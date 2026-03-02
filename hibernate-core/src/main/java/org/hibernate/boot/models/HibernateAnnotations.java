@@ -98,7 +98,7 @@ public interface HibernateAnnotations {
 			EnumSet.of( Kind.METHOD, Kind.FIELD ),
 			false
 	);
-	SpecializedAnnotationDescriptor<AttributeAccessor, AttributeAccessorAnnotation> ATTRIBUTE_ACCESSOR = new SpecializedAnnotationDescriptor<>(
+	OrmAnnotationDescriptor<AttributeAccessor, AttributeAccessorAnnotation> ATTRIBUTE_ACCESSOR = new OrmAnnotationDescriptor<>(
 			AttributeAccessor.class,
 			AttributeAccessorAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
@@ -116,7 +116,7 @@ public interface HibernateAnnotations {
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
-	SpecializedAnnotationDescriptor<BatchSize, BatchSizeAnnotation> BATCH_SIZE = new SpecializedAnnotationDescriptor<>(
+	OrmAnnotationDescriptor<BatchSize, BatchSizeAnnotation> BATCH_SIZE = new OrmAnnotationDescriptor<>(
 			BatchSize.class,
 			BatchSizeAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.FIELD, Kind.METHOD ),
@@ -147,7 +147,7 @@ public interface HibernateAnnotations {
 			false,
 			CHECKS
 	);
-	SpecializedAnnotationDescriptor<Collate, CollateAnnotation> COLLATE = new SpecializedAnnotationDescriptor<>(
+	OrmAnnotationDescriptor<Collate, CollateAnnotation> COLLATE = new OrmAnnotationDescriptor<>(
 			Collate.class,
 			CollateAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
@@ -239,13 +239,13 @@ public interface HibernateAnnotations {
 			false,
 			COLUMN_TRANSFORMERS
 	);
-	SpecializedAnnotationDescriptor<Comments, CommentsAnnotation> COMMENTS = new SpecializedAnnotationDescriptor<>(
+	OrmAnnotationDescriptor<Comments, CommentsAnnotation> COMMENTS = new OrmAnnotationDescriptor<>(
 			Comments.class,
 			CommentsAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.FIELD, Kind.METHOD ),
 			false
 	);
-	SpecializedAnnotationDescriptor<Comment, CommentAnnotation> COMMENT = new SpecializedAnnotationDescriptor<>(
+	OrmAnnotationDescriptor<Comment, CommentAnnotation> COMMENT = new OrmAnnotationDescriptor<>(
 			Comment.class,
 			CommentAnnotation.class,
 			EnumSet.of( Kind.CLASS, Kind.FIELD, Kind.METHOD ),
@@ -308,7 +308,7 @@ public interface HibernateAnnotations {
 			EnumSet.of( Kind.CLASS ),
 			false
 	);
-	SpecializedAnnotationDescriptor<DiscriminatorOptions, DiscriminatorOptionsAnnotation> DISCRIMINATOR_OPTIONS = new SpecializedAnnotationDescriptor<>(
+	OrmAnnotationDescriptor<DiscriminatorOptions, DiscriminatorOptionsAnnotation> DISCRIMINATOR_OPTIONS = new OrmAnnotationDescriptor<>(
 			DiscriminatorOptions.class,
 			DiscriminatorOptionsAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
@@ -925,7 +925,7 @@ public interface HibernateAnnotations {
 					EnumSet.of( Kind.FIELD, Kind.METHOD ),
 					false
 			);
-	SpecializedAnnotationDescriptor<TenantId, TenantIdAnnotation> TENANT_ID = new SpecializedAnnotationDescriptor<>(
+	OrmAnnotationDescriptor<TenantId, TenantIdAnnotation> TENANT_ID = new OrmAnnotationDescriptor<>(
 			TenantId.class,
 			TenantIdAnnotation.class,
 			EnumSet.of( Kind.FIELD, Kind.METHOD ),
@@ -949,7 +949,7 @@ public interface HibernateAnnotations {
 			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
 			false
 	);
-	SpecializedAnnotationDescriptor<TypeBinderType, TypeBinderTypeAnnotation> TYPE_BINDER_TYPE = new SpecializedAnnotationDescriptor<>(
+	OrmAnnotationDescriptor<TypeBinderType, TypeBinderTypeAnnotation> TYPE_BINDER_TYPE = new OrmAnnotationDescriptor<>(
 			TypeBinderType.class,
 			TypeBinderTypeAnnotation.class,
 			EnumSet.of( Kind.ANNOTATION ),

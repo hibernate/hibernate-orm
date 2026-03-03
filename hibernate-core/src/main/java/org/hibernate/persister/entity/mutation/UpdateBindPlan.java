@@ -338,13 +338,9 @@ public class UpdateBindPlan implements BindPlan {
 				final var attribute = attributeMappings.get( attributeIndex );
 				if ( !attribute.isPluralAttributeMapping()
 						&& tableDetails.getTableName().equals( attribute.getContainingTableExpression() ) ) {
-					// For DIRTY locking, only include if field is dirty
-					if ( entityPersister.optimisticLockStyle() == OptimisticLockStyle.DIRTY ) {
-						if ( dirtyFields != null && !contains( dirtyFields, attributeIndex ) ) {
-							continue;
-						}
-					}
-
+					// Note: Even for DIRTY locking, we must bind all versionable fields to the WHERE clause
+					// because the SQL generator includes all versionable fields in the WHERE clause.
+					// The "DIRTY" aspect is handled at the SQL generation level, not at the binding level.
 					decomposeAttributeForRestriction(
 							previousValues[attributeIndex],
 							session,

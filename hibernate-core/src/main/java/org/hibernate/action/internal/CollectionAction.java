@@ -45,8 +45,24 @@ public abstract class CollectionAction implements ComparableExecutable {
 		this.collection = collection;
 	}
 
-	protected PersistentCollection<?> getCollection() {
+	/**
+	 * collection accessor
+	 *
+	 * @return The collection
+	 */
+	public PersistentCollection<?> getCollection() {
 		return collection;
+	}
+
+	/**
+	 * collection key accessor
+	 *
+	 * @return The collection key
+	 */
+	public Object getKey() {
+		return key instanceof DelayedPostInsertIdentifier
+				? session.getPersistenceContextInternal().getEntry( collection.getOwner() ).getId()
+				: key;
 	}
 
 	/**
@@ -104,12 +120,6 @@ public abstract class CollectionAction implements ComparableExecutable {
 
 	public final CollectionPersister getPersister() {
 		return persister;
-	}
-
-	protected final Object getKey() {
-		return key instanceof DelayedPostInsertIdentifier
-				? session.getPersistenceContextInternal().getEntry( collection.getOwner() ).getId()
-				: key;
 	}
 
 	@Override

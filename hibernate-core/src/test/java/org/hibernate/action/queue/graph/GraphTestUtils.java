@@ -2,10 +2,8 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.action.queue2.graph;
+package org.hibernate.action.queue.graph;
 
-import org.hibernate.action.queue.graph.GraphEdge;
-import org.hibernate.action.queue.graph.GroupNode;
 
 import java.util.Set;
 

@@ -7,6 +7,11 @@ package org.hibernate.persister.collection.mutation;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.action.queue.MutationKind;
+import org.hibernate.action.queue.StatementShapeKey;
+import org.hibernate.action.queue.bind.BindPlan;
+import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
@@ -150,5 +155,119 @@ public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator
 		return operationGroup;
 	}
 
+	@Override
+	public List<PlannedOperationGroup> decomposeUpdateRows(
+			PersistentCollection<?> collection,
+			Object key,
+			int ordinalBase,
+			SharedSessionContractImplementor session) {
+		final var operation = rowMutationOperations.getUpdateRowOperation();
+		if ( operation == null ) {
+			return List.of();
+		}
+
+		final var mutationTarget = getMutationTarget();
+		final var tableMapping = mutationTarget.getCollectionTableMapping();
+		final String tableName = tableMapping.getTableName();
+
+		final BindPlan bindPlan = new UpdateRowsBindPlan(
+				collection,
+				key,
+				rowMutationOperations.getUpdateRowValues(),
+				rowMutationOperations.getUpdateRowRestrictions(),
+				mutationTarget
+		);
+
+		final PlannedOperation plannedOp = new PlannedOperation(
+				tableName,
+				MutationKind.UPDATE,
+				operation,
+				bindPlan,
+				ordinalBase * 1_000,
+				"UpdateRowsCoordinator(" + mutationTarget.getRolePath() + ")"
+		);
+
+		final List<PlannedOperation> operations = List.of( plannedOp );
+		final PlannedOperationGroup group = new PlannedOperationGroup(
+				tableName,
+				MutationKind.UPDATE,
+				StatementShapeKey.forUpdate( tableName, operations ),
+				operations,
+				false,
+				ordinalBase * 1_000,
+				"UpdateRowsCoordinator(" + mutationTarget.getRolePath() + ")"
+		);
+
+		return List.of( group );
+	}
+
+	private static class UpdateRowsBindPlan implements BindPlan {
+		private final PersistentCollection<?> collection;
+		private final Object key;
+		private final RowMutationOperations.Values updateRowValues;
+		private final RowMutationOperations.Restrictions updateRowRestrictions;
+		private final CollectionMutationTarget mutationTarget;
+
+		public UpdateRowsBindPlan(
+				PersistentCollection<?> collection,
+				Object key,
+				RowMutationOperations.Values updateRowValues,
+				RowMutationOperations.Restrictions updateRowRestrictions,
+				CollectionMutationTarget mutationTarget) {
+			this.collection = collection;
+			this.key = key;
+			this.updateRowValues = updateRowValues;
+			this.updateRowRestrictions = updateRowRestrictions;
+			this.mutationTarget = mutationTarget;
+		}
+
+		@Override
+		public void bindAndMaybePatch(
+				MutationExecutor executor,
+				PlannedOperation operation,
+				SharedSessionContractImplementor session) {
+			// Binding happens in execute()
+		}
+
+		@Override
+		public void execute(
+				MutationExecutor executor,
+				PlannedOperation operation,
+				SharedSessionContractImplementor session) {
+			final var pluralAttribute = mutationTarget.getTargetPart();
+			final var collectionDescriptor = pluralAttribute.getCollectionDescriptor();
+			final var entries = collection.entries( collectionDescriptor );
+			final var jdbcValueBindings = executor.getJdbcValueBindings();
+
+			int entryCount = 0;
+			while ( entries.hasNext() ) {
+				final Object entry = entries.next();
+
+				if ( collection.needsUpdating( entry, entryCount, pluralAttribute ) ) {
+					updateRowValues.applyValues(
+							collection,
+							key,
+							entry,
+							entryCount,
+							session,
+							jdbcValueBindings
+					);
+
+					updateRowRestrictions.applyRestrictions(
+							collection,
+							key,
+							entry,
+							entryCount,
+							session,
+							jdbcValueBindings
+					);
+
+					executor.execute( entry, null, null, null, session );
+				}
+
+				entryCount++;
+			}
+		}
+	}
 
 }

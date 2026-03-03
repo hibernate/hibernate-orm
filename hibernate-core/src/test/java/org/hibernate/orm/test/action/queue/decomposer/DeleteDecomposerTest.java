@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.action.queue2.decomposer;
+package org.hibernate.orm.test.action.queue.decomposer;
 
 import java.util.List;
 

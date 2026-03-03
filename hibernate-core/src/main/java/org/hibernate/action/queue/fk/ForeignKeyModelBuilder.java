@@ -23,8 +23,7 @@ import java.util.stream.Stream;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
-/// Normalize Hibernate mapping model defined
-/// [ForeignKeyDescriptor][org.hibernate.metamodel.mapping.ForeignKeyDescriptor] → edges
+/// Finds all foreign-keys defined in the domain model and creates [ForeignKey] descriptor for each.
 ///
 /// @author Steve Ebersole
 public final class ForeignKeyModelBuilder {
@@ -137,6 +136,7 @@ public final class ForeignKeyModelBuilder {
 				source.getKeyDetails().getKeyColumns().stream().map( TableDetails.KeyColumn::getColumnName ).toList(),
 				target.getKeyDetails().getKeyColumns().stream().map( TableDetails.KeyColumn::getColumnName ).toList(),
 				false,
+				false,
 				false
 		));
 	}
@@ -197,6 +197,7 @@ public final class ForeignKeyModelBuilder {
 				fkDesc.getTargetTable(),
 				keyColumns,
 				targetColumns,
+				true,
 				nullable,
 				deferrable
 		));

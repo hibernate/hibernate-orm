@@ -24,7 +24,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.creation.internal.SessionCreationOptions;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.internal.PersistenceContexts;
-import org.hibernate.engine.spi.ActionQueue;
+import org.hibernate.action.queue.ActionQueue2;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
@@ -154,7 +154,7 @@ public class SessionImpl
 		implements Serializable, SharedSessionContractImplementor, JdbcSessionOwner, SessionImplementor, EventSource,
 				TransactionCoordinatorBuilder.Options, WrapperOptions, StatefulLoadAccessContext {
 
-	private transient ActionQueue actionQueue;
+	private transient ActionQueue2 actionQueue;
 	private transient EventListenerGroups eventListenerGroups;
 	private transient PersistenceContext persistenceContext;
 
@@ -215,7 +215,7 @@ public class SessionImpl
 
 	private static void setUpTransactionCompletionProcesses(
 			SessionCreationOptions options,
-			ActionQueue actionQueue,
+			ActionQueue2 actionQueue,
 			SessionImpl childSession) {
 		if ( options instanceof SharedSessionCreationOptions sharedOptions
 				&& sharedOptions.isTransactionCoordinatorShared() ) {
@@ -252,8 +252,8 @@ public class SessionImpl
 		return persistenceContext;
 	}
 
-	protected ActionQueue createActionQueue() {
-		return new ActionQueue( this );
+	protected ActionQueue2 createActionQueue() {
+		return new ActionQueue2( this );
 	}
 
 	@Override
@@ -1770,7 +1770,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public ActionQueue getActionQueue() {
+	public ActionQueue2 getActionQueue() {
 		checkOpenOrWaitingForAutoClose();
 //		checkTransactionSynchStatus();
 		return actionQueue;
@@ -2662,7 +2662,9 @@ public class SessionImpl
 		ois.defaultReadObject();
 
 		persistenceContext = PersistenceContexts.deserialize( ois, this );
-		actionQueue = ActionQueue.deserialize( ois, this );
+		// TODO: Implement serialization support for ActionQueue2
+		// For now, create a new instance instead of deserializing
+		actionQueue = createActionQueue();
 
 		loadQueryInfluencers = (LoadQueryInfluencers) ois.readObject();
 

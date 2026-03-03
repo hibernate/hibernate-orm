@@ -58,6 +58,11 @@ public class InsertBindPlan implements BindPlan {
 	}
 
 	@Override
+	public Object getEntityInstance() {
+		return entity;
+	}
+
+	@Override
 	public void bindAndMaybePatch(
 			MutationExecutor executor,
 			PlannedOperation plannedOperation,

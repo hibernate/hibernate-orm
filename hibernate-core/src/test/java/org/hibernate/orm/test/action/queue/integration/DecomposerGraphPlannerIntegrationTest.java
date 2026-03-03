@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.action.queue2.integration;
+package org.hibernate.orm.test.action.queue.integration;
 
 import jakarta.persistence.*;
 import org.hibernate.action.internal.EntityDeleteAction;

@@ -107,20 +107,20 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		return rowMutationOperations;
 	}
 
-	protected InsertRowsCoordinator getInsertRowsCoordinator() {
+	public InsertRowsCoordinator getInsertRowsCoordinator() {
 		return insertRowsCoordinator;
 	}
 
-	protected UpdateRowsCoordinator getUpdateRowsCoordinator() {
+	public UpdateRowsCoordinator getUpdateRowsCoordinator() {
 		return updateRowsCoordinator;
 	}
 
-	protected DeleteRowsCoordinator getDeleteRowsCoordinator() {
+	public DeleteRowsCoordinator getDeleteRowsCoordinator() {
 		return deleteRowsCoordinator;
 	}
 
 	@Override
-	protected RemoveCoordinator getRemoveCoordinator() {
+	public RemoveCoordinator getRemoveCoordinator() {
 		return removeCoordinator;
 	}
 

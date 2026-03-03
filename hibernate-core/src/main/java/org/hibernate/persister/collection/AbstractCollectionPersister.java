@@ -920,9 +920,8 @@ public abstract class AbstractCollectionPersister
 		return useShallowQueryCacheLayout;
 	}
 
-	@Override
 	public abstract RowMutationOperations getRowMutationOperations();
-	protected abstract RemoveCoordinator getRemoveCoordinator();
+	public abstract RemoveCoordinator getRemoveCoordinator();
 
 	@Override
 	public boolean hasOrdering() {

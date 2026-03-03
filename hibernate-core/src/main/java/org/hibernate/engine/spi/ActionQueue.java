@@ -74,7 +74,6 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 	private final SessionImplementor session;
 
 	private UnresolvedEntityInsertActions unresolvedInsertions;
-
 	// NOTE: ExecutableList fields must be instantiated via ListProvider#init
 	//       or #getOrInit to ensure that they are instantiated consistently.
 

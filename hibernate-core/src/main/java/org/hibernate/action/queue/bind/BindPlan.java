@@ -18,6 +18,16 @@ public interface BindPlan {
 		return null;
 	}
 
+	/**
+	 * Get the entity instance for this operation.
+	 * Used for tracking entities that become managed during flush (for unresolved insert resolution).
+	 *
+	 * @return the entity instance, or null if this operation doesn't have an associated entity instance
+	 */
+	default Object getEntityInstance() {
+		return null;
+	}
+
 	void bindAndMaybePatch(MutationExecutor executor, PlannedOperation operation, SharedSessionContractImplementor session);
 	void execute(MutationExecutor executor, PlannedOperation operation, SharedSessionContractImplementor session);
 }

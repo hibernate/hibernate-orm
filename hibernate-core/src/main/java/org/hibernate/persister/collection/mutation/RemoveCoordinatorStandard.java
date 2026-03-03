@@ -4,8 +4,14 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import org.hibernate.action.queue.MutationKind;
+import org.hibernate.action.queue.StatementShapeKey;
+import org.hibernate.action.queue.bind.BindPlan;
+import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
@@ -14,6 +20,8 @@ import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
+
+import java.util.List;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
@@ -131,5 +139,78 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 		final var tableReference = new MutatingTableReference( tableMapping );
 		return singleOperation( MutationType.DELETE, mutationTarget,
 				operationProducer.createOperation( tableReference ) );
+	}
+
+	@Override
+	public List<PlannedOperationGroup> decomposeRemove(
+			Object key,
+			int ordinalBase,
+			SharedSessionContractImplementor session) {
+		if ( operationGroup == null ) {
+			operationGroup = buildOperationGroup();
+		}
+
+		final var operation = (JdbcMutationOperation) operationGroup.getSingleOperation();
+		final var tableMapping = mutationTarget.getCollectionTableMapping();
+		final String tableName = tableMapping.getTableName();
+
+		final BindPlan bindPlan = new RemoveBindPlan( key, mutationTarget );
+
+		final PlannedOperation plannedOp = new PlannedOperation(
+				tableName,
+				MutationKind.DELETE_BY_FK,
+				operation,
+				bindPlan,
+				ordinalBase * 1_000,
+				"RemoveCoordinator(" + mutationTarget.getRolePath() + ")"
+		);
+
+		final List<PlannedOperation> operations = List.of( plannedOp );
+		final PlannedOperationGroup group = new PlannedOperationGroup(
+				tableName,
+				MutationKind.DELETE_BY_FK,
+				new StatementShapeKey( tableName, MutationKind.DELETE_BY_FK, operation.hashCode() ),
+				operations,
+				false,
+				ordinalBase * 1_000,
+				"RemoveCoordinator(" + mutationTarget.getRolePath() + ")"
+		);
+
+		return List.of( group );
+	}
+
+	private static class RemoveBindPlan implements BindPlan {
+		private final Object key;
+		private final CollectionMutationTarget mutationTarget;
+
+		public RemoveBindPlan(Object key, CollectionMutationTarget mutationTarget) {
+			this.key = key;
+			this.mutationTarget = mutationTarget;
+		}
+
+		@Override
+		public void bindAndMaybePatch(
+				MutationExecutor executor,
+				PlannedOperation operation,
+				SharedSessionContractImplementor session) {
+			final var foreignKeyDescriptor = mutationTarget.getTargetPart().getKeyDescriptor();
+			final var jdbcValueBindings = executor.getJdbcValueBindings();
+			foreignKeyDescriptor.getKeyPart().decompose(
+					key,
+					0,
+					jdbcValueBindings,
+					null,
+					RowMutationOperations.DEFAULT_RESTRICTOR,
+					session
+			);
+		}
+
+		@Override
+		public void execute(
+				MutationExecutor executor,
+				PlannedOperation operation,
+				SharedSessionContractImplementor session) {
+			executor.execute( key, null, null, null, session );
+		}
 	}
 }

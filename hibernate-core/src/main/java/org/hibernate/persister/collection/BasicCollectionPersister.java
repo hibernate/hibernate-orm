@@ -83,7 +83,11 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		return rowMutationOperations;
 	}
 
-	protected InsertRowsCoordinator getCreateEntryCoordinator() {
+	public InsertRowsCoordinator getCreateEntryCoordinator() {
+		return insertRowsCoordinator;
+	}
+
+	public InsertRowsCoordinator getInsertRowsCoordinator() {
 		return insertRowsCoordinator;
 	}
 	@Override
@@ -97,7 +101,11 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		getCreateEntryCoordinator().insertRows( collection, id, collection::includeInInsert, session );
 	}
 
-	protected UpdateRowsCoordinator getUpdateEntryCoordinator() {
+	public UpdateRowsCoordinator getUpdateEntryCoordinator() {
+		return updateCoordinator;
+	}
+
+	public UpdateRowsCoordinator getUpdateRowsCoordinator() {
 		return updateCoordinator;
 	}
 
@@ -106,7 +114,11 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		getUpdateEntryCoordinator().updateRows( id, collection, session );
 	}
 
-	protected DeleteRowsCoordinator getRemoveEntryCoordinator() {
+	public DeleteRowsCoordinator getRemoveEntryCoordinator() {
+		return deleteRowsCoordinator;
+	}
+
+	public DeleteRowsCoordinator getDeleteRowsCoordinator() {
 		return deleteRowsCoordinator;
 	}
 
@@ -116,7 +128,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	}
 
 	@Override
-	protected RemoveCoordinator getRemoveCoordinator() {
+	public RemoveCoordinator getRemoveCoordinator() {
 		return removeCoordinator;
 	}
 

@@ -2,14 +2,14 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.action.queue2.planner;
+package org.hibernate.orm.test.action.queue.planner;
 
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.graph.Graph;
 import org.hibernate.action.queue.graph.GraphEdge;
-import org.hibernate.action.queue2.graph.GraphTestUtils;
+import org.hibernate.action.queue.graph.GraphTestUtils;
 import org.hibernate.action.queue.graph.GroupNode;
 import org.hibernate.action.queue.plan.FlushPlan;
 import org.hibernate.action.queue.plan.PlannedOperation;

@@ -14,6 +14,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -86,7 +87,6 @@ import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.AttributeConverter;
 
-import static java.util.Comparator.comparingInt;
 import static org.hibernate.cfg.MappingSettings.XML_MAPPING_ENABLED;
 import static org.hibernate.internal.util.collections.CollectionHelper.mutableJoin;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForArray;
@@ -113,6 +113,10 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferre
  * @author Steve Ebersole
  */
 public class MetadataBuildingProcess {
+
+	private static final Comparator<TypeContributor> TYPE_CONTRIBUTOR_COMPARATOR = Comparator.comparingInt(
+					TypeContributor::ordinal )
+			.thenComparing( a -> a.getClass().getCanonicalName() );
 
 	/**
 	 * Unified single phase for MetadataSources to Metadata process
@@ -843,10 +847,7 @@ public class MetadataBuildingProcess {
 			ClassLoaderService classLoaderService) {
 		Collection<TypeContributor> typeContributors = classLoaderService.loadJavaServices( TypeContributor.class );
 		List<TypeContributor> contributors = new ArrayList<>( typeContributors );
-		contributors.sort(
-				comparingInt( TypeContributor::ordinal )
-						.thenComparing( a -> a.getClass().getCanonicalName() )
-		);
+		contributors.sort( TYPE_CONTRIBUTOR_COMPARATOR );
 		return contributors;
 	}
 

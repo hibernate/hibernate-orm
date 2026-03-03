@@ -12,6 +12,7 @@ import org.hibernate.StaleStateException;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
+import org.hibernate.engine.jdbc.batch.spi.StaleStateMapper;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
@@ -90,7 +91,8 @@ public class BatchImpl implements Batch {
 
 	@Override
 	public void addToBatch(
-			JdbcValueBindings jdbcValueBindings, TableInclusionChecker inclusionChecker,
+			JdbcValueBindings jdbcValueBindings,
+			TableInclusionChecker inclusionChecker,
 			StaleStateMapper staleStateMapper) {
 		if ( staleStateMapper != null ) {
 			if ( staleStateMappers == null ) {

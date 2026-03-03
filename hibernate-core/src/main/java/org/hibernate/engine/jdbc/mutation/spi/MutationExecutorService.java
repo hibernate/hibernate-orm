@@ -9,18 +9,23 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.service.Service;
 import org.hibernate.sql.model.MutationOperationGroup;
 
-/**
- * Service for creating executors for model mutation operations
- *
- * @author Steve Ebersole
- */
+/// Service for creating executors for model mutation operations
+///
+/// @author Steve Ebersole
 public interface MutationExecutorService extends Service {
 
-	/**
-	 * Create an executor for the given {@code operationGroup}, potentially using batching
-	 */
+	/// Create an executor for the given `operationGroup`, potentially using batching
 	MutationExecutor createExecutor(
 			BatchKeyAccess batchKeySupplier,
 			MutationOperationGroup operationGroup,
 			SharedSessionContractImplementor session);
+
+
+	/// Create an executor for the given `operation`, potentially using batching.
+	MutationExecutor createExecutor(
+			BatchKeyAccess batchKeySupplier,
+			MutationOperationGroup operationGroup,
+			JdbcValueBindingsFactory bindingsFactory,
+			SharedSessionContractImplementor session
+	);
 }

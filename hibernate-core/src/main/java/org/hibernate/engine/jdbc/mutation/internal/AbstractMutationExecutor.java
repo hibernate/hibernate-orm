@@ -6,8 +6,8 @@ package org.hibernate.engine.jdbc.mutation.internal;
 
 import java.sql.SQLException;
 
-import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.engine.jdbc.batch.spi.StaleStateMapper;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.OperationResultChecker;
@@ -61,7 +61,7 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 			TableInclusionChecker inclusionChecker,
 			OperationResultChecker resultChecker,
 			SharedSessionContractImplementor session,
-			Batch.StaleStateMapper staleStateMapper) {
+			StaleStateMapper staleStateMapper) {
 		final var generatedValues = performNonBatchedOperations(
 				modelReference,
 				valuesAnalysis,
@@ -94,7 +94,7 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 	protected void performBatchedOperations(
 			ValuesAnalysis valuesAnalysis,
 			TableInclusionChecker inclusionChecker,
-			Batch.StaleStateMapper staleStateMapper) {
+			StaleStateMapper staleStateMapper) {
 	}
 
 	/**

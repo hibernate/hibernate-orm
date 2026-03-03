@@ -42,6 +42,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
+import org.hibernate.action.queue.fk.ForeignKeyModel;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.QueryEngine;
@@ -287,6 +288,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public String bestGuessEntityName(Object object) {
 		return delegate.bestGuessEntityName( object );
+	}
+
+	@Override
+	public ForeignKeyModel getForeignKeyModel() {
+		return delegate.getForeignKeyModel();
 	}
 
 	@Override

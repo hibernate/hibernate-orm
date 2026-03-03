@@ -102,7 +102,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 		return persister.getCollectionSpaces();
 	}
 
-	protected final CollectionPersister getPersister() {
+	public final CollectionPersister getPersister() {
 		return persister;
 	}
 

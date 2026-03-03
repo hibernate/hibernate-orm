@@ -21,8 +21,8 @@ import org.hibernate.id.insert.AbstractReturningDelegate;
 import org.hibernate.id.insert.AbstractSelectingDelegate;
 import org.hibernate.id.insert.UniqueKeySelectingDelegate;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.MutationType;
 
+import org.hibernate.sql.model.MutationType;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;

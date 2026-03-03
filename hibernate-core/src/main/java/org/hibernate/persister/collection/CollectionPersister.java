@@ -15,6 +15,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.action.internal.CollectionRecreateAction;
+import org.hibernate.action.internal.CollectionRemoveAction;
+import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.collection.spi.CollectionSemantics;
@@ -30,6 +33,7 @@ import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.mutation.RowMutationOperations;
+import org.hibernate.action.queue.graph.MutationDecomposer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -103,6 +107,10 @@ public interface CollectionPersister extends Restrictable {
 	default PluralAttributeMapping getAttributeMapping() {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
 	}
+
+	MutationDecomposer<CollectionRecreateAction> getRecreateDecomposer();
+	MutationDecomposer<CollectionRemoveAction> getRemoveDecomposer();
+	MutationDecomposer<CollectionUpdateAction> getUpdateDecomposer();
 
 	/**
 	 * Get the persister of the entity that "owns" this collection

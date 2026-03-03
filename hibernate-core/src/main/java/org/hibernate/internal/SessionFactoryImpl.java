@@ -85,6 +85,8 @@ import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.action.queue.fk.ForeignKeyModel;
+import org.hibernate.action.queue.fk.ForeignKeyModelBuilder;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.internal.QueryEngineImpl;
 import org.hibernate.query.named.NamedObjectRepository;
@@ -217,6 +219,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	final transient JdbcValuesMappingProducerProvider jdbcValuesMappingProducerProvider;
 	final transient TransactionIdentifierService transactionIdentifierService;
 
+	private final ForeignKeyModel foreignKeyModel;
+
 	public SessionFactoryImpl(
 			final MetadataImplementor bootMetamodel,
 			final SessionFactoryOptions options,
@@ -333,6 +337,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			// we're in an incompletely-initialized state
 			typeConfiguration.scope( this );
 
+			foreignKeyModel = ForeignKeyModelBuilder.buildForeignKeyGraphModel( mappingMetamodelImpl );
+
 			observerChain.sessionFactoryCreated( this );
 		}
 		catch ( Exception e ) {
@@ -406,6 +412,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				.getEntityDescriptor( entityClass )
 				.getEntityCallbacks()
 				.addListener( CallbackType.fromCallbackAnnotation( callbackType ), callback );
+	}
+
+	@Override
+	public ForeignKeyModel getForeignKeyModel() {
+		return foreignKeyModel;
 	}
 
 	@Override

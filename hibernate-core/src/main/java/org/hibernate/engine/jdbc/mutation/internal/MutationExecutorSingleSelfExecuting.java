@@ -8,6 +8,7 @@ import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
+import org.hibernate.engine.jdbc.mutation.spi.JdbcValueDescriptorAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.SelfExecutingUpdateOperation;
 import org.hibernate.sql.model.ValuesAnalysis;
@@ -16,7 +17,7 @@ import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class MutationExecutorSingleSelfExecuting extends AbstractMutationExecutor implements JdbcValueBindingsImpl.JdbcValueDescriptorAccess {
+public class MutationExecutorSingleSelfExecuting extends AbstractMutationExecutor implements JdbcValueDescriptorAccess {
 	private final SelfExecutingUpdateOperation operation;
 	private final JdbcValueBindingsImpl valueBindings;
 

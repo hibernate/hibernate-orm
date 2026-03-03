@@ -5,11 +5,13 @@
 package org.hibernate.engine.jdbc.mutation.spi;
 
 import java.util.Comparator;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Consumer;
 
+import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 
 /**
@@ -62,5 +64,19 @@ public class BindingGroup {
 	 */
 	public void clear() {
 		bindings.clear();
+	}
+
+	public Binding getBinding(String columnName, ParameterUsage usage) {
+		for ( Binding binding : bindings ) {
+			if ( binding.getValueDescriptor().getUsage() == usage
+				&& binding.getColumnName().equals( columnName ) ) {
+				return binding;
+			}
+		}
+		throw new IllegalArgumentException( String.format( Locale.ROOT,
+				"Could not locate binding [%s : %s]",
+				usage.toString(),
+				columnName
+		) );
 	}
 }

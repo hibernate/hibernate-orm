@@ -36,6 +36,9 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.persister.collection.mutation.CollectionRecreateDecomposer;
+import org.hibernate.persister.collection.mutation.CollectionRemoveDecomposer;
+import org.hibernate.persister.collection.mutation.CollectionUpdateDecomposer;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.filter.internal.FilterHelper;
 import org.hibernate.jdbc.Expectation;
@@ -244,6 +247,10 @@ public abstract class AbstractCollectionPersister
 	private volatile Set<String> affectingFetchProfiles;
 
 	private Collection collectionBootDescriptor;
+
+	private CollectionRecreateDecomposer recreateDecomposer;
+	private CollectionRemoveDecomposer removeDecomposer;
+	private CollectionUpdateDecomposer updateDecomposer;
 
 	public AbstractCollectionPersister(
 			Collection collectionBootDescriptor,
@@ -594,6 +601,25 @@ public abstract class AbstractCollectionPersister
 		}
 		buildStaticWhereFragmentSensitiveSql();
 		collectionBootDescriptor = null;
+
+		this.recreateDecomposer = new CollectionRecreateDecomposer();
+		this.removeDecomposer = new CollectionRemoveDecomposer();
+		this.updateDecomposer = new  CollectionUpdateDecomposer();
+	}
+
+	@Override
+	public CollectionRecreateDecomposer getRecreateDecomposer() {
+		return recreateDecomposer;
+	}
+
+	@Override
+	public CollectionRemoveDecomposer getRemoveDecomposer() {
+		return removeDecomposer;
+	}
+
+	@Override
+	public CollectionUpdateDecomposer getUpdateDecomposer() {
+		return updateDecomposer;
 	}
 
 	private void delayedWhereFragmentProcessing(

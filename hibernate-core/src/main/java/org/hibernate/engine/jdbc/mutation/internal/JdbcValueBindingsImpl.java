@@ -4,21 +4,21 @@
  */
 package org.hibernate.engine.jdbc.mutation.internal;
 
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
-
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.group.UnknownParameterException;
 import org.hibernate.engine.jdbc.mutation.spi.BindingGroup;
+import org.hibernate.engine.jdbc.mutation.spi.JdbcValueDescriptorAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
-import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
+
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 
 /**
  * @author Steve Ebersole
@@ -113,17 +113,5 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 		if ( bindingGroup != null ) {
 			bindingGroup.clear();
 		}
-	}
-
-	/**
-	 * Access to {@link JdbcValueDescriptor} values
-	 */
-	public interface JdbcValueDescriptorAccess {
-
-		default String resolvePhysicalTableName(String tableName) {
-			return tableName;
-		}
-
-		JdbcValueDescriptor resolveValueDescriptor(String tableName, String columnName, ParameterUsage usage);
 	}
 }

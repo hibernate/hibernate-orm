@@ -1351,7 +1351,7 @@ public class SessionImpl
 	@Override
 	public boolean isDirty() {
 		checkOpen();
-		if ( actionQueue.areInsertionsOrDeletionsQueued() ) {
+		if ( actionQueue.hasAnyQueuedActions() ) {
 			return true;
 		}
 		else {

@@ -4,21 +4,22 @@
  */
 package org.hibernate.engine.jdbc.mutation.internal;
 
-import java.util.Locale;
-
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
+import org.hibernate.engine.jdbc.mutation.spi.JdbcValueDescriptorAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 
+import java.util.Locale;
+
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSingleMutationExecutor extends AbstractMutationExecutor implements JdbcValueBindingsImpl.JdbcValueDescriptorAccess {
+public abstract class AbstractSingleMutationExecutor extends AbstractMutationExecutor implements JdbcValueDescriptorAccess {
 	private final PreparableMutationOperation mutationOperation;
-	private final JdbcValueBindingsImpl valueBindings;
+	private final JdbcValueBindings valueBindings;
 
 	public AbstractSingleMutationExecutor(
 			PreparableMutationOperation mutationOperation,

@@ -8,8 +8,11 @@ import java.util.Map;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
+import org.hibernate.engine.jdbc.mutation.spi.JdbcValueBindingsFactory;
+import org.hibernate.engine.jdbc.mutation.spi.JdbcValueDescriptorAccess;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -40,6 +43,7 @@ public class StandardMutationExecutorService implements MutationExecutorService 
 	public MutationExecutor createExecutor(
 			BatchKeyAccess batchKeySupplier,
 			MutationOperationGroup operationGroup,
+			JdbcValueBindingsFactory bindingsFactory,
 			SharedSessionContractImplementor session) {
 		// decide whether to use batching - any number > one means to batch
 		final Integer sessionBatchSize = session.getJdbcCoordinator()
@@ -71,5 +75,30 @@ public class StandardMutationExecutorService implements MutationExecutorService 
 		}
 
 		return new MutationExecutorStandard( operationGroup, batchKeySupplier, batchSizeToUse, session );
+	}
+
+	@Override
+	public MutationExecutor createExecutor(
+			BatchKeyAccess batchKeySupplier,
+			MutationOperationGroup operationGroup,
+			SharedSessionContractImplementor session) {
+		return createExecutor(
+				batchKeySupplier,
+				operationGroup,
+				StandardMutationExecutorService::jdbcValueBindingsFactory,
+				session
+		);
+	}
+
+	private static JdbcValueBindings jdbcValueBindingsFactory(
+			MutationOperation mutationOperation,
+			JdbcValueDescriptorAccess jdbcValueDescriptorAccess,
+			SharedSessionContractImplementor session) {
+		return new JdbcValueBindingsImpl(
+				mutationOperation.getMutationType(),
+				mutationOperation.getMutationTarget(),
+				jdbcValueDescriptorAccess,
+				session
+		);
 	}
 }

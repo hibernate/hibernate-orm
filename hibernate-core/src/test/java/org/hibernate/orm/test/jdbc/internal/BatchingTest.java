@@ -12,6 +12,7 @@ import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.JdbcValueBindingsImpl;
+import org.hibernate.engine.jdbc.mutation.spi.JdbcValueDescriptorAccess;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.orm.test.common.JournalingBatchObserver;
@@ -95,7 +96,7 @@ public class BatchingTest implements BatchKey {
 		return new JdbcValueBindingsImpl(
 				MutationType.INSERT,
 				null,
-				new JdbcValueBindingsImpl.JdbcValueDescriptorAccess() {
+				new JdbcValueDescriptorAccess() {
 					@Override
 					public JdbcValueDescriptor resolveValueDescriptor(
 							String tableName,

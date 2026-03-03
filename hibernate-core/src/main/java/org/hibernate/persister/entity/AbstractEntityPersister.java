@@ -74,6 +74,9 @@ import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
+import org.hibernate.persister.entity.mutation.DeleteDecomposer;
+import org.hibernate.persister.entity.mutation.InsertDecomposer;
+import org.hibernate.persister.entity.mutation.UpdateDecomposer;
 import org.hibernate.persister.filter.internal.FilterHelper;
 import org.hibernate.internal.util.ImmutableBitSet;
 import org.hibernate.internal.util.IndexedConsumer;
@@ -381,6 +384,10 @@ public abstract class AbstractEntityPersister
 	private String sqlVersionSelectString;
 
 	private EntityTableMapping[] tableMappings;
+	private InsertDecomposer insertDecomposer;
+	private UpdateDecomposer updateDecomposer;
+	private DeleteDecomposer deleteDecomposer;
+
 	private InsertCoordinator insertCoordinator;
 	private UpdateCoordinator updateCoordinator;
 	private DeleteCoordinator deleteCoordinator;
@@ -1047,6 +1054,21 @@ public abstract class AbstractEntityPersister
 
 	SingleIdArrayLoadPlan getSQLLazySelectLoadPlan(String fetchGroup) {
 		return lazyLoadPlanByFetchGroup.get( fetchGroup );
+	}
+
+	@Override
+	public InsertDecomposer getInsertDecomposer() {
+		return insertDecomposer;
+	}
+
+	@Override
+	public UpdateDecomposer getUpdateDecomposer() {
+		return updateDecomposer;
+	}
+
+	@Override
+	public DeleteDecomposer getDeleteDecomposer() {
+		return deleteDecomposer;
 	}
 
 	@Override
@@ -2818,7 +2840,7 @@ public abstract class AbstractEntityPersister
 			}
 
 			{
-				final var staticInsertGroup = insertCoordinator.getStaticMutationOperationGroup();
+				final var staticInsertGroup = insertDecomposer.getStaticMutationGroup();
 				if ( staticInsertGroup != null ) {
 					for ( int i = 0; i < staticInsertGroup.getNumberOfOperations(); i++ ) {
 						if ( staticInsertGroup.getOperation( i ) instanceof JdbcOperation jdbcOperation ) {
@@ -2829,7 +2851,7 @@ public abstract class AbstractEntityPersister
 			}
 
 			{
-				final var staticUpdateGroup = updateCoordinator.getStaticMutationOperationGroup();
+				final var staticUpdateGroup = updateDecomposer.getStaticMutationGroup();
 				if ( staticUpdateGroup != null ) {
 					for ( int i = 0; i < staticUpdateGroup.getNumberOfOperations(); i++ ) {
 						if ( staticUpdateGroup.getOperation( i ) instanceof JdbcOperation jdbcOperation ) {
@@ -2840,7 +2862,7 @@ public abstract class AbstractEntityPersister
 			}
 
 			{
-				final var staticDeleteGroup = deleteCoordinator.getStaticMutationOperationGroup();
+				final var staticDeleteGroup = deleteDecomposer.getStaticMutationGroup();
 				if ( staticDeleteGroup != null ) {
 					for ( int i = 0; i < staticDeleteGroup.getNumberOfOperations(); i++ ) {
 						if ( staticDeleteGroup.getOperation( i ) instanceof JdbcOperation jdbcOperation ) {
@@ -3299,6 +3321,10 @@ public abstract class AbstractEntityPersister
 			updateGeneratedValuesProcessor =
 					createGeneratedValuesProcessor( UPDATE, updateGeneratedAttributes );
 		}
+
+		insertDecomposer = new InsertDecomposer( this, factory );
+		updateDecomposer = new UpdateDecomposer( this, factory );;
+		deleteDecomposer = new DeleteDecomposer( this, factory );;
 
 		insertCoordinator = stateManagement.createInsertCoordinator( this );
 		updateCoordinator = stateManagement.createUpdateCoordinator( this );

@@ -101,11 +101,11 @@ public class EntityUpdateAction extends EntityAction {
 				: naturalIdMapping.extractNaturalIdFromEntityState( previousState );
 	}
 
-	protected Object[] getState() {
+	public Object[] getState() {
 		return state;
 	}
 
-	protected Object[] getPreviousState() {
+	public Object[] getPreviousState() {
 		return previousState;
 	}
 
@@ -113,7 +113,7 @@ public class EntityUpdateAction extends EntityAction {
 		return nextVersion;
 	}
 
-	protected int[] getDirtyFields() {
+	public int[] getDirtyFields() {
 		return dirtyFields;
 	}
 	protected boolean hasDirtyCollection() {
@@ -295,7 +295,7 @@ public class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	protected Object getPreviousVersion() {
+	public Object getPreviousVersion() {
 		final var persister = getPersister();
 		if ( persister.isVersionPropertyGenerated() ) {
 			// we need to grab the version value from the entity, otherwise

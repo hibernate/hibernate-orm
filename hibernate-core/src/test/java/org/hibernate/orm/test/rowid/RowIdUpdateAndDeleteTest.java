@@ -8,8 +8,8 @@ import org.hibernate.annotations.RowId;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.MutationType;
 
+import org.hibernate.sql.model.MutationType;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;

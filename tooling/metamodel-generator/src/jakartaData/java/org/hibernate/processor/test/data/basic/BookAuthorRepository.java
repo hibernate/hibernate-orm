@@ -107,6 +107,12 @@ public interface BookAuthorRepository {
 	Stream<Book> byPubDate4(LocalDate publicationDate, Sort<? super Book> order);
 
 	@Find
+	Stream<Book> byPubDate5(LocalDate publicationDate, Sort<?> order);
+
+	@Find
+	Stream<Book> byPubDate6(LocalDate publicationDate, Order<?> order);
+
+	@Find
 	Book[] bookArrayByTitle(String title);
 
 	@Insert

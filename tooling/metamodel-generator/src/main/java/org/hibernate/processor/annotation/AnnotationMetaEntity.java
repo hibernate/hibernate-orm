@@ -2082,6 +2082,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				if ( typeArgument == null ) {
 					missingTypeArgError( entityType, parameter, typeName );
 				}
+				else if ( typeArgument.getKind() == TypeKind.WILDCARD ) {
+					if ( ((WildcardType) typeArgument).getExtendsBound() != null ) {
+						wrongTypeArgError( entityType, parameter, typeName );
+					}
+				}
 				else if ( !types.isSameType( typeArgument, entityType.asType() ) ) {
 					wrongTypeArgError( entityType, parameter, typeName );
 				}
@@ -2230,7 +2235,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						for ( TypeMirror arg : type.getTypeArguments() ) {
 							switch ( arg.getKind() ) {
 								case WILDCARD:
-									return ((WildcardType) arg).getSuperBound();
+									final WildcardType wildcard = (WildcardType) arg;
+									return wildcard.getSuperBound() != null ? wildcard.getSuperBound() : wildcard;
 								case ARRAY:
 								case DECLARED:
 								case TYPEVAR:

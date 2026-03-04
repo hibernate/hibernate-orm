@@ -20,7 +20,7 @@ public interface EventSource extends SessionImplementor {
 	/**
 	 * Get the ActionQueue for this session
 	 */
-	org.hibernate.action.queue.ActionQueue2 getActionQueue();
+	org.hibernate.action.queue.ActionQueue getActionQueue();
 
 	/**
 	 * Instantiate an entity instance, using either an interceptor,

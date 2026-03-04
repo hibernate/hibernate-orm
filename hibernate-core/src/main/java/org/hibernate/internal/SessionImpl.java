@@ -24,7 +24,9 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.creation.internal.SessionCreationOptions;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.internal.PersistenceContexts;
-import org.hibernate.action.queue.ActionQueue2;
+import org.hibernate.action.queue.ActionQueue;
+import org.hibernate.action.queue.GraphBasedActionQueue;
+import org.hibernate.engine.spi.ActionQueueLegacy;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
@@ -154,7 +156,7 @@ public class SessionImpl
 		implements Serializable, SharedSessionContractImplementor, JdbcSessionOwner, SessionImplementor, EventSource,
 				TransactionCoordinatorBuilder.Options, WrapperOptions, StatefulLoadAccessContext {
 
-	private transient ActionQueue2 actionQueue;
+	private transient ActionQueue actionQueue;
 	private transient EventListenerGroups eventListenerGroups;
 	private transient PersistenceContext persistenceContext;
 
@@ -213,9 +215,10 @@ public class SessionImpl
 		}
 	}
 
+	@SuppressWarnings("removal")
 	private static void setUpTransactionCompletionProcesses(
 			SessionCreationOptions options,
-			ActionQueue2 actionQueue,
+			ActionQueue actionQueue,
 			SessionImpl childSession) {
 		if ( options instanceof SharedSessionCreationOptions sharedOptions
 				&& sharedOptions.isTransactionCoordinatorShared() ) {
@@ -252,8 +255,26 @@ public class SessionImpl
 		return persistenceContext;
 	}
 
-	protected ActionQueue2 createActionQueue() {
-		return new ActionQueue2( this );
+	protected ActionQueue createActionQueue() {
+		// Get configuration from service registry
+		final var configService = getFactory()
+				.getServiceRegistry()
+				.getService( org.hibernate.engine.config.spi.ConfigurationService.class );
+
+		final String implementation = configService.getSetting(
+				org.hibernate.cfg.FlushSettings.FLUSH_QUEUE_IMPL,
+				String.class,
+				"graph"
+		);
+
+		return switch ( implementation.toLowerCase() ) {
+			case "legacy" -> new ActionQueueLegacy( this );
+			case "graph" -> new GraphBasedActionQueue( this );
+			default -> throw new IllegalArgumentException(
+					"Unknown ActionQueue implementation: " + implementation +
+					". Valid values are 'graph' and 'legacy'."
+			);
+		};
 	}
 
 	@Override
@@ -1770,7 +1791,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public ActionQueue2 getActionQueue() {
+	public ActionQueue getActionQueue() {
 		checkOpenOrWaitingForAutoClose();
 //		checkTransactionSynchStatus();
 		return actionQueue;
@@ -2662,7 +2683,7 @@ public class SessionImpl
 		ois.defaultReadObject();
 
 		persistenceContext = PersistenceContexts.deserialize( ois, this );
-		// TODO: Implement serialization support for ActionQueue2
+		// TODO: Implement serialization support for GraphBasedActionQueue
 		// For now, create a new instance instead of deserializing
 		actionQueue = createActionQueue();
 

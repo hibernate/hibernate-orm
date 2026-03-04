@@ -1287,7 +1287,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public org.hibernate.action.queue.ActionQueue2 getActionQueue() {
+	public org.hibernate.action.queue.ActionQueue getActionQueue() {
 		return delegate.getActionQueue();
 	}
 

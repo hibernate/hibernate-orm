@@ -99,12 +99,12 @@ public class PlannedOperation {
 	}
 
 	public void setCachedInsertValuesAnalysis(Object cachedInsertValuesAnalysis) {
-		// todo (ActionQueue2) : does this ever change after we calculate them in the decomposer?
+		// todo (GraphBasedActionQueue) : does this ever change after we calculate them in the decomposer?
 		this.cachedValuesAnalysis = cachedInsertValuesAnalysis;
 	}
 
 	public void setCachedTableInclusionChecker(Object cachedTableInclusionChecker) {
-		// todo (ActionQueue2) : does this ever change after we calculate them in the decomposer?
+		// todo (GraphBasedActionQueue) : does this ever change after we calculate them in the decomposer?
 		this.cachedTableInclusionChecker = cachedTableInclusionChecker;
 	}
 

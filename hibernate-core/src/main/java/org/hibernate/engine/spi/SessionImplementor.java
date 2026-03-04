@@ -75,12 +75,12 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 	}
 
 	/**
-	 * Get the {@link org.hibernate.action.queue.ActionQueue2} associated with this session.
+	 * Get the {@link org.hibernate.action.queue.ActionQueue} associated with this session.
 	 * @deprecated This was only used in tests and can be quite safely removed.
 	 *             Use {@link org.hibernate.event.spi.EventSource#getActionQueue()}.
 	 */
 	@Deprecated(since = "7.3", forRemoval = true)
-	org.hibernate.action.queue.ActionQueue2 getActionQueue();
+	org.hibernate.action.queue.ActionQueue getActionQueue();
 
 	/**
 	 * Should this session be automatically closed after the current

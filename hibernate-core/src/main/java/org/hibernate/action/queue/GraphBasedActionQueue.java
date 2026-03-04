@@ -22,7 +22,6 @@ import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.TransactionCompletionCallbacks;
 import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
 
 import java.io.IOException;
@@ -38,12 +37,15 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 /**
  * ActionQueue implementation using FlushCoordinator for graph-based flush scheduling.
  * <p>
- * This is the Action Queue 2 implementation that replaces the traditional action queue
- * execution with graph-based dependency ordering and cycle breaking.
+ * This implementation replaces the traditional action queue execution with graph-based
+ * dependency ordering and cycle breaking.
+ * <p>
+ * This is the default implementation. The legacy implementation is
+ * {@link org.hibernate.engine.spi.ActionQueueLegacy}.
  *
  * @author Steve Ebersole
  */
-public class ActionQueue2 implements TransactionCompletionCallbacks {
+public class GraphBasedActionQueue implements ActionQueue {
 	private final SessionImplementor session;
 	private final FlushCoordinator flushCoordinator;
 	private final List<Executable> pendingActions;
@@ -60,11 +62,11 @@ public class ActionQueue2 implements TransactionCompletionCallbacks {
 	private int collectionRemovalCount;
 
 	/**
-	 * Construct an ActionQueue2 for the given session.
+	 * Construct a GraphBasedActionQueue for the given session.
 	 *
 	 * @param session The session
 	 */
-	public ActionQueue2(SessionImplementor session) {
+	public GraphBasedActionQueue(SessionImplementor session) {
 		this.session = session;
 		this.flushCoordinator = new FlushCoordinator(session);
 		this.pendingActions = new ArrayList<>();
@@ -325,9 +327,14 @@ public class ActionQueue2 implements TransactionCompletionCallbacks {
 	/**
 	 * Sort entity actions.
 	 * <p>
-	 * Note: With ActionQueue2, sorting is handled by FlushCoordinator's graph-based
+	 * Note: With GraphBasedActionQueue, sorting is handled by FlushCoordinator's graph-based
 	 * ordering, so this is a no-op for API compatibility.
+	 *
+	 * @deprecated This method is not used by GraphBasedActionQueue. It exists only for
+	 *             API compatibility with {@link org.hibernate.engine.spi.ActionQueueLegacy}.
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
+	@Override
 	public void sortActions() {
 		// No-op: FlushCoordinator handles ordering via graph
 	}
@@ -335,9 +342,14 @@ public class ActionQueue2 implements TransactionCompletionCallbacks {
 	/**
 	 * Sort collection actions.
 	 * <p>
-	 * Note: With ActionQueue2, sorting is handled by FlushCoordinator's graph-based
+	 * Note: With GraphBasedActionQueue, sorting is handled by FlushCoordinator's graph-based
 	 * ordering, so this is a no-op for API compatibility.
+	 *
+	 * @deprecated This method is not used by GraphBasedActionQueue. It exists only for
+	 *             API compatibility with {@link org.hibernate.engine.spi.ActionQueueLegacy}.
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
+	@Override
 	public void sortCollectionActions() {
 		// No-op: FlushCoordinator handles ordering via graph
 	}
@@ -581,14 +593,17 @@ public class ActionQueue2 implements TransactionCompletionCallbacks {
 	 *
 	 * @param callbacks the callbacks to use
 	 * @param isTransactionCoordinatorShared whether the transaction coordinator is shared
+	 *
+	 * @deprecated This method is not used by GraphBasedActionQueue, which manages its own
+	 *             callbacks internally. It exists only for API compatibility with
+	 *             {@link org.hibernate.engine.spi.ActionQueueLegacy}.
 	 */
+	@Deprecated(since = "7.0", forRemoval = true)
+	@Override
 	public void setTransactionCompletionCallbacks(
 			TransactionCompletionCallbacksImplementor callbacks,
 			boolean isTransactionCoordinatorShared) {
-		// Note: ActionQueue2 doesn't currently support changing the callbacks after construction
-		// This is called during session creation with shared transaction coordinators
-		// For now, we'll ignore it since ActionQueue2 manages its own callbacks
-		// TODO: Evaluate if this needs proper support
+		// No-op: GraphBasedActionQueue manages its own callbacks internally
 	}
 
 	/**
@@ -674,14 +689,14 @@ public class ActionQueue2 implements TransactionCompletionCallbacks {
 	/**
 	 * Serialize the action queue.
 	 * <p>
-	 * Note: Serialization is not yet fully implemented for ActionQueue2.
+	 * Note: Serialization is not yet fully implemented for GraphBasedActionQueue.
 	 * This method is a stub for API compatibility.
 	 *
 	 * @param oos the output stream
 	 * @throws IOException if serialization fails
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
-		// TODO: Implement proper serialization for ActionQueue2
+		// TODO: Implement proper serialization for GraphBasedActionQueue
 		// For now, just write minimal state
 		oos.writeInt(0); // Placeholder version number
 	}
@@ -710,7 +725,7 @@ public class ActionQueue2 implements TransactionCompletionCallbacks {
 			}
 		}
 
-		return "ActionQueue2[insertions=" + insertCount
+		return "GraphBasedActionQueue[insertions=" + insertCount
 				+ " updates=" + updateCount
 				+ " deletions=" + deleteCount
 				+ " collections=" + collectionCount

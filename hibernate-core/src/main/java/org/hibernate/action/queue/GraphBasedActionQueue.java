@@ -294,6 +294,14 @@ public class GraphBasedActionQueue implements ActionQueue {
 			// Clear pending actions
 			pendingActions.clear();
 
+			// Reset counters after execution
+			insertCount = 0;
+			updateCount = 0;
+			deleteCount = 0;
+			collectionCreationCount = 0;
+			collectionUpdateCount = 0;
+			collectionRemovalCount = 0;
+
 			// Execute any pending JDBC batch
 			session.getJdbcCoordinator().executeBatch();
 
@@ -510,7 +518,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 		// - Deletes (keep them)
 		// - Collection removals that existed before the check
 
-		int collectionRemovalCount = 0;
+		int collectionRemovalCountLocal = 0;
 		List<Executable> toKeep = new ArrayList<>();
 
 		for (Executable action : pendingActions) {
@@ -520,16 +528,53 @@ public class GraphBasedActionQueue implements ActionQueue {
 				toKeep.add(action);
 			}
 			else if (action instanceof CollectionRemoveAction) {
-				if (collectionRemovalCount < previousCollectionRemovalSize) {
+				if (collectionRemovalCountLocal < previousCollectionRemovalSize) {
 					toKeep.add(action);
 				}
-				collectionRemovalCount++;
+				collectionRemovalCountLocal++;
 			}
 			// Skip: CollectionRecreateAction, CollectionUpdateAction, EntityUpdateAction, QueuedOperationCollectionAction
 		}
 
 		pendingActions.clear();
 		pendingActions.addAll(toKeep);
+
+		// Recalculate counters after clearing actions
+		recalculateCounters();
+	}
+
+	/**
+	 * Recalculate action counters by scanning pending actions.
+	 * Used after clearing actions during auto-flush checks.
+	 */
+	private void recalculateCounters() {
+		insertCount = 0;
+		updateCount = 0;
+		deleteCount = 0;
+		collectionCreationCount = 0;
+		collectionUpdateCount = 0;
+		collectionRemovalCount = 0;
+
+		for (Executable action : pendingActions) {
+			if (action instanceof EntityInsertAction || action instanceof EntityIdentityInsertAction) {
+				insertCount++;
+			}
+			else if (action instanceof EntityUpdateAction) {
+				updateCount++;
+			}
+			else if (action instanceof EntityDeleteAction || action instanceof OrphanRemovalAction) {
+				deleteCount++;
+			}
+			else if (action instanceof CollectionRecreateAction) {
+				collectionCreationCount++;
+			}
+			else if (action instanceof CollectionUpdateAction) {
+				collectionUpdateCount++;
+			}
+			else if (action instanceof CollectionRemoveAction) {
+				collectionRemovalCount++;
+			}
+		}
 	}
 
 	/**

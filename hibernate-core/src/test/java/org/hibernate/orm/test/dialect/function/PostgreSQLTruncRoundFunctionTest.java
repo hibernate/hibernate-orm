@@ -6,6 +6,7 @@ package org.hibernate.orm.test.dialect.function;
 
 import java.math.BigDecimal;
 
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 
@@ -37,7 +38,13 @@ public class PostgreSQLTruncRoundFunctionTest {
 	@RequiresDialect(PostgreSQLDialect.class)
 	@RequiresDialect(value = CockroachDialect.class, majorVersion = 22, minorVersion = 2, comment = "CockroachDB didn't support the two-argument trunc before version 22.2")
 	public void testTrunc(SessionFactoryScope scope) {
-		testFunction( scope, "trunc", "floor" );
+		if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ) {
+			// Spanner supports two arguments trunc
+			testFunction( scope, "trunc", "trunc" );
+		}
+		else {
+			testFunction( scope, "trunc", "floor" );
+		}
 	}
 
 	@Test
@@ -90,7 +97,13 @@ public class PostgreSQLTruncRoundFunctionTest {
 							BigDecimal.class
 					).getSingleResult().compareTo( new BigDecimal( "1.78" ) )
 			);
-			assertTrue( sqlStatementInspector.getSqlQueries().get( 0 ).contains( function ) );
+			if (function.equals("round") && scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ) {
+				// Spanner round doesn't support two arguments
+				assertTrue( sqlStatementInspector.getSqlQueries().get( 0 ).contains( workaround ) );
+			}
+			else {
+				assertTrue( sqlStatementInspector.getSqlQueries().get( 0 ).contains( function ) );
+			}
 		} );
 	}
 }

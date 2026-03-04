@@ -13,6 +13,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.TableGenerator;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.Session;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -58,6 +60,7 @@ public class DefaultInitialValueTableGeneratorConfiguredTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportPooledSequences.class )
 	public void testTheGeneratedIdValuesAreCorrect(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

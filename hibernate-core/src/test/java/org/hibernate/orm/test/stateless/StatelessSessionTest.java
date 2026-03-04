@@ -12,7 +12,9 @@ import org.hibernate.LockMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.Transaction;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -131,6 +133,7 @@ public class StatelessSessionTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class )
 	public void testHqlBulk(SessionFactoryScope scope) {
 		scope.inStatelessSession(
 				statelessSession -> {

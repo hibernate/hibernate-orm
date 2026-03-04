@@ -90,6 +90,7 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	@Test
 	@SkipForDialect( dialectClass = CockroachDialect.class )
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNoWait.class )
 	public void testFindWithTimeoutHint() {
 		final Lock lock = new Lock();
 		lock.setName( "name" );

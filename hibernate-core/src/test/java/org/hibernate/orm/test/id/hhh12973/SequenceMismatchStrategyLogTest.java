@@ -84,6 +84,7 @@ public class SequenceMismatchStrategyLogTest extends EntityManagerFactoryBasedFu
 	protected void addConfigOptions(Map options) {
 		options.put( AvailableSettings.HBM2DDL_AUTO, "none" );
 		options.put( AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY, "log" );
+		options.put( AvailableSettings.PREFERRED_POOLED_OPTIMIZER, "pooled" );
 		triggerable.reset();
 		assertFalse( triggerable.wasTriggered() );
 	}

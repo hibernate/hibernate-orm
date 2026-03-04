@@ -70,7 +70,7 @@ public class CollectionOneToManySizeTest {
 		);
 	}
 
-	@Entity
+	@Entity(name = "CollectionOrder")
 	public static class Order {
 		@Id
 		Long id;
@@ -79,7 +79,7 @@ public class CollectionOneToManySizeTest {
 		Set<OrderItem> orderItems;
 	}
 
-	@Entity
+	@Entity(name = "OrderItem")
 	public static class OrderItem {
 		@Id
 		Long id;

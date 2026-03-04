@@ -29,6 +29,7 @@ import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -40,9 +41,11 @@ import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.MutableValue;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -83,6 +86,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @SessionFactory
 @RequiresDialect( PostgreSQLDialect.class )
 @RequiresDialect( OracleDialect.class )
+@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner PostgreSQL doesn't support stored procedures")
 public class StructEmbeddableArrayTest implements AdditionalMappingContributor {
 
 	@Override

@@ -114,7 +114,7 @@ public class OrderUpdatesTest {
 		}
 	}
 
-	@Entity(name = "Chil;d")
+	@Entity(name = "Child")
 	@IdClass(Key.class)
 	public static class Child {
 

@@ -16,8 +16,10 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -61,6 +63,7 @@ public class LockingBasedOnSelectClauseTests {
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "See https://sourceforge.net/p/hsqldb/bugs/1734/")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Cursor must be on simple SELECT for FOR UPDATE")
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSelectLocking.class )
 	void testBasicHqlUsage(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			session.createQuery( "select b.author from Book b" )

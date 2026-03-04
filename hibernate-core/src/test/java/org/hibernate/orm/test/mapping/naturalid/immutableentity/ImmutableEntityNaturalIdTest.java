@@ -14,8 +14,10 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -113,6 +115,7 @@ public class ImmutableEntityNaturalIdTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsConcurrentTransactions.class )
 	public void testImmutableNaturalIdLifecycle(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final StatisticsImplementor stats = sessionFactory.getStatistics();

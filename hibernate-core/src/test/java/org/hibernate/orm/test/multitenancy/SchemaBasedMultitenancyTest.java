@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.dialect.SQLServerDialect;
@@ -34,6 +35,7 @@ import static org.junit.jupiter.api.AssertionsKt.assertNull;
 				@Setting(name = MULTI_TENANT_IDENTIFIER_RESOLVER,
 						value = "org.hibernate.orm.test.multitenancy.SchemaBasedMultitenancyTest$MyResolver")})
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportSchemaCreation.class)
+@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner JDBC driver does not support setSchema")
 @SkipForDialect(dialectClass = SQLServerDialect.class, reason = "Warning: setSchema is a no-op in this driver version")
 @SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "getSchema() method not implemented by jTDS")
 @SkipForDialect(dialectClass = InformixDialect.class, reason = "setSchema() method is a noop")

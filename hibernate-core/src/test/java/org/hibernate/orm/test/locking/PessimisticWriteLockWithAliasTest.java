@@ -6,9 +6,11 @@ package org.hibernate.orm.test.locking;
 
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -49,6 +51,7 @@ public class PessimisticWriteLockWithAliasTest {
 	@JiraKey("HHH-12866")
 	@RequiresDialect(OracleDialect.class)
 	@RequiresDialect(PostgreSQLDialect.class)
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSelectLocking.class )
 	public void testSetLockModeWithAlias(SessionFactoryScope factoryScope) {
 		var sqlCollector = factoryScope.getCollectingStatementInspector();
 		sqlCollector.clear();

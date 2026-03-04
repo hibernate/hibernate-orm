@@ -69,14 +69,14 @@ public class NativeQueryLimitOffsetTest {
 	public void testPartialLimitOffsetOnNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					List<Long> l = session.createNativeQuery( "select id from Person where name like :name", Long.class)
+					List<Long> l = session.createNativeQuery( "select id from Person where name like :name order by id", Long.class)
 							.setParameter("name", "J%")
 							.setFirstResult(1)
 							.getResultList();
 					assertEquals( 2, l.get( 0 ) );
 					assertEquals( 4, l.size() );
 
-					l = session.createNativeQuery( "select id from Person where name like :name", Long.class)
+					l = session.createNativeQuery( "select id from Person where name like :name order by id", Long.class)
 							.setParameter("name", "J%")
 							.setMaxResults( 3 )
 							.getResultList();

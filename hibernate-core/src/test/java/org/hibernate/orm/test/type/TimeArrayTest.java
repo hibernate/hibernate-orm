@@ -4,9 +4,12 @@
  */
 package org.hibernate.orm.test.type;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;
@@ -187,6 +190,17 @@ public class TimeArrayTest {
 								time1,
 								time2,
 								time3
+						} )
+				);
+			}
+			else if ( dialect instanceof SpannerPostgreSQLDialect ) {
+				LocalDate localDate = LocalDate.of( 1970, 1, 1 );
+				assertThat(
+						tuple[1],
+						is( new Object[] {
+								localDate.atTime( time1 ).atOffset( ZoneOffset.UTC ),
+								localDate.atTime( time2 ).atOffset( ZoneOffset.UTC ),
+								localDate.atTime( time3 ).atOffset( ZoneOffset.UTC )
 						} )
 				);
 			}

@@ -14,6 +14,7 @@ import org.hibernate.Session;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -1724,6 +1725,7 @@ public class HQLTest {
 	@Test
 	@SkipForDialect(dialectClass = SQLServerDialect.class)
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTimestampComparison.class )
 	public void test_hql_current_date_function_example(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-current-date-function-example[]
@@ -1786,6 +1788,7 @@ public class HQLTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature =  DialectFeatureChecks.SupportsVarSampFunction.class )
 	public void test_var_function_example(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-native-function-example[]
@@ -1895,7 +1898,7 @@ public class HQLTest {
 	@Test
 	public void test_hql_collection_expressions_example_1(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
-			Call call = entityManager.createQuery("select c from Call c", Call.class).getResultList().get(1);
+			Call call = entityManager.createQuery("select c from Call c order by c.id", Call.class).getResultList().get(1);
 			//tag::hql-collection-expressions-example[]
 			List<Phone> phones = entityManager.createQuery(
 				"select p " +
@@ -1912,7 +1915,7 @@ public class HQLTest {
 	@Test
 	public void test_hql_collection_expressions_example_2(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
-			Call call = entityManager.createQuery("select c from Call c", Call.class).getResultList().get(0);
+			Call call = entityManager.createQuery("select c from Call c order by c.id", Call.class).getResultList().get(0);
 			//tag::hql-collection-expressions-example[]
 
 			List<Phone> phones = entityManager.createQuery(
@@ -2000,6 +2003,7 @@ public class HQLTest {
 
 	@Test
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Comparisons between 'DATE' and 'TIMESTAMP' are not supported")
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTimestampComparison.class )
 	public void test_hql_collection_expressions_example_8(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-collection-expressions-all-example[]
@@ -2440,6 +2444,7 @@ public class HQLTest {
 	@RequiresDialect(H2Dialect.class)
 	@RequiresDialect(PostgreSQLDialect.class)
 	@RequiresDialect(MySQLDialect.class)
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTimestampComparison.class )
 	public void test_hql_relational_comparisons_example_3(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-relational-comparisons-example[]
@@ -2525,6 +2530,7 @@ public class HQLTest {
 	}
 
 	@Test
+//	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsFunctionalDependencyAnalysis.class )
 	public void test_hql_all_subquery_comparison_qualifier_example(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-all-subquery-comparison-qualifier-example[]
@@ -2644,6 +2650,7 @@ public class HQLTest {
 	@RequiresDialect(H2Dialect.class)
 	@RequiresDialect(PostgreSQLDialect.class)
 	@RequiresDialect(MySQLDialect.class)
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTimestampComparison.class )
 	public void test_hql_between_predicate_example_2(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( entityManager -> {
 			//tag::hql-between-predicate-example[]

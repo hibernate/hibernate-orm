@@ -58,8 +58,11 @@ public class GeneratedValuesImpl implements GeneratedValues {
 
 	@Override
 	public void apply(GeneratedValues generatedValues) {
-		// for now...
-		if ( generatedValues instanceof GeneratedValuesImpl impl ) {
+		if ( generatedValues == null ) {
+			// this happens per-table,
+			// presumably this would mean there were none for this table.
+		}
+		else if ( generatedValues instanceof GeneratedValuesImpl impl ) {
 			generatedValuesMap.putAll( impl.generatedValuesMap );
 		}
 		else {

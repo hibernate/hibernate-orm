@@ -128,8 +128,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			var table = (EntityTableMapping) operation.getTableDetails();
 			String tableName = table.getTableName();
 
-			final BindPlan bindPlan = new UpdateBindPlan(
-					entityPersister,
+			final BindPlan bindPlan = createUpdateBindPlan(
 					entity,
 					identifier,
 					rowId,
@@ -435,5 +434,49 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				}
 			}
 		}
+	}
+
+	private BindPlan createUpdateBindPlan(
+			Object entity,
+			Object identifier,
+			Object rowId,
+			Object[] state,
+			Object[] previousState,
+			Object version,
+			int[] dirtyFields,
+			boolean[] updateable,
+			boolean applyOptimisticLocking,
+			UpdateValuesAnalysisForDecomposer valuesAnalysis) {
+		// Use specialized BindPlan for union subclass inheritance
+		if ( entityPersister instanceof org.hibernate.persister.entity.UnionSubclassEntityPersister ) {
+			return new UnionSubclassUpdateBindPlan(
+					entityPersister,
+					entity,
+					identifier,
+					rowId,
+					state,
+					previousState,
+					version,
+					dirtyFields,
+					updateable,
+					applyOptimisticLocking,
+					valuesAnalysis
+			);
+		}
+
+		// Standard BindPlan for other inheritance strategies
+		return new UpdateBindPlan(
+				entityPersister,
+				entity,
+				identifier,
+				rowId,
+				state,
+				previousState,
+				version,
+				dirtyFields,
+				updateable,
+				applyOptimisticLocking,
+				valuesAnalysis
+		);
 	}
 }

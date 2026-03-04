@@ -93,14 +93,12 @@ public class SoftDeleteBindPlan implements BindPlan {
 		final var operation = plannedOperation.getOperation();
 		final var tableDetails = (EntityTableMapping) operation.getTableDetails();
 
-		// Bind the soft delete value (the UPDATE's SET clause)
-		bindSoftDeleteValue( jdbcValueBindings, tableDetails );
+		// NOTE: We do NOT bind the soft delete value or non-deleted restriction here.
+		// These are literal values (e.g., true/false or CURRENT_TIMESTAMP) that are
+		// already embedded in the SQL statement. They have no parameters to bind.
 
 		// Bind the identifier for the WHERE clause
 		breakDownKeyJdbcValue( id, session, jdbcValueBindings, tableDetails );
-
-		// Bind the non-deleted value restriction (WHERE soft_delete_col = not_deleted_value)
-		bindNonDeletedRestriction( jdbcValueBindings, tableDetails );
 
 		// Apply optimistic locking if needed
 		if ( applyOptimisticLocking ) {
@@ -112,53 +110,6 @@ public class SoftDeleteBindPlan implements BindPlan {
 					session
 			);
 		}
-	}
-
-	protected void bindSoftDeleteValue(
-			JdbcValueBindings jdbcValueBindings,
-			EntityTableMapping tableDetails) {
-		// Bind the deleted value for the UPDATE's SET clause
-		softDeleteMapping.decompose(
-				null,  // value will be determined by the soft delete mapping itself
-				0,
-				jdbcValueBindings,
-				null,
-				(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
-					// The soft delete mapping provides the "deleted" value
-					// This goes in the SET clause
-					bindings.bindValue(
-							jdbcValue,
-							tableDetails.getTableName(),
-							selectableMapping.getSelectionExpression(),
-							ParameterUsage.SET
-					);
-				},
-				null  // session not needed for soft delete value
-		);
-	}
-
-	protected void bindNonDeletedRestriction(
-			JdbcValueBindings jdbcValueBindings,
-			EntityTableMapping tableDetails) {
-		// Bind the non-deleted value for the WHERE clause
-		// This ensures we only update rows that are not already soft-deleted
-		softDeleteMapping.decompose(
-				null,  // value will be determined by the soft delete mapping itself
-				0,
-				jdbcValueBindings,
-				null,
-				(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
-					// The soft delete mapping provides the "non-deleted" value
-					// This goes in the WHERE clause
-					bindings.bindValue(
-							jdbcValue,
-							tableDetails.getTableName(),
-							selectableMapping.getSelectionExpression(),
-							ParameterUsage.RESTRICT
-					);
-				},
-				null  // session not needed for soft delete value
-		);
 	}
 
 	protected void breakDownKeyJdbcValue(

@@ -108,8 +108,7 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 			var table = (EntityTableMapping) operation.getTableDetails();
 			String tableName = table.getTableName();
 
-			final BindPlan bindPlan = new InsertBindPlan(
-					entityPersister,
+			final BindPlan bindPlan = createInsertBindPlan(
 					entity,
 					identifier,
 					state,
@@ -294,5 +293,42 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		return ( (OnExecutionGenerator) generator ).referenceColumnsInSql( dialect );
 	}
 
+	private BindPlan createInsertBindPlan(
+			Object entity,
+			Object identifier,
+			Object[] state,
+			boolean[] insertable,
+			InsertValuesAnalysis valuesAnalysis,
+			TableInclusionChecker inclusionChecker,
+			AbstractEntityInsertAction action,
+			GeneratedValuesCollector generatedValuesCollector) {
+		// Use specialized BindPlan for union subclass inheritance
+		if ( entityPersister instanceof org.hibernate.persister.entity.UnionSubclassEntityPersister ) {
+			return new UnionSubclassInsertBindPlan(
+					entityPersister,
+					entity,
+					identifier,
+					state,
+					insertable,
+					valuesAnalysis,
+					inclusionChecker,
+					action,
+					generatedValuesCollector
+			);
+		}
+
+		// Standard BindPlan for other inheritance strategies
+		return new InsertBindPlan(
+				entityPersister,
+				entity,
+				identifier,
+				state,
+				insertable,
+				valuesAnalysis,
+				inclusionChecker,
+				action,
+				generatedValuesCollector
+		);
+	}
 
 }

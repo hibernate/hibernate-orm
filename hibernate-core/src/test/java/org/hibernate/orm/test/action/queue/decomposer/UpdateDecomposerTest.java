@@ -91,7 +91,6 @@ public class UpdateDecomposerTest {
 	}
 
 	@Test
-//	@org.junit.jupiter.api.Disabled("TODO: ActionQueue2 executes EntityUpdateAction twice - see DIRTY_OPT_LOCK_ROOT_CAUSE.md")
 	public void testUpdateWithVersionedEntity(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
@@ -226,7 +225,6 @@ public class UpdateDecomposerTest {
 	}
 
 	@Test
-//	@org.junit.jupiter.api.Disabled("TODO: ActionQueue2 executes EntityUpdateAction twice - see DIRTY_OPT_LOCK_ROOT_CAUSE.md")
 	public void testUpdateWithAllOptimisticLock(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
@@ -259,7 +257,6 @@ public class UpdateDecomposerTest {
 	}
 
 	@Test
-	@org.junit.jupiter.api.Disabled("TODO: ActionQueue2 executes EntityUpdateAction twice - see DIRTY_OPT_LOCK_ROOT_CAUSE.md")
 	public void testUpdateWithDirtyOptimisticLock(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );

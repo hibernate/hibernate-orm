@@ -92,6 +92,7 @@ public class ConvertedEnumCheckConstraintsTests {
 				fail( "Expecting a failure" );
 			}
 			catch (SQLException expected) {
+				session.getTransaction().setRollbackOnly();
 			}
 		} ) );
 	}

@@ -15,6 +15,8 @@ import org.hibernate.dialect.type.PostgreSQLCastingIntervalSecondJdbcType;
 import org.hibernate.dialect.type.PostgreSQLIntervalSecondJdbcType;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.NumericJdbcType;
@@ -42,6 +44,7 @@ import jakarta.persistence.Table;
 @DomainModel(annotatedClasses = { PostgresIntervalSecondTest.EntityWithIntervalSecondDuration.class })
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.PREFERRED_DURATION_JDBC_TYPE, value = "NUMERIC"))
 @RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsIntervalSecondType.class )
 public class PostgresIntervalSecondTest {
 
 	@Test

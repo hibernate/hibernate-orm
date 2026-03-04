@@ -7,8 +7,10 @@ package org.hibernate.orm.test.onetomany;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -36,6 +38,7 @@ import jakarta.persistence.Table;
 )
 @SessionFactory
 @JiraKey(value = "HHH-16272")
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class )
 public class RefreshWithPropertyAccessAndCollectionMapManipulationInSetterMethodTest {
 
 	@Test

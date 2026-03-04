@@ -17,8 +17,10 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -150,6 +152,7 @@ public class MultiLoadLockingTest {
 
 	// (1) simple Id entity w/ pessimistic read lock
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSelectLocking.class )
 	void testMultiLoadSimpleIdEntityPessimisticReadLock(SessionFactoryScope scope) {
 		final String lockString = scope.getSessionFactory()
 				.getJdbcServices()
@@ -188,6 +191,7 @@ public class MultiLoadLockingTest {
 
 	// (2) composite Id entity w/ pessimistic read lock (one of the entities already in L1C)
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSelectLocking.class )
 	void testMultiLoadCompositeIdEntityPessimisticReadLockAlreadyInSession(SessionFactoryScope scope) {
 		final String lockString = scope.getSessionFactory()
 				.getJdbcServices()
@@ -244,6 +248,7 @@ public class MultiLoadLockingTest {
 
 	// (3) simple Id entity w/ pessimistic write lock (one in L1C & some in L2C)
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSelectLocking.class )
 	public void testMultiLoadSimpleIdEntityPessimisticWriteLockSomeInL1CAndSomeInL2C(SessionFactoryScope scope) {
 		final Integer userInL2CId = userIds.get(0);
 		final Integer userInL1CId = userIds.get(1);

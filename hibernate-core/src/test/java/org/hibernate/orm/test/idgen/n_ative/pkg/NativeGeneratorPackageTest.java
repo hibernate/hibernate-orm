@@ -50,7 +50,7 @@ public class NativeGeneratorPackageTest {
 		assertThat( generator ).isInstanceOf( NativeGenerator.class );
 	}
 
-	@Entity
+	@Entity(name = "NativeEntity")
 	public static class NativeEntity {
 		@Id @GeneratedValue
 		long id;

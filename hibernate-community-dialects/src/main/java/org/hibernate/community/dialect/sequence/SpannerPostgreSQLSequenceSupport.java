@@ -45,4 +45,9 @@ public class SpannerPostgreSQLSequenceSupport extends PostgreSQLSequenceSupport 
 		}
 		return nextValString;
 	}
+
+	@Override
+	public String getSelectSequencePreviousValString(String sequenceName) throws MappingException {
+		throw new UnsupportedOperationException( "No support for retrieving previous value" );
+	}
 }

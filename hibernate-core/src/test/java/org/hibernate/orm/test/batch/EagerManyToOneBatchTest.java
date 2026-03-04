@@ -76,7 +76,7 @@ public class EagerManyToOneBatchTest {
 		scope.inTransaction(
 				session -> {
 					List<Child> children = session
-							.createQuery( "select c from Child as c ", Child.class )
+							.createQuery( "select c from Child as c order by c.id", Child.class )
 							.getResultList();
 					// Child->parent is an eager manyToOne, so the queries to retrieve this association are executed immediately
 					// we have 2 more queries executed instead of 3 due to the DEFAULT_BATCH_FETCH_SIZE value

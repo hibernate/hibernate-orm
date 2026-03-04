@@ -23,7 +23,9 @@ import org.hibernate.Locking;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -50,6 +52,7 @@ import static org.hibernate.Locking.Scope.ROOT_ONLY;
 		FollowOnLockingTests.Customer.class
 } )
 @SessionFactory(useCollectingStatementInspector = true)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSelectLocking.class )
 public class FollowOnLockingTests {
 
 	/**

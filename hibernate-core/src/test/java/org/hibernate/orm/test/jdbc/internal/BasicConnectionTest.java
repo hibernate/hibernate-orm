@@ -9,6 +9,8 @@ import org.hibernate.Transaction;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.resource.jdbc.ResourceRegistry;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -44,6 +46,7 @@ public class BasicConnectionTest {
 	@Test
 	@SkipForDialect(dialectClass = DerbyDialect.class,
 			reason = "Derby can't drop tables that are still referred to from open ResultSets")
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTableWithoutPrimaryKey.class )
 	public void testBasicJdbcUsage(SessionFactoryScope factoryScope) throws JDBCException {
 		factoryScope.inSession( (session) -> {
 			var jdbcCoordinator = session.getJdbcCoordinator();

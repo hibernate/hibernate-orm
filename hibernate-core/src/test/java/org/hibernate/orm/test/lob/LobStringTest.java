@@ -9,6 +9,7 @@ import java.sql.Clob;
 import java.sql.SQLException;
 import java.util.List;
 
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.Query;
 
@@ -17,6 +18,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -98,6 +100,7 @@ public class LobStringTest {
 	@Test
 	@JiraKey(value = "HHH-11477")
 	@RequiresDialect(PostgreSQLDialect.class)
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support lo_get function")
 	public void testUsingStringLobAnnotatedPropertyInNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final List<TestEntity> results = session.createNativeQuery(
@@ -127,6 +130,7 @@ public class LobStringTest {
 	@Test
 	@JiraKey(value = "HHH-11477")
 	@RequiresDialect(PostgreSQLDialect.class)
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support lo_get function")
 	public void testSelectStringLobAnnotatedInNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final List<String> results = session.createNativeQuery(
@@ -145,6 +149,7 @@ public class LobStringTest {
 	@Test
 	@JiraKey(value = "HHH-11477")
 	@RequiresDialect(PostgreSQLDialect.class)
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support lo_get function")
 	public void testUsingLobPropertyInNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final List<String> results = session.createNativeQuery(
@@ -163,6 +168,7 @@ public class LobStringTest {
 	@Test
 	@JiraKey(value = "HHH-11477")
 	@RequiresDialect(PostgreSQLDialect.class)
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support lo_get function")
 	public void testSelectClobPropertyInNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final List<byte[]> results = session.createNativeQuery(

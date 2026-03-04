@@ -47,7 +47,7 @@ class CurrentTimestampVersionTest {
 		// TODO: assert some stuff about the timestamp values
 	}
 
-	@Entity
+	@Entity(name = "Timestamped")
 	static class Timestamped {
 		@Id
 		Long id;

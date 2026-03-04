@@ -12,6 +12,7 @@ import org.hibernate.QueryException;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
@@ -593,6 +594,7 @@ public class FunctionTests {
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsDateTimeTruncation.class )
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Emulator bug with date_trunc")
 	public void testDateTruncFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -622,6 +624,7 @@ public class FunctionTests {
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsDateTimeTruncation.class )
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "See HHH-16442, Oracle trunc() throws away the timezone")
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Emulator bug")
 	public void testDateTruncWithOffsetFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1188,6 +1191,7 @@ public class FunctionTests {
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL interprets string as hex literal and produces error")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "No cast from varchar to byte")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "GaussDB bytea doesn't have a length")
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner bytea doesn't have a length")
 	public void testCastBinaryWithLength(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1775,6 +1779,7 @@ public class FunctionTests {
 	@SkipForDialect( dialectClass = TiDBDialect.class, reason = "Bug in the TiDB timestampadd function (https://github.com/pingcap/tidb/issues/41052)")
 	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "Altibase returns 2025-03-31 as a result of select {2024-02-29} + 13 month")
 	@SkipForDialect( dialectClass = FirebirdDialect.class, reason = "Firebird returns 2025-03-31 as a result of select {2024-02-29} + 13 month")
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner bug in current_date which is not considering timezone")
 	public void testDurationArithmetic(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2017,6 +2022,8 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "Spanner bug in current_date which is not considering timezone")
 	public void testDateDurationArithmeticWithLiterals(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2113,6 +2120,8 @@ public class FunctionTests {
 	@Test
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class,
 			reason = "PT47H59M59.999999S instead of PT48H")
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "PT47H59M59.999999S instead of PT48H")
 	public void testIntervalDiffExpressionsWithAssertions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2132,6 +2141,7 @@ public class FunctionTests {
 			reason = "trivial rounding error")
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "Overflow occurred on a datetime or interval operation")
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "rounding error in Spanner")
 	public void testMoreIntervalDiffExpressions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2595,6 +2605,7 @@ public class FunctionTests {
 
 	@Test
 	@SkipForDialect(dialectClass = DerbyDialect.class)
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimestampComparison.class)
 	public void testBetweenDates(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -2757,6 +2768,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner JDBC driver currently doesn't support reading UUID column as bytes")
 	public void testUUIDColumnFunction(SessionFactoryScope scope) {
 		scope.inTransaction(s -> {
 			byte[] bytes = s.createSelectionQuery("select column(e.theuuid as binary) from EntityOfBasics e", byte[].class)
@@ -2766,7 +2778,9 @@ public class FunctionTests {
 		});
 	}
 
-	@Test @RequiresDialect(PostgreSQLDialect.class)
+	@Test
+	@RequiresDialect(PostgreSQLDialect.class)
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support ctid column")
 	public void testCtidColumnFunction(SessionFactoryScope scope) {
 		scope.inTransaction(s -> {
 			String string = s.createSelectionQuery("select column(e.ctid as String) from EntityOfBasics e", String.class)
@@ -2795,12 +2809,27 @@ public class FunctionTests {
 			catch (NoSuchAlgorithmException e) {
 				throw new RuntimeException( e );
 			}
-			bytes = s.createSelectionQuery("select md5('hello')", byte[].class).getSingleResult();
-			try {
-				assertArrayEquals( MessageDigest.getInstance( "MD5" ).digest("hello".getBytes()), bytes );
-			}
-			catch (NoSuchAlgorithmException e) {
-				throw new RuntimeException( e );
+		});
+	}
+
+	@Test
+	@RequiresDialect(PostgreSQLDialect.class)
+	@RequiresDialect(MySQLDialect.class)
+	@RequiresDialect(OracleDialect.class)
+	@RequiresDialect(value = DB2Dialect.class, majorVersion = 11)
+	@RequiresDialect(SQLServerDialect.class)
+	@RequiresDialect(H2Dialect.class)
+	@RequiresDialect(HANADialect.class)
+	@RequiresDialect(CockroachDialect.class)
+	@RequiresDialect(value = FirebirdDialect.class, majorVersion = 4)
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support the md5 function")
+	public void testMd5Function(SessionFactoryScope scope) {
+		scope.inTransaction(s -> {
+			byte[] bytes = s.createSelectionQuery("select md5('hello')", byte[].class).getSingleResult();
+				try {
+					assertArrayEquals(MessageDigest.getInstance("MD5").digest("hello".getBytes()), bytes);
+				} catch (NoSuchAlgorithmException e) {
+				throw new RuntimeException(e);
 			}
 		});
 	}
@@ -2808,6 +2837,8 @@ public class FunctionTests {
 	@Test
 	@SkipForDialect(dialectClass = SybaseASEDialect.class)
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix does not support binary literals")
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "Spanner doesn't support encode/decode functions")
 	public void testHexFunction(SessionFactoryScope scope) {
 		scope.inTransaction(s -> {
 			assertEquals( "DEADBEEF",

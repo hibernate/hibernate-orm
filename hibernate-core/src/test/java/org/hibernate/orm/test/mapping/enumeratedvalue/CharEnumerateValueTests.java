@@ -97,6 +97,7 @@ public class CharEnumerateValueTests {
 				fail( "Expecting a failure" );
 			}
 			catch (SQLException expected) {
+				session.getTransaction().setRollbackOnly();
 			}
 		} ) );
 	}
@@ -119,6 +120,7 @@ public class CharEnumerateValueTests {
 				fail( "Expecting a failure" );
 			}
 			catch (SQLException expected) {
+				session.getTransaction().setRollbackOnly();
 			}
 		} ) );
 	}

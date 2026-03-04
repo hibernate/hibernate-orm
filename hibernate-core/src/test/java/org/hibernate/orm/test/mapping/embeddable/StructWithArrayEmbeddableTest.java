@@ -38,9 +38,10 @@ import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.MutableValue;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -61,8 +62,6 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 @JiraKey("HHH-15862")
-@RequiresDialect( PostgreSQLDialect.class )
-@RequiresDialect( OracleDialect.class )
 @BootstrapServiceRegistry(
 		javaServices = @BootstrapServiceRegistry.JavaService(
 				role = AdditionalMappingContributor.class,
@@ -75,6 +74,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.COLUMN_ORDERING_STRATEGY, value = "legacy"))
 @DomainModel(annotatedClasses = StructWithArrayEmbeddableTest.StructHolder.class)
 @SessionFactory
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsUserDefinedTypes.class )
 public class StructWithArrayEmbeddableTest implements AdditionalMappingContributor {
 	@Override
 	public void contribute(

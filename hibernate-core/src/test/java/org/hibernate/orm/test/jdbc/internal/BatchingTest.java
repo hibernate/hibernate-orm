@@ -17,6 +17,8 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.orm.test.common.JournalingBatchObserver;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.StandardBasicTypes;
@@ -32,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Brett Meyer
  */
 @SessionFactory
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTableWithoutPrimaryKey.class )
 public class BatchingTest implements BatchKey {
 	private final String SANDBOX_TBL = "SANDBOX_JDBC_TST";
 

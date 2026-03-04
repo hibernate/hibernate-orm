@@ -14,8 +14,10 @@ import jakarta.persistence.Timeout;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfileOverride;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -26,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @Jpa(annotatedClasses = LockOptionsTest.MyEntity.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
 public class LockOptionsTest {
 	@Test
 	void test(EntityManagerFactoryScope scope) {
@@ -72,7 +75,7 @@ public class LockOptionsTest {
 				});
 	}
 
-	@Entity
+	@Entity(name = "MyEntity")
 	@FetchProfile(name = "hello world")
 	public static class MyEntity {
 		@Id @GeneratedValue long id;

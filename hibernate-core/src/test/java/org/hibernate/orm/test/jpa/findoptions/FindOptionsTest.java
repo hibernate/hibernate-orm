@@ -21,8 +21,10 @@ import org.hibernate.Session;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfileOverride;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
@@ -35,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @Jpa(annotatedClasses = FindOptionsTest.MyEntity.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
 public class FindOptionsTest {
 	@Test
 	@SkipForDialect(dialectClass = InformixDialect.class,
@@ -116,7 +119,7 @@ public class FindOptionsTest {
 				});
 	}
 
-	@Entity
+	@Entity(name = "MyEntity")
 	@FetchProfile(name = "hello world")
 	public static class MyEntity {
 		@Id @GeneratedValue long id;

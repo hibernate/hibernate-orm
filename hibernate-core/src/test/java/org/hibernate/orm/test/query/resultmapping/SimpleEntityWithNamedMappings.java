@@ -35,7 +35,7 @@ import jakarta.persistence.SqlResultSetMapping;
 		classes = @ConstructorResult(
 				targetClass = SimpleEntityWithNamedMappings.DropDownDto.class,
 				columns = {
-						@ColumnResult( name = "id" ),
+						@ColumnResult( name = "id", type = Integer.class ),
 						@ColumnResult( name = "name" )
 				}
 		)

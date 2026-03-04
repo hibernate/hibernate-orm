@@ -6566,4 +6566,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public boolean supportsCteHeaderColumnList() {
 		return true;
 	}
+
+	/**
+	 * Does this dialect require an alias for subqueries in the {@code from} clause?
+	 *
+	 * @return {@code true} if an alias is required for subqueries in the {@code from} clause
+	 */
+	public boolean requiresAliasForFromClauseSubquery() {
+		return false;
+	}
 }

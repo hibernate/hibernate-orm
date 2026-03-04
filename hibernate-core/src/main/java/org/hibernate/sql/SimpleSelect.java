@@ -214,7 +214,15 @@ public class SimpleSelect implements RestrictionRenderingContext {
 	}
 
 	private void applyFromClause(StringBuilder buf) {
-		buf.append( " from " ).append( dialect.appendLockHint( lockOptions, tableName ) );
+		buf.append( " from " );
+		if ( tableName.charAt( 0 ) == '(' && dialect.requiresAliasForFromClauseSubquery() ) {
+			buf.append( tableName )
+					.append( " subselect_" )
+					.append( dialect.appendLockHint( lockOptions, tableName ).substring( tableName.length() ) );
+		}
+		else {
+			buf.append( dialect.appendLockHint( lockOptions, tableName ) );
+		}
 	}
 
 	private void applyWhereClause(StringBuilder buf) {

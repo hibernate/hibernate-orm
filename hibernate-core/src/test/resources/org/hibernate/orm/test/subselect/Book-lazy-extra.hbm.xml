@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+        "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping
+        package="org.hibernate.orm.test.subselect"
+        default-access="field">
+
+    <class name="Author" table="author">
+        <id name="id"/>
+
+        <property name="name"
+                  not-null="true"/>
+
+        <set name="books" lazy="extra">
+            <subselect>
+                SELECT b.author_id, b.title FROM book b join author a on b.author_id = a.id
+            </subselect>
+            <key column="author_id"/>
+
+            <element type="string" column="title"/>
+        </set>
+    </class>
+
+    <class name="Book" table="book">
+        <id name="id"/>
+        <property name="title"/>
+        <property name="authorId" column="author_id"/>
+    </class>
+
+</hibernate-mapping>

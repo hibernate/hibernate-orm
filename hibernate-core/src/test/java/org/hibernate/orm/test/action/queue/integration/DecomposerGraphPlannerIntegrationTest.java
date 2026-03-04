@@ -12,6 +12,7 @@ import org.hibernate.action.queue.fk.ForeignKeyModel;
 import org.hibernate.action.queue.graph.Graph;
 import org.hibernate.action.queue.graph.StandardGraphBuilder;
 import org.hibernate.action.queue.plan.FlushPlan;
+import org.hibernate.action.queue.plan.PlanStep;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.action.queue.plan.StandardFlushPlanner;
@@ -76,7 +77,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			);
 
 			// Decompose
-			final List<PlannedOperationGroup> groups = decomposer.decompose(action, 0, sessionImpl);
+			final List<PlannedOperationGroup> groups = decomposer.decompose(action, 0, callback -> {}, sessionImpl);
 
 			final ForeignKeyModel fkModel = factory.getForeignKeyModel();
 
@@ -97,8 +98,8 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Verify all operations are in the plan
 			int totalOps = 0;
-			for (FlushPlan.PlanStep step : plan.steps()) {
-				totalOps += step.ops().size();
+			for ( PlanStep step : plan.steps()) {
+				totalOps += step.operations().size();
 			}
 			assertEquals(1, totalOps, "Plan should contain the insert operation");
 		});
@@ -142,8 +143,8 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Decompose both actions
 			final List<PlannedOperationGroup> allGroups = new ArrayList<>();
-			allGroups.addAll(personDecomposer.decompose(personAction, 0, sessionImpl));
-			allGroups.addAll(addressDecomposer.decompose(addressAction, 1, sessionImpl));
+			allGroups.addAll(personDecomposer.decompose(personAction, 0, callback -> {}, sessionImpl));
+			allGroups.addAll(addressDecomposer.decompose(addressAction, 1, callback -> {}, sessionImpl));
 
 			final ForeignKeyModel fkModel = factory.getForeignKeyModel();
 
@@ -161,8 +162,8 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Verify FK ordering: Person must come before Address
 			final List<PlannedOperation> allOps = new ArrayList<>();
-			for (FlushPlan.PlanStep step : plan.steps()) {
-				allOps.addAll(step.ops());
+			for ( PlanStep step : plan.steps()) {
+				allOps.addAll(step.operations());
 			}
 
 			assertEquals(2, allOps.size(), "Should have 2 insert operations");
@@ -222,7 +223,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			final UpdateDecomposer decomposer = new UpdateDecomposer(persister, factory);
 
 			// Decompose
-			final List<PlannedOperationGroup> groups = decomposer.decompose(action, 0, sessionImpl);
+			final List<PlannedOperationGroup> groups = decomposer.decompose(action, 0, callback -> {}, sessionImpl);
 
 			final ForeignKeyModel fkModel = factory.getForeignKeyModel();
 
@@ -273,7 +274,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			final DeleteDecomposer decomposer = new DeleteDecomposer(persister, factory);
 
 			// Decompose
-			final List<PlannedOperationGroup> groups = decomposer.decompose(action, 0, sessionImpl);
+			final List<PlannedOperationGroup> groups = decomposer.decompose(action, 0, callback -> {}, sessionImpl);
 
 			final ForeignKeyModel fkModel = factory.getForeignKeyModel();
 
@@ -363,9 +364,9 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Decompose all actions
 			final List<PlannedOperationGroup> allGroups = new ArrayList<>();
-			allGroups.addAll(personInsertDecomposer.decompose(person1InsertAction, 0, sessionImpl));
-			allGroups.addAll(addressInsertDecomposer.decompose(addressInsertAction, 1, sessionImpl));
-			allGroups.addAll(personUpdateDecomposer.decompose(person2UpdateAction, 2, sessionImpl));
+			allGroups.addAll(personInsertDecomposer.decompose(person1InsertAction, 0, callback -> {}, sessionImpl));
+			allGroups.addAll(addressInsertDecomposer.decompose(addressInsertAction, 1, callback -> {}, sessionImpl));
+			allGroups.addAll(personUpdateDecomposer.decompose(person2UpdateAction, 2, callback -> {}, sessionImpl));
 
 			final ForeignKeyModel fkModel = factory.getForeignKeyModel();
 
@@ -383,8 +384,8 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Count total operations
 			int totalOps = 0;
-			for (FlushPlan.PlanStep step : plan.steps()) {
-				totalOps += step.ops().size();
+			for ( PlanStep step : plan.steps()) {
+				totalOps += step.operations().size();
 			}
 			assertEquals(3, totalOps, "Should have 3 operations total");
 		});
@@ -442,8 +443,8 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Decompose
 			final List<PlannedOperationGroup> allGroups = new ArrayList<>();
-			allGroups.addAll(deptDecomposer.decompose(deptAction, 0, sessionImpl));
-			allGroups.addAll(empDecomposer.decompose(empAction, 1, sessionImpl));
+			allGroups.addAll(deptDecomposer.decompose(deptAction, 0, callback -> {}, sessionImpl));
+			allGroups.addAll(empDecomposer.decompose(empAction, 1, callback -> {}, sessionImpl));
 
 			final ForeignKeyModel fkModel = factory.getForeignKeyModel();
 
@@ -464,8 +465,8 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Verify at least one operation has a binding patch (cycle was broken)
 			boolean patchFound = false;
-			for (FlushPlan.PlanStep step : plan.steps()) {
-				for (PlannedOperation op : step.ops()) {
+			for ( PlanStep step : plan.steps()) {
+				for (PlannedOperation op : step.operations()) {
 					if (op.getBindingPatch() != null) {
 						patchFound = true;
 						break;
@@ -476,8 +477,8 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Verify all operations are in the plan
 			int totalOps = 0;
-			for (FlushPlan.PlanStep step : plan.steps()) {
-				totalOps += step.ops().size();
+			for ( PlanStep step : plan.steps()) {
+				totalOps += step.operations().size();
 			}
 			assertEquals(2, totalOps, "Should have 2 insert operations");
 		});

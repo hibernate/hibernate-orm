@@ -7,7 +7,6 @@ package org.hibernate.action.internal;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitDeleteEventListener;
@@ -80,7 +79,7 @@ public class EntityDeleteAction extends EntityAction {
 		return state;
 	}
 
-	protected Object getNaturalIdValues() {
+	public Object getNaturalIdValues() {
 		return naturalIdValues;
 	}
 
@@ -107,7 +106,7 @@ public class EntityDeleteAction extends EntityAction {
 
 		final boolean veto = isInstanceLoaded() && preDelete();
 
-		handleNaturalIdLocalResolutions( persister, session.getPersistenceContextInternal() );
+		handleNaturalIdLocalResolutions();
 
 		final Object cacheKey = lockCacheItem();
 
@@ -138,7 +137,9 @@ public class EntityDeleteAction extends EntityAction {
 		}
 	}
 
-	private void handleNaturalIdLocalResolutions(EntityPersister persister, PersistenceContext context) {
+	public void handleNaturalIdLocalResolutions() {
+		final var persister = getPersister();
+		final var context = getSession().getPersistenceContextInternal();
 		final var naturalIdMapping = persister.getNaturalIdMapping();
 		if ( naturalIdMapping != null ) {
 			naturalIdValues = context.getNaturalIdResolutions()
@@ -199,7 +200,7 @@ public class EntityDeleteAction extends EntityAction {
 		removeCacheItem( cacheKey );
 	}
 
-	protected boolean preDelete() {
+	public boolean preDelete() {
 		final var listenerGroup = getEventListenerGroups().eventListenerGroup_PRE_DELETE;
 		if ( listenerGroup.isEmpty() ) {
 			return false;
@@ -215,7 +216,7 @@ public class EntityDeleteAction extends EntityAction {
 		}
 	}
 
-	protected void postDelete() {
+	public void postDelete() {
 		getEventListenerGroups().eventListenerGroup_POST_DELETE
 				.fireLazyEventOnEachListener( this::newPostDeleteEvent, PostDeleteEventListener::onPostDelete );
 	}
@@ -260,7 +261,7 @@ public class EntityDeleteAction extends EntityAction {
 		return false;
 	}
 
-	protected Object lockCacheItem() {
+	public Object lockCacheItem() {
 		final var persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			final var cache = persister.getCacheAccessStrategy();

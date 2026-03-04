@@ -15,24 +15,36 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 
-/**
- * @author Steve Ebersole
- */
+/// Performs topological sorting on a dependency graph to determine the
+/// correct execution order for mutation operations using Kahn's Algorithm
+/// for breadth-first searching.
+///
+/// @author Steve Ebersole
 public class TopographicalSorter {
 	public List<GroupNode> sort(Graph graph) {
+		// Initialize all nodes with in-degree 0
 		final Map<GroupNode, Integer> indegree = new HashMap<>();
-		for (GroupNode n : graph.nodes()) indegree.put(n, 0);
+		for (GroupNode n : graph.nodes()) {
+			indegree.put(n, 0);
+		}
 
+		// Count incoming edges for each node
 		for (GroupNode u : graph.nodes()) {
 			for ( GraphEdge e : graph.outgoing().getOrDefault(u, List.of())) {
-				if (e.isBroken()) continue;
+				if (e.isBroken()) {
+					// Skip broken edges!
+					// See CycleBreaker
+					continue;
+				}
 				indegree.put(e.getTo(), indegree.get(e.getTo()) + 1);
 			}
 		}
 
 		final PriorityQueue<GroupNode> q = new PriorityQueue<>( Comparator.comparingLong( GroupNode::stableId ));
 		for (var en : indegree.entrySet()) {
-			if (en.getValue() == 0) q.add(en.getKey());
+			if (en.getValue() == 0) {
+				q.add(en.getKey());
+			}
 		}
 
 		final ArrayList<GroupNode> order = new ArrayList<>(graph.nodes().size());

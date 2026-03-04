@@ -25,9 +25,9 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.man
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.noOperations;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
-/**
- * @author Steve Ebersole
- */
+/// Base support for [EntityAction]-based [MutationDecomposer] implementations.
+///
+/// @author Steve Ebersole
 public abstract class AbstractDecomposer<T extends EntityAction> implements MutationDecomposer<T> {
 	protected final EntityPersister entityPersister;
 	protected final SessionFactoryImplementor sessionFactory;

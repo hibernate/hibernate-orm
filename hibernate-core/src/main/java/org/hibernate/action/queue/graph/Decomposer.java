@@ -10,12 +10,11 @@ import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.EntityDeleteAction;
-import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.internal.EntityUpdateAction;
+import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
-import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SessionImplementor;
 
 import java.util.ArrayList;
@@ -24,6 +23,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
@@ -38,7 +38,6 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 /// @author Steve Ebersole
 public class Decomposer {
 	private final SessionImplementor session;
-	private final MutationExecutorService executorService;
 
 	// Tracks inserts that have unresolved dependencies on transient entities
 	private final Map<AbstractEntityInsertAction, NonNullableTransientDependencies> unresolvedInserts = new IdentityHashMap<>();
@@ -47,12 +46,12 @@ public class Decomposer {
 
 	public Decomposer(SessionImplementor session) {
 		this.session = session;
-		this.executorService = session.getFactory()
-				.getServiceRegistry()
-				.requireService( MutationExecutorService.class );
 	}
 
-	public List<PlannedOperationGroup> decompose(Executable executable, int ordinalBase) {
+	public List<PlannedOperationGroup> decompose(
+			Executable executable,
+			int ordinalBase,
+			Consumer<PostExecutionCallback> postExecCallbackRegistry) {
 		// Special handling for entity inserts - check for unresolved transient dependencies
 		if (executable instanceof AbstractEntityInsertAction insert) {
 			final NonNullableTransientDependencies transientDeps = insert.findNonNullableTransientEntities();
@@ -62,29 +61,57 @@ public class Decomposer {
 				trackUnresolvedInsert(insert, transientDeps);
 				return Collections.emptyList();
 			}
+
+			return insert.getPersister().getInsertDecomposer().decompose(
+					insert,
+					ordinalBase,
+					postExecCallbackRegistry,
+					session
+			);
 		}
 
-		// Normal decomposition for resolved actions
-		if (executable instanceof EntityInsertAction eia) {
-			return eia.getPersister().getInsertDecomposer().decompose( eia, ordinalBase, session );
-		}
 		if (executable instanceof EntityUpdateAction eua) {
-			return eua.getPersister().getUpdateDecomposer().decompose( eua, ordinalBase, session );
+			return eua.getPersister().getUpdateDecomposer().decompose(
+					eua,
+					ordinalBase,
+					postExecCallbackRegistry,
+					session
+			);
 		}
 		if (executable instanceof EntityDeleteAction eda) {
-			return eda.getPersister().getDeleteDecomposer().decompose( eda, ordinalBase, session );
+			return eda.getPersister().getDeleteDecomposer().decompose(
+					eda,
+					ordinalBase,
+					postExecCallbackRegistry,
+					session
+			);
 		}
 
 		if (executable instanceof CollectionRecreateAction cra) {
 			// MutationKind.INSERT
-			return cra.getPersister().getRecreateDecomposer().decompose( cra, ordinalBase, session );
+			return cra.getPersister().getRecreateDecomposer().decompose(
+					cra,
+					ordinalBase,
+					postExecCallbackRegistry,
+					session
+			);
 		}
 		if (executable instanceof CollectionRemoveAction cra) {
 			// MutationKind.DELETE
-			return cra.getPersister().getRemoveDecomposer().decompose( cra, ordinalBase, session );
+			return cra.getPersister().getRemoveDecomposer().decompose(
+					cra,
+					ordinalBase,
+					postExecCallbackRegistry,
+					session
+			);
 		}
 		if (executable instanceof CollectionUpdateAction cua) {
-			return cua.getPersister().getUpdateDecomposer().decompose( cua, ordinalBase, session );
+			return cua.getPersister().getUpdateDecomposer().decompose(
+					cua,
+					ordinalBase,
+					postExecCallbackRegistry,
+					session
+			);
 		}
 
 		throw new UnsupportedOperationException( "Decomposition not supported for " +  executable.getClass().getName() );
@@ -125,21 +152,23 @@ public class Decomposer {
 		final List<PlannedOperationGroup> resolvedGroups = arrayList(dependentInserts.size());
 		final List<AbstractEntityInsertAction> fullyResolved = new ArrayList<>();
 
-		for (AbstractEntityInsertAction insert : dependentInserts) {
-			final NonNullableTransientDependencies dependencies = unresolvedInserts.get(insert);
+		for (AbstractEntityInsertAction entityInsert : dependentInserts) {
+			final NonNullableTransientDependencies dependencies = unresolvedInserts.get(entityInsert);
 
 			// Remove this entity from the insert's dependency list
 			dependencies.resolveNonNullableTransientEntity(managedEntity);
 
 			// If all dependencies are now satisfied, decompose it
 			if (dependencies.isEmpty()) {
-				// AbstractEntityInsertAction is the base class, but decomposer expects EntityInsertAction
-				if (insert instanceof EntityInsertAction entityInsert) {
-					resolvedGroups.addAll(
-							entityInsert.getPersister().getInsertDecomposer().decompose(entityInsert, 0, session)
-					);
-					fullyResolved.add(insert);
-				}
+				resolvedGroups.addAll(
+						entityInsert.getPersister().getInsertDecomposer().decompose(
+								entityInsert,
+								0,
+								postCallback -> {}, // No post-execution callbacks for unresolved inserts
+								session
+						)
+				);
+				fullyResolved.add(entityInsert);
 			}
 		}
 

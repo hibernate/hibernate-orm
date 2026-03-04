@@ -19,9 +19,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * @author Steve Ebersole
- */
+/// Applies Uses Tarjan’s Algorithm for finding strongly connected components (SCCs).
+///
+/// @author Steve Ebersole
 public class TarjanScc {
 	static List<List<GroupNode>> compute(Graph graph) {
 		final Map<GroupNode, Integer> index = new HashMap<>();

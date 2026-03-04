@@ -12,19 +12,21 @@ import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.sql.SQLException;
 
-/**
- * Bind plan for entity update operations
- *
- * @author Steve Ebersole
- */
+/// BindPlan for entity update operations.
+///
+/// @see GeneratedValuesCollector
+///
+/// @author Steve Ebersole
 public class UpdateBindPlan implements BindPlan {
 	private final EntityPersister entityPersister;
+	private final Object entity;
 	private final Object identifier;
 	private final Object rowId;
 	private final Object[] state;
@@ -37,6 +39,7 @@ public class UpdateBindPlan implements BindPlan {
 
 	public UpdateBindPlan(
 			EntityPersister entityPersister,
+			Object entity,
 			Object identifier,
 			Object rowId,
 			Object[] state,
@@ -47,6 +50,7 @@ public class UpdateBindPlan implements BindPlan {
 			boolean applyOptimisticLocking,
 			UpdateValuesAnalysisForDecomposer valuesAnalysis) {
 		this.entityPersister = entityPersister;
+		this.entity = entity;
 		this.identifier = identifier;
 		this.rowId = rowId;
 		this.state = state;
@@ -97,13 +101,17 @@ public class UpdateBindPlan implements BindPlan {
 			return;
 		}
 
-		executor.execute(
+		final GeneratedValues generatedValues = executor.execute(
 				null,  // entity instance not needed
 				null,  // valuesAnalysis not needed
 				null,  // tableInclusionChecker not needed
 				UpdateBindPlan::verifyOutcome,
 				session
 		);
+
+		if ( generatedValues != null ) {
+			entityPersister.processUpdateGeneratedProperties( identifier, entity, state, generatedValues, session );
+		}
 	}
 
 	/**

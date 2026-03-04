@@ -270,10 +270,10 @@ Even if we removed the first entity and then persist a new one, Hibernate is goi
 
 [TIP]
 ====
-The order in which SQL statements are executed is given by the `ActionQueue` and not by the order in which entity state operations have been previously defined.
+The order in which SQL statements are executed is given by the `ActionQueue2` and not by the order in which entity state operations have been previously defined.
 ====
 
-The `ActionQueue` executes all operations in the following order:
+The `ActionQueue2` executes all operations in the following order:
 
 . `OrphanRemovalAction`
 . `EntityInsertAction` or `EntityIdentityInsertAction`

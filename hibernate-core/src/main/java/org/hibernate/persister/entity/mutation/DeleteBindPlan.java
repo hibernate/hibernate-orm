@@ -18,11 +18,9 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import java.sql.SQLException;
 
-/**
- * Bind plan for entity deletion operations
- *
- * @author Steve Ebersole
- */
+/// Bind plan for entity deletion operations.
+///
+/// @author Steve Ebersole
 public class DeleteBindPlan implements BindPlan {
 	private final EntityPersister entityPersister;
 	private final Object identifier;

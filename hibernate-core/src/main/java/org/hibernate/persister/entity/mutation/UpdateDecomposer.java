@@ -6,6 +6,7 @@ package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.queue.bind.BindPlan;
+import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.plan.PlannedOperation;
@@ -14,6 +15,8 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.PreUpdateEvent;
+import org.hibernate.generator.EventType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
@@ -67,13 +70,23 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 	public List<PlannedOperationGroup> decompose(
 			EntityUpdateAction action,
 			int ordinalBase,
+			java.util.function.Consumer<PostExecutionCallback> postExecutionCallbackRegistry,
 			SharedSessionContractImplementor session) {
+		final boolean vetoed = preUpdate( action, session );
+		if ( vetoed ) {
+			return List.of();
+		}
+
+		final Object entity = action.getInstance();
 		final Object identifier = action.getId();
 		final Object rowId = action.getRowId();
 		final Object[] state = action.getState();
 		final Object[] previousState = action.getPreviousState();
 		final Object version = action.getPreviousVersion();
 		final int[] dirtyFields = action.getDirtyFields();
+
+		action.handleNaturalIdLocalResolutions( identifier, entityPersister, session.getPersistenceContext() );
+		final Object cacheKey = action.lockCacheItem( version );
 
 		// Determine if we need to apply optimistic locking
 		final boolean applyOptimisticLocking = shouldApplyOptimisticLocking( version, previousState );
@@ -103,6 +116,10 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				session
 		);
 
+		final var generatedValuesCollector = new GeneratedValuesCollector( entityPersister, EventType.UPDATE );
+		final PostUpdateHandling postUpdateHandling = new PostUpdateHandling( action, cacheKey, version, generatedValuesCollector );
+		postExecutionCallbackRegistry.accept( postUpdateHandling );
+
 		LinkedHashMap<String, List<PlannedOperation>> byTable = new LinkedHashMap<>();
 		int localOrd = 0;
 
@@ -113,6 +130,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 
 			final BindPlan bindPlan = new UpdateBindPlan(
 					entityPersister,
+					entity,
 					identifier,
 					rowId,
 					state,
@@ -155,6 +173,28 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		}
 
 		return out;
+	}
+
+	protected boolean preUpdate(EntityUpdateAction action, SharedSessionContractImplementor session) {
+		final var listenerGroup = session.getFactory().getEventListenerGroups().eventListenerGroup_PRE_UPDATE;
+		if ( listenerGroup.isEmpty() ) {
+			return false;
+		}
+		else {
+			final PreUpdateEvent event = new PreUpdateEvent(
+					action.getInstance(),
+					action.getId(),
+					action.getState(),
+					action.getPreviousState(),
+					action.getPersister(),
+					session
+			);
+			boolean veto = false;
+			for ( var listener : listenerGroup.listeners() ) {
+				veto |= listener.onPreUpdate( event );
+			}
+			return veto;
+		}
 	}
 
 	private boolean shouldApplyOptimisticLocking(Object version, Object[] previousState) {

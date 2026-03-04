@@ -11,9 +11,8 @@ import org.hibernate.action.queue.graph.GroupNode;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author Steve Ebersole
- */
+/// Standard FlushPlanner
+/// @author Steve Ebersole
 public class StandardFlushPlanner implements FlushPlanner {
 	public StandardFlushPlanner() {
 	}
@@ -36,8 +35,8 @@ public class StandardFlushPlanner implements FlushPlanner {
 		return new FlushPlan(buildSteps(topoOrder));
 	}
 
-	private List<FlushPlan.PlanStep> buildSteps(List<GroupNode> topoOrder) {
-		final ArrayList<FlushPlan.PlanStep> steps = new ArrayList<>();
+	private List<PlanStep> buildSteps(List<GroupNode> topoOrder) {
+		final ArrayList<PlanStep> steps = new ArrayList<>();
 
 		StatementShapeKey curKey = null;
 		final ArrayList<PlannedOperation> bucket = new ArrayList<>();
@@ -54,7 +53,7 @@ public class StandardFlushPlanner implements FlushPlanner {
 					bucket.add(op);
 				}
 				else {
-					steps.add(new FlushPlan.SimplePlanStep(new ArrayList<>(bucket)));
+					steps.add(new SimplePlanStep(new ArrayList<>(bucket)));
 					bucket.clear();
 					curKey = key;
 					bucket.add(op);
@@ -63,7 +62,7 @@ public class StandardFlushPlanner implements FlushPlanner {
 		}
 
 		if (!bucket.isEmpty()) {
-			steps.add(new FlushPlan.SimplePlanStep(new ArrayList<>(bucket)));
+			steps.add(new SimplePlanStep(new ArrayList<>(bucket)));
 		}
 		return steps;
 	}

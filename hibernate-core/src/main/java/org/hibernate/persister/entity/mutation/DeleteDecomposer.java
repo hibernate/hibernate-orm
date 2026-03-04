@@ -6,6 +6,7 @@ package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.queue.bind.BindPlan;
+import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.plan.PlannedOperation;
@@ -36,13 +37,15 @@ import java.util.List;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
-/// Decomposer for entity delete operations.
+/// [Decomposer][org.hibernate.action.queue.graph.MutationDecomposer] for entity delete operations.
 ///
 /// Converts an [EntityDeleteAction] into a set of [PlannedOperationGroup]s that can
-///  be executed in the correct order respecting foreign key constraints.  The delete
-/// operations are created in reverse order - child (key) tables before parent (target) tables.
+/// be executed in the correct order respecting foreign key constraints.  The delete
+/// operations are created in "reverse order", meaning child (key) tables before parent
+/// (target) tables - e.g. `orders` before `customers`.
 ///
 /// @see DeleteBindPlan
+/// @see SoftDeleteBindPlan
 ///
 /// @author Steve Ebersole
 public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
@@ -70,10 +73,31 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 	public List<PlannedOperationGroup> decompose(
 			EntityDeleteAction action,
 			int ordinalBase,
+			java.util.function.Consumer<PostExecutionCallback> postExecutionCallbackRegistry,
 			SharedSessionContractImplementor session) {
 		final Object identifier = action.getId();
 		final Object version = action.getVersion();
 		final Object[] state = action.getState();
+
+		// PRE-EXECUTION PHASE: Fire PRE_DELETE event listeners
+		// Note: Only if the entity instance is loaded (not for unloaded proxy deletes)
+		final boolean veto = (action.getInstance() != null) && action.preDelete();
+
+		// Handle natural ID local resolutions before delete
+		action.handleNaturalIdLocalResolutions();
+
+		// Lock cache item before delete (returns cacheKey for post-execution)
+		final Object cacheKey = action.lockCacheItem();
+
+		// Register post-execution callback for finalization work
+		final PostDeleteHandling postDeleteHandling = new PostDeleteHandling(action, cacheKey, veto);
+		postExecutionCallbackRegistry.accept(postDeleteHandling);
+
+		// If vetoed by PRE_DELETE listener, skip creating DELETE operations
+		// Post-execution callback will still run to handle cleanup (cache unlock, etc.)
+		if ( veto || action.isCascadeDeleteEnabled() ) {
+			return List.of();
+		}
 
 		// Check if this is a soft delete
 		final SoftDeleteMapping softDeleteMapping = entityPersister.getSoftDeleteMapping();

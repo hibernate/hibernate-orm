@@ -160,7 +160,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		}
 	}
 
-	protected void putCacheIfNecessary() {
+	public void putCacheIfNecessary() {
 		final var persister = getPersister();
 		final var session = getSession();
 		if ( isCachePutEnabled( persister, session ) ) {
@@ -205,7 +205,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		}
 	}
 
-	protected void postInsert() {
+	public void postInsert() {
 		getEventListenerGroups()
 				.eventListenerGroup_POST_INSERT
 				.fireLazyEventOnEachListener( this::newPostInsertEvent, PostInsertEventListener::onPostInsert );

@@ -72,7 +72,7 @@ public class DeleteDecomposerTest {
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
 
 			// Decompose
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			// Verify
 			assertNotNull( groups );
@@ -106,7 +106,7 @@ public class DeleteDecomposerTest {
 			assertNotNull( persister.getVersionMapping() );
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			assertNotNull( groups );
 			assertFalse( groups.isEmpty() );
@@ -132,7 +132,7 @@ public class DeleteDecomposerTest {
 			DeleteDecomposer decomposer = new DeleteDecomposer( persister, factory );
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			// Should have 2 groups (secondary table + primary table, in reverse order)
 			assertEquals( 2, groups.size(), "Should have 2 operation groups for secondary table" );
@@ -160,7 +160,7 @@ public class DeleteDecomposerTest {
 			DeleteDecomposer decomposer = new DeleteDecomposer( persister, factory );
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			// Should have 2 groups (child table + parent table, in reverse order)
 			assertTrue( groups.size() >= 2, "Joined inheritance should have at least 2 tables" );
@@ -190,7 +190,7 @@ public class DeleteDecomposerTest {
 			assertNotNull( persister.getSoftDeleteMapping(), "Soft delete should be enabled" );
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			// Verify
 			assertNotNull( groups );
@@ -225,7 +225,7 @@ public class DeleteDecomposerTest {
 			assertNotNull( persister.getVersionMapping() );
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			assertNotNull( groups );
 			assertEquals( 1, groups.size() );
@@ -254,7 +254,7 @@ public class DeleteDecomposerTest {
 			assertEquals( OptimisticLockStyle.ALL, persister.optimisticLockStyle() );
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			assertNotNull( groups );
 			assertFalse( groups.isEmpty() );
@@ -310,7 +310,7 @@ public class DeleteDecomposerTest {
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
 			int ordinalBase = 10;
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, ordinalBase, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, ordinalBase, callback -> {}, session );
 
 			// Verify ordinals are based on the base
 			for ( PlannedOperationGroup group : groups ) {
@@ -348,7 +348,7 @@ public class DeleteDecomposerTest {
 					(EventSource) session
 			);
 
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			assertNotNull( groups );
 			assertFalse( groups.isEmpty() );
@@ -372,7 +372,7 @@ public class DeleteDecomposerTest {
 			DeleteDecomposer decomposer = new DeleteDecomposer( persister, factory );
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			// In reverse order: child table should come before parent table
 			// This ensures FK constraints are not violated

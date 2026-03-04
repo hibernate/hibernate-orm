@@ -24,7 +24,11 @@ public class GeneratedValuesImpl implements GeneratedValues {
 	private final Map<ModelPart, Object> generatedValuesMap;
 
 	public GeneratedValuesImpl(List<? extends ModelPart> generatedProperties) {
-		this.generatedValuesMap = new IdentityHashMap<>( generatedProperties.size() );
+		this( generatedProperties.size() );
+	}
+
+	public GeneratedValuesImpl(int generatedPropertiesCount) {
+		this.generatedValuesMap = new IdentityHashMap<>( generatedPropertiesCount );
 	}
 
 	@Override
@@ -50,5 +54,16 @@ public class GeneratedValuesImpl implements GeneratedValues {
 		}
 
 		return generatedValues;
+	}
+
+	@Override
+	public void apply(GeneratedValues generatedValues) {
+		// for now...
+		if ( generatedValues instanceof GeneratedValuesImpl impl ) {
+			generatedValuesMap.putAll( impl.generatedValuesMap );
+		}
+		else {
+			throw new UnsupportedOperationException( "Only GeneratedValuesImpl supported : " + generatedValues.getClass().getName() );
+		}
 	}
 }

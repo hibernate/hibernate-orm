@@ -4,10 +4,11 @@
  */
 package org.hibernate.persister.entity.mutation;
 
-import org.hibernate.action.internal.EntityInsertAction;
+import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.bind.BindPlan;
+import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.dialect.Dialect;
@@ -15,6 +16,8 @@ import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.PreInsertEvent;
+import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
@@ -30,13 +33,21 @@ import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
-/**
- * @author Steve Ebersole
- */
-public class InsertDecomposer extends AbstractDecomposer<EntityInsertAction> {
+/// [Decomposer][org.hibernate.action.queue.graph.MutationDecomposer] for entity insert operations.
+///
+/// Converts an [AbstractEntityInsertAction] into a set of [PlannedOperationGroup]s that can
+/// be executed in the correct order respecting foreign key constraints.  The insert operations
+/// are created in "forward order", meaning parent (target) tables before child (key) tables - e.g.
+/// `customers` before `orders`.
+///
+/// [MutationDecomposer][org.hibernate.action.queue.graph.MutationDecomposer] implementation for entity insertions.
+///
+/// @author Steve Ebersole
+public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAction> {
 	private final MutationOperationGroup staticInsertGroup;
 	private final BasicBatchKey batchKey;
 
@@ -61,9 +72,19 @@ public class InsertDecomposer extends AbstractDecomposer<EntityInsertAction> {
 
 	@Override
 	public List<PlannedOperationGroup> decompose(
-			EntityInsertAction action,
+			AbstractEntityInsertAction action,
 			int ordinalBase,
+			Consumer<PostExecutionCallback> postExecutionCallbackRegistry,
 			SharedSessionContractImplementor session) {
+		final boolean vetoed = preInsert( action, session );
+		if ( vetoed ) {
+			return List.of();
+		}
+
+		// Nullify transient references before decomposing - this ensures bidirectional
+		// associations are handled correctly and nullability checks are performed
+		action.nullifyTransientReferencesIfNotAlready();
+
 		final Object entity = action.getInstance();
 		final Object identifier = action.getId();
 		final Object[] state = action.getState();
@@ -78,6 +99,10 @@ public class InsertDecomposer extends AbstractDecomposer<EntityInsertAction> {
 		LinkedHashMap<String, List<PlannedOperation>> byTable = new LinkedHashMap<>();
 		int localOrd = 0;
 
+		final var generatedValuesCollector = new GeneratedValuesCollector( entityPersister, EventType.INSERT );
+		final PostInsertHandling postInsertHandling = new PostInsertHandling( action, generatedValuesCollector );
+		postExecutionCallbackRegistry.accept( postInsertHandling );
+
 		for (int i = 0; i < effectiveGroup.getNumberOfOperations(); i++) {
 			var operation = effectiveGroup.getOperation(i);
 			var table = (EntityTableMapping) operation.getTableDetails();
@@ -91,7 +116,8 @@ public class InsertDecomposer extends AbstractDecomposer<EntityInsertAction> {
 					insertable,
 					valuesAnalysis,
 					inclusionChecker,
-					action::getId
+					action,
+					generatedValuesCollector
 			);
 
 			final PlannedOperation op = new PlannedOperation(
@@ -102,8 +128,6 @@ public class InsertDecomposer extends AbstractDecomposer<EntityInsertAction> {
 					ordinalBase * 1_000 + (localOrd++),
 					"EntityInsertAction(" + entityPersister.getEntityName() + ")"
 			);
-
-			op.setEntityIdSupplier( action::getId );
 
 			byTable.computeIfAbsent(tableName, t -> new ArrayList<>()).add(op);
 		}
@@ -127,6 +151,27 @@ public class InsertDecomposer extends AbstractDecomposer<EntityInsertAction> {
 		}
 
 		return out;
+	}
+
+	protected boolean preInsert(AbstractEntityInsertAction action, SharedSessionContractImplementor session) {
+		final var listenerGroup = session.getFactory().getEventListenerGroups().eventListenerGroup_PRE_INSERT;
+		if ( listenerGroup.isEmpty() ) {
+			return false;
+		}
+		else {
+			boolean veto = false;
+			final PreInsertEvent event = new PreInsertEvent(
+					action.getInstance(),
+					action.getId(),
+					action.getState(),
+					action.getPersister(),
+					session
+			);
+			for ( var listener : listenerGroup.listeners() ) {
+				veto |= listener.onPreInsert( event );
+			}
+			return veto;
+		}
 	}
 
 	private TableInclusionChecker calculateTableInclusionCheck(InsertValuesAnalysis analysis) {

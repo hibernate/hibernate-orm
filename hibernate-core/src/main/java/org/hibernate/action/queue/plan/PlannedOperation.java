@@ -11,9 +11,8 @@ import org.hibernate.sql.model.MutationOperation;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
-/// Represents a single mutation operation.
+/// Represents a single SQL operation to be executed.
 ///
 /// @author Steve Ebersole
 public class PlannedOperation {
@@ -28,8 +27,6 @@ public class PlannedOperation {
 
 	// Optional directive installed by planner for cycle-breaking (nullable FK null-in-insert)
 	private BindingPatch bindingPatch;
-
-	private Supplier<Object> entityIdSupplier;
 
 	// Captured “intended” FK values when we cycle-break (used for fixup update synthesis)
 	private final Map<String, Object> intendedFkValues = new LinkedHashMap<>();
@@ -77,10 +74,6 @@ public class PlannedOperation {
 		return bindingPatch;
 	}
 
-	public Supplier<Object> getEntityIdSupplier() {
-		return entityIdSupplier;
-	}
-
 	public Map<String, Object> getIntendedFkValues() {
 		return intendedFkValues;
 	}
@@ -103,10 +96,6 @@ public class PlannedOperation {
 
 	public void setBindingPatch(BindingPatch bindingPatch) {
 		this.bindingPatch = bindingPatch;
-	}
-
-	public void setEntityIdSupplier(Supplier<Object> entityIdSupplier) {
-		this.entityIdSupplier = entityIdSupplier;
 	}
 
 	public void setCachedInsertValuesAnalysis(Object cachedInsertValuesAnalysis) {

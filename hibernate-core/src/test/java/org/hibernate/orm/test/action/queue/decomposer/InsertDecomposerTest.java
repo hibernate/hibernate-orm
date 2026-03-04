@@ -71,7 +71,7 @@ public class InsertDecomposerTest {
 			EntityInsertAction action = createInsertAction( entity, session, persister );
 
 			// Decompose
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			// Verify
 			assertNotNull( groups );
@@ -99,7 +99,7 @@ public class InsertDecomposerTest {
 			InsertDecomposer decomposer = new InsertDecomposer( persister, factory );
 
 			EntityInsertAction action = createInsertAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			// Should have 2 groups (primary table + secondary table)
 			assertEquals( 2, groups.size(), "Should have 2 operation groups for secondary table" );
@@ -124,7 +124,7 @@ public class InsertDecomposerTest {
 			InsertDecomposer decomposer = new InsertDecomposer( persister, factory );
 
 			EntityInsertAction action = createInsertAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			// Should have 2 groups (parent table + child table)
 			assertTrue( groups.size() >= 2, "Joined inheritance should have at least 2 tables" );
@@ -151,7 +151,7 @@ public class InsertDecomposerTest {
 			assertTrue( persister.isDynamicInsert(), "Entity should have dynamic insert enabled" );
 
 			EntityInsertAction action = createInsertAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			assertNotNull( groups );
 			assertFalse( groups.isEmpty() );
@@ -174,7 +174,7 @@ public class InsertDecomposerTest {
 			InsertDecomposer decomposer = new InsertDecomposer( persister, factory );
 
 			EntityInsertAction action = createInsertAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			assertNotNull( groups );
 			assertFalse( groups.isEmpty() );
@@ -205,7 +205,7 @@ public class InsertDecomposerTest {
 			InsertDecomposer decomposer = new InsertDecomposer( persister, factory );
 
 			EntityInsertAction action = createInsertAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			assertNotNull( groups );
 			assertFalse( groups.isEmpty() );
@@ -242,7 +242,7 @@ public class InsertDecomposerTest {
 			InsertDecomposer decomposer = new InsertDecomposer( persister, factory );
 
 			EntityInsertAction action = createInsertAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			assertNotNull( groups );
 			assertFalse( groups.isEmpty() );
@@ -264,7 +264,7 @@ public class InsertDecomposerTest {
 
 			EntityInsertAction action = createInsertAction( entity, session, persister );
 			int ordinalBase = 5;
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, ordinalBase, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, ordinalBase, callback -> {}, session );
 
 			// Verify ordinals are based on the base
 			for ( PlannedOperationGroup group : groups ) {

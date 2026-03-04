@@ -8,9 +8,9 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author Steve Ebersole
- */
+/// Output of [FlushPlanner] containing
+///
+/// @author Steve Ebersole
 public class FlushPlan {
 	private final List<PlanStep> steps;
 	private final ArrayDeque<PlannedOperation> fixups = new ArrayDeque<>();
@@ -31,10 +31,4 @@ public class FlushPlan {
 		return out;
 	}
 
-	public interface PlanStep {
-		List<PlannedOperation> ops();
-	}
-
-	public record SimplePlanStep(List<PlannedOperation> ops) implements PlanStep {
-	}
 }

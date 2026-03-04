@@ -6,16 +6,16 @@ package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
+import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.EntityDeleteAction;
-import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.internal.EntityUpdateAction;
+import org.hibernate.action.queue.graph.MutationDecomposer;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.action.queue.graph.MutationDecomposer;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
@@ -80,7 +80,7 @@ public interface EntityMutationTarget extends MutationTarget<EntityTableMapping>
 		};
 	}
 
-	MutationDecomposer<EntityInsertAction> getInsertDecomposer();
+	MutationDecomposer<AbstractEntityInsertAction> getInsertDecomposer();
 	MutationDecomposer<EntityUpdateAction> getUpdateDecomposer();
 	MutationDecomposer<EntityDeleteAction> getDeleteDecomposer();
 

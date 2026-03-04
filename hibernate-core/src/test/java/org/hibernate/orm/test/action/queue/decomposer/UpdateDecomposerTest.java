@@ -77,7 +77,7 @@ public class UpdateDecomposerTest {
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
 
 			// Decompose
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			// Verify
 			assertNotNull( groups );
@@ -91,7 +91,7 @@ public class UpdateDecomposerTest {
 	}
 
 	@Test
-	@org.junit.jupiter.api.Disabled("TODO: Version not being incremented on entity after update - needs investigation")
+//	@org.junit.jupiter.api.Disabled("TODO: ActionQueue2 executes EntityUpdateAction twice - see DIRTY_OPT_LOCK_ROOT_CAUSE.md")
 	public void testUpdateWithVersionedEntity(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
@@ -120,7 +120,7 @@ public class UpdateDecomposerTest {
 			assertTrue( entity.version > initialVersion, "Version should be incremented" );
 
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			assertNotNull( groups );
 			assertFalse( groups.isEmpty() );
@@ -151,7 +151,7 @@ public class UpdateDecomposerTest {
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			// Should have 2 groups (primary table + secondary table)
 			assertEquals( 2, groups.size(), "Should have 2 operation groups for secondary table" );
@@ -184,7 +184,7 @@ public class UpdateDecomposerTest {
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			// Should have 2 groups (parent table + child table)
 			assertTrue( groups.size() >= 2, "Joined inheritance should have at least 2 tables" );
@@ -218,7 +218,7 @@ public class UpdateDecomposerTest {
 			assertTrue( persister.isDynamicUpdate(), "Entity should have dynamic update enabled" );
 
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			assertNotNull( groups );
 			assertFalse( groups.isEmpty() );
@@ -226,7 +226,7 @@ public class UpdateDecomposerTest {
 	}
 
 	@Test
-	@org.junit.jupiter.api.Disabled("TODO: Optimistic lock WHERE clause returns 0 rows - previousState investigation needed")
+//	@org.junit.jupiter.api.Disabled("TODO: ActionQueue2 executes EntityUpdateAction twice - see DIRTY_OPT_LOCK_ROOT_CAUSE.md")
 	public void testUpdateWithAllOptimisticLock(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
@@ -251,7 +251,7 @@ public class UpdateDecomposerTest {
 			assertEquals( OptimisticLockStyle.ALL, persister.optimisticLockStyle() );
 
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			assertNotNull( groups );
 			assertFalse( groups.isEmpty() );
@@ -259,7 +259,7 @@ public class UpdateDecomposerTest {
 	}
 
 	@Test
-	@org.junit.jupiter.api.Disabled("TODO: Optimistic lock WHERE clause returns 0 rows - previousState investigation needed")
+	@org.junit.jupiter.api.Disabled("TODO: ActionQueue2 executes EntityUpdateAction twice - see DIRTY_OPT_LOCK_ROOT_CAUSE.md")
 	public void testUpdateWithDirtyOptimisticLock(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
@@ -284,7 +284,7 @@ public class UpdateDecomposerTest {
 			assertEquals( OptimisticLockStyle.DIRTY, persister.optimisticLockStyle() );
 
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			assertNotNull( groups );
 			assertFalse( groups.isEmpty() );
@@ -343,7 +343,7 @@ public class UpdateDecomposerTest {
 
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
 			int ordinalBase = 10;
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, ordinalBase, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, ordinalBase, callback -> {}, session );
 
 			// Verify ordinals are based on the base
 			for ( PlannedOperationGroup group : groups ) {
@@ -390,7 +390,7 @@ public class UpdateDecomposerTest {
 					(EventSource) session
 			);
 
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			// Even with no dirty fields, should still create operation groups
 			assertNotNull( groups );
@@ -419,7 +419,7 @@ public class UpdateDecomposerTest {
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			// Updates should be in forward order (parent before child)
 			// This is opposite of deletes which are in reverse order
@@ -450,7 +450,7 @@ public class UpdateDecomposerTest {
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			// Should have operations for primary table
 			// Optional table should be handled appropriately based on null values
@@ -483,7 +483,7 @@ public class UpdateDecomposerTest {
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, session );
+			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
 
 			// Should have 2 groups for both tables
 			assertEquals( 2, groups.size(), "Should have 2 operation groups (primary + optional)" );

@@ -12,6 +12,7 @@ import org.hibernate.action.queue.graph.GraphEdge;
 import org.hibernate.action.queue.graph.GraphTestUtils;
 import org.hibernate.action.queue.graph.GroupNode;
 import org.hibernate.action.queue.plan.FlushPlan;
+import org.hibernate.action.queue.plan.PlanStep;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.action.queue.plan.StandardFlushPlanner;
@@ -65,7 +66,7 @@ public class StandardFlushPlannerTest {
 
 		assertNotNull(plan);
 		assertEquals(1, plan.steps().size(), "Single node should produce one step");
-		assertEquals(1, plan.steps().get(0).ops().size(), "Step should contain one operation");
+		assertEquals(1, plan.steps().get(0).operations().size(), "Step should contain one operation");
 	}
 
 	@Test
@@ -98,8 +99,8 @@ public class StandardFlushPlannerTest {
 
 		// Verify topological order - A before B before C
 		final List<PlannedOperation> allOps = new ArrayList<>();
-		for (FlushPlan.PlanStep step : plan.steps()) {
-			allOps.addAll(step.ops());
+		for ( PlanStep step : plan.steps()) {
+			allOps.addAll(step.operations());
 		}
 
 		assertEquals(3, allOps.size(), "Should have 3 operations");
@@ -142,8 +143,8 @@ public class StandardFlushPlannerTest {
 
 		// Verify binding patch was installed on the child INSERT operations
 		boolean patchFound = false;
-		for (FlushPlan.PlanStep step : plan.steps()) {
-			for (PlannedOperation op : step.ops()) {
+		for ( PlanStep step : plan.steps()) {
+			for (PlannedOperation op : step.operations()) {
 				System.out.printf( "Operation : %s -> %s\n", op.getKind(), op.getTableExpression() );
 				if (op.getBindingPatch() != null) {
 					patchFound = true;
@@ -256,7 +257,7 @@ public class StandardFlushPlannerTest {
 
 		assertNotNull(plan);
 		assertEquals(1, plan.steps().size(), "Operations with same shape should be in one step");
-		assertEquals(3, plan.steps().get(0).ops().size(), "Step should contain all 3 operations");
+		assertEquals(3, plan.steps().get(0).operations().size(), "Step should contain all 3 operations");
 	}
 
 	@Test
@@ -314,8 +315,8 @@ public class StandardFlushPlannerTest {
 
 		// Verify all operations are present
 		int totalOps = 0;
-		for (FlushPlan.PlanStep step : plan.steps()) {
-			totalOps += step.ops().size();
+		for ( PlanStep step : plan.steps()) {
+			totalOps += step.operations().size();
 		}
 		assertEquals(3, totalOps, "All operations should be in the plan");
 	}
@@ -411,8 +412,8 @@ public class StandardFlushPlannerTest {
 
 		// Verify topological order - A before B and C, B and C before D
 		final List<PlannedOperation> allOps = new ArrayList<>();
-		for (FlushPlan.PlanStep step : plan.steps()) {
-			allOps.addAll(step.ops());
+		for ( PlanStep step : plan.steps()) {
+			allOps.addAll(step.operations());
 		}
 
 		int indexA = findOperationIndex(allOps, "tableA");
@@ -454,8 +455,8 @@ public class StandardFlushPlannerTest {
 		assertTrue(edgeAB.isBroken() || edgeBA.isBroken(), "Cycle should be broken");
 
 		// Verify no binding patch on UPDATE operations
-		for (FlushPlan.PlanStep step : plan.steps()) {
-			for (PlannedOperation op : step.ops()) {
+		for ( PlanStep step : plan.steps()) {
+			for (PlannedOperation op : step.operations()) {
 				if (op.getKind() == MutationKind.UPDATE) {
 					assertNull(op.getBindingPatch(), "UPDATE operations should not have binding patch");
 				}

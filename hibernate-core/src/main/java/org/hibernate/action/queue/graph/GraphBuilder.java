@@ -8,9 +8,10 @@ import org.hibernate.action.queue.plan.PlannedOperationGroup;
 
 import java.util.List;
 
-/**
- * @author Steve Ebersole
- */
+/// Constructs a directed dependency [graph][Graph] from PlannedOperations using details
+/// from the [org.hibernate.action.queue.fk.ForeignKeyModel].
+///
+/// @author Steve Ebersole
 public interface GraphBuilder {
 	Graph build(List<PlannedOperationGroup> groups);
 }

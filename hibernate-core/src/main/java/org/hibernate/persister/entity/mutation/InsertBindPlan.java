@@ -4,6 +4,7 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.cyclebreak.CycleBreakPatcher;
 import org.hibernate.action.queue.plan.PlannedOperation;
@@ -13,16 +14,18 @@ import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.sql.SQLException;
-import java.util.function.Supplier;
 
-/**
- * @author Steve Ebersole
- */
+///Bind plan for entity insert operations.
+///
+/// @see GeneratedValuesCollector
+///
+/// @author Steve Ebersole
 public class InsertBindPlan implements BindPlan {
 	private final EntityPersister entityPersister;
 	private final Object entity;
@@ -31,7 +34,8 @@ public class InsertBindPlan implements BindPlan {
 	private final boolean[] insertable;
 	private final InsertValuesAnalysis valuesAnalysis;
 	private final TableInclusionChecker tableInclusionChecker;
-	private final Supplier<Object> identifierSupplier;
+	private final AbstractEntityInsertAction action;
+	private final GeneratedValuesCollector generatedValuesCollector;
 
 	public InsertBindPlan(
 			EntityPersister entityPersister,
@@ -41,7 +45,8 @@ public class InsertBindPlan implements BindPlan {
 			boolean[] insertable,
 			InsertValuesAnalysis valuesAnalysis,
 			TableInclusionChecker tableInclusionChecker,
-			Supplier<Object> identifierSupplier) {
+			AbstractEntityInsertAction action,
+			GeneratedValuesCollector generatedValuesCollector) {
 		this.entityPersister = entityPersister;
 		this.entity = entity;
 		this.identifier = identifier;
@@ -49,12 +54,13 @@ public class InsertBindPlan implements BindPlan {
 		this.insertable = insertable;
 		this.valuesAnalysis = valuesAnalysis;
 		this.tableInclusionChecker = tableInclusionChecker;
-		this.identifierSupplier = identifierSupplier;
+		this.action = action;
+		this.generatedValuesCollector = generatedValuesCollector;
 	}
 
 	@Override
-	public Supplier<Object> getEntityIdAccess() {
-		return identifierSupplier;
+	public Object getEntityId() {
+		return action.getId();
 	}
 
 	@Override
@@ -99,13 +105,15 @@ public class InsertBindPlan implements BindPlan {
 			return;
 		}
 
-		executor.execute(
+		final GeneratedValues generatedValues = executor.execute(
 				entity,
 				valuesAnalysis,
 				tableInclusionChecker,
 				InsertBindPlan::verifyOutcome,
 				session
 		);
+
+		generatedValuesCollector.apply( generatedValues );
 	}
 
 	protected void decomposeForInsert(

@@ -4,17 +4,18 @@
  */
 package org.hibernate.action.queue.bind;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
-import java.util.function.Supplier;
-
-/**
- * @author Steve Ebersole
- */
+/// Binds parameters to SQL and executes it
+///
+/// @author Steve Ebersole
 public interface BindPlan {
-	default Supplier<Object> getEntityIdAccess() {
+	/// Access to the entity identifier associated with the PlannedOperation
+	/// that this BindPlan is associated with.  May be null.
+	@Nullable default Object getEntityId() {
 		return null;
 	}
 

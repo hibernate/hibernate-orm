@@ -20,9 +20,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * @author Steve Ebersole
- */
+/// Uses Tarjan’s Algorithm for finding strongly connected components (SCCs)
+/// in a directed graph and using that information to break cycles.
+///
+/// @see GraphEdge#setBroken(boolean)
+/// @see BindingPatch
+/// @see org.hibernate.action.queue.cyclebreak.CycleBreakPatcher
+///
+/// @author Steve Ebersole
 public class CycleBreaker {
 	public CycleBreaker() {
 	}
@@ -80,7 +85,7 @@ public class CycleBreaker {
 			if (state.getOrDefault(start, VisitState.UNVISITED) != VisitState.UNVISITED) {
 				continue;
 			}
-			final List<GraphEdge> cycle = dfsFindCycle(graph, start, inScc, state, stack);
+			final List<GraphEdge> cycle = depthFirstSearchForCycle(graph, start, inScc, state, stack);
 			if (!cycle.isEmpty()) {
 				return cycle;
 			}
@@ -88,7 +93,7 @@ public class CycleBreaker {
 		return List.of();
 	}
 
-	private List<GraphEdge> dfsFindCycle(
+	private List<GraphEdge> depthFirstSearchForCycle(
 			Graph graph,
 			GroupNode u,
 			Set<GroupNode> inScc,
@@ -108,7 +113,7 @@ public class CycleBreaker {
 
 			final VisitState vs = state.getOrDefault(e.getTo(), VisitState.UNVISITED);
 			if (vs == VisitState.UNVISITED) {
-				final List<GraphEdge> found = dfsFindCycle(graph, e.getTo(), inScc, state, stack);
+				final List<GraphEdge> found = depthFirstSearchForCycle(graph, e.getTo(), inScc, state, stack);
 				if (!found.isEmpty()) {
 					return found;
 				}

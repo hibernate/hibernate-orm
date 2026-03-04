@@ -4,12 +4,6 @@
  */
 package org.hibernate.orm.test.jpa.query;
 
-import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import java.util.Date;
-import java.util.List;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
@@ -22,23 +16,25 @@ import jakarta.persistence.SqlResultSetMappings;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-
 import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
-import org.hibernate.dialect.OracleDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.SkipForDialect;
-
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.Date;
+import java.util.List;
+
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
-@SkipForDialect(dialectClass = OracleDialect.class, matchSubTypes = true, reason = "https://hibernate.atlassian.net/browse/HHH-10323")
-@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support integer column. Added a test seperately")
-@Jpa(annotatedClasses = {ConstructorResultNativeQueryTest.Person.class})
-public class ConstructorResultNativeQueryTest {
+@RequiresDialect(SpannerPostgreSQLDialect.class)
+@Jpa(annotatedClasses = {SpannerPostgreSQLConstructorResultNativeQueryTest.Person.class})
+public class SpannerPostgreSQLConstructorResultNativeQueryTest {
 	@Entity( name = "Person" )
 	@SqlResultSetMappings(
 			value = {
@@ -111,7 +107,7 @@ public class ConstructorResultNativeQueryTest {
 	public static class Person {
 		@Id
 		@Column(name = "id")
-		private Integer id;
+		private Long id;
 		@Column( name = "p_name" )
 		private String name;
 		@Temporal( TemporalType.TIMESTAMP )
@@ -122,18 +118,18 @@ public class ConstructorResultNativeQueryTest {
 		public Person() {
 		}
 
-		public Person(Integer id, String name, Date birthDate) {
+		public Person(Long id, String name, Date birthDate) {
 			this.id = id;
 			this.name = name;
 			this.birthDate = birthDate;
 		}
 
-		public Person(Integer id, String name) {
+		public Person(Long id, String name) {
 			this.id = id;
 			this.name = name;
 		}
 
-		public Person(Integer id, String name, String weight) {
+		public Person(Long id, String name, String weight) {
 			this.id = id;
 			this.name = name;
 			this.weight = Integer.valueOf(weight);
@@ -148,7 +144,7 @@ public class ConstructorResultNativeQueryTest {
 	@Test
 	public void testConstructorResultNativeQuery(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
-			em.persist( new Person( 1, "John", new Date() ) );
+			em.persist( new Person( 1L, "John", new Date() ) );
 		} );
 
 		scope.inTransaction( em -> {
@@ -165,7 +161,7 @@ public class ConstructorResultNativeQueryTest {
 	@Test
 	public void testMultipleConstructorResultNativeQuery(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
-			em.persist( new Person( 1, "John", new Date() ) );
+			em.persist( new Person( 1L, "John", new Date() ) );
 		} );
 
 		scope.inTransaction( em -> {
@@ -181,7 +177,7 @@ public class ConstructorResultNativeQueryTest {
 	@Test
 	public void testConstructorResultNativeQuerySpecifyingType(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
-			em.persist( new Person( 1, "John", "85" ) );
+			em.persist( new Person( 1L, "John", "85" ) );
 		} );
 
 		scope.inTransaction( em -> {

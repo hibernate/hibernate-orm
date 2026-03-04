@@ -34,7 +34,7 @@ class GeneratedOnForcedIncrementTest {
 		} );
 		assertTrue( persisted.updated.isBefore( updated.updated ) );
 	}
-	@Entity
+	@Entity(name = "WithUpdateTimestamp")
 	static class WithUpdateTimestamp {
 		@Id long id;
 		@Version long version;

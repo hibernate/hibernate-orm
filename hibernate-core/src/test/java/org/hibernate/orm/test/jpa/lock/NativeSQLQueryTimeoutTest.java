@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.jpa.lock;
 
 
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 
@@ -26,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 @RequiresDialect(PostgreSQLDialect.class)
 @SkipForDialect(dialectClass = CockroachDialect.class, reason = "https://github.com/cockroachdb/cockroach/issues/41335")
+@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support pg_sleep function")
 @JiraKey( value = "HHH-13493")
 @Jpa(
 		integrationSettings = {@Setting(name = HINT_SPEC_QUERY_TIMEOUT, value = "500")}

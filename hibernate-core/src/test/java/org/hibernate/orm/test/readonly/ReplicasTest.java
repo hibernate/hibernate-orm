@@ -109,7 +109,7 @@ class ReplicasTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Thing")
 	static class Thing {
 		@Id
 		Long id = 2L;

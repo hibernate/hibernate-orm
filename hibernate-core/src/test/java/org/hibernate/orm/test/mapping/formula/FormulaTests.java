@@ -22,6 +22,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -122,6 +123,8 @@ public class FormulaTests {
 				override = @Formula("cast(rate * 100 as decimal(10,2)) || '%'"))
 		@DialectOverride.Formula(dialect = InformixDialect.class,
 				override = @Formula("trim(concat(to_char(rate * 100,'#&.&&'), '%'))"))
+		@DialectOverride.Formula(dialect = SpannerPostgreSQLDialect.class,
+				override = @Formula("cast(rate * 100 as varchar) || '%'"))
 		private String ratePercent;
 
 		public Long getId() {

@@ -134,7 +134,7 @@ public class CriteriaUpdateWithParametersTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Process")
 	public static class Process {
 		@Id
 		@GeneratedValue

@@ -47,7 +47,7 @@ public class IdGeneratorTypeWithBeanContainerTest {
 		assertThat(entity.id, is(SimpleBeanContainer.INITIAL_VALUE));
 	}
 
-	@Entity
+	@Entity(name = "SimpleEntity")
 	public static class SimpleEntity {
 		@Id @SimpleId
 		long id;

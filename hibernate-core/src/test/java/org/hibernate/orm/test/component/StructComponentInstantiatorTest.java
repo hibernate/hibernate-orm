@@ -9,13 +9,12 @@ import java.util.Objects;
 
 import org.hibernate.annotations.Instantiator;
 import org.hibernate.annotations.Struct;
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.PostgreSQLDialect;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -37,8 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 )
 @DomainModel(annotatedClasses = StructComponentInstantiatorTest.RecordStructHolder.class)
 @SessionFactory
-@RequiresDialect(PostgreSQLDialect.class)
-@RequiresDialect(OracleDialect.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsUserDefinedTypes.class )
 public class StructComponentInstantiatorTest {
 
 	@BeforeEach

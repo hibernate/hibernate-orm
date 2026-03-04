@@ -7,12 +7,14 @@ package org.hibernate.orm.test.hql;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.boot.model.FunctionContributor;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +33,7 @@ import java.sql.Statement;
 ) )
 @DomainModel( annotatedClasses = PostgreSQLFunctionWhereClauseTest.Book.class )
 @SessionFactory
+@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support functions")
 public class PostgreSQLFunctionWhereClauseTest {
 	@BeforeEach
 	void setUp(SessionFactoryScope factoryScope) {

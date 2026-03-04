@@ -6,13 +6,14 @@ package org.hibernate.orm.test.annotations.manytoonewithformula;
 
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.InformixDialect;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -153,7 +154,7 @@ public class ManyToOneWithFormulaTest {
 	@SkipForDialect( dialectClass = OracleDialect.class, reason = "Oracle do not support 'substring' function JDBC escape" )
 	@SkipForDialect( dialectClass = InformixDialect.class, reason = "Informix does not support 'substring' function JDBC escape" )
 	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = " Altibase char type returns with trailing spaces")
-	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support JDBC escapes" )
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsJdbcEscapes.class)
 	public void testManyToOneFromNonPkToNonPk(SessionFactoryScope scope) {
 		// also tests usage of the stand-alone @JoinFormula annotation
 		// (i.e. not wrapped within @JoinColumnsOrFormulas)

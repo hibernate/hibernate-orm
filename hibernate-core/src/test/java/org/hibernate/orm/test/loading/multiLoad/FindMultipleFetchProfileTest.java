@@ -51,7 +51,7 @@ public class FindMultipleFetchProfileTest {
 			assertTrue(Hibernate.isInitialized(all.get(1).owner));
 		});
 	}
-	@Entity
+	@Entity(name = "Record")
 	@FetchProfile(name = "withOwner")
 	static class Record {
 		@Id Long id;
@@ -70,7 +70,7 @@ public class FindMultipleFetchProfileTest {
 		Record() {
 		}
 	}
-	@Entity
+	@Entity(name = "Owner")
 	static class Owner {
 		@Id String name;
 

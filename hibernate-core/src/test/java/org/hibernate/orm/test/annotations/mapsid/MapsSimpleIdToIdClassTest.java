@@ -32,7 +32,7 @@ class MapsSimpleIdToIdClassTest {
 		} );
 	}
 
-	@Entity
+	@Entity(name = "Employee")
 	static class Employee {
 		@Id
 		long id;
@@ -45,7 +45,7 @@ class MapsSimpleIdToIdClassTest {
 		long empId;
 	}
 
-	@Entity
+	@Entity(name = "Dependent")
 	@IdClass(DependentId.class)
 	static class Dependent {
 		@Id

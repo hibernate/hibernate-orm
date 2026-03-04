@@ -90,7 +90,7 @@ public class TransientOverrideAsPersistentSingleTableTests {
 	public void testQueryByRootClass(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			//noinspection removal
-			var employees = session.createQuery( "from Employee", Employee.class )
+			var employees = session.createQuery( "from Employee order by name", Employee.class )
 					.getResultList();
 			assertEquals( 2, employees.size() );
 			assertThat( employees.get( 0 ), instanceOf( Editor.class ) );

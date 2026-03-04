@@ -434,7 +434,7 @@ public class CountQueryTests {
 		private String s;
 	}
 
-	@Entity
+	@Entity(name = "Contract")
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	public static class Contract extends LogSupport {
 		@Id

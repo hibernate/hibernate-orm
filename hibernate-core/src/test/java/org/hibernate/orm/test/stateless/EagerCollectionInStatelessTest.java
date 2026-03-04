@@ -56,7 +56,7 @@ public class EagerCollectionInStatelessTest {
 		});
 	}
 
-	@Entity
+	@Entity(name = "WithEagerCollection")
 	static class WithEagerCollection {
 		@Id long id = 69L;
 		@ElementCollection(fetch = EAGER)

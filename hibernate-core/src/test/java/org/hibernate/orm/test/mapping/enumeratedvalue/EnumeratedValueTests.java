@@ -96,6 +96,7 @@ public class EnumeratedValueTests {
 				fail( "Expecting a failure" );
 			}
 			catch (SQLException expected) {
+				session.getTransaction().setRollbackOnly();
 			}
 
 			try (PreparedStatement statement = connection.prepareStatement( "insert into persons (id, status) values (?, ?)" ) ) {
@@ -106,6 +107,7 @@ public class EnumeratedValueTests {
 				fail( "Expecting a failure" );
 			}
 			catch (SQLException expected) {
+				session.getTransaction().setRollbackOnly();
 			}
 		} ) );
 	}

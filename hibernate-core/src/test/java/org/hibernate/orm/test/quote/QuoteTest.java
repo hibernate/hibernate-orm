@@ -149,7 +149,7 @@ public class QuoteTest {
 		@Column(name = "`ID`")
 		protected long id;
 
-		@Column(name = "_id")
+		@Column(name = "id_")
 		protected long _id;
 
 		@ManyToOne(fetch = FetchType.LAZY)

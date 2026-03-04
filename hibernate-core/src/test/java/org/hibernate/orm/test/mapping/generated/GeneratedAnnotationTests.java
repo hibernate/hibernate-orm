@@ -9,6 +9,7 @@ import java.time.Instant;
 import org.hibernate.HibernateError;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.generator.EventType;
 
@@ -16,6 +17,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DomainModel( annotatedClasses = GeneratedAnnotationTests.AuditedEntity.class )
 @SessionFactory
 @RequiresDialect(value = PostgreSQLDialect.class, comment = "To write a trigger only once")
+@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support triggers")
 public class GeneratedAnnotationTests {
 
 	private static final String TRIGGER = "begin NEW.lastUpdatedAt = current_timestamp; return NEW; end;";

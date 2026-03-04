@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
 import org.hibernate.cfg.QuerySettings;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.criteria.JpaCriteriaInsertValues;
@@ -18,6 +19,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 
@@ -32,6 +34,8 @@ import org.junit.jupiter.api.Test;
 )
 @SessionFactory
 @JiraKey("HHH-19314")
+@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
+		reason = "ON CONFLICT clause with empty conflict target in INSERT statement is not supported")
 public class InsertConflictWithCriteriaCopyTreeEnabledTests {
 
 	@Test

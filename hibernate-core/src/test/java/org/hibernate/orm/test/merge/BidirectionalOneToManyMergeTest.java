@@ -54,7 +54,7 @@ public class BidirectionalOneToManyMergeTest {
 		} );
 	}
 
-	@Entity
+	@Entity(name = "Post")
 	public static class Post {
 
 		@Id
@@ -114,7 +114,7 @@ public class BidirectionalOneToManyMergeTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "PostComment")
 	public static class PostComment {
 
 		@Id

@@ -45,7 +45,7 @@ public class GetMultipleTest {
 		});
 
 	}
-	@Entity
+	@Entity(name = "Record")
 	static class Record {
 		@Id Long id;
 		String message;

@@ -26,6 +26,7 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
@@ -45,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Andrea Boriero
  */
 @RequiresDialectFeature(feature = SupportsSequences.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportSelectPreviousSequence.class )
 @BaseUnitTest
 public class SequenceStyleGeneratorBehavesLikeSequenceHiloGeneratorWithZeroIncrementSizeTest {
 	private static final String TEST_SEQUENCE = "test_sequence";

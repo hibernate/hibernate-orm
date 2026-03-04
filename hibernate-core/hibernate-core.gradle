@@ -294,6 +294,10 @@ tasks.withType( Test.class ).configureEach { test ->
         test.maxParallelForks = Runtime.runtime.availableProcessors()
         test.systemProperty 'maxParallelForks', test.maxParallelForks
     }
+    else if ( project.db == "spannerpgsql" ) {
+        test.maxParallelForks = 4
+        test.systemProperty 'maxParallelForks', test.maxParallelForks
+    }
 }
 
 tasks.named( "javadoc", Javadoc ) {

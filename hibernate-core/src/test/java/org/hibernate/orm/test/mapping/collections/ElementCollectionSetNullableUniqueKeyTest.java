@@ -17,6 +17,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -34,6 +35,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @BaseUnitTest
 @SkipForDialect( dialectClass = SybaseDialect.class, matchSubTypes = true,
 		reason = "Sybase does not support unique constraints on nullable columns" )
+@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
+		reason = "Spanner automatically creates primary key if it doesn't exist")
 public class ElementCollectionSetNullableUniqueKeyTest {
 	private StandardServiceRegistry ssr;
 

@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.testing.jdbc.JdbcUtils;
@@ -19,6 +20,7 @@ import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistryFunctionalTesting;
 import org.hibernate.testing.orm.junit.ServiceRegistryProducer;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
@@ -46,6 +48,7 @@ import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_JDBC_METADATA_EXTR
 @MethodSource("extractorStrategies")
 @ServiceRegistryFunctionalTesting
 @DomainModel(annotatedClasses = ViewValidationTest.TestEntity.class)
+@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support DELETE CASCASE")
 public class ViewValidationTest implements ServiceRegistryProducer {
 	static List<JdbcMetadataAccessStrategy> extractorStrategies() {
 		return List.of(

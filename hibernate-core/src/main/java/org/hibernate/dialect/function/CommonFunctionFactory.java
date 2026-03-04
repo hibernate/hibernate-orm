@@ -185,6 +185,55 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 *  For Spanner
+	 */
+	public void log10_spanner() {
+		functionRegistry.patternDescriptorBuilder( "log10", "log(?1)" )
+				.setExactArgumentCount(1)
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
+				.register();
+	}
+
+	public void position_spanner() {
+		functionRegistry.patternDescriptorBuilder("position", "strpos(?2, ?1)")
+				.setInvariantType(integerType)
+				.setExactArgumentCount(2)
+				.setParameterTypes(STRING, STRING)
+				.setArgumentListSignature("(STRING pattern in STRING string)")
+				.register();
+	}
+
+	public void log_spanner() {
+		functionRegistry.patternDescriptorBuilder( "log", "ln(cast(?2 as float8))/ln(cast(?1 as  float8))" )
+				.setExactArgumentCount( 2 )
+				.setParameterTypes(NUMERIC, NUMERIC)
+				.setInvariantType(doubleType)
+				.setArgumentListSignature("(NUMERIC base, NUMERIC arg)")
+				.register();
+	}
+
+	public void hyperbolic_spanner() {
+		functionRegistry.patternDescriptorBuilder( "sinh", "(exp(?1) - exp(-?1)) / 2" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
+				.register();
+
+		functionRegistry.patternDescriptorBuilder( "cosh", "(exp(?1) + exp(-?1)) / 2" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
+				.register();
+
+		functionRegistry.patternDescriptorBuilder( "tanh", "(exp(?1) - exp(-?1)) / (exp(?1) + exp(-?1))" )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
+				.register();
+	}
+
 	public void log2() {
 		functionRegistry.namedDescriptorBuilder( "log2" )
 				.setInvariantType(doubleType)
@@ -1791,19 +1840,6 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * Spanner substring() function
-	 */
-	public void substring_spanner() {
-		functionRegistry.namedDescriptorBuilder( "strpos" )
-				.setInvariantType(stringType)
-				.setArgumentCountBetween( 2, 3 )
-				.setParameterTypes(STRING, INTEGER, INTEGER)
-				.setArgumentListSignature( "(STRING string{ from|,} INTEGER start[{ for|,} INTEGER length])" )
-				.register();
-		functionRegistry.registerAlternateKey( "substring", "strpos" );
-	}
-
-	/**
 	 * Transact SQL-style (3 required args)
 	 */
 	public void substring_substringLen() {
@@ -2320,6 +2356,17 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	/**
+	 * power() for Spanner
+	 */
+	public void power_spanner() {
+		functionRegistry.patternDescriptorBuilder("power", "power(?1::float8, ?2::float8)")
+				.setExactArgumentCount(2)
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
+				.register();
+	}
+
 	public void round() {
 		functionRegistry.namedDescriptorBuilder( "round" )
 				// To avoid truncating to a specific data type, we default to using the argument type
@@ -2390,6 +2437,14 @@ public class CommonFunctionFactory {
 				.setInvariantType(integerType)
 				.setParameterTypes( STRING )
 				.setExactArgumentCount( 1 )
+				.register();
+	}
+
+	public void sqrt_spanner() {
+		functionRegistry.patternDescriptorBuilder("sqrt", "sqrt(?1::float8)")
+				.setExactArgumentCount(1)
+				.setParameterTypes(NUMERIC)
+				.setInvariantType(doubleType)
 				.register();
 	}
 

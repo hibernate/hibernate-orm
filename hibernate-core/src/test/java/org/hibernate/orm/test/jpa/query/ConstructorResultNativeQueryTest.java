@@ -23,6 +23,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -35,6 +36,7 @@ import org.junit.jupiter.api.Test;
  * @author Steve Ebersole
  */
 @SkipForDialect(dialectClass = OracleDialect.class, matchSubTypes = true, reason = "https://hibernate.atlassian.net/browse/HHH-10323")
+@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support integer column. Added a test seperately")
 @Jpa(annotatedClasses = {ConstructorResultNativeQueryTest.Person.class})
 public class ConstructorResultNativeQueryTest {
 	@Entity( name = "Person" )

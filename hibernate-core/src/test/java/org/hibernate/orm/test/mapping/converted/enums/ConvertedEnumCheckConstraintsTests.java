@@ -12,6 +12,8 @@ import java.sql.Statement;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -82,6 +84,7 @@ public class ConvertedEnumCheckConstraintsTests {
 	@SessionFactory(useCollectingStatementInspector = true)
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsColumnCheck.class )
 	@Test
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner enforces check constraints at commit time")
 	void verifyCheckConstraints(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> session.doWork( (connection) -> {
 			try (PreparedStatement statement = connection.prepareStatement( "insert into persons (id, gender) values (?, ?)" ) ) {

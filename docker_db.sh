@@ -1576,56 +1576,91 @@ spanner_pg() {
 }
 
 spanner_emulator() {
+  local dialect=${1:-GOOGLE_STANDARD_SQL}
+  local emulator_image=${SPANNER_EMULATOR:-gcr.io/cloud-spanner-emulator/emulator:1.5.50}
+  local total_containers=4
 
-  $CONTAINER_CLI rm -f spanner || true
-  # Run emulator (gRPC on 9010, REST on 9020)
-  $CONTAINER_CLI run --name spanner -d \
-    -p 9010:9010 \
-    -p 9020:9020 \
-    ${SPANNER_EMULATOR:-gcr.io/cloud-spanner-emulator/emulator:1.5.50}
+  # Start all emulator containers first
+  for n in $(seq 1 ${total_containers}); do
+    local container_name="spanner_${n}"
+    local port=$((9010 + n))
+    local rest_port=$((9020 + n))
 
-  # Wait for emulator to be ready (check logs for known messages)
-  n=0
-  until [ "$n" -ge 20 ]; do
-    OUTPUT="$($CONTAINER_CLI logs spanner 2>&1 || true)"
-    if [[ "$OUTPUT" == *"gRPC server listening"* ]] || [[ "$OUTPUT" == *"Cloud Spanner emulator running"* ]]; then
-      echo "Cloud Spanner emulator started."
-      break
-    fi
-    echo "Waiting for Cloud Spanner emulator to start..."
-    n=$((n+1))
-    sleep 3
+    echo "Starting Spanner emulator instance ${n} on port ${port}..."
+    $CONTAINER_CLI rm -f ${container_name} || true
+
+    $CONTAINER_CLI run --name ${container_name} -d \
+      -p ${port}:9010 \
+      -p ${rest_port}:9020 \
+      ${emulator_image}
   done
 
-  if [ "$n" -ge 20 ]; then
-    echo "Cloud Spanner emulator failed to start after 1 minute"
-    exit 1
-  fi
+  # Wait for all emulators to be ready
+  for n in $(seq 1 ${total_containers}); do
+    local container_name="spanner_${n}"
+    local port=$((9010 + n))
+    
+    local retries=0
+    until [ "$retries" -ge 20 ]; do
+      local logs="$($CONTAINER_CLI logs ${container_name} 2>&1 || true)"
+      if [[ "$logs" == *"gRPC server listening"* ]] || [[ "$logs" == *"Cloud Spanner emulator running"* ]]; then
+        echo "Cloud Spanner emulator (${container_name}) started on port ${port}."
+        break
+      fi
+      echo "Waiting for Cloud Spanner emulator (${container_name}) to start..."
+      retries=$((retries+1))
+      sleep 3
+    done
+    
+    if [ "$retries" -ge 20 ]; then
+       echo "Cloud Spanner emulator (${container_name}) failed to start"
+       exit 1
+    fi
+  done
 
-  if ! command -v gcloud >/dev/null; then
-    echo "gcloud not found. Installing gcloud..."
-    curl -sSL https://sdk.cloud.google.com | bash -s -- --disable-prompts --install-dir=/tmp >/dev/null 2>&1
-    export PATH="/tmp/google-cloud-sdk/bin:$PATH"
-  fi
+  # Configure Instance
+  for n in $(seq 1 ${total_containers}); do
+    local rest_port=$((9020 + n))
+    echo "Configuring Spanner emulator instance ${n} on port ${rest_port}..."
+    local host="localhost:${rest_port}"
+    local create_statement
+    
+    # Create Instance
+    curl -s -X POST "http://${host}/v1/projects/orm-test-project/instances" \
+      -H "Content-Type: application/json" \
+      -d '{
+            "instanceId": "orm-test-instance",
+            "instance": {
+              "config": "emulator-config",
+              "displayName": "Test Instance",
+              "nodeCount": 1
+            }
+          }' >/dev/null
 
-  echo "Configuring Spanner emulator instance and database timezone..."
-  # Execute in a subshell so we don't pollute the host environment variables indefinitely
-  (
-    export SPANNER_EMULATOR_HOST=localhost:9010
-    gcloud spanner instances create orm-test-instance \
-      --config=emulator-config --description="Test Instance" --nodes=1 \
-      --project=orm-test-project >/dev/null 2>&1 || true
-      
-    local dialect=${1:-GOOGLE_STANDARD_SQL}
-    gcloud spanner databases create orm-test-db \
-      --instance=orm-test-instance --database-dialect=${dialect} \
-      --project=orm-test-project >/dev/null 2>&1 || true
-      
-    gcloud spanner databases ddl update orm-test-db \
-      --instance=orm-test-instance \
-      --ddl="ALTER DATABASE \"orm-test-db\" SET \"spanner.default_time_zone\" = 'UTC';" \
-      --project=orm-test-project >/dev/null 2>&1 || true
-  )
+    # Determine Create Database statement based on dialect
+    if [[ "$dialect" == "POSTGRESQL" ]]; then
+       create_statement="CREATE DATABASE \"orm-test-db\""
+    else
+       create_statement="CREATE DATABASE \`orm-test-db\`"
+    fi
+
+    # Create Database
+    curl -s -X POST "http://${host}/v1/projects/orm-test-project/instances/orm-test-instance/databases" \
+      -H "Content-Type: application/json" \
+      -d "{
+            \"createStatement\": \"${create_statement//\"/\\\"}\",
+            \"databaseDialect\": \"${dialect}\"
+          }" >/dev/null
+
+    # Update DDL (for Timezone)
+    curl -s -X PATCH "http://${host}/v1/projects/orm-test-project/instances/orm-test-instance/databases/orm-test-db/ddl" \
+      -H "Content-Type: application/json" \
+      -d '{
+            "statements": [
+              "ALTER DATABASE \"orm-test-db\" SET \"spanner.default_time_zone\" = '"'UTC'"'"
+            ]
+          }' >/dev/null
+  done
 }
 
 if [ -z ${1} ]; then

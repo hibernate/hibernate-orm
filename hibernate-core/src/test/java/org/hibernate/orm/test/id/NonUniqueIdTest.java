@@ -10,10 +10,12 @@ import jakarta.persistence.Table;
 
 import org.hibernate.HibernateException;
 
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -27,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		annotatedClasses = NonUniqueIdTest.Category.class
 )
 @SessionFactory
+@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support creating tables without primary key" )
 public class NonUniqueIdTest {
 
 	@BeforeAll

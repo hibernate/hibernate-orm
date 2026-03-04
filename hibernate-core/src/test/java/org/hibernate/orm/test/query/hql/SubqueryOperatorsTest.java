@@ -11,7 +11,9 @@ import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -30,6 +32,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class SubqueryOperatorsTest {
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsFunctionalDependencyAnalysis.class )
 	public void testEvery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -42,6 +45,7 @@ public class SubqueryOperatorsTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsFunctionalDependencyAnalysis.class )
 	public void testAny(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

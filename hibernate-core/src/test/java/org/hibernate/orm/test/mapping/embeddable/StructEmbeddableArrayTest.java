@@ -40,9 +40,10 @@ import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.MutableValue;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
-import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -81,8 +82,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 )
 @DomainModel(annotatedClasses = StructEmbeddableArrayTest.StructHolder.class)
 @SessionFactory
-@RequiresDialect( PostgreSQLDialect.class )
-@RequiresDialect( OracleDialect.class )
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsUserDefinedTypes.class )
 public class StructEmbeddableArrayTest implements AdditionalMappingContributor {
 
 	@Override

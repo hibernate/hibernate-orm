@@ -6,8 +6,10 @@ package org.hibernate.orm.test.mapping.identifier;
 
 import org.hibernate.annotations.PartitionKey;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -19,6 +21,7 @@ import jakarta.persistence.Table;
  * @author Christian Beikov
  */
 @Jpa(annotatedClasses = {SimplePartitionKeyTest.User.class})
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class )
 public class SimplePartitionKeyTest {
 
 	@Test

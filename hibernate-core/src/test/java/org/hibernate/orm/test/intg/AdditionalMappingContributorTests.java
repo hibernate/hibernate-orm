@@ -17,6 +17,7 @@ import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
@@ -32,6 +33,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
@@ -104,6 +106,7 @@ public class AdditionalMappingContributorTests {
 	@DomainModel
 	@SessionFactory
 	@SuppressWarnings("JUnitMalformedDeclaration")
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support table name starting with underscore")
 	void verifyJdkClassDetailsContributions(
 			DomainModelScope domainModelScope,
 			SessionFactoryScope sessionFactoryScope) {

@@ -99,7 +99,7 @@ public class EagerManyToOneStreamTest {
 		scope.inTransaction(
 				session -> {
 					Query<Child> query = session
-							.createQuery( "select c from Child as c ", Child.class );
+							.createQuery( "select c from Child as c order by c.id", Child.class );
 					try (Stream<Child> resultStream = query.getResultStream()) {
 
 						List<Child> children = resultStream.collect( Collectors.toList() );

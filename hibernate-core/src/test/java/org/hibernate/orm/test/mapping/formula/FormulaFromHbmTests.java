@@ -7,6 +7,7 @@ package org.hibernate.orm.test.mapping.formula;
 import java.sql.Types;
 
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.mapping.BasicValue;
@@ -31,6 +32,7 @@ import static org.hamcrest.Matchers.is;
  */
 @DomainModel( xmlMappings = "org/hibernate/orm/test/mapping/formula/EntityOfFormulas.hbm.xml")
 @SessionFactory
+@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support JDBC escapes" )
 public class FormulaFromHbmTests {
 	@Test
 	public void mappingAssertions(DomainModelScope scope) {

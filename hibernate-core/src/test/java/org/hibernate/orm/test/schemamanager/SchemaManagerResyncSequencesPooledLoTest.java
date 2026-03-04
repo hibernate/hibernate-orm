@@ -40,7 +40,7 @@ class SchemaManagerResyncSequencesPooledLoTest {
 	static class EntityWithSequence {
 		@Id
 		@GeneratedValue
-		@SequenceGenerator(name = "TheSequence", allocationSize = 20)
+		@SequenceGenerator(name = "TheSequence_SEQ", allocationSize = 20)
 		Long id;
 		String name;
 

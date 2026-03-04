@@ -20,8 +20,10 @@ import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -115,6 +117,7 @@ public class LoadByNaturalIdTest {
 	@Test
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "Cursor must be on simple SELECT for FOR UPDATE")
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
 	void testFindOptions(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			session.find( Parent.class, "Luigi",

@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.orderby;
 
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 
@@ -12,6 +13,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
@@ -32,6 +34,8 @@ public class OrderByAndAggregateFunctionTest {
 	@Test
 	@RequiresDialect(PostgreSQLDialect.class)
 	@RequiresDialect(H2Dialect.class)
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "Spanner doesn't support non-GROUP BY column in SELECT with aggregation")
 	public void testSelectWithOrderAndGroupBy(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

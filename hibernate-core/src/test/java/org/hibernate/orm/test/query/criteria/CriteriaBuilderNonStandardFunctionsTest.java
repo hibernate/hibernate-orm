@@ -17,6 +17,7 @@ import java.util.List;
 import jakarta.persistence.criteria.ParameterExpression;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.common.TemporalUnit;
@@ -135,7 +136,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 
 	@Test
 	@RequiresDialect(PostgreSQLDialect.class)
-	@SkipForDialect(dialectClass = org.hibernate.community.dialect.SpannerPostgreSQLDialect.class, reason = "Spanner PostgreSQL does not support inet type")
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner PostgreSQL does not support inet type")
 	public void testSqlCustomType(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -228,7 +229,6 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = org.hibernate.community.dialect.SpannerPostgreSQLDialect.class, reason = "Spanner PostgreSQL does not support overlay")
 	public void testOverlay(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -322,7 +322,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 
 	@Test
 	@RequiresDialect(PostgreSQLDialect.class)
-	@SkipForDialect(dialectClass = org.hibernate.community.dialect.SpannerPostgreSQLDialect.class, reason = "Spanner PostgreSQL does not support collation")
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner PostgreSQL does not support collation")
 	public void testCollatePostgreSQL(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -346,7 +346,6 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 
 	@Test
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach has unreliable support for numeric types in log function")
-	@SkipForDialect(dialectClass = org.hibernate.community.dialect.SpannerPostgreSQLDialect.class, reason = "Spanner PostgreSQL does not support 2-parameter log function with numeric type")
 	public void testLog(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -455,7 +454,6 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 	@Test
 	@JiraKey("HHH-16185")
 	@JiraKey("HHH-20113")
-	@SkipForDialect(dialectClass = org.hibernate.community.dialect.SpannerPostgreSQLDialect.class, reason = "Spanner PostgreSQL does not support numeric truncation")
 	public void testNumericTruncFunction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final CriteriaBuilder cb = session.getCriteriaBuilder();
@@ -489,6 +487,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 	@Test
 	@JiraKey("HHH-16130")
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsDateTimeTruncation.class )
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Emulator bug in date_trunc")
 	public void testDateTruncFunction(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();

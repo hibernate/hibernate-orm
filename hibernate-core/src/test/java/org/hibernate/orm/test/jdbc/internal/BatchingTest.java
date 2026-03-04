@@ -6,6 +6,7 @@ package org.hibernate.orm.test.jdbc.internal;
 
 import java.sql.Statement;
 
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.batch.internal.BatchBuilderImpl;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
@@ -19,6 +20,7 @@ import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.StandardBasicTypes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -32,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author Brett Meyer
  */
 @SessionFactory
+@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support creating tables without primary key" )
 public class BatchingTest implements BatchKey {
 	private final String SANDBOX_TBL = "SANDBOX_JDBC_TST";
 

@@ -12,6 +12,7 @@ import jakarta.persistence.EnumeratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -97,6 +98,8 @@ public class NamedEnumEnumerateValueTests {
 	@DomainModel(annotatedClasses = Person.class)
 	@SessionFactory
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsColumnCheck.class )
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "Spanner doesn't commit the transaction when it fails with the constraint violation")
 	@Test
 	void verifyCheckConstraints(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> session.doWork( (connection) -> {
@@ -115,6 +118,8 @@ public class NamedEnumEnumerateValueTests {
 	@SessionFactory
 	@SkipForDialect( dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase (at least jTDS driver) truncates the value so the constraint is not violated" )
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsColumnCheck.class )
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "Spanner doesn't commit the transaction when it fails with the constraint violation")
 	@Test
 	void verifyCheckConstraints2(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> session.doWork( (connection) -> {

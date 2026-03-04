@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.query.hql;
 
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.community.dialect.DerbyDialect;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -67,6 +68,7 @@ public class InsertSelectTests {
 	@JiraKey( value = "HHH-15531")
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't really support window functions, " +
 			"but this requires the use of a dense_rank window function. We could emulate this, but don't think it's worth it")
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support dense_rank or row_number")
 	public void testInsertSelectDistinct(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

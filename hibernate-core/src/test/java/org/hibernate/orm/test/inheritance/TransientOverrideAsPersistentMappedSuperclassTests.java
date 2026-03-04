@@ -101,7 +101,7 @@ public class TransientOverrideAsPersistentMappedSuperclassTests {
 	public void testQueryByRootClass(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			//noinspection removal
-			final List<Employee> employees = session.createQuery( "from Employee", Employee.class )
+			final List<Employee> employees = session.createQuery( "from Employee order by name", Employee.class )
 					.getResultList();
 			assertEquals( 2, employees.size() );
 			assertThat( employees.get( 0 ), instanceOf( Editor.class ) );

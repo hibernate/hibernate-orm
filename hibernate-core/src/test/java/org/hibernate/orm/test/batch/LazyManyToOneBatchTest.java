@@ -76,7 +76,7 @@ public class LazyManyToOneBatchTest {
 		scope.inTransaction(
 				session -> {
 					List<Child> children = session
-							.createQuery( "select c from Child as c ", Child.class )
+							.createQuery( "select c from Child as c order by c.id", Child.class )
 							.getResultList();
 					statementInspector.assertExecutedCount( 1 );
 					assertEquals( 4, children.size() );

@@ -10,9 +10,11 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.PartitionKey;
 import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
@@ -29,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 						value = "org/hibernate/orm/test/sql/partition/postgrespartitions-drop.sql"),
 				@Setting(name = SchemaToolingSettings.JAKARTA_HBM2DDL_DROP_SOURCE,
 						value = "script-then-metadata")})
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportPartitionBy.class )
 class PostgresPartitionedTableTest {
 	@Test void test(EntityManagerFactoryScope scope) {
 		scope.inTransaction( session -> {

@@ -18,6 +18,7 @@ import org.hibernate.annotations.CollectionIdJdbcTypeCode;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.generator.Generator;
@@ -58,13 +59,19 @@ public class AutoGenerationTypeTests {
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity1.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
-			Dialect dialect = new H2Dialect();
+			Dialect dialect = metadata.getDatabase().getDialect();
 			final SequenceStyleGenerator generator = (SequenceStyleGenerator) idMapping.createGenerator( dialect, entityBinding.getRootClass());
 			final DatabaseStructure database1Structure = generator.getDatabaseStructure();
 
 			// implicit name : `${entity-name}_seq`
 			assertThat( database1Structure.getPhysicalName().render() ).isEqualToIgnoringCase( "tbl_1_SEQ" );
-			assertThat( database1Structure.getIncrementSize() ).isEqualTo( 50 );
+			if (dialect instanceof SpannerPostgreSQLDialect ) {
+				// Spanner doesn't support increment by in sequence. It should be 1.
+				assertThat( database1Structure.getIncrementSize() ).isEqualTo( 1 );
+			}
+			else {
+				assertThat( database1Structure.getIncrementSize() ).isEqualTo( 50 );
+			}
 		}
 	}
 
@@ -79,7 +86,7 @@ public class AutoGenerationTypeTests {
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( Entity2.class.getName() );
 			final KeyValue idMapping = entityBinding.getRootClass().getIdentifier();
-			Dialect dialect = new H2Dialect();
+			Dialect dialect = metadata.getDatabase().getDialect();
 			final SequenceStyleGenerator generator = (SequenceStyleGenerator) idMapping.createGenerator(
 					dialect,
 					entityBinding.getRootClass(),
@@ -90,7 +97,13 @@ public class AutoGenerationTypeTests {
 
 			// GeneratedValue#generator value
 			assertThat( database2Structure.getPhysicalName().render() ).isEqualToIgnoringCase("id_seq" );
-			assertThat( database2Structure.getIncrementSize() ).isEqualTo( 50 );
+			if (dialect instanceof SpannerPostgreSQLDialect ) {
+				// Spanner doesn't support increment by in sequence. It should be 1.
+				assertThat( database2Structure.getIncrementSize() ).isEqualTo( 1 );
+			}
+			else {
+				assertThat( database2Structure.getIncrementSize() ).isEqualTo( 50 );
+			}
 		}
 	}
 
@@ -110,12 +123,18 @@ public class AutoGenerationTypeTests {
 			final Property theTwos = entity1Binding.getProperty( "theTwos" );
 			final IdentifierBag idBagMapping = (IdentifierBag) theTwos.getValue();
 			final KeyValue collectionIdMapping = idBagMapping.getIdentifier();
-			Dialect dialect = new H2Dialect();
+			Dialect dialect = metadata.getDatabase().getDialect();
 			final SequenceStyleGenerator generator = (SequenceStyleGenerator) collectionIdMapping.createGenerator( dialect, null);
 			final DatabaseStructure idBagIdGeneratorDbStructure = generator.getDatabaseStructure();
 
 			assertThat( idBagIdGeneratorDbStructure.getPhysicalName().render() ).isEqualToIgnoringCase( "tbl_2_seq" );
-			assertThat( idBagIdGeneratorDbStructure.getIncrementSize() ).isEqualTo( 50 );
+			if (dialect instanceof SpannerPostgreSQLDialect ) {
+				// Spanner doesn't support increment by in sequence. It should be 1.
+				assertThat( idBagIdGeneratorDbStructure.getIncrementSize() ).isEqualTo( 1 );
+			}
+			else {
+				assertThat( idBagIdGeneratorDbStructure.getIncrementSize() ).isEqualTo( 50 );
+			}
 		}
 	}
 

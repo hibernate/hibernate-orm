@@ -49,7 +49,7 @@ public class DeleteDetachedOptionalityViolationTest {
 		scope.inTransaction( s -> assertNull( s.find( Thing.class, thing.id ) ) );
 	}
 
-	@Entity
+	@Entity(name = "Thing")
 	static class Thing {
 		@GeneratedValue
 		@Id

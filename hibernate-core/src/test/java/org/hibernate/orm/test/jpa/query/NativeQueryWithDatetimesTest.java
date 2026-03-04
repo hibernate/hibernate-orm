@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -31,7 +32,12 @@ public class NativeQueryWithDatetimesTest {
 	@Test void test(EntityManagerFactoryScope scope) {
 		scope.inTransaction(s -> s.persist(new Datetimes()));
 		Object[] result = scope.fromTransaction(s -> (Object[]) s.createNativeQuery("select ctime, cdate, cdatetime from tdatetimes", Object[].class).getSingleResult());
-		assertInstanceOf(LocalTime.class, result[0]);
+		if (scope.getDialect() instanceof SpannerPostgreSQLDialect) {
+			assertInstanceOf( LocalDateTime.class, result[0] );
+		}
+		else {
+			assertInstanceOf( LocalTime.class, result[0] );
+		}
 		assertInstanceOf(LocalDate.class, result[1]);
 		assertInstanceOf(LocalDateTime.class, result[2]);
 //		result = scope.fromTransaction(s -> (Object[]) s.createNativeQuery("select current_time, current_date, current_timestamp from tdatetimes", Object[].class).getSingleResult());

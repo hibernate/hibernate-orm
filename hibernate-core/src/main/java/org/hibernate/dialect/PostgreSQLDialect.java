@@ -600,8 +600,6 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.covarPopSamp();
 		functionFactory.corr();
 		functionFactory.regrLinearRegressionAggregates();
-		functionFactory.insert_overlay();
-		functionFactory.overlay();
 		functionFactory.soundex(); //was introduced in Postgres 9 apparently
 
 		functionFactory.locate_positionSubstring();
@@ -617,6 +615,9 @@ public class PostgreSQLDialect extends Dialect {
 	protected void registerUtilityFunctions( FunctionContributions functionContributions ) {
 		final var functionFactory = new CommonFunctionFactory( functionContributions );
 		final var functionRegistry =  functionContributions.getFunctionRegistry();
+
+		functionFactory.insert_overlay();
+		functionFactory.overlay();
 
 		functionFactory.makeDateTimeTimestamp();
 		// Note that PostgreSQL doesn't support the OVER clause for ordered set-aggregate functions

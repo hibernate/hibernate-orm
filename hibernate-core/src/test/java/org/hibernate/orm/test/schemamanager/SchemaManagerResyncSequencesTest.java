@@ -8,15 +8,19 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SessionFactory
 @DomainModel(annotatedClasses = SchemaManagerResyncSequencesTest.EntityWithSequence.class)
+@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
+		reason = "Spanner doesn't support calling nextval in RO transactions")
 class SchemaManagerResyncSequencesTest {
 	@Test void test(SessionFactoryScope scope) {
 		var schemaManager = scope.getSessionFactory().getSchemaManager();

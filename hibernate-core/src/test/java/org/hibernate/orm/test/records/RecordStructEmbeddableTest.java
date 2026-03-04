@@ -13,8 +13,10 @@ import org.hibernate.dialect.PostgreSQLDialect;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -39,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @RequiresDialect(PostgreSQLDialect.class)
 @RequiresDialect(OracleDialect.class)
 @RequiresDialect(DB2Dialect.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNamedEnum.class )
 public class RecordStructEmbeddableTest {
 
 	@BeforeEach

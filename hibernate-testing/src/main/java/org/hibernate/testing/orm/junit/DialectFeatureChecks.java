@@ -371,6 +371,14 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsExtendedConnectionLockTimeouts implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return dialect.getLockingSupport().getConnectionLockTimeoutStrategy().getSupportedLevel()
+				== ConnectionLockTimeoutStrategy.Level.EXTENDED;
+		}
+	}
+
 	public static class SupportsBackwardsScrollableResultSets implements DialectFeatureCheck {
 		@Override
 		public boolean apply(Dialect dialect) {

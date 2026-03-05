@@ -106,7 +106,7 @@ public class MySQLLockingSupport implements LockingSupport, LockingSupport.Metad
 
 		@Override
 		public Level getSupportedLevel() {
-			return ConnectionLockTimeoutStrategy.Level.EXTENDED;
+			return Level.SUPPORTED;
 		}
 
 		@Override
@@ -135,10 +135,13 @@ public class MySQLLockingSupport implements LockingSupport, LockingSupport.Metad
 						if ( milliseconds == SKIP_LOCKED_MILLI ) {
 							throw new HibernateException( "Connection lock-timeout does not accept skip-locked" );
 						}
+						if ( milliseconds == NO_WAIT_MILLI ) {
+							throw new HibernateException( "Connection lock-timeout does not accept no-wait" );
+						}
 						if ( milliseconds == WAIT_FOREVER_MILLI ) {
 							return foreverValue;
 						}
-						return milliseconds / 1000;
+						return (int) Math.ceil( (double) milliseconds / 1000);
 					},
 					"SET @@SESSION.innodb_lock_wait_timeout = %s",
 					connection,

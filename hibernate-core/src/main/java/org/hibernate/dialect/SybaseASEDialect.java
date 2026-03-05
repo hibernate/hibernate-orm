@@ -694,13 +694,24 @@ public class SybaseASEDialect extends SybaseDialect {
 						new QueryTimeoutException( message, sqlException, sql );
 					case "JZ0TO", "JZ006" ->
 						new LockTimeoutException( message, sqlException, sql );
-					case "S1000", "23000" ->
+					case "S1000" -> {
+						if ( errorCode == 12205 ) {
+							yield new LockTimeoutException( message, sqlException, sql );
+						}
+						else {
+							yield convertConstraintViolation( sqlException, message, sql, errorCode );
+						}
+					}
+					case "23000" ->
 						convertConstraintViolation( sqlException, message, sql, errorCode );
 					case "ZZZZZ" -> {
 						if ( 515 == errorCode ) {
 							// Attempt to insert NULL value into column; column does not allow nulls.
 							yield new ConstraintViolationException( message, sqlException, sql, ConstraintKind.NOT_NULL,
 									getViolatedConstraintNameExtractor().extractConstraintName( sqlException ) );
+						}
+						else if ( errorCode == 12205 ) {
+							yield new LockTimeoutException( message, sqlException, sql );
 						}
 						else {
 							yield null;

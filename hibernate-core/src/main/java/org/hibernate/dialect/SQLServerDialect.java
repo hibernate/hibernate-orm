@@ -1277,5 +1277,4 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return false;
 	}
-
 }

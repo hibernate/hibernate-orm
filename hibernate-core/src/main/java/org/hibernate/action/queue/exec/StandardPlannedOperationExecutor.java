@@ -6,10 +6,10 @@ package org.hibernate.action.queue.exec;
 
 import org.hibernate.action.queue.Helper;
 import org.hibernate.action.queue.MutationKind;
+import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.cyclebreak.FkFixupUpdateBindPlan;
 import org.hibernate.action.queue.cyclebreak.FkFixupUpdateFactory;
 import org.hibernate.action.queue.plan.PlannedOperation;
-import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
@@ -99,6 +99,15 @@ public class StandardPlannedOperationExecutor implements PlannedOperationExecuto
 	}
 
 	private BatchKeyAccess batchKeySupplier(PlannedOperation op) {
-		return () -> new BasicBatchKey(op.getTableExpression() + "#" + op.getKind().name());
+		// Use StatementShapeKey which includes table, operation type, and SQL structure hash
+		// This ensures operations with different SQL structures get separate batches
+		// Example: "DELETE WHERE id=?" and "DELETE WHERE fk=? AND id=?" targeting the same table
+		// will use different batches due to different parameter counts
+		final StatementShapeKey shapeKey = switch (op.getKind()) {
+			case INSERT -> StatementShapeKey.forInsert(op.getTableExpression(), op);
+			case UPDATE -> StatementShapeKey.forUpdate(op.getTableExpression(), op);
+			case DELETE -> StatementShapeKey.forDelete(op.getTableExpression(), op);
+		};
+		return () -> shapeKey;
 	}
 }

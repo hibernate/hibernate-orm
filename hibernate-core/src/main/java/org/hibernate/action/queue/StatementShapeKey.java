@@ -5,6 +5,7 @@
 package org.hibernate.action.queue;
 
 import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.sql.model.PreparableMutationOperation;
 
 import java.util.Objects;
@@ -18,7 +19,7 @@ import static org.hibernate.action.queue.Helper.normalizeTableName;
 /// Useful as a key for batching.
 ///
 /// @author Steve Ebersole
-public record StatementShapeKey(String tableExpression, MutationKind kind, int shapeHash) {
+public record StatementShapeKey(String tableExpression, MutationKind kind, int shapeHash) implements BatchKey {
 
 	public StatementShapeKey withType(MutationKind t) {
 		return new StatementShapeKey(tableExpression, t, Objects.hash(tableExpression, t, shapeHash));

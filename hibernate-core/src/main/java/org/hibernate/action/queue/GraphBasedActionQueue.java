@@ -117,7 +117,19 @@ public class GraphBasedActionQueue implements ActionQueue {
 		// IDENTITY inserts must execute immediately to generate IDs
 		// Delegate execution to FlushCoordinator but trigger it now, not at flush time
 		if (insert.isEarlyInsert()) {
-			// Execute IDENTITY insert immediately via FlushCoordinator
+			// CRITICAL: Before executing an IDENTITY insert, we must flush any pending
+			// parent inserts to avoid transient reference errors.
+			//
+			// Example scenario that fails without this:
+			// 1. persist(parent) with assigned ID → added to pendingActions
+			// 2. Cascade persist(child) with IDENTITY generation
+			// 3. Child tries to insert with FK to parent
+			// 4. But parent not in database yet → transient reference error!
+			//
+			// Solution: Execute pending inserts first (mirrors ActionQueueLegacy behavior)
+			executePendingInserts();
+
+			// Now execute IDENTITY insert immediately via FlushCoordinator
 			flushCoordinator.executeIdentityInsert(insert);
 
 			// Still increment counter for stats
@@ -142,6 +154,40 @@ public class GraphBasedActionQueue implements ActionQueue {
 					insert
 			);
 		}
+	}
+
+	/**
+	 * Executes all pending insert actions.
+	 * <p>
+	 * This is necessary before executing IDENTITY inserts to ensure parent entities
+	 * with assigned IDs are in the database before children with IDENTITY generation
+	 * try to insert with foreign keys referencing those parents.
+	 * <p>
+	 * Mirrors the behavior of ActionQueueLegacy.executeInserts() which is called
+	 * before processing early (IDENTITY) inserts.
+	 */
+	private void executePendingInserts() {
+		if (pendingActions.isEmpty()) {
+			return;
+		}
+
+		// Collect all insert actions from pending list
+		final List<Executable> insertsToExecute = new ArrayList<>();
+		for (Executable action : pendingActions) {
+			if (action instanceof AbstractEntityInsertAction) {
+				insertsToExecute.add(action);
+			}
+		}
+
+		if (insertsToExecute.isEmpty()) {
+			return;
+		}
+
+		// Execute these inserts via FlushCoordinator
+		flushCoordinator.executeFlush(insertsToExecute);
+
+		// Remove executed actions from pending list
+		pendingActions.removeAll(insertsToExecute);
 	}
 
 	/**

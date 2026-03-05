@@ -26,7 +26,7 @@ tasks.build.enabled = false
 //		2. generate and place all the artifacts in the staging directory (see local.publishing-java-module)
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-tasks.register("releasePrepare") {
+def releasePrepareTask = tasks.register("releasePrepare") {
     group = "release-prepare"
     description = "Scripted release 'Release Prepare' stage"
 

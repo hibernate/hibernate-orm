@@ -224,14 +224,14 @@ class ColumnDefinitions {
 
 			final String generatedAs = column.getGeneratedAs();
 			if ( generatedAs != null ) {
-				if ( !dialect.supportsNotNullAfterGeneratedAs() ) {
-					return;
-				}
 				definition.append( dialect.generatedAs(
 						generatedAs,
 						column.isStored(),
 						column.isHidden()
 				) );
+				if ( !dialect.supportsNotNullAfterGeneratedAs() ) {
+					return;
+				}
 			}
 
 			if ( column.isNullable() ) {

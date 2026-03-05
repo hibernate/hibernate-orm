@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -23,13 +24,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 
 @RequiresDialect(SpannerPostgreSQLDialect.class)
+@RequiresDialect(SpannerDialect.class)
 @DomainModel(annotatedClasses = {
 		SpannerPostgreSQLDisableIntPKTest.IntegerIdEntity.class,
 		SpannerPostgreSQLDisableIntPKTest.LongIdEntity.class
 })
 @SessionFactory
 @ServiceRegistry(settings = {
-		@Setting(name = "hibernate.dialect.spannerpg.use_integer_for_primary_key", value = "false"),
+		@Setting(name = "hibernate.dialect.spanner.use_integer_for_primary_key", value = "false"),
 })
 public class SpannerPostgreSQLDisableIntPKTest {
 

@@ -118,7 +118,7 @@ class FullJoinTest {
 
 	private void prepareData(EntityManagerFactoryScope scope) {
 		scope.inTransaction( session -> {
-			session.createNativeQuery( "delete from OtherThing_Thing" ).executeUpdate();
+			session.createNativeQuery( "delete from OtherThing_Thing where 1=1" ).executeUpdate();
 			session.createQuery( "delete from Thing" ).executeUpdate();
 			session.createQuery( "delete from OtherThing" ).executeUpdate();
 

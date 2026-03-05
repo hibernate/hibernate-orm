@@ -60,12 +60,3 @@ def releasePrepareTask = tasks.register("releasePrepare") {
     // used by JReleaser during the release process
     dependsOn tasks.publishAllPublicationsToStagingRepository
 }
-
-// used from the h2 CI job
-tasks.register("preVerifyRelease") {
-    group = "release-prepare"
-    description = "Delegates to `releasePrepare` task"
-
-    dependsOn releasePrepareTask
-}
-

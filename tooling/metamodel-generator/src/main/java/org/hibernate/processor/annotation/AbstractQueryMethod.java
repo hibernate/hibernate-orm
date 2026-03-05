@@ -94,9 +94,18 @@ public abstract class AbstractQueryMethod extends AbstractAnnotatedMethod {
 
 	abstract boolean isNullable(int index);
 
+	@Nullable
+	abstract String containerType();
+
+	boolean useSpecificationCreateQuery() {
+		return isUsingSpecification()
+			&& !isReactive()
+			&& !isUnspecializedQueryType( containerType() );
+	}
+
 	boolean initiallyUnwrapped() {
 		return !isUsingEntityManager() // a TypedQuery from EntityManager is not a SelectionQuery
-			|| isUsingSpecification() && !isReactive(); // SelectionSpecification.createQuery() returns SelectionQuery
+			|| useSpecificationCreateQuery(); // SelectionSpecification.createQuery() returns SelectionQuery
 	}
 
 	List<String> parameterTypes() {

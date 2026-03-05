@@ -12,7 +12,7 @@ import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
-import org.hibernate.action.queue.plan.PlannedOperationGroup;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -48,7 +48,7 @@ public class Decomposer {
 		this.session = session;
 	}
 
-	public List<PlannedOperationGroup> decompose(
+	public List<PlannedOperation> decompose(
 			Executable executable,
 			int ordinalBase,
 			Consumer<PostExecutionCallback> postExecCallbackRegistry) {
@@ -139,9 +139,9 @@ public class Decomposer {
 	 * This should be called after an entity becomes managed (e.g., after an INSERT is executed).
 	 *
 	 * @param managedEntity the entity that just became managed
-	 * @return list of PlannedOperationGroups for inserts that were resolved
+	 * @return list of PlannedOperations for inserts that were resolved
 	 */
-	public List<PlannedOperationGroup> resolveAndDecompose(Object managedEntity) {
+	public List<PlannedOperation> resolveAndDecompose(Object managedEntity) {
 		// Find inserts that were waiting for this entity
 		final Set<AbstractEntityInsertAction> dependentInserts = insertsByTransientEntity.remove(managedEntity);
 
@@ -149,7 +149,7 @@ public class Decomposer {
 			return Collections.emptyList();
 		}
 
-		final List<PlannedOperationGroup> resolvedGroups = arrayList(dependentInserts.size());
+		final List<PlannedOperation> resolvedOperations = arrayList(dependentInserts.size());
 		final List<AbstractEntityInsertAction> fullyResolved = new ArrayList<>();
 
 		for (AbstractEntityInsertAction entityInsert : dependentInserts) {
@@ -160,7 +160,7 @@ public class Decomposer {
 
 			// If all dependencies are now satisfied, decompose it
 			if (dependencies.isEmpty()) {
-				resolvedGroups.addAll(
+				resolvedOperations.addAll(
 						entityInsert.getPersister().getInsertDecomposer().decompose(
 								entityInsert,
 								0,
@@ -175,7 +175,7 @@ public class Decomposer {
 		// Clean up fully resolved inserts
 		fullyResolved.forEach(unresolvedInserts::remove);
 
-		return resolvedGroups;
+		return resolvedOperations;
 	}
 
 	/**

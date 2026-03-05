@@ -7,7 +7,7 @@ package org.hibernate.action.queue.fk;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.metamodel.mapping.internal.ManyToManyCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -110,12 +110,12 @@ public final class ForeignKeyModelBuilder {
 
 		// key FK (collection table -> owner)
 		final ForeignKeyDescriptor keyFk = attributeMapping.getKeyDescriptor();
-		addIfConstraint(keyFk, false, foreignKeys, seen);
+		addIfConstraint(keyFk, keyFk.getKeyPart(), keyFk.getTargetPart(), false, foreignKeys, seen);
 
 		// many-to-many join table has element FK too
 		if (attributeMapping.getElementDescriptor() instanceof ManyToManyCollectionPart m2m) {
 			final ForeignKeyDescriptor elementFk = m2m.getForeignKeyDescriptor();
-			addIfConstraint(elementFk, m2m.isOptional(), foreignKeys, seen);
+			addIfConstraint(elementFk, elementFk.getKeyPart(), elementFk.getTargetPart(), m2m.isOptional(), foreignKeys, seen);
 		}
 	}
 
@@ -133,8 +133,8 @@ public final class ForeignKeyModelBuilder {
 		foreignKeys.add(new ForeignKey(
 				source.getTableName(),
 				target.getTableName(),
-				source.getKeyDetails().getKeyColumns().stream().map( TableDetails.KeyColumn::getColumnName ).toList(),
-				target.getKeyDetails().getKeyColumns().stream().map( TableDetails.KeyColumn::getColumnName ).toList(),
+				source.getKeyDetails(),
+				target.getKeyDetails(),
 				false,
 				false,
 				false
@@ -162,21 +162,29 @@ public final class ForeignKeyModelBuilder {
 			List<ForeignKey> foreignKeys,
 			IdentityHashMap<ForeignKeyDescriptor, Boolean> seen) {
 		final ForeignKeyDescriptor fk = toOne.getForeignKeyDescriptor();
-		addIfConstraint(fk, toOne.isNullable(), foreignKeys, seen);
+		addIfConstraint(fk, fk.getKeyPart(), fk.getTargetPart(), toOne.isNullable(), foreignKeys, seen);
 	}
 
 	private void addIfConstraint(
 			ForeignKeyDescriptor fk,
+			SelectableMappings keySide,
+			SelectableMappings targetSide,
 			boolean nullable,
 			List<ForeignKey> foreignKeys,
 			IdentityHashMap<ForeignKeyDescriptor, Boolean> seen) {
-		if (fk == null) return;
-		if (!fk.hasConstraint()) return;
-		addConstraint( fk, nullable, foreignKeys, seen );
+		if ( fk == null ) {
+			return;
+		}
+		if ( !fk.hasConstraint() ) {
+			return;
+		}
+		addConstraint( fk, keySide, targetSide, nullable, foreignKeys, seen );
 	}
 
 	private void addConstraint(
 			ForeignKeyDescriptor fkDesc,
+			SelectableMappings keySide,
+			SelectableMappings targetSide,
 			boolean nullable,
 			List<ForeignKey> foreignKeys,
 			IdentityHashMap<ForeignKeyDescriptor, Boolean> seen) {
@@ -195,8 +203,8 @@ public final class ForeignKeyModelBuilder {
 		foreignKeys.add(new ForeignKey(
 				fkDesc.getKeyTable(),
 				fkDesc.getTargetTable(),
-				keyColumns,
-				targetColumns,
+				keySide,
+				targetSide,
 				true,
 				nullable,
 				deferrable

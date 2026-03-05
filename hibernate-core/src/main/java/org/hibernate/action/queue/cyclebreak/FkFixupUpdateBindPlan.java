@@ -66,6 +66,16 @@ public class FkFixupUpdateBindPlan implements BindPlan {
 
 	@Override
 	public void execute(MutationExecutor executor, PlannedOperation operation, SharedSessionContractImplementor session) {
-		updateTemplate.executorHook().execute(executor, session);
+		// Comes down to whether we want to allow this to be added back to the flush plan
+		// as another "cycle" for possible batching.
+		//
+		// For now, let's just execute it directly...
+		executor.execute(
+				operation.getBindPlan().getEntityInstance(),
+				null,
+				tableMapping -> true,
+				(statementDetails, affectedRowCount, batchPosition) -> affectedRowCount == 1,
+				session
+		);
 	}
 }

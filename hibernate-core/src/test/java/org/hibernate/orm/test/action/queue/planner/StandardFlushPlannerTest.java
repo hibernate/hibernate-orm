@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -499,27 +498,19 @@ public class StandardFlushPlannerTest {
 	}
 
 	private GraphEdge createEdge(GroupNode from, GroupNode to, boolean breakable, long stableId) {
-		return GraphTestUtils.createEdge(
-				from,
-				to,
-				breakable,
-				breakable ? 10 : Integer.MAX_VALUE, // default cost
-				Set.of("fk_column"),
-				false,
-				stableId
-		);
+		if (breakable) {
+			return GraphTestUtils.createBreakableEdge(from, to, 10);
+		} else {
+			return GraphTestUtils.createUnbreakableEdge(from, to);
+		}
 	}
 
 	private GraphEdge createEdge(GroupNode from, GroupNode to, boolean breakable, int breakCost) {
-		return GraphTestUtils.createEdge(
-				from,
-				to,
-				breakable,
-				breakCost,
-				Set.of("fk_column"),
-				false,
-				System.nanoTime()
-		);
+		if (breakable) {
+			return GraphTestUtils.createBreakableEdge(from, to, breakCost);
+		} else {
+			return GraphTestUtils.createUnbreakableEdge(from, to);
+		}
 	}
 
 	private int findOperationIndex(List<PlannedOperation> ops, String tableName) {

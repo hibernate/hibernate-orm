@@ -6,11 +6,9 @@ package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.queue.MutationKind;
-import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.plan.PlannedOperation;
-import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
@@ -21,7 +19,6 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
-import org.hibernate.action.queue.Helper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
@@ -31,20 +28,12 @@ import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
-
 /// [Decomposer][org.hibernate.action.queue.graph.MutationDecomposer] for entity insert operations.
 ///
-/// Converts an [AbstractEntityInsertAction] into a set of [PlannedOperationGroup]s that can
-/// be executed in the correct order respecting foreign key constraints.  The insert operations
-/// are created in "forward order", meaning parent (target) tables before child (key) tables - e.g.
-/// `customers` before `orders`.
-///
-/// [MutationDecomposer][org.hibernate.action.queue.graph.MutationDecomposer] implementation for entity insertions.
+/// Converts an [AbstractEntityInsertAction] into a group of [PlannedOperation] to be performed.
 ///
 /// @author Steve Ebersole
 public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAction> {
@@ -71,7 +60,7 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 	}
 
 	@Override
-	public List<PlannedOperationGroup> decompose(
+	public List<PlannedOperation> decompose(
 			AbstractEntityInsertAction action,
 			int ordinalBase,
 			Consumer<PostExecutionCallback> postExecutionCallbackRegistry,
@@ -96,12 +85,15 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 
 		var effectiveGroup = chooseEffectiveInsertGroup( insertable, entity, identifier, session );
 
-		LinkedHashMap<String, List<PlannedOperation>> byTable = new LinkedHashMap<>();
-		int localOrd = 0;
-
 		final var generatedValuesCollector = new GeneratedValuesCollector( entityPersister, EventType.INSERT );
 		final PostInsertHandling postInsertHandling = new PostInsertHandling( action, generatedValuesCollector );
 		postExecutionCallbackRegistry.accept( postInsertHandling );
+
+		// Compute whether this entity insert needs identity pre-phase
+		final boolean needsIdPrePhase = org.hibernate.action.queue.Helper.needsIdentityPrePhase(entityPersister, identifier);
+
+		final List<PlannedOperation> operations = new ArrayList<>(effectiveGroup.getNumberOfOperations());
+		int localOrd = 0;
 
 		for (int i = 0; i < effectiveGroup.getNumberOfOperations(); i++) {
 			var operation = effectiveGroup.getOperation(i);
@@ -125,31 +117,14 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 					operation,
 					bindPlan,
 					ordinalBase * 1_000 + (localOrd++),
-					"EntityInsertAction(" + entityPersister.getEntityName() + ")"
+					"EntityInsertAction(" + entityPersister.getEntityName() + ")",
+					needsIdPrePhase
 			);
 
-			byTable.computeIfAbsent(tableName, t -> new ArrayList<>()).add(op);
+			operations.add(op);
 		}
 
-		ArrayList<PlannedOperationGroup> out = arrayList(byTable.size());
-		int ord = 0;
-		for (var e : byTable.entrySet()) {
-			String tableName = e.getKey();
-			List<PlannedOperation> plannedOperations = e.getValue();
-
-			out.add(new PlannedOperationGroup(
-					tableName,
-					MutationKind.INSERT,
-					// hash based on op shape
-					StatementShapeKey.forInsert(tableName, plannedOperations),
-					plannedOperations,
-					Helper.needsIdentityPrePhase(entityPersister, identifier),
-					ordinalBase * 1_000 + (ord++),
-					"EntityInsertAction(" + entityPersister.getEntityName() + ")"
-			));
-		}
-
-		return out;
+		return operations;
 	}
 
 	protected boolean preInsert(AbstractEntityInsertAction action, SharedSessionContractImplementor session) {

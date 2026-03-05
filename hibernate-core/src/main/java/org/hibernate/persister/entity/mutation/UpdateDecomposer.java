@@ -8,9 +8,7 @@ import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.MutationKind;
-import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.plan.PlannedOperation;
-import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -29,17 +27,11 @@ import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /// Decomposer for entity update operations.
 ///
-/// Converts an [EntityUpdateAction] into a set of [PlannedOperationGroup]s that can
-/// be executed in the correct order respecting foreign key constraints. Update operations
-/// are created in forward order (same as inserts) - parent (target)/ tables are processed
-///  before child (key) tables.
+/// Converts an [EntityUpdateAction] into a group of [PlannedOperation] to be performed.
 ///
 /// @see UpdateBindPlan
 ///
@@ -67,7 +59,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 	}
 
 	@Override
-	public List<PlannedOperationGroup> decompose(
+	public List<PlannedOperation> decompose(
 			EntityUpdateAction action,
 			int ordinalBase,
 			java.util.function.Consumer<PostExecutionCallback> postExecutionCallbackRegistry,
@@ -120,7 +112,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		final PostUpdateHandling postUpdateHandling = new PostUpdateHandling( action, cacheKey, version, generatedValuesCollector );
 		postExecutionCallbackRegistry.accept( postUpdateHandling );
 
-		LinkedHashMap<String, List<PlannedOperation>> byTable = new LinkedHashMap<>();
+		final List<PlannedOperation> operations = new ArrayList<>(effectiveGroup.getNumberOfOperations());
 		int localOrd = 0;
 
 		for ( int i = 0; i < effectiveGroup.getNumberOfOperations(); i++ ) {
@@ -150,28 +142,10 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 					"EntityUpdateAction(" + entityPersister.getEntityName() + ")"
 			);
 
-			byTable.computeIfAbsent( tableName, t -> new ArrayList<>() ).add( op );
+			operations.add(op);
 		}
 
-		ArrayList<PlannedOperationGroup> out = arrayList( byTable.size() );
-		int ord = 0;
-		for ( var e : byTable.entrySet() ) {
-			String tableName = e.getKey();
-			List<PlannedOperation> plannedOperations = e.getValue();
-
-			out.add( new PlannedOperationGroup(
-					tableName,
-					MutationKind.UPDATE,
-					// hash based on op shape
-					StatementShapeKey.forUpdate( tableName, plannedOperations ),
-					plannedOperations,
-					false,  // updates never need identity pre-phase
-					ordinalBase * 1_000 + (ord++),
-					"EntityUpdateAction(" + entityPersister.getEntityName() + ")"
-			) );
-		}
-
-		return out;
+		return operations;
 	}
 
 	protected boolean preUpdate(EntityUpdateAction action, SharedSessionContractImplementor session) {

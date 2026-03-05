@@ -5,7 +5,10 @@
 package org.hibernate.action.queue.graph;
 
 
-import java.util.Set;
+import org.hibernate.action.queue.fk.ForeignKey;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectableMappings;
 
 /**
  * Test utilities for creating graph structures
@@ -14,32 +17,56 @@ import java.util.Set;
  */
 public class GraphTestUtils {
 
+	// Empty SelectableMappings for testing
+	private static final SelectableMappings EMPTY_SELECTABLES = new SelectableMappings() {
+		@Override
+		public int getJdbcTypeCount() {
+			return 0;
+		}
+
+		@Override
+		public SelectableMapping getSelectable(int columnIndex) {
+			throw new IndexOutOfBoundsException("No selectables in empty instance");
+		}
+
+		@Override
+		public int forEachSelectable(int offset, SelectableConsumer consumer) {
+			return 0;
+		}
+	};
+
 	/**
 	 * Create a GraphEdge for testing purposes.
 	 * This is in the same package as GraphEdge, so it can access the package-private constructor.
 	 */
 	public static GraphEdge createEdge(
+			GroupNode targetNode,
+			GroupNode keyNode,
 			GroupNode from,
 			GroupNode to,
 			boolean breakable,
 			int breakCost,
-			Set<String> childColumnsToNull,
-			boolean deferrable,
+			SelectableMappings childColumnsToNull,
+			ForeignKey foreignKey,
 			long stableId) {
-		return new GraphEdge(from, to, breakable, breakCost, childColumnsToNull, deferrable, stableId);
+		return new GraphEdge(targetNode, keyNode, from, to, breakable, breakCost, childColumnsToNull, foreignKey, stableId);
 	}
 
 	/**
 	 * Create a simple breakable edge with default parameters
 	 */
 	public static GraphEdge createBreakableEdge(GroupNode from, GroupNode to, int breakCost) {
-		return createEdge(from, to, true, breakCost, Set.of("fk_column"), false, System.nanoTime());
+		// Create a dummy ForeignKey for testing
+		ForeignKey fk = new ForeignKey("key_table", "target_table", EMPTY_SELECTABLES, EMPTY_SELECTABLES, true, true, false);
+		return createEdge(from, to, from, to, true, breakCost, EMPTY_SELECTABLES, fk, System.nanoTime());
 	}
 
 	/**
 	 * Create an unbreakable edge
 	 */
 	public static GraphEdge createUnbreakableEdge(GroupNode from, GroupNode to) {
-		return createEdge(from, to, false, Integer.MAX_VALUE, Set.of(), false, System.nanoTime());
+		// Create a dummy ForeignKey for testing
+		ForeignKey fk = new ForeignKey("key_table", "target_table", EMPTY_SELECTABLES, EMPTY_SELECTABLES, true, false, false);
+		return createEdge(from, to, from, to, false, Integer.MAX_VALUE, EMPTY_SELECTABLES, fk, System.nanoTime());
 	}
 }

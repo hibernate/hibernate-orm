@@ -177,9 +177,9 @@ public class ForeignKeyModelBuilderTest {
 				.orElse(null);
 
 		assertNotNull(toOneFK, "Should find ToOne FK");
-		assertFalse(toOneFK.keyColumns().isEmpty(), "FK should have key columns");
-		assertFalse(toOneFK.targetColumns().isEmpty(), "FK should have target columns");
-		assertEquals(toOneFK.keyColumns().size(), toOneFK.targetColumns().size(),
+		assertTrue(toOneFK.keyColumns().getJdbcTypeCount() > 0, "FK should have key columns");
+		assertTrue(toOneFK.targetColumns().getJdbcTypeCount() > 0, "FK should have target columns");
+		assertEquals(toOneFK.keyColumns().getJdbcTypeCount(), toOneFK.targetColumns().getJdbcTypeCount(),
 				"Key columns and target columns should have same size");
 	}
 
@@ -220,8 +220,8 @@ public class ForeignKeyModelBuilderTest {
 				.orElse(null);
 
 		assertNotNull(compositeFK, "Should find composite FK");
-		assertTrue(compositeFK.keyColumns().size() > 1, "Composite FK should have multiple columns");
-		assertEquals(compositeFK.keyColumns().size(), compositeFK.targetColumns().size(),
+		assertTrue(compositeFK.keyColumns().getJdbcTypeCount() > 1, "Composite FK should have multiple columns");
+		assertEquals(compositeFK.keyColumns().getJdbcTypeCount(), compositeFK.targetColumns().getJdbcTypeCount(),
 				"Composite FK key and target columns should match");
 	}
 

@@ -311,6 +311,11 @@ public class GraphBasedActionQueue implements ActionQueue {
 				// TODO: Could optimize by collecting spaces during execution
 			}
 		}
+		else {
+			ACTION_LOGGER.debugf(
+				"[GRAPH-AQ-DEBUG] executeActions: no pending actions to execute"
+			);
+		}
 	}
 
 	/**

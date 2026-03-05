@@ -7,7 +7,7 @@ package org.hibernate.persister.collection.mutation;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.graph.MutationDecomposer;
-import org.hibernate.action.queue.plan.PlannedOperationGroup;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.PreCollectionRemoveEvent;
@@ -28,7 +28,7 @@ import java.util.List;
 /// @author Steve Ebersole
 public class CollectionRemoveDecomposer implements MutationDecomposer<CollectionRemoveAction> {
 	@Override
-	public List<PlannedOperationGroup> decompose(
+	public List<PlannedOperation> decompose(
 			CollectionRemoveAction action,
 			int ordinalBase,
 			Consumer<PostExecutionCallback> postExecutionCallbackRegistry,

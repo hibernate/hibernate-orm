@@ -9,6 +9,8 @@ import org.hibernate.action.queue.cyclebreak.BindingPatch;
 import org.hibernate.action.queue.graph.Graph;
 import org.hibernate.action.queue.graph.GraphEdge;
 import org.hibernate.action.queue.graph.GroupNode;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectableMappings;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -64,6 +66,15 @@ public class CycleBreaker {
 
 			final GraphEdge chosen = chooseEdgeToBreak(cycle);
 			if (chosen == null) {
+				// No breakable edge found - check if this is a DELETE cycle
+				if (isDeleteOnlyCycle(cycle)) {
+					// DELETE cycles cannot be broken with NULL strategy
+					// Break an arbitrary edge to allow topological sort to proceed
+					// Rely on deferrable constraints or batch execution
+					breakArbitraryDeleteEdge(cycle);
+					continue;
+				}
+
 				throw new IllegalStateException("Unbreakable cycle detected for SCC: " + describeScc(scc));
 			}
 
@@ -162,25 +173,84 @@ public class CycleBreaker {
 	}
 
 	private void installPatchForEdge(GraphEdge chosen) {
-		final PlannedOperationGroup childGroup = chosen.getTo().group();
+		// NOTE: this is always an INSERT
+
+		// we need to patch the key side of the foreign key
+		final PlannedOperationGroup keyGroup = chosen.getKeyNode().group();
 
 		// This planner only applies NULL-in-INSERT strategy
-		if ( childGroup.kind() != MutationKind.INSERT)  {
+		if ( keyGroup.kind() != MutationKind.INSERT)  {
 			return;
 		}
 
-		final String table = childGroup.tableExpression();
-		final Set<String> cols = chosen.getChildColumnsToNull();
+		final String table = keyGroup.tableExpression();
 
-		for ( PlannedOperation op : childGroup.operations()) {
+		for ( PlannedOperation op : keyGroup.operations()) {
 			if (op.getBindingPatch() == null) {
-				op.setBindingPatch( new BindingPatch(table, cols) );
+				op.setBindingPatch( new BindingPatch(table, toSet(chosen.getChildColumnsToNull())) );
 			}
 			else {
-				final Set<String> merged = new LinkedHashSet<>(op.getBindingPatch().fkColumnsToNull());
-				merged.addAll(cols);
+				final Set<SelectableMapping> merged = new LinkedHashSet<>(op.getBindingPatch().fkColumnsToNull());
+				apply( chosen.getChildColumnsToNull(), merged );
 				op.setBindingPatch( new BindingPatch(op.getBindingPatch().tableName(), merged) );
 			}
+		}
+	}
+
+	private static Set<SelectableMapping> toSet(SelectableMappings mappings) {
+		final var set = new LinkedHashSet<SelectableMapping>();
+		apply( mappings, set );
+		return set;
+	}
+
+	private static void apply(SelectableMappings selectableMappings, Set<SelectableMapping> set) {
+		selectableMappings.forEachSelectable( (selectionIndex, selectableMapping) -> set.add(selectableMapping) );
+	}
+
+	private boolean isDeleteOnlyCycle(List<GraphEdge> cycle) {
+		// Check if all nodes in the cycle are DELETE operations
+		for (GraphEdge e : cycle) {
+			final PlannedOperationGroup fromGroup = e.getFrom().group();
+			final PlannedOperationGroup toGroup = e.getTo().group();
+
+			if (fromGroup.kind() != MutationKind.DELETE) {
+				return false;
+			}
+			if (toGroup.kind() != MutationKind.DELETE) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private void breakArbitraryDeleteEdge(List<GraphEdge> cycle) {
+		// For DELETE cycles, we can't use NULL strategy
+		// Break an arbitrary edge to allow topological sort to proceed
+		// The database must handle the cycle via deferrable constraints or cascade
+
+		GraphEdge toBreak = null;
+
+		// Prefer deferrable edges if available (database can defer FK checks)
+		for (GraphEdge e : cycle) {
+			if (e.isBroken()) continue;
+			if (e.isDeferrable()) {
+				toBreak = e;
+				break;
+			}
+		}
+
+		// Otherwise just pick the first non-broken edge
+		if (toBreak == null) {
+			for (GraphEdge e : cycle) {
+				if (!e.isBroken()) {
+					toBreak = e;
+					break;
+				}
+			}
+		}
+
+		if (toBreak != null) {
+			toBreak.setBroken(true);
 		}
 	}
 

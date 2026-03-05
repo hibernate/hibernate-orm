@@ -6,10 +6,8 @@ package org.hibernate.persister.collection.mutation;
 
 
 import org.hibernate.action.queue.MutationKind;
-import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.plan.PlannedOperation;
-import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
@@ -129,7 +127,7 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 	}
 
 	@Override
-	public List<PlannedOperationGroup> decomposeInsertRows(
+	public List<PlannedOperation> decomposeInsertRows(
 			PersistentCollection<?> collection,
 			Object key,
 			EntryFilter entryFilter,
@@ -165,18 +163,7 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 				"InsertRowsCoordinator(" + mutationTarget.getRolePath() + ")"
 		);
 
-		final List<PlannedOperation> operations = List.of( plannedOp );
-		final PlannedOperationGroup group = new PlannedOperationGroup(
-				tableName,
-				MutationKind.INSERT,
-				StatementShapeKey.forInsert( tableName, operations ),
-				operations,
-				false,
-				ordinalBase * 1_000,
-				"InsertRowsCoordinator(" + mutationTarget.getRolePath() + ")"
-		);
-
-		return List.of( group );
+		return List.of( plannedOp );
 	}
 
 	/**

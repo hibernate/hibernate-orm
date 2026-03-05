@@ -4,15 +4,17 @@
  */
 package org.hibernate.action.queue.exec;
 
-import org.hibernate.action.queue.bind.DeferredJdbcValueBindings;
+import org.hibernate.action.queue.Helper;
+import org.hibernate.action.queue.MutationKind;
+import org.hibernate.action.queue.cyclebreak.FkFixupUpdateBindPlan;
 import org.hibernate.action.queue.cyclebreak.FkFixupUpdateFactory;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
-import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.sql.model.MutationOperationGroup;
 
 /**
@@ -20,17 +22,14 @@ import org.hibernate.sql.model.MutationOperationGroup;
  */
 public class StandardPlannedOperationExecutor implements PlannedOperationExecutor {
 	private final FkFixupUpdateFactory nullableFkUpdateFactory;
-	private final boolean requireDeferredBindings;
 	private final SharedSessionContractImplementor session;
 	private final MutationExecutorService executorService;
 
 
 	public StandardPlannedOperationExecutor(
 			FkFixupUpdateFactory nullableFkUpdateFactory,
-			boolean requireDeferredBindings,
 			SharedSessionContractImplementor session) {
 		this.nullableFkUpdateFactory = nullableFkUpdateFactory;
-		this.requireDeferredBindings = requireDeferredBindings;
 		this.session = session;
 		this.executorService = session.getFactory()
 				.getServiceRegistry()
@@ -48,58 +47,58 @@ public class StandardPlannedOperationExecutor implements PlannedOperationExecuto
 				session
 		);
 
-		if (requireDeferredBindings) {
-			ensureDeferredJdbcValueBindings(exec);
-		}
-
 		op.getBindPlan().bindAndMaybePatch(exec, op, session );
 		op.getBindPlan().execute(exec, op, session );
 	}
 
 	@Override
 	public PlannedOperation synthesizeFixupUpdateIfNeeded(PlannedOperation cycleBrokenInsertOp, Object entityId) {
-//		if (cycleBrokenInsertOp.getIntendedFkValues().isEmpty()) {
-//			return null;
-//		}
-//		if (entityId == null) {
-//			throw new IllegalStateException("FK fixup requires non-null entityId (identity prereq must have executed)");
-//		}
-//
-//		final String table = cycleBrokenInsertOp.getTableExpression();
-//
-//		final FkFixupUpdateFactory.UpdateTemplate tmpl = nullableFkUpdateFactory.buildFkFixupUpdateGroup(
-//				table,
-//				cycleBrokenInsertOp.getIntendedFkValues().keySet(),
-//				session
-//		);
-//
-//		final BindPlan bindPlan = new FkFixupUpdateBindPlan(
-//				nullableFkUpdateFactory.entityPersister,
-//				entityId,
-//				cycleBrokenInsertOp.getIntendedFkValues(),
-//				tmpl
-//		);
-//
-//		return new PlannedOperation(
-//				table,
-//				MutationKind.UPDATE,
-//				tmpl.operation(),
-//				bindPlan,
-//				cycleBrokenInsertOp.getOrdinal() + 10_000,
-//				cycleBrokenInsertOp.getOrigin() + " [cycle-break FK fixup update]"
-//		);
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		// No fixup needed if no FK values were deferred during cycle breaking
+		if (cycleBrokenInsertOp.getIntendedFkValues().isEmpty()) {
+			return null;
+		}
+
+		if (entityId == null) {
+			throw new IllegalStateException("FK fixup requires non-null entityId (identity prereq must have executed)");
+		}
+
+		var mutationTarget = cycleBrokenInsertOp.getOperation().getMutationTarget();
+		var persister = ( mutationTarget instanceof EntityMutationTarget emt )
+				? emt.getTargetPart().getEntityPersister()
+				: null;
+		if ( persister == null ) {
+			throw new IllegalStateException("FK fixup only valid for entities, but found - " + mutationTarget);
+		}
+
+		final String table = cycleBrokenInsertOp.getTableExpression();
+		assert table != null;
+		assert table.equals( Helper.normalizeTableName(table) );
+
+		final FkFixupUpdateFactory.UpdateTemplate tmpl = nullableFkUpdateFactory.buildFkFixupUpdateGroup(
+				persister,
+				table,
+				cycleBrokenInsertOp.getIntendedFkValues().keySet(),
+				session
+		);
+
+		final FkFixupUpdateBindPlan bindPlan = new FkFixupUpdateBindPlan(
+				persister,
+				entityId,
+				cycleBrokenInsertOp.getIntendedFkValues(),
+				tmpl
+		);
+
+		return new PlannedOperation(
+				table,
+				MutationKind.UPDATE,
+				tmpl.operation(),
+				bindPlan,
+				cycleBrokenInsertOp.getOrdinal() + 10_000,
+				cycleBrokenInsertOp.getOrigin() + " [cycle-break FK fixup update]"
+		);
 	}
 
 	private BatchKeyAccess batchKeySupplier(PlannedOperation op) {
 		return () -> new BasicBatchKey(op.getTableExpression() + "#" + op.getKind().name());
-	}
-
-	private void ensureDeferredJdbcValueBindings(MutationExecutor exec) {
-		final JdbcValueBindings cur = exec.getJdbcValueBindings();
-		if (cur instanceof DeferredJdbcValueBindings ) {
-			return;
-		}
-		throw new IllegalStateException("Expecting MutationExecutor#getJdbcValueBindings to be a DeferredJdbcValueBindings");
 	}
 }

@@ -8,17 +8,17 @@ import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.fk.ForeignKey;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.action.queue.fk.ForeignKeyModel;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectableMappings;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static java.util.Comparator.comparingInt;
-import static org.hibernate.action.queue.Helper.normalizeColumnName;
 import static org.hibernate.action.queue.Helper.normalizeTableName;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
@@ -26,6 +26,24 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
  * @author Steve Ebersole
  */
 public class StandardGraphBuilder extends AbstractGraphBuilder {
+	// Empty SelectableMappings for non-breakable DELETE edges
+	private static final SelectableMappings EMPTY_SELECTABLES = new SelectableMappings() {
+		@Override
+		public int getJdbcTypeCount() {
+			return 0;
+		}
+
+		@Override
+		public SelectableMapping getSelectable(int columnIndex) {
+			throw new IndexOutOfBoundsException("No selectables in empty instance");
+		}
+
+		@Override
+		public int forEachSelectable(int offset, SelectableConsumer consumer) {
+			return 0;
+		}
+	};
+
 	public StandardGraphBuilder(ForeignKeyModel fkModel, boolean avoidBreakingDeferrable, boolean ignoreDeferrableForOrdering) {
 		super(fkModel, avoidBreakingDeferrable, ignoreDeferrableForOrdering);
 	}
@@ -33,7 +51,9 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 	@Override
 	public Graph build(List<PlannedOperationGroup> groups) {
 		final ArrayList<GroupNode> nodes = arrayList(groups.size());
+		// After consolidation, each table has at most one node per kind+shape
 		final Map<String, GroupNode> insertNodeByTable = new HashMap<>();
+		final Map<String, GroupNode> deleteNodeByTable = new HashMap<>();
 		final Map<GroupNode, List<GraphEdge>> outgoing = new HashMap<>();
 
 		// stable ids based on group.ordinal (if provided), else encounter order
@@ -49,44 +69,79 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 			if ( g.kind() == MutationKind.INSERT) {
 				insertNodeByTable.put(normalizeTableName(g.tableExpression()), n);
 			}
+			else if ( g.kind() == MutationKind.DELETE ) {
+				deleteNodeByTable.put(normalizeTableName(g.tableExpression()), n);
+			}
 		}
 
 		long edgeId = 1;
 		for ( ForeignKey foreignKey : fkModel.foreignKeys() ) {
 			if (ignoreDeferrableForOrdering && foreignKey.deferrable()) {
+				// if the foreign-key is known to be deferrable in the database,
+				// and we are allowed to take advantage of that, then there is no
+				// need to break.
 				continue;
 			}
 
 			final String childTable = normalizeTableName(foreignKey.keyTable());
 			final String parentTable = normalizeTableName(foreignKey.targetTable());
 
-			final GroupNode parentInsert = insertNodeByTable.get(parentTable);
-			final GroupNode childInsert = insertNodeByTable.get(childTable);
+		// Create INSERT edges: parent -> child (insert parent before child)
+		final GroupNode parentInsert = insertNodeByTable.get(parentTable);
+		final GroupNode childInsert = insertNodeByTable.get(childTable);
 
-			if (parentInsert == null || childInsert == null) {
-				continue; // only order inserts for tables involved in this flush
-			}
-
+		if (parentInsert != null && childInsert != null) {
 			// Edge direction for ordering: parent -> child
-			final boolean breakable = foreignKey.nullable() && (!avoidBreakingDeferrable || !foreignKey.deferrable());
+			final boolean breakable = foreignKey.nullable() &&
+				(!avoidBreakingDeferrable || !foreignKey.deferrable());
 			final int breakCost = computeBreakCost(foreignKey);
 
-			final Set<String> colsToNull = new LinkedHashSet<>();
-			for (String col : foreignKey.keyColumns()) {
-				colsToNull.add(normalizeColumnName(col));
-			}
-
 			final GraphEdge edge = new GraphEdge(
+					// FK target
 					parentInsert,
+					// FK key
+					childInsert,
+					// FROM parent (graphing)
+					parentInsert,
+					// TO child (graphing)
 					childInsert,
 					breakable,
 					breakCost,
-					colsToNull,
-					foreignKey.deferrable(),
+					foreignKey.keyColumns(),
+					foreignKey,
 					edgeId++
 			);
 
 			outgoing.computeIfAbsent(parentInsert, k -> new ArrayList<>()).add(edge);
+		}
+
+			// Create DELETE edges: child -> parent (delete child before parent)
+			final GroupNode parentDelete = deleteNodeByTable.get(parentTable);
+			final GroupNode childDelete = deleteNodeByTable.get(childTable);
+
+			if (parentDelete != null && childDelete != null) {
+				// Edge direction for DELETE: child -> parent (reversed!)
+				final GraphEdge edge = new GraphEdge(
+						// FK target
+						parentDelete,
+						// FK key
+						childDelete,
+						// FROM child (graphing)
+						childDelete,
+						// TO parent (graphing)
+						parentDelete,
+						// NOT breakable - can't use NULL strategy for DELETE
+						false,
+						// No break cost (not breakable)
+						0,
+						// No columns to null (not breakable) - pass empty SelectableMappings
+						EMPTY_SELECTABLES,
+						foreignKey,
+						edgeId++
+				);
+
+				outgoing.computeIfAbsent(childDelete, k -> new ArrayList<>()).add(edge);
+			}
 		}
 
 		for (GroupNode n : nodes) {

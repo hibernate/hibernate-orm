@@ -7,7 +7,6 @@ package org.hibernate.action.queue;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.sql.model.PreparableMutationOperation;
 
-import java.util.List;
 import java.util.Objects;
 
 import static org.hibernate.action.queue.Helper.normalizeTableName;
@@ -25,39 +24,39 @@ public record StatementShapeKey(String tableExpression, MutationKind kind, int s
 		return new StatementShapeKey(tableExpression, t, Objects.hash(tableExpression, t, shapeHash));
 	}
 
-	public static StatementShapeKey forInsert(String tableName, List<PlannedOperation> plannedOperations) {
+	public static StatementShapeKey forInsert(String tableName, PlannedOperation plannedOperation) {
 		final String normalizedTableName = normalizeTableName( tableName );
-		final int h = hashMutationShape(normalizedTableName, MutationKind.INSERT, plannedOperations);
+		final int h = hashMutationShape(normalizedTableName, MutationKind.INSERT, plannedOperation);
 		return new StatementShapeKey( normalizedTableName, MutationKind.INSERT, h);
 	}
 
-	public static StatementShapeKey forUpdate(String tableName, List<PlannedOperation> plannedOperations) {
+	public static StatementShapeKey forUpdate(String tableName, PlannedOperation plannedOperation) {
 		final String normalizedTableName = normalizeTableName( tableName );
-		final int h = hashMutationShape(normalizedTableName, MutationKind.UPDATE, plannedOperations);
+		final int h = hashMutationShape(normalizedTableName, MutationKind.UPDATE, plannedOperation);
 		return new StatementShapeKey( normalizedTableName, MutationKind.UPDATE, h);
 	}
 
-	public static StatementShapeKey forDelete(String tableName, List<PlannedOperation> plannedOperations) {
+	public static StatementShapeKey forDelete(String tableName, PlannedOperation plannedOperation) {
 		final String normalizedTableName = normalizeTableName( tableName );
-		final int h = hashMutationShape(normalizedTableName, MutationKind.DELETE, plannedOperations);
+		final int h = hashMutationShape(normalizedTableName, MutationKind.DELETE, plannedOperation);
 		return new StatementShapeKey( normalizedTableName, MutationKind.DELETE, h);
 	}
 
-	private static int hashMutationShape(String normalizedTableName, MutationKind kind, List<PlannedOperation> plannedOperations) {
+	private static int hashMutationShape(
+			String normalizedTableName,
+			MutationKind kind,
+			PlannedOperation plannedOperation) {
 		// Always include table + kind (guards against collisions)
 		int hash = 17;
 		hash = 31 * hash + normalizedTableName.hashCode();
 		hash = 31 * hash + kind.hashCode();
 
-		// Apply each planned operation
-		for ( PlannedOperation plannedOperation : plannedOperations ) {
-			if ( plannedOperation.getOperation() instanceof PreparableMutationOperation pmo ) {
-				// prefer the SQL string
-				hash = 31 * hash + pmo.getSqlString().hashCode();
-			}
-			else {
-				hash = 31 * hash + plannedOperation.getOperation().hashCode();
-			}
+		if ( plannedOperation.getOperation() instanceof PreparableMutationOperation pmo ) {
+			hash = 31 * hash + pmo.getSqlString().hashCode();
+		}
+		else {
+			// we have some form of "self executing" operation
+			hash = 31 * hash + plannedOperation.getOperation().hashCode();
 		}
 
 		return hash;

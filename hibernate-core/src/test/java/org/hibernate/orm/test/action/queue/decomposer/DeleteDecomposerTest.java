@@ -4,10 +4,15 @@
  */
 package org.hibernate.orm.test.action.queue.decomposer;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.queue.MutationKind;
+import org.hibernate.action.queue.StatementShapeKey;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -72,7 +77,8 @@ public class DeleteDecomposerTest {
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
 
 			// Decompose
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			// Verify
 			assertNotNull( groups );
@@ -106,7 +112,8 @@ public class DeleteDecomposerTest {
 			assertNotNull( persister.getVersionMapping() );
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			assertNotNull( groups );
 			assertFalse( groups.isEmpty() );
@@ -132,7 +139,8 @@ public class DeleteDecomposerTest {
 			DeleteDecomposer decomposer = new DeleteDecomposer( persister, factory );
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			// Should have 2 groups (secondary table + primary table, in reverse order)
 			assertEquals( 2, groups.size(), "Should have 2 operation groups for secondary table" );
@@ -160,7 +168,8 @@ public class DeleteDecomposerTest {
 			DeleteDecomposer decomposer = new DeleteDecomposer( persister, factory );
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			// Should have 2 groups (child table + parent table, in reverse order)
 			assertTrue( groups.size() >= 2, "Joined inheritance should have at least 2 tables" );
@@ -190,7 +199,8 @@ public class DeleteDecomposerTest {
 			assertNotNull( persister.getSoftDeleteMapping(), "Soft delete should be enabled" );
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			// Verify
 			assertNotNull( groups );
@@ -225,7 +235,8 @@ public class DeleteDecomposerTest {
 			assertNotNull( persister.getVersionMapping() );
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			assertNotNull( groups );
 			assertEquals( 1, groups.size() );
@@ -254,7 +265,8 @@ public class DeleteDecomposerTest {
 			assertEquals( OptimisticLockStyle.ALL, persister.optimisticLockStyle() );
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			assertNotNull( groups );
 			assertFalse( groups.isEmpty() );
@@ -310,7 +322,8 @@ public class DeleteDecomposerTest {
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
 			int ordinalBase = 10;
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, ordinalBase, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, ordinalBase, callback -> {}, session );
+			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			// Verify ordinals are based on the base
 			for ( PlannedOperationGroup group : groups ) {
@@ -348,7 +361,8 @@ public class DeleteDecomposerTest {
 					(EventSource) session
 			);
 
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			assertNotNull( groups );
 			assertFalse( groups.isEmpty() );
@@ -372,7 +386,8 @@ public class DeleteDecomposerTest {
 			DeleteDecomposer decomposer = new DeleteDecomposer( persister, factory );
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			// In reverse order: child table should come before parent table
 			// This ensures FK constraints are not violated
@@ -492,5 +507,86 @@ public class DeleteDecomposerTest {
 
 		String field1;
 		String field2;
+	}
+
+	// Helper methods for grouping operations (mirrors FlushCoordinator logic)
+	private List<PlannedOperationGroup> groupOperations(List<PlannedOperation> operations) {
+		if (operations.isEmpty()) {
+			return List.of();
+		}
+
+		// Group by shapeKey only (merge operations from different entities)
+		// This mirrors FlushCoordinator behavior for non-self-referential tables
+		final Map<StatementShapeKey, OperationGroupBuilder> builders = new LinkedHashMap<>();
+
+		for (PlannedOperation operation : operations) {
+			final StatementShapeKey shapeKey = computeShapeKey(operation);
+			var builder = builders.get(shapeKey);
+			if (builder == null) {
+				// First operation for this key - create new builder (which adds the operation in constructor)
+				builder = new OperationGroupBuilder(operation, shapeKey);
+				builders.put(shapeKey, builder);
+			} else {
+				// Subsequent operation for this key - add to existing builder
+				builder.addOperation(operation);
+			}
+		}
+
+		final List<PlannedOperationGroup> groups = new ArrayList<>(builders.size());
+		for (OperationGroupBuilder builder : builders.values()) {
+			groups.add(builder.build());
+		}
+
+		return groups;
+	}
+
+	private StatementShapeKey computeShapeKey(PlannedOperation operation) {
+		final String table = operation.getTableExpression();
+		final MutationKind kind = operation.getKind();
+
+		return switch (kind) {
+			case INSERT -> StatementShapeKey.forInsert(table, operation);
+			case UPDATE -> StatementShapeKey.forUpdate(table, operation);
+			case DELETE -> StatementShapeKey.forDelete(table, operation);
+		};
+	}
+
+	private static class OperationGroupBuilder {
+		private final String tableExpression;
+		private final MutationKind kind;
+		private final StatementShapeKey shapeKey;
+		private int ordinal;
+		private final String origin;
+		private final List<PlannedOperation> operations = new ArrayList<>();
+
+		OperationGroupBuilder(PlannedOperation firstOperation, StatementShapeKey shapeKey) {
+			this.tableExpression = firstOperation.getTableExpression();
+			this.kind = firstOperation.getKind();
+			this.shapeKey = shapeKey;
+			this.ordinal = firstOperation.getOrdinal();
+			this.origin = firstOperation.getOrigin();
+			this.operations.add(firstOperation);
+		}
+
+		void addOperation(PlannedOperation op) {
+			this.operations.add(op);
+			// Track minimum ordinal when merging operations
+			this.ordinal = Math.min(this.ordinal, op.getOrdinal());
+		}
+
+		PlannedOperationGroup build() {
+			final boolean needsIdPrePhase = operations.stream()
+					.anyMatch(PlannedOperation::needsIdPrePhase);
+
+			return new PlannedOperationGroup(
+					tableExpression,
+					kind,
+					shapeKey,
+					operations,
+					needsIdPrePhase,
+					ordinal,
+					origin
+			);
+		}
 	}
 }

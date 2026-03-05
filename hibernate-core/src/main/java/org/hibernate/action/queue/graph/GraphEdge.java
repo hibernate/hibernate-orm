@@ -4,7 +4,8 @@
  */
 package org.hibernate.action.queue.graph;
 
-import java.util.Set;
+import org.hibernate.action.queue.fk.ForeignKey;
+import org.hibernate.metamodel.mapping.SelectableMappings;
 
 /// Represents a foreign key dependency edge between two operation groups in the dependency graph.
 /// This edge tells us the order in which we can execute the operations -
@@ -48,50 +49,68 @@ import java.util.Set;
 /// @author Steve Ebersole
 public class GraphEdge {
 	// The table that is the target of the foreign-key
-	final GroupNode parent;
+	final GroupNode targetNode;
 	// The table that is the key (source) of the foreign-key
-	final GroupNode child;
+	final GroupNode keyNode;
 
-	// At the moment, simply an "alias" for `parent`.
+	// incoming node (graph planning)
 	final GroupNode from;
-	// At the moment, simply an "alias" for `child`.
+	// outgoing node (graph planning)
 	final GroupNode to;
 
 	final boolean breakable;
 	final int breakCost;
-	final Set<String> childColumnsToNull;
-	final boolean deferrable;
+	final SelectableMappings childColumnsToNull;
+
+	final ForeignKey foreignKey;
 	final long stableId;
 
 	boolean broken;
 
-	GraphEdge(GroupNode parent,
-		GroupNode child,
-		boolean breakable,
-		int breakCost,
-		Set<String> childColumnsToNull,
-		boolean deferrable,
+	GraphEdge(
+			GroupNode targetTableOpGroup,
+			GroupNode keyTableOpGroup,
+			GroupNode from,
+			GroupNode to,
+			boolean breakable,
+			int breakCost,
+			SelectableMappings childColumnsToNull,
+			ForeignKey foreignKey,
 		long stableId) {
-
-		this.parent = parent;
-		this.child = child;
-		this.from = parent;
-		this.to = child;
+		this.targetNode = targetTableOpGroup;
+		this.keyNode = keyTableOpGroup;
+		this.from = from;
+		this.to = to;
 		this.breakable = breakable;
 		this.breakCost = breakCost;
 		this.childColumnsToNull = childColumnsToNull;
-		this.deferrable = deferrable;
+		this.foreignKey = foreignKey;
 		this.stableId = stableId;
 	}
 
+	///  The foreign key that this edge describes
+	public ForeignKey getForeignKey() {
+		return foreignKey;
+	}
+
 	/// The node/operation on the table that is the target of the foreign-key.
-	public GroupNode getParent() {
-		return parent;
+	public GroupNode getTargetNode() {
+		return targetNode;
 	}
 
 	/// The node/operation on the table that is the key (source) of the foreign-key.
-	public GroupNode getChild() {
-		return child;
+	public GroupNode getKeyNode() {
+		return keyNode;
+	}
+
+	/// The incoming node (vertx), used in graph planning.
+	public GroupNode getFrom() {
+		return from;
+	}
+
+	/// The outgoing node (vertx), used in graph planning.
+	public GroupNode getTo() {
+		return to;
 	}
 
 	/// Ultimately, whether the backing foreign-key is [nullable][org.hibernate.action.queue.fk.ForeignKey#nullable()].
@@ -113,7 +132,7 @@ public class GraphEdge {
 	///
 	/// - insert as null in the initial insert
 	/// - update to set in the update
-	public Set<String> getChildColumnsToNull() {
+	public SelectableMappings getChildColumnsToNull() {
 		return childColumnsToNull;
 	}
 
@@ -124,7 +143,7 @@ public class GraphEdge {
 	///
 	/// @implNote This is currently not used, but is definitely something we want to use.
 	public boolean isDeferrable() {
-		return deferrable;
+		return foreignKey.deferrable();
 	}
 
 	public long getStableId() {
@@ -140,15 +159,5 @@ public class GraphEdge {
 	/// Break a cycle at this edge.
 	public void setBroken(boolean broken) {
 		this.broken = broken;
-	}
-
-	/// Same as [#getParent()].
-	public GroupNode getFrom() {
-		return from;
-	}
-
-	/// Same as [#getChild()].
-	public GroupNode getTo() {
-		return to;
 	}
 }

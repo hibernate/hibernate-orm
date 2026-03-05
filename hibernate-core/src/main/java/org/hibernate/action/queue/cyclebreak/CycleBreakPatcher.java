@@ -33,7 +33,8 @@ public class CycleBreakPatcher {
 
 		final JdbcValueBindingsImplementor bindings = (JdbcValueBindingsImplementor) executor.getJdbcValueBindings();
 
-		for (String rawCol : bindingPatch.fkColumnsToNull()) {
+		for (var selectableMapping : bindingPatch.fkColumnsToNull()) {
+			final String rawCol = selectableMapping.getSelectionExpression();
 			final String col = normalizeColumnName(rawCol);
 
 			// 1) Read the intended value that coordinator already bound

@@ -4,8 +4,9 @@
  */
 package org.hibernate.action.queue.fk;
 
+import org.hibernate.metamodel.mapping.SelectableMappings;
+
 import java.io.Serializable;
-import java.util.List;
 
 /// Describes a foreign-key in terms needed by graph creation and scheduling.
 ///
@@ -21,8 +22,8 @@ import java.util.List;
 public record ForeignKey(
 		String keyTable,
 		String targetTable,
-		List<String> keyColumns,
-		List<String> targetColumns,
+		SelectableMappings keyColumns,
+		SelectableMappings targetColumns,
 		boolean isAssociation,
 		boolean nullable,
 		boolean deferrable) implements Serializable {

@@ -4,10 +4,26 @@
  */
 package org.hibernate.action.queue.cyclebreak;
 
-import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
+import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
+import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
+import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.model.jdbc.JdbcUpdateMutation;
+
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+
+import static org.hibernate.action.queue.Helper.normalizeColumnName;
+import static org.hibernate.action.queue.Helper.normalizeTableName;
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+
 
 /// Concrete factory that builds:
 ///
@@ -17,72 +33,70 @@ import org.hibernate.sql.model.MutationOperationGroup;
 ///
 /// @author Steve Ebersole
 public final class FkFixupUpdateFactory {
-//	private final PreparedStatementGroupExecutorHook executorHook;
-//
-//	public FkFixupUpdateFactory(EntityPersister entityPersister, PreparedStatementGroupExecutorHook executorHook) {
-//		this.entityPersister = entityPersister;
-//		this.executorHook = executorHook;
-//	}
-
 	public record UpdateTemplate(
 			MutationOperationGroup group,
 			MutationOperation operation,
-			int shapeHash,
-			PreparedStatementGroupExecutorHook executorHook) {
+			int shapeHash) {
 	}
 
-	public interface PreparedStatementGroupExecutorHook {
-		void execute(MutationExecutor exec, SharedSessionContractImplementor session);
+	public UpdateTemplate buildFkFixupUpdateGroup(
+			EntityPersister entityPersister,
+			String tableName,
+			Set<String> keyColumnsToFix,
+			SharedSessionContractImplementor session) {
+		final String normalizeTableName = normalizeTableName( tableName );
+		var tableMapping = findMutableTableMapping(entityPersister, normalizeTableName);
+
+		var groupBuilder = new MutationGroupBuilder( MutationType.UPDATE, entityPersister );
+		final TableUpdateBuilder<JdbcUpdateMutation> updateBuilder = new TableUpdateBuilderStandard<>(
+				entityPersister,
+				tableMapping,
+				session.getFactory()
+		);
+		groupBuilder.addTableDetailsBuilder(updateBuilder);
+
+		// SET fk = ?
+		final LinkedHashSet<String> restrictedFkColumns = new LinkedHashSet<>();
+		tableMapping.getKeyMapping().forEachSelectable( (i, selectableMapping) -> {
+			if (selectableMapping == null || selectableMapping.isFormula()) {
+				return;
+			}
+			final String columnName = normalizeColumnName( selectableMapping.getSelectableName() );
+			if ( keyColumnsToFix.contains( columnName ) ) {
+				updateBuilder.addValueColumn( columnName, selectableMapping );
+				restrictedFkColumns.add(columnName);
+			}
+		} );
+
+		// WHERE pk = ?
+		final List<String> keyColumns = arrayList( tableMapping.getKeyMapping().getColumnCount() );
+		tableMapping.getKeyMapping().forEachSelectable( (i, selectableMapping) -> {
+			if ( !selectableMapping.isFormula() ) {
+				final String columnName = normalizeColumnName( selectableMapping.getSelectableName() );
+				updateBuilder.addKeyRestriction(selectableMapping);
+				keyColumns.add(columnName);
+			}
+		} );
+
+		final JdbcUpdateMutation jdbcUpdate = updateBuilder
+				.buildMutation()
+				.createMutationOperation( null, session.getFactory() );
+		final MutationOperationGroup opGroup = new FixupOperationGroup( entityPersister, jdbcUpdate );
+
+		final int shapeHash = Objects.hash(normalizeTableName, restrictedFkColumns, keyColumns);
+		return new UpdateTemplate( opGroup, jdbcUpdate, shapeHash );
 	}
 
-	public static final PreparedStatementGroupExecutorHook DEFAULT_UPDATE_EXEC =
-			(exec, session) -> {
-		throw new UnsupportedOperationException( "Not supported yet." );
-//				final PreparedStatementGroup psg = exec.getPreparedStatementGroup();
-//				for ( PreparedStatementDetails psd : psg.getPreparedStatementDetails()) {
-//					final int rowCount = psd.executeUpdate(); // adjust if needed
-//					psd.getExpectation().verifyOutcome(rowCount, psd.getStatement(), -1, session);
-//				}
-			};
+	private static EntityTableMapping findMutableTableMapping(EntityPersister persister, String wanted) {
+		for ( int i = 0; i < persister.getTableMappings().length; i++ ) {
+			if ( wanted.equals( normalizeTableName( persister.getTableMappings()[i].getTableName() ) ) ) {
+				return persister.getTableMappings()[i];
+			}
+		}
+		throw new IllegalArgumentException("No table mapping for [" + wanted + "] in [" + persister.getEntityName() + "]");
+	}
 
-//	public UpdateTemplate buildFkFixupUpdateGroup(
-//			String tableName,
-//			Set<String> keyColumnsToFix,
-//			SharedSessionContractImplementor session) {
-//		final EntityTableMapping tableMapping = findMutableTableMapping(entityPersister, tableName);
-//
-//		final MutationGroupBuilder groupBuilder = new MutationGroupBuilder( MutationKind.UPDATE, entityPersister);
-//		final TableUpdateBuilder<?> updateBuilder = createTableUpdateBuilder(tableMapping);
-//
-//		groupBuilder.addTableDetailsBuilder(updateBuilder);
-//
-//		// SET fk = ?
-//		final LinkedHashSet<String> restrictedFkColumns = new LinkedHashSet<>();
-//		tableMapping.getKeyMapping().forEachSelectable( (i, selectableMapping) -> {
-//			if (selectableMapping == null || selectableMapping.isFormula()) {
-//				return;
-//			}
-//			if ( keyColumnsToFix.contains( selectableMapping.getSelectableName() ) ) {
-//				updateBuilder.addValueColumn( selectableMapping );
-//				restrictedFkColumns.add(norm(selectableMapping.getSelectionExpression()));
-//			}
-//		} );
-//
-//		// WHERE key restrictions (skips nullable/formula by defaults you shared)
-//		final List<String> keyColumns = arrayList(tableMapping.getKeyMapping().getColumnCount());
-//		tableMapping.getKeyMapping().forEachSelectable(  (i, selectableMapping) -> {
-//			updateBuilder.addKeyRestriction(selectableMapping);
-//			keyColumns.add(norm(selectableMapping.getSelectionExpression()));
-//		} );
-//
-//		final var builtMutationGroup = groupBuilder.buildMutationGroup();
-//		final MutationOperationGroup opGroup = createOperationGroup(null, builtMutationGroup);
-//
-//		final MutationOperation operation = opGroup.getOperation(0);
-//		final int shapeHash = Objects.hash(norm(tableName), restrictedFkColumns, keyColumns);
-//
-//		return new UpdateTemplate( opGroup, operation, shapeHash, executorHook );
-//	}
+
 //
 //	// ---- delegate-aware builder creation (your method) ----
 //
@@ -106,18 +120,6 @@ public final class FkFixupUpdateFactory {
 //
 //	// ---- mapping discovery / selectable lookup ----
 //
-//	private static EntityTableMapping findMutableTableMapping(EntityPersister persister, String tableName) {
-//		final String wanted = norm(tableName);
-//		final EntityTableMapping[] found = new EntityTableMapping[1];
-//		persister.forEachMutableTable(t -> {
-//			final EntityTableMapping etm = (EntityTableMapping) t;
-//			if (found[0] == null && norm(etm.getTableName()).equals(wanted)) found[0] = etm;
-//		});
-//		if (found[0] == null) {
-//			throw new IllegalArgumentException("No mutable table mapping for [" + tableName + "] in [" + persister.getEntityName() + "]");
-//		}
-//		return found[0];
-//	}
 //
 //	private static String norm(String s) {
 //		if (s == null) return "";

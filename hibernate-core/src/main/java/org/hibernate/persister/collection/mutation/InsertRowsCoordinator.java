@@ -4,7 +4,7 @@
  */
 package org.hibernate.persister.collection.mutation;
 
-import org.hibernate.action.queue.plan.PlannedOperationGroup;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -53,9 +53,9 @@ public interface InsertRowsCoordinator extends CollectionOperationCoordinator {
 	 * @param entryFilter Filter to determine which entries to include
 	 * @param ordinalBase Base ordinal for operation ordering
 	 * @param session The session
-	 * @return List of planned operation groups (may be empty for NoOp coordinators)
+	 * @return List of planned operation groups (maybe empty for NoOp coordinators)
 	 */
-	default List<PlannedOperationGroup> decomposeInsertRows(
+	default List<PlannedOperation> decomposeInsertRows(
 			PersistentCollection<?> collection,
 			Object key,
 			EntryFilter entryFilter,

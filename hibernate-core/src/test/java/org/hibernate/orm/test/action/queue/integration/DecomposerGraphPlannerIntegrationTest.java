@@ -8,6 +8,8 @@ import jakarta.persistence.*;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.internal.EntityUpdateAction;
+import org.hibernate.action.queue.MutationKind;
+import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.fk.ForeignKeyModel;
 import org.hibernate.action.queue.graph.Graph;
 import org.hibernate.action.queue.graph.StandardGraphBuilder;
@@ -77,7 +79,8 @@ public class DecomposerGraphPlannerIntegrationTest {
 			);
 
 			// Decompose
-			final List<PlannedOperationGroup> groups = decomposer.decompose(action, 0, callback -> {}, sessionImpl);
+			final List<PlannedOperation> operations = decomposer.decompose(action, 0, callback -> {}, sessionImpl);
+			final List<PlannedOperationGroup> groups = groupOperations(operations);
 
 			final ForeignKeyModel fkModel = factory.getForeignKeyModel();
 
@@ -143,8 +146,8 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Decompose both actions
 			final List<PlannedOperationGroup> allGroups = new ArrayList<>();
-			allGroups.addAll(personDecomposer.decompose(personAction, 0, callback -> {}, sessionImpl));
-			allGroups.addAll(addressDecomposer.decompose(addressAction, 1, callback -> {}, sessionImpl));
+			allGroups.addAll(groupOperations(personDecomposer.decompose(personAction, 0, callback -> {}, sessionImpl)));
+			allGroups.addAll(groupOperations(addressDecomposer.decompose(addressAction, 1, callback -> {}, sessionImpl)));
 
 			final ForeignKeyModel fkModel = factory.getForeignKeyModel();
 
@@ -223,7 +226,8 @@ public class DecomposerGraphPlannerIntegrationTest {
 			final UpdateDecomposer decomposer = new UpdateDecomposer(persister, factory);
 
 			// Decompose
-			final List<PlannedOperationGroup> groups = decomposer.decompose(action, 0, callback -> {}, sessionImpl);
+			final List<PlannedOperation> operations = decomposer.decompose(action, 0, callback -> {}, sessionImpl);
+			final List<PlannedOperationGroup> groups = groupOperations(operations);
 
 			final ForeignKeyModel fkModel = factory.getForeignKeyModel();
 
@@ -274,7 +278,8 @@ public class DecomposerGraphPlannerIntegrationTest {
 			final DeleteDecomposer decomposer = new DeleteDecomposer(persister, factory);
 
 			// Decompose
-			final List<PlannedOperationGroup> groups = decomposer.decompose(action, 0, callback -> {}, sessionImpl);
+			final List<PlannedOperation> operations = decomposer.decompose(action, 0, callback -> {}, sessionImpl);
+			final List<PlannedOperationGroup> groups = groupOperations(operations);
 
 			final ForeignKeyModel fkModel = factory.getForeignKeyModel();
 
@@ -364,9 +369,9 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Decompose all actions
 			final List<PlannedOperationGroup> allGroups = new ArrayList<>();
-			allGroups.addAll(personInsertDecomposer.decompose(person1InsertAction, 0, callback -> {}, sessionImpl));
-			allGroups.addAll(addressInsertDecomposer.decompose(addressInsertAction, 1, callback -> {}, sessionImpl));
-			allGroups.addAll(personUpdateDecomposer.decompose(person2UpdateAction, 2, callback -> {}, sessionImpl));
+			allGroups.addAll(groupOperations(personInsertDecomposer.decompose(person1InsertAction, 0, callback -> {}, sessionImpl)));
+			allGroups.addAll(groupOperations(addressInsertDecomposer.decompose(addressInsertAction, 1, callback -> {}, sessionImpl)));
+			allGroups.addAll(groupOperations(personUpdateDecomposer.decompose(person2UpdateAction, 2, callback -> {}, sessionImpl)));
 
 			final ForeignKeyModel fkModel = factory.getForeignKeyModel();
 
@@ -443,8 +448,8 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Decompose
 			final List<PlannedOperationGroup> allGroups = new ArrayList<>();
-			allGroups.addAll(deptDecomposer.decompose(deptAction, 0, callback -> {}, sessionImpl));
-			allGroups.addAll(empDecomposer.decompose(empAction, 1, callback -> {}, sessionImpl));
+			allGroups.addAll(groupOperations(deptDecomposer.decompose(deptAction, 0, callback -> {}, sessionImpl)));
+			allGroups.addAll(groupOperations(empDecomposer.decompose(empAction, 1, callback -> {}, sessionImpl)));
 
 			final ForeignKeyModel fkModel = factory.getForeignKeyModel();
 
@@ -482,6 +487,92 @@ public class DecomposerGraphPlannerIntegrationTest {
 			}
 			assertEquals(2, totalOps, "Should have 2 insert operations");
 		});
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Helper methods
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/**
+	 * Helper method to group operations by shape (table + kind + SQL).
+	 * Mirrors FlushCoordinator's grouping logic.
+	 */
+	private List<PlannedOperationGroup> groupOperations(List<PlannedOperation> operations) {
+		if (operations.isEmpty()) {
+			return List.of();
+		}
+
+		// Group by shapeKey only (merge operations from different entities)
+		// This mirrors FlushCoordinator behavior for non-self-referential tables
+		final java.util.Map<StatementShapeKey, OperationGroupBuilder> builders = new java.util.LinkedHashMap<>();
+
+		for (PlannedOperation operation : operations) {
+			final StatementShapeKey shapeKey = computeShapeKey(operation);
+			var builder = builders.get(shapeKey);
+			if (builder == null) {
+				// First operation for this key - create new builder (which adds the operation in constructor)
+				builder = new OperationGroupBuilder(operation, shapeKey);
+				builders.put(shapeKey, builder);
+			} else {
+				// Subsequent operation for this key - add to existing builder
+				builder.addOperation(operation);
+			}
+		}
+
+		final List<PlannedOperationGroup> groups = new ArrayList<>(builders.size());
+		for (OperationGroupBuilder builder : builders.values()) {
+			groups.add(builder.build());
+		}
+
+		return groups;
+	}
+
+	private StatementShapeKey computeShapeKey(PlannedOperation operation) {
+		final String table = operation.getTableExpression();
+		final MutationKind kind = operation.getKind();
+
+		return switch (kind) {
+			case INSERT -> StatementShapeKey.forInsert(table, operation);
+			case UPDATE -> StatementShapeKey.forUpdate(table, operation);
+			case DELETE -> StatementShapeKey.forDelete(table, operation);
+		};
+	}
+
+	private static class OperationGroupBuilder {
+		private final String tableExpression;
+		private final MutationKind kind;
+		private final StatementShapeKey shapeKey;
+		private int ordinal;
+		private final String origin;
+		private final List<PlannedOperation> operations = new ArrayList<>();
+
+		OperationGroupBuilder(PlannedOperation firstOperation, StatementShapeKey shapeKey) {
+			this.tableExpression = firstOperation.getTableExpression();
+			this.kind = firstOperation.getKind();
+			this.shapeKey = shapeKey;
+			this.ordinal = firstOperation.getOrdinal();
+			this.origin = firstOperation.getOrigin();
+			this.operations.add(firstOperation);
+		}
+
+		void addOperation(PlannedOperation op) {
+			this.operations.add(op);
+			// Track minimum ordinal when merging operations
+			this.ordinal = Math.min(this.ordinal, op.getOrdinal());
+		}
+
+		PlannedOperationGroup build() {
+			final boolean needsIdPrePhase = false;
+			return new PlannedOperationGroup(
+					tableExpression,
+					kind,
+					shapeKey,
+					operations,
+					needsIdPrePhase,
+					ordinal,
+					origin
+			);
+		}
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -617,6 +708,32 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 		public void setDepartment(Department department) {
 			this.department = department;
+		}
+	}
+
+	/**
+	 * Composite key for grouping operations by shape and ordinalBase.
+	 */
+	private static class OperationGroupKey {
+		private final StatementShapeKey shapeKey;
+		private final int ordinalBase;
+
+		OperationGroupKey(StatementShapeKey shapeKey, int ordinalBase) {
+			this.shapeKey = shapeKey;
+			this.ordinalBase = ordinalBase;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (!(o instanceof OperationGroupKey)) return false;
+			OperationGroupKey that = (OperationGroupKey) o;
+			return ordinalBase == that.ordinalBase && shapeKey.equals(that.shapeKey);
+		}
+
+		@Override
+		public int hashCode() {
+			return 31 * shapeKey.hashCode() + ordinalBase;
 		}
 	}
 }

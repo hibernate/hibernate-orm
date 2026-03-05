@@ -7,7 +7,7 @@ package org.hibernate.persister.collection.mutation;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.graph.MutationDecomposer;
-import org.hibernate.action.queue.plan.PlannedOperationGroup;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.PreCollectionUpdateEvent;
@@ -29,7 +29,7 @@ import java.util.List;
 /// @author Steve Ebersole
 public class CollectionUpdateDecomposer implements MutationDecomposer<CollectionUpdateAction> {
 	@Override
-	public List<PlannedOperationGroup> decompose(
+	public List<PlannedOperation> decompose(
 			CollectionUpdateAction action,
 			int ordinalBase,
 			Consumer<PostExecutionCallback> postExecutionCallbackRegistry,
@@ -51,24 +51,24 @@ public class CollectionUpdateDecomposer implements MutationDecomposer<Collection
 		// ===================================================================
 		// EXECUTION PHASE - Delegate to row coordinators
 		// ===================================================================
-		final List<PlannedOperationGroup> groups = new ArrayList<>();
+		final List<PlannedOperation> operations = new ArrayList<>();
 
 		// 1. DELETE operations for removed entries
 		final DeleteRowsCoordinator deleteCoordinator = getDeleteRowsCoordinator(persister);
 		if (deleteCoordinator != null) {
-			groups.addAll(deleteCoordinator.decomposeDeleteRows(collection, key, ordinalBase, session));
+			operations.addAll(deleteCoordinator.decomposeDeleteRows(collection, key, ordinalBase, session));
 		}
 
 		// 2. UPDATE operations for modified entries
 		final UpdateRowsCoordinator updateCoordinator = getUpdateRowsCoordinator(persister);
 		if (updateCoordinator != null) {
-			groups.addAll(updateCoordinator.decomposeUpdateRows(collection, key, ordinalBase + 1, session));
+			operations.addAll(updateCoordinator.decomposeUpdateRows(collection, key, ordinalBase + 1, session));
 		}
 
 		// 3. INSERT operations for new entries
 		final InsertRowsCoordinator insertCoordinator = getInsertRowsCoordinator(persister);
 		if (insertCoordinator != null) {
-			groups.addAll(insertCoordinator.decomposeInsertRows(
+			operations.addAll(insertCoordinator.decomposeInsertRows(
 					collection, key, collection::includeInInsert, ordinalBase + 2, session));
 		}
 
@@ -77,7 +77,7 @@ public class CollectionUpdateDecomposer implements MutationDecomposer<Collection
 		// ===================================================================
 		postExecutionCallbackRegistry.accept(new PostCollectionUpdateHandling(action, cacheKey));
 
-		return groups;
+		return operations;
 	}
 
 	private void preUpdate(CollectionUpdateAction action, SharedSessionContractImplementor session) {

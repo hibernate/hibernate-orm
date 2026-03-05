@@ -6,37 +6,39 @@ package org.hibernate.action.queue.cyclebreak;
 
 import org.hibernate.action.queue.plan.CycleBreaker;
 import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 
 import java.util.Set;
 
 /// Handling for cycle-breaking (nullable FK null-in-insert) installed by the planner.
 ///
-/// When the planner decides to break a cycle, it creates a BindingPatch and
-/// "installs it" into the PlannedOperation where it decided to break the cycle.
+/// When the planner decides to break a cycle, it creates a `BindingPatch` and
+/// "installs it" into the `PlannedOperation` where it decided to break the cycle.
 /// Its presence acts as a trigger to tell later processing to do some special handling.
 /// This is handled in [CycleBreaker].
 ///
 /// When this PlannedOperation is executed, its BindPlan will bind values normally
 /// (into [org.hibernate.engine.jdbc.mutation.JdbcValueBindings]).  It will then see
 /// that a BindingPatch is in effect and will replace the necessary binding values with
-/// a special mutable form.  This is handled in [org.hibernate.action.queue2.CycleBreakPatcher].
+/// a special mutable form.  This is handled in [org.hibernate.action.queue.cyclebreak.CycleBreakPatcher].
 /// It will also capture the "real values" and store them on the
 /// [PlannedOperation#getIntendedFkValues()].
 ///
 /// In the code that executes PlannedOperations, we check for [PlannedOperation#getIntendedFkValues()]
 /// and, if there are any, perform some "fix up" to apply those foreign-key values using
 /// a subsequent UPDATE statement.  The update statement is created by
-/// [PlannedOperationExecutor#synthesizeFixupUpdateIfNeeded(PlannedOperation, Object)] and
-/// is added back to the [FlushPlan] as a follow-up step.  The update could be executed immediately,
+/// [org.hibernate.action.queue.exec.PlannedOperationExecutor#synthesizeFixupUpdateIfNeeded(PlannedOperation, Object)] and
+/// is added back to the [org.hibernate.action.queue.plan.FlushPlan] as a follow-up step.  The update could be executed immediately,
 /// but queueing it as a follow-up step allows for batching.
 ///
-/// @see PlannedOperation#getBindingPatch()
 /// @see CycleBreaker
-/// @see org.hibernate.action.queue2.CycleBreakPatcher
+/// @see PlannedOperation#getBindingPatch()
+/// @see PlannedOperation#setBindingPatch(BindingPatch)
+/// @see org.hibernate.action.queue.cyclebreak.CycleBreakPatcher
 /// @see org.hibernate.persister.entity.mutation.InsertBindPlan
 ///
 /// @author Steve Ebersole
 public record BindingPatch(
 		String tableName,
-		Set<String> fkColumnsToNull) {
+		Set<SelectableMapping> fkColumnsToNull) {
 }

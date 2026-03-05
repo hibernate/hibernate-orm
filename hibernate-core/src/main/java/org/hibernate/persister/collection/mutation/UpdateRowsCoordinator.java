@@ -4,7 +4,7 @@
  */
 package org.hibernate.persister.collection.mutation;
 
-import org.hibernate.action.queue.plan.PlannedOperationGroup;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -23,9 +23,9 @@ public interface UpdateRowsCoordinator extends CollectionOperationCoordinator {
 	 * @param key The collection key
 	 * @param ordinalBase Base ordinal for operation ordering
 	 * @param session The session
-	 * @return List of planned operation groups (may be empty for NoOp coordinators)
+	 * @return List of planned operation groups (maybe empty for NoOp coordinators)
 	 */
-	default List<PlannedOperationGroup> decomposeUpdateRows(
+	default List<PlannedOperation> decomposeUpdateRows(
 			PersistentCollection<?> collection,
 			Object key,
 			int ordinalBase,

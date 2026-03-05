@@ -8,9 +8,7 @@ import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.MutationKind;
-import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.plan.PlannedOperation;
-import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -31,18 +29,13 @@ import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationGroupSingle;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /// [Decomposer][org.hibernate.action.queue.graph.MutationDecomposer] for entity delete operations.
 ///
-/// Converts an [EntityDeleteAction] into a set of [PlannedOperationGroup]s that can
-/// be executed in the correct order respecting foreign key constraints.  The delete
-/// operations are created in "reverse order", meaning child (key) tables before parent
-/// (target) tables - e.g. `orders` before `customers`.
+/// Converts an [EntityDeleteAction] into a group of [PlannedOperation] to be performed.
 ///
 /// @see DeleteBindPlan
 /// @see SoftDeleteBindPlan
@@ -70,7 +63,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 	}
 
 	@Override
-	public List<PlannedOperationGroup> decompose(
+	public List<PlannedOperation> decompose(
 			EntityDeleteAction action,
 			int ordinalBase,
 			java.util.function.Consumer<PostExecutionCallback> postExecutionCallbackRegistry,
@@ -111,11 +104,11 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 				? chooseEffectiveSoftDeleteGroup( identifier, version, state, session, applyOptimisticLocking )
 				: chooseEffectiveDeleteGroup( identifier, version, state, session, applyOptimisticLocking );
 
-		LinkedHashMap<String, List<PlannedOperation>> byTable = new LinkedHashMap<>();
-		int localOrd = 0;
-
 		// For soft deletes, use UPDATE mutation kind; for hard deletes, use DELETE
 		final MutationKind mutationKind = isSoftDelete ? MutationKind.UPDATE : MutationKind.DELETE;
+
+		final List<PlannedOperation> operations = new ArrayList<>(effectiveGroup.getNumberOfOperations());
+		int localOrd = 0;
 
 		for ( int i = 0; i < effectiveGroup.getNumberOfOperations(); i++ ) {
 			var operation = effectiveGroup.getOperation( i );
@@ -148,31 +141,10 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 					"EntityDeleteAction(" + entityPersister.getEntityName() + ")"
 			);
 
-			byTable.computeIfAbsent( tableName, t -> new ArrayList<>() ).add( op );
+			operations.add(op);
 		}
 
-		ArrayList<PlannedOperationGroup> out = arrayList( byTable.size() );
-		int ord = 0;
-		for ( var e : byTable.entrySet() ) {
-			String tableName = e.getKey();
-			List<PlannedOperation> plannedOperations = e.getValue();
-
-			final StatementShapeKey shapeKey = isSoftDelete
-					? StatementShapeKey.forUpdate( tableName, plannedOperations )
-					: StatementShapeKey.forDelete( tableName, plannedOperations );
-
-			out.add( new PlannedOperationGroup(
-					tableName,
-					mutationKind,
-					shapeKey,
-					plannedOperations,
-					false,  // deletes never need identity pre-phase
-					ordinalBase * 1_000 + (ord++),
-					"EntityDeleteAction(" + entityPersister.getEntityName() + ")"
-			) );
-		}
-
-		return out;
+		return operations;
 	}
 
 	private boolean shouldApplyOptimisticLocking(Object version, Object[] state) {

@@ -4,10 +4,15 @@
  */
 package org.hibernate.orm.test.action.queue.decomposer;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.queue.MutationKind;
+import org.hibernate.action.queue.StatementShapeKey;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -71,7 +76,8 @@ public class InsertDecomposerTest {
 			EntityInsertAction action = createInsertAction( entity, session, persister );
 
 			// Decompose
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			// Verify
 			assertNotNull( groups );
@@ -99,7 +105,8 @@ public class InsertDecomposerTest {
 			InsertDecomposer decomposer = new InsertDecomposer( persister, factory );
 
 			EntityInsertAction action = createInsertAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			// Should have 2 groups (primary table + secondary table)
 			assertEquals( 2, groups.size(), "Should have 2 operation groups for secondary table" );
@@ -124,7 +131,8 @@ public class InsertDecomposerTest {
 			InsertDecomposer decomposer = new InsertDecomposer( persister, factory );
 
 			EntityInsertAction action = createInsertAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			// Should have 2 groups (parent table + child table)
 			assertTrue( groups.size() >= 2, "Joined inheritance should have at least 2 tables" );
@@ -151,7 +159,8 @@ public class InsertDecomposerTest {
 			assertTrue( persister.isDynamicInsert(), "Entity should have dynamic insert enabled" );
 
 			EntityInsertAction action = createInsertAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			assertNotNull( groups );
 			assertFalse( groups.isEmpty() );
@@ -174,7 +183,8 @@ public class InsertDecomposerTest {
 			InsertDecomposer decomposer = new InsertDecomposer( persister, factory );
 
 			EntityInsertAction action = createInsertAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			assertNotNull( groups );
 			assertFalse( groups.isEmpty() );
@@ -205,7 +215,8 @@ public class InsertDecomposerTest {
 			InsertDecomposer decomposer = new InsertDecomposer( persister, factory );
 
 			EntityInsertAction action = createInsertAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			assertNotNull( groups );
 			assertFalse( groups.isEmpty() );
@@ -242,7 +253,8 @@ public class InsertDecomposerTest {
 			InsertDecomposer decomposer = new InsertDecomposer( persister, factory );
 
 			EntityInsertAction action = createInsertAction( entity, session, persister );
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			assertNotNull( groups );
 			assertFalse( groups.isEmpty() );
@@ -264,7 +276,8 @@ public class InsertDecomposerTest {
 
 			EntityInsertAction action = createInsertAction( entity, session, persister );
 			int ordinalBase = 5;
-			List<PlannedOperationGroup> groups = decomposer.decompose( action, ordinalBase, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, ordinalBase, callback -> {}, session );
+			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			// Verify ordinals are based on the base
 			for ( PlannedOperationGroup group : groups ) {
@@ -274,7 +287,7 @@ public class InsertDecomposerTest {
 		} );
 	}
 
-	// Helper method
+	// Helper methods
 	private EntityInsertAction createInsertAction(
 			Object entity,
 			SessionImplementor session,
@@ -291,6 +304,86 @@ public class InsertDecomposerTest {
 				false, // isVersionIncrementDisabled
 				(EventSource) session
 		);
+	}
+
+	/**
+	 * Helper method to group operations by shape (table + kind + SQL).
+	 * Mirrors FlushCoordinator's grouping logic.
+	 */
+	private List<PlannedOperationGroup> groupOperations(List<PlannedOperation> operations) {
+		if (operations.isEmpty()) {
+			return List.of();
+		}
+
+		// Group by shapeKey only (merge operations from different entities)
+		// This mirrors FlushCoordinator behavior for non-self-referential tables
+		final Map<StatementShapeKey, OperationGroupBuilder> builders = new LinkedHashMap<>();
+
+		for (PlannedOperation operation : operations) {
+			final StatementShapeKey shapeKey = computeShapeKey(operation);
+			var builder = builders.get(shapeKey);
+			if (builder == null) {
+				// First operation for this key - create new builder (which adds the operation in constructor)
+				builder = new OperationGroupBuilder(operation, shapeKey);
+				builders.put(shapeKey, builder);
+			} else {
+				// Subsequent operation for this key - add to existing builder
+				builder.addOperation(operation);
+			}
+		}
+
+		final List<PlannedOperationGroup> groups = new ArrayList<>(builders.size());
+		for (OperationGroupBuilder builder : builders.values()) {
+			groups.add(builder.build());
+		}
+
+		return groups;
+	}
+
+	private StatementShapeKey computeShapeKey(PlannedOperation operation) {
+		final String table = operation.getTableExpression();
+		final MutationKind kind = operation.getKind();
+
+		return switch (kind) {
+			case INSERT -> StatementShapeKey.forInsert(table, operation);
+			case UPDATE -> StatementShapeKey.forUpdate(table, operation);
+			case DELETE -> StatementShapeKey.forDelete(table, operation);
+		};
+	}
+
+	private static class OperationGroupBuilder {
+		private final String tableExpression;
+		private final MutationKind kind;
+		private final StatementShapeKey shapeKey;
+		private final int ordinal;
+		private final String origin;
+		private final List<PlannedOperation> operations = new ArrayList<>();
+
+		OperationGroupBuilder(PlannedOperation firstOperation, StatementShapeKey shapeKey) {
+			this.tableExpression = firstOperation.getTableExpression();
+			this.kind = firstOperation.getKind();
+			this.shapeKey = shapeKey;
+			this.ordinal = firstOperation.getOrdinal();
+			this.origin = firstOperation.getOrigin();
+			this.operations.add(firstOperation);
+		}
+
+		void addOperation(PlannedOperation op) {
+			this.operations.add(op);
+		}
+
+		PlannedOperationGroup build() {
+			final boolean needsIdPrePhase = false;
+			return new PlannedOperationGroup(
+					tableExpression,
+					kind,
+					shapeKey,
+					operations,
+					needsIdPrePhase,
+					ordinal,
+					origin
+			);
+		}
 	}
 
 	// Test entities
@@ -396,5 +489,31 @@ public class InsertDecomposerTest {
 		Long id;
 
 		String name;
+	}
+
+	/**
+	 * Composite key for grouping operations by shape and ordinalBase.
+	 */
+	private static class OperationGroupKey {
+		private final StatementShapeKey shapeKey;
+		private final int ordinalBase;
+
+		OperationGroupKey(StatementShapeKey shapeKey, int ordinalBase) {
+			this.shapeKey = shapeKey;
+			this.ordinalBase = ordinalBase;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (!(o instanceof OperationGroupKey)) return false;
+			OperationGroupKey that = (OperationGroupKey) o;
+			return ordinalBase == that.ordinalBase && shapeKey.equals(that.shapeKey);
+		}
+
+		@Override
+		public int hashCode() {
+			return 31 * shapeKey.hashCode() + ordinalBase;
+		}
 	}
 }

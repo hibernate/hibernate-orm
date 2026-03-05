@@ -8,10 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.action.queue.MutationKind;
-import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.plan.PlannedOperation;
-import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
@@ -156,7 +154,7 @@ public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator
 	}
 
 	@Override
-	public List<PlannedOperationGroup> decomposeUpdateRows(
+	public List<PlannedOperation> decomposeUpdateRows(
 			PersistentCollection<?> collection,
 			Object key,
 			int ordinalBase,
@@ -187,18 +185,7 @@ public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator
 				"UpdateRowsCoordinator(" + mutationTarget.getRolePath() + ")"
 		);
 
-		final List<PlannedOperation> operations = List.of( plannedOp );
-		final PlannedOperationGroup group = new PlannedOperationGroup(
-				tableName,
-				MutationKind.UPDATE,
-				StatementShapeKey.forUpdate( tableName, operations ),
-				operations,
-				false,
-				ordinalBase * 1_000,
-				"UpdateRowsCoordinator(" + mutationTarget.getRolePath() + ")"
-		);
-
-		return List.of( group );
+		return List.of( plannedOp );
 	}
 
 	private static class UpdateRowsBindPlan implements BindPlan {

@@ -16,18 +16,19 @@ public interface FlushSettings {
 	 * <p>
 	 * Valid values:
 	 * <ul>
-	 *     <li>{@code "graph"} - Uses the graph-based ActionQueue implementation
-	 *         ({@link org.hibernate.action.queue.GraphBasedActionQueue}), which handles
-	 *         foreign key dependencies automatically through graph analysis (default)
 	 *     <li>{@code "legacy"} - Uses the traditional ActionQueue implementation
 	 *         ({@link org.hibernate.engine.spi.ActionQueueLegacy}), which requires manual
-	 *         ordering of actions
+	 *         ordering of actions (default)
+	 *     <li>{@code "graph"} - Uses the graph-based ActionQueue implementation
+	 *         ({@link org.hibernate.action.queue.GraphBasedActionQueue}), which handles
+	 *         foreign key dependencies automatically through graph analysis
 	 * </ul>
 	 * <p>
-	 * The default is {@code "graph"}, which provides improved handling of complex
-	 * foreign key relationships and automatic dependency resolution.
+	 * The default is {@code "legacy"}. The graph-based implementation is experimental and
+	 * provides improved handling of complex foreign key relationships and automatic
+	 * dependency resolution.
 	 *
-	 * @settingDefault {@code "graph"}
+	 * @settingDefault {@code "legacy"}
 	 *
 	 * @since 7.0
 	 */

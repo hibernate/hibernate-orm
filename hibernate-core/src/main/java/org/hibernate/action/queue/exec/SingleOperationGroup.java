@@ -38,7 +38,7 @@ public final class SingleOperationGroup implements MutationOperationGroup {
 		return switch ( localizedKind ) {
 			case INSERT -> MutationType.INSERT;
 			case UPDATE -> MutationType.UPDATE;
-			case DELETE, DELETE_BY_FK -> MutationType.DELETE;
+			case DELETE -> MutationType.DELETE;
 		};
 	}
 

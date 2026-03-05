@@ -264,7 +264,7 @@ public class SessionImpl
 		final String implementation = configService.getSetting(
 				org.hibernate.cfg.FlushSettings.FLUSH_QUEUE_IMPL,
 				String.class,
-				"graph"
+				"legacy"
 		);
 
 		return switch ( implementation.toLowerCase() ) {

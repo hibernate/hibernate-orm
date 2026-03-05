@@ -38,6 +38,7 @@ public class PlannedOperation {
 	// metadata
 	private int ordinal;
 	private String origin;
+	private boolean needsIdPrePhase;
 
 	public PlannedOperation(
 			String tableExpression,
@@ -46,12 +47,24 @@ public class PlannedOperation {
 			BindPlan bindPlan,
 			int ordinal,
 			String origin) {
+		this(tableExpression, kind, operation, bindPlan, ordinal, origin, false);
+	}
+
+	public PlannedOperation(
+			String tableExpression,
+			MutationKind kind,
+			MutationOperation operation,
+			BindPlan bindPlan,
+			int ordinal,
+			String origin,
+			boolean needsIdPrePhase) {
 		this.tableExpression = tableExpression;
 		this.kind = kind;
 		this.operation = operation;
 		this.bindPlan = bindPlan;
 		this.ordinal = ordinal;
 		this.origin = origin;
+		this.needsIdPrePhase = needsIdPrePhase;
 	}
 
 	public String getTableExpression() {
@@ -92,6 +105,10 @@ public class PlannedOperation {
 
 	public String getOrigin() {
 		return origin;
+	}
+
+	public boolean needsIdPrePhase() {
+		return needsIdPrePhase;
 	}
 
 	public void setBindingPatch(BindingPatch bindingPatch) {

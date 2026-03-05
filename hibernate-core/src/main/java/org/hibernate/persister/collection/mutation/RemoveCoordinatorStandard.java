@@ -5,10 +5,8 @@
 package org.hibernate.persister.collection.mutation;
 
 import org.hibernate.action.queue.MutationKind;
-import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.plan.PlannedOperation;
-import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
@@ -142,7 +140,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 	}
 
 	@Override
-	public List<PlannedOperationGroup> decomposeRemove(
+	public List<PlannedOperation> decomposeRemove(
 			Object key,
 			int ordinalBase,
 			SharedSessionContractImplementor session) {
@@ -158,25 +156,14 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 
 		final PlannedOperation plannedOp = new PlannedOperation(
 				tableName,
-				MutationKind.DELETE_BY_FK,
+				MutationKind.DELETE,
 				operation,
 				bindPlan,
 				ordinalBase * 1_000,
 				"RemoveCoordinator(" + mutationTarget.getRolePath() + ")"
 		);
 
-		final List<PlannedOperation> operations = List.of( plannedOp );
-		final PlannedOperationGroup group = new PlannedOperationGroup(
-				tableName,
-				MutationKind.DELETE_BY_FK,
-				new StatementShapeKey( tableName, MutationKind.DELETE_BY_FK, operation.hashCode() ),
-				operations,
-				false,
-				ordinalBase * 1_000,
-				"RemoveCoordinator(" + mutationTarget.getRolePath() + ")"
-		);
-
-		return List.of( group );
+		return List.of( plannedOp );
 	}
 
 	private static class RemoveBindPlan implements BindPlan {

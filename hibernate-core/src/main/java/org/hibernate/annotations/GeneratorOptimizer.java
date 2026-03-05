@@ -35,6 +35,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({METHOD, FIELD})
 @Retention(RUNTIME)
 @Incubating
-public @interface Optimizer {
+public @interface GeneratorOptimizer {
 	StandardOptimizerDescriptor value();
 }

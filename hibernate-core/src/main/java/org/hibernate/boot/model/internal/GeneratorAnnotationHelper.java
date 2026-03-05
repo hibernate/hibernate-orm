@@ -11,7 +11,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.IdGeneratorType;
-import org.hibernate.annotations.Optimizer;
+import org.hibernate.annotations.GeneratorOptimizer;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.models.HibernateAnnotations;
@@ -247,7 +247,7 @@ public class GeneratorAnnotationHelper {
 	}
 
 	private static void applyOptimizer(MemberDetails idMember, Properties properties) {
-		final var optimizer = idMember.getDirectAnnotationUsage( Optimizer.class );
+		final var optimizer = idMember.getDirectAnnotationUsage( GeneratorOptimizer.class );
 		if ( optimizer != null ) {
 			properties.setProperty( OPT_PARAM, optimizer.value().getExternalName() );
 		}

@@ -7,38 +7,38 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
-import org.hibernate.annotations.Optimizer;
+import org.hibernate.annotations.GeneratorOptimizer;
 import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
 import org.hibernate.models.spi.ModelsContext;
 
 @SuppressWarnings({ "ClassExplicitlyAnnotation", "unused" })
 @jakarta.annotation.Generated("org.hibernate.orm.build.annotations.ClassGeneratorProcessor")
-public class OptimizerAnnotation implements Optimizer {
+public class GeneratorOptimizerAnnotation implements GeneratorOptimizer {
 	private StandardOptimizerDescriptor value;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
-	public OptimizerAnnotation(ModelsContext modelContext) {
+	public GeneratorOptimizerAnnotation(ModelsContext modelContext) {
 	}
 
 	/**
 	 * Used in creating annotation instances from JDK variant
 	 */
-	public OptimizerAnnotation(Optimizer annotation, ModelsContext modelContext) {
+	public GeneratorOptimizerAnnotation(GeneratorOptimizer annotation, ModelsContext modelContext) {
 		this.value = annotation.value();
 	}
 
 	/**
 	 * Used in creating annotation instances from Jandex variant
 	 */
-	public OptimizerAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
+	public GeneratorOptimizerAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.value = (StandardOptimizerDescriptor) attributeValues.get( "value" );
 	}
 
 	@Override
 	public Class<? extends Annotation> annotationType() {
-		return Optimizer.class;
+		return GeneratorOptimizer.class;
 	}
 
 	@Override

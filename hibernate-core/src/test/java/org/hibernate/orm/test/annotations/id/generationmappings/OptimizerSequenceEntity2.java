@@ -8,7 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
-import org.hibernate.annotations.Optimizer;
+import org.hibernate.annotations.GeneratorOptimizer;
 import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
 
 @Entity
@@ -19,7 +19,7 @@ public class OptimizerSequenceEntity2 {
 	@Id
 	@GeneratedValue(generator="sequence_gen")
 	@SequenceGenerator(name="sequence_gen", sequenceName = "optimizer_sequence2", allocationSize = 30)
-	@Optimizer(StandardOptimizerDescriptor.POOLED_LOTL)
+	@GeneratorOptimizer(StandardOptimizerDescriptor.POOLED_LOTL)
 	public Long getId() {
 		return id;
 	}

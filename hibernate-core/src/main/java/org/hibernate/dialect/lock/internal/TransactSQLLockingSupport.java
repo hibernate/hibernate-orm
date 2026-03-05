@@ -176,6 +176,17 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 
 		@Override
 		public void setLockTimeout(Timeout timeout, Connection connection, SessionFactoryImplementor factory) {
+			// see https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc31654.1600/doc/html/san1360629104549.html
+			// SAP Adaptive Server Enterprise 16.0
+			// > System Administration Guide 16.0: Volume 1
+			//   > Setting Configuration Parameters
+			//     > Configuration Parameters
+			//       > Alphabetical Listing of Configuration Parameters
+			//         > lock wait period
+			//
+			// range:   0 – 2147483647
+			// default: 2147483647
+			// unit:    seconds
 			final int milliseconds = timeout.milliseconds();
 
 			if ( milliseconds == Timeouts.SKIP_LOCKED_MILLI ) {
@@ -196,7 +207,7 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 				Helper.setLockTimeout( 2147483647, "set lock wait %s", connection, factory );
 			}
 			else {
-				Helper.setLockTimeout( milliseconds, "set lock wait %s", connection, factory );
+				Helper.setLockTimeout( milliseconds / 1000, "set lock wait %s", connection, factory );
 			}
 		}
 	}

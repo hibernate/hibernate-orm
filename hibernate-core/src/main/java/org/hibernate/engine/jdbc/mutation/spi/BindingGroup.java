@@ -6,7 +6,6 @@ package org.hibernate.engine.jdbc.mutation.spi;
 
 import java.util.Comparator;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Consumer;
@@ -55,7 +54,6 @@ public class BindingGroup {
 	 * Create a binding
 	 */
 	public void bindValue(String columnName, Object value, JdbcValueDescriptor valueDescriptor) {
-		assert Objects.equals( columnName, valueDescriptor.getColumnName() );
 		bindings.add( new Binding( columnName, value, valueDescriptor ) );
 	}
 

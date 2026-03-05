@@ -8,10 +8,10 @@ import java.util.Map;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
-import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.JdbcValueBindingsFactory;
+import org.hibernate.engine.jdbc.mutation.spi.JdbcValueBindingsImplementor;
 import org.hibernate.engine.jdbc.mutation.spi.JdbcValueDescriptorAccess;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -90,7 +90,7 @@ public class StandardMutationExecutorService implements MutationExecutorService 
 		);
 	}
 
-	private static JdbcValueBindings jdbcValueBindingsFactory(
+	private static JdbcValueBindingsImplementor jdbcValueBindingsFactory(
 			MutationOperation mutationOperation,
 			JdbcValueDescriptorAccess jdbcValueDescriptorAccess,
 			SharedSessionContractImplementor session) {

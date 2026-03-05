@@ -39,7 +39,7 @@ public class Binding {
 	}
 
 	public void setValue(Object newValue) {
-		this.value = value;
+		this.value = newValue;
 	}
 
 	public JdbcValueDescriptor getValueDescriptor() {

@@ -4,13 +4,15 @@
  */
 package org.hibernate.engine.jdbc.mutation.internal;
 
-import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.group.UnknownParameterException;
+import org.hibernate.engine.jdbc.mutation.spi.Binding;
 import org.hibernate.engine.jdbc.mutation.spi.BindingGroup;
+import org.hibernate.engine.jdbc.mutation.spi.JdbcValueBindingsImplementor;
 import org.hibernate.engine.jdbc.mutation.spi.JdbcValueDescriptorAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.MutableObject;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
@@ -20,10 +22,13 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import static org.hibernate.action.queue.Helper.normalizeColumnName;
+import static org.hibernate.action.queue.Helper.normalizeTableName;
+
 /**
  * @author Steve Ebersole
  */
-public class JdbcValueBindingsImpl implements JdbcValueBindings {
+public class JdbcValueBindingsImpl implements JdbcValueBindingsImplementor {
 	private final MutationType mutationType;
 	private final MutationTarget<?> mutationTarget;
 	private final JdbcValueDescriptorAccess jdbcValueDescriptorAccess;
@@ -44,7 +49,8 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 
 	@Override
 	public BindingGroup getBindingGroup(String tableName) {
-		return bindingGroupMap.get( tableName );
+		final String normalizedTableName = normalizeTableName( tableName );
+		return bindingGroupMap.get( normalizedTableName );
 	}
 
 	@Override
@@ -58,8 +64,12 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 		if ( jdbcValueDescriptor == null ) {
 			throw new UnknownParameterException( mutationType, mutationTarget, tableName, columnName, usage );
 		}
-		resolveBindingGroup( jdbcValueDescriptorAccess.resolvePhysicalTableName( tableName ) )
-				.bindValue( columnName, value, jdbcValueDescriptor );
+		// Normalize table and column names for storage to match cycle breaking lookups
+		final String physicalTableName = jdbcValueDescriptorAccess.resolvePhysicalTableName( tableName );
+		final String normalizedTableName = normalizeTableName( physicalTableName );
+		final String normalizedColumnName = normalizeColumnName( columnName );
+		resolveBindingGroup( normalizedTableName )
+				.bindValue( normalizedColumnName, value, jdbcValueDescriptor );
 	}
 
 	private BindingGroup resolveBindingGroup(String tableName) {
@@ -77,17 +87,24 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 
 	@Override
 	public void beforeStatement(PreparedStatementDetails statementDetails) {
-		final var bindingGroup =
-				bindingGroupMap.get( statementDetails.getMutatingTableDetails().getTableName() );
+		final String normalizedTableName = normalizeTableName(
+				statementDetails.getMutatingTableDetails().getTableName() );
+		final var bindingGroup = bindingGroupMap.get( normalizedTableName );
 		if ( bindingGroup == null ) {
 			statementDetails.resolveStatement();
 		}
 		else {
 			bindingGroup.forEachBinding( (binding) -> {
 				try {
+					// Unwrap MutableObject handles used by cycle breaking
+					Object valueToBindObject = binding.getValue();
+					if ( valueToBindObject instanceof MutableObject ) {
+						valueToBindObject = ( (MutableObject<?>) valueToBindObject ).get();
+					}
+
 					binding.getValueBinder().bind(
 							statementDetails.resolveStatement(),
-							binding.getValue(),
+							valueToBindObject,
 							binding.getPosition(),
 							session
 					);
@@ -109,9 +126,27 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 
 	@Override
 	public void afterStatement(TableMapping mutatingTable) {
-		final var bindingGroup = bindingGroupMap.remove( mutatingTable.getTableName() );
+		final String normalizedTableName = normalizeTableName( mutatingTable.getTableName() );
+		final var bindingGroup = bindingGroupMap.remove( normalizedTableName );
 		if ( bindingGroup != null ) {
 			bindingGroup.clear();
 		}
+	}
+
+	@Override
+	public Object getBoundValue(String tableName, String columnName, ParameterUsage usage) {
+		final String normalizedTableName = normalizeTableName( tableName );
+		final String normalizedColumnName = normalizeColumnName( columnName );
+		final BindingGroup bindingGroup = bindingGroupMap.get( normalizedTableName );
+		return bindingGroup.getBinding( normalizedColumnName, usage ).getValue();
+	}
+
+	@Override
+	public void replaceValue(String tableName, String columnName, ParameterUsage usage, Object newValue) {
+		final String normalizedTableName = normalizeTableName( tableName );
+		final String normalizedColumnName = normalizeColumnName( columnName );
+		final BindingGroup bindingGroup = bindingGroupMap.get( normalizedTableName );
+		final Binding binding = bindingGroup.getBinding( normalizedColumnName, usage );
+		binding.setValue( newValue );
 	}
 }

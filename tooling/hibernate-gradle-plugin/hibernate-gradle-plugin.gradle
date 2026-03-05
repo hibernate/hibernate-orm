@@ -81,14 +81,6 @@ def releasePrepareTask = tasks.register("releasePrepare") {
 	dependsOn tasks.check
 }
 
-// used from the h2 CI job
-tasks.register("preVerifyRelease") {
-	group = "release-prepare"
-	description = "Delegates to `releasePrepare` task"
-
-	dependsOn releasePrepareTask
-}
-
 tasks.register("releaseGradlePluginPerform") {
 	group = "release-perform"
 	description = "An explicit task for publishing Gradle Plugins to the Plugin Portal"

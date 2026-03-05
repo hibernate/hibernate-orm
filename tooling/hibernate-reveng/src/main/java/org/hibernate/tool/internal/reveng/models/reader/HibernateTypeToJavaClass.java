@@ -20,6 +20,9 @@ import java.math.BigInteger;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+
+import jakarta.persistence.TemporalType;
 
 /**
  * Converts Hibernate type name strings (as returned by
@@ -32,8 +35,15 @@ import java.util.Map;
 public class HibernateTypeToJavaClass {
 
 	private static final Map<String, Class<?>> TYPE_MAP = new HashMap<>();
+	private static final Map<String, TemporalType> TEMPORAL_MAP = new HashMap<>();
+	private static final Set<String> LOB_TYPES = Set.of("blob", "clob");
 
 	static {
+		// Temporal type mappings
+		TEMPORAL_MAP.put("date", TemporalType.DATE);
+		TEMPORAL_MAP.put("time", TemporalType.TIME);
+		TEMPORAL_MAP.put("timestamp", TemporalType.TIMESTAMP);
+
 		// Primitive types
 		TYPE_MAP.put("int", int.class);
 		TYPE_MAP.put("long", long.class);
@@ -92,5 +102,27 @@ public class HibernateTypeToJavaClass {
 		}
 		Class<?> result = TYPE_MAP.get(hibernateTypeName);
 		return result != null ? result : Object.class;
+	}
+
+	/**
+	 * Returns the JPA {@link TemporalType} for the given Hibernate type name,
+	 * or {@code null} if the type is not temporal.
+	 */
+	public static TemporalType toTemporalType(String hibernateTypeName) {
+		if (hibernateTypeName == null) {
+			return null;
+		}
+		return TEMPORAL_MAP.get(hibernateTypeName);
+	}
+
+	/**
+	 * Returns {@code true} if the given Hibernate type name represents a
+	 * LOB type (blob or clob).
+	 */
+	public static boolean isLob(String hibernateTypeName) {
+		if (hibernateTypeName == null) {
+			return false;
+		}
+		return LOB_TYPES.contains(hibernateTypeName);
 	}
 }

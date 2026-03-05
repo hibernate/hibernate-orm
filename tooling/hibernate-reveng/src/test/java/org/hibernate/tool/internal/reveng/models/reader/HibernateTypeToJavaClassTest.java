@@ -21,6 +21,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
 
+import jakarta.persistence.TemporalType;
+
 import org.junit.jupiter.api.Test;
 
 /**
@@ -154,5 +156,54 @@ public class HibernateTypeToJavaClassTest {
 	@Test
 	public void testBooleanWrapperType() {
 		assertEquals(Boolean.class, HibernateTypeToJavaClass.toJavaClass("java.lang.Boolean"));
+	}
+
+	// ---- Temporal type tests ----
+
+	@Test
+	public void testTemporalDate() {
+		assertEquals(TemporalType.DATE, HibernateTypeToJavaClass.toTemporalType("date"));
+	}
+
+	@Test
+	public void testTemporalTime() {
+		assertEquals(TemporalType.TIME, HibernateTypeToJavaClass.toTemporalType("time"));
+	}
+
+	@Test
+	public void testTemporalTimestamp() {
+		assertEquals(TemporalType.TIMESTAMP, HibernateTypeToJavaClass.toTemporalType("timestamp"));
+	}
+
+	@Test
+	public void testTemporalNonTemporal() {
+		assertNull(HibernateTypeToJavaClass.toTemporalType("string"));
+	}
+
+	@Test
+	public void testTemporalNull() {
+		assertNull(HibernateTypeToJavaClass.toTemporalType(null));
+	}
+
+	// ---- LOB type tests ----
+
+	@Test
+	public void testIsLobBlob() {
+		assertTrue(HibernateTypeToJavaClass.isLob("blob"));
+	}
+
+	@Test
+	public void testIsLobClob() {
+		assertTrue(HibernateTypeToJavaClass.isLob("clob"));
+	}
+
+	@Test
+	public void testIsLobNonLob() {
+		assertFalse(HibernateTypeToJavaClass.isLob("string"));
+	}
+
+	@Test
+	public void testIsLobNull() {
+		assertFalse(HibernateTypeToJavaClass.isLob(null));
 	}
 }

@@ -130,6 +130,48 @@ public class RevengStrategyAdapter {
 			uniqueReference);
 	}
 
+	/**
+	 * Gets the property name for a many-to-many relationship.
+	 * Builds mapping {@link ForeignKey} objects for both sides of the
+	 * join table and calls {@code delegate.foreignKeyToManyToManyName()}.
+	 */
+	public String foreignKeyToManyToManyName(
+			RawForeignKeyInfo fromFk,
+			TableMetadata joinTableMetadata,
+			List<RawForeignKeyInfo> joinTableFks,
+			RawForeignKeyInfo toFk,
+			boolean uniqueReference) {
+		Table joinTable = buildMappingTable(joinTableMetadata, joinTableFks);
+		ForeignKey fromKey = buildMappingForeignKeyOnTable(fromFk, joinTable);
+		ForeignKey toKey = buildMappingForeignKeyOnTable(toFk, joinTable);
+		TableIdentifier middleTableId = TableIdentifier.create(
+			joinTableMetadata.getCatalog(),
+			joinTableMetadata.getSchema(),
+			joinTableMetadata.getTableName());
+		return delegate.foreignKeyToManyToManyName(fromKey, middleTableId, toKey, uniqueReference);
+	}
+
+	/**
+	 * Checks whether this FK's side of the join table is the inverse side
+	 * of a collection (i.e. should use {@code mappedBy}).
+	 */
+	public boolean isForeignKeyCollectionInverse(
+			RawForeignKeyInfo fkInfo,
+			TableMetadata joinTableMetadata,
+			List<RawForeignKeyInfo> joinTableFks) {
+		Table joinTable = buildMappingTable(joinTableMetadata, joinTableFks);
+		Table referencedTable = new Table("Hibernate Tools");
+		referencedTable.setName(fkInfo.referencedTableName());
+		referencedTable.setSchema(fkInfo.referencedSchema());
+		referencedTable.setCatalog(fkInfo.referencedCatalog());
+		return delegate.isForeignKeyCollectionInverse(
+			fkInfo.fkName(),
+			joinTable,
+			buildColumnList(fkInfo.fkColumnName()),
+			referencedTable,
+			buildColumnList(fkInfo.pkColumnName()));
+	}
+
 	// ---- Internal helpers ----
 
 	private Table buildMappingTable(TableMetadata metadata, List<RawForeignKeyInfo> outgoingFks) {
@@ -245,6 +287,34 @@ public class RevengStrategyAdapter {
 			refColumns);
 		fk.setReferencedTable(referencedTable);
 
+		return fk;
+	}
+
+	private ForeignKey buildMappingForeignKeyOnTable(RawForeignKeyInfo fkInfo, Table table) {
+		List<Column> fkColumns = new ArrayList<>();
+		Column fkColumn = table.getColumn(new Column(fkInfo.fkColumnName()));
+		if (fkColumn != null) {
+			fkColumns.add(fkColumn);
+		} else {
+			fkColumns.add(new Column(fkInfo.fkColumnName()));
+		}
+
+		Table referencedTable = new Table("Hibernate Tools");
+		referencedTable.setName(fkInfo.referencedTableName());
+		referencedTable.setSchema(fkInfo.referencedSchema());
+		referencedTable.setCatalog(fkInfo.referencedCatalog());
+
+		List<Column> refColumns = new ArrayList<>();
+		refColumns.add(new Column(fkInfo.pkColumnName()));
+
+		ForeignKey fk = table.createForeignKey(
+			fkInfo.fkName(),
+			fkColumns,
+			fkInfo.referencedTableName(),
+			null,
+			null,
+			refColumns);
+		fk.setReferencedTable(referencedTable);
 		return fk;
 	}
 

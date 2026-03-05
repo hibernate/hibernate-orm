@@ -27,8 +27,12 @@ import java.util.Map;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengSettings;
+import jakarta.persistence.TemporalType;
+
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
+import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
+import org.hibernate.tool.internal.reveng.models.metadata.ManyToManyMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.OneToManyMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
 import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
@@ -176,6 +180,156 @@ public class ModelsDatabaseSchemaReaderTest {
 	}
 
 	@Test
+	public void testTemporalAndLobColumns() {
+		dialect.addTable("EVENT", null, null);
+		dialect.addColumn("EVENT", "ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addColumn("EVENT", "EVENT_DATE", java.sql.Types.DATE, 0, 0, true);
+		dialect.addColumn("EVENT", "START_TIME", java.sql.Types.TIME, 0, 0, true);
+		dialect.addColumn("EVENT", "CREATED_AT", java.sql.Types.TIMESTAMP, 0, 0, true);
+		dialect.addColumn("EVENT", "DESCRIPTION", java.sql.Types.CLOB, 0, 0, true);
+		dialect.addColumn("EVENT", "PHOTO", java.sql.Types.BLOB, 0, 0, true);
+		dialect.addPrimaryKey("EVENT", "ID", 1);
+
+		ModelsDatabaseSchemaReader reader = new ModelsDatabaseSchemaReader(
+			dialect, strategy, null, null);
+		List<TableMetadata> result = reader.readSchema();
+
+		assertEquals(1, result.size());
+		TableMetadata event = result.get(0);
+		List<ColumnMetadata> columns = event.getColumns();
+		assertEquals(6, columns.size());
+
+		ColumnMetadata dateCol = findColumn(columns, "EVENT_DATE");
+		assertEquals(TemporalType.DATE, dateCol.getTemporalType());
+		assertFalse(dateCol.isLob());
+
+		ColumnMetadata timeCol = findColumn(columns, "START_TIME");
+		assertEquals(TemporalType.TIME, timeCol.getTemporalType());
+
+		ColumnMetadata timestampCol = findColumn(columns, "CREATED_AT");
+		assertEquals(TemporalType.TIMESTAMP, timestampCol.getTemporalType());
+
+		ColumnMetadata descCol = findColumn(columns, "DESCRIPTION");
+		assertNull(descCol.getTemporalType());
+		assertTrue(descCol.isLob());
+		assertEquals(String.class, descCol.getJavaType());
+
+		ColumnMetadata photoCol = findColumn(columns, "PHOTO");
+		assertNull(photoCol.getTemporalType());
+		assertTrue(photoCol.isLob());
+		assertEquals(byte[].class, photoCol.getJavaType());
+
+		ColumnMetadata idCol = findColumn(columns, "ID");
+		assertNull(idCol.getTemporalType());
+		assertFalse(idCol.isLob());
+	}
+
+	@Test
+	public void testCompositeId() {
+		dialect.addTable("ORDER_ITEM", null, null);
+		dialect.addColumn("ORDER_ITEM", "ORDER_ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addColumn("ORDER_ITEM", "PRODUCT_ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addColumn("ORDER_ITEM", "QUANTITY", java.sql.Types.INTEGER, 10, 0, true);
+		dialect.addPrimaryKey("ORDER_ITEM", "ORDER_ID", 1);
+		dialect.addPrimaryKey("ORDER_ITEM", "PRODUCT_ID", 2);
+
+		ModelsDatabaseSchemaReader reader = new ModelsDatabaseSchemaReader(
+			dialect, strategy, null, null);
+		List<TableMetadata> result = reader.readSchema();
+
+		assertEquals(1, result.size());
+		TableMetadata orderItem = result.get(0);
+
+		CompositeIdMetadata compositeId = orderItem.getCompositeId();
+		assertNotNull(compositeId);
+		assertEquals("id", compositeId.getFieldName());
+		assertEquals("OrderItemId", compositeId.getIdClassName());
+		assertEquals("com.example", compositeId.getIdClassPackage());
+		assertEquals(2, compositeId.getAttributeOverrides().size());
+		assertEquals("orderId", compositeId.getAttributeOverrides().get(0).getFieldName());
+		assertEquals("ORDER_ID", compositeId.getAttributeOverrides().get(0).getColumnName());
+		assertEquals("productId", compositeId.getAttributeOverrides().get(1).getFieldName());
+		assertEquals("PRODUCT_ID", compositeId.getAttributeOverrides().get(1).getColumnName());
+	}
+
+	@Test
+	public void testSinglePrimaryKeyNoCompositeId() {
+		dialect.addTable("EMPLOYEE", null, null);
+		dialect.addColumn("EMPLOYEE", "ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addColumn("EMPLOYEE", "NAME", java.sql.Types.VARCHAR, 255, 0, true);
+		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
+
+		ModelsDatabaseSchemaReader reader = new ModelsDatabaseSchemaReader(
+			dialect, strategy, null, null);
+		List<TableMetadata> result = reader.readSchema();
+
+		assertEquals(1, result.size());
+		assertNull(result.get(0).getCompositeId());
+	}
+
+	@Test
+	public void testManyToManyRelationships() {
+		// USERS table
+		dialect.addTable("USERS", null, null);
+		dialect.addColumn("USERS", "ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addPrimaryKey("USERS", "ID", 1);
+
+		// ROLES table
+		dialect.addTable("ROLES", null, null);
+		dialect.addColumn("ROLES", "ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addPrimaryKey("ROLES", "ID", 1);
+
+		// Join table USER_ROLE
+		dialect.addTable("USER_ROLE", null, null);
+		dialect.addColumn("USER_ROLE", "USER_ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addColumn("USER_ROLE", "ROLE_ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addPrimaryKey("USER_ROLE", "USER_ID", 1);
+		dialect.addPrimaryKey("USER_ROLE", "ROLE_ID", 2);
+
+		// FKs from join table
+		dialect.addExportedKey("USERS", "ID", "USER_ROLE", "USER_ID", "FK_UR_USER", 1);
+		dialect.addExportedKey("ROLES", "ID", "USER_ROLE", "ROLE_ID", "FK_UR_ROLE", 1);
+
+		ModelsDatabaseSchemaReader reader = new ModelsDatabaseSchemaReader(
+			dialect, strategy, null, null);
+		List<TableMetadata> result = reader.readSchema();
+
+		// Join table should be filtered out
+		assertEquals(2, result.size());
+		TableMetadata users = findTable(result, "USERS");
+		TableMetadata roles = findTable(result, "ROLES");
+		assertNotNull(users);
+		assertNotNull(roles);
+
+		// One side should be the owning side (with joinTable), the other the inverse (with mappedBy)
+		int totalM2M = users.getManyToManys().size() + roles.getManyToManys().size();
+		assertEquals(2, totalM2M);
+
+		// Find owning and inverse sides
+		ManyToManyMetadata owning = null;
+		ManyToManyMetadata inverse = null;
+		for (ManyToManyMetadata m2m : users.getManyToManys()) {
+			if (m2m.getJoinTableName() != null) {
+				owning = m2m;
+			} else {
+				inverse = m2m;
+			}
+		}
+		for (ManyToManyMetadata m2m : roles.getManyToManys()) {
+			if (m2m.getJoinTableName() != null) {
+				if (owning == null) owning = m2m;
+			} else {
+				if (inverse == null) inverse = m2m;
+			}
+		}
+
+		assertNotNull(owning, "Should have an owning side with joinTable");
+		assertNotNull(inverse, "Should have an inverse side with mappedBy");
+		assertEquals("USER_ROLE", owning.getJoinTableName());
+		assertNotNull(inverse.getMappedBy());
+	}
+
+	@Test
 	public void testEmptySchema() {
 		ModelsDatabaseSchemaReader reader = new ModelsDatabaseSchemaReader(
 			dialect, strategy, null, null);
@@ -188,6 +342,15 @@ public class ModelsDatabaseSchemaReaderTest {
 		for (TableMetadata t : tables) {
 			if (t.getTableName().equals(tableName)) {
 				return t;
+			}
+		}
+		return null;
+	}
+
+	private ColumnMetadata findColumn(List<ColumnMetadata> columns, String columnName) {
+		for (ColumnMetadata c : columns) {
+			if (c.getColumnName().equals(columnName)) {
+				return c;
 			}
 		}
 		return null;

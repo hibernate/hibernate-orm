@@ -158,4 +158,43 @@ public class RevengStrategyAdapterTest {
 		String name = adapter.foreignKeyToCollectionName(fkInfo, false);
 		assertEquals("employeesForDepartmentId", name);
 	}
+
+	@Test
+	public void testForeignKeyToManyToManyName() {
+		TableMetadata joinTable = new TableMetadata("USER_ROLE", "UserRole", "com.example")
+			.addColumn(new ColumnMetadata("USER_ID", "userId", long.class).primaryKey(true))
+			.addColumn(new ColumnMetadata("ROLE_ID", "roleId", long.class).primaryKey(true));
+
+		List<RawForeignKeyInfo> joinTableFks = Arrays.asList(
+			new RawForeignKeyInfo("FK_UR_USER", "USER_ROLE", null, null, "USER_ID", "ID",
+				"USERS", null, null, 1),
+			new RawForeignKeyInfo("FK_UR_ROLE", "USER_ROLE", null, null, "ROLE_ID", "ID",
+				"ROLES", null, null, 1)
+		);
+
+		// fromFk = FK to USERS, toFk = FK to ROLES → property name should be pluralized "Roles"
+		String name = adapter.foreignKeyToManyToManyName(
+			joinTableFks.get(0), joinTable, joinTableFks, joinTableFks.get(1), true);
+		assertEquals("roleses", name);
+	}
+
+	@Test
+	public void testIsForeignKeyCollectionInverse() {
+		TableMetadata joinTable = new TableMetadata("USER_ROLE", "UserRole", "com.example")
+			.addColumn(new ColumnMetadata("USER_ID", "userId", long.class).primaryKey(true))
+			.addColumn(new ColumnMetadata("ROLE_ID", "roleId", long.class).primaryKey(true));
+
+		List<RawForeignKeyInfo> joinTableFks = Arrays.asList(
+			new RawForeignKeyInfo("FK_UR_USER", "USER_ROLE", null, null, "USER_ID", "ID",
+				"USERS", null, null, 1),
+			new RawForeignKeyInfo("FK_UR_ROLE", "USER_ROLE", null, null, "ROLE_ID", "ID",
+				"ROLES", null, null, 1)
+		);
+
+		// Verify the method doesn't throw and returns a valid result
+		boolean inverse = adapter.isForeignKeyCollectionInverse(
+			joinTableFks.get(0), joinTable, joinTableFks);
+		// Default strategy returns false when FK/PK column names differ
+		assertFalse(inverse);
+	}
 }

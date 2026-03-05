@@ -29,8 +29,12 @@ import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
+import jakarta.persistence.TemporalType;
+
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
+import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
+import org.hibernate.tool.internal.reveng.models.metadata.ManyToManyMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.OneToManyMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.OneToOneMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
@@ -92,6 +96,9 @@ public class ModelsDatabaseSchemaReader {
 		resolveIncomingForeignKeys(
 			tablesByName, tablesByEntityName, incomingFksByTable, manyToManyTables, adapter);
 
+		resolveManyToManyRelationships(
+			tablesByName, outgoingFksByTable, manyToManyTables, adapter);
+
 		// Step 4: Return result (excluding M2M tables)
 		List<TableMetadata> result = new ArrayList<>();
 		for (Map.Entry<String, TableMetadata> entry : tablesByName.entrySet()) {
@@ -136,6 +143,7 @@ public class ModelsDatabaseSchemaReader {
 					}
 
 					readColumnsAndPrimaryKeys(tableMetadata, tableId, catalog, schema);
+					detectCompositeId(tableMetadata, tableId);
 					tablesByName.put(tableName, tableMetadata);
 				}
 			} finally {
@@ -197,6 +205,15 @@ public class ModelsDatabaseSchemaReader {
 					columnMetadata.version(true);
 				}
 
+				TemporalType temporalType = HibernateTypeToJavaClass.toTemporalType(hibernateType);
+				if (temporalType != null) {
+					columnMetadata.temporal(temporalType);
+				}
+
+				if (HibernateTypeToJavaClass.isLob(hibernateType)) {
+					columnMetadata.lob(true);
+				}
+
 				tableMetadata.addColumn(columnMetadata);
 			}
 		} finally {
@@ -236,6 +253,31 @@ public class ModelsDatabaseSchemaReader {
 			return columnName.equals(optimisticLockColumn);
 		}
 		return strategy.useColumnForOptimisticLock(tableId, columnName);
+	}
+
+	private void detectCompositeId(TableMetadata tableMetadata, TableIdentifier tableId) {
+		List<ColumnMetadata> pkColumns = new ArrayList<>();
+		for (ColumnMetadata col : tableMetadata.getColumns()) {
+			if (col.isPrimaryKey()) {
+				pkColumns.add(col);
+			}
+		}
+		if (pkColumns.size() <= 1) {
+			return;
+		}
+
+		String idClassName = strategy.tableToCompositeIdName(tableId);
+		if (idClassName == null) {
+			idClassName = strategy.classNameToCompositeIdName(
+				tableMetadata.getEntityClassName());
+		}
+
+		CompositeIdMetadata compositeId = new CompositeIdMetadata(
+			"id", idClassName, tableMetadata.getEntityPackage());
+		for (ColumnMetadata pkCol : pkColumns) {
+			compositeId.addAttributeOverride(pkCol.getFieldName(), pkCol.getColumnName());
+		}
+		tableMetadata.compositeId(compositeId);
 	}
 
 	private List<RawForeignKeyInfo> collectAllForeignKeys(Map<String, TableMetadata> tablesByName) {
@@ -410,6 +452,89 @@ public class ModelsDatabaseSchemaReader {
 		}
 	}
 
+	private void resolveManyToManyRelationships(
+			Map<String, TableMetadata> tablesByName,
+			Map<String, List<RawForeignKeyInfo>> outgoingFksByTable,
+			Set<String> manyToManyTables,
+			RevengStrategyAdapter adapter) {
+		for (String joinTableName : manyToManyTables) {
+			TableMetadata joinTable = tablesByName.get(joinTableName);
+			if (joinTable == null) {
+				continue;
+			}
+			List<RawForeignKeyInfo> outgoingFks = outgoingFksByTable.getOrDefault(
+				joinTableName, java.util.Collections.emptyList());
+
+			// Filter to first-column FKs only (keySeq == 1)
+			List<RawForeignKeyInfo> firstColumnFks = new ArrayList<>();
+			for (RawForeignKeyInfo fk : outgoingFks) {
+				if (fk.keySeq() <= 1) {
+					firstColumnFks.add(fk);
+				}
+			}
+
+			if (firstColumnFks.size() != 2) {
+				continue;
+			}
+
+			RawForeignKeyInfo fk1 = firstColumnFks.get(0);
+			RawForeignKeyInfo fk2 = firstColumnFks.get(1);
+
+			TableMetadata table1 = tablesByName.get(fk1.referencedTableName());
+			TableMetadata table2 = tablesByName.get(fk2.referencedTableName());
+			if (table1 == null || table2 == null) {
+				continue;
+			}
+
+			// Determine owning/inverse side based on column ordering
+			// in the join table: the FK whose column appears first
+			// is the inverse side (matching Hibernate's convention).
+			int fk1Pos = columnPosition(joinTable, fk1.fkColumnName());
+			int fk2Pos = columnPosition(joinTable, fk2.fkColumnName());
+			boolean fk1First = fk1Pos <= fk2Pos;
+
+			RawForeignKeyInfo owningFk;
+			RawForeignKeyInfo inverseFk;
+			TableMetadata owningTable;
+			TableMetadata inverseTable;
+
+			if (fk1First) {
+				// fk1's column is first → fk1's referenced table is the inverse side
+				owningFk = fk2;
+				inverseFk = fk1;
+				owningTable = table2;
+				inverseTable = table1;
+			} else {
+				owningFk = fk1;
+				inverseFk = fk2;
+				owningTable = table1;
+				inverseTable = table2;
+			}
+
+			// Owning side: has @JoinTable
+			String owningFieldName = adapter.foreignKeyToManyToManyName(
+				inverseFk, joinTable, outgoingFks, owningFk, true);
+			ManyToManyMetadata owningM2m = new ManyToManyMetadata(
+				owningFieldName,
+				inverseTable.getEntityClassName(),
+				inverseTable.getEntityPackage())
+				.joinTable(joinTableName,
+					owningFk.fkColumnName(),
+					inverseFk.fkColumnName());
+			owningTable.addManyToMany(owningM2m);
+
+			// Inverse side: has @MappedBy
+			String inverseFieldName = adapter.foreignKeyToManyToManyName(
+				owningFk, joinTable, outgoingFks, inverseFk, true);
+			ManyToManyMetadata inverseM2m = new ManyToManyMetadata(
+				inverseFieldName,
+				owningTable.getEntityClassName(),
+				owningTable.getEntityPackage())
+				.mappedBy(owningFieldName);
+			inverseTable.addManyToMany(inverseM2m);
+		}
+	}
+
 	// ---- Helper methods ----
 
 	private List<SchemaSelection> getSchemaSelections() {
@@ -486,6 +611,16 @@ public class ModelsDatabaseSchemaReader {
 			Map<String, TableMetadata> tablesByName,
 			Map<String, List<RawForeignKeyInfo>> fksByTable) {
 		return fksByTable.getOrDefault(tableName, java.util.Collections.emptyList());
+	}
+
+	private int columnPosition(TableMetadata table, String columnName) {
+		List<ColumnMetadata> columns = table.getColumns();
+		for (int i = 0; i < columns.size(); i++) {
+			if (columns.get(i).getColumnName().equals(columnName)) {
+				return i;
+			}
+		}
+		return Integer.MAX_VALUE;
 	}
 
 	private List<RawForeignKeyInfo> collectAllRawFks(

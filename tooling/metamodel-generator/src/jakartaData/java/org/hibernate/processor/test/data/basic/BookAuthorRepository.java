@@ -227,4 +227,10 @@ public interface BookAuthorRepository {
 	@HQL("SELECT 1L")
 	@Nullable
 	Long one();
+
+	@Query("select count(*) filter (where true)")
+	long countBooksWithIsbn();
+
+	@Query("with foo as (select count(*) filter (where true) > 0 as bool from Book) select bool from foo")
+	boolean countBooksWithIsbn2();
 }

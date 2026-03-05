@@ -65,7 +65,7 @@ public class SimpleNaturalIdTest {
 	@Test
 	void testLoading(EntityManagerFactoryScope scope) {
 		scope.inTransaction( (entityManager) -> {
-			//tag::naturalid-loading-example
+			//tag::naturalid-loading-example[]
 			var book = entityManager.find( Book.class,
 					"978-9730228236",
 					KeyType.NATURAL,
@@ -76,7 +76,7 @@ public class SimpleNaturalIdTest {
 					KeyType.NATURAL,
 					LockMode.PESSIMISTIC_WRITE,
 					Timeout.seconds( 1 ) );
-			//end::naturalid-loading-example
+			//end::naturalid-loading-example[]
 		} );
 	}
 

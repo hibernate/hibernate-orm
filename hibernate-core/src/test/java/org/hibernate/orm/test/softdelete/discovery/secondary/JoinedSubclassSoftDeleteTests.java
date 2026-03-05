@@ -42,11 +42,7 @@ public class JoinedSubclassSoftDeleteTests {
 
 	@AfterEach
 	void dropTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.doWork( (connection) -> {
-			final Statement statement = connection.createStatement();
-			statement.execute( "delete from joined_sub" );
-			statement.execute( "delete from joined_root" );
-		} ) );
+		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

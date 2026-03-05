@@ -55,4 +55,8 @@ public abstract class AbstractReadOnlyTest {
 		int deletes = (int) scope.getSessionFactory().getStatistics().getEntityDeleteCount();
 		assertEquals( expected, deletes, "unexpected delete counts" );
 	}
+
+	protected int getScale(SessionFactoryScope scope) {
+		return scope.getSessionFactory().getJdbcServices().getDialect() instanceof org.hibernate.dialect.SpannerDialect ? 9 : 19;
+	}
 }

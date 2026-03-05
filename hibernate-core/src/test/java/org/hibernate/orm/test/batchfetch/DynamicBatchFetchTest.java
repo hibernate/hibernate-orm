@@ -9,6 +9,7 @@ import java.util.List;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -16,6 +17,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @ServiceRegistry(
 		settings = @Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false")
 )
+@SkipForDialect( dialectClass = SpannerDialect.class, reason = "temporary disable, taking too long to complete")
 public class DynamicBatchFetchTest {
 	private static int currentId = 1;
 

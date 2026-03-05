@@ -4,44 +4,40 @@
  */
 package org.hibernate.dialect;
 
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
-import org.hibernate.StaleObjectStateException;
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
-import org.hibernate.boot.model.relational.Exportable;
-import org.hibernate.boot.model.relational.Sequence;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
+import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.function.SpannerFormatFunction;
 import org.hibernate.dialect.function.SpannerExtractFunction;
 import org.hibernate.dialect.function.SpannerTruncFunction;
-import org.hibernate.dialect.lock.LockingStrategy;
-import org.hibernate.dialect.lock.LockingStrategyException;
-import org.hibernate.dialect.lock.internal.NoLockingSupport;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.SpannerIdentityColumnSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
+import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
+import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.dialect.sequence.SpannerSequenceSupport;
 import org.hibernate.dialect.sql.ast.SpannerSqlAstTranslator;
-import org.hibernate.dialect.temptable.SpannerTemporaryTableExporter;
-import org.hibernate.dialect.temptable.TemporaryTableExporter;
+import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
@@ -51,6 +47,12 @@ import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.produce.function.FunctionParameterType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.internal.PessimisticLockKind;
+import org.hibernate.dialect.lock.PessimisticLockStyle;
+import org.hibernate.dialect.lock.internal.LockingSupportSimple;
+import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
+import org.hibernate.dialect.lock.spi.LockTimeoutType;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -67,8 +69,11 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+
+import org.hibernate.Timeouts;
 import java.util.Calendar;
-import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
@@ -112,16 +117,25 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  */
 public class SpannerDialect extends Dialect {
 
-	private final Exporter<Table> spannerTableExporter = new SpannerDialectTableExporter( this );
+	private final UniqueDelegate SPANNER_UNIQUE_DELEGATE = new AlterTableUniqueIndexDelegate( this );
+	private final Exporter<Table> SPANNER_TABLE_EXPORTER = new SpannerDialectTableExporter( this );
+	private final SequenceSupport SPANNER_SEQUENCE_SUPPORT = new SpannerSequenceSupport(this);
 
-	private final SpannerTemporaryTableExporter spannerTemporaryTableExporter = new SpannerTemporaryTableExporter(
-			this );
+	private static final Pattern NOT_NULL_PATTERN = Pattern.compile( ".*Cannot specify a null value for column(?:[:]? (.*?) in table|: (.*?(?=$))).*" );
+	private static final Pattern UNIQUE_INDEX_PATTERN = Pattern.compile( ".*UNIQUE violation on index (.*?)(?:,|$).*" );
+	private static final Pattern CHECK_PATTERN = Pattern.compile( ".*Check constraint (.*?) is violated.*" );
+	private static final Pattern FK_PATTERN = Pattern.compile( ".*Foreign key (.*?) constraint violation.*" );
 
-	private static final LockingStrategy LOCKING_STRATEGY = new DoNothingLockingStrategy();
+	private static final String USE_INTEGER_FOR_PRIMARY_KEY = "hibernate.dialect.spanner.use_integer_for_primary_key";
+	private boolean useIntegerForPrimaryKey;
 
-	private static final EmptyExporter NOOP_EXPORTER = new EmptyExporter();
-
-	private static final UniqueDelegate NOOP_UNIQUE_DELEGATE = new DoNothingUniqueDelegate();
+	private static final LockingSupport SPANNER_LOCKING_SUPPORT = new LockingSupportSimple(
+			PessimisticLockStyle.CLAUSE,
+			RowLockStrategy.NONE,
+			LockTimeoutType.NONE,
+			OuterJoinLockingType.FULL,
+			ConnectionLockTimeoutStrategy.NONE
+	);
 
 	public SpannerDialect() {
 		super( ZERO_VERSION );
@@ -131,51 +145,44 @@ public class SpannerDialect extends Dialect {
 		super(info);
 	}
 
+	public boolean useIntegerForPrimaryKey() {
+		return useIntegerForPrimaryKey;
+	}
+
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+		final var configurationService = serviceRegistry.requireService( ConfigurationService.class );
+		this.useIntegerForPrimaryKey = configurationService.getSetting(
+				USE_INTEGER_FOR_PRIMARY_KEY,
+				StandardConverters.BOOLEAN,
+				false
+		);
+	}
+
+	@Override
+	protected void initDefaultProperties() {
+		super.initDefaultProperties();
+		getDefaultProperties().setProperty( AvailableSettings.PREFERRED_POOLED_OPTIMIZER, "none" );
+	}
+
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case BOOLEAN:
-				return "bool";
-
-			case TINYINT:
-			case SMALLINT:
-			case INTEGER:
-			case BIGINT:
-				return "int64";
-
-			case REAL:
-			case FLOAT:
-			case DOUBLE:
-			case DECIMAL:
-			case NUMERIC:
-				return "float64";
-
+		return switch ( sqlTypeCode ) {
+			case BOOLEAN -> "bool";
+			case TINYINT, SMALLINT, INTEGER, BIGINT -> "int64";
+			case REAL -> "float32";
+			case FLOAT, DOUBLE -> "float64";
+			case DECIMAL, NUMERIC -> "numeric";
 			//there is no time type of any kind
-			case TIME:
 			//timestamp does not accept precision
-			case TIMESTAMP:
-			case TIMESTAMP_WITH_TIMEZONE:
-				return "timestamp";
-
-			case CHAR:
-			case NCHAR:
-			case VARCHAR:
-			case NVARCHAR:
-				return "string($l)";
-
-			case BINARY:
-			case VARBINARY:
-				return "bytes($l)";
-
-			case CLOB:
-			case NCLOB:
-				return "string(max)";
-			case BLOB:
-				return "bytes(max)";
-
-			default:
-				return super.columnType( sqlTypeCode );
-		}
+			case TIME, TIMESTAMP, TIMESTAMP_WITH_TIMEZONE -> "timestamp";
+			case CHAR, NCHAR, VARCHAR, NVARCHAR -> "string($l)";
+			case BINARY, VARBINARY -> "bytes($l)";
+			case CLOB, NCLOB -> "string(max)";
+			case BLOB -> "bytes(max)";
+			default -> super.columnType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -191,20 +198,11 @@ public class SpannerDialect extends Dialect {
 
 	@Override
 	protected String castType(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case CHAR:
-			case NCHAR:
-			case VARCHAR:
-			case NVARCHAR:
-			case LONG32VARCHAR:
-			case LONG32NVARCHAR:
-				return "string";
-			case BINARY:
-			case VARBINARY:
-			case LONG32VARBINARY:
-				return "bytes";
-		}
-		return super.castType( sqlTypeCode );
+		return switch ( sqlTypeCode ) {
+			case CHAR, NCHAR, VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR -> "string";
+			case BINARY, VARBINARY, LONG32VARBINARY -> "bytes";
+			default -> super.castType( sqlTypeCode );
+		};
 	}
 
 	@Override
@@ -600,16 +598,6 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
-	public Exporter<Table> getTableExporter() {
-		return this.spannerTableExporter;
-	}
-
-	@Override
-	public String getCreateTableString() {
-		return "create table if not exists";
-	}
-
-	@Override
 	public boolean supportsIfExistsBeforeTableName() {
 		return true;
 	}
@@ -942,6 +930,87 @@ public class SpannerDialect extends Dialect {
 	/* DDL-related functions */
 
 	@Override
+	public Exporter<Table> getTableExporter() {
+		return SPANNER_TABLE_EXPORTER;
+	}
+
+	@Override
+	public boolean supportsColumnCheck() {
+		return false;
+	}
+
+	@Override
+	public String getCreateIndexString(boolean unique) {
+		return unique ? "create unique null_filtered index" : "create index";
+	}
+
+	@Override
+	public boolean supportsUniqueConstraints() {
+		return false;
+	}
+
+	@Override
+	public UniqueDelegate getUniqueDelegate() {
+		return SPANNER_UNIQUE_DELEGATE;
+	}
+
+	@Override
+	public String getAddForeignKeyConstraintString(
+			String constraintName,
+			String[] foreignKey,
+			String referencedTable,
+			String[] primaryKey,
+			boolean referencesPrimaryKey) {
+		// Spanner requires the referenced columns to specify in all cases, including
+		// if the foreign key is referencing the primary key of the referenced table. Setting referencesPrimaryKey to
+		// false will add all the referenced columns.
+		return super.getAddForeignKeyConstraintString( constraintName, foreignKey, referencedTable, primaryKey, false );
+	}
+
+	@Override
+	public boolean supportsCircularCascadeDeleteConstraints() {
+		return false;
+	}
+
+	@Override
+	public String getColumnDefaultString(String defaultValue) {
+		if ( defaultValue != null && !defaultValue.startsWith( "(" ) ) {
+			return "(" + defaultValue + ")";
+		}
+		return defaultValue;
+	}
+
+	@Override
+	public boolean requiresNotNullBeforeDefault() {
+		return true;
+	}
+
+	@Override
+	public String generatedAs(String generatedAs) {
+		return " as (" + generatedAs + ") stored";
+	}
+
+	@Override
+	public boolean supportsNoColumnsInsert() {
+		return false;
+	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return SpannerIdentityColumnSupport.INSTANCE;
+	}
+
+	@Override
+	public SequenceSupport getSequenceSupport() {
+		return SPANNER_SEQUENCE_SUPPORT;
+	}
+
+	@Override
+	public GenerationType getNativeValueGenerationStrategy() {
+		return GenerationType.SEQUENCE;
+	}
+
+	@Override
 	public boolean canCreateSchema() {
 		return false;
 	}
@@ -971,38 +1040,8 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
-	public boolean dropConstraints() {
-		return false;
-	}
-
-	@Override
 	public boolean qualifyIndexName() {
 		return false;
-	}
-
-	@Override
-	public String getDropForeignKeyString() {
-		throw new UnsupportedOperationException(
-				"Cannot drop foreign-key constraint because Cloud Spanner does not support foreign keys." );
-	}
-
-	@Override
-	public String getAddForeignKeyConstraintString(
-			String constraintName,
-			String[] foreignKey,
-			String referencedTable,
-			String[] primaryKey,
-			boolean referencesPrimaryKey) {
-		throw new UnsupportedOperationException(
-				"Cannot add foreign-key constraint because Cloud Spanner does not support foreign keys." );
-	}
-
-	@Override
-	public String getAddForeignKeyConstraintString(
-			String constraintName,
-			String foreignKeyDefinition) {
-		throw new UnsupportedOperationException(
-				"Cannot add foreign-key constraint because Cloud Spanner does not support foreign keys." );
 	}
 
 	@Override
@@ -1010,164 +1049,90 @@ public class SpannerDialect extends Dialect {
 		throw new UnsupportedOperationException( "Cannot add primary key constraint in Cloud Spanner." );
 	}
 
-	@Override
-	public TemporaryTableExporter getTemporaryTableExporter() {
-		return spannerTemporaryTableExporter;
-	}
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Lock acquisition functions
 
-
 	@Override
 	public LockingSupport getLockingSupport() {
-		return NoLockingSupport.NO_LOCKING_SUPPORT;
+		return SPANNER_LOCKING_SUPPORT;
 	}
 
 	@Override
 	public LockingClauseStrategy getLockingClauseStrategy(QuerySpec querySpec, LockOptions lockOptions) {
-		// Spanner does not support the FOR UPDATE clause
-		return NON_CLAUSE_STRATEGY;
-	}
-
-	@Override
-	public LockingStrategy getLockingStrategy(EntityPersister lockable, LockMode lockMode) {
-		return LOCKING_STRATEGY;
+		if ( getPessimisticLockStyle() != PessimisticLockStyle.CLAUSE || lockOptions == null ) {
+			return NON_CLAUSE_STRATEGY;
+		}
+		final var lockKind = PessimisticLockKind.interpret( lockOptions.getLockMode() );
+		if ( lockKind == PessimisticLockKind.NONE ) {
+			return NON_CLAUSE_STRATEGY;
+		}
+		if ( lockOptions.getTimeout() != null ) {
+			validateSpannerLockTimeout( lockOptions.getTimeout().milliseconds() );
+		}
+		return buildLockingClauseStrategy(
+				lockKind, RowLockStrategy.NONE, lockOptions, querySpec.getRootPathsForLocking() );
 	}
 
 	@Override
 	public String getForUpdateString(LockOptions lockOptions) {
-		return "";
-	}
-
-	@Override
-	public String getForUpdateString() {
-		return "";
-	}
-
-	@Override
-	public String getForUpdateString(String aliases) {
-		throw new UnsupportedOperationException(
-				"Cloud Spanner does not support selecting for lock acquisition." );
-	}
-
-	@Override
-	public String getForUpdateString(String aliases, LockOptions lockOptions) {
-		throw new UnsupportedOperationException(
-				"Cloud Spanner does not support selecting for lock acquisition." );
-	}
-
-	@Override
-	public String getWriteLockString(Timeout timeout) {
-		throw new UnsupportedOperationException(
-				"Cloud Spanner does not support selecting for lock acquisition." );
-	}
-
-	@Override
-	public String getWriteLockString(String aliases, Timeout timeout) {
-		throw new UnsupportedOperationException(
-				"Cloud Spanner does not support selecting for lock acquisition." );
-	}
-
-	@Override
-	public String getReadLockString(Timeout timeout) {
-		throw new UnsupportedOperationException(
-				"Cloud Spanner does not support selecting for lock acquisition." );
-	}
-
-	@Override
-	public String getReadLockString(String aliases, Timeout timeout) {
-		throw new UnsupportedOperationException(
-				"Cloud Spanner does not support selecting for lock acquisition." );
+		if ( lockOptions != null && lockOptions.getTimeout() != null ) {
+			validateSpannerLockTimeout( lockOptions.getTimeout().milliseconds() );
+		}
+		return getForUpdateString();
 	}
 
 	@Override
 	public String getWriteLockString(int timeout) {
-		throw new UnsupportedOperationException(
-				"Cloud Spanner does not support selecting for lock acquisition." );
+		validateSpannerLockTimeout( timeout );
+		return getForUpdateString();
 	}
 
 	@Override
-	public String getWriteLockString(String aliases, int timeout) {
-		throw new UnsupportedOperationException(
-				"Cloud Spanner does not support selecting for lock acquisition." );
+	public String getWriteLockString(Timeout timeout) {
+		return getWriteLockString( timeout.milliseconds() );
 	}
 
 	@Override
 	public String getReadLockString(int timeout) {
-		throw new UnsupportedOperationException(
-				"Cloud Spanner does not support selecting for lock acquisition." );
+		validateSpannerLockTimeout( timeout );
+		return getForUpdateString();
 	}
 
 	@Override
-	public String getReadLockString(String aliases, int timeout) {
-		throw new UnsupportedOperationException(
-				"Cloud Spanner does not support selecting for lock acquisition." );
+	public String getReadLockString(Timeout timeout) {
+		return getReadLockString( timeout.milliseconds() );
 	}
 
 	@Override
 	public String getForUpdateNowaitString() {
-		throw new UnsupportedOperationException(
-				"Cloud Spanner does not support selecting for lock acquisition." );
+		throw new UnsupportedOperationException( "Spanner does not support no wait." );
 	}
 
 	@Override
 	public String getForUpdateNowaitString(String aliases) {
-		throw new UnsupportedOperationException(
-				"Cloud Spanner does not support selecting for lock acquisition." );
+		throw new UnsupportedOperationException( "Spanner does not support no wait." );
 	}
-
 
 	@Override
 	public String getForUpdateSkipLockedString() {
-		throw new UnsupportedOperationException(
-				"Cloud Spanner does not support selecting for lock acquisition." );
+		throw new UnsupportedOperationException( "Spanner does not support skip locked." );
 	}
 
 	@Override
 	public String getForUpdateSkipLockedString(String aliases) {
-		throw new UnsupportedOperationException(
-				"Cloud Spanner does not support selecting for lock acquisition." );
+		throw new UnsupportedOperationException( "Spanner does not support skip locked." );
 	}
 
-	/* Unsupported Hibernate Exporters */
-
-	@Override
-	public Exporter<Sequence> getSequenceExporter() {
-		return NOOP_EXPORTER;
-	}
-
-	@Override
-	public Exporter<ForeignKey> getForeignKeyExporter() {
-		return NOOP_EXPORTER;
-	}
-
-	@Override
-	public Exporter<UniqueKey> getUniqueKeyExporter() {
-		return NOOP_EXPORTER;
-	}
-
-	@Override
-	public String applyLocksToSql(
-			String sql,
-			LockOptions aliasedLockOptions,
-			Map<String, String[]> keyColumnNames) {
-		return sql;
-	}
-
-	@Override
-	public UniqueDelegate getUniqueDelegate() {
-		return NOOP_UNIQUE_DELEGATE;
-	}
-
-	@Override
-	public boolean supportsCircularCascadeDeleteConstraints() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsCascadeDelete() {
-		return false;
+	private static void validateSpannerLockTimeout(int millis) {
+		if ( Timeouts.isRealTimeout( millis ) ) {
+			throw new UnsupportedOperationException( "Spanner does not support lock timeout." );
+		}
+		if ( millis == Timeouts.SKIP_LOCKED_MILLI ) {
+			throw new UnsupportedOperationException( "Spanner does not support skip locked." );
+		}
+		if ( millis == Timeouts.NO_WAIT_MILLI ) {
+			throw new UnsupportedOperationException( "Spanner does not support no wait." );
+		}
 	}
 
 	@Override
@@ -1284,66 +1249,49 @@ public class SpannerDialect extends Dialect {
 		return false;
 	}
 
-	/**
-	 * A no-op {@link Exporter} which is responsible for returning empty Create and Drop SQL strings.
-	 *
-	 * @author Daniel Zou
-	 */
-	static class EmptyExporter<T extends Exportable> implements Exporter<T> {
+	@Override
+	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
+		return (sqlException, message, sql) -> {
+			final String sqlMessage = sqlException.getMessage();
+			if ( sqlMessage != null ) {
+				Matcher matcher = NOT_NULL_PATTERN.matcher( sqlMessage );
+				if ( matcher.matches() ) {
+					String group = matcher.group( 1 ) != null ? matcher.group( 1 ) : matcher.group( 2 );
+					return new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.NOT_NULL, extractConstraintName( group ) );
+				}
 
-		@Override
-		public String[] getSqlCreateStrings(T exportable, Metadata metadata, SqlStringGenerationContext context) {
-			return ArrayHelper.EMPTY_STRING_ARRAY;
-		}
+				matcher = UNIQUE_INDEX_PATTERN.matcher( sqlMessage );
+				if ( matcher.matches() ) {
+					return new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.UNIQUE, extractConstraintName( matcher.group( 1 ) ) );
+				}
 
-		@Override
-		public String[] getSqlDropStrings(T exportable, Metadata metadata, SqlStringGenerationContext context) {
-			return ArrayHelper.EMPTY_STRING_ARRAY;
-		}
+				if ( sqlMessage.contains( "Failed to insert row with primary key" ) ) {
+					return new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.UNIQUE, null );
+				}
+
+				matcher = CHECK_PATTERN.matcher( sqlMessage );
+				if ( matcher.matches() ) {
+					return new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.CHECK, extractConstraintName( matcher.group( 1 ) ) );
+				}
+
+				matcher = FK_PATTERN.matcher( sqlMessage );
+				if ( matcher.matches() ) {
+					return new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.FOREIGN_KEY, extractConstraintName( matcher.group( 1 ) ) );
+				}
+			}
+			return null;
+		};
 	}
 
-	/**
-	 * A locking strategy for the Cloud Spanner dialect that does nothing. Cloud Spanner does not
-	 * support locking.
-	 *
-	 * @author Chengyuan Zhao
-	 */
-	static class DoNothingLockingStrategy implements LockingStrategy {
-
-		@Override
-		public void lock(
-				Object id, Object version, Object object, int timeout, SharedSessionContractImplementor session)
-				throws StaleObjectStateException, LockingStrategyException {
-			// Do nothing. Cloud Spanner doesn't have have locking strategies.
+	private String extractConstraintName(String name) {
+		if ( name == null ) {
+			return null;
 		}
-	}
-
-	/**
-	 * A no-op delegate for generating Unique-Constraints. Cloud Spanner offers unique-restrictions
-	 * via interleaved indexes with the "UNIQUE" option. This is not currently supported.
-	 *
-	 * @author Chengyuan Zhao
-	 */
-	static class DoNothingUniqueDelegate implements UniqueDelegate {
-
-		@Override
-		public String getColumnDefinitionUniquenessFragment(Column column, SqlStringGenerationContext context) {
-			return "";
+		name = name.replace( "`", "" ).replace( "\"", "" ).replace( "'", "" ).trim();
+		int dotIndex = name.lastIndexOf( '.' );
+		if ( dotIndex > -1 ) {
+			name = name.substring( dotIndex + 1 );
 		}
-
-		@Override
-		public String getTableCreationUniqueConstraintsFragment(Table table, SqlStringGenerationContext context) {
-			return "";
-		}
-
-		@Override
-		public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata, SqlStringGenerationContext context) {
-			return "";
-		}
-
-		@Override
-		public String getAlterTableToDropUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata, SqlStringGenerationContext context) {
-			return "";
-		}
+		return name;
 	}
 }

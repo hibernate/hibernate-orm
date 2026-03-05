@@ -217,9 +217,19 @@ class ColumnDefinitions {
 				definition.append(" collate ").append( dialect.quoteCollation( collation ) );
 			}
 
+			final boolean requiresNotNullBeforeDefault = dialect.requiresNotNullBeforeDefault();
+			if ( requiresNotNullBeforeDefault ) {
+				if ( column.isNullable() ) {
+					definition.append( dialect.getNullColumnString( columnType ) );
+				}
+				else {
+					definition.append( " not null" );
+				}
+			}
+
 			final String defaultValue = column.getDefaultValue();
 			if ( defaultValue != null ) {
-				definition.append( " default " ).append( defaultValue );
+				definition.append( " default " ).append( dialect.getColumnDefaultString( defaultValue ) );
 			}
 
 			final String generatedAs = column.getGeneratedAs();
@@ -230,11 +240,13 @@ class ColumnDefinitions {
 				}
 			}
 
-			if ( column.isNullable() ) {
-				definition.append( dialect.getNullColumnString( columnType ) );
-			}
-			else {
-				definition.append( " not null" );
+			if ( !requiresNotNullBeforeDefault ) {
+				if ( column.isNullable() ) {
+					definition.append( dialect.getNullColumnString( columnType ) );
+				}
+				else {
+					definition.append( " not null" );
+				}
 			}
 		}
 	}

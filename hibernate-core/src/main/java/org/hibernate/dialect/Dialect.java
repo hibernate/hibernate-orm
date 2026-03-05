@@ -4144,6 +4144,28 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Allows the dialect to format the default value for a column.
+	 * The default implementation returns the given default value as-is.
+	 *
+	 * @param defaultValue the default value expression
+	 * @return the formatted default value expression
+	 */
+	public String getColumnDefaultString(String defaultValue) {
+		return defaultValue;
+	}
+
+	/**
+	 * Does this dialect require the {@code not null} constraint to precede the
+	 * {@code default} or {@code generated as} clause?
+	 * Spanner strictly requires {@code not null} to come before {@code default}.
+	 *
+	 * @return {@code true} if {@code not null} should precede {@code default}
+	 */
+	public boolean requiresNotNullBeforeDefault() {
+		return false;
+	}
+
+	/**
 	 * The keyword used to specify a nullable column of the given SQL type.
 	 *
 	 * @implNote The culprit is {@code timestamp} columns on MySQL.

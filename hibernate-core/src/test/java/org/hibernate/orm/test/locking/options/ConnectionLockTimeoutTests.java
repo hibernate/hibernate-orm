@@ -119,8 +119,10 @@ public class ConnectionLockTimeoutTests {
 					Duration.ofMinutes(59)
 				);
 			}
-			else if ( session.getDialect() instanceof MySQLDialect ) {
+			else if ( session.getDialect() instanceof MySQLDialect
+					|| session.getDialect() instanceof SybaseDialect ) {
 				// The minimum value of innodb_lock_wait_timeout in MySQL is 1 second.
+				// Sybase ASE also has a minimum of 1s.
 				durs = List.of(
 					Duration.ofSeconds(1),
 					Duration.ofSeconds(2),

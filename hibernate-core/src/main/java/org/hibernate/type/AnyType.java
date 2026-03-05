@@ -272,14 +272,12 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		final String currentEntityName =
 				current == null ? null : session.bestGuessEntityName( current );
 
-		final boolean[] idCheckable = new boolean[checkable.length - 1];
-		System.arraycopy( checkable, 1, idCheckable, 0, idCheckable.length );
-
 		final Object oldId = old == null ? null : getIdentifier( oldEntityName, old, session );
 		final Object newId = current == null ? null : getIdentifier( currentEntityName, current, session );
 
-		return (checkable[0] && !Objects.equals( oldEntityName, currentEntityName ))
-			|| identifierType.isDirty( oldId, newId, idCheckable, session );
+		return checkable[0] && !Objects.equals( oldEntityName, currentEntityName )
+			|| identifierType.isDirty( oldId, newId, Arrays.copyOfRange( checkable, 1, checkable.length ),
+				session );
 	}
 
 	@Override

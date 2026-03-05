@@ -4,11 +4,9 @@
  */
 package org.hibernate.processor.annotation;
 
-import org.antlr.v4.runtime.Token;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
-import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.processor.Context;
@@ -69,6 +67,7 @@ import java.util.stream.Stream;
 import jakarta.persistence.AccessType;
 
 import static java.lang.Character.toUpperCase;
+import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 import static org.hibernate.processor.util.StringUtil.decapitalize;
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
@@ -76,9 +75,11 @@ import static java.util.Objects.requireNonNullElse;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
+import static org.hibernate.grammars.hql.HqlLexer.FILTER;
 import static org.hibernate.grammars.hql.HqlLexer.FROM;
 import static org.hibernate.grammars.hql.HqlLexer.GROUP;
 import static org.hibernate.grammars.hql.HqlLexer.HAVING;
+import static org.hibernate.grammars.hql.HqlLexer.LEFT_PAREN;
 import static org.hibernate.grammars.hql.HqlLexer.ORDER;
 import static org.hibernate.grammars.hql.HqlLexer.WHERE;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -3111,19 +3112,31 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			return hql;
 		}
 		else {
-			final HqlLexer hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( hql );
-			final List<? extends Token> allTokens = hqlLexer.getAllTokens();
-			for ( final Token token : allTokens ) {
-				switch ( token.getType() ) {
-					case FROM:
-						return hql;
-					case WHERE:
-					case HAVING:
-					case GROUP:
-					case ORDER:
-						return new StringBuilder( hql )
-								.insert( token.getStartIndex(), "from " + entityType + " " )
-								.toString();
+			final var hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( hql );
+			final var allTokens = hqlLexer.getAllTokens();
+			int previousType = -1;
+			int previousPreviousType = -1;
+			for ( final var token : allTokens ) {
+				if ( token.getChannel() == DEFAULT_CHANNEL ) {
+					final int tokenType = token.getType();
+					switch ( tokenType ) {
+						case FROM:
+							return hql;
+						case WHERE:
+							if ( previousType == LEFT_PAREN && previousPreviousType == FILTER ) {
+								// WHERE is part of FILTER (WHERE ...), not the query's own WHERE clause
+								break;
+							}
+							// fall through
+						case HAVING:
+						case GROUP:
+						case ORDER:
+							return new StringBuilder( hql )
+									.insert( token.getStartIndex(), "from " + entityType + " " )
+									.toString();
+					}
+					previousPreviousType = previousType;
+					previousType = tokenType;
 				}
 			}
 			return hql + " from " + entityType;

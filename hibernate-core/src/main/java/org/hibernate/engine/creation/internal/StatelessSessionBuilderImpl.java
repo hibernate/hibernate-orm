@@ -147,6 +147,11 @@ public abstract class StatelessSessionBuilderImpl
 	}
 
 	@Override
+	public Object getTemporalIdentifier() {
+		return temporalIdentifier;
+	}
+
+	@Override
 	public List<SessionEventListener> getCustomSessionEventListeners() {
 		return null;
 	}

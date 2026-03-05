@@ -225,6 +225,9 @@ class ColumnDefinitions {
 			final String generatedAs = column.getGeneratedAs();
 			if ( generatedAs != null) {
 				definition.append( dialect.generatedAs( generatedAs ) );
+				if ( !dialect.supportsNotNullAfterGeneratedAs() ) {
+					return;
+				}
 			}
 
 			if ( column.isNullable() ) {

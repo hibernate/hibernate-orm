@@ -42,6 +42,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sql.spi.SqlTranslationEngine;
 import org.hibernate.relational.SchemaManager;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.temporal.spi.TransactionIdentifierService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
@@ -426,5 +427,10 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public Object resolveTenantIdentifier() {
 		return delegate.resolveTenantIdentifier();
+	}
+
+	@Override
+	public TransactionIdentifierService getTransactionIdentifierService() {
+		return delegate.getTransactionIdentifierService();
 	}
 }

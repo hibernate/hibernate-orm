@@ -355,7 +355,7 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public ForeignKey createForeignKeyOfEntity(String entityName) {
-		if ( isConstrained() ) {
+		if ( isConstrained() && !hasAuxiliaryColumnInPrimaryKey( entityName ) ) {
 			final var foreignKey = table.createForeignKey(
 					getForeignKeyName(),
 					getConstraintColumns(),
@@ -373,7 +373,7 @@ public abstract class SimpleValue implements KeyValue {
 
 	@Override
 	public ForeignKey createForeignKeyOfEntity(String entityName, List<Column> referencedColumns) {
-		if ( isConstrained() ) {
+		if ( isConstrained() && !hasAuxiliaryColumnInPrimaryKey( entityName ) ) {
 			final var foreignKey = table.createForeignKey(
 					getForeignKeyName(),
 					getConstraintColumns(),
@@ -387,6 +387,20 @@ public abstract class SimpleValue implements KeyValue {
 		}
 
 		return null;
+	}
+
+	protected boolean hasAuxiliaryColumnInPrimaryKey(PersistentClass referencedEntity) {
+		return referencedEntity.getRootClass().isAuxiliaryColumnInPrimaryKey();
+	}
+
+	protected boolean hasAuxiliaryColumnInPrimaryKey(String entityName) {
+		if ( entityName == null ) {
+			return false;
+		}
+		else {
+			final var referencedEntity = metadata.getEntityBinding( entityName );
+			return referencedEntity != null && hasAuxiliaryColumnInPrimaryKey( referencedEntity );
+		}
 	}
 
 	@Override

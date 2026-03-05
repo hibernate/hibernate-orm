@@ -13,6 +13,7 @@ import org.hibernate.loader.ast.spi.SqlInPredicateMultiKeyLoader;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.exec.spi.JdbcSelect;
@@ -80,6 +81,7 @@ public class EntityBatchLoaderInPredicate<T>
 				loadQueryInfluencers,
 				new LockOptions(),
 				builder::add,
+				new SqlAliasBaseManager(),
 				sessionFactory
 		);
 		jdbcParameters = builder.build();

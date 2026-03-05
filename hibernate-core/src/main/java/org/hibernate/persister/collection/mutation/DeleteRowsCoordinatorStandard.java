@@ -70,31 +70,33 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 			final var deletes = collection.getDeletes( collectionDescriptor, !deleteByIndex );
 			if ( !deletes.hasNext() ) {
 				MODEL_MUTATION_LOGGER.noRowsToDelete();
-				return;
 			}
+			else {
 
-			int deletionCount = 0;
+				int deletionCount = 0;
 
-			final var restrictions = rowMutationOperations.getDeleteRowRestrictions();
+				final var restrictions = rowMutationOperations.getDeleteRowRestrictions();
 
-			while ( deletes.hasNext() ) {
-				final Object removal = deletes.next();
+				while ( deletes.hasNext() ) {
+					final Object removal = deletes.next();
 
-				restrictions.applyRestrictions(
-						collection,
-						key,
-						removal,
-						deletionCount,
-						session,
-						jdbcValueBindings
-				);
+					restrictions.applyRestrictions(
+							collection,
+							key,
+							removal,
+							deletionCount,
+							session,
+							jdbcValueBindings
+					);
 
-				mutationExecutor.execute( removal, null, null, null, session );
+					mutationExecutor.execute( removal, null, null, null, session );
 
-				deletionCount++;
+					deletionCount++;
+
+				}
+
+				MODEL_MUTATION_LOGGER.doneDeletingCollectionRows( deletionCount, mutationTarget.getRolePath() );
 			}
-
-			MODEL_MUTATION_LOGGER.doneDeletingCollectionRows( deletionCount, mutationTarget.getRolePath() );
 		}
 		finally {
 			mutationExecutor.release();
@@ -105,7 +107,7 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 		assert mutationTarget.getTargetPart() != null
 			&& mutationTarget.getTargetPart().getKeyDescriptor() != null;
 
-		final var operation = rowMutationOperations.getDeleteRowOperation();
-		return singleOperation( MutationType.DELETE, mutationTarget, operation );
+		return singleOperation( MutationType.DELETE, mutationTarget,
+				rowMutationOperations.getDeleteRowOperation() );
 	}
 }

@@ -12,6 +12,7 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.spi.QueryOptionsAdapter;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -75,6 +76,7 @@ public class MultiNaturalIdLoadingBatcher {
 				loadQueryInfluencers,
 				lockOptions,
 				jdbcParametersBuilder::add,
+				new SqlAliasBaseManager(),
 				sessionFactory
 		);
 		this.jdbcParameters = jdbcParametersBuilder.build();

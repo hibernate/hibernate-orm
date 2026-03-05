@@ -5,6 +5,7 @@
 package org.hibernate.engine.spi;
 
 import java.sql.Connection;
+import java.time.Instant;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
@@ -182,6 +183,18 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 	@Override
 	public SessionBuilderImplementor subselectFetchEnabled(boolean subselectFetchEnabled) {
 		delegate.subselectFetchEnabled( subselectFetchEnabled );
+		return this;
+	}
+
+	@Override
+	public SessionBuilderImplementor asOf(Instant instant) {
+		delegate.asOf( instant );
+		return this;
+	}
+
+	@Override
+	public SessionBuilderImplementor atTransaction(Object transactionId) {
+		delegate.atTransaction( transactionId );
 		return this;
 	}
 }

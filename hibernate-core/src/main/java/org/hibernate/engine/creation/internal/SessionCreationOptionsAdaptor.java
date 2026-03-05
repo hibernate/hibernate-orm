@@ -150,4 +150,9 @@ public record SessionCreationOptionsAdaptor(
 	public void registerParentSessionObserver(ParentSessionObserver observer) {
 		registerParentSessionObserver( observer, originalSession );
 	}
+
+	@Override
+	public Object getTemporalIdentifier() {
+		return null;
+	}
 }

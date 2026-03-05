@@ -25,7 +25,7 @@ import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
  */
 public class GenerationTargetToDatabase implements GenerationTarget {
 
-	private final DdlTransactionIsolator ddlTransactionIsolator;
+	public final DdlTransactionIsolator ddlTransactionIsolator;
 	private final boolean releaseAfterUse;
 
 	private Statement jdbcStatement;
@@ -70,6 +70,16 @@ public class GenerationTargetToDatabase implements GenerationTarget {
 
 	@Override
 	public void accept(String command) {
+		//TODO: temporary workaround DELETE ME
+		if ( ddlTransactionIsolator.getJdbcContext().getDialect().throttleDdl() ) {
+			try {
+				Thread.sleep( 20 );
+			}
+			catch (InterruptedException e) {
+				//ignore
+			}
+		}
+
 		getSqlStatementLogger().logStatement( command, FormatStyle.NONE.getFormatter() );
 		try {
 			final var statement = jdbcStatement();

@@ -16,6 +16,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
@@ -95,6 +96,7 @@ public class EntityBatchLoaderArrayParam<T>
 				loadQueryInfluencers,
 				new LockOptions(),
 				jdbcParameter,
+				new SqlAliasBaseManager(),
 				sessionFactory
 		);
 

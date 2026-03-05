@@ -2069,6 +2069,7 @@ public class SessionImpl
 	@Override
 	public void afterTransactionBegin() {
 		checkOpenOrWaitingForAutoClose();
+		super.afterTransactionBegin();
 		afterTransactionBeginEvents();
 	}
 

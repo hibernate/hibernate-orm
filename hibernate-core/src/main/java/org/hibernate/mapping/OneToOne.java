@@ -117,6 +117,11 @@ public final class OneToOne extends ToOne {
 		return constrained;
 	}
 
+	@Override
+	boolean isActuallyConstrained() {
+		return constrained && super.isConstrained();
+	}
+
 	/**
 	 * Returns the foreignKeyType.
 	 * @return AssociationType.ForeignKeyType

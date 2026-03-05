@@ -2387,6 +2387,8 @@ public abstract class CollectionBinder {
 		collection.setCollectionTable( collectionTable );
 		handleCheckConstraints( collectionTable );
 		processSoftDeletes();
+		processTemporal();
+		processAudited();
 	}
 
 	private void handleCheckConstraints(Table collectionTable) {
@@ -2409,7 +2411,7 @@ public abstract class CollectionBinder {
 
 	private void processSoftDeletes() {
 		assert collection.getCollectionTable() != null;
-		final var softDelete = extractSoftDelete( property, buildingContext );
+		final var softDelete = extract( SoftDelete.class, property, buildingContext );
 		if ( softDelete != null ) {
 			SoftDeleteHelper.bindSoftDeleteIndicator(
 					softDelete,
@@ -2420,10 +2422,34 @@ public abstract class CollectionBinder {
 		}
 	}
 
-	private static SoftDelete extractSoftDelete(MemberDetails property, MetadataBuildingContext context) {
-		final var fromProperty = property.getDirectAnnotationUsage( SoftDelete.class );
+	private void processTemporal() {
+		assert collection.getCollectionTable() != null;
+		final var temporal = extract( Temporal.class, property, buildingContext );
+		if ( temporal != null ) {
+			TemporalHelper.bindTemporalColumns(
+					temporal,
+					collection,
+					collection.getCollectionTable(),
+					property.getDirectAnnotationUsage( Temporal.HistoryTable.class ),
+					property.getDirectAnnotationUsage( Temporal.HistoryPartitioning.class ),
+					buildingContext
+			);
+		}
+	}
+
+	private void processAudited() {
+		assert collection.getCollectionTable() != null;
+		final var audited = extract( Audited.class, property, buildingContext );
+		if ( audited != null ) {
+			AuditHelper.bindAuditTable( audited, collection, buildingContext );
+		}
+	}
+
+	private static <T extends Annotation> T extract(
+			Class<T> annotationClass, MemberDetails property, MetadataBuildingContext context) {
+		final var fromProperty = property.getDirectAnnotationUsage( annotationClass );
 		return fromProperty == null
-				? extractFromPackage( SoftDelete.class, property.getDeclaringType(), context )
+				? extractFromPackage( annotationClass, property.getDeclaringType(), context )
 				: fromProperty;
 	}
 
@@ -2449,6 +2475,8 @@ public abstract class CollectionBinder {
 		collection.setCollectionTable( table );
 
 		processSoftDeletes();
+		processTemporal();
+		processAudited();
 		checkCheckAnnotation();
 	}
 

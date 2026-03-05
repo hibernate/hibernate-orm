@@ -56,6 +56,8 @@ public interface SessionCreationOptions {
 
 	TimeZone getJdbcTimeZone();
 
+	Object getTemporalIdentifier();
+
 	/**
 	 * @return the full list of SessionEventListener if this was customized,
 	 * or null if this Session is being created with the default list.

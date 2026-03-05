@@ -86,8 +86,7 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 
 	@Override
 	public void addValueColumn(String columnWriteFragment, SelectableMapping selectableMapping) {
-		final ColumnValueBinding valueBinding = createValueBinding( columnWriteFragment, selectableMapping );
-
+		final var valueBinding = createValueBinding( columnWriteFragment, selectableMapping );
 		if ( selectableMapping.isLob() && getJdbcServices().getDialect().forceLobAsLastValue() ) {
 			if ( lobValueBindings == null ) {
 				lobValueBindings = new ArrayList<>();

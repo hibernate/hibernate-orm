@@ -52,4 +52,18 @@ public abstract class AbstractUpdateRowsCoordinator implements UpdateRowsCoordin
 	}
 
 	protected abstract int doUpdate(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session);
+
+	protected Object resolveDeleteRowValue(PersistentCollection<?> collection, Object entry, int entryPosition) {
+		final var attributeMapping = getMutationTarget().getTargetPart();
+		final var identifierDescriptor = attributeMapping.getIdentifierDescriptor();
+		if ( identifierDescriptor != null ) {
+			return collection.getIdentifier( entry, entryPosition );
+		}
+		else if ( getMutationTarget().hasPhysicalIndexColumn() && attributeMapping.getIndexDescriptor() != null ) {
+			return collection.getIndex( entry, entryPosition, attributeMapping.getCollectionDescriptor() );
+		}
+		else {
+			return collection.getSnapshotElement( entry, entryPosition );
+		}
+	}
 }

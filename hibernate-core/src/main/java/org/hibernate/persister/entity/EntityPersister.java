@@ -863,6 +863,20 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	boolean[] getPropertyUpdateability();
 
 	/**
+	 * Is the property excluded from temporal versioning.
+	 */
+	default boolean isPropertyTemporalExcluded(int attributeIndex) {
+		return false;
+	}
+
+	/**
+	 * Is the property excluded from audit logging.
+	 */
+	default boolean isPropertyAuditedExcluded(int attributeIndex) {
+		return false;
+	}
+
+	/**
 	 * Get the "checkability" of the properties of this class
 	 * (is the property dirty checked, does the cache need
 	 * to be updated)
@@ -1556,6 +1570,9 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
 	String[] toColumns(String propertyName);
+
+	@Incubating
+	boolean excludedFromTemporalVersioning(int[] dirtyAttributeIndexes, boolean hasDirtyCollection);
 
 	boolean isSharedColumn(String columnExpression);
 

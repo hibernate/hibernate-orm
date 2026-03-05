@@ -44,6 +44,7 @@ import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.collections.ArrayHelper.indexOf;
 import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
 import static org.hibernate.internal.log.StatisticsLogger.STATISTICS_LOGGER;
+import static org.hibernate.sql.exec.internal.TemporalParameterBindingsHelper.applyTemporalParameterBindings;
 
 /**
  * Standard JdbcSelectExecutor implementation used by Hibernate,
@@ -127,7 +128,11 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 		final var deferredResultSetAccess = new DeferredResultSetAccess(
 				jdbcSelect,
-				jdbcParameterBindings,
+				applyTemporalParameterBindings(
+						jdbcParameterBindings,
+						jdbcSelect.getParameterBinders(),
+						executionContext.getLoadQueryInfluencers()
+				),
 				executionContext,
 				statementCreator,
 				resultCountEstimate

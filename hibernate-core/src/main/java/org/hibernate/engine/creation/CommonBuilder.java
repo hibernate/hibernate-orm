@@ -12,8 +12,10 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.StatelessSession;
+import org.hibernate.cfg.StateManagementSettings;
 
 import java.sql.Connection;
+import java.time.Instant;
 import java.util.TimeZone;
 import java.util.function.UnaryOperator;
 
@@ -170,4 +172,30 @@ public interface CommonBuilder {
 	///
 	/// @return `this`, for method chaining
 	CommonBuilder jdbcTimeZone(TimeZone timeZone);
+
+	/**
+	 * Specify the instant for reading
+	 * {@linkplain org.hibernate.annotations.Temporal temporal} entity data.
+	 * Instances of temporal entities retrieved in the session will represent
+	 * the revisions effective at the given instant.
+	 *
+	 * @see org.hibernate.annotations.Temporal
+	 */
+	@Incubating
+	CommonBuilder asOf(Instant instant);
+
+	/**
+	 * Specify the
+	 * {@linkplain StateManagementSettings#TRANSACTION_ID_SUPPLIER
+	 * transaction id} for reading {@linkplain org.hibernate.annotations.Temporal
+	 * temporal} entity data. Instances of temporal entities retrieved in the
+	 * session will represent the revisions effective at the end of the given
+	 * transaction.
+	 * The given value should match the type returned by the configured
+	 * transaction id supplier.
+	 *
+	 * @see org.hibernate.annotations.Temporal
+	 */
+	@Incubating
+	CommonBuilder atTransaction(Object transactionId);
 }

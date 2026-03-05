@@ -122,6 +122,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				session.getLoadQueryInfluencers(),
 				lockOptions,
 				JdbcParametersList.newBuilder()::add,
+				new SqlAliasBaseManager(),
 				factory
 		);
 
@@ -335,6 +336,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				session.getLoadQueryInfluencers(),
 				new LockOptions(),
 				builder::add,
+				new SqlAliasBaseManager(),
 				factory
 		);
 		final var jdbcParameters = builder.build();

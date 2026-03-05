@@ -24,6 +24,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.StandardVirtualTableGroup;
@@ -383,6 +384,7 @@ public class EntityGraphLoadPlanBuilderTest implements SessionFactoryScopeAware 
 				loadQueryInfluencers,
 				new LockOptions( READ ),
 				jdbcParameter -> {},
+				new SqlAliasBaseManager(),
 				scope.getSessionFactory()
 		);
 	}

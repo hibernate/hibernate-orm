@@ -206,7 +206,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsIdentityColumns implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			if ( dialect instanceof SpannerPostgreSQLDialect ) {
+			if ( dialect instanceof SpannerPostgreSQLDialect || dialect instanceof SpannerDialect ) {
 				// Spanner supports identity columns but it doesn't support returning integer type since
 				// Spanner supports only bit reversed positive.
 				return false;
@@ -254,7 +254,7 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsConcurrentTransactions implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			// Currently Spanner Emulator doesn't allow concurrent modifications
-			return !(dialect instanceof SpannerPostgreSQLDialect);
+			return !(dialect instanceof SpannerPostgreSQLDialect || dialect instanceof SpannerDialect);
 		}
 	}
 
@@ -1050,7 +1050,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsArrayComparison implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return !(dialect instanceof SpannerPostgreSQLDialect);
+			return !(dialect instanceof SpannerPostgreSQLDialect || dialect instanceof SpannerDialect);
 		}
 	}
 

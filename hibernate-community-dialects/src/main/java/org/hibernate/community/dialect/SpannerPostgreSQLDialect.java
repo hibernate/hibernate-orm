@@ -116,7 +116,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	// range of a 32-bit integer.
 	// This workaround that is only intended for testing, and should not be used for primary key
 	// values in production.
-	private static final String USE_INTEGER_FOR_PRIMARY_KEY = "hibernate.dialect.spannerpg.use_integer_for_primary_key";
+	private static final String USE_INTEGER_FOR_PRIMARY_KEY = "hibernate.dialect.spanner.use_integer_for_primary_key";
 
 	private boolean useIntegerForPrimaryKey;
 

@@ -42,9 +42,8 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		long dpId = scope.fromTransaction(
 				session -> {
 					DataPoint dp = new DataPoint();
-					dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-					dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale(
-							19,
+					dp.setX( new BigDecimal( 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+					dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ),
 							BigDecimal.ROUND_DOWN
 					) );
 					dp.setDescription( "original" );
@@ -94,9 +93,8 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 				session -> {
 					for ( int i = 0; i < 100; i++ ) {
 						DataPoint dp = new DataPoint();
-						dp.setX( new BigDecimal( i * 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-						dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale(
-								19,
+						dp.setX( new BigDecimal( i * 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+						dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ),
 								BigDecimal.ROUND_DOWN
 						) );
 						session.persist( dp );
@@ -160,9 +158,8 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 					DataPoint dpFirst = null;
 					for ( int i = 0; i < 100; i++ ) {
 						DataPoint dp = new DataPoint();
-						dp.setX( new BigDecimal( i * 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-						dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale(
-								19,
+						dp.setX( new BigDecimal( i * 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+						dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ),
 								BigDecimal.ROUND_DOWN
 						) );
 						session.persist( dp );
@@ -200,9 +197,8 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		scope.inTransaction(
 				session -> {
 					d.setDescription( "original" );
-					d.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-					d.setY( new BigDecimal( Math.cos( d.getX().doubleValue() ) ).setScale(
-							19,
+					d.setX( new BigDecimal( 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+					d.setY( new BigDecimal( Math.cos( d.getX().doubleValue() ) ).setScale( getScale( scope ),
 							BigDecimal.ROUND_DOWN
 					) );
 					session.persist( d );
@@ -261,9 +257,8 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		scope.inTransaction(
 				session -> {
 					d.setDescription( "original" );
-					d.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-					d.setY( new BigDecimal( Math.cos( d.getX().doubleValue() ) ).setScale(
-							19,
+					d.setX( new BigDecimal( 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+					d.setY( new BigDecimal( Math.cos( d.getX().doubleValue() ) ).setScale( getScale( scope ),
 							BigDecimal.ROUND_DOWN
 					) );
 					session.persist( d );
@@ -320,8 +315,8 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		Session s = openSession( scope );
 		Transaction t = s.beginTransaction();
 		DataPoint dp = new DataPoint();
-		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+		dp.setX( new BigDecimal( 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
 		s.persist( dp );
 		t.commit();
 		s.close();
@@ -357,8 +352,8 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		Session s = openSession( scope );
 		Transaction t = s.beginTransaction();
 		DataPoint dp = new DataPoint();
-		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+		dp.setX( new BigDecimal( 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
 		s.persist( dp );
 		t.commit();
 		s.close();
@@ -397,8 +392,8 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		DataPoint dp = null;
 		for ( int i = 0; i < 100; i++ ) {
 			dp = new DataPoint();
-			dp.setX( new BigDecimal( i * 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+			dp.setX( new BigDecimal( i * 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
 			s.persist( dp );
 		}
 		t.commit();
@@ -459,8 +454,8 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		DataPoint dp = null;
 		for ( int i = 0; i < 100; i++ ) {
 			dp = new DataPoint();
-			dp.setX( new BigDecimal( i * 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+			dp.setX( new BigDecimal( i * 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+			dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
 			s.persist( dp );
 		}
 		t.commit();
@@ -566,8 +561,8 @@ public class ReadOnlyTest extends AbstractReadOnlyTest {
 		Session s = openSession( scope );
 		Transaction t = s.beginTransaction();
 		DataPoint dp = new DataPoint();
-		dp.setX( new BigDecimal( 0.1d ).setScale( 19, BigDecimal.ROUND_DOWN ) );
-		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( 19, BigDecimal.ROUND_DOWN ) );
+		dp.setX( new BigDecimal( 0.1d ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
+		dp.setY( new BigDecimal( Math.cos( dp.getX().doubleValue() ) ).setScale( getScale( scope ), BigDecimal.ROUND_DOWN ) );
 		s.persist( dp );
 		t.commit();
 		s.close();

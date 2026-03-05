@@ -60,7 +60,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * session's transactional-write-behind semantics. The DML operations are
  * queued here until a flush forces them to be executed against the database.
  * <p>
- * This is the legacy implementation. The default implementation is now
+ * This is the legacy implementation. The new, currently incubating, implementation is
  * {@link org.hibernate.action.queue.GraphBasedActionQueue}.
  *
  * @apiNote This class is logically part of the {@linkplain Executable action}
@@ -232,6 +232,7 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.ActionQueue
 	 * @param session The session "owning" this queue.
 	 */
 	public ActionQueueLegacy(SessionImplementor session) {
+		ACTION_LOGGER.usingActionQueue( getClass().getName() );
 		this.session = session;
 		isTransactionCoordinatorShared = false;
 		transactionCompletionCallbacks = new TransactionCompletionCallbacksImpl( session );

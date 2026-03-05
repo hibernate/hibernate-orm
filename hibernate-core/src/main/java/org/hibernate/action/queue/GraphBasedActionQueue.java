@@ -5,6 +5,7 @@
 package org.hibernate.action.queue;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.PropertyValueException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.BulkOperationCleanupAction;
@@ -34,17 +35,15 @@ import java.util.Set;
 import static org.hibernate.action.internal.ActionLogging.ACTION_LOGGER;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
-/**
- * ActionQueue implementation using FlushCoordinator for graph-based flush scheduling.
- * <p>
- * This implementation replaces the traditional action queue execution with graph-based
- * dependency ordering and cycle breaking.
- * <p>
- * This is the default implementation. The legacy implementation is
- * {@link org.hibernate.engine.spi.ActionQueueLegacy}.
- *
- * @author Steve Ebersole
- */
+/// ActionQueue implementation using FlushCoordinator for graph-based flush scheduling.
+///
+/// This implementation replaces the traditional action queue execution with graph-based
+/// dependency ordering and cycle breaking.
+///
+/// @see FlushCoordinator
+///
+/// @author Steve Ebersole
+@Incubating
 public class GraphBasedActionQueue implements ActionQueue {
 	private final SessionImplementor session;
 	private final FlushCoordinator flushCoordinator;
@@ -67,6 +66,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 	 * @param session The session
 	 */
 	public GraphBasedActionQueue(SessionImplementor session) {
+		ACTION_LOGGER.usingActionQueue( getClass().getName() );
 		this.session = session;
 		this.flushCoordinator = new FlushCoordinator(session);
 		this.pendingActions = new ArrayList<>();
@@ -114,20 +114,25 @@ public class GraphBasedActionQueue implements ActionQueue {
 	}
 
 	private void addInsertAction(AbstractEntityInsertAction insert) {
+		// IDENTITY inserts must execute immediately to generate IDs
+		// Delegate execution to FlushCoordinator but trigger it now, not at flush time
 		if (insert.isEarlyInsert()) {
-			// Early insert (IDENTITY generation) - execute immediately
-			ACTION_LOGGER.executingIdentityInsertImmediately();
-			executeEarlyInsert(insert);
-		}
-		else {
-			// Regular insert - collect for batch execution
-			ACTION_LOGGER.addingResolvedNonEarlyInsertAction();
-			pendingActions.add(insert);
+			// Execute IDENTITY insert immediately via FlushCoordinator
+			flushCoordinator.executeIdentityInsert(insert);
+
+			// Still increment counter for stats
 			insertCount++;
+
+			// Don't add to pendingActions - already executed
+			return;
 		}
 
-		// Make entity managed and resolve any dependent inserts
-		// This happens regardless of early vs regular insert
+		// Regular inserts are queued for later execution
+		ACTION_LOGGER.addingResolvedNonEarlyInsertAction();
+		pendingActions.add(insert);
+		insertCount++;
+
+		// Make entity managed for regular inserts
 		if (!insert.isVeto()) {
 			insert.makeEntityManaged();
 		}
@@ -137,26 +142,6 @@ public class GraphBasedActionQueue implements ActionQueue {
 					insert
 			);
 		}
-	}
-
-	private void executeEarlyInsert(AbstractEntityInsertAction insert) {
-		// Execute any pending inserts first (maintains current behavior)
-		if (!pendingActions.isEmpty()) {
-			List<Executable> insertsToFlush = new ArrayList<>();
-			for (Executable action : pendingActions) {
-				if (action instanceof AbstractEntityInsertAction) {
-					insertsToFlush.add(action);
-				}
-			}
-			if (!insertsToFlush.isEmpty()) {
-				ACTION_LOGGER.executingInsertsBeforeFindingNonNullableTransientEntitiesForEarlyInsert(insert);
-				flushCoordinator.executeFlush(insertsToFlush);
-				pendingActions.removeAll(insertsToFlush);
-			}
-		}
-
-		// Execute the early insert immediately
-		flushCoordinator.executeFlush(List.of(insert));
 	}
 
 	/**

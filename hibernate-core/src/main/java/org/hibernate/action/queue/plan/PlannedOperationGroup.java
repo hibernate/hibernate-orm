@@ -9,8 +9,20 @@ import org.hibernate.action.queue.StatementShapeKey;
 
 import java.util.List;
 
-/// Groups all [operations][#operations] of a given [kind][#kind] for a given [table][#tableExpression],
-/// specifically for a certain ["shape"][#shapeKey].
+/// Groups [operations][#operations] of a given [kind][#kind] and [shape][#shape]
+/// against a [table][#tableExpression].
+///
+/// For example, we would group -
+///
+/// - insert into persons (name, id) values (?,?)
+/// - insert into persons (name, id) values (?,?)
+/// - ...
+///
+/// But this group would not contain any of
+///
+/// - insert into persons (id) values (?) // different shape
+/// - insert into addresses ... // different table
+/// - update persons ... // different kind
 ///
 /// @author Steve Ebersole
 public record PlannedOperationGroup(

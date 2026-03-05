@@ -5,7 +5,6 @@
 package org.hibernate.action.queue;
 
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.MutationOperationGroup;
 
 import java.util.Locale;
 
@@ -32,12 +31,9 @@ public class Helper {
 		return x.toLowerCase( Locale.ROOT ).replace( "\"", "" ).replace( "`", "" );
 	}
 
-	public static int opGroupHash(MutationOperationGroup group) {
-		// You can do better: include operation SQL strings / table names / parameter count, etc.
-		return System.identityHashCode(group);
-	}
-
 	public static boolean needsIdentityPrePhase(EntityPersister persister, Object identifier) {
-		return persister.getGenerator().generatedOnExecution() && identifier != null;
+		// IDENTITY generation needs pre-phase execution when ID is not yet assigned
+		// (i.e., identifier == null means database will generate it)
+		return persister.getGenerator().generatedOnExecution() && identifier == null;
 	}
 }

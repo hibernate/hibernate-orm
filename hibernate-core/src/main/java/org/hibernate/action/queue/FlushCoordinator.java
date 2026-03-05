@@ -4,6 +4,8 @@
  */
 package org.hibernate.action.queue;
 
+import org.hibernate.HibernateException;
+import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.queue.exec.PlannedOperationExecutor;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.exec.StandardPlannedOperationExecutor;
@@ -57,7 +59,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 /// Some important concepts for this coordination include -
 ///
 /// - `PlannedOperation` - a single operation against a single table
-/// - `PlannedOperationGroup` - multiple operations (of the same kind) against a single table
+/// - `PlannedOperationGroup` - multiple operations (of the same kind and shape) against a single table
 /// -
 ///
 /// @author Steve Ebersole
@@ -100,10 +102,8 @@ public class FlushCoordinator {
 		);
 	}
 
-	/**
-	 * Identifies tables that have self-referential associations (FK from table to itself).
-	 * These tables need special grouping treatment to avoid creating false cycles in the graph.
-	 */
+	/// Identifies tables that have self-referential associations (FK from table to itself).
+	/// These tables need special grouping treatment to avoid creating false cycles in the graph.
 	private java.util.Set<String> identifySelfReferentialTables(ForeignKeyModel fkModel) {
 		final java.util.Set<String> tables = new java.util.HashSet<>();
 		for (var fk : fkModel.foreignKeys()) {
@@ -118,13 +118,34 @@ public class FlushCoordinator {
 		return tables;
 	}
 
-	/**
-	 * Get the Decomposer (for accessing unresolved insert tracking).
-	 *
-	 * @return the decomposer
-	 */
+	/// Get the Decomposer (for accessing unresolved insert tracking).
+	///
+	/// @return the decomposer
 	public Decomposer getDecomposer() {
 		return decomposer;
+	}
+
+	/// Execute a single IDENTITY insert immediately.
+	///
+	/// IDENTITY inserts must execute immediately upon persist() to generate the ID,
+	/// rather than being deferred until flush(). This method handles immediate execution
+	/// of a single IDENTITY insert action.
+	///
+	/// @param insert the IDENTITY insert action to execute
+	public void executeIdentityInsert(AbstractEntityInsertAction insert) {
+		try {
+			// Execute IDENTITY insert directly
+			// This handles ID generation, EntityKey creation, event firing, etc.
+			insert.execute();
+
+			// Now make the entity managed (ID has been generated)
+			if (!insert.isVeto()) {
+				insert.makeEntityManaged();
+			}
+		}
+		catch (Exception e) {
+			throw new HibernateException("Could not execute IDENTITY insert", e);
+		}
 	}
 
 	public void executeFlush(List<Executable> actions) {
@@ -141,8 +162,10 @@ public class FlushCoordinator {
 			return;
 		}
 
+		// Note: IDENTITY inserts are no longer in the actions list
+		// They were executed immediately when added to ActionQueue via executeIdentityInsert()
+		// All operations here go through normal graph/plan/execute flow
 		var graph = graphBuilder.build( operationGroups );
-
 		var plan = flushPlanner.plan( graph );
 
 		try {
@@ -160,6 +183,7 @@ public class FlushCoordinator {
 		// Final validation - any remaining unresolved inserts are an error
 		decomposer.validateNoUnresolvedInserts();
 	}
+
 
 	private List<PlannedOperationGroup> decomposeExecutables(
 			List<Executable> executables,
@@ -244,10 +268,8 @@ public class FlushCoordinator {
 		};
 	}
 
-	/**
-	 * Helper class to build a PlannedOperationGroup from multiple PlannedOperations.
-	 * When merging operations from multiple entities, tracks the minimum ordinal for proper ordering.
-	 */
+	/// Helper class to build a PlannedOperationGroup from multiple PlannedOperations.
+	/// When merging operations from multiple entities, tracks the minimum ordinal for proper ordering.
 	private static class OperationGroupBuilder {
 		private final String tableExpression;
 		private final MutationKind kind;
@@ -289,14 +311,11 @@ public class FlushCoordinator {
 		}
 	}
 
-	/**
-	 * Executes planned operations in order. Handles fixups emitted from cycle breaks.
-	 *
-	 * Policy here:
-	 *  - run all base steps first
-	 *  - enqueue fixups as we go
-	 *  - run fixups after base plan finishes (simple + safe)
-	 */
+	/// Executes planned operations in order. Handles fixups emitted from cycle breaks.
+	/// Policy here:
+	///  - run all base steps first
+	///  - enqueue fixups as we go
+	///  - run fixups after base plan finishes (simple + safe)
 	private void executePlan(FlushPlan plan) {
 		for ( PlanStep step : plan.steps() ) {
 			executeStep(step, plan);
@@ -332,13 +351,11 @@ public class FlushCoordinator {
 		}
 	}
 
-	/**
-	 * Post-execution phase: finalize actions after all their PlannedOperations have executed.
-	 * All finalization work is handled by the post-execution callbacks.
-	 *
-	 * @param actions The original list of Executable actions (unused - kept for potential future use)
-	 * @param callbacks The callbacks to be triggered
-	 */
+	/// Post-execution phase: finalize actions after all their PlannedOperations have executed.
+	/// All finalization work is handled by the post-execution callbacks.
+	///
+	/// @param actions The original list of Executable actions (unused - kept for potential future use)
+	/// @param callbacks The callbacks to be triggered
 	private void afterAllOperationsExecuted(List<Executable> actions, List<PostExecutionCallback> callbacks) {
 		// Execute all post-execution callbacks - these handle ALL finalization:
 		// - PostInsertHandling: handles all insert finalization (values, cache, events, stats)
@@ -351,10 +368,8 @@ public class FlushCoordinator {
 		// This method remains for potential future use with action types that don't use callbacks.
 	}
 
-	/**
-	 * After executing a flush, check if any unresolved inserts can now be resolved.
-	 * This handles the case where an entity is persisted after another entity that references it.
-	 */
+	/// After executing a flush, check if any unresolved inserts can now be resolved.
+	/// This handles the case where an entity is persisted after another entity that references it.
 	private void resolveUnresolvedInserts() {
 		if (!decomposer.hasUnresolvedInserts()) {
 			return;
@@ -381,9 +396,7 @@ public class FlushCoordinator {
 		newlyManagedEntities.clear();
 	}
 
-	/**
-	 * Composite key for grouping operations by shape and ordinalBase.
-	 */
+	/// Composite key for grouping operations by shape and ordinalBase.
 	private static class OperationGroupKey {
 		private final StatementShapeKey shapeKey;
 		private final int ordinalBase;

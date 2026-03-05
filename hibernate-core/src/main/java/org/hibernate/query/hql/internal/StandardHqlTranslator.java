@@ -8,7 +8,6 @@ import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.InputMismatchException;
 import org.antlr.v4.runtime.NoViableAltException;
 import org.hibernate.QueryException;
-import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.query.sqm.EntityTypeException;
 import org.hibernate.query.sqm.PathElementException;
@@ -24,7 +23,6 @@ import org.hibernate.query.sqm.internal.SqmTreePrinter;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmStatement;
 
-import org.antlr.v4.runtime.ANTLRErrorListener;
 import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.DefaultErrorStrategy;
@@ -91,10 +89,9 @@ public class StandardHqlTranslator implements HqlTranslator {
 
 	private HqlParser.StatementContext parseHql(String hql) {
 		// Build the lexer
-		final HqlLexer hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( hql );
-
+		final var hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( hql );
 		// Build the parse tree
-		final HqlParser hqlParser = HqlParseTreeBuilder.INSTANCE.buildHqlParser( hql, hqlLexer );
+		final var hqlParser = HqlParseTreeBuilder.INSTANCE.buildHqlParser( hql, hqlLexer );
 
 		// try to use SLL(k)-based parsing first - it's faster
 		hqlParser.getInterpreter().setPredictionMode( PredictionMode.SLL );
@@ -104,7 +101,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 		try {
 			return hqlParser.statement();
 		}
-		catch (ParseCancellationException e) {
+		catch ( ParseCancellationException e ) {
 			// When resetting the parser, its CommonTokenStream will seek(0) i.e. restart emitting buffered tokens.
 			// This is enough when reusing the lexer and parser, and it would be wrong to also reset the lexer.
 			// Resetting the lexer causes it to hand out tokens again from the start, which will then append to the
@@ -117,14 +114,12 @@ public class StandardHqlTranslator implements HqlTranslator {
 			// fall back to LL(k)-based parsing
 			hqlParser.getInterpreter().setPredictionMode( PredictionMode.LL );
 			hqlParser.setErrorHandler( new DefaultErrorStrategy() );
-
-			final ANTLRErrorListener errorListener = new BaseErrorListener() {
+			hqlParser.addErrorListener( new BaseErrorListener() {
 				@Override
-				public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
-					throw new SyntaxException( prettifyAntlrError( offendingSymbol, line, charPositionInLine, msg, e, hql, true ), hql );
+				public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e1) {
+					throw new SyntaxException( prettifyAntlrError( offendingSymbol, line, charPositionInLine, msg, e1, hql, true ), hql );
 				}
-			};
-			hqlParser.addErrorListener( errorListener );
+			} );
 
 			return hqlParser.statement();
 		}

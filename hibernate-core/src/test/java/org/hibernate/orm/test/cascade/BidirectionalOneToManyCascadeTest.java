@@ -25,9 +25,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/cascade/Child.hbm.xml",
-				"org/hibernate/orm/test/cascade/DeleteOrphanChild.hbm.xml",
-				"org/hibernate/orm/test/cascade/Parent.hbm.xml"
+				"org/hibernate/orm/test/cascade/Child.orm.xml",
+				"org/hibernate/orm/test/cascade/DeleteOrphanChild.orm.xml",
+				"org/hibernate/orm/test/cascade/Parent.orm.xml"
 		}
 )
 @SessionFactory

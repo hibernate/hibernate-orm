@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.where.hbm;
+package org.hibernate.orm.test.where.xml;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -23,9 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 /**
  * @author Gail Badner
  */
-@SuppressWarnings("JUnitMalformedDeclaration")
-@DomainModel(xmlMappings = "hbm/where/EagerManyToOneFetchModeJoinWhereTest.hbm.xml")
-@SessionFactory(exportSchema = false)
+@DomainModel(xmlMappings = "mappings/where/EagerManyToOneFetchModeJoinWhereTest.orm.xml")
+@SessionFactory
 public class EagerManyToOneFetchModeJoinWhereTest {
 	@AfterEach
 	void dropTestData(SessionFactoryScope factoryScope) {
@@ -33,8 +32,8 @@ public class EagerManyToOneFetchModeJoinWhereTest {
 	}
 
 	@Test
-	@JiraKey( value = "HHH-12104" )
-	@FailureExpected( jiraKey = "HHH-12104")
+	@JiraKey( value = "HHH-2737" )
+	@FailureExpected( jiraKey = "HHH-2737")
 	public void testAssociatedWhereClause(SessionFactoryScope factoryScope) {
 		var product = new Product();
 		var category = new Category();
@@ -44,9 +43,9 @@ public class EagerManyToOneFetchModeJoinWhereTest {
 		product.containedCategory.category = category;
 		product.containedCategories.add( new ContainedCategory( category ) );
 
-		factoryScope.inTransaction( (session) -> {
-			session.persist( product );
-		} );
+		factoryScope.inTransaction( (session) ->
+				session.persist( product )
+		);
 
 		factoryScope.inTransaction( (session) -> {
 			var p = session.find( Product.class, product.id );

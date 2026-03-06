@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE project>
+<project name="Hbm2DDLLogicTest">
+
+	<target name="testHbm2DDLLogic">
+		
+		<taskdef 
+			name="hibernatetool" 
+			classname="org.hibernate.tool.ant.HibernateToolTask" />
+
+		<hibernatetool destdir="${destinationDir}">
+		
+			<configuration namingstrategy="org.hibernate.cfg.ImprovedNamingStrategy">
+				<fileset file="${resourcesDir}/TopDown.hbm.xml" />
+			</configuration>
+			
+			<hbm2java />
+
+			<!-- this one is executed, security clean up-->
+			<hbm2ddl drop="true" create="false" export="true" outputfilename="onlydrop.sql" format="true" />
+			
+			<!-- allow to test creation of script file + delimiter + non execution (test will fail if executed because of crappy delimiter) -->
+			<hbm2ddl drop="false" create="true" export="false" outputfilename="onlycreate.sql" format="true" delimiter="---"/>
+			<hbm2ddl drop="true" create="false" export="false" outputfilename="onlydrop.sql" format="true" />
+			<hbm2ddl drop="true" create="true" export="false" outputfilename="dropandcreate.sql" format="true" delimiter="---"/>
+			<hbm2ddl export="false" update="true" outputfilename="update.sql" format="true" delimiter="---"/>
+			
+			<!-- this one is executed, security clean up, could be easily removed-->
+			<hbm2ddl drop="true" create="false" export="true" outputfilename="onlydrop.sql" format="true" />
+			<hbm2doc />
+
+		</hibernatetool>
+
+	</target>
+		
+</project>

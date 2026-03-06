@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping package="org.hibernate.tool.hbm2x.Hbm2JavaInitializationTest">
+
+    <class name="Passenger">
+
+    	<id name="id"
+    		length="20" type="integer">
+    		<generator class="native">
+                <param name="sequence">SEQ</param>
+            </generator>
+        </id>
+
+        <property name="familyName" type="string" not-null="true" length="234"/>
+
+		<many-to-one
+		    name="currentTrain"
+            class="org.hibernate.tool.hbm2x.Hbm2JavaInitializationTest.Train"
+            cascade="all, replicate"
+            fetch="join"
+            lazy="false"
+            update="true"
+            insert="true"
+            access="property"
+            >
+            <column name="currentTrainCity"/>
+            <column name="currentTrainLine"/>
+        </many-to-one>
+
+        <set name="usualTrains" table="USUAL_TRAIN">
+    		<key column="passengerId"/>
+    		<many-to-many class="Train">
+                <column name="trainCity"/>
+                <column name="trainLine"/>
+            </many-to-many>
+        </set>
+	</class>
+
+</hibernate-mapping>

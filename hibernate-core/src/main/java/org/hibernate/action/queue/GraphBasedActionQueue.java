@@ -190,21 +190,17 @@ public class GraphBasedActionQueue implements ActionQueue {
 		pendingActions.removeAll(insertsToExecute);
 	}
 
-	/**
-	 * Adds an entity update action.
-	 *
-	 * @param action The action representing the entity update
-	 */
+	/// Adds an entity update action.
+	///
+	/// @param action The action representing the entity update
 	public void addAction(EntityUpdateAction action) {
 		updateCount++;
 		pendingActions.add(action);
 	}
 
-	/**
-	 * Adds an entity delete action.
-	 *
-	 * @param action The action representing the entity deletion
-	 */
+	/// Adds an entity delete action.
+	///
+	/// @param action The action representing the entity deletion
 	public void addAction(EntityDeleteAction action) {
 		deleteCount++;
 		pendingActions.add(action);

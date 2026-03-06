@@ -157,12 +157,34 @@ public class StandardHqlTranslator implements HqlTranslator {
 				errorText += "'*' (empty query string)";
 			}
 			else {
-				// don't use String.lines() because it strips trailing bank lines
-				final String[] lines = hql.split( "\r?\n|\r", -1 );
-				final String lineText = lines[lines.length - 1];
+				// don't use String.lines() because it strips trailing blank lines
+				final String[] lines = hql.split( "\\R", -1 );
+				final String currentLineText = lines[line - 1];
+				final String errorLineText;
+				if ( currentLineText.isEmpty() ) { // no text on the line with the error
+					if ( lines.length == line ) { // on last line
+						// back up to end of previous line, if any
+						if ( line == 1 ) {
+							// query has no text
+							errorLineText = currentLineText;
+						}
+						else {
+							errorLineText = lines[line - 2];
+							charPositionInLine = errorLineText.length();
+						}
+					}
+					else {
+						// move forward to start of next line
+						errorLineText = lines[line];
+						charPositionInLine = 0;
+					}
+				}
+				else {
+					errorLineText = currentLineText;
+				}
 				final String text =
-						lineText.substring( 0, charPositionInLine )
-							+ "*" + lineText.substring( charPositionInLine );
+						errorLineText.substring( 0, charPositionInLine )
+							+ "*" + errorLineText.substring( charPositionInLine );
 				errorText += "'" + text + "'";
 			}
 		}

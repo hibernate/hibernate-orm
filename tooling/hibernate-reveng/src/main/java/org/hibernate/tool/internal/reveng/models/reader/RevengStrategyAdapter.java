@@ -40,7 +40,11 @@ public class RevengStrategyAdapter {
 
 	private final RevengStrategy delegate;
 
-	public RevengStrategyAdapter(RevengStrategy delegate) {
+	public static RevengStrategyAdapter create(RevengStrategy delegate) {
+		return new RevengStrategyAdapter(delegate);
+	}
+
+	private RevengStrategyAdapter(RevengStrategy delegate) {
 		this.delegate = delegate;
 	}
 
@@ -62,7 +66,7 @@ public class RevengStrategyAdapter {
 	 * to a {@link Table} that has a {@link PrimaryKey}.
 	 */
 	public boolean isOneToOne(RawForeignKeyInfo fkInfo, TableMetadata fkTableMetadata) {
-		Table fkTable = buildMappingTableWithPrimaryKey(fkTableMetadata);
+		Table fkTable = buildMappingTable(fkTableMetadata, null);
 		ForeignKey foreignKey = buildMappingForeignKey(fkInfo, fkTable);
 		return delegate.isOneToOne(foreignKey);
 	}
@@ -142,8 +146,8 @@ public class RevengStrategyAdapter {
 			RawForeignKeyInfo toFk,
 			boolean uniqueReference) {
 		Table joinTable = buildMappingTable(joinTableMetadata, joinTableFks);
-		ForeignKey fromKey = buildMappingForeignKeyOnTable(fromFk, joinTable);
-		ForeignKey toKey = buildMappingForeignKeyOnTable(toFk, joinTable);
+		ForeignKey fromKey = buildMappingForeignKey(fromFk, joinTable);
+		ForeignKey toKey = buildMappingForeignKey(toFk, joinTable);
 		TableIdentifier middleTableId = TableIdentifier.create(
 			joinTableMetadata.getCatalog(),
 			joinTableMetadata.getSchema(),
@@ -160,137 +164,80 @@ public class RevengStrategyAdapter {
 			TableMetadata joinTableMetadata,
 			List<RawForeignKeyInfo> joinTableFks) {
 		Table joinTable = buildMappingTable(joinTableMetadata, joinTableFks);
-		Table referencedTable = new Table("Hibernate Tools");
-		referencedTable.setName(fkInfo.referencedTableName());
-		referencedTable.setSchema(fkInfo.referencedSchema());
-		referencedTable.setCatalog(fkInfo.referencedCatalog());
 		return delegate.isForeignKeyCollectionInverse(
 			fkInfo.fkName(),
 			joinTable,
 			buildColumnList(fkInfo.fkColumnName()),
-			referencedTable,
+			createReferencedTable(fkInfo),
 			buildColumnList(fkInfo.pkColumnName()));
 	}
 
 	// ---- Internal helpers ----
 
 	private Table buildMappingTable(TableMetadata metadata, List<RawForeignKeyInfo> outgoingFks) {
-		Table table = createBaseTable(metadata);
-		addColumns(table, metadata);
-		addPrimaryKey(table, metadata);
-		addForeignKeys(table, outgoingFks);
-		return table;
-	}
-
-	private Table buildMappingTableWithPrimaryKey(TableMetadata metadata) {
-		Table table = createBaseTable(metadata);
-		addColumns(table, metadata);
-		addPrimaryKey(table, metadata);
-		return table;
-	}
-
-	private Table createBaseTable(TableMetadata metadata) {
 		Table table = new Table("Hibernate Tools");
 		table.setAbstract(false);
 		table.setName(metadata.getTableName());
 		table.setSchema(metadata.getSchema());
 		table.setCatalog(metadata.getCatalog());
+		addMappingColumns(table, metadata);
+		setMappingPrimaryKey(table, metadata);
+		addMappingForeignKeys(table, outgoingFks);
 		return table;
 	}
 
-	private void addColumns(Table table, TableMetadata metadata) {
-		for (ColumnMetadata colMeta : metadata.getColumns()) {
-			Column column = new Column();
-			column.setName(colMeta.getColumnName());
-			column.setNullable(colMeta.isNullable());
-			column.setLength(colMeta.getLength());
-			column.setPrecision(colMeta.getPrecision());
-			column.setScale(colMeta.getScale());
-			table.addColumn(column);
+	private void setMappingPrimaryKey(Table table, TableMetadata metadata) {
+		PrimaryKey pk = buildMappingPrimaryKey(table, metadata);
+		if (pk != null) {
+			table.setPrimaryKey(pk);
 		}
 	}
 
-	private void addPrimaryKey(Table table, TableMetadata metadata) {
+	private void addMappingForeignKeys(Table table, List<RawForeignKeyInfo> outgoingFks) {
+		if (outgoingFks != null) {
+			for (RawForeignKeyInfo fkInfo : outgoingFks) {
+				buildMappingForeignKey(fkInfo, table);
+			}
+		}
+	}
+
+	private void addMappingColumns(Table table, TableMetadata metadata) {
+		for (ColumnMetadata colMeta : metadata.getColumns()) {
+			table.addColumn(buildMappingColumn(colMeta));
+		}
+	}
+
+	private Column buildMappingColumn(ColumnMetadata colMeta) {
+		Column column = new Column();
+		column.setName(colMeta.getColumnName());
+		column.setNullable(colMeta.isNullable());
+		column.setLength(colMeta.getLength());
+		column.setPrecision(colMeta.getPrecision());
+		column.setScale(colMeta.getScale());
+		return column;
+	}
+
+	private PrimaryKey buildMappingPrimaryKey(Table table, TableMetadata metadata) {
 		List<ColumnMetadata> pkColumns = new ArrayList<>();
 		for (ColumnMetadata colMeta : metadata.getColumns()) {
 			if (colMeta.isPrimaryKey()) {
 				pkColumns.add(colMeta);
 			}
 		}
-		if (!pkColumns.isEmpty()) {
-			PrimaryKey pk = new PrimaryKey(table);
-			for (ColumnMetadata pkCol : pkColumns) {
-				Column column = table.getColumn(new Column(pkCol.getColumnName()));
-				if (column != null) {
-					pk.addColumn(column);
-				}
+		if (pkColumns.isEmpty()) {
+			return null;
+		}
+		PrimaryKey pk = new PrimaryKey(table);
+		for (ColumnMetadata pkCol : pkColumns) {
+			Column column = table.getColumn(new Column(pkCol.getColumnName()));
+			if (column != null) {
+				pk.addColumn(column);
 			}
-			table.setPrimaryKey(pk);
 		}
+		return pk;
 	}
 
-	private void addForeignKeys(Table table, List<RawForeignKeyInfo> outgoingFks) {
-		if (outgoingFks == null) {
-			return;
-		}
-		for (RawForeignKeyInfo fkInfo : outgoingFks) {
-			List<Column> fkColumns = new ArrayList<>();
-			Column fkColumn = table.getColumn(new Column(fkInfo.fkColumnName()));
-			if (fkColumn != null) {
-				fkColumns.add(fkColumn);
-			} else {
-				fkColumns.add(new Column(fkInfo.fkColumnName()));
-			}
-
-			Table referencedTable = new Table("Hibernate Tools");
-			referencedTable.setName(fkInfo.referencedTableName());
-			referencedTable.setSchema(fkInfo.referencedSchema());
-			referencedTable.setCatalog(fkInfo.referencedCatalog());
-
-			List<Column> refColumns = new ArrayList<>();
-			refColumns.add(new Column(fkInfo.pkColumnName()));
-
-			ForeignKey fk = table.createForeignKey(
-				fkInfo.fkName(),
-				fkColumns,
-				fkInfo.referencedTableName(),
-				null,
-				null,
-				refColumns);
-			fk.setReferencedTable(referencedTable);
-		}
-	}
-
-	private ForeignKey buildMappingForeignKey(RawForeignKeyInfo fkInfo, Table fkTable) {
-		List<Column> fkColumns = new ArrayList<>();
-		Column fkColumn = fkTable.getColumn(new Column(fkInfo.fkColumnName()));
-		if (fkColumn != null) {
-			fkColumns.add(fkColumn);
-		} else {
-			fkColumns.add(new Column(fkInfo.fkColumnName()));
-		}
-
-		Table referencedTable = new Table("Hibernate Tools");
-		referencedTable.setName(fkInfo.referencedTableName());
-		referencedTable.setSchema(fkInfo.referencedSchema());
-		referencedTable.setCatalog(fkInfo.referencedCatalog());
-
-		List<Column> refColumns = new ArrayList<>();
-		refColumns.add(new Column(fkInfo.pkColumnName()));
-
-		ForeignKey fk = fkTable.createForeignKey(
-			fkInfo.fkName(),
-			fkColumns,
-			fkInfo.referencedTableName(),
-			null,
-			null,
-			refColumns);
-		fk.setReferencedTable(referencedTable);
-
-		return fk;
-	}
-
-	private ForeignKey buildMappingForeignKeyOnTable(RawForeignKeyInfo fkInfo, Table table) {
+	private ForeignKey buildMappingForeignKey(RawForeignKeyInfo fkInfo, Table table) {
 		List<Column> fkColumns = new ArrayList<>();
 		Column fkColumn = table.getColumn(new Column(fkInfo.fkColumnName()));
 		if (fkColumn != null) {
@@ -298,15 +245,8 @@ public class RevengStrategyAdapter {
 		} else {
 			fkColumns.add(new Column(fkInfo.fkColumnName()));
 		}
-
-		Table referencedTable = new Table("Hibernate Tools");
-		referencedTable.setName(fkInfo.referencedTableName());
-		referencedTable.setSchema(fkInfo.referencedSchema());
-		referencedTable.setCatalog(fkInfo.referencedCatalog());
-
 		List<Column> refColumns = new ArrayList<>();
 		refColumns.add(new Column(fkInfo.pkColumnName()));
-
 		ForeignKey fk = table.createForeignKey(
 			fkInfo.fkName(),
 			fkColumns,
@@ -314,8 +254,16 @@ public class RevengStrategyAdapter {
 			null,
 			null,
 			refColumns);
-		fk.setReferencedTable(referencedTable);
+		fk.setReferencedTable(createReferencedTable(fkInfo));
 		return fk;
+	}
+
+	private Table createReferencedTable(RawForeignKeyInfo fkInfo) {
+		Table referencedTable = new Table("Hibernate Tools");
+		referencedTable.setName(fkInfo.referencedTableName());
+		referencedTable.setSchema(fkInfo.referencedSchema());
+		referencedTable.setCatalog(fkInfo.referencedCatalog());
+		return referencedTable;
 	}
 
 	private List<Column> buildColumnList(String columnName) {

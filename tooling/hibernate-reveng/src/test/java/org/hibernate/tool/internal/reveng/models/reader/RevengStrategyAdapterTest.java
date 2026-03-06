@@ -46,7 +46,7 @@ public class RevengStrategyAdapterTest {
 		settings.setDetectManyToMany(true);
 		settings.setDetectOneToOne(true);
 		strategy.setSettings(settings);
-		adapter = new RevengStrategyAdapter(strategy);
+		adapter = RevengStrategyAdapter.create(strategy);
 	}
 
 	@Test

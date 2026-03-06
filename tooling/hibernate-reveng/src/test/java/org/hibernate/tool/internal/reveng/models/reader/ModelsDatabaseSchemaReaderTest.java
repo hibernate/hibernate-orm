@@ -69,7 +69,7 @@ public class ModelsDatabaseSchemaReaderTest {
 		dialect.addColumn("EMPLOYEE", "SALARY", java.sql.Types.DECIMAL, 10, 2, true);
 		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
 
-		ModelsDatabaseSchemaReader reader = new ModelsDatabaseSchemaReader(
+		ModelsDatabaseSchemaReader reader = ModelsDatabaseSchemaReader.create(
 			dialect, strategy, null, null);
 		List<TableMetadata> result = reader.readSchema();
 
@@ -119,7 +119,7 @@ public class ModelsDatabaseSchemaReaderTest {
 		dialect.addExportedKey("DEPARTMENT", "ID", "EMPLOYEE", "DEPARTMENT_ID",
 			"FK_EMP_DEPT", 1);
 
-		ModelsDatabaseSchemaReader reader = new ModelsDatabaseSchemaReader(
+		ModelsDatabaseSchemaReader reader = ModelsDatabaseSchemaReader.create(
 			dialect, strategy, null, null);
 		List<TableMetadata> result = reader.readSchema();
 
@@ -168,7 +168,7 @@ public class ModelsDatabaseSchemaReaderTest {
 		dialect.addExportedKey("USERS", "ID", "USER_ROLE", "USER_ID", "FK_UR_USER", 1);
 		dialect.addExportedKey("ROLES", "ID", "USER_ROLE", "ROLE_ID", "FK_UR_ROLE", 1);
 
-		ModelsDatabaseSchemaReader reader = new ModelsDatabaseSchemaReader(
+		ModelsDatabaseSchemaReader reader = ModelsDatabaseSchemaReader.create(
 			dialect, strategy, null, null);
 		List<TableMetadata> result = reader.readSchema();
 
@@ -190,7 +190,7 @@ public class ModelsDatabaseSchemaReaderTest {
 		dialect.addColumn("EVENT", "PHOTO", java.sql.Types.BLOB, 0, 0, true);
 		dialect.addPrimaryKey("EVENT", "ID", 1);
 
-		ModelsDatabaseSchemaReader reader = new ModelsDatabaseSchemaReader(
+		ModelsDatabaseSchemaReader reader = ModelsDatabaseSchemaReader.create(
 			dialect, strategy, null, null);
 		List<TableMetadata> result = reader.readSchema();
 
@@ -233,7 +233,7 @@ public class ModelsDatabaseSchemaReaderTest {
 		dialect.addPrimaryKey("ORDER_ITEM", "ORDER_ID", 1);
 		dialect.addPrimaryKey("ORDER_ITEM", "PRODUCT_ID", 2);
 
-		ModelsDatabaseSchemaReader reader = new ModelsDatabaseSchemaReader(
+		ModelsDatabaseSchemaReader reader = ModelsDatabaseSchemaReader.create(
 			dialect, strategy, null, null);
 		List<TableMetadata> result = reader.readSchema();
 
@@ -259,7 +259,7 @@ public class ModelsDatabaseSchemaReaderTest {
 		dialect.addColumn("EMPLOYEE", "NAME", java.sql.Types.VARCHAR, 255, 0, true);
 		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
 
-		ModelsDatabaseSchemaReader reader = new ModelsDatabaseSchemaReader(
+		ModelsDatabaseSchemaReader reader = ModelsDatabaseSchemaReader.create(
 			dialect, strategy, null, null);
 		List<TableMetadata> result = reader.readSchema();
 
@@ -290,7 +290,7 @@ public class ModelsDatabaseSchemaReaderTest {
 		dialect.addExportedKey("USERS", "ID", "USER_ROLE", "USER_ID", "FK_UR_USER", 1);
 		dialect.addExportedKey("ROLES", "ID", "USER_ROLE", "ROLE_ID", "FK_UR_ROLE", 1);
 
-		ModelsDatabaseSchemaReader reader = new ModelsDatabaseSchemaReader(
+		ModelsDatabaseSchemaReader reader = ModelsDatabaseSchemaReader.create(
 			dialect, strategy, null, null);
 		List<TableMetadata> result = reader.readSchema();
 
@@ -331,7 +331,7 @@ public class ModelsDatabaseSchemaReaderTest {
 
 	@Test
 	public void testEmptySchema() {
-		ModelsDatabaseSchemaReader reader = new ModelsDatabaseSchemaReader(
+		ModelsDatabaseSchemaReader reader = ModelsDatabaseSchemaReader.create(
 			dialect, strategy, null, null);
 		List<TableMetadata> result = reader.readSchema();
 

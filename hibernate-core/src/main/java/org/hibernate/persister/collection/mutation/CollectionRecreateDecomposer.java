@@ -45,18 +45,34 @@ public class CollectionRecreateDecomposer implements MutationDecomposer<Collecti
 		// Register callback even if no operations (for event firing, statistics)
 		postExecutionCallbackRegistry.accept(new PostCollectionRecreateHandling(action, cacheKey));
 
-		final InsertRowsCoordinator coordinator = getInsertRowsCoordinator(persister);
-		if (coordinator == null) {
-			return List.of();
+		final List<PlannedOperation> operations = new java.util.ArrayList<>();
+
+		// Decompose insert operations
+		final InsertRowsCoordinator insertCoordinator = getInsertRowsCoordinator(persister);
+		if (insertCoordinator != null) {
+			operations.addAll( insertCoordinator.decomposeInsertRows(
+					collection,
+					key,
+					collection::includeInRecreate,
+					ordinalBase,
+					session
+			) );
 		}
 
-		return coordinator.decomposeInsertRows(
-				collection,
-				key,
-				collection::includeInRecreate,
-				ordinalBase,
-				session
-		);
+		// Decompose write index operations (for @OrderColumn collections)
+		final WriteIndexCoordinator writeIndexCoordinator = getWriteIndexCoordinator(persister);
+		if (writeIndexCoordinator != null) {
+			operations.addAll( writeIndexCoordinator.decomposeWriteIndex(
+					collection,
+					collection.entries( persister ),
+					key,
+					true, // resetIndex = true for recreate
+					ordinalBase,
+					session
+			) );
+		}
+
+		return operations;
 	}
 
 	private void preRecreate(CollectionRecreateAction action, SharedSessionContractImplementor session) {
@@ -99,6 +115,17 @@ public class CollectionRecreateDecomposer implements MutationDecomposer<Collecti
 		else if ( persister instanceof BasicCollectionPersister basic ) {
 			return basic.getInsertRowsCoordinator();
 		}
+		return null;
+	}
+
+	/**
+	 * Get the WriteIndexCoordinator from the persister.
+	 */
+	private static WriteIndexCoordinator getWriteIndexCoordinator(CollectionPersister persister) {
+		if ( persister instanceof OneToManyPersister oneToMany ) {
+			return oneToMany.getWriteIndexCoordinator();
+		}
+		// BasicCollectionPersister doesn't currently have writeIndex support
 		return null;
 	}
 }

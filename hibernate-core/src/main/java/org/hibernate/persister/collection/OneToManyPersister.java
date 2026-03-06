@@ -14,7 +14,6 @@ import org.hibernate.MappingException;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
@@ -32,11 +31,17 @@ import org.hibernate.persister.collection.mutation.OperationProducer;
 import org.hibernate.persister.collection.mutation.RemoveCoordinator;
 import org.hibernate.persister.collection.mutation.RowMutationOperations;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
+import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorNoOp;
+import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorOneToMany;
+import org.hibernate.persister.collection.mutation.WriteIndexCoordinator;
+import org.hibernate.persister.collection.mutation.WriteIndexCoordinatorNoOp;
+import org.hibernate.persister.collection.mutation.WriteIndexCoordinatorStandard;
+import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorTablePerSubclass;
+import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueParameterList;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
@@ -48,12 +53,10 @@ import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
-import static org.hibernate.internal.util.NullnessHelper.areAllNonNull;
 import static org.hibernate.internal.util.collections.ArrayHelper.isAnyTrue;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.persister.collection.mutation.RowMutationOperations.DEFAULT_RESTRICTOR;
 import static org.hibernate.sql.model.ast.builder.TableUpdateBuilder.NULL;
-import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
 /**
  * A {@link CollectionPersister} for {@linkplain jakarta.persistence.OneToMany
@@ -72,6 +75,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	private final UpdateRowsCoordinator updateRowsCoordinator;
 	private final DeleteRowsCoordinator deleteRowsCoordinator;
 	private final RemoveCoordinator removeCoordinator;
+	private final WriteIndexCoordinator writeIndexCoordinator;
 
 	private final boolean keyIsNullable;
 	private final MutationExecutorService mutationExecutorService;
@@ -99,6 +103,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		updateRowsCoordinator = stateManagement.createUpdateRowsCoordinator( this );
 		deleteRowsCoordinator = stateManagement.createDeleteRowsCoordinator( this );
 		removeCoordinator = stateManagement.createRemoveCoordinator( this );
+		writeIndexCoordinator = buildWriteIndexCoordinator();
 		mutationExecutorService = creationContext.getServiceRegistry().getService( MutationExecutorService.class );
 	}
 
@@ -122,6 +127,10 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	@Override
 	public RemoveCoordinator getRemoveCoordinator() {
 		return removeCoordinator;
+	}
+
+	public WriteIndexCoordinator getWriteIndexCoordinator() {
+		return writeIndexCoordinator;
 	}
 
 	@Override
@@ -166,60 +175,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			Object key,
 			boolean resetIndex,
 			SharedSessionContractImplementor session) {
-		// See HHH-5732 and HHH-18830.
-		// Claim: "If one-to-many and inverse, still need to create the index."
-		// In fact this is wrong: JPA is very clear that bidirectional associations
-		// are persisted from the owning side. However, since this is a very ancient
-		// mistake, I have fixed it in a backward-compatible way, by writing to the
-		// order column if there is no mapping at all for it on the other side.
-		// But if the owning entity does have a mapping for the order column, don't
-		// do superfluous SQL UPDATEs here from the unowned side, no matter how many
-		// users complain.
-		if ( doWriteEvenWhenInverse && entries.hasNext() ) {
-
-			final var updateRowOperation = rowMutationOperations.getUpdateRowOperation();
-			final var updateRowValues = rowMutationOperations.getUpdateRowValues();
-			final var updateRowRestrictions = rowMutationOperations.getUpdateRowRestrictions();
-			assert areAllNonNull( updateRowOperation, updateRowValues, updateRowRestrictions );
-
-			final var mutationExecutor = mutationExecutorService.createExecutor(
-					() -> new BasicBatchKey( getNavigableRole() + "#INDEX" ),
-					singleOperation( MutationType.UPDATE, this, updateRowOperation ),
-					session
-			);
-
-			final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
-			try {
-				int nextIndex = baseIndex() + ( resetIndex ? 0 : getSize( key, session ) );
-				while ( entries.hasNext() ) {
-					final Object entry = entries.next();
-					if ( entry != null && collection.entryExists( entry, nextIndex ) ) {
-						updateRowValues.applyValues(
-								collection,
-								key,
-								entry,
-								nextIndex,
-								session,
-								jdbcValueBindings
-						);
-						updateRowRestrictions.applyRestrictions(
-								collection,
-								key,
-								entry,
-								nextIndex,
-								session,
-								jdbcValueBindings
-						);
-						mutationExecutor.execute( collection, null, null, null, session );
-						nextIndex++;
-					}
-				}
-			}
-			finally {
-				mutationExecutor.release();
-			}
-		}
-
+		writeIndexCoordinator.writeIndex( collection, entries, key, resetIndex, session );
 	}
 
 	public boolean isOneToMany() {
@@ -374,6 +330,15 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				deleteEntryRestrictions,
 				deleteAllEntriesOperationProducer
 		);
+	}
+
+	private WriteIndexCoordinator buildWriteIndexCoordinator() {
+		if ( doWriteEvenWhenInverse ) {
+			return new WriteIndexCoordinatorStandard( this, rowMutationOperations, getFactory() );
+		}
+		else {
+			return new WriteIndexCoordinatorNoOp( this );
+		}
 	}
 
 	private JdbcMutationOperation generateDeleteRowOperation(MutatingTableReference tableReference) {

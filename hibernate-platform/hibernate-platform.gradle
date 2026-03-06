@@ -9,28 +9,47 @@ description = 'Platform (BOM) for Hibernate ORM dependencies'
 dependencies {
     constraints {
         api project( ":hibernate-core" )
+        api "org.hibernate:hibernate-core:$version"
         api project( ":hibernate-testing" )
+        api "org.hibernate:hibernate-testing:$version"
 
         api project( ":hibernate-envers" )
+        api "org.hibernate:hibernate-envers:$version"
         api project( ":hibernate-spatial" )
+        api "org.hibernate:hibernate-spatial:$version"
         api project( ":hibernate-vector" )
+        api "org.hibernate:hibernate-vector:$version"
 
         api project( ":hibernate-community-dialects" )
+        api "org.hibernate:hibernate-community-dialects:$version"
         api project( ":hibernate-scan-jandex" )
 
         api project( ":hibernate-agroal" )
+        api "org.hibernate:hibernate-agroal:$version"
         api project( ":hibernate-c3p0" )
+        api "org.hibernate:hibernate-c3p0:$version"
         api project( ":hibernate-hikaricp" )
+        api "org.hibernate:hibernate-hikaricp:$version"
 
         api project( ":hibernate-jcache" )
+        api "org.hibernate:hibernate-jcache:$version"
 
         api project( ":hibernate-micrometer" )
+        api "org.hibernate:hibernate-micrometer:$version"
         api project( ":hibernate-graalvm")
+        api "org.hibernate:hibernate-graalvm:$version"
 
         api project( ":hibernate-processor" )
+        api "org.hibernate:hibernate-processor:$version"
         api project( ":hibernate-gradle-plugin" )
         api project( ":hibernate-maven-plugin" )
         api project( ":hibernate-ant" )
+        api "org.hibernate:hibernate-ant:$version"
+
+        api project( ":hibernate-assistant" )
+        api "org.hibernate:hibernate-assistant:$version"
+        api project( ":hibernate-jfr" )
+        api "org.hibernate:hibernate-jfr:$version"
 
         api libs.hibernateModels
 

@@ -19,6 +19,9 @@ plugins {
 description = "Gradle plugin for integrating Hibernate aspects into your build"
 
 dependencies {
+	// align artifacts natively when consuming through Gradle
+	api platform(project(":hibernate-platform"))
+
 	implementation project(':hibernate-core')
 	implementation libs.byteBuddy
 	implementation jakartaLibs.jaxbApi

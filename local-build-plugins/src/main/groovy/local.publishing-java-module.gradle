@@ -33,8 +33,51 @@ dependencies {
                 || file.path.contains("/org/hibernate/grammars/hql/")
         )
     }
+
+    // align artifacts natively when consuming through Gradle
+    api platform(project(":hibernate-platform"))
 }
 
+def moduleVersionAlignmentDependencies = configurations.dependencyScope("moduleVersionAlignmentDependencies") {
+    dependencies.add(project.dependencies.create(project) { transitive = false })
+    dependencies.add(project.dependencies.create(project.dependencies.platform(project(":hibernate-platform"))))
+}
+def moduleVersionAlignment = configurations.resolvable("moduleVersionAlignment") {
+    extendsFrom(moduleVersionAlignmentDependencies.get())
+}
+def verifyModuleVersionAlignment = tasks.register("verifyModuleVersionAlignment") {
+    group = "verification"
+    description = "Verify module version alignment"
+
+    def rootComponent = moduleVersionAlignment.flatMap {
+        it.incoming.getResolutionResult().rootComponent
+    }
+    def projectPath = project.path
+
+    doLast {
+        if (!rootComponent
+                .get()
+                .dependencies
+                .find {
+                    it instanceof ResolvedDependencyResult &&
+                            it.selected.id instanceof ProjectComponentIdentifier &&
+                            it.selected.id.projectPath == ":hibernate-platform"
+                }
+                .selected
+                .dependencies
+                .any {
+                    it instanceof ResolvedDependencyResult &&
+                            it.constraint &&
+                            it.selected.id instanceof ProjectComponentIdentifier &&
+                            it.selected.id.projectPath == projectPath
+                }) {
+            throw new GradleException(":hibernate-platform is missing dependency on $projectPath")
+        }
+    }
+}
+tasks.named("check") {
+    dependsOn(verifyModuleVersionAlignment)
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Publishing
@@ -68,4 +111,3 @@ tasks.register("preVerifyRelease") {
 
     dependsOn releasePrepareTask
 }
-

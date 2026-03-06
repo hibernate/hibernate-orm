@@ -158,7 +158,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 			}
 			else {
 				// don't use String.lines() because it strips trailing bank lines
-				final String[] lines = hql.split( "\r?\n|\r" );
+				final String[] lines = hql.split( "\r?\n|\r", -1 );
 				final String lineText = lines[lines.length - 1];
 				final String text =
 						lineText.substring( 0, charPositionInLine )

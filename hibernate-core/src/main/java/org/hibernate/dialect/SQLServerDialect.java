@@ -1087,13 +1087,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public String generatedAs(String generatedAs) {
-		return generatedAs.startsWith( "row " )
-				? " datetime2 generated always as " + generatedAs
-				: " as (" + generatedAs + ") persisted";
-	}
-
-	@Override
 	public TemporaryTableStrategy getLocalTemporaryTableStrategy() {
 		return SQLServerLocalTemporaryTableStrategy.INSTANCE;
 	}
@@ -1179,6 +1172,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			// Keeping the catalog in the name does not break on ORM, but it fails using Vert.X for Reactive.
 			return context.formatWithoutCatalog( name );
 		}
+	}
+
+	@Override
+	public String generatedAs(String generatedAs, boolean stored, boolean hidden) {
+		return generatedAs.startsWith( "row " )
+				? " datetime2 generated always as " + generatedAs
+				: " as (" + generatedAs + ")" + ( stored ? " persisted" : "" );
 	}
 
 	@Override

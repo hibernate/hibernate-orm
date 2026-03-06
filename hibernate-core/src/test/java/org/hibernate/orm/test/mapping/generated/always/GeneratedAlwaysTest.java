@@ -8,19 +8,13 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.GeneratedColumn;
-import org.hibernate.community.dialect.AltibaseDialect;
-import org.hibernate.community.dialect.DerbyDialect;
-import org.hibernate.community.dialect.InformixDialect;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.PostgresPlusDialect;
-import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks.SupportsGeneratedColumns;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,14 +27,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @DomainModel(annotatedClasses = GeneratedAlwaysTest.OrderLine.class)
 @SessionFactory
-@SkipForDialect(dialectClass = H2Dialect.class, majorVersion = 1) // 'generated always' was added in 2.0
+@RequiresDialectFeature(feature = SupportsGeneratedColumns.class)
 @SkipForDialect(dialectClass = HSQLDialect.class)
-@SkipForDialect(dialectClass = DerbyDialect.class)
-@SkipForDialect(dialectClass = SybaseASEDialect.class)
-@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 11, versionMatchMode = VersionMatchMode.SAME_OR_OLDER) // 'generated always' was added in 12
-@SkipForDialect(dialectClass = PostgresPlusDialect.class, majorVersion = 11, versionMatchMode = VersionMatchMode.SAME_OR_OLDER) // 'generated always' was added in 12
-@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "generated always is not supported in Altibase")
-@SkipForDialect(dialectClass = InformixDialect.class)
 public class GeneratedAlwaysTest {
 
 	@Test

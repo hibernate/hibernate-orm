@@ -304,6 +304,15 @@ public interface HibernateAnnotations {
 			GeneratedColumn.class,
 			GeneratedColumnAnnotation.class
 	);
+	OrmAnnotationDescriptor<DerivedColumns,DerivedColumnsAnnotation> DERIVED_COLUMNS = new OrmAnnotationDescriptor<>(
+			DerivedColumns.class,
+			DerivedColumnsAnnotation.class
+	);
+	OrmAnnotationDescriptor<DerivedColumn,DerivedColumnAnnotation> DERIVED_COLUMN = new OrmAnnotationDescriptor<>(
+			DerivedColumn.class,
+			DerivedColumnAnnotation.class,
+			DERIVED_COLUMNS
+	);
 	OrmAnnotationDescriptor<GenericGenerators,GenericGeneratorsAnnotation> GENERIC_GENERATORS = new OrmAnnotationDescriptor<>(
 			GenericGenerators.class,
 			GenericGeneratorsAnnotation.class

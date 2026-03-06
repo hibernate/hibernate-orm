@@ -76,3 +76,92 @@ jobs:
           exit $status
         env:
           DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY_PR }}
+
+  publish-sonar-scans:
+    name: Publish Sonar scan
+    if: github.repository == 'hibernate/hibernate-orm' && github.event.workflow_run.conclusion != 'cancelled'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine the Branch Reference for which the original action was triggered
+        id: determine_branch_ref
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${{ github.event.workflow_run.event }}" == "pull_request" ]; then
+            echo "::notice::Triggering workflow was executed for a pull request"
+          
+            FORK_OWNER="${{ github.event.workflow_run.head_repository.owner.login }}"
+            BRANCH_NAME="${{ github.event.workflow_run.head_branch }}"
+            if [ "${{ github.event.workflow_run.head_repository.owner.login }}" != "${{ github.event.workflow_run.repository.owner.login }}" ]; then
+              BRANCH_NAME="$FORK_OWNER:$BRANCH_NAME"
+            fi
+            TARGET_BRANCH=$(gh pr view "$BRANCH_NAME" --repo ${{ github.event.workflow_run.repository.full_name }} --json baseRefName -q .baseRefName)
+          
+            echo "::notice::PR found. Target branch is: $TARGET_BRANCH"
+            echo "original_branch_ref=$TARGET_BRANCH" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Triggering workflow was executed for a push event? Using the head_branch value."
+            echo "original_branch_ref=${{ github.event.workflow_run.head_branch }}" >> "$GITHUB_OUTPUT"
+          fi
+      # Checkout target branch which has trusted code
+      - name: Check out target branch
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          # By default, a workflow that is triggered with on workflow_run would run on the main (default) branch.
+          #  Different branches might have different versions of Develocity, and we want to make sure
+          #  that we publish with the one that we built the scan with in the first place.
+          ref: ${{ steps.determine_branch_ref.outputs.original_branch_ref }}
+          fetch-depth: 0
+      - name: Set up Java 25
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+        with:
+          java-version: 25
+          distribution: temurin
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # 7.0.0
+        with:
+          pattern: build-results-data
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id }}
+          path: .
+          merge-multiple: 'true'
+        # Don't fail the build if there are no matching artifacts
+        continue-on-error: true
+
+      - name: Install Sonar CLI
+        run: |
+          SONAR_SCANNER_VERSION=8.0.1.6346
+          export SONAR_SCANNER_HOME=$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION
+          curl --create-dirs -sSLo $HOME/.sonar/sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-$SONAR_SCANNER_VERSION.zip
+          unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
+          mv "$HOME/.sonar/sonar-scanner-$SONAR_SCANNER_VERSION"/* "$HOME/.sonar/" 
+
+      - name: Sonar Analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          find . -name "*.exec" -type f
+          EXTRA_ARGS=""
+          if [ "${{ github.event.workflow_run.event }}" == "pull_request" ]; then
+            echo "::notice::Triggering workflow was executed for a pull request"
+          
+            FORK_OWNER="${{ github.event.workflow_run.head_repository.owner.login }}"
+            BRANCH_NAME="${{ github.event.workflow_run.head_branch }}"
+            if [ "${{ github.event.workflow_run.head_repository.owner.login }}" != "${{ github.event.workflow_run.repository.owner.login }}" ]; then
+              BRANCH_NAME="$FORK_OWNER:$BRANCH_NAME"
+            fi
+            TARGET_BRANCH=$(gh pr view "$BRANCH_NAME" --repo ${{ github.event.workflow_run.repository.full_name }} --json baseRefName -q .baseRefName)
+            PR_ID=$(gh pr view "$BRANCH_NAME" --repo ${{ github.event.workflow_run.repository.full_name }} --json number -q .number)
+          
+            EXTRA_ARGS="-Dsonar.pullrequest.branch=$BRANCH_NAME -Dsonar.pullrequest.key=$PR_ID -Dsonar.pullrequest.base=${{steps.determine_branch_ref.outputs.original_branch_ref}} -Dsonar.pullrequest.provider=GitHub -Dsonar.pullrequest.github.repository=hibernate/hibernate-orm"
+          else
+            EXTRA_ARGS="-Dsonar.branch.name=${{github.event.workflow_run.head_branch}}"
+          fi
+          
+          $HOME/.sonar/bin/sonar-scanner $EXTRA_ARGS \
+              -Dsonar.java.libraries="$(pwd)/target/sonar-dependencies/*.jar" \
+              -Dsonar.coverage.jacoco.xmlReportPaths="$(pwd)/reporting/target/reports/jacoco/mergeCodeCoverageReport/mergeCodeCoverageReport.xml"
+

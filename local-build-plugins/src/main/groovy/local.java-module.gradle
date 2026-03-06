@@ -20,6 +20,11 @@ plugins {
     id "project-report"
 }
 
+def skipJacoco = project.hasProperty('skipJacoco') ? project.getProperty('skipJacoco').toBoolean() : false
+if (!skipJacoco) {
+    plugins.apply('jacoco')
+}
+
 def hibernateVersion = ormBuildDetails.hibernateVersion
 def jpaVersion = ormBuildDetails.jpaVersion
 
@@ -49,6 +54,7 @@ dependencies {
     compileOnly jdbcLibs.oracle
     compileOnly (jdbcLibs.oracleJdbcJacksonOsonExtension) {
         exclude group: 'com.oracle.database.jdbc', module: 'ojdbc8'
+        exclude group: 'jakarta.persistence', module: 'jakarta.persistence-api'
     }
 
     // JUnit dependencies made up of:
@@ -104,6 +110,7 @@ dependencies {
         testRuntimeOnly jdbcLibs.oracleXmlParser
         testRuntimeOnly (jdbcLibs.oracleJdbcJacksonOsonExtension) {
             exclude group: 'com.oracle.database.jdbc', module: 'ojdbc8'
+            exclude group: 'jakarta.persistence', module: 'jakarta.persistence-api'
         }
     }
     else if ( db.startsWith( 'altibase' ) ) {
@@ -229,6 +236,15 @@ tasks.withType( Test.class ).configureEach { test ->
     if ( project.hasProperty( 'excludeTests' ) ) {
         test.filter {
             excludeTestsMatching project.property('excludeTests').toString()
+        }
+    }
+    if (!skipJacoco) {
+        def coverageReportSuffix = providers.gradleProperty('db').orElse('default')
+        def javaVersion = JavaVersion.current().majorVersion
+        test.jacoco {
+            destinationFile = layout.buildDirectory.file(
+                    coverageReportSuffix.map { db -> "jacoco/report-${db}-jdk${javaVersion}.exec" }
+            ).get().asFile
         }
     }
 }

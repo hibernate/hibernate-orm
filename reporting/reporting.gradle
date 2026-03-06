@@ -1,0 +1,46 @@
+plugins {
+    id "local.module"
+    id 'jacoco-report-aggregation'
+}
+
+description = 'Reporting module'
+
+ext {
+    projectsToIncludeWhenAggregatingCoverage = [
+            'hibernate-agroal',
+            'hibernate-c3p0',
+            'hibernate-community-dialects',
+            'hibernate-core',
+            'hibernate-envers',
+            'hibernate-graalvm',
+            'hibernate-hikaricp',
+            'hibernate-jcache',
+            'hibernate-jfr',
+            'hibernate-micrometer',
+            'hibernate-scan-jandex',
+            'hibernate-spatial',
+            'hibernate-testing',
+            'hibernate-vector',
+            // Tooling:
+            'hibernate-ant',
+            'hibernate-assistant',
+            'hibernate-gradle-plugin',
+            'hibernate-maven-plugin',
+            'hibernate-processor'
+    ]
+}
+
+tasks.register('mergeCodeCoverageReport', JacocoReport) {
+    executionData fileTree(rootProject.layout.projectDirectory.asFile).include("**/target/jacoco/*.exec")
+    parent.subprojects.each { Project subProject ->
+        if ( project.projectsToIncludeWhenAggregatingCoverage.contains( subProject.name ) ) {
+            sourceSets  subProject.sourceSets.main
+        }
+    }
+
+    reports {
+        xml.required = true
+    }
+
+    dependsOn rootProject.subprojects.collect { p -> p.tasks.matching { it.name == 'compileJava' } }
+}

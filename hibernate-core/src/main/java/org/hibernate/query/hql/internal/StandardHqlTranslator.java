@@ -31,7 +31,6 @@ import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
-import static java.util.stream.Collectors.toList;
 import static org.hibernate.query.hql.HqlLogging.QUERY_LOGGER;
 
 /**
@@ -158,8 +157,12 @@ public class StandardHqlTranslator implements HqlTranslator {
 				errorText += "'*' (empty query string)";
 			}
 			else {
-				String lineText = hql.lines().collect( toList() ).get( line -1 );
-				String text = lineText.substring( 0, charPositionInLine) + "*" + lineText.substring(charPositionInLine);
+				// don't use String.lines() because it strips trailing bank lines
+				final String[] lines = hql.split( "\r?\n|\r" );
+				final String lineText = lines[lines.length - 1];
+				final String text =
+						lineText.substring( 0, charPositionInLine )
+							+ "*" + lineText.substring( charPositionInLine );
 				errorText += "'" + text + "'";
 			}
 		}

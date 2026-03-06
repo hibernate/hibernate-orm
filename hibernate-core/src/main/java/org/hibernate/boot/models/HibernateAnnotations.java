@@ -483,6 +483,10 @@ public interface HibernateAnnotations {
 			OnDelete.class,
 			OnDeleteAnnotation.class
 	);
+	OrmAnnotationDescriptor<GeneratorOptimizer, GeneratorOptimizerAnnotation> OPTIMIZER = new OrmAnnotationDescriptor<>(
+			GeneratorOptimizer.class,
+			GeneratorOptimizerAnnotation.class
+	);
 	OrmAnnotationDescriptor<OptimisticLock,OptimisticLockAnnotation> OPTIMISTIC_LOCK = new OrmAnnotationDescriptor<>(
 			OptimisticLock.class,
 			OptimisticLockAnnotation.class

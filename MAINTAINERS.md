@@ -84,7 +84,7 @@ In any case, before the release:
   * Check there are no resolved/closed issues in the corresponding "work-in-progress version"
     (e.g. `6.6`, `6.6-next`, ... naming convention may vary);
     if there are, you might want to assign them to your release.
-* Pull all upstream changes and perform `./gradlew preVerifyRelease` locally.
+* Pull all upstream changes and perform `./gradlew releasePrepare` locally.
 
 **If it's the first `Alpha`/`Beta` of a new major or minor release**, before the release:
 

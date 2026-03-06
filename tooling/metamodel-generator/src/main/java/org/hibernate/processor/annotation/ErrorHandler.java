@@ -62,7 +62,7 @@ class ErrorHandler implements Validation.Handler {
 	public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String message, RecognitionException e) {
 		errorCount++;
 		String prettyMessage = "illegal HQL syntax - "
-				+ prettifyAntlrError( offendingSymbol, line, charPositionInLine, message, e, queryString, false );
+				+ prettifyAntlrError( offendingSymbol, line, charPositionInLine, message, e, queryString, true );
 		context.message( element, mirror, value, prettyMessage, Diagnostic.Kind.ERROR );
 	}
 

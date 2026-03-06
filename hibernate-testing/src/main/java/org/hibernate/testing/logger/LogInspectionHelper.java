@@ -31,7 +31,7 @@ public final class LogInspectionHelper {
 		convertType( log ).clearAllListeners();
 	}
 
-	private static Log4J2DelegatingLogger convertType(BasicLogger log) {
+	private static DelegatingLogger convertType(BasicLogger log) {
 		if ( log instanceof DelegatingBasicLogger wrapper) {
 			//Most loggers generated via the annotation processor are of this type
 			try {
@@ -41,13 +41,13 @@ public final class LogInspectionHelper {
 				throw new RuntimeException( cause );
 			}
 		}
-		if ( ! ( log instanceof Log4J2DelegatingLogger ) ) {
+		if ( ! ( log instanceof DelegatingLogger) ) {
 			throw new AssertionFailure( "Unexpected log type: JBoss Logger didn't register the custom TestableLoggerProvider as logger provider" );
 		}
-		return (Log4J2DelegatingLogger) log;
+		return (DelegatingLogger) log;
 	}
 
-	private static Log4J2DelegatingLogger extractFromWrapper(DelegatingBasicLogger wrapper) throws Exception {
+	private static DelegatingLogger extractFromWrapper(DelegatingBasicLogger wrapper) throws Exception {
 		Field field = DelegatingBasicLogger.class.getDeclaredField( "log" );
 		field.setAccessible( true );
 		Object object = field.get( wrapper );

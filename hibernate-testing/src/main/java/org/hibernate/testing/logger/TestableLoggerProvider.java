@@ -4,14 +4,13 @@
  */
 package org.hibernate.testing.logger;
 
-import java.util.HashMap;
+import org.jboss.logging.Log4j2LoggerProvider;
+import org.jboss.logging.Logger;
+import org.jboss.logging.LoggerProvider;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import org.jboss.logging.Logger;
-
-import org.apache.logging.log4j.ThreadContext;
 
 /**
  * A {@code LoggerProvider} for JBoss Logger.
@@ -19,10 +18,15 @@ import org.apache.logging.log4j.ThreadContext;
  *
  * @author Sanne Grinovero (C) 2015 Red Hat Inc.
  */
-public class TestableLoggerProvider implements org.jboss.logging.LoggerProvider {
+public class TestableLoggerProvider implements LoggerProvider {
 
 	//We LEAK Logger instances: good only for testing as we know the set of categories is limited in practice
-	private static final ConcurrentMap<String,Logger> reuseLoggerInstances = new ConcurrentHashMap<>();
+	private static final ConcurrentMap<String, Logger> reuseLoggerInstances = new ConcurrentHashMap<>();
+	private final LoggerProvider delegate;
+
+	public TestableLoggerProvider() {
+		delegate = new Log4j2LoggerProvider();
+	}
 
 	// Maintainer note:
 	// Except the next method, which is adjusted to return our own Log4DelegatingLogger
@@ -33,7 +37,7 @@ public class TestableLoggerProvider implements org.jboss.logging.LoggerProvider 
 	public Logger getLogger(final String name) {
 		Logger logger = reuseLoggerInstances.get( name );
 		if ( logger == null ) {
-			logger = new Log4J2DelegatingLogger( "".equals( name ) ? "ROOT" : name );
+			logger = new DelegatingLogger( delegate.getLogger( "".equals( name ) ? "ROOT" : name ) );
 			Logger previous = reuseLoggerInstances.putIfAbsent( name, logger );
 			if ( previous != null ) {
 				return previous;
@@ -44,67 +48,61 @@ public class TestableLoggerProvider implements org.jboss.logging.LoggerProvider 
 
 	@Override
 	public void clearMdc() {
-		ThreadContext.clearMap();
+		delegate.clearMdc();
 	}
 
 	@Override
 	public Object putMdc(String key, Object value) {
-		try {
-			return ThreadContext.get( key );
-		}
-		finally {
-			ThreadContext.put( key, String.valueOf( value ) );
-		}
+		return delegate.putMdc( key, value );
 	}
 
 	@Override
 	public Object getMdc(String key) {
-		return ThreadContext.get( key );
+		return delegate.getMdc( key );
 	}
 
 	@Override
 	public void removeMdc(String key) {
-		ThreadContext.remove( key );
+		delegate.removeMdc( key );
 	}
 
 	@Override
 	public Map<String, Object> getMdcMap() {
-		return new HashMap<>( ThreadContext.getImmutableContext() );
+		return delegate.getMdcMap();
 	}
 
 	@Override
 	public void clearNdc() {
-		ThreadContext.clearStack();
+		delegate.clearNdc();
 	}
 
 	@Override
 	public String getNdc() {
-		return ThreadContext.peek();
+		return delegate.getNdc();
 	}
 
 	@Override
 	public int getNdcDepth() {
-		return ThreadContext.getDepth();
+		return delegate.getNdcDepth();
 	}
 
 	@Override
 	public String popNdc() {
-		return ThreadContext.pop();
+		return delegate.popNdc();
 	}
 
 	@Override
 	public String peekNdc() {
-		return ThreadContext.peek();
+		return delegate.peekNdc();
 	}
 
 	@Override
 	public void pushNdc(String message) {
-		ThreadContext.push( message );
+		delegate.pushNdc( message );
 	}
 
 	@Override
 	public void setNdcMaxDepth(int maxDepth) {
-		ThreadContext.trim( maxDepth );
+		delegate.setNdcMaxDepth( maxDepth );
 	}
-
 }

@@ -130,7 +130,12 @@ public class PropertyInferredData implements PropertyData {
 		// then, look on the member's type
 		// 		NOTE: this is not supported for collections-of-embeddables
 		// 		for the same reason stated above
-		return memberDetails.getAssociatedType().determineRawClass().getDirectAnnotationUsage( TargetEmbeddable.class );
+		ClassDetails memberRawClass = memberDetails.getAssociatedType().determineRawClass();
+		if (memberRawClass.isJdkClass()) {
+			return null;
+		}
+
+		return memberRawClass.getDirectAnnotationUsage( TargetEmbeddable.class );
 	}
 
 	private static ClassTypeDetailsImpl resolveTargetEmbeddableAnnotation(

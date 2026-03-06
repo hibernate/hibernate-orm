@@ -132,7 +132,6 @@ include::{example-dir-hql}/HQLTest.java[tags=hql-select-no-from]
 ----
 
 For complicated queries, it's probably best to explicitly specify a `select` list.
-====
 
 An alternative "simplest" query has _only_ a `select` list:
 
@@ -1802,11 +1801,11 @@ Extracts a scalar value by https://www.ietf.org/archive/id/draft-goessner-dispat
 include::{extrasdir}/json_value_bnf.txt[]
 ----
 
-The first argument is an expression to a JSON document. The second argument is a JSON path as String expression.
+The first argument is an expression to a JSON document. The second argument is a JSON path as a string expression.
 
 WARNING: Some databases might also allow extracting non-scalar values. Beware that this behavior is not portable.
 
-NOTE: It is recommended to only us the dot notation for JSON paths instead of the bracket notation,
+NOTE: It is recommended to use the dot notation for JSON paths instead of the bracket notation,
 since most databases support only that.
 
 [[hql-json-value-example]]

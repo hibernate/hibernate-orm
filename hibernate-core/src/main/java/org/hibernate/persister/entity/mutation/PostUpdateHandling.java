@@ -7,6 +7,7 @@ package org.hibernate.persister.entity.mutation;
 import org.hibernate.AssertionFailure;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.generator.values.GeneratedValues;
 
@@ -47,40 +48,53 @@ public class PostUpdateHandling implements PostExecutionCallback {
 
 	@Override
 	public void handle(SessionImplementor session) {
-		// Get aggregated GeneratedValues from all tables
-		final GeneratedValues generatedValues = generatedValuesCollector.getGeneratedValues();
-
 		final var persistenceContext = session.getPersistenceContextInternal();
 		final var entry = persistenceContext.getEntry( action.getInstance() );
 		if ( entry == null ) {
 			throw new AssertionFailure( "possible non-threadsafe access to session : could not locate entry after update" );
 		}
 
-		// 1. Handle database-generated properties (timestamps, etc.)
+		if ( action.getPersister().isMutable() ) {
+			handleMutableEntity( entry, session );
+		}
+		else {
+			handleImmutableEntity( entry, session );
+		}
+	}
+
+	private void handleMutableEntity(EntityEntry entry, SessionImplementor session) {
+		// Apply aggregated GeneratedValues from all tables
+		final GeneratedValues generatedValues = generatedValuesCollector.getGeneratedValues();
 		action.handleGeneratedProperties( entry, generatedValues );
 
-		// 2. Handle application-generated version increment
+		// Handle application-generated version increment
 		// This is complementary to UpdateBindPlan's GeneratedValues processing:
 		// - UpdateBindPlan handles database-generated values (timestamps, etc.)
 		// - This section handles application-generated values (version increments)
 		finalizeVersion( entry );
 
-		// 3. Handle deleted entities
 		action.handleDeleted( entry );
-
-		// 4. Update cache
 		action.updateCacheItem( previousVersion, cacheKey, entry );
-
-		// 5. Handle natural ID shared resolutions
-		action.handleNaturalIdSharedResolutions( action.getId(), action.getPersister(), persistenceContext );
-
-		// 6. Fire POST_UPDATE event listeners
+		action.handleNaturalIdSharedResolutions( action.getId(), action.getPersister(), session.getPersistenceContext() );
 		action.postUpdate();
 
-		// 7. Update statistics
 		final var statistics = session.getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
 			statistics.updateEntity( action.getPersister().getEntityName() );
+		}
+	}
+
+	private void handleImmutableEntity(EntityEntry entry, SessionImplementor session) {
+		action.updateCacheItem( previousVersion, cacheKey, entry );
+
+		// For versioned immutable entities, increment statistics
+		// This seems completely counter-intuitive, but there are tests with exactly
+		// this expectation.
+		if ( action.getPersister().isVersioned() ) {
+			final var statistics = session.getFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.updateEntity( action.getPersister().getEntityName() );
+			}
 		}
 	}
 

@@ -66,7 +66,9 @@ public class CycleBreaker {
 
 			final GraphEdge chosen = chooseEdgeToBreak(cycle);
 			if (chosen == null) {
-				// No breakable edge found - check if this is a DELETE cycle
+				// No breakable edge found - use fallback strategies
+
+				// Strategy 1: Check if this is a DELETE-only cycle
 				if (isDeleteOnlyCycle(cycle)) {
 					// DELETE cycles cannot be broken with NULL strategy
 					// Break an arbitrary edge to allow topological sort to proceed
@@ -75,6 +77,38 @@ public class CycleBreaker {
 					continue;
 				}
 
+				// Strategy 2: Try to break an UPDATE edge (UPDATEs can be deferred)
+				final GraphEdge updateEdge = findUpdateEdge(cycle);
+				if (updateEdge != null) {
+					updateEdge.setBroken(true);
+					// UPDATE operations don't need patches - they reference existing rows
+					continue;
+				}
+
+				// Strategy 3: Try to break a deferrable edge
+				final GraphEdge deferrableEdge = findDeferrableEdge(cycle);
+				if (deferrableEdge != null) {
+					deferrableEdge.setBroken(true);
+					// Deferrable constraints are checked at transaction commit
+					continue;
+				}
+
+				// Strategy 4: Break a non-DELETE edge as last resort
+				// Prefer INSERT over UPDATE, as INSERTs can potentially use NULL strategy
+				final GraphEdge nonDeleteEdge = findNonDeleteEdge(cycle);
+				if (nonDeleteEdge != null) {
+					nonDeleteEdge.setBroken(true);
+					// Try to install patch even for non-nullable FK
+					// This may fail at runtime but allows planning to proceed
+					if (nonDeleteEdge.getKeyNode() != null &&
+						nonDeleteEdge.getKeyNode().group().kind() == MutationKind.INSERT) {
+						installPatchForEdge(nonDeleteEdge);
+					}
+					continue;
+				}
+
+				// If we get here, cycle contains only DELETE operations with no deferrable edges
+				// This should not happen as isDeleteOnlyCycle() would have caught it
 				throw new IllegalStateException("Unbreakable cycle detected for SCC: " + describeScc(scc));
 			}
 
@@ -252,6 +286,70 @@ public class CycleBreaker {
 		if (toBreak != null) {
 			toBreak.setBroken(true);
 		}
+	}
+
+	/**
+	 * Find an UPDATE edge in the cycle. UPDATE operations can be safely broken
+	 * because they reference existing rows and don't create new dependencies.
+	 */
+	private GraphEdge findUpdateEdge(List<GraphEdge> cycle) {
+		for (GraphEdge e : cycle) {
+			if (e.isBroken()) {
+				continue;
+			}
+			// Check if either end of the edge is an UPDATE operation
+			if (e.getFrom().group().kind() == MutationKind.UPDATE ||
+				e.getTo().group().kind() == MutationKind.UPDATE) {
+				return e;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Find a deferrable edge in the cycle. Deferrable constraints are checked
+	 * at transaction commit, so breaking these edges is safe.
+	 */
+	private GraphEdge findDeferrableEdge(List<GraphEdge> cycle) {
+		for (GraphEdge e : cycle) {
+			if (e.isBroken()) {
+				continue;
+			}
+			if (e.isDeferrable()) {
+				return e;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Find a non-DELETE edge in the cycle. As a last resort, we can break
+	 * INSERT edges even with non-nullable FKs, though this may cause runtime errors.
+	 */
+	private GraphEdge findNonDeleteEdge(List<GraphEdge> cycle) {
+		// First try to find INSERT edges (more likely to work with patches)
+		for (GraphEdge e : cycle) {
+			if (e.isBroken()) {
+				continue;
+			}
+			if (e.getFrom().group().kind() == MutationKind.INSERT &&
+				e.getTo().group().kind() == MutationKind.INSERT) {
+				return e;
+			}
+		}
+
+		// Then try any non-DELETE edge
+		for (GraphEdge e : cycle) {
+			if (e.isBroken()) {
+				continue;
+			}
+			if (e.getFrom().group().kind() != MutationKind.DELETE ||
+				e.getTo().group().kind() != MutationKind.DELETE) {
+				return e;
+			}
+		}
+
+		return null;
 	}
 
 

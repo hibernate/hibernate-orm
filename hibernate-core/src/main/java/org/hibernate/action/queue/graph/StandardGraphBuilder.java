@@ -202,6 +202,37 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 			}
 		}
 
+		// Create DELETE -> INSERT edges for same table
+		// This ensures DELETE operations complete before INSERT operations to the same table,
+		// avoiding unique constraint violations when replacing entities (e.g., orphan removal + insert)
+		for (String tableName : deleteNodeByTable.keySet()) {
+			final GroupNode tableDelete = deleteNodeByTable.get(tableName);
+			final GroupNode tableInsert = insertNodeByTable.get(tableName);
+
+			if (tableInsert != null && tableDelete != null) {
+				// DELETE must happen before INSERT to same table
+				final GraphEdge edge = new GraphEdge(
+						// No specific FK (this is a table-level dependency)
+						null,
+						null,
+						// FROM delete (graphing)
+						tableDelete,
+						// TO insert (graphing)
+						tableInsert,
+						// NOT breakable - must maintain this order
+						false,
+						// No break cost
+						0,
+						// No columns
+						EMPTY_SELECTABLES,
+						null,
+						edgeId++
+				);
+
+				outgoing.computeIfAbsent(tableDelete, k -> new ArrayList<>()).add(edge);
+			}
+		}
+
 		for (GroupNode n : nodes) {
 			outgoing.computeIfAbsent(n, k -> new ArrayList<>());
 		}

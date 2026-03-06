@@ -6,6 +6,7 @@ package org.hibernate.orm.test.action.queue.integration;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.*;
@@ -29,6 +30,11 @@ import static org.junit.jupiter.api.Assertions.*;
 		DeleteCascadeTest.Employee.class
 })
 public class DeleteCascadeTest {
+
+	@AfterEach
+	public void cleanup(EntityManagerFactoryScope scope) {
+		scope.dropData();
+	}
 
 	@Test
 	public void testDeleteWithCascadeAll(EntityManagerFactoryScope scope) {

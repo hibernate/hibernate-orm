@@ -42,9 +42,6 @@ public class CollectionRecreateDecomposer implements MutationDecomposer<Collecti
 
 		final Object cacheKey = lockCacheItem(action, session);
 
-		// Register callback even if no operations (for event firing, statistics)
-		postExecutionCallbackRegistry.accept(new PostCollectionRecreateHandling(action, cacheKey));
-
 		final List<PlannedOperation> operations = new java.util.ArrayList<>();
 
 		// Decompose insert operations
@@ -59,18 +56,23 @@ public class CollectionRecreateDecomposer implements MutationDecomposer<Collecti
 			) );
 		}
 
-		// Decompose write index operations (for @OrderColumn collections)
+		// Handle write index operations (for @OrderColumn collections)
+		// Execute as post-execution callback to ensure INSERT operations complete first
 		final WriteIndexCoordinator writeIndexCoordinator = getWriteIndexCoordinator(persister);
 		if (writeIndexCoordinator != null) {
-			operations.addAll( writeIndexCoordinator.decomposeWriteIndex(
-					collection,
-					collection.entries( persister ),
-					key,
-					true, // resetIndex = true for recreate
-					ordinalBase,
-					session
-			) );
+			postExecutionCallbackRegistry.accept( sess -> {
+				writeIndexCoordinator.writeIndex(
+						collection,
+						collection.entries( persister ),
+						key,
+						true, // resetIndex = true for recreate
+						sess
+				);
+			} );
 		}
+
+		// Register callback even if no operations (for event firing, statistics)
+		postExecutionCallbackRegistry.accept(new PostCollectionRecreateHandling(action, cacheKey));
 
 		return operations;
 	}

@@ -16,6 +16,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.TRACE;
@@ -34,7 +35,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface CurrentSessionLogging extends BasicLogger {
 	String NAME = SubSystemLogging.BASE + ".current_session";
 
-	CurrentSessionLogging CURRENT_SESSION_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), CurrentSessionLogging.class, NAME );
+	CurrentSessionLogging CURRENT_SESSION_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), CurrentSessionLogging.class, NAME, Locale.ROOT );
 
 	@LogMessage(level = WARN)
 	@Message(id = 90070001, value = "Session already bound on call to bind(); make sure you clean up your sessions")

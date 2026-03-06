@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.INFO;
@@ -39,7 +40,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 @Internal
 public interface JaxbLogger extends BasicLogger {
 	String LOGGER_NAME = BootLogging.NAME + ".jaxb";
-	JaxbLogger JAXB_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JaxbLogger.class, LOGGER_NAME );
+	JaxbLogger JAXB_LOGGER = Logger.getMessageLogger( MethodHandles.lookup(), JaxbLogger.class, LOGGER_NAME, Locale.ROOT );
 
 	@LogMessage(level = DEBUG)
 	@Message(id = 90005501, value = "Unable to close StAX reader")

@@ -20,6 +20,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 	private final int numberOfRows;
 	private final JdbcValuesMapping resolvedMapping;
 	private final int[] valueIndexesToCacheIndexes;
+	private final boolean cacheCompatible;
 	private final int offset;
 	private final int resultCount;
 	private int position = -1;
@@ -27,11 +28,53 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 	public JdbcValuesCacheHit(List<?> cachedResults, JdbcValuesMapping resolvedMapping) {
 		// See QueryCachePutManagerEnabledImpl for what is being put into the cached results
 		this.cachedResults = cachedResults;
-		this.offset = !cachedResults.isEmpty() && cachedResults.get( 0 ) instanceof CachedJdbcValuesMetadata ? 1 : 0;
+		final CachedJdbcValuesMetadata metadata = !cachedResults.isEmpty()
+				&& cachedResults.get( 0 ) instanceof CachedJdbcValuesMetadata cachedMetadata
+						? cachedMetadata
+						: null;
+		this.offset = metadata != null ? 1 : 0;
 		this.numberOfRows = cachedResults.size() - offset - 1;
 		this.resultCount = cachedResults.isEmpty() ? 0 : (int) cachedResults.get( cachedResults.size() - 1 );
 		this.resolvedMapping = resolvedMapping;
-		this.valueIndexesToCacheIndexes = resolvedMapping.getValueIndexesToCacheIndexes();
+		if ( metadata != null ) {
+			this.cacheCompatible = isCacheCompatible( resolvedMapping, metadata );
+			this.valueIndexesToCacheIndexes = metadata.getValueIndexesToCacheIndexes();
+		}
+		else {
+			this.cacheCompatible = true;
+			this.valueIndexesToCacheIndexes = resolvedMapping.getValueIndexesToCacheIndexes();
+		}
+	}
+
+	/**
+	 * Checks whether the cached data is compatible with the reader's mapping,
+	 * by verifying that the Java types of cached values match the reader's expected types.
+	 *
+	 * @param resolvedMapping the current result type's mapping
+	 * @param metadata the cached metadata containing stored Java types
+	 */
+	private static boolean isCacheCompatible(
+			JdbcValuesMapping resolvedMapping,
+			CachedJdbcValuesMetadata metadata) {
+		for ( var selection : resolvedMapping.getSqlSelections() ) {
+			final int valueIndex = selection.getValuesArrayPosition();
+			final var storedJavaType = metadata.getStoredJavaType( valueIndex );
+			if ( storedJavaType == null
+					|| selection.getExpressionType().getSingleJdbcMapping().getJavaTypeDescriptor() != storedJavaType ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Returns whether the cached data is compatible with the resolved mapping.
+	 * When {@code false}, the cache entry was populated by a query with a different
+	 * result type that either cached different columns or used incompatible Java types,
+	 * and needs to be re-populated.
+	 */
+	public boolean isCacheCompatible() {
+		return cacheCompatible;
 	}
 
 	@Override
@@ -172,9 +215,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 		}
 		final Object row = cachedResults.get( position + offset );
 		if ( row instanceof Object[] array ) {
-			return valueIndexesToCacheIndexes == null
-					? array[valueIndex]
-					: array[valueIndexesToCacheIndexes[valueIndex]];
+			return array[valueIndexesToCacheIndexes[valueIndex]];
 		}
 		else {
 			assert valueIndexesToCacheIndexes[valueIndex] == 0;

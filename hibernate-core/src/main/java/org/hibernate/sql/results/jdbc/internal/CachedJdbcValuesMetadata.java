@@ -11,15 +11,25 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.internal.util.collections.ArrayHelper.indexOf;
 
 public final class CachedJdbcValuesMetadata implements JdbcValuesMetadata, Serializable {
 	private final String[] columnNames;
 	private final BasicType<?>[] types;
+	private final int[] valueIndexesToCacheIndexes;
 
-	public CachedJdbcValuesMetadata(String[] columnNames, BasicType<?>[] types) {
+	public CachedJdbcValuesMetadata(String[] columnNames, BasicType<?>[] types, int[] valueIndexesToCacheIndexes) {
 		this.columnNames = columnNames;
 		this.types = types;
+		this.valueIndexesToCacheIndexes = valueIndexesToCacheIndexes;
+	}
+
+	public int[] getValueIndexesToCacheIndexes() {
+		return valueIndexesToCacheIndexes;
+	}
+
+	public JavaType<?> getStoredJavaType(int columnIndex) {
+		final var type = types[columnIndex];
+		return type != null ? type.getJavaTypeDescriptor() : null;
 	}
 
 	@Override
@@ -29,18 +39,19 @@ public final class CachedJdbcValuesMetadata implements JdbcValuesMetadata, Seria
 
 	@Override
 	public int resolveColumnPosition(String columnName) {
-		final int position = indexOf( columnNames, columnName ) + 1;
-		if ( position == 0 ) {
-			throw new IllegalStateException( "Unexpected resolving of unavailable column: " + columnName );
+		for ( int i = 0; i < columnNames.length; i++ ) {
+			if ( columnName.equalsIgnoreCase( columnNames[i] ) ) {
+				return i + 1;
+			}
 		}
-		return position;
+		throw new CacheMetadataIncompleteException( "Column unavailable with name: " + columnName );
 	}
 
 	@Override
 	public String resolveColumnName(int position) {
 		final String name = columnNames[position - 1];
 		if ( name == null ) {
-			throw new IllegalStateException( "Unexpected resolving of unavailable column at position: " + position );
+			throw new CacheMetadataIncompleteException( "Column unavailable at position: " + position );
 		}
 		return name;
 	}
@@ -52,7 +63,7 @@ public final class CachedJdbcValuesMetadata implements JdbcValuesMetadata, Seria
 			TypeConfiguration typeConfiguration) {
 		final var type = types[position - 1];
 		if ( type == null ) {
-			throw new IllegalStateException( "Unexpected resolving of unavailable column at position: " + position );
+			throw new CacheMetadataIncompleteException( "Column unavailable at position: " + position );
 		}
 		if ( explicitJavaType == null || type.getJavaTypeDescriptor() == explicitJavaType ) {
 			//noinspection unchecked
@@ -61,6 +72,15 @@ public final class CachedJdbcValuesMetadata implements JdbcValuesMetadata, Seria
 		else {
 			return typeConfiguration.getBasicTypeRegistry()
 					.resolve( explicitJavaType, type.getJdbcType() );
+		}
+	}
+
+	/**
+	 * Thrown when the cached metadata does not contain information for a requested column
+	 */
+	public static class CacheMetadataIncompleteException extends RuntimeException {
+		public CacheMetadataIncompleteException(String message) {
+			super( message );
 		}
 	}
 

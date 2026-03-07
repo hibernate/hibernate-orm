@@ -139,3 +139,5 @@ Columns mapped by `@Version` fields are now declared `not null` by default.
 
 This section describes changes to dependencies used by Hibernate ORM.
 
+* Upgrade to Byte Buddy 1.18
+* Upgrade to Hibernate Models 1.1

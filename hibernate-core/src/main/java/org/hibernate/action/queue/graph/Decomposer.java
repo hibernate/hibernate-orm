@@ -11,6 +11,7 @@ import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityUpdateAction;
+import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.spi.Executable;
@@ -112,6 +113,23 @@ public class Decomposer {
 					postExecCallbackRegistry,
 					session
 			);
+		}
+		if (executable instanceof QueuedOperationCollectionAction qoca) {
+			// QueuedOperationCollectionAction is a special meta-action that represents operations
+			// on the collection that are "queued" (adding an element to a uninitialized bag, e.g.).
+			// It must execute before any other CollectionAction involving the same collection.
+			// Since it calls processQueuedOps() which handles the queued operations directly,
+			// it doesn't decompose into standard PlannedOperations.  Execute it immediately and
+			// return empty list.
+
+			// todo (ActionQueue2) : Consider adding the decomposition.
+			//  	Conceptually we could decompose these queued operations into its constituent PlannedOperations.
+			//		That's not particularly difficult.
+			//		The only consideration is that these still need to be executed before all other
+			//		operations for that collection; so not sure its worth the effort?
+
+			qoca.execute();
+			return Collections.emptyList();
 		}
 
 		throw new UnsupportedOperationException( "Decomposition not supported for " +  executable.getClass().getName() );

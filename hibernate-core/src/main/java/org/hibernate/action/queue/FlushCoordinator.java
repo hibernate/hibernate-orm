@@ -141,6 +141,18 @@ public class FlushCoordinator {
 			// Now make the entity managed (ID has been generated)
 			if (!insert.isVeto()) {
 				insert.makeEntityManaged();
+
+				// After making the entity managed, resolve any waiting inserts that depended on it
+				// This mirrors ActionQueueLegacy behavior where resolveDependentActions is called
+				// after each entity becomes managed
+				final var resolvedOps = decomposer.resolveAndDecompose(insert.getInstance());
+				if (!resolvedOps.isEmpty()) {
+					// Execute the resolved operations directly
+					// These should be other IDENTITY inserts that were waiting for this entity
+					for (var op : resolvedOps) {
+						executor.executePlannedOperation(op);
+					}
+				}
 			}
 		}
 		catch (Exception e) {

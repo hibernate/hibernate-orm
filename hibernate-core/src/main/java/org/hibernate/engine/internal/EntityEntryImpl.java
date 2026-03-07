@@ -331,11 +331,16 @@ public final class EntityEntryImpl implements Serializable, EntityEntry {
 
 	@Override
 	public boolean isNullifiable(boolean earlyInsert, SharedSessionContractImplementor session) {
-		if ( getStatus() == SAVING ) {
-			return true;
-		}
-		else if ( earlyInsert ) {
+		if ( earlyInsert ) {
+			// For IDENTITY inserts, check database existence first.
+			// Even if status is SAVING (during merge cascade), if the entity
+			// exists in DB (was already inserted), don't nullify the FK.
 			return !isExistsInDatabase();
+		}
+		else if ( getStatus() == SAVING ) {
+			// For non-IDENTITY inserts, SAVING status means not yet in DB,
+			// so FK should be nullified to avoid constraint violations.
+			return true;
 		}
 		else {
 			return session.getPersistenceContextInternal()

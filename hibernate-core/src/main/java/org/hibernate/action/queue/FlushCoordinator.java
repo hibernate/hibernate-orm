@@ -132,7 +132,8 @@ public class FlushCoordinator {
 	/// of a single IDENTITY insert action.
 	///
 	/// @param insert the IDENTITY insert action to execute
-	public void executeIdentityInsert(AbstractEntityInsertAction insert) {
+	/// @param pendingInsertsExecutor callback to execute any pending inserts after this entity is managed
+	public void executeIdentityInsert(AbstractEntityInsertAction insert, Runnable pendingInsertsExecutor) {
 		try {
 			// Execute IDENTITY insert directly
 			// This handles ID generation, EntityKey creation, event firing, etc.
@@ -142,15 +143,23 @@ public class FlushCoordinator {
 			if (!insert.isVeto()) {
 				insert.makeEntityManaged();
 
+				// CRITICAL: Now that this entity is managed (in PC with ID), execute any pending inserts.
+				// This allows pending inserts to reference this entity during decomposition.
+				// Must happen AFTER makeEntityManaged() but BEFORE resolveDependentActions().
+				pendingInsertsExecutor.run();
+
 				// After making the entity managed, resolve any waiting inserts that depended on it
 				// This mirrors ActionQueueLegacy behavior where resolveDependentActions is called
-				// after each entity becomes managed
-				final var resolvedOps = decomposer.resolveAndDecompose(insert.getInstance());
-				if (!resolvedOps.isEmpty()) {
-					// Execute the resolved operations directly
-					// These should be other IDENTITY inserts that were waiting for this entity
-					for (var op : resolvedOps) {
-						executor.executePlannedOperation(op);
+				// after each entity becomes managed. Returns the original insert actions so they
+				// can be properly executed with IDENTITY ID handling.
+				final var resolvedActions = decomposer.resolveDependentActions(insert.getInstance());
+				if (!resolvedActions.isEmpty()) {
+					// Re-execute each resolved action - they're now ready because dependencies are satisfied
+					// For IDENTITY inserts, this will execute them immediately (recursive call)
+					// For regular inserts, they would be added to queue
+					for (var resolvedAction : resolvedActions) {
+						// Execute directly - we know dependencies are resolved
+						executeIdentityInsert(resolvedAction, pendingInsertsExecutor);
 					}
 				}
 			}

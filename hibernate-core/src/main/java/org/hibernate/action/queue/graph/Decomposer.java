@@ -119,11 +119,13 @@ public class Decomposer {
 
 	/**
 	 * Track an insert action that has unresolved dependencies on transient entities.
+	 * This is called for IDENTITY inserts that have transient FK dependencies and need
+	 * to be deferred until those dependencies are satisfied.
 	 *
 	 * @param insert the insert action with unresolved dependencies
 	 * @param dependencies the non-nullable transient dependencies
 	 */
-	private void trackUnresolvedInsert(AbstractEntityInsertAction insert, NonNullableTransientDependencies dependencies) {
+	public void trackUnresolvedInsert(AbstractEntityInsertAction insert, NonNullableTransientDependencies dependencies) {
 		unresolvedInserts.put(insert, dependencies);
 
 		// Build reverse mapping for fast resolution lookup
@@ -132,6 +134,41 @@ public class Decomposer {
 					.computeIfAbsent(transientEntity, k -> Collections.newSetFromMap(new IdentityHashMap<>()))
 					.add(insert);
 		}
+	}
+
+	/**
+	 * Resolve inserts that were waiting for the specified entity and return the resolved actions.
+	 * This should be called after an entity becomes managed to re-add resolved inserts for execution.
+	 *
+	 * @param managedEntity the entity that just became managed
+	 * @return list of AbstractEntityInsertActions that were resolved (all dependencies now satisfied)
+	 */
+	public List<AbstractEntityInsertAction> resolveDependentActions(Object managedEntity) {
+		// Find inserts that were waiting for this entity
+		final Set<AbstractEntityInsertAction> dependentInserts = insertsByTransientEntity.remove(managedEntity);
+
+		if (dependentInserts == null || dependentInserts.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		final List<AbstractEntityInsertAction> fullyResolved = new ArrayList<>();
+
+		for (AbstractEntityInsertAction entityInsert : dependentInserts) {
+			final NonNullableTransientDependencies dependencies = unresolvedInserts.get(entityInsert);
+
+			// Remove this entity from the insert's dependency list
+			dependencies.resolveNonNullableTransientEntity(managedEntity);
+
+			// If all dependencies are now satisfied, it can be executed
+			if (dependencies.isEmpty()) {
+				fullyResolved.add(entityInsert);
+			}
+		}
+
+		// Clean up fully resolved inserts
+		fullyResolved.forEach(unresolvedInserts::remove);
+
+		return fullyResolved;
 	}
 
 	/**

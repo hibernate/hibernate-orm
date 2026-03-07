@@ -125,28 +125,20 @@ public class GraphBasedActionQueue implements ActionQueue {
 			// 4. But B is still transient (being processed) → fail!
 			final var nonNullableTransientDeps = insert.findNonNullableTransientEntities();
 			if (nonNullableTransientDeps != null) {
-				// Defer this insert by adding to pendingActions
-				// The decomposer will track it as unresolved and resolve it later
+				// Defer this IDENTITY insert - DON'T add to pendingActions
+				// Only track in Decomposer's unresolvedInserts
+				// It will be resolved and executed via executeIdentityInsert when dependencies are satisfied
 				// NOTE: Don't call makeEntityManaged() here - the entity stays transient until resolved
-				pendingActions.add(insert);
+				// Track in Decomposer manually since we're not going through decompose()
+				flushCoordinator.getDecomposer().trackUnresolvedInsert(insert, nonNullableTransientDeps);
 				insertCount++;
 				return;
 			}
 
-			// CRITICAL: Before executing an IDENTITY insert, we must flush any pending
-			// parent inserts to avoid transient reference errors.
-			//
-			// Example scenario that fails without this:
-			// 1. persist(parent) with assigned ID → added to pendingActions
-			// 2. Cascade persist(child) with IDENTITY generation
-			// 3. Child tries to insert with FK to parent
-			// 4. But parent not in database yet → transient reference error!
-			//
-			// Solution: Execute pending inserts first (mirrors ActionQueueLegacy behavior)
-			executePendingInserts();
-
-			// Now execute IDENTITY insert immediately via FlushCoordinator
-			flushCoordinator.executeIdentityInsert(insert);
+			// Execute IDENTITY insert immediately via FlushCoordinator
+			// NOTE: executePendingInserts is called INSIDE executeIdentityInsert
+			// AFTER makeEntityManaged() so this entity is available for FK references
+			flushCoordinator.executeIdentityInsert(insert, this::executePendingInserts);
 
 			// Still increment counter for stats
 			insertCount++;

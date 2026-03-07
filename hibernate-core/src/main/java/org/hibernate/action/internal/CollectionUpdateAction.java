@@ -23,6 +23,8 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 public final class CollectionUpdateAction extends CollectionAction {
 
 	private final boolean emptySnapshot;
+	private final Object affectedOwner;
+	private final Object affectedOwnerId;
 
 	/**
 	 * Constructs a CollectionUpdateAction
@@ -40,6 +42,12 @@ public final class CollectionUpdateAction extends CollectionAction {
 				final EventSource session) {
 		super( persister, collection, id, session );
 		this.emptySnapshot = emptySnapshot;
+		// Capture the owner at action creation time so it's available when the post-event
+		// fires (which may be after the collection owner reference has been cleared)
+		this.affectedOwner = collection.getOwner();
+		// Also capture the owner ID from the entity entry at action creation time
+		final var ownerEntry = session.getPersistenceContextInternal().getEntry( affectedOwner );
+		this.affectedOwnerId = ownerEntry != null ? ownerEntry.getId() : null;
 	}
 
 	@Override
@@ -143,6 +151,14 @@ public final class CollectionUpdateAction extends CollectionAction {
 
 	private PostCollectionUpdateEvent newPostCollectionUpdateEvent() {
 		return new PostCollectionUpdateEvent( getPersister(), getCollection(), eventSource() );
+	}
+
+	public Object getAffectedOwner() {
+		return affectedOwner;
+	}
+
+	public Object getAffectedOwnerId() {
+		return affectedOwnerId;
 	}
 
 }

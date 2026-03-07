@@ -80,7 +80,8 @@ public class PostCollectionRemoveHandling implements PostExecutionCallback {
 				action.getPersister(),
 				action.getCollection(),
 				(org.hibernate.event.spi.EventSource) session,
-				action.getAffectedOwner()
+				action.getAffectedOwner(),
+				action.getAffectedOwnerId()
 		);
 	}
 }

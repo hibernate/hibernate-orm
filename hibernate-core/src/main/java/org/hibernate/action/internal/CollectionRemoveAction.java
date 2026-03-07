@@ -20,6 +20,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 public final class CollectionRemoveAction extends CollectionAction {
 
 	private final Object affectedOwner;
+	private final Object affectedOwnerId;
 	private final boolean emptySnapshot;
 
 	/**
@@ -50,6 +51,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 		// so capture its value as the affected owner so it is accessible to
 		// both pre- and post- events
 		this.affectedOwner = session.getPersistenceContextInternal().getLoadedCollectionOwnerOrNull( collection );
+		this.affectedOwnerId = session.getPersistenceContextInternal().getLoadedCollectionOwnerIdOrNull( collection );
 	}
 
 	/**
@@ -77,6 +79,9 @@ public final class CollectionRemoveAction extends CollectionAction {
 		}
 		this.emptySnapshot = emptySnapshot;
 		this.affectedOwner = affectedOwner;
+		// Get the owner ID from the entity entry at action creation time
+		final var ownerEntry = session.getPersistenceContextInternal().getEntry( affectedOwner );
+		this.affectedOwnerId = ownerEntry != null ? ownerEntry.getId() : null;
 	}
 
 	/**
@@ -95,6 +100,7 @@ public final class CollectionRemoveAction extends CollectionAction {
 		super( persister, null, id, session );
 		emptySnapshot = false;
 		affectedOwner = null;
+		affectedOwnerId = null;
 	}
 
 	@Override
@@ -155,5 +161,9 @@ public final class CollectionRemoveAction extends CollectionAction {
 
 	public Object getAffectedOwner() {
 		return affectedOwner;
+	}
+
+	public Object getAffectedOwnerId() {
+		return affectedOwnerId;
 	}
 }

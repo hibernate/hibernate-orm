@@ -79,7 +79,9 @@ public class PostCollectionUpdateHandling implements PostExecutionCallback {
 		return new PostCollectionUpdateEvent(
 				action.getPersister(),
 				action.getCollection(),
-				(org.hibernate.event.spi.EventSource) session
+				(org.hibernate.event.spi.EventSource) session,
+				action.getAffectedOwner(),
+				action.getAffectedOwnerId()
 		);
 	}
 }

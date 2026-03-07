@@ -18,6 +18,9 @@ import org.hibernate.persister.collection.CollectionPersister;
  */
 public final class CollectionRecreateAction extends CollectionAction {
 
+	private final Object affectedOwner;
+	private final Object affectedOwnerId;
+
 	/**
 	 * Constructs a CollectionRecreateAction
 	 *  @param collection The collection being recreated
@@ -31,6 +34,12 @@ public final class CollectionRecreateAction extends CollectionAction {
 			final Object id,
 			final EventSource session) {
 		super( persister, collection, id, session );
+		// Capture the owner at action creation time so it's available when the post-event
+		// fires (which may be after the collection owner reference has been cleared)
+		this.affectedOwner = collection.getOwner();
+		// Also capture the owner ID from the entity entry at action creation time
+		final var ownerEntry = session.getPersistenceContextInternal().getEntry( affectedOwner );
+		this.affectedOwnerId = ownerEntry != null ? ownerEntry.getId() : null;
 	}
 
 	@Override
@@ -81,5 +90,13 @@ public final class CollectionRecreateAction extends CollectionAction {
 
 	private PostCollectionRecreateEvent newPostCollectionRecreateEvent() {
 		return new PostCollectionRecreateEvent( getPersister(), getCollection(), eventSource() );
+	}
+
+	public Object getAffectedOwner() {
+		return affectedOwner;
+	}
+
+	public Object getAffectedOwnerId() {
+		return affectedOwnerId;
 	}
 }

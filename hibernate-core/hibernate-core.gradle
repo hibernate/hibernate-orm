@@ -11,6 +11,7 @@ plugins {
     id "org.hibernate.build.version-injection"
     id "org.hibernate.orm.antlr"
     id "local-xjc-plugin"
+    id "me.champeau.jmh" version "0.7.2"
 }
 
 description = 'Hibernate\'s core ORM functionality'
@@ -91,6 +92,9 @@ dependencies {
     // dependency here.
     antlr libs.antlr
     antlr libs.antlrRuntime
+
+    // JMH benchmarks
+    jmh jdbcLibs.h2
 }
 
 jar {
@@ -111,6 +115,19 @@ sourceSets {
             srcDir 'src/test/resources'
             srcDir 'src/test/bundles'
         }
+    }
+}
+
+jmh {
+    jmhVersion = '1.37'
+    warmupIterations = 5
+    iterations = 10
+    fork = 1
+    zip64 = true
+
+    // Can be overridden via -Pjmh.include="pattern"
+    if (project.hasProperty('jmh.include')) {
+        includes = [project.property('jmh.include')]
     }
 }
 

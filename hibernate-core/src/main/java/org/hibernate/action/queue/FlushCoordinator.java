@@ -178,7 +178,11 @@ public class FlushCoordinator {
 
 		var operationGroups = decomposeExecutables( actions, postExecutionCallbacks::add );
 		if ( operationGroups.isEmpty() ) {
-			// No operations decomposed - check if we have unresolved inserts that can never resolve
+			// No SQL operations needed, but we must still execute post-execution callbacks
+			// because decomposers may have registered callbacks for event firing, cache updates, etc.
+			// Example: CollectionRecreateAction for an inverse one-to-many has no SQL but still
+			// needs to fire PostCollectionRecreate event and update collection state.
+			afterAllOperationsExecuted( actions, postExecutionCallbacks );
 			decomposer.validateNoUnresolvedInserts();
 			return;
 		}

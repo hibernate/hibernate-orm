@@ -66,15 +66,23 @@ public class CycleBreaker {
 
 			final GraphEdge chosen = chooseEdgeToBreak(cycle);
 			if (chosen == null) {
-				// No breakable edge found - use fallback strategies
+				// No edge found by standard criteria
+				// Use fallback strategies (these work even when chooseEdgeToBreak can't decide)
 
 				// Strategy 1: Check if this is a DELETE-only cycle
 				if (isDeleteOnlyCycle(cycle)) {
 					// DELETE cycles cannot be broken with NULL strategy
 					// Break an arbitrary edge to allow topological sort to proceed
 					// Rely on deferrable constraints or batch execution
+					// NOTE: This works even if all edges are non-breakable (DELETE edges always are)
 					breakArbitraryDeleteEdge(cycle);
 					continue;
+				}
+
+				// For non-DELETE cycles, check if ANY edges are breakable
+				if (!hasAnyBreakableEdge(cycle)) {
+					// All edges are marked as unbreakable - cannot proceed
+					throw new IllegalStateException("Unbreakable cycle detected for SCC: " + describeScc(scc));
 				}
 
 				// Strategy 2: Try to break an UPDATE edge (UPDATEs can be deferred)
@@ -206,6 +214,15 @@ public class CycleBreaker {
 		return best;
 	}
 
+	private boolean hasAnyBreakableEdge(List<GraphEdge> cycle) {
+		for (GraphEdge e : cycle) {
+			if (!e.isBroken() && e.isBreakable()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	private void installPatchForEdge(GraphEdge chosen) {
 		// NOTE: this is always an INSERT
 
@@ -261,6 +278,10 @@ public class CycleBreaker {
 		// For DELETE cycles, we can't use NULL strategy
 		// Break an arbitrary edge to allow topological sort to proceed
 		// The database must handle the cycle via deferrable constraints or cascade
+		//
+		// NOTE: DELETE edges are always marked as non-breakable (can't use NULL-INSERT)
+		// But for DELETE-only cycles, we MUST break an edge to allow any progress.
+		// This is especially true for self-referencing FKs where you need to delete rows.
 
 		GraphEdge toBreak = null;
 
@@ -273,7 +294,7 @@ public class CycleBreaker {
 			}
 		}
 
-		// Otherwise just pick the first non-broken edge
+		// Otherwise just pick the first non-broken edge (ignore isBreakable for DELETE cycles)
 		if (toBreak == null) {
 			for (GraphEdge e : cycle) {
 				if (!e.isBroken()) {

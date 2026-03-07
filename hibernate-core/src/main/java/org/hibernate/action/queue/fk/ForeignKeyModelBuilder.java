@@ -110,13 +110,25 @@ public final class ForeignKeyModelBuilder {
 
 		// key FK (collection table -> owner)
 		final ForeignKeyDescriptor keyFk = attributeMapping.getKeyDescriptor();
-		addIfConstraint(keyFk, keyFk.getKeyPart(), keyFk.getTargetPart(), false, foreignKeys, seen);
+		final boolean keyNullable = areColumnsNullable(keyFk.getKeyPart());
+		addIfConstraint(keyFk, keyFk.getKeyPart(), keyFk.getTargetPart(), keyNullable, foreignKeys, seen);
 
-		// many-to-many join table has element FK too
+		// many-to-many join table has element FK too (collection table -> child)
 		if (attributeMapping.getElementDescriptor() instanceof ManyToManyCollectionPart m2m) {
 			final ForeignKeyDescriptor elementFk = m2m.getForeignKeyDescriptor();
-			addIfConstraint(elementFk, elementFk.getKeyPart(), elementFk.getTargetPart(), m2m.isOptional(), foreignKeys, seen);
+			final boolean inverseKeyNullable = areColumnsNullable(elementFk.getKeyPart());
+			addIfConstraint(elementFk, elementFk.getKeyPart(), elementFk.getTargetPart(), inverseKeyNullable, foreignKeys, seen);
 		}
+	}
+
+	private boolean areColumnsNullable(SelectableMappings columns) {
+		// FK is nullable if ALL its columns are nullable
+		for ( int i = 0; i < columns.getJdbcTypeCount(); i++ ) {
+			if ( !columns.getSelectable( i ).isNullable() ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/// Create foreignKeys for tables within an entity mapping.

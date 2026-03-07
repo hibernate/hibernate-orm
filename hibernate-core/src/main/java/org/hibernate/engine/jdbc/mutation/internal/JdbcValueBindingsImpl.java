@@ -138,7 +138,11 @@ public class JdbcValueBindingsImpl implements JdbcValueBindingsImplementor {
 		final String normalizedTableName = normalizeTableName( tableName );
 		final String normalizedColumnName = normalizeColumnName( columnName );
 		final BindingGroup bindingGroup = bindingGroupMap.get( normalizedTableName );
-		return bindingGroup.getBinding( normalizedColumnName, usage ).getValue();
+		if ( bindingGroup == null ) {
+			return null;
+		}
+		final Binding binding = bindingGroup.findBinding( normalizedColumnName, usage );
+		return binding == null ? null : binding.getValue();
 	}
 
 	@Override

@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.jdbc.mutation.spi;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 
@@ -15,7 +16,7 @@ public interface JdbcValueBindingsImplementor extends JdbcValueBindings {
 	/// Retrieve the currently bound value for the given parameter.
 	///
 	/// @see Binding#getValue()
-	Object getBoundValue(String tableName, String columnName, ParameterUsage usage);
+	@Nullable Object getBoundValue(String tableName, String columnName, ParameterUsage usage);
 
 	/// Allow replacing a bound value.
 	/// Used by cycle breaking to inject mutable object handles.

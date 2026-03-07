@@ -51,10 +51,11 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 	@Override
 	public Graph build(List<PlannedOperationGroup> groups) {
 		final ArrayList<GroupNode> nodes = arrayList(groups.size());
-		// After consolidation, each table has at most one node per kind+shape
-		final Map<String, GroupNode> insertNodeByTable = new HashMap<>();
-		final Map<String, GroupNode> updateNodeByTable = new HashMap<>();
-		final Map<String, GroupNode> deleteNodeByTable = new HashMap<>();
+		// When tables have self-referential FKs, they can have multiple groups per kind
+		// (split by ordinalBase to avoid false cycles)
+		final Map<String, List<GroupNode>> insertNodeByTable = new HashMap<>();
+		final Map<String, List<GroupNode>> updateNodeByTable = new HashMap<>();
+		final Map<String, List<GroupNode>> deleteNodeByTable = new HashMap<>();
 		final Map<GroupNode, List<GraphEdge>> outgoing = new HashMap<>();
 
 		// stable ids based on group.ordinal (if provided), else encounter order
@@ -68,13 +69,13 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 			nodes.add(n);
 
 			if ( g.kind() == MutationKind.INSERT) {
-				insertNodeByTable.put(normalizeTableName(g.tableExpression()), n);
+				insertNodeByTable.computeIfAbsent(normalizeTableName(g.tableExpression()), k -> new ArrayList<>()).add(n);
 			}
 			else if ( g.kind() == MutationKind.UPDATE ) {
-				updateNodeByTable.put(normalizeTableName(g.tableExpression()), n);
+				updateNodeByTable.computeIfAbsent(normalizeTableName(g.tableExpression()), k -> new ArrayList<>()).add(n);
 			}
 			else if ( g.kind() == MutationKind.DELETE ) {
-				deleteNodeByTable.put(normalizeTableName(g.tableExpression()), n);
+				deleteNodeByTable.computeIfAbsent(normalizeTableName(g.tableExpression()), k -> new ArrayList<>()).add(n);
 			}
 		}
 
@@ -91,114 +92,156 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 			final String parentTable = normalizeTableName(foreignKey.targetTable());
 
 		// Create INSERT edges: parent -> child (insert parent before child)
-		final GroupNode parentInsert = insertNodeByTable.get(parentTable);
-		final GroupNode childInsert = insertNodeByTable.get(childTable);
+		// When a table has multiple groups (self-referential FK), create edges for all combinations
+		final List<GroupNode> parentInserts = insertNodeByTable.get(parentTable);
+		final List<GroupNode> childInserts = insertNodeByTable.get(childTable);
 
-		if (parentInsert != null && childInsert != null) {
-			// Edge direction for ordering: parent -> child
-			final boolean breakable = foreignKey.nullable() &&
-				(!avoidBreakingDeferrable || !foreignKey.deferrable());
-			final int breakCost = computeBreakCost(foreignKey);
+		if (parentInserts != null && childInserts != null) {
+			for (GroupNode parentInsert : parentInserts) {
+				for (GroupNode childInsert : childInserts) {
+					// Edge direction for ordering: parent -> child
+					// Self-referencing FKs must be breakable (otherwise first INSERT is impossible)
+					final boolean breakable;
+					if (childTable.equals(parentTable)) {
+						// Self-referential FK - always breakable
+						breakable = true;
+					}
+					else {
+						breakable = foreignKey.nullable() &&
+							(!avoidBreakingDeferrable || !foreignKey.deferrable());
+					}
+					final int breakCost = computeBreakCost(foreignKey);
 
-			final GraphEdge edge = new GraphEdge(
-					// FK target
-					parentInsert,
-					// FK key
-					childInsert,
-					// FROM parent (graphing)
-					parentInsert,
-					// TO child (graphing)
-					childInsert,
-					breakable,
-					breakCost,
-					foreignKey.keyColumns(),
-					foreignKey,
-					edgeId++
-			);
+					final GraphEdge edge = new GraphEdge(
+							// FK target
+							parentInsert,
+							// FK key
+							childInsert,
+							// FROM parent (graphing)
+							parentInsert,
+							// TO child (graphing)
+							childInsert,
+							breakable,
+							breakCost,
+							foreignKey.keyColumns(),
+							foreignKey,
+							edgeId++
+					);
 
-			outgoing.computeIfAbsent(parentInsert, k -> new ArrayList<>()).add(edge);
+					outgoing.computeIfAbsent(parentInsert, k -> new ArrayList<>()).add(edge);
+				}
+			}
 		}
 
 			// Create DELETE edges: child -> parent (delete child before parent)
-			final GroupNode parentDelete = deleteNodeByTable.get(parentTable);
-			final GroupNode childDelete = deleteNodeByTable.get(childTable);
+			// When a table has multiple groups (self-referential FK), create edges for all combinations
+			final List<GroupNode> parentDeletes = deleteNodeByTable.get(parentTable);
+			final List<GroupNode> childDeletes = deleteNodeByTable.get(childTable);
 
-			if (parentDelete != null && childDelete != null) {
-				// Edge direction for DELETE: child -> parent (reversed!)
-				final GraphEdge edge = new GraphEdge(
-						// FK target
-						parentDelete,
-						// FK key
-						childDelete,
-						// FROM child (graphing)
-						childDelete,
-						// TO parent (graphing)
-						parentDelete,
-						// NOT breakable - can't use NULL strategy for DELETE
-						false,
-						// No break cost (not breakable)
-						0,
-						// No columns to null (not breakable) - pass empty SelectableMappings
-						EMPTY_SELECTABLES,
-						foreignKey,
-						edgeId++
-				);
+			if (parentDeletes != null && childDeletes != null) {
+				for (GroupNode parentDelete : parentDeletes) {
+					for (GroupNode childDelete : childDeletes) {
+						// Edge direction for DELETE: child -> parent (reversed!)
+						final GraphEdge edge = new GraphEdge(
+								// FK target
+								parentDelete,
+								// FK key
+								childDelete,
+								// FROM child (graphing)
+								childDelete,
+								// TO parent (graphing)
+								parentDelete,
+								// NOT breakable - can't use NULL strategy for DELETE
+								false,
+								// No break cost (not breakable)
+								0,
+								// No columns to null (not breakable) - pass empty SelectableMappings
+								EMPTY_SELECTABLES,
+								foreignKey,
+								edgeId++
+						);
 
-				outgoing.computeIfAbsent(childDelete, k -> new ArrayList<>()).add(edge);
+						outgoing.computeIfAbsent(childDelete, k -> new ArrayList<>()).add(edge);
+
+						// DEBUG: Log DELETE edges
+						try {
+							String msg = String.format("DELETE edge: %s → %s (FK: %s.%s → %s)\n",
+								childTable, parentTable,
+								foreignKey.keyTable(), foreignKey.keyColumns(),
+								foreignKey.targetTable());
+							java.nio.file.Files.write(
+								java.nio.file.Paths.get("/tmp/graph-edges-debug.log"),
+								msg.getBytes(),
+								java.nio.file.StandardOpenOption.CREATE,
+								java.nio.file.StandardOpenOption.APPEND
+							);
+						} catch (Exception e) {
+							// ignore
+						}
+					}
+				}
 			}
 
 			// Create UPDATE -> DELETE edges: update child/parent FK before deleting parent
 			// Case 1: Child UPDATE -> Parent DELETE (child FK changes, then orphan parent deleted)
-			final GroupNode childUpdate = updateNodeByTable.get(childTable);
-			if (childUpdate != null && parentDelete != null) {
-				// UPDATE child must happen before DELETE parent
-				// Example: UPDATE Car SET engine_id=2, then DELETE Engine WHERE id=1
-				final GraphEdge edge = new GraphEdge(
-						// FK target (parent)
-						parentDelete,
-						// FK key (child)
-						childUpdate,
-						// FROM child UPDATE (graphing)
-						childUpdate,
-						// TO parent DELETE (graphing)
-						parentDelete,
-						// NOT breakable
-						false,
-						// No break cost
-						0,
-						// No columns
-						EMPTY_SELECTABLES,
-						foreignKey,
-						edgeId++
-				);
+			final List<GroupNode> childUpdates = updateNodeByTable.get(childTable);
+			if (childUpdates != null && parentDeletes != null) {
+				for (GroupNode childUpdate : childUpdates) {
+					for (GroupNode parentDelete : parentDeletes) {
+						// UPDATE child must happen before DELETE parent
+						// Example: UPDATE Car SET engine_id=2, then DELETE Engine WHERE id=1
+						final GraphEdge edge = new GraphEdge(
+								// FK target (parent)
+								parentDelete,
+								// FK key (child)
+								childUpdate,
+								// FROM child UPDATE (graphing)
+								childUpdate,
+								// TO parent DELETE (graphing)
+								parentDelete,
+								// NOT breakable
+								false,
+								// No break cost
+								0,
+								// No columns
+								EMPTY_SELECTABLES,
+								foreignKey,
+								edgeId++
+						);
 
-				outgoing.computeIfAbsent(childUpdate, k -> new ArrayList<>()).add(edge);
+						outgoing.computeIfAbsent(childUpdate, k -> new ArrayList<>()).add(edge);
+					}
+				}
 			}
 
 			// Case 2: Parent UPDATE -> Child DELETE (parent FK changes, then orphan child deleted)
-			final GroupNode parentUpdate = updateNodeByTable.get(parentTable);
-			if (parentUpdate != null && childDelete != null) {
-				// UPDATE parent must happen before DELETE child
-				final GraphEdge edge = new GraphEdge(
-						// FK target (parent)
-						parentUpdate,
-						// FK key (child)
-						childDelete,
-						// FROM parent UPDATE (graphing)
-						parentUpdate,
-						// TO child DELETE (graphing)
-						childDelete,
-						// NOT breakable
-						false,
-						// No break cost
-						0,
-						// No columns
-						EMPTY_SELECTABLES,
-						foreignKey,
-						edgeId++
-				);
+			final List<GroupNode> parentUpdates = updateNodeByTable.get(parentTable);
+			if (parentUpdates != null && childDeletes != null) {
+				for (GroupNode parentUpdate : parentUpdates) {
+					for (GroupNode childDelete : childDeletes) {
+						// UPDATE parent must happen before DELETE child
+						final GraphEdge edge = new GraphEdge(
+								// FK target (parent)
+								parentUpdate,
+								// FK key (child)
+								childDelete,
+								// FROM parent UPDATE (graphing)
+								parentUpdate,
+								// TO child DELETE (graphing)
+								childDelete,
+								// NOT breakable
+								false,
+								// No break cost
+								0,
+								// No columns
+								EMPTY_SELECTABLES,
+								foreignKey,
+								edgeId++
+						);
 
-				outgoing.computeIfAbsent(parentUpdate, k -> new ArrayList<>()).add(edge);
+						outgoing.computeIfAbsent(parentUpdate, k -> new ArrayList<>()).add(edge);
+					}
+				}
 			}
 		}
 
@@ -206,30 +249,34 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 		// This ensures DELETE operations complete before INSERT operations to the same table,
 		// avoiding unique constraint violations when replacing entities (e.g., orphan removal + insert)
 		for (String tableName : deleteNodeByTable.keySet()) {
-			final GroupNode tableDelete = deleteNodeByTable.get(tableName);
-			final GroupNode tableInsert = insertNodeByTable.get(tableName);
+			final List<GroupNode> tableDeletes = deleteNodeByTable.get(tableName);
+			final List<GroupNode> tableInserts = insertNodeByTable.get(tableName);
 
-			if (tableInsert != null && tableDelete != null) {
-				// DELETE must happen before INSERT to same table
-				final GraphEdge edge = new GraphEdge(
-						// No specific FK (this is a table-level dependency)
-						null,
-						null,
-						// FROM delete (graphing)
-						tableDelete,
-						// TO insert (graphing)
-						tableInsert,
-						// NOT breakable - must maintain this order
-						false,
-						// No break cost
-						0,
-						// No columns
-						EMPTY_SELECTABLES,
-						null,
-						edgeId++
-				);
+			if (tableInserts != null && tableDeletes != null) {
+				for (GroupNode tableDelete : tableDeletes) {
+					for (GroupNode tableInsert : tableInserts) {
+						// DELETE must happen before INSERT to same table
+						final GraphEdge edge = new GraphEdge(
+								// No specific FK (this is a table-level dependency)
+								null,
+								null,
+								// FROM delete (graphing)
+								tableDelete,
+								// TO insert (graphing)
+								tableInsert,
+								// NOT breakable - must maintain this order
+								false,
+								// No break cost
+								0,
+								// No columns
+								EMPTY_SELECTABLES,
+								null,
+								edgeId++
+						);
 
-				outgoing.computeIfAbsent(tableDelete, k -> new ArrayList<>()).add(edge);
+						outgoing.computeIfAbsent(tableDelete, k -> new ArrayList<>()).add(edge);
+					}
+				}
 			}
 		}
 

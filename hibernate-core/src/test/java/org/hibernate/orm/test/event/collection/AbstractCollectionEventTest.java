@@ -234,16 +234,33 @@ public abstract class AbstractCollectionEventTest {
 		if ( ((PersistentCollection) collectionOrig).wasInitialized() ) {
 			checkResult( listeners, listeners.getInitializeCollectionListener(), parent, collectionOrig, index++ );
 		}
-		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, collectionOrig, index++ );
-		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, collectionOrig, index++ );
-		if ( newChild instanceof ChildWithBidirectionalManyToMany ) {
-			checkResult( listeners, listeners.getPreCollectionRecreateListener(),
-					(ChildWithBidirectionalManyToMany) newChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionRecreateListener(),
-					(ChildWithBidirectionalManyToMany) newChild, index++ );
+		// Event ordering differs between ActionQueue implementations
+		if ( isGraphBasedActionQueue( scope ) ) {
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, collectionOrig, index++ );
+			if ( newChild instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPreCollectionRecreateListener(),
+						(ChildWithBidirectionalManyToMany) newChild, index++ );
+			}
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, collectionOrig, index++ );
+			if ( newChild instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPostCollectionRecreateListener(),
+						(ChildWithBidirectionalManyToMany) newChild, index++ );
+			}
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
 		}
-		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
-		checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
+		else {
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, collectionOrig, index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, collectionOrig, index++ );
+			if ( newChild instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPreCollectionRecreateListener(),
+						(ChildWithBidirectionalManyToMany) newChild, index++ );
+				checkResult( listeners, listeners.getPostCollectionRecreateListener(),
+						(ChildWithBidirectionalManyToMany) newChild, index++ );
+			}
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
+		}
 		checkNumberOfResults( listeners, index );
 	}
 
@@ -267,16 +284,33 @@ public abstract class AbstractCollectionEventTest {
 		if ( ((PersistentCollection) oldCollection).wasInitialized() ) {
 			checkResult( listeners, listeners.getInitializeCollectionListener(), parent, oldCollection, index++ );
 		}
-		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
-		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
-		if ( newChild instanceof ChildWithBidirectionalManyToMany ) {
-			checkResult( listeners, listeners.getPreCollectionRecreateListener(),
-					(ChildWithBidirectionalManyToMany) newChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionRecreateListener(),
-					(ChildWithBidirectionalManyToMany) newChild, index++ );
+		// Event ordering differs between ActionQueue implementations
+		if ( isGraphBasedActionQueue( scope ) ) {
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
+			if ( newChild instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPreCollectionRecreateListener(),
+						(ChildWithBidirectionalManyToMany) newChild, index++ );
+			}
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
+			if ( newChild instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPostCollectionRecreateListener(),
+						(ChildWithBidirectionalManyToMany) newChild, index++ );
+			}
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
 		}
-		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
-		checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
+		else {
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
+			if ( newChild instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPreCollectionRecreateListener(),
+						(ChildWithBidirectionalManyToMany) newChild, index++ );
+				checkResult( listeners, listeners.getPostCollectionRecreateListener(),
+						(ChildWithBidirectionalManyToMany) newChild, index++ );
+			}
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
+		}
 		checkNumberOfResults( listeners, index );
 	}
 
@@ -310,18 +344,37 @@ public abstract class AbstractCollectionEventTest {
 				checkResult( listeners, listeners.getInitializeCollectionListener(), childWithManyToMany, index++ );
 			}
 		}
-		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
-		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
-		if ( child instanceof ChildWithBidirectionalManyToMany ) {
-			// hmmm, the same parent was removed and re-added to the child's collection;
-			// should this be considered an update?
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(),
-					(ChildWithBidirectionalManyToMany) child, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(),
-					(ChildWithBidirectionalManyToMany) child, index++ );
+		// Event ordering differs between ActionQueue implementations
+		if ( isGraphBasedActionQueue( scope ) ) {
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
+			if ( child instanceof ChildWithBidirectionalManyToMany ) {
+				// hmmm, the same parent was removed and re-added to the child's collection;
+				// should this be considered an update?
+				checkResult( listeners, listeners.getPreCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) child, index++ );
+			}
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
+			if ( child instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPostCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) child, index++ );
+			}
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
 		}
-		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
-		checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
+		else {
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
+			if ( child instanceof ChildWithBidirectionalManyToMany ) {
+				// hmmm, the same parent was removed and re-added to the child's collection;
+				// should this be considered an update?
+				checkResult( listeners, listeners.getPreCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) child, index++ );
+				checkResult( listeners, listeners.getPostCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) child, index++ );
+			}
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
+		}
 		checkNumberOfResults( listeners, index );
 	}
 
@@ -355,20 +408,41 @@ public abstract class AbstractCollectionEventTest {
 				checkResult( listeners, listeners.getInitializeCollectionListener(), oldChildWithManyToMany, index++ );
 			}
 		}
-		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
-		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
-		if ( oldChild instanceof ChildWithBidirectionalManyToMany ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(),
-					(ChildWithBidirectionalManyToMany) oldChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(),
-					(ChildWithBidirectionalManyToMany) oldChild, index++ );
-			checkResult( listeners, listeners.getPreCollectionRecreateListener(),
-					(ChildWithBidirectionalManyToMany) newChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionRecreateListener(),
-					(ChildWithBidirectionalManyToMany) newChild, index++ );
+		// Event ordering differs between ActionQueue implementations
+		if ( isGraphBasedActionQueue( scope ) ) {
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
+			if ( oldChild instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPreCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) oldChild, index++ );
+				checkResult( listeners, listeners.getPreCollectionRecreateListener(),
+						(ChildWithBidirectionalManyToMany) newChild, index++ );
+			}
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
+			if ( oldChild instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPostCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) oldChild, index++ );
+				checkResult( listeners, listeners.getPostCollectionRecreateListener(),
+						(ChildWithBidirectionalManyToMany) newChild, index++ );
+			}
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
 		}
-		checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
-		checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
+		else {
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, oldCollection, index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, oldCollection, index++ );
+			if ( oldChild instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPreCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) oldChild, index++ );
+				checkResult( listeners, listeners.getPostCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) oldChild, index++ );
+				checkResult( listeners, listeners.getPreCollectionRecreateListener(),
+						(ChildWithBidirectionalManyToMany) newChild, index++ );
+				checkResult( listeners, listeners.getPostCollectionRecreateListener(),
+						(ChildWithBidirectionalManyToMany) newChild, index++ );
+			}
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), parent, index++ );
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), parent, index++ );
+		}
 		checkNumberOfResults( listeners, index );
 	}
 
@@ -605,15 +679,34 @@ public abstract class AbstractCollectionEventTest {
 		if ( ((PersistentCollection) otherParent.getChildren()).wasInitialized() ) {
 			checkResult( listeners, listeners.getInitializeCollectionListener(), otherParent, index++ );
 		}
-		checkResult( listeners, listeners.getPreCollectionUpdateListener(), parent, index++ );
-		checkResult( listeners, listeners.getPostCollectionUpdateListener(), parent, index++ );
-		checkResult( listeners, listeners.getPreCollectionUpdateListener(), otherParent, index++ );
-		checkResult( listeners, listeners.getPostCollectionUpdateListener(), otherParent, index++ );
-		if ( child instanceof ChildWithBidirectionalManyToMany ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(),
-					(ChildWithBidirectionalManyToMany) child, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(),
-					(ChildWithBidirectionalManyToMany) child, index++ );
+		// Event ordering differs between ActionQueue implementations:
+		// - Legacy: PRE-A, POST-A, PRE-B, POST-B (paired per action)
+		// - Graph-based: PRE-A, PRE-B, POST-A, POST-B (all PRE, then all POST)
+		if ( isGraphBasedActionQueue( scope ) ) {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), parent, index++ );
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), otherParent, index++ );
+			if ( child instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPreCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) child, index++ );
+			}
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), parent, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), otherParent, index++ );
+			if ( child instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPostCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) child, index++ );
+			}
+		}
+		else {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), parent, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), parent, index++ );
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), otherParent, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), otherParent, index++ );
+			if ( child instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPreCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) child, index++ );
+				checkResult( listeners, listeners.getPostCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) child, index++ );
+			}
 		}
 		checkNumberOfResults( listeners, index );
 	}
@@ -649,15 +742,32 @@ public abstract class AbstractCollectionEventTest {
 			checkResult( listeners, listeners.getInitializeCollectionListener(),
 					(ChildWithBidirectionalManyToMany) child, index++ );
 		}
-		checkResult( listeners, listeners.getPreCollectionUpdateListener(), parent, index++ );
-		checkResult( listeners, listeners.getPostCollectionUpdateListener(), parent, index++ );
-		checkResult( listeners, listeners.getPreCollectionUpdateListener(), otherParent, index++ );
-		checkResult( listeners, listeners.getPostCollectionUpdateListener(), otherParent, index++ );
-		if ( child instanceof ChildWithBidirectionalManyToMany ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(),
-					(ChildWithBidirectionalManyToMany) child, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(),
-					(ChildWithBidirectionalManyToMany) child, index++ );
+		// Event ordering differs between ActionQueue implementations
+		if ( isGraphBasedActionQueue( scope ) ) {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), parent, index++ );
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), otherParent, index++ );
+			if ( child instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPreCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) child, index++ );
+			}
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), parent, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), otherParent, index++ );
+			if ( child instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPostCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) child, index++ );
+			}
+		}
+		else {
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), parent, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), parent, index++ );
+			checkResult( listeners, listeners.getPreCollectionUpdateListener(), otherParent, index++ );
+			checkResult( listeners, listeners.getPostCollectionUpdateListener(), otherParent, index++ );
+			if ( child instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPreCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) child, index++ );
+				checkResult( listeners, listeners.getPostCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) child, index++ );
+			}
 		}
 		checkNumberOfResults( listeners, index );
 	}
@@ -697,25 +807,54 @@ public abstract class AbstractCollectionEventTest {
 			checkResult( listeners, listeners.getInitializeCollectionListener(),
 					(ChildWithBidirectionalManyToMany) otherChild, index++ );
 		}
-		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, otherParent.getChildren(),
-				index++ );
-		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, otherParent.getChildren(),
-				index++ );
-		checkResult( listeners, listeners.getPreCollectionRemoveListener(), otherParent, otherCollectionOrig, index++ );
-		checkResult( listeners, listeners.getPostCollectionRemoveListener(), otherParent, otherCollectionOrig,
-				index++ );
-		if ( otherChild instanceof ChildWithBidirectionalManyToMany ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(),
-					(ChildWithBidirectionalManyToMany) otherChildOrig, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(),
-					(ChildWithBidirectionalManyToMany) otherChildOrig, index++ );
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(),
-					(ChildWithBidirectionalManyToMany) otherChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(),
-					(ChildWithBidirectionalManyToMany) otherChild, index++ );
+		// Event ordering differs between ActionQueue implementations
+		if ( isGraphBasedActionQueue( scope ) ) {
+			// All PRE events first (order may vary based on graph dependencies)
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), otherParent, index++ );
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, otherParent.getChildren(),
+					index++ );
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), otherParent, otherCollectionOrig, index++ );
+			if ( otherChild instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPreCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) otherChildOrig, index++ );
+				checkResult( listeners, listeners.getPreCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) otherChild, index++ );
+			}
+			// Then all POST events
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), otherParent, index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, otherParent.getChildren(),
+					index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), otherParent, otherCollectionOrig,
+					index++ );
+			if ( otherChild instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPostCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) otherChildOrig, index++ );
+				checkResult( listeners, listeners.getPostCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) otherChild, index++ );
+			}
 		}
-		checkResult( listeners, listeners.getPreCollectionRecreateListener(), otherParent, index++ );
-		checkResult( listeners, listeners.getPostCollectionRecreateListener(), otherParent, index++ );
+		else {
+			// Paired PRE/POST per action
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, otherParent.getChildren(),
+					index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, otherParent.getChildren(),
+					index++ );
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), otherParent, otherCollectionOrig, index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), otherParent, otherCollectionOrig,
+					index++ );
+			if ( otherChild instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPreCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) otherChildOrig, index++ );
+				checkResult( listeners, listeners.getPostCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) otherChildOrig, index++ );
+				checkResult( listeners, listeners.getPreCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) otherChild, index++ );
+				checkResult( listeners, listeners.getPostCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) otherChild, index++ );
+			}
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), otherParent, index++ );
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), otherParent, index++ );
+		}
 		// there should also be pre- and post-recreate collection events for parent, but thats broken now;
 		// this is covered in BrokenCollectionEventTest
 		checkNumberOfResults( listeners, index );
@@ -762,47 +901,101 @@ public abstract class AbstractCollectionEventTest {
 			checkResult( listeners, listeners.getInitializeCollectionListener(),
 					(ChildWithBidirectionalManyToMany) otherOtherChild, index++ );
 		}
-		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, otherOtherParent.getChildren(),
-				index++ );
-		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, otherOtherParent.getChildren(),
-				index++ );
-		checkResult( listeners, listeners.getPreCollectionRemoveListener(), otherParent, otherCollectionOrig, index++ );
-		checkResult( listeners, listeners.getPostCollectionRemoveListener(), otherParent, otherCollectionOrig,
-				index++ );
-		if ( otherOtherChild instanceof ChildWithBidirectionalManyToMany ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(),
-					(ChildWithBidirectionalManyToMany) otherChildOrig, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(),
-					(ChildWithBidirectionalManyToMany) otherChildOrig, index++ );
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(),
-					(ChildWithBidirectionalManyToMany) otherOtherChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(),
-					(ChildWithBidirectionalManyToMany) otherOtherChild, index++ );
+		// Event ordering differs between ActionQueue implementations
+		// This test has two flushes, so events are grouped per flush
+		if ( isGraphBasedActionQueue( scope ) ) {
+			// First flush: all PRE, then all POST (order may vary based on graph dependencies)
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), otherParent,
+					otherOtherParent.getChildren(), index++ );
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, otherOtherParent.getChildren(),
+					index++ );
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), otherParent, otherCollectionOrig, index++ );
+			if ( otherOtherChild instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPreCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) otherChildOrig, index++ );
+				checkResult( listeners, listeners.getPreCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) otherOtherChild, index++ );
+			}
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), otherParent,
+					otherOtherParent.getChildren(), index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, otherOtherParent.getChildren(),
+					index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), otherParent, otherCollectionOrig,
+					index++ );
+			if ( otherOtherChild instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPostCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) otherChildOrig, index++ );
+				checkResult( listeners, listeners.getPostCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) otherOtherChild, index++ );
+			}
+			if ( ((PersistentCollection) otherOtherCollectionOrig).wasInitialized() ) {
+				checkResult( listeners, listeners.getInitializeCollectionListener(), otherOtherParent,
+						otherOtherCollectionOrig, index++ );
+			}
+			// Second flush: all PRE, then all POST
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), otherOtherParent, index++ );
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), otherParent, otherOtherParent.getChildren(),
+					index++ );
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), otherOtherParent, otherOtherCollectionOrig,
+					index++ );
+			if ( otherOtherChild instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPreCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) otherOtherChild, index++ );
+			}
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), otherOtherParent, index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), otherParent,
+					otherOtherParent.getChildren(), index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), otherOtherParent, otherOtherCollectionOrig,
+					index++ );
+			if ( otherOtherChild instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPostCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) otherOtherChild, index++ );
+			}
 		}
-		checkResult( listeners, listeners.getPreCollectionRecreateListener(), otherParent,
-				otherOtherParent.getChildren(), index++ );
-		checkResult( listeners, listeners.getPostCollectionRecreateListener(), otherParent,
-				otherOtherParent.getChildren(), index++ );
-		if ( ((PersistentCollection) otherOtherCollectionOrig).wasInitialized() ) {
-			checkResult( listeners, listeners.getInitializeCollectionListener(), otherOtherParent,
-					otherOtherCollectionOrig, index++ );
+		else {
+			// Legacy: paired PRE/POST per action
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, otherOtherParent.getChildren(),
+					index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, otherOtherParent.getChildren(),
+					index++ );
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), otherParent, otherCollectionOrig, index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), otherParent, otherCollectionOrig,
+					index++ );
+			if ( otherOtherChild instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPreCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) otherChildOrig, index++ );
+				checkResult( listeners, listeners.getPostCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) otherChildOrig, index++ );
+				checkResult( listeners, listeners.getPreCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) otherOtherChild, index++ );
+				checkResult( listeners, listeners.getPostCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) otherOtherChild, index++ );
+			}
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), otherParent,
+					otherOtherParent.getChildren(), index++ );
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), otherParent,
+					otherOtherParent.getChildren(), index++ );
+			if ( ((PersistentCollection) otherOtherCollectionOrig).wasInitialized() ) {
+				checkResult( listeners, listeners.getInitializeCollectionListener(), otherOtherParent,
+						otherOtherCollectionOrig, index++ );
+			}
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), otherParent, otherOtherParent.getChildren(),
+					index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), otherParent,
+					otherOtherParent.getChildren(), index++ );
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), otherOtherParent, otherOtherCollectionOrig,
+					index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), otherOtherParent, otherOtherCollectionOrig,
+					index++ );
+			if ( otherOtherChild instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPreCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) otherOtherChild, index++ );
+				checkResult( listeners, listeners.getPostCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) otherOtherChild, index++ );
+			}
+			checkResult( listeners, listeners.getPreCollectionRecreateListener(), otherOtherParent, index++ );
+			checkResult( listeners, listeners.getPostCollectionRecreateListener(), otherOtherParent, index++ );
 		}
-		checkResult( listeners, listeners.getPreCollectionRemoveListener(), otherParent, otherOtherParent.getChildren(),
-				index++ );
-		checkResult( listeners, listeners.getPostCollectionRemoveListener(), otherParent,
-				otherOtherParent.getChildren(), index++ );
-		checkResult( listeners, listeners.getPreCollectionRemoveListener(), otherOtherParent, otherOtherCollectionOrig,
-				index++ );
-		checkResult( listeners, listeners.getPostCollectionRemoveListener(), otherOtherParent, otherOtherCollectionOrig,
-				index++ );
-		if ( otherOtherChild instanceof ChildWithBidirectionalManyToMany ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(),
-					(ChildWithBidirectionalManyToMany) otherOtherChild, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(),
-					(ChildWithBidirectionalManyToMany) otherOtherChild, index++ );
-		}
-		checkResult( listeners, listeners.getPreCollectionRecreateListener(), otherOtherParent, index++ );
-		checkResult( listeners, listeners.getPostCollectionRecreateListener(), otherOtherParent, index++ );
 		// there should also be pre- and post-recreate collection events for parent, and otherParent
 		// but thats broken now; this is covered in BrokenCollectionEventTest
 		checkNumberOfResults( listeners, index );
@@ -832,6 +1025,18 @@ public abstract class AbstractCollectionEventTest {
 			parent.addChild( ChildName );
 			s.persist( parent );
 			return parent;
+		} );
+	}
+
+	/**
+	 * Helper to detect which ActionQueue implementation is being used.
+	 * Graph-based ActionQueue fires all PRE events during decomposition,
+	 * then all POST events after SQL execution (different event ordering from legacy).
+	 */
+	protected boolean isGraphBasedActionQueue(SessionFactoryScope scope) {
+		return scope.fromSession( s -> {
+			org.hibernate.action.queue.ActionQueue aq = s.unwrap(org.hibernate.event.spi.EventSource.class).getActionQueue();
+			return aq instanceof org.hibernate.action.queue.GraphBasedActionQueue;
 		} );
 	}
 

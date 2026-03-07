@@ -237,6 +237,7 @@ public final class Collections {
 
 		final var loadedPersister = collectionEntry.getLoadedPersister();
 		final var currentPersister = collectionEntry.getCurrentPersister();
+
 		if ( loadedPersister != null || currentPersister != null ) {
 			// it is or was referenced _somewhere_
 

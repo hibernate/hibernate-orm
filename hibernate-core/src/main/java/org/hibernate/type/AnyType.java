@@ -335,7 +335,8 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 				entityName == null
 						? null
 						: factory.getMappingMetamodel().getEntityDescriptor( entityName );
-		return infoString( descriptor, value, factory );
+		final Object id = descriptor == null ? null : descriptor.getIdentifier( value );
+		return infoString( descriptor, id, factory );
 	}
 
 	@Override

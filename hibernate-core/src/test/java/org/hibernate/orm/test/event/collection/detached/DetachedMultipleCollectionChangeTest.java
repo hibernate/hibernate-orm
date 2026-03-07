@@ -69,14 +69,27 @@ public class DetachedMultipleCollectionChangeTest {
 			s.persist( mce.get() );
 		} );
 
-		checkListener( listeners, listeners.getPreCollectionRecreateListener(),
-				mce.get(), oldRefentities1, eventCount++ );
-		checkListener( listeners, listeners.getPostCollectionRecreateListener(),
-				mce.get(), oldRefentities1, eventCount++ );
-		checkListener( listeners, listeners.getPreCollectionRecreateListener(),
-				mce.get(), oldRefentities2, eventCount++ );
-		checkListener( listeners, listeners.getPostCollectionRecreateListener(),
-				mce.get(), oldRefentities2, eventCount++ );
+		// Event ordering differs between ActionQueue implementations
+		if ( isGraphBasedActionQueue( scope ) ) {
+			checkListener( listeners, listeners.getPreCollectionRecreateListener(),
+					mce.get(), oldRefentities1, eventCount++ );
+			checkListener( listeners, listeners.getPreCollectionRecreateListener(),
+					mce.get(), oldRefentities2, eventCount++ );
+			checkListener( listeners, listeners.getPostCollectionRecreateListener(),
+					mce.get(), oldRefentities1, eventCount++ );
+			checkListener( listeners, listeners.getPostCollectionRecreateListener(),
+					mce.get(), oldRefentities2, eventCount++ );
+		}
+		else {
+			checkListener( listeners, listeners.getPreCollectionRecreateListener(),
+					mce.get(), oldRefentities1, eventCount++ );
+			checkListener( listeners, listeners.getPostCollectionRecreateListener(),
+					mce.get(), oldRefentities1, eventCount++ );
+			checkListener( listeners, listeners.getPreCollectionRecreateListener(),
+					mce.get(), oldRefentities2, eventCount++ );
+			checkListener( listeners, listeners.getPostCollectionRecreateListener(),
+					mce.get(), oldRefentities2, eventCount++ );
+		}
 		checkEventCount( listeners, eventCount );
 
 
@@ -235,6 +248,13 @@ public class DetachedMultipleCollectionChangeTest {
 								int nEventsExpected) {
 		assertEquals( nEventsExpected, listeners.getListenersCalled().size() );
 		assertEquals( nEventsExpected, listeners.getEvents().size() );
+	}
+
+	private boolean isGraphBasedActionQueue(SessionFactoryScope scope) {
+		return scope.fromSession( s -> {
+			org.hibernate.action.queue.ActionQueue aq = s.unwrap(org.hibernate.event.spi.EventSource.class).getActionQueue();
+			return aq instanceof org.hibernate.action.queue.GraphBasedActionQueue;
+		} );
 	}
 
 }

@@ -42,13 +42,28 @@ public abstract class AbstractAssociationCollectionEventTest extends AbstractCol
 			checkResult( listeners, listeners.getInitializeCollectionListener(),
 					(ChildWithBidirectionalManyToMany) child, index++ );
 		}
-		checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, index++ );
-		checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, index++ );
-		if ( child instanceof ChildWithBidirectionalManyToMany ) {
-			checkResult( listeners, listeners.getPreCollectionUpdateListener(),
-					(ChildWithBidirectionalManyToMany) child, index++ );
-			checkResult( listeners, listeners.getPostCollectionUpdateListener(),
-					(ChildWithBidirectionalManyToMany) child, index++ );
+		// Event ordering differs between ActionQueue implementations
+		if ( isGraphBasedActionQueue( scope ) ) {
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, index++ );
+			if ( child instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPreCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) child, index++ );
+			}
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, index++ );
+			if ( child instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPostCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) child, index++ );
+			}
+		}
+		else {
+			checkResult( listeners, listeners.getPreCollectionRemoveListener(), parent, index++ );
+			checkResult( listeners, listeners.getPostCollectionRemoveListener(), parent, index++ );
+			if ( child instanceof ChildWithBidirectionalManyToMany ) {
+				checkResult( listeners, listeners.getPreCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) child, index++ );
+				checkResult( listeners, listeners.getPostCollectionUpdateListener(),
+						(ChildWithBidirectionalManyToMany) child, index++ );
+			}
 		}
 		checkNumberOfResults( listeners, index );
 	}

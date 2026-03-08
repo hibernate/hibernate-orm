@@ -45,6 +45,8 @@ public class ActionQueueThroughputBenchmark {
 		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		private Long id;
 		private String name;
+
+		@Column(name = "entity_value")
 		private int value;
 
 		public ThroughputEntity() {}

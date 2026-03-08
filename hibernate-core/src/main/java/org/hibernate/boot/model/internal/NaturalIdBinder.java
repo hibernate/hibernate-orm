@@ -6,6 +6,7 @@ package org.hibernate.boot.model.internal;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.NaturalIdConstraint;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -18,6 +19,7 @@ import java.util.List;
 
 import static java.util.Collections.singletonList;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 /**
  * @author Gavin King
@@ -35,7 +37,22 @@ class NaturalIdBinder {
 		final var naturalId = property.getDirectAnnotationUsage( NaturalId.class );
 		if ( naturalId != null ) {
 			final var annotatedColumns = joinColumns != null ? joinColumns : columns;
-			final Identifier name = uniqueKeyName( context, annotatedColumns );
+			// If the entity declares @NaturalIdConstraint, use the provided
+			// constraint name instead of the implicit naming strategy
+			final var modelsContext = context.getBootstrapContext().getModelsContext();
+			final var persistentClass = annotatedColumns.getPropertyHolder().getPersistentClass();
+			final var mappedClass = persistentClass.getMappedClass();
+			final var naturalIdConstraint = mappedClass != null
+					? modelsContext.getClassDetailsRegistry()
+					.resolveClassDetails( mappedClass.getName() )
+					.getAnnotationUsage( NaturalIdConstraint.class, modelsContext )
+					: null;
+
+			final Identifier name =
+					naturalIdConstraint != null && isNotEmpty( naturalIdConstraint.name() )
+							? toIdentifier( naturalIdConstraint.name() )
+							: uniqueKeyName( context, annotatedColumns );
+
 			if ( inSecondPass ) {
 				addColumnsToUniqueKey( annotatedColumns, name );
 			}

@@ -483,4 +483,129 @@ public class ActionQueueThroughputBenchmark {
 			session.getTransaction().commit();
 		}
 	}
+
+	// ========== Throughput Benchmarks: Exceeding Batch Size ==========
+
+	@Benchmark
+	public void exceedBatchSize_100_Legacy(LegacyQueueState state, Blackhole bh) {
+		exceedBatchSizeInsert(state.sessionFactory, 100, bh);
+	}
+
+	@Benchmark
+	public void exceedBatchSize_100_Graph(GraphQueueState state, Blackhole bh) {
+		exceedBatchSizeInsert(state.sessionFactory, 100, bh);
+	}
+
+	@Benchmark
+	public void exceedBatchSize_500_Legacy(LegacyQueueState state, Blackhole bh) {
+		exceedBatchSizeInsert(state.sessionFactory, 500, bh);
+	}
+
+	@Benchmark
+	public void exceedBatchSize_500_Graph(GraphQueueState state, Blackhole bh) {
+		exceedBatchSizeInsert(state.sessionFactory, 500, bh);
+	}
+
+	private void exceedBatchSizeInsert(SessionFactory sf, int count, Blackhole bh) {
+		// Batch size is 50, so 100/500 will require 2/10 batches
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			for (int i = 0; i < count; i++) {
+				session.persist(new ThroughputEntity("Entity-" + i, i));
+			}
+			session.getTransaction().commit();
+			bh.consume(session);
+		}
+
+		// Cleanup
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			session.createMutationQuery("delete from ThroughputEntity").executeUpdate();
+			session.getTransaction().commit();
+		}
+	}
+
+	// ========== Throughput Benchmarks: Mixed Operations Exceeding Batch ==========
+
+	@Benchmark
+	public void mixedExceedBatch_Legacy(LegacyQueueState state, Blackhole bh) {
+		mixedExceedBatch(state.sessionFactory, bh);
+	}
+
+	@Benchmark
+	public void mixedExceedBatch_Graph(GraphQueueState state, Blackhole bh) {
+		mixedExceedBatch(state.sessionFactory, bh);
+	}
+
+	private void mixedExceedBatch(SessionFactory sf, Blackhole bh) {
+		// Insert 100 entities (2 batches)
+		List<Long> ids = new ArrayList<>();
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			for (int i = 0; i < 100; i++) {
+				ThroughputEntity entity = new ThroughputEntity("Entity-" + i, i);
+				session.persist(entity);
+				session.flush();
+				ids.add(entity.id);
+			}
+			session.getTransaction().commit();
+		}
+
+		// Update 60 of them (exceeds batch size)
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			for (int i = 0; i < 60; i++) {
+				ThroughputEntity entity = session.find(ThroughputEntity.class, ids.get(i));
+				entity.value = entity.value * 2;
+			}
+			session.getTransaction().commit();
+		}
+
+		// Delete all 100 (2 batches)
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			for (Long id : ids) {
+				ThroughputEntity entity = session.find(ThroughputEntity.class, id);
+				session.remove(entity);
+			}
+			session.getTransaction().commit();
+			bh.consume(ids.size());
+		}
+	}
+
+	// ========== Throughput Benchmarks: Cascade Exceeding Batch ==========
+
+	@Benchmark
+	public void cascadeExceedBatch_Legacy(LegacyQueueState state, Blackhole bh) {
+		cascadeExceedBatch(state.sessionFactory, bh);
+	}
+
+	@Benchmark
+	public void cascadeExceedBatch_Graph(GraphQueueState state, Blackhole bh) {
+		cascadeExceedBatch(state.sessionFactory, bh);
+	}
+
+	private void cascadeExceedBatch(SessionFactory sf, Blackhole bh) {
+		// Create 15 parents with 5 children each = 90 entities total (exceeds batch size)
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			for (int i = 0; i < 15; i++) {
+				ThroughputParent parent = new ThroughputParent("Parent-" + i);
+				for (int j = 0; j < 5; j++) {
+					parent.addChild(new ThroughputChild("Child-" + i + "-" + j, j));
+				}
+				session.persist(parent);
+			}
+			session.getTransaction().commit();
+			bh.consume(session);
+		}
+
+		// Cleanup
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			session.createMutationQuery("delete from ThroughputChild").executeUpdate();
+			session.createMutationQuery("delete from ThroughputParent").executeUpdate();
+			session.getTransaction().commit();
+		}
+	}
 }

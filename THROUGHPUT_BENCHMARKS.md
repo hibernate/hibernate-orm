@@ -144,6 +144,74 @@ for (int i = 0; i < 5; i++) {
 
 ---
 
+### 9. Exceed Batch Size 100 (`exceedBatchSize_100_*`)
+**What it measures**: Insert 100 entities (batch size = 50, requires 2 batches)
+
+```java
+for (int i = 0; i < 100; i++) {
+    session.persist(new ThroughputEntity("Entity-" + i, i));
+}
+```
+
+**Why it matters**: Tests multi-batch execution performance
+- Batch size is 50, so 100 entities require 2 JDBC batch flushes
+- Shows how ActionQueue handles batch boundaries
+- Important for bulk import scenarios
+
+---
+
+### 10. Exceed Batch Size 500 (`exceedBatchSize_500_*`)
+**What it measures**: Insert 500 entities (batch size = 50, requires 10 batches)
+
+```java
+for (int i = 0; i < 500; i++) {
+    session.persist(new ThroughputEntity("Entity-" + i, i));
+}
+```
+
+**Why it matters**: Tests ActionQueue scalability with many batches
+- 10 JDBC batches to complete
+- Reveals overhead in batch coordination
+- Critical for large data import operations
+
+---
+
+### 11. Mixed Exceed Batch (`mixedExceedBatch_*`)
+**What it measures**: Mixed operations all exceeding batch size
+
+```java
+// Insert 100 entities
+// Update 60 entities
+// Delete 100 entities
+```
+
+**Why it matters**: Real-world scenario with multiple operation types
+- Each operation type requires multiple batches
+- Tests ActionQueue's ability to handle mixed operations across batches
+- Simulates complex transactions
+
+---
+
+### 12. Cascade Exceed Batch (`cascadeExceedBatch_*`)
+**What it measures**: 15 parents with 5 children each = 90 entities
+
+```java
+for (int i = 0; i < 15; i++) {
+    ThroughputParent parent = new ThroughputParent("Parent-" + i);
+    for (int j = 0; j < 5; j++) {
+        parent.addChild(new ThroughputChild("Child-" + i + "-" + j, j));
+    }
+    session.persist(parent);
+}
+```
+
+**Why it matters**: Cascade operations spanning multiple batches
+- 90 total entities exceed batch size of 50
+- Tests FK dependency handling across batch boundaries
+- Validates correct parent-child ordering in multiple batches
+
+---
+
 ## Expected Results
 
 ### Performance Characteristics

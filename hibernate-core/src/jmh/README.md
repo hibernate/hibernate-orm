@@ -141,6 +141,26 @@ Measures operations per second. Higher is better.
 - **Why**: Measures complex cascade throughput
 - **Metric**: Complex cascade operations per second
 
+#### 9. Exceed Batch Size 100 (`exceedBatchSize_100_*`)
+- **What**: Insert 100 entities (batch size is 50, requires 2 batches)
+- **Why**: Measures performance when operations span multiple JDBC batches
+- **Metric**: Operations per second with multi-batch handling
+
+#### 10. Exceed Batch Size 500 (`exceedBatchSize_500_*`)
+- **What**: Insert 500 entities (batch size is 50, requires 10 batches)
+- **Why**: Measures scalability with large operations requiring many batches
+- **Metric**: Large batch operations per second
+
+#### 11. Mixed Exceed Batch (`mixedExceedBatch_*`)
+- **What**: Insert 100, update 60, delete 100 (all exceed batch size)
+- **Why**: Tests mixed operation types with multi-batch execution
+- **Metric**: Mixed multi-batch cycles per second
+
+#### 12. Cascade Exceed Batch (`cascadeExceedBatch_*`)
+- **What**: Insert 15 parents with 5 children each (90 entities, exceeds batch size)
+- **Why**: Tests cascade operations requiring multiple batches
+- **Metric**: Large cascade operations per second
+
 ## Understanding Results
 
 ### Average Time Mode (ActionQueueBenchmark)

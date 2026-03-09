@@ -209,24 +209,24 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
-
 		functionRegistry.register(
 				"json_array",
-				new org.hibernate.community.dialect.function.SpannerPostgreSQLJsonArrayFunction( functionContributions.getTypeConfiguration() )
+				new org.hibernate.dialect.function.json.SpannerPostgreSQLJsonArrayFunction( functionContributions.getTypeConfiguration() )
 		);
 		functionRegistry.register(
 				"json_object",
-				new org.hibernate.community.dialect.function.SpannerPostgreSQLJsonObjectFunction( functionContributions.getTypeConfiguration() )
-		);
-		functionRegistry.register(
-				"json_insert",
-				new org.hibernate.community.dialect.function.SpannerPostgreSQLJsonInsertFunction( functionContributions.getTypeConfiguration() )
+				new org.hibernate.dialect.function.json.SpannerPostgreSQLJsonObjectFunction( functionContributions.getTypeConfiguration() )
 		);
 	}
 
 	@Override
 	protected void registerJsonFunction(CommonFunctionFactory functionFactory) {
-		super.registerJsonFunction( functionFactory );
+		functionFactory.jsonObject_postgresql();
+		functionFactory.jsonArray_postgresql();
+		functionFactory.jsonSet_postgresql();
+		functionFactory.jsonRemove_postgresql();
+		functionFactory.jsonReplace_postgresql();
+		functionFactory.jsonArrayInsert_postgresql();
 	}
 
 	@Override

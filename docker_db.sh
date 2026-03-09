@@ -1635,7 +1635,7 @@ spanner_emulator() {
               "displayName": "Test Instance",
               "nodeCount": 1
             }
-          }' >/dev/null
+          }' >/dev/null || true
 
     # Determine Create Database statement based on dialect
     if [[ "$dialect" == "POSTGRESQL" ]]; then
@@ -1650,7 +1650,7 @@ spanner_emulator() {
       -d "{
             \"createStatement\": \"${create_statement//\"/\\\"}\",
             \"databaseDialect\": \"${dialect}\"
-          }" >/dev/null
+          }" >/dev/null || true
 
     # Update DDL (for Timezone)
     curl -s -X PATCH "http://${host}/v1/projects/orm-test-project/instances/orm-test-instance/databases/orm-test-db/ddl" \
@@ -1659,7 +1659,7 @@ spanner_emulator() {
             "statements": [
               "ALTER DATABASE \"orm-test-db\" SET \"spanner.default_time_zone\" = '"'UTC'"'"
             ]
-          }' >/dev/null
+          }' >/dev/null || true
   done
 }
 

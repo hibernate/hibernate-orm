@@ -213,6 +213,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 
 	@Override
 	protected void registerJsonFunction(CommonFunctionFactory functionFactory) {
+		super.registerJsonFunction( functionFactory );
 	}
 
 	@Override

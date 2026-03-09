@@ -5939,12 +5939,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			);
 		}
 		else if ( rowIdExpression == null ) {
-			final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
-			final int jdbcTypeCount = identifierMapping.getJdbcTypeCount();
+			final var identifierTableMapping = mutationTarget.getIdentifierTableMapping();
+			final int jdbcTypeCount = identifierTableMapping.getKeyDetails().getJdbcTypeCount();
 			final List<ColumnReference> targetExpressions = new ArrayList<>( jdbcTypeCount );
 			final List<ColumnReference> sourceExpressions = new ArrayList<>( jdbcTypeCount );
-			identifierMapping.forEachSelectable(
-					0,
+			identifierTableMapping.getKeyDetails().forEachSelectable(
 					(selectionIndex, selectableMapping) -> {
 						targetExpressions.add( new ColumnReference(
 								lhsAlias,
@@ -5965,11 +5964,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			return new ComparisonPredicate(
 					targetExpressions.size() == 1
 							? targetExpressions.get( 0 )
-							: new SqlTuple( targetExpressions, identifierMapping ),
+							: new SqlTuple( targetExpressions, null ),
 					ComparisonOperator.EQUAL,
 					sourceExpressions.size() == 1
 							? sourceExpressions.get( 0 )
-							: new SqlTuple( sourceExpressions, identifierMapping )
+							: new SqlTuple( sourceExpressions, null )
 			);
 		}
 		else {

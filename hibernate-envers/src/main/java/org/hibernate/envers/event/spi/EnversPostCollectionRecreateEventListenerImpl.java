@@ -28,6 +28,9 @@ public class EnversPostCollectionRecreateEventListenerImpl
 	@Override
 	public void onPostRecreateCollection(PostCollectionRecreateEvent event) {
 		final CollectionEntry collectionEntry = getCollectionEntry( event );
+		if ( collectionEntry == null ) {
+			return;
+		}
 		if ( !collectionEntry.getLoadedPersister().isInverse() ) {
 			onCollectionAction( event, event.getCollection(), null, collectionEntry );
 		}

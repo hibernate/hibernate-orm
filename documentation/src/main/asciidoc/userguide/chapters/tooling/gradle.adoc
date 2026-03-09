@@ -1,8 +1,9 @@
 [[tooling-gradle]]
 === Gradle
 
-Hibernate provides the ability to integrate both
-<<tooling-gradle-enhancement,bytecode enhancement>> and <<tooling-gradle-modelgen,metamodel generation>> capabilities into Gradle builds.
+Hibernate provides the ability to integrate
+<<tooling-gradle-enhancement,bytecode enhancement>>, <<tooling-gradle-modelgen,metamodel generation>>,
+and <<tooling-gradle-reveng,reverse engineering>> capabilities into Gradle builds.
 
 [[tooling-gradle-enhancement]]
 ==== Bytecode Enhancement
@@ -64,5 +65,113 @@ an annotation processor in Gradle is as easy as:
 ----
 dependencies {
     annotationProcessor "org.hibernate.orm:hibernate-processor:{fullVersion}"
+}
+----
+
+
+[[tooling-gradle-reveng]]
+==== Reverse Engineering
+
+Hibernate provides a Gradle plugin for <<tooling-reveng,reverse engineering>> an existing database
+into Java entities, mapping files, DAOs, configuration files, and DDL scripts.
+
+[[tooling-gradle-reveng-plugin]]
+===== Plugin Declaration
+
+To apply the reverse engineering plugin, use Gradle's `plugins {}` block:
+
+[source,gradle,subs="attributes+"]
+----
+plugins {
+    id 'org.hibernate.tool.hibernate-tools-gradle' version '{fullVersion}'
+}
+----
+
+NOTE: The Gradle configuration cache must be disabled when using this plugin.
+Add `org.gradle.configuration-cache=false` to your `gradle.properties` file.
+
+
+[[tooling-gradle-reveng-tasks]]
+===== Available Tasks
+
+The plugin registers the following tasks:
+
+`generateJava`:: Generates Java entity classes from the database schema.
+`generateDao`:: Generates Data Access Object (DAO) classes.
+`generateHbm`:: Generates `hbm.xml` mapping files.
+`generateCfg`:: Generates a `hibernate.cfg.xml` configuration file.
+`runSql`:: Executes the SQL statement specified by the `sqlToRun` extension property against the database.
+
+
+[[tooling-gradle-reveng-configuration]]
+===== Extension Configuration
+
+The plugin creates a `hibernateTools` extension to configure its behavior:
+
+[source,gradle]
+----
+hibernateTools {
+    hibernateProperties = 'hibernate.properties'
+    outputFolder = 'generated-sources'
+    packageName = 'com.example.model'
+    generateAnnotations = true
+    useGenerics = true
+}
+----
+
+The extension supports the following properties:
+
+`hibernateProperties`:: Name of the properties file containing JDBC connection settings. The file is looked up from the project's main resource set. Default: `hibernate.properties`.
+`outputFolder`:: Relative path (from the project directory) where generated files are written. Default: `generated-sources`.
+`packageName`:: The default Java package name for generated classes. Default: empty (default package).
+`generateAnnotations`:: Whether to generate Jakarta Persistence annotations on entity classes. Default: `true`.
+`useGenerics`:: Whether to use Java generics in generated code. Default: `true`.
+`revengStrategy`:: Fully qualified class name of a custom reverse engineering strategy. Default: `null` (uses the default strategy).
+`revengFile`:: Name of a reverse engineering configuration XML file (looked up from the main resource set). Default: `null`.
+`templatePath`:: Path to a directory containing custom FreeMarker templates for code generation. Default: `null`.
+`sqlToRun`:: The SQL statement to execute when running the `runSql` task. Default: empty string.
+
+
+[[tooling-gradle-reveng-properties]]
+===== Hibernate Properties
+
+Create a `hibernate.properties` file in `src/main/resources/` with your JDBC connection settings:
+
+[source,properties]
+----
+hibernate.connection.driver_class=org.h2.Driver
+hibernate.connection.url=jdbc:h2:tcp://localhost/./mydb
+hibernate.connection.username=sa
+hibernate.default_catalog=MY_CATALOG
+hibernate.default_schema=PUBLIC
+----
+
+The JDBC driver must be declared as a project dependency.
+
+
+[[tooling-gradle-reveng-example]]
+===== Example
+
+The following `build.gradle` generates JPA entity classes from an H2 database:
+
+[source,gradle,subs="attributes+"]
+----
+plugins {
+    id 'java'
+    id 'org.hibernate.tool.hibernate-tools-gradle' version '{fullVersion}'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.h2database:h2:2.2.224'
+}
+
+hibernateTools {
+    hibernateProperties = 'hibernate.properties'
+    packageName = 'com.example.model'
+    outputFolder = 'generated-sources'
 }
 ----

@@ -13,6 +13,8 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -43,6 +45,7 @@ public class JsonArrayTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = org.hibernate.community.dialect.SpannerPostgreSQLDialect.class, reason = "Spanner PG does not support values in from clause")
 	public void testAbsentOnNull(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			em.createQuery("select json_array(null, 1 absent on null)" ).getResultList();

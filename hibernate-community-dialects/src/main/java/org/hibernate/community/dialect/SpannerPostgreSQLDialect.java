@@ -209,6 +209,11 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
+
+		functionRegistry.register(
+				"json_array",
+				new org.hibernate.community.dialect.function.SpannerPostgreSQLJsonArrayFunction( functionContributions.getTypeConfiguration() )
+		);
 	}
 
 	@Override

@@ -21,6 +21,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.persistence.GenerationType;
+
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengStrategy;
@@ -89,10 +91,15 @@ class TableReader {
 		String tableName = (String) tableRow.get("TABLE_NAME");
 		String catalog = (String) tableRow.get("TABLE_CAT");
 		String schema = (String) tableRow.get("TABLE_SCHEM");
+		String comment = (String) tableRow.get("REMARKS");
 
 		TableIdentifier tableId = TableIdentifier.create(catalog, schema, tableName);
 		if (!strategy.excludeTable(tableId)) {
-			tablesByName.put(tableName, createTableMetadata(tableName, catalog, schema, tableId));
+			TableMetadata tableMetadata = createTableMetadata(tableName, catalog, schema, tableId);
+			if (comment != null) {
+				tableMetadata.comment(comment);
+			}
+			tablesByName.put(tableName, tableMetadata);
 		}
 	}
 
@@ -115,7 +122,42 @@ class TableReader {
 				.readColumns(tableMetadata, tableId, catalog, schema);
 
 		detectCompositeId(tableMetadata, tableId);
+		applyIdentifierStrategy(tableMetadata, tableId, catalog, schema);
+
+		IndexReader
+				.create(dialect)
+				.readIndexes(tableMetadata, catalog, schema);
+
 		return tableMetadata;
+	}
+
+	private void applyIdentifierStrategy(TableMetadata tableMetadata, TableIdentifier tableId,
+			String catalog, String schema) {
+		if (tableMetadata.getCompositeId() != null) {
+			return;
+		}
+
+		ColumnMetadata pkColumn = null;
+		for (ColumnMetadata col : tableMetadata.getColumns()) {
+			if (col.isPrimaryKey()) {
+				pkColumn = col;
+				break;
+			}
+		}
+		if (pkColumn == null) {
+			return;
+		}
+
+		PrimaryKeyReader primaryKeyReader = PrimaryKeyReader.create(dialect, strategy);
+		String strategyName = primaryKeyReader.readIdentifierStrategy(
+			catalog, schema, tableMetadata.getTableName(), tableId);
+		GenerationType genType = PrimaryKeyReader.toGenerationType(strategyName);
+		if (genType != null) {
+			pkColumn.generationType(genType);
+			if (genType == GenerationType.IDENTITY) {
+				pkColumn.autoIncrement(true);
+			}
+		}
 	}
 
 	private void detectCompositeId(TableMetadata tableMetadata, TableIdentifier tableId) {

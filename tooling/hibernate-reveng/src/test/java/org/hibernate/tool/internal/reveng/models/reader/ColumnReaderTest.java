@@ -88,12 +88,48 @@ public class ColumnReaderTest {
 		List<ColumnMetadata> columns = tableMetadata.getColumns();
 		ColumnMetadata priceCol = findColumn(columns, "PRICE");
 		assertEquals(100, priceCol.getLength());
-		assertEquals(100, priceCol.getPrecision());
-		assertEquals(0, priceCol.getScale());
 
 		ColumnMetadata amountCol = findColumn(columns, "AMOUNT");
 		assertEquals(50, amountCol.getLength());
-		assertEquals(3, amountCol.getScale());
+	}
+
+	@Test
+	public void testTypeApplicabilityVarchar() {
+		dialect.addColumn("TEST_TABLE", "NAME", java.sql.Types.VARCHAR, 255, 0, true);
+
+		ColumnReader reader = ColumnReader.create(dialect, strategy);
+		reader.readColumns(tableMetadata, tableId, null, null);
+
+		ColumnMetadata nameCol = findColumn(tableMetadata.getColumns(), "NAME");
+		assertEquals(255, nameCol.getLength(), "VARCHAR should have length");
+		assertEquals(0, nameCol.getPrecision(), "VARCHAR should not have precision");
+		assertEquals(0, nameCol.getScale(), "VARCHAR should not have scale");
+	}
+
+	@Test
+	public void testTypeApplicabilityBigint() {
+		dialect.addColumn("TEST_TABLE", "BIG_NUM", java.sql.Types.BIGINT, 19, 0, false);
+
+		ColumnReader reader = ColumnReader.create(dialect, strategy);
+		reader.readColumns(tableMetadata, tableId, null, null);
+
+		ColumnMetadata bigNumCol = findColumn(tableMetadata.getColumns(), "BIG_NUM");
+		assertEquals(0, bigNumCol.getLength(), "BIGINT should not have length");
+		assertEquals(0, bigNumCol.getPrecision(), "BIGINT should not have precision");
+		assertEquals(0, bigNumCol.getScale(), "BIGINT should not have scale");
+	}
+
+	@Test
+	public void testTypeApplicabilityDecimal() {
+		dialect.addColumn("TEST_TABLE", "AMOUNT", java.sql.Types.DECIMAL, 10, 2, true);
+
+		ColumnReader reader = ColumnReader.create(dialect, strategy);
+		reader.readColumns(tableMetadata, tableId, null, null);
+
+		ColumnMetadata amountCol = findColumn(tableMetadata.getColumns(), "AMOUNT");
+		assertEquals(0, amountCol.getLength(), "DECIMAL should not have length");
+		assertEquals(10, amountCol.getPrecision(), "DECIMAL should have precision");
+		assertEquals(2, amountCol.getScale(), "DECIMAL should have scale");
 	}
 
 	@Test
@@ -214,6 +250,21 @@ public class ColumnReaderTest {
 		List<ColumnMetadata> columns = tableMetadata.getColumns();
 		assertTrue(findColumn(columns, "NULLABLE_COL").isNullable());
 		assertFalse(findColumn(columns, "NOT_NULL_COL").isNullable());
+	}
+
+	@Test
+	public void testColumnComment() {
+		dialect.addColumn("TEST_TABLE", "ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addColumn("TEST_TABLE", "NAME", java.sql.Types.VARCHAR, 255, 0, true,
+			"The employee name");
+		dialect.addPrimaryKey("TEST_TABLE", "ID", 1);
+
+		ColumnReader reader = ColumnReader.create(dialect, strategy);
+		reader.readColumns(tableMetadata, tableId, null, null);
+
+		List<ColumnMetadata> columns = tableMetadata.getColumns();
+		assertNull(findColumn(columns, "ID").getComment());
+		assertEquals("The employee name", findColumn(columns, "NAME").getComment());
 	}
 
 	private ColumnMetadata findColumn(List<ColumnMetadata> columns, String columnName) {

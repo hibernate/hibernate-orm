@@ -125,6 +125,36 @@ public class ForeignKeyReaderTest {
 	}
 
 	@Test
+	public void testNullForeignKeyNameGeneration() {
+		dialect.addExportedKey("DEPARTMENT", "ID", "EMPLOYEE", "DEPARTMENT_ID", null, 1);
+
+		Map<String, TableMetadata> tables = new LinkedHashMap<>();
+		tables.put("DEPARTMENT", new TableMetadata("DEPARTMENT", "Department", "com.example"));
+
+		ForeignKeyReader reader = ForeignKeyReader.create(dialect, null, null);
+		List<RawForeignKeyInfo> result = reader.readForeignKeys(tables);
+
+		assertEquals(1, result.size());
+		assertEquals("FK_UNNAMED_0", result.get(0).fkName());
+	}
+
+	@Test
+	public void testMultipleNullForeignKeyNames() {
+		dialect.addExportedKey("DEPARTMENT", "ID", "EMPLOYEE", "DEPARTMENT_ID", null, 1);
+		dialect.addExportedKey("DEPARTMENT", "ID", "PROJECT", "DEPARTMENT_ID", null, 1);
+
+		Map<String, TableMetadata> tables = new LinkedHashMap<>();
+		tables.put("DEPARTMENT", new TableMetadata("DEPARTMENT", "Department", "com.example"));
+
+		ForeignKeyReader reader = ForeignKeyReader.create(dialect, null, null);
+		List<RawForeignKeyInfo> result = reader.readForeignKeys(tables);
+
+		assertEquals(2, result.size());
+		assertEquals("FK_UNNAMED_0", result.get(0).fkName());
+		assertEquals("FK_UNNAMED_1", result.get(1).fkName());
+	}
+
+	@Test
 	public void testEmptyTablesMap() {
 		ForeignKeyReader reader = ForeignKeyReader.create(dialect, null, null);
 		List<RawForeignKeyInfo> result = reader.readForeignKeys(Map.of());

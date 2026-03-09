@@ -35,6 +35,7 @@ class ForeignKeyReader {
 	private final RevengDialect dialect;
 	private final String defaultCatalog;
 	private final String defaultSchema;
+	private int nullFkNameCounter = 0;
 
 	static ForeignKeyReader create(RevengDialect dialect, String defaultCatalog, String defaultSchema) {
 		return new ForeignKeyReader(dialect, defaultCatalog, defaultSchema);
@@ -75,6 +76,9 @@ class ForeignKeyReader {
 	private RawForeignKeyInfo readForeignKey(Map<String, Object> fkRow,
 			String referencedTableName, String referencedCatalog, String referencedSchema) {
 		String fkName = (String) fkRow.get("FK_NAME");
+		if (fkName == null) {
+			fkName = "FK_UNNAMED_" + nullFkNameCounter++;
+		}
 		String fkTableName = (String) fkRow.get("FKTABLE_NAME");
 		String fkTableCatalog = (String) fkRow.get("FKTABLE_CAT");
 		String fkTableSchema = (String) fkRow.get("FKTABLE_SCHEM");

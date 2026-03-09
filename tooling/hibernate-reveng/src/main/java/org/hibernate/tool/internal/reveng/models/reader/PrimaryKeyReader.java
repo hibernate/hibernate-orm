@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.GenerationType;
+
 import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
@@ -71,5 +73,52 @@ class PrimaryKeyReader {
 		}
 
 		return new HashSet<>(pkList);
+	}
+
+	/**
+	 * Reads the identifier generation strategy for the given table.
+	 * First checks if the strategy has a user-defined strategy name,
+	 * then falls back to the dialect's suggested strategy.
+	 *
+	 * @return the strategy name, or null if none is configured
+	 */
+	String readIdentifierStrategy(String catalog, String schema,
+			String tableName, TableIdentifier tableId) {
+		String strategyName = strategy.getTableIdentifierStrategyName(tableId);
+		if (strategyName != null) {
+			return strategyName;
+		}
+
+		Iterator<Map<String, Object>> iterator = dialect.getSuggestedPrimaryKeyStrategyName(
+			catalog, schema, tableName);
+		try {
+			if (iterator.hasNext()) {
+				Map<String, Object> row = iterator.next();
+				return (String) row.get("HIBERNATE_STRATEGY");
+			}
+		} finally {
+			dialect.close(iterator);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Maps a strategy name string to a {@link GenerationType}.
+	 *
+	 * @param strategyName the strategy name (e.g., "identity", "sequence", "assigned")
+	 * @return the corresponding GenerationType, or null for "assigned" or null input
+	 */
+	static GenerationType toGenerationType(String strategyName) {
+		if (strategyName == null || "assigned".equals(strategyName)) {
+			return null;
+		}
+		if ("identity".equals(strategyName)) {
+			return GenerationType.IDENTITY;
+		}
+		if ("sequence".equals(strategyName)) {
+			return GenerationType.SEQUENCE;
+		}
+		return GenerationType.AUTO;
 	}
 }

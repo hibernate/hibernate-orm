@@ -364,18 +364,32 @@ public class ModelsDatabaseSchemaReaderTest {
 		private final Map<String, List<Map<String, Object>>> columns = new HashMap<>();
 		private final Map<String, List<Map<String, Object>>> primaryKeys = new HashMap<>();
 		private final Map<String, List<Map<String, Object>>> exportedKeys = new HashMap<>();
+		private final Map<String, List<Map<String, Object>>> suggestedStrategies = new HashMap<>();
+		private final Map<String, List<Map<String, Object>>> indexInfo = new HashMap<>();
 
 		void addTable(String name, String catalog, String schema) {
+			addTable(name, catalog, schema, null);
+		}
+
+		void addTable(String name, String catalog, String schema, String comment) {
 			Map<String, Object> row = new HashMap<>();
 			row.put("TABLE_NAME", name);
 			row.put("TABLE_CAT", catalog);
 			row.put("TABLE_SCHEM", schema);
 			row.put("TABLE_TYPE", "TABLE");
+			if (comment != null) {
+				row.put("REMARKS", comment);
+			}
 			tables.add(row);
 		}
 
 		void addColumn(String tableName, String columnName, int sqlType,
 				int size, int decimalDigits, boolean nullable) {
+			addColumn(tableName, columnName, sqlType, size, decimalDigits, nullable, null);
+		}
+
+		void addColumn(String tableName, String columnName, int sqlType,
+				int size, int decimalDigits, boolean nullable, String comment) {
 			Map<String, Object> row = new HashMap<>();
 			row.put("TABLE_NAME", tableName);
 			row.put("COLUMN_NAME", columnName);
@@ -385,6 +399,9 @@ public class ModelsDatabaseSchemaReaderTest {
 			row.put("NULLABLE", nullable
 				? java.sql.DatabaseMetaData.columnNullable
 				: java.sql.DatabaseMetaData.columnNoNulls);
+			if (comment != null) {
+				row.put("REMARKS", comment);
+			}
 			columns.computeIfAbsent(tableName, k -> new ArrayList<>()).add(row);
 		}
 
@@ -394,6 +411,23 @@ public class ModelsDatabaseSchemaReaderTest {
 			row.put("COLUMN_NAME", columnName);
 			row.put("KEY_SEQ", (short) keySeq);
 			primaryKeys.computeIfAbsent(tableName, k -> new ArrayList<>()).add(row);
+		}
+
+		void addSuggestedPrimaryKeyStrategy(String tableName, String strategyName) {
+			Map<String, Object> row = new HashMap<>();
+			row.put("TABLE_NAME", tableName);
+			row.put("HIBERNATE_STRATEGY", strategyName);
+			suggestedStrategies.computeIfAbsent(tableName, k -> new ArrayList<>()).add(row);
+		}
+
+		void addIndexInfo(String tableName, String indexName, String columnName, boolean nonUnique) {
+			Map<String, Object> row = new HashMap<>();
+			row.put("TABLE_NAME", tableName);
+			row.put("INDEX_NAME", indexName);
+			row.put("COLUMN_NAME", columnName);
+			row.put("NON_UNIQUE", nonUnique);
+			row.put("TYPE", (short) 3); // tableIndexOther
+			indexInfo.computeIfAbsent(tableName, k -> new ArrayList<>()).add(row);
 		}
 
 		void addExportedKey(String pkTableName, String pkColumnName,
@@ -436,13 +470,13 @@ public class ModelsDatabaseSchemaReaderTest {
 		@Override
 		public Iterator<Map<String, Object>> getIndexInfo(String catalog, String schema,
 				String table) {
-			return Collections.emptyIterator();
+			return indexInfo.getOrDefault(table, Collections.emptyList()).iterator();
 		}
 
 		@Override
 		public Iterator<Map<String, Object>> getSuggestedPrimaryKeyStrategyName(
 				String catalog, String schema, String table) {
-			return Collections.emptyIterator();
+			return suggestedStrategies.getOrDefault(table, Collections.emptyList()).iterator();
 		}
 
 		@Override

@@ -91,10 +91,14 @@ public class BasicFieldBuilder {
 		if (columnMetadata.isPrimaryKey()) {
 			IdJpaAnnotation idAnnotation = JpaAnnotations.ID.createUsage(modelsContext);
 			field.addAnnotationUsage(idAnnotation);
-			if (columnMetadata.isAutoIncrement()) {
+			GenerationType genType = columnMetadata.getGenerationType();
+			if (genType == null && columnMetadata.isAutoIncrement()) {
+				genType = GenerationType.IDENTITY;
+			}
+			if (genType != null) {
 				GeneratedValueJpaAnnotation generatedAnnotation =
 					JpaAnnotations.GENERATED_VALUE.createUsage(modelsContext);
-				generatedAnnotation.strategy(GenerationType.IDENTITY);
+				generatedAnnotation.strategy(genType);
 				field.addAnnotationUsage(generatedAnnotation);
 			}
 		}
@@ -162,6 +166,9 @@ public class BasicFieldBuilder {
 		}
 		if (columnMetadata.getScale() > 0) {
 			columnAnnotation.scale(columnMetadata.getScale());
+		}
+		if (columnMetadata.isUnique()) {
+			columnAnnotation.unique(true);
 		}
 		field.addAnnotationUsage(columnAnnotation);
 	}

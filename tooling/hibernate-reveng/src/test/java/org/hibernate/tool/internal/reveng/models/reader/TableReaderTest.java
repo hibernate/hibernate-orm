@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.tool.api.reveng.RevengSettings;
@@ -253,6 +254,105 @@ public class TableReaderTest {
 		List<ColumnMetadata> columns = result.get("TYPES_TABLE").getColumns();
 		assertNotNull(findColumn(columns, "ID").getJavaType());
 		assertEquals(String.class, findColumn(columns, "NAME").getJavaType());
+	}
+
+	@Test
+	public void testIdentityStrategy() {
+		dialect.addTable("EMPLOYEE", null, null);
+		dialect.addColumn("EMPLOYEE", "ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addColumn("EMPLOYEE", "NAME", java.sql.Types.VARCHAR, 255, 0, true);
+		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
+		dialect.addSuggestedPrimaryKeyStrategy("EMPLOYEE", "identity");
+
+		TableReader reader = TableReader.create(dialect, strategy, null, null);
+		Map<String, TableMetadata> result = reader.readTables();
+
+		ColumnMetadata idCol = findColumn(result.get("EMPLOYEE").getColumns(), "ID");
+		assertEquals(GenerationType.IDENTITY, idCol.getGenerationType());
+		assertTrue(idCol.isAutoIncrement());
+	}
+
+	@Test
+	public void testSequenceStrategy() {
+		dialect.addTable("EMPLOYEE", null, null);
+		dialect.addColumn("EMPLOYEE", "ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
+		dialect.addSuggestedPrimaryKeyStrategy("EMPLOYEE", "sequence");
+
+		TableReader reader = TableReader.create(dialect, strategy, null, null);
+		Map<String, TableMetadata> result = reader.readTables();
+
+		ColumnMetadata idCol = findColumn(result.get("EMPLOYEE").getColumns(), "ID");
+		assertEquals(GenerationType.SEQUENCE, idCol.getGenerationType());
+		assertFalse(idCol.isAutoIncrement());
+	}
+
+	@Test
+	public void testAssignedStrategyNoGenerationType() {
+		dialect.addTable("EMPLOYEE", null, null);
+		dialect.addColumn("EMPLOYEE", "ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
+		dialect.addSuggestedPrimaryKeyStrategy("EMPLOYEE", "assigned");
+
+		TableReader reader = TableReader.create(dialect, strategy, null, null);
+		Map<String, TableMetadata> result = reader.readTables();
+
+		ColumnMetadata idCol = findColumn(result.get("EMPLOYEE").getColumns(), "ID");
+		assertNull(idCol.getGenerationType());
+	}
+
+	@Test
+	public void testNoStrategyNoGenerationType() {
+		dialect.addTable("EMPLOYEE", null, null);
+		dialect.addColumn("EMPLOYEE", "ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
+
+		TableReader reader = TableReader.create(dialect, strategy, null, null);
+		Map<String, TableMetadata> result = reader.readTables();
+
+		ColumnMetadata idCol = findColumn(result.get("EMPLOYEE").getColumns(), "ID");
+		assertNull(idCol.getGenerationType());
+	}
+
+	@Test
+	public void testCompositeIdNoStrategy() {
+		dialect.addTable("ORDER_ITEM", null, null);
+		dialect.addColumn("ORDER_ITEM", "ORDER_ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addColumn("ORDER_ITEM", "PRODUCT_ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addPrimaryKey("ORDER_ITEM", "ORDER_ID", 1);
+		dialect.addPrimaryKey("ORDER_ITEM", "PRODUCT_ID", 2);
+		dialect.addSuggestedPrimaryKeyStrategy("ORDER_ITEM", "identity");
+
+		TableReader reader = TableReader.create(dialect, strategy, null, null);
+		Map<String, TableMetadata> result = reader.readTables();
+
+		// Composite ID should not get a generation strategy
+		ColumnMetadata orderIdCol = findColumn(result.get("ORDER_ITEM").getColumns(), "ORDER_ID");
+		assertNull(orderIdCol.getGenerationType());
+	}
+
+	@Test
+	public void testTableComment() {
+		dialect.addTable("EMPLOYEE", null, null, "Employee records");
+		dialect.addColumn("EMPLOYEE", "ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
+
+		TableReader reader = TableReader.create(dialect, strategy, null, null);
+		Map<String, TableMetadata> result = reader.readTables();
+
+		assertEquals("Employee records", result.get("EMPLOYEE").getComment());
+	}
+
+	@Test
+	public void testTableCommentNull() {
+		dialect.addTable("EMPLOYEE", null, null);
+		dialect.addColumn("EMPLOYEE", "ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
+
+		TableReader reader = TableReader.create(dialect, strategy, null, null);
+		Map<String, TableMetadata> result = reader.readTables();
+
+		assertNull(result.get("EMPLOYEE").getComment());
 	}
 
 	private ColumnMetadata findColumn(List<ColumnMetadata> columns, String columnName) {

@@ -87,10 +87,17 @@ class ColumnReader {
 		String fieldName = strategy.columnToPropertyName(tableId, rowInfo.columnName());
 
 		ColumnMetadata columnMetadata = new ColumnMetadata(rowInfo.columnName(), fieldName, javaClass)
-			.nullable(rowInfo.nullable())
-			.length(rowInfo.columnSize())
-			.precision(rowInfo.columnSize())
-			.scale(rowInfo.decimalDigits());
+			.nullable(rowInfo.nullable());
+
+		if (JdbcToHibernateTypeHelper.typeHasLength(rowInfo.sqlType())) {
+			columnMetadata.length(rowInfo.columnSize());
+		}
+		if (JdbcToHibernateTypeHelper.typeHasPrecision(rowInfo.sqlType())) {
+			columnMetadata.precision(rowInfo.columnSize());
+		}
+		if (JdbcToHibernateTypeHelper.typeHasScale(rowInfo.sqlType())) {
+			columnMetadata.scale(rowInfo.decimalDigits());
+		}
 
 		if (rowInfo.primaryKey()) {
 			columnMetadata.primaryKey(true);
@@ -107,6 +114,10 @@ class ColumnReader {
 
 		if (HibernateTypeToJavaClass.isLob(hibernateType)) {
 			columnMetadata.lob(true);
+		}
+
+		if (rowInfo.comment() != null) {
+			columnMetadata.comment(rowInfo.comment());
 		}
 
 		return columnMetadata;
@@ -133,7 +144,7 @@ class ColumnReader {
 	}
 
 	record RowInfo(String columnName, int sqlType, int columnSize, int decimalDigits,
-			boolean nullable, boolean primaryKey) {
+			boolean nullable, boolean primaryKey, String comment) {
 		static RowInfo createFrom(Map<String, Object> colRow, Set<String> pkColumns) {
 			String columnName = (String) colRow.get("COLUMN_NAME");
 			int sqlType = (Integer) colRow.get("DATA_TYPE");
@@ -144,8 +155,9 @@ class ColumnReader {
 			int nullable = colRow.get("NULLABLE") != null
 				? (Integer) colRow.get("NULLABLE") : 1;
 			boolean isNullable = nullable != java.sql.DatabaseMetaData.columnNoNulls;
+			String comment = (String) colRow.get("REMARKS");
 			return new RowInfo(columnName, sqlType, columnSize, decimalDigits,
-				isNullable, pkColumns.contains(columnName));
+				isNullable, pkColumns.contains(columnName), comment);
 		}
 	}
 }

@@ -41,6 +41,8 @@ public class TableMetadata {
 	private String parentEntityPackage;
 	private String primaryKeyJoinColumnName;
 	private CompositeIdMetadata compositeId;
+	private String comment;
+	private List<IndexMetadata> indexes = new ArrayList<>();
 
 	public TableMetadata(String tableName, String entityClassName, String entityPackage) {
 		this.tableName = tableName;
@@ -149,6 +151,18 @@ public class TableMetadata {
 	public CompositeIdMetadata getCompositeId() { return compositeId; }
 	public TableMetadata compositeId(CompositeIdMetadata compositeId) {
 		this.compositeId = compositeId;
+		return this;
+	}
+
+	public String getComment() { return comment; }
+	public TableMetadata comment(String comment) {
+		this.comment = comment;
+		return this;
+	}
+
+	public List<IndexMetadata> getIndexes() { return indexes; }
+	public TableMetadata addIndex(IndexMetadata index) {
+		this.indexes.add(index);
 		return this;
 	}
 }

@@ -182,6 +182,40 @@ public class TableMetadataTest {
 	}
 
 	@Test
+	public void testComment() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example")
+			.comment("Employee records");
+
+		assertEquals("Employee records", table.getComment());
+	}
+
+	@Test
+	public void testCommentDefaultsToNull() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+
+		assertNull(table.getComment());
+	}
+
+	@Test
+	public void testAddIndex() {
+		IndexMetadata index = new IndexMetadata("IDX_EMAIL", true)
+			.addColumn("EMAIL");
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example")
+			.addIndex(index);
+
+		assertEquals(1, table.getIndexes().size());
+		assertEquals("IDX_EMAIL", table.getIndexes().get(0).getIndexName());
+	}
+
+	@Test
+	public void testIndexesDefaultToEmpty() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+
+		assertNotNull(table.getIndexes());
+		assertTrue(table.getIndexes().isEmpty());
+	}
+
+	@Test
 	public void testIsForeignKeyColumnWithForeignKey() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example")
 			.addForeignKey(new ForeignKeyMetadata(

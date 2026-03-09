@@ -21,6 +21,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import jakarta.persistence.GenerationType;
+
 import org.hibernate.tool.api.reveng.RevengSettings;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.models.reader.ModelsDatabaseSchemaReaderTest.TestRevengDialect;
@@ -139,5 +141,85 @@ public class PrimaryKeyReaderTest {
 		Set<String> result = reader.readPrimaryKeys(null, null, "TEST_TABLE", tableId);
 
 		assertTrue(result.isEmpty());
+	}
+
+	@Test
+	public void testReadIdentifierStrategyFromDialect() {
+		dialect.addSuggestedPrimaryKeyStrategy("TEST_TABLE", "identity");
+
+		PrimaryKeyReader reader = PrimaryKeyReader.create(dialect, strategy);
+		String result = reader.readIdentifierStrategy(null, null, "TEST_TABLE", tableId);
+
+		assertEquals("identity", result);
+	}
+
+	@Test
+	public void testReadIdentifierStrategyFromStrategy() {
+		DefaultStrategy customStrategy = new DefaultStrategy() {
+			@Override
+			public String getTableIdentifierStrategyName(TableIdentifier identifier) {
+				return "sequence";
+			}
+		};
+		RevengSettings settings = new RevengSettings(customStrategy);
+		settings.setDefaultPackageName("com.example");
+		customStrategy.setSettings(settings);
+
+		PrimaryKeyReader reader = PrimaryKeyReader.create(dialect, customStrategy);
+		String result = reader.readIdentifierStrategy(null, null, "TEST_TABLE", tableId);
+
+		assertEquals("sequence", result);
+	}
+
+	@Test
+	public void testReadIdentifierStrategyReturnsNullWhenNone() {
+		PrimaryKeyReader reader = PrimaryKeyReader.create(dialect, strategy);
+		String result = reader.readIdentifierStrategy(null, null, "TEST_TABLE", tableId);
+
+		assertNull(result);
+	}
+
+	@Test
+	public void testStrategyTakesPrecedenceOverDialect() {
+		dialect.addSuggestedPrimaryKeyStrategy("TEST_TABLE", "identity");
+		DefaultStrategy customStrategy = new DefaultStrategy() {
+			@Override
+			public String getTableIdentifierStrategyName(TableIdentifier identifier) {
+				return "sequence";
+			}
+		};
+		RevengSettings settings = new RevengSettings(customStrategy);
+		settings.setDefaultPackageName("com.example");
+		customStrategy.setSettings(settings);
+
+		PrimaryKeyReader reader = PrimaryKeyReader.create(dialect, customStrategy);
+		String result = reader.readIdentifierStrategy(null, null, "TEST_TABLE", tableId);
+
+		assertEquals("sequence", result);
+	}
+
+	@Test
+	public void testToGenerationTypeIdentity() {
+		assertEquals(GenerationType.IDENTITY, PrimaryKeyReader.toGenerationType("identity"));
+	}
+
+	@Test
+	public void testToGenerationTypeSequence() {
+		assertEquals(GenerationType.SEQUENCE, PrimaryKeyReader.toGenerationType("sequence"));
+	}
+
+	@Test
+	public void testToGenerationTypeAssigned() {
+		assertNull(PrimaryKeyReader.toGenerationType("assigned"));
+	}
+
+	@Test
+	public void testToGenerationTypeNull() {
+		assertNull(PrimaryKeyReader.toGenerationType(null));
+	}
+
+	@Test
+	public void testToGenerationTypeOther() {
+		assertEquals(GenerationType.AUTO, PrimaryKeyReader.toGenerationType("native"));
 	}
 }

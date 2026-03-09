@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
 /**
@@ -135,6 +136,51 @@ public class ColumnMetadataTest {
 			.lob(true);
 
 		assertTrue(column.isLob());
+	}
+
+	@Test
+	public void testComment() {
+		ColumnMetadata column = new ColumnMetadata("NAME", "name", String.class)
+			.comment("The user name");
+
+		assertEquals("The user name", column.getComment());
+	}
+
+	@Test
+	public void testCommentDefaultsToNull() {
+		ColumnMetadata column = new ColumnMetadata("NAME", "name", String.class);
+
+		assertNull(column.getComment());
+	}
+
+	@Test
+	public void testGenerationType() {
+		ColumnMetadata column = new ColumnMetadata("ID", "id", Long.class)
+			.generationType(GenerationType.SEQUENCE);
+
+		assertEquals(GenerationType.SEQUENCE, column.getGenerationType());
+	}
+
+	@Test
+	public void testGenerationTypeDefaultsToNull() {
+		ColumnMetadata column = new ColumnMetadata("ID", "id", Long.class);
+
+		assertNull(column.getGenerationType());
+	}
+
+	@Test
+	public void testUnique() {
+		ColumnMetadata column = new ColumnMetadata("EMAIL", "email", String.class)
+			.unique(true);
+
+		assertTrue(column.isUnique());
+	}
+
+	@Test
+	public void testUniqueDefaultsToFalse() {
+		ColumnMetadata column = new ColumnMetadata("EMAIL", "email", String.class);
+
+		assertFalse(column.isUnique());
 	}
 
 	@Test

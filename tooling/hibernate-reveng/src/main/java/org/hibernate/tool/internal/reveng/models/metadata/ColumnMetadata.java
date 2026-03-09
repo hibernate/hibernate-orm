@@ -16,6 +16,7 @@
 package org.hibernate.tool.internal.reveng.models.metadata;
 
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
 /**
@@ -38,6 +39,9 @@ public class ColumnMetadata {
 	private Boolean basicOptional;
 	private TemporalType temporalType;
 	private boolean lob;
+	private String comment;
+	private GenerationType generationType;
+	private boolean unique;
 
 	public ColumnMetadata(String columnName, String fieldName, Class<?> javaType) {
 		this.columnName = columnName;
@@ -102,6 +106,21 @@ public class ColumnMetadata {
 		return this;
 	}
 
+	public ColumnMetadata comment(String comment) {
+		this.comment = comment;
+		return this;
+	}
+
+	public ColumnMetadata generationType(GenerationType generationType) {
+		this.generationType = generationType;
+		return this;
+	}
+
+	public ColumnMetadata unique(boolean unique) {
+		this.unique = unique;
+		return this;
+	}
+
 	// Getters
 	public String getColumnName() { return columnName; }
 	public String getFieldName() { return fieldName; }
@@ -118,4 +137,7 @@ public class ColumnMetadata {
 	public boolean isBasicOptional() { return basicOptional != null ? basicOptional : true; }
 	public TemporalType getTemporalType() { return temporalType; }
 	public boolean isLob() { return lob; }
+	public String getComment() { return comment; }
+	public GenerationType getGenerationType() { return generationType; }
+	public boolean isUnique() { return unique; }
 }

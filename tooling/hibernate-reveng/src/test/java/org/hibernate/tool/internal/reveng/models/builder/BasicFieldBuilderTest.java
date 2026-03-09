@@ -130,6 +130,55 @@ public class BasicFieldBuilderTest {
 	}
 
 	@Test
+	public void testPrimaryKeyWithSequenceStrategy() {
+		ColumnMetadata column = new ColumnMetadata("ID", "id", Long.class)
+			.primaryKey(true)
+			.generationType(GenerationType.SEQUENCE)
+			.nullable(false);
+
+		BasicFieldBuilder.addBasicField(entityClass, column, modelsContext);
+
+		FieldDetails field = entityClass.getFields().get(0);
+
+		assertNotNull(field.getAnnotationUsage(Id.class, modelsContext), "Should have @Id");
+
+		GeneratedValue gen = field.getAnnotationUsage(GeneratedValue.class, modelsContext);
+		assertNotNull(gen, "Should have @GeneratedValue");
+		assertEquals(GenerationType.SEQUENCE, gen.strategy());
+	}
+
+	@Test
+	public void testPrimaryKeyWithAutoStrategy() {
+		ColumnMetadata column = new ColumnMetadata("ID", "id", Long.class)
+			.primaryKey(true)
+			.generationType(GenerationType.AUTO)
+			.nullable(false);
+
+		BasicFieldBuilder.addBasicField(entityClass, column, modelsContext);
+
+		FieldDetails field = entityClass.getFields().get(0);
+
+		GeneratedValue gen = field.getAnnotationUsage(GeneratedValue.class, modelsContext);
+		assertNotNull(gen, "Should have @GeneratedValue");
+		assertEquals(GenerationType.AUTO, gen.strategy());
+	}
+
+	@Test
+	public void testPrimaryKeyNoGenerationType() {
+		ColumnMetadata column = new ColumnMetadata("ID", "id", Long.class)
+			.primaryKey(true)
+			.nullable(false);
+
+		BasicFieldBuilder.addBasicField(entityClass, column, modelsContext);
+
+		FieldDetails field = entityClass.getFields().get(0);
+
+		assertNotNull(field.getAnnotationUsage(Id.class, modelsContext), "Should have @Id");
+		assertNull(field.getAnnotationUsage(GeneratedValue.class, modelsContext),
+			"Should NOT have @GeneratedValue when no generationType set");
+	}
+
+	@Test
 	public void testAutoIncrementWithoutPrimaryKeyIsIgnored() {
 		ColumnMetadata column = new ColumnMetadata("SEQ", "seq", Long.class)
 			.autoIncrement(true);
@@ -271,6 +320,33 @@ public class BasicFieldBuilderTest {
 		assertNotNull(col, "Should have @Column");
 		assertEquals(10, col.precision());
 		assertEquals(2, col.scale());
+	}
+
+	@Test
+	public void testColumnUnique() {
+		ColumnMetadata column = new ColumnMetadata("EMAIL", "email", String.class)
+			.unique(true);
+
+		BasicFieldBuilder.addBasicField(entityClass, column, modelsContext);
+
+		FieldDetails field = entityClass.getFields().get(0);
+
+		Column col = field.getAnnotationUsage(Column.class, modelsContext);
+		assertNotNull(col, "Should have @Column");
+		assertTrue(col.unique(), "Should have unique=true");
+	}
+
+	@Test
+	public void testColumnNotUnique() {
+		ColumnMetadata column = new ColumnMetadata("NAME", "name", String.class);
+
+		BasicFieldBuilder.addBasicField(entityClass, column, modelsContext);
+
+		FieldDetails field = entityClass.getFields().get(0);
+
+		Column col = field.getAnnotationUsage(Column.class, modelsContext);
+		assertNotNull(col, "Should have @Column");
+		assertFalse(col.unique(), "Should have unique=false by default");
 	}
 
 	@Test

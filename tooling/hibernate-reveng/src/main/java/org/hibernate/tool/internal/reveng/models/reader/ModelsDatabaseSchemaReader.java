@@ -76,6 +76,12 @@ public class ModelsDatabaseSchemaReader {
 				.create(dialect, defaultCatalog, defaultSchema)
 				.readForeignKeys(tablesByName);
 
+		// Merge user-defined foreign keys
+		List<RawForeignKeyInfo> userFks = UserDefinedForeignKeyReader
+				.create(strategy, defaultCatalog, defaultSchema)
+				.readUserForeignKeys(tablesByName);
+		allFks.addAll(userFks);
+
 		// Build FK indexes
 		Map<String, List<RawForeignKeyInfo>> outgoingFksByTable = groupByFkTable(allFks);
 		Map<String, List<RawForeignKeyInfo>> incomingFksByTable = groupByReferencedTable(allFks);

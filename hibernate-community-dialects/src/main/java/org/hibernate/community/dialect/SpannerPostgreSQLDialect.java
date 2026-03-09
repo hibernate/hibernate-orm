@@ -218,6 +218,10 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 				"json_object",
 				new org.hibernate.community.dialect.function.SpannerPostgreSQLJsonObjectFunction( functionContributions.getTypeConfiguration() )
 		);
+		functionRegistry.register(
+				"json_insert",
+				new org.hibernate.community.dialect.function.SpannerPostgreSQLJsonInsertFunction( functionContributions.getTypeConfiguration() )
+		);
 	}
 
 	@Override

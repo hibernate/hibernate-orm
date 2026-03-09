@@ -1580,43 +1580,43 @@ spanner_emulator() {
   local emulator_image=${SPANNER_EMULATOR:-gcr.io/cloud-spanner-emulator/emulator:1.5.50}
   local total_containers=4
 
-  # Start all emulator containers first
-  for n in $(seq 1 ${total_containers}); do
-    local container_name="spanner_${n}"
-    local port=$((9010 + n))
-    local rest_port=$((9020 + n))
-
-    echo "Starting Spanner emulator instance ${n} on port ${port}..."
-    $CONTAINER_CLI rm -f ${container_name} || true
-
-    $CONTAINER_CLI run --name ${container_name} -d \
-      -p ${port}:9010 \
-      -p ${rest_port}:9020 \
-      ${emulator_image}
-  done
-
-  # Wait for all emulators to be ready
-  for n in $(seq 1 ${total_containers}); do
-    local container_name="spanner_${n}"
-    local port=$((9010 + n))
-    
-    local retries=0
-    until [ "$retries" -ge 20 ]; do
-      local logs="$($CONTAINER_CLI logs ${container_name} 2>&1 || true)"
-      if [[ "$logs" == *"gRPC server listening"* ]] || [[ "$logs" == *"Cloud Spanner emulator running"* ]]; then
-        echo "Cloud Spanner emulator (${container_name}) started on port ${port}."
-        break
-      fi
-      echo "Waiting for Cloud Spanner emulator (${container_name}) to start..."
-      retries=$((retries+1))
-      sleep 3
-    done
-    
-    if [ "$retries" -ge 20 ]; then
-       echo "Cloud Spanner emulator (${container_name}) failed to start"
-       exit 1
-    fi
-  done
+#  # Start all emulator containers first
+#  for n in $(seq 1 ${total_containers}); do
+#    local container_name="spanner_${n}"
+#    local port=$((9010 + n))
+#    local rest_port=$((9020 + n))
+#
+#    echo "Starting Spanner emulator instance ${n} on port ${port}..."
+#    $CONTAINER_CLI rm -f ${container_name} || true
+#
+#    $CONTAINER_CLI run --name ${container_name} -d \
+#      -p ${port}:9010 \
+#      -p ${rest_port}:9020 \
+#      ${emulator_image}
+#  done
+#
+#  # Wait for all emulators to be ready
+#  for n in $(seq 1 ${total_containers}); do
+#    local container_name="spanner_${n}"
+#    local port=$((9010 + n))
+#
+#    local retries=0
+#    until [ "$retries" -ge 20 ]; do
+#      local logs="$($CONTAINER_CLI logs ${container_name} 2>&1 || true)"
+#      if [[ "$logs" == *"gRPC server listening"* ]] || [[ "$logs" == *"Cloud Spanner emulator running"* ]]; then
+#        echo "Cloud Spanner emulator (${container_name}) started on port ${port}."
+#        break
+#      fi
+#      echo "Waiting for Cloud Spanner emulator (${container_name}) to start..."
+#      retries=$((retries+1))
+#      sleep 3
+#    done
+#
+#    if [ "$retries" -ge 20 ]; then
+#       echo "Cloud Spanner emulator (${container_name}) failed to start"
+#       exit 1
+#    fi
+#  done
 
   # Configure Instance
   for n in $(seq 1 ${total_containers}); do

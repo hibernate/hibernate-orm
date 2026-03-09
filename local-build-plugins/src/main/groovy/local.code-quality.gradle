@@ -96,7 +96,7 @@ spotless {
     java {
         targetExclude( "target/**/*.java" )
         licenseHeaderFile( rootProject.file("shared/config/spotless/license.java") )
-        removeUnusedImports()
+//        removeUnusedImports()
         leadingSpacesToTabs( 4 )
         trimTrailingWhitespace()
         endWithNewline()

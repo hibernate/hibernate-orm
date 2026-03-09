@@ -217,6 +217,8 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 				"json_object",
 				new org.hibernate.dialect.function.json.SpannerPostgreSQLJsonObjectFunction( functionContributions.getTypeConfiguration() )
 		);
+
+//		functionFactory.arrayLength_cardinality();
 	}
 
 	@Override
@@ -231,6 +233,39 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 
 	@Override
 	protected void registerArrayFunctions(CommonFunctionFactory functionFactory) {
+		functionFactory.array_postgresql();
+		functionFactory.arrayAggregate();
+		functionFactory.arrayPosition_postgresql();
+		functionFactory.arrayPositions_postgresql();
+		// Spanner does not support cardinality() or array_length() for arrays yet
+		// functionFactory.arrayLength_cardinality();
+		functionFactory.arrayConcat_postgresql();
+		functionFactory.arrayPrepend_postgresql();
+		functionFactory.arrayAppend_postgresql();
+		functionFactory.arrayContains_postgresql();
+		functionFactory.arrayIntersects_postgresql();
+		functionFactory.arrayGet_bracket();
+		functionFactory.arraySet_unnest();
+		functionFactory.arrayRemove();
+		functionFactory.arrayRemoveIndex_unnest( true );
+		functionFactory.arraySlice_operator();
+		functionFactory.arrayReplace();
+		if ( getVersion().isSameOrAfter( 14 ) ) {
+			functionFactory.arrayTrim_trim_array();
+		}
+		else {
+			functionFactory.arrayTrim_unnest();
+		}
+		if ( getVersion().isSameOrAfter( 18 ) ) {
+			functionFactory.arrayReverse();
+			functionFactory.arraySort();
+		}
+		else {
+			functionFactory.arrayReverse_unnest();
+			functionFactory.arraySort_unnest();
+		}
+		functionFactory.arrayFill_postgresql();
+		functionFactory.arrayToString_postgresql();
 	}
 
 	@Override

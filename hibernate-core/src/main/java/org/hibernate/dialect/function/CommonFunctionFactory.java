@@ -3082,6 +3082,23 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * Spanner array_length() function
+	 */
+	public void arrayLength_spanner() {
+		functionRegistry.namedDescriptorBuilder( "array_length" )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( integerType ) )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+								StandardArgumentsValidators.exactly( 1 ),
+								ArrayArgumentValidator.DEFAULT_INSTANCE
+						)
+				)
+				.setArgumentListSignature( "(ARRAY array)" )
+				.register();
+		functionRegistry.register( "length", new DynamicDispatchFunction( functionRegistry, "character_length", "array_length" ) );
+	}
+
+	/**
 	 * Oracle array_length() function
 	 */
 	public void arrayLength_oracle() {

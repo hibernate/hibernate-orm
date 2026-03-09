@@ -31,7 +31,6 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -1257,6 +1256,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			querySpec.applyPredicate(
 					createRowMatchingPredicate(
+							statement.getMutationTarget(),
 							dmlTargetTableGroup,
 							dmlTargetAlias,
 							dmlTargetTableGroup.getPrimaryTableReference().getIdentificationVariable()
@@ -1377,6 +1377,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( valueExpression ) );
 		querySpec.applyPredicate(
 				createRowMatchingPredicate(
+						statement.getMutationTarget(),
 						dmlTargetTableGroup,
 						"dml_target_",
 						dmlTargetTableGroup.getPrimaryTableReference().getIdentificationVariable()
@@ -1561,7 +1562,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( inlineView.getColumnNames().size() - 1 );
 		}
 		else if ( rowIdExpression == null ) {
-			createRowMatchingPredicate( dmlTargetTableGroup, "t", "s" ).accept( this );
+			createRowMatchingPredicate( statement.getMutationTarget(), dmlTargetTableGroup, "t", "s" ).accept( this );
 		}
 		else {
 			appendSql( "t." );
@@ -5888,6 +5889,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			addAdditionalWherePredicate(
 					// Render the match predicate like `table.ctid=alias.ctid`
 					createRowMatchingPredicate(
+							statement.getMutationTarget(),
 							dmlTargetTableGroup,
 							statement.getTargetTable().getTableExpression(),
 							statement.getTargetTable().getIdentificationVariable()
@@ -5896,7 +5898,24 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	/**
+	 * @deprecated Use {@link #createRowMatchingPredicate(MutationTarget, TableGroup, String, String)} instead
+	 */
+	@Deprecated(forRemoval = true, since = "7.4")
 	protected Predicate createRowMatchingPredicate(TableGroup dmlTargetTableGroup, String lhsAlias, String rhsAlias) {
+		return createRowMatchingPredicate(
+				(MutationTarget<?>) dmlTargetTableGroup.getModelPart().asEntityMappingType(),
+				dmlTargetTableGroup,
+				lhsAlias,
+				rhsAlias
+		);
+	}
+
+	protected Predicate createRowMatchingPredicate(
+			MutationTarget<?> mutationTarget,
+			TableGroup dmlTargetTableGroup,
+			String lhsAlias,
+			String rhsAlias) {
 		final EntityMappingType entityMappingType = dmlTargetTableGroup.getModelPart().asEntityMappingType();
 		final EntityRowIdMapping rowIdMapping = entityMappingType == null ? null : entityMappingType.getRowIdMapping();
 		final String rowIdExpression = dialect.rowId( null );

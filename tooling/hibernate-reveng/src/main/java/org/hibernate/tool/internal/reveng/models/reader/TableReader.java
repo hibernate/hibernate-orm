@@ -75,9 +75,9 @@ class TableReader {
 	private void readTablesForSchemaSelection(
 			SchemaSelection selection, Map<String, TableMetadata> tablesByName) {
 		Iterator<Map<String, Object>> tableIterator = dialect.getTables(
-			selection.getMatchCatalog(),
-			selection.getMatchSchema(),
-			selection.getMatchTable());
+			StringHelper.replace(selection.getMatchCatalog(), ".*", "%"),
+			StringHelper.replace(selection.getMatchSchema(), ".*", "%"),
+			StringHelper.replace(selection.getMatchTable(), ".*", "%"));
 		try {
 			while (tableIterator.hasNext()) {
 				readTable(tableIterator.next(), tablesByName);
@@ -88,14 +88,20 @@ class TableReader {
 	}
 
 	private void readTable(Map<String, Object> tableRow, Map<String, TableMetadata> tablesByName) {
-		String tableName = (String) tableRow.get("TABLE_NAME");
-		String catalog = (String) tableRow.get("TABLE_CAT");
-		String schema = (String) tableRow.get("TABLE_SCHEM");
+		String tableType = (String) tableRow.get("TABLE_TYPE");
+		if (!isTypeToAdd(tableType)) {
+			return;
+		}
+
+		String tableName = quote((String) tableRow.get("TABLE_NAME"), dialect);
+		String catalog = quote((String) tableRow.get("TABLE_CAT"), dialect);
+		String schema = quote((String) tableRow.get("TABLE_SCHEM"), dialect);
 		String comment = (String) tableRow.get("REMARKS");
 
 		TableIdentifier tableId = TableIdentifier.create(catalog, schema, tableName);
 		if (!strategy.excludeTable(tableId)) {
-			TableMetadata tableMetadata = createTableMetadata(tableName, catalog, schema, tableId);
+			TableMetadata tableMetadata = createTableMetadata(
+				tableName, catalog, schema, tableId, tableType);
 			if (comment != null) {
 				tableMetadata.comment(comment);
 			}
@@ -103,8 +109,15 @@ class TableReader {
 		}
 	}
 
+	private static boolean isTypeToAdd(String tableType) {
+		return "TABLE".equalsIgnoreCase(tableType)
+			|| "VIEW".equalsIgnoreCase(tableType)
+			|| "SYNONYM".equals(tableType);
+	}
+
 	private TableMetadata createTableMetadata(
-			String tableName, String catalog, String schema, TableIdentifier tableId) {
+			String tableName, String catalog, String schema,
+			TableIdentifier tableId, String tableType) {
 		String fullClassName = strategy.tableToClassName(tableId);
 		String entityPackage = StringHelper.qualifier(fullClassName);
 		String entityClassName = StringHelper.unqualify(fullClassName);
@@ -124,9 +137,11 @@ class TableReader {
 		detectCompositeId(tableMetadata, tableId);
 		applyIdentifierStrategy(tableMetadata, tableId, catalog, schema);
 
-		IndexReader
-				.create(dialect)
-				.readIndexes(tableMetadata, catalog, schema);
+		if ("TABLE".equalsIgnoreCase(tableType)) {
+			IndexReader
+					.create(dialect)
+					.readIndexes(tableMetadata, catalog, schema);
+		}
 
 		return tableMetadata;
 	}
@@ -183,6 +198,18 @@ class TableReader {
 			compositeId.addAttributeOverride(pkCol.getFieldName(), pkCol.getColumnName());
 		}
 		tableMetadata.compositeId(compositeId);
+	}
+
+	private static String quote(String name, RevengDialect dialect) {
+		if (name == null) return null;
+		if (dialect.needQuote(name)) {
+			if (name.length() > 1 && name.charAt(0) == '`'
+					&& name.charAt(name.length() - 1) == '`') {
+				return name;
+			}
+			return "`" + name + "`";
+		}
+		return name;
 	}
 
 	private List<SchemaSelection> getSchemaSelections() {

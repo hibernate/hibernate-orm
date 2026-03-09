@@ -367,16 +367,33 @@ public class ModelsDatabaseSchemaReaderTest {
 		private final Map<String, List<Map<String, Object>>> suggestedStrategies = new HashMap<>();
 		private final Map<String, List<Map<String, Object>>> indexInfo = new HashMap<>();
 
+		private boolean quoteAllNames = false;
+		private String lastGetTablesCatalog;
+		private String lastGetTablesSchema;
+		private String lastGetTablesTable;
+
+		void setQuoteAllNames(boolean quoteAllNames) {
+			this.quoteAllNames = quoteAllNames;
+		}
+
+		String getLastGetTablesCatalog() { return lastGetTablesCatalog; }
+		String getLastGetTablesSchema() { return lastGetTablesSchema; }
+		String getLastGetTablesTable() { return lastGetTablesTable; }
+
 		void addTable(String name, String catalog, String schema) {
-			addTable(name, catalog, schema, null);
+			addTable(name, catalog, schema, "TABLE", null);
 		}
 
 		void addTable(String name, String catalog, String schema, String comment) {
+			addTable(name, catalog, schema, "TABLE", comment);
+		}
+
+		void addTable(String name, String catalog, String schema, String tableType, String comment) {
 			Map<String, Object> row = new HashMap<>();
 			row.put("TABLE_NAME", name);
 			row.put("TABLE_CAT", catalog);
 			row.put("TABLE_SCHEM", schema);
-			row.put("TABLE_TYPE", "TABLE");
+			row.put("TABLE_TYPE", tableType);
 			if (comment != null) {
 				row.put("REMARKS", comment);
 			}
@@ -446,6 +463,9 @@ public class ModelsDatabaseSchemaReaderTest {
 
 		@Override
 		public Iterator<Map<String, Object>> getTables(String catalog, String schema, String table) {
+			lastGetTablesCatalog = catalog;
+			lastGetTablesSchema = schema;
+			lastGetTablesTable = table;
 			return tables.iterator();
 		}
 
@@ -493,7 +513,7 @@ public class ModelsDatabaseSchemaReaderTest {
 
 		@Override
 		public boolean needQuote(String name) {
-			return false;
+			return quoteAllNames;
 		}
 	}
 }

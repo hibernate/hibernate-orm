@@ -79,11 +79,11 @@ class ForeignKeyReader {
 		if (fkName == null) {
 			fkName = "FK_UNNAMED_" + nullFkNameCounter++;
 		}
-		String fkTableName = (String) fkRow.get("FKTABLE_NAME");
-		String fkTableCatalog = (String) fkRow.get("FKTABLE_CAT");
-		String fkTableSchema = (String) fkRow.get("FKTABLE_SCHEM");
-		String fkColumnName = (String) fkRow.get("FKCOLUMN_NAME");
-		String pkColumnName = (String) fkRow.get("PKCOLUMN_NAME");
+		String fkTableName = quote((String) fkRow.get("FKTABLE_NAME"), dialect);
+		String fkTableCatalog = quote((String) fkRow.get("FKTABLE_CAT"), dialect);
+		String fkTableSchema = quote((String) fkRow.get("FKTABLE_SCHEM"), dialect);
+		String fkColumnName = quote((String) fkRow.get("FKCOLUMN_NAME"), dialect);
+		String pkColumnName = quote((String) fkRow.get("PKCOLUMN_NAME"), dialect);
 		int keySeq = fkRow.get("KEY_SEQ") != null
 			? ((Number) fkRow.get("KEY_SEQ")).intValue() : 1;
 
@@ -93,5 +93,17 @@ class ForeignKeyReader {
 			fkColumnName, pkColumnName,
 			referencedTableName, referencedCatalog, referencedSchema,
 			keySeq);
+	}
+
+	private static String quote(String name, RevengDialect dialect) {
+		if (name == null) return null;
+		if (dialect.needQuote(name)) {
+			if (name.length() > 1 && name.charAt(0) == '`'
+					&& name.charAt(name.length() - 1) == '`') {
+				return name;
+			}
+			return "`" + name + "`";
+		}
+		return name;
 	}
 }

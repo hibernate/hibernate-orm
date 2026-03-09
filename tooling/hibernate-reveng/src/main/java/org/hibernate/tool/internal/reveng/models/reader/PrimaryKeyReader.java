@@ -59,7 +59,7 @@ class PrimaryKeyReader {
 		Iterator<Map<String, Object>> pkIterator = dialect.getPrimaryKeys(catalog, schema, tableName);
 		try {
 			while (pkIterator.hasNext()) {
-				pkList.add((String) pkIterator.next().get("COLUMN_NAME"));
+				pkList.add(quote((String) pkIterator.next().get("COLUMN_NAME"), dialect));
 			}
 		} finally {
 			dialect.close(pkIterator);
@@ -109,6 +109,18 @@ class PrimaryKeyReader {
 	 * @param strategyName the strategy name (e.g., "identity", "sequence", "assigned")
 	 * @return the corresponding GenerationType, or null for "assigned" or null input
 	 */
+	private static String quote(String name, RevengDialect dialect) {
+		if (name == null) return null;
+		if (dialect.needQuote(name)) {
+			if (name.length() > 1 && name.charAt(0) == '`'
+					&& name.charAt(name.length() - 1) == '`') {
+				return name;
+			}
+			return "`" + name + "`";
+		}
+		return name;
+	}
+
 	static GenerationType toGenerationType(String strategyName) {
 		if (strategyName == null || "assigned".equals(strategyName)) {
 			return null;

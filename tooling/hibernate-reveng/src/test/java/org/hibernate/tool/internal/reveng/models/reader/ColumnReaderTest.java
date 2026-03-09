@@ -267,6 +267,22 @@ public class ColumnReaderTest {
 		assertEquals("The employee name", findColumn(columns, "NAME").getComment());
 	}
 
+	@Test
+	public void testQuotedColumnNames() {
+		dialect.setQuoteAllNames(true);
+		dialect.addColumn("TEST_TABLE", "ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addColumn("TEST_TABLE", "NAME", java.sql.Types.VARCHAR, 255, 0, true);
+		dialect.addPrimaryKey("TEST_TABLE", "ID", 1);
+
+		ColumnReader reader = ColumnReader.create(dialect, strategy);
+		reader.readColumns(tableMetadata, tableId, null, null);
+
+		List<ColumnMetadata> columns = tableMetadata.getColumns();
+		assertEquals(2, columns.size());
+		assertNotNull(findColumn(columns, "`ID`"));
+		assertNotNull(findColumn(columns, "`NAME`"));
+	}
+
 	private ColumnMetadata findColumn(List<ColumnMetadata> columns, String columnName) {
 		for (ColumnMetadata c : columns) {
 			if (c.getColumnName().equals(columnName)) {

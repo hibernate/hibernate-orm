@@ -17,6 +17,7 @@ package org.hibernate.tool.internal.reveng.models.reader;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -24,8 +25,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.tool.api.reveng.RevengSettings;
+import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
+import org.hibernate.tool.internal.reveng.models.metadata.IndexMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
 import org.hibernate.tool.internal.reveng.models.reader.ModelsDatabaseSchemaReaderTest.TestRevengDialect;
 import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
@@ -353,6 +356,127 @@ public class TableReaderTest {
 		Map<String, TableMetadata> result = reader.readTables();
 
 		assertNull(result.get("EMPLOYEE").getComment());
+	}
+
+	@Test
+	public void testSchemaSelectionWildcardReplacement() {
+		dialect.addTable("EMPLOYEE", null, null);
+		dialect.addColumn("EMPLOYEE", "ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
+
+		DefaultStrategy wildcardStrategy = new DefaultStrategy() {
+			@Override
+			public List<SchemaSelection> getSchemaSelections() {
+				List<SchemaSelection> selections = new ArrayList<>();
+				selections.add(new SchemaSelection() {
+					@Override
+					public String getMatchCatalog() { return "MY_CAT.*"; }
+					@Override
+					public String getMatchSchema() { return "MY_SCHEMA.*"; }
+					@Override
+					public String getMatchTable() { return "EMP.*"; }
+				});
+				return selections;
+			}
+		};
+		RevengSettings settings = new RevengSettings(wildcardStrategy);
+		settings.setDefaultPackageName("com.example");
+		wildcardStrategy.setSettings(settings);
+
+		TableReader reader = TableReader.create(dialect, wildcardStrategy, null, null);
+		reader.readTables();
+
+		assertEquals("MY_CAT%", dialect.getLastGetTablesCatalog());
+		assertEquals("MY_SCHEMA%", dialect.getLastGetTablesSchema());
+		assertEquals("EMP%", dialect.getLastGetTablesTable());
+	}
+
+	@Test
+	public void testViewIncludedWithoutIndexes() {
+		dialect.addTable("EMPLOYEE_VIEW", null, null, "VIEW", null);
+		dialect.addColumn("EMPLOYEE_VIEW", "ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addColumn("EMPLOYEE_VIEW", "NAME", java.sql.Types.VARCHAR, 255, 0, true);
+		dialect.addPrimaryKey("EMPLOYEE_VIEW", "ID", 1);
+		dialect.addIndexInfo("EMPLOYEE_VIEW", "IDX_NAME", "NAME", true);
+
+		TableReader reader = TableReader.create(dialect, strategy, null, null);
+		Map<String, TableMetadata> result = reader.readTables();
+
+		assertEquals(1, result.size());
+		assertTrue(result.containsKey("EMPLOYEE_VIEW"));
+		assertTrue(result.get("EMPLOYEE_VIEW").getIndexes().isEmpty(),
+			"VIEWs should not have indexes processed");
+	}
+
+	@Test
+	public void testSynonymIncluded() {
+		dialect.addTable("EMPLOYEE_SYN", null, null, "SYNONYM", null);
+		dialect.addColumn("EMPLOYEE_SYN", "ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addPrimaryKey("EMPLOYEE_SYN", "ID", 1);
+
+		TableReader reader = TableReader.create(dialect, strategy, null, null);
+		Map<String, TableMetadata> result = reader.readTables();
+
+		assertEquals(1, result.size());
+		assertTrue(result.containsKey("EMPLOYEE_SYN"));
+	}
+
+	@Test
+	public void testSystemTableExcluded() {
+		dialect.addTable("SYS_CONFIG", null, null, "SYSTEM TABLE", null);
+		dialect.addColumn("SYS_CONFIG", "ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addPrimaryKey("SYS_CONFIG", "ID", 1);
+
+		TableReader reader = TableReader.create(dialect, strategy, null, null);
+		Map<String, TableMetadata> result = reader.readTables();
+
+		assertTrue(result.isEmpty(), "SYSTEM TABLE type should be excluded");
+	}
+
+	@Test
+	public void testTableTypeHasIndexes() {
+		dialect.addTable("EMPLOYEE", null, null, "TABLE", null);
+		dialect.addColumn("EMPLOYEE", "ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addColumn("EMPLOYEE", "NAME", java.sql.Types.VARCHAR, 255, 0, true);
+		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
+		dialect.addIndexInfo("EMPLOYEE", "IDX_NAME", "NAME", true);
+
+		TableReader reader = TableReader.create(dialect, strategy, null, null);
+		Map<String, TableMetadata> result = reader.readTables();
+
+		assertFalse(result.get("EMPLOYEE").getIndexes().isEmpty(),
+			"TABLE type should have indexes processed");
+	}
+
+	@Test
+	public void testQuotedTableName() {
+		dialect.setQuoteAllNames(true);
+		dialect.addTable("EMPLOYEE", null, null);
+		dialect.addColumn("EMPLOYEE", "ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
+
+		TableReader reader = TableReader.create(dialect, strategy, null, null);
+		Map<String, TableMetadata> result = reader.readTables();
+
+		assertTrue(result.containsKey("`EMPLOYEE`"));
+		TableMetadata employee = result.get("`EMPLOYEE`");
+		assertEquals("`EMPLOYEE`", employee.getTableName());
+	}
+
+	@Test
+	public void testQuotedCatalogAndSchema() {
+		dialect.setQuoteAllNames(true);
+		dialect.addTable("EMPLOYEE", "MY-CATALOG", "MY-SCHEMA");
+		dialect.addColumn("EMPLOYEE", "ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
+
+		TableReader reader = TableReader.create(dialect, strategy, "DEFAULT_CAT", "DEFAULT_SCHEMA");
+		Map<String, TableMetadata> result = reader.readTables();
+
+		TableMetadata employee = result.get("`EMPLOYEE`");
+		assertNotNull(employee);
+		assertEquals("`MY-CATALOG`", employee.getCatalog());
+		assertEquals("`MY-SCHEMA`", employee.getSchema());
 	}
 
 	private ColumnMetadata findColumn(List<ColumnMetadata> columns, String columnName) {

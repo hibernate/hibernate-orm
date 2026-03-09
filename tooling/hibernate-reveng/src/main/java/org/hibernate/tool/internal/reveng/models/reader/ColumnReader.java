@@ -74,7 +74,7 @@ class ColumnReader {
 
 	private void readColumn(Map<String, Object> colRow, TableMetadata tableMetadata,
 			TableIdentifier tableId, Set<String> pkColumns) {
-		RowInfo rowInfo = RowInfo.createFrom(colRow, pkColumns);
+		RowInfo rowInfo = RowInfo.createFrom(colRow, pkColumns, dialect);
 
 		if (!strategy.excludeColumn(tableId, rowInfo.columnName())) {
 			tableMetadata.addColumn(createColumnMetadata(tableId, rowInfo));
@@ -143,10 +143,23 @@ class ColumnReader {
 		return strategy.useColumnForOptimisticLock(tableId, columnName);
 	}
 
+	private static String quote(String name, RevengDialect dialect) {
+		if (name == null) return null;
+		if (dialect.needQuote(name)) {
+			if (name.length() > 1 && name.charAt(0) == '`'
+					&& name.charAt(name.length() - 1) == '`') {
+				return name;
+			}
+			return "`" + name + "`";
+		}
+		return name;
+	}
+
 	record RowInfo(String columnName, int sqlType, int columnSize, int decimalDigits,
 			boolean nullable, boolean primaryKey, String comment) {
-		static RowInfo createFrom(Map<String, Object> colRow, Set<String> pkColumns) {
-			String columnName = (String) colRow.get("COLUMN_NAME");
+		static RowInfo createFrom(Map<String, Object> colRow, Set<String> pkColumns,
+				RevengDialect dialect) {
+			String columnName = quote((String) colRow.get("COLUMN_NAME"), dialect);
 			int sqlType = (Integer) colRow.get("DATA_TYPE");
 			int columnSize = colRow.get("COLUMN_SIZE") != null
 				? (Integer) colRow.get("COLUMN_SIZE") : 0;

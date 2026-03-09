@@ -75,7 +75,7 @@ class IndexReader {
 			while (indexIterator.hasNext()) {
 				Map<String, Object> row = indexIterator.next();
 				String indexName = (String) row.get("INDEX_NAME");
-				String columnName = (String) row.get("COLUMN_NAME");
+				String columnName = quote((String) row.get("COLUMN_NAME"), dialect);
 
 				// Skip statistical indexes (null column or index name)
 				if (indexName == null || columnName == null) {
@@ -98,5 +98,17 @@ class IndexReader {
 		}
 
 		return indexesByName.values();
+	}
+
+	private static String quote(String name, RevengDialect dialect) {
+		if (name == null) return null;
+		if (dialect.needQuote(name)) {
+			if (name.length() > 1 && name.charAt(0) == '`'
+					&& name.charAt(name.length() - 1) == '`') {
+				return name;
+			}
+			return "`" + name + "`";
+		}
+		return name;
 	}
 }

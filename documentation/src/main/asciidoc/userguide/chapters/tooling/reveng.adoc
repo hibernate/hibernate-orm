@@ -1,0 +1,261 @@
+[[tooling-reveng]]
+=== Reverse Engineering
+
+Reverse engineering reads an existing database schema via JDBC and generates various artifacts
+from it.  This is useful for bootstrapping a Hibernate project from a legacy database, or for
+keeping generated code in sync as a schema evolves.
+
+See the tool-specific discussions (<<tooling-gradle-reveng,Gradle>>, <<tooling-maven-reveng,Maven>>
+and <<tooling-ant-reveng,Ant>>) for details on integrating reverse engineering into those environments.
+
+
+[[tooling-reveng-exporters]]
+==== Available Exporters
+
+The following artifacts can be generated from a database schema:
+
+Java entity classes:: Annotated Jakarta Persistence entity classes.
+Data Access Objects (DAOs):: DAO classes providing basic CRUD operations.
+`hbm.xml` mapping files:: Hibernate XML mapping files.
+`hibernate.cfg.xml`:: A configuration file listing the generated mappings.
+DDL scripts:: SQL schema creation and drop scripts.
+HTML documentation:: An HTML report describing the database schema.
+Custom FreeMarker templates:: User-defined templates for arbitrary code generation.
+
+Which exporters are available and how they are configured depends on the build tool.
+See <<tooling-gradle-reveng-tasks,Gradle tasks>>, <<tooling-maven-reveng-goals,Maven goals>>,
+or <<tooling-ant-reveng-exporters,Ant exporters>> for specifics.
+
+
+[[tooling-reveng-connection]]
+==== JDBC Connection Settings
+
+Reverse engineering connects to the database using settings from a `hibernate.properties` file:
+
+[source,properties]
+----
+hibernate.connection.driver_class=org.h2.Driver
+hibernate.connection.url=jdbc:h2:tcp://localhost/./mydb
+hibernate.connection.username=sa
+hibernate.connection.password=
+hibernate.default_catalog=MY_CATALOG
+hibernate.default_schema=PUBLIC
+----
+
+The JDBC driver must be available on the classpath (typically declared as a project dependency).
+The location of the properties file is configured in the build tool plugin -- see
+<<tooling-gradle-reveng-properties,Gradle>>, <<tooling-maven-reveng-common-params,Maven>>,
+or <<tooling-ant-reveng-configurations,Ant>> for details.
+
+
+[[tooling-reveng-config]]
+==== Reverse Engineering Configuration File
+
+An optional XML configuration file can be used to customize how the database schema is interpreted.
+The file uses the `hibernate-reverse-engineering` document type:
+
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-reverse-engineering SYSTEM
+    "https://hibernate.org/dtd/hibernate-reverse-engineering-3.0.dtd">
+
+<hibernate-reverse-engineering>
+    <!-- configuration elements go here -->
+</hibernate-reverse-engineering>
+----
+
+The path to this file is configured via the build tool plugin (e.g. `revengFile` in Gradle and Maven,
+`revengfile` attribute on `<jdbcconfiguration>` in Ant).
+
+
+[[tooling-reveng-schema-selection]]
+===== Schema Selection
+
+By default, reverse engineering reads all tables visible to the JDBC connection.
+Use `<schema-selection>` elements to restrict which catalogs, schemas, or tables are processed:
+
+[source,xml]
+----
+<hibernate-reverse-engineering>
+    <!-- Only process tables in the PUBLIC schema -->
+    <schema-selection match-schema="PUBLIC"/>
+
+    <!-- Only process a specific table -->
+    <schema-selection match-schema="PUBLIC" match-table="CUSTOMER"/>
+</hibernate-reverse-engineering>
+----
+
+The `match-catalog`, `match-schema`, and `match-table` attributes accept SQL `LIKE` patterns
+(e.g. `match-table="PROD_%"`).
+
+
+[[tooling-reveng-type-mapping]]
+===== Type Mappings
+
+The `<type-mapping>` element overrides how SQL types are mapped to Hibernate types:
+
+[source,xml]
+----
+<type-mapping>
+    <!-- Map single-character VARCHAR columns to yes_no type -->
+    <sql-type jdbc-type="VARCHAR" length="1" hibernate-type="yes_no"/>
+
+    <!-- Map NUMERIC(10,2) to BigDecimal -->
+    <sql-type jdbc-type="NUMERIC" precision="10" scale="2"
+              hibernate-type="big_decimal"/>
+</type-mapping>
+----
+
+Each `<sql-type>` element supports the following attributes:
+
+`jdbc-type`:: The JDBC type name (e.g. `VARCHAR`, `INTEGER`, `NUMERIC`). Required.
+`hibernate-type`:: The Hibernate type to use. Required.
+`length`:: Match only columns with this length.
+`precision`:: Match only columns with this precision.
+`scale`:: Match only columns with this scale.
+`not-null`:: Match only columns with this nullability (`true` or `false`).
+
+More specific mappings (those with more attributes) take precedence over less specific ones.
+
+
+[[tooling-reveng-table-filter]]
+===== Table Filters
+
+`<table-filter>` elements control which tables are included or excluded, and can assign
+a package name to the generated classes:
+
+[source,xml]
+----
+<!-- Assign a package to tables matching a pattern -->
+<table-filter match-name="PROD_.*" package="com.example.product"/>
+
+<!-- Exclude audit tables -->
+<table-filter match-name=".*_AUD" exclude="true"/>
+----
+
+The `match-catalog`, `match-schema`, and `match-name` attributes accept regular expression patterns.
+
+
+[[tooling-reveng-table]]
+===== Per-Table Configuration
+
+The `<table>` element provides fine-grained control over individual tables:
+
+[source,xml]
+----
+<table name="CUSTOMER" class="Customer">
+
+    <!-- Primary key configuration -->
+    <primary-key property="id">
+        <generator class="sequence">
+            <param name="sequence_name">CUST_SEQ</param>
+        </generator>
+    </primary-key>
+
+    <!-- Column overrides -->
+    <column name="CUST_NAME" property="name" type="string"/>
+    <column name="INTERNAL_CODE" exclude="true"/>
+
+    <!-- Foreign key overrides -->
+    <foreign-key constraint-name="FK_CUST_ADDR">
+        <many-to-one property="address"/>
+        <set property="customers" exclude="false"/>
+    </foreign-key>
+
+</table>
+----
+
+The `<table>` element supports the following attributes:
+
+`name`:: The table name. Required.
+`catalog`:: The catalog name.
+`schema`:: The schema name.
+`class`:: The Java class name to use instead of the default derived name.
+
+The `<primary-key>` child element controls identifier generation. It accepts a `property` attribute
+for the property name, and nested `<key-column>` and `<generator>` elements.
+
+The `<column>` child element overrides individual column mappings. It accepts `name` (required),
+`property`, `type`, and `exclude` attributes.
+
+The `<foreign-key>` child element customizes association mappings for a specific foreign key
+constraint. It accepts `constraint-name` and `foreign-table` attributes, and can contain
+`<many-to-one>`, `<set>`, `<one-to-one>`, and `<inverse-one-to-one>` child elements to control
+the generated association properties.
+
+
+[[tooling-reveng-detection]]
+==== Detection Settings
+
+The build tool plugins expose several boolean settings that control how relationships and special
+columns are detected:
+
+`detectManyToMany`:: When `true`, pure link tables (tables whose primary key consists entirely of
+two foreign keys and no other columns) are mapped as `@ManyToMany` associations instead of generating
+an entity for the link table. Default: `true`.
+
+`detectOneToOne`:: When `true`, foreign keys that are also the primary key of their table are mapped
+as `@OneToOne` associations. Default: `true`.
+
+`detectOptimisticLock`:: When `true`, columns named `VERSION`, `TIMESTAMP`, or `DBTIMESTAMP` with
+appropriate types are mapped as `@Version` properties. Default: `true`.
+
+These settings are configured in the build tool plugin.  See
+<<tooling-maven-reveng-common-params,Maven>> or <<tooling-ant-reveng-configurations,Ant>> for details.
+
+
+[[tooling-reveng-custom-strategy]]
+==== Custom Strategies
+
+For programmatic control over reverse engineering, implement the
+`org.hibernate.tool.reveng.api.core.RevengStrategy` interface. This interface provides callbacks
+for customizing class names, property names, type mappings, association handling, and more.
+
+The simplest approach is to extend `DelegatingStrategy`, which wraps another strategy and
+delegates all methods to it. Override only the methods you need to customize:
+
+[source,java]
+----
+import org.hibernate.tool.reveng.api.core.RevengStrategy;
+import org.hibernate.tool.reveng.internal.core.strategy.DelegatingStrategy;
+import org.hibernate.tool.reveng.api.core.TableIdentifier;
+
+public class MyStrategy extends DelegatingStrategy {
+
+    public MyStrategy(RevengStrategy delegate) {
+        super(delegate);
+    }
+
+    @Override
+    public String tableToClassName(TableIdentifier tableIdentifier) {
+        String className = super.tableToClassName(tableIdentifier);
+        // Add "Entity" suffix to all generated class names
+        return className + "Entity";
+    }
+
+    @Override
+    public boolean excludeTable(TableIdentifier ti) {
+        // Skip tables starting with "TMP_"
+        return ti.getName().startsWith("TMP_")
+            || super.excludeTable(ti);
+    }
+}
+----
+
+The custom strategy class must provide either a no-argument constructor or a constructor that
+accepts a `RevengStrategy` parameter (used as the delegate). It is specified via the
+`revengStrategy` configuration property in the build tool plugin.
+
+Key methods available for override:
+
+`tableToClassName`:: Controls the entity class name for a given table.
+`columnToPropertyName`:: Controls the property name for a given column.
+`columnToHibernateTypeName`:: Controls the Hibernate type mapping for a column.
+`excludeTable`:: Returns `true` to skip a table entirely.
+`excludeColumn`:: Returns `true` to skip a specific column.
+`isManyToManyTable`:: Returns `true` if a table should be treated as a many-to-many link table.
+`isOneToOne`:: Returns `true` if a foreign key represents a one-to-one relationship.
+`getTableIdentifierStrategyName`:: Controls the identifier generation strategy for a table.
+`foreignKeyToCollectionName`:: Controls the property name for a collection association.
+`foreignKeyToEntityName`:: Controls the property name for a many-to-one association.

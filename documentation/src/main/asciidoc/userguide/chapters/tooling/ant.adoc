@@ -4,7 +4,8 @@
 Hibernate provides https://ant.apache.org/[Ant] support.
 Everything Ant related is available from the
 https://central.sonatype.com/artifact/org.hibernate.orm/hibernate-ant[hibernate-ant]
-library.
+library.  The Ant integration supports <<tooling-ant-enhancement,bytecode enhancement>>,
+<<tooling-ant-modelgen,metamodel generation>>, and <<tooling-ant-reveng,reverse engineering>>.
 
 [[tooling-ant-enhancement]]
 ==== Bytecode Enhancement ====
@@ -190,6 +191,134 @@ Ant's https://ant.apache.org/manual/Tasks/javac.html[javac] task.
 ----
 
 ====
+
+
+[[tooling-ant-reveng]]
+==== Reverse Engineering
+
+Hibernate provides an Ant task for <<tooling-reveng,reverse engineering>> an existing database
+into Java entities, mapping files, DAOs, configuration files, and DDL scripts.
+
+
+[[tooling-ant-reveng-task]]
+===== Task Definition
+
+The reverse engineering task is implemented by `org.hibernate.tool.ant.HibernateToolTask`.
+Define it in your `build.xml` using a `taskdef`:
+
+[source,xml,subs="attributes+"]
+----
+<taskdef name="hibernatetool"
+         classname="org.hibernate.tool.ant.HibernateToolTask"
+         classpathref="toolslib"/>
+----
+
+The `toolslib` classpath must include the
+https://central.sonatype.com/artifact/org.hibernate.orm/hibernate-ant[hibernate-ant]
+artifact and its dependencies, as well as the JDBC driver for your database.
+
+
+[[tooling-ant-reveng-hibernatetool]]
+===== The `<hibernatetool>` Task
+
+The `<hibernatetool>` task is the main entry point. It accepts the following attributes:
+
+`destdir`:: The base output directory for generated files. Required (can be set on the task or on individual exporters).
+`templatepath`:: Path to a directory containing custom FreeMarker templates.
+
+It also accepts `<property>` child elements for passing additional properties, and
+a `<classpath>` element for configuring the classpath.
+
+
+[[tooling-ant-reveng-configurations]]
+===== Configuration Elements
+
+A `<hibernatetool>` task requires exactly one configuration element that defines how metadata is obtained.
+For reverse engineering from a database, use `<jdbcconfiguration>`:
+
+`<jdbcconfiguration>`:: Reads database metadata via JDBC for reverse engineering. Attributes:
++
+--
+`propertyfile`;; Path to a properties file containing JDBC connection settings.
+`configurationfile`;; Path to a `hibernate.cfg.xml` file.
+`packagename`;; The default Java package name for generated classes.
+`reversestrategy`;; Fully qualified class name of a custom reverse engineering strategy.
+`revengfile`;; Path containing reverse engineering configuration XML file(s) for customizing schema selection and type mappings.
+`detectmanytomany`;; Whether to detect many-to-many link tables. Default: `true`.
+`detectonetoone`;; Whether to detect one-to-one associations. Default: `true`.
+`detectoptimisticlock`;; Whether to detect `VERSION`/`TIMESTAMP` columns for optimistic locking. Default: `true`.
+--
+
+Other configuration elements are also available for non-JDBC scenarios:
+
+`<configuration>`:: Uses a `hibernate.cfg.xml` and/or HBM mapping files as input.
+`<jpaconfiguration>`:: Uses a JPA `persistence.xml` as input.
+
+
+[[tooling-ant-reveng-exporters]]
+===== Exporter Elements
+
+One or more exporter elements can be nested inside `<hibernatetool>` to specify what artifacts to generate.
+Each exporter supports a `destdir` attribute to override the output directory.
+
+`<hbm2java>`:: Generates Java entity classes.
+`<hbm2hbmxml>`:: Generates `hbm.xml` mapping files.
+`<hbm2dao>`:: Generates Data Access Object (DAO) classes.
+`<hbm2ddl>`:: Generates DDL scripts (schema creation/drop).
+`<hbm2cfgxml>`:: Generates a `hibernate.cfg.xml` configuration file.
+`<hbm2doc>`:: Generates HTML documentation of the database schema.
+`<hbmtemplate>`:: Runs a custom FreeMarker template for user-defined code generation.
+`<query>`:: Executes HQL queries against the configured metadata.
+
+
+[[tooling-ant-reveng-example]]
+===== Example
+
+The following `build.xml` generates JPA entity classes from a database:
+
+[source,xml,subs="attributes+"]
+----
+<project name="reveng-example" default="generate">
+
+    <path id="toolslib">
+        <fileset dir="${lib.dir}">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+
+    <taskdef name="hibernatetool"
+             classname="org.hibernate.tool.ant.HibernateToolTask"
+             classpathref="toolslib"/>
+
+    <target name="generate">
+        <hibernatetool destdir="${build.dir}/generated-sources">
+            <classpath>
+                <path refid="toolslib"/>
+            </classpath>
+            <jdbcconfiguration
+                propertyfile="src/main/resources/hibernate.properties"
+                packagename="com.example.model"
+                detectmanytomany="true"/>
+            <hbm2java/>
+        </hibernatetool>
+    </target>
+
+</project>
+----
+
+To generate multiple artifact types in a single run, add additional exporter elements:
+
+[source,xml]
+----
+<hibernatetool destdir="${build.dir}/generated-sources">
+    <jdbcconfiguration
+        propertyfile="src/main/resources/hibernate.properties"
+        packagename="com.example.model"/>
+    <hbm2java/>
+    <hbm2dao/>
+    <hbm2ddl/>
+</hibernatetool>
+----
 
 
 [[tooling-ant-schema]]

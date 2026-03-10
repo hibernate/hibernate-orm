@@ -6,9 +6,8 @@ package org.hibernate.orm.test.action.queue.fk;
 
 import java.util.Set;
 
+import org.hibernate.action.queue.constraint.ConstraintModelBuilder;
 import org.hibernate.action.queue.fk.ForeignKey;
-import org.hibernate.action.queue.fk.ForeignKeyModel;
-import org.hibernate.action.queue.fk.ForeignKeyModelBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -63,20 +62,22 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testBasicForeignKeyModelBuilding(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		ForeignKeyModel model = sessionFactory.getForeignKeyModel();
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var foreignKeys = constraintModel.foreignKeys();
 
-		assertNotNull(model);
-		assertNotNull(model.foreignKeys());
-		assertFalse(model.foreignKeys().isEmpty(), "Foreign key model should contain foreign keys");
+		assertNotNull(constraintModel);
+		assertNotNull(foreignKeys);
+		assertFalse(foreignKeys.isEmpty(), "Foreign key model should contain foreign keys");
 	}
 
 	@Test
 	public void testSecondaryTableForeignKeys(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		ForeignKeyModel model = sessionFactory.getForeignKeyModel();
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var foreignKeys = constraintModel.foreignKeys();
 
 		// EntityWithSecondaryTable should have FK from secondary table to primary table
-		boolean foundSecondaryTableFK = model.foreignKeys().stream()
+		boolean foundSecondaryTableFK = foreignKeys.stream()
 				.anyMatch(fk -> fk.keyTable().contains("entity_secondary") &&
 						fk.targetTable().contains("entity_primary"));
 
@@ -86,10 +87,11 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testJoinedInheritanceForeignKeys(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		ForeignKeyModel model = sessionFactory.getForeignKeyModel();
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var foreignKeys = constraintModel.foreignKeys();
 
 		// ChildEntity table should have FK to ParentEntity table in joined inheritance
-		boolean foundInheritanceFK = model.foreignKeys().stream()
+		boolean foundInheritanceFK = foreignKeys.stream()
 				.anyMatch(fk -> fk.keyTable().contains("ChildEntity") &&
 						fk.targetTable().contains("ParentEntity"));
 
@@ -99,10 +101,11 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testToOneForeignKeys(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		ForeignKeyModel model = sessionFactory.getForeignKeyModel();
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var foreignKeys = constraintModel.foreignKeys();
 
 		// EntityWithToOne should have FK to TargetEntity
-		boolean foundToOneFK = model.foreignKeys().stream()
+		boolean foundToOneFK = foreignKeys.stream()
 				.anyMatch(fk -> fk.keyTable().contains("EntityWithToOne") &&
 						fk.targetTable().contains("TargetEntity"));
 
@@ -112,10 +115,11 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testCollectionTableForeignKeys(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		ForeignKeyModel model = sessionFactory.getForeignKeyModel();
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var foreignKeys = constraintModel.foreignKeys();
 
 		// Owner's @OneToMany should create FK in Item table
-		boolean foundCollectionFK = model.foreignKeys().stream()
+		boolean foundCollectionFK = foreignKeys.stream()
 				.anyMatch(fk -> fk.keyTable().contains("Item") &&
 						fk.targetTable().contains("Owner"));
 
@@ -125,10 +129,11 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testManyToManyForeignKeys(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		ForeignKeyModel model = sessionFactory.getForeignKeyModel();
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var foreignKeys = constraintModel.foreignKeys();
 
 		// Many-to-many join table should have two FKs
-		long m2mFKCount = model.foreignKeys().stream()
+		long m2mFKCount = foreignKeys.stream()
 				.filter(fk -> fk.keyTable().contains("student_course"))
 				.count();
 
@@ -138,10 +143,11 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testEmbeddedToOneForeignKeys(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		ForeignKeyModel model = sessionFactory.getForeignKeyModel();
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var foreignKeys = constraintModel.foreignKeys();
 
 		// EntityWithEmbedded has embedded component with ToOne - should find FK
-		boolean foundEmbeddedFK = model.foreignKeys().stream()
+		boolean foundEmbeddedFK = foreignKeys.stream()
 				.anyMatch(fk -> fk.keyTable().contains("EntityWithEmbedded") &&
 						fk.targetTable().contains("TargetEntity"));
 
@@ -151,10 +157,11 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testNullableForeignKeys(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		ForeignKeyModel model = sessionFactory.getForeignKeyModel();
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var foreignKeys = constraintModel.foreignKeys();
 
 		// Find nullable FK (EntityWithNullableFK -> OptionalTarget)
-		ForeignKey nullableFK = model.foreignKeys().stream()
+		ForeignKey nullableFK = foreignKeys.stream()
 				.filter(fk -> fk.keyTable().contains("EntityWithNullableFK") &&
 						fk.targetTable().contains("OptionalTarget"))
 				.findFirst()
@@ -167,10 +174,11 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testForeignKeyColumns(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		ForeignKeyModel model = sessionFactory.getForeignKeyModel();
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var foreignKeys = constraintModel.foreignKeys();
 
 		// Find a specific FK and verify column mappings
-		ForeignKey toOneFK = model.foreignKeys().stream()
+		ForeignKey toOneFK = foreignKeys.stream()
 				.filter(fk -> fk.keyTable().contains("EntityWithToOne") &&
 						fk.targetTable().contains("TargetEntity"))
 				.findFirst()
@@ -186,21 +194,23 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testNoDuplicateForeignKeys(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		ForeignKeyModel model = sessionFactory.getForeignKeyModel();
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var foreignKeys = constraintModel.foreignKeys();
 
 		// Count unique FKs - the builder uses IdentityHashMap to avoid duplicates
 		// Just verify we got a reasonable number of FKs without duplicates causing issues
-		int fkCount = model.foreignKeys().size();
+		int fkCount = foreignKeys.size();
 		assertTrue(fkCount > 0, "Should have at least one FK");
 	}
 
 	@Test
 	public void testElementCollectionForeignKeys(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		ForeignKeyModel model = sessionFactory.getForeignKeyModel();
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var foreignKeys = constraintModel.foreignKeys();
 
 		// Element collection table should have FK back to owner
-		boolean foundElementCollectionFK = model.foreignKeys().stream()
+		boolean foundElementCollectionFK = foreignKeys.stream()
 				.anyMatch(fk -> fk.keyTable().contains("element_values") &&
 						fk.targetTable().contains("EntityWithElementCollection"));
 
@@ -210,10 +220,11 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testCompositeForeignKeys(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		ForeignKeyModel model = sessionFactory.getForeignKeyModel();
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var foreignKeys = constraintModel.foreignKeys();
 
 		// Find composite FK (multi-column)
-		ForeignKey compositeFK = model.foreignKeys().stream()
+		ForeignKey compositeFK = foreignKeys.stream()
 				.filter(fk -> fk.keyTable().contains("EntityWithCompositeFK") &&
 						fk.targetTable().contains("CompositeKeyTarget"))
 				.findFirst()
@@ -228,10 +239,11 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testDeferrableFlagIsAlwaysFalse(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		ForeignKeyModel model = sessionFactory.getForeignKeyModel();
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var foreignKeys = constraintModel.foreignKeys();
 
 		// Currently, all FKs are marked as non-deferrable
-		boolean allNonDeferrable = model.foreignKeys().stream()
+		boolean allNonDeferrable = foreignKeys.stream()
 				.allMatch(fk -> !fk.deferrable());
 
 		assertTrue(allNonDeferrable, "All FKs should be marked as non-deferrable (current implementation)");
@@ -240,10 +252,11 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testForeignKeyTableNames(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		ForeignKeyModel model = sessionFactory.getForeignKeyModel();
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var foreignKeys = constraintModel.foreignKeys();
 
 		// Verify all FKs have non-null, non-empty table names
-		boolean allHaveValidTables = model.foreignKeys().stream()
+		boolean allHaveValidTables = foreignKeys.stream()
 				.allMatch(fk -> fk.keyTable() != null && !fk.keyTable().isEmpty() &&
 						fk.targetTable() != null && !fk.targetTable().isEmpty());
 

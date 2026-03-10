@@ -142,11 +142,13 @@ public final class ForeignKeyModelBuilder {
 			EntityTableMapping target,
 			List<ForeignKey> foreignKeys,
 			IdentityHashMap<ForeignKeyDescriptor, Boolean> seen) {
+		// Secondary tables and joined inheritance always target primary key
 		foreignKeys.add(new ForeignKey(
 				source.getTableName(),
 				target.getTableName(),
 				source.getKeyDetails(),
 				target.getKeyDetails(),
+				ForeignKey.TargetType.PRIMARY_KEY,
 				false,
 				false,
 				false
@@ -212,11 +214,14 @@ public final class ForeignKeyModelBuilder {
 
 		final boolean deferrable = false;
 
+		// For backward compatibility, assume NON_UNIQUE
+		// ConstraintModelBuilder does proper target type detection
 		foreignKeys.add(new ForeignKey(
 				fkDesc.getKeyTable(),
 				fkDesc.getTargetTable(),
 				keySide,
 				targetSide,
+				ForeignKey.TargetType.NON_UNIQUE,
 				true,
 				nullable,
 				deferrable

@@ -57,7 +57,8 @@ public class GraphTestUtils {
 	 */
 	public static GraphEdge createBreakableEdge(GroupNode from, GroupNode to, int breakCost) {
 		// Create a dummy ForeignKey for testing
-		ForeignKey fk = new ForeignKey("key_table", "target_table", EMPTY_SELECTABLES, EMPTY_SELECTABLES, true, true, false);
+		ForeignKey fk = new ForeignKey("key_table", "target_table", EMPTY_SELECTABLES, EMPTY_SELECTABLES,
+				ForeignKey.TargetType.NON_UNIQUE, true, true, false);
 		return createEdge(from, to, from, to, true, breakCost, EMPTY_SELECTABLES, fk, System.nanoTime());
 	}
 
@@ -66,7 +67,8 @@ public class GraphTestUtils {
 	 */
 	public static GraphEdge createUnbreakableEdge(GroupNode from, GroupNode to) {
 		// Create a dummy ForeignKey for testing
-		ForeignKey fk = new ForeignKey("key_table", "target_table", EMPTY_SELECTABLES, EMPTY_SELECTABLES, true, false, false);
+		ForeignKey fk = new ForeignKey("key_table", "target_table", EMPTY_SELECTABLES, EMPTY_SELECTABLES,
+				ForeignKey.TargetType.NON_UNIQUE, true, false, false);
 		return createEdge(from, to, from, to, false, Integer.MAX_VALUE, EMPTY_SELECTABLES, fk, System.nanoTime());
 	}
 }

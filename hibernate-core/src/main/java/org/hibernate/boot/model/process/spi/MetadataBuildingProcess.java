@@ -33,6 +33,8 @@ import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
+import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
+import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
 import org.hibernate.boot.model.process.internal.ScanningCoordinator;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
@@ -227,18 +229,39 @@ public class MetadataBuildingProcess {
 			MetadataBuildingContextRootImpl rootMetadataBuildingContext,
 			DomainModelSource domainModelSource,
 			InFlightMetadataCollectorImpl metadataCollector) {
-		final var processor = new MetadataSourceProcessor() {
-			private final MetadataSourceProcessor hbmProcessor =
-					options.isXmlMappingEnabled()
-							? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
-							: new NoOpMetadataSourceProcessorImpl();
+		final MetadataSourceProcessor hbmProcessor = options.isXmlMappingEnabled()
+				? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
+				: new NoOpMetadataSourceProcessorImpl();
 
-			private final AnnotationMetadataSourceProcessorImpl annotationProcessor =
-					new AnnotationMetadataSourceProcessorImpl(
-							managedResources,
-							domainModelSource,
-							rootMetadataBuildingContext
-					);
+		final AnnotationMetadataSourceProcessorImpl annotationProcessor = new AnnotationMetadataSourceProcessorImpl(
+				managedResources,
+				domainModelSource,
+				rootMetadataBuildingContext
+		);
+
+		final var bootstrapContext = rootMetadataBuildingContext.getBootstrapContext();
+		final var classLoaderService = bootstrapContext.getClassLoaderService();
+		assert classLoaderService != null;
+
+		final var converterRegistry =
+				rootMetadataBuildingContext.getMetadataCollector().getConverterRegistry();
+		domainModelSource.getConversionRegistrations().forEach( registration -> {
+			final var explicitDomainType = registration.getExplicitDomainType();
+			converterRegistry.addRegisteredConversion( new RegisteredConversion(
+					explicitDomainType == void.class || explicitDomainType == Void.class
+							? void.class
+							: explicitDomainType,
+					registration.getConverterType(),
+					registration.isAutoApply()
+			) );
+		} );
+		domainModelSource.getConverterRegistrations().forEach( registration ->
+				converterRegistry.addAttributeConverter( ConverterDescriptors.of(
+						classLoaderService.classForName( registration.converterClass().getClassName() ),
+						registration.autoApply(), false
+				) ) );
+
+		final var processor = new MetadataSourceProcessor() {
 
 			@Override
 			public void prepare() {

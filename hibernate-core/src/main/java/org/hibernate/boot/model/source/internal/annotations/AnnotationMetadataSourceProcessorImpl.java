@@ -76,11 +76,16 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 					registration.isAutoApply()
 			) );
 		} );
-		domainModelSource.getConverterRegistrations().forEach( registration ->
-				converterRegistry.addAttributeConverter( ConverterDescriptors.of(
-						classLoaderService.classForName( registration.converterClass().getClassName() ),
-						registration.autoApply(), false
-				) ) );
+		domainModelSource.getConverterRegistrations().forEach( registration -> {
+			@SuppressWarnings("unchecked")
+			final var converterClass = (Class<? extends AttributeConverter<?,?>>)
+					classLoaderService.classForName( registration.converterClass().getClassName() );
+			if ( !converterRegistry.hasRegisteredConverter( converterClass ) ) {
+				converterRegistry.addAttributeConverter(
+						ConverterDescriptors.of( converterClass, registration.autoApply(), false )
+				);
+			}
+		} );
 
 		applyManagedClasses( domainModelSource, knownClasses );
 

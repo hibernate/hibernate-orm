@@ -34,5 +34,13 @@ public interface ConverterRegistry {
 
 	void addRegisteredConversion(RegisteredConversion conversion);
 
+	/**
+	 * Check if an {@link AttributeConverter} class is already registered.
+	 *
+	 * @param converterClass the converter class to check
+	 * @return {@code true} if the converter is already registered
+	 */
+	boolean hasRegisteredConverter(Class<? extends AttributeConverter<?,?>> converterClass);
+
 	ConverterAutoApplyHandler getAttributeConverterAutoApplyHandler();
 }

@@ -46,6 +46,11 @@ public class AttributeConverterManager implements ConverterAutoApplyHandler {
 		return registeredConversionsByDomainType == null ? null : registeredConversionsByDomainType.get( domainType );
 	}
 
+	public boolean hasConverterFor(Class<?> converterClass) {
+		return attributeConverterDescriptorsByClass != null
+				&& attributeConverterDescriptorsByClass.containsKey( converterClass );
+	}
+
 	public void addConverter(ConverterDescriptor<?,?> descriptor) {
 		final var converterClass = descriptor.getAttributeConverterClass();
 		if ( BOOT_LOGGER.isTraceEnabled() ) {

@@ -566,6 +566,11 @@ public class InFlightMetadataCollectorImpl
 	}
 
 	@Override
+	public boolean hasRegisteredConverter(Class<? extends AttributeConverter<?,?>> converterClass) {
+		return attributeConverterManager.hasConverterFor( converterClass );
+	}
+
+	@Override
 	public ConverterAutoApplyHandler getAttributeConverterAutoApplyHandler() {
 		return attributeConverterManager;
 	}

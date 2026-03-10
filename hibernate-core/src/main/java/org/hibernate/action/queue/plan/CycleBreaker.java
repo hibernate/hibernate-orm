@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/// Uses Tarjan’s Algorithm for finding strongly connected components (SCCs)
+/// Uses Tarjan's Algorithm for finding strongly connected components (SCCs)
 /// in a directed graph and using that information to break cycles.
 ///
 /// @see GraphEdge#setBroken(boolean)
@@ -34,14 +34,14 @@ public class CycleBreaker {
 	public CycleBreaker() {
 	}
 
-	public void applyCycleBreaks(Graph graph) {
+	public void applyCycleBreaks(Graph graph, org.hibernate.action.queue.PlanningOptions planningOptions) {
 		final List<List<GroupNode>> sccs = TarjanScc.compute(graph);
 
 		for (List<GroupNode> scc : sccs) {
 			if (scc.size() == 1 && !hasSelfLoop(graph, scc.get(0))) {
 				continue;
 			}
-			breakSccCycles(graph, scc);
+			breakSccCycles(graph, scc, planningOptions);
 		}
 	}
 
@@ -54,11 +54,11 @@ public class CycleBreaker {
 		return false;
 	}
 
-	private void breakSccCycles(Graph graph, List<GroupNode> scc) {
+	private void breakSccCycles(Graph graph, List<GroupNode> scc, org.hibernate.action.queue.PlanningOptions planningOptions) {
 		final Set<GroupNode> inScc = new HashSet<>(scc);
 
 		while (true) {
-			final List<GraphEdge> cycle = findAnyCycleInScc(graph, inScc);
+			final List<GraphEdge> cycle = findAnyCycleInScc(graph, inScc, planningOptions);
 			if (cycle.isEmpty()) {
 				// SCC is now acyclic
 				return;
@@ -130,7 +130,7 @@ public class CycleBreaker {
 
 	private enum VisitState { UNVISITED, VISITING, VISITED }
 
-	private List<GraphEdge> findAnyCycleInScc(Graph graph, Set<GroupNode> inScc) {
+	private List<GraphEdge> findAnyCycleInScc(Graph graph, Set<GroupNode> inScc, org.hibernate.action.queue.PlanningOptions planningOptions) {
 		final Map<GroupNode, VisitState> state = new HashMap<>();
 		final Deque<GraphEdge> stack = new ArrayDeque<>();
 
@@ -140,6 +140,36 @@ public class CycleBreaker {
 			}
 			final List<GraphEdge> cycle = depthFirstSearchForCycle(graph, start, inScc, state, stack);
 			if (!cycle.isEmpty()) {
+				// Phase 3: Check if this is a unique-constraint-only cycle involving UPDATEs
+				// Such cycles occur when swapping unique values (e.g., one-to-one relationships)
+				// Solution: Break one edge and install a patch to use NULL-then-patch strategy
+				if (isIgnorableUniqueUpdateCycle(cycle, planningOptions)) {
+					// Find a unique constraint edge with an FK and column information
+					GraphEdge edgeWithColumns = null;
+					for (GraphEdge e : cycle) {
+						if (isUniqueConstraintEdge(e) && e.getKeyNode() != null &&
+							e.getChildColumnsToNull() != null &&
+							e.getChildColumnsToNull().getJdbcTypeCount() > 0) {
+							edgeWithColumns = e;
+							break;
+						}
+					}
+
+					if (edgeWithColumns != null) {
+						// Break this edge and install a patch
+						edgeWithColumns.setBroken(true);
+						installPatchForEdge(edgeWithColumns);
+					} else {
+						// Fallback: break all unique edges (no patches available)
+						for (GraphEdge e : cycle) {
+							if (isUniqueConstraintEdge(e)) {
+								e.setBroken(true);
+							}
+						}
+					}
+					// Continue searching for real cycles
+					continue;
+				}
 				return cycle;
 			}
 		}
@@ -224,26 +254,39 @@ public class CycleBreaker {
 	}
 
 	private void installPatchForEdge(GraphEdge chosen) {
-		// NOTE: this is always an INSERT
-
 		// we need to patch the key side of the foreign key
 		final PlannedOperationGroup keyGroup = chosen.getKeyNode().group();
 
-		// This planner only applies NULL-in-INSERT strategy
-		if ( keyGroup.kind() != MutationKind.INSERT)  {
-			return;
+		// Determine if this is a unique constraint swap cycle or FK cycle
+		final boolean isUniqueSwap = isUniqueConstraintEdge(chosen);
+		final BindingPatch.CycleType cycleType = isUniqueSwap
+				? BindingPatch.CycleType.UNIQUE_SWAP
+				: BindingPatch.CycleType.FOREIGN_KEY;
+
+		// For FK cycles: only patch INSERTs (Phase 2)
+		// For unique swaps: patch UPDATEs (Phase 3)
+		if (isUniqueSwap) {
+			// Phase 3: NULL-in-UPDATE strategy for unique constraint swaps
+			if ( keyGroup.kind() != MutationKind.UPDATE)  {
+				return;
+			}
+		} else {
+			// Phase 2: NULL-in-INSERT strategy for FK cycles
+			if ( keyGroup.kind() != MutationKind.INSERT)  {
+				return;
+			}
 		}
 
 		final String table = keyGroup.tableExpression();
 
 		for ( PlannedOperation op : keyGroup.operations()) {
 			if (op.getBindingPatch() == null) {
-				op.setBindingPatch( new BindingPatch(table, toSet(chosen.getChildColumnsToNull())) );
+				op.setBindingPatch( new BindingPatch(table, toSet(chosen.getChildColumnsToNull()), cycleType) );
 			}
 			else {
 				final Set<SelectableMapping> merged = new LinkedHashSet<>(op.getBindingPatch().fkColumnsToNull());
 				apply( chosen.getChildColumnsToNull(), merged );
-				op.setBindingPatch( new BindingPatch(op.getBindingPatch().tableName(), merged) );
+				op.setBindingPatch( new BindingPatch(op.getBindingPatch().tableName(), merged, cycleType) );
 			}
 		}
 	}
@@ -373,6 +416,48 @@ public class CycleBreaker {
 		return null;
 	}
 
+
+	/**
+	 * Check if an edge represents a unique constraint dependency (not a foreign key).
+	 * Phase 3: Unique constraint edges have null foreignKey.
+	 */
+	private boolean isUniqueConstraintEdge(GraphEdge edge) {
+		return edge.getForeignKey() == null;
+	}
+
+	/**
+	 * Check if a cycle consists only of unique constraint edges involving UPDATEs.
+	 * Phase 3: Such cycles occur when swapping unique constraint values.
+	 *
+	 * Example: Swapping one-to-one relationships
+	 * - UPDATE emp1 SET dept_id = 2
+	 * - UPDATE emp2 SET dept_id = 1
+	 * This creates a cycle in the graph but can be handled with NULL-then-patch strategy.
+	 */
+	private boolean isIgnorableUniqueUpdateCycle(List<GraphEdge> cycle, org.hibernate.action.queue.PlanningOptions planningOptions) {
+		// Check if all edges are unique constraint edges (no foreign keys)
+		boolean allUniqueEdges = true;
+		boolean hasUpdate = false;
+
+		for (GraphEdge e : cycle) {
+			if (!isUniqueConstraintEdge(e)) {
+				allUniqueEdges = false;
+				break;
+			}
+
+			// Check if any node in the edge is an UPDATE
+			if (e.getFrom().group().kind() == MutationKind.UPDATE ||
+				e.getTo().group().kind() == MutationKind.UPDATE) {
+				hasUpdate = true;
+			}
+		}
+
+		// Only handle as unique swap cycle if:
+		// 1. All edges are unique constraints, AND
+		// 2. At least one UPDATE is involved
+		// This is Phase 3 behavior - always apply for UPDATE swaps
+		return allUniqueEdges && hasUpdate;
+	}
 
 	private static String describeScc(List<GroupNode> scc) {
 		StringBuilder sb = new StringBuilder("{");

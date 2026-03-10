@@ -12,7 +12,7 @@ import org.hibernate.action.queue.exec.StandardPlannedOperationExecutor;
 import org.hibernate.action.queue.plan.PlanStep;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
-import org.hibernate.action.queue.fk.ForeignKeyModel;
+import org.hibernate.action.queue.constraint.ConstraintModel;
 import org.hibernate.action.queue.graph.Decomposer;
 import org.hibernate.action.queue.graph.GraphBuilder;
 import org.hibernate.action.queue.graph.StandardGraphBuilder;
@@ -42,9 +42,9 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 /// - Validates no unresolved inserts remain
 /// - Manages post-execution callbacks
 ///
-/// An important input to this process is the new [ForeignKeyModel] which describes
-/// details about all foreign keys defined by the domain model.  Flush coordination
-/// leverages this at many points.
+/// An important input to this process is the new [ConstraintModel] which describes
+/// details about all foreign keys and unique keys defined by the domain model.  Flush
+/// coordination leverages this at many points.
 ///
 /// The basic flow is initiated by a call to [#executeFlush(List)] which is passed a
 /// list of [actions][Executable].
@@ -53,7 +53,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 /// 	[PlannedOperation] references by the [Decomposer] delegate.
 /// - The [PlannedOperation] references are grouped by "shape" into [PlannedOperationGroup] references.
 /// - The [PlannedOperationGroup] references are then arranged into a directed dependency `Graph`
-/// 	(using the [ForeignKeyModel]) by [GraphBuilder].
+/// 	(using the [ConstraintModel]) by [GraphBuilder].
 /// - [FlushPlanner] then creates an executable plan from the `Graph`..
 ///
 /// Some important concepts for this coordination include -
@@ -65,6 +65,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 /// @author Steve Ebersole
 public class FlushCoordinator {
 	private final SessionImplementor session;
+	private final PlanningOptions planningOptions;
 	private final GraphBuilder graphBuilder;
 
 	private final Decomposer decomposer;
@@ -77,36 +78,28 @@ public class FlushCoordinator {
 	// Tables involved in self-referential associations (need ordinalBase separation to avoid false cycles)
 	private final java.util.Set<String> selfReferentialTables;
 
-	public FlushCoordinator(SessionImplementor session) {
+	public FlushCoordinator(ConstraintModel constraintModel, PlanningOptions planningOptions, SessionImplementor session) {
 		this.session = session;
-
-		// for now
-		boolean avoidBreakingDeferrable = false;
-		boolean ignoreDeferrableForOrdering = true;
-
-		ForeignKeyModel foreignKeyModel = session.getFactory().getForeignKeyModel();
+		this.planningOptions = planningOptions;
 
 		// Identify tables with self-referential associations
-		selfReferentialTables = identifySelfReferentialTables(foreignKeyModel);
+		selfReferentialTables = identifySelfReferentialTables(constraintModel);
 
 		decomposer = new Decomposer( session );
 		graphBuilder = new StandardGraphBuilder(
-				foreignKeyModel,
-				avoidBreakingDeferrable,
-				ignoreDeferrableForOrdering
-		);
-		flushPlanner = new StandardFlushPlanner();
-		executor = new StandardPlannedOperationExecutor(
-				null,
+				constraintModel,
+				planningOptions,
 				session
 		);
+		flushPlanner = new StandardFlushPlanner();
+		executor = new StandardPlannedOperationExecutor(new org.hibernate.action.queue.cyclebreak.FkFixupUpdateFactory(), session);
 	}
 
 	/// Identifies tables that have self-referential associations (FK from table to itself).
 	/// These tables need special grouping treatment to avoid creating false cycles in the graph.
-	private java.util.Set<String> identifySelfReferentialTables(ForeignKeyModel fkModel) {
+	private java.util.Set<String> identifySelfReferentialTables(ConstraintModel constraintModel) {
 		final java.util.Set<String> tables = new java.util.HashSet<>();
-		for (var fk : fkModel.foreignKeys()) {
+		for (var fk : constraintModel.foreignKeys()) {
 			if (fk.isAssociation()) {
 				String keyTable = Helper.normalizeTableName(fk.keyTable());
 				String targetTable = Helper.normalizeTableName(fk.targetTable());
@@ -191,10 +184,10 @@ public class FlushCoordinator {
 		// They were executed immediately when added to ActionQueue via executeIdentityInsert()
 		// All operations here go through normal graph/plan/execute flow
 		var graph = graphBuilder.build( operationGroups );
-		var plan = flushPlanner.plan( graph );
+		var plan = flushPlanner.plan( graph, planningOptions );
 
 		try {
-			executePlan( plan );
+			executePlan( plan, actions );
 			// Post-execution phase: finalize actions after all their operations completed
 			afterAllOperationsExecuted( actions, postExecutionCallbacks );
 		}
@@ -341,9 +334,9 @@ public class FlushCoordinator {
 	///  - run all base steps first
 	///  - enqueue fixups as we go
 	///  - run fixups after base plan finishes (simple + safe)
-	private void executePlan(FlushPlan plan) {
+	private void executePlan(FlushPlan plan, List<Executable> actions) {
 		for ( PlanStep step : plan.steps() ) {
-			executeStep(step, plan);
+			executeStep(step, plan, actions);
 		}
 
 		// Execute deferred FK fixups
@@ -352,8 +345,9 @@ public class FlushCoordinator {
 		}
 	}
 
-	private void executeStep(PlanStep step, FlushPlan plan) {
+	private void executeStep(PlanStep step, FlushPlan plan, List<Executable> actions) {
 		for (PlannedOperation op : step.operations()) {
+			// DEBUG: Don't call makeEntityManaged() here - test if it's called elsewhere
 			executor.executePlannedOperation(op);
 
 			// Track entities that became managed (for unresolved insert resolution)
@@ -369,6 +363,16 @@ public class FlushCoordinator {
 				final Object entityId = op.getBindPlan().getEntityId();
 
 				final PlannedOperation fix = executor.synthesizeFixupUpdateIfNeeded( op, entityId);
+				if (fix != null) {
+					plan.enqueueFixup(fix, step);
+				}
+			}
+
+			// If this op was cycle-broken for unique swap, the patcher stored intended values in op.intendedUniqueValues.
+			if (!op.getIntendedUniqueValues().isEmpty()) {
+				final Object entityId = op.getBindPlan().getEntityId();
+
+				final PlannedOperation fix = ((StandardPlannedOperationExecutor) executor).synthesizeUniqueSwapUpdateIfNeeded( op, entityId);
 				if (fix != null) {
 					plan.enqueueFixup(fix, step);
 				}
@@ -408,8 +412,8 @@ public class FlushCoordinator {
 				// Group resolved operations and recursively flush
 				final var resolvedGroups = groupOperations(resolvedOperations);
 				final var graph = graphBuilder.build(resolvedGroups);
-				final var plan = flushPlanner.plan(graph);
-				executePlan(plan);
+				final var plan = flushPlanner.plan(graph, planningOptions);
+				executePlan(plan, List.of()); // No actions for resolved inserts
 
 				// After recursive execution, try again (might have resolved more dependencies)
 				resolveUnresolvedInserts();

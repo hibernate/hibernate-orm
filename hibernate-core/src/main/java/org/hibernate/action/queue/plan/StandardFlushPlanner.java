@@ -4,6 +4,7 @@
  */
 package org.hibernate.action.queue.plan;
 
+import org.hibernate.action.queue.PlanningOptions;
 import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.graph.Graph;
 import org.hibernate.action.queue.graph.GroupNode;
@@ -18,13 +19,37 @@ public class StandardFlushPlanner implements FlushPlanner {
 	}
 
 	@Override
-	public FlushPlan plan(Graph graph) {
+	public FlushPlan plan(Graph graph, PlanningOptions planningOptions) {
 		// detect cycles and choose edges to break.
 		//		for the broken edge, apply a "binding path"
 		//		which facilitates the pattern of inserting
 		//		with null fk and later updating to set the
 		//		actual fk value
-		new CycleBreaker().applyCycleBreaks(graph);
+		// DEBUG
+		try {
+			String msg = String.format("Calling CycleBreaker with graph containing %d nodes\\n", graph.nodes().size());
+			java.nio.file.Files.write(
+					java.nio.file.Paths.get("/tmp/cycle-breaker-debug.log"),
+					msg.getBytes(),
+					java.nio.file.StandardOpenOption.CREATE,
+					java.nio.file.StandardOpenOption.APPEND
+			);
+		} catch (Exception e) {
+			// ignore
+		}
+		new CycleBreaker().applyCycleBreaks(graph, planningOptions);
+		// DEBUG
+		try {
+			String msg = "CycleBreaker completed\\n";
+			java.nio.file.Files.write(
+					java.nio.file.Paths.get("/tmp/cycle-breaker-debug.log"),
+					msg.getBytes(),
+					java.nio.file.StandardOpenOption.CREATE,
+					java.nio.file.StandardOpenOption.APPEND
+			);
+		} catch (Exception e) {
+			// ignore
+		}
 
 		// ---------------------------------------------------------------
 		// The graph should now be acyclic.

@@ -9,8 +9,10 @@ import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.queue.MutationKind;
+import org.hibernate.action.queue.PlanningOptions;
 import org.hibernate.action.queue.StatementShapeKey;
-import org.hibernate.action.queue.fk.ForeignKeyModel;
+import org.hibernate.action.queue.constraint.ConstraintModel;
+import org.hibernate.action.queue.constraint.ConstraintModelBuilder;
 import org.hibernate.action.queue.graph.Graph;
 import org.hibernate.action.queue.graph.StandardGraphBuilder;
 import org.hibernate.action.queue.plan.FlushPlan;
@@ -82,15 +84,26 @@ public class DecomposerGraphPlannerIntegrationTest {
 			final List<PlannedOperation> operations = decomposer.decompose(action, 0, callback -> {}, sessionImpl);
 			final List<PlannedOperationGroup> groups = groupOperations(operations);
 
-			final ForeignKeyModel fkModel = factory.getForeignKeyModel();
+			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel());
 
-			// Build graph
-			final StandardGraphBuilder graphBuilder = new StandardGraphBuilder(fkModel, true, false);
+			// Build graph with planning options
+			final PlanningOptions planningOptions = new PlanningOptions(
+					true,  // orderByForeignKeys
+					true,  // orderByUniqueKeySlots
+					false, // avoidBreakingDeferrable
+					true,  // ignoreDeferrableForOrdering
+					PlanningOptions.UniqueCycleStrategy.IGNORE_UNIQUE_EDGES_IN_CYCLES
+			);
+			final StandardGraphBuilder graphBuilder = new StandardGraphBuilder(
+					constraintModel,
+					planningOptions,
+					sessionImpl  // Pass session for Phase 2 value extraction
+			);
 			final Graph graph = graphBuilder.build(groups);
 
 			// Create plan
 			final StandardFlushPlanner planner = new StandardFlushPlanner();
-			final FlushPlan plan = planner.plan(graph);
+			final FlushPlan plan = planner.plan(graph, planningOptions);
 
 			// Verify
 			assertNotNull(plan);
@@ -149,15 +162,26 @@ public class DecomposerGraphPlannerIntegrationTest {
 			allGroups.addAll(groupOperations(personDecomposer.decompose(personAction, 0, callback -> {}, sessionImpl)));
 			allGroups.addAll(groupOperations(addressDecomposer.decompose(addressAction, 1, callback -> {}, sessionImpl)));
 
-			final ForeignKeyModel fkModel = factory.getForeignKeyModel();
+			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel());
 
-			// Build graph
-			final StandardGraphBuilder graphBuilder = new StandardGraphBuilder(fkModel, true, false);
+			// Build graph with planning options
+			final PlanningOptions planningOptions = new PlanningOptions(
+					true,  // orderByForeignKeys
+					true,  // orderByUniqueKeySlots
+					false, // avoidBreakingDeferrable
+					true,  // ignoreDeferrableForOrdering
+					PlanningOptions.UniqueCycleStrategy.IGNORE_UNIQUE_EDGES_IN_CYCLES
+			);
+			final StandardGraphBuilder graphBuilder = new StandardGraphBuilder(
+					constraintModel,
+					planningOptions,
+					sessionImpl  // Pass session for Phase 2 value extraction
+			);
 			final Graph graph = graphBuilder.build(allGroups);
 
 			// Create plan
 			final StandardFlushPlanner planner = new StandardFlushPlanner();
-			final FlushPlan plan = planner.plan(graph);
+			final FlushPlan plan = planner.plan(graph, planningOptions);
 
 			// Verify
 			assertNotNull(plan);
@@ -229,15 +253,26 @@ public class DecomposerGraphPlannerIntegrationTest {
 			final List<PlannedOperation> operations = decomposer.decompose(action, 0, callback -> {}, sessionImpl);
 			final List<PlannedOperationGroup> groups = groupOperations(operations);
 
-			final ForeignKeyModel fkModel = factory.getForeignKeyModel();
+			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel());
 
-			// Build graph
-			final StandardGraphBuilder graphBuilder = new StandardGraphBuilder(fkModel, true, false);
+			// Build graph with planning options
+			final PlanningOptions planningOptions = new PlanningOptions(
+					true,  // orderByForeignKeys
+					true,  // orderByUniqueKeySlots
+					false, // avoidBreakingDeferrable
+					true,  // ignoreDeferrableForOrdering
+					PlanningOptions.UniqueCycleStrategy.IGNORE_UNIQUE_EDGES_IN_CYCLES
+			);
+			final StandardGraphBuilder graphBuilder = new StandardGraphBuilder(
+					constraintModel,
+					planningOptions,
+					sessionImpl  // Pass session for Phase 2 value extraction
+			);
 			final Graph graph = graphBuilder.build(groups);
 
 			// Create plan
 			final StandardFlushPlanner planner = new StandardFlushPlanner();
-			final FlushPlan plan = planner.plan(graph);
+			final FlushPlan plan = planner.plan(graph, planningOptions);
 
 			// Verify
 			assertNotNull(plan);
@@ -281,15 +316,26 @@ public class DecomposerGraphPlannerIntegrationTest {
 			final List<PlannedOperation> operations = decomposer.decompose(action, 0, callback -> {}, sessionImpl);
 			final List<PlannedOperationGroup> groups = groupOperations(operations);
 
-			final ForeignKeyModel fkModel = factory.getForeignKeyModel();
+			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel());
 
-			// Build graph
-			final StandardGraphBuilder graphBuilder = new StandardGraphBuilder(fkModel, true, false);
+			// Build graph with planning options
+			final PlanningOptions planningOptions = new PlanningOptions(
+					true,  // orderByForeignKeys
+					true,  // orderByUniqueKeySlots
+					false, // avoidBreakingDeferrable
+					true,  // ignoreDeferrableForOrdering
+					PlanningOptions.UniqueCycleStrategy.IGNORE_UNIQUE_EDGES_IN_CYCLES
+			);
+			final StandardGraphBuilder graphBuilder = new StandardGraphBuilder(
+					constraintModel,
+					planningOptions,
+					sessionImpl  // Pass session for Phase 2 value extraction
+			);
 			final Graph graph = graphBuilder.build(groups);
 
 			// Create plan
 			final StandardFlushPlanner planner = new StandardFlushPlanner();
-			final FlushPlan plan = planner.plan(graph);
+			final FlushPlan plan = planner.plan(graph, planningOptions);
 
 			// Verify
 			assertNotNull(plan);
@@ -373,15 +419,26 @@ public class DecomposerGraphPlannerIntegrationTest {
 			allGroups.addAll(groupOperations(addressInsertDecomposer.decompose(addressInsertAction, 1, callback -> {}, sessionImpl)));
 			allGroups.addAll(groupOperations(personUpdateDecomposer.decompose(person2UpdateAction, 2, callback -> {}, sessionImpl)));
 
-			final ForeignKeyModel fkModel = factory.getForeignKeyModel();
+			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel());
 
-			// Build graph
-			final StandardGraphBuilder graphBuilder = new StandardGraphBuilder(fkModel, true, false);
+			// Build graph with planning options
+			final PlanningOptions planningOptions = new PlanningOptions(
+					true,  // orderByForeignKeys
+					true,  // orderByUniqueKeySlots
+					false, // avoidBreakingDeferrable
+					true,  // ignoreDeferrableForOrdering
+					PlanningOptions.UniqueCycleStrategy.IGNORE_UNIQUE_EDGES_IN_CYCLES
+			);
+			final StandardGraphBuilder graphBuilder = new StandardGraphBuilder(
+					constraintModel,
+					planningOptions,
+					sessionImpl  // Pass session for Phase 2 value extraction
+			);
 			final Graph graph = graphBuilder.build(allGroups);
 
 			// Create plan
 			final StandardFlushPlanner planner = new StandardFlushPlanner();
-			final FlushPlan plan = planner.plan(graph);
+			final FlushPlan plan = planner.plan(graph, planningOptions);
 
 			// Verify
 			assertNotNull(plan);
@@ -451,10 +508,21 @@ public class DecomposerGraphPlannerIntegrationTest {
 			allGroups.addAll(groupOperations(deptDecomposer.decompose(deptAction, 0, callback -> {}, sessionImpl)));
 			allGroups.addAll(groupOperations(empDecomposer.decompose(empAction, 1, callback -> {}, sessionImpl)));
 
-			final ForeignKeyModel fkModel = factory.getForeignKeyModel();
+			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel());
 
-			// Build graph
-			final StandardGraphBuilder graphBuilder = new StandardGraphBuilder(fkModel, true, false);
+			// Build graph with planning options
+			final PlanningOptions planningOptions = new PlanningOptions(
+					true,  // orderByForeignKeys
+					true,  // orderByUniqueKeySlots
+					false, // avoidBreakingDeferrable
+					true,  // ignoreDeferrableForOrdering
+					PlanningOptions.UniqueCycleStrategy.IGNORE_UNIQUE_EDGES_IN_CYCLES
+			);
+			final StandardGraphBuilder graphBuilder = new StandardGraphBuilder(
+					constraintModel,
+					planningOptions,
+					sessionImpl  // Pass session for Phase 2 value extraction
+			);
 			final Graph graph = graphBuilder.build(allGroups);
 
 			// Verify there are edges in the graph
@@ -462,7 +530,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Create plan
 			final StandardFlushPlanner planner = new StandardFlushPlanner();
-			final FlushPlan plan = planner.plan(graph);
+			final FlushPlan plan = planner.plan(graph, planningOptions);
 
 			// Verify plan was created successfully (cycle was broken)
 			assertNotNull(plan);

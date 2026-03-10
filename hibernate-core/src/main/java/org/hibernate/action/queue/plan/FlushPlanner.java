@@ -4,6 +4,7 @@
  */
 package org.hibernate.action.queue.plan;
 
+import org.hibernate.action.queue.PlanningOptions;
 import org.hibernate.action.queue.graph.Graph;
 
 /// Creates an executable plan from the dependency graph.
@@ -15,5 +16,5 @@ import org.hibernate.action.queue.graph.Graph;
 ///
 /// @author Steve Ebersole
 public interface FlushPlanner {
-	FlushPlan plan(Graph graph);
+	FlushPlan plan(Graph graph, PlanningOptions planningOptions);
 }

@@ -482,9 +482,9 @@ public class EntityTemplateHelper {
 			props.add(new FullConstructorProperty(
 					getCompositeIdTypeName(cid), cid.getFieldName()));
 		}
-		// Basic columns (skip FK columns, skip version)
+		// Basic columns (skip FK columns, skip version, respect gen-property)
 		for (ColumnMetadata col : table.getColumns()) {
-			if (!isForeignKeyColumn(col.getColumnName()) && !col.isVersion()) {
+			if (!isForeignKeyColumn(col.getColumnName()) && !col.isVersion() && isGenProperty(col)) {
 				props.add(new FullConstructorProperty(
 						getJavaTypeName(col), col.getFieldName()));
 			}
@@ -529,16 +529,26 @@ public class EntityTemplateHelper {
 	// --- toString support ---
 
 	public List<ToStringProperty> getToStringProperties() {
+		// If any column has use-in-tostring, only include those
+		boolean hasExplicitToString = table.getColumns().stream()
+				.anyMatch(col -> col.hasMetaAttribute("use-in-tostring"));
 		List<ToStringProperty> props = new ArrayList<>();
-		// Composite ID
-		CompositeIdMetadata cid = table.getCompositeId();
-		if (cid != null) {
-			props.add(new ToStringProperty(cid.getFieldName(), getGetterName(cid.getFieldName())));
-		}
-		// Basic columns (skip FK columns)
-		for (ColumnMetadata col : table.getColumns()) {
-			if (!isForeignKeyColumn(col.getColumnName())) {
-				props.add(new ToStringProperty(col.getFieldName(), getGetterName(col.getFieldName())));
+		if (hasExplicitToString) {
+			for (ColumnMetadata col : table.getColumns()) {
+				if (getColumnMetaAsBool(col, "use-in-tostring", false)) {
+					props.add(new ToStringProperty(col.getFieldName(), getGetterName(col.getFieldName())));
+				}
+			}
+		} else {
+			// Default: composite ID + all non-FK columns (respecting gen-property)
+			CompositeIdMetadata cid = table.getCompositeId();
+			if (cid != null) {
+				props.add(new ToStringProperty(cid.getFieldName(), getGetterName(cid.getFieldName())));
+			}
+			for (ColumnMetadata col : table.getColumns()) {
+				if (!isForeignKeyColumn(col.getColumnName()) && isGenProperty(col)) {
+					props.add(new ToStringProperty(col.getFieldName(), getGetterName(col.getFieldName())));
+				}
 			}
 		}
 		return props;
@@ -548,6 +558,30 @@ public class EntityTemplateHelper {
 
 	public boolean hasCompositeId() {
 		return table.getCompositeId() != null;
+	}
+
+	public boolean needsEqualsHashCode() {
+		// If any column has use-in-equals, we need equals/hashCode
+		boolean hasExplicitEquals = table.getColumns().stream()
+				.anyMatch(col -> col.hasMetaAttribute("use-in-equals"));
+		if (hasExplicitEquals) return true;
+		// Otherwise, need it if we have a PK or composite ID
+		return hasCompositeId() || !getIdentifierColumns().isEmpty();
+	}
+
+	public boolean hasExplicitEqualsColumns() {
+		return table.getColumns().stream()
+				.anyMatch(col -> getColumnMetaAsBool(col, "use-in-equals", false));
+	}
+
+	public List<ColumnMetadata> getEqualsColumns() {
+		List<ColumnMetadata> result = new ArrayList<>();
+		for (ColumnMetadata col : table.getColumns()) {
+			if (getColumnMetaAsBool(col, "use-in-equals", false)) {
+				result.add(col);
+			}
+		}
+		return result;
 	}
 
 	public List<ColumnMetadata> getIdentifierColumns() {
@@ -592,6 +626,54 @@ public class EntityTemplateHelper {
 			return "(int) Double.doubleToLongBits(" + getter + ")";
 		}
 		return "(" + getter + " == null ? 0 : " + getter + ".hashCode())";
+	}
+
+	// --- Meta-attribute support ---
+
+	public boolean hasClassMetaAttribute(String name) {
+		return table.hasMetaAttribute(name);
+	}
+
+	public String getClassMetaAttribute(String name) {
+		List<String> values = table.getMetaAttribute(name);
+		return values.isEmpty() ? "" : String.join("\n", values);
+	}
+
+	public boolean hasColumnMetaAttribute(ColumnMetadata col, String name) {
+		return col.hasMetaAttribute(name);
+	}
+
+	public boolean getColumnMetaAsBool(ColumnMetadata col, String name, boolean defaultValue) {
+		List<String> values = col.getMetaAttribute(name);
+		if (values.isEmpty()) {
+			return defaultValue;
+		}
+		return Boolean.parseBoolean(values.get(0));
+	}
+
+	public String getColumnMetaAttribute(ColumnMetadata col, String name) {
+		List<String> values = col.getMetaAttribute(name);
+		return values.isEmpty() ? "" : String.join("\n", values);
+	}
+
+	public boolean isGenProperty(ColumnMetadata col) {
+		return getColumnMetaAsBool(col, "gen-property", true);
+	}
+
+	public boolean hasFieldDescription(ColumnMetadata col) {
+		return col.hasMetaAttribute("field-description");
+	}
+
+	public String getFieldDescription(ColumnMetadata col) {
+		return getColumnMetaAttribute(col, "field-description");
+	}
+
+	public boolean hasExtraClassCode() {
+		return table.hasMetaAttribute("class-code");
+	}
+
+	public String getExtraClassCode() {
+		return getClassMetaAttribute("class-code");
 	}
 
 	// --- Utility ---

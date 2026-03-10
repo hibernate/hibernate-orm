@@ -21,6 +21,7 @@ import java.util.Set;
 
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
@@ -120,6 +121,8 @@ class ColumnReader {
 			columnMetadata.comment(rowInfo.comment());
 		}
 
+		applyColumnMetaAttributes(columnMetadata, tableId, rowInfo.columnName());
+
 		return columnMetadata;
 	}
 
@@ -133,6 +136,21 @@ class ColumnReader {
 				0, rowInfo.nullable(), rowInfo.primaryKey());
 		}
 		return hibernateType;
+	}
+
+	private void applyColumnMetaAttributes(ColumnMetadata columnMetadata,
+			TableIdentifier tableId, String columnName) {
+		Map<String, MetaAttribute> metaMap = strategy.columnToMetaAttributes(tableId, columnName);
+		if (metaMap != null) {
+			for (Map.Entry<String, MetaAttribute> entry : metaMap.entrySet()) {
+				MetaAttribute ma = entry.getValue();
+				if (ma != null && ma.getValues() != null) {
+					for (Object value : ma.getValues()) {
+						columnMetadata.addMetaAttribute(entry.getKey(), value.toString());
+					}
+				}
+			}
+		}
 	}
 
 	private boolean isVersionColumn(TableIdentifier tableId, String columnName) {

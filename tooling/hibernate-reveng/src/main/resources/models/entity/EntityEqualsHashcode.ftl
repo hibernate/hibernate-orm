@@ -1,5 +1,25 @@
-<#if !pojo.isSubclass()>
-<#if pojo.hasCompositeId()>
+<#if !pojo.isSubclass() && pojo.needsEqualsHashCode()>
+<#if pojo.hasExplicitEqualsColumns()>
+<#assign eqCols = pojo.getEqualsColumns()>
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) return true;
+        if (other == null) return false;
+        if (!(other instanceof ${pojo.getDeclarationName()})) return false;
+        ${pojo.getDeclarationName()} castOther = (${pojo.getDeclarationName()}) other;
+        return <#list eqCols as col>${pojo.generateEqualsExpression(col)}<#if col_has_next>
+                && </#if></#list>;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 17;
+<#list eqCols as col>
+        result = 37 * result + ${pojo.generateHashCodeExpression(col)};
+</#list>
+        return result;
+    }
+<#elseif pojo.hasCompositeId()>
 <#assign idField = pojo.getTable().getCompositeId().getFieldName()>
 <#assign idGetter = pojo.getGetterName(idField)>
     @Override

@@ -15,6 +15,8 @@ ${pojo.getPackageDeclaration()}
 
 <#include "EntityEqualsHashcode.ftl"/>
 
+<#include "EntityExtraClassCode.ftl"/>
+
 }
 </#assign>
 

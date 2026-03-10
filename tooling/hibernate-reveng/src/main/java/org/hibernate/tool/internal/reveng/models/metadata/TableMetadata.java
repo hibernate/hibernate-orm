@@ -16,7 +16,10 @@
 package org.hibernate.tool.internal.reveng.models.metadata;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Represents metadata for a database table.
@@ -43,6 +46,7 @@ public class TableMetadata {
 	private CompositeIdMetadata compositeId;
 	private String comment;
 	private List<IndexMetadata> indexes = new ArrayList<>();
+	private Map<String, List<String>> metaAttributes = new LinkedHashMap<>();
 
 	public TableMetadata(String tableName, String entityClassName, String entityPackage) {
 		this.tableName = tableName;
@@ -164,5 +168,21 @@ public class TableMetadata {
 	public TableMetadata addIndex(IndexMetadata index) {
 		this.indexes.add(index);
 		return this;
+	}
+
+	public Map<String, List<String>> getMetaAttributes() { return metaAttributes; }
+	public TableMetadata metaAttributes(Map<String, List<String>> metaAttributes) {
+		this.metaAttributes = metaAttributes;
+		return this;
+	}
+	public TableMetadata addMetaAttribute(String name, String value) {
+		this.metaAttributes.computeIfAbsent(name, k -> new ArrayList<>()).add(value);
+		return this;
+	}
+	public List<String> getMetaAttribute(String name) {
+		return metaAttributes.getOrDefault(name, Collections.emptyList());
+	}
+	public boolean hasMetaAttribute(String name) {
+		return metaAttributes.containsKey(name);
 	}
 }

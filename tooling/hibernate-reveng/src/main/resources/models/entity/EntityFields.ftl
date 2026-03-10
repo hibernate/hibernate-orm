@@ -4,9 +4,14 @@
     private ${pojo.getCompositeIdTypeName(cid)} ${cid.getFieldName()};
 
 </#if>
-<#-- Basic columns (skip FK columns) -->
+<#-- Basic columns (skip FK columns, respect gen-property) -->
 <#list pojo.getTable().getColumns() as col>
-<#if !pojo.isForeignKeyColumn(col.getColumnName())>
+<#if !pojo.isForeignKeyColumn(col.getColumnName()) && pojo.isGenProperty(col)>
+<#if pojo.hasFieldDescription(col)>
+    /**
+     * ${pojo.getFieldDescription(col)}
+     */
+</#if>
     private ${pojo.getJavaTypeName(col)} ${col.getFieldName()};
 
 </#if>

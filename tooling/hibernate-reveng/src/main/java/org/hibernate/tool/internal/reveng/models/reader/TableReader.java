@@ -24,6 +24,7 @@ import java.util.Map;
 import jakarta.persistence.GenerationType;
 
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
@@ -143,6 +144,8 @@ class TableReader {
 					.readIndexes(tableMetadata, catalog, schema);
 		}
 
+		applyTableMetaAttributes(tableMetadata, tableId);
+
 		return tableMetadata;
 	}
 
@@ -198,6 +201,20 @@ class TableReader {
 			compositeId.addAttributeOverride(pkCol.getFieldName(), pkCol.getColumnName());
 		}
 		tableMetadata.compositeId(compositeId);
+	}
+
+	private void applyTableMetaAttributes(TableMetadata tableMetadata, TableIdentifier tableId) {
+		Map<String, MetaAttribute> metaMap = strategy.tableToMetaAttributes(tableId);
+		if (metaMap != null) {
+			for (Map.Entry<String, MetaAttribute> entry : metaMap.entrySet()) {
+				MetaAttribute ma = entry.getValue();
+				if (ma != null && ma.getValues() != null) {
+					for (Object value : ma.getValues()) {
+						tableMetadata.addMetaAttribute(entry.getKey(), value.toString());
+					}
+				}
+			}
+		}
 	}
 
 	private static String quote(String name, RevengDialect dialect) {

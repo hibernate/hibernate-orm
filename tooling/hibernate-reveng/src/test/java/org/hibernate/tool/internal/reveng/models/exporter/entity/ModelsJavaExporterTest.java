@@ -400,4 +400,84 @@ public class ModelsJavaExporterTest {
 		assertFalse(source.contains("public boolean equals("), source);
 		assertFalse(source.contains("public int hashCode()"), source);
 	}
+
+	// --- Meta-attribute tests ---
+
+	@Test
+	public void testGenPropertyFalseSkipsField() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("INTERNAL", "internal", String.class)
+				.addMetaAttribute("gen-property", "false"));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		String source = export(table);
+		assertFalse(source.contains("private String internal;"), source);
+		assertFalse(source.contains("getInternal()"), source);
+		assertTrue(source.contains("private String name;"), source);
+		assertTrue(source.contains("getName()"), source);
+	}
+
+	@Test
+	public void testFieldDescription() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class)
+				.addMetaAttribute("field-description", "The employee name"));
+		String source = export(table);
+		assertTrue(source.contains("The employee name"), source);
+	}
+
+	@Test
+	public void testExtraClassCode() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addMetaAttribute("class-code", "    public void customMethod() { }");
+		String source = export(table);
+		assertTrue(source.contains("extra code specified in the reveng.xml"), source);
+		assertTrue(source.contains("public void customMethod() { }"), source);
+	}
+
+	@Test
+	public void testUseInToString() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class)
+				.addMetaAttribute("use-in-tostring", "true"));
+		table.addColumn(new ColumnMetadata("SECRET", "secret", String.class));
+		String source = export(table);
+		// Extract the toString method body by finding matching braces
+		int toStringStart = source.indexOf("public String toString()");
+		assertTrue(toStringStart >= 0, "toString() should be generated");
+		int braceStart = source.indexOf("{", toStringStart);
+		int depth = 1;
+		int pos = braceStart + 1;
+		while (depth > 0 && pos < source.length()) {
+			if (source.charAt(pos) == '{') depth++;
+			else if (source.charAt(pos) == '}') depth--;
+			pos++;
+		}
+		String toStringBody = source.substring(toStringStart, pos);
+		assertTrue(toStringBody.contains("getName()"), "name should be in toString");
+		assertFalse(toStringBody.contains("getSecret()"), "secret should not be in toString");
+		assertFalse(toStringBody.contains("getId()"), "id should not be in toString");
+	}
+
+	@Test
+	public void testUseInEquals() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class)
+				.addMetaAttribute("use-in-equals", "true"));
+		String source = export(table);
+		assertTrue(source.contains("public boolean equals(Object other)"), source);
+		assertTrue(source.contains("getEmail()"), source);
+	}
+
+	@Test
+	public void testNoExtraClassCodeWhenNotSet() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		String source = export(table);
+		assertFalse(source.contains("extra code"), source);
+	}
 }

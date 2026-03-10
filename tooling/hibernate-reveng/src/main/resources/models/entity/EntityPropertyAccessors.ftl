@@ -11,9 +11,9 @@
     }
 
 </#if>
-<#-- Basic column accessors (skip FK columns) -->
+<#-- Basic column accessors (skip FK columns, respect gen-property) -->
 <#list pojo.getTable().getColumns() as col>
-<#if !pojo.isForeignKeyColumn(col.getColumnName())>
+<#if !pojo.isForeignKeyColumn(col.getColumnName()) && pojo.isGenProperty(col)>
     <#if col.isPrimaryKey()>
     ${pojo.generateIdAnnotations(col)}
     </#if>

@@ -15,6 +15,12 @@
  */
 package org.hibernate.tool.internal.reveng.models.metadata;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
@@ -42,6 +48,7 @@ public class ColumnMetadata {
 	private String comment;
 	private GenerationType generationType;
 	private boolean unique;
+	private Map<String, List<String>> metaAttributes = new LinkedHashMap<>();
 
 	public ColumnMetadata(String columnName, String fieldName, Class<?> javaType) {
 		this.columnName = columnName;
@@ -140,4 +147,20 @@ public class ColumnMetadata {
 	public String getComment() { return comment; }
 	public GenerationType getGenerationType() { return generationType; }
 	public boolean isUnique() { return unique; }
+
+	public Map<String, List<String>> getMetaAttributes() { return metaAttributes; }
+	public ColumnMetadata metaAttributes(Map<String, List<String>> metaAttributes) {
+		this.metaAttributes = metaAttributes;
+		return this;
+	}
+	public ColumnMetadata addMetaAttribute(String name, String value) {
+		this.metaAttributes.computeIfAbsent(name, k -> new ArrayList<>()).add(value);
+		return this;
+	}
+	public List<String> getMetaAttribute(String name) {
+		return metaAttributes.getOrDefault(name, Collections.emptyList());
+	}
+	public boolean hasMetaAttribute(String name) {
+		return metaAttributes.containsKey(name);
+	}
 }

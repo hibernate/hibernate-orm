@@ -93,7 +93,7 @@ public class JdbcOperationQuerySelect
 	}
 
 	@Override
-	public @Nullable LoadedValuesCollector getLoadedValuesCollector() {
+	public @Nullable LoadedValuesCollector createLoadedValuesCollector() {
 		return null;
 	}
 
@@ -102,7 +102,7 @@ public class JdbcOperationQuerySelect
 	}
 
 	@Override
-	public void performPostAction(boolean succeeded, StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext) {
+	public void performPostActions(boolean succeeded, StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext, LoadedValuesCollector loadedValuesCollector) {
 	}
 
 	@Override

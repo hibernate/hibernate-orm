@@ -25,8 +25,6 @@ import org.hibernate.engine.creation.internal.SessionCreationOptions;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.internal.PersistenceContexts;
 import org.hibernate.action.queue.ActionQueue;
-import org.hibernate.action.queue.GraphBasedActionQueue;
-import org.hibernate.engine.spi.ActionQueueLegacy;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
@@ -256,25 +254,7 @@ public class SessionImpl
 	}
 
 	protected ActionQueue createActionQueue() {
-		// Get configuration from service registry
-		final var configService = getFactory()
-				.getServiceRegistry()
-				.getService( org.hibernate.engine.config.spi.ConfigurationService.class );
-
-		final String implementation = configService.getSetting(
-				org.hibernate.cfg.FlushSettings.FLUSH_QUEUE_IMPL,
-				String.class,
-				"legacy"
-		);
-
-		return switch ( implementation.toLowerCase() ) {
-			case "legacy" -> new ActionQueueLegacy( this );
-			case "graph" -> new GraphBasedActionQueue( this );
-			default -> throw new IllegalArgumentException(
-					"Unknown ActionQueue implementation: " + implementation +
-					". Valid values are 'graph' and 'legacy'."
-			);
-		};
+		return getFactory().getActionQueueFactory().buildActionQueue( this );
 	}
 
 	@Override

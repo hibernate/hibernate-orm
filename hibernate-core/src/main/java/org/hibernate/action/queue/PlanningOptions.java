@@ -7,9 +7,11 @@ package org.hibernate.action.queue;
 /**
  * @author Steve Ebersole
  */
-public record GraphPlanningConfiguration(
+public record PlanningOptions(
 	boolean orderByForeignKeys,
 	boolean orderByUniqueKeySlots,
+	boolean avoidBreakingDeferrable,
+	boolean ignoreDeferrableForOrdering,
 	UniqueCycleStrategy uniqueCycleStrategy) {
 
 	public enum UniqueCycleStrategy {

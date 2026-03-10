@@ -12,6 +12,7 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.action.queue.ActionQueueFactory;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -30,7 +31,6 @@ import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
-import org.hibernate.action.queue.fk.ForeignKeyModel;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sql.spi.SqlTranslationEngine;
@@ -346,5 +346,8 @@ public interface SessionFactoryImplementor extends SessionFactory {
 		return GraphParser.parse( graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
 	}
 
-	ForeignKeyModel getForeignKeyModel();
+	/**
+	 * Access to the factory for ActionQueue instances configured for this factory.
+	 */
+	ActionQueueFactory getActionQueueFactory();
 }

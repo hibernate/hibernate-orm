@@ -42,7 +42,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
-import org.hibernate.action.queue.fk.ForeignKeyModel;
+import org.hibernate.action.queue.ActionQueueFactory;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.QueryEngine;
@@ -291,8 +291,8 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
-	public ForeignKeyModel getForeignKeyModel() {
-		return delegate.getForeignKeyModel();
+	public ActionQueueFactory getActionQueueFactory() {
+		return delegate.getActionQueueFactory();
 	}
 
 	@Override

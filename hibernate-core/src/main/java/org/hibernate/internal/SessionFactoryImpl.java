@@ -30,6 +30,8 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.UnknownFilterException;
+import org.hibernate.action.queue.ActionQueueFactory;
+import org.hibernate.action.queue.support.ActionQueueSupport;
 import org.hibernate.binder.internal.TenantIdBinder;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
@@ -85,8 +87,6 @@ import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.action.queue.fk.ForeignKeyModel;
-import org.hibernate.action.queue.fk.ForeignKeyModelBuilder;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.internal.QueryEngineImpl;
 import org.hibernate.query.named.NamedObjectRepository;
@@ -219,7 +219,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	final transient JdbcValuesMappingProducerProvider jdbcValuesMappingProducerProvider;
 	final transient TransactionIdentifierService transactionIdentifierService;
 
-	private final ForeignKeyModel foreignKeyModel;
+	private final ActionQueueFactory actionQueueFactory;
 
 	public SessionFactoryImpl(
 			final MetadataImplementor bootMetamodel,
@@ -337,7 +337,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			// we're in an incompletely-initialized state
 			typeConfiguration.scope( this );
 
-			foreignKeyModel = ForeignKeyModelBuilder.buildForeignKeyGraphModel( mappingMetamodelImpl );
+			actionQueueFactory = ActionQueueSupport.resolveActionQueueSupport( this );
 
 			observerChain.sessionFactoryCreated( this );
 		}
@@ -415,8 +415,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public ForeignKeyModel getForeignKeyModel() {
-		return foreignKeyModel;
+	public ActionQueueFactory getActionQueueFactory() {
+		return actionQueueFactory;
 	}
 
 	@Override

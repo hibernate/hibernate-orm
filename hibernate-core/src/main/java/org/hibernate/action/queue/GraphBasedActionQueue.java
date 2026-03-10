@@ -19,6 +19,7 @@ import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
+import org.hibernate.action.queue.constraint.ConstraintModel;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.engine.spi.EntityEntry;
@@ -63,12 +64,14 @@ public class GraphBasedActionQueue implements ActionQueue {
 	/**
 	 * Construct a GraphBasedActionQueue for the given session.
 	 *
+	 * @param constraintModel
+	 * @param planningOptions
 	 * @param session The session
 	 */
-	public GraphBasedActionQueue(SessionImplementor session) {
+	public GraphBasedActionQueue(ConstraintModel constraintModel, PlanningOptions planningOptions, SessionImplementor session) {
 		ACTION_LOGGER.usingActionQueue( getClass().getName() );
 		this.session = session;
-		this.flushCoordinator = new FlushCoordinator(session);
+		this.flushCoordinator = new FlushCoordinator( constraintModel, planningOptions, session );
 		this.pendingActions = new ArrayList<>();
 		this.transactionCompletionCallbacks = new TransactionCompletionCallbacksImpl(session);
 		this.isTransactionCoordinatorShared = false;
@@ -152,16 +155,23 @@ public class GraphBasedActionQueue implements ActionQueue {
 		pendingActions.add(insert);
 		insertCount++;
 
-		// Make entity managed for regular inserts
-		if (!insert.isVeto()) {
-			insert.makeEntityManaged();
+		// Check for unresolved transient dependencies before making entity managed
+		// This prevents PropertyValueException in circular cascade scenarios
+		final var transientDeps = insert.findNonNullableTransientEntities();
+		if (transientDeps == null || transientDeps.isEmpty()) {
+			// Safe to make entity managed - no unresolved dependencies
+			if (!insert.isVeto()) {
+				insert.makeEntityManaged();
+			}
+			else {
+				throw new EntityActionVetoException(
+						"The EntityInsertAction was vetoed.",
+						insert
+				);
+			}
 		}
-		else {
-			throw new EntityActionVetoException(
-					"The EntityInsertAction was vetoed.",
-					insert
-			);
-		}
+		// Else: entity has unresolved dependencies, leave transient for now
+		// Decomposer will track and resolve it later
 	}
 
 	/**
@@ -189,6 +199,16 @@ public class GraphBasedActionQueue implements ActionQueue {
 
 		if (insertsToExecute.isEmpty()) {
 			return;
+		}
+
+		// Make insert entities managed before execution
+		for (Executable action : insertsToExecute) {
+			if (action instanceof AbstractEntityInsertAction) {
+				AbstractEntityInsertAction insert = (AbstractEntityInsertAction) action;
+				if (!insert.isVeto()) {
+					insert.makeEntityManaged();
+				}
+			}
 		}
 
 		// Execute these inserts via FlushCoordinator
@@ -305,6 +325,16 @@ public class GraphBasedActionQueue implements ActionQueue {
 		}
 
 		if (!insertActions.isEmpty()) {
+			// Make insert entities managed before execution
+			for (Executable action : insertActions) {
+				if (action instanceof AbstractEntityInsertAction) {
+					AbstractEntityInsertAction insert = (AbstractEntityInsertAction) action;
+					if (!insert.isVeto()) {
+						insert.makeEntityManaged();
+					}
+				}
+			}
+
 			flushCoordinator.executeFlush(insertActions);
 			pendingActions.removeAll(insertActions);
 			session.getJdbcCoordinator().executeBatch();

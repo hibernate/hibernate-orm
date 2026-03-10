@@ -9,6 +9,8 @@ import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.cyclebreak.FkFixupUpdateBindPlan;
 import org.hibernate.action.queue.cyclebreak.FkFixupUpdateFactory;
+import org.hibernate.action.queue.cyclebreak.UniqueSwapUpdateBindPlan;
+import org.hibernate.action.queue.cyclebreak.UniqueSwapUpdateFactory;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
@@ -22,6 +24,7 @@ import org.hibernate.sql.model.MutationOperationGroup;
  */
 public class StandardPlannedOperationExecutor implements PlannedOperationExecutor {
 	private final FkFixupUpdateFactory nullableFkUpdateFactory;
+	private final UniqueSwapUpdateFactory uniqueSwapUpdateFactory;
 	private final SharedSessionContractImplementor session;
 	private final MutationExecutorService executorService;
 
@@ -30,6 +33,7 @@ public class StandardPlannedOperationExecutor implements PlannedOperationExecuto
 			FkFixupUpdateFactory nullableFkUpdateFactory,
 			SharedSessionContractImplementor session) {
 		this.nullableFkUpdateFactory = nullableFkUpdateFactory;
+		this.uniqueSwapUpdateFactory = new UniqueSwapUpdateFactory();
 		this.session = session;
 		this.executorService = session.getFactory()
 				.getServiceRegistry()
@@ -95,6 +99,52 @@ public class StandardPlannedOperationExecutor implements PlannedOperationExecuto
 				bindPlan,
 				cycleBrokenInsertOp.getOrdinal() + 10_000,
 				cycleBrokenInsertOp.getOrigin() + " [cycle-break FK fixup update]"
+		);
+	}
+
+	public PlannedOperation synthesizeUniqueSwapUpdateIfNeeded(PlannedOperation cycleBrokenUpdateOp, Object entityId) {
+		// No fixup needed if no unique constraint values were deferred during cycle breaking
+		if (cycleBrokenUpdateOp.getIntendedUniqueValues().isEmpty()) {
+			return null;
+		}
+
+		if (entityId == null) {
+			throw new IllegalStateException("Unique swap fixup requires non-null entityId");
+		}
+
+		var mutationTarget = cycleBrokenUpdateOp.getOperation().getMutationTarget();
+		var persister = ( mutationTarget instanceof EntityMutationTarget emt )
+				? emt.getTargetPart().getEntityPersister()
+				: null;
+		if ( persister == null ) {
+			throw new IllegalStateException("Unique swap fixup only valid for entities, but found - " + mutationTarget);
+		}
+
+		final String table = cycleBrokenUpdateOp.getTableExpression();
+		assert table != null;
+		assert table.equals( Helper.normalizeTableName(table) );
+
+		final UniqueSwapUpdateFactory.UpdateTemplate tmpl = uniqueSwapUpdateFactory.buildUniqueSwapUpdateGroup(
+				persister,
+				table,
+				cycleBrokenUpdateOp.getIntendedUniqueValues().keySet(),
+				session
+		);
+
+		final UniqueSwapUpdateBindPlan bindPlan = new UniqueSwapUpdateBindPlan(
+				persister,
+				entityId,
+				cycleBrokenUpdateOp.getIntendedUniqueValues(),
+				tmpl
+		);
+
+		return new PlannedOperation(
+				table,
+				MutationKind.UPDATE,
+				tmpl.operation(),
+				bindPlan,
+				cycleBrokenUpdateOp.getOrdinal() + 10_000,
+				cycleBrokenUpdateOp.getOrigin() + " [cycle-break unique swap fixup update]"
 		);
 	}
 

@@ -5,7 +5,7 @@
 package org.hibernate.action.queue.cyclebreak;
 
 import org.hibernate.action.queue.bind.BindPlan;
-import org.hibernate.action.queue.cyclebreak.FkFixupUpdateFactory.UpdateTemplate;
+import org.hibernate.action.queue.cyclebreak.UniqueSwapUpdateFactory.UpdateTemplate;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
@@ -13,30 +13,29 @@ import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
-
 import java.util.Map;
 
 import static org.hibernate.action.queue.Helper.normalizeColumnName;
 
 /**
- * BindPlan specifically for "FK fixup" update operation.
+ * BindPlan specifically for unique constraint swap UPDATE operations.
  *
  * @author Steve Ebersole
  */
-public class FkFixupUpdateBindPlan implements BindPlan {
+public class UniqueSwapUpdateBindPlan implements BindPlan {
 	private final EntityPersister entityPersister;
 	private final Object identifier;
-	private final Map<String,Object> intendedFkValues;
+	private final Map<String,Object> intendedValues;
 	private final UpdateTemplate updateTemplate;
 
-	public FkFixupUpdateBindPlan(
+	public UniqueSwapUpdateBindPlan(
 			EntityPersister entityPersister,
 			Object identifier,
-			Map<String, Object> intendedFkValues,
+			Map<String, Object> intendedValues,
 			UpdateTemplate updateTemplate) {
 		this.entityPersister = entityPersister;
 		this.identifier = identifier;
-		this.intendedFkValues = intendedFkValues;
+		this.intendedValues = intendedValues;
 		this.updateTemplate = updateTemplate;
 	}
 
@@ -47,9 +46,10 @@ public class FkFixupUpdateBindPlan implements BindPlan {
 			SharedSessionContractImplementor session) {
 		final JdbcValueBindings jdbcValueBindings = executor.getJdbcValueBindings();
 
-		// SET fk columns
-		for (var e : intendedFkValues.entrySet()) {
-			jdbcValueBindings.bindValue(e.getValue(), updateTemplate.tableName(), normalizeColumnName(e.getKey()), ParameterUsage.SET);
+		// SET unique constraint columns
+		for (var e : intendedValues.entrySet()) {
+			final String columnName = normalizeColumnName(e.getKey());
+			jdbcValueBindings.bindValue(e.getValue(), updateTemplate.tableName(), columnName, ParameterUsage.SET);
 		}
 
 		// WHERE key columns
@@ -58,8 +58,8 @@ public class FkFixupUpdateBindPlan implements BindPlan {
 				(valueIndex, value, jdbcValueMapping) -> {
 					jdbcValueBindings.bindValue(
 							value,
-							operation.getTableExpression(),
-							jdbcValueMapping.getSelectableName(),
+							updateTemplate.tableName(),
+							normalizeColumnName(jdbcValueMapping.getSelectableName()),
 							ParameterUsage.RESTRICT
 					);
 				},
@@ -69,10 +69,7 @@ public class FkFixupUpdateBindPlan implements BindPlan {
 
 	@Override
 	public void execute(MutationExecutor executor, PlannedOperation operation, SharedSessionContractImplementor session) {
-		// Comes down to whether we want to allow this to be added back to the flush plan
-		// as another "cycle" for possible batching.
-		//
-		// For now, let's just execute it directly...
+		// Execute the UPDATE directly
 		executor.execute(
 				operation.getBindPlan().getEntityInstance(),
 				null,

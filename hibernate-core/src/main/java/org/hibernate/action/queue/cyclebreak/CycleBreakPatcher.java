@@ -33,6 +33,9 @@ public class CycleBreakPatcher {
 
 		final JdbcValueBindingsImplementor bindings = (JdbcValueBindingsImplementor) executor.getJdbcValueBindings();
 
+		// Determine which map to use based on cycle type
+		final boolean isUniqueSwap = bindingPatch.cycleType() == BindingPatch.CycleType.UNIQUE_SWAP;
+
 		for (var selectableMapping : bindingPatch.fkColumnsToNull()) {
 			final String rawCol = selectableMapping.getSelectionExpression();
 			final String col = normalizeColumnName(rawCol);
@@ -49,11 +52,15 @@ public class CycleBreakPatcher {
 			final MutableObject<?> handle = new MutableObject<>(intended);
 			bindings.replaceValue(table, col, ParameterUsage.SET, handle);
 
-			// 3) Force NULL for INSERT
+			// 3) Force NULL for INSERT/UPDATE
 			handle.set( null );
 
 			// 4) Record intended value for later fixup UPDATE
-			plannedOperation.getIntendedFkValues().put(col, intended);
+			if (isUniqueSwap) {
+				plannedOperation.getIntendedUniqueValues().put(col, intended);
+			} else {
+				plannedOperation.getIntendedFkValues().put(col, intended);
+			}
 		}
 	}
 }

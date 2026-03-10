@@ -31,6 +31,9 @@ public class PlannedOperation {
 	// Captured “intended” FK values when we cycle-break (used for fixup update synthesis)
 	private final Map<String, Object> intendedFkValues = new LinkedHashMap<>();
 
+	// Captured “intended” unique constraint values when we cycle-break UPDATE swap cycles
+	private final Map<String, Object> intendedUniqueValues = new LinkedHashMap<>();
+
 	// Cached analysis/checker from bind phase (optional)
 	private Object cachedValuesAnalysis;
 	private Object cachedTableInclusionChecker;
@@ -89,6 +92,10 @@ public class PlannedOperation {
 
 	public Map<String, Object> getIntendedFkValues() {
 		return intendedFkValues;
+	}
+
+	public Map<String, Object> getIntendedUniqueValues() {
+		return intendedUniqueValues;
 	}
 
 	public Object getCachedInsertValuesAnalysis() {

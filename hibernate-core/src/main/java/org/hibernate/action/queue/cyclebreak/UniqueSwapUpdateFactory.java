@@ -24,15 +24,13 @@ import static org.hibernate.action.queue.Helper.normalizeColumnName;
 import static org.hibernate.action.queue.Helper.normalizeTableName;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
-
-/// Concrete factory that builds:
-///
-/// ```sql
-///   UPDATE <table> SET fk1=?, fk2=? WHERE keyParts...
-/// ```
-///
-/// @author Steve Ebersole
-public final class FkFixupUpdateFactory {
+/**
+ * Factory for building UPDATE operations specifically for unique constraint swap cycles.
+ * Unlike FK fixup UPDATEs, these work with unique constraint columns that may not be foreign keys.
+ *
+ * @author Steve Ebersole
+ */
+public final class UniqueSwapUpdateFactory {
 	public record UpdateTemplate(
 			String tableName,
 			MutationOperationGroup group,
@@ -40,13 +38,13 @@ public final class FkFixupUpdateFactory {
 			int shapeHash) {
 	}
 
-	public UpdateTemplate buildFkFixupUpdateGroup(
+	public UpdateTemplate buildUniqueSwapUpdateGroup(
 			EntityPersister entityPersister,
 			String tableName,
-			Set<String> keyColumnsToFix,
+			Set<String> columnsToFix,
 			SharedSessionContractImplementor session) {
-		final String normalizeTableName = normalizeTableName( tableName );
-		var tableMapping = findMutableTableMapping(entityPersister, normalizeTableName);
+		final String normalizedTableName = normalizeTableName( tableName );
+		var tableMapping = findMutableTableMapping(entityPersister, normalizedTableName);
 
 		var groupBuilder = new MutationGroupBuilder( MutationType.UPDATE, entityPersister );
 		final TableUpdateBuilder<JdbcUpdateMutation> updateBuilder = new TableUpdateBuilderStandard<>(
@@ -56,23 +54,20 @@ public final class FkFixupUpdateFactory {
 		);
 		groupBuilder.addTableDetailsBuilder(updateBuilder);
 
-		// SET fk = ?
-		// Iterate through ALL columns in the table to find FK columns to update
-		final LinkedHashSet<String> restrictedFkColumns = new LinkedHashSet<>();
-		// First try to find columns via attribute mappings
+		// SET unique_column = ?
+		final LinkedHashSet<String> restrictedColumns = new LinkedHashSet<>();
 		entityPersister.forEachAttributeMapping( attributeMapping -> {
 			attributeMapping.forEachSelectable( (i, selectableMapping) -> {
 				if (selectableMapping == null || selectableMapping.isFormula()) {
 					return;
 				}
 				final String columnName = normalizeColumnName( selectableMapping.getSelectableName() );
-				if ( keyColumnsToFix.contains( columnName ) ) {
-					updateBuilder.addValueColumn( columnName, selectableMapping );
-					restrictedFkColumns.add(columnName);
+				if ( columnsToFix.contains( columnName ) ) {
+					updateBuilder.addValueColumn( selectableMapping );
+					restrictedColumns.add(columnName);
 				}
 			} );
 		} );
-
 
 		// WHERE pk = ?
 		final List<String> keyColumns = arrayList( tableMapping.getKeyMapping().getColumnCount() );
@@ -89,8 +84,8 @@ public final class FkFixupUpdateFactory {
 				.createMutationOperation( null, session.getFactory() );
 		final MutationOperationGroup opGroup = new FixupOperationGroup( entityPersister, jdbcUpdate );
 
-		final int shapeHash = Objects.hash(normalizeTableName, restrictedFkColumns, keyColumns);
-		return new UpdateTemplate( normalizeTableName, opGroup, jdbcUpdate, shapeHash );
+		final int shapeHash = Objects.hash(normalizedTableName, restrictedColumns, keyColumns);
+		return new UpdateTemplate( normalizedTableName, opGroup, jdbcUpdate, shapeHash );
 	}
 
 	private static EntityTableMapping findMutableTableMapping(EntityPersister persister, String wanted) {
@@ -101,38 +96,4 @@ public final class FkFixupUpdateFactory {
 		}
 		throw new IllegalArgumentException("No table mapping for [" + wanted + "] in [" + persister.getEntityName() + "]");
 	}
-
-
-//
-//	// ---- delegate-aware builder creation (your method) ----
-//
-//	private TableUpdateBuilder<?> createTableUpdateBuilder(EntityTableMapping tableMapping) {
-//		final var delegate =
-//				tableMapping.isIdentifierTable()
-//						? persister.getUpdateDelegate()
-//						: null;
-//		return delegate != null
-//				? delegate.createTableMutationBuilder(tableMapping.getInsertExpectation(), persister.getFactory())
-//				: newTableUpdateBuilder(tableMapping);
-//	}
-//
-//	private TableMutationBuilder<?> newTableUpdateBuilder(EntityTableMapping tableMapping) {
-//		throw new UnsupportedOperationException("WIRE ME: newTableUpdateBuilder(EntityTableMapping) from your coordinator");
-//	}
-//
-//	private MutationOperationGroup createOperationGroup(Object mutationTarget, Object builtMutationGroup) {
-//		throw new UnsupportedOperationException("WIRE ME: createOperationGroup(target, mutationGroup) from your coordinator");
-//	}
-//
-//	// ---- mapping discovery / selectable lookup ----
-//
-//
-//	private static String norm(String s) {
-//		if (s == null) return "";
-//		String x = s.trim();
-//		int dot = x.lastIndexOf('.');
-//		if (dot >= 0) x = x.substring(dot + 1);
-//		return x.toLowerCase( Locale.ROOT).replace("\"", "").replace("`", "");
-//	}
-
 }

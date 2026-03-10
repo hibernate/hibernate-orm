@@ -40,5 +40,13 @@ import java.util.Set;
 /// @author Steve Ebersole
 public record BindingPatch(
 		String tableName,
-		Set<SelectableMapping> fkColumnsToNull) {
+		Set<SelectableMapping> fkColumnsToNull,
+		CycleType cycleType) {
+
+	public enum CycleType {
+		/// Foreign key cycle - columns are FK columns referencing another entity
+		FOREIGN_KEY,
+		/// Unique constraint swap cycle - columns are unique constraint columns
+		UNIQUE_SWAP
+	}
 }

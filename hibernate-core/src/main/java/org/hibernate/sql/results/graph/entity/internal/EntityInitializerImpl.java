@@ -1494,18 +1494,26 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 		final RowProcessingState rowProcessingState = data.getRowProcessingState();
 		final var entityEntry = data.entityHolder.getEntityEntry();
 		final var loadedState = entityEntry.getLoadedState();
-		final DomainResultAssembler<?>[] concreteAssemblers = assemblers[data.concreteDescriptor.getSubclassId()];
+		final var concreteAssemblers = assemblers[data.concreteDescriptor.getSubclassId()];
+		final Object[] state;
+		if ( loadedState != null ) {
+			state = loadedState;
+		}
+		else {
+			assert entityEntry.getStatus() == Status.READ_ONLY;
+			state = data.concreteDescriptor.getValues( data.entityInstanceForNotify );
+		}
 
-		for ( int i = 0; i < loadedState.length; i++ ) {
-			final var subInstance = loadedState[i];
-			final DomainResultAssembler<?> assembler = concreteAssemblers[i];
+		for ( int i = 0; i < state.length; i++ ) {
+			final var subInstance = state[i];
+			final var assembler = concreteAssemblers[i];
 			if ( subInstance == UNFETCHED_PROPERTY
 				&& assembler != null
 				&& !(assembler instanceof UnfetchedResultAssembler<?>)
 				&& !(assembler instanceof UnfetchedCollectionAssembler) ) {
 				final var value = assembler.assemble( rowProcessingState );
 				if ( value != UNFETCHED_PROPERTY ) {
-					loadedState[i] = value;
+					state[i] = value;
 					data.concreteDescriptor.setValue( data.entityInstanceForNotify, i, value );
 				}
 			}
@@ -1516,7 +1524,7 @@ public class EntityInitializerImpl extends AbstractInitializer<EntityInitializer
 				data,
 				session,
 				session.getPersistenceContextInternal(),
-				loadedState,
+				state,
 				entityEntry.getVersion()
 		);
 	}

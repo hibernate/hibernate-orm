@@ -196,8 +196,9 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			}
 		};
 
+		final var loadedValuesCollector = jdbcSelect.createLoadedValuesCollector();
 		final var valuesProcessingState = new JdbcValuesSourceProcessingStateStandardImpl(
-				jdbcSelect.getLoadedValuesCollector(),
+				loadedValuesCollector,
 				processingOptions,
 				executionContext
 		);
@@ -221,7 +222,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 					rowReader
 			);
 
-			jdbcSelect.performPostAction( true, statementAccess, connection, executionContext );
+			jdbcSelect.performPostActions( true, statementAccess, connection, executionContext, loadedValuesCollector );
 
 			if ( stats ) {
 				logQueryStatistics( jdbcSelect, executionContext, startTime, result, statistics );
@@ -230,7 +231,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			return result;
 		}
 		catch (RuntimeException e) {
-			jdbcSelect.performPostAction( false, statementAccess, connection, executionContext );
+			jdbcSelect.performPostActions( false, statementAccess, connection, executionContext, loadedValuesCollector );
 			throw e;
 		}
 	}

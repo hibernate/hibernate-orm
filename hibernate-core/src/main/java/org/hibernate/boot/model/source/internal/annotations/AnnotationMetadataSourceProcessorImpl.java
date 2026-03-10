@@ -13,9 +13,6 @@ import java.util.Set;
 import org.hibernate.MappingException;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
-import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
-import org.hibernate.boot.model.convert.spi.ConverterRegistry;
-import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.internal.AnnotationBinder;
 import org.hibernate.boot.model.internal.InheritanceState;
 import org.hibernate.boot.model.process.spi.ManagedResources;
@@ -66,27 +63,6 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 
 		classLoaderService = bootstrapContext.getClassLoaderService();
 		assert classLoaderService != null;
-
-		final ConverterRegistry converterRegistry =
-				rootMetadataBuildingContext.getMetadataCollector().getConverterRegistry();
-		domainModelSource.getConversionRegistrations().forEach( (registration) -> {
-			final Class<?> explicitDomainType = registration.getExplicitDomainType();
-			converterRegistry.addRegisteredConversion( new RegisteredConversion(
-					explicitDomainType == void.class || explicitDomainType == Void.class
-							? void.class
-							: explicitDomainType,
-					registration.getConverterType(),
-					registration.isAutoApply(),
-					rootMetadataBuildingContext
-			) );
-		} );
-		domainModelSource.getConverterRegistrations().forEach( (registration) -> {
-			converterRegistry.addAttributeConverter( ConverterDescriptors.of(
-					classLoaderService.classForName( registration.converterClass().getClassName() ),
-					registration.autoApply(), false,
-					bootstrapContext.getClassmateContext()
-			) );
-		} );
 
 		applyManagedClasses( domainModelSource, knownClasses );
 

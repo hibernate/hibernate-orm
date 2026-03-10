@@ -43,6 +43,9 @@ See the link:{releaseSeriesBase}#whats-new[website] for the list of new features
 
 This section describes changes to contracts (classes, interfaces, methods, etc.) which are considered https://hibernate.org/community/compatibility-policy/#api[API].
 
+[[columns-annotation]]
+=== Removed @Columns
+
 The obsolete `@Columns` annotation was removed, since this is no longer used.
 
 
@@ -133,6 +136,11 @@ Such changes typically do not impact programs using a relational schema managed 
 === Not null constraints on version columns
 
 Columns mapped by `@Version` fields are now declared `not null` by default.
+
+[NOTE]
+====
+"By default" in the sense that users no longer need to specify `nullable=false` for these columns.  Hibernate has never supported NULL values in version columns.
+====
 
 [[dependency-changes]]
 == Changes in Dependencies

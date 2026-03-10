@@ -70,6 +70,7 @@ import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.filter.internal.FilterHelper;
 import org.hibernate.internal.util.ImmutableBitSet;
 import org.hibernate.internal.util.IndexedConsumer;
@@ -147,7 +148,6 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.models.internal.util.CollectionHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.DeleteCoordinatorSoft;
@@ -2696,7 +2696,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void forEachTableDetails(Consumer<TableDetails> consumer) {
-		CollectionHelper.forEach( getTableMappings(), consumer );
+		ArrayHelper.forEach( getTableMappings(), consumer );
 	}
 
 	/**

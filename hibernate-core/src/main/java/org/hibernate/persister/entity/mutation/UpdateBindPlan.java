@@ -19,6 +19,8 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import java.sql.SQLException;
 
+import static org.hibernate.action.queue.Helper.normalizeColumnName;
+
 /// BindPlan for entity update operations.
 ///
 /// @see GeneratedValuesCollector
@@ -62,6 +64,32 @@ public class UpdateBindPlan implements BindPlan {
 		this.valuesAnalysis = valuesAnalysis;
 	}
 
+	/**
+	 * Get the current (new) state of the entity.
+	 * Phase 3: Used for unique constraint value extraction.
+	 */
+	public Object[] getState() {
+		return state;
+	}
+
+	/**
+	 * Get the previous (old) state of the entity.
+	 * Phase 3: Used for unique constraint value extraction.
+	 */
+	public Object[] getPreviousState() {
+		return previousState;
+	}
+
+	@Override
+	public Object getEntityInstance() {
+		return entity;
+	}
+
+	@Override
+	public Object getEntityId() {
+		return identifier;
+	}
+
 	@Override
 	public void bindAndMaybePatch(
 			MutationExecutor executor,
@@ -87,6 +115,13 @@ public class UpdateBindPlan implements BindPlan {
 				applyOptimisticLocking,
 				session
 		);
+
+		// Apply nullable-FK cycle-break patch if planner requested it
+		// Phase 3: Support for UPDATE operations in unique constraint swap cycles
+		if (plannedOperation.getBindingPatch() != null) {
+			org.hibernate.action.queue.cyclebreak.CycleBreakPatcher.applyNullInsertPatch(
+					executor, plannedOperation, plannedOperation.getBindingPatch() );
+		}
 	}
 
 	@Override
@@ -145,6 +180,7 @@ public class UpdateBindPlan implements BindPlan {
 		final var operation = plannedOperation.getOperation();
 		final var tableDetails = (EntityTableMapping) operation.getTableDetails();
 		final var attributeMappings = entityPersister.getAttributeMappings();
+		final var tableName = org.hibernate.action.queue.Helper.normalizeTableName( tableDetails.getTableName() );
 
 		// Bind the SET clause values (updated attributes)
 		final int[] attributeIndexes = tableDetails.getAttributeIndexes();
@@ -157,13 +193,14 @@ public class UpdateBindPlan implements BindPlan {
 						session,
 						jdbcValueBindings,
 						tableDetails,
+						tableName,
 						attributeMapping
 				);
 			}
 		}
 
 		// Bind the WHERE clause - identifier
-		breakDownKeyJdbcValue( id, rowId, session, jdbcValueBindings, tableDetails );
+		breakDownKeyJdbcValue( id, rowId, session, jdbcValueBindings, tableDetails, tableName );
 
 		// Apply optimistic locking if needed
 		if ( applyOptimisticLocking ) {
@@ -172,13 +209,14 @@ public class UpdateBindPlan implements BindPlan {
 					previousValues,
 					jdbcValueBindings,
 					tableDetails,
+					tableName,
 					session
 			);
 		}
 
 		// Apply partitioned selection restrictions if needed
 		if ( entityPersister.hasPartitionedSelectionMapping() && previousValues != null ) {
-			applyPartitionedSelectionRestrictions( previousValues, jdbcValueBindings, tableDetails, session );
+			applyPartitionedSelectionRestrictions( previousValues, jdbcValueBindings, tableDetails, tableName, session );
 		}
 	}
 
@@ -213,6 +251,7 @@ public class UpdateBindPlan implements BindPlan {
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings,
 			EntityTableMapping tableDetails,
+			String tableName,
 			AttributeMapping mapping) {
 		if ( mapping instanceof PluralAttributeMapping ) {
 			return;
@@ -231,8 +270,8 @@ public class UpdateBindPlan implements BindPlan {
 					if ( selectableMapping.isUpdateable() && !selectableMapping.isFormula() ) {
 						bindings.bindValue(
 								jdbcValue,
-								tableDetails.getTableName(),
-								selectableMapping.getSelectionExpression(),
+								tableName,
+								normalizeColumnName( selectableMapping.getSelectionExpression() ),
 								ParameterUsage.SET
 						);
 					}
@@ -246,9 +285,8 @@ public class UpdateBindPlan implements BindPlan {
 			Object rowId,
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings,
-			EntityTableMapping tableDetails) {
-		final String tableName = tableDetails.getTableName();
-
+			EntityTableMapping tableDetails,
+			String tableName) {
 		// Use rowId if available and applicable
 		if ( rowId != null && shouldUseRowId( tableDetails ) ) {
 			final var rowIdMapping = entityPersister.getRowIdMapping();
@@ -262,7 +300,7 @@ public class UpdateBindPlan implements BindPlan {
 							bindings.bindValue(
 									jdbcValue,
 									tableName,
-									selectableMapping.getSelectionExpression(),
+									normalizeColumnName( selectableMapping.getSelectionExpression() ),
 									ParameterUsage.RESTRICT
 							);
 						},
@@ -279,7 +317,7 @@ public class UpdateBindPlan implements BindPlan {
 					jdbcValueBindings.bindValue(
 							jdbcValue,
 							tableName,
-							columnMapping.getColumnName(),
+							normalizeColumnName( columnMapping.getColumnName() ),
 							ParameterUsage.RESTRICT
 					);
 				},
@@ -297,14 +335,15 @@ public class UpdateBindPlan implements BindPlan {
 			Object[] previousValues,
 			JdbcValueBindings jdbcValueBindings,
 			EntityTableMapping tableDetails,
+			String tableName,
 			SharedSessionContractImplementor session) {
 		final OptimisticLockStyle optimisticLockStyle = entityPersister.optimisticLockStyle();
 
 		if ( optimisticLockStyle.isVersion() && entityPersister.getVersionMapping() != null ) {
-			applyVersionBasedOptLocking( version, jdbcValueBindings, tableDetails, session );
+			applyVersionBasedOptLocking( version, jdbcValueBindings, tableDetails, tableName, session );
 		}
 		else if ( previousValues != null && optimisticLockStyle.isAllOrDirty() ) {
-			applyNonVersionOptLocking( previousValues, jdbcValueBindings, tableDetails, session );
+			applyNonVersionOptLocking( previousValues, jdbcValueBindings, tableDetails, tableName, session );
 		}
 	}
 
@@ -312,6 +351,7 @@ public class UpdateBindPlan implements BindPlan {
 			Object version,
 			JdbcValueBindings jdbcValueBindings,
 			EntityTableMapping tableDetails,
+			String tableName,
 			SharedSessionContractImplementor session) {
 		final var versionMapping = entityPersister.getVersionMapping();
 		if ( versionMapping != null && tableDetails.getTableName().equals( versionMapping.getContainingTableExpression() ) ) {
@@ -323,8 +363,8 @@ public class UpdateBindPlan implements BindPlan {
 					(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
 						bindings.bindValue(
 								jdbcValue,
-								tableDetails.getTableName(),
-								selectableMapping.getSelectionExpression(),
+								tableName,
+								normalizeColumnName( selectableMapping.getSelectionExpression() ),
 								ParameterUsage.RESTRICT
 						);
 					},
@@ -337,6 +377,7 @@ public class UpdateBindPlan implements BindPlan {
 			Object[] previousValues,
 			JdbcValueBindings jdbcValueBindings,
 			EntityTableMapping tableDetails,
+			String tableName,
 			SharedSessionContractImplementor session) {
 		final boolean[] versionability = entityPersister.getPropertyVersionability();
 		final var attributeMappings = entityPersister.getAttributeMappings();
@@ -354,6 +395,7 @@ public class UpdateBindPlan implements BindPlan {
 							session,
 							jdbcValueBindings,
 							tableDetails,
+							tableName,
 							attribute
 					);
 				}
@@ -365,6 +407,7 @@ public class UpdateBindPlan implements BindPlan {
 			Object[] previousValues,
 			JdbcValueBindings jdbcValueBindings,
 			EntityTableMapping tableDetails,
+			String tableName,
 			SharedSessionContractImplementor session) {
 		final var attributeMappings = entityPersister.getAttributeMappings();
 
@@ -387,7 +430,7 @@ public class UpdateBindPlan implements BindPlan {
 										if ( selectable.isPartitioned() ) {
 											bindings.bindValue(
 													jdbcValue,
-													tableDetails.getTableName(),
+													tableName,
 													selectable.getSelectionExpression(),
 													ParameterUsage.RESTRICT
 											);
@@ -407,6 +450,7 @@ public class UpdateBindPlan implements BindPlan {
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings,
 			EntityTableMapping tableDetails,
+			String tableName,
 			AttributeMapping mapping) {
 		if ( mapping instanceof PluralAttributeMapping ) {
 			return;
@@ -421,8 +465,8 @@ public class UpdateBindPlan implements BindPlan {
 					if ( selectableMapping.isUpdateable() && !selectableMapping.isFormula() ) {
 						bindings.bindValue(
 								jdbcValue,
-								tableDetails.getTableName(),
-								selectableMapping.getSelectionExpression(),
+								tableName,
+								normalizeColumnName( selectableMapping.getSelectionExpression() ),
 								ParameterUsage.RESTRICT
 						);
 					}

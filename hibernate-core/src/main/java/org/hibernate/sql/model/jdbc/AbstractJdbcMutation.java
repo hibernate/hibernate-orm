@@ -7,6 +7,7 @@ package org.hibernate.sql.model.jdbc;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.action.queue.Helper;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.JdbcValueDescriptorImpl;
 import org.hibernate.jdbc.Expectation;
@@ -80,9 +81,10 @@ public abstract class AbstractJdbcMutation implements JdbcMutationOperation {
 
 	@Override
 	public JdbcValueDescriptor findValueDescriptor(String columnName, ParameterUsage usage) {
+		assert Helper.normalizeColumnName(  columnName ).equals( columnName );
 		for ( int i = 0; i < jdbcValueDescriptors.size(); i++ ) {
 			final var descriptor = jdbcValueDescriptors.get( i );
-			if ( descriptor.getColumnName().equals( columnName )
+			if ( Helper.normalizeColumnName( descriptor.getColumnName() ).equals( columnName )
 					&& descriptor.getUsage() == usage ) {
 				return descriptor;
 			}

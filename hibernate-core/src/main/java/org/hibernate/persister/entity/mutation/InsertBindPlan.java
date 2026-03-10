@@ -5,6 +5,7 @@
 package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.action.internal.AbstractEntityInsertAction;
+import org.hibernate.action.queue.Helper;
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.cyclebreak.CycleBreakPatcher;
 import org.hibernate.action.queue.plan.PlannedOperation;
@@ -15,11 +16,10 @@ import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValues;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.sql.SQLException;
+import java.util.Map;
 
 ///Bind plan for entity insert operations.
 ///
@@ -30,9 +30,8 @@ public class InsertBindPlan implements BindPlan {
 	private final EntityPersister entityPersister;
 	private final Object entity;
 	private final Object identifier;
-	private final Object[] state;
+	private final Map<ColumnDetails, Object> columnValues;
 	private final boolean[] insertable;
-	private final InsertValuesAnalysis valuesAnalysis;
 	private final TableInclusionChecker tableInclusionChecker;
 	private final AbstractEntityInsertAction action;
 	private final GeneratedValuesCollector generatedValuesCollector;
@@ -41,18 +40,16 @@ public class InsertBindPlan implements BindPlan {
 			EntityPersister entityPersister,
 			Object entity,
 			Object identifier,
-			Object[] state,
+			Map<ColumnDetails, Object> columnValues,
 			boolean[] insertable,
-			InsertValuesAnalysis valuesAnalysis,
 			TableInclusionChecker tableInclusionChecker,
 			AbstractEntityInsertAction action,
 			GeneratedValuesCollector generatedValuesCollector) {
 		this.entityPersister = entityPersister;
 		this.entity = entity;
 		this.identifier = identifier;
-		this.state = state;
+		this.columnValues = columnValues;
 		this.insertable = insertable;
-		this.valuesAnalysis = valuesAnalysis;
 		this.tableInclusionChecker = tableInclusionChecker;
 		this.action = action;
 		this.generatedValuesCollector = generatedValuesCollector;
@@ -82,9 +79,7 @@ public class InsertBindPlan implements BindPlan {
 		decomposeForInsert(
 				executor,
 				identifier,
-				state,
 				plannedOperation,
-				insertable,
 				session
 		);
 
@@ -107,7 +102,7 @@ public class InsertBindPlan implements BindPlan {
 
 		final GeneratedValues generatedValues = executor.execute(
 				entity,
-				valuesAnalysis,
+				null,
 				tableInclusionChecker,
 				InsertBindPlan::verifyOutcome,
 				session
@@ -119,79 +114,48 @@ public class InsertBindPlan implements BindPlan {
 	protected void decomposeForInsert(
 			MutationExecutor mutationExecutor,
 			Object id,
-			Object[] values,
 			PlannedOperation plannedOperation,
-			boolean[] propertyInclusions,
 			SharedSessionContractImplementor session) {
 		final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
-		final var attributeMappings = entityPersister.getAttributeMappings();
 
 		final var operation = plannedOperation.getOperation();
 		final var tableDetails = (EntityTableMapping) operation.getTableDetails();
+		final var tableName = Helper.normalizeTableName( tableDetails.getTableName() );
 
-		final int[] attributeIndexes = tableDetails.getAttributeIndexes();
-		for ( int i = 0; i < attributeIndexes.length; i++ ) {
-			final int attributeIndex = attributeIndexes[ i ];
-			if ( propertyInclusions[attributeIndex] ) {
-				decomposeAttribute( values[attributeIndex], session, jdbcValueBindings,
-						tableDetails, attributeMappings.get( attributeIndex ) );
+		columnValues.forEach( (columnMapping, columnValue) -> {
+			if ( insertable[columnMapping.attributeIndex()]) {
+				if ( columnMapping.physicalColumn() && columnMapping.insertable() ) {
+					jdbcValueBindings.bindValue(
+							columnValue,
+							tableName,
+							columnMapping.columnName(),
+							ParameterUsage.SET
+					);
+				}
 			}
-		}
+		} );
 
 		if ( id == null ) {
 			assert entityPersister.getInsertDelegate() != null;
 		}
 		else {
-			breakDownKeyJdbcValue( id, session, jdbcValueBindings, tableDetails );
+			breakDownKeyJdbcValue( id, session, jdbcValueBindings, tableDetails, tableName );
 		}
-	}
-
-	protected void decomposeAttribute(
-			Object value,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings,
-			EntityTableMapping tableDetails,
-			AttributeMapping mapping) {
-		if ( mapping instanceof PluralAttributeMapping ) {
-			return;
-		}
-
-		if ( !tableDetails.getTableName().equals( mapping.getContainingTableExpression() ) ) {
-			return;
-		}
-
-		mapping.decompose(
-				value,
-				0,
-				jdbcValueBindings,
-				null,
-				(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
-					if ( selectableMapping.isInsertable() ) {
-						bindings.bindValue(
-								jdbcValue,
-								entityPersister.physicalTableNameForMutation( selectableMapping ),
-								selectableMapping.getSelectionExpression(),
-								ParameterUsage.SET
-						);
-					}
-				},
-				session
-		);
 	}
 
 	protected void breakDownKeyJdbcValue(
 			Object id,
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings,
-			EntityTableMapping tableDetails) {
-		final String tableName = tableDetails.getTableName();
+			EntityTableMapping tableDetails,
+			String tableName) {
 		tableDetails.getKeyMapping().breakDownKeyJdbcValues(
 				id,
 				(jdbcValue, columnMapping) -> {
 					jdbcValueBindings.bindValue(
 							jdbcValue,
 							tableName,
-							columnMapping.getColumnName(),
+							Helper.normalizeColumnName( columnMapping.getColumnName() ),
 							ParameterUsage.SET
 					);
 				},

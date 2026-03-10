@@ -5,13 +5,11 @@
 package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.action.internal.AbstractEntityInsertAction;
-import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
-import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /// Specialized BindPlan for union subclass insert operations.
 ///
@@ -25,9 +23,8 @@ public class UnionSubclassInsertBindPlan extends InsertBindPlan {
 			EntityPersister entityPersister,
 			Object entity,
 			Object identifier,
-			Object[] state,
+			InsertValuesAnalysisForDecomposer valuesAnalysis,
 			boolean[] insertable,
-			InsertValuesAnalysis valuesAnalysis,
 			TableInclusionChecker tableInclusionChecker,
 			AbstractEntityInsertAction action,
 			GeneratedValuesCollector generatedValuesCollector) {
@@ -35,45 +32,19 @@ public class UnionSubclassInsertBindPlan extends InsertBindPlan {
 				entityPersister,
 				entity,
 				identifier,
-				state,
+				mergeColumnValues( valuesAnalysis ),
 				insertable,
-				valuesAnalysis,
 				tableInclusionChecker,
 				action,
 				generatedValuesCollector
 		);
 	}
 
-	@Override
-	protected void decomposeAttribute(
-			Object value,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings,
-			EntityTableMapping tableDetails,
-			AttributeMapping mapping) {
-		if ( mapping instanceof PluralAttributeMapping ) {
-			return;
-		}
-
-		// Union subclass tables contain ALL columns (inherited + specific)
-		// so we don't check getContainingTableExpression()
-
-		mapping.decompose(
-				value,
-				0,
-				jdbcValueBindings,
-				null,
-				(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
-					if ( selectableMapping.isInsertable() ) {
-						bindings.bindValue(
-								jdbcValue,
-								tableDetails.getTableName(), // Use current table name
-								selectableMapping.getSelectionExpression(),
-								ParameterUsage.SET
-						);
-					}
-				},
-				session
-		);
+	private static Map<ColumnDetails, Object> mergeColumnValues(InsertValuesAnalysisForDecomposer valuesAnalysis) {
+		final Map<ColumnDetails, Object> combined = new HashMap<ColumnDetails, Object>();
+		valuesAnalysis.getColumnValuesByTable().forEach( (tableName, columnValues) -> {
+			combined.putAll( columnValues );
+		} );
+		return combined;
 	}
 }

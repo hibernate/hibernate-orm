@@ -27,10 +27,10 @@ import org.hibernate.sql.model.internal.MutationGroupStandard;
  * @author Steve Ebersole
  */
 public class MutationGroupBuilder implements SelectableConsumer {
-	private final MutationType mutationType;
-	private final EntityMutationTarget mutationTarget;
+	protected final MutationType mutationType;
+	protected final EntityMutationTarget mutationTarget;
 
-	private final Map<String, TableMutationBuilder<?>> tableMutationBuilderMap;
+	protected final Map<String, TableMutationBuilder<?>> tableMutationBuilderMap;
 
 	public MutationGroupBuilder(MutationType mutationType, EntityMutationTarget mutationTarget) {
 		this.mutationType = mutationType;

@@ -31,6 +31,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static org.hibernate.action.queue.Helper.normalizeTableName;
+
 /// [Decomposer][org.hibernate.action.queue.graph.MutationDecomposer] for entity insert operations.
 ///
 /// Converts an [AbstractEntityInsertAction] into a group of [PlannedOperation] to be performed.
@@ -78,7 +80,7 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		final Object identifier = action.getId();
 		final Object[] state = action.getState();
 
-		var valuesAnalysis = new InsertValuesAnalysis(entityPersister, state);
+		var valuesAnalysis = new InsertValuesAnalysisForDecomposer(entityPersister, state, session);
 		var inclusionChecker = calculateTableInclusionCheck( valuesAnalysis );
 
 		var insertable = entityPersister.getPropertyInsertability();
@@ -98,14 +100,14 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		for (int i = 0; i < effectiveGroup.getNumberOfOperations(); i++) {
 			var operation = effectiveGroup.getOperation(i);
 			var table = (EntityTableMapping) operation.getTableDetails();
-			String tableName = table.getTableName();
+			String tableName = normalizeTableName( table.getTableName() );
 
 			final BindPlan bindPlan = createInsertBindPlan(
+					tableName,
 					entity,
 					identifier,
-					state,
-					insertable,
 					valuesAnalysis,
+					insertable,
 					inclusionChecker,
 					action,
 					generatedValuesCollector
@@ -148,7 +150,7 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		}
 	}
 
-	private TableInclusionChecker calculateTableInclusionCheck(InsertValuesAnalysis analysis) {
+	private TableInclusionChecker calculateTableInclusionCheck(InsertValuesAnalysisForDecomposer analysis) {
 		return (tableMapping) -> !tableMapping.isOptional() || analysis.hasNonNullBindings( tableMapping );
 	}
 
@@ -269,11 +271,11 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 	}
 
 	private BindPlan createInsertBindPlan(
+			String tableName,
 			Object entity,
 			Object identifier,
-			Object[] state,
+			InsertValuesAnalysisForDecomposer valuesAnalysis,
 			boolean[] insertable,
-			InsertValuesAnalysis valuesAnalysis,
 			TableInclusionChecker inclusionChecker,
 			AbstractEntityInsertAction action,
 			GeneratedValuesCollector generatedValuesCollector) {
@@ -283,9 +285,8 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 					entityPersister,
 					entity,
 					identifier,
-					state,
-					insertable,
 					valuesAnalysis,
+					insertable,
 					inclusionChecker,
 					action,
 					generatedValuesCollector
@@ -297,9 +298,8 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 				entityPersister,
 				entity,
 				identifier,
-				state,
+				valuesAnalysis.getColumnValuesForTable( tableName ),
 				insertable,
-				valuesAnalysis,
 				inclusionChecker,
 				action,
 				generatedValuesCollector

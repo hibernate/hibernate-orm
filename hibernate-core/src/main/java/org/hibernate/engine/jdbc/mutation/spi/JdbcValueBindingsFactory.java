@@ -7,12 +7,12 @@ package org.hibernate.engine.jdbc.mutation.spi;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.MutationOperation;
 
-/// Allows supplying a custom [JdbcValueBindings] into the executor.
+/// Allows supplying a custom [JdbcValueBindingsImplementor] into the executor.
 ///
 /// @author Steve Ebersole
 @FunctionalInterface
 public interface JdbcValueBindingsFactory {
-	/// Create the [JdbcValueBindings] to use for processing the given operation.
+	/// Create the [JdbcValueBindingsImplementor] to use for processing the given operation.
 	JdbcValueBindingsImplementor create(
 			MutationOperation operation,
 			JdbcValueDescriptorAccess jdbcValueDescriptorAccess,

@@ -113,7 +113,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 		for ( int i = 0; i < effectiveGroup.getNumberOfOperations(); i++ ) {
 			var operation = effectiveGroup.getOperation( i );
 			var table = (EntityTableMapping) operation.getTableDetails();
-			String tableName = table.getTableName();
+			String tableName = org.hibernate.action.queue.Helper.normalizeTableName( table.getTableName() );
 
 			final BindPlan bindPlan = isSoftDelete
 					? new SoftDeleteBindPlan(

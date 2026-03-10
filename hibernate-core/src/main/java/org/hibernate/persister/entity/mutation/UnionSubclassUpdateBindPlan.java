@@ -52,6 +52,7 @@ public class UnionSubclassUpdateBindPlan extends UpdateBindPlan {
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings,
 			EntityTableMapping tableDetails,
+			String tableName,
 			AttributeMapping mapping) {
 		if ( mapping instanceof PluralAttributeMapping ) {
 			return;
@@ -69,7 +70,7 @@ public class UnionSubclassUpdateBindPlan extends UpdateBindPlan {
 					if ( selectableMapping.isUpdateable() && !selectableMapping.isFormula() ) {
 						bindings.bindValue(
 								jdbcValue,
-								tableDetails.getTableName(), // Use current table name
+								tableName,
 								selectableMapping.getSelectionExpression(),
 								ParameterUsage.SET
 						);

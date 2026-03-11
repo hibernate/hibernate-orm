@@ -12,7 +12,6 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -24,8 +23,6 @@ import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
  * @author Steve Ebersole
  */
 public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implements SqmSingularValuedJoin<O,T> {
-
-	private final SqmSingularPersistentAttribute<? super O, T> attribute;
 
 	public SqmSingularJoin(
 			SqmFrom<?,O> lhs,
@@ -43,7 +40,6 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 				fetched,
 				nodeBuilder
 		);
-		attribute = joinedNavigable;
 	}
 
 	@Override
@@ -60,7 +56,6 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
 		super( lhs, navigablePath, joinedNavigable, alias, joinType, fetched, nodeBuilder );
-		attribute = joinedNavigable;
 	}
 
 	@Override
@@ -92,13 +87,8 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 	}
 
 	@Override
-	public SqmPathSource<T> getReferencedPathSource() {
-		return getModel().getSqmPathSource();
-	}
-
-	@Override
 	public SqmSingularPersistentAttribute<? super O, T> getModel() {
-		return attribute;
+		return (SqmSingularPersistentAttribute<? super O, T>) super.getModel();
 	}
 
 	@Override

@@ -39,14 +39,18 @@ import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for {@link ModelsJavaExporter}.
+ * Tests for {@link EntityExporter}.
  *
  * @author Koen Aers
  */
-public class ModelsJavaExporterTest {
+public class EntityExporterTest {
 
 	private String export(TableMetadata table) {
-		ModelsJavaExporter exporter = ModelsJavaExporter.create(List.of(table));
+		return export(table, true);
+	}
+
+	private String export(TableMetadata table, boolean annotated) {
+		EntityExporter exporter = EntityExporter.create(List.of(table), annotated);
 		StringWriter writer = new StringWriter();
 		exporter.export(writer, table);
 		return writer.toString();
@@ -479,5 +483,115 @@ public class ModelsJavaExporterTest {
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		String source = export(table);
 		assertFalse(source.contains("extra code"), source);
+	}
+
+	// --- Unannotated (annotated=false) tests ---
+
+	@Test
+	public void testUnannotatedNoEntityAnnotation() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		String source = export(table, false);
+		assertFalse(source.contains("@Entity"), source);
+		assertFalse(source.contains("@Table"), source);
+		assertTrue(source.contains("public class Employee"), source);
+		assertTrue(source.contains("implements Serializable"), source);
+	}
+
+	@Test
+	public void testUnannotatedNoColumnAnnotations() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class)
+				.primaryKey(true)
+				.generationType(GenerationType.IDENTITY));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		String source = export(table, false);
+		assertFalse(source.contains("@Id"), source);
+		assertFalse(source.contains("@GeneratedValue"), source);
+		assertFalse(source.contains("@Column"), source);
+		assertTrue(source.contains("private Long id;"), source);
+		assertTrue(source.contains("private String name;"), source);
+		assertTrue(source.contains("public Long getId()"), source);
+		assertTrue(source.contains("public String getName()"), source);
+	}
+
+	@Test
+	public void testUnannotatedNoRelationshipAnnotations() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyMetadata(
+				"department", "DEPT_ID", "Department", "com.example"));
+		table.addOneToMany(new OneToManyMetadata(
+				"projects", "employee", "Project", "com.example"));
+		String source = export(table, false);
+		assertFalse(source.contains("@ManyToOne"), source);
+		assertFalse(source.contains("@JoinColumn"), source);
+		assertFalse(source.contains("@OneToMany"), source);
+		assertTrue(source.contains("private Department department;"), source);
+		assertTrue(source.contains("Set<Project>"), source);
+	}
+
+	@Test
+	public void testUnannotatedNoJakartaImports() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class)
+				.primaryKey(true)
+				.generationType(GenerationType.IDENTITY));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		String source = export(table, false);
+		assertFalse(source.contains("import jakarta.persistence"), source);
+	}
+
+	@Test
+	public void testUnannotatedNoVersionAnnotation() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("VERSION", "version", Integer.class).version(true));
+		String source = export(table, false);
+		assertFalse(source.contains("@Version"), source);
+		assertTrue(source.contains("private Integer version;"), source);
+	}
+
+	@Test
+	public void testUnannotatedNoTemporalOrLobAnnotations() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("HIRE_DATE", "hireDate", Date.class)
+				.temporal(TemporalType.TIMESTAMP));
+		table.addColumn(new ColumnMetadata("BIO", "bio", String.class).lob(true));
+		String source = export(table, false);
+		assertFalse(source.contains("@Temporal"), source);
+		assertFalse(source.contains("@Lob"), source);
+		assertTrue(source.contains("private Date hireDate;"), source);
+		assertTrue(source.contains("private String bio;"), source);
+	}
+
+	@Test
+	public void testUnannotatedNoEmbeddedAnnotations() {
+		TableMetadata table = new TableMetadata("ORDER_LINE", "OrderLine", "com.example");
+		table.compositeId(new CompositeIdMetadata("id", "OrderLineId", "com.example")
+				.addAttributeOverride("orderId", "ORDER_ID"));
+		table.addEmbeddedField(new EmbeddedFieldMetadata("address", "Address", "com.example")
+				.addAttributeOverride("street", "HOME_STREET"));
+		String source = export(table, false);
+		assertFalse(source.contains("@EmbeddedId"), source);
+		assertFalse(source.contains("@Embedded"), source);
+		assertFalse(source.contains("@AttributeOverride"), source);
+		assertTrue(source.contains("private OrderLineId id;"), source);
+		assertTrue(source.contains("private Address address;"), source);
+	}
+
+	@Test
+	public void testUnannotatedConstructorsAndToStringStillGenerated() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		String source = export(table, false);
+		assertTrue(source.contains("public Employee() {"), source);
+		assertTrue(source.contains("public Employee(Long id, String name)"), source);
+		assertTrue(source.contains("public String toString()"), source);
+		assertTrue(source.contains("public boolean equals(Object other)"), source);
+		assertTrue(source.contains("public int hashCode()"), source);
 	}
 }

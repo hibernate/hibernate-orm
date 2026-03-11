@@ -1,9 +1,9 @@
-    public ${pojo.getDeclarationName()}() {
+    public ${templateHelper.getDeclarationName()}() {
     }
-<#if pojo.needsFullConstructor()>
+<#if templateHelper.needsFullConstructor()>
 
-    public ${pojo.getDeclarationName()}(${pojo.getFullConstructorParameterList()}) {
-<#list pojo.getFullConstructorProperties() as prop>
+    public ${templateHelper.getDeclarationName()}(${templateHelper.getFullConstructorParameterList()}) {
+<#list templateHelper.getFullConstructorProperties() as prop>
         this.${prop.fieldName()} = ${prop.fieldName()};
 </#list>
     }

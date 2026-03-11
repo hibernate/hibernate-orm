@@ -42,14 +42,16 @@ import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
  *
  * @author Koen Aers
  */
-public class EntityTemplateHelper {
+public class TemplateHelper {
 
 	private final TableMetadata table;
 	private final ImportContext importContext;
+	private final boolean annotated;
 
-	EntityTemplateHelper(TableMetadata table, ImportContext importContext) {
+	TemplateHelper(TableMetadata table, ImportContext importContext, boolean annotated) {
 		this.table = table;
 		this.importContext = importContext;
+		this.annotated = annotated;
 	}
 
 	// --- Package / class ---
@@ -152,6 +154,9 @@ public class EntityTemplateHelper {
 	// --- Annotation generation ---
 
 	public String generateClassAnnotations() {
+		if (!annotated) {
+			return "";
+		}
 		StringBuilder sb = new StringBuilder();
 		// @Entity
 		sb.append(importType("jakarta.persistence.Entity")).append("\n");
@@ -213,6 +218,9 @@ public class EntityTemplateHelper {
 	}
 
 	public String generateIdAnnotations(ColumnMetadata col) {
+		if (!annotated) {
+			return "";
+		}
 		StringBuilder sb = new StringBuilder();
 		importType("jakarta.persistence.Id");
 		sb.append("@Id\n");
@@ -226,11 +234,17 @@ public class EntityTemplateHelper {
 	}
 
 	public String generateVersionAnnotation() {
+		if (!annotated) {
+			return "";
+		}
 		importType("jakarta.persistence.Version");
 		return "@Version";
 	}
 
 	public String generateBasicAnnotation(ColumnMetadata col) {
+		if (!annotated) {
+			return "";
+		}
 		FetchType fetch = col.getBasicFetchType();
 		boolean optionalSet = col.isBasicOptionalSet();
 		if (fetch == null && !optionalSet) {
@@ -253,6 +267,9 @@ public class EntityTemplateHelper {
 	}
 
 	public String generateTemporalAnnotation(ColumnMetadata col) {
+		if (!annotated) {
+			return "";
+		}
 		TemporalType tt = col.getTemporalType();
 		if (tt == null) {
 			return "";
@@ -263,11 +280,17 @@ public class EntityTemplateHelper {
 	}
 
 	public String generateLobAnnotation() {
+		if (!annotated) {
+			return "";
+		}
 		importType("jakarta.persistence.Lob");
 		return "@Lob";
 	}
 
 	public String generateColumnAnnotation(ColumnMetadata col) {
+		if (!annotated) {
+			return "";
+		}
 		importType("jakarta.persistence.Column");
 		StringBuilder sb = new StringBuilder("@Column(name = \"");
 		sb.append(col.getColumnName()).append("\"");
@@ -291,6 +314,9 @@ public class EntityTemplateHelper {
 	}
 
 	public String generateManyToOneAnnotation(ForeignKeyMetadata fk) {
+		if (!annotated) {
+			return "";
+		}
 		StringBuilder sb = new StringBuilder();
 		importType("jakarta.persistence.ManyToOne");
 		sb.append("@ManyToOne");
@@ -321,6 +347,9 @@ public class EntityTemplateHelper {
 	}
 
 	public String generateOneToManyAnnotation(OneToManyMetadata o2m) {
+		if (!annotated) {
+			return "";
+		}
 		importType("jakarta.persistence.OneToMany");
 		StringBuilder sb = new StringBuilder("@OneToMany(mappedBy = \"");
 		sb.append(o2m.getMappedBy()).append("\"");
@@ -341,6 +370,9 @@ public class EntityTemplateHelper {
 	}
 
 	public String generateOneToOneAnnotation(OneToOneMetadata o2o) {
+		if (!annotated) {
+			return "";
+		}
 		StringBuilder sb = new StringBuilder();
 		importType("jakarta.persistence.OneToOne");
 		sb.append("@OneToOne");
@@ -394,6 +426,9 @@ public class EntityTemplateHelper {
 	}
 
 	public String generateManyToManyAnnotation(ManyToManyMetadata m2m) {
+		if (!annotated) {
+			return "";
+		}
 		StringBuilder sb = new StringBuilder();
 		importType("jakarta.persistence.ManyToMany");
 		sb.append("@ManyToMany");
@@ -439,6 +474,9 @@ public class EntityTemplateHelper {
 	}
 
 	public String generateEmbeddedIdAnnotation(CompositeIdMetadata cid) {
+		if (!annotated) {
+			return "";
+		}
 		StringBuilder sb = new StringBuilder();
 		importType("jakarta.persistence.EmbeddedId");
 		sb.append("@EmbeddedId");
@@ -451,6 +489,9 @@ public class EntityTemplateHelper {
 	}
 
 	public String generateEmbeddedAnnotation(EmbeddedFieldMetadata emb) {
+		if (!annotated) {
+			return "";
+		}
 		StringBuilder sb = new StringBuilder();
 		importType("jakarta.persistence.Embedded");
 		sb.append("@Embedded");

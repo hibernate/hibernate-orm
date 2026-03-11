@@ -27,15 +27,15 @@ import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for {@link ModelsCfgExporter}.
+ * Tests for {@link CfgXmlExporter}.
  *
  * @author Koen Aers
  */
-public class ModelsCfgExporterTest {
+public class CfgXmlExporterTest {
 
 	@Test
 	public void testEmptySchema() {
-		ModelsCfgExporter exporter = ModelsCfgExporter.create(List.of());
+		CfgXmlExporter exporter = CfgXmlExporter.create(List.of());
 		StringWriter writer = new StringWriter();
 		exporter.export(writer, new Properties());
 		String xml = writer.toString();
@@ -49,7 +49,7 @@ public class ModelsCfgExporterTest {
 	@Test
 	public void testSingleEntity() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		ModelsCfgExporter exporter = ModelsCfgExporter.create(List.of(table));
+		CfgXmlExporter exporter = CfgXmlExporter.create(List.of(table));
 		StringWriter writer = new StringWriter();
 		Properties props = new Properties();
 		props.put("ejb3", "true");
@@ -61,7 +61,7 @@ public class ModelsCfgExporterTest {
 	@Test
 	public void testSingleEntityResourceMapping() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		ModelsCfgExporter exporter = ModelsCfgExporter.create(List.of(table));
+		CfgXmlExporter exporter = CfgXmlExporter.create(List.of(table));
 		StringWriter writer = new StringWriter();
 		exporter.export(writer, new Properties());
 		String xml = writer.toString();
@@ -73,7 +73,7 @@ public class ModelsCfgExporterTest {
 		List<TableMetadata> tables = List.of(
 				new TableMetadata("EMPLOYEE", "Employee", "com.example"),
 				new TableMetadata("DEPARTMENT", "Department", "com.example"));
-		ModelsCfgExporter exporter = ModelsCfgExporter.create(tables);
+		CfgXmlExporter exporter = CfgXmlExporter.create(tables);
 		StringWriter writer = new StringWriter();
 		Properties props = new Properties();
 		props.put("ejb3", "true");
@@ -85,7 +85,7 @@ public class ModelsCfgExporterTest {
 
 	@Test
 	public void testHibernateProperties() {
-		ModelsCfgExporter exporter = ModelsCfgExporter.create(List.of());
+		CfgXmlExporter exporter = CfgXmlExporter.create(List.of());
 		StringWriter writer = new StringWriter();
 		Properties props = new Properties();
 		props.put("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
@@ -98,7 +98,7 @@ public class ModelsCfgExporterTest {
 
 	@Test
 	public void testIgnoredProperties() {
-		ModelsCfgExporter exporter = ModelsCfgExporter.create(List.of());
+		CfgXmlExporter exporter = CfgXmlExporter.create(List.of());
 		StringWriter writer = new StringWriter();
 		Properties props = new Properties();
 		props.put(Environment.SESSION_FACTORY_NAME, "myFactory");
@@ -116,7 +116,7 @@ public class ModelsCfgExporterTest {
 
 	@Test
 	public void testSessionFactoryName() {
-		ModelsCfgExporter exporter = ModelsCfgExporter.create(List.of());
+		CfgXmlExporter exporter = CfgXmlExporter.create(List.of());
 		StringWriter writer = new StringWriter();
 		Properties props = new Properties();
 		props.put(Environment.SESSION_FACTORY_NAME, "mySessionFactory");
@@ -133,7 +133,7 @@ public class ModelsCfgExporterTest {
 		List<TableMetadata> tables = new ArrayList<>();
 		tables.add(child);
 		tables.add(root);
-		ModelsCfgExporter exporter = ModelsCfgExporter.create(tables);
+		CfgXmlExporter exporter = CfgXmlExporter.create(tables);
 		StringWriter writer = new StringWriter();
 		Properties props = new Properties();
 		props.put("ejb3", "true");
@@ -148,7 +148,7 @@ public class ModelsCfgExporterTest {
 
 	@Test
 	public void testXmlEscaping() {
-		ModelsCfgExporter exporter = ModelsCfgExporter.create(List.of());
+		CfgXmlExporter exporter = CfgXmlExporter.create(List.of());
 		StringWriter writer = new StringWriter();
 		Properties props = new Properties();
 		props.put("hibernate.custom", "value <with> special chars");

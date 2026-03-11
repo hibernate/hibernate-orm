@@ -35,13 +35,15 @@ import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
  *
  * @author Koen Aers
  */
-public class ModelsJavaExporter {
+public class EntityExporter {
 
 	private final List<TableMetadata> tables;
+	private final boolean annotated;
 	private final Configuration freemarkerConfig;
 
-	private ModelsJavaExporter(List<TableMetadata> tables) {
+	private EntityExporter(List<TableMetadata> tables, boolean annotated) {
 		this.tables = tables;
+		this.annotated = annotated;
 		this.freemarkerConfig = new Configuration(Configuration.VERSION_2_3_33);
 		this.freemarkerConfig.setClassLoaderForTemplateLoading(
 				getClass().getClassLoader(), "/");
@@ -50,15 +52,19 @@ public class ModelsJavaExporter {
 				TemplateExceptionHandler.RETHROW_HANDLER);
 	}
 
-	public static ModelsJavaExporter create(List<TableMetadata> tables) {
-		return new ModelsJavaExporter(tables);
+	public static EntityExporter create(List<TableMetadata> tables) {
+		return new EntityExporter(tables, true);
+	}
+
+	public static EntityExporter create(List<TableMetadata> tables, boolean annotated) {
+		return new EntityExporter(tables, annotated);
 	}
 
 	public void export(Writer output, TableMetadata table) {
 		ImportContextImpl importContext = new ImportContextImpl(table.getEntityPackage());
-		EntityTemplateHelper pojo = new EntityTemplateHelper(table, importContext);
+		TemplateHelper templateHelper = new TemplateHelper(table, importContext, annotated);
 		Map<String, Object> model = new HashMap<>();
-		model.put("pojo", pojo);
+		model.put("templateHelper", templateHelper);
 		try {
 			Template template = freemarkerConfig.getTemplate("models/entity/Entity.ftl");
 			template.process(model, output);

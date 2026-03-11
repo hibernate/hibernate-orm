@@ -1,5 +1,5 @@
-<#if pojo.hasExtraClassCode()>
+<#if templateHelper.hasExtraClassCode()>
     // The following is extra code specified in the reveng.xml files
-${pojo.getExtraClassCode()}
+${templateHelper.getExtraClassCode()}
     // end of extra code specified in the reveng.xml files
 </#if>

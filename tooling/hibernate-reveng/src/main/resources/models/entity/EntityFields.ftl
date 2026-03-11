@@ -1,43 +1,43 @@
 <#-- Composite ID field -->
-<#if pojo.getTable().getCompositeId()??>
-<#assign cid = pojo.getTable().getCompositeId()>
-    private ${pojo.getCompositeIdTypeName(cid)} ${cid.getFieldName()};
+<#if templateHelper.getTable().getCompositeId()??>
+<#assign cid = templateHelper.getTable().getCompositeId()>
+    private ${templateHelper.getCompositeIdTypeName(cid)} ${cid.getFieldName()};
 
 </#if>
 <#-- Basic columns (skip FK columns, respect gen-property) -->
-<#list pojo.getTable().getColumns() as col>
-<#if !pojo.isForeignKeyColumn(col.getColumnName()) && pojo.isGenProperty(col)>
-<#if pojo.hasFieldDescription(col)>
+<#list templateHelper.getTable().getColumns() as col>
+<#if !templateHelper.isForeignKeyColumn(col.getColumnName()) && templateHelper.isGenProperty(col)>
+<#if templateHelper.hasFieldDescription(col)>
     /**
-     * ${pojo.getFieldDescription(col)}
+     * ${templateHelper.getFieldDescription(col)}
      */
 </#if>
-    private ${pojo.getJavaTypeName(col)} ${col.getFieldName()};
+    private ${templateHelper.getJavaTypeName(col)} ${col.getFieldName()};
 
 </#if>
 </#list>
 <#-- ManyToOne fields -->
-<#list pojo.getTable().getForeignKeys() as fk>
-    private ${pojo.getFieldTypeName(fk)} ${fk.getFieldName()};
+<#list templateHelper.getTable().getForeignKeys() as fk>
+    private ${templateHelper.getFieldTypeName(fk)} ${fk.getFieldName()};
 
 </#list>
 <#-- OneToOne fields -->
-<#list pojo.getTable().getOneToOnes() as o2o>
-    private ${pojo.getFieldTypeName(o2o)} ${o2o.getFieldName()};
+<#list templateHelper.getTable().getOneToOnes() as o2o>
+    private ${templateHelper.getFieldTypeName(o2o)} ${o2o.getFieldName()};
 
 </#list>
 <#-- OneToMany fields -->
-<#list pojo.getTable().getOneToManys() as o2m>
-    private ${pojo.getCollectionTypeName(o2m)} ${o2m.getFieldName()} = new ${pojo.importType("java.util.HashSet")}<>(0);
+<#list templateHelper.getTable().getOneToManys() as o2m>
+    private ${templateHelper.getCollectionTypeName(o2m)} ${o2m.getFieldName()} = new ${templateHelper.importType("java.util.HashSet")}<>(0);
 
 </#list>
 <#-- ManyToMany fields -->
-<#list pojo.getTable().getManyToManys() as m2m>
-    private ${pojo.getCollectionTypeName(m2m)} ${m2m.getFieldName()} = new ${pojo.importType("java.util.HashSet")}<>(0);
+<#list templateHelper.getTable().getManyToManys() as m2m>
+    private ${templateHelper.getCollectionTypeName(m2m)} ${m2m.getFieldName()} = new ${templateHelper.importType("java.util.HashSet")}<>(0);
 
 </#list>
 <#-- Embedded fields -->
-<#list pojo.getTable().getEmbeddedFields() as emb>
-    private ${pojo.getEmbeddedTypeName(emb)} ${emb.getFieldName()};
+<#list templateHelper.getTable().getEmbeddedFields() as emb>
+    private ${templateHelper.getEmbeddedTypeName(emb)} ${emb.getFieldName()};
 
 </#list>

@@ -32,16 +32,16 @@ import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
  *
  * @author Koen Aers
  */
-public class ModelsCfgExporter {
+public class CfgXmlExporter {
 
 	private final List<TableMetadata> tables;
 
-	private ModelsCfgExporter(List<TableMetadata> tables) {
+	private CfgXmlExporter(List<TableMetadata> tables) {
 		this.tables = tables;
 	}
 
-	public static ModelsCfgExporter create(List<TableMetadata> tables) {
-		return new ModelsCfgExporter(tables);
+	public static CfgXmlExporter create(List<TableMetadata> tables) {
+		return new CfgXmlExporter(tables);
 	}
 
 	public void export(Writer output, Properties properties) {

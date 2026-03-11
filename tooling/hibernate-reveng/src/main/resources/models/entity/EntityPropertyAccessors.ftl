@@ -1,103 +1,127 @@
 <#-- Composite ID accessor -->
-<#if pojo.getTable().getCompositeId()??>
-<#assign cid = pojo.getTable().getCompositeId()>
-    ${pojo.generateEmbeddedIdAnnotation(cid)}
-    public ${pojo.getCompositeIdTypeName(cid)} ${pojo.getGetterName(cid.getFieldName())}() {
+<#if templateHelper.getTable().getCompositeId()??>
+<#assign cid = templateHelper.getTable().getCompositeId()>
+<#assign ann = templateHelper.generateEmbeddedIdAnnotation(cid)>
+<#if ann?has_content>
+    ${ann}
+</#if>
+    public ${templateHelper.getCompositeIdTypeName(cid)} ${templateHelper.getGetterName(cid.getFieldName())}() {
         return this.${cid.getFieldName()};
     }
 
-    public void ${pojo.getSetterName(cid.getFieldName())}(${pojo.getCompositeIdTypeName(cid)} ${cid.getFieldName()}) {
+    public void ${templateHelper.getSetterName(cid.getFieldName())}(${templateHelper.getCompositeIdTypeName(cid)} ${cid.getFieldName()}) {
         this.${cid.getFieldName()} = ${cid.getFieldName()};
     }
 
 </#if>
 <#-- Basic column accessors (skip FK columns, respect gen-property) -->
-<#list pojo.getTable().getColumns() as col>
-<#if !pojo.isForeignKeyColumn(col.getColumnName()) && pojo.isGenProperty(col)>
-    <#if col.isPrimaryKey()>
-    ${pojo.generateIdAnnotations(col)}
+<#list templateHelper.getTable().getColumns() as col>
+<#if !templateHelper.isForeignKeyColumn(col.getColumnName()) && templateHelper.isGenProperty(col)>
+    <#assign idAnn = col.isPrimaryKey()?then(templateHelper.generateIdAnnotations(col), "")>
+    <#if idAnn?has_content>
+    ${idAnn}
     </#if>
-    <#if col.isVersion()>
-    ${pojo.generateVersionAnnotation()}
+    <#assign versionAnn = col.isVersion()?then(templateHelper.generateVersionAnnotation(), "")>
+    <#if versionAnn?has_content>
+    ${versionAnn}
     </#if>
-    <#assign basicAnn = pojo.generateBasicAnnotation(col)>
+    <#assign basicAnn = templateHelper.generateBasicAnnotation(col)>
     <#if basicAnn?has_content>
     ${basicAnn}
     </#if>
-    <#assign temporalAnn = pojo.generateTemporalAnnotation(col)>
+    <#assign temporalAnn = templateHelper.generateTemporalAnnotation(col)>
     <#if temporalAnn?has_content>
     ${temporalAnn}
     </#if>
-    <#if col.isLob()>
-    ${pojo.generateLobAnnotation()}
+    <#assign lobAnn = col.isLob()?then(templateHelper.generateLobAnnotation(), "")>
+    <#if lobAnn?has_content>
+    ${lobAnn}
     </#if>
-    ${pojo.generateColumnAnnotation(col)}
-    public ${pojo.getJavaTypeName(col)} ${pojo.getGetterName(col.getFieldName())}() {
+    <#assign colAnn = templateHelper.generateColumnAnnotation(col)>
+    <#if colAnn?has_content>
+    ${colAnn}
+    </#if>
+    public ${templateHelper.getJavaTypeName(col)} ${templateHelper.getGetterName(col.getFieldName())}() {
         return this.${col.getFieldName()};
     }
 
-    public void ${pojo.getSetterName(col.getFieldName())}(${pojo.getJavaTypeName(col)} ${col.getFieldName()}) {
+    public void ${templateHelper.getSetterName(col.getFieldName())}(${templateHelper.getJavaTypeName(col)} ${col.getFieldName()}) {
         this.${col.getFieldName()} = ${col.getFieldName()};
     }
 
 </#if>
 </#list>
 <#-- ManyToOne accessors -->
-<#list pojo.getTable().getForeignKeys() as fk>
-    ${pojo.generateManyToOneAnnotation(fk)}
-    public ${pojo.getFieldTypeName(fk)} ${pojo.getGetterName(fk.getFieldName())}() {
+<#list templateHelper.getTable().getForeignKeys() as fk>
+<#assign ann = templateHelper.generateManyToOneAnnotation(fk)>
+<#if ann?has_content>
+    ${ann}
+</#if>
+    public ${templateHelper.getFieldTypeName(fk)} ${templateHelper.getGetterName(fk.getFieldName())}() {
         return this.${fk.getFieldName()};
     }
 
-    public void ${pojo.getSetterName(fk.getFieldName())}(${pojo.getFieldTypeName(fk)} ${fk.getFieldName()}) {
+    public void ${templateHelper.getSetterName(fk.getFieldName())}(${templateHelper.getFieldTypeName(fk)} ${fk.getFieldName()}) {
         this.${fk.getFieldName()} = ${fk.getFieldName()};
     }
 
 </#list>
 <#-- OneToOne accessors -->
-<#list pojo.getTable().getOneToOnes() as o2o>
-    ${pojo.generateOneToOneAnnotation(o2o)}
-    public ${pojo.getFieldTypeName(o2o)} ${pojo.getGetterName(o2o.getFieldName())}() {
+<#list templateHelper.getTable().getOneToOnes() as o2o>
+<#assign ann = templateHelper.generateOneToOneAnnotation(o2o)>
+<#if ann?has_content>
+    ${ann}
+</#if>
+    public ${templateHelper.getFieldTypeName(o2o)} ${templateHelper.getGetterName(o2o.getFieldName())}() {
         return this.${o2o.getFieldName()};
     }
 
-    public void ${pojo.getSetterName(o2o.getFieldName())}(${pojo.getFieldTypeName(o2o)} ${o2o.getFieldName()}) {
+    public void ${templateHelper.getSetterName(o2o.getFieldName())}(${templateHelper.getFieldTypeName(o2o)} ${o2o.getFieldName()}) {
         this.${o2o.getFieldName()} = ${o2o.getFieldName()};
     }
 
 </#list>
 <#-- OneToMany accessors -->
-<#list pojo.getTable().getOneToManys() as o2m>
-    ${pojo.generateOneToManyAnnotation(o2m)}
-    public ${pojo.getCollectionTypeName(o2m)} ${pojo.getGetterName(o2m.getFieldName())}() {
+<#list templateHelper.getTable().getOneToManys() as o2m>
+<#assign ann = templateHelper.generateOneToManyAnnotation(o2m)>
+<#if ann?has_content>
+    ${ann}
+</#if>
+    public ${templateHelper.getCollectionTypeName(o2m)} ${templateHelper.getGetterName(o2m.getFieldName())}() {
         return this.${o2m.getFieldName()};
     }
 
-    public void ${pojo.getSetterName(o2m.getFieldName())}(${pojo.getCollectionTypeName(o2m)} ${o2m.getFieldName()}) {
+    public void ${templateHelper.getSetterName(o2m.getFieldName())}(${templateHelper.getCollectionTypeName(o2m)} ${o2m.getFieldName()}) {
         this.${o2m.getFieldName()} = ${o2m.getFieldName()};
     }
 
 </#list>
 <#-- ManyToMany accessors -->
-<#list pojo.getTable().getManyToManys() as m2m>
-    ${pojo.generateManyToManyAnnotation(m2m)}
-    public ${pojo.getCollectionTypeName(m2m)} ${pojo.getGetterName(m2m.getFieldName())}() {
+<#list templateHelper.getTable().getManyToManys() as m2m>
+<#assign ann = templateHelper.generateManyToManyAnnotation(m2m)>
+<#if ann?has_content>
+    ${ann}
+</#if>
+    public ${templateHelper.getCollectionTypeName(m2m)} ${templateHelper.getGetterName(m2m.getFieldName())}() {
         return this.${m2m.getFieldName()};
     }
 
-    public void ${pojo.getSetterName(m2m.getFieldName())}(${pojo.getCollectionTypeName(m2m)} ${m2m.getFieldName()}) {
+    public void ${templateHelper.getSetterName(m2m.getFieldName())}(${templateHelper.getCollectionTypeName(m2m)} ${m2m.getFieldName()}) {
         this.${m2m.getFieldName()} = ${m2m.getFieldName()};
     }
 
 </#list>
 <#-- Embedded field accessors -->
-<#list pojo.getTable().getEmbeddedFields() as emb>
-    ${pojo.generateEmbeddedAnnotation(emb)}
-    public ${pojo.getEmbeddedTypeName(emb)} ${pojo.getGetterName(emb.getFieldName())}() {
+<#list templateHelper.getTable().getEmbeddedFields() as emb>
+<#assign ann = templateHelper.generateEmbeddedAnnotation(emb)>
+<#if ann?has_content>
+    ${ann}
+</#if>
+    public ${templateHelper.getEmbeddedTypeName(emb)} ${templateHelper.getGetterName(emb.getFieldName())}() {
         return this.${emb.getFieldName()};
     }
 
-    public void ${pojo.getSetterName(emb.getFieldName())}(${pojo.getEmbeddedTypeName(emb)} ${emb.getFieldName()}) {
+    public void ${templateHelper.getSetterName(emb.getFieldName())}(${templateHelper.getEmbeddedTypeName(emb)} ${emb.getFieldName()}) {
         this.${emb.getFieldName()} = ${emb.getFieldName()};
     }
 

@@ -52,7 +52,6 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
-import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.query.ParameterLabelException;
 import org.hibernate.query.PathException;
 import org.hibernate.query.SemanticException;
@@ -3529,10 +3528,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmFkExpression<?> visitToOneFkReference(HqlParser.ToOneFkReferenceContext ctx) {
 		final var sqmPath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
-		final var toOneReference = sqmPath.getReferencedPathSource();
+		final var toOneReference = sqmPath.getResolvedModel();
 		final boolean validToOneRef =
 				toOneReference.getBindableType() == Bindable.BindableType.SINGULAR_ATTRIBUTE
-						&& toOneReference instanceof EntitySqmPathSource;
+						&& toOneReference.getPathType() instanceof SqmEntityDomainType<?>;
 		if ( !validToOneRef ) {
 			throw new FunctionArgumentException(
 					String.format(

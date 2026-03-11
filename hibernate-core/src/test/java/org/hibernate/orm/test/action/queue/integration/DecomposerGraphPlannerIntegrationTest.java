@@ -103,7 +103,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Create plan
 			final StandardFlushPlanner planner = new StandardFlushPlanner( planningOptions );
-			final FlushPlan plan = planner.plan(graph, planningOptions);
+			final FlushPlan plan = planner.plan(graph);
 
 			// Verify
 			assertNotNull(plan);
@@ -181,7 +181,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Create plan
 			final StandardFlushPlanner planner = new StandardFlushPlanner( planningOptions );
-			final FlushPlan plan = planner.plan(graph, planningOptions);
+			final FlushPlan plan = planner.plan(graph);
 
 			// Verify
 			assertNotNull(plan);
@@ -272,7 +272,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Create plan
 			final StandardFlushPlanner planner = new StandardFlushPlanner( planningOptions );
-			final FlushPlan plan = planner.plan(graph, planningOptions);
+			final FlushPlan plan = planner.plan(graph);
 
 			// Verify
 			assertNotNull(plan);
@@ -335,7 +335,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Create plan
 			final StandardFlushPlanner planner = new StandardFlushPlanner( planningOptions );
-			final FlushPlan plan = planner.plan(graph, planningOptions);
+			final FlushPlan plan = planner.plan(graph);
 
 			// Verify
 			assertNotNull(plan);
@@ -438,7 +438,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Create plan
 			final StandardFlushPlanner planner = new StandardFlushPlanner( planningOptions );
-			final FlushPlan plan = planner.plan(graph, planningOptions);
+			final FlushPlan plan = planner.plan(graph);
 
 			// Verify
 			assertNotNull(plan);
@@ -530,7 +530,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Create plan
 			final StandardFlushPlanner planner = new StandardFlushPlanner( planningOptions );
-			final FlushPlan plan = planner.plan(graph, planningOptions);
+			final FlushPlan plan = planner.plan(graph);
 
 			// Verify plan was created successfully (cycle was broken)
 			assertNotNull(plan);

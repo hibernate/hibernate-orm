@@ -4,7 +4,6 @@
  */
 package org.hibernate.action.queue.plan;
 
-import org.hibernate.action.queue.PlanningOptions;
 import org.hibernate.action.queue.graph.Graph;
 
 /// Creates an executable plan from the dependency graph.

@@ -123,14 +123,6 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 			return;
 		}
 
-		// short-circuit for entities being saved (INSERT pending)....
-		// Entities with Status.SAVING haven't been made managed yet because they have
-		// unresolved transient dependencies. They shouldn't have UPDATEs scheduled.
-		if ( entry.getStatus() == Status.SAVING ) {
-			// nothing to do - this entity is being inserted, not updated
-			return;
-		}
-
 		final boolean mightBeDirty = entry.requiresDirtyCheck( entity );
 
 		final Object[] values = getValues( entity, entry, mightBeDirty, session );
@@ -141,7 +133,9 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		boolean substitute = wrapCollections( event, values );
 
-		if ( isUpdateNecessary( event, mightBeDirty ) ) {
+		// Entities with Status.SAVING are being inserted and haven't been made managed yet
+		// because they have unresolved transient dependencies. They shouldn't have UPDATEs scheduled.
+		if ( entry.getStatus() != Status.SAVING && isUpdateNecessary( event, mightBeDirty ) ) {
 			substitute = scheduleUpdate( event ) || substitute;
 		}
 

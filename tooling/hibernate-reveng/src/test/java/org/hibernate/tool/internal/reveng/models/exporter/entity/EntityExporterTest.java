@@ -17,8 +17,12 @@ package org.hibernate.tool.internal.reveng.models.exporter.entity;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Date;
 import java.util.List;
 
@@ -37,6 +41,7 @@ import org.hibernate.tool.internal.reveng.models.metadata.OneToManyMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.OneToOneMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Tests for {@link EntityExporter}.
@@ -593,5 +598,51 @@ public class EntityExporterTest {
 		assertTrue(source.contains("public String toString()"), source);
 		assertTrue(source.contains("public boolean equals(Object other)"), source);
 		assertTrue(source.contains("public int hashCode()"), source);
+	}
+
+	// --- Custom template path tests ---
+
+	@Test
+	public void testCustomTemplatePath(@TempDir Path tempDir) throws IOException {
+		// Create a custom Entity.ftl that outputs a simple marker
+		Path templateDir = tempDir.resolve("models").resolve("entity");
+		Files.createDirectories(templateDir);
+		Files.writeString(templateDir.resolve("Entity.ftl"),
+				"// Custom template for ${templateHelper.getDeclarationName()}");
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		EntityExporter exporter = EntityExporter.create(
+				List.of(table), true, new String[] { tempDir.toString() });
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, table);
+		String source = writer.toString();
+		assertEquals("// Custom template for Employee", source);
+	}
+
+	@Test
+	public void testCustomTemplatePathFallsBackToDefault(@TempDir Path tempDir) {
+		// Empty temp dir — should fall back to classpath templates
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		EntityExporter exporter = EntityExporter.create(
+				List.of(table), true, new String[] { tempDir.toString() });
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, table);
+		String source = writer.toString();
+		assertTrue(source.contains("@Entity"), source);
+		assertTrue(source.contains("public class Employee"), source);
+	}
+
+	@Test
+	public void testCustomTemplatePathNonExistentDirectoryIgnored() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		EntityExporter exporter = EntityExporter.create(
+				List.of(table), true, new String[] { "/nonexistent/path" });
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, table);
+		String source = writer.toString();
+		assertTrue(source.contains("@Entity"), source);
+		assertTrue(source.contains("public class Employee"), source);
 	}
 }

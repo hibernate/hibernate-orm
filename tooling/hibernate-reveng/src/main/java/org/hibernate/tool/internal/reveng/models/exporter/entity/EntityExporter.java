@@ -15,12 +15,18 @@
  */
 package org.hibernate.tool.internal.reveng.models.exporter.entity;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import freemarker.cache.ClassTemplateLoader;
+import freemarker.cache.FileTemplateLoader;
+import freemarker.cache.MultiTemplateLoader;
+import freemarker.cache.TemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -41,23 +47,26 @@ public class EntityExporter {
 	private final boolean annotated;
 	private final Configuration freemarkerConfig;
 
-	private EntityExporter(List<TableMetadata> tables, boolean annotated) {
+	private EntityExporter(List<TableMetadata> tables, boolean annotated, String[] templatePath) {
 		this.tables = tables;
 		this.annotated = annotated;
 		this.freemarkerConfig = new Configuration(Configuration.VERSION_2_3_33);
-		this.freemarkerConfig.setClassLoaderForTemplateLoading(
-				getClass().getClassLoader(), "/");
+		this.freemarkerConfig.setTemplateLoader(createTemplateLoader(templatePath));
 		this.freemarkerConfig.setDefaultEncoding("UTF-8");
 		this.freemarkerConfig.setTemplateExceptionHandler(
 				TemplateExceptionHandler.RETHROW_HANDLER);
 	}
 
 	public static EntityExporter create(List<TableMetadata> tables) {
-		return new EntityExporter(tables, true);
+		return new EntityExporter(tables, true, new String[0]);
 	}
 
 	public static EntityExporter create(List<TableMetadata> tables, boolean annotated) {
-		return new EntityExporter(tables, annotated);
+		return new EntityExporter(tables, annotated, new String[0]);
+	}
+
+	public static EntityExporter create(List<TableMetadata> tables, boolean annotated, String[] templatePath) {
+		return new EntityExporter(tables, annotated, templatePath);
 	}
 
 	public void export(Writer output, TableMetadata table) {
@@ -72,5 +81,23 @@ public class EntityExporter {
 		} catch (IOException | TemplateException e) {
 			throw new RuntimeException("Failed to export entity: " + table.getEntityClassName(), e);
 		}
+	}
+
+	private TemplateLoader createTemplateLoader(String[] templatePath) {
+		List<TemplateLoader> loaders = new ArrayList<>();
+		if (templatePath != null) {
+			for (String path : templatePath) {
+				File dir = new File(path);
+				if (dir.isDirectory()) {
+					try {
+						loaders.add(new FileTemplateLoader(dir));
+					} catch (IOException e) {
+						throw new RuntimeException("Failed to create template loader for: " + path, e);
+					}
+				}
+			}
+		}
+		loaders.add(new ClassTemplateLoader(getClass().getClassLoader(), "/"));
+		return new MultiTemplateLoader(loaders.toArray(new TemplateLoader[0]));
 	}
 }

@@ -114,6 +114,11 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 	}
 
 	@Override
+	public SqmSingularPersistentAttribute<? super O, S> getModel() {
+		return (SqmSingularPersistentAttribute<? super O, S>) super.getReferencedPathSource();
+	}
+
+	@Override
 	public SqmPathSource<S> getReferencedPathSource() {
 		return treatTarget;
 	}

@@ -26,6 +26,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
+import static org.hamcrest.Matchers.sameInstance;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -180,6 +181,22 @@ public class TreatJoinTest extends BaseEntityManagerFunctionalTestCase {
 					.join("author");
 			criteria.where(cb.equal(join.<String> get("name"), "Andrea Camilleri"));
 			entityManager.createQuery(criteria.select(root)).getResultList();
+		} );
+	}
+
+	@Test
+	@JiraKey( value = "HHH-20224")
+	public void testCachedTreatedJoin() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<Bid> query = cb.createQuery( Bid.class );
+			Root<Bid> bid = query.from( Bid.class );
+
+			final Join<Bid, Book> item = bid.join( "item" );
+
+			// Assert that caching works correctly
+			Join<Bid, Book> treat = cb.treat( item, Book.class );
+			assertThat( treat, sameInstance( cb.treat( item, Book.class ) ) );
 		} );
 	}
 

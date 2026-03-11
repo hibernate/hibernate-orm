@@ -278,4 +278,11 @@ public interface DeprecationLogger extends BasicLogger {
 					"Specify the root entity using the 'root' attribute instead of prefixing the graph with the entity type."
 	)
 	void deprecatedNamedEntityGraphTextThatContainTypeIndicator();
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000045,
+			value = "Encountered use of deprecated method in ImplicitDatabaseObjectNamingStrategy."
+	)
+	void logDeprecatedImplicitDatabaseObjectNamingStrategyMethod();
 }

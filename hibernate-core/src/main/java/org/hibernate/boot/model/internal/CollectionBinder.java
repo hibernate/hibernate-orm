@@ -1627,9 +1627,10 @@ public abstract class CollectionBinder {
 	}
 
 	private String toPhysicalName(String logicalName) {
-		final var jdbcEnvironment = getMetadataCollector().getDatabase().getJdbcEnvironment();
+		final var database = getMetadataCollector().getDatabase();
+		final var jdbcEnvironment = database.getJdbcEnvironment();
 		return buildingContext.getBuildingOptions().getPhysicalNamingStrategy()
-				.toPhysicalTableName( jdbcEnvironment.getIdentifierHelper().toIdentifier( logicalName ), jdbcEnvironment )
+				.toPhysicalTableName( database.toIdentifier( logicalName ), jdbcEnvironment )
 				.render( jdbcEnvironment.getDialect() );
 	}
 

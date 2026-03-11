@@ -817,7 +817,7 @@ public class AnnotatedColumn {
 		final String table = column.table();
 		return table.isBlank()
 				? ""
-				: database.getJdbcEnvironment().getIdentifierHelper().toIdentifier( table ).render();
+				: database.toIdentifier( table ).render( database.getDialect() );
 	}
 
 	private static String getSqlType(
@@ -908,7 +908,7 @@ public class AnnotatedColumn {
 		final String name = column.name();
 		return name.isBlank()
 				? null
-				: database.getJdbcEnvironment().getIdentifierHelper().toIdentifier( name ).render();
+				: database.toIdentifier( name ).render( database.getDialect() );
 	}
 
 	void applyColumnDefault(PropertyData inferredData, int length) {

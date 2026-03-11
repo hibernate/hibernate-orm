@@ -33,6 +33,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * @author Andrea Boriero
@@ -192,6 +193,22 @@ public class TreatJoinTest {
 					.join("author");
 			criteria.where(cb.equal(join.<String> get("name"), "Andrea Camilleri"));
 			entityManager.createQuery(criteria.select(root)).getResultList();
+		} );
+	}
+
+	@Test
+	@JiraKey( value = "HHH-20224")
+	public void testCachedTreatedJoin(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<Bid> query = cb.createQuery( Bid.class );
+			Root<Bid> bid = query.from( Bid.class );
+
+			final Join<Bid, Book> item = bid.join( "item" );
+
+			// Assert that caching works correctly
+			Join<Bid, Book> treat = cb.treat( item, Book.class );
+			assertSame( treat, cb.treat( item, Book.class ) );
 		} );
 	}
 

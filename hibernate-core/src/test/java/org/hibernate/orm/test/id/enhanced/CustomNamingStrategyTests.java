@@ -13,6 +13,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.boot.model.naming.Identifier;
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentifierGenerator;
@@ -83,6 +84,22 @@ public class CustomNamingStrategyTests {
 		}
 
 		@Override
+		public QualifiedName determineSequenceName(
+				Identifier catalogName,
+				Identifier schemaName,
+				Map<?,?> configValues,
+				Database database) {
+
+			final String rootTableName = ConfigurationHelper.getString( PersistentIdentifierGenerator.TABLE, configValues );
+			final String structureName = String.format( "%s_ids_seq", rootTableName );
+			return new QualifiedSequenceName(
+					catalogName,
+					schemaName,
+					database.toIdentifier( structureName )
+			);
+		}
+
+		@Override
 		public QualifiedName determineTableName(
 				Identifier catalogName,
 				Identifier schemaName,
@@ -98,7 +115,24 @@ public class CustomNamingStrategyTests {
 					jdbcEnvironment.getIdentifierHelper().toIdentifier( structureName )
 			);
 		}
+
+		@Override
+		public QualifiedName determineTableName(
+				Identifier catalogName,
+				Identifier schemaName,
+				Map<?,?> configValues,
+				Database database) {
+
+			final String rootTableName = ConfigurationHelper.getString( PersistentIdentifierGenerator.TABLE, configValues );
+			final String structureName = String.format( "%s_ids_tbl", rootTableName );
+			return new QualifiedSequenceName(
+					catalogName,
+					schemaName,
+					database.toIdentifier( structureName )
+			);
+		}
 	}
+
 
 	@Entity( name = "TheEntity" )
 	@Table( name = "ents" )

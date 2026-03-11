@@ -65,6 +65,10 @@ public class InsertBindPlan implements BindPlan {
 		return entity;
 	}
 
+	public Map<ColumnDetails, Object> getColumnValues() {
+		return columnValues;
+	}
+
 	@Override
 	public void bindAndMaybePatch(
 			MutationExecutor executor,

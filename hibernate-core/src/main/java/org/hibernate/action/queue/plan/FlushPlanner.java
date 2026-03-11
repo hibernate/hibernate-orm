@@ -16,5 +16,5 @@ import org.hibernate.action.queue.graph.Graph;
 ///
 /// @author Steve Ebersole
 public interface FlushPlanner {
-	FlushPlan plan(Graph graph, PlanningOptions planningOptions);
+	FlushPlan plan(Graph graph);
 }

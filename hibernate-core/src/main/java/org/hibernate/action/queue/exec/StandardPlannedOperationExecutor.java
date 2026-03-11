@@ -29,10 +29,8 @@ public class StandardPlannedOperationExecutor implements PlannedOperationExecuto
 	private final MutationExecutorService executorService;
 
 
-	public StandardPlannedOperationExecutor(
-			FkFixupUpdateFactory nullableFkUpdateFactory,
-			SharedSessionContractImplementor session) {
-		this.nullableFkUpdateFactory = nullableFkUpdateFactory;
+	public StandardPlannedOperationExecutor(SharedSessionContractImplementor session) {
+		this.nullableFkUpdateFactory = new FkFixupUpdateFactory();
 		this.uniqueSwapUpdateFactory = new UniqueSwapUpdateFactory();
 		this.session = session;
 		this.executorService = session.getFactory()

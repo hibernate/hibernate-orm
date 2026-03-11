@@ -54,9 +54,9 @@ public class StandardFlushPlannerTest {
 	public void testEmptyGraph() {
 		// Test planning with an empty graph
 		final Graph graph = new Graph(List.of(), Map.of());
-		final StandardFlushPlanner planner = new StandardFlushPlanner();
+		final StandardFlushPlanner planner = new StandardFlushPlanner(DEFAULT_PLANNING_OPTIONS);
 
-		final FlushPlan plan = planner.plan(graph, DEFAULT_PLANNING_OPTIONS);
+		final FlushPlan plan = planner.plan(graph);
 
 		assertNotNull(plan);
 		assertTrue(plan.steps().isEmpty(), "Empty graph should produce empty plan");
@@ -69,9 +69,9 @@ public class StandardFlushPlannerTest {
 		final GroupNode node1 = new GroupNode(group1, 1L);
 
 		final Graph graph = new Graph(List.of(node1), Map.of());
-		final StandardFlushPlanner planner = new StandardFlushPlanner();
+		final StandardFlushPlanner planner = new StandardFlushPlanner( DEFAULT_PLANNING_OPTIONS );
 
-		final FlushPlan plan = planner.plan(graph, DEFAULT_PLANNING_OPTIONS);
+		final FlushPlan plan = planner.plan(graph);
 
 		assertNotNull(plan);
 		assertEquals(1, plan.steps().size(), "Single node should produce one step");
@@ -99,9 +99,9 @@ public class StandardFlushPlannerTest {
 		outgoing.put(nodeC, List.of());
 
 		final Graph graph = new Graph(List.of(nodeA, nodeB, nodeC), outgoing);
-		final StandardFlushPlanner planner = new StandardFlushPlanner();
+		final StandardFlushPlanner planner = new StandardFlushPlanner( DEFAULT_PLANNING_OPTIONS );
 
-		final FlushPlan plan = planner.plan(graph, DEFAULT_PLANNING_OPTIONS);
+		final FlushPlan plan = planner.plan(graph);
 
 		assertNotNull(plan);
 		assertFalse(plan.steps().isEmpty(), "Plan should have steps");
@@ -140,9 +140,9 @@ public class StandardFlushPlannerTest {
 		outgoing.put(nodeB, List.of(edgeBA));
 
 		final Graph graph = new Graph(List.of(nodeA, nodeB), outgoing);
-		final StandardFlushPlanner planner = new StandardFlushPlanner();
+		final StandardFlushPlanner planner = new StandardFlushPlanner( DEFAULT_PLANNING_OPTIONS );
 
-		final FlushPlan plan = planner.plan(graph, DEFAULT_PLANNING_OPTIONS);
+		final FlushPlan plan = planner.plan(graph);
 
 		assertNotNull(plan);
 		assertFalse(plan.steps().isEmpty(), "Plan should have steps");
@@ -179,9 +179,9 @@ public class StandardFlushPlannerTest {
 		outgoing.put(nodeA, List.of(selfEdge));
 
 		final Graph graph = new Graph(List.of(nodeA), outgoing);
-		final StandardFlushPlanner planner = new StandardFlushPlanner();
+		final StandardFlushPlanner planner = new StandardFlushPlanner( DEFAULT_PLANNING_OPTIONS );
 
-		final FlushPlan plan = planner.plan(graph, DEFAULT_PLANNING_OPTIONS);
+		final FlushPlan plan = planner.plan(graph);
 
 		assertNotNull(plan);
 		assertTrue(selfEdge.isBroken(), "Self-loop edge should be broken");
@@ -221,9 +221,9 @@ public class StandardFlushPlannerTest {
 		outgoing.put(nodeD, List.of(edgeDC));
 
 		final Graph graph = new Graph(List.of(nodeA, nodeB, nodeC, nodeD), outgoing);
-		final StandardFlushPlanner planner = new StandardFlushPlanner();
+		final StandardFlushPlanner planner = new StandardFlushPlanner(DEFAULT_PLANNING_OPTIONS);
 
-		final FlushPlan plan = planner.plan(graph, DEFAULT_PLANNING_OPTIONS);
+		final FlushPlan plan = planner.plan(graph);
 
 		assertNotNull(plan);
 		assertFalse(plan.steps().isEmpty(), "Plan should have steps");
@@ -260,9 +260,9 @@ public class StandardFlushPlannerTest {
 		final GroupNode node1 = new GroupNode(group1, 1L);
 
 		final Graph graph = new Graph(List.of(node1), Map.of());
-		final StandardFlushPlanner planner = new StandardFlushPlanner();
+		final StandardFlushPlanner planner = new StandardFlushPlanner(DEFAULT_PLANNING_OPTIONS);
 
-		final FlushPlan plan = planner.plan(graph, DEFAULT_PLANNING_OPTIONS);
+		final FlushPlan plan = planner.plan(graph);
 
 		assertNotNull(plan);
 		assertEquals(1, plan.steps().size(), "Operations with same shape should be in one step");
@@ -295,9 +295,9 @@ public class StandardFlushPlannerTest {
 		final GroupNode node3 = new GroupNode(group3, 3L);
 
 		final Graph graph = new Graph(List.of(node1, node2, node3), Map.of());
-		final StandardFlushPlanner planner = new StandardFlushPlanner();
+		final StandardFlushPlanner planner = new StandardFlushPlanner(DEFAULT_PLANNING_OPTIONS);
 
-		final FlushPlan plan = planner.plan(graph, DEFAULT_PLANNING_OPTIONS);
+		final FlushPlan plan = planner.plan(graph);
 
 		assertNotNull(plan);
 		assertTrue(plan.steps().size() >= 2, "Operations with different shapes should be in separate steps");
@@ -315,9 +315,9 @@ public class StandardFlushPlannerTest {
 		final GroupNode deleteNode = new GroupNode(deleteGroup, 3L);
 
 		final Graph graph = new Graph(List.of(insertNode, updateNode, deleteNode), Map.of());
-		final StandardFlushPlanner planner = new StandardFlushPlanner();
+		final StandardFlushPlanner planner = new StandardFlushPlanner(DEFAULT_PLANNING_OPTIONS);
 
-		final FlushPlan plan = planner.plan(graph, DEFAULT_PLANNING_OPTIONS);
+		final FlushPlan plan = planner.plan(graph);
 
 		assertNotNull(plan);
 		assertFalse(plan.steps().isEmpty(), "Plan should have steps");
@@ -348,10 +348,10 @@ public class StandardFlushPlannerTest {
 		outgoing.put(nodeB, List.of(edgeBA));
 
 		final Graph graph = new Graph(List.of(nodeA, nodeB), outgoing);
-		final StandardFlushPlanner planner = new StandardFlushPlanner();
+		final StandardFlushPlanner planner = new StandardFlushPlanner(DEFAULT_PLANNING_OPTIONS);
 
 		// Should throw IllegalStateException for unbreakable cycle
-		assertThrows(IllegalStateException.class, () -> planner.plan(graph, DEFAULT_PLANNING_OPTIONS));
+		assertThrows(IllegalStateException.class, () -> planner.plan(graph));
 	}
 
 	@Test
@@ -372,9 +372,9 @@ public class StandardFlushPlannerTest {
 		outgoing.put(nodeB, List.of(edgeBA));
 
 		final Graph graph = new Graph(List.of(nodeA, nodeB), outgoing);
-		final StandardFlushPlanner planner = new StandardFlushPlanner();
+		final StandardFlushPlanner planner = new StandardFlushPlanner(DEFAULT_PLANNING_OPTIONS);
 
-		final FlushPlan plan = planner.plan(graph, DEFAULT_PLANNING_OPTIONS);
+		final FlushPlan plan = planner.plan(graph);
 
 		assertNotNull(plan);
 
@@ -412,9 +412,9 @@ public class StandardFlushPlannerTest {
 		outgoing.put(nodeD, List.of());
 
 		final Graph graph = new Graph(List.of(nodeA, nodeB, nodeC, nodeD), outgoing);
-		final StandardFlushPlanner planner = new StandardFlushPlanner();
+		final StandardFlushPlanner planner = new StandardFlushPlanner(DEFAULT_PLANNING_OPTIONS);
 
-		final FlushPlan plan = planner.plan(graph, DEFAULT_PLANNING_OPTIONS);
+		final FlushPlan plan = planner.plan(graph);
 
 		assertNotNull(plan);
 		assertFalse(plan.steps().isEmpty(), "Plan should have steps");
@@ -454,9 +454,9 @@ public class StandardFlushPlannerTest {
 		outgoing.put(nodeB, List.of(edgeBA));
 
 		final Graph graph = new Graph(List.of(nodeA, nodeB), outgoing);
-		final StandardFlushPlanner planner = new StandardFlushPlanner();
+		final StandardFlushPlanner planner = new StandardFlushPlanner(DEFAULT_PLANNING_OPTIONS);
 
-		final FlushPlan plan = planner.plan(graph, DEFAULT_PLANNING_OPTIONS);
+		final FlushPlan plan = planner.plan(graph);
 
 		assertNotNull(plan);
 

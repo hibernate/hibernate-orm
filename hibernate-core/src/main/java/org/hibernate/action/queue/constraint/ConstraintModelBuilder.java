@@ -182,7 +182,7 @@ public final class ConstraintModelBuilder {
 
 		uniqueConstraints.add(new UniqueConstraint(
 				tableName,
-				"natural_id_" + descriptor.getEntityName(),
+				naturalIdMapping.getNavigableRole().getFullPath(),
 				UniqueConstraint.ConstraintType.UNIQUE_KEY,
 				columns,
 				false,  // Natural IDs are typically not deferrable
@@ -353,7 +353,7 @@ public final class ConstraintModelBuilder {
 			// Add unique constraint for the FK column
 			uniqueConstraints.add(new UniqueConstraint(
 					fk.getKeyTable(),
-					"uk_" + fk.getKeyTable() + "_" + toOne.getAttributeName(),
+					toOne.getNavigableRole().getFullPath(),
 					UniqueConstraint.ConstraintType.UNIQUE_FOREIGN_KEY,
 					fk.getKeyPart(),
 					false,  // FK unique constraints are typically not deferrable

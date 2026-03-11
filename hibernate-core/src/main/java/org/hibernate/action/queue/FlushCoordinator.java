@@ -6,18 +6,18 @@ package org.hibernate.action.queue;
 
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
+import org.hibernate.action.queue.constraint.ConstraintModel;
 import org.hibernate.action.queue.exec.PlannedOperationExecutor;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.exec.StandardPlannedOperationExecutor;
-import org.hibernate.action.queue.plan.PlanStep;
-import org.hibernate.action.queue.plan.PlannedOperation;
-import org.hibernate.action.queue.plan.PlannedOperationGroup;
-import org.hibernate.action.queue.constraint.ConstraintModel;
 import org.hibernate.action.queue.graph.Decomposer;
 import org.hibernate.action.queue.graph.GraphBuilder;
 import org.hibernate.action.queue.graph.StandardGraphBuilder;
 import org.hibernate.action.queue.plan.FlushPlan;
 import org.hibernate.action.queue.plan.FlushPlanner;
+import org.hibernate.action.queue.plan.PlanStep;
+import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.action.queue.plan.StandardFlushPlanner;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -31,10 +31,10 @@ import java.util.function.Consumer;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /// Orchestrates the steps needed to flush a Session, using a graph-based approach to
-/// model mutation scheduling that automatically handles foreign key dependencies,
+/// model mutation-operation scheduling that automatically handles foreign key dependencies,
 /// cycle detection, and proper execution ordering.
 ///
-/// As it coordinates all phases of flush execution, its responsibilities include -
+/// Its responsibilities include -
 ///
 /// - Manage decomposition → graph → planning → execution flow
 /// - Tracks newly managed entities for unresolved insert resolution
@@ -58,14 +58,19 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 ///
 /// Some important concepts for this coordination include -
 ///
-/// - `PlannedOperation` - a single operation against a single table
-/// - `PlannedOperationGroup` - multiple operations (of the same kind and shape) against a single table
-/// -
+/// = `ConstraintModel` - Details about constraints defined on the domain model.
+/// - `PlannedOperation` - A single operation against a single table
+/// - `PlannedOperationGroup` - Multiple operations (of the same kind and shape) against a single table
+/// - `GraphNode` - Wraps `PlannedOperation` and acts as vertx for the graph.
+/// - `GraphEdge` - Used to denote to/from dependencies in the graph.
+/// - `CycleBreaker` - Used to find edges where we can break cycles in the graph (using fk-fixups e.g.).
+/// - `BindingPatch` - When we do break an edge, we "install" one of these on to the corresponding `PlannedOperation`.
+/// - `PlanStep` - Grouping of independent `PlannedOperation` references.
+/// - `FlushPlan` - Group of `PlanStep`, indicates the overall groupings of operations to perform as part of the flush.
 ///
 /// @author Steve Ebersole
 public class FlushCoordinator {
 	private final SessionImplementor session;
-	private final PlanningOptions planningOptions;
 	private final GraphBuilder graphBuilder;
 
 	private final Decomposer decomposer;
@@ -80,19 +85,14 @@ public class FlushCoordinator {
 
 	public FlushCoordinator(ConstraintModel constraintModel, PlanningOptions planningOptions, SessionImplementor session) {
 		this.session = session;
-		this.planningOptions = planningOptions;
 
 		// Identify tables with self-referential associations
 		selfReferentialTables = identifySelfReferentialTables(constraintModel);
 
 		decomposer = new Decomposer( session );
-		graphBuilder = new StandardGraphBuilder(
-				constraintModel,
-				planningOptions,
-				session
-		);
-		flushPlanner = new StandardFlushPlanner();
-		executor = new StandardPlannedOperationExecutor(new org.hibernate.action.queue.cyclebreak.FkFixupUpdateFactory(), session);
+		graphBuilder = new StandardGraphBuilder( constraintModel, planningOptions, session );
+		flushPlanner = new StandardFlushPlanner( planningOptions );
+		executor = new StandardPlannedOperationExecutor( session );
 	}
 
 	/// Identifies tables that have self-referential associations (FK from table to itself).
@@ -184,7 +184,7 @@ public class FlushCoordinator {
 		// They were executed immediately when added to ActionQueue via executeIdentityInsert()
 		// All operations here go through normal graph/plan/execute flow
 		var graph = graphBuilder.build( operationGroups );
-		var plan = flushPlanner.plan( graph, planningOptions );
+		var plan = flushPlanner.plan( graph );
 
 		try {
 			executePlan( plan, actions );
@@ -412,7 +412,7 @@ public class FlushCoordinator {
 				// Group resolved operations and recursively flush
 				final var resolvedGroups = groupOperations(resolvedOperations);
 				final var graph = graphBuilder.build(resolvedGroups);
-				final var plan = flushPlanner.plan(graph, planningOptions);
+				final var plan = flushPlanner.plan(graph);
 				executePlan(plan, List.of()); // No actions for resolved inserts
 
 				// After recursive execution, try again (might have resolved more dependencies)

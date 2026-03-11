@@ -15,11 +15,14 @@ import java.util.List;
 /// Standard FlushPlanner
 /// @author Steve Ebersole
 public class StandardFlushPlanner implements FlushPlanner {
-	public StandardFlushPlanner() {
+	private final PlanningOptions planningOptions;
+
+	public StandardFlushPlanner(PlanningOptions planningOptions) {
+		this.planningOptions = planningOptions;
 	}
 
 	@Override
-	public FlushPlan plan(Graph graph, PlanningOptions planningOptions) {
+	public FlushPlan plan(Graph graph) {
 		// detect cycles and choose edges to break.
 		//		for the broken edge, apply a "binding path"
 		//		which facilitates the pattern of inserting

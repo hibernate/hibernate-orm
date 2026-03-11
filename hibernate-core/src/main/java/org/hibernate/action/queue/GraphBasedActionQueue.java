@@ -61,13 +61,11 @@ public class GraphBasedActionQueue implements ActionQueue {
 	private int collectionUpdateCount;
 	private int collectionRemovalCount;
 
-	/**
-	 * Construct a GraphBasedActionQueue for the given session.
-	 *
-	 * @param constraintModel
-	 * @param planningOptions
-	 * @param session The session
-	 */
+	/// Construct a GraphBasedActionQueue for the given session.
+	///
+	/// @param constraintModel Details about foreign-key and unique constraints defined in the model.
+	/// @param planningOptions Options for graph building and planning.
+	/// @param session The session
 	public GraphBasedActionQueue(ConstraintModel constraintModel, PlanningOptions planningOptions, SessionImplementor session) {
 		ACTION_LOGGER.usingActionQueue( getClass().getName() );
 		this.session = session;

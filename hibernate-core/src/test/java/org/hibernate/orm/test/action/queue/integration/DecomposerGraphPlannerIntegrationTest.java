@@ -102,7 +102,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			final Graph graph = graphBuilder.build(groups);
 
 			// Create plan
-			final StandardFlushPlanner planner = new StandardFlushPlanner();
+			final StandardFlushPlanner planner = new StandardFlushPlanner( planningOptions );
 			final FlushPlan plan = planner.plan(graph, planningOptions);
 
 			// Verify
@@ -180,7 +180,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			final Graph graph = graphBuilder.build(allGroups);
 
 			// Create plan
-			final StandardFlushPlanner planner = new StandardFlushPlanner();
+			final StandardFlushPlanner planner = new StandardFlushPlanner( planningOptions );
 			final FlushPlan plan = planner.plan(graph, planningOptions);
 
 			// Verify
@@ -271,7 +271,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			final Graph graph = graphBuilder.build(groups);
 
 			// Create plan
-			final StandardFlushPlanner planner = new StandardFlushPlanner();
+			final StandardFlushPlanner planner = new StandardFlushPlanner( planningOptions );
 			final FlushPlan plan = planner.plan(graph, planningOptions);
 
 			// Verify
@@ -334,7 +334,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			final Graph graph = graphBuilder.build(groups);
 
 			// Create plan
-			final StandardFlushPlanner planner = new StandardFlushPlanner();
+			final StandardFlushPlanner planner = new StandardFlushPlanner( planningOptions );
 			final FlushPlan plan = planner.plan(graph, planningOptions);
 
 			// Verify
@@ -437,7 +437,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			final Graph graph = graphBuilder.build(allGroups);
 
 			// Create plan
-			final StandardFlushPlanner planner = new StandardFlushPlanner();
+			final StandardFlushPlanner planner = new StandardFlushPlanner( planningOptions );
 			final FlushPlan plan = planner.plan(graph, planningOptions);
 
 			// Verify
@@ -529,7 +529,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			assertFalse(graph.outgoing().isEmpty(), "Graph should have edges for FK relationships");
 
 			// Create plan
-			final StandardFlushPlanner planner = new StandardFlushPlanner();
+			final StandardFlushPlanner planner = new StandardFlushPlanner( planningOptions );
 			final FlushPlan plan = planner.plan(graph, planningOptions);
 
 			// Verify plan was created successfully (cycle was broken)

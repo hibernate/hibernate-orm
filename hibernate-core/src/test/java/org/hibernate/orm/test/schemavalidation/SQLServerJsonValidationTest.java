@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.jdbc.JdbcUtils;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -26,7 +27,7 @@ import org.junit.jupiter.api.Test;
 @RequiresDialect(SQLServerDialect.class)
 @ServiceRegistry(
 		settings = @org.hibernate.testing.orm.junit.Setting(
-				name = "hibernate.use_nationalized_character_data",
+				name = MappingSettings.USE_NATIONALIZED_CHARACTER_DATA,
 				value = "true"
 		)
 )

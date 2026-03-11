@@ -111,6 +111,11 @@ public class SqmTreatedMapJoin<L, K, V, S extends V> extends SqmMapJoin<L, K, S>
 	}
 
 	@Override
+	public SqmMapPersistentAttribute<L, K, S> getModel() {
+		return (SqmMapPersistentAttribute<L, K, S>) super.getReferencedPathSource();
+	}
+
+	@Override
 	public SqmTreatableDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}

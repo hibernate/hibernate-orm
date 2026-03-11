@@ -112,6 +112,11 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	}
 
 	@Override
+	public SqmListPersistentAttribute<O, S> getModel() {
+		return (SqmListPersistentAttribute<O, S>) super.getReferencedPathSource();
+	}
+
+	@Override
 	public SqmTreatableDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}

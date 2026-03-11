@@ -112,6 +112,11 @@ public class SqmTreatedBagJoin<L, R, S extends R> extends SqmBagJoin<L, S> imple
 	}
 
 	@Override
+	public SqmBagPersistentAttribute<L, S> getModel() {
+		return (SqmBagPersistentAttribute<L, S>) super.getReferencedPathSource();
+	}
+
+	@Override
 	public SqmTreatableDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}

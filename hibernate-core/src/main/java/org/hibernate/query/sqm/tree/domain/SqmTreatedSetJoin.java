@@ -112,6 +112,11 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 	}
 
 	@Override
+	public SqmSetPersistentAttribute<O, S> getModel() {
+		return (SqmSetPersistentAttribute<O, S>) super.getReferencedPathSource();
+	}
+
+	@Override
 	public SqmTreatableDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}

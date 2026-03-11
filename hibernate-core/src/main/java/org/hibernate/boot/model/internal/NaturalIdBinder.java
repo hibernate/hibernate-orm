@@ -39,14 +39,8 @@ class NaturalIdBinder {
 			final var annotatedColumns = joinColumns != null ? joinColumns : columns;
 			// If the entity declares @NaturalIdConstraint, use the provided
 			// constraint name instead of the implicit naming strategy
-			final var modelsContext = context.getBootstrapContext().getModelsContext();
-			final var persistentClass = annotatedColumns.getPropertyHolder().getPersistentClass();
-			final var mappedClass = persistentClass.getMappedClass();
-			final var naturalIdConstraint = mappedClass != null
-					? modelsContext.getClassDetailsRegistry()
-					.resolveClassDetails( mappedClass.getName() )
-					.getAnnotationUsage( NaturalIdConstraint.class, modelsContext )
-					: null;
+			final var naturalIdConstraint = property.getDeclaringType()
+					.getDirectAnnotationUsage( NaturalIdConstraint.class );
 
 			final Identifier name =
 					naturalIdConstraint != null && isNotEmpty( naturalIdConstraint.name() )

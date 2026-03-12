@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.exporter.entity;
+package org.hibernate.tool.internal.reveng.models.exporter.mapping;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,27 +32,22 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 
-import org.hibernate.tool.internal.export.java.ImportContextImpl;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
 
 /**
- * Generates JPA-annotated Java entity source files from {@link TableMetadata}
+ * Generates a JPA {@code mapping.xml} file per entity from {@link TableMetadata}
  * using FreeMarker templates.
  *
  * @author Koen Aers
  */
-public class EntityExporter {
+public class MappingXmlExporter {
 
-	private static final String DEFAULT_TEMPLATE_PATH = "/models/entity";
-	private static final String TEMPLATE_NAME = "main.entity.ftl";
+	private static final String DEFAULT_TEMPLATE_PATH = "/models/mapping";
+	private static final String TEMPLATE_NAME = "main.mapping.ftl";
 
-	private final List<TableMetadata> tables;
-	private final boolean annotated;
 	private final Configuration freemarkerConfig;
 
-	private EntityExporter(List<TableMetadata> tables, boolean annotated, String[] templatePath) {
-		this.tables = tables;
-		this.annotated = annotated;
+	private MappingXmlExporter(String[] templatePath) {
 		this.freemarkerConfig = new Configuration(Configuration.VERSION_2_3_33);
 		this.freemarkerConfig.setTemplateLoader(createTemplateLoader(templatePath));
 		this.freemarkerConfig.setDefaultEncoding("UTF-8");
@@ -60,29 +55,24 @@ public class EntityExporter {
 				TemplateExceptionHandler.RETHROW_HANDLER);
 	}
 
-	public static EntityExporter create(List<TableMetadata> tables) {
-		return new EntityExporter(tables, true, new String[0]);
+	public static MappingXmlExporter create() {
+		return new MappingXmlExporter(new String[0]);
 	}
 
-	public static EntityExporter create(List<TableMetadata> tables, boolean annotated) {
-		return new EntityExporter(tables, annotated, new String[0]);
-	}
-
-	public static EntityExporter create(List<TableMetadata> tables, boolean annotated, String[] templatePath) {
-		return new EntityExporter(tables, annotated, templatePath);
+	public static MappingXmlExporter create(String[] templatePath) {
+		return new MappingXmlExporter(templatePath);
 	}
 
 	public void export(Writer output, TableMetadata table) {
-		ImportContextImpl importContext = new ImportContextImpl(table.getEntityPackage());
-		TemplateHelper templateHelper = new TemplateHelper(table, importContext, annotated);
 		Map<String, Object> model = new HashMap<>();
-		model.put("templateHelper", templateHelper);
+		model.put("table", table);
 		try {
 			Template template = freemarkerConfig.getTemplate(TEMPLATE_NAME);
 			template.process(model, output);
 			output.flush();
 		} catch (IOException | TemplateException e) {
-			throw new RuntimeException("Failed to export entity: " + table.getEntityClassName(), e);
+			throw new RuntimeException(
+					"Failed to export mapping.xml for: " + table.getEntityClassName(), e);
 		}
 	}
 

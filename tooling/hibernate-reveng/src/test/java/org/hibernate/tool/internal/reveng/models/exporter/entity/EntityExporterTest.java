@@ -605,9 +605,7 @@ public class EntityExporterTest {
 	@Test
 	public void testCustomTemplatePath(@TempDir Path tempDir) throws IOException {
 		// Create a custom Entity.ftl that outputs a simple marker
-		Path templateDir = tempDir.resolve("models").resolve("entity");
-		Files.createDirectories(templateDir);
-		Files.writeString(templateDir.resolve("Entity.ftl"),
+		Files.writeString(tempDir.resolve("main.entity.ftl"),
 				"// Custom template for ${templateHelper.getDeclarationName()}");
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));

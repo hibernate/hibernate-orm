@@ -5,7 +5,6 @@
 package org.hibernate.testing.logger;
 
 import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.core.LoggerContext;
 import org.jboss.logging.Logger;
 
 import java.text.MessageFormat;
@@ -132,10 +131,7 @@ public final class DelegatingLogger extends Logger {
 	}
 
 	void setLevel(org.apache.logging.log4j.Level level) {
-		((LoggerContext) LogManager.getContext( false ))
-				.getConfiguration()
-				.getLoggerConfig( getName() )
-				.setLevel( level );
+		org.apache.logging.log4j.core.config.Configurator.setLevel( getName(), level );
 	}
 
 	void setLevel(Level level) {

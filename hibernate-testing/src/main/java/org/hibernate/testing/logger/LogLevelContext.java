@@ -20,6 +20,10 @@ public class LogLevelContext implements AutoCloseable {
 		doSetRuntimeLevel( name, targetLevel );
 	}
 
+	public static LogLevelContext withLevel(Class<?> loggerName, Logger.Level level) {
+		return withLevel( loggerName.getName(), level );
+	}
+
 	public static LogLevelContext withLevel(String loggerName, Logger.Level level) {
 		return new LogLevelContext( loggerName, level );
 	}

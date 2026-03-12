@@ -329,7 +329,7 @@ public class CompositeNestedGeneratedValueGenerator
 	}
 
 	// Used by Hibernate Reactive
-	public CompositeType getComponentType() {
+	public ComponentType getComponentType() {
 		return componentType;
 	}
 

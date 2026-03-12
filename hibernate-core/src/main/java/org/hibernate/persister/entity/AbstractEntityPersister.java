@@ -376,10 +376,12 @@ public abstract class AbstractEntityPersister
 	private String sqlVersionSelectString;
 
 	private EntityTableMapping[] tableMappings;
-	private InsertCoordinator insertCoordinator;
-	private UpdateCoordinator updateCoordinator;
-	private DeleteCoordinator deleteCoordinator;
-	private UpdateCoordinator mergeCoordinator;
+
+	// Used by Hibernate Reactive
+	protected InsertCoordinator insertCoordinator;
+	protected UpdateCoordinator updateCoordinator;
+	protected DeleteCoordinator deleteCoordinator;
+	protected UpdateCoordinator mergeCoordinator;
 
 	private SqmMultiTableMutationStrategy sqmMultiTableMutationStrategy;
 	private SqmMultiTableInsertStrategy sqmMultiTableInsertStrategy;
@@ -3279,13 +3281,18 @@ public abstract class AbstractEntityPersister
 					createGeneratedValuesProcessor( UPDATE, updateGeneratedAttributes );
 		}
 
+		createCoordinators(stateManagement);
+
+		//select SQL
+		sqlVersionSelectString = generateSelectVersionString();
+	}
+
+	// Useb by Hibernate Reactive
+	protected void createCoordinators(StateManagement stateManagement) {
 		insertCoordinator = stateManagement.createInsertCoordinator( this );
 		updateCoordinator = stateManagement.createUpdateCoordinator( this );
 		deleteCoordinator = stateManagement.createDeleteCoordinator( this );
 		mergeCoordinator = stateManagement.createMergeCoordinator( this );
-
-		//select SQL
-		sqlVersionSelectString = generateSelectVersionString();
 	}
 
 	protected GeneratedValuesMutationDelegate createInsertDelegate() {

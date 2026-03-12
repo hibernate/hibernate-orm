@@ -4,6 +4,7 @@
  */
 package org.hibernate.engine.spi;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
@@ -41,6 +42,22 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Steve Ebersole
  */
 public interface PersistenceContext {
+
+	/**
+	 * Marker object used to indicate (via reference checking) that no row was returned.
+	 */
+	// Used by Hibernate Reactive
+	Serializable NO_ROW = new Serializable() {
+		@Override
+		public String toString() {
+			return "NO_ROW";
+		}
+
+		@Serial
+		public Object readResolve() {
+			return NO_ROW;
+		}
+	};
 
 	boolean isStateless();
 

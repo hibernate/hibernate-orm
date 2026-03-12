@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -86,21 +85,6 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Sanne Grinovero
  */
 class StatefulPersistenceContext implements PersistenceContext {
-
-	/**
-	 * Marker object used to indicate (via reference checking) that no row was returned.
-	 */
-	private static final Serializable NO_ROW = new Serializable() {
-		@Override
-		public String toString() {
-			return "NO_ROW";
-		}
-
-		@Serial
-		public Object readResolve() {
-			return NO_ROW;
-		}
-	};
 
 	private static final int INIT_COLL_SIZE = 8;
 

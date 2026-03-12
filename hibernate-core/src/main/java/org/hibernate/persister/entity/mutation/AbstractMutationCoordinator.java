@@ -166,7 +166,10 @@ public abstract class AbstractMutationCoordinator {
 		return singleTableMutation.createMutationOperation( valuesAnalysis, factory() );
 	}
 
-	boolean hasValueGenerationOnExecution(
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected boolean hasValueGenerationOnExecution(
 			Object entity,
 			SharedSessionContractImplementor session,
 			OnExecutionGenerator generator,

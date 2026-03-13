@@ -264,6 +264,31 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		);
 	}
 
+	public static SelectableMapping withSelectablePath(
+			SelectableMapping selectableMapping,
+			SelectablePath selectablePath){
+		return new SelectableMappingImpl(
+				selectableMapping.getContainingTableExpression(),
+				selectableMapping.getSelectionExpression(),
+				selectablePath,
+				selectableMapping.getCustomReadExpression(),
+				selectableMapping.getCustomWriteExpression(),
+				selectableMapping.getColumnDefinition(),
+				selectableMapping.getLength(),
+				selectableMapping.getArrayLength(),
+				selectableMapping.getPrecision(),
+				selectableMapping.getScale(),
+				selectableMapping.getTemporalPrecision(),
+				selectableMapping.isLob(),
+				selectableMapping.isNullable(),
+				selectableMapping.isInsertable(),
+				selectableMapping.isUpdateable(),
+				selectableMapping.isPartitioned(),
+				selectableMapping.isFormula(),
+				selectableMapping.getJdbcMapping()
+		);
+	}
+
 	@Override
 	public String toString() {
 		return String.format(

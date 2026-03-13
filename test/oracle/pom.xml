@@ -33,8 +33,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.oracle.ojdbc</groupId>
-            <artifactId>ojdbc8</artifactId>
+            <groupId>com.oracle.database.jdbc</groupId>
+            <artifactId>ojdbc11</artifactId>
         </dependency>
     	<dependency>
     		<groupId>org.hibernate.tool</groupId>

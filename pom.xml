@@ -117,7 +117,7 @@
         <jboss-logging.version>3.6.2.Final</jboss-logging.version>
         <junit-jupiter.version>6.0.3</junit-jupiter.version>
         <mysql.version>9.6.0</mysql.version>
-        <oracle.version>19.3.0.0</oracle.version>
+        <oracle.version>23.26.1.0.0</oracle.version>
         <sqlserver.version>13.2.1.jre11</sqlserver.version>
         <jakarta.xml.bind-api.version>4.0.5</jakarta.xml.bind-api.version>
         <maven-resolver.version>1.9.27</maven-resolver.version>
@@ -192,8 +192,8 @@
     			<scope>test</scope>
 			</dependency>
 			<dependency>
-    			<groupId>com.oracle.ojdbc</groupId>
-    			<artifactId>ojdbc8</artifactId>
+    			<groupId>com.oracle.database.jdbc</groupId>
+    			<artifactId>ojdbc11</artifactId>
     			<version>${oracle.version}</version>
     			<scope>test</scope>
 			</dependency>

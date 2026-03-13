@@ -1,0 +1,76 @@
+# See https://docs.github.com/en/code-security/tutorials/secure-your-dependencies/automating-dependabot-with-github-actions#enabling-automerge-on-a-pull-request
+name: Dependabot auto-merge Hibernate ORM update
+on:
+  pull_request:
+    branches:
+      # Only include the branches for which we want
+      # the automerge capabilities to be applied:
+      - '7.2'
+      - '6.6'
+
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  dependabot-auto-merge:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'hibernate/hibernate-tools'
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@21025c705c08248db411dc16f3619e6b5f9ea21a
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Check if Hibernate ORM Patch update
+        id: orm-update-check
+        run: |
+          if [[ "${{ contains(steps.metadata.outputs.dependency-names, 'org.hibernate.orm') }}" == "true" && \
+                "${{ steps.metadata.outputs.update-type }}" == "version-update:semver-patch" ]]; then
+            echo "Match found. Proceeding with Jira update."
+            echo "passed=true" >> $GITHUB_OUTPUT
+          else
+            echo "Not a Hibernate ORM patch update. Stopping workflow."
+            echo "passed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+      - name: Checkout PR Branch
+        if: steps.orm-update-check.outputs.passed == 'true'
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Attempt to update commit message
+        if: steps.orm-update-check.outputs.passed == 'true'
+        run: |
+          ORM_NEW_VERSION="${{steps.metadata.outputs.new-version}}"
+          
+          JIRA_JSON=$(curl -s -G "https://hibernate.atlassian.net/rest/api/3/search/jql" \
+            --data-urlencode "fields=key" \
+            --data-urlencode "maxResults=1" \
+            --data-urlencode "jql=project=HBX and summary ~ \"Update Hibernate ORM dependency to $ORM_NEW_VERSION\"")
+          
+          JIRA_KEY=$(echo "$JIRA_JSON" | jq -r '.issues[0].key // empty')
+
+          if [ -z "$JIRA_KEY" ]; then
+            echo "Unable to find the JIRA for this verison of ORM $ORM_NEW_VERSION"
+          else
+            git config user.email ci@hibernate.org
+            git config user.name Hibernate-CI
+            gh pr checkout "$PR_URL"
+            ORIGINAL_MSG=$(git log -1 --pretty=%B)
+            git commit --amend -m "$JIRA_KEY $ORIGINAL_MSG"
+            git push --force-with-lease
+          fi
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Enable auto-merge for Dependabot PRs
+        if: steps.orm-update-check.outputs.passed == 'true'
+        run: gh pr merge --auto --rebase "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}

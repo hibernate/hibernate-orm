@@ -14,12 +14,13 @@ import java.util.Properties;
 
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.SourceType;
+import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgHibernateConfiguration;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.internal.util.ValueHolder;
 import org.hibernate.internal.util.config.ConfigurationException;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
-import static org.hibernate.boot.jaxb.SourceType.FILE;
 import static org.hibernate.boot.jaxb.SourceType.RESOURCE;
 import static org.hibernate.boot.jaxb.SourceType.URL;
 
@@ -71,16 +72,28 @@ public class ConfigLoader {
 	}
 
 	public LoadedConfig loadConfigXmlFile(File cfgXmlFile) {
-		try {
-
-			return LoadedConfig.consume( jaxbProcessorHolder.getValue()
-					.unmarshal( new FileInputStream( cfgXmlFile ),
-							new Origin( FILE, cfgXmlFile.getAbsolutePath() ) ) );
+		final var cfgFileDirectoryPath = GetConfigResourceDirectoryPath(cfgXmlFile.getAbsolutePath());
+		final var cfgFileStream = locateStream( cfgFileDirectoryPath );
+		if ( cfgFileStream == null ) {
+			throw new ConfigurationException( "Could not locate cfg.xml resource [" + cfgXmlFile.getAbsolutePath() + "]" );
 		}
-		catch (FileNotFoundException e) {
-			throw new ConfigurationException(
-					"Specified cfg.xml file [" + cfgXmlFile.getAbsolutePath() + "] does not exist"
+
+		try
+		{
+			final JaxbCfgHibernateConfiguration jaxbCfg = jaxbProcessorHolder.getValue().unmarshal(
+					cfgFileStream,
+					new Origin( SourceType.FILE, cfgXmlFile.getAbsolutePath() )
 			);
+
+			return LoadedConfig.consume( jaxbCfg );
+		}
+		finally {
+			try {
+				cfgFileStream.close();
+			}
+			catch (IOException e) {
+				BOOT_LOGGER.unableToCloseCfgXmlFile( e );
+			}
 		}
 	}
 
@@ -160,5 +173,31 @@ public class ConfigLoader {
 		final var properties = new Properties();
 		properties.load( stream );
 		return properties;
+	}
+
+	private static String GetConfigResourceDirectoryPath(String absolutePath){
+		int index = 0;
+		if ( absolutePath.contains( "resources\\test" ) ) {
+			// intellij... intellij sets up project outputs little different
+			int outIndex = absolutePath.lastIndexOf( "resources\\test" );
+			index += outIndex + "resources\\test".length() + 1;
+		}
+		else if ( absolutePath.contains( "out\\test" ) ) {
+			// intellij... intellij sets up project outputs little different
+			int outIndex = absolutePath.lastIndexOf( "out\\test" );
+			index += outIndex + "out\\test".length() + 1;
+		}
+		else if ( absolutePath.contains( "target" ) ) {
+			// assume there's normally a /target
+			int outIndex = absolutePath.lastIndexOf( "target" );
+			index += outIndex + "target".length() + 1;
+		}
+		else if ( absolutePath.contains( "bin" ) ) {
+			// if running in some IDEs, may be in /bin instead
+			int outIndex =  absolutePath.lastIndexOf( "bin" );
+			index += outIndex + "bin".length() + 1;
+		}
+
+		return absolutePath.substring( index );
 	}
 }

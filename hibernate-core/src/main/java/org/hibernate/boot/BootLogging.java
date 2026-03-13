@@ -455,4 +455,8 @@ public interface BootLogging extends BasicLogger {
 	@LogMessage(level = WARN)
 	@Message(id = 160246, value = "Association '%s' is 'mappedBy' another entity and should not specify an '@OrderColumn' (use '@OrderBy' instead)")
 	void mappedByShouldNotSpecifyOrderColumn(String associationPath);
+
+	@LogMessage(level = DEBUG)
+	@Message(id = 160247, value = "Unable to close cfg.xml file")
+	void unableToCloseCfgXmlFile(@Cause Throwable e);
 }

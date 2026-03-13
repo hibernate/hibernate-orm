@@ -1,7 +1,9 @@
 [[tooling-maven]]
 === Maven
 
-The following sections illustrate how both <<tooling-maven-enhancement,bytecode enhancement>> and <<tooling-maven-modelgen,metamodel generation>> capabilities can be integrated into Maven builds.
+The following sections illustrate how <<tooling-maven-enhancement,bytecode enhancement>>,
+<<tooling-maven-modelgen,metamodel generation>>, and <<tooling-maven-reveng,reverse engineering>>
+capabilities can be integrated into Maven builds.
 
 [[tooling-maven-enhancement]]
 ==== Bytecode Enhancement
@@ -171,3 +173,156 @@ paths of the maven compiler plugin.
 include::extras/maven-example-metamodel.pom[]
 ----
 ====
+
+
+[[tooling-maven-reveng]]
+==== Reverse Engineering
+
+Hibernate provides a Maven plugin for <<tooling-reveng,reverse engineering>> an existing database
+into Java entities, mapping files, DAOs, and DDL scripts.
+
+
+[[tooling-maven-reveng-plugin]]
+===== Plugin Declaration
+
+Add the `hibernate-maven-plugin` to your POM:
+
+[source,xml,subs="attributes+"]
+----
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-maven-plugin</artifactId>
+            <version>{fullVersion}</version>
+            <executions>
+                <execution>
+                    <id>generate-entities</id>
+                    <phase>generate-sources</phase>
+                    <goals>
+                        <goal>hbm2java</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+----
+
+
+[[tooling-maven-reveng-goals]]
+===== Available Goals
+
+The plugin provides the following goals:
+
+`hbm2java`:: Generates Java entity classes from the database schema. Binds to the `generate-sources` phase by default.
+`hbm2ddl`:: Generates DDL scripts from the database schema. Binds to the `generate-resources` phase by default.
+`hbm2dao`:: Generates Data Access Object (DAO) classes. Binds to the `generate-sources` phase by default.
+`generateHbm`:: Generates `hbm.xml` mapping files from the database schema. Binds to the `generate-sources` phase by default.
+`hbm2orm`:: Transforms existing `hbm.xml` mapping files into ORM annotated entities. Binds to the `generate-resources` phase by default. This goal does not perform reverse engineering from a database -- it converts existing HBM mappings.
+
+
+[[tooling-maven-reveng-common-params]]
+===== Common Configuration Parameters
+
+The following parameters are shared by the `hbm2java`, `hbm2ddl`, `hbm2dao`, and `generateHbm` goals:
+
+`propertyFile`:: Path to a properties file containing JDBC connection settings. Default: `${project.basedir}/src/main/resources/hibernate.properties`.
+`packageName`:: The default Java package name for generated classes.
+`revengFile`:: Path to a reverse engineering configuration XML file for customizing schema selection, type mappings, and filters.
+`revengStrategy`:: Fully qualified class name of a custom reverse engineering strategy. Extend `DefaultReverseEngineeringStrategy` and override methods to customize class names, type mappings, etc.
+`detectManyToMany`:: If `true`, pure many-to-many link tables (tables whose primary key consists of exactly two foreign keys and no other columns) are mapped as many-to-many associations. Default: `true`.
+`detectOneToOne`:: If `true`, a one-to-one association is created for each foreign key found. Default: `true`.
+`detectOptimisticLock`:: If `true`, columns named `VERSION` or `TIMESTAMP` with appropriate types are mapped as `@Version` properties. Default: `true`.
+`createCollectionForForeignKey`:: If `true`, a collection mapping is generated for each foreign key. Default: `true`.
+`createManyToOneForForeignKey`:: If `true`, a many-to-one association is created for each foreign key found. Default: `true`.
+
+
+[[tooling-maven-reveng-hbm2java-params]]
+===== hbm2java Parameters
+
+`outputDirectory`:: The directory into which entity classes are generated. Default: `${project.build.directory}/generated-sources/`.
+`ejb3`:: Whether to generate Jakarta Persistence annotations. Default: `true`.
+`jdk5`:: Whether to use JDK 5+ constructs such as generics and static imports. Default: `true`.
+`templatePath`:: Path to a directory containing custom FreeMarker templates.
+
+
+[[tooling-maven-reveng-hbm2ddl-params]]
+===== hbm2ddl Parameters
+
+`outputDirectory`:: The directory into which DDL scripts are generated. Default: `${project.build.directory}/generated-resources/`.
+`outputFileName`:: The filename of the generated DDL script. Default: `schema.ddl`.
+`targetTypes`:: The type of output to produce: `DATABASE` (export to the database), `SCRIPT` (write to a script file), or `STDOUT` (write to standard output). Default: `SCRIPT`.
+`schemaExportAction`:: The DDL statements to create: `NONE`, `CREATE`, `DROP`, or `BOTH` (drop then create). Default: `CREATE`.
+`delimiter`:: The end-of-statement delimiter. Default: `;`.
+`format`:: Whether to format the SQL output. Default: `true`.
+`haltOnError`:: Whether to stop on the first error. Default: `true`.
+
+
+[[tooling-maven-reveng-hbm2dao-params]]
+===== hbm2dao Parameters
+
+`outputDirectory`:: The directory into which DAO classes are generated. Default: `${project.build.directory}/generated-sources/`.
+`ejb3`:: Whether to use Jakarta Persistence features. Default: `false`.
+`jdk5`:: Whether to use JDK 5+ constructs. Default: `false`.
+`templatePath`:: Path to a directory containing custom FreeMarker templates.
+
+
+[[tooling-maven-reveng-hbm2orm-params]]
+===== hbm2orm Parameters
+
+The `hbm2orm` goal transforms existing `hbm.xml` files into ORM `mapping.xml` files. It does not connect to a database.
+
+`inputFolder`:: The folder containing `hbm.xml` files to transform. Files are discovered recursively. Default: `${project.basedir}/src/main/resources`.
+`format`:: Whether to format the output XML. Default: `true`.
+
+
+[[tooling-maven-reveng-example]]
+===== Example
+
+The following POM generates JPA entity classes from an H2 database:
+
+[source,xml,subs="attributes+"]
+----
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.example</groupId>
+    <artifactId>my-project</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>2.2.224</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.hibernate.orm</groupId>
+                <artifactId>hibernate-maven-plugin</artifactId>
+                <version>{fullVersion}</version>
+                <executions>
+                    <execution>
+                        <id>generate-entities</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>hbm2java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+----
+
+By default, the plugin reads JDBC connection settings from `src/main/resources/hibernate.properties`.
+Run the generation with:
+
+[source,bash]
+----
+mvn generate-sources
+----

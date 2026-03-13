@@ -11,3 +11,22 @@
 Describes the new features and capabilities added to Hibernate ORM in {version}.
 
 IMPORTANT: If migrating from earlier versions, be sure to also check out the link:{migrationGuide}[Migration Guide] for discussion of impactful changes.
+
+[[reveng]]
+== Reverse Engineering
+
+The reverse engineering module, previously part of the standalone Hibernate Tools project, is now integrated directly into Hibernate ORM. It is available as plugins for Gradle, Maven, and Ant.
+
+The reverse engineering plugins can generate:
+
+- Java entity classes
+- DAO classes
+- `hbm.xml` mapping files
+- `mapping.xml` mapping files
+- `hibernate.cfg.xml` configuration files
+- DDL scripts
+- HTML documentation
+
+The process is customizable via XML configuration files and custom strategy classes.
+
+See the link:{userGuideBase}#reveng[Reverse Engineering] chapter in the User Guide for details.

@@ -14,10 +14,12 @@ These services include
 * <<tooling-enhancement,Bytecode enhancement>>
 * <<tooling-modelgen,Static Metamodel generation>>
 * <<tooling-schema,Schema management>>
+* <<tooling-reveng,Reverse engineering>>
 
 include::enhancement.adoc[]
 include::modelgen.adoc[]
 include::schema.adoc[]
+include::reveng.adoc[]
 
 include::gradle.adoc[]
 include::maven.adoc[]

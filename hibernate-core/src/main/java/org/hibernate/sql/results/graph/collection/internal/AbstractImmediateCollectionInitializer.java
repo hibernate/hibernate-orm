@@ -4,6 +4,8 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiConsumer;
 
@@ -12,6 +14,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -43,6 +46,7 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 	 * refers to the rows entry in the collection.  null indicates that the collection is empty
 	 */
 	protected final @Nullable DomainResultAssembler<?> collectionValueKeyResultAssembler;
+	protected final Initializer<InitializerData> @Nullable [] loadingOwnerInitializers;
 
 	public static class ImmediateCollectionInitializerData extends CollectionInitializerData {
 
@@ -55,6 +59,7 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 		 */
 		protected Object collectionValueKey;
 		protected LoadingCollectionEntryImpl responsibility;
+		protected boolean justHandleResponsibility;
 
 		public ImmediateCollectionInitializerData(AbstractImmediateCollectionInitializer<?> initializer, RowProcessingState rowProcessingState) {
 			super( rowProcessingState );
@@ -84,6 +89,33 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 				collectionKeyResult == collectionValueKeyResult
 						? null
 						: collectionValueKeyResult.createResultAssembler( this, creationState );
+		this.loadingOwnerInitializers = determineLoadingOwnerInitializers( parent );
+	}
+
+	private static Initializer<InitializerData> @Nullable [] determineLoadingOwnerInitializers(InitializerParent<?> parent) {
+		Initializer<?> parentInitializer = Initializer.findOwningEntityInitializer( parent );
+		ArrayList<Initializer<InitializerData>> loadingOwnerInitializers = null;
+		while ( parentInitializer != null ) {
+			parentInitializer = parentInitializer.getParent();
+			if ( parentInitializer != null ) {
+				// Bag owners are illegal and set owners have no duplicates anyway,
+				// so only need to track owning collections that have an index assembler
+				if ( parentInitializer.isCollectionInitializer() || parentInitializer.isEntityInitializer() ) {
+					if ( loadingOwnerInitializers == null ) {
+						loadingOwnerInitializers = new ArrayList<>();
+					}
+					//noinspection unchecked
+					loadingOwnerInitializers.add( (Initializer<InitializerData>) parentInitializer );
+				}
+			}
+		}
+		if ( loadingOwnerInitializers != null ) {
+			Collections.reverse( loadingOwnerInitializers );
+		}
+		//noinspection unchecked
+		return loadingOwnerInitializers == null
+				? null
+				: loadingOwnerInitializers.toArray( new Initializer[0] );
 	}
 
 	@Override
@@ -110,6 +142,7 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 		}
 		super.resolveKey( data );
 		data.collectionValueKey = null;
+		data.justHandleResponsibility = false;
 		// Can't resolve any sub-initializers if the collection is shallow cached
 		if ( data.getState() != State.MISSING && !data.shallowCached ) {
 			if ( collectionValueKeyResultAssembler == null ) {
@@ -142,6 +175,7 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 	@Override
 	public void resolveFromPreviousRow(Data data) {
 		super.resolveFromPreviousRow( data );
+		data.justHandleResponsibility = false;
 		if ( data.getState() == State.RESOLVED ) {
 			// The state is resolved, so we know a collection instance exists
 			final PersistentCollection<?> collection = castNonNull( data.getCollectionInstance() );
@@ -152,6 +186,16 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 			}
 			else {
 				resolveKeySubInitializers( data );
+				// The responsibility might be null, because the collection is being loaded by a different initializer,
+				// in which case there is no need to check if the loading owners of the responsibility matches
+				if ( data.responsibility != null ) {
+					// Defer checking the responsibility since this method is being called within the resolveKey
+					// phase, meaning that parent initializers might not have their resolved instances set yet.
+					// Since checking the responsibility requires snapshotting the parent instances for
+					// deduplication purposes, that process must be deferred.
+					data.setState( State.KEY_RESOLVED );
+					data.justHandleResponsibility = true;
+				}
 			}
 		}
 	}
@@ -226,7 +270,8 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 
 	@Override
 	public void resolveInstance(Data data) {
-		if ( data.getState() == State.KEY_RESOLVED ) {// Being a result initializer means that this collection initializer is for lazy loading,
+		if ( data.getState() == State.KEY_RESOLVED && !data.justHandleResponsibility ) {
+			// Being a result initializer means that this collection initializer is for lazy loading,
 			// which has a very high chance that a collection resolved of the previous row is the same for the current row,
 			// so pass that flag as indicator whether to check previous row state.
 			// Note that we don't need to check previous rows in other cases,
@@ -253,13 +298,13 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 				if ( existingLoadingEntry != null ) {
 					data.setCollectionInstance( existingLoadingEntry.getCollectionInstance() );
 
-					if ( existingLoadingEntry.getInitializer() == this ) {
+					if ( shouldContinueLoadingEntry( existingLoadingEntry, rowProcessingState ) ) {
 						assert !data.shallowCached;
 						// we are responsible for loading the collection values
 						data.responsibility = (LoadingCollectionEntryImpl) existingLoadingEntry;
 					}
 					else {
-						// the entity is already being loaded elsewhere
+						// the entity is already being loaded elsewhere or finished loading
 						data.setState( State.INITIALIZED );
 					}
 				}
@@ -325,6 +370,42 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 				}
 			}
 		}
+		else if ( data.getState() == State.KEY_RESOLVED ) {
+			// This happens when resolveInstance(Object, Data) is called with an existing lazy persistent collection,
+			// where the takeResponsibility call has to be deferred.
+			data.setState( State.RESOLVED );
+			if ( data.responsibility == null ) {
+				takeResponsibility( data );
+			}
+			else if ( !shouldContinueLoadingEntry( data.responsibility, data.getRowProcessingState() ) ) {
+				// the entity is already being loaded elsewhere or finished loading
+				data.setState( State.INITIALIZED );
+			}
+		}
+	}
+
+	protected boolean shouldContinueLoadingEntry(LoadingCollectionEntry existingLoadingEntry, RowProcessingState rowProcessingState) {
+		if ( existingLoadingEntry.getInitializer() != this ) {
+			// Don't load the collection if another initializer claimed it already
+			return false;
+		}
+		else {
+			// Only read into the collection if the loading owners match
+			final Object[] existingLoadingOwners = existingLoadingEntry.getLoadingOwners();
+			if ( existingLoadingOwners != null ) {
+				final Object[] loadingOwners = determineLoadingOwners( rowProcessingState );
+				assert loadingOwners != null;
+				assert existingLoadingOwners.length == loadingOwners.length;
+				for ( int i = 0; i < existingLoadingOwners.length; i++ ) {
+					if ( existingLoadingOwners[i] != loadingOwners[i]
+						&& (!(existingLoadingOwners[i] instanceof CollectionLoadingOwner collectionLoadingOwner)
+							|| !collectionLoadingOwner.isEqual( (CollectionLoadingOwner) loadingOwners[i], rowProcessingState.getSession() )) ) {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
 	}
 
 	protected void initializeShallowCached(Data data) {
@@ -348,6 +429,7 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 		super.setMissing( data );
 		data.collectionValueKey = null;
 		data.responsibility = null;
+		data.justHandleResponsibility = false;
 	}
 
 	@Override
@@ -371,6 +453,7 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 				collection = (PersistentCollection<?>) instance;
 			}
 			data.collectionValueKey = null;
+			data.justHandleResponsibility = false;
 			if ( collection.wasInitialized() ) {
 				resolveFromPreviouslyInitializedInstance( data );
 			}
@@ -392,6 +475,7 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 							if ( existingLoadingEntry.getInitializer() == this ) {
 								// we are responsible for loading the collection values
 								data.responsibility = (LoadingCollectionEntryImpl) existingLoadingEntry;
+								// todo: shouldn't we call resolveCollectionContentKey here?
 							}
 							else {
 								// the collection is already being loaded elsewhere
@@ -406,7 +490,12 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 							}
 						}
 						else {
-							takeResponsibility( data );
+							// Defer taking the responsibility since this method is being called within the resolveKey
+							// phase, meaning that parent initializers might not have their resolved instances set yet.
+							// Since taking the responsibility requires snapshotting the parent instances for
+							// deduplication purposes, that process must be deferred.
+							data.setState( State.KEY_RESOLVED );
+							data.justHandleResponsibility = true;
 						}
 					}
 				}
@@ -424,13 +513,47 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 		getElementAssembler().resolveState( rowProcessingState );
 	}
 
+	protected Object @Nullable [] determineLoadingOwners(RowProcessingState rowProcessingState) {
+		if ( loadingOwnerInitializers == null ) {
+			return null;
+		}
+		final Object[] loadingOwners = new Object[loadingOwnerInitializers.length];
+		for ( int i = 0; i < loadingOwnerInitializers.length; i++ ) {
+			final Initializer<InitializerData> initializer = loadingOwnerInitializers[i];
+			if ( initializer instanceof AbstractImmediateCollectionInitializer<?> immediateCollectionInitializer ) {
+				final DomainResultAssembler<?> indexAssembler = immediateCollectionInitializer.getIndexAssembler();
+				loadingOwners[i] = new CollectionLoadingOwner(
+						immediateCollectionInitializer.getInitializedPart(),
+						indexAssembler != null
+								? indexAssembler.assemble( rowProcessingState )
+								: immediateCollectionInitializer.getElementAssembler().assemble( rowProcessingState )
+				);
+			}
+			else {
+				loadingOwners[i] = initializer.getResolvedInstance( rowProcessingState );
+			}
+		}
+		return loadingOwners;
+	}
+
+	record CollectionLoadingOwner(PluralAttributeMapping pluralAttributeMapping, Object owner) {
+		public boolean isEqual(CollectionLoadingOwner that, SharedSessionContractImplementor session) {
+			final CollectionPart ownerPart = pluralAttributeMapping.getIndexDescriptor() == null
+					? pluralAttributeMapping.getElementDescriptor()
+					: pluralAttributeMapping.getIndexDescriptor();
+			return pluralAttributeMapping == that.pluralAttributeMapping
+				&& ownerPart.areEqual( owner, that.owner, session );
+		}
+	}
+
 	protected void takeResponsibility(Data data) {
 		data.responsibility =
 				new LoadingCollectionEntryImpl(
 						getCollectionAttributeMapping().getCollectionDescriptor(),
 						this,
 						data.collectionKey.getKey(),
-						data.getCollectionInstance()
+						data.getCollectionInstance(),
+						determineLoadingOwners( data.getRowProcessingState() )
 				);
 		data.getRowProcessingState().getJdbcValuesSourceProcessingState()
 				.registerLoadingCollection( data.collectionKey, data.responsibility );

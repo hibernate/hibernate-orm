@@ -107,7 +107,7 @@ class HHH20253Test {
 		private CompanyEmails companyEmails;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-    	@JoinColumn(name = "parent_company_id")
+		@JoinColumn(name = "parent_company_id")
 		private CompanyEntity parent;
 
 		public CompanyEntity getParent() {

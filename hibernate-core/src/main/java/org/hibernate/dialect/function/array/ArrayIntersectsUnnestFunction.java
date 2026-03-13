@@ -7,6 +7,7 @@ package org.hibernate.dialect.function.array;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.ReturnableType;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -32,24 +33,24 @@ public class ArrayIntersectsUnnestFunction extends AbstractArrayIntersectsFuncti
 		final Expression needleExpression = (Expression) sqlAstArguments.get( 1 );
 		sqlAppender.append( '(' );
 		if ( ArrayHelper.isNullable( haystackExpression ) ) {
-			haystackExpression.accept( walker );
+			walker.render( haystackExpression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 			sqlAppender.append( " is not null and " );
 		}
 		if ( ArrayHelper.isNullable( needleExpression ) ) {
-			needleExpression.accept( walker );
+			walker.render( needleExpression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 			sqlAppender.append( " is not null and " );
 		}
 		if ( !nullable ) {
 			sqlAppender.append( "not exists(select 1 from unnest(" );
-			needleExpression.accept( walker );
+			walker.render( needleExpression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 			sqlAppender.append( ") t(i) where t.i is null) and " );
 		}
 		sqlAppender.append( "exists(select * from unnest(" );
-		needleExpression.accept( walker );
+		walker.render( needleExpression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		sqlAppender.append( ")" );
 		sqlAppender.append( " intersect " );
 		sqlAppender.append( "select * from unnest(" );
-		haystackExpression.accept( walker );
+		walker.render( haystackExpression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		sqlAppender.append( ")))" );
 	}
 }

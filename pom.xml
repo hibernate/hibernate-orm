@@ -28,7 +28,7 @@
 
     <groupId>org.hibernate.tool</groupId>
     <artifactId>hibernate-tools-parent</artifactId>
-    <version>8.0.0-SNAPSHOT</version>
+    <version>7.4.0-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
@@ -110,7 +110,7 @@
         <google-java-format.version>1.28.0</google-java-format.version>
         <h2.version>2.4.240</h2.version>
         <hibernate-commons-annotations.version>7.0.3.Final</hibernate-commons-annotations.version>
-        <hibernate-orm.version>8.0.0.Alpha1</hibernate-orm.version>
+        <hibernate-orm.version>7.4.0-SNAPSHOT</hibernate-orm.version>
         <hsqldb.version>2.7.4</hsqldb.version>
         <jakartaee-api.version>11.0.0</jakartaee-api.version>
         <jakarta.ejb-api.version>4.0.1</jakarta.ejb-api.version>
@@ -349,6 +349,20 @@
             </dependency>
          </dependencies>
     </dependencyManagement>
+
+    <repositories>
+        <repository>
+            <id>${central.snapshots.repo.id}</id>
+            <name>${central.snapshots.repo.name}</name>
+            <url>${central.snapshots.repo.url}</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <distributionManagement>
         <repository>

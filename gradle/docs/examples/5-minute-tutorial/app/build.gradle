@@ -8,7 +8,7 @@
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'application'
-    id 'org.hibernate.tool.hibernate-tools-gradle' version '8.0.0.Alpha2'
+    id 'org.hibernate.tool.hibernate-tools-gradle' version '7.4.0-SNAPSHOT'
 }
 
 repositories {

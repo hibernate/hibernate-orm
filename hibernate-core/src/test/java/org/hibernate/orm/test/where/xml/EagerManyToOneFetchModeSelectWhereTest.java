@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.where.hbm;
+package org.hibernate.orm.test.where.xml;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @ServiceRegistry(settings = @Setting(name=IMPLICIT_NAMING_STRATEGY, value = "legacy-jpa"))
-@DomainModel(xmlMappings = "hbm/where/EagerManyToOneFetchModeSelectWhereTest.hbm.xml")
+@DomainModel(xmlMappings = "mappings/where/EagerManyToOneFetchModeSelectWhereTest.orm.xml")
 @SessionFactory
 public class EagerManyToOneFetchModeSelectWhereTest {
 	@AfterEach
@@ -47,9 +47,9 @@ public class EagerManyToOneFetchModeSelectWhereTest {
 		product.containedCategory.category = category;
 		product.containedCategories.add( new ContainedCategory( category ) );
 
-		factoryScope.inTransaction( (session) -> {
-			session.persist( product );
-		} );
+		factoryScope.inTransaction( (session) ->
+				session.persist( product )
+		);
 
 		factoryScope.inTransaction( (session) -> {
 			var p = session.find( Product.class, product.id );

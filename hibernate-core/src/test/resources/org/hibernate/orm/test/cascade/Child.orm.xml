@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+        <!--
+          ~ SPDX-License-Identifier: Apache-2.0
+          ~ Copyright Red Hat Inc. and Hibernate Authors
+          -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="7.0">
+    <package>org.hibernate.orm.test.cascade</package>
+    <entity class="Child" >
+        <table name="Child"/>
+        <attributes>
+            <id name="id">
+                <generated-value generator="increment"/>
+                <type value="Long"/>
+            </id>
+            <many-to-one name="parent" target-entity="Parent" optional="false">
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </many-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>

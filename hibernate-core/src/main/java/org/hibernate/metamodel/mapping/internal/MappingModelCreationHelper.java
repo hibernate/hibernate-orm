@@ -989,7 +989,14 @@ public class MappingModelCreationHelper {
 				if ( bootValueMapping instanceof OneToOne ) {
 					final var identifierMapping =
 							attributeMapping.findContainingEntityMapping().getIdentifierMapping();
-					declaringKeyPropertyAccess = ( (PropertyBasedMapping) identifierMapping ).getPropertyAccess();
+					if ( identifierMapping instanceof PropertyBasedMapping propertyIdentifierMapping ) {
+						declaringKeyPropertyAccess = propertyIdentifierMapping.getPropertyAccess();
+					} else {
+						declaringKeyPropertyAccess = new ChainedPropertyAccessImpl(
+								attributeMapping.getPropertyAccess(),
+								( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess()
+						);
+					}
 				}
 				else {
 					declaringKeyPropertyAccess = new ChainedPropertyAccessImpl(

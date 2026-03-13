@@ -87,7 +87,7 @@ dependencyResolutionManagement {
             def jbossLoggingToolVersion = version "jbossLoggingTool", "3.0.4.Final"
 
             def agroalVersion = version "agroal", "2.8"
-            def c3poVersion = version "c3p0", "0.11.2"
+            def c3poVersion = version "c3p0", "0.12.0"
             def hikaricpVersion = version "hikaricp", "7.0.2"
 
             def jcacheVersion = version "jcache", "1.1.1"

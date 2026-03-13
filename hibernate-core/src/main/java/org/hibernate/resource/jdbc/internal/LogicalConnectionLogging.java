@@ -15,6 +15,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import static org.hibernate.cfg.JdbcSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT;
 import static org.jboss.logging.Logger.Level.DEBUG;
@@ -34,7 +35,7 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface LogicalConnectionLogging extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".resource.jdbc";
 	LogicalConnectionLogging CONNECTION_LOGGER = Logger.getMessageLogger(
-			MethodHandles.lookup(), LogicalConnectionLogging.class, LOGGER_NAME
+			MethodHandles.lookup(), LogicalConnectionLogging.class, LOGGER_NAME, Locale.ROOT
 	);
 
 	// ---- TRACE: lifecycle around JDBC transactions on logical connection ----

@@ -14,6 +14,7 @@ import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.TRACE;
 
@@ -26,7 +27,7 @@ import static org.jboss.logging.Logger.Level.TRACE;
 @Internal
 public interface VersionLogger extends BasicLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".versioning";
-	VersionLogger INSTANCE = Logger.getMessageLogger( MethodHandles.lookup(), VersionLogger.class, LOGGER_NAME );
+	VersionLogger INSTANCE = Logger.getMessageLogger( MethodHandles.lookup(), VersionLogger.class, LOGGER_NAME, Locale.ROOT );
 
 	@LogMessage(level = TRACE)
 	@Message(value = "Seeding version: %s", id = 160001)

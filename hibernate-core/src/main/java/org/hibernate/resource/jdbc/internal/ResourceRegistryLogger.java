@@ -16,6 +16,7 @@ import org.jboss.logging.annotations.ValidIdRange;
 import java.lang.invoke.MethodHandles;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Locale;
 
 import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.DEBUG;
@@ -40,7 +41,8 @@ public interface ResourceRegistryLogger extends BasicLogger {
 	ResourceRegistryLogger RESOURCE_REGISTRY_LOGGER = Logger.getMessageLogger(
 			MethodHandles.lookup(),
 			ResourceRegistryLogger.class,
-			LOGGER_NAME
+			LOGGER_NAME,
+			Locale.ROOT
 	);
 
 	@LogMessage(level = TRACE)

@@ -47,6 +47,7 @@ public class ColumnMetadataTest {
 		assertEquals(0, column.getScale());
 		assertNull(column.getBasicFetchType());
 		assertNull(column.getTemporalType());
+		assertNull(column.getHibernateTypeName());
 		assertFalse(column.isBasicOptionalSet());
 		assertTrue(column.isBasicOptional(), "Should default to true when not set");
 	}
@@ -181,6 +182,21 @@ public class ColumnMetadataTest {
 		ColumnMetadata column = new ColumnMetadata("EMAIL", "email", String.class);
 
 		assertFalse(column.isUnique());
+	}
+
+	@Test
+	public void testHibernateTypeName() {
+		ColumnMetadata column = new ColumnMetadata("NAME", "name", String.class)
+			.hibernateTypeName("string");
+
+		assertEquals("string", column.getHibernateTypeName());
+	}
+
+	@Test
+	public void testHibernateTypeNameDefaultsToNull() {
+		ColumnMetadata column = new ColumnMetadata("NAME", "name", String.class);
+
+		assertNull(column.getHibernateTypeName());
 	}
 
 	@Test

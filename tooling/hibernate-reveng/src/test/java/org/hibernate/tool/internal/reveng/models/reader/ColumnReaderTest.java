@@ -268,6 +268,23 @@ public class ColumnReaderTest {
 	}
 
 	@Test
+	public void testHibernateTypeNameStored() {
+		dialect.addColumn("TEST_TABLE", "ID", java.sql.Types.BIGINT, 19, 0, false);
+		dialect.addColumn("TEST_TABLE", "NAME", java.sql.Types.VARCHAR, 255, 0, true);
+		dialect.addColumn("TEST_TABLE", "CREATED", java.sql.Types.TIMESTAMP, 0, 0, true);
+		dialect.addPrimaryKey("TEST_TABLE", "ID", 1);
+
+		ColumnReader reader = ColumnReader.create(dialect, strategy);
+		reader.readColumns(tableMetadata, tableId, null, null);
+
+		List<ColumnMetadata> columns = tableMetadata.getColumns();
+		assertNotNull(findColumn(columns, "ID").getHibernateTypeName(),
+				"Hibernate type name should be stored for ID");
+		assertEquals("string", findColumn(columns, "NAME").getHibernateTypeName());
+		assertEquals("timestamp", findColumn(columns, "CREATED").getHibernateTypeName());
+	}
+
+	@Test
 	public void testQuotedColumnNames() {
 		dialect.setQuoteAllNames(true);
 		dialect.addColumn("TEST_TABLE", "ID", java.sql.Types.BIGINT, 19, 0, false);

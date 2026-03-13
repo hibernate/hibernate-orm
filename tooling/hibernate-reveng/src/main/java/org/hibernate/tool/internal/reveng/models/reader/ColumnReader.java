@@ -88,6 +88,7 @@ class ColumnReader {
 		String fieldName = strategy.columnToPropertyName(tableId, rowInfo.columnName());
 
 		ColumnMetadata columnMetadata = new ColumnMetadata(rowInfo.columnName(), fieldName, javaClass)
+			.hibernateTypeName(hibernateType)
 			.nullable(rowInfo.nullable());
 
 		if (JdbcToHibernateTypeHelper.typeHasLength(rowInfo.sqlType())) {

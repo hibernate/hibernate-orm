@@ -14,7 +14,6 @@ import org.hibernate.boot.model.relational.QualifiedName;
 import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -192,7 +191,7 @@ public class SequenceStyleGenerator
 		identifierType = creationContext.getType();
 		table = creationContext.getValue().getTable();
 
-		final var sequenceName = determineSequenceName( parameters, jdbcEnvironment, serviceRegistry );
+		final var sequenceName = determineSequenceName( parameters, serviceRegistry, creationContext.getDatabase() );
 		final int initialValue = determineInitialValue( parameters );
 		int incrementSize = determineIncrementSize( parameters );
 		final var optimizationStrategy = determineOptimizationStrategy( parameters, incrementSize );
@@ -222,6 +221,7 @@ public class SequenceStyleGenerator
 				identifierType,
 				parameters,
 				jdbcEnvironment,
+				creationContext.getDatabase(),
 				forceTableUse,
 				sequenceName,
 				initialValue,
@@ -345,18 +345,16 @@ public class SequenceStyleGenerator
 	 * Called during {@linkplain #configure configuration}.
 	 *
 	 * @param params  The params supplied in the generator config (plus some standard useful extras).
-	 * @param jdbcEnv The JdbcEnvironment
 	 * @return The sequence name
 	 */
 	protected QualifiedName determineSequenceName(
 			Properties params,
-			JdbcEnvironment jdbcEnv,
-			ServiceRegistry serviceRegistry) {
-		final var identifierHelper = jdbcEnv.getIdentifierHelper();
-		final Identifier catalog = identifierHelper.toIdentifier( getString( CATALOG, params ) );
-		final Identifier schema =  identifierHelper.toIdentifier( getString( SCHEMA, params ) );
+			ServiceRegistry serviceRegistry,
+			Database database) {
+		final Identifier catalog = database.toIdentifier( getString( CATALOG, params ) );
+		final Identifier schema = database.toIdentifier( getString( SCHEMA, params ) );
 		final String sequenceName = getString( SEQUENCE_PARAM, params, () -> getString( ALT_SEQUENCE_PARAM, params ) );
-		return sequenceName( params, serviceRegistry, sequenceName, catalog, schema, identifierHelper );
+		return sequenceName( params, serviceRegistry, sequenceName, catalog, schema, database );
 	}
 
 	private static QualifiedName sequenceName(
@@ -364,18 +362,18 @@ public class SequenceStyleGenerator
 			ServiceRegistry serviceRegistry,
 			String explicitSequenceName,
 			Identifier catalog, Identifier schema,
-			IdentifierHelper identifierHelper) {
+			Database database) {
 		if ( isNotEmpty( explicitSequenceName ) ) {
 			// we have an explicit name, use it
 			return explicitSequenceName.contains( "." )
 					? QualifiedNameParser.INSTANCE.parse( explicitSequenceName )
 					: new QualifiedNameParser.NameParts( catalog, schema,
-							identifierHelper.toIdentifier( explicitSequenceName, false, true ) );
+							database.toIdentifier( explicitSequenceName, true ) );
 		}
 		else {
 			// otherwise, determine an implicit name to use
 			return getNamingStrategy( params, serviceRegistry )
-					.determineSequenceName( catalog, schema, params, serviceRegistry );
+					.determineSequenceName( catalog, schema, params, database );
 		}
 	}
 
@@ -394,6 +392,11 @@ public class SequenceStyleGenerator
 	protected Identifier determineValueColumnName(Properties params, JdbcEnvironment jdbcEnvironment) {
 		final String name = getString( VALUE_COLUMN_PARAM, params, DEF_VALUE_COLUMN );
 		return jdbcEnvironment.getIdentifierHelper().toIdentifier( name );
+	}
+
+	protected Identifier determineValueColumnName(Properties params, Database database) {
+		final String name = getString( VALUE_COLUMN_PARAM, params, DEF_VALUE_COLUMN );
+		return database.toIdentifier( name );
 	}
 
 	/**
@@ -494,13 +497,14 @@ public class SequenceStyleGenerator
 			Type type,
 			Properties params,
 			JdbcEnvironment jdbcEnvironment,
+			Database database,
 			boolean forceTableUse,
 			QualifiedName sequenceName,
 			int initialValue,
 			int incrementSize) {
 		return isPhysicalSequence( jdbcEnvironment, forceTableUse )
 				? buildSequenceStructure( type, params, jdbcEnvironment, sequenceName, initialValue, incrementSize )
-				: buildTableStructure( type, params, jdbcEnvironment, sequenceName, initialValue, incrementSize );
+				: buildTableStructure( type, params, database, sequenceName, initialValue, incrementSize );
 	}
 
 	protected boolean isPhysicalSequence(JdbcEnvironment jdbcEnvironment, boolean forceTableUse) {
@@ -537,6 +541,25 @@ public class SequenceStyleGenerator
 				determineContributor( params ),
 				sequenceName,
 				determineValueColumnName( params, jdbcEnvironment ),
+				initialValue,
+				incrementSize,
+				params.getProperty( OPTIONS ),
+				type.getReturnedClass()
+		);
+	}
+
+	protected DatabaseStructure buildTableStructure(
+			Type type,
+			Properties params,
+			Database database,
+			QualifiedName sequenceName,
+			int initialValue,
+			int incrementSize) {
+
+		return new TableStructure(
+				determineContributor( params ),
+				sequenceName,
+				determineValueColumnName( params, database ),
 				initialValue,
 				incrementSize,
 				params.getProperty( OPTIONS ),

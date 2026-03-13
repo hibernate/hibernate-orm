@@ -25,7 +25,6 @@ import org.hibernate.boot.model.relational.QualifiedNameParser;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
@@ -335,10 +334,11 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		table = creationContext.getValue().getTable();
 
 		final var jdbcEnvironment = serviceRegistry.requireService( JdbcEnvironment.class );
+		final var database = creationContext.getDatabase();
 
-		qualifiedTableName = determineGeneratorTableName( parameters, jdbcEnvironment, serviceRegistry );
-		segmentColumnName = determineSegmentColumnName( parameters, jdbcEnvironment );
-		valueColumnName = determineValueColumnName( parameters, jdbcEnvironment );
+		qualifiedTableName = determineGeneratorTableName( parameters, jdbcEnvironment, serviceRegistry, database );
+		segmentColumnName = determineSegmentColumnName( parameters, jdbcEnvironment, database );
+		valueColumnName = determineValueColumnName( parameters, jdbcEnvironment, database );
 
 		segmentValue = determineSegmentValue( parameters );
 
@@ -379,12 +379,12 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	protected QualifiedName determineGeneratorTableName(
 			Properties params,
 			JdbcEnvironment jdbcEnvironment,
-			ServiceRegistry serviceRegistry) {
-		final var identifierHelper = jdbcEnvironment.getIdentifierHelper();
-		final Identifier catalog = identifierHelper.toIdentifier( getString( CATALOG, params ) );
-		final Identifier schema = identifierHelper.toIdentifier( getString( SCHEMA, params ) );
+			ServiceRegistry serviceRegistry,
+			Database database) {
+		final Identifier catalog = database.toIdentifier( getString( CATALOG, params ) );
+		final Identifier schema = database.toIdentifier( getString( SCHEMA, params ) );
 		final String tableName = getString( TABLE_PARAM, params );
-		return tableName( params, serviceRegistry, tableName, catalog, schema, identifierHelper );
+		return tableName( params, serviceRegistry, tableName, catalog, schema, database );
 	}
 
 	private static QualifiedName tableName(
@@ -392,16 +392,16 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			ServiceRegistry serviceRegistry,
 			String explicitTableName,
 			Identifier catalog, Identifier schema,
-			IdentifierHelper identifierHelper) {
+			Database database) {
 		if ( isNotEmpty( explicitTableName ) ) {
 			return explicitTableName.contains(".")
 					? QualifiedNameParser.INSTANCE.parse( explicitTableName )
 					: new QualifiedNameParser.NameParts( catalog, schema,
-							identifierHelper.toIdentifier( explicitTableName ) );
+							database.toIdentifier( explicitTableName ) );
 		}
 		else {
 			return getNamingStrategy( params, serviceRegistry )
-					.determineTableName( catalog, schema, params, serviceRegistry );
+					.determineTableName( catalog, schema, params, database );
 		}
 	}
 
@@ -416,9 +416,9 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	 * @param jdbcEnvironment The JDBC environment
 	 * @return The name of the segment column
 	 */
-	protected String determineSegmentColumnName(Properties params, JdbcEnvironment jdbcEnvironment) {
+	protected String determineSegmentColumnName(Properties params, JdbcEnvironment jdbcEnvironment, Database database) {
 		final String name = getString( SEGMENT_COLUMN_PARAM, params, DEF_SEGMENT_COLUMN );
-		return jdbcEnvironment.getIdentifierHelper().toIdentifier( name ).render( jdbcEnvironment.getDialect() );
+		return database.toIdentifier( name ).render( jdbcEnvironment.getDialect() );
 	}
 
 	/**
@@ -431,9 +431,9 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 	 * @param jdbcEnvironment The JDBC environment
 	 * @return The name of the value column
 	 */
-	protected String determineValueColumnName(Properties params, JdbcEnvironment jdbcEnvironment) {
+	protected String determineValueColumnName(Properties params, JdbcEnvironment jdbcEnvironment, Database database) {
 		final String name = getString( VALUE_COLUMN_PARAM, params, DEF_VALUE_COLUMN );
-		return jdbcEnvironment.getIdentifierHelper().toIdentifier( name ).render( jdbcEnvironment.getDialect() );
+		return database.toIdentifier( name ).render( jdbcEnvironment.getDialect() );
 	}
 
 	/**

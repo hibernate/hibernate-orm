@@ -78,18 +78,19 @@ public class IncrementGenerator implements IdentifierGenerator {
 	public void configure(GeneratorCreationContext creationContext, Properties parameters) throws MappingException {
 		returnClass = creationContext.getType().getReturnedClass();
 
-		final var jdbcEnvironment = creationContext.getDatabase().getJdbcEnvironment();
+		final var database = creationContext.getDatabase();
+		final var jdbcEnvironment = database.getJdbcEnvironment();
 		final var identifierHelper = jdbcEnvironment.getIdentifierHelper();
 
-		column = identifierHelper.normalizeQuoting( identifierHelper.toIdentifier( getString( COLUMN, PK, parameters ) ) )
+		column = identifierHelper.normalizeQuoting( database.toIdentifier( getString( COLUMN, PK, parameters ) ) )
 				.render( jdbcEnvironment.getDialect() );
 
-		final Identifier catalog = identifierHelper.toIdentifier( getString( CATALOG, parameters ) );
-		final Identifier schema =  identifierHelper.toIdentifier( getString( SCHEMA, parameters ) );
+		final Identifier catalog = database.toIdentifier( getString( CATALOG, parameters ) );
+		final Identifier schema =  database.toIdentifier( getString( SCHEMA, parameters ) );
 
 		physicalTableNames = new ArrayList<>();
 		for ( String tableName : splitAtCommas( getString( TABLES, PersistentIdentifierGenerator.TABLES, parameters ) ) ) {
-			physicalTableNames.add( new QualifiedTableName( catalog, schema, identifierHelper.toIdentifier( tableName ) ) );
+			physicalTableNames.add( new QualifiedTableName( catalog, schema, database.toIdentifier( tableName ) ) );
 		}
 	}
 

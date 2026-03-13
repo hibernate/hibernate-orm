@@ -85,7 +85,7 @@ public class OnDeleteOneToManyTest {
 		scope.getEntityManagerFactory().getSchemaManager().truncate();
 	}
 
-	@Entity
+	@Entity(name = "Parent")
 	static class Parent {
 		@Id
 		long id;
@@ -95,7 +95,7 @@ public class OnDeleteOneToManyTest {
 		Set<Child> children = new HashSet<>();
 	}
 
-	@Entity
+	@Entity(name = "Child")
 	static class Child {
 		@Id
 		long id;

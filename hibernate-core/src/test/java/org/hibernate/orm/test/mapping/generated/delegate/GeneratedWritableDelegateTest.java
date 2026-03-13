@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.mapping.generated.delegate;
 
 import org.hibernate.annotations.Generated;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.insert.AbstractReturningDelegate;
@@ -17,6 +18,7 @@ import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -40,6 +42,7 @@ import static org.hibernate.generator.EventType.UPDATE;
 } )
 @SessionFactory
 @RequiresDialect( value = PostgreSQLDialect.class, comment = "To write a trigger only once" )
+@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support triggers")
 @Jira( "https://hibernate.atlassian.net/browse/HHH-10921" )
 public class GeneratedWritableDelegateTest {
 	@Test

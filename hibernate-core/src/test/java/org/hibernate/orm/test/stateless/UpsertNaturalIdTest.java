@@ -61,7 +61,7 @@ class UpsertNaturalIdTest {
 			assertEquals("000", nat.code);
 		} );
 	}
-	@Entity
+	@Entity(name = "UpsertNatural")
 	static class Natural {
 		@Id long id;
 		@NaturalId String code;

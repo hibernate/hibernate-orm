@@ -11,12 +11,15 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsIdentityColumns.class )
 @Jpa(annotatedClasses = MoreIdClassMixedGenerationTests.Animal.class)
 class MoreIdClassMixedGenerationTests {
 	@Test void test(EntityManagerFactoryScope scope) {

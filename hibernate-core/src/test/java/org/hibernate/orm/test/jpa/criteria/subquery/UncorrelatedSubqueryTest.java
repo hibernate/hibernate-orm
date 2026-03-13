@@ -10,6 +10,7 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.orm.test.jpa.metamodel.Address;
 import org.hibernate.orm.test.jpa.metamodel.Alias;
 import org.hibernate.orm.test.jpa.metamodel.Country;
@@ -27,6 +28,7 @@ import org.hibernate.orm.test.jpa.metamodel.ShelfLife;
 import org.hibernate.orm.test.jpa.metamodel.Spouse;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -76,6 +78,7 @@ public class UncorrelatedSubqueryTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "ALL subqueries with operators other than <>/!= are not supported")
 	public void testEqualAll(EntityManagerFactoryScope scope) {
 		CriteriaBuilder builder = scope.getEntityManagerFactory().getCriteriaBuilder();
 		scope.inTransaction( entityManager -> {

@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.ast.internal.MultiKeyLoadHelper;
@@ -18,6 +19,7 @@ import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -70,6 +72,8 @@ class MultiNaturalIdLoadTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "Spanner doesn't guarantee that rows will be returned in same order as inserted order")
 	public void testBasicUnorderedMultiLoad(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
 		scope.inTransaction(

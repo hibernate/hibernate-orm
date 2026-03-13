@@ -15,9 +15,9 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.JdbcMetadataAccessStrategy;
 import org.hibernate.tool.schema.SourceType;
@@ -35,7 +35,6 @@ import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -50,8 +49,7 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 @JiraKey("HHH-17293")
 @BaseUnitTest
-@RequiresDialect(PostgreSQLDialect.class)
-@RequiresDialect(H2Dialect.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsIntervalSecondType.class )
 public class DurationValidationTest implements ExecutionOptions {
 	private StandardServiceRegistry ssr;
 	private MetadataImplementor metadata;

@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 
 import org.assertj.core.api.Assertions;
@@ -249,6 +250,7 @@ public class LiteralTests {
 					Object localDate = session.createQuery("select date 1999-07-23").getSingleResult();
 					assertThat( localDate, is( instanceOf(LocalDate.class) ) );
 					assertThat( localDate, equalTo(LocalDate.of(1999,7,23)) );
+
 					Object localTime = session.createQuery("select time 23:59").getSingleResult();
 					assertThat( localTime, is( instanceOf(LocalTime.class) ) );
 					assertThat( localTime, equalTo(LocalTime.of(23,59)) );
@@ -257,8 +259,15 @@ public class LiteralTests {
 							is( instanceOf(LocalDateTime.class) ) );
 					assertThat( session.createQuery( "select local date" ).getSingleResult(),
 							is( instanceOf(LocalDate.class) ) );
-					assertThat( session.createQuery( "select local time" ).getSingleResult(),
-							is( instanceOf(LocalTime.class) ) );
+
+					if (session.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect) {
+						// Spanner maps TIME to TIMESTAMP WITH TIME ZONE
+						assertThat(session.createQuery("select local time").getSingleResult(),
+								is(instanceOf(Timestamp.class)));
+					} else {
+						assertThat(session.createQuery("select local time").getSingleResult(),
+								is(instanceOf(LocalTime.class)));
+					}
 
 					assertThat( session.createQuery( "select instant" ).getSingleResult(),
 							is( instanceOf(Instant.class) ) );
@@ -267,6 +276,7 @@ public class LiteralTests {
 							is( instanceOf(Timestamp.class) ) );
 					assertThat( session.createQuery( "select current date" ).getSingleResult(),
 							is( instanceOf(Date.class) ) );
+
 					assertThat( session.createQuery( "select current time" ).getSingleResult(),
 							is( instanceOf(Time.class) ) );
 				}

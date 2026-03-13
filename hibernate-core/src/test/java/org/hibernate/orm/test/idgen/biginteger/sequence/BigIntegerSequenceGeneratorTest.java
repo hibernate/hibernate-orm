@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 @DomainModel(xmlMappings = "org/hibernate/orm/test/idgen/biginteger/sequence/Mapping.hbm.xml")
 @SessionFactory
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSequences.class )
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNumericPrimaryKey.class )
 public class BigIntegerSequenceGeneratorTest {
 
 	@Test

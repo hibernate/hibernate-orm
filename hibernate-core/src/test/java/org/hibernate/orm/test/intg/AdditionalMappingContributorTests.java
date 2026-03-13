@@ -32,6 +32,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
@@ -259,6 +260,7 @@ public class AdditionalMappingContributorTests {
 	}
 
 	@SuppressWarnings("unused")
+	@Table(name = "Entity5")
 	public static class Entity5 {
 		private Integer id;
 		private String name;

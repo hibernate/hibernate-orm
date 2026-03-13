@@ -177,6 +177,13 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsJdbcEscapes implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return !(dialect instanceof SpannerPostgreSQLDialect);
+		}
+	}
+
 	public static class SupportsNumericPrimaryKey implements DialectFeatureCheck {
 		@Override
 		public boolean apply(Dialect dialect) {
@@ -319,6 +326,7 @@ abstract public class DialectFeatureChecks {
 		public boolean apply(Dialect dialect) {
 			return !( dialect instanceof DB2Dialect
 					|| dialect instanceof DerbyDialect
+					|| dialect instanceof SpannerPostgreSQLDialect
 					|| dialect instanceof FirebirdDialect );
 		}
 	}
@@ -349,7 +357,15 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsLockTimeouts implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect.supportsLockTimeouts();
+			return dialect.getLockingSupport().getMetadata().getLockTimeoutType( Timeouts.ONE_SECOND ) != LockTimeoutType.NONE;
+		}
+	}
+
+	public static class SupportsNoWait implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getLockingSupport()
+					.getMetadata()
+					.getLockTimeoutType( Timeouts.NO_WAIT ) == LockTimeoutType.QUERY;
 		}
 	}
 
@@ -481,7 +497,7 @@ abstract public class DialectFeatureChecks {
 		public boolean apply(Dialect dialect) {
 			return dialect instanceof DB2Dialect
 				|| dialect instanceof OracleDialect
-				|| dialect instanceof PostgreSQLDialect
+				|| (dialect instanceof PostgreSQLDialect && !(dialect instanceof SpannerPostgreSQLDialect))
 				|| dialect instanceof SQLServerDialect
 				|| dialect instanceof DerbyDialect
 				|| dialect instanceof MySQLDialect && !(dialect instanceof TiDBDialect)
@@ -493,7 +509,7 @@ abstract public class DialectFeatureChecks {
 		public boolean apply(Dialect dialect) {
 			return dialect instanceof DB2Dialect
 				|| dialect instanceof OracleDialect
-				|| dialect instanceof PostgreSQLDialect
+				|| (dialect instanceof PostgreSQLDialect && !(dialect instanceof SpannerPostgreSQLDialect))
 				|| dialect instanceof SQLServerDialect;
 		}
 	}
@@ -526,7 +542,7 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsCharCodeConversion implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			// Derby doesn't support the `ASCII` or `CHR` functions
-			return !( dialect instanceof DerbyDialect );
+			return !( dialect instanceof DerbyDialect || dialect instanceof SpannerPostgreSQLDialect);
 		}
 	}
 
@@ -609,7 +625,6 @@ abstract public class DialectFeatureChecks {
 		public boolean apply(Dialect dialect) {
 			if (dialect instanceof DerbyDialect
 				|| dialect instanceof FirebirdDialect
-				|| dialect instanceof SpannerPostgreSQLDialect
 				|| dialect instanceof InformixDialect) {
 				return false;
 			}
@@ -718,13 +733,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsMedian implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return !( dialect instanceof MySQLDialect && !(dialect instanceof MariaDBDialect)
-					|| dialect instanceof SpannerDialect
-					|| dialect instanceof SybaseDialect
-					|| dialect instanceof DerbyDialect
-					|| dialect instanceof FirebirdDialect
-					|| dialect instanceof InformixDialect
-					|| dialect instanceof DB2Dialect db2 && db2.getDB2Version().isBefore( 11 ) );
+			return definesFunction( dialect, "median" );
 		}
 	}
 
@@ -1051,6 +1060,18 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsArrayComparison implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return !(dialect instanceof SpannerPostgreSQLDialect);
+		}
+	}
+
+	public static class SupportsTableWithoutPrimaryKey implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return !(dialect instanceof SpannerPostgreSQLDialect || dialect instanceof SpannerDialect);
+		}
+	}
+
+	public static class SupportsVarSampFunction implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "var_samp" );
 		}
 	}
 

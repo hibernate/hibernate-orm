@@ -157,6 +157,7 @@ public class TreatJoinTest {
 					cb.equal(
 							treatedRoot.<Book, Author>join("author").<String>get("name"),
 							"Andrea Camilleri"));
+			criteria.orderBy( cb.asc( root.get( "id" ) ) );
 			final List<Item> resultList = entityManager.createQuery( criteria.select( treatedRoot ) ).getResultList();
 			final Item item = resultList.get( 0 );
 			assertThat( item, instanceOf(Book.class) );

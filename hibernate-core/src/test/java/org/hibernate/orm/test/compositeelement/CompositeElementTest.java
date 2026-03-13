@@ -7,9 +7,11 @@ package org.hibernate.orm.test.compositeelement;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -22,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		xmlMappings = "org/hibernate/orm/test/compositeelement/Parent.hbm.xml"
 )
 @SessionFactory
+@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support JDBC escapes")
 public class CompositeElementTest {
 
 	@AfterEach

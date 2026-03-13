@@ -7,6 +7,7 @@ package org.hibernate.orm.test.sql;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Tuple;
 import org.hibernate.Session;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -28,6 +29,7 @@ import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.StandardBasicTypes;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -442,6 +444,8 @@ public class SQLTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "Spanner fails with ambiguous ID columns")
 	public void test_sql_jpa_multi_entity_query_example(EntityManagerFactoryScope scope) {
 		assertThrows( NonUniqueDiscoveredSqlAliasException.class, () -> scope.inTransaction( entityManager -> {
 			//tag::sql-jpa-multi-entity-query-example[]
@@ -456,6 +460,8 @@ public class SQLTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "Spanner fails with ambiguous ID columns")
 	public void test_sql_hibernate_multi_entity_query_example(EntityManagerFactoryScope scope) {
 		try {
 			scope.inTransaction( entityManager -> {
@@ -520,6 +526,8 @@ public class SQLTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "Spanner fails with ambiguous ID columns")
 	public void test_sql_hibernate_inheritance_query_example(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			Session session = entityManager.unwrap( Session.class );

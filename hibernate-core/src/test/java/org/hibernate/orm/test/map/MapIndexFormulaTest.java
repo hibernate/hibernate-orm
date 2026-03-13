@@ -9,7 +9,9 @@ import java.util.Map;
 
 import org.hibernate.dialect.MariaDBDialect;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -53,6 +55,7 @@ public class MapIndexFormulaTest {
 
 	@Test
 	@SkipForDialect( dialectClass = MariaDBDialect.class, reason = "HHH-18433")
+//	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsPrimaryKeyUpdate.class )
 	public void testIndexFormulaMap(SessionFactoryScope scope) {
 		User turin = new User( "turin", "tiger" );
 		scope.inTransaction(

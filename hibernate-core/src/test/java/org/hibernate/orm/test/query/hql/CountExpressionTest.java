@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -119,6 +120,8 @@ public class CountExpressionTest {
 	@JiraKey(value = "HHH-11042")
 	@SkipForDialect(dialectClass = InformixDialect.class,
 			reason = "Informix allows only one column in count(distinct)")
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "Spanner suppports only one column in count(distinct)")
 	public void testCountDistinctTupleSanity(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			// A simple concatenation of tuple arguments would produce a distinct count of 1 in this case

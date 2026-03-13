@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import org.hibernate.community.dialect.DerbyDialect;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -20,12 +21,15 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SessionFactory
 @DomainModel(annotatedClasses = InsertConflictOnConstraintTest.Constrained.class)
+@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
+		reason = "ON CONFLICT DO UPDATE with constraint name is not supported")
 public class InsertConflictOnConstraintTest {
 
 	@RequiresDialect(PostgreSQLDialect.class)

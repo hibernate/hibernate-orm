@@ -13,12 +13,14 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -53,6 +55,7 @@ public class TruncConvertedDatetimeAttributeTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Emulator bug with date_trunc")
 	public void testTruncSelection(SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			assertThat( session.createQuery(
@@ -67,6 +70,7 @@ public class TruncConvertedDatetimeAttributeTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimestampComparison.class)
 	public void testTruncComparison(SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			assertThat( session.createQuery(

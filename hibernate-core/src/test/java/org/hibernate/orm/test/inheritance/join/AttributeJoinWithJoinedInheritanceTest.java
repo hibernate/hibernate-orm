@@ -68,7 +68,7 @@ public class AttributeJoinWithJoinedInheritanceTest {
 		scope.inTransaction( s -> {
 			final List<Integer> resultList = s.createQuery(
 					"select ce.id " +
-							"from RootOne r left join r.child ce ",
+							"from RootOne r left join r.child ce order by ce.id",
 					Integer.class
 			).getResultList();
 			assertEquals( 2, resultList.size() );

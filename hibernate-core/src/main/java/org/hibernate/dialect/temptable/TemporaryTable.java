@@ -358,6 +358,7 @@ public class TemporaryTable implements Exportable, Contributable {
 						// We add a special row number column that we can use to identify and join rows
 						final BasicType<Integer> integerBasicType = typeConfiguration.getBasicTypeForJavaType( Integer.class );
 						final String rowNumberType;
+						final boolean rowNumberIdentity;
 						if ( dialect.supportsWindowFunctions() ) {
 							rowNumberType = typeConfiguration.getDdlTypeRegistry().getTypeName(
 									integerBasicType.getJdbcType().getDdlTypeCode(),
@@ -370,6 +371,7 @@ public class TemporaryTable implements Exportable, Contributable {
 									),
 									integerBasicType
 							);
+							rowNumberIdentity = false;
 						}
 						else if ( dialect.getIdentityColumnSupport().supportsIdentityColumns() ) {
 							rowNumberType = typeConfiguration.getDdlTypeRegistry().getTypeName(
@@ -384,6 +386,7 @@ public class TemporaryTable implements Exportable, Contributable {
 									integerBasicType
 							) + " " + dialect.getIdentityColumnSupport()
 													.getIdentityColumnString( integerBasicType.getJdbcType().getDdlTypeCode() );
+							rowNumberIdentity = true;
 						}
 						else {
 							CORE_LOGGER.multiTableInsertNotAvailable( persistentClass.getEntityName() );
@@ -398,6 +401,7 @@ public class TemporaryTable implements Exportable, Contributable {
 									),
 									integerBasicType
 							);
+							rowNumberIdentity = false;
 						}
 						columns.add(
 								new TemporaryTableColumn(
@@ -406,7 +410,7 @@ public class TemporaryTable implements Exportable, Contributable {
 										integerBasicType,
 										rowNumberType,
 										Size.nil(),
-										false,
+										rowNumberIdentity,
 										true
 								)
 						);

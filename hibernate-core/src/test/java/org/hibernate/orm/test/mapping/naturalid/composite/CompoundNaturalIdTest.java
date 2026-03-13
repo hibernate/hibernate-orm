@@ -7,6 +7,7 @@ package org.hibernate.orm.test.mapping.naturalid.composite;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 
@@ -47,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		dialectClass = CockroachDialect.class,
 		reason = "On CockroachDB the difference between simple and compound natural id is very high"
 )
+@SkipForDialect( dialectClass = SpannerDialect.class, reason = "temporary disable, taking too long to complete")
 public class CompoundNaturalIdTest {
 
 	private static final int OBJECT_NUMBER = 2000;

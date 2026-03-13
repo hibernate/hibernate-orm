@@ -117,13 +117,7 @@ public class SingleTableNullNonOptionalSecondaryTableTest extends AbstractNonOpt
 
 	@AfterEach
 	public void cleanupData() {
-		doInJPA(
-				this::entityManagerFactory, entityManager -> {
-					entityManager.createNativeQuery( "delete from Details" ).executeUpdate();
-					entityManager.createNativeQuery( "delete from MoreDetails" ).executeUpdate();
-					entityManager.createNativeQuery( "delete from AnEntity" ).executeUpdate();
-				}
-		);
+		entityManagerFactory().unwrap( org.hibernate.SessionFactory.class ).getSchemaManager().truncate();
 	}
 
 	@Override

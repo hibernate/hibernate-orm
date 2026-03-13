@@ -9,17 +9,19 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import org.hibernate.internal.CoreMessageLogger;
-import org.jboss.logging.Logger;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyKeyJavaClass;
+import org.hibernate.internal.util.EntityPrinter;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.logger.LogLevelContext.withLevel;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 
 
 /**
@@ -38,9 +40,15 @@ class AnyTypeFlushToLoggableStringTest {
 
 	@Test
 	void testLogEntityWithAnyKeyJavaClassAsString(EntityManagerFactoryScope scope) {
-		try (
-				var l1 = withLevel( CoreMessageLogger.NAME, Logger.Level.DEBUG );
-		) {
+		LoggerContext context = (LoggerContext) LogManager.getContext( false );
+		LoggerConfig coreLoggerConfig = context.getConfiguration()
+				.getLoggerConfig( EntityPrinter.class.getName() );
+
+		Level oldLevel = coreLoggerConfig.getLevel();
+
+		coreLoggerConfig.setLevel( Level.DEBUG );
+		context.updateLoggers();
+		try {
 			scope.inTransaction(
 					entityManager -> {
 						Book book = new Book();
@@ -52,6 +60,10 @@ class AnyTypeFlushToLoggableStringTest {
 						entityManager.clear();
 					}
 			);
+		}
+		finally {
+			coreLoggerConfig.setLevel( oldLevel );
+			context.updateLoggers();
 		}
 	}
 

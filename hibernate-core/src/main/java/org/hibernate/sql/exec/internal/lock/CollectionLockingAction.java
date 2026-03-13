@@ -41,18 +41,14 @@ import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
  */
 public class CollectionLockingAction implements PostAction {
 	// Used by Hibernate Reactive
-	protected final LoadedValuesCollectorImpl loadedValuesCollector;
-	// Used by Hibernate Reactive
 	protected final LockMode lockMode;
 	// Used by Hibernate Reactive
 	protected final Timeout lockTimeout;
 
 	// Used by Hibernate Reactive
 	protected CollectionLockingAction(
-			LoadedValuesCollectorImpl loadedValuesCollector,
 			LockMode lockMode,
 			Timeout lockTimeout) {
-		this.loadedValuesCollector = loadedValuesCollector;
 		this.lockMode = lockMode;
 		this.lockTimeout = lockTimeout;
 	}
@@ -63,15 +59,12 @@ public class CollectionLockingAction implements PostAction {
 			JdbcSelectWithActionsBuilder jdbcSelectBuilder) {
 		assert lockOptions.getScope() == Locking.Scope.INCLUDE_COLLECTIONS;
 
-		final var loadedValuesCollector = resolveLoadedValuesCollector( lockingTarget );
-
 		// NOTE: we need to set this separately so that it can get incorporated into
 		// the JdbcValuesSourceProcessingState for proper callbacks
-		jdbcSelectBuilder.setLoadedValuesCollector( loadedValuesCollector );
+		jdbcSelectBuilder.setLoadedValuesCollector( () -> resolveLoadedValuesCollector( lockingTarget ) );
 
 		// additionally, add a post-action which uses the collected values.
 		jdbcSelectBuilder.appendPostAction( new CollectionLockingAction(
-				loadedValuesCollector,
 				lockOptions.getLockMode(),
 				lockOptions.getTimeout()
 		) );
@@ -81,12 +74,13 @@ public class CollectionLockingAction implements PostAction {
 	public void performPostAction(
 			StatementAccess jdbcStatementAccess,
 			Connection jdbcConnection,
-			ExecutionContext executionContext) {
-		performPostAction( executionContext );
+			ExecutionContext executionContext,
+			LoadedValuesCollector loadedValuesCollector) {
+		performPostAction( executionContext, loadedValuesCollector );
 	}
 
 	// Used by Hibernate Reactive
-	protected void performPostAction(ExecutionContext executionContext) {
+	protected void performPostAction(ExecutionContext executionContext, LoadedValuesCollector loadedValuesCollector) {
 		LockingHelper.logLoadedValues( loadedValuesCollector );
 
 		final var session = executionContext.getSession();
@@ -182,16 +176,6 @@ public class CollectionLockingAction implements PostAction {
 				collectionsToLock = new ArrayList<>();
 			}
 			collectionsToLock.add( new LoadedCollectionRegistration( navigablePath, collectionDescriptor, collectionKey ) );
-		}
-
-		@Override
-		public void clear() {
-			if ( entitiesToLock != null ) {
-				entitiesToLock.clear();
-			}
-			if ( collectionsToLock != null ) {
-				collectionsToLock.clear();
-			}
 		}
 
 		@Override

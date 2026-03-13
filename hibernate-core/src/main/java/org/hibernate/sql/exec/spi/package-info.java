@@ -17,7 +17,7 @@
  * Also provides support for pessimistic locking as part of
  * {@linkplain org.hibernate.sql.exec.spi.JdbcSelect JDBC select} handling.  For details,
  * see {@linkplain org.hibernate.sql.exec.internal.JdbcSelectWithActions},
- * {@linkplain org.hibernate.sql.exec.spi.JdbcSelect#getLoadedValuesCollector()},
+ * {@linkplain org.hibernate.sql.exec.spi.JdbcSelect#createLoadedValuesCollector()},
  * {@linkplain org.hibernate.sql.exec.internal.lock.FollowOnLockingAction}
  * and friends.
  */

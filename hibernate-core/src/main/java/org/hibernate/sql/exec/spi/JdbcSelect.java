@@ -26,12 +26,11 @@ public interface JdbcSelect extends PrimaryOperation, CacheableJdbcOperation {
 	int getMaxRows();
 
 	/**
-	 * Access to a collector of values loaded to be applied during the
+	 * Creates a collector of values loaded to be applied during the
 	 * processing of the selection's results.
 	 * May be {@code null}.
 	 */
-	@Nullable
-	LoadedValuesCollector getLoadedValuesCollector();
+	@Nullable LoadedValuesCollector createLoadedValuesCollector();
 
 	/**
 	 * Perform any pre-actions.
@@ -45,7 +44,6 @@ public interface JdbcSelect extends PrimaryOperation, CacheableJdbcOperation {
 	 * @param executionContext Access to contextual information useful while executing.
 	 */
 	void performPreActions(StatementAccess jdbcStatementAccess, Connection jdbcConnection, ExecutionContext executionContext);	/**
-
 	 * Perform any post-actions.
 	 * <p>
 	 * Generally the post-actions should use the passed {@code jdbcStatementAccess} to interact with the
@@ -56,11 +54,13 @@ public interface JdbcSelect extends PrimaryOperation, CacheableJdbcOperation {
 	 * @param jdbcStatementAccess Access to a JDBC Statement object which may be used to perform the action.
 	 * @param jdbcConnection The JDBC Connection.
 	 * @param executionContext Access to contextual information useful while executing.
+	 * @param loadedValuesCollector Access to the collector of values loaded as part of the primary operation.  This is useful for post-actions that need to know what was loaded in order to perform their work.
 	 */
-	void performPostAction(
+	void performPostActions(
 			boolean succeeded,
 			StatementAccess jdbcStatementAccess,
 			Connection jdbcConnection,
-			ExecutionContext executionContext);
+			ExecutionContext executionContext,
+			LoadedValuesCollector loadedValuesCollector);
 
 }

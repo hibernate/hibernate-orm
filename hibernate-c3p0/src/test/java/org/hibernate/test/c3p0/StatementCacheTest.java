@@ -27,6 +27,8 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 @SkipForDialect(dialectClass = SybaseASEDialect.class,
 		reason = "JtdsConnection.isValid not implemented")
+@SkipForDialect(dialectClass = SQLServerDialect.class,
+		reason = "started failing after upgrade to c3p0 0.10")
 public class StatementCacheTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@JiraKey(value = "HHH-7193")

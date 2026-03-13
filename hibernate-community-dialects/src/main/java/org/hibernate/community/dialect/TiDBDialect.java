@@ -33,6 +33,10 @@ import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
+import static java.lang.Integer.parseInt;
+
+import static org.hibernate.internal.util.StringHelper.split;
+
 import static org.hibernate.community.dialect.lock.internal.TiDBLockingSupport.TIDB_LOCKING_SUPPORT;
 
 /**
@@ -41,14 +45,13 @@ import static org.hibernate.community.dialect.lock.internal.TiDBLockingSupport.T
  * @author Cong Wang
  */
 public class TiDBDialect extends MySQLDialect {
-
-	// 8.0.11 is the first MySQL 8.0 GA release.
-	// See also: https://docs.pingcap.com/tidb/stable/mysql-compatibility/
-	private static final DatabaseVersion VERSION80 = DatabaseVersion.make( 8, 0, 11 );
-
 	// See also: https://www.pingcap.com/tidb-release-support-policy/
+	//
+	// Note this is the minium TiDB version, not the MySQL version TiDB identifies as.
 	// v5.4 EOL date: 15 Feb 2026
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 5, 4 );
+
+	private final DatabaseVersion mySQLVersion;
 
 	public TiDBDialect() {
 		this( MINIMUM_VERSION );
@@ -56,17 +59,48 @@ public class TiDBDialect extends MySQLDialect {
 
 	public TiDBDialect(DatabaseVersion version) {
 		super( version );
+		this.mySQLVersion = DatabaseVersion.make( 8, 0, 11 );
 	}
 
 	public TiDBDialect(DialectResolutionInfo info) {
-		super( createVersion( info, MINIMUM_VERSION ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
+		super( fetchDataBaseVersion( info ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
 		registerKeywords( info );
+		this.mySQLVersion = createVersion( info, MINIMUM_VERSION );
+	}
+
+
+	@Override
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		return fetchDataBaseVersion( info );
+	}
+
+
+	private static DatabaseVersion fetchDataBaseVersion(DialectResolutionInfo info) {
+		final String versionStringTiDB = info.getDatabaseVersion();
+		if ( versionStringTiDB != null ) {
+			// [8, 0, 11, TiDB, v8, 5, 4]
+			final String[] components = split( ".-", versionStringTiDB );
+			if ( components.length >= 7 ) {
+				try {
+					final int majorVersion = parseInt( components[4].substring(1) ); // v8 -> 8
+					final int minorVersion = parseInt( components[5] );
+					final int patchLevel = parseInt( components[6] );
+					return DatabaseVersion.make( majorVersion, minorVersion, patchLevel );
+				}
+				catch (NumberFormatException ex) {
+					// Ignore
+				}
+			}
+		}
+		return MINIMUM_VERSION;
 	}
 
 	@Override
 	public DatabaseVersion getMySQLVersion() {
-		// For simplicity’s sake, configure MySQL 8.0 compatibility
-		return VERSION80;
+		if (mySQLVersion == null) {
+			return DatabaseVersion.make( 8, 0, 11 );
+		}
+		return mySQLVersion;
 	}
 
 	@Override
@@ -77,25 +111,32 @@ public class TiDBDialect extends MySQLDialect {
 	@Override
 	protected void registerDefaultKeywords() {
 		super.registerDefaultKeywords();
-		// TiDB implemented 'Window Functions' of MySQL 8, so the following keywords are reserved.
-		registerKeyword( "CUME_DIST" );
-		registerKeyword( "DENSE_RANK" );
-		registerKeyword( "EXCEPT" );
-		registerKeyword( "FIRST_VALUE" );
-		registerKeyword( "GROUPS" );
-		registerKeyword( "LAG" );
-		registerKeyword( "LAST_VALUE" );
-		registerKeyword( "LEAD" );
-		registerKeyword( "NTH_VALUE" );
-		registerKeyword( "NTILE" );
-		registerKeyword( "PERCENT_RANK" );
-		registerKeyword( "RANK" );
-		registerKeyword( "ROW_NUMBER" );
+
+		if ( getMySQLVersion().isBefore( 8, 0 ) ) {
+			// TiDB implemented 'Window Functions' of MySQL 8, even in TiDB versions that identify as 5.7
+			// so the following keywords are reserved.
+			registerKeyword( "CUME_DIST" );
+			registerKeyword( "DENSE_RANK" );
+			registerKeyword( "EXCEPT" );
+			registerKeyword( "FIRST_VALUE" );
+			registerKeyword( "GROUPS" );
+			registerKeyword( "LAG" );
+			registerKeyword( "LAST_VALUE" );
+			registerKeyword( "LEAD" );
+			registerKeyword( "NTH_VALUE" );
+			registerKeyword( "NTILE" );
+			registerKeyword( "PERCENT_RANK" );
+			registerKeyword( "RANK" );
+			registerKeyword( "ROW_NUMBER" );
+		}
 	}
 
 	@Override
 	public boolean supportsCascadeDelete() {
-		return false;
+		// FK including cascade is supported as experimental feature since TiDB v6.6.0
+		// FK including cascade is supported as GA feature since TiDB v8.5.0
+		// https://docs.pingcap.com/tidb/stable/foreign-key/
+		return getVersion().isSameOrAfter( 6, 6 );
 	}
 
 	@Override
@@ -146,7 +187,7 @@ public class TiDBDialect extends MySQLDialect {
 
 	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return getVersion().isSameOrAfter( 5, 7 );
+		return true;
 	}
 
 	@Override

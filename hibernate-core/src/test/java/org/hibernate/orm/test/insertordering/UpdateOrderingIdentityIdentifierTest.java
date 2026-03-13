@@ -131,10 +131,10 @@ public class UpdateOrderingIdentityIdentifierTest {
 
 		@Id
 		@GeneratedValue(generator = "AnimalSeq")
-		@GenericGenerator(name = "AniamlSeq", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
+		@GenericGenerator(name = "AnimalSeq", strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator", parameters = {
 				@Parameter(name = "sequence_name", value = "ANIMAL_SEQ"),
 				@Parameter(name = "optimizer", value = "pooled"),
-				@Parameter(name = "increment_size", value = "50")
+				@Parameter(name = "increment_size", value = "150")
 		})
 		public Long getId() {
 			return id;

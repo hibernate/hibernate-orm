@@ -330,12 +330,9 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			return "<uninitialized>";
 		}
 
-		final String entityName = factory.bestGuessEntityName(value);
-		final var descriptor =
-				entityName == null
-						? null
-						: factory.getMappingMetamodel().getEntityDescriptor( entityName );
-		return infoString( descriptor, value, factory );
+		final var persister = guessEntityPersister( value, factory );
+		final var id = persister == null ? null : persister.getIdentifier( value );
+		return infoString( persister, id, factory );
 	}
 
 	@Override

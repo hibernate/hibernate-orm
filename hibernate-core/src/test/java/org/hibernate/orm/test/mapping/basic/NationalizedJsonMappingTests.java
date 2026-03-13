@@ -33,8 +33,6 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNationalizedData.class)
-@RequiresDialectFeature(feature = DialectFeatureChecks.IsJtds.class, reverse = true,
-		comment = "jTDS driver does not support setNString")
 public class NationalizedJsonMappingTests {
 
 	private static final String UNICODE_JSON = "{\"name\": \"🦑 Unicode Test 🦑\"}";

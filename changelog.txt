@@ -1,6 +1,40 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.3.0.Final (March 16, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/37673
+
+
+** Bug
+    * HHH-20253 ClassCastException when using hibernate-enhance-maven-plugin plugin
+    * HHH-20229 logFlushResults ko with a @AnyKeyJavaClass(String.class)
+    * HHH-20224  Exception when calling treat() twice
+    * HHH-20212 Jakarta Data Repository implementation with custom session getter does not compile
+    * HHH-20200 Select query returns soft deleted entries with Inheritance.TABLE_PER_CLASS
+    * HHH-20199 Regression Hibernate 7: Using an AdditionalMappingContributor leads to a rescan of Entities that breaks when @Converters are present 
+    * HHH-20187 NPE in BeanValidationEventListener with StatelessSession
+    * HHH-20176 Native Query cache causing ArrayIndexOutOfBoundsException with extra columns
+    * HHH-20165 Hibernate processor: Panache Next generated repository name conflicts
+    * HHH-20164 Hibernate processor: @Delete methods not working outside of Jakarta Data repository
+    * HHH-20163 Hibernate processor: nested types are visited twice
+    * HHH-20162 MySQL timeout based on innodb_lock_timeout has incorrect units
+    * HHH-20151 Metamodel geneartor: allow implicit repositories for Panache Next
+    * HHH-20149 HQL docs have outdated information about JPQL regarding optional select clause
+    * HHH-20137 HbmXmlTransformer does not create <sql-restriction> for Element collections
+    * HHH-20119 Values return by Enum Converter are not escaped in CREATE TABLE query
+    * HHH-20065 Subsequent StatelessSession#insertMultiple calls lead to pending batches
+    * HHH-20010 Infinite loop with nested embeddable
+    * HHH-19917 Bytecode-enhanced dirty tracking fails for mixed access properties
+    * HHH-9499 MappingException when JOINED Inheritance and bidirectional references
+
+** Improvement
+    * HHH-20115 Pass a ROOT locale to loggers to avoid unnecessary class lookups
+
+** Sub-task
+    * HHH-20128 Configure Locking Strategy, CTE, Temporary Tables
+
 Changes in 7.3.0.CR2 (February 03, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

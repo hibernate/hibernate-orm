@@ -27,6 +27,7 @@ import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.DynamicType.Unloaded;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.dynamic.scaffold.TypeValidation;
+import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
@@ -74,7 +75,14 @@ public final class ByteBuddyState {
 	}
 
 	ByteBuddyState(ClassFileVersion classFileVersion) {
-		byteBuddy = new ByteBuddy( classFileVersion ).with( TypeValidation.DISABLED );
+		byteBuddy = new ByteBuddy( classFileVersion )
+				.with( TypeValidation.DISABLED )
+				// we use a fixed suffix to make sure our builds are reproducible
+				// ByteBuddy uses a random suffix by default to be extremely safe
+				// in case the class is instrumented multiple times
+				// but in our case, we can use a common suffix affected to Hibernate ORM
+				// this change affects cached accessors and field values
+				.with( new Implementation.Context.Default.Factory.WithFixedSuffix( "hibernate" ) );
 		proxyCache = new TypeCache<>( TypeCache.Sort.WEAK );
 		basicProxyCache = new TypeCache<>( TypeCache.Sort.WEAK );
 	}

@@ -17,7 +17,7 @@
 
 import org.hibernate.jenkins.pipeline.helpers.version.Version
 
-env.PROJECT = "HBX"
+env.PROJECT = "tools"
 def RELEASE_ON_SCHEDULE = false // Set to `true` *only* on branches where you want a scheduled release.
 
 // Avoid running the pipeline on branch indexing
@@ -98,7 +98,7 @@ pipeline {
 					print "INFO: params.RELEASE_DRY_RUN? = ${params.RELEASE_DRY_RUN}"
 
 					checkoutReleaseScripts()
-
+					def derivedDryRun = params.RELEASE_DRY_RUN
 					def currentVersion = Version.parseDevelopmentVersion( sh(
 							script: ".release/scripts/determine-current-version.sh ${env.PROJECT}",
 							returnStdout: true
@@ -126,11 +126,11 @@ pipeline {
 						echo "Release was triggered automatically"
 
 						def ormVersion = Version.parseReleaseVersion( sh(
-								script: "./mvnw help:evaluate -Dexpression=hibernate-orm.version -q -DforceStdout",
+								script: ".release/scripts/determine-property-value.sh hibernate-orm.version",
 								returnStdout: true
 						).trim() )
 
-						if (!ormVersion.unqualified().equals(currentVersion.unqualified())) {
+						if (ormVersion.unqualified != currentVersion.unqualified) {
 							print "INFO: Build skipped because the Hibernate ORM update was not detected in the current sources. Hibernate ORM version: ${ormVersion}; Hibernate Tools version: ${currentVersion}."
 							currentBuild.getRawBuild().getExecutor().interrupt(Result.NOT_BUILT)
 							sleep(1)   // Interrupt is not blocking and does not take effect immediately.
@@ -141,7 +141,13 @@ pipeline {
 								script: ".release/scripts/determine-release-version.sh ${currentVersion}",
 								returnStdout: true
 						).trim() )
+
+						derivedDryRun = false
 					}
+					env.JRELEASER_DRY_RUN = derivedDryRun
+					env.ADDITIONAL_SCRIPT_ARGS = "${derivedDryRun ? ' -d ' : ''}"
+					echo "Derived dry run: ${derivedDryRun}"
+					echo "Additional script arguments: ${env.ADDITIONAL_SCRIPT_ARGS}"
 					echo "Release version: ${releaseVersion}"
 
 					if ( !params.DEVELOPMENT_VERSION ) {
@@ -157,11 +163,10 @@ pipeline {
 
 					env.RELEASE_VERSION = releaseVersion.toString()
 					env.DEVELOPMENT_VERSION = developmentVersion.toString()
-					env.JRELEASER_DRY_RUN = params.RELEASE_DRY_RUN
 
 					echo "Performing full release for version ${releaseVersion.toString()}"
 
-					withMaven(mavenSettingsConfig: params.RELEASE_DRY_RUN ? null : 'ci-hibernate.deploy.settings.maven',
+					withMaven(mavenSettingsConfig: derivedDryRun ? null : 'ci-hibernate.deploy.settings.maven',
 							mavenLocalRepo: env.WORKSPACE_TMP + '/.m2repository') {
 						configFileProvider([configFile(fileId: 'release.config.ssh', targetLocation: env.HOME + '/.ssh/config'),
 											configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: env.HOME + '/.ssh/known_hosts')]) {
@@ -174,7 +179,7 @@ pipeline {
 								sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate-ci.frs.sourceforge.net']) {
 									sh 'cat $HOME/.ssh/config'
 									sh """
-										bash -xe .release/scripts/release.sh -j ${params.RELEASE_DRY_RUN ? '-d' : ''} \
+										bash -xe .release/scripts/release.sh -j ${env.ADDITIONAL_SCRIPT_ARGS} \
 												tools ${releaseVersion.toString()} ${developmentVersion.toString()}
 									"""
 
@@ -186,8 +191,13 @@ pipeline {
 									sh "sed -i \"s/\\(id 'org.hibernate.tool.hibernate-tools-gradle' version '\\)[^\\']*/\\1${releaseVersion.toString()}/\" gradle/docs/examples/5-minute-tutorial/app/build.gradle"
 
 									sh "git add ant/docs/5-minute-tutorial.md ant/docs/reference-guide.md gradle/docs/5-minute-tutorial.md gradle/docs/examples/5-minute-tutorial/app/build.gradle"
+									sh "git status"
 									sh "git commit -m \"[Jenkins release job] Update documentation versions by release build ${releaseVersion.toString()}\""
-									sh "git push origin HEAD:${env.GIT_BRANCH}"
+									if (!derivedDryRun) {
+										sh "git push origin HEAD:${env.GIT_BRANCH}"
+									} else {
+										echo "DRY RUN: Would excute 'git push origin HEAD:${env.GIT_BRANCH}' during a regular build."
+									}
 								}
 							}
 						}
@@ -202,7 +212,7 @@ pipeline {
 					checkoutReleaseScripts()
 
 					withCredentials([string(credentialsId: 'release-webhook.hibernate.atlassian.net', variable: 'JIRA_WEBHOOK_SECRET')]) {
-						sh ".release/scripts/jira-release.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION}"
+						sh ".release/scripts/jira-release.sh ${env.ADDITIONAL_SCRIPT_ARGS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION}"
 					}
 				}
 			}

@@ -123,6 +123,11 @@ test.dependsOn quarkusHrPanacheTestTask
 test.dependsOn quarkusOrmPanacheTestTask
 test.dependsOn jakartaDataTestTask
 
+// work-around for Gradle bug: https://github.com/gradle/gradle/issues/37146
+tasks.quarkusHrPanacheTest.dependsOn ':hibernate-graalvm:jar'
+tasks.quarkusOrmPanacheTest.dependsOn ':hibernate-graalvm:jar'
+tasks.jakartaDataTest.dependsOn ':hibernate-graalvm:jar'
+
 tasks.sourcesJar.dependsOn ':hibernate-core:generateHqlParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlScriptParser'
 

@@ -444,10 +444,10 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	public String generatedAs(String generatedAs) {
+	public String generatedAs(String generatedAs, boolean stored, boolean hidden) {
 		return generatedAs.startsWith( "row " )
 				? " generated always as " + generatedAs
-				: super.generatedAs( generatedAs );
+				: super.generatedAs( generatedAs, stored, hidden );
 	}
 
 	@Override

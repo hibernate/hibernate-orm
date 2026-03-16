@@ -32,7 +32,27 @@ public @interface GeneratedColumn {
 	/**
 	 * The expression to include in the generated DDL.
 	 *
-	 * @return the SQL expression that is evaluated to generate the column value.
+	 * @return the SQL expression that is evaluated to
+	 *         generate the column value.
 	 */
 	String value();
+
+	/**
+	 * Specifies whether the generated column should
+	 * be stored or virtual. This preference is ignored
+	 * if the database does not support the specified
+	 * option.
+	 *
+	 * @since 7.4
+	 */
+	boolean stored() default true;
+
+	/**
+	 * Specifies whether the generated column should
+	 * be hidden. This preference is ignored if the
+	 * database does not support the specified option.
+	 *
+	 * @since 7.4
+	 */
+	boolean hidden() default false;
 }

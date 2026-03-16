@@ -84,6 +84,8 @@ public class AnnotatedColumn {
 
 	private String defaultValue;
 	private String generatedAs;
+	private boolean generatedAsStored = true;
+	private boolean generatedAsHidden;
 
 	private final List<CheckConstraint> checkConstraints = new ArrayList<>();
 
@@ -227,6 +229,14 @@ public class AnnotatedColumn {
 
 	private void setGeneratedAs(String as) {
 		this.generatedAs = as;
+		this.generatedAsStored = true;
+		this.generatedAsHidden = false;
+	}
+
+	private void setGeneratedAs(String as, boolean stored, boolean hidden) {
+		this.generatedAs = as;
+		this.generatedAsStored = stored;
+		this.generatedAsHidden = hidden;
 	}
 
 	public AnnotatedColumn() {
@@ -264,6 +274,8 @@ public class AnnotatedColumn {
 			}
 			if ( generatedAs != null ) {
 				mappingColumn.setGeneratedAs( generatedAs );
+				mappingColumn.setStored( generatedAsStored );
+				mappingColumn.setHidden( generatedAsHidden );
 			}
 			if ( logicalColumnName != null ) {
 				BOOT_LOGGER.bindingColumn( logicalColumnName );
@@ -941,17 +953,17 @@ public class AnnotatedColumn {
 					getBuildingContext()
 			);
 			if ( generatedColumn != null ) {
-				if (length!=1) {
-					throw new AnnotationException("'@GeneratedColumn' may only be applied to single-column mappings but '"
+				if ( length != 1 ) {
+					throw new AnnotationException( "'@GeneratedColumn' may only be applied to single-column mappings but '"
 							+ memberDetails.getName() + "' maps to " + length + " columns" );
 				}
-				setGeneratedAs( generatedColumn.value() );
+				setGeneratedAs( generatedColumn.value(), generatedColumn.stored(), generatedColumn.hidden() );
 			}
 		}
 		else {
 			BOOT_LOGGER.couldNotPerformGeneratedColumnLookup();
 		}
-}
+	}
 
 	private void applyColumnCheckConstraint(jakarta.persistence.Column column) {
 		applyCheckConstraints( column.check() );

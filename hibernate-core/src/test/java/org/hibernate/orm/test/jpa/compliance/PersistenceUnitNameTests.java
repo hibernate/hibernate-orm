@@ -9,8 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.boot.archive.scan.internal.DisabledScanner;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -71,7 +69,6 @@ public class PersistenceUnitNameTests {
 		settings.put( JdbcSettings.USER, allSettings.get( JdbcSettings.USER ) );
 		settings.put( JdbcSettings.PASS, allSettings.get( JdbcSettings.PASS ) );
 		settings.put( JdbcSettings.URL, allSettings.get( JdbcSettings.URL ) );
-		settings.put( AvailableSettings.SCANNER, DisabledScanner.class );
 		return settings;
 	}
 }

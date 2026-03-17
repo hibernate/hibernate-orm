@@ -5,8 +5,6 @@
 package org.hibernate.testing.boot;
 
 import org.hibernate.boot.CacheRegionDefinition;
-import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
-import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -124,18 +122,8 @@ public class BootstrapContextImpl implements BootstrapContext, AutoCloseable {
 	}
 
 	@Override
-	public ScanOptions getScanOptions() {
-		return delegate.getScanOptions();
-	}
-
-	@Override
-	public ScanEnvironment getScanEnvironment() {
-		return delegate.getScanEnvironment();
-	}
-
-	@Override
-	public Object getScanner() {
-		return delegate.getScanner();
+	public Object getScanning() {
+		return delegate.getScanning();
 	}
 
 	@Override

@@ -4,15 +4,14 @@
  */
 package org.hibernate.jpa;
 
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceConfiguration;
+import jakarta.persistence.PersistenceUnitTransactionType;
+import jakarta.persistence.SharedCacheMode;
+import jakarta.persistence.ValidationMode;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.scan.spi.ScanningProvider;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.CacheSettings;
@@ -23,15 +22,18 @@ import org.hibernate.cfg.MappingSettings;
 import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.cfg.SchemaToolingSettings;
 import org.hibernate.cfg.StatisticsSettings;
+import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tool.schema.Action;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.PersistenceConfiguration;
-import jakarta.persistence.PersistenceUnitTransactionType;
-import jakarta.persistence.SharedCacheMode;
-import jakarta.persistence.ValidationMode;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 
 /**
  * Extends the Jakarta Persistence-defined {@link PersistenceConfiguration}
@@ -73,7 +75,7 @@ import jakarta.persistence.ValidationMode;
  * When a {@linkplain #rootUrl() root URL} is supplied, or when at least
  * one {@linkplain #jarFileUrls() JAR file URL} is supplied, and when
  * {@code hibernate-scan-jandex} or some other service implementing
- * {@link org.hibernate.boot.archive.scan.spi.ScannerFactory} is available,
+ * {@link ScanningProvider} is available,
  * the given URLs are scanned for entity classes, embeddable classes,
  * mapped superclasses, converters, and XML mappings, alleviating the
  * need to call {@link #managedClass} or {@link #mappingFile}.
@@ -108,12 +110,12 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 
 	/**
 	 * Create a new empty configuration with a given {@linkplain #rootUrl root URL}
-	 * used for {@linkplain PersistenceSettings#SCANNER_DISCOVERY entity discovery}
+	 * used for {@linkplain PersistenceSettings#SCANNER entity discovery}
 	 * via scanning.
 	 * <p>
 	 * The module {@code hibernate-scan-jandex} must be added as a dependency,
 	 * or some other implementation of the service
-	 * {@link org.hibernate.boot.archive.scan.spi.ScannerFactory} must be made
+	 * {@link ScanningProvider} must be made
 	 * available.
 	 *
 	 * @param name the name of the persistence unit, which may be used by
@@ -130,12 +132,11 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	/**
 	 * Create a new empty configuration with the {@linkplain #rootUrl root URL}
 	 * inferred from the given class file and used for
-	 * {@linkplain PersistenceSettings#SCANNER_DISCOVERY entity discovery}
-	 * via scanning.
+	 * {@linkplain PersistenceSettings#SCANNER entity discovery} via scanning.
 	 * <p>
 	 * The module {@code hibernate-scan-jandex} must be added as a dependency,
 	 * or some other implementation of the service
-	 * {@link org.hibernate.boot.archive.scan.spi.ScannerFactory} must be made
+	 * {@link ScanningProvider} must be made
 	 * available.
 	 *
 	 * @param name the name of the persistence unit, which may be used by
@@ -154,6 +155,8 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 */
 	@Override
 	public SessionFactory createEntityManagerFactory() {
+		new EntityManagerFactoryBuilderImpl( this ).build();
+
 		return (SessionFactory) super.createEntityManagerFactory();
 	}
 
@@ -535,6 +538,34 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	}
 
 	/**
+	 * Root URL of the persistence unit.
+	 * When {@linkplain org.hibernate.cfg.PersistenceSettings#SCANNER
+	 * entity discovery} is enabled, this root URL will be scanned for entities.
+	 *
+	 * @see org.hibernate.cfg.PersistenceSettings#SCANNER
+	 * @see jakarta.persistence.spi.PersistenceUnitInfo#getPersistenceUnitRootUrl
+	 *
+	 * @since 7.1
+	 */
+	public URL rootUrl() {
+		return rootUrl;
+	}
+
+	/**
+	 * URLs of JAR files.
+	 * When {@linkplain org.hibernate.cfg.PersistenceSettings#SCANNER
+	 * entity discovery} is enabled, the JAR files will be scanned for entities.
+	 *
+	 * @see org.hibernate.cfg.PersistenceSettings#SCANNER
+	 * @see jakarta.persistence.spi.PersistenceUnitInfo#getJarFileUrls
+	 *
+	 * @since 7.1
+	 */
+	public List<URL> jarFileUrls() {
+		return jarFileUrls;
+	}
+
+	/**
 	 * Add the specified URL as a {@linkplain #jarFileUrls() JAR file}.
 	 *
 	 * @see #jarFileUrls()
@@ -665,33 +696,5 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	@Override
 	public HibernatePersistenceConfiguration properties(Map<String, ?> properties) {
 		return (HibernatePersistenceConfiguration) super.properties( properties );
-	}
-
-	/**
-	 * URLs of JAR files.
-	 * When {@linkplain org.hibernate.cfg.PersistenceSettings#SCANNER_DISCOVERY
-	 * entity discovery} is enabled, the JAR files will be scanned for entities.
-	 *
-	 * @see org.hibernate.cfg.PersistenceSettings#SCANNER_DISCOVERY
-	 * @see jakarta.persistence.spi.PersistenceUnitInfo#getJarFileUrls
-	 *
-	 * @since 7.1
-	 */
-	public List<URL> jarFileUrls() {
-		return jarFileUrls;
-	}
-
-	/**
-	 * Root URL of the persistence unit.
-	 * When {@linkplain org.hibernate.cfg.PersistenceSettings#SCANNER_DISCOVERY
-	 * entity discovery} is enabled, this root URL will be scanned for entities.
-	 *
-	 * @see org.hibernate.cfg.PersistenceSettings#SCANNER_DISCOVERY
-	 * @see jakarta.persistence.spi.PersistenceUnitInfo#getPersistenceUnitRootUrl
-	 *
-	 * @since 7.1
-	 */
-	public URL rootUrl() {
-		return rootUrl;
 	}
 }

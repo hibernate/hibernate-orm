@@ -4,6 +4,10 @@
  */
 package org.hibernate.boot.archive.internal;
 
+import org.hibernate.HibernateException;
+import org.hibernate.boot.archive.spi.ArchiveException;
+import org.hibernate.boot.archive.spi.InputStreamAccess;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,15 +15,9 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.Serializable;
 
-import org.hibernate.HibernateException;
-import org.hibernate.boot.archive.spi.ArchiveException;
-import org.hibernate.boot.archive.spi.InputStreamAccess;
-
-/**
- * An InputStreamAccess implementation based on a File reference
- *
- * @author Steve Ebersole
- */
+/// An InputStreamAccess implementation based on a File reference
+///
+/// @author Steve Ebersole
 public class FileInputStreamAccess implements InputStreamAccess, Serializable {
 	private final String name;
 	private final File file;

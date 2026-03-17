@@ -4,20 +4,7 @@
  */
 package org.hibernate.boot.model.process.spi;
 
-import java.io.InputStream;
-import java.sql.Types;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.OffsetTime;
-import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-
+import jakarta.persistence.AttributeConverter;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
 import org.hibernate.boot.MetadataSources;
@@ -32,7 +19,6 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
-import org.hibernate.boot.model.process.internal.ScanningCoordinator;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.model.source.internal.annotations.AnnotationMetadataSourceProcessorImpl;
@@ -55,7 +41,6 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Table;
@@ -72,20 +57,30 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JsonArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JsonAsStringArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JsonAsStringJdbcType;
+import org.hibernate.type.descriptor.jdbc.UuidAsBinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.XmlAsStringArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.XmlAsStringJdbcType;
-import org.hibernate.type.descriptor.jdbc.UuidAsBinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 
+import java.io.InputStream;
+import java.sql.Types;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
-import jakarta.persistence.AttributeConverter;
-
-import static org.hibernate.cfg.MappingSettings.XML_MAPPING_ENABLED;
 import static org.hibernate.internal.util.collections.CollectionHelper.mutableJoin;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForArray;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getPreferredSqlTypeCodeForDuration;
@@ -140,20 +135,7 @@ public class MetadataBuildingProcess {
 	public static ManagedResources prepare(
 			final MetadataSources sources,
 			final BootstrapContext bootstrapContext) {
-		final var managedResources = ManagedResourcesImpl.baseline( sources, bootstrapContext );
-		ScanningCoordinator.INSTANCE.coordinateScan(
-				managedResources,
-				bootstrapContext,
-				isXmlMappingEnabled( bootstrapContext )
-						? sources.getXmlMappingBinderAccess()
-						: null
-		);
-		return managedResources;
-	}
-
-	private static Boolean isXmlMappingEnabled(BootstrapContext bootstrapContext) {
-		return bootstrapContext.getConfigurationService()
-				.getSetting( XML_MAPPING_ENABLED, StandardConverters.BOOLEAN, true );
+		return ManagedResourcesImpl.baseline( sources, bootstrapContext );
 	}
 
 	/**

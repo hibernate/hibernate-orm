@@ -8,23 +8,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.SharedCacheMode;
 import org.hibernate.AnnotationException;
 import org.hibernate.HibernateException;
-import org.hibernate.cache.spi.RegionFactory;
-import org.hibernate.cfg.JpaComplianceSettings;
-import org.hibernate.context.spi.MultiTenancy;
-import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
-import org.hibernate.boot.archive.scan.spi.ScanOptions;
-import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
+import org.hibernate.boot.scan.spi.ScanningProvider;
 import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
 import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.model.FunctionContributions;
@@ -56,8 +53,11 @@ import org.hibernate.boot.spi.MetadataBuilderInitializer;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.MetadataSourcesContributor;
+import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.cfg.JpaComplianceSettings;
 import org.hibernate.cfg.MappingSettings;
+import org.hibernate.context.spi.MultiTenancy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -69,16 +69,13 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
-
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.ConstraintMode;
-import jakarta.persistence.SharedCacheMode;
-
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.cfg.CacheSettings.DEFAULT_CACHE_CONCURRENCY_STRATEGY;
 import static org.hibernate.cfg.CacheSettings.JAKARTA_SHARED_CACHE_MODE;
 import static org.hibernate.cfg.CacheSettings.JPA_SHARED_CACHE_MODE;
@@ -100,7 +97,6 @@ import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_CHARSET_NAME;
 import static org.hibernate.cfg.SchemaToolingSettings.HBM2DDL_DEFAULT_CONSTRAINT_MODE;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.engine.config.spi.StandardConverters.STRING;
-import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
@@ -222,20 +218,8 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder applyScanOptions(ScanOptions scanOptions) {
-		bootstrapContext.injectScanOptions( scanOptions );
-		return this;
-	}
-
-	@Override
-	public MetadataBuilder applyScanEnvironment(ScanEnvironment scanEnvironment) {
-		bootstrapContext.injectScanEnvironment( scanEnvironment );
-		return this;
-	}
-
-	@Override
-	public MetadataBuilder applyScanner(Scanner scanner) {
-		bootstrapContext.injectScanner( scanner );
+	public MetadataBuilder applyScanning(ScanningProvider scanningProvider) {
+		bootstrapContext.injectScanning( scanningProvider );
 		return this;
 	}
 

@@ -6,11 +6,8 @@ package org.hibernate.boot.internal;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.boot.CacheRegionDefinition;
-import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
-import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
-import org.hibernate.boot.archive.scan.spi.ScanOptions;
-import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
+import org.hibernate.boot.scan.spi.ScanningProvider;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.models.internal.ClassLoaderServiceLoading;
@@ -21,7 +18,6 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.cfg.PersistenceSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
@@ -66,9 +62,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	private boolean isJpaBootstrap;
 
-	private ScanOptions scanOptions;
-	private ScanEnvironment scanEnvironment;
-	private Object scannerSetting;
+	private Object scanningSetting;
 	private ArchiveDescriptorFactory archiveDescriptorFactory;
 
 	private HashMap<String,SqmFunctionDescriptor> sqlFunctionMap;
@@ -93,13 +87,9 @@ public class BootstrapContextImpl implements BootstrapContext {
 		final var configService = serviceRegistry.requireService( ConfigurationService.class );
 
 		jpaCompliance = new MutableJpaComplianceImpl( configService.getSettings() );
-		scanOptions = new StandardScanOptions(
-				(String) configService.getSettings().get( PersistenceSettings.SCANNER_DISCOVERY ),
-				false
-		);
 
-		// ScanEnvironment must be set explicitly
-		scannerSetting = configService.getSettings().get( SCANNER );
+		// Scanning environment
+		scanningSetting = configService.getSettings().get( SCANNER );
 		archiveDescriptorFactory = strategySelector.resolveStrategy(
 				ArchiveDescriptorFactory.class,
 				configService.getSettings().get( SCANNER_ARCHIVE_INTERPRETER )
@@ -193,18 +183,8 @@ public class BootstrapContextImpl implements BootstrapContext {
 	}
 
 	@Override
-	public ScanOptions getScanOptions() {
-		return scanOptions;
-	}
-
-	@Override
-	public ScanEnvironment getScanEnvironment() {
-		return scanEnvironment;
-	}
-
-	@Override
-	public Object getScanner() {
-		return scannerSetting;
+	public Object getScanning() {
+		return scanningSetting;
 	}
 
 	@Override
@@ -251,9 +231,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	public void release() {
 		classLoaderAccess.release();
 
-		scanOptions = null;
-		scanEnvironment = null;
-		scannerSetting = null;
+		scanningSetting = null;
 		archiveDescriptorFactory = null;
 
 		if ( sqlFunctionMap != null ) {
@@ -306,25 +284,12 @@ public class BootstrapContextImpl implements BootstrapContext {
 		this.classLoaderAccess.injectTempClassLoader( classLoader );
 	}
 
-	void injectScanOptions(ScanOptions scanOptions) {
-		if ( scanOptions != this.scanOptions ) {
-			BOOT_LOGGER.injectingScanOptions( scanOptions, this.scanOptions );
+	public void injectScanning(ScanningProvider scanningProvider) {
+		if ( scanningProvider != this.scanningSetting ) {
+			BOOT_LOGGER.injectingScanner( scanningProvider, this.scanningSetting );
 		}
-		this.scanOptions = scanOptions;
-	}
+		this.scanningSetting = scanningProvider;
 
-	void injectScanEnvironment(ScanEnvironment scanEnvironment) {
-		if ( scanEnvironment != this.scanEnvironment ) {
-			BOOT_LOGGER.injectingScanEnvironment( scanEnvironment, this.scanEnvironment );
-		}
-		this.scanEnvironment = scanEnvironment;
-	}
-
-	void injectScanner(Scanner scanner) {
-		if ( scanner != this.scannerSetting ) {
-			BOOT_LOGGER.injectingScanner( scanner, this.scannerSetting );
-		}
-		this.scannerSetting = scanner;
 	}
 
 	void injectArchiveDescriptorFactory(ArchiveDescriptorFactory factory) {

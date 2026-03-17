@@ -5,9 +5,6 @@
 package org.hibernate.orm.test.boot.models;
 
 import org.hibernate.boot.CacheRegionDefinition;
-import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
-import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
-import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.internal.TypeBeanInstanceProducer;
@@ -67,8 +64,6 @@ public class BootstrapContextTesting implements BootstrapContext {
 
 	private boolean isJpaBootstrap;
 
-	private ScanOptions scanOptions;
-	private ScanEnvironment scanEnvironment;
 	private Object scannerSetting;
 	private ArchiveDescriptorFactory archiveDescriptorFactory;
 
@@ -93,10 +88,6 @@ public class BootstrapContextTesting implements BootstrapContext {
 		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
 
 		this.jpaCompliance = new MutableJpaComplianceImpl( configService.getSettings() );
-		this.scanOptions = new StandardScanOptions(
-				(String) configService.getSettings().get( AvailableSettings.SCANNER_DISCOVERY ),
-				false
-		);
 
 		// ScanEnvironment must be set explicitly
 		this.scannerSetting = configService.getSettings().get( AvailableSettings.SCANNER );
@@ -193,17 +184,7 @@ public class BootstrapContextTesting implements BootstrapContext {
 	}
 
 	@Override
-	public ScanOptions getScanOptions() {
-		return scanOptions;
-	}
-
-	@Override
-	public ScanEnvironment getScanEnvironment() {
-		return scanEnvironment;
-	}
-
-	@Override
-	public Object getScanner() {
+	public Object getScanning() {
 		return scannerSetting;
 	}
 
@@ -251,8 +232,6 @@ public class BootstrapContextTesting implements BootstrapContext {
 	public void release() {
 		classLoaderAccess.release();
 
-		scanOptions = null;
-		scanEnvironment = null;
 		scannerSetting = null;
 		archiveDescriptorFactory = null;
 

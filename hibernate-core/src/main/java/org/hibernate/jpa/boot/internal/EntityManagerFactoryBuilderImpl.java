@@ -4,22 +4,18 @@
  */
 package org.hibernate.jpa.boot.internal;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.function.Consumer;
-import javax.sql.DataSource;
-
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.PersistenceUnitTransactionType;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.CacheRegionDefinition.CacheRegionType;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
 import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.model.TypeContributor;
@@ -46,10 +42,14 @@ import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.jpa.HibernatePersistenceConfiguration;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
 import org.hibernate.jpa.boot.spi.JpaSettings;
+import org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.boot.spi.StrategyRegistrationProviderList;
 import org.hibernate.jpa.boot.spi.TypeContributorList;
@@ -63,14 +63,22 @@ import org.hibernate.service.spi.Stoppable;
 import org.hibernate.tool.schema.spi.DelayedDropRegistryNotAvailableImpl;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.PersistenceException;
-import jakarta.persistence.PersistenceUnitTransactionType;
+import javax.sql.DataSource;
+import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.function.Consumer;
 
 import static jakarta.persistence.PersistenceUnitTransactionType.JTA;
 import static java.lang.Boolean.parseBoolean;
 import static java.util.Collections.unmodifiableMap;
+import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
+import static org.hibernate.boot.scan.internal.ScanningHelper.performScanning;
 import static org.hibernate.cfg.AvailableSettings.CFG_XML_FILE;
 import static org.hibernate.cfg.AvailableSettings.CLASSLOADERS;
 import static org.hibernate.cfg.AvailableSettings.CLASS_CACHE_PREFIX;
@@ -98,7 +106,6 @@ import static org.hibernate.cfg.AvailableSettings.JPA_TRANSACTION_TYPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY;
 import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_MODE;
 import static org.hibernate.cfg.AvailableSettings.PASS;
-import static org.hibernate.cfg.AvailableSettings.SCANNER_DISCOVERY;
 import static org.hibernate.cfg.AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.URL;
 import static org.hibernate.cfg.AvailableSettings.USER;
@@ -106,8 +113,8 @@ import static org.hibernate.cfg.BytecodeSettings.BYTECODE_PROVIDER_INSTANCE;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_DIRTY_TRACKING;
 import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION;
+import static org.hibernate.cfg.PersistenceSettings.PERSISTENCE_UNIT_NAME;
 import static org.hibernate.cfg.TransactionSettings.FLUSH_BEFORE_COMPLETION;
-import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -115,6 +122,7 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getString;
+import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 import static org.hibernate.jpa.internal.util.LogHelper.logPersistenceUnitInformation;
 import static org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper.interpretTransactionType;
 
@@ -157,6 +165,101 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private final StandardServiceRegistry standardServiceRegistry;
 	private final ManagedResources managedResources;
 	private final MetadataBuilderImplementor metamodelBuilder;
+
+	public  EntityManagerFactoryBuilderImpl(HibernatePersistenceConfiguration cfg) {
+		var bootRegistry = buildBootstrapServiceRegistry( cfg.properties(), null, null );
+		var registryBuilder = StandardServiceRegistryBuilder.forJpa( bootRegistry );
+
+		final var mergedSettings = createMergedSettings( cfg, registryBuilder );
+		ignoreFlushBeforeCompletion( mergedSettings );
+		// keep the merged config values for phase-2
+		configurationValues = mergedSettings.getConfigurationValues();
+
+		try {
+			// Build the "standard" service registry
+			registryBuilder.applySettings( configurationValues );
+			standardServiceRegistry = registryBuilder.build();
+
+			persistenceUnit = new PersistenceConfigurationDescriptor( cfg, standardServiceRegistry );
+
+			final var metadataSources = new MetadataSources( standardServiceRegistry );
+			metamodelBuilder =
+					(MetadataBuilderImplementor)
+							metadataSources.getMetadataBuilder( standardServiceRegistry );
+			applyMappingResources( metadataSources );
+			applyScanning( cfg, metadataSources, standardServiceRegistry );
+			applyMetamodelBuilderSettings( mergedSettings, getConverterDescriptors( metadataSources ) );
+			applyMetadataBuilderContributor();
+			setupMappingReferences( metadataSources );
+			managedResources =
+					MetadataBuildingProcess.prepare( metadataSources, metamodelBuilder.getBootstrapContext() );
+			setupValidation();
+
+			setupEnhancement( persistenceUnit, metadataSources );
+			// for the time being we want to revoke access to the temp ClassLoader if one was passed
+			metamodelBuilder.applyTempClassLoader( null );
+		}
+		catch (Throwable throwable) {
+			bootRegistry.close();
+			cleanup();
+			throw throwable;
+		}
+	}
+
+	private void applyScanning(HibernatePersistenceConfiguration cfg, MetadataSources metadataSources, StandardServiceRegistry standardServiceRegistry) {
+		var scanningResult = performScanning( cfg, standardServiceRegistry );
+
+		scanningResult.discoveredPackages().forEach( metadataSources::addPackage );
+
+		scanningResult.discoveredClasses().forEach( metadataSources::addAnnotatedClassName );
+
+		scanningResult.mappingFiles().forEach( (mappingFileUri) -> {
+			try {
+				metadataSources.addURL( mappingFileUri.toURL() );
+			}
+			catch (MalformedURLException e) {
+				throw new HibernateException( "Unable to handle discovered mapping file : " + mappingFileUri, e );
+			}
+		} );
+	}
+
+	private MergedSettings createMergedSettings(
+			@NonNull HibernatePersistenceConfiguration cfg,
+			@NonNull StandardServiceRegistryBuilder standardRegistryBuilder) {
+		var mergedSettings = new MergedSettings();
+
+		mergedSettings.getConfigurationValues().putAll( cfg.properties() );
+		mergedSettings.getConfigurationValues().put( PERSISTENCE_UNIT_NAME, cfg.name() );
+
+		// see if the persistence.xml settings named a Hibernate config file
+		final String cfgXmlResourceName = getCfgXmlResourceName( Collections.emptyMap(), mergedSettings );
+		if ( isNotEmpty( cfgXmlResourceName ) ) {
+			processHibernateConfigXmlResources( standardRegistryBuilder, mergedSettings, cfgXmlResourceName );
+		}
+
+		normalizeSettings( null, null, mergedSettings );
+
+		// here we are going to iterate the merged config settings looking for:
+		//		1) additional JACC permissions
+		//		2) additional cache region declarations
+		//
+		// we will also clean up any references with null entries
+		final var iterator = mergedSettings.getConfigurationValues().entrySet().iterator();
+		while ( iterator.hasNext() ) {
+			final var entry = iterator.next();
+			final Object value = entry.getValue();
+			if ( value == null ) {
+				// remove entries with null values
+				iterator.remove();
+				break; //TODO: this looks wrong!
+			}
+			else if ( value instanceof String valueString ) {
+				handleCacheRegionDefinition( valueString, entry.getKey(), mergedSettings );
+			}
+		}
+
+		return mergedSettings;
+	}
 
 	public EntityManagerFactoryBuilderImpl(
 			PersistenceUnitDescriptor persistenceUnit,
@@ -241,7 +344,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	private static Map<String, Object> mergedIntegrationSettings(
-			PersistenceUnitDescriptor persistenceUnit, Map<String, Object> integrationSettings) {
+			PersistenceUnitDescriptor persistenceUnit,
+			Map<String, Object> integrationSettings) {
 		final var properties = persistenceUnit.getProperties();
 		if ( properties != null ) {
 			// original integration setting entries take precedence
@@ -513,7 +617,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			registryBuilder.applyClassLoaderService( providedClassLoaderService );
 		}
 		else {
-			if ( persistenceUnit.getClassLoader() != null ) {
+			if ( persistenceUnit != null && persistenceUnit.getClassLoader() != null ) {
 				registryBuilder.applyClassLoader( persistenceUnit.getClassLoader() );
 			}
 			if ( providedClassLoader != null ) {
@@ -521,11 +625,13 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 			applyConfiguredClassLoaders( integrationSettings, registryBuilder );
 			//configurationValues not assigned yet, using directly the properties of the PU
-			final var unitProperties = persistenceUnit.getProperties();
-			if ( unitProperties != null ) {
-				final TcclLookupPrecedence tcclLookupPrecedence = TcclLookupPrecedence.from( unitProperties );
-				if ( tcclLookupPrecedence != null ) {
-					registryBuilder.applyTcclLookupPrecedence( tcclLookupPrecedence );
+			if ( persistenceUnit != null ) {
+				final var unitProperties = persistenceUnit.getProperties();
+				if ( unitProperties != null ) {
+					final TcclLookupPrecedence tcclLookupPrecedence = TcclLookupPrecedence.from( unitProperties );
+					if ( tcclLookupPrecedence != null ) {
+						registryBuilder.applyTcclLookupPrecedence( tcclLookupPrecedence );
+					}
 				}
 			}
 		}
@@ -554,7 +660,12 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	private void applyIntegrationProvider(
-			Map<?,?> integrationSettings, BootstrapServiceRegistryBuilder registryBuilder) {
+			Map<?,?> integrationSettings,
+			BootstrapServiceRegistryBuilder registryBuilder) {
+		if ( integrationSettings == null ) {
+			return;
+		}
+
 		final Object integrationSetting = integrationSettings.get( INTEGRATOR_PROVIDER );
 		if ( integrationSetting != null ) {
 			final var integratorProvider =
@@ -644,26 +755,30 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			Map<String, Object> integrationSettings,
 			MergedSettings mergedSettings) {
 		// make a copy so that we can remove things as we process them
-		final Map<String, Object> integrationSettingsCopy = new HashMap<>( integrationSettings );
+		final Map<String, Object> integrationSettingsCopy = integrationSettings == null
+				? null
+				: new HashMap<>( integrationSettings );
 		normalizeConnectionAccessUserAndPass( integrationSettingsCopy, mergedSettings );
 		normalizeTransactionCoordinator( persistenceUnit, integrationSettingsCopy, mergedSettings );
 		normalizeDataAccess( integrationSettingsCopy, mergedSettings, persistenceUnit );
 		normalizeValidationMode( persistenceUnit, integrationSettingsCopy, mergedSettings );
 		normalizeSharedCacheMode( persistenceUnit, integrationSettingsCopy, mergedSettings );
 
-		// Apply all "integration overrides" as the last step.  By specification,
-		// these should have precedence.
-		// NOTE that this occurs after the specialized normalize calls above which
-		//      remove any specially-handled settings.
-		for ( var entry : integrationSettingsCopy.entrySet() ) {
-			final String key = entry.getKey();
-			if ( key != null ) {
-				final Object value = entry.getValue();
-				if ( value == null ) {
-					mergedSettings.getConfigurationValues().remove( key );
-				}
-				else {
-					mergedSettings.getConfigurationValues().put( key, value );
+		if ( integrationSettingsCopy != null ) {
+			// Apply all "integration overrides" as the last step.  By specification,
+			// these should have precedence.
+			// NOTE that this occurs after the specialized normalize calls above which
+			//      remove any specially-handled settings.
+			for ( var entry : integrationSettingsCopy.entrySet() ) {
+				final String key = entry.getKey();
+				if ( key != null ) {
+					final Object value = entry.getValue();
+					if ( value == null ) {
+						mergedSettings.getConfigurationValues().remove( key );
+					}
+					else {
+						mergedSettings.getConfigurationValues().put( key, value );
+					}
 				}
 			}
 		}
@@ -674,18 +789,33 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			Map<String, Object> integrationSettingsCopy,
 			MergedSettings mergedSettings) {
 		final var configurationSettings = mergedSettings.getConfigurationValues();
-		// normalize SharedCacheMode
-		final Object intgCacheMode = integrationSettingsCopy.remove( JPA_SHARED_CACHE_MODE );
-		final Object jakartaIntgCacheMode = integrationSettingsCopy.remove( JAKARTA_SHARED_CACHE_MODE );
-		if ( jakartaIntgCacheMode != null ) {
-			configurationSettings.put( JAKARTA_SHARED_CACHE_MODE, jakartaIntgCacheMode );
+
+		if ( integrationSettingsCopy != null ) {
+			final Object jakartaCacheMode = integrationSettingsCopy.remove( JAKARTA_SHARED_CACHE_MODE );
+			if ( jakartaCacheMode != null ) {
+				configurationSettings.put( JAKARTA_SHARED_CACHE_MODE, jakartaCacheMode );
+				// EARLY EXIT!!!
+				return;
+			}
+
+			final Object legacyCacheMode = integrationSettingsCopy.remove( JPA_SHARED_CACHE_MODE );
+			if ( legacyCacheMode != null ) {
+				DEPRECATION_LOGGER.deprecatedSetting( JPA_SHARED_CACHE_MODE, JAKARTA_SHARED_CACHE_MODE );
+				configurationSettings.put( JAKARTA_SHARED_CACHE_MODE, legacyCacheMode );
+				configurationSettings.put( JPA_SHARED_CACHE_MODE, legacyCacheMode );
+				// EARLY EXIT!!!
+				return;
+			}
 		}
-		else if ( intgCacheMode != null ) {
-			DEPRECATION_LOGGER.deprecatedSetting( JPA_SHARED_CACHE_MODE, JAKARTA_SHARED_CACHE_MODE );
-			configurationSettings.put( JPA_SHARED_CACHE_MODE, intgCacheMode );
-		}
-		else if ( persistenceUnit.getSharedCacheMode() != null ) {
+
+		if ( persistenceUnit != null && persistenceUnit.getSharedCacheMode() != null ) {
 			configurationSettings.put( JAKARTA_SHARED_CACHE_MODE, persistenceUnit.getSharedCacheMode() );
+		}
+
+		var legacyCacheMode = configurationSettings.get( JPA_SHARED_CACHE_MODE );
+		if ( legacyCacheMode != null ) {
+			DEPRECATION_LOGGER.deprecatedSetting( JPA_SHARED_CACHE_MODE, JAKARTA_SHARED_CACHE_MODE );
+			configurationSettings.put( JAKARTA_SHARED_CACHE_MODE, legacyCacheMode );
 		}
 	}
 
@@ -694,18 +824,35 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			Map<String, Object> integrationSettingsCopy,
 			MergedSettings mergedSettings) {
 		final var configurationSettings = mergedSettings.getConfigurationValues();
-		// normalize ValidationMode
-		final Object intgValidationMode = integrationSettingsCopy.remove( JPA_VALIDATION_MODE );
-		final Object jakartaIntgValidationMode = integrationSettingsCopy.remove( JAKARTA_VALIDATION_MODE );
-		if ( jakartaIntgValidationMode != null ) {
-			configurationSettings.put( JAKARTA_VALIDATION_MODE, jakartaIntgValidationMode );
+		if ( integrationSettingsCopy != null ) {
+			final Object jakartaValidationMode = integrationSettingsCopy.remove( JAKARTA_VALIDATION_MODE );
+			if ( jakartaValidationMode != null ) {
+				configurationSettings.put( JAKARTA_VALIDATION_MODE, jakartaValidationMode );
+				// EARLY EXIT!!!
+				return;
+			}
+
+			final Object legacyValidationMode = integrationSettingsCopy.remove( JPA_VALIDATION_MODE );
+			if ( legacyValidationMode != null ) {
+				DEPRECATION_LOGGER.deprecatedSetting( JPA_VALIDATION_MODE, JAKARTA_VALIDATION_MODE );
+				configurationSettings.put( JPA_VALIDATION_MODE, legacyValidationMode );
+				configurationSettings.put( JAKARTA_VALIDATION_MODE, legacyValidationMode );
+				// EARLY EXIT!!!
+				return;
+			}
 		}
-		else if ( intgValidationMode != null ) {
-			DEPRECATION_LOGGER.deprecatedSetting( JPA_VALIDATION_MODE, JAKARTA_VALIDATION_MODE );
-			configurationSettings.put( JPA_VALIDATION_MODE, intgValidationMode );
-		}
-		else if ( persistenceUnit.getValidationMode() != null ) {
+
+		if ( persistenceUnit != null && persistenceUnit.getValidationMode() != null ) {
 			configurationSettings.put( JAKARTA_VALIDATION_MODE, persistenceUnit.getValidationMode() );
+			// EARLY EXIT!!!
+			return;
+		}
+
+		var legacyValidationMode = configurationSettings.get( JPA_VALIDATION_MODE );
+		if ( legacyValidationMode != null ) {
+			DEPRECATION_LOGGER.deprecatedSetting( JPA_VALIDATION_MODE, JAKARTA_VALIDATION_MODE );
+			configurationSettings.put( JAKARTA_VALIDATION_MODE, legacyValidationMode );
+			configurationSettings.put( JPA_VALIDATION_MODE, legacyValidationMode );
 		}
 	}
 
@@ -717,19 +864,46 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			Map<?, ?> integrationSettingsCopy,
 			MergedSettings mergedSettings) {
 		final Object effectiveUser = coalesceSuppliedValues(
-				() -> integrationSettingsCopy.remove( USER ),
-				() -> integrationSettingsCopy.remove( JAKARTA_JDBC_USER ),
 				() -> {
-					final Object setting = integrationSettingsCopy.remove( JPA_JDBC_USER );
-					if ( setting != null ) {
-						DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_USER, JAKARTA_JDBC_USER );
+					if ( integrationSettingsCopy != null ) {
+						return coalesceSuppliedValues(
+								() -> integrationSettingsCopy.remove( USER ),
+								() -> integrationSettingsCopy.remove( JAKARTA_JDBC_USER ),
+								() -> {
+									final Object setting = integrationSettingsCopy.remove( JPA_JDBC_USER );
+									if ( setting != null ) {
+										DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_USER, JAKARTA_JDBC_USER );
+									}
+									return setting;
+								}
+						);
 					}
-					return setting;
+					else {
+						return null;
+					}
 				},
-				() -> extractPuProperty( persistenceUnit, USER ),
-				() -> extractPuProperty( persistenceUnit, JAKARTA_JDBC_USER ),
 				() -> {
-					final Object setting = extractPuProperty( persistenceUnit, JPA_JDBC_USER );
+					if ( persistenceUnit != null ) {
+						return coalesceSuppliedValues(
+								() -> extractPuProperty( persistenceUnit, USER ),
+								() -> extractPuProperty( persistenceUnit, JAKARTA_JDBC_USER ),
+								() -> {
+									final Object setting = extractPuProperty( persistenceUnit, JPA_JDBC_USER );
+									if ( setting != null ) {
+										DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_USER, JAKARTA_JDBC_USER );
+									}
+									return setting;
+								}
+						);
+					}
+					else {
+						return null;
+					}
+				},
+				() -> mergedSettings.getConfigurationValues().get( USER ),
+				() -> mergedSettings.getConfigurationValues().get( JAKARTA_JDBC_USER ),
+				() -> {
+					final Object setting = mergedSettings.getConfigurationValues().get( JPA_JDBC_USER );
 					if ( setting != null ) {
 						DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_USER, JAKARTA_JDBC_USER );
 					}
@@ -738,25 +912,52 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		);
 
 		final Object effectivePass = coalesceSuppliedValues(
-				() -> integrationSettingsCopy.remove( PASS ),
-				() -> integrationSettingsCopy.remove( JAKARTA_JDBC_PASSWORD ),
 				() -> {
-					final Object setting = integrationSettingsCopy.remove( JPA_JDBC_PASSWORD );
+					if ( integrationSettingsCopy != null ) {
+						return coalesceSuppliedValues(
+								() -> integrationSettingsCopy.remove( PASS ),
+								() -> integrationSettingsCopy.remove( JAKARTA_JDBC_PASSWORD ),
+								() -> {
+									final Object setting = integrationSettingsCopy.remove( JPA_JDBC_PASSWORD );
+									if ( setting != null ) {
+										DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_PASSWORD, JAKARTA_JDBC_PASSWORD );
+									}
+									return setting;
+								}
+						);
+					}
+					else {
+						return null;
+					}
+				},
+				() -> {
+					if ( persistenceUnit != null ) {
+						return coalesceSuppliedValues(
+								() -> extractPuProperty( persistenceUnit, PASS ),
+								() -> extractPuProperty( persistenceUnit, JAKARTA_JDBC_PASSWORD ),
+								() -> {
+									{
+										final Object setting = extractPuProperty( persistenceUnit, JPA_JDBC_PASSWORD );
+										if ( setting != null ) {
+											DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_PASSWORD, JAKARTA_JDBC_PASSWORD );
+										}
+										return setting;
+									}
+								}
+						);
+					}
+					else {
+						return null;
+					}
+				},
+				() -> mergedSettings.getConfigurationValues().get( PASS ),
+				() -> mergedSettings.getConfigurationValues().get( JAKARTA_JDBC_PASSWORD ),
+				() -> {
+					final Object setting = mergedSettings.getConfigurationValues().get( JPA_JDBC_PASSWORD );
 					if ( setting != null ) {
 						DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_PASSWORD, JAKARTA_JDBC_PASSWORD );
 					}
 					return setting;
-				},
-				() -> extractPuProperty( persistenceUnit, PASS ),
-				() -> extractPuProperty( persistenceUnit, JAKARTA_JDBC_PASSWORD ),
-				() -> {
-					{
-						final Object setting = extractPuProperty( persistenceUnit, JPA_JDBC_PASSWORD );
-						if ( setting != null ) {
-							DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_PASSWORD, JAKARTA_JDBC_PASSWORD );
-						}
-						return setting;
-					}
 				}
 		);
 
@@ -817,7 +1018,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	private static PersistenceUnitTransactionType determineTransactionType(
-			PersistenceUnitDescriptor persistenceUnit, Map<?, ?> integrationSettingsCopy, MergedSettings mergedSettings) {
+			PersistenceUnitDescriptor persistenceUnit,
+			Map<?, ?> integrationSettingsCopy,
+			MergedSettings mergedSettings) {
 		final var txnType = configuredTransactionType( persistenceUnit, integrationSettingsCopy, mergedSettings );
 		if ( txnType == null ) {
 			// is it more appropriate to have this be based on bootstrap entry point (EE vs SE)?
@@ -833,33 +1036,34 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			PersistenceUnitDescriptor persistenceUnit,
 			Map<?, ?> integrationSettingsCopy,
 			MergedSettings mergedSettings) {
-		Object intgTxnType = integrationSettingsCopy.remove( JAKARTA_TRANSACTION_TYPE );
-		if ( intgTxnType == null ) {
-			intgTxnType = integrationSettingsCopy.remove( JPA_TRANSACTION_TYPE );
+		if ( integrationSettingsCopy != null ) {
+			Object intgTxnType = integrationSettingsCopy.remove( JAKARTA_TRANSACTION_TYPE );
+			if ( intgTxnType == null ) {
+				intgTxnType = integrationSettingsCopy.remove( JPA_TRANSACTION_TYPE );
+				if ( intgTxnType != null ) {
+					DEPRECATION_LOGGER.deprecatedSetting( JPA_TRANSACTION_TYPE, JAKARTA_TRANSACTION_TYPE );
+				}
+			}
 			if ( intgTxnType != null ) {
-				DEPRECATION_LOGGER.deprecatedSetting( JPA_TRANSACTION_TYPE, JAKARTA_TRANSACTION_TYPE );
+				return interpretTransactionType( intgTxnType );
 			}
 		}
 
-		if ( intgTxnType != null ) {
-			return interpretTransactionType( intgTxnType );
-		}
-		else {
+		if ( persistenceUnit != null ) {
 			final var persistenceUnitTransactionType = persistenceUnit.getPersistenceUnitTransactionType();
 			if ( persistenceUnitTransactionType != null ) {
 				return persistenceUnitTransactionType;
 			}
-			else {
-				Object puPropTxnType = mergedSettings.getConfigurationValues().get( JAKARTA_TRANSACTION_TYPE );
-				if ( puPropTxnType == null ) {
-					puPropTxnType = mergedSettings.getConfigurationValues().get( JPA_TRANSACTION_TYPE );
-					if ( puPropTxnType != null ) {
-						DEPRECATION_LOGGER.deprecatedSetting( JPA_TRANSACTION_TYPE, JAKARTA_TRANSACTION_TYPE );
-					}
-				}
-				return puPropTxnType == null ? null : interpretTransactionType( puPropTxnType );
+		}
+
+		Object puPropTxnType = mergedSettings.getConfigurationValues().get( JAKARTA_TRANSACTION_TYPE );
+		if ( puPropTxnType == null ) {
+			puPropTxnType = mergedSettings.getConfigurationValues().get( JPA_TRANSACTION_TYPE );
+			if ( puPropTxnType != null ) {
+				DEPRECATION_LOGGER.deprecatedSetting( JPA_TRANSACTION_TYPE, JAKARTA_TRANSACTION_TYPE );
 			}
 		}
+		return puPropTxnType == null ? null : interpretTransactionType( puPropTxnType );
 	}
 
 	private void normalizeDataAccess(
@@ -873,144 +1077,152 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			return;
 		}
 
-		if ( integrationSettingsCopy.containsKey( DATASOURCE ) ) {
-			final Object dataSourceRef = integrationSettingsCopy.remove( DATASOURCE );
-			if ( dataSourceRef != null ) {
-				applyDataSource( dataSourceRef, null, integrationSettingsCopy, mergedSettings );
-				// EARLY EXIT!!
-				return;
-			}
-		}
-
-		if ( integrationSettingsCopy.containsKey( JAKARTA_JTA_DATASOURCE ) ) {
-			final Object dataSourceRef = integrationSettingsCopy.remove( JAKARTA_JTA_DATASOURCE );
-			if ( dataSourceRef != null ) {
-				applyDataSource( dataSourceRef, true, integrationSettingsCopy, mergedSettings );
-				// EARLY EXIT!!
-				return;
-			}
-		}
-
-		if ( integrationSettingsCopy.containsKey( JPA_JTA_DATASOURCE ) ) {
-			DEPRECATION_LOGGER.deprecatedSetting( JPA_JTA_DATASOURCE, JAKARTA_JTA_DATASOURCE );
-			final Object dataSourceRef = integrationSettingsCopy.remove( JPA_JTA_DATASOURCE );
-			if ( dataSourceRef != null ) {
-				applyDataSource( dataSourceRef, true,integrationSettingsCopy, mergedSettings );
-				// EARLY EXIT!!
-				return;
-			}
-		}
-
-		if ( integrationSettingsCopy.containsKey( JAKARTA_NON_JTA_DATASOURCE ) ) {
-			final Object dataSourceRef = integrationSettingsCopy.remove( JAKARTA_NON_JTA_DATASOURCE );
-			applyDataSource( dataSourceRef, false, integrationSettingsCopy, mergedSettings );
-			// EARLY EXIT!!
-			return;
-		}
-
-		if ( integrationSettingsCopy.containsKey( JPA_NON_JTA_DATASOURCE ) ) {
-			DEPRECATION_LOGGER.deprecatedSetting( JPA_NON_JTA_DATASOURCE, JAKARTA_NON_JTA_DATASOURCE );
-			final Object dataSourceRef = integrationSettingsCopy.remove( JPA_NON_JTA_DATASOURCE );
-			applyDataSource( dataSourceRef, false, integrationSettingsCopy, mergedSettings );
-			// EARLY EXIT!!
-			return;
-		}
-
 		final var configuration = mergedSettings.getConfigurationValues();
 
-		if ( integrationSettingsCopy.containsKey( URL ) ) {
-			// hibernate-specific settings have precedence over the JPA ones
-			final Object integrationJdbcUrl = integrationSettingsCopy.get( URL );
-			if ( integrationJdbcUrl != null ) {
-				applyJdbcSettings(
-						integrationJdbcUrl,
-						coalesceSuppliedValues(
-								() -> getString( DRIVER, integrationSettingsCopy ),
-								() -> getString( JAKARTA_JDBC_DRIVER, integrationSettingsCopy ),
-								() -> {
-									final String driver = getString( JPA_JDBC_DRIVER, integrationSettingsCopy );
-									if ( driver != null ) {
-										DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_DRIVER, JAKARTA_JDBC_DRIVER );
-									}
-									return driver;
-								},
-								() -> getString( DRIVER, configuration ),
-								() -> getString( JAKARTA_JDBC_DRIVER, configuration ),
-								() -> {
-									final String driver = getString( JPA_JDBC_DRIVER, configuration );
-									if ( driver != null ) {
-										DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_DRIVER, JAKARTA_JDBC_DRIVER );
-									}
-									return driver;
-								}
-						),
-						integrationSettingsCopy,
-						mergedSettings
-				);
+		if ( integrationSettingsCopy != null ) {
+			if ( integrationSettingsCopy.containsKey( DATASOURCE ) ) {
+				final Object dataSourceRef = integrationSettingsCopy.remove( DATASOURCE );
+				if ( dataSourceRef != null ) {
+					applyDataSource( dataSourceRef, null, integrationSettingsCopy, mergedSettings );
+					// EARLY EXIT!!
+					return;
+				}
+			}
+
+			if ( integrationSettingsCopy.containsKey( JAKARTA_JTA_DATASOURCE ) ) {
+				final Object dataSourceRef = integrationSettingsCopy.remove( JAKARTA_JTA_DATASOURCE );
+				if ( dataSourceRef != null ) {
+					applyDataSource( dataSourceRef, true, integrationSettingsCopy, mergedSettings );
+					// EARLY EXIT!!
+					return;
+				}
+			}
+
+			if ( integrationSettingsCopy.containsKey( JPA_JTA_DATASOURCE ) ) {
+				DEPRECATION_LOGGER.deprecatedSetting( JPA_JTA_DATASOURCE, JAKARTA_JTA_DATASOURCE );
+				final Object dataSourceRef = integrationSettingsCopy.remove( JPA_JTA_DATASOURCE );
+				if ( dataSourceRef != null ) {
+					applyDataSource( dataSourceRef, true, integrationSettingsCopy, mergedSettings );
+					// EARLY EXIT!!
+					return;
+				}
+			}
+
+			if ( integrationSettingsCopy.containsKey( JAKARTA_NON_JTA_DATASOURCE ) ) {
+				final Object dataSourceRef = integrationSettingsCopy.remove( JAKARTA_NON_JTA_DATASOURCE );
+				applyDataSource( dataSourceRef, false, integrationSettingsCopy, mergedSettings );
 				// EARLY EXIT!!
 				return;
 			}
-		}
 
-		if ( integrationSettingsCopy.containsKey( JAKARTA_JDBC_URL ) ) {
-			final Object integrationJdbcUrl = integrationSettingsCopy.get( JAKARTA_JDBC_URL );
-			if ( integrationJdbcUrl != null ) {
-				applyJdbcSettings(
-						integrationJdbcUrl,
-						coalesceSuppliedValues(
-								() -> getString( JAKARTA_JDBC_DRIVER, integrationSettingsCopy ),
-								() -> getString( JAKARTA_JDBC_DRIVER, configuration )
-						),
-						integrationSettingsCopy,
-						mergedSettings
-				);
+			if ( integrationSettingsCopy.containsKey( JPA_NON_JTA_DATASOURCE ) ) {
+				DEPRECATION_LOGGER.deprecatedSetting( JPA_NON_JTA_DATASOURCE, JAKARTA_NON_JTA_DATASOURCE );
+				final Object dataSourceRef = integrationSettingsCopy.remove( JPA_NON_JTA_DATASOURCE );
+				applyDataSource( dataSourceRef, false, integrationSettingsCopy, mergedSettings );
 				// EARLY EXIT!!
 				return;
 			}
-		}
 
-		if ( integrationSettingsCopy.containsKey( JPA_JDBC_URL ) ) {
-			DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_URL, JAKARTA_JDBC_URL );
-			final Object integrationJdbcUrl = integrationSettingsCopy.get( JPA_JDBC_URL );
-			if ( integrationJdbcUrl != null ) {
-				applyJdbcSettings(
-						integrationJdbcUrl,
-						coalesceSuppliedValues(
-								() -> {
-									final String driver = getString( JPA_JDBC_DRIVER, integrationSettingsCopy );
-									if ( driver != null ) {
-										DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_DRIVER, JAKARTA_JDBC_DRIVER );
+			if ( integrationSettingsCopy.containsKey( URL ) ) {
+				// hibernate-specific settings have precedence over the JPA ones
+				final Object integrationJdbcUrl = integrationSettingsCopy.get( URL );
+				if ( integrationJdbcUrl != null ) {
+					applyJdbcSettings(
+							integrationJdbcUrl,
+							coalesceSuppliedValues(
+									() -> getString( DRIVER, integrationSettingsCopy ),
+									() -> getString( JAKARTA_JDBC_DRIVER, integrationSettingsCopy ),
+									() -> {
+										final String driver = getString( JPA_JDBC_DRIVER, integrationSettingsCopy );
+										if ( driver != null ) {
+											DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_DRIVER,
+													JAKARTA_JDBC_DRIVER );
+										}
+										return driver;
+									},
+									() -> getString( DRIVER, configuration ),
+									() -> getString( JAKARTA_JDBC_DRIVER, configuration ),
+									() -> {
+										final String driver = getString( JPA_JDBC_DRIVER, configuration );
+										if ( driver != null ) {
+											DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_DRIVER,
+													JAKARTA_JDBC_DRIVER );
+										}
+										return driver;
 									}
-									return driver;
-								},
-								() -> {
-									final String driver = getString( JPA_JDBC_DRIVER, configuration );
-									if ( driver != null ) {
-										DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_DRIVER, JAKARTA_JDBC_DRIVER );
+							),
+							integrationSettingsCopy,
+							mergedSettings
+					);
+					// EARLY EXIT!!
+					return;
+				}
+			}
+
+			if ( integrationSettingsCopy.containsKey( JAKARTA_JDBC_URL ) ) {
+				final Object integrationJdbcUrl = integrationSettingsCopy.get( JAKARTA_JDBC_URL );
+				if ( integrationJdbcUrl != null ) {
+					applyJdbcSettings(
+							integrationJdbcUrl,
+							coalesceSuppliedValues(
+									() -> getString( JAKARTA_JDBC_DRIVER, integrationSettingsCopy ),
+									() -> getString( JAKARTA_JDBC_DRIVER, configuration )
+							),
+							integrationSettingsCopy,
+							mergedSettings
+					);
+					// EARLY EXIT!!
+					return;
+				}
+			}
+
+			if ( integrationSettingsCopy.containsKey( JPA_JDBC_URL ) ) {
+				DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_URL, JAKARTA_JDBC_URL );
+				final Object integrationJdbcUrl = integrationSettingsCopy.get( JPA_JDBC_URL );
+				if ( integrationJdbcUrl != null ) {
+					applyJdbcSettings(
+							integrationJdbcUrl,
+							coalesceSuppliedValues(
+									() -> {
+										final String driver = getString( JPA_JDBC_DRIVER, integrationSettingsCopy );
+										if ( driver != null ) {
+											DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_DRIVER,
+													JAKARTA_JDBC_DRIVER );
+										}
+										return driver;
+									},
+									() -> {
+										final String driver = getString( JPA_JDBC_DRIVER, configuration );
+										if ( driver != null ) {
+											DEPRECATION_LOGGER.deprecatedSetting( JPA_JDBC_DRIVER,
+													JAKARTA_JDBC_DRIVER );
+										}
+										return driver;
 									}
-									return driver;
-								}
-						),
-						integrationSettingsCopy,
-						mergedSettings
-				);
-				// EARLY EXIT!!
-				return;
+							),
+							integrationSettingsCopy,
+							mergedSettings
+					);
+					// EARLY EXIT!!
+					return;
+				}
 			}
 		}
 
-		final Object jtaDataSource = persistenceUnit.getJtaDataSource();
-		if ( jtaDataSource != null ) {
-			applyDataSource( jtaDataSource, true, integrationSettingsCopy, mergedSettings );
-			// EARLY EXIT!!
-			return;
-		}
+		if ( persistenceUnit != null ) {
+			final Object jtaDataSource = persistenceUnit.getJtaDataSource();
+			if ( jtaDataSource != null ) {
+				applyDataSource( jtaDataSource, true, integrationSettingsCopy, mergedSettings );
+				// EARLY EXIT!!
+				return;
+			}
 
-		final Object nonJtaDataSource = persistenceUnit.getNonJtaDataSource();
-		if ( nonJtaDataSource != null ) {
-			applyDataSource( nonJtaDataSource, false, integrationSettingsCopy, mergedSettings );
-			// EARLY EXIT!!
-			return;
+			final Object nonJtaDataSource = persistenceUnit.getNonJtaDataSource();
+			if ( nonJtaDataSource != null ) {
+				applyDataSource( nonJtaDataSource, false, integrationSettingsCopy, mergedSettings );
+				// EARLY EXIT!!
+				return;
+			}
 		}
 
 		if ( configuration.containsKey( URL ) ) {
@@ -1120,9 +1332,11 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	private void cleanUpConfigKeys(Map<?, ?> integrationSettingsCopy, MergedSettings mergedSettings, String... keys) {
 		for ( String key : keys ) {
-			final Object removedSetting = integrationSettingsCopy.remove( key );
-			if ( removedSetting != null ) {
-				JPA_LOGGER.removedIntegrationOverride( key );
+			if ( integrationSettingsCopy != null ) {
+				final Object removedSetting = integrationSettingsCopy.remove( key );
+				if ( removedSetting != null ) {
+					JPA_LOGGER.removedIntegrationOverride( key );
+				}
 			}
 
 			final Object removedMergedSetting = mergedSettings.getConfigurationValues().remove( key );
@@ -1159,21 +1373,23 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		// clean up the integration-map values
-		cleanUpConfigKeys(
-				integrationSettingsCopy,
-				DRIVER,
-				JPA_JDBC_DRIVER,
-				JAKARTA_JDBC_DRIVER,
-				URL,
-				JPA_JDBC_URL,
-				JAKARTA_JDBC_URL,
-				USER,
-				JPA_JDBC_USER,
-				JAKARTA_JDBC_USER,
-				PASS,
-				JPA_JDBC_PASSWORD,
-				JAKARTA_JDBC_PASSWORD
-		);
+		if ( integrationSettingsCopy != null ) {
+			cleanUpConfigKeys(
+					integrationSettingsCopy,
+					DRIVER,
+					JPA_JDBC_DRIVER,
+					JAKARTA_JDBC_DRIVER,
+					URL,
+					JPA_JDBC_URL,
+					JAKARTA_JDBC_URL,
+					USER,
+					JPA_JDBC_USER,
+					JAKARTA_JDBC_USER,
+					PASS,
+					JPA_JDBC_PASSWORD,
+					JAKARTA_JDBC_PASSWORD
+			);
+		}
 
 		cleanUpConfigKeys(
 				integrationSettingsCopy,
@@ -1228,70 +1444,44 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	}
 
 	private void applyMappingResources(MetadataSources metadataSources) {
-		// todo : where in the heck are `org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor.getManagedClassNames` handled?!?
+		assert persistenceUnit != null;
 
-//		final ClassLoaderService classLoaderService = ssr.getService( ClassLoaderService.class );
-//
-//		// todo : make sure MetadataSources/Metadata are capable of handling duplicate sources
-//
-//		// explicit persistence unit mapping files listings
-//		if ( persistenceUnit.getMappingFileNames() != null ) {
-//			for ( String name : persistenceUnit.getMappingFileNames() ) {
-//				metadataSources.addResource( name );
-//			}
-//		}
-//
-//		// explicit persistence unit managed class listings
-//		//		IMPL NOTE : managed-classes can contain class or package names!!!
-//		if ( persistenceUnit.getManagedClassNames() != null ) {
-//			for ( String managedClassName : persistenceUnit.getManagedClassNames() ) {
-//				// try it as a class name first...
-//				final String classFileName = managedClassName.replace( '.', '/' ) + ".class";
-//				final URL classFileUrl = classLoaderService.locateResource( classFileName );
-//				if ( classFileUrl != null ) {
-//					// it is a class
-//					metadataSources.addAnnotatedClassName( managedClassName );
-//					continue;
-//				}
-//
-//				// otherwise, try it as a package name
-//				final String packageInfoFileName = managedClassName.replace( '.', '/' ) + "/package-info.class";
-//				final URL packageInfoFileUrl = classLoaderService.locateResource( packageInfoFileName );
-//				if ( packageInfoFileUrl != null ) {
-//					// it is a package
-//					metadataSources.addPackage( managedClassName );
-//					continue;
-//				}
-//
-//				LOG.debugf(
-//						"Unable to resolve class [%s] named in persistence unit [%s]",
-//						managedClassName,
-//						persistenceUnit.getName()
-//				);
-//			}
-//		}
+		persistenceUnit.getAllClassNames().forEach( (name) -> {
+			if ( name.endsWith( "package-info" ) ) {
+				// this makes a difference for some reason in AnnotationMetadataSourceProcessorImpl
+				metadataSources.addPackage( StringHelper.qualifier( name ) );
+			}
+			else {
+				metadataSources.addAnnotatedClassName( name );
+			}
+		} );
 
-		addMappingFiles( metadataSources );
+		if ( !metamodelBuilder.getMetadataBuildingOptions().isXmlMappingEnabled() ) {
+			BOOT_LOGGER.ignoringXmlMappings(
+					persistenceUnit.getMappingFileNames().size(),
+					MappingSettings.XML_MAPPING_ENABLED
+			);
+		}
+		else {
+			persistenceUnit.getMappingFileNames().forEach( name -> {
+				metadataSources.addResource( name );
+			} );
+			addStandardMappings( persistenceUnit, metadataSources );
+
+			// add any explicit hbm.xml references passed in
+			final String explicitHbmXmls =
+					(String) configurationValues.remove( AvailableSettings.HBM_XML_FILES );
+			if ( explicitHbmXmls != null ) {
+				for ( String hbmXml : split( ", ", explicitHbmXmls ) ) {
+					metadataSources.addResource( hbmXml );
+				}
+			}
+		}
 	}
 
-	private void addMappingFiles(MetadataSources metadataSources) {
-		// add any explicit hbm.xml references passed in
-		final String explicitHbmXmls =
-				(String) configurationValues.remove( AvailableSettings.HBM_XML_FILES );
-		if ( explicitHbmXmls != null ) {
-			for ( String hbmXml : split( ", ", explicitHbmXmls ) ) {
-				metadataSources.addResource( hbmXml );
-			}
-		}
-
-		// add any explicit orm.xml references passed in
-		final List<?> explicitOrmXmlList =
-				(List<?>) configurationValues.remove( AvailableSettings.ORM_XML_FILES );
-		if ( explicitOrmXmlList != null ) {
-			for ( Object object : explicitOrmXmlList ) {
-				metadataSources.addResource( (String) object );
-			}
-		}
+	private void addStandardMappings(PersistenceUnitDescriptor persistenceUnit, MetadataSources metadataSources) {
+		var ormXmlUrls = standardServiceRegistry.requireService( ClassLoaderService.class ).locateResources( "META-INF/orm.xml" );
+		ormXmlUrls.forEach( metadataSources::addURL );
 	}
 
 	private List<ConverterDescriptor<?, ?>> getConverterDescriptors(MetadataSources metadataSources) {
@@ -1332,9 +1522,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		metamodelBuilder.applyDefaultToOneFetchType( persistenceUnit.getDefaultToOneFetchType() );
 
-		metamodelBuilder.applyScanEnvironment( new StandardJpaScanEnvironmentImpl( persistenceUnit ) );
-		metamodelBuilder.applyScanOptions( getScanOptions() );
-
 		final var cacheRegionDefinitions = mergedSettings.getCacheRegionDefinitions();
 		if ( cacheRegionDefinitions != null ) {
 			cacheRegionDefinitions.forEach( metamodelBuilder::applyCacheRegionDefinition );
@@ -1345,13 +1532,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( converterDescriptors != null ) {
 			converterDescriptors.forEach( metamodelBuilder::applyAttributeConverter );
 		}
-	}
-
-	private StandardScanOptions getScanOptions() {
-		return new StandardScanOptions(
-				(String) configurationValues.get( SCANNER_DISCOVERY ),
-				persistenceUnit.isExcludeUnlistedClasses()
-		);
 	}
 
 	private void applyTypeContributors() {
@@ -1563,7 +1743,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	/**
 	 * Exposed to extensions: see Hibernate Reactive
 	 */
-	protected StandardServiceRegistry getStandardServiceRegistry() {
+	public StandardServiceRegistry getStandardServiceRegistry() {
 		return standardServiceRegistry;
 	}
 }

@@ -8,7 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import org.apache.maven.cli.MavenCli;
+import org.codehaus.plexus.classworlds.ClassWorld;
 import org.hibernate.bytecode.enhance.spi.EnhancementInfo;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -28,13 +30,22 @@ public class EnhancerMojoTestIT {
 	@TempDir
 	File projectDir;
 
+	private ClassWorld classWorld;
 	private MavenCli mavenCli;
+	private URLClassLoader testClassLoader;
 
 	@BeforeEach
 	public void beforeEach() throws Exception {
 		copyJavFiles();
 		System.setProperty(MVN_HOME, projectDir.getAbsolutePath());
-		mavenCli = new MavenCli();
+		classWorld = new ClassWorld( "plexus.core", Thread.currentThread().getContextClassLoader() );
+		mavenCli = new MavenCli( classWorld );
+	}
+
+	@AfterEach
+	public void afterEach() throws Exception {
+		classWorld.close();
+		destroyTestClassLoader();
 	}
 
 	@Test
@@ -214,7 +225,7 @@ public class EnhancerMojoTestIT {
 		assertFalse(fileExists("target/classes/Baz.class"));
 		assertFalse(fileExists("target/classes/Foo.class"));
 		// Execute the 'compile' target
-		new MavenCli().doMain(
+		mavenCli.doMain(
 				new String[]{"compile"},
 				projectDir.getAbsolutePath(),
 				null,
@@ -278,14 +289,29 @@ public class EnhancerMojoTestIT {
 	}
 
 	private ClassLoader getTestClassLoader() throws Exception {
-		return new URLClassLoader( new URL[]{
-				new File(projectDir, "target/classes").toURI().toURL(),
-				new File(projectDir, "target/dependency/geolatte-geom-1.10.jar").toURI().toURL(),
-		});
+		if ( testClassLoader == null ) {
+			testClassLoader = new URLClassLoader( new URL[] {
+					new File( projectDir, "target/classes" ).toURI().toURL(),
+					new File( projectDir, "target/dependency/geolatte-geom-1.10.jar" ).toURI().toURL(),
+			} );
+		}
+		return testClassLoader;
+	}
+
+	private void destroyTestClassLoader() throws Exception {
+		if ( testClassLoader != null ) {
+			testClassLoader.close();
+			testClassLoader = null;
+		}
 	}
 
 	private boolean isEnhanced(String className) throws Exception {
-		return getTestClassLoader().loadClass( className ).isAnnotationPresent( EnhancementInfo.class );
+		try {
+			return getTestClassLoader().loadClass( className ).isAnnotationPresent( EnhancementInfo.class );
+		}
+		finally {
+			destroyTestClassLoader();
+		}
 	}
 
 	private boolean methodIsPresentInClass(String methodName, String className) throws Exception {
@@ -296,30 +322,38 @@ public class EnhancerMojoTestIT {
 		} catch (NoSuchMethodException e) {
 			return false;
 		}
+		finally {
+			destroyTestClassLoader();
+		}
 	}
 
 	private boolean isAssociationManagementPresent() throws Exception {
 		// Some dynamic programming
 		ClassLoader loader = getTestClassLoader();
-		// Obtain the class objects for 'Baz' and 'Bar'
-		Class<?> bazClass = loader.loadClass( "Baz" );
-		Class<?> barClass = loader.loadClass( "Bar" );
-		// Create an instance of both 'Baz' and 'Bar'
-		Object bazObject = bazClass.getDeclaredConstructor().newInstance();
-		Object barObject = barClass.getDeclaredConstructor().newInstance();
-		// Lookup the 'bars' field of class 'Baz' (an ArrayList of 'Bar' objects)
-		Field bazBarsField = bazClass.getDeclaredField( "bars" );
-		bazBarsField.setAccessible( true );
-		// Obtain the 'bars' list of the 'Baz' object; it should be empty
-		List<?> bazBarsList = (List<?>) bazBarsField.get( bazObject );   // baz.bars
-		assertTrue(bazBarsList.isEmpty());
-		// Lookup the 'setBaz' method of class 'Bar' and invoke it on the 'Bar' object
-		Method barSetBazMethod = barClass.getDeclaredMethod( "setBaz", new Class[] { bazClass } );
-		barSetBazMethod.invoke( barObject, bazObject );                  // bar.setBaz(baz)
-		// Reobtain the 'bars' list of the 'Baz' object
-		bazBarsList = (List<?>) bazBarsField.get( bazObject );
-		// If there is association management, the 'bars' list should contain the 'Bar' object
-		return bazBarsList.contains( barObject );                        // baz.bars.contains(bar)
+		try {
+			// Obtain the class objects for 'Baz' and 'Bar'
+			Class<?> bazClass = loader.loadClass( "Baz" );
+			Class<?> barClass = loader.loadClass( "Bar" );
+			// Create an instance of both 'Baz' and 'Bar'
+			Object bazObject = bazClass.getDeclaredConstructor().newInstance();
+			Object barObject = barClass.getDeclaredConstructor().newInstance();
+			// Lookup the 'bars' field of class 'Baz' (an ArrayList of 'Bar' objects)
+			Field bazBarsField = bazClass.getDeclaredField( "bars" );
+			bazBarsField.setAccessible( true );
+			// Obtain the 'bars' list of the 'Baz' object; it should be empty
+			List<?> bazBarsList = (List<?>) bazBarsField.get( bazObject );   // baz.bars
+			assertTrue( bazBarsList.isEmpty() );
+			// Lookup the 'setBaz' method of class 'Bar' and invoke it on the 'Bar' object
+			Method barSetBazMethod = barClass.getDeclaredMethod( "setBaz", new Class[] {bazClass} );
+			barSetBazMethod.invoke( barObject, bazObject );                  // bar.setBaz(baz)
+			// Reobtain the 'bars' list of the 'Baz' object
+			bazBarsList = (List<?>) bazBarsField.get( bazObject );
+			// If there is association management, the 'bars' list should contain the 'Bar' object
+			return bazBarsList.contains( barObject );                        // baz.bars.contains(bar)
+		}
+		finally {
+			destroyTestClassLoader();
+		}
 	}
 
 	private boolean fileExists(String relativePath) {

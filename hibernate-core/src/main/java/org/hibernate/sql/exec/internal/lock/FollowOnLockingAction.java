@@ -22,7 +22,6 @@ import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -33,15 +32,11 @@ import org.hibernate.sql.exec.spi.PostAction;
 import org.hibernate.sql.exec.spi.StatementAccess;
 
 import java.sql.Connection;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import static java.util.Collections.emptyMap;
 import static org.hibernate.sql.exec.SqlExecLogger.SQL_EXEC_LOGGER;
@@ -76,12 +71,9 @@ public class FollowOnLockingAction implements PostAction {
 			LockingClauseStrategy lockingClauseStrategy,
 			JdbcSelectWithActionsBuilder jdbcSelectBuilder) {
 		final var fromClause = lockingTarget.getFromClause();
-		final Supplier<LoadedValuesCollector> loadedValuesCollector =
-				() -> resolveLoadedValuesCollector( fromClause, lockingClauseStrategy );
-
 		// NOTE: we need to set this separately so that it can get incorporated into
 		// the JdbcValuesSourceProcessingState for proper callbacks
-		jdbcSelectBuilder.setLoadedValuesCollector( loadedValuesCollector );
+		jdbcSelectBuilder.setLoadedValuesCollectorFactory( resolveLoadedValuesCollectorFactory( fromClause, lockingClauseStrategy ) );
 
 		// additionally, add a post-action which uses the collected values.
 		jdbcSelectBuilder.appendPostAction( new FollowOnLockingAction(
@@ -275,52 +267,9 @@ public class FollowOnLockingAction implements PostAction {
 	}
 
 	// Used by Hibernate Reactive
-	protected static LoadedValuesCollectorImpl resolveLoadedValuesCollector(
+	protected static LoadedValuesCollectorFactory resolveLoadedValuesCollectorFactory(
 			FromClause fromClause,
 			LockingClauseStrategy lockingClauseStrategy) {
-		return new LoadedValuesCollectorImpl( lockingClauseStrategy );
-	}
-
-	public static class LoadedValuesCollectorImpl implements LoadedValuesCollector {
-		private final Collection<NavigablePath> pathsToLock;
-
-		private List<LoadedEntityRegistration> entitiesToLock;
-		private List<LoadedCollectionRegistration> collectionsToLock;
-
-		public LoadedValuesCollectorImpl(LockingClauseStrategy lockingClauseStrategy) {
-			pathsToLock = LockingHelper.extractPathsToLock( lockingClauseStrategy );
-		}
-
-		@Override
-		public void registerEntity(NavigablePath navigablePath, EntityMappingType entityDescriptor, EntityKey entityKey) {
-			if ( pathsToLock.contains( navigablePath ) ) {
-				if ( entitiesToLock == null ) {
-					entitiesToLock = new ArrayList<>();
-				}
-				entitiesToLock.add(
-						new LoadedEntityRegistration( navigablePath, entityDescriptor, entityKey ) );
-			}
-		}
-
-		@Override
-		public void registerCollection(NavigablePath navigablePath, PluralAttributeMapping collectionDescriptor, CollectionKey collectionKey) {
-			if ( pathsToLock.contains( navigablePath ) ) {
-				if ( collectionsToLock == null ) {
-					collectionsToLock = new ArrayList<>();
-				}
-				collectionsToLock.add(
-						new LoadedCollectionRegistration( navigablePath, collectionDescriptor, collectionKey ) );
-			}
-		}
-
-		@Override
-		public List<LoadedEntityRegistration> getCollectedEntities() {
-			return entitiesToLock == null ? Collections.emptyList() : entitiesToLock;
-		}
-
-		@Override
-		public List<LoadedCollectionRegistration> getCollectedCollections() {
-			return collectionsToLock == null ? Collections.emptyList() : collectionsToLock;
-		}
+		return new LoadedValuesCollectorFactory( lockingClauseStrategy.getPathsToLock() );
 	}
 }

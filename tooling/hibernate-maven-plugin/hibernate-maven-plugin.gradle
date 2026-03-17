@@ -87,6 +87,7 @@ integrationTest {
     environment "hibernateVersion", project.version
 }
 
-integrationTest.dependsOn rootProject.childProjects.'hibernate-core'.tasks.publishToMavenLocal
+integrationTest.dependsOn project(':hibernate-core').tasks.publishToMavenLocal
+integrationTest.dependsOn ":hibernate-platform:publishToMavenLocal"
 integrationTest.dependsOn publishToMavenLocal
 check.dependsOn integrationTest

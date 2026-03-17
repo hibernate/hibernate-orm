@@ -7,6 +7,7 @@ package org.hibernate.sql.exec.spi;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.exec.internal.lock.LoadedValuesCollectorFactory;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 
 import java.sql.Connection;
@@ -26,11 +27,12 @@ public interface JdbcSelect extends PrimaryOperation, CacheableJdbcOperation {
 	int getMaxRows();
 
 	/**
-	 * Creates a collector of values loaded to be applied during the
+	 * Returns a Factory used to create a collector of values loaded to be applied during the
 	 * processing of the selection's results.
 	 * May be {@code null}.
 	 */
-	@Nullable LoadedValuesCollector createLoadedValuesCollector();
+	@Nullable
+	LoadedValuesCollectorFactory getLoadedValuesCollectorFactory();
 
 	/**
 	 * Perform any pre-actions.

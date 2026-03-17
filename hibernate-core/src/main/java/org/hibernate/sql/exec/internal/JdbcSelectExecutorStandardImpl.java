@@ -196,7 +196,9 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			}
 		};
 
-		final var loadedValuesCollector = jdbcSelect.createLoadedValuesCollector();
+		final var loadedValuesCollector = jdbcSelect.getLoadedValuesCollectorFactory() == null
+				? null
+				: jdbcSelect.getLoadedValuesCollectorFactory().build();
 		final var valuesProcessingState = new JdbcValuesSourceProcessingStateStandardImpl(
 				loadedValuesCollector,
 				processingOptions,

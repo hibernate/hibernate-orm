@@ -1,8 +1,9 @@
+:version: 8.0
+
 = {version} Migration Guide
 :toc2:
 :sectanchors:
 :toclevels: 4
-:version: 8.0
 :docsBase: https://docs.jboss.org/hibernate/orm
 :versionDocBase: {docsBase}/{version}
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
@@ -159,6 +160,23 @@ address this conflict, we've renamed the `NamedSqmQueryMemento` method to
 `#getAnticipatedParameterTypes`.
 
 
+[[scanning]]
+=== Scanning
+
+Jakarta Persistence clarifies that scanning is the responsibility of the
+container, rather than the provider.  To that effect, the scanning SPI, and
+related ArchiveDescriptor SPI, have been rewritten.  During "EE bootstrap",
+Hibernate no longer performs scanning.  Instead the `jakarta.persistence.spi.PersistenceUnitInfo`
+has been augmented to make it clear that the container passes in any classes
+discovered during scanning.
+
+Hibernate does still provide this SPI for use by containers - Wild Fly for example takes
+advantage of this.
+
+Hibernate also uses this scanning SPI when applications use `HibernatePersistenceConfiguration`
+bootstrapping and supply the root and/or non-root URLs.
+
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Changes in Behavior
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -233,6 +251,12 @@ This operates quite differently from the older Hibernate `Session.get()` methods
 * force initialized the entity, if there was one and it was previously uninitialized.
 
 Applications which use(d) `Session.get()` should be aware of this change in behavior.
+
+=== Scanning
+
+As discussed in <<scanning>> above, Hibernate no longer performs scanning during "EE bootstrap".
+It is expected by Jakarta Persistence that the container perform the scanning prior to
+bootstrapping Hibernate.
 
 
 [[graph-remove-attribute-node]]

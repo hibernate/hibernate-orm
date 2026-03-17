@@ -4,16 +4,16 @@
  */
 package org.hibernate.boot.archive.internal;
 
+import org.hibernate.HibernateException;
+import org.hibernate.boot.archive.spi.InputStreamAccess;
+
 import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URL;
 
-import org.hibernate.HibernateException;
-import org.hibernate.boot.archive.spi.InputStreamAccess;
-
-/**
- * @author Steve Ebersole
- */
+/// InputStreamAccess for streams from URL.
+///
+/// @author Steve Ebersole
 public class UrlInputStreamAccess implements InputStreamAccess, Serializable {
 	private final URL url;
 

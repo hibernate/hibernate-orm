@@ -4,17 +4,15 @@
  */
 package org.hibernate.boot.archive.internal;
 
+import org.hibernate.boot.archive.spi.InputStreamAccess;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
 
-import org.hibernate.boot.archive.spi.InputStreamAccess;
-
-/**
- * An InputStreamAccess implementation based on a byte array
- *
- * @author Steve Ebersole
- */
+/// An InputStreamAccess implementation based on a byte array
+///
+/// @author Steve Ebersole
 public class ByteArrayInputStreamAccess implements InputStreamAccess, Serializable {
 	private final String name;
 	private final byte[] bytes;

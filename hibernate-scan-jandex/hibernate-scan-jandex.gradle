@@ -9,4 +9,8 @@ dependencies {
 	api jakartaLibs.jpa
 
 	implementation libs.jandex
+	implementation libs.hibernateModels
+
+	testImplementation project( ':hibernate-testing' )
+	testImplementation testLibs.shrinkwrap
 }

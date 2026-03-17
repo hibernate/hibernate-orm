@@ -17,7 +17,6 @@ import org.hibernate.Session;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -280,7 +279,6 @@ public class ExpressionsTest {
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "does not support extract(epoch)")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "datediff overflow limits")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.date multi overflows")
-	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "FIXIT")
 	public void testDateTimeOperations(EntityManagerFactoryScope scope) {
 		HibernateCriteriaBuilder builder = (HibernateCriteriaBuilder) this.builder;
 		scope.inTransaction( entityManager -> {

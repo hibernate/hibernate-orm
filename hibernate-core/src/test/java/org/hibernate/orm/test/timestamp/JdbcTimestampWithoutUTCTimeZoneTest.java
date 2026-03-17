@@ -12,6 +12,7 @@ import java.time.ZoneId;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -32,6 +33,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Vlad Mihalcea
  */
 @RequiresDialect(value = PostgreSQLDialect.class)
+@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
+		reason = "Spanner PG timezone doesn't depend on JVM timezone")
 public class JdbcTimestampWithoutUTCTimeZoneTest extends BaseSessionFactoryFunctionalTest {
 
 	private TimeZoneConnectionProvider connectionProvider;

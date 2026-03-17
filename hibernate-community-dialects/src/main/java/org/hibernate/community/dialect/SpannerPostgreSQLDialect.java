@@ -20,6 +20,10 @@ import org.hibernate.community.dialect.sql.ast.SpannerPostgreSQLSqlAstTranslator
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
+import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
+import org.hibernate.dialect.function.array.ArrayIncludesOperatorFunction;
+import org.hibernate.dialect.function.json.SpannerPostgreSQLJsonArrayFunction;
+import org.hibernate.dialect.function.json.SpannerPostgreSQLJsonObjectFunction;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
 import org.hibernate.dialect.FunctionalDependencyAnalysisSupportImpl;
@@ -27,6 +31,11 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.SpannerConcatFunction;
+import org.hibernate.dialect.function.array.SpannerPostgreSQLArrayConcatElementFunction;
+import org.hibernate.dialect.function.array.SpannerPostgreSQLArrayTrimEmulation;
+import org.hibernate.dialect.function.array.SpannerPostgreSQLArrayReplaceFunction;
+import org.hibernate.dialect.function.array.SpannerPostgreSQLArrayRemoveFunction;
+import org.hibernate.dialect.function.array.SpannerPostgreSQLArrayRemoveIndexFunction;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.function.SpannerPostgreSQLRegexpLikeFunction;
 import org.hibernate.dialect.function.SpannerPostgreSQLTruncFunction;
@@ -146,6 +155,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	private static final Pattern NOT_NULL_CONSTRAINT_PATTERN = Pattern.compile( ".*(must not be NULL in table|does not specify a non-null value for NOT NULL column|Cannot specify a null value for column).*" );
 	private static final Pattern FOREIGN_KEY_CONSTRAINT_PATTERN = Pattern.compile( ".*Foreign key.*(constraint violation on table|constraint violation when deleting or updating referenced key|violated on table).*" );
 	private static final Pattern CHECK_CONSTRAINT_PATTERN = Pattern.compile( ".*Check constraint.*" );
+	private static final Pattern TABLE_DOES_NOT_EXIST_PATTERN = Pattern.compile( ".*relation.*does not exist.*" );
 
 	public SpannerPostgreSQLDialect() {
 		super();
@@ -202,13 +212,13 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 		);
 		functionRegistry.registerPattern(
 				"var_pop",
-				"(avg(?1 * ?1)-power(avg(?1),2))" );
+				"(avg(?1 * ?1)-power(cast(avg(?1) as float8),cast(2 as float8)))" );
 		functionRegistry.registerPattern(
 				"stddev_pop",
-				"sqrt(avg(?1 * ?1)-power(avg(?1),2))" );
+				"sqrt(avg(?1 * ?1)-power(cast(avg(?1) as float8),cast(2 as float8)))" );
 
-		functionFactory.varSamp_sumCount();
-		functionFactory.stddevSamp_sumCount();
+		functionFactory.varSamp_sumCount_spanner();
+		functionFactory.stddevSamp_sumCount_spanner();
 
 		functionFactory.octetLength_pattern("length(?1)");
 		functionFactory.bitLength_pattern("length(?1)*8");
@@ -229,14 +239,50 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 				.setExactArgumentCount( 2 )
 				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE )
 				.register();
+
+		functionRegistry.register( "json_array",
+				new SpannerPostgreSQLJsonArrayFunction( functionContributions.getTypeConfiguration() ) );
+		functionRegistry.register( "json_object",
+				new SpannerPostgreSQLJsonObjectFunction( functionContributions.getTypeConfiguration() ) );
+
+		functionFactory.unnest_postgresql( false );
+		functionFactory.arrayLength_spanner();
+
+		functionRegistry.register( "array_prepend", new SpannerPostgreSQLArrayConcatElementFunction( true ) );
+		functionRegistry.register( "array_append", new SpannerPostgreSQLArrayConcatElementFunction( false ) );
+		functionRegistry.register( "array_trim", new SpannerPostgreSQLArrayTrimEmulation() );
+		functionRegistry.register( "array_replace", new SpannerPostgreSQLArrayReplaceFunction() );
+		functionRegistry.register( "array_remove", new SpannerPostgreSQLArrayRemoveFunction() );
+		functionRegistry.register( "array_remove_index", new SpannerPostgreSQLArrayRemoveIndexFunction( true ) );
+		functionRegistry.register( "array_contains", new ArrayContainsOperatorFunction( false, functionContributions.getTypeConfiguration() ) );
+		functionRegistry.register( "array_includes", new ArrayIncludesOperatorFunction( false, functionContributions.getTypeConfiguration() ) );
+		functionRegistry.register( "array_includes_nullable", new ArrayIncludesOperatorFunction( true, functionContributions.getTypeConfiguration() ) );
 	}
 
 	@Override
 	protected void registerJsonFunction(CommonFunctionFactory functionFactory) {
+		functionFactory.jsonObject_postgresql();
+		functionFactory.jsonArray_postgresql();
+		functionFactory.jsonSet_postgresql();
+		functionFactory.jsonRemove_postgresql();
+		functionFactory.jsonReplace_postgresql();
+		functionFactory.jsonArrayInsert_postgresql();
 	}
 
 	@Override
 	protected void registerArrayFunctions(CommonFunctionFactory functionFactory) {
+		functionFactory.array_postgresql();
+		functionFactory.arrayAggregate();
+		functionFactory.arrayConcat_postgresql();
+		functionFactory.arrayPrepend_postgresql();
+		functionFactory.arrayAppend_postgresql();
+		functionFactory.arrayIntersects_postgresql();
+		functionFactory.arrayGet_bracket();
+		functionFactory.arraySlice_operator();
+		functionFactory.arrayReplace();
+		functionFactory.arrayReverse_unnest();
+		functionFactory.arraySort_unnest();
+		functionFactory.arrayToString_postgresql();
 	}
 
 	@Override
@@ -251,6 +297,14 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	protected void initDefaultProperties() {
 		super.initDefaultProperties();
 		getDefaultProperties().setProperty( AvailableSettings.PREFERRED_POOLED_OPTIMIZER, "none" );
+	}
+
+	@Override
+	public String getArrayTypeName(String javaElementTypeName, String elementTypeName, Integer maxLength) {
+		if ( elementTypeName != null && elementTypeName.equals( "varchar" ) ) {
+			elementTypeName = "text";
+		}
+		return super.getArrayTypeName( javaElementTypeName, elementTypeName, maxLength );
 	}
 
 	@Override
@@ -975,7 +1029,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 		if (sqlException.getErrorCode() == 6) {
 			return new ConstraintViolationException( message, sqlException, ConstraintViolationException.ConstraintKind.UNIQUE, null );
 		}
-		else if (sqlException.getErrorCode() == 5) {
+		else if (sqlException.getErrorCode() == 5 || matches( TABLE_DOES_NOT_EXIST_PATTERN, message )) {
 			return new SQLGrammarException( message, sqlException );
 		}
 		else if (matches( NOT_NULL_CONSTRAINT_PATTERN, message )) {

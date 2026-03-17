@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
 
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
@@ -89,6 +90,7 @@ public class ArrayTrimTest {
 	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 14, versionMatchMode = VersionMatchMode.OLDER, reason = "The PostgreSQL emulation for version < 14 doesn't throw an error")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, majorVersion = 14, versionMatchMode = VersionMatchMode.OLDER, reason = "The PostgreSQL emulation for version < 14 doesn't throw an error")
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "The Cockroach emulation doesn't throw an error")
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner PG doesn't throw an error")
 	public void testTrimOutOfRange(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			try {

@@ -29,6 +29,7 @@ import java.util.Set;
 
 import org.apache.tools.ant.BuildException;
 import org.gradle.api.DefaultTask;
+import org.gradle.work.DisableCachingByDefault;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.ResolvedArtifact;
@@ -45,6 +46,7 @@ import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.RevengStrategyFactory;
 import org.hibernate.tool.gradle.Extension;
 
+@DisableCachingByDefault(because = "Generates output from a live database connection")
 public abstract class AbstractTask extends DefaultTask {
 
 	@Internal

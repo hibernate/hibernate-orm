@@ -28,7 +28,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.work.DisableCachingByDefault;
 
+@DisableCachingByDefault(because = "Executes SQL against a live database connection")
 public class RunSqlTask extends AbstractTask {
 	
 	@TaskAction

@@ -6,8 +6,9 @@ package org.hibernate.orm.test.mapping.naturalid;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.annotations.NaturalIdConstraint;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -17,37 +18,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-/**
- * Tests the behavior of {@link NaturalIdConstraint}.
- *
- * <p>
- * By default, Hibernate generates the name of the unique constraint
- * used to enforce a {@link NaturalId} using the configured implicit
- * naming strategy.
- * </p>
- *
- * <p>
- * The {@link NaturalIdConstraint} annotation allows explicitly specifying
- * the name of this constraint at the entity level.
- * </p>
- *
- * <p>
- * This test verifies two scenarios:
- * </p>
- *
- * <ul>
- *     <li>
- *         When {@link NaturalIdConstraint} is present, the specified
- *         constraint name is used.
- *     </li>
- *     <li>
- *         When the annotation is absent, Hibernate falls back to the
- *         implicit naming strategy.
- *     </li>
- * </ul>
- *
- * @author Utsav Mehta
- */
 @JiraKey("HHH-20000")
 @ServiceRegistry
 public class NaturalIdConstraintTest {
@@ -62,10 +32,45 @@ public class NaturalIdConstraintTest {
 				.getTable()
 				.getUniqueKeys();
 
-		assertEquals( 1, uniqueKeys.size() );
+		assertEquals( 1, uniqueKeys.size(), "Should have 1 unique key" );
 
 		var uniqueKey = uniqueKeys.values().iterator().next();
 		assertEquals( "PERSON_SSN", uniqueKey.getName() );
+	}
+
+	@Test
+	public void testCompositeNaturalIdUsesMatchingUniqueConstraint(ServiceRegistryScope registryScope) {
+		var metadata = new MetadataSources( registryScope.getRegistry() )
+				.addAnnotatedClasses( CompositePerson.class )
+				.buildMetadata();
+
+		var uniqueKeys = metadata.getEntityBinding( CompositePerson.class.getName() )
+				.getTable()
+				.getUniqueKeys();
+
+		assertEquals( 1, uniqueKeys.size(), "Should have 1 unique key for composite natural-id" );
+
+		var uniqueKey = uniqueKeys.values().iterator().next();
+		assertEquals( "PERSON_NATURAL_ID", uniqueKey.getName() );
+	}
+
+	@Test
+	public void testCompositeNaturalIdIgnoresPartialConstraints(ServiceRegistryScope registryScope) {
+		var metadata = new MetadataSources( registryScope.getRegistry() )
+				.addAnnotatedClasses( CompositePersonWithPartialConstraints.class )
+				.buildMetadata();
+
+		var uniqueKeys = metadata.getEntityBinding( CompositePersonWithPartialConstraints.class.getName() )
+				.getTable()
+				.getUniqueKeys();
+
+		assertEquals( 1, uniqueKeys.size() );
+
+		var uniqueKey = uniqueKeys.values().iterator().next();
+
+		// Should NOT use UK_FIRST or UK_LAST
+		assertFalse( uniqueKey.getName().equals( "UK_FIRST" ) );
+		assertFalse( uniqueKey.getName().equals( "UK_LAST" ) );
 	}
 
 	@Test
@@ -87,7 +92,7 @@ public class NaturalIdConstraintTest {
 	}
 
 	@Entity(name = "Person")
-	@NaturalIdConstraint(name = "PERSON_SSN")
+	@Table(uniqueConstraints = @UniqueConstraint(name = "PERSON_SSN", columnNames = "ssn"))
 	public static class Person {
 
 		@Id
@@ -121,5 +126,37 @@ public class NaturalIdConstraintTest {
 
 		@NaturalId
 		String ssn;
+	}
+	@Entity(name = "CompositePerson")
+	@Table(uniqueConstraints = @UniqueConstraint(
+			name = "PERSON_NATURAL_ID",
+			columnNames = {"firstName", "lastName"}
+	))
+	public static class CompositePerson {
+
+		@Id
+		Long id;
+
+		@NaturalId
+		String firstName;
+
+		@NaturalId
+		String lastName;
+	}
+	@Entity(name = "CompositePersonWithPartialConstraints")
+	@Table(uniqueConstraints = {
+			@UniqueConstraint(name = "UK_FIRST", columnNames = "firstName"),
+			@UniqueConstraint(name = "UK_LAST", columnNames = "lastName")
+	})
+	public static class CompositePersonWithPartialConstraints {
+
+		@Id
+		Long id;
+
+		@NaturalId
+		String firstName;
+
+		@NaturalId
+		String lastName;
 	}
 }

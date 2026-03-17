@@ -192,6 +192,7 @@ dependencyResolutionManagement {
             def jfrUnitVersion = version "jfrUnit", "1.0.0.Alpha2"
 
             def hibernateValidatorVersion = version "hibernateValidator", "9.1.0.Final"
+            def persistenceTckVersion = version "persistenceTck", "4.0.0-SNAPSHOT"
 
             library( "validator", "org.hibernate.validator", "hibernate-validator" ).versionRef( hibernateValidatorVersion )
 
@@ -200,6 +201,7 @@ dependencyResolutionManagement {
             library( "junitJupiterParams", "org.junit.jupiter", "junit-jupiter-params" ).versionRef( junitJupiterVersion )
             library( "junit4Engine", "org.junit.vintage", "junit-vintage-engine" ).versionRef( junitJupiterVersion )
             library( "junitJupiterLauncher", "org.junit.platform", "junit-platform-launcher" ).versionRef( junitJupiterLauncherVersion )
+            library( "junitJupiterSuiteEngine", "org.junit.platform", "junit-platform-suite-engine" ).versionRef( junitJupiterLauncherVersion )
             library( "junit4", "junit", "junit" ).versionRef( junit4Version )
 
             library( "assertjCore", "org.assertj", "assertj-core" ).versionRef( assertjVersion )
@@ -223,6 +225,8 @@ dependencyResolutionManagement {
             library( "weld", "org.jboss.weld.se", "weld-se-shaded" ).versionRef( weldVersion )
 
             library( "jfrUnit", "org.moditect.jfrunit", "jfrunit-core" ).versionRef( jfrUnitVersion )
+
+            library( "jakartaPersistenceTckTests", "jakarta.persistence", "persistence-tck-spec-tests" ).versionRef( persistenceTckVersion )
         }
         jdbcLibs {
             def h2Version = version "h2", overrideableVersion( "gradle.libs.versions.h2", "2.4.240" )
@@ -370,6 +374,8 @@ project(':hibernate-ant').projectDir = new File(rootProject.projectDir, "tooling
 include 'hibernate-assistant'
 project(':hibernate-assistant').projectDir = new File(rootProject.projectDir, "tooling/hibernate-assistant")
 
+include 'hibernate-tck-runner'
+
 rootProject.children.each { project ->
     project.buildFileName = "${project.name}.gradle"
     assert project.projectDir.isDirectory()
@@ -377,5 +383,3 @@ rootProject.children.each { project ->
     assert project.buildFile.isFile()
 }
 include 'hibernate-platform'
-
-

@@ -63,9 +63,6 @@ pipeline {
 		maven 'Apache Maven 3.9'
 		jdk 'OpenJDK 25 Latest'
 	}
-	environment {
-		OPENJDK_17_LATEST_HOME = tool name: 'OpenJDK 17 Latest', type: 'jdk'
-	}
 	options {
 		buildDiscarder logRotator(daysToKeepStr: '30', numToKeepStr: '10')
 		disableConcurrentBuilds(abortPrevious: false)

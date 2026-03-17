@@ -42,6 +42,7 @@
        <deploy.skip>false</deploy.skip>
 
        <gradle.executable>./gradlew</gradle.executable>
+       <gradle.default.build.command>build</gradle.default.build.command>
    </properties>
 
    <build>
@@ -184,7 +185,7 @@
                             <executable>${gradle.executable}</executable>
                             <arguments>
                                 <argument>clean</argument>
-                                <argument>build</argument>
+                                <argument>${gradle.default.build.command}</argument>
                                 <argument>-PprojectVersion=${project.version}</argument>
                                 <argument>-Ph2Version=${h2.version}</argument>
                                 <argument>-PgradleTestVersions=${gradle.min.test.version}</argument>
@@ -292,6 +293,17 @@
             </activation>
             <properties>
                 <deploy.publish.gradle.plugin>publishPlugins</deploy.publish.gradle.plugin>
+            </properties>
+        </profile>
+        <profile>
+            <id>skip-tests</id>
+            <activation>
+                <property>
+                    <name>skipTests</name>
+                </property>
+            </activation>
+            <properties>
+                <gradle.default.build.command>assemble</gradle.default.build.command>
             </properties>
         </profile>
     </profiles>

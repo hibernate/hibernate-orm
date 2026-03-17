@@ -19,6 +19,7 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.bytecode.spi.BytecodeProvider;
+import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceConfigurationDescriptor;
@@ -251,11 +252,16 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 	}
 
 	private EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(PersistenceConfiguration configuration) {
-		return getEntityManagerFactoryBuilder(
-				new PersistenceConfigurationDescriptor( configuration ),
-				emptyMap(),
-				HibernatePersistenceProvider.class.getClassLoader()
-		);
+		if ( configuration instanceof HibernatePersistenceConfiguration hibernatePersistenceConfiguration ) {
+			return new EntityManagerFactoryBuilderImpl( hibernatePersistenceConfiguration );
+		}
+		else {
+			return getEntityManagerFactoryBuilder(
+					new PersistenceConfigurationDescriptor( configuration ),
+					emptyMap(),
+					HibernatePersistenceProvider.class.getClassLoader()
+			);
+		}
 	}
 
 	@Override

@@ -167,6 +167,27 @@ public abstract class NClobJdbcType implements JdbcType {
 						st.setString( name, javaType.unwrap( value, String.class, options ) );
 					}
 				}
+
+				@Override
+				protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						super.doBindNull( st, index, options );
+					}
+					else {
+						st.setNull( index, Types.CLOB );
+					}
+				}
+
+				@Override
+				protected void doBindNull(CallableStatement st, String name, WrapperOptions options)
+						throws SQLException {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						super.doBindNull( st, name, options );
+					}
+					else {
+						st.setNull( name, Types.CLOB );
+					}
+				}
 			};
 		}
 		@Override
@@ -247,6 +268,27 @@ public abstract class NClobJdbcType implements JdbcType {
 						st.setClob( name, javaType.unwrap( value, NClob.class, options ) );
 					}
 				}
+
+				@Override
+				protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						super.doBindNull( st, index, options );
+					}
+					else {
+						st.setNull( index, Types.CLOB );
+					}
+				}
+
+				@Override
+				protected void doBindNull(CallableStatement st, String name, WrapperOptions options)
+						throws SQLException {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						super.doBindNull( st, name, options );
+					}
+					else {
+						st.setNull( name, Types.CLOB );
+					}
+				}
 			};
 		}
 	};
@@ -288,6 +330,27 @@ public abstract class NClobJdbcType implements JdbcType {
 						st.setCharacterStream( name, characterStream.asReader(), characterStream.getLength() );
 					}
 				}
+
+				@Override
+				protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						super.doBindNull( st, index, options );
+					}
+					else {
+						st.setNull( index, Types.CLOB );
+					}
+				}
+
+				@Override
+				protected void doBindNull(CallableStatement st, String name, WrapperOptions options)
+						throws SQLException {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						super.doBindNull( st, name, options );
+					}
+					else {
+						st.setNull( name, Types.CLOB );
+					}
+				}
 			};
 		}
 	};
@@ -325,6 +388,27 @@ public abstract class NClobJdbcType implements JdbcType {
 					}
 					else {
 						st.setString( name, javaType.unwrap( value, String.class, options ) );
+					}
+				}
+
+				@Override
+				protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						super.doBindNull( st, index, options );
+					}
+					else {
+						st.setNull( index, Types.CLOB );
+					}
+				}
+
+				@Override
+				protected void doBindNull(CallableStatement st, String name, WrapperOptions options)
+						throws SQLException {
+					if ( options.getDialect().supportsNationalizedMethods() ) {
+						super.doBindNull( st, name, options );
+					}
+					else {
+						st.setNull( name, Types.CLOB );
 					}
 				}
 			};

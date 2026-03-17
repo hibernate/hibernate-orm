@@ -815,6 +815,7 @@ public abstract sealed class PersistentClass
 	public void setCustomSQLInsert(String customSQLInsert, boolean callable) {
 		this.customSQLInsert = customSQLInsert;
 		this.customInsertCallable = callable;
+		this.insertExpectation = Expectation.None::new;
 	}
 
 	public String getCustomSQLInsert() {
@@ -828,6 +829,7 @@ public abstract sealed class PersistentClass
 	public void setCustomSQLUpdate(String customSQLUpdate, boolean callable) {
 		this.customSQLUpdate = customSQLUpdate;
 		this.customUpdateCallable = callable;
+		this.updateExpectation = Expectation.None::new;
 	}
 
 	public String getCustomSQLUpdate() {
@@ -841,6 +843,7 @@ public abstract sealed class PersistentClass
 	public void setCustomSQLDelete(String customSQLDelete, boolean callable) {
 		this.customSQLDelete = customSQLDelete;
 		this.customDeleteCallable = callable;
+		this.deleteExpectation = Expectation.None::new;
 	}
 
 	public String getCustomSQLDelete() {

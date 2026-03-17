@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<persistence version="8.0" xmlns="http://www.hibernate.org/xsd/orm/configuration">
+
+    <persistence-unit name="explicit">
+        <class>org.hibernate.orm.test.boot.archive.OneEntity</class>
+        <class>org.hibernate.orm.test.boot.archive.SecondEntity</class>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+    </persistence-unit>
+
+</persistence>

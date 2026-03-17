@@ -4,6 +4,28 @@
  */
 package org.hibernate.orm.test.bootstrap.scanning;
 
+import org.hibernate.boot.archive.internal.ArchiveHelper;
+import org.hibernate.boot.archive.internal.ExplodedArchiveDescriptor;
+import org.hibernate.boot.archive.internal.JarFileBasedArchiveDescriptor;
+import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
+import org.hibernate.boot.archive.spi.ArchiveDescriptor;
+import org.hibernate.boot.scan.internal.ScanningContextImpl;
+import org.hibernate.boot.scan.spi.Scanner;
+import org.hibernate.boot.scan.spi.ScanningResult;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.orm.test.jpa.pack.defaultpar.Version;
+import org.hibernate.orm.test.jpa.pack.explodedpar.Carpet;
+import org.hibernate.scan.jandex.ProvidedIndexScanner;
+import org.hibernate.scan.jandex.IndexBuildingScanner;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.jboss.jandex.IndexView;
+import org.junit.jupiter.api.Test;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,37 +34,8 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
-import java.net.URLStreamHandlerFactory;
-import java.util.Collections;
-import java.util.List;
-
-import org.hibernate.archive.scan.internal.ClassDescriptorImpl;
-import org.hibernate.archive.scan.internal.ScanResultCollector;
-import org.hibernate.archive.scan.internal.StandardScanner;
-import org.hibernate.archive.scan.spi.AbstractScannerImpl;
-import org.hibernate.boot.archive.internal.ArchiveHelper;
-import org.hibernate.boot.archive.internal.ExplodedArchiveDescriptor;
-import org.hibernate.boot.archive.internal.JarFileBasedArchiveDescriptor;
-import org.hibernate.boot.archive.internal.JarProtocolArchiveDescriptor;
-import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
-import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
-import org.hibernate.boot.archive.scan.internal.StandardScanParameters;
-import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
-import org.hibernate.boot.archive.scan.spi.MappingFileDescriptor;
-import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
-import org.hibernate.boot.archive.scan.spi.ScanResult;
-import org.hibernate.boot.archive.spi.ArchiveDescriptor;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.orm.test.jpa.pack.defaultpar.Version;
-import org.hibernate.orm.test.jpa.pack.explodedpar.Carpet;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.RequiresDialect;
-
-import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -51,9 +44,10 @@ import static org.junit.Assert.assertTrue;
  * @author Brett Meyer
  */
 @RequiresDialect( H2Dialect.class ) // Nothing dialect-specific -- no need to run in matrix.
+@ServiceRegistry
 public class JarVisitorTest extends PackagingTestCase {
 	@Test
-	public void testHttp() throws Exception {
+	public void testHttp(ServiceRegistryScope registryScope) throws Exception {
 		final URL url = ArchiveHelper.getJarURLFromURLEntry(
 				new URL(
 						"jar:http://www.ibiblio.org/maven/hibernate/jars/hibernate-annotations-3.0beta1.jar!/META-INF/persistence.xml"
@@ -69,79 +63,47 @@ public class JarVisitorTest extends PackagingTestCase {
 			return;
 		}
 
-		ScanResult result = standardScan( url );
-		assertEquals( 0, result.getLocatedClasses().size() );
-		assertEquals( 0, result.getLocatedPackages().size() );
-		assertEquals( 0, result.getLocatedMappingFiles().size() );
+		ScanningResult result = standardScan( url, null, registryScope.getRegistry() );
+		assertEquals( 0, result.discoveredClasses().size() );
+		assertEquals( 0, result.discoveredPackages().size() );
 	}
 
-	private ScanResult standardScan(URL url) {
-		ScanEnvironment env = new ScanEnvironmentImpl( url );
-		return new StandardScanner().scan(
-				env,
-				new StandardScanOptions(),
-				StandardScanParameters.INSTANCE
+	private ScanningResult standardScan(URL url, IndexView jandexIndex, StandardServiceRegistry registry) {
+		var context = new ScanningContextImpl(
+				new StandardArchiveDescriptorFactory(),
+				Environment.getProperties()
 		);
-	}
-
-	private static class ScanEnvironmentImpl implements ScanEnvironment {
-		private final URL rootUrl;
-
-		private ScanEnvironmentImpl(URL rootUrl) {
-			this.rootUrl = rootUrl;
+		final Scanner scanner;
+		if ( jandexIndex == null ) {
+			scanner = new IndexBuildingScanner( context );
 		}
-
-		@Override
-		public URL getRootUrl() {
-			return rootUrl;
+		else {
+			scanner = new ProvidedIndexScanner( context, jandexIndex );
 		}
-
-		@Override
-		public List<URL> getNonRootUrls() {
-			return Collections.emptyList();
-		}
-
-		@Override
-		public List<String> getExplicitlyListedClassNames() {
-			return Collections.emptyList();
-		}
-
-		@Override
-		public List<String> getExplicitlyListedMappingFiles() {
-			return Collections.emptyList();
-		}
+		return scanner.scan( url );
 	}
 
 	@Test
-	public void testInputStreamZippedJar() throws Exception {
+	public void testInputStreamZippedJar(ServiceRegistryScope registryScope) throws Exception {
+		var jandexIndex = buildDefaultParIndex();
 		File defaultPar = buildDefaultPar();
 		addPackageToClasspath( defaultPar );
 
-		ScanResult result = standardScan( defaultPar.toURL() );
+		var result = standardScan( defaultPar.toURL(), jandexIndex, registryScope.getRegistry() );
 		validateResults( result, org.hibernate.orm.test.jpa.pack.defaultpar.ApplicationServer.class, Version.class );
 	}
 
-	private void validateResults(ScanResult scanResult, Class... expectedClasses) throws IOException {
-		assertEquals( 3, scanResult.getLocatedClasses().size() );
-		for ( Class expectedClass : expectedClasses ) {
-			assertTrue(
-					scanResult.getLocatedClasses().contains(
-							new ClassDescriptorImpl( expectedClass.getName(), ClassDescriptor.Categorization.MODEL, null )
-					)
-			);
+	private void validateResults(ScanningResult scanResult, Class... expectedClasses) throws IOException {
+		assertEquals( 3, scanResult.discoveredClasses().size() );
+		for ( Class<?> expectedClass : expectedClasses ) {
+			assertTrue( scanResult.discoveredClasses().contains( expectedClass.getName() ) );
 		}
 
-		assertEquals( 2, scanResult.getLocatedMappingFiles().size() );
-		for ( MappingFileDescriptor mappingFileDescriptor : scanResult.getLocatedMappingFiles() ) {
-			assertNotNull( mappingFileDescriptor.getStreamAccess() );
-			final InputStream stream = mappingFileDescriptor.getStreamAccess().accessInputStream();
-			assertNotNull( stream );
-			stream.close();
-		}
 	}
 
 	@Test
-	public void testNestedJarProtocol() throws Exception {
+	public void testNestedJarProtocol(ServiceRegistryScope registryScope) throws Exception {
+		var jandexIndex = buildDefaultParIndex();
 		File defaultPar = buildDefaultPar();
 		File nestedEar = buildNestedEar( defaultPar );
 		File nestedEarDir = buildNestedEarDir( defaultPar );
@@ -150,149 +112,86 @@ public class JarVisitorTest extends PackagingTestCase {
 		String jarFileName = nestedEar.toURL().toExternalForm() + "!/defaultpar.par";
 		URL rootUrl = new URL( jarFileName );
 
-		JarProtocolArchiveDescriptor archiveDescriptor = new JarProtocolArchiveDescriptor(
-				StandardArchiveDescriptorFactory.INSTANCE,
-				rootUrl,
-				""
-		);
-
-		ScanEnvironment environment = new ScanEnvironmentImpl( rootUrl );
-		ScanResultCollector collector = new ScanResultCollector(
-				environment,
-				new StandardScanOptions(),
-				StandardScanParameters.INSTANCE
-		);
-
-		archiveDescriptor.visitArchive(
-				new AbstractScannerImpl.ArchiveContextImpl( true, collector )
-		);
-
+		var results = standardScan( rootUrl, jandexIndex, registryScope.getRegistry() );
 		validateResults(
-				collector.toScanResult(),
+				results,
 				org.hibernate.orm.test.jpa.pack.defaultpar.ApplicationServer.class,
 				Version.class
 		);
 
 		jarFileName = nestedEarDir.toURL().toExternalForm() + "!/defaultpar.par";
 		rootUrl = new URL( jarFileName );
-		archiveDescriptor = new JarProtocolArchiveDescriptor(
-				StandardArchiveDescriptorFactory.INSTANCE,
-				rootUrl,
-				""
-		);
 
-		environment = new ScanEnvironmentImpl( rootUrl );
-		collector = new ScanResultCollector(
-				environment,
-				new StandardScanOptions(),
-				StandardScanParameters.INSTANCE
-		);
-
-		archiveDescriptor.visitArchive(
-				new AbstractScannerImpl.ArchiveContextImpl( true, collector )
-		);
+		results = standardScan( rootUrl, jandexIndex, registryScope.getRegistry() );
 		validateResults(
-				collector.toScanResult(),
+				results,
 				org.hibernate.orm.test.jpa.pack.defaultpar.ApplicationServer.class,
 				Version.class
 		);
 	}
 
 	@Test
-	public void testJarProtocol() throws Exception {
+	public void testJarProtocol(ServiceRegistryScope registryScope) throws Exception {
+		IndexView jandexIndex = buildWarIndex();
 		File war = buildWar();
 		addPackageToClasspath( war );
 
 		String jarFileName = war.toURL().toExternalForm() + "!/WEB-INF/classes";
 		URL rootUrl = new URL( jarFileName );
 
-		JarProtocolArchiveDescriptor archiveDescriptor = new JarProtocolArchiveDescriptor(
-				StandardArchiveDescriptorFactory.INSTANCE,
-				rootUrl,
-				""
-		);
-
-		final ScanEnvironment environment = new ScanEnvironmentImpl( rootUrl );
-		final ScanResultCollector collector = new ScanResultCollector(
-				environment,
-				new StandardScanOptions(),
-				StandardScanParameters.INSTANCE
-		);
-
-		archiveDescriptor.visitArchive(
-				new AbstractScannerImpl.ArchiveContextImpl( true, collector )
-		);
-
+		var results = standardScan( rootUrl, jandexIndex, registryScope.getRegistry() );
 		validateResults(
-				collector.toScanResult(),
+				results,
 				org.hibernate.orm.test.jpa.pack.war.ApplicationServer.class,
 				org.hibernate.orm.test.jpa.pack.war.Version.class
 		);
 	}
 
 	@Test
-	public void testZippedJar() throws Exception {
+	public void testZippedJar(ServiceRegistryScope registryScope) throws Exception {
+		var jandexIndex = buildDefaultParIndex();
 		File defaultPar = buildDefaultPar();
 		addPackageToClasspath( defaultPar );
 
-		ScanResult result = standardScan( defaultPar.toURL() );
+		var results = standardScan( defaultPar.toURL(), jandexIndex, registryScope.getRegistry() );
 		validateResults(
-				result,
+				results,
 				org.hibernate.orm.test.jpa.pack.defaultpar.ApplicationServer.class,
 				Version.class
 		);
 	}
 
 	@Test
-	public void testExplodedJar() throws Exception {
+	public void testExplodedJar(ServiceRegistryScope registryScope) throws Exception {
+		var jandexIndex = buildExplodedParIndex();
 		File explodedPar = buildExplodedPar();
 		addPackageToClasspath( explodedPar );
 
-		String dirPath = explodedPar.toURL().toExternalForm();
-		// TODO - shouldn't  ExplodedJarVisitor take care of a trailing slash?
-		if ( dirPath.endsWith( "/" ) ) {
-			dirPath = dirPath.substring( 0, dirPath.length() - 1 );
-		}
+		var result = standardScan( explodedPar.toURL(), jandexIndex, registryScope.getRegistry() );
+		assertEquals( 1, result.discoveredClasses().size() );
+		assertEquals( 1, result.discoveredPackages().size() );
 
-		ScanResult result = standardScan( ArchiveHelper.getURLFromPath( dirPath ) );
-		assertEquals( 1, result.getLocatedClasses().size() );
-		assertEquals( 1, result.getLocatedPackages().size() );
-		assertEquals( 1, result.getLocatedMappingFiles().size() );
-
-		assertTrue(
-				result.getLocatedClasses().contains(
-						new ClassDescriptorImpl( Carpet.class.getName(), ClassDescriptor.Categorization.MODEL, null )
-				)
-		);
-
-		for ( MappingFileDescriptor mappingFileDescriptor : result.getLocatedMappingFiles() ) {
-			assertNotNull( mappingFileDescriptor.getStreamAccess() );
-			final InputStream stream = mappingFileDescriptor.getStreamAccess().accessInputStream();
-			assertNotNull( stream );
-			stream.close();
-		}
+		assertTrue( result.discoveredClasses().contains( Carpet.class.getName() ) );
 	}
 
 	@Test
 	@JiraKey(value = "HHH-6806")
-	public void testJarVisitorFactory() throws Exception {
+	public void testJarVisitorFactory(ServiceRegistryScope registryScope) throws Exception {
 		final File explodedPar = buildExplodedPar();
 		final File defaultPar = buildDefaultPar();
 		addPackageToClasspath( explodedPar, defaultPar );
 
 		//setting URL to accept vfs based protocol
-		URL.setURLStreamHandlerFactory(new URLStreamHandlerFactory() {
-										public URLStreamHandler createURLStreamHandler(String protocol) {
-											if("vfszip".equals(protocol) || "vfsfile".equals(protocol) )
-												return new URLStreamHandler() {
-													protected URLConnection openConnection(URL u)
-															throws IOException {
-														return null;
-													}
-												};
-											return null;
-										}
-									});
+		URL.setURLStreamHandlerFactory( protocol -> {
+			if("vfszip".equals(protocol) || "vfsfile".equals(protocol) )
+				return new URLStreamHandler() {
+					protected URLConnection openConnection(URL u)
+							throws IOException {
+						return null;
+					}
+				};
+			return null;
+		} );
 
 		URL jarUrl = defaultPar.toURL();
 		ArchiveDescriptor descriptor = StandardArchiveDescriptorFactory.INSTANCE.buildArchiveDescriptor( jarUrl );
@@ -309,52 +208,6 @@ public class JarVisitorTest extends PackagingTestCase {
 		jarUrl  = new URL( explodedPar.toURL().toExternalForm().replace( "file:", "vfsfile:" ) );
 		descriptor = StandardArchiveDescriptorFactory.INSTANCE.buildArchiveDescriptor( jarUrl );
 		assertEquals( ExplodedArchiveDescriptor.class.getName(), descriptor.getClass().getName() );
-	}
-
-	@Test
-	@JiraKey( value = "EJB-230" )
-	public void testDuplicateFilterExplodedJarExpected() throws Exception {
-//		File explodedPar = buildExplodedPar();
-//		addPackageToClasspath( explodedPar );
-//
-//		Filter[] filters = getFilters();
-//		Filter[] dupeFilters = new Filter[filters.length * 2];
-//		int index = 0;
-//		for ( Filter filter : filters ) {
-//			dupeFilters[index++] = filter;
-//		}
-//		filters = getFilters();
-//		for ( Filter filter : filters ) {
-//			dupeFilters[index++] = filter;
-//		}
-//		String dirPath = explodedPar.toURL().toExternalForm();
-//		// TODO - shouldn't  ExplodedJarVisitor take care of a trailing slash?
-//		if ( dirPath.endsWith( "/" ) ) {
-//			dirPath = dirPath.substring( 0, dirPath.length() - 1 );
-//		}
-//		JarVisitor jarVisitor = new ExplodedJarVisitor( dirPath, dupeFilters );
-//		assertEquals( "explodedpar", jarVisitor.getUnqualifiedJarName() );
-//		Set[] entries = jarVisitor.getMatchingEntries();
-//		assertEquals( 1, entries[1].size() );
-//		assertEquals( 1, entries[0].size() );
-//		assertEquals( 1, entries[2].size() );
-//		for ( Entry entry : ( Set<Entry> ) entries[2] ) {
-//			InputStream is = entry.getInputStream();
-//			if ( is != null ) {
-//				assertTrue( 0 < is.available() );
-//				is.close();
-//			}
-//		}
-//		for ( Entry entry : ( Set<Entry> ) entries[5] ) {
-//			InputStream is = entry.getInputStream();
-//			if ( is != null ) {
-//				assertTrue( 0 < is.available() );
-//				is.close();
-//			}
-//		}
-//
-//		Entry entry = new Entry( Carpet.class.getName(), null );
-//		assertTrue( entries[1].contains( entry ) );
 	}
 
 	@Test

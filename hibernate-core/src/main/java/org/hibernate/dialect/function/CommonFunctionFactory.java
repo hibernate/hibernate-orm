@@ -2366,6 +2366,24 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
+	private static final String VAR_SAMP_SUM_COUNT_SPANNER_PATTERN = "(sum(power(cast(?1 as float8), cast(2 as float8)))-(power(cast(sum(?1) as float8), cast(2 as float8))/count(?1)))/nullif(count(?1)-1,0)";
+
+	public void stddevSamp_sumCount_spanner() {
+		functionRegistry.patternAggregateDescriptorBuilder( "stddev_samp", "sqrt(" + VAR_SAMP_SUM_COUNT_SPANNER_PATTERN + ")" )
+				.setInvariantType( doubleType )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( NUMERIC )
+				.register();
+	}
+
+	public void varSamp_sumCount_spanner() {
+		functionRegistry.patternAggregateDescriptorBuilder( "var_samp", VAR_SAMP_SUM_COUNT_SPANNER_PATTERN )
+				.setInvariantType( doubleType )
+				.setExactArgumentCount( 1 )
+				.setParameterTypes( NUMERIC )
+				.register();
+	}
+
 	/**
 	 * SQL Server
 	 */
@@ -3068,6 +3086,24 @@ public class CommonFunctionFactory {
 				.setArgumentListSignature( "(ARRAY array)" )
 				.register();
 		functionRegistry.register( "length", new DynamicDispatchFunction( functionRegistry, "character_length", "array_length" ) );
+	}
+
+	/**
+	 * Spanner array_length() function
+	 */
+	public void arrayLength_spanner() {
+		functionRegistry.patternDescriptorBuilder( "array_length", "case when ?1 is null then null else coalesce(array_length(?1, 1), 0) end" )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( integerType ) )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+								StandardArgumentsValidators.exactly( 1 ),
+								ArrayArgumentValidator.DEFAULT_INSTANCE
+						)
+				)
+				.setArgumentListSignature( "(ARRAY array)" )
+				.register();
+		functionRegistry.register( "length", new DynamicDispatchFunction( functionRegistry, "character_length", "array_length" ) );
+		functionRegistry.registerAlternateKey( "cardinality", "array_length" );
 	}
 
 	/**

@@ -11,6 +11,8 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 import jakarta.persistence.Tuple;
 import org.hibernate.annotations.SoftDelete;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.YesNoConverter;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -69,6 +71,8 @@ public class SoftDeleteTablePerClassTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "Spanner JDBC driver currently doesn't support returning correct precision in the result metadata")
 	void testDeletedFlagsAreSetCorrectly(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			// SpellBook(1) soft-deleted via HQL, SpellBook(2) active

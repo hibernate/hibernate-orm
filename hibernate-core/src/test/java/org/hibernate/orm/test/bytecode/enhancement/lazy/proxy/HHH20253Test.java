@@ -95,7 +95,7 @@ class HHH20253Test {
 		scope.getSessionFactory().getSchemaManager().truncate();
 	}
 
-	@Entity
+	@Entity(name = "CompanyEntity")
 	static class CompanyEntity {
 
 		@Id
@@ -136,7 +136,7 @@ class HHH20253Test {
 		}
 	}
 
-	@Entity
+	@Entity(name = "CompanyEmails")
 	static class CompanyEmails {
 
 		@Id

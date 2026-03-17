@@ -1138,6 +1138,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsArrayContainsNullable implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction( dialect, "array_contains_nullable" );
+		}
+	}
+
 	public static class SupportsArrayFill implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "array_fill" );

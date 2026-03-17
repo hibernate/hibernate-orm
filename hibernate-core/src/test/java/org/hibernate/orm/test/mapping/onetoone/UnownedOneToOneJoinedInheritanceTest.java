@@ -59,7 +59,7 @@ public class UnownedOneToOneJoinedInheritanceTest {
 		} );
 	}
 
-	@Entity
+	@Entity(name = "Owner")
 	@Inheritance(strategy = InheritanceType.JOINED)
 	public static abstract class Owner {
 		@Id
@@ -85,7 +85,7 @@ public class UnownedOneToOneJoinedInheritanceTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Vehicle")
 	@Inheritance(strategy = InheritanceType.JOINED)
 	public static abstract class Vehicle {
 		@Id
@@ -111,7 +111,7 @@ public class UnownedOneToOneJoinedInheritanceTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Car")
 	public static class Car extends Vehicle {
 		@OneToOne(mappedBy = "vehicle")
 		private Person person;
@@ -125,7 +125,7 @@ public class UnownedOneToOneJoinedInheritanceTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Person")
 	public static class Person extends Owner {
 	}
 }

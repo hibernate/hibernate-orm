@@ -13,6 +13,7 @@ import java.time.temporal.ChronoUnit;
 
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
@@ -207,6 +208,8 @@ public class GlobalJavaTimeJdbcTypeTests {
 
 	@Test
 	@RequiresDialect(value = PostgreSQLDialect.class)
+	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
+			reason = "Spanner PostgreSQL does not support WITH expressions for INSERT statements")
 	void testArray(SessionFactoryScope scope) {
 		final var offsetDateTime = OffsetDateTime.parse("1977-07-24T12:34:56+02:00");
 		scope.inTransaction( session -> {

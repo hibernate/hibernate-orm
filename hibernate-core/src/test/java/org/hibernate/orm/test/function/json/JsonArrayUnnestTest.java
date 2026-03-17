@@ -45,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsStructuralArrays.class)
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsUnnest.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonAggregate.class)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsJsonTable.class )
 public class JsonArrayUnnestTest {
 
 	@BeforeEach

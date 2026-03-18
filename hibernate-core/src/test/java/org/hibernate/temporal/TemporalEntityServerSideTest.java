@@ -240,7 +240,7 @@ class TemporalEntityServerSideTest {
 		);
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
-					TemporalEntity2 entity = session.get( TemporalEntity2.class, 2L );
+					TemporalEntity2 entity = session.find( TemporalEntity2.class, 2L );
 					assertNull( entity );
 				}
 		);

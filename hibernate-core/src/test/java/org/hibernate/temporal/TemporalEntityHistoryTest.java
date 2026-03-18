@@ -255,7 +255,7 @@ class TemporalEntityHistoryTest {
 		);
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
-					TemporalEntity4 entity = session.get( TemporalEntity4.class, 2L );
+					TemporalEntity4 entity = session.find( TemporalEntity4.class, 2L );
 					assertNull( entity );
 				}
 		);

@@ -532,9 +532,6 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 				case HINT_SPEC_CACHE_STORE_MODE:
 					applyResultCachingStoreModeHint( hintName, value );
 					return true;
-				case HINT_CACHE_REGION:
-					applyResultCachingRegionHint( hintName, value );
-					return true;
 				case HINT_JAVAEE_FETCH_GRAPH:
 					DEPRECATION_LOGGER.deprecatedHint( HINT_JAVAEE_FETCH_GRAPH, HINT_SPEC_FETCH_GRAPH );
 					//fall through to:

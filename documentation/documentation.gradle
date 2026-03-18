@@ -22,11 +22,11 @@ plugins {
 	id "local.module"
 	id "local.javadoc"
 
-	id "org.hibernate.orm.build.reports"
+    alias(libs.plugins.asciidoctor.convert)
+    alias(libs.plugins.asciidoctor.pdf)
 
-	id 'org.asciidoctor.jvm.convert' version '4.0.5'
-	id 'org.asciidoctor.jvm.pdf' version '4.0.5'
-	id "org.hibernate.orm.build.settings-doc"
+    alias(libs.plugins.hibernateBuildReports)
+    alias(libs.plugins.hibernateBuildSettingsDoc)
 }
 
 repositories {
@@ -63,7 +63,7 @@ configurations {
 
 	javadocClasspath {
 		description = 'Class files for the javadoc to be built'
-		resolutionStrategy.capabilitiesResolution.withCapability('org.junit.jupiter:junit-jupiter-params:'+testLibs.versions.junitJupiter.get()) { details ->
+		resolutionStrategy.capabilitiesResolution.withCapability('org.junit.jupiter:junit-jupiter-params:'+libs.versions.junitJupiter.get()) { details ->
 			details.select( details.candidates.first() ).because( 'first' )
 		}
 
@@ -167,20 +167,20 @@ dependencies {
 	jpamodelgen project( ':hibernate-processor' )
 
 	javadocClasspath libs.loggingAnnotations
-	javadocClasspath jakartaLibs.validation
-	javadocClasspath jakartaLibs.cdi
-	javadocClasspath jakartaLibs.jacc
-	javadocClasspath jakartaLibs.jsonbApi
+	javadocClasspath libs.jakarta.validation
+	javadocClasspath libs.jakarta.cdi
+	javadocClasspath libs.jakarta.jacc
+	javadocClasspath libs.jakarta.jsonbApi
 	javadocClasspath libs.ant
-	javadocClasspath jdbcLibs.postgresql
-	javadocClasspath jdbcLibs.edb
+	javadocClasspath libs.jdbc.postgresql
+	javadocClasspath libs.jdbc.edb
 	javadocClasspath libs.jackson
 	javadocClasspath libs.jackson3
 	javadocClasspath gradleApi()
 	javadocClasspath libs.jacksonXml
 	javadocClasspath libs.jackson3Xml
-	javadocClasspath jdbcLibs.oracle
-	javadocClasspath jdbcLibs.oracleJdbcJacksonOsonExtension
+	javadocClasspath libs.jdbc.oracle
+	javadocClasspath libs.jdbc.oracleJdbcJacksonOsonExtension
 }
 
 
@@ -367,9 +367,9 @@ def buildTutorialZipTask = tasks.register( 'buildTutorialZip', Zip ) { task ->
 	archiveFileName = 'hibernate-tutorials.zip'
 	expand(
 			version: project.version,
-			slf4j: "2.0.7",
-			junit: testLibs.versions.junit4.get(),
-			h2: jdbcLibs.versions.h2.get()
+			slf4j: libs.versions.slf4j.get(),
+			junit: libs.versions.junit4.get(),
+			h2: libs.versions.h2.get()
 	)
 }
 

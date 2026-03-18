@@ -60,9 +60,9 @@ dependencies {
 
         api libs.hibernateModels
 
-        api jakartaLibs.jpa
-        api jakartaLibs.jta
-        api jakartaLibs.data
+        api libs.jakarta.jpa
+        api libs.jakarta.jta
+        api libs.jakarta.data
 
         runtime libs.antlrRuntime
         runtime libs.logging
@@ -70,9 +70,9 @@ dependencies {
         runtime libs.byteBuddyAgent
         runtime libs.jandex
 
-        runtime jakartaLibs.jaxb
-        runtime jakartaLibs.jaxbApi
-        runtime jakartaLibs.inject
+        runtime libs.jakarta.jaxb
+        runtime libs.jakarta.jaxbApi
+        runtime libs.jakarta.inject
 
 
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

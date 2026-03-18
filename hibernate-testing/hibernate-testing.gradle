@@ -14,31 +14,31 @@ dependencies {
     api project( ':hibernate-core' )
     api project( ':hibernate-community-dialects' )
 
-    api testLibs.junit4
-    api testLibs.junitJupiterApi
-    api testLibs.junitJupiterParams
+    api libs.test.junit4
+    api libs.test.junitJupiterApi
+    api libs.test.junitJupiterParams
 
-    api testLibs.hamcrest
-    api testLibs.assertjCore
+    api libs.test.hamcrest
+    api libs.test.assertjCore
 
-    api testLibs.mockito
-    api testLibs.mockitoJunitJupiter
+    api libs.test.mockito
+    api libs.test.mockitoJunitJupiter
 
-    api testLibs.bytemanBmunit
+    api libs.test.bytemanBmunit
 
-    api( testLibs.jbossTxSpi ) {
+    api( libs.test.jbossTxSpi ) {
         transitive=false
     }
-    api( testLibs.jbossJta ) {
+    api( libs.test.jbossJta ) {
         transitive=false
     }
 
-    api 'javax.money:money-api:1.1'
-    api ( 'org.javamoney.moneta:moneta-core:1.4.4' ) {
+    api libs.test.javaxMoney
+    api(libs.test.moneta) {
         transitive = false
     }
 
-    api testLibs.log4j2
+    api libs.test.log4j2
 
     implementation libs.hibernateModels
     implementation libs.jandex
@@ -50,14 +50,14 @@ dependencies {
     // JBossStandAloneJtaPlatform is old and likely wouldn't work with Jakarta EE anyway,
     // so I won't try to fix it, but we might want to remove it in the next minor,
     // and then we can remove the dependency below.
-    implementation(testLibs.wildFlyTxnClient) {
+    implementation(libs.test.wildFlyTxnClient) {
         // WildFly Elytron includes a whole copy of JBoss Logging, Jackson with its original package,
         // not even shaded, which causes lots of problems.
         // Since we don't need WildFly Elytron in our tests, we'll just exclude it.
         exclude group: 'org.wildfly.security', module: 'wildfly-elytron'
     }
-    implementation testLibs.junitJupiterEngine
-    implementation testLibs.junitJupiterLauncher
+    implementation libs.test.junitJupiterEngine
+    implementation libs.test.junitJupiterLauncher
 
     annotationProcessor project( ':hibernate-processor' )
 }

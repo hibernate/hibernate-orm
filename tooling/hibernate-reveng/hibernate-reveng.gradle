@@ -6,10 +6,10 @@ description = "Library providing functionality to perform reverse engineering Hi
 
 dependencies {
     implementation project( ':hibernate-core' )
-    implementation libs.commonsCollections4
+    implementation libs.commonsCollections
     implementation libs.eclipseJdtCore
     implementation libs.freemarker
     implementation libs.antlrRuntime
-    implementation jakartaLibs.jaxbApi
-    testRuntimeOnly jakartaLibs.ejb
+    implementation libs.jakarta.jaxbApi
+    testRuntimeOnly libs.jakarta.ejb
 }

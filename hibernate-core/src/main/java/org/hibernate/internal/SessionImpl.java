@@ -40,6 +40,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.event.spi.*;
 import org.hibernate.event.spi.LoadEventListener.LoadType;
+import org.hibernate.exception.GenericJDBCException;
+import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.find.FindByKeyOperation;
@@ -2190,8 +2192,11 @@ public class SessionImpl
 			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch ( JDBCException e ) {
-			if ( accessTransaction().isActive() && accessTransaction().getRollbackOnly() ) {
-				// Assume situation HHH-12472 running on WildFly
+			final Transaction transaction = accessTransaction();
+			if ( transaction.isActive() && transaction.getRollbackOnly()
+				&& (e instanceof GenericJDBCException || e instanceof JDBCConnectionException) ) {
+				// Assume situation HHH-12472 running on WildFly,
+				// but only if the exception is generic to avoid swallowing locking exceptions (HHH-20260)
 				// Just log the exception and return null
 				SESSION_LOGGER.jdbcExceptionThrownWithTransactionRolledBack( e );
 				return null;

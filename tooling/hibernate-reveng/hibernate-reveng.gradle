@@ -6,12 +6,12 @@ description = "Library providing functionality to perform reverse engineering Hi
 
 dependencies {
     implementation project( ':hibernate-core' )
-    implementation libs.commonsCollections4
+    implementation libs.commonsCollections
     // kept as a direct dependency to avoid conflicts with the spotless plugin's
     // internal use of google-java-format for removeUnusedImports()
     implementation libs.googleJavaFormatter
     implementation libs.freemarker
     implementation libs.antlrRuntime
-    implementation jakartaLibs.jaxbApi
-    testRuntimeOnly jakartaLibs.ejb
+    implementation libs.jakarta.jaxbApi
+    testRuntimeOnly libs.jakarta.ejb
 }

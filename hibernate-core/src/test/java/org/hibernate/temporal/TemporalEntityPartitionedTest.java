@@ -247,7 +247,7 @@ class TemporalEntityPartitionedTest {
 		awaitOracleClockTick();
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
-					TemporalEntity3 entity = session.get( TemporalEntity3.class, 2L );
+					TemporalEntity3 entity = session.find( TemporalEntity3.class, 2L );
 					assertNull( entity );
 				}
 		);

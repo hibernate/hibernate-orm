@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
 
 import static jakarta.persistence.CascadeType.ALL;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.graph.GraphSemantic.FETCH;
 
 /**
  * @author Wander Winkelhorst
@@ -50,12 +49,12 @@ class HHH20253Test {
 		scope.inTransaction( session -> {
 			var sqlStatementInspector = scope.getCollectingStatementInspector();
 			sqlStatementInspector.clear();
-			var query = session.createQuery( "select e from Item e", Item.class )
-					.setFetchSize( 10 );
 
 			var graph = session.createEntityGraph( Item.class );
 			graph.addAttributeNode("company");
-			query.applyGraph( graph, FETCH );
+
+			var query = session.createQuery( "select e from Item e", graph )
+					.setFetchSize( 10 );
 
 			var resultList = query.list();
 			assertThat( resultList ).isNotEmpty();

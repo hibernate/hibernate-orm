@@ -6,7 +6,6 @@ package org.hibernate;
 
 import jakarta.persistence.EntityGraph;
 
-import jakarta.persistence.FindOption;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.Timeout;
 import org.hibernate.graph.GraphSemantic;

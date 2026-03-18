@@ -97,7 +97,7 @@ public class StatelessSessionMultipleOpsTest {
 					.hasSize( 1 );
 
 			for ( int i = 0; i < count; i++ ) {
-				final var p = session.get( Person.class, i );
+				final var p = session.find( Person.class, i );
 				assertThat( p ).isNull();
 			}
 		} );

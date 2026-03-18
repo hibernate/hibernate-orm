@@ -100,7 +100,9 @@ gradleTestVersionsList.each { gradleVersion ->
         environment("HIBERNATE_TOOLS_VERSION", projectVersion)
         environment("H2_VERSION", h2Version)
         systemProperty 'gradle.test.version', gradleVersion
-        systemProperty 'gradle.test.java.home', jdkLauncher.get().metadata.installationPath.asFile.absolutePath
+        doFirst {
+            systemProperty 'gradle.test.java.home', jdkLauncher.get().metadata.installationPath.asFile.absolutePath
+        }
     }
 }
 

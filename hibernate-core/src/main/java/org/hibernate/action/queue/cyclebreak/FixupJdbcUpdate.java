@@ -1,0 +1,107 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.action.queue.cyclebreak;
+
+import org.hibernate.action.queue.meta.TableDescriptor;
+import org.hibernate.action.queue.mutation.GraphMutationTarget;
+import org.hibernate.action.queue.mutation.jdbc.JdbcUpdate;
+import org.hibernate.action.queue.mutation.jdbc.PreparableJdbcOperation;
+import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.exec.internal.JdbcParameterImpl;
+import org.hibernate.sql.exec.spi.JdbcParameterBinder;
+import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
+
+import java.util.List;
+import java.util.Map;
+
+///Custom JDBC UPDATE mutation for FK fixup operations.
+///
+///This bypasses the standard mutation builders and provides value descriptors
+///using normalized column names and JDBC mappings extracted from SelectableMapping objects.
+///
+///Compatible with bytecode-enhanced entities since it doesn't rely on attribute traversal.
+///
+///@author Steve Ebersole
+public class FixupJdbcUpdate implements JdbcUpdate, PreparableJdbcOperation {
+	private final String sql;
+	private final EntityPersister entityPersister;
+	private final TableDescriptor tableDescriptor;
+	private final Expectation expectation;
+
+	private final List<JdbcParameterBinder> parameterBinders;
+
+	// todo (ActionQueue2) : not sure this are needed see #findValueDescriptor
+	//private final Map<String, JdbcValueDescriptor> jdbcValueDescriptorMap;
+
+	public FixupJdbcUpdate(
+			String sql,
+			TableDescriptor tableDescriptor,
+			EntityPersister entityPersister,
+			Map<String, JdbcValueDescriptor> jdbcValueDescriptorMap) {
+		this.sql = sql;
+		this.tableDescriptor = tableDescriptor;
+		this.entityPersister = entityPersister;
+		this.expectation = Expectation.RowCount.INSTANCE;
+
+		//this.jdbcValueDescriptorMap = jdbcValueDescriptorMap;
+		this.parameterBinders = CollectionHelper.arrayList( jdbcValueDescriptorMap.size() );
+		jdbcValueDescriptorMap.forEach( (column, jdbcValueDescriptor ) -> {
+			parameterBinders.add( new JdbcParameterImpl( jdbcValueDescriptor.getJdbcMapping() ) );
+	} );
+	}
+
+	@Override
+	public String getSqlString() {
+		return sql;
+	}
+
+	@Override
+	public TableDescriptor getTableDescriptor() {
+		return tableDescriptor;
+	}
+
+	@Override
+	public MutationType getMutationType() {
+		return MutationType.UPDATE;
+	}
+
+	@Override
+	public GraphMutationTarget<?> getMutationTarget() {
+		return entityPersister;
+	}
+
+	@Override
+	public boolean isCallable() {
+		return false;
+	}
+
+	@Override
+	public Expectation getExpectation() {
+		return expectation;
+	}
+
+	@Override
+	public JdbcValueDescriptor findValueDescriptor(String columnName, ParameterUsage usage) {
+		// todo : see todo above
+		throw new UnsupportedOperationException( "Lets see if this is actually used" );
+//		if ( usage == ParameterUsage.SET ) {
+//			return setParameterDescriptors.get( columnName );
+//		}
+//		else {
+//			assert usage == ParameterUsage.RESTRICT ;
+//			return restrictParameterDescriptors.get( columnName );
+//		}
+	}
+
+	@Override
+	public String toString() {
+		return "FixupJdbcUpdate(" + tableDescriptor.physicalName() + ")";
+	}
+
+}

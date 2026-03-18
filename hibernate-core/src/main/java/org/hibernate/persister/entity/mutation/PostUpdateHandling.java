@@ -4,8 +4,10 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.action.internal.EntityUpdateAction;
+import org.hibernate.action.queue.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -39,7 +41,7 @@ public class PostUpdateHandling implements PostExecutionCallback {
 			EntityUpdateAction action,
 			Object cacheKey,
 			Object previousVersion,
-			GeneratedValuesCollector generatedValuesCollector) {
+			@Nullable GeneratedValuesCollector generatedValuesCollector) {
 		this.action = action;
 		this.cacheKey = cacheKey;
 		this.previousVersion = previousVersion;
@@ -64,14 +66,23 @@ public class PostUpdateHandling implements PostExecutionCallback {
 
 	private void handleMutableEntity(EntityEntry entry, SessionImplementor session) {
 		// Apply aggregated GeneratedValues from all tables
-		final GeneratedValues generatedValues = generatedValuesCollector.getGeneratedValues();
-		action.handleGeneratedProperties( entry, generatedValues );
+		if ( generatedValuesCollector != null ) {
+			final GeneratedValues generatedValues = generatedValuesCollector.generatedValues();
+			action.handleGeneratedProperties( entry, generatedValues );
+		}
 
 		// Handle application-generated version increment
 		// This is complementary to UpdateBindPlan's GeneratedValues processing:
 		// - UpdateBindPlan handles database-generated values (timestamps, etc.)
 		// - This section handles application-generated values (version increments)
 		finalizeVersion( entry );
+
+		// For non-versioned entities, finalizeVersion() returns early without calling
+		// entry.postUpdate(). We must still synchronize the loadedState to prevent
+		// the entity from appearing dirty on subsequent flushes.
+		if ( action.getNextVersion() == null ) {
+			entry.postUpdate( action.getInstance(), action.getState(), null );
+		}
 
 		action.handleDeleted( entry );
 		action.updateCacheItem( previousVersion, cacheKey, entry );

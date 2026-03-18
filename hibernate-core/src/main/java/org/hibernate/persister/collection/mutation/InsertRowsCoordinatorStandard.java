@@ -5,19 +5,15 @@
 package org.hibernate.persister.collection.mutation;
 
 
-import org.hibernate.action.queue.MutationKind;
-import org.hibernate.action.queue.bind.BindPlan;
-import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
-import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 
-import java.util.List;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
@@ -26,7 +22,7 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
  * @author Steve Ebersole
  */
 public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
-	private final CollectionMutationTarget mutationTarget;
+	private final AbstractCollectionPersister mutationTarget;
 	private final RowMutationOperations rowMutationOperations;
 
 	private final BasicBatchKey batchKey;
@@ -35,7 +31,7 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 	private MutationOperationGroup operationGroup;
 
 	public InsertRowsCoordinatorStandard(
-			CollectionMutationTarget mutationTarget,
+			AbstractCollectionPersister mutationTarget,
 			RowMutationOperations rowMutationOperations,
 			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
@@ -106,6 +102,8 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 					);
 					mutationExecutor.execute( entry, null, null, null, session );
 				}
+				else {
+				}
 
 				entryCount++;
 			}
@@ -126,107 +124,68 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 		return singleOperation( MutationType.INSERT, mutationTarget, operation );
 	}
 
-	@Override
-	public List<PlannedOperation> decomposeInsertRows(
-			PersistentCollection<?> collection,
-			Object key,
-			EntryFilter entryFilter,
-			int ordinalBase,
-			SharedSessionContractImplementor session) {
-		if ( operationGroup == null ) {
-			operationGroup = createOperationGroup();
-		}
+//	@Override
+//	public List<PlannedOperation> decomposeInsertRows(
+//			PersistentCollection<?> collection,
+//			Object key,
+//			EntryFilter entryFilter,
+//			int ordinalBase,
+//			SharedSessionContractImplementor session) {
+//		if ( operationGroup == null ) {
+//			operationGroup = createOperationGroup();
+//		}
+//
+//		final var jdbcOperation = collectionJdbcOperations.getInsertRowOperation();
+//		if ( jdbcOperation == null ) {
+//			return List.of();
+//		}
+//
+//		var tableDescriptor = mutationTarget.getCollectionTableDescriptor();
+//		final var pluralAttribute = mutationTarget.getTargetPart();
+//		final var collectionDescriptor = pluralAttribute.getCollectionDescriptor();
+//
+//		// Pre-insert callback once for the whole collection
+//		collection.preInsert( collectionDescriptor );
+//
+//		final var entries = collection.entries( collectionDescriptor );
+//		if ( !entries.hasNext() ) {
+//			return List.of();
+//		}
+//
+//		final List<PlannedOperation> operations = new ArrayList<>();
+//		final var insertRowValues = rowJdbcOperations.getInsertRowValues();
+//
+//		int entryCount = 0;
+//		while ( entries.hasNext() ) {
+//			final Object entry = entries.next();
+//
+//			if ( entryFilter == null || entryFilter.include( entry, entryCount, collection, pluralAttribute ) ) {
+//				// Create ONE PlannedOperation per row
+//				final BindPlan bindPlan = new SingleRowInsertBindPlan(
+//						collection,
+//						key,
+//						entry,
+//						entryCount,
+//						insertRowValues,
+//						mutationTarget
+//				);
+//
+//				final PlannedOperation plannedOp = new PlannedOperation(
+//						tableDescriptor,
+//						MutationKind.INSERT,
+//						jdbcOperation,
+//						bindPlan,
+//						ordinalBase * 1_000 + entryCount,
+//						"InsertRow[" + entryCount + "](" + mutationTarget.getRolePath() + ")"
+//				);
+//
+//				operations.add( plannedOp );
+//			}
+//
+//			entryCount++;
+//		}
+//
+//		return operations;
+//	}
 
-		final var operation = rowMutationOperations.getInsertRowOperation();
-		if ( operation == null ) {
-			return List.of();
-		}
-
-		final var tableMapping = mutationTarget.getCollectionTableMapping();
-		final String tableName = tableMapping.getTableName();
-
-		// Create bind plan that delegates to this coordinator
-		final BindPlan bindPlan = new InsertRowsBindPlan(
-				collection,
-				key,
-				entryFilter,
-				rowMutationOperations.getInsertRowValues(),
-				mutationTarget
-		);
-
-		final PlannedOperation plannedOp = new PlannedOperation(
-				tableName,
-				MutationKind.INSERT,
-				operation,
-				bindPlan,
-				ordinalBase * 1_000,
-				"InsertRowsCoordinator(" + mutationTarget.getRolePath() + ")"
-		);
-
-		return List.of( plannedOp );
-	}
-
-	/**
-	 * Bind plan for insert rows operations.
-	 */
-	private static class InsertRowsBindPlan implements BindPlan {
-		private final PersistentCollection<?> collection;
-		private final Object key;
-		private final EntryFilter entryFilter;
-		private final RowMutationOperations.Values insertRowValues;
-		private final CollectionMutationTarget mutationTarget;
-
-		public InsertRowsBindPlan(
-				PersistentCollection<?> collection,
-				Object key,
-				EntryFilter entryFilter,
-				RowMutationOperations.Values insertRowValues,
-				CollectionMutationTarget mutationTarget) {
-			this.collection = collection;
-			this.key = key;
-			this.entryFilter = entryFilter;
-			this.insertRowValues = insertRowValues;
-			this.mutationTarget = mutationTarget;
-		}
-
-		@Override
-		public void bindAndMaybePatch(
-				MutationExecutor executor,
-				PlannedOperation operation,
-				SharedSessionContractImplementor session) {
-			// Binding happens in execute() since we iterate over entries
-		}
-
-		@Override
-		public void execute(
-				MutationExecutor executor,
-				PlannedOperation operation,
-				SharedSessionContractImplementor session) {
-			final var pluralAttribute = mutationTarget.getTargetPart();
-			final var collectionDescriptor = pluralAttribute.getCollectionDescriptor();
-			final var entries = collection.entries( collectionDescriptor );
-			final var jdbcValueBindings = executor.getJdbcValueBindings();
-
-			collection.preInsert( collectionDescriptor );
-
-			int entryCount = 0;
-			while ( entries.hasNext() ) {
-				final Object entry = entries.next();
-
-				if ( entryFilter == null || entryFilter.include( entry, entryCount, collection, pluralAttribute ) ) {
-					insertRowValues.applyValues(
-							collection,
-							key,
-							entry,
-							entryCount,
-							session,
-							jdbcValueBindings
-					);
-					executor.execute( entry, null, null, null, session );
-				}
-
-				entryCount++;
-			}
-		}
-	}
 }

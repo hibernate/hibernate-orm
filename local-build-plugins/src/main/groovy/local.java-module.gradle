@@ -51,8 +51,8 @@ dependencies {
 
     compileOnly libs.loggingAnnotations
     // Used for compiling some Oracle specific JdbcTypes
-    compileOnly jdbcLibs.oracle
-    compileOnly (jdbcLibs.oracleJdbcJacksonOsonExtension) {
+    compileOnly libs.jdbc.oracle
+    compileOnly (libs.jdbc.oracleJdbcJacksonOsonExtension) {
         exclude group: 'com.oracle.database.jdbc', module: 'ojdbc8'
         exclude group: 'jakarta.persistence', module: 'jakarta.persistence-api'
     }
@@ -61,63 +61,63 @@ dependencies {
     // 		* JUnit (version 5 or later)
     // 		* the Jupiter engine which runs JUnit 6 based tests
     //		* the "vintage" engine - which runs JUnit 3 and 4 based tests
-    testImplementation testLibs.junitJupiterApi
-    testImplementation testLibs.junitJupiterEngine
-    testImplementation testLibs.junitJupiterParams
-    testImplementation testLibs.junitJupiterLauncher
-    testImplementation testLibs.assertjCore
+    testImplementation libs.test.junitJupiterApi
+    testImplementation libs.test.junitJupiterEngine
+    testImplementation libs.test.junitJupiterParams
+    testImplementation libs.test.junitJupiterLauncher
+    testImplementation libs.test.assertjCore
 
-    testRuntimeOnly testLibs.log4j2
+    testRuntimeOnly libs.test.log4j2
     testRuntimeOnly libs.byteBuddy
 
     //Databases
-    testRuntimeOnly jdbcLibs.h2
-    testRuntimeOnly jdbcLibs.derby
-    testRuntimeOnly jdbcLibs.derbyTools
-    testRuntimeOnly jdbcLibs.hsqldb
-    testRuntimeOnly jdbcLibs.postgresql
-    testRuntimeOnly jdbcLibs.edb
-    testRuntimeOnly jdbcLibs.mssql
-    testRuntimeOnly jdbcLibs.informix
-    testRuntimeOnly jdbcLibs.cockroachdb
-    testRuntimeOnly jdbcLibs.gaussdb
-    testRuntimeOnly jdbcLibs.sybase
-    testRuntimeOnly jdbcLibs.teradata
-    testRuntimeOnly jdbcLibs.spanner
+    testRuntimeOnly libs.jdbc.h2
+    testRuntimeOnly libs.jdbc.derby
+    testRuntimeOnly libs.jdbc.derbyTools
+    testRuntimeOnly libs.jdbc.hsqldb
+    testRuntimeOnly libs.jdbc.postgresql
+    testRuntimeOnly libs.jdbc.edb
+    testRuntimeOnly libs.jdbc.mssql
+    testRuntimeOnly libs.jdbc.informix
+    testRuntimeOnly libs.jdbc.cockroachdb
+    testRuntimeOnly libs.jdbc.gaussdb
+    testRuntimeOnly libs.jdbc.sybase
+    testRuntimeOnly libs.jdbc.teradata
+    testRuntimeOnly libs.jdbc.spanner
     testRuntimeOnly rootProject.fileTree(dir: 'drivers', include: '*.jar')
 
     // Since both the DB2 driver and HANA have a package "net.jpountz" we have to add dependencies conditionally
     // This is due to the "no split-packages" requirement of Java 9+
 
     if ( db.startsWith( 'db2' ) ) {
-        testRuntimeOnly jdbcLibs.db2
+        testRuntimeOnly libs.jdbc.db2
     }
     else if ( db.startsWith( 'hana' ) ) {
-        testRuntimeOnly jdbcLibs.hana
+        testRuntimeOnly libs.jdbc.hana
     }
     else if ( db.startsWith( 'mysql' ) || db.startsWith( 'tidb' ) ) {
-        testRuntimeOnly jdbcLibs.mysql
+        testRuntimeOnly libs.jdbc.mysql
     }
     else if ( db.startsWith( 'mariadb' ) ) {
-        testRuntimeOnly jdbcLibs.mariadb
+        testRuntimeOnly libs.jdbc.mariadb
     }
     else if ( db.startsWith( 'firebird' ) ) {
-        testRuntimeOnly jdbcLibs.firebird
+        testRuntimeOnly libs.jdbc.firebird
     }
     else if ( db.startsWith( 'oracle' ) ) {
-        testRuntimeOnly jdbcLibs.oracle
-        testRuntimeOnly jdbcLibs.oracleXml
-        testRuntimeOnly jdbcLibs.oracleXmlParser
-        testRuntimeOnly (jdbcLibs.oracleJdbcJacksonOsonExtension) {
+        testRuntimeOnly libs.jdbc.oracle
+        testRuntimeOnly libs.jdbc.oracleXml
+        testRuntimeOnly libs.jdbc.oracleXmlParser
+        testRuntimeOnly (libs.jdbc.oracleJdbcJacksonOsonExtension) {
             exclude group: 'com.oracle.database.jdbc', module: 'ojdbc8'
             exclude group: 'jakarta.persistence', module: 'jakarta.persistence-api'
         }
     }
     else if ( db.startsWith( 'altibase' ) ) {
-        testRuntimeOnly jdbcLibs.altibase
+        testRuntimeOnly libs.jdbc.altibase
     }
     else if ( db.startsWith( 'informix' ) ) {
-        testRuntimeOnly jdbcLibs.informix
+        testRuntimeOnly libs.jdbc.informix
     }
 
     annotationProcessor libs.loggingProcessor

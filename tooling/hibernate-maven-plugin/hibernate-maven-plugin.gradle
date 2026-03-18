@@ -5,7 +5,7 @@
 
 plugins {
     id "local.publishing-java-module"
-    id "org.gradlex.maven-plugin-development" version "1.0.3"
+    alias(libs.plugins.mavenPluginDev)
 }
 
 description = 'Maven plugin to integrate aspects of Hibernate into your build.'
@@ -26,28 +26,29 @@ dependencies {
     implementation project( ":hibernate-core" )
     implementation project( ":hibernate-reveng" )
 
-    implementation mavenLibs.mavenPlugin
-    implementation (mavenLibs.mavenCore) {
+    implementation(libs.maven.core) {
         exclude group: 'com.google.guava', module: 'guava'
     }
-    implementation (mavenLibs.mavenSharedFileManagement) {
+    implementation(libs.maven.pluginApi) {
+        exclude group: 'com.google.guava', module: 'guava'
+    }
+    implementation(libs.maven.fileManagement) {
         // file-management 3.2.0 pulls in plexus-utils 4.x (via maven-parent:44) which is
         // incompatible with Maven 3's runtime; exclude it so the 3.x version from maven-core wins
         exclude group: 'org.codehaus.plexus', module: 'plexus-utils'
     }
-    implementation jakartaLibs.jaxbApi
 
-    compileOnly mavenLibs.mavenPluginToolsAnnotations
+    compileOnly libs.maven.pluginToolsAnnotations
 
-    intTestImplementation testLibs.junitJupiterApi
-    intTestImplementation testLibs.junitJupiterEngine
-    intTestImplementation mavenLibs.mavenEmbedder
-    intTestRuntimeOnly testLibs.junitJupiterLauncher
-    intTestRuntimeOnly testLibs.logbackClassic
-    intTestRuntimeOnly mavenLibs.mavenCompat
-    intTestRuntimeOnly mavenLibs.mavenResolverTransportHttp
-    intTestRuntimeOnly mavenLibs.mavenResolverConnectorBasic
-    intTestRuntimeOnly jdbcLibs.h2
+    intTestImplementation libs.test.junitJupiter
+    intTestImplementation libs.maven.embedder
+    intTestRuntimeOnly libs.maven.compat
+    intTestRuntimeOnly libs.test.junitJupiterLauncher
+    intTestRuntimeOnly libs.maven.resolverHttp
+    intTestRuntimeOnly libs.maven.resolverBasic
+    intTestRuntimeOnly libs.test.logbackClassic
+    intTestRuntimeOnly libs.maven.resolverHttp
+    intTestRuntimeOnly libs.jdbc.h2
 }
 
 tasks.register('integrationTest', Test) {
@@ -92,7 +93,7 @@ publishingExtension.publications.named("publishedArtifacts") {
 
 integrationTest {
     environment "hibernateVersion", project.version
-    environment "h2Version", jdbcLibs.versions.h2.get()
+    environment "h2Version", libs.versions.h2.get()
     testLogging {
         exceptionFormat = 'full'
     }

@@ -5,9 +5,8 @@
 
 plugins {
     id "local.module"
-    id "org.hibernate.orm.build.jdks"
-
-    id "idea"
+    alias(libs.plugins.hibernateBuildJdks)
+    alias(libs.plugins.idea)
 }
 
 idea.module {

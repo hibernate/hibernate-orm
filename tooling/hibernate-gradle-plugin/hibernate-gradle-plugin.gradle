@@ -11,36 +11,12 @@ plugins {
 	id "local.javadoc"
 	id "local.code-quality"
 
-	id 'com.gradle.plugin-publish' version '2.0.0'
+    alias(libs.plugins.pluginPublish)
 	// for local publishing
 	id 'maven-publish'
 }
 
 description = "Gradle plugin for integrating Hibernate aspects into your build"
-
-dependencies {
-	// align artifacts natively when consuming through Gradle
-	api platform(project(":hibernate-platform"))
-
-	implementation project(':hibernate-core')
-	implementation project(':hibernate-reveng')
-	implementation libs.byteBuddy
-	implementation jakartaLibs.jaxbApi
-
-	implementation gradleApi()
-	implementation localGroovy()
-
-	// for Gradle
-	implementation jakartaLibs.inject
-	implementation localGroovy()
-
-	testImplementation gradleTestKit()
-	testImplementation testLibs.assertjCore
-	testImplementation testLibs.junitJupiterApi
-
-	testRuntimeOnly testLibs.junitJupiterEngine
-	testRuntimeOnly testLibs.junitJupiterLauncher
-}
 
 sourceSets {
 	functionalTest {
@@ -53,7 +29,29 @@ configurations {
 }
 
 dependencies {
-	functionalTestRuntimeOnly jdbcLibs.h2
+	// align artifacts natively when consuming through Gradle
+	api platform(project(":hibernate-platform"))
+
+	implementation project(':hibernate-core')
+	implementation project(':hibernate-reveng')
+	implementation libs.byteBuddy
+	implementation libs.jakarta.jaxbApi
+
+	implementation gradleApi()
+	implementation localGroovy()
+
+	// for Gradle
+	implementation libs.jakarta.inject
+	implementation localGroovy()
+
+	testImplementation gradleTestKit()
+	testImplementation libs.test.assertjCore
+	testImplementation libs.test.junitJupiterApi
+
+	testRuntimeOnly libs.test.junitJupiterEngine
+	testRuntimeOnly libs.test.junitJupiterLauncher
+
+	functionalTestRuntimeOnly libs.jdbc.h2
 }
 
 tasks.named( "forbiddenApisFunctionalTest" ) {
@@ -88,6 +86,7 @@ test {
 		exclude project.property( 'excludeTests' ) as String
 	}
     systemProperty("orm.gradle.min", project.property("orm.gradle.min"))
+    systemProperty('gradle.libs.versions.toml.path', rootProject.file('gradle/libs.versions.toml').absolutePath)
 	jvmArgs("--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED",
 			"--add-opens", "java.base/java.util=ALL-UNNAMED",
 			"--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED")
@@ -100,7 +99,7 @@ def functionalTestTask = tasks.register("functionalTest", Test) {
 	classpath = sourceSets.functionalTest.runtimeClasspath
 	useJUnitPlatform()
 	systemProperty("gradle.test.version", project.property("orm.gradle.min"))
-	systemProperty("h2.version", jdbcLibs.versions.h2.get())
+	systemProperty("h2.version", libs.versions.h2.get())
 	jvmArgs("--add-opens", "java.base/java.lang.invoke=ALL-UNNAMED",
 			"--add-opens", "java.base/java.util=ALL-UNNAMED",
 			"--add-opens", "java.base/java.util.concurrent.atomic=ALL-UNNAMED")

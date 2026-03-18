@@ -6,7 +6,7 @@ description = 'Integrate support for Jandex into Hibernate O/RM'
 
 dependencies {
 	api project( ':hibernate-core' )
-	api jakartaLibs.jpa
+	api libs.jakarta.jpa
 
 	implementation libs.jandex
 }

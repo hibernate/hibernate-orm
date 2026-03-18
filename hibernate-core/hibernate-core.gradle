@@ -8,9 +8,9 @@ plugins {
     id "local.publishing-java-module"
     id "local.publishing-group-relocation"
 
-    id "org.hibernate.build.version-injection"
-    id "org.hibernate.orm.antlr"
-    id "local-xjc-plugin"
+    alias(libs.plugins.versionInjection)
+    alias(libs.plugins.hibernateBuildAntlr)
+    alias(libs.plugins.hibernateXjc)
 }
 
 description = 'Hibernate\'s core ORM functionality'
@@ -23,60 +23,60 @@ configurations {
 
 
 dependencies {
-    api jakartaLibs.jpa
-    api jakartaLibs.jta
+    api libs.jakarta.jpa
+    api libs.jakarta.jta
 
     implementation libs.hibernateModels
     implementation libs.byteBuddy
 
-    implementation jakartaLibs.jaxbApi
-    implementation jakartaLibs.jaxb
-    implementation jakartaLibs.inject
+    implementation libs.jakarta.jaxbApi
+    implementation libs.jakarta.jaxb
+    implementation libs.jakarta.inject
 
     implementation libs.antlrRuntime
 
-    compileOnly jakartaLibs.jacc
-    compileOnly jakartaLibs.validation
-    compileOnly jakartaLibs.cdi
-    compileOnly jakartaLibs.jsonbApi
+    compileOnly libs.jakarta.jacc
+    compileOnly libs.jakarta.validation
+    compileOnly libs.jakarta.cdi
+    compileOnly libs.jakarta.jsonbApi
     compileOnly libs.jackson
     compileOnly libs.jacksonXml
     compileOnly libs.jackson3
     compileOnly libs.jackson3Xml
-    compileOnly jdbcLibs.postgresql
-    compileOnly jdbcLibs.edb
+    compileOnly libs.jdbc.postgresql
+    compileOnly libs.jdbc.edb
 
     testImplementation project(':hibernate-testing')
     testImplementation project(':hibernate-ant')
     testImplementation project(':hibernate-scan-jandex')
 
     // todo : to get rid of these
-    testImplementation testLibs.junit4
-    testImplementation testLibs.junit4Engine
+    testImplementation libs.test.junit4
+    testImplementation libs.test.junit4Engine
 
-    testImplementation testLibs.shrinkwrap
-    testImplementation testLibs.shrinkwrapDescriptors
-    testImplementation jakartaLibs.cdi
-    testImplementation jakartaLibs.jacc
-    testImplementation jakartaLibs.validation
-    testImplementation( testLibs.validator ) {
+    testImplementation libs.test.shrinkwrap
+    testImplementation libs.test.shrinkwrapDescriptors
+    testImplementation libs.jakarta.cdi
+    testImplementation libs.jakarta.jacc
+    testImplementation libs.jakarta.validation
+    testImplementation( libs.test.validator ) {
         // for test runtime
         transitive = true
     }
-    testImplementation jdbcLibs.h2
+    testImplementation libs.jdbc.h2
     testImplementation libs.hibernateModelsJandex
 
     testRuntimeOnly libs.byteBuddy
-    testRuntimeOnly testLibs.weld
-    implementation(libs.logging)
-    testRuntimeOnly(testLibs.wildFlyTxnClient) {
+    testRuntimeOnly libs.test.weld
+    implementation libs.logging
+    testRuntimeOnly(libs.test.wildFlyTxnClient) {
         // WildFly Elytron includes a whole copy of JBoss Logging, Jackson with its original package,
         // not even shaded, which causes lots of problems.
         // Since we don't need WildFly Elytron in our tests, we'll just exclude it.
         exclude group: 'org.wildfly.security', module: 'wildfly-elytron'
     }
     testImplementation libs.jandex
-    testImplementation jakartaLibs.jsonb
+    testImplementation libs.jakarta.jsonb
     testImplementation libs.jackson
     testRuntimeOnly libs.jacksonXml
     testRuntimeOnly libs.jacksonJsr310

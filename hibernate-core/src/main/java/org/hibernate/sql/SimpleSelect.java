@@ -215,6 +215,9 @@ public class SimpleSelect implements RestrictionRenderingContext {
 
 	private void applyFromClause(StringBuilder buf) {
 		buf.append( " from " ).append( dialect.appendLockHint( lockOptions, tableName ) );
+		if ( tableName.charAt( 0 ) == '(' ) {
+			buf.append( " r" );
+		}
 	}
 
 	private void applyWhereClause(StringBuilder buf) {

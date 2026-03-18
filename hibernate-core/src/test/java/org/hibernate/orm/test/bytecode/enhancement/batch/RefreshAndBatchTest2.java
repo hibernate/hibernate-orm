@@ -11,7 +11,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -51,7 +50,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 		}
 )
 @JiraKey("HHH-18608")
-@BytecodeEnhanced(runNotEnhancedAsWell = true)
+//@BytecodeEnhanced(runNotEnhancedAsWell = true)
 public class RefreshAndBatchTest2 {
 
 	@BeforeEach

@@ -8,7 +8,6 @@ import java.util.Locale;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 
@@ -48,16 +47,25 @@ public class UnknownParameterException extends HibernateException {
 		this.usage = usage;
 	}
 
-	@Override
-	public String toString() {
-		return String.format(
+	public UnknownParameterException(
+			MutationType mutationType,
+			String mutationTargetRole,
+			String tableName,
+			String columnName,
+			ParameterUsage usage) {
+		super( String.format(
 				Locale.ROOT,
-				"UnknownParameterException(`%s.%s` for %s - %s : %s)",
+				"Unable to locate parameter `%s.%s` for %s - %s : %s",
 				tableName,
 				columnName,
 				usage,
 				mutationType.name(),
-				StringHelper.collapse( mutationTarget.getRolePath() )
-		);
+				mutationTargetRole
+		) );
+		this.mutationType = mutationType;
+		this.mutationTarget = null;
+		this.tableName = tableName;
+		this.columnName = columnName;
+		this.usage = usage;
 	}
 }

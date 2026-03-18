@@ -9,10 +9,12 @@ import org.hibernate.action.queue.ActionQueueFactory;
 import org.hibernate.engine.spi.ActionQueueLegacy;
 import org.hibernate.engine.spi.SessionImplementor;
 
+import java.io.Serializable;
+
 /// ActionQueueFactory for building ActionQueueLegacy instances.
 ///
 /// @author Steve Ebersole
-public class LegacyActionQueueFactory implements ActionQueueFactory {
+public class LegacyActionQueueFactory implements ActionQueueFactory, Serializable {
 	@Override
 	public ActionQueue buildActionQueue(SessionImplementor session) {
 		return new ActionQueueLegacy( session );

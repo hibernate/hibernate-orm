@@ -4,10 +4,7 @@
  */
 package org.hibernate.persister.collection.mutation;
 
-import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-
-import java.util.List;
 
 /**
  * Removes the collection:<ul>
@@ -36,18 +33,4 @@ public interface RemoveCoordinator extends CollectionOperationCoordinator {
 	 */
 	void deleteAllRows(Object key, SharedSessionContractImplementor session);
 
-	/**
-	 * Decompose the remove operation into planned operation groups for the graph-based planner.
-	 *
-	 * @param key The collection key
-	 * @param ordinalBase Base ordinal for operation ordering
-	 * @param session The session
-	 * @return List of planned operation groups (maybe empty for NoOp coordinators)
-	 */
-	default List<PlannedOperation> decomposeRemove(
-			Object key,
-			int ordinalBase,
-			SharedSessionContractImplementor session) {
-		return List.of();
-	}
 }

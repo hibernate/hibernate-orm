@@ -9,7 +9,7 @@ import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import java.util.List;
 
 /// Constructs a directed dependency [graph][Graph] from PlannedOperations using details
-/// from the [org.hibernate.action.queue.fk.ForeignKeyModel].
+/// from the [org.hibernate.action.queue.constraint.ConstraintModel].
 ///
 /// @author Steve Ebersole
 public interface GraphBuilder {

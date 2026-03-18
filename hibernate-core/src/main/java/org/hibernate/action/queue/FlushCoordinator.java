@@ -7,16 +7,16 @@ package org.hibernate.action.queue;
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.queue.constraint.ConstraintModel;
-import org.hibernate.action.queue.exec.PlannedOperationExecutor;
+import org.hibernate.action.queue.exec.PlanStepExecutor;
+import org.hibernate.action.queue.exec.PlanStepExecutorFactory;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
-import org.hibernate.action.queue.exec.StandardPlannedOperationExecutor;
 import org.hibernate.action.queue.graph.Decomposer;
 import org.hibernate.action.queue.graph.GraphBuilder;
 import org.hibernate.action.queue.graph.StandardGraphBuilder;
+import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.action.queue.plan.FlushPlan;
 import org.hibernate.action.queue.plan.FlushPlanner;
 import org.hibernate.action.queue.plan.PlanStep;
-import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.action.queue.plan.StandardFlushPlanner;
 import org.hibernate.action.spi.Executable;
@@ -75,7 +75,7 @@ public class FlushCoordinator {
 
 	private final Decomposer decomposer;
 	private final FlushPlanner flushPlanner;
-	private final PlannedOperationExecutor executor;
+	private final PlanStepExecutor executor;
 
 	// Track entities that became managed during the current flush
 	private final List<Object> newlyManagedEntities = new ArrayList<>();
@@ -92,7 +92,7 @@ public class FlushCoordinator {
 		decomposer = new Decomposer( session );
 		graphBuilder = new StandardGraphBuilder( constraintModel, planningOptions, session );
 		flushPlanner = new StandardFlushPlanner( planningOptions );
-		executor = new StandardPlannedOperationExecutor( session );
+		executor = PlanStepExecutorFactory.create( session );
 	}
 
 	/// Identifies tables that have self-referential associations (FK from table to itself).
@@ -101,8 +101,8 @@ public class FlushCoordinator {
 		final java.util.Set<String> tables = new java.util.HashSet<>();
 		for (var fk : constraintModel.foreignKeys()) {
 			if (fk.isAssociation()) {
-				String keyTable = Helper.normalizeTableName(fk.keyTable());
-				String targetTable = Helper.normalizeTableName(fk.targetTable());
+				String keyTable = (fk.keyTable());
+				String targetTable = (fk.targetTable());
 				if (keyTable.equals(targetTable)) {
 					tables.add(keyTable);
 				}
@@ -195,6 +195,8 @@ public class FlushCoordinator {
 			postExecutionCallbacks.clear();
 		}
 
+		executor.finishUp();
+
 		// After execution, try to resolve any deferred inserts
 		resolveUnresolvedInserts();
 
@@ -242,8 +244,8 @@ public class FlushCoordinator {
 		final Map<OperationGroupKey, OperationGroupBuilder> builders = new LinkedHashMap<>();
 
 		for (PlannedOperation operation : operations) {
-			final StatementShapeKey shapeKey = computeShapeKey(operation);
-			final String normalizedTable = Helper.normalizeTableName(operation.getTableExpression());
+			final StatementShapeKey shapeKey = operation.getShapeKey();
+			final String normalizedTable = (operation.getTableExpression());
 
 			// For self-referential tables, include ordinalBase to avoid false cycles
 			// For other tables, merge across entities for better batching
@@ -270,20 +272,6 @@ public class FlushCoordinator {
 		}
 
 		return groups;
-	}
-
-	/**
-	 * Computes the StatementShapeKey for a PlannedOperation.
-	 */
-	private StatementShapeKey computeShapeKey(PlannedOperation operation) {
-		final String table = operation.getTableExpression();
-		final MutationKind kind = operation.getKind();
-
-		return switch (kind) {
-			case INSERT -> StatementShapeKey.forInsert(table, operation);
-			case UPDATE -> StatementShapeKey.forUpdate(table, operation);
-			case DELETE -> StatementShapeKey.forDelete(table, operation);
-		};
 	}
 
 	/// Helper class to build a PlannedOperationGroup from multiple PlannedOperations.
@@ -340,44 +328,16 @@ public class FlushCoordinator {
 		}
 
 		// Execute deferred FK fixups
-		for (PlannedOperation fixup : plan.drainFixupsInOrder()) {
-			executor.executePlannedOperation( fixup );
-		}
+		// todo: worth it to group these by shape?
+		executor.execute( plan.drainFixupsInOrder(), null, null );
 	}
 
 	private void executeStep(PlanStep step, FlushPlan plan, List<Executable> actions) {
-		for (PlannedOperation op : step.operations()) {
-			// DEBUG: Don't call makeEntityManaged() here - test if it's called elsewhere
-			executor.executePlannedOperation(op);
-
-			// Track entities that became managed (for unresolved insert resolution)
-			if (op.getKind() == MutationKind.INSERT) {
-				final Object entity = op.getBindPlan().getEntityInstance();
-				if (entity != null) {
-					newlyManagedEntities.add(entity);
-				}
-			}
-
-			// If this op was cycle-broken, the patcher stored intended FK values in op.intendedFkValues.
-			if (!op.getIntendedFkValues().isEmpty()) {
-				final Object entityId = op.getBindPlan().getEntityId();
-
-				final PlannedOperation fix = executor.synthesizeFixupUpdateIfNeeded( op, entityId);
-				if (fix != null) {
-					plan.enqueueFixup(fix, step);
-				}
-			}
-
-			// If this op was cycle-broken for unique swap, the patcher stored intended values in op.intendedUniqueValues.
-			if (!op.getIntendedUniqueValues().isEmpty()) {
-				final Object entityId = op.getBindPlan().getEntityId();
-
-				final PlannedOperation fix = ((StandardPlannedOperationExecutor) executor).synthesizeUniqueSwapUpdateIfNeeded( op, entityId);
-				if (fix != null) {
-					plan.enqueueFixup(fix, step);
-				}
-			}
-		}
+		executor.execute(
+				step.operations(),
+				newlyManagedEntities::add,
+				plan::enqueueFixup
+		);
 	}
 
 	/// Post-execution phase: finalize actions after all their PlannedOperations have executed.
@@ -420,6 +380,8 @@ public class FlushCoordinator {
 				return;
 			}
 		}
+
+		executor.finishUp();
 
 		// Clear the list for the next flush
 		newlyManagedEntities.clear();

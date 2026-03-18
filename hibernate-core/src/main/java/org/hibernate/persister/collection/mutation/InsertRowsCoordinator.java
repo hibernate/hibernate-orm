@@ -4,13 +4,10 @@
  */
 package org.hibernate.persister.collection.mutation;
 
-import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
-
-import java.util.List;
 
 /**
  * Coordinates the logical insertion of collection entries which are not yet persistent.
@@ -40,29 +37,6 @@ public interface InsertRowsCoordinator extends CollectionOperationCoordinator {
 			Object id,
 			EntryFilter entryChecker,
 			SharedSessionContractImplementor session);
-
-	/**
-	 * Decompose the insert rows operation into planned operation groups for the graph-based planner.
-	 * <p>
-	 * This method allows coordinators to express their operation structure, including support for
-	 * table-per-subclass scenarios where a single logical insert may require multiple physical
-	 * operations to different tables.
-	 *
-	 * @param collection The collection being inserted
-	 * @param key The collection key
-	 * @param entryFilter Filter to determine which entries to include
-	 * @param ordinalBase Base ordinal for operation ordering
-	 * @param session The session
-	 * @return List of planned operation groups (maybe empty for NoOp coordinators)
-	 */
-	default List<PlannedOperation> decomposeInsertRows(
-			PersistentCollection<?> collection,
-			Object key,
-			EntryFilter entryFilter,
-			int ordinalBase,
-			SharedSessionContractImplementor session) {
-		return List.of();
-	}
 
 	/**
 	 * A tri-predicate for including / excluding collection entries

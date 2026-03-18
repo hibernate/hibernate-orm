@@ -4,7 +4,6 @@
  */
 package org.hibernate.persister.entity.mutation;
 
-import org.hibernate.action.queue.Helper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 
@@ -23,7 +22,7 @@ public record ColumnDetails(
 
 	public static ColumnDetails from(SelectableMapping selectableMapping, int attributeIndex, String attributeName) {
 		return new ColumnDetails(
-				Helper.normalizeColumnName( selectableMapping.getSelectableName() ),
+				selectableMapping.getSelectableName(),
 				selectableMapping.getJdbcMapping(),
 				!selectableMapping.isFormula(),
 				selectableMapping.isNullable(),

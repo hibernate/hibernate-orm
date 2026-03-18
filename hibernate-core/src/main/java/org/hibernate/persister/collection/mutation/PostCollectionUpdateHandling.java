@@ -7,9 +7,11 @@ package org.hibernate.persister.collection.mutation;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.PostCollectionUpdateEvent;
 import org.hibernate.event.spi.PostCollectionUpdateEventListener;
+import org.hibernate.persister.collection.CollectionPersister;
 
 /// Post-execution callback for collection update actions.
 ///
@@ -25,43 +27,54 @@ import org.hibernate.event.spi.PostCollectionUpdateEventListener;
 ///
 /// @author Steve Ebersole
 public class PostCollectionUpdateHandling implements PostExecutionCallback {
-	private final CollectionUpdateAction action;
-	private final Object cacheKey;
+	private final CollectionPersister persister;
+	private final PersistentCollection<?> collection;
+	private final Object key;
 
-	public PostCollectionUpdateHandling(CollectionUpdateAction action, Object cacheKey) {
-		this.action = action;
-		this.cacheKey = cacheKey;
+	private final Object affectedOwner;
+	private final Object affectedOwnerId;
+
+	public PostCollectionUpdateHandling(
+			CollectionPersister persister,
+			PersistentCollection<?> collection,
+			Object key,
+			Object affectedOwner,
+			Object affectedOwnerId) {
+		this.persister = persister;
+		this.collection = collection;
+		this.key = key;
+		this.affectedOwner = affectedOwner;
+		this.affectedOwnerId = affectedOwnerId;
 	}
 
 	@Override
 	public void handle(SessionImplementor session) {
-		final var collection = action.getCollection();
-		final var persister = action.getPersister();
-
-		// 1. Update CollectionEntry state
+		// Update CollectionEntry state
 		if (collection != null) {
 			session.getPersistenceContextInternal()
 					.getCollectionEntry(collection)
 					.afterAction(collection);
 		}
 
-		// 2. Evict from cache
-		evict(session, cacheKey);
+		// Evict from cache
+		if ( persister.hasCache() ) {
+			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
+			final Object cacheKey = cache.generateCacheKey(
+					key,
+					persister,
+					session.getFactory(),
+					session.getTenantIdentifier()
+			);
+			cache.remove(session, cacheKey);
+		}
 
-		// 3. Fire POST_COLLECTION_UPDATE event
+		// Fire POST_COLLECTION_UPDATE event
 		postUpdate(session);
 
-		// 4. Update statistics
+		// Update statistics
 		final var statistics = session.getFactory().getStatistics();
 		if (statistics.isStatisticsEnabled()) {
 			statistics.updateCollection(persister.getRole());
-		}
-	}
-
-	private void evict(SessionImplementor session, Object cacheKey) {
-		if (action.getPersister().hasCache() && cacheKey != null) {
-			final CollectionDataAccess cache = action.getPersister().getCacheAccessStrategy();
-			cache.remove(session, cacheKey);
 		}
 	}
 
@@ -77,11 +90,11 @@ public class PostCollectionUpdateHandling implements PostExecutionCallback {
 
 	private PostCollectionUpdateEvent newPostCollectionUpdateEvent(SessionImplementor session) {
 		return new PostCollectionUpdateEvent(
-				action.getPersister(),
-				action.getCollection(),
+				persister,
+				collection,
 				(org.hibernate.event.spi.EventSource) session,
-				action.getAffectedOwner(),
-				action.getAffectedOwnerId()
+				affectedOwner,
+				affectedOwnerId
 		);
 	}
 }

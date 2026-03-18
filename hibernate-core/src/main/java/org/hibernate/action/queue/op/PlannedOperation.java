@@ -46,9 +46,9 @@ public class PlannedOperation {
 	private Object cachedTableInclusionChecker;
 
 	// metadata
+	private final boolean needsIdPrePhase;
 	private int ordinal;
 	private String origin;
-	private boolean needsIdPrePhase;
 
 	public PlannedOperation(
 			TableDescriptor tableDescriptor,
@@ -77,9 +77,9 @@ public class PlannedOperation {
 		this.needsIdPrePhase = needsIdPrePhase;
 
 		this.shapeKey = switch (kind) {
-			case INSERT -> StatementShapeKey.forInsert(tableDescriptor.normalizedName(), this);
-			case UPDATE -> StatementShapeKey.forUpdate(tableDescriptor.normalizedName(), this);
-			case DELETE -> StatementShapeKey.forDelete(tableDescriptor.normalizedName(), this);
+			case INSERT -> StatementShapeKey.forInsert(tableDescriptor.name(), this);
+			case UPDATE -> StatementShapeKey.forUpdate(tableDescriptor.name(), this);
+			case DELETE -> StatementShapeKey.forDelete(tableDescriptor.name(), this);
 		};
 	}
 
@@ -88,7 +88,7 @@ public class PlannedOperation {
 	}
 
 	public String getTableExpression() {
-		return tableDescriptor.normalizedName();
+		return tableDescriptor.name();
 	}
 
 	public MutationKind getKind() {

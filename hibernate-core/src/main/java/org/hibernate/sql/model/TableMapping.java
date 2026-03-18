@@ -4,7 +4,6 @@
  */
 package org.hibernate.sql.model;
 
-import org.hibernate.action.queue.Helper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.TableDetails;
 
@@ -23,8 +22,7 @@ public interface TableMapping extends TableDetails {
 	String getTableName();
 
 	default boolean containsTableName(String tableName) {
-		// Normalize both table names for comparison to handle case differences
-		return Helper.normalizeTableName( getTableName() ).equals( Helper.normalizeTableName( tableName ) );
+		return getTableName().equals( tableName );
 	}
 
 	/**

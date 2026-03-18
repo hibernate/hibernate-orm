@@ -10,12 +10,15 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.action.queue.meta.EntityTableDescriptor;
+import org.hibernate.action.queue.mutation.ast.builder.GraphTableInsertBuilder;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
@@ -752,6 +755,25 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		if ( explicitDiscriminatorColumnName != null ) {
 			final TableInsertBuilder tableInsertBuilder =
 					insertGroupBuilder.getTableDetailsBuilder( getRootTableName() );
+			tableInsertBuilder.addValueColumn(
+					getDiscriminatorValueString(),
+					getDiscriminatorMapping()
+			);
+		}
+	}
+
+	@Override
+	public EntityTableDescriptor getIdentifierTableDescriptor() {
+		final var superMappingType = getSuperMappingType();
+		return superMappingType == null
+				? getTableDescriptors()[0]
+				: getRootEntityDescriptor().getEntityPersister().getIdentifierTableDescriptor();
+	}
+
+	@Override
+	public void addDiscriminatorToInsertGroup(Function<String, GraphTableInsertBuilder> insertGroupBuilder) {
+		if ( explicitDiscriminatorColumnName != null ) {
+			final GraphTableInsertBuilder tableInsertBuilder = insertGroupBuilder.apply( getRootTableName() );
 			tableInsertBuilder.addValueColumn(
 					getDiscriminatorValueString(),
 					getDiscriminatorMapping()

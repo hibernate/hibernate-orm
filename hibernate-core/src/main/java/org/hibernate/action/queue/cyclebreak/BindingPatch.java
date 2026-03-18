@@ -5,7 +5,7 @@
 package org.hibernate.action.queue.cyclebreak;
 
 import org.hibernate.action.queue.plan.CycleBreaker;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 
 import java.util.Set;
@@ -35,7 +35,6 @@ import java.util.Set;
 /// @see PlannedOperation#getBindingPatch()
 /// @see PlannedOperation#setBindingPatch(BindingPatch)
 /// @see org.hibernate.action.queue.cyclebreak.CycleBreakPatcher
-/// @see org.hibernate.persister.entity.mutation.InsertBindPlan
 ///
 /// @author Steve Ebersole
 public record BindingPatch(

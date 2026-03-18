@@ -247,6 +247,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 	 * @param action The action representing the (re)creation of a collection
 	 */
 	public void addAction(CollectionRecreateAction action) {
+		ACTION_LOGGER.debugf( "GraphBasedActionQueue.addAction(CollectionRecreateAction) - role=%s, key=%s", action.getPersister().getRole(), action.getKey() );
 		collectionCreationCount++;
 		pendingActions.add(action);
 	}
@@ -345,6 +346,10 @@ public class GraphBasedActionQueue implements ActionQueue {
 	 * @throws HibernateException error executing queued actions
 	 */
 	public void executeActions() throws HibernateException {
+		ACTION_LOGGER.debugf( "GraphBasedActionQueue.executeActions() - pendingActions.size=%d", pendingActions.size() );
+		for (Executable action : pendingActions) {
+			ACTION_LOGGER.debugf( "  - pending action: %s", action.getClass().getSimpleName() );
+		}
 		if (!pendingActions.isEmpty()) {
 			// Delegate to FlushCoordinator for graph-based execution
 			flushCoordinator.executeFlush(pendingActions);

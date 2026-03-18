@@ -13,7 +13,7 @@ import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -90,7 +90,7 @@ public class Decomposer {
 
 		if (executable instanceof CollectionRecreateAction cra) {
 			// MutationKind.INSERT
-			return cra.getPersister().getRecreateDecomposer().decompose(
+			return cra.getPersister().decompose(
 					cra,
 					ordinalBase,
 					postExecCallbackRegistry,
@@ -99,7 +99,7 @@ public class Decomposer {
 		}
 		if (executable instanceof CollectionRemoveAction cra) {
 			// MutationKind.DELETE
-			return cra.getPersister().getRemoveDecomposer().decompose(
+			return cra.getPersister().decompose(
 					cra,
 					ordinalBase,
 					postExecCallbackRegistry,
@@ -107,7 +107,7 @@ public class Decomposer {
 			);
 		}
 		if (executable instanceof CollectionUpdateAction cua) {
-			return cua.getPersister().getUpdateDecomposer().decompose(
+			return cua.getPersister().decompose(
 					cua,
 					ordinalBase,
 					postExecCallbackRegistry,

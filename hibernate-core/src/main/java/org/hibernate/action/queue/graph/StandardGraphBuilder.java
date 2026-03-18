@@ -6,8 +6,9 @@ package org.hibernate.action.queue.graph;
 
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.PlanningOptions;
-import org.hibernate.action.queue.fk.ForeignKey;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.bind.EntityUpdateBindPlan;
+import org.hibernate.action.queue.constraint.ForeignKey;
+import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.action.queue.constraint.ConstraintModel;
 import org.hibernate.action.queue.constraint.UniqueConstraint;
@@ -25,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Comparator.comparingInt;
-import static org.hibernate.action.queue.Helper.normalizeTableName;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
@@ -81,13 +81,13 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 			nodes.add(n);
 
 			if ( g.kind() == MutationKind.INSERT) {
-				insertNodeByTable.computeIfAbsent(normalizeTableName(g.tableExpression()), k -> new ArrayList<>()).add(n);
+				insertNodeByTable.computeIfAbsent((g.tableExpression()), k -> new ArrayList<>()).add(n);
 			}
 			else if ( g.kind() == MutationKind.UPDATE ) {
-				updateNodeByTable.computeIfAbsent(normalizeTableName(g.tableExpression()), k -> new ArrayList<>()).add(n);
+				updateNodeByTable.computeIfAbsent((g.tableExpression()), k -> new ArrayList<>()).add(n);
 			}
 			else if ( g.kind() == MutationKind.DELETE ) {
-				deleteNodeByTable.computeIfAbsent(normalizeTableName(g.tableExpression()), k -> new ArrayList<>()).add(n);
+				deleteNodeByTable.computeIfAbsent((g.tableExpression()), k -> new ArrayList<>()).add(n);
 			}
 		}
 
@@ -100,8 +100,8 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 				continue;
 			}
 
-			final String childTable = normalizeTableName(foreignKey.keyTable());
-			final String parentTable = normalizeTableName(foreignKey.targetTable());
+			final String childTable = (foreignKey.keyTable());
+			final String parentTable = (foreignKey.targetTable());
 
 		// Create INSERT edges: parent -> child (insert parent before child)
 		// When a table has multiple groups (self-referential FK), create edges for all combinations
@@ -307,7 +307,7 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 			String tableName = entry.getKey();
 
 			// Skip if table has no unique constraints
-			if (constraintModel.getUniqueConstraintsForTable(normalizeTableName(tableName)).isEmpty()) {
+			if (constraintModel.getUniqueConstraintsForTable((tableName)).isEmpty()) {
 				continue;
 			}
 
@@ -321,7 +321,7 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 			String tableName = entry.getKey();
 
 			// Skip if table has no unique constraints
-			if (constraintModel.getUniqueConstraintsForTable(normalizeTableName(tableName)).isEmpty()) {
+			if (constraintModel.getUniqueConstraintsForTable((tableName)).isEmpty()) {
 				continue;
 			}
 
@@ -335,7 +335,7 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 		List<UpdateSlotChange> allUpdateSlotChanges = new ArrayList<>();
 		for (PlannedOperationGroup group : groups) {
 			if (group.kind() == MutationKind.UPDATE) {
-				String tableName = normalizeTableName(group.tableExpression());
+				String tableName = (group.tableExpression());
 				if (!constraintModel.getUniqueConstraintsForTable(tableName).isEmpty()) {
 					// Find the corresponding GroupNode
 					GroupNode updateNode = findGroupNode(nodes, group);
@@ -646,7 +646,7 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 			}
 
 			// Check if this UPDATE group has swap conflicts
-			String tableName = normalizeTableName(group.tableExpression());
+			String tableName = (group.tableExpression());
 			List<UniqueConstraint> constraints = constraintModel.getUniqueConstraintsForTable(tableName);
 
 			if (constraints.isEmpty()) {
@@ -760,7 +760,7 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 		}
 
 		var bindPlan = operation.getBindPlan();
-		if (!(bindPlan instanceof org.hibernate.persister.entity.mutation.UpdateBindPlan updateBindPlan)) {
+		if (!(bindPlan instanceof EntityUpdateBindPlan updateBindPlan)) {
 			return slots;
 		}
 
@@ -836,7 +836,7 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 	 * This is needed to install patches for UPDATE swap cycles.
 	 */
 	private ForeignKey findForeignKeyForUniqueSlot(UniqueSlot slot) {
-		String tableName = normalizeTableName(slot.tableName());
+		String tableName = (slot.tableName());
 
 		// Get the unique constraint for this slot
 		List<UniqueConstraint> constraints = constraintModel.getUniqueConstraintsForTable(tableName);
@@ -855,7 +855,7 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 		// Find an FK that uses the same columns
 		// For now, return the first FK on this table (works for simple cases like dept_id)
 		for (ForeignKey fk : constraintModel.foreignKeys()) {
-			String fkKeyTable = normalizeTableName(fk.keyTable());
+			String fkKeyTable = (fk.keyTable());
 			if (fkKeyTable.equals(tableName)) {
 				return fk;
 			}

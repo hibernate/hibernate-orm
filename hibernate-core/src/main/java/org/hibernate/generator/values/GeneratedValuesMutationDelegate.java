@@ -4,8 +4,7 @@
  */
 package org.hibernate.generator.values;
 
-import java.sql.PreparedStatement;
-
+import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -14,6 +13,8 @@ import org.hibernate.generator.EventType;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
+
+import java.sql.PreparedStatement;
 
 /**
  * Each implementation defines a strategy for retrieving values
@@ -49,6 +50,16 @@ public interface GeneratedValuesMutationDelegate {
 	GeneratedValues performMutation(
 			PreparedStatementDetails statementDetails,
 			JdbcValueBindings valueBindings,
+			Object entity,
+			SharedSessionContractImplementor session);
+
+	/**
+	 * Perform the {@code mutation} and extract the database-generated values.
+	 *
+	 * @see #createTableMutationBuilder
+	 */
+	GeneratedValues performGraphMutation(
+			PlannedOperation operation,
 			Object entity,
 			SharedSessionContractImplementor session);
 

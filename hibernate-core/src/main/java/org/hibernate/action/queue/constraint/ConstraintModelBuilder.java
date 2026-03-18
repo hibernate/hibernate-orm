@@ -4,7 +4,6 @@
  */
 package org.hibernate.action.queue.constraint;
 
-import org.hibernate.action.queue.fk.ForeignKey;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;

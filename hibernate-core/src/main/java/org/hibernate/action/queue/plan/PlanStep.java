@@ -4,6 +4,8 @@
  */
 package org.hibernate.action.queue.plan;
 
+import org.hibernate.action.queue.op.PlannedOperation;
+
 import java.util.List;
 
 /// Execution step within a FlushPlan containing one or more [operations][#operations()].

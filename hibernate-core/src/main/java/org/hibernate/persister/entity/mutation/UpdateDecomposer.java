@@ -5,57 +5,52 @@
 package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.action.internal.EntityUpdateAction;
-import org.hibernate.action.queue.bind.BindPlan;
-import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.MutationKind;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.bind.EntityUpdateBindPlan;
+import org.hibernate.action.queue.bind.GeneratedValuesCollector;
+import org.hibernate.action.queue.exec.PostExecutionCallback;
+import org.hibernate.action.queue.meta.EntityTableDescriptor;
+import org.hibernate.action.queue.meta.TableDescriptor;
+import org.hibernate.action.queue.mutation.ast.TableUpdate;
+import org.hibernate.action.queue.mutation.ast.builder.GraphTableUpdateBuilder;
+import org.hibernate.action.queue.mutation.ast.builder.GraphTableUpdateBuilderStandard;
+import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.PreUpdateEvent;
-import org.hibernate.generator.EventType;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.MutationOperationGroup;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
-import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
-import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilderSkipped;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
-import org.hibernate.sql.model.ast.MutatingTableReference;
+import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 
 /// Decomposer for entity update operations.
 ///
 /// Converts an [EntityUpdateAction] into a group of [PlannedOperation] to be performed.
 ///
-/// @see UpdateBindPlan
+/// @see EntityUpdateBindPlan
 ///
 /// @author Steve Ebersole
 public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
-	private final MutationOperationGroup staticUpdateGroup;
-	private final BasicBatchKey batchKey;
+	private final Map<String, TableUpdate> staticUpdateOperations;
 
 	public UpdateDecomposer(EntityPersister entityPersister, SessionFactoryImplementor sessionFactory) {
 		super( entityPersister, sessionFactory );
 
-		this.staticUpdateGroup = entityPersister.isDynamicUpdate()
+		this.staticUpdateOperations = entityPersister.isDynamicUpdate()
 				// entity specified dynamic-update - skip static operations
 				? null
-				: generateStaticOperationGroup();
-
-		// Batching support for updates (unless update-generated properties)
-		this.batchKey = entityPersister.hasUpdateGeneratedProperties()
-				? null
-				: new BasicBatchKey( entityPersister.getEntityName() + "#UPDATE" );
+				: generateStaticOperations();
 	}
 
-	public MutationOperationGroup getStaticMutationGroup() {
-		return staticUpdateGroup;
+	public Map<String, TableUpdate> getStaticUpdateOperations() {
+		return staticUpdateOperations;
 	}
 
 	@Override
@@ -108,19 +103,19 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				session
 		);
 
-		final var generatedValuesCollector = new GeneratedValuesCollector( entityPersister, EventType.UPDATE );
+		var generatedValuesCollector = GeneratedValuesCollector.forUpdate( entityPersister );
 		final PostUpdateHandling postUpdateHandling = new PostUpdateHandling( action, cacheKey, version, generatedValuesCollector );
 		postExecutionCallbackRegistry.accept( postUpdateHandling );
 
-		final List<PlannedOperation> operations = new ArrayList<>(effectiveGroup.getNumberOfOperations());
+		final List<PlannedOperation> operations = CollectionHelper.arrayList( effectiveGroup.size() );
 		int localOrd = 0;
 
-		for ( int i = 0; i < effectiveGroup.getNumberOfOperations(); i++ ) {
-			var operation = effectiveGroup.getOperation( i );
-			var table = (EntityTableMapping) operation.getTableDetails();
-			String tableName = org.hibernate.action.queue.Helper.normalizeTableName( table.getTableName() );
+		for ( Map.Entry<String, TableUpdate> entry : effectiveGroup.entrySet() ) {
+			var operation = entry.getValue().createMutationOperation();
+			var tableDescriptor = (EntityTableDescriptor) operation.getTableDescriptor();
 
-			final BindPlan bindPlan = createUpdateBindPlan(
+			final EntityUpdateBindPlan bindPlan = createUpdateBindPlan(
+					tableDescriptor,
 					entity,
 					identifier,
 					rowId,
@@ -130,11 +125,12 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 					dirtyFields,
 					updateable,
 					applyOptimisticLocking,
-					valuesAnalysis
+					valuesAnalysis,
+					generatedValuesCollector
 			);
 
 			final PlannedOperation op = new PlannedOperation(
-					tableName,
+					tableDescriptor,
 					MutationKind.UPDATE,
 					operation,
 					bindPlan,
@@ -183,7 +179,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		return false;
 	}
 
-	private MutationOperationGroup chooseEffectiveUpdateGroup(
+	private Map<String, TableUpdate> chooseEffectiveUpdateGroup(
 			Object identifier,
 			Object rowId,
 			Object[] state,
@@ -201,25 +197,42 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				|| (applyOptimisticLocking && entityPersister.optimisticLockStyle() == OptimisticLockStyle.DIRTY);
 
 		return needsDynamicUpdate
-				? generateDynamicUpdateGroup( identifier, rowId, state, previousState, version, dirtyFields, updateable, valuesAnalysis, session )
-				: staticUpdateGroup;
+				? generateDynamicUpdateOperations( identifier, rowId, state, previousState, version, dirtyFields, updateable, valuesAnalysis, session )
+				: staticUpdateOperations;
 	}
 
-	public MutationOperationGroup generateStaticOperationGroup() {
-		final var updateGroupBuilder = new MutationGroupBuilder( MutationType.UPDATE, entityPersister );
+	private Map<String, TableUpdate> generateStaticOperations() {
+		final Map<String, GraphTableUpdateBuilder> staticOperationBuilders = new HashMap<>();
 
 		// Process tables in forward order
-		entityPersister.forEachMutableTable( (tableMapping) -> {
-			final var tableUpdateBuilder = new TableUpdateBuilderStandard<>( entityPersister, tableMapping, sessionFactory );
-			updateGroupBuilder.addTableDetailsBuilder( tableUpdateBuilder );
+		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
+			staticOperationBuilders.put(
+					tableDescriptor.name(),
+					createGraphTableUpdateBuilder(tableDescriptor)
+			);
 		} );
 
-		applyStaticUpdateDetails( updateGroupBuilder );
+		applyStaticUpdateDetails( staticOperationBuilders );
 
-		return createOperationGroup( null, updateGroupBuilder.buildMutationGroup() );
+		final Map<String, TableUpdate> staticOperations = new HashMap<>();
+		staticOperationBuilders.forEach( (name, operationBuilder) -> {
+			// Only build mutation if there are columns to update
+			if ( operationBuilder.hasValueBindings() ) {
+				staticOperations.put( name, operationBuilder.buildMutation() );
+			}
+		} );
+		return Collections.unmodifiableMap( staticOperations );
 	}
 
-	protected MutationOperationGroup generateDynamicUpdateGroup(
+	private GraphTableUpdateBuilder createGraphTableUpdateBuilder(TableDescriptor tableDescriptor) {
+		return new GraphTableUpdateBuilderStandard(
+				entityPersister,
+				tableDescriptor,
+				sessionFactory
+		);
+	}
+
+	protected Map<String, TableUpdate> generateDynamicUpdateOperations(
 			Object identifier,
 			Object rowId,
 			Object[] state,
@@ -229,92 +242,96 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			boolean[] updateable,
 			UpdateValuesAnalysisForDecomposer valuesAnalysis,
 			SharedSessionContractImplementor session) {
-		final var updateGroupBuilder = new MutationGroupBuilder( MutationType.UPDATE, entityPersister );
+		final Map<String, GraphTableUpdateBuilder> operationBuilders = new HashMap<>();
 
 		// Process tables in forward order
-		entityPersister.forEachMutableTable( (tableMapping) -> {
-			final var tableReference = new MutatingTableReference( tableMapping );
-			final TableMutationBuilder<?> tableUpdateBuilder;
-			if ( !valuesAnalysis.needsUpdate( tableMapping ) ) {
-				// This table does not need updating
-				tableUpdateBuilder = new TableUpdateBuilderSkipped( tableReference );
+		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
+			if ( valuesAnalysis.needsUpdate( tableDescriptor ) ) {
+				operationBuilders.put(
+						tableDescriptor.name(),
+						createGraphTableUpdateBuilder(tableDescriptor)
+				);
 			}
-			else {
-				tableUpdateBuilder = new TableUpdateBuilderStandard<>( entityPersister, tableMapping, sessionFactory );
-			}
-			updateGroupBuilder.addTableDetailsBuilder( tableUpdateBuilder );
 		} );
 
-		applyDynamicUpdateDetails( updateGroupBuilder, state, previousState, version, dirtyFields, updateable, session );
+		applyDynamicUpdateDetails( operationBuilders, state, previousState, version, dirtyFields, updateable, session );
 
-		return createOperationGroup( null, updateGroupBuilder.buildMutationGroup() );
+		final Map<String, TableUpdate> operations = new HashMap<>();
+		operationBuilders.forEach( (name, operationBuilder) -> {
+			// Only build mutation if there are columns to update
+			if ( operationBuilder.hasValueBindings() ) {
+				operations.put( name, operationBuilder.buildMutation() );
+			}
+		} );
+		return operations;
 	}
 
-	private void applyStaticUpdateDetails(MutationGroupBuilder updateGroupBuilder) {
-		final var attributeMappings = entityPersister.getAttributeMappings();
+	private void applyStaticUpdateDetails(Map<String, GraphTableUpdateBuilder> builders) {
 		final boolean[] propertyUpdateability = entityPersister.getPropertyUpdateability();
 
 		// Apply SET clause columns
-		updateGroupBuilder.forEachTableMutationBuilder( (builder) -> {
-			final var tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
-			final var tableUpdateBuilder = (TableUpdateBuilder<?>) builder;
+		builders.forEach( (name, builder) -> {
+			final var tableDescriptor = (EntityTableDescriptor) builder.getTableDescriptor();
+			// Skip inverse tables
+			if (tableDescriptor.isInverse()) {
+				return;
+			}
 
-			final int[] attributeIndexes = tableMapping.getAttributeIndexes();
-			for ( int i = 0; i < attributeIndexes.length; i++ ) {
-				final int attributeIndex = attributeIndexes[i];
-				if ( propertyUpdateability[attributeIndex] ) {
-					final var attributeMapping = attributeMappings.get( attributeIndex );
-					attributeMapping.forEachUpdatable( updateGroupBuilder );
+			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
+				var attribute = tableDescriptor.attributes().get( i );
+				if ( propertyUpdateability[attribute.getStateArrayPosition()] ) {
+					tableDescriptor.forEachAttributeColumn( attribute, builder::addValueColumn );
 				}
 			}
 
 			// Apply WHERE clause - key restrictions
-			applyKeyRestriction( tableUpdateBuilder, tableMapping );
+			applyKeyRestriction( builder );
 
 			// Apply optimistic locking
-			applyOptimisticLocking( tableUpdateBuilder, tableMapping );
+			applyOptimisticLocking( builder );
 		} );
 
 		// Apply partitioned selection restrictions if needed
 		if ( entityPersister.hasPartitionedSelectionMapping() ) {
-			applyPartitionedSelectionRestrictions( updateGroupBuilder );
+			applyPartitionedSelectionRestrictions( builders );
 		}
 	}
 
 	private void applyDynamicUpdateDetails(
-			MutationGroupBuilder updateGroupBuilder,
+			Map<String, GraphTableUpdateBuilder> builders,
 			Object[] state,
 			Object[] previousState,
 			Object version,
 			int[] dirtyFields,
 			boolean[] updateable,
 			SharedSessionContractImplementor session) {
-		final var attributeMappings = entityPersister.getAttributeMappings();
+		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
 
 		// Apply SET clause columns
-		updateGroupBuilder.forEachTableMutationBuilder( (builder) -> {
-			final var tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
-			final var tableUpdateBuilder = (TableUpdateBuilder<?>) builder;
+		builders.forEach( (name, builder) -> {
+			final var tableDescriptor = (EntityTableDescriptor) builder.getTableDescriptor();
+			// Skip inverse tables
+			if (tableDescriptor.isInverse()) {
+				return;
+			}
 
-			final int[] attributeIndexes = tableMapping.getAttributeIndexes();
-			for ( int i = 0; i < attributeIndexes.length; i++ ) {
-				final int attributeIndex = attributeIndexes[i];
-				if ( shouldIncludeInDynamicUpdate( attributeIndex, updateable, dirtyFields ) ) {
-					final var attributeMapping = attributeMappings.get( attributeIndex );
-					attributeMapping.forEachUpdatable( updateGroupBuilder );
+			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
+				var attribute = tableDescriptor.attributes().get( i );
+				if ( shouldIncludeInDynamicUpdate( attribute.getStateArrayPosition(), updateable, dirtyFields ) ) {
+					tableDescriptor.forEachAttributeColumn( attribute, builder::addValueColumn );
 				}
 			}
 
 			// Apply WHERE clause - key restrictions
-			applyKeyRestriction( tableUpdateBuilder, tableMapping );
+			applyKeyRestriction( builder );
 
 			// Apply optimistic locking
-			applyOptimisticLocking( tableUpdateBuilder, tableMapping );
+			applyOptimisticLocking( builder );
 		} );
 
 		// Apply partitioned selection restrictions if needed
 		if ( entityPersister.hasPartitionedSelectionMapping() ) {
-			applyPartitionedSelectionRestrictions( updateGroupBuilder );
+			applyPartitionedSelectionRestrictions( builders );
 		}
 	}
 
@@ -336,46 +353,42 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		return true;
 	}
 
-	private void applyKeyRestriction(
-			TableUpdateBuilder<?> tableUpdateBuilder,
-			EntityTableMapping tableMapping) {
-		tableUpdateBuilder.addKeyRestrictions( tableMapping.getKeyMapping() );
+	private void applyKeyRestriction(GraphTableUpdateBuilder tableUpdateBuilder) {
+		tableUpdateBuilder.addKeyRestrictions( tableUpdateBuilder.getTableDescriptor().keyDescriptor() );
 	}
 
-	private void applyOptimisticLocking(
-			TableUpdateBuilder<?> tableUpdateBuilder,
-			EntityTableMapping tableMapping) {
+	private void applyOptimisticLocking(GraphTableUpdateBuilder tableUpdateBuilder) {
 		final var optimisticLockStyle = entityPersister.optimisticLockStyle();
 
 		if ( optimisticLockStyle.isVersion() && entityPersister.getVersionMapping() != null ) {
-			applyVersionBasedOptLocking( tableUpdateBuilder, tableMapping );
+			applyVersionBasedOptLocking( tableUpdateBuilder );
 		}
 		else if ( optimisticLockStyle.isAllOrDirty() ) {
-			applyNonVersionOptLocking( tableUpdateBuilder, tableMapping );
+			applyNonVersionOptLocking( tableUpdateBuilder );
 		}
 	}
 
-	private void applyVersionBasedOptLocking(
-			TableUpdateBuilder<?> tableUpdateBuilder,
-			EntityTableMapping tableMapping) {
+	private void applyVersionBasedOptLocking(GraphTableUpdateBuilder tableUpdateBuilder) {
 		final var versionMapping = entityPersister.getVersionMapping();
+		final var tableDescriptor = tableUpdateBuilder.getTableDescriptor();
 		if ( versionMapping != null
-				&& tableMapping.getTableName().equals( versionMapping.getContainingTableExpression() ) ) {
+				&& tableDescriptor.name().equals(
+					versionMapping.getContainingTableExpression() ) ) {
 			tableUpdateBuilder.addOptimisticLockRestriction( versionMapping );
 		}
 	}
 
-	private void applyNonVersionOptLocking(
-			TableUpdateBuilder<?> tableUpdateBuilder,
-			EntityTableMapping tableMapping) {
+	private void applyNonVersionOptLocking(GraphTableUpdateBuilder tableUpdateBuilder) {
 		final boolean[] versionability = entityPersister.getPropertyVersionability();
 		final var attributeMappings = entityPersister.getAttributeMappings();
+		final var tableDescriptor = tableUpdateBuilder.getTableDescriptor();
 
 		for ( int attributeIndex = 0; attributeIndex < versionability.length; attributeIndex++ ) {
 			if ( versionability[attributeIndex] ) {
 				final var attribute = attributeMappings.get( attributeIndex );
 				if ( !attribute.isPluralAttributeMapping()
-						&& tableMapping.getTableName().equals( attribute.getContainingTableExpression() ) ) {
+						&& tableDescriptor.name().equals(
+							attribute.getContainingTableExpression() ) ) {
 					// Add each selectable (column) as an optimistic lock restriction
 					final int jdbcTypeCount = attribute.getJdbcTypeCount();
 					for ( int i = 0; i < jdbcTypeCount; i++ ) {
@@ -389,7 +402,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		}
 	}
 
-	private void applyPartitionedSelectionRestrictions(MutationGroupBuilder updateGroupBuilder) {
+	private void applyPartitionedSelectionRestrictions(Map<String, GraphTableUpdateBuilder> builders) {
 		final var attributeMappings = entityPersister.getAttributeMappings();
 
 		for ( int m = 0; m < attributeMappings.size(); m++ ) {
@@ -400,17 +413,17 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				if ( selectableMapping.isPartitioned() ) {
 					final String tableNameForMutation =
 							entityPersister.physicalTableNameForMutation( selectableMapping );
-					final RestrictedTableMutationBuilder<?, ?> rootTableMutationBuilder =
-							updateGroupBuilder.findTableDetailsBuilder( tableNameForMutation );
-					if ( rootTableMutationBuilder != null ) {
-						rootTableMutationBuilder.addKeyRestrictionLeniently( selectableMapping );
+					final GraphTableUpdateBuilder builder = builders.get( tableNameForMutation );
+					if ( builder != null ) {
+						builder.addKeyRestriction( selectableMapping );
 					}
 				}
 			}
 		}
 	}
 
-	private BindPlan createUpdateBindPlan(
+	private EntityUpdateBindPlan createUpdateBindPlan(
+			EntityTableDescriptor tableDescriptor,
 			Object entity,
 			Object identifier,
 			Object rowId,
@@ -420,26 +433,19 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			int[] dirtyFields,
 			boolean[] updateable,
 			boolean applyOptimisticLocking,
-			UpdateValuesAnalysisForDecomposer valuesAnalysis) {
-		// Use specialized BindPlan for union subclass inheritance
-		if ( entityPersister instanceof org.hibernate.persister.entity.UnionSubclassEntityPersister ) {
-			return new UnionSubclassUpdateBindPlan(
-					entityPersister,
-					entity,
-					identifier,
-					rowId,
-					state,
-					previousState,
-					version,
-					dirtyFields,
-					updateable,
-					applyOptimisticLocking,
-					valuesAnalysis
-			);
+			UpdateValuesAnalysisForDecomposer valuesAnalysis,
+			GeneratedValuesCollector generatedValuesCollector) {
+		final EntityTableDescriptor tableDescriptorToUse;
+
+		if ( entityPersister instanceof UnionSubclassEntityPersister ) {
+			tableDescriptorToUse = entityPersister.getIdentifierTableDescriptor();
+		}
+		else {
+			tableDescriptorToUse = tableDescriptor;
 		}
 
-		// Standard BindPlan for other inheritance strategies
-		return new UpdateBindPlan(
+		return new EntityUpdateBindPlan(
+				tableDescriptorToUse,
 				entityPersister,
 				entity,
 				identifier,
@@ -450,7 +456,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				dirtyFields,
 				updateable,
 				applyOptimisticLocking,
-				valuesAnalysis
+				valuesAnalysis,
+				generatedValuesCollector
 		);
 	}
 }

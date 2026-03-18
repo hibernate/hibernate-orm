@@ -5,24 +5,26 @@
 package org.hibernate.action.queue.bind;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.action.queue.Helper;
 import org.hibernate.action.queue.cyclebreak.CycleBreakPatcher;
+import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.UpdateValuesAnalysisForDecomposer;
 
-import static org.hibernate.action.queue.Helper.normalizeColumnName;
+import java.sql.SQLException;
+
 import static org.hibernate.internal.util.collections.ArrayHelper.contains;
 
 /**
  * @author Steve Ebersole
  */
-public class EntityUpdateBindPlan implements BindPlan {
+public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 	private final EntityTableDescriptor tableDescriptor;
 	private final EntityPersister entityPersister;
 	private final Object entity;
@@ -161,7 +163,7 @@ public class EntityUpdateBindPlan implements BindPlan {
 					if ( selectableMapping.isUpdateable() && !selectableMapping.isFormula() ) {
 						bindings.bindValue(
 								jdbcValue,
-								normalizeColumnName( selectableMapping.getSelectableName() ),
+								( selectableMapping.getSelectableName() ),
 								ParameterUsage.SET
 						);
 					}
@@ -192,7 +194,7 @@ public class EntityUpdateBindPlan implements BindPlan {
 				(index, jdbcValue, columnMapping) -> {
 					valueBindings.bindValue(
 							jdbcValue,
-							normalizeColumnName( columnMapping.getSelectableName() ),
+							( columnMapping.getSelectableName() ),
 							ParameterUsage.RESTRICT
 					);
 				},
@@ -221,7 +223,7 @@ public class EntityUpdateBindPlan implements BindPlan {
 			return;
 		}
 
-		if ( tableDescriptor.physicalName().equals( versionMapping.getContainingTableExpression() ) ) {
+		if ( tableDescriptor.name().equals( versionMapping.getContainingTableExpression() ) ) {
 			versionMapping.decompose(
 					version,
 					0,
@@ -230,7 +232,7 @@ public class EntityUpdateBindPlan implements BindPlan {
 					(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
 						bindings.bindValue(
 								jdbcValue,
-								normalizeColumnName( selectableMapping.getSelectionExpression() ),
+								( selectableMapping.getSelectionExpression() ),
 								ParameterUsage.RESTRICT
 						);
 					},
@@ -279,7 +281,7 @@ public class EntityUpdateBindPlan implements BindPlan {
 					if ( selectableMapping.isUpdateable() && !selectableMapping.isFormula() ) {
 						bindings.bindValue(
 								jdbcValue,
-								normalizeColumnName( selectableMapping.getSelectionExpression() ),
+								( selectableMapping.getSelectionExpression() ),
 								ParameterUsage.RESTRICT
 						);
 					}
@@ -310,7 +312,7 @@ public class EntityUpdateBindPlan implements BindPlan {
 									if ( selectable.isPartitioned() ) {
 										bindings.bindValue(
 												jdbcValue,
-												Helper.normalizeColumnName( selectable.getSelectionExpression() ),
+												selectable.getSelectionExpression(),
 												ParameterUsage.RESTRICT
 										);
 									}
@@ -321,5 +323,28 @@ public class EntityUpdateBindPlan implements BindPlan {
 				}
 			} );
 		}
+	}
+
+	@Override
+	public OperationResultChecker getOperationResultChecker() {
+		return this;
+	}
+
+	@Override
+	public boolean checkResult(
+			int affectedRowCount,
+			int batchPosition,
+			String sqlString,
+			SessionFactoryImplementor sessionFactory) throws SQLException {
+		return Checkers.identifiedResultsCheck(
+				tableDescriptor.updateDetails().getExpectation(),
+				affectedRowCount,
+				batchPosition,
+				entityPersister,
+				tableDescriptor,
+				identifier,
+				sqlString,
+				sessionFactory
+		);
 	}
 }

@@ -5,7 +5,7 @@
 package org.hibernate.action.queue.graph;
 
 
-import org.hibernate.action.queue.fk.ForeignKey;
+import org.hibernate.action.queue.constraint.ForeignKey;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;

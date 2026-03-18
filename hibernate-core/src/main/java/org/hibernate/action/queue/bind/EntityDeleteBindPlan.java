@@ -4,19 +4,22 @@
  */
 package org.hibernate.action.queue.bind;
 
-import org.hibernate.action.queue.Helper;
+import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
+import java.sql.SQLException;
+
 /**
  * @author Steve Ebersole
  */
-public class EntityDeleteBindPlan implements BindPlan {
+public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 	private final EntityTableDescriptor tableDescriptor;
 	private final EntityPersister entityPersister;
 	private final Object identifier;
@@ -72,7 +75,7 @@ public class EntityDeleteBindPlan implements BindPlan {
 				(index, jdbcValue, columnMapping) -> {
 					valueBindings.bindValue(
 							jdbcValue,
-							tableDescriptor.keyDescriptor().columns().get( index ).normalizedName(),
+							columnMapping.getSelectableName(),
 							ParameterUsage.RESTRICT
 					);
 				},
@@ -100,7 +103,7 @@ public class EntityDeleteBindPlan implements BindPlan {
 		if ( versionMapping == null ) {
 			return;
 		}
-		if ( tableDescriptor.physicalName().equals( versionMapping.getContainingTableExpression() ) ) {
+		if ( tableDescriptor.name().equals( versionMapping.getContainingTableExpression() ) ) {
 			versionMapping.decompose(
 					version,
 					0,
@@ -181,7 +184,7 @@ public class EntityDeleteBindPlan implements BindPlan {
 									if ( selectable.isPartitioned() ) {
 										bindings.bindValue(
 												jdbcValue,
-												Helper.normalizeColumnName( selectable.getSelectionExpression() ),
+												selectable.getSelectionExpression(),
 												ParameterUsage.RESTRICT
 										);
 									}
@@ -192,5 +195,28 @@ public class EntityDeleteBindPlan implements BindPlan {
 				}
 			} );
 		}
+	}
+
+	@Override
+	public OperationResultChecker getOperationResultChecker() {
+		return this;
+	}
+
+	@Override
+	public boolean checkResult(
+			int affectedRowCount,
+			int batchPosition,
+			String sqlString,
+			SessionFactoryImplementor sessionFactory) throws SQLException {
+		return Checkers.identifiedResultsCheck(
+				tableDescriptor.deleteDetails().getExpectation(),
+				affectedRowCount,
+				batchPosition,
+				entityPersister,
+				tableDescriptor,
+				identifier,
+				sqlString,
+				sessionFactory
+		);
 	}
 }

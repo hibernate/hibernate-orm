@@ -4,9 +4,11 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.EntityInsertAction;
+import org.hibernate.action.queue.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
@@ -41,7 +43,7 @@ public class PostInsertHandling implements PostExecutionCallback {
 
 	public PostInsertHandling(
 			AbstractEntityInsertAction action,
-			GeneratedValuesCollector generatedValuesCollector) {
+			@Nullable GeneratedValuesCollector generatedValuesCollector) {
 		this.action = action;
 		this.generatedValuesCollector = generatedValuesCollector;
 	}
@@ -53,8 +55,6 @@ public class PostInsertHandling implements PostExecutionCallback {
 		final Object id = action.getId();
 		final Object[] state = action.getState();
 
-		// Get aggregated GeneratedValues from all tables
-		final GeneratedValues generatedValues = generatedValuesCollector.getGeneratedValues();
 
 		// 1. Get EntityEntry
 		final var persistenceContext = session.getPersistenceContextInternal();
@@ -66,8 +66,11 @@ public class PostInsertHandling implements PostExecutionCallback {
 		// 2. Update EntityEntry state after insert
 		entry.postInsert( state );
 
-		// 3. Handle generated properties (IDs, timestamps, versions, etc.)
-		handleGeneratedProperties( entry, generatedValues, persistenceContext, persister, state );
+		// 3. Handle generated properties (IDs, timestamps, versions, etc.) across all the tables
+		if ( generatedValuesCollector != null ) {
+			final GeneratedValues generatedValues = generatedValuesCollector.generatedValues();
+			handleGeneratedProperties( entry, generatedValues, persistenceContext, persister, state );
+		}
 
 		// 4. Register inserted key in persistence context
 		persistenceContext.registerInsertedKey( persister, id );

@@ -7,31 +7,32 @@ package org.hibernate.persister.entity.mutation;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.bind.BindPlan;
+import org.hibernate.action.queue.bind.EntityInsertBindPlan;
+import org.hibernate.action.queue.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.meta.EntityTableDescriptor;
+import org.hibernate.action.queue.meta.TableDescriptor;
+import org.hibernate.action.queue.mutation.ast.TableInsert;
+import org.hibernate.action.queue.mutation.ast.builder.GraphTableInsertBuilder;
+import org.hibernate.action.queue.mutation.ast.builder.GraphTableInsertBuilderStandard;
+import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.support.Helper;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
-import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.PreInsertEvent;
-import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
-import org.hibernate.metamodel.mapping.AttributeMappingsList;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.MutationOperationGroup;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
-import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
+import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
-import static org.hibernate.action.queue.Helper.normalizeTableName;
 
 /// [Decomposer][org.hibernate.action.queue.graph.MutationDecomposer] for entity insert operations.
 ///
@@ -39,26 +40,20 @@ import static org.hibernate.action.queue.Helper.normalizeTableName;
 ///
 /// @author Steve Ebersole
 public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAction> {
-	private final MutationOperationGroup staticInsertGroup;
-	private final BasicBatchKey batchKey;
+	private final Map<String, TableInsert> staticInsertOperations;
 
 	public InsertDecomposer(EntityPersister entityPersister, SessionFactoryImplementor sessionFactory) {
 		super( entityPersister, sessionFactory );
 
-		this.staticInsertGroup = entityPersister.isDynamicInsert()
+		this.staticInsertOperations = entityPersister.isDynamicInsert()
 				// the entity specified dynamic-insert - skip generating the
 				// static inserts as we will create them every time
 				? null
-				: generateStaticOperationGroup();
-
-		batchKey = entityPersister.isIdentifierAssignedByInsert() || entityPersister.hasInsertGeneratedProperties()
-				// disable batching in case of insert-generated identifier or properties
-				? null
-				: new BasicBatchKey( entityPersister.getEntityName() + "#INSERT" );
+				: generateStaticOperations();
 	}
 
-	public MutationOperationGroup getStaticMutationGroup() {
-		return staticInsertGroup;
+	public Map<String, TableInsert> getStaticInsertOperations() {
+		return staticInsertOperations;
 	}
 
 	@Override
@@ -87,34 +82,36 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 
 		var effectiveGroup = chooseEffectiveInsertGroup( insertable, entity, identifier, session );
 
-		final var generatedValuesCollector = new GeneratedValuesCollector( entityPersister, EventType.INSERT );
+		final var generatedValuesCollector = GeneratedValuesCollector.forInsert( entityPersister );
 		final PostInsertHandling postInsertHandling = new PostInsertHandling( action, generatedValuesCollector );
 		postExecutionCallbackRegistry.accept( postInsertHandling );
 
 		// Compute whether this entity insert needs identity pre-phase
-		final boolean needsIdPrePhase = org.hibernate.action.queue.Helper.needsIdentityPrePhase(entityPersister, identifier);
+		final boolean needsIdPrePhase = Helper.needsIdentityPrePhase(entityPersister, identifier);
 
-		final List<PlannedOperation> operations = new ArrayList<>(effectiveGroup.getNumberOfOperations());
+		final List<PlannedOperation> operations = CollectionHelper.arrayList( effectiveGroup.size() );
 		int localOrd = 0;
+		int i = 0;
+		for ( Map.Entry<String, TableInsert> entry : effectiveGroup.entrySet() ) {
+			var operation = entry.getValue().createMutationOperation();
+			var tableDescriptor = (EntityTableDescriptor) operation.getTableDescriptor();
 
-		for (int i = 0; i < effectiveGroup.getNumberOfOperations(); i++) {
-			var operation = effectiveGroup.getOperation(i);
-			var table = (EntityTableMapping) operation.getTableDetails();
-			String tableName = normalizeTableName( table.getTableName() );
+			if ( !inclusionChecker.include( tableDescriptor ) ) {
+				continue;
+			}
 
 			final BindPlan bindPlan = createInsertBindPlan(
-					tableName,
+					tableDescriptor,
 					entity,
 					identifier,
 					valuesAnalysis,
 					insertable,
-					inclusionChecker,
 					action,
 					generatedValuesCollector
 			);
 
 			final PlannedOperation op = new PlannedOperation(
-					tableName,
+					tableDescriptor,
 					MutationKind.INSERT,
 					operation,
 					bindPlan,
@@ -150,113 +147,146 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		}
 	}
 
-	private TableInclusionChecker calculateTableInclusionCheck(InsertValuesAnalysisForDecomposer analysis) {
+	private org.hibernate.action.queue.support.TableInclusionChecker calculateTableInclusionCheck(InsertValuesAnalysisForDecomposer analysis) {
 		return (tableMapping) -> !tableMapping.isOptional() || analysis.hasNonNullBindings( tableMapping );
 	}
 
-	private MutationOperationGroup chooseEffectiveInsertGroup(
+	private Map<String, TableInsert> chooseEffectiveInsertGroup(
 			boolean[] insertable,
 			Object entity,
 			Object id,
 			SharedSessionContractImplementor session) {
 		final boolean forceIdentifierBinding = entityPersister.getGenerator().generatedOnExecution() && id != null;
 		return entityPersister.isDynamicInsert() || forceIdentifierBinding
-				? generateDynamicInsertSqlGroup( insertable, entity, session, forceIdentifierBinding )
-				: staticInsertGroup;
+				? generateDynamicInsertOperations( insertable, entity, session, forceIdentifierBinding )
+				: staticInsertOperations;
 	}
 
-	public MutationOperationGroup generateStaticOperationGroup() {
-		final var insertGroupBuilder = new MutationGroupBuilder( MutationType.INSERT, entityPersister );
-		entityPersister.forEachMutableTable( (tableMapping) -> {
-			insertGroupBuilder.addTableDetailsBuilder( createTableInsertBuilder( tableMapping, false ) );
+	private Map<String, TableInsert> generateStaticOperations() {
+		final Map<String, GraphTableInsertBuilder> staticOperationBuilders = new HashMap<>();
+		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
+			staticOperationBuilders.put(
+					tableDescriptor.name(),
+					createGraphTableInsertBuilder(tableDescriptor, false)
+			);
 		} );
-		applyTableInsertDetails( insertGroupBuilder, entityPersister.getPropertyInsertability(), null, null, false );
-		return createOperationGroup( null, insertGroupBuilder.buildMutationGroup() );
-	}
 
-	protected MutationOperationGroup generateDynamicInsertSqlGroup(
-			boolean[] insertable,
-			Object object,
-			SharedSessionContractImplementor session,
-			boolean forceIdentifierBinding) {
-		final var insertGroupBuilder = new MutationGroupBuilder( MutationType.INSERT, entityPersister );
-		entityPersister.forEachMutableTable(
-				(tableMapping) -> insertGroupBuilder.addTableDetailsBuilder( createTableInsertBuilder( tableMapping, forceIdentifierBinding ) )
+		applyGraphTableInsertDetails(
+				staticOperationBuilders,
+				entityPersister.getPropertyInsertability(),
+				null,
+				null,
+				false
 		);
-		applyTableInsertDetails( insertGroupBuilder, insertable, object, session, forceIdentifierBinding );
-		return createOperationGroup( null, insertGroupBuilder.buildMutationGroup() );
+
+		final Map<String, TableInsert> staticOperations = new HashMap<>();
+		staticOperationBuilders.forEach(  (name, operationBuilder) -> {
+			staticOperations.put( name, operationBuilder.buildMutation() );
+		} );
+		return Collections.unmodifiableMap( staticOperations );
 	}
 
-	private TableMutationBuilder<?> createTableInsertBuilder(EntityTableMapping tableMapping, boolean forceIdentifierBinding) {
+	private GraphTableInsertBuilder createGraphTableInsertBuilder(
+			TableDescriptor tableDescriptor,
+			boolean forceIdentifierBinding) {
 		final var delegate = entityPersister.getInsertDelegate();
-		return tableMapping.isIdentifierTable()
-			&& delegate != null
-			&& !forceIdentifierBinding
-				? delegate.createTableMutationBuilder( tableMapping.getInsertExpectation(), sessionFactory )
-				: new TableInsertBuilderStandard( entityPersister, tableMapping, sessionFactory );
+		// TODO: Handle custom insert delegates for graph mutations
+		// For now, always use standard builder
+		return new GraphTableInsertBuilderStandard(
+				entityPersister,
+				tableDescriptor,
+				sessionFactory
+		);
 	}
 
-	private void applyTableInsertDetails(
-			MutationGroupBuilder insertGroupBuilder,
+	private void applyGraphTableInsertDetails(
+			Map<String, GraphTableInsertBuilder> builders,
 			boolean[] attributeInclusions,
 			Object object,
 			SharedSessionContractImplementor session,
 			boolean forceIdentifierBinding) {
-		final AttributeMappingsList attributeMappings = entityPersister.getAttributeMappings();
 		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
 
-		insertGroupBuilder.forEachTableMutationBuilder( (builder) -> {
-			final var tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
-			assert !tableMapping.isInverse();
+		builders.forEach( (name, builder) -> {
+			final var tableDescriptor = (EntityTableDescriptor) builder.getTableDescriptor();
+			// Skip inverse tables
+			if (tableDescriptor.isInverse()) {
+				return;
+			}
 
-			// `attributeIndexes` represents the indexes (relative to `attributeMappings`) of
-			// the attributes mapped to the table
-			final int[] attributeIndexes = tableMapping.getAttributeIndexes();
-			for ( int i = 0; i < attributeIndexes.length; i++ ) {
-				final int attributeIndex = attributeIndexes[ i ];
-				final var attributeMapping = attributeMappings.get( attributeIndex );
-				if ( attributeInclusions[attributeIndex] ) {
-					attributeMapping.forEachInsertable( insertGroupBuilder );
+			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
+				var attribute = tableDescriptor.attributes().get(i);
+				if ( attributeInclusions[attribute.getStateArrayPosition()] ) {
+					tableDescriptor.forEachAttributeColumn( attribute, builder::addValueColumn );
 				}
 				else {
-					final var generator = attributeMapping.getGenerator();
+					final var generator = attribute.getGenerator();
 					if ( isValueGenerated( generator ) ) {
 						if ( session != null && generator.generatedBeforeExecution( object, session ) ) {
-							attributeInclusions[attributeIndex] = true;
-							attributeMapping.forEachInsertable( insertGroupBuilder );
+							attributeInclusions[attribute.getStateArrayPosition()] = true;
+							tableDescriptor.forEachAttributeColumn( attribute, builder::addValueColumn );
 						}
 						else if ( isValueGenerationInSql( generator, dialect ) ) {
-							handleValueGeneration( attributeMapping, insertGroupBuilder, (OnExecutionGenerator) generator );
+							handleValueGeneration( attribute, builder, (OnExecutionGenerator) generator );
 						}
 					}
 				}
 			}
 		} );
 
-		entityPersister.addDiscriminatorToInsertGroup( insertGroupBuilder );
-		entityPersister.addSoftDeleteToInsertGroup( insertGroupBuilder );
+		entityPersister.addDiscriminatorToInsertGroup( (tableName) -> builders.get( tableName ) );
+		entityPersister.addSoftDeleteToInsertGroup( (tableName) -> builders.get( tableName ) );
 
 		// add the keys
-		insertGroupBuilder.forEachTableMutationBuilder( (tableMutationBuilder) -> {
-			final var tableInsertBuilder = (TableInsertBuilder) tableMutationBuilder;
-			final var tableMapping = (EntityTableMapping) tableInsertBuilder.getMutatingTable().getTableMapping();
-			final var keyMapping = tableMapping.getKeyMapping();
-			if ( tableMapping.isIdentifierTable() && entityPersister.isIdentifierAssignedByInsert() && !forceIdentifierBinding ) {
+		builders.forEach( (name, builder) -> {
+			if ( ( (EntityTableDescriptor) builder.getTableDescriptor() ).isIdentifierTable()
+				&& entityPersister.isIdentifierAssignedByInsert()
+				&& !forceIdentifierBinding ) {
 				assert entityPersister.getInsertDelegate() != null;
 				final var generator = (OnExecutionGenerator) entityPersister.getGenerator();
 				if ( generator.referenceColumnsInSql( dialect ) ) {
 					final String[] columnValues = generator.getReferencedColumnValues( dialect );
 					if ( columnValues != null ) {
 						assert columnValues.length == 1;
-						assert keyMapping.getColumnCount() == 1;
-						tableInsertBuilder.addKeyColumn( columnValues[0], keyMapping.getKeyColumn( 0 ) );
+						assert builder.getTableDescriptor().keyDescriptor().columns().size() == 1;
+						builder.addKeyColumn( columnValues[0], builder.getTableDescriptor().keyDescriptor().columns().get( 0 ) );
 					}
 				}
 			}
 			else {
-				keyMapping.forEachKeyColumn( tableInsertBuilder::addKeyColumn );
+				for (var keyColumn : builder.getTableDescriptor().keyDescriptor().columns()) {
+					builder.addKeyColumn(keyColumn);
+				}
 			}
 		} );
+	}
+
+	protected Map<String, TableInsert> generateDynamicInsertOperations(
+			boolean[] insertable,
+			Object object,
+			SharedSessionContractImplementor session,
+			boolean forceIdentifierBinding) {
+		final Map<String, GraphTableInsertBuilder> operationBuilders = new HashMap<>();
+		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
+			operationBuilders.put(
+					tableDescriptor.name(),
+					createGraphTableInsertBuilder(tableDescriptor, false)
+			);
+		} );
+
+		applyGraphTableInsertDetails(
+				operationBuilders,
+				insertable,
+				object,
+				session,
+				forceIdentifierBinding
+		);
+
+		final Map<String, TableInsert> operations = new HashMap<>();
+		operationBuilders.forEach(  (name, operationBuilder) -> {
+			operations.put( name, operationBuilder.buildMutation() );
+		} );
+		return operations;
 	}
 
 	private static boolean isValueGenerated(Generator generator) {
@@ -270,40 +300,44 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		return ( (OnExecutionGenerator) generator ).referenceColumnsInSql( dialect );
 	}
 
-	private BindPlan createInsertBindPlan(
-			String tableName,
+	private EntityInsertBindPlan createInsertBindPlan(
+			EntityTableDescriptor tableDescriptor,
 			Object entity,
 			Object identifier,
 			InsertValuesAnalysisForDecomposer valuesAnalysis,
 			boolean[] insertable,
-			TableInclusionChecker inclusionChecker,
 			AbstractEntityInsertAction action,
 			GeneratedValuesCollector generatedValuesCollector) {
-		// Use specialized BindPlan for union subclass inheritance
-		if ( entityPersister instanceof org.hibernate.persister.entity.UnionSubclassEntityPersister ) {
-			return new UnionSubclassInsertBindPlan(
-					entityPersister,
-					entity,
-					identifier,
-					valuesAnalysis,
-					insertable,
-					inclusionChecker,
-					action,
-					generatedValuesCollector
-			);
+		final EntityTableDescriptor tableDescriptorToUse;
+		final Map<ColumnDetails, Object> columnValuesToUse;
+
+		if ( entityPersister instanceof UnionSubclassEntityPersister ) {
+			tableDescriptorToUse = entityPersister.getIdentifierTableDescriptor();
+			columnValuesToUse = mergeColumnValues( valuesAnalysis );
+		}
+		else {
+			tableDescriptorToUse = tableDescriptor;
+			columnValuesToUse = valuesAnalysis.getColumnValuesForTable( tableDescriptorToUse.name() );
 		}
 
-		// Standard BindPlan for other inheritance strategies
-		return new InsertBindPlan(
+		return new EntityInsertBindPlan(
+				tableDescriptorToUse,
 				entityPersister,
 				entity,
 				identifier,
-				valuesAnalysis.getColumnValuesForTable( tableName ),
+				columnValuesToUse,
 				insertable,
-				inclusionChecker,
 				action,
 				generatedValuesCollector
 		);
+	}
+
+	private static Map<ColumnDetails, Object> mergeColumnValues(InsertValuesAnalysisForDecomposer valuesAnalysis) {
+		final Map<ColumnDetails, Object> combined = new HashMap<>();
+		valuesAnalysis.getColumnValuesByTable().forEach( (tableName, columnValues) -> {
+			combined.putAll( columnValues );
+		} );
+		return combined;
 	}
 
 }

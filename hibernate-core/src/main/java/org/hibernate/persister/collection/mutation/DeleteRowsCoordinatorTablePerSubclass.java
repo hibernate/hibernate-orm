@@ -23,7 +23,7 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
  * OneToMany delete coordinator if the element is a {@link org.hibernate.persister.entity.UnionSubclassEntityPersister}.
  */
 public class DeleteRowsCoordinatorTablePerSubclass implements DeleteRowsCoordinator {
-	private final CollectionMutationTarget mutationTarget;
+	private final OneToManyPersister mutationTarget;
 	private final RowMutationOperations rowMutationOperations;
 	private final boolean deleteByIndex;
 

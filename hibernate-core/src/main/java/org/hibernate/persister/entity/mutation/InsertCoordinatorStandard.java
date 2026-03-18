@@ -289,14 +289,14 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings,
 			EntityTableMapping tableDetails) {
-		final String tableName = org.hibernate.action.queue.Helper.normalizeTableName( tableDetails.getTableName() );
+		final String tableName = tableDetails.getTableName();
 		tableDetails.getKeyMapping().breakDownKeyJdbcValues(
 				id,
 				(jdbcValue, columnMapping) -> {
 					jdbcValueBindings.bindValue(
 							jdbcValue,
 							tableName,
-							org.hibernate.action.queue.Helper.normalizeColumnName( columnMapping.getColumnName() ),
+							columnMapping.getColumnName(),
 							ParameterUsage.SET
 					);
 				},
@@ -394,7 +394,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 							bindings.bindValue(
 									jdbcValue,
 									entityPersister().physicalTableNameForMutation( selectableMapping ),
-									org.hibernate.action.queue.Helper.normalizeColumnName( selectableMapping.getSelectionExpression() ),
+									selectableMapping.getSelectionExpression(),
 									ParameterUsage.SET
 							);
 						}

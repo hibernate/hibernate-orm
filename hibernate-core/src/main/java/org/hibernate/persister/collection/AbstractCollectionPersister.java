@@ -13,6 +13,9 @@ import org.hibernate.Internal;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.TransientObjectException;
+import org.hibernate.action.queue.meta.CollectionTableDescriptor;
+import org.hibernate.action.queue.meta.ColumnDescriptor;
+import org.hibernate.action.queue.meta.TableKeyDescriptor;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -36,11 +39,6 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.persister.collection.mutation.CollectionRecreateDecomposer;
-import org.hibernate.persister.collection.mutation.CollectionRemoveDecomposer;
-import org.hibernate.persister.collection.mutation.CollectionUpdateDecomposer;
-import org.hibernate.persister.filter.FilterAliasGenerator;
-import org.hibernate.persister.filter.internal.FilterHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.loader.ast.internal.CollectionElementLoaderByIndex;
 import org.hibernate.loader.ast.internal.CollectionLoaderNamedQuery;
@@ -71,6 +69,7 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.PluralAttributeMappingImpl;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.collection.mutation.CollectionGraphMutationTarget;
 import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
 import org.hibernate.persister.collection.mutation.CollectionTableMapping;
 import org.hibernate.persister.collection.mutation.RemoveCoordinator;
@@ -78,6 +77,8 @@ import org.hibernate.persister.collection.mutation.RowMutationOperations;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.persister.filter.FilterAliasGenerator;
+import org.hibernate.persister.filter.internal.FilterHelper;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.QueryOptions;
@@ -117,6 +118,7 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -153,8 +155,8 @@ import static org.hibernate.temporal.TemporalTableStrategy.HISTORY_TABLE;
  */
 @Internal
 public abstract class AbstractCollectionPersister
-		implements CollectionPersister, InFlightCollectionMapping, CollectionMutationTarget,
-				PluralAttributeMappingImpl.Aware, FetchProfileAffectee, Joinable {
+		implements CollectionPersister, InFlightCollectionMapping, CollectionGraphMutationTarget,
+				CollectionMutationTarget, PluralAttributeMappingImpl.Aware, FetchProfileAffectee, Joinable {
 
 	private final NavigableRole navigableRole;
 	private final CollectionSemantics<?,?> collectionSemantics;
@@ -248,9 +250,7 @@ public abstract class AbstractCollectionPersister
 
 	private Collection collectionBootDescriptor;
 
-	private CollectionRecreateDecomposer recreateDecomposer;
-	private CollectionRemoveDecomposer removeDecomposer;
-	private CollectionUpdateDecomposer updateDecomposer;
+	private CollectionTableDescriptor collectionTableDescriptor;
 
 	public AbstractCollectionPersister(
 			Collection collectionBootDescriptor,
@@ -600,26 +600,6 @@ public abstract class AbstractCollectionPersister
 							creationProcess.getCreationContext().getTypeConfiguration() );
 		}
 		buildStaticWhereFragmentSensitiveSql();
-		collectionBootDescriptor = null;
-
-		this.recreateDecomposer = new CollectionRecreateDecomposer();
-		this.removeDecomposer = new CollectionRemoveDecomposer();
-		this.updateDecomposer = new  CollectionUpdateDecomposer();
-	}
-
-	@Override
-	public CollectionRecreateDecomposer getRecreateDecomposer() {
-		return recreateDecomposer;
-	}
-
-	@Override
-	public CollectionRemoveDecomposer getRemoveDecomposer() {
-		return removeDecomposer;
-	}
-
-	@Override
-	public CollectionUpdateDecomposer getUpdateDecomposer() {
-		return updateDecomposer;
 	}
 
 	private void delayedWhereFragmentProcessing(
@@ -731,6 +711,7 @@ public abstract class AbstractCollectionPersister
 		return getTableIdentifierExpression( table, factory );
 	}
 
+
 	@Override
 	public void postInstantiate() throws MappingException {
 		collectionLoader =
@@ -743,6 +724,18 @@ public abstract class AbstractCollectionPersister
 			collectionElementLoaderByIndex =
 					new CollectionElementLoaderByIndex( attributeMapping, new LoadQueryInfluencers( factory ), factory );
 		}
+
+		// Build collection table descriptor
+		// For one-to-many collections, this represents the element entity's table
+		// For other collection types, this represents the collection table
+		collectionTableDescriptor = buildCollectionTableDescriptor(
+				collectionBootDescriptor,
+				getTableName(),
+				attributeMapping
+		);
+
+		// free up the reference
+		collectionBootDescriptor = null;
 
 		logStaticSQL();
 	}
@@ -1686,6 +1679,21 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
+	public CollectionTableDescriptor getCollectionTableDescriptor() {
+		return collectionTableDescriptor;
+	}
+
+	@Override
+	public void forEachMutableTableDescriptor(Consumer<CollectionTableDescriptor> consumer) {
+		consumer.accept( getCollectionTableDescriptor() );
+	}
+
+	@Override
+	public void forEachMutableTableDescriptorReverse(Consumer<CollectionTableDescriptor> consumer) {
+		consumer.accept( getCollectionTableDescriptor() );
+	}
+
+	@Override
 	public boolean hasPhysicalIndexColumn() {
 		return hasIndex() && !indexContainsFormula;
 	}
@@ -1698,6 +1706,31 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public void forEachMutableTableReverse(Consumer<CollectionTableMapping> consumer) {
 		consumer.accept( tableMapping );
+	}
+
+	private static CollectionTableDescriptor buildCollectionTableDescriptor(
+			Collection collectionBootDescriptor,
+			String qualifiedTableName,
+			PluralAttributeMapping attributeMapping) {
+		return new CollectionTableDescriptor(
+				qualifiedTableName,
+				!collectionBootDescriptor.isOneToMany(),
+				collectionBootDescriptor.isInverse(),
+				collectionBootDescriptor.getKey().isCascadeDeleteEnabled(),
+				buildInsertMutationDetails( collectionBootDescriptor ),
+				buildUpdateMutationDetails( collectionBootDescriptor ),
+				buildDeleteMutationDetails( collectionBootDescriptor ),
+				buildDeleteAllMutationDetails( collectionBootDescriptor ),
+				buildTableKeyDescriptor( attributeMapping )
+		);
+	}
+
+	private static TableKeyDescriptor buildTableKeyDescriptor(PluralAttributeMapping attributeMapping) {
+		var keyColumns = new ArrayList<ColumnDescriptor>();
+		attributeMapping.getKeyDescriptor().visitKeySelectables( (index, selectableMapping) -> {
+			keyColumns.add( ColumnDescriptor.from( selectableMapping ) );
+		} );
+		return new TableKeyDescriptor( keyColumns );
 	}
 
 	private static CollectionTableMapping buildCollectionTableMapping(
@@ -1905,5 +1938,10 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public String getIdentifierColumnAlias(String suffix) {
 		return hasId() ? new Alias( suffix ).toAliasString( identifierColumnAlias ) : null;
+	}
+
+	@Override
+	public String getRolePath() {
+		return getNavigableRole().getFullPath();
 	}
 }

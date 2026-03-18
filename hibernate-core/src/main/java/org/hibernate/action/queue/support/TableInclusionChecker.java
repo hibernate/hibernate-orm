@@ -10,7 +10,6 @@ import org.hibernate.action.queue.meta.TableDescriptor;
 /**
  * @author Steve Ebersole
  */
-@Incubating
 @FunctionalInterface
 public interface TableInclusionChecker {
 	boolean include(TableDescriptor tableDescriptor);

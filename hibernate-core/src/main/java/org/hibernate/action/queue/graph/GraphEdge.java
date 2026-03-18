@@ -4,7 +4,7 @@
  */
 package org.hibernate.action.queue.graph;
 
-import org.hibernate.action.queue.fk.ForeignKey;
+import org.hibernate.action.queue.constraint.ForeignKey;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 
 /// Represents a foreign key dependency edge between two operation groups in the dependency graph.
@@ -113,7 +113,7 @@ public class GraphEdge {
 		return to;
 	}
 
-	/// Ultimately, whether the backing foreign-key is [nullable][org.hibernate.action.queue.fk.ForeignKey#nullable()].
+	/// Ultimately, whether the backing foreign-key is [nullable][ForeignKey#nullable()].
 	/// If the foreign-key is nullable, it means we can use that to help break cycles - the classic pattern of -
 	///
 	/// - insert into table_1 with null fk value

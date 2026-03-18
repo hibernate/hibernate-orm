@@ -5,17 +5,18 @@
 package org.hibernate.action.queue.bind;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.action.queue.plan.PlannedOperation;
-import org.hibernate.engine.jdbc.mutation.MutationExecutor;
+import org.hibernate.action.queue.exec.OperationResultChecker;
+import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
-/// Binds parameters to SQL and executes it
+/// Represents JDBC parameter binding for graph-based operation execution
 ///
 /// @author Steve Ebersole
 public interface BindPlan {
 	/// Access to the entity identifier associated with the PlannedOperation
 	/// that this BindPlan is associated with.  May be null.
-	@Nullable default Object getEntityId() {
+	@Nullable
+	default Object getEntityId() {
 		return null;
 	}
 
@@ -25,10 +26,22 @@ public interface BindPlan {
 	 *
 	 * @return the entity instance, or null if this operation doesn't have an associated entity instance
 	 */
+	@Nullable
 	default Object getEntityInstance() {
 		return null;
 	}
 
-	void bindAndMaybePatch(MutationExecutor executor, PlannedOperation operation, SharedSessionContractImplementor session);
-	void execute(MutationExecutor executor, PlannedOperation operation, SharedSessionContractImplementor session);
+	default GeneratedValuesCollector getGeneratedValuesCollector() {
+		return null;
+	}
+
+	void bindValues(
+			JdbcValueBindings valueBindings,
+			PlannedOperation plannedOperation,
+			SharedSessionContractImplementor session);
+
+
+	default OperationResultChecker getOperationResultChecker() {
+		return null;
+	}
 }

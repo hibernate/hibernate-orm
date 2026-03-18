@@ -12,7 +12,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.orm.test.bytecode.enhancement.lazy.NoDirtyCheckingContext;
 import org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.inlinedirtychecking.DirtyCheckEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
-import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -35,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		)
 )
 @SessionFactory
-@BytecodeEnhanced(runNotEnhancedAsWell = true)
+//@BytecodeEnhanced(runNotEnhancedAsWell = true)
 @CustomEnhancementContext({ NoDirtyCheckingContext.class, DirtyCheckEnhancementContext.class })
 public class BackrefCompositeMapKeyTest {
 

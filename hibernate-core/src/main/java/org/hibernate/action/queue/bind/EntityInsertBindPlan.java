@@ -6,19 +6,22 @@ package org.hibernate.action.queue.bind;
 
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.queue.cyclebreak.CycleBreakPatcher;
+import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.ColumnDetails;
 
+import java.sql.SQLException;
 import java.util.Map;
 
 /**
  * @author Steve Ebersole
  */
-public class EntityInsertBindPlan implements BindPlan {
+public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 	private final EntityTableDescriptor tableDescriptor;
 	private final EntityPersister entityPersister;
 	private final Object entity;
@@ -75,13 +78,9 @@ public class EntityInsertBindPlan implements BindPlan {
 	}
 
 	private void decomposeForInsert(JdbcValueBindings valueBindings, Object identifier, SharedSessionContractImplementor session) {
-		System.err.println("[DEBUG-INSERT-BIND] decomposeForInsert - table: " + tableDescriptor.normalizedName());
-		System.err.println("[DEBUG-INSERT-BIND] Column values count: " + columnValues.size());
 		columnValues.forEach( (columnMapping, columnValue) -> {
-			System.err.println("[DEBUG-INSERT-BIND] Column: " + columnMapping.columnName() + ", insertable[" + columnMapping.attributeIndex() + "]=" + insertable[columnMapping.attributeIndex()] + ", physical=" + columnMapping.physicalColumn() + ", insertable=" + columnMapping.insertable());
 			if ( insertable[columnMapping.attributeIndex()]) {
 				if ( columnMapping.physicalColumn() && columnMapping.insertable() ) {
-					System.err.println("[DEBUG-INSERT-BIND] Binding column: " + columnMapping.columnName() + " = " + columnValue);
 					valueBindings.bindValue(
 							columnValue,
 							columnMapping.columnName(),
@@ -102,21 +101,39 @@ public class EntityInsertBindPlan implements BindPlan {
 	private void breakDownKeyJdbcValue(
 			JdbcValueBindings valueBindings,
 			SharedSessionContractImplementor session) {
-		System.err.println("[DEBUG-INSERT-BIND] Breaking down identifier for table: " + tableDescriptor.normalizedName());
-		System.err.println("[DEBUG-INSERT-BIND] Identifier value: " + identifier);
-		System.err.println("[DEBUG-INSERT-BIND] Identifier class: " + (identifier != null ? identifier.getClass().getName() : "null"));
 		entityPersister.getIdentifierMapping().breakDownJdbcValues(
 				identifier,
 				(index, jdbcValue, columnMapping) -> {
-					String columnName = org.hibernate.action.queue.Helper.normalizeColumnName( columnMapping.getSelectableName() );
-					System.err.println("[DEBUG-INSERT-BIND] Binding identifier column [" + index + "]: " + columnName + " = " + jdbcValue);
 					valueBindings.bindValue(
 							jdbcValue,
-							columnName,
+							columnMapping.getSelectableName(),
 							ParameterUsage.SET
 					);
 				},
 				session
+		);
+	}
+
+	@Override
+	public OperationResultChecker getOperationResultChecker() {
+		return this;
+	}
+
+	@Override
+	public boolean checkResult(
+			int affectedRowCount,
+			int batchPosition,
+			String sqlString,
+			SessionFactoryImplementor sessionFactory) throws SQLException {
+		return Checkers.identifiedResultsCheck(
+				tableDescriptor.insertDetails().getExpectation(),
+				affectedRowCount,
+				batchPosition,
+				entityPersister,
+				tableDescriptor,
+				identifier,
+				sqlString,
+				sessionFactory
 		);
 	}
 }

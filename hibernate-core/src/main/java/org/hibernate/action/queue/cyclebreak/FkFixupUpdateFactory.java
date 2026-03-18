@@ -4,135 +4,79 @@
  */
 package org.hibernate.action.queue.cyclebreak;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.action.queue.MutationKind;
+import org.hibernate.action.queue.meta.EntityTableDescriptor;
+import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.mutation.EntityTableMapping;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.MutationOperationGroup;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
-import org.hibernate.sql.model.jdbc.JdbcUpdateMutation;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-
-import static org.hibernate.action.queue.Helper.normalizeColumnName;
-import static org.hibernate.action.queue.Helper.normalizeTableName;
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
-
-
-/// Concrete factory that builds:
+/// Factory for building PlannedOperations which "fixup" cycle breaks due to
+/// foreign-key cycles.
+///
+/// The original operation inserts null for those foreign-key columns as part
+/// of the cycle break. Here, we build the update which "fixes" those
+/// foreign-key columns by setting them to their real value.
+///
+/// Builds SQL like:
 ///
 /// ```sql
-///   UPDATE <table> SET fk1=?, fk2=? WHERE keyParts...
+///   update <table> set <fk> = ? where <pk> = ?
 /// ```
 ///
 /// @author Steve Ebersole
 public final class FkFixupUpdateFactory {
-	public record UpdateTemplate(
-			String tableName,
-			MutationOperationGroup group,
-			MutationOperation operation,
-			int shapeHash) {
-	}
 
-	public UpdateTemplate buildFkFixupUpdateGroup(
-			EntityPersister entityPersister,
-			String tableName,
-			Set<String> keyColumnsToFix,
+	@Nullable
+	public PlannedOperation buildOperationIfNeeded(
+			PlannedOperation cycleBrokenOp,
+			Object entityId,
 			SharedSessionContractImplementor session) {
-		final String normalizeTableName = normalizeTableName( tableName );
-		var tableMapping = findMutableTableMapping(entityPersister, normalizeTableName);
+		assert cycleBrokenOp.getKind() == MutationKind.INSERT;
 
-		var groupBuilder = new MutationGroupBuilder( MutationType.UPDATE, entityPersister );
-		final TableUpdateBuilder<JdbcUpdateMutation> updateBuilder = new TableUpdateBuilderStandard<>(
-				entityPersister,
-				tableMapping,
-				session.getFactory()
-		);
-		groupBuilder.addTableDetailsBuilder(updateBuilder);
-
-		// SET fk = ?
-		// Iterate through ALL columns in the table to find FK columns to update
-		final LinkedHashSet<String> restrictedFkColumns = new LinkedHashSet<>();
-		// First try to find columns via attribute mappings
-		entityPersister.forEachAttributeMapping( attributeMapping -> {
-			attributeMapping.forEachSelectable( (i, selectableMapping) -> {
-				if (selectableMapping == null || selectableMapping.isFormula()) {
-					return;
-				}
-				final String columnName = normalizeColumnName( selectableMapping.getSelectableName() );
-				if ( keyColumnsToFix.contains( columnName ) ) {
-					updateBuilder.addValueColumn( columnName, selectableMapping );
-					restrictedFkColumns.add(columnName);
-				}
-			} );
-		} );
-
-
-		// WHERE pk = ?
-		final List<String> keyColumns = arrayList( tableMapping.getKeyMapping().getColumnCount() );
-		tableMapping.getKeyMapping().forEachSelectable( (i, selectableMapping) -> {
-			if ( !selectableMapping.isFormula() ) {
-				final String columnName = normalizeColumnName( selectableMapping.getSelectableName() );
-				updateBuilder.addKeyRestriction(selectableMapping);
-				keyColumns.add(columnName);
-			}
-		} );
-
-		final JdbcUpdateMutation jdbcUpdate = updateBuilder
-				.buildMutation()
-				.createMutationOperation( null, session.getFactory() );
-		final MutationOperationGroup opGroup = new FixupOperationGroup( entityPersister, jdbcUpdate );
-
-		final int shapeHash = Objects.hash(normalizeTableName, restrictedFkColumns, keyColumns);
-		return new UpdateTemplate( normalizeTableName, opGroup, jdbcUpdate, shapeHash );
-	}
-
-	private static EntityTableMapping findMutableTableMapping(EntityPersister persister, String wanted) {
-		for ( int i = 0; i < persister.getTableMappings().length; i++ ) {
-			if ( wanted.equals( normalizeTableName( persister.getTableMappings()[i].getTableName() ) ) ) {
-				return persister.getTableMappings()[i];
-			}
+		// No fixup needed if no foreign-key values were deferred during cycle breaking
+		if (cycleBrokenOp.getIntendedFkValues().isEmpty()) {
+			return null;
 		}
-		throw new IllegalArgumentException("No table mapping for [" + wanted + "] in [" + persister.getEntityName() + "]");
+
+		if (entityId == null) {
+			throw new IllegalStateException("Foreign-key fixup requires non-null entityId");
+		}
+
+		var mutationTarget = cycleBrokenOp.getJdbcOperation().getMutationTarget();
+		var persister = ( mutationTarget instanceof EntityMutationTarget emt )
+				? emt.getTargetPart().getEntityPersister()
+				: null;
+		if ( persister == null ) {
+			throw new IllegalStateException("FK fixup only valid for entities, but found - " + mutationTarget);
+		}
+
+		var tableDescriptor = (EntityTableDescriptor) cycleBrokenOp.getMutatingTableDescriptor();
+		assert tableDescriptor != null;
+
+		var tableUpdate = new FixupTableUpdate(
+				tableDescriptor,
+				persister,
+				tableDescriptor.findColumns( cycleBrokenOp.getIntendedFkValues().keySet() ),
+				tableDescriptor.keyDescriptor().columns()
+		);
+
+		var jdbcUpdate = tableUpdate.buildJdbcUpdate();
+
+		final FixupBindPlan bindPlan = new FixupBindPlan(
+				persister,
+				entityId,
+				cycleBrokenOp.getIntendedFkValues()
+		);
+
+		return new PlannedOperation(
+				tableDescriptor,
+				MutationKind.UPDATE,
+				jdbcUpdate,
+				bindPlan,
+				cycleBrokenOp.getOrdinal() + 10_000,
+				cycleBrokenOp.getOrigin() + " [cycle-break FK fixup update]"
+		);
 	}
-
-
-//
-//	// ---- delegate-aware builder creation (your method) ----
-//
-//	private TableUpdateBuilder<?> createTableUpdateBuilder(EntityTableMapping tableMapping) {
-//		final var delegate =
-//				tableMapping.isIdentifierTable()
-//						? persister.getUpdateDelegate()
-//						: null;
-//		return delegate != null
-//				? delegate.createTableMutationBuilder(tableMapping.getInsertExpectation(), persister.getFactory())
-//				: newTableUpdateBuilder(tableMapping);
-//	}
-//
-//	private TableMutationBuilder<?> newTableUpdateBuilder(EntityTableMapping tableMapping) {
-//		throw new UnsupportedOperationException("WIRE ME: newTableUpdateBuilder(EntityTableMapping) from your coordinator");
-//	}
-//
-//	private MutationOperationGroup createOperationGroup(Object mutationTarget, Object builtMutationGroup) {
-//		throw new UnsupportedOperationException("WIRE ME: createOperationGroup(target, mutationGroup) from your coordinator");
-//	}
-//
-//	// ---- mapping discovery / selectable lookup ----
-//
-//
-//	private static String norm(String s) {
-//		if (s == null) return "";
-//		String x = s.trim();
-//		int dot = x.lastIndexOf('.');
-//		if (dot >= 0) x = x.substring(dot + 1);
-//		return x.toLowerCase( Locale.ROOT).replace("\"", "").replace("`", "");
-//	}
 
 }

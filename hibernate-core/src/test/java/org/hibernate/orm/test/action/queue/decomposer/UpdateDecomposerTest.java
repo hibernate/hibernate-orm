@@ -12,7 +12,7 @@ import java.util.Map;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.StatementShapeKey;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -297,22 +297,6 @@ public class UpdateDecomposerTest {
 
 			assertNotNull( groups );
 			assertFalse( groups.isEmpty() );
-		} );
-	}
-
-	@Test
-	public void testStaticUpdateGroup(EntityManagerFactoryScope scope) {
-		scope.inTransaction( entityManager -> {
-			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
-			SessionFactoryImplementor factory = session.getSessionFactory();
-
-			EntityPersister persister = factory.getMappingMetamodel()
-					.getEntityDescriptor( SimpleEntity.class );
-			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
-
-			// Static update group should be pre-generated for non-dynamic entities
-			assertNotNull( decomposer.getStaticMutationGroup() );
-			assertTrue( decomposer.getStaticMutationGroup().getNumberOfOperations() > 0 );
 		} );
 	}
 

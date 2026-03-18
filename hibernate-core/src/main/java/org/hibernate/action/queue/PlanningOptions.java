@@ -4,9 +4,9 @@
  */
 package org.hibernate.action.queue;
 
-/**
- * @author Steve Ebersole
- */
+/// Options for controlling operation planning and scheduling.
+///
+/// @author Steve Ebersole
 public record PlanningOptions(
 	boolean orderByForeignKeys,
 	boolean orderByUniqueKeySlots,

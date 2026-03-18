@@ -11,6 +11,8 @@ import org.hibernate.engine.jdbc.mutation.spi.BindingGroup;
 import org.hibernate.engine.jdbc.mutation.spi.JdbcValueDescriptorAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MutableObject;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -27,7 +29,7 @@ public class JdbcValueBindings {
 	public JdbcValueBindings(TableDescriptor tableDescriptor, JdbcValueDescriptorAccess jdbcValueDescriptorAccess) {
 		this.tableDescriptor = tableDescriptor;
 		this.jdbcValueDescriptorAccess = jdbcValueDescriptorAccess;
-		this.bindingGroup = new BindingGroup( tableDescriptor.normalizedName() );
+		this.bindingGroup = new BindingGroup( tableDescriptor.name() );
 	}
 
 	public void beforeStatement(PreparedStatement preparedStatement, SharedSessionContractImplementor session) {
@@ -62,7 +64,7 @@ public class JdbcValueBindings {
 
 	public void bindValue(Object columnValue, String columnName, ParameterUsage parameterUsage) {
 		final var jdbcValueDescriptor = jdbcValueDescriptorAccess.resolveValueDescriptor(
-				tableDescriptor.normalizedName(),
+				tableDescriptor.name(),
 				columnName,
 				parameterUsage
 		);
@@ -77,5 +79,25 @@ public class JdbcValueBindings {
 	public void replaceValue(String columnName, ParameterUsage parameterUsage, Object newValue) {
 		final Binding binding = bindingGroup.getBinding( columnName, parameterUsage );
 		binding.setValue( newValue );
+	}
+
+	/**
+	 * Form of {@linkplain #bindValue(Object, String, ParameterUsage)} which is intended for use
+	 * as a {@linkplain ModelPart.JdbcValueConsumer} with {@linkplain ParameterUsage#SET} semantics.
+	 *
+	 * @see ModelPart.JdbcValueConsumer#consume(int, Object, SelectableMapping)
+	 */
+	public void bindAssignment(@SuppressWarnings("unused") int valueIndex, Object value, SelectableMapping jdbcValueMapping) {
+		bindValue( value, jdbcValueMapping.getSelectableName(), ParameterUsage.SET );
+	}
+
+	/**
+	 * Form of {@linkplain #bindValue(Object, String, ParameterUsage)} which is intended for use
+	 * as a {@linkplain ModelPart.JdbcValueConsumer} with {@linkplain ParameterUsage#RESTRICT} semantics.
+	 *
+	 * @see ModelPart.JdbcValueConsumer#consume(int, Object, SelectableMapping)
+	 */
+	public void bindRestriction(@SuppressWarnings("unused") int valueIndex, Object value, SelectableMapping jdbcValueMapping) {
+		bindValue( value, jdbcValueMapping.getSelectableName(), ParameterUsage.RESTRICT );
 	}
 }

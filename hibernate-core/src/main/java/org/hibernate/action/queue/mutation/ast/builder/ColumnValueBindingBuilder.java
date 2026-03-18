@@ -5,7 +5,6 @@
 package org.hibernate.action.queue.mutation.ast.builder;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.action.queue.Helper;
 import org.hibernate.action.queue.meta.ColumnDescriptor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -48,7 +47,7 @@ public class ColumnValueBindingBuilder {
 			Consumer<Object> parameterConsumer) {
 		final ColumnReference columnReference = new ColumnReference(
 				mutatingTableReference,
-				columnDescriptor.normalizedName(),
+				columnDescriptor.name(),
 				columnDescriptor.jdbcMapping()
 		);
 		final ColumnWriteFragment columnWriteFragment = buildWriteFragment(
@@ -80,14 +79,14 @@ public class ColumnValueBindingBuilder {
 		}
 
 		if ( !writeExpression.contains( "?" ) ) {
-			return new ColumnWriteFragment( writeExpression, SimpleSelectableMapping.from( columnDescriptor ) );
+			return new ColumnWriteFragment( writeExpression, columnDescriptor );
 		}
 
 		if ( containsParameter( writeExpression ) ) {
 			return buildParameterizedWriteFragment( writeExpression, columnDescriptor, mutatingTableReference, columnReference, parameterUsage, parameterConsumer );
 		}
 
-		return new ColumnWriteFragment( writeExpression, SimpleSelectableMapping.from( columnDescriptor ) );
+		return new ColumnWriteFragment( writeExpression, columnDescriptor );
 	}
 
 	private static ColumnWriteFragment buildParameterizedWriteFragment(
@@ -110,12 +109,12 @@ public class ColumnValueBindingBuilder {
 			aggregateMappingType.forEachSelectable( parameters );
 			parameterConsumer.accept( parameters );
 
-			return new ColumnWriteFragment( writeExpression, parameters, SimpleSelectableMapping.from( columnDescriptor ) );
+			return new ColumnWriteFragment( writeExpression, parameters, columnDescriptor );
 		}
 		else {
 			final ColumnValueParameter parameter = new ColumnValueParameter( columnReference, parameterUsage );
 			parameterConsumer.accept( parameter );
-			return new ColumnWriteFragment( writeExpression, parameter, SimpleSelectableMapping.from( columnDescriptor ) );
+			return new ColumnWriteFragment( writeExpression, parameter, columnDescriptor );
 		}
 	}
 
@@ -129,7 +128,7 @@ public class ColumnValueBindingBuilder {
 			TableReference mutatingTableReference,
 			ParameterUsage parameterUsage,
 			Consumer<Object> parameterConsumer) {
-		final String columnName = Helper.normalizeColumnName( selectableMapping.getSelectionExpression() );
+		final String columnName = ( selectableMapping.getSelectionExpression() );
 		final ColumnReference columnReference = new ColumnReference(
 				mutatingTableReference,
 				columnName,

@@ -7,12 +7,14 @@ package org.hibernate.persister.entity;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
+import org.hibernate.action.queue.mutation.ast.builder.GraphTableInsertBuilder;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.persister.filter.FilterAliasGenerator;
@@ -473,6 +475,17 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 					insertGroupBuilder.getTableDetailsBuilder( getRootTableName() );
 			tableInsertBuilder.addValueColumn(
 					discriminatorValue == DiscriminatorValue.Special.NULL ? NULL : discriminatorSQLValue,
+					getDiscriminatorMapping()
+			);
+		}
+	}
+
+	@Override
+	public void addDiscriminatorToInsertGroup(Function<String, GraphTableInsertBuilder> insertGroupBuilder) {
+		if ( discriminatorInsertable ) {
+			final GraphTableInsertBuilder tableInsertBuilder = insertGroupBuilder.apply( getRootTableName() );
+			tableInsertBuilder.addValueColumn(
+					discriminatorValue == NULL_DISCRIMINATOR ? NULL : discriminatorSQLValue,
 					getDiscriminatorMapping()
 			);
 		}

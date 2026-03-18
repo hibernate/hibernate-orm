@@ -4,19 +4,15 @@
  */
 package org.hibernate.persister.collection.mutation;
 
-import org.hibernate.action.queue.MutationKind;
-import org.hibernate.action.queue.bind.BindPlan;
-import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
-import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 
-import java.util.List;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
@@ -25,7 +21,7 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
  * @author Steve Ebersole
  */
 public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
-	private final CollectionMutationTarget mutationTarget;
+	private final AbstractCollectionPersister mutationTarget;
 	private final RowMutationOperations rowMutationOperations;
 	private final boolean deleteByIndex;
 
@@ -35,7 +31,7 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 	private MutationOperationGroup operationGroup;
 
 	public DeleteRowsCoordinatorStandard(
-			CollectionMutationTarget mutationTarget,
+			AbstractCollectionPersister mutationTarget,
 			RowMutationOperations rowMutationOperations,
 			boolean deleteByIndex,
 			ServiceRegistry serviceRegistry) {
@@ -117,98 +113,61 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 				rowMutationOperations.getDeleteRowOperation() );
 	}
 
-	@Override
-	public List<PlannedOperation> decomposeDeleteRows(
-			PersistentCollection<?> collection,
-			Object key,
-			int ordinalBase,
-			SharedSessionContractImplementor session) {
-		if ( operationGroup == null ) {
-			operationGroup = createOperationGroup();
-		}
+//	@Override
+//	public List<PlannedOperation> decomposeDeleteRows(
+//			PersistentCollection<?> collection,
+//			Object key,
+//			int ordinalBase,
+//			SharedSessionContractImplementor session) {
+//		if ( operationGroup == null ) {
+//			operationGroup = createOperationGroup();
+//		}
+//
+//		final var jdbcOperation = collectionJdbcOperations.getDeleteRowOperation();
+//		if ( jdbcOperation == null ) {
+//			return List.of();
+//		}
+//
+//		final var tableDescriptor = mutationTarget.getCollectionTableDescriptor();
+//		final var pluralAttribute = mutationTarget.getTargetPart();
+//		final var collectionDescriptor = pluralAttribute.getCollectionDescriptor();
+//
+//		final var deletes = collection.getDeletes( collectionDescriptor, !deleteByIndex );
+//		if ( !deletes.hasNext() ) {
+//			return List.of();
+//		}
+//
+//		final List<PlannedOperation> operations = new ArrayList<>();
+//		final var deleteRowRestrictions = rowMutationOperations.getDeleteRowRestrictions();
+//
+//		int deletionCount = 0;
+//		while ( deletes.hasNext() ) {
+//			final Object removal = deletes.next();
+//
+//			// Create ONE PlannedOperation per row deletion
+//			final BindPlan bindPlan = new SingleRowDeleteBindPlan(
+//					collection,
+//					key,
+//					removal,
+//					deletionCount,
+//					graphBasedJdbcOperations.getDeleteRowRestrictions(),
+//					mutationTarget
+//			);
+//
+//			final PlannedOperation plannedOp = new PlannedOperation(
+//					tableDescriptor,
+//					MutationKind.DELETE,
+//					jdbcOperation,
+//					bindPlan,
+//					ordinalBase * 1_000 + deletionCount,
+//					"DeleteRow[" + deletionCount + "](" + mutationTarget.getRolePath() + ")"
+//			);
+//
+//			operations.add( plannedOp );
+//			deletionCount++;
+//		}
+//
+//		return operations;
+//	}
 
-		final var operation = rowMutationOperations.getDeleteRowOperation();
-		if ( operation == null ) {
-			return List.of();
-		}
-
-		final var tableMapping = mutationTarget.getCollectionTableMapping();
-		final String tableName = tableMapping.getTableName();
-
-		final BindPlan bindPlan = new DeleteRowsBindPlan(
-				collection,
-				key,
-				deleteByIndex,
-				rowMutationOperations.getDeleteRowRestrictions(),
-				mutationTarget
-		);
-
-		final PlannedOperation plannedOp = new PlannedOperation(
-				tableName,
-				MutationKind.DELETE,
-				operation,
-				bindPlan,
-				ordinalBase * 1_000,
-				"DeleteRowsCoordinator(" + mutationTarget.getRolePath() + ")"
-		);
-
-		return List.of( plannedOp );
-	}
-
-	private static class DeleteRowsBindPlan implements BindPlan {
-		private final PersistentCollection<?> collection;
-		private final Object key;
-		private final boolean deleteByIndex;
-		private final RowMutationOperations.Restrictions deleteRowRestrictions;
-		private final CollectionMutationTarget mutationTarget;
-
-		public DeleteRowsBindPlan(
-				PersistentCollection<?> collection,
-				Object key,
-				boolean deleteByIndex,
-				RowMutationOperations.Restrictions deleteRowRestrictions,
-				CollectionMutationTarget mutationTarget) {
-			this.collection = collection;
-			this.key = key;
-			this.deleteByIndex = deleteByIndex;
-			this.deleteRowRestrictions = deleteRowRestrictions;
-			this.mutationTarget = mutationTarget;
-		}
-
-		@Override
-		public void bindAndMaybePatch(
-				MutationExecutor executor,
-				PlannedOperation operation,
-				SharedSessionContractImplementor session) {
-			// Binding happens in execute()
-		}
-
-		@Override
-		public void execute(
-				MutationExecutor executor,
-				PlannedOperation operation,
-				SharedSessionContractImplementor session) {
-			final var pluralAttribute = mutationTarget.getTargetPart();
-			final var collectionDescriptor = pluralAttribute.getCollectionDescriptor();
-			final var deletes = collection.getDeletes( collectionDescriptor, !deleteByIndex );
-			final var jdbcValueBindings = executor.getJdbcValueBindings();
-
-			int deletionCount = 0;
-			while ( deletes.hasNext() ) {
-				final Object removal = deletes.next();
-
-				deleteRowRestrictions.applyRestrictions(
-						collection,
-						key,
-						removal,
-						deletionCount,
-						session,
-						jdbcValueBindings
-				);
-
-				executor.execute( removal, null, null, null, session );
-				deletionCount++;
-			}
-		}
-	}
 }

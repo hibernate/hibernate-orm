@@ -19,6 +19,14 @@ import org.hibernate.MappingException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.QueryException;
 import org.hibernate.Timeouts;
+import org.hibernate.action.queue.meta.ColumnDescriptor;
+import org.hibernate.action.queue.meta.EntityTableDescriptor;
+import org.hibernate.action.queue.meta.TableKeyDescriptor;
+import org.hibernate.action.queue.mutation.ast.TableInsert;
+import org.hibernate.action.queue.mutation.ast.TableMutation;
+import org.hibernate.action.queue.mutation.ast.TableUpdate;
+import org.hibernate.action.queue.mutation.ast.builder.GraphTableInsertBuilder;
+import org.hibernate.action.queue.mutation.jdbc.PreparableJdbcOperation;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -75,6 +83,7 @@ import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.persister.entity.mutation.DeleteDecomposer;
+import org.hibernate.persister.entity.mutation.EntityGraphMutationTarget;
 import org.hibernate.persister.entity.mutation.InsertDecomposer;
 import org.hibernate.persister.entity.mutation.UpdateDecomposer;
 import org.hibernate.persister.filter.internal.FilterHelper;
@@ -204,8 +213,9 @@ import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -246,6 +256,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
@@ -302,8 +313,8 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
 @SuppressWarnings("deprecation")
 public abstract class AbstractEntityPersister
 		extends EntityMetamodel
-		implements EntityPersister, InFlightEntityMappingType, EntityMutationTarget, LazyPropertyInitializer,
-				FetchProfileAffectee, Joinable {
+		implements EntityPersister, InFlightEntityMappingType, EntityGraphMutationTarget,
+				EntityMutationTarget, LazyPropertyInitializer, FetchProfileAffectee, Joinable {
 
 	/**
 	 * The property name of the "special" identifier property in HQL
@@ -383,11 +394,12 @@ public abstract class AbstractEntityPersister
 	private final LockModeEnumMap<LockingStrategy> lockers = new LockModeEnumMap<>();
 	private String sqlVersionSelectString;
 
-	private EntityTableMapping[] tableMappings;
+	private EntityTableDescriptor[] tableDescriptors;
 	private InsertDecomposer insertDecomposer;
 	private UpdateDecomposer updateDecomposer;
 	private DeleteDecomposer deleteDecomposer;
 
+	private EntityTableMapping[] tableMappings;
 	private InsertCoordinator insertCoordinator;
 	private UpdateCoordinator updateCoordinator;
 	private DeleteCoordinator deleteCoordinator;
@@ -2773,6 +2785,38 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public EntityTableDescriptor[] getTableDescriptors() {
+		return tableDescriptors;
+	}
+
+	@Override
+	public EntityTableDescriptor getIdentifierTableDescriptor() {
+		return getTableDescriptors()[0];
+	}
+
+	@Override
+	public void forEachMutableTableDescriptor(Consumer<EntityTableDescriptor> consumer) {
+		for ( int i = 0; i < tableDescriptors.length; i++ ) {
+			final var tableMapping = tableDescriptors[i];
+			// inverse tables are not mutable from this mapping
+			if ( !tableMapping.isInverse() ) {
+				consumer.accept( tableMapping );
+			}
+		}
+	}
+
+	@Override
+	public void forEachMutableTableDescriptorReverse(Consumer<EntityTableDescriptor> consumer) {
+		for ( int i = tableDescriptors.length - 1; i >= 0; i-- ) {
+			final var tableMapping = tableDescriptors[i];
+			// inverse tables are not mutable from this mapping
+			if ( !tableMapping.isInverse() ) {
+				consumer.accept( tableMapping );
+			}
+		}
+	}
+
+	@Override
 	public void forEachTableDetails(Consumer<TableDetails> consumer) {
 		CollectionHelper.forEach( getTableMappings(), consumer );
 	}
@@ -2840,34 +2884,31 @@ public abstract class AbstractEntityPersister
 			}
 
 			{
-				final var staticInsertGroup = insertDecomposer.getStaticMutationGroup();
-				if ( staticInsertGroup != null ) {
-					for ( int i = 0; i < staticInsertGroup.getNumberOfOperations(); i++ ) {
-						if ( staticInsertGroup.getOperation( i ) instanceof JdbcOperation jdbcOperation ) {
-							MODEL_MUTATION_LOGGER.insertOperationSql( i, jdbcOperation.getSqlString() );
-						}
+				final var staticInsertOperations = insertDecomposer.getStaticInsertOperations();
+				int i = 0;
+				for ( Map.Entry<String, TableInsert> insertEntry : staticInsertOperations.entrySet() ) {
+					if ( insertEntry.getValue() instanceof PreparableJdbcOperation jdbcOperation ) {
+						MODEL_MUTATION_LOGGER.insertOperationSql( i++, jdbcOperation.getSqlString() );
 					}
 				}
 			}
 
 			{
-				final var staticUpdateGroup = updateDecomposer.getStaticMutationGroup();
-				if ( staticUpdateGroup != null ) {
-					for ( int i = 0; i < staticUpdateGroup.getNumberOfOperations(); i++ ) {
-						if ( staticUpdateGroup.getOperation( i ) instanceof JdbcOperation jdbcOperation ) {
-							MODEL_MUTATION_LOGGER.updateOperationSql( i, jdbcOperation.getSqlString() );
-						}
+				final var staticUpdateOperations = updateDecomposer.getStaticUpdateOperations();
+				int i = 0;
+				for ( Map.Entry<String, TableUpdate> updateEntry : staticUpdateOperations.entrySet() ) {
+					if ( updateEntry.getValue() instanceof PreparableJdbcOperation jdbcOperation ) {
+						MODEL_MUTATION_LOGGER.updateOperationSql( i++, jdbcOperation.getSqlString() );
 					}
 				}
 			}
 
 			{
-				final var staticDeleteGroup = deleteDecomposer.getStaticMutationGroup();
-				if ( staticDeleteGroup != null ) {
-					for ( int i = 0; i < staticDeleteGroup.getNumberOfOperations(); i++ ) {
-						if ( staticDeleteGroup.getOperation( i ) instanceof JdbcOperation jdbcOperation ) {
-							MODEL_MUTATION_LOGGER.deleteOperationSql( i, jdbcOperation.getSqlString() );
-						}
+				final var staticDeleteOperations = deleteDecomposer.getStaticDeleteOperations();
+				int i = 0;
+				for ( Map.Entry<String, ? extends TableMutation<?>> updateEntry : staticDeleteOperations.entrySet() ) {
+					if ( updateEntry.getValue() instanceof PreparableJdbcOperation jdbcOperation ) {
+						MODEL_MUTATION_LOGGER.updateOperationSql( i++, jdbcOperation.getSqlString() );
 					}
 				}
 			}
@@ -3322,6 +3363,7 @@ public abstract class AbstractEntityPersister
 					createGeneratedValuesProcessor( UPDATE, updateGeneratedAttributes );
 		}
 
+		tableDescriptors = buildTableDescriptors();
 		insertDecomposer = new InsertDecomposer( this, factory );
 		updateDecomposer = new UpdateDecomposer( this, factory );;
 		deleteDecomposer = new DeleteDecomposer( this, factory );;
@@ -3347,6 +3389,207 @@ public abstract class AbstractEntityPersister
 
 	protected GeneratedValuesMutationDelegate createUpdateDelegate() {
 		return getGeneratedValuesDelegate( this, UPDATE );
+	}
+
+	private EntityTableDescriptor[] buildTableDescriptors() {
+		var tableBuilderMap = new LinkedHashMap<String, TableDescriptorBuilder>();
+		visitMutabilityOrderedTables( (name, relativePosition, tableKeyColumnVisitationSupplier) -> {
+			final var tableMappingBuilder = getTableDescriptorBuilder(
+					name,
+					relativePosition,
+					tableKeyColumnVisitationSupplier,
+					tableBuilderMap
+			);
+			tableBuilderMap.put( name, tableMappingBuilder );
+		} );
+
+		forEachAttributeMapping( (attributeIndex, attribute) -> {
+			if ( !attribute.isPluralAttributeMapping() ) {
+				final var tableName = attribute.getContainingTableExpression();
+				final var builder = tableBuilderMap.get( tableName );
+				if ( builder != null && !builder.isInverse ) {
+					builder.addAttribute( attribute );
+					attribute.forEachSelectable( (selectableIndex, selectable) -> {
+						builder.addColumn( attribute, ColumnDescriptor.from( selectable ) );
+					} );
+				}
+			}
+		} );
+
+		final EntityTableDescriptor[] tableDescriptors = new EntityTableDescriptor[tableBuilderMap.size()];
+		int i = 0;
+		for ( var entry : tableBuilderMap.entrySet() ) {
+			tableDescriptors[i++] = entry.getValue().build();
+		}
+		return tableDescriptors;
+	}
+
+	private TableDescriptorBuilder getTableDescriptorBuilder(
+			String tableName,
+			int relativePosition,
+			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier,
+			LinkedHashMap<String, TableDescriptorBuilder> tableBuilderMap) {
+		final var existing = tableBuilderMap.get( tableName );
+		if ( existing != null ) {
+			return existing;
+		}
+		else {
+			final var tableMappingBuilder = createTableDescriptorBuilder(
+					tableName,
+					relativePosition,
+					tableKeyColumnVisitationSupplier
+			);
+			tableBuilderMap.put( tableName, tableMappingBuilder );
+			return tableMappingBuilder;
+		}
+	}
+
+	private TableDescriptorBuilder createTableDescriptorBuilder(
+			String tableName,
+			int relativePosition,
+			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier) {
+		var keyColumns = new ArrayList<ColumnDescriptor>();
+		tableKeyColumnVisitationSupplier.get().accept( (index, selectableMapping) -> {
+			keyColumns.add( ColumnDescriptor.from( selectableMapping ) );
+		} );
+
+		final boolean isIdentifierTable = isIdentifierTable( tableName );
+
+		return new TableDescriptorBuilder(
+				tableName,
+				relativePosition,
+				isIdentifierTable,
+				!isIdentifierTable && isNullableTable( relativePosition ),
+				isInverseTable( relativePosition ),
+				insertExpectations[relativePosition],
+				substituteBrackets( customSQLInsert[relativePosition] ),
+				insertCallable[relativePosition],
+				updateExpectations[relativePosition],
+				substituteBrackets( customSQLUpdate[relativePosition] ),
+				updateCallable[relativePosition],
+				isTableCascadeDeleteEnabled( relativePosition ),
+				deleteExpectations[relativePosition],
+				substituteBrackets( customSQLDelete[relativePosition] ),
+				deleteCallable[relativePosition],
+				isDynamicUpdate(),
+				isDynamicInsert(),
+				new TableKeyDescriptor( keyColumns )
+		);
+	}
+
+
+	private static class TableDescriptorBuilder {
+		private final String tableName;
+		private final int relativePosition;
+		private final boolean isIdentifierTable;
+		private final boolean isOptional;
+		private final boolean isInverse;
+
+		private final Expectation insertExpectation;
+		private final String customInsertSql;
+		private final boolean insertCallable;
+
+		private final Expectation updateExpectation;
+		private final String customUpdateSql;
+		private final boolean updateCallable;
+
+		private final boolean cascadeDeleteEnabled;
+		private final Expectation deleteExpectation;
+		private final String customDeleteSql;
+		private final boolean deleteCallable;
+
+		private final boolean dynamicInsert;
+		private final boolean dynamicUpdate;
+
+		private final TableKeyDescriptor keyDescriptor;
+		private final List<ColumnDescriptor> columnDescriptors = new ArrayList<>();
+		private final List<AttributeMapping> attributes = new ArrayList<>();
+		private final Map<AttributeMapping,List<Integer>> attributeColumnIndexes = new HashMap<>();
+
+		public TableDescriptorBuilder(
+				String tableName,
+				int relativePosition,
+				boolean isIdentifierTable,
+				boolean isOptional,
+				boolean isInverse,
+				Expectation insertExpectation,
+				String customInsertSql,
+				boolean insertCallable,
+				Expectation updateExpectation,
+				String customUpdateSql,
+				boolean updateCallable,
+				boolean cascadeDeleteEnabled,
+				Expectation deleteExpectation,
+				String customDeleteSql,
+				boolean deleteCallable,
+				boolean dynamicInsert,
+				boolean dynamicUpdate,
+				TableKeyDescriptor keyDescriptor) {
+			this.tableName = tableName;
+			this.relativePosition = relativePosition;
+			this.isIdentifierTable = isIdentifierTable;
+			this.isOptional = isOptional;
+			this.isInverse = isInverse;
+			this.insertExpectation = insertExpectation;
+			this.customInsertSql = customInsertSql;
+			this.insertCallable = insertCallable;
+			this.updateExpectation = updateExpectation;
+			this.customUpdateSql = customUpdateSql;
+			this.updateCallable = updateCallable;
+			this.cascadeDeleteEnabled = cascadeDeleteEnabled;
+			this.deleteExpectation = deleteExpectation;
+			this.customDeleteSql = customDeleteSql;
+			this.deleteCallable = deleteCallable;
+			this.dynamicInsert = dynamicInsert;
+			this.dynamicUpdate = dynamicUpdate;
+			this.keyDescriptor = keyDescriptor;
+		}
+
+		private EntityTableDescriptor build() {
+			return new EntityTableDescriptor(
+					tableName,
+					relativePosition,
+					isIdentifierTable,
+					isOptional,
+					isInverse,
+					cascadeDeleteEnabled,
+					new TableMapping.MutationDetails(
+							MutationType.INSERT,
+							insertExpectation,
+							customInsertSql,
+							insertCallable,
+							dynamicInsert
+					),
+					new TableMapping.MutationDetails(
+							MutationType.UPDATE,
+							updateExpectation,
+							customUpdateSql,
+							updateCallable,
+							dynamicUpdate
+					),
+					new TableMapping.MutationDetails(
+							MutationType.DELETE,
+							deleteExpectation,
+							customDeleteSql,
+							deleteCallable
+					),
+					columnDescriptors,
+					attributes,
+					attributeColumnIndexes,
+					keyDescriptor
+			);
+		}
+
+		public int addAttribute(AttributeMapping attribute) {
+			attributes.add(attribute);
+			return attributes.size() - 1;
+		}
+
+		public void addColumn(AttributeMapping attribute, ColumnDescriptor from) {
+			columnDescriptors.add(from);
+			attributeColumnIndexes.computeIfAbsent( attribute, (a) -> new ArrayList<>() )
+					.add( columnDescriptors.size() - 1 );
+		}
 	}
 
 	private static class TableMappingBuilder {
@@ -3554,9 +3797,24 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public void addDiscriminatorToInsertGroup(Function<String, GraphTableInsertBuilder> insertGroupBuilder) {
+	}
+
+	@Override
 	public void addAuxiliaryToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
 		if ( auxiliaryMapping != null ) {
 			auxiliaryMapping.addToInsertGroup( insertGroupBuilder, this );
+		}
+	}
+
+	@Override
+	public void addSoftDeleteToInsertGroup(Function<String, GraphTableInsertBuilder> insertGroupBuilder) {
+		if ( softDeleteMapping != null ) {
+			final GraphTableInsertBuilder insertBuilder = insertGroupBuilder.apply( getIdentifierTableName() );
+			final var mutatingTable = insertBuilder.getTableReference();
+			final var columnReference = new ColumnReference( mutatingTable, softDeleteMapping );
+			final var nonDeletedValueBinding = softDeleteMapping.createNonDeletedValueBinding( columnReference );
+			insertBuilder.addValueColumn( nonDeletedValueBinding );
 		}
 	}
 

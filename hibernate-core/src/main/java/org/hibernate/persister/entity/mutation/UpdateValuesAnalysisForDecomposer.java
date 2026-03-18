@@ -4,7 +4,8 @@
  */
 package org.hibernate.persister.entity.mutation;
 
-import org.hibernate.sql.model.TableMapping;
+import org.hibernate.action.queue.meta.EntityTableDescriptor;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -16,80 +17,84 @@ import java.util.Set;
  * @author Steve Ebersole
  */
 public class UpdateValuesAnalysisForDecomposer {
-	private final Set<TableMapping> tablesWithNonNullValues = new HashSet<>();
-	private final Set<TableMapping> tablesWithPreviousNonNullValues = new HashSet<>();
-	private final Set<TableMapping> tablesNeedingUpdate = new HashSet<>();
+	private final Set<EntityTableDescriptor> tablesWithNonNullValues = new HashSet<>();
+	private final Set<EntityTableDescriptor> tablesWithPreviousNonNullValues = new HashSet<>();
+	private final Set<EntityTableDescriptor> tablesNeedingUpdate = new HashSet<>();
 	private final int[] dirtyAttributeIndexes;
 
 	public UpdateValuesAnalysisForDecomposer(
-			EntityMutationTarget mutationTarget,
+			EntityGraphMutationTarget mutationTarget,
 			Object[] values,
 			Object[] previousValues,
 			int[] dirtyAttributeIndexes) {
 		this.dirtyAttributeIndexes = dirtyAttributeIndexes;
 
-		mutationTarget.forEachMutableTable( (tableMapping) -> {
-			final int[] attributeIndexes = tableMapping.getAttributeIndexes();
+		mutationTarget.forEachMutableTableDescriptor( (table) -> {
+			boolean checkForNonNull = true;
+			boolean checkForPreviousNonNull = true;
+			boolean checkForDirtiness = true;
 
-			// Check current values for non-null
 			if ( values == null ) {
-				tablesWithNonNullValues.add( tableMapping );
-			}
-			else {
-				for ( int i = 0; i < attributeIndexes.length; i++ ) {
-					final int attributeIndex = attributeIndexes[i];
-					if ( values[attributeIndex] != null ) {
-						tablesWithNonNullValues.add( tableMapping );
-						break;
-					}
-				}
+				tablesWithNonNullValues.add( table );
+				checkForNonNull = false;
 			}
 
-			// Check previous values for non-null
 			if ( previousValues == null ) {
-				tablesWithPreviousNonNullValues.add( tableMapping );
-			}
-			else {
-				for ( int i = 0; i < attributeIndexes.length; i++ ) {
-					final int attributeIndex = attributeIndexes[i];
-					if ( previousValues[attributeIndex] != null ) {
-						tablesWithPreviousNonNullValues.add( tableMapping );
-						break;
-					}
-				}
+				tablesWithPreviousNonNullValues.add( table );
+				checkForPreviousNonNull = false;
 			}
 
-			// Determine if table needs updating
 			if ( dirtyAttributeIndexes == null ) {
 				// No dirty tracking - update all tables with columns
-				if ( tableMapping.hasColumns() ) {
-					tablesNeedingUpdate.add( tableMapping );
+				if ( !table.columns().isEmpty() ) {
+					tablesNeedingUpdate.add( table );
 				}
+				checkForDirtiness = false;
 			}
-			else {
-				// Check if any dirty attributes belong to this table
-				for ( int dirtyIndex : dirtyAttributeIndexes ) {
-					for ( int tableAttrIndex : attributeIndexes ) {
-						if ( dirtyIndex == tableAttrIndex ) {
-							tablesNeedingUpdate.add( tableMapping );
-							break;
-						}
+
+			for ( int i = 0; i < table.attributes().size(); i++ ) {
+				var attribute = table.attributes().get( i );
+
+				if ( checkForNonNull ) {
+					if ( values[attribute.getStateArrayPosition()] != null ) {
+						tablesWithNonNullValues.add( table );
+					}
+				}
+
+				if ( checkForPreviousNonNull ) {
+					if ( previousValues[attribute.getStateArrayPosition()] != null ) {
+						tablesWithPreviousNonNullValues.add( table );
+					}
+				}
+
+				if ( checkForDirtiness ) {
+					if ( isAttributeDirty( attribute, dirtyAttributeIndexes ) ) {
+						tablesNeedingUpdate.add( table );
 					}
 				}
 			}
 		} );
 	}
 
-	public boolean hasNonNullValues(TableMapping tableMapping) {
-		return tablesWithNonNullValues.contains( tableMapping );
+	private boolean isAttributeDirty(AttributeMapping attribute, int[] dirtyAttributeIndexes) {
+		for ( int i = 0; i < dirtyAttributeIndexes.length; i++ ) {
+			if ( attribute.getStateArrayPosition() == dirtyAttributeIndexes[i] ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
-	public boolean hasPreviousNonNullValues(TableMapping tableMapping) {
-		return tablesWithPreviousNonNullValues.contains( tableMapping );
+	public boolean hasNonNullValues(EntityTableDescriptor table) {
+		return tablesWithNonNullValues.contains( table );
 	}
 
-	public boolean needsUpdate(TableMapping tableMapping) {
-		return tablesNeedingUpdate.contains( tableMapping );
+	public boolean hasPreviousNonNullValues(EntityTableDescriptor table) {
+		return tablesWithPreviousNonNullValues.contains( table );
+	}
+
+	public boolean needsUpdate(EntityTableDescriptor table) {
+		return tablesNeedingUpdate.contains( table );
 	}
 
 	public boolean hasDirtyAttributes() {

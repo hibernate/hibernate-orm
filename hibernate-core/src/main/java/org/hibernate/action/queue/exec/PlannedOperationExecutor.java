@@ -4,7 +4,7 @@
  */
 package org.hibernate.action.queue.exec;
 
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.op.PlannedOperation;
 
 /// Adapter hides Hibernate "group" concepts from the planner.
 ///

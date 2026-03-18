@@ -6,12 +6,13 @@ package org.hibernate.action.queue.meta;
 
 import org.hibernate.sql.model.TableMapping.MutationDetails;
 
+import java.io.Serializable;
+
 /**
  * @author Steve Ebersole
  */
 public record CollectionTableDescriptor(
-		String normalizedName,
-		String physicalName,
+		String name,
 		boolean isJoinTable,
 		boolean isInverse,
 		boolean cascadeDeleteEnabled,
@@ -19,7 +20,7 @@ public record CollectionTableDescriptor(
 		MutationDetails updateDetails,
 		MutationDetails deleteDetails,
 		MutationDetails deleteAllDetails,
-		TableKeyDescriptor keyDescriptor) implements TableDescriptor {
+		TableKeyDescriptor keyDescriptor) implements TableDescriptor, Serializable {
 	@Override
 	public boolean isOptional() {
 		return false;

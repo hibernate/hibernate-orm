@@ -5,6 +5,7 @@
 package org.hibernate.persister.collection;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -18,6 +19,8 @@ import org.hibernate.MappingException;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
+import org.hibernate.action.queue.exec.PostExecutionCallback;
+import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.collection.spi.CollectionSemantics;
@@ -108,9 +111,62 @@ public interface CollectionPersister extends Restrictable {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
 	}
 
-	MutationDecomposer<CollectionRecreateAction> getRecreateDecomposer();
-	MutationDecomposer<CollectionRemoveAction> getRemoveDecomposer();
-	MutationDecomposer<CollectionUpdateAction> getUpdateDecomposer();
+	/**
+	 * Decomposes a collection recreate action into planned operations.
+	 * <p>
+	 * Manages pre-execution phase and registering [PostCollectionRecreateHandling] callback
+	 * for post-execution phase.  Delegates to [InsertRowsCoordinator] to create the needed
+	 * PlannedOperations.
+	 *
+	 * @param action
+	 * @param ordinalBase
+	 * @param postExecCallbackRegistry
+	 * @param session
+	 * @return
+	 */
+///
+///
+/// Manages pre-execution phase and registering [PostCollectionRecreateHandling] callback
+/// for post-execution phase.  Delegates to [InsertRowsCoordinator] to create the needed
+/// PlannedOperations.
+
+	List<PlannedOperation> decompose(
+			CollectionRecreateAction action,
+			int ordinalBase,
+			Consumer<PostExecutionCallback> postExecCallbackRegistry,
+			SharedSessionContractImplementor session);
+
+	/**
+	 * Removes the collection:<ul>
+	 *     <li>
+	 *         For collections with a collection-table, this will execute a DELETE based
+	 *         on the {@linkplain org.hibernate.engine.spi.CollectionKey collection-key}
+	 *     </li>
+	 *     <li>
+	 *         For one-to-many collections, this executes an UPDATE to unset the collection-key
+	 *         on the association table
+	 *     </li>
+	 * </ul>
+	 */
+	List<PlannedOperation> decompose(
+			CollectionRemoveAction action,
+			int ordinalBase,
+			Consumer<PostExecutionCallback> postExecCallbackRegistry,
+			SharedSessionContractImplementor session);
+
+	/// Decomposes a collection update action into planned operations -
+	///
+	/// - "deletes" removed entries.  See [CollectionJdbcOperations#getDeleteRowOperation()]
+	/// - updates modified entries.  See [CollectionJdbcOperations#getUpdateRowOperation()]
+	/// - "inserts" new entries.  See [CollectionJdbcOperations#getInsertRowOperation()]
+	///
+	/// Manages pre-execution phase and registering [PostCollectionUpdateHandling] callback
+	/// for post-execution phase.
+	List<PlannedOperation> decompose(
+			CollectionUpdateAction action,
+			int ordinalBase,
+			Consumer<PostExecutionCallback> postExecCallbackRegistry,
+			SharedSessionContractImplementor session);
 
 	/**
 	 * Get the persister of the entity that "owns" this collection

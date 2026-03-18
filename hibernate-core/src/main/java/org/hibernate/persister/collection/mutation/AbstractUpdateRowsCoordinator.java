@@ -5,9 +5,9 @@
 package org.hibernate.persister.collection.mutation;
 
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
@@ -15,16 +15,12 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
  * @author Steve Ebersole
  */
 public abstract class AbstractUpdateRowsCoordinator implements UpdateRowsCoordinator {
-	private final CollectionMutationTarget mutationTarget;
+	private final AbstractCollectionPersister mutationTarget;
 	private final SessionFactoryImplementor sessionFactory;
-	protected final MutationExecutorService mutationExecutorService;
 
-	public AbstractUpdateRowsCoordinator(CollectionMutationTarget mutationTarget, SessionFactoryImplementor sessionFactory) {
+	public AbstractUpdateRowsCoordinator(AbstractCollectionPersister mutationTarget, SessionFactoryImplementor sessionFactory) {
 		this.mutationTarget = mutationTarget;
 		this.sessionFactory = sessionFactory;
-		mutationExecutorService =
-				sessionFactory.getServiceRegistry()
-						.getService( MutationExecutorService.class );
 	}
 
 	@Override
@@ -37,7 +33,8 @@ public abstract class AbstractUpdateRowsCoordinator implements UpdateRowsCoordin
 	}
 
 	@Override
-	public CollectionMutationTarget getMutationTarget() {
+	public AbstractCollectionPersister getMutationTarget() {
+		// exposes AbstractCollectionPersister until we can drop MutationTarget in favor of GraphMutationTarget
 		return mutationTarget;
 	}
 

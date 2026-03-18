@@ -4,8 +4,6 @@
  */
 package org.hibernate.action.queue.constraint;
 
-import org.hibernate.action.queue.fk.ForeignKey;
-
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;

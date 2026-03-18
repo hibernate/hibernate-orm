@@ -12,6 +12,8 @@ import java.util.Locale;
 import java.util.function.Supplier;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.action.queue.mutation.jdbc.PreparableJdbcOperation;
+import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -104,6 +106,43 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 				statementDetails.releaseStatement( session );
 			}
 			jdbcValueBindings.afterStatement( statementDetails.getMutatingTableDetails() );
+		}
+	}
+
+	@Override
+	public GeneratedValues performGraphMutation(
+			PlannedOperation operation,
+			Object entity,
+			SharedSessionContractImplementor session) {
+		var jdbcOperation = (PreparableJdbcOperation) operation.getJdbcOperation();
+		var sql = jdbcOperation.getSqlString();
+		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
+
+		// todo (ActionQueue2) : need access to the columns being generated to pass along to prepareStatement
+		try (var preparedStatement = session.getJdbcCoordinator()
+				.getStatementPreparer()
+				.prepareStatement( sql, RETURN_GENERATED_KEYS ) ) {
+
+			var valueBindings = new org.hibernate.action.queue.bind.JdbcValueBindings(
+					operation.getMutatingTableDescriptor(),
+					jdbcOperation
+			);
+			operation.getBindPlan().bindValues( valueBindings, operation, session );
+			valueBindings.beforeStatement( preparedStatement, session );
+
+			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement, sql );
+			return extractGeneratedValues( session, preparedStatement, sql,
+					() -> String.format( Locale.ROOT,
+							"Unable to extract generated key for '%s'",
+							persister.getNavigableRole().getFullPath() ) );
+		}
+		catch (SQLException sqle) {
+			throw session.getJdbcServices()
+					.getSqlExceptionHelper()
+					.convert( sqle, "Unable performing SQL - " + sql );
+		}
+		finally {
+			session.getJdbcCoordinator().afterStatementExecution();
 		}
 	}
 

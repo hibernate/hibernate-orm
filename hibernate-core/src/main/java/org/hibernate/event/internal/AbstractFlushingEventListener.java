@@ -277,6 +277,7 @@ public abstract class AbstractFlushingEventListener {
 				(collection, collectionEntry) -> {
 					if ( collectionEntry.isDorecreate() ) {
 						final var currentKey = collectionEntry.getCurrentKey();
+						EVENT_LISTENER_LOGGER.debugf( "Creating CollectionRecreateAction for role=%s, key=%s", collectionEntry.getCurrentPersister().getRole(), currentKey );
 						interceptor.onCollectionRecreate( collection, currentKey );
 						actionQueue.addAction(
 								new CollectionRecreateAction(

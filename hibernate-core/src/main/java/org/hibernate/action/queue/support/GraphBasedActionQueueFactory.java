@@ -13,10 +13,8 @@ import org.hibernate.action.queue.constraint.ConstraintModelBuilder;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.metamodel.mapping.SelectableMapping;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.Serializable;
 
 import static org.hibernate.cfg.FlushSettings.DEFERRABLE_AVOID_BREAK;
 import static org.hibernate.cfg.FlushSettings.DEFERRABLE_EDGES_IGNORE;
@@ -27,17 +25,14 @@ import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 /// ActionQueueFactory for building GraphBasedActionQueue instances.
 ///
 /// @author Steve Ebersole
-public class GraphBasedActionQueueFactory implements ActionQueueFactory {
+public class GraphBasedActionQueueFactory implements ActionQueueFactory, Serializable {
 	private final PlanningOptions planningOptions;
 	private final ConstraintModel constraintModel;
-
-	private final Map<String, Map<String, SelectableMapping>> columnDescriptorsByTable;
 
 	public GraphBasedActionQueueFactory(SessionFactoryImplementor factory) {
 		var configurationService = factory.getServiceRegistry().requireService( ConfigurationService.class );
 		planningOptions = buildPlanningOptions( configurationService );
 		constraintModel = buildConstraintModel( factory, planningOptions );
-		columnDescriptorsByTable = buildColumnDescriptorsByTable( factory );
 	}
 
 	@Override
@@ -64,11 +59,5 @@ public class GraphBasedActionQueueFactory implements ActionQueueFactory {
 	private static ConstraintModel buildConstraintModel(SessionFactoryImplementor factory, PlanningOptions planningOptions) {
 		// todo : account for PlanningOptions - do not build UniqueConstraints if we will not be using them
 		return ConstraintModelBuilder.buildConstraintModel( factory.getMappingMetamodel() );
-	}
-
-	private static Map<String, Map<String, SelectableMapping>> buildColumnDescriptorsByTable(SessionFactoryImplementor factory) {
-		final Map<String, Map<String, SelectableMapping>> result = new HashMap<>();
-
-		return result;
 	}
 }

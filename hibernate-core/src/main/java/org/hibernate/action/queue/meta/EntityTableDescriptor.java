@@ -8,21 +8,18 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.sql.model.TableMapping;
 
-import java.util.ArrayList;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /// Immutable descriptor for a table involved in a mutation.
 ///
-/// All names are pre-normalized at construction time.
 /// Provides metadata needed for mutation execution.
 ///
-/// @param normalizedName Normalized table name - see [Helper#normalizeTableName(String)].
-/// @param physicalName Name from the mapping model (non-normalized).
+/// @param name Table name from the mapping model.
 /// @param relativePosition Position within the target's grouping of tables.
 /// @param columns The columns contained on this table.
 /// @param attributes The attributes mapped to this table.
@@ -30,8 +27,7 @@ import java.util.stream.Stream;
 ///
 /// @author Steve Ebersole
 public record EntityTableDescriptor(
-		String normalizedName,
-		String physicalName,
+		String name,
 		int relativePosition,
 		boolean isIdentifierTable,
 		boolean isOptional,
@@ -43,17 +39,11 @@ public record EntityTableDescriptor(
 		List<ColumnDescriptor> columns,
 		List<AttributeMapping> attributes,
 		Map<AttributeMapping,List<Integer>> attributeColumnIndexes,
-		TableKeyDescriptor keyDescriptor) implements TableDescriptor {
+		TableKeyDescriptor keyDescriptor) implements TableDescriptor, Serializable {
 
 	public EntityTableDescriptor {
 		// Immutable - defensive copy
 		columns = List.copyOf(columns);
-	}
-
-	///Get the physical (non-normalized) table name.
-	@Override
-	public String physicalName() {
-		return physicalName;
 	}
 
 	public void forEachAttributeColumn(AttributeMapping attribute, Consumer<ColumnDescriptor> consumer) {
@@ -74,50 +64,32 @@ public record EntityTableDescriptor(
 				.forEach( consumer );
 	}
 
-	/// Find column by normalized name.
+	/// Find column by name.
 	/// Returns null if not found.
-	public ColumnDescriptor findColumn(String normalizedColumnName) {
+	public ColumnDescriptor findColumn(String columnName) {
 		return Stream.of(columns(), keyDescriptor().columns())
 				.flatMap(List::stream)
-				.filter( col -> col.normalizedName().equals( normalizedColumnName ) )
+				.filter( col -> col.name().equals( columnName ) )
 				.findFirst()
 				.orElse( null );
 	}
 
-	/// Find columns by normalized names.
+	/// Find columns by names.
 	/// Returns empty if none found.
-	public List<ColumnDescriptor> findColumns(String... normalizedColumnNames) {
+	public List<ColumnDescriptor> findColumns(String... columnNames) {
 		return Stream.of(columns(), keyDescriptor().columns())
 				.flatMap(List::stream)
-				.filter( (col) -> ArrayHelper.contains( normalizedColumnNames, col.normalizedName() ) )
+				.filter( (col) -> ArrayHelper.contains( columnNames, col.name() ) )
 				.toList();
 	}
 
-	/// Find columns by normalized names.
+	/// Find columns by names.
 	/// Returns empty if none found.
-	public List<ColumnDescriptor> findColumns(Collection<String> normalizedColumnNames) {
+	public List<ColumnDescriptor> findColumns(Collection<String> columnNames) {
 		return Stream.of(columns(), keyDescriptor().columns())
 				.flatMap(List::stream)
-				.filter(col -> normalizedColumnNames.contains( col.normalizedName() ))
+				.filter(col -> columnNames.contains( col.name() ))
 				.toList();
 	}
 
-	/// Validate that all required columns exist.
-	/// Throws clear exception if missing.
-	public void validateColumns(Set<String> requiredNormalizedNames) {
-		var missing = new ArrayList<String>();
-		for (var required : requiredNormalizedNames) {
-			if (findColumn(required) == null) {
-				missing.add(required);
-			}
-		}
-		if (!missing.isEmpty()) {
-			throw new IllegalArgumentException(
-					"Table " + normalizedName + " missing columns: " + missing +
-					" (available: " + columns.stream()
-							.map( ColumnDescriptor::normalizedName)
-							.toList() + ")"
-			);
-		}
-	}
 }

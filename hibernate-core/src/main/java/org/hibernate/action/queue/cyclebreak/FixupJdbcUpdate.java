@@ -36,8 +36,7 @@ public class FixupJdbcUpdate implements JdbcUpdate, PreparableJdbcOperation {
 
 	private final List<JdbcParameterBinder> parameterBinders;
 
-	// todo (ActionQueue2) : not sure this are needed see #findValueDescriptor
-	//private final Map<String, JdbcValueDescriptor> jdbcValueDescriptorMap;
+	private final Map<String, JdbcValueDescriptor> jdbcValueDescriptorMap;
 
 	public FixupJdbcUpdate(
 			String sql,
@@ -49,7 +48,7 @@ public class FixupJdbcUpdate implements JdbcUpdate, PreparableJdbcOperation {
 		this.entityPersister = entityPersister;
 		this.expectation = Expectation.RowCount.INSTANCE;
 
-		//this.jdbcValueDescriptorMap = jdbcValueDescriptorMap;
+		this.jdbcValueDescriptorMap = jdbcValueDescriptorMap;
 		this.parameterBinders = CollectionHelper.arrayList( jdbcValueDescriptorMap.size() );
 		jdbcValueDescriptorMap.forEach( (column, jdbcValueDescriptor ) -> {
 			parameterBinders.add( new JdbcParameterImpl( jdbcValueDescriptor.getJdbcMapping() ) );
@@ -88,20 +87,12 @@ public class FixupJdbcUpdate implements JdbcUpdate, PreparableJdbcOperation {
 
 	@Override
 	public JdbcValueDescriptor findValueDescriptor(String columnName, ParameterUsage usage) {
-		// todo : see todo above
-		throw new UnsupportedOperationException( "Lets see if this is actually used" );
-//		if ( usage == ParameterUsage.SET ) {
-//			return setParameterDescriptors.get( columnName );
-//		}
-//		else {
-//			assert usage == ParameterUsage.RESTRICT ;
-//			return restrictParameterDescriptors.get( columnName );
-//		}
+		return jdbcValueDescriptorMap.get( columnName );
 	}
 
 	@Override
 	public String toString() {
-		return "FixupJdbcUpdate(" + tableDescriptor.physicalName() + ")";
+		return "FixupJdbcUpdate(" + tableDescriptor.name() + ")";
 	}
 
 }

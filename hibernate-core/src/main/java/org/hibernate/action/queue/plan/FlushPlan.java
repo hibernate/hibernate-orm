@@ -4,6 +4,8 @@
  */
 package org.hibernate.action.queue.plan;
 
+import org.hibernate.action.queue.op.PlannedOperation;
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +23,7 @@ public class FlushPlan {
 
 	public List<PlanStep> steps() { return steps; }
 
-	public void enqueueFixup(PlannedOperation fixup, PlanStep currentStep) {
+	public void enqueueFixup(PlannedOperation fixup) {
 		fixups.addLast(fixup);
 	}
 

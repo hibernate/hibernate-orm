@@ -102,6 +102,18 @@ public interface ModelPart extends MappingModelExpressible {
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection,JdbcMapping> selectionConsumer);
 
+	/// Visits each physical (non-formula)  column.
+	default int forEachColumn(SelectableConsumer consumer) {
+		final int[] count = new int[] {0};
+		forEachSelectable( 0, (index, selectableMapping) -> {
+			if ( !selectableMapping.isFormula() ) {
+				consumer.accept( count[0], selectableMapping );
+				count[0] = count[0] + 1;
+			}
+		} );
+		return count[0];
+	}
+
 	/// A shorthand form of [#forEachSelectable(int,SelectableConsumer)], that passes `0` as offset.
 	default int forEachSelectable(SelectableConsumer consumer) {
 		return forEachSelectable( 0, consumer );

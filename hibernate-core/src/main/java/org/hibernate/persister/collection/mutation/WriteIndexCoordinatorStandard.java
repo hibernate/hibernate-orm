@@ -4,20 +4,16 @@
  */
 package org.hibernate.persister.collection.mutation;
 
-import org.hibernate.action.queue.MutationKind;
-import org.hibernate.action.queue.bind.BindPlan;
-import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
-import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.model.MutationType;
 
 import java.util.Iterator;
-import java.util.List;
 
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
@@ -29,12 +25,12 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
  * @author Steve Ebersole
  */
 public class WriteIndexCoordinatorStandard implements WriteIndexCoordinator {
-	private final CollectionMutationTarget mutationTarget;
+	private final AbstractCollectionPersister mutationTarget;
 	private final RowMutationOperations rowMutationOperations;
 	private final MutationExecutorService mutationExecutorService;
 
 	public WriteIndexCoordinatorStandard(
-			CollectionMutationTarget mutationTarget,
+			AbstractCollectionPersister mutationTarget,
 			RowMutationOperations rowMutationOperations,
 			SessionFactoryImplementor sessionFactory) {
 		this.mutationTarget = mutationTarget;
@@ -119,44 +115,6 @@ public class WriteIndexCoordinatorStandard implements WriteIndexCoordinator {
 		}
 	}
 
-	@Override
-	public List<PlannedOperation> decomposeWriteIndex(
-			PersistentCollection<?> collection,
-			Iterator<?> entries,
-			Object key,
-			boolean resetIndex,
-			int ordinalBase,
-			SharedSessionContractImplementor session) {
-		final var updateRowOperation = rowMutationOperations.getUpdateRowOperation();
-		if ( updateRowOperation == null || !entries.hasNext() ) {
-			return List.of();
-		}
-
-		final var tableMapping = mutationTarget.getCollectionTableMapping();
-		final String tableName = tableMapping.getTableName();
-
-		final BindPlan bindPlan = new WriteIndexBindPlan(
-				collection,
-				key,
-				resetIndex,
-				entries,
-				rowMutationOperations.getUpdateRowValues(),
-				rowMutationOperations.getUpdateRowRestrictions(),
-				mutationTarget
-		);
-
-		final PlannedOperation plannedOp = new PlannedOperation(
-				tableName,
-				MutationKind.UPDATE,
-				updateRowOperation,
-				bindPlan,
-				ordinalBase * 1_000,
-				"WriteIndexCoordinator(" + mutationTarget.getRolePath() + ")"
-		);
-
-		return List.of( plannedOp );
-	}
-
 	private int getBaseIndex() {
 		return getBaseIndex(mutationTarget);
 	}
@@ -164,75 +122,5 @@ public class WriteIndexCoordinatorStandard implements WriteIndexCoordinator {
 	private static int getBaseIndex(CollectionMutationTarget mutationTarget) {
 		final var indexMetadata = mutationTarget.getTargetPart().getIndexMetadata();
 		return indexMetadata != null ? indexMetadata.getListIndexBase() : 0;
-	}
-
-	private static class WriteIndexBindPlan implements BindPlan {
-		private final PersistentCollection<?> collection;
-		private final Object key;
-		private final boolean resetIndex;
-		private final Iterator<?> entries;
-		private final RowMutationOperations.Values updateRowValues;
-		private final RowMutationOperations.Restrictions updateRowRestrictions;
-		private final CollectionMutationTarget mutationTarget;
-
-		public WriteIndexBindPlan(
-				PersistentCollection<?> collection,
-				Object key,
-				boolean resetIndex,
-				Iterator<?> entries,
-				RowMutationOperations.Values updateRowValues,
-				RowMutationOperations.Restrictions updateRowRestrictions,
-				CollectionMutationTarget mutationTarget) {
-			this.collection = collection;
-			this.key = key;
-			this.resetIndex = resetIndex;
-			this.entries = entries;
-			this.updateRowValues = updateRowValues;
-			this.updateRowRestrictions = updateRowRestrictions;
-			this.mutationTarget = mutationTarget;
-		}
-
-		@Override
-		public void bindAndMaybePatch(
-				MutationExecutor executor,
-				PlannedOperation operation,
-				SharedSessionContractImplementor session) {
-			// Binding happens in execute()
-		}
-
-		@Override
-		public void execute(
-				MutationExecutor executor,
-				PlannedOperation operation,
-				SharedSessionContractImplementor session) {
-			final var jdbcValueBindings = executor.getJdbcValueBindings();
-			final CollectionPersister persister = mutationTarget.getTargetPart().getCollectionDescriptor();
-			final int baseIndex = getBaseIndex(mutationTarget);
-			int nextIndex = baseIndex + ( resetIndex ? 0 : persister.getSize( key, session ) );
-
-			while ( entries.hasNext() ) {
-				final Object entry = entries.next();
-				if ( entry != null && collection.entryExists( entry, nextIndex ) ) {
-					updateRowValues.applyValues(
-							collection,
-							key,
-							entry,
-							nextIndex,
-							session,
-							jdbcValueBindings
-					);
-					updateRowRestrictions.applyRestrictions(
-							collection,
-							key,
-							entry,
-							nextIndex,
-							session,
-							jdbcValueBindings
-					);
-					executor.execute( collection, null, null, null, session );
-					nextIndex++;
-				}
-			}
-		}
 	}
 }

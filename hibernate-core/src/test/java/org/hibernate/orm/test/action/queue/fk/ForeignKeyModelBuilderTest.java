@@ -7,7 +7,7 @@ package org.hibernate.orm.test.action.queue.fk;
 import java.util.Set;
 
 import org.hibernate.action.queue.constraint.ConstraintModelBuilder;
-import org.hibernate.action.queue.fk.ForeignKey;
+import org.hibernate.action.queue.constraint.ForeignKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;

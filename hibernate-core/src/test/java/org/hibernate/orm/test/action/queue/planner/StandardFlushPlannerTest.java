@@ -4,26 +4,28 @@
  */
 package org.hibernate.orm.test.action.queue.planner;
 
-import org.hibernate.action.queue.PlanningOptions;
-import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.MutationKind;
+import org.hibernate.action.queue.PlanningOptions;
 import org.hibernate.action.queue.StatementShapeKey;
+import org.hibernate.action.queue.bind.BindPlan;
+import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.action.queue.graph.Graph;
 import org.hibernate.action.queue.graph.GraphEdge;
 import org.hibernate.action.queue.graph.GraphTestUtils;
 import org.hibernate.action.queue.graph.GroupNode;
+import org.hibernate.action.queue.meta.EntityTableDescriptor;
+import org.hibernate.action.queue.meta.TableDescriptor;
+import org.hibernate.action.queue.mutation.GraphMutationTarget;
+import org.hibernate.action.queue.mutation.jdbc.JdbcOperation;
+import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.action.queue.plan.FlushPlan;
 import org.hibernate.action.queue.plan.PlanStep;
-import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.action.queue.plan.StandardFlushPlanner;
-import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.MutationTarget;
-import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +34,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for {@link StandardFlushPlanner}
@@ -478,11 +485,37 @@ public class StandardFlushPlannerTest {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	private PlannedOperationGroup createGroup(String tableName, MutationKind kind, int ordinal) {
-		final StatementShapeKey shapeKey = new StatementShapeKey(tableName, kind, ordinal);
-		final PlannedOperation op = createOperation(tableName, kind, shapeKey, ordinal);
+		return createGroup(
+				makeTableDescriptor( tableName ),
+				kind,
+				ordinal
+		);
+	}
+
+	private static TableDescriptor makeTableDescriptor(String name) {
+		return new EntityTableDescriptor(
+				name,
+				0,
+				true,
+				false,
+				false,
+				false,
+				null,
+				null,
+				null,
+				List.of(),
+				List.of(),
+				Map.of(),
+				null
+		);
+	}
+
+	private PlannedOperationGroup createGroup(TableDescriptor tableDescriptor, MutationKind kind, int ordinal) {
+		final StatementShapeKey shapeKey = new StatementShapeKey(tableDescriptor.name(), kind, ordinal);
+		final PlannedOperation op = createOperation(tableDescriptor, kind, shapeKey, ordinal);
 
 		return new PlannedOperationGroup(
-				tableName,
+				tableDescriptor.name(),
 				kind,
 				shapeKey,
 				List.of(op),
@@ -497,8 +530,16 @@ public class StandardFlushPlannerTest {
 			MutationKind kind,
 			StatementShapeKey shapeKey,
 			int ordinal) {
+		return createOperation( makeTableDescriptor( tableName ), kind, shapeKey, ordinal );
+	}
+
+	private PlannedOperation createOperation(
+			TableDescriptor tableDescriptor,
+			MutationKind kind,
+			StatementShapeKey shapeKey,
+			int ordinal) {
 		return new PlannedOperation(
-				tableName,
+				tableDescriptor,
 				kind,
 				new MockMutationOperation(),
 				new MockBindPlan(),
@@ -536,19 +577,24 @@ public class StandardFlushPlannerTest {
 	// Mock classes
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private static class MockMutationOperation implements MutationOperation {
+	private static class MockMutationOperation implements JdbcOperation {
 		@Override
 		public MutationType getMutationType() {
 			return MutationType.INSERT;
 		}
 
 		@Override
-		public MutationTarget<?> getMutationTarget() {
+		public GraphMutationTarget<?> getMutationTarget() {
 			return null;
 		}
 
 		@Override
-		public TableMapping getTableDetails() {
+		public Expectation getExpectation() {
+			return null;
+		}
+
+		@Override
+		public TableDescriptor getTableDescriptor() {
 			return null;
 		}
 
@@ -560,16 +606,8 @@ public class StandardFlushPlannerTest {
 
 	private static class MockBindPlan implements BindPlan {
 		@Override
-		public void bindAndMaybePatch(
-				MutationExecutor executor,
-				PlannedOperation plannedOperation,
-				SharedSessionContractImplementor session) {
-			// no-op for testing
-		}
-
-		@Override
-		public void execute(
-				MutationExecutor executor,
+		public void bindValues(
+				JdbcValueBindings valueBindings,
 				PlannedOperation plannedOperation,
 				SharedSessionContractImplementor session) {
 			// no-op for testing

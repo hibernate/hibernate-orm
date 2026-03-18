@@ -22,9 +22,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import static org.hibernate.action.queue.Helper.normalizeColumnName;
-import static org.hibernate.action.queue.Helper.normalizeTableName;
-
 /**
  * @author Steve Ebersole
  */
@@ -49,7 +46,7 @@ public class JdbcValueBindingsImpl implements JdbcValueBindingsImplementor {
 
 	@Override
 	public BindingGroup getBindingGroup(String tableName) {
-		final String normalizedTableName = normalizeTableName( tableName );
+		final String normalizedTableName = ( tableName );
 		return bindingGroupMap.get( normalizedTableName );
 	}
 
@@ -61,7 +58,7 @@ public class JdbcValueBindingsImpl implements JdbcValueBindingsImplementor {
 			ParameterUsage usage) {
 		// Normalize column name BEFORE calling resolveValueDescriptor because
 		// AbstractJdbcMutation.findValueDescriptor expects normalized names
-		final String normalizedColumnName = normalizeColumnName( columnName );
+		final String normalizedColumnName = ( columnName );
 		final var jdbcValueDescriptor =
 				jdbcValueDescriptorAccess.resolveValueDescriptor( tableName, normalizedColumnName, usage );
 		if ( jdbcValueDescriptor == null ) {
@@ -69,7 +66,7 @@ public class JdbcValueBindingsImpl implements JdbcValueBindingsImplementor {
 		}
 		// Normalize table name for storage to match cycle breaking lookups
 		final String physicalTableName = jdbcValueDescriptorAccess.resolvePhysicalTableName( tableName );
-		final String normalizedTableName = normalizeTableName( physicalTableName );
+		final String normalizedTableName = ( physicalTableName );
 		resolveBindingGroup( normalizedTableName )
 				.bindValue( normalizedColumnName, value, jdbcValueDescriptor );
 	}
@@ -89,7 +86,7 @@ public class JdbcValueBindingsImpl implements JdbcValueBindingsImplementor {
 
 	@Override
 	public void beforeStatement(PreparedStatementDetails statementDetails) {
-		final String normalizedTableName = normalizeTableName(
+		final String normalizedTableName = (
 				statementDetails.getMutatingTableDetails().getTableName() );
 		final var bindingGroup = bindingGroupMap.get( normalizedTableName );
 		if ( bindingGroup == null ) {
@@ -128,7 +125,7 @@ public class JdbcValueBindingsImpl implements JdbcValueBindingsImplementor {
 
 	@Override
 	public void afterStatement(TableMapping mutatingTable) {
-		final String normalizedTableName = normalizeTableName( mutatingTable.getTableName() );
+		final String normalizedTableName = ( mutatingTable.getTableName() );
 		final var bindingGroup = bindingGroupMap.remove( normalizedTableName );
 		if ( bindingGroup != null ) {
 			bindingGroup.clear();
@@ -137,8 +134,8 @@ public class JdbcValueBindingsImpl implements JdbcValueBindingsImplementor {
 
 	@Override
 	public Object getBoundValue(String tableName, String columnName, ParameterUsage usage) {
-		final String normalizedTableName = normalizeTableName( tableName );
-		final String normalizedColumnName = normalizeColumnName( columnName );
+		final String normalizedTableName = ( tableName );
+		final String normalizedColumnName = ( columnName );
 		final BindingGroup bindingGroup = bindingGroupMap.get( normalizedTableName );
 		if ( bindingGroup == null ) {
 			return null;
@@ -149,8 +146,8 @@ public class JdbcValueBindingsImpl implements JdbcValueBindingsImplementor {
 
 	@Override
 	public void replaceValue(String tableName, String columnName, ParameterUsage usage, Object newValue) {
-		final String normalizedTableName = normalizeTableName( tableName );
-		final String normalizedColumnName = normalizeColumnName( columnName );
+		final String normalizedTableName = ( tableName );
+		final String normalizedColumnName = ( columnName );
 		final BindingGroup bindingGroup = bindingGroupMap.get( normalizedTableName );
 		final Binding binding = bindingGroup.getBinding( normalizedColumnName, usage );
 		binding.setValue( newValue );

@@ -136,7 +136,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 		return session;
 	}
 
-	protected final void evict() throws CacheException {
+	public final void evict() throws CacheException {
 		if ( persister.hasCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
 			final Object cacheKey = cache.generateCacheKey(

@@ -12,7 +12,7 @@ import java.util.Map;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.StatementShapeKey;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -284,8 +284,8 @@ public class DeleteDecomposerTest {
 			DeleteDecomposer decomposer = new DeleteDecomposer( persister, factory );
 
 			// Static delete group should be pre-generated for hard deletes
-			assertNotNull( decomposer.getStaticMutationGroup() );
-			assertTrue( decomposer.getStaticMutationGroup().getNumberOfOperations() > 0 );
+			assertNotNull( decomposer.getStaticDeleteOperations() );
+			assertFalse( decomposer.getStaticDeleteOperations().isEmpty() );
 		} );
 	}
 
@@ -300,8 +300,8 @@ public class DeleteDecomposerTest {
 			DeleteDecomposer decomposer = new DeleteDecomposer( persister, factory );
 
 			// Static delete group should be pre-generated for soft deletes too
-			assertNotNull( decomposer.getStaticMutationGroup() );
-			assertTrue( decomposer.getStaticMutationGroup().getNumberOfOperations() > 0 );
+			assertNotNull( decomposer.getStaticDeleteOperations() );
+			assertFalse( decomposer.getStaticDeleteOperations().isEmpty() );
 		} );
 	}
 

@@ -8,6 +8,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.action.queue.mutation.jdbc.PreparableJdbcOperation;
+import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -27,7 +29,8 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesMutationDelegate
+public abstract class AbstractSelectingDelegate
+		extends AbstractGeneratedValuesMutationDelegate
 		implements InsertGeneratedIdentifierDelegate {
 
 	protected AbstractSelectingDelegate(
@@ -61,6 +64,39 @@ public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesM
 	public PreparedStatement prepareStatement(String insertSql, SharedSessionContractImplementor session) {
 		return session.getJdbcCoordinator().getMutationStatementPreparer()
 				.prepareStatement( insertSql, NO_GENERATED_KEYS );
+	}
+
+	@Override
+	public GeneratedValues performGraphMutation(
+			PlannedOperation operation,
+			Object entity,
+			SharedSessionContractImplementor session) {
+		var jdbcOperation = (PreparableJdbcOperation) operation.getJdbcOperation();
+		final String sql = jdbcOperation.getSqlString();
+		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
+
+		try (var preparedStatement = prepareStatement( sql, session ) ) {
+			var valueBindings = new org.hibernate.action.queue.bind.JdbcValueBindings(
+					operation.getMutatingTableDescriptor(),
+					jdbcOperation
+			);
+			operation.getBindPlan().bindValues( valueBindings, operation, session );
+			valueBindings.beforeStatement( preparedStatement, session );
+
+			session.getJdbcCoordinator()
+					.getResultSetReturn()
+					.executeUpdate( preparedStatement, sql );
+		}
+		catch (SQLException sqle) {
+			throw session.getJdbcServices()
+					.getSqlExceptionHelper()
+					.convert( sqle, "Unable performing SQL - " + sql );
+		}
+		finally {
+			session.getJdbcCoordinator().afterStatementExecution();
+		}
+
+		return selectGeneratedId( session, entity );
 	}
 
 	@Override

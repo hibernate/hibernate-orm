@@ -50,6 +50,10 @@ public final class CollectionUpdateAction extends CollectionAction {
 		this.affectedOwnerId = ownerEntry != null ? ownerEntry.getId() : null;
 	}
 
+	public boolean isEmptySnapshot() {
+		return emptySnapshot;
+	}
+
 	@Override
 	public void execute() throws HibernateException {
 		final Object key = getKey();
@@ -133,7 +137,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 		return super.compareTo( executable );
 	}
 
-	private void preUpdate() {
+	public void preUpdate() {
 		getEventListenerGroups().eventListenerGroup_PRE_COLLECTION_UPDATE
 				.fireLazyEventOnEachListener( this::newPreCollectionUpdateEvent,
 						PreCollectionUpdateEventListener::onPreUpdateCollection );
@@ -143,7 +147,7 @@ public final class CollectionUpdateAction extends CollectionAction {
 		return new PreCollectionUpdateEvent( getPersister(), getCollection(), eventSource() );
 	}
 
-	private void postUpdate() {
+	public void postUpdate() {
 		getEventListenerGroups().eventListenerGroup_POST_COLLECTION_UPDATE
 				.fireLazyEventOnEachListener( this::newPostCollectionUpdateEvent,
 						PostCollectionUpdateEventListener::onPostUpdateCollection );

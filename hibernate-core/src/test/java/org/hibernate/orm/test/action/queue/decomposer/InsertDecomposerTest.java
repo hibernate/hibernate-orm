@@ -12,7 +12,7 @@ import java.util.Map;
 import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.StatementShapeKey;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -234,8 +234,8 @@ public class InsertDecomposerTest {
 			InsertDecomposer decomposer = new InsertDecomposer( persister, factory );
 
 			// Static insert group should be pre-generated
-			assertNotNull( decomposer.getStaticMutationGroup() );
-			assertTrue( decomposer.getStaticMutationGroup().getNumberOfOperations() > 0 );
+			assertNotNull( decomposer.getStaticInsertOperations() );
+			assertFalse( decomposer.getStaticInsertOperations().isEmpty() );
 		} );
 	}
 

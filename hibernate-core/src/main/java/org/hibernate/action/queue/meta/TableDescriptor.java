@@ -11,9 +11,7 @@ import org.hibernate.sql.model.TableMapping;
  * @author Steve Ebersole
  */
 public interface TableDescriptor {
-	String normalizedName();
-
-	String physicalName();
+	String name();
 
 	boolean isOptional();
 

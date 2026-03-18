@@ -8,6 +8,7 @@ import org.hibernate.action.queue.PlanningOptions;
 import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.graph.Graph;
 import org.hibernate.action.queue.graph.GroupNode;
+import org.hibernate.action.queue.op.PlannedOperation;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,31 +29,7 @@ public class StandardFlushPlanner implements FlushPlanner {
 		//		which facilitates the pattern of inserting
 		//		with null fk and later updating to set the
 		//		actual fk value
-		// DEBUG
-		try {
-			String msg = String.format("Calling CycleBreaker with graph containing %d nodes\\n", graph.nodes().size());
-			java.nio.file.Files.write(
-					java.nio.file.Paths.get("/tmp/cycle-breaker-debug.log"),
-					msg.getBytes(),
-					java.nio.file.StandardOpenOption.CREATE,
-					java.nio.file.StandardOpenOption.APPEND
-			);
-		} catch (Exception e) {
-			// ignore
-		}
 		new CycleBreaker().applyCycleBreaks(graph, planningOptions);
-		// DEBUG
-		try {
-			String msg = "CycleBreaker completed\\n";
-			java.nio.file.Files.write(
-					java.nio.file.Paths.get("/tmp/cycle-breaker-debug.log"),
-					msg.getBytes(),
-					java.nio.file.StandardOpenOption.CREATE,
-					java.nio.file.StandardOpenOption.APPEND
-			);
-		} catch (Exception e) {
-			// ignore
-		}
 
 		// ---------------------------------------------------------------
 		// The graph should now be acyclic.

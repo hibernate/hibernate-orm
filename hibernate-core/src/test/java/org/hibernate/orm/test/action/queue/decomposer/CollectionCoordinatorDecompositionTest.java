@@ -4,27 +4,30 @@
  */
 package org.hibernate.orm.test.action.queue.decomposer;
 
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import org.hibernate.persister.collection.BasicCollectionPersister;
-import org.hibernate.persister.collection.mutation.CollectionRecreateDecomposer;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests that collection decomposers correctly delegate to coordinators.
  */
 @DomainModel(annotatedClasses = CollectionCoordinatorDecompositionTest.Person.class)
-@SessionFactory
+@SessionFactory(
+		generateStatistics = true,
+		exportSchema = true
+)
 public class CollectionCoordinatorDecompositionTest {
 
 	@Test
@@ -40,17 +43,10 @@ public class CollectionCoordinatorDecompositionTest {
 		scope.inTransaction( session -> {
 			Person person = session.find( Person.class, 1L );
 			assertNotNull( person );
+			System.out.println("LEGACY QUEUE TEST: person.emails.size() = " + person.emails.size());
+			System.out.println("LEGACY QUEUE TEST: person.emails = " + person.emails);
 			assertEquals( 1, person.emails.size() );
-
-			// Verify that the decomposer returns operation groups
-			final BasicCollectionPersister persister = (BasicCollectionPersister) session.getSessionFactory()
-					.getMappingMetamodel()
-					.getCollectionDescriptor( Person.class.getName() + ".emails" );
-
-			final CollectionRecreateDecomposer decomposer = new CollectionRecreateDecomposer();
-
-			// The decomposer should delegate to the coordinator
-			assertNotNull( persister.getInsertRowsCoordinator() );
+			assertEquals( "test@example.com", person.emails.get(0) );
 		} );
 	}
 

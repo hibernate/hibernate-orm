@@ -5,39 +5,38 @@
 package org.hibernate.action.queue.meta;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.action.queue.Helper;
 import org.hibernate.action.queue.op.JdbcValueDescriptorImpl;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 
+import java.io.Serializable;
+
 /// Immutable descriptor for a column involved in a mutation.
 ///
 /// Extends existing ColumnDetails with additional mutation context.
 ///
-/// @param normalizedName Pre-normalized column name - see [org.hibernate.action.queue.Helper#normalizeColumnName(String)]
-/// @param physicalName Original physical name.
+/// @param name Column name from the mapping model.
+/// @param tableName Table name containing this column.
 /// @param jdbcMapping Details about the JDBC type of the column.
 ///
 /// @author Steve Ebersole
 public record ColumnDescriptor(
-		String normalizedName,
-		String physicalName,
-		String normalizedTableName,
+		String name,
+		String tableName,
 		JdbcMapping jdbcMapping,
 		String writeFragment,
 		boolean isFormula,
 		boolean nullable,
 		boolean insertable,
 		boolean updatable,
-		boolean isPartitioned) implements SelectableMapping {
+		boolean isPartitioned) implements SelectableMapping, Serializable {
 
 	public static ColumnDescriptor from(SelectableMapping selectable) {
 		return new ColumnDescriptor(
-				Helper.normalizeColumnName(selectable.getSelectableName()),
 				selectable.getSelectableName(),
-				Helper.normalizeTableName( selectable.getContainingTableExpression() ),
+				selectable.getContainingTableExpression(),
 				selectable.getJdbcMapping(),
 				selectable.getWriteExpression(),
 				selectable.isFormula(),
@@ -49,17 +48,17 @@ public record ColumnDescriptor(
 	}
 
 	public JdbcValueDescriptor createValueDescriptor(ParameterUsage parameterUsage, int parameterIndex) {
-		return new JdbcValueDescriptorImpl( normalizedName, jdbcMapping, parameterUsage, parameterIndex );
+		return new JdbcValueDescriptorImpl( name, jdbcMapping, parameterUsage, parameterIndex );
 	}
 
 	@Override
 	public String getContainingTableExpression() {
-		return normalizedTableName;
+		return tableName;
 	}
 
 	@Override
 	public String getSelectionExpression() {
-		return physicalName;
+		return name;
 	}
 
 	@Override

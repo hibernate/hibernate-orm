@@ -6,7 +6,7 @@ package org.hibernate.action.queue.graph;
 
 
 import org.hibernate.action.queue.exec.PostExecutionCallback;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 

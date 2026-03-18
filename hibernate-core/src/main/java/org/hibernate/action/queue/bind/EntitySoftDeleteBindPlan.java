@@ -5,15 +5,14 @@
 package org.hibernate.action.queue.bind;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.action.queue.Helper;
+import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
-import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.sql.SQLException;
@@ -24,14 +23,13 @@ import java.sql.SQLException;
 /// soft-delete indicator column.
 ///
 /// @author Steve Ebersole
-public class EntitySoftDeleteBindPlan implements BindPlan {
+public class EntitySoftDeleteBindPlan implements BindPlan, OperationResultChecker {
 	private final EntityTableDescriptor tableDescriptor;
 	private final EntityPersister entityPersister;
 	private final Object identifier;
 	private final Object version;
 	private final Object[] loadedState;
 	private final boolean applyOptimisticLocking;
-	private final SoftDeleteMapping softDeleteMapping;
 
 	public EntitySoftDeleteBindPlan(
 			EntityTableDescriptor tableDescriptor,
@@ -39,15 +37,13 @@ public class EntitySoftDeleteBindPlan implements BindPlan {
 			Object identifier,
 			Object version,
 			Object[] loadedState,
-			boolean applyOptimisticLocking,
-			SoftDeleteMapping softDeleteMapping) {
+			boolean applyOptimisticLocking) {
 		this.tableDescriptor = tableDescriptor;
 		this.entityPersister = entityPersister;
 		this.identifier = identifier;
 		this.version = version;
 		this.loadedState = loadedState;
 		this.applyOptimisticLocking = applyOptimisticLocking;
-		this.softDeleteMapping = softDeleteMapping;
 	}
 
 	@Override
@@ -86,7 +82,7 @@ public class EntitySoftDeleteBindPlan implements BindPlan {
 				(index, jdbcValue, columnMapping) -> {
 					valueBindings.bindValue(
 							jdbcValue,
-							tableDescriptor.keyDescriptor().columns().get( index ).normalizedName(),
+							tableDescriptor.keyDescriptor().columns().get( index ).name(),
 							ParameterUsage.RESTRICT
 					);
 				},
@@ -114,7 +110,7 @@ public class EntitySoftDeleteBindPlan implements BindPlan {
 		if ( versionMapping == null ) {
 			return;
 		}
-		if ( tableDescriptor.physicalName().equals( versionMapping.getContainingTableExpression() ) ) {
+		if ( tableDescriptor.name().equals( versionMapping.getContainingTableExpression() ) ) {
 			versionMapping.decompose(
 					version,
 					0,
@@ -195,7 +191,7 @@ public class EntitySoftDeleteBindPlan implements BindPlan {
 									if ( selectable.isPartitioned() ) {
 										bindings.bindValue(
 												jdbcValue,
-												Helper.normalizeColumnName( selectable.getSelectionExpression() ),
+												( selectable.getSelectionExpression() ),
 												ParameterUsage.RESTRICT
 										);
 									}
@@ -208,16 +204,26 @@ public class EntitySoftDeleteBindPlan implements BindPlan {
 		}
 	}
 
-	private static boolean verifyOutcome(
-			PreparedStatementDetails statementDetails,
+	@Override
+	public OperationResultChecker getOperationResultChecker() {
+		return this;
+	}
+
+	@Override
+	public boolean checkResult(
 			int affectedRowCount,
-			int batchPosition) throws SQLException {
-		statementDetails.getExpectation().verifyOutcome(
+			int batchPosition,
+			String sqlString,
+			SessionFactoryImplementor sessionFactory) throws SQLException {
+		return Checkers.identifiedResultsCheck(
+				tableDescriptor.deleteDetails().getExpectation(),
 				affectedRowCount,
-				statementDetails.getStatement(),
 				batchPosition,
-				statementDetails.getSqlString()
+				entityPersister,
+				tableDescriptor,
+				identifier,
+				sqlString,
+				sessionFactory
 		);
-		return true;
 	}
 }

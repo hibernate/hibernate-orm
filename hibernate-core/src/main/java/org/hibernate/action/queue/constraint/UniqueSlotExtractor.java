@@ -5,13 +5,12 @@
 package org.hibernate.action.queue.constraint;
 
 import org.hibernate.action.queue.MutationKind;
-import org.hibernate.action.queue.bind.BindPlan;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.bind.EntityUpdateBindPlan;
+import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.mutation.UpdateBindPlan;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +63,7 @@ public class UniqueSlotExtractor {
 		}
 
 		// Get entity instance and state from BindPlan
-		BindPlan bindPlan = operation.getBindPlan();
+		var bindPlan = operation.getBindPlan();
 		if (bindPlan == null) {
 			return slots;
 		}
@@ -109,8 +108,8 @@ public class UniqueSlotExtractor {
 			return slots;
 		}
 
-		BindPlan bindPlan = operation.getBindPlan();
-		if (!(bindPlan instanceof UpdateBindPlan updateBindPlan)) {
+		var bindPlan = operation.getBindPlan();
+		if (!(bindPlan instanceof EntityUpdateBindPlan updateBindPlan)) {
 			return slots;  // Not an UpdateBindPlan, can't extract state
 		}
 

@@ -4,12 +4,6 @@
  */
 package org.hibernate.persister.entity;
 
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
-
 import jakarta.persistence.Entity;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
@@ -39,8 +33,6 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.internal.VersionGeneration;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.persister.filter.FilterAliasGenerator;
-import org.hibernate.persister.filter.internal.TableGroupFilterAliasGenerator;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
@@ -52,9 +44,12 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
+import org.hibernate.persister.entity.mutation.EntityGraphMutationTarget;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
+import org.hibernate.persister.filter.FilterAliasGenerator;
+import org.hibernate.persister.filter.internal.TableGroupFilterAliasGenerator;
 import org.hibernate.persister.walking.spi.AttributeSource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -67,6 +62,12 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.VersionJavaType;
+
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 
 import static org.hibernate.internal.util.StringHelper.unqualifyEntityName;
 
@@ -119,7 +120,7 @@ import static org.hibernate.internal.util.StringHelper.unqualifyEntityName;
  * @see org.hibernate.persister.spi.PersisterFactory
  * @see org.hibernate.persister.spi.PersisterClassResolver
  */
-public interface EntityPersister extends EntityMappingType, EntityMutationTarget, RootTableGroupProducer, AttributeSource {
+public interface EntityPersister extends EntityMappingType, EntityGraphMutationTarget, EntityMutationTarget, RootTableGroupProducer, AttributeSource {
 
 	/**
 	 * Finish the initialization of this object.
@@ -1585,4 +1586,10 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	@Internal
 	boolean managesColumns(String[] columnNames);
+
+
+	@Override
+	default String getRolePath() {
+		return getNavigableRole().getFullPath();
+	}
 }

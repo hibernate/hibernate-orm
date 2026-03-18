@@ -21,7 +21,7 @@ dependencies {
 
 	implementation "jakarta.inject:jakarta.inject-api:2.0.1"
 
-	implementation "org.glassfish.jaxb:jaxb-xjc:4.0.6"
+	implementation "org.glassfish.jaxb:jaxb-xjc:4.0.7"
 	implementation "org.patrodyne.jvnet:hisrc-basicjaxb-tools:2.2.1"
 	implementation "org.patrodyne.jvnet:hisrc-basicjaxb-plugins:2.2.1"
 

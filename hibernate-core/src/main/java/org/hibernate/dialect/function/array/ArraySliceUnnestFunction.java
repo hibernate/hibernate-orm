@@ -57,7 +57,7 @@ public class ArraySliceUnnestFunction extends AbstractSqmSelfRenderingFunctionDe
 		startIndexExpression.accept( walker );
 		sqlAppender.append( " is not null and ");
 		endIndexExpression.accept( walker );
-		sqlAppender.append( " is not null then coalesce((select array_agg(t.val) from unnest(" );
+		sqlAppender.append( " is not null then coalesce((select array_agg(t.val order by t.idx) from unnest(" );
 		arrayExpression.accept( walker );
 		sqlAppender.append( ") with ordinality t(val,idx) where t.idx between " );
 		startIndexExpression.accept( walker );

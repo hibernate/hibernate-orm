@@ -378,7 +378,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsLockTimeouts implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect.getLockingSupport().getMetadata().getLockTimeoutType( Timeouts.ONE_SECOND ) == LockTimeoutType.QUERY;
+			return dialect.getLockingSupport().getMetadata().getLockTimeoutType( Timeouts.ONE_SECOND ) != LockTimeoutType.NONE;
 		}
 	}
 

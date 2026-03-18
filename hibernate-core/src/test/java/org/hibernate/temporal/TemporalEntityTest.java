@@ -261,7 +261,7 @@ class TemporalEntityTest {
 		awaitOracleClockTick();
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
-					TemporalEntity1 entity = session.get( TemporalEntity1.class, 2L );
+					TemporalEntity1 entity = session.find( TemporalEntity1.class, 2L );
 					assertNull( entity );
 				}
 		);

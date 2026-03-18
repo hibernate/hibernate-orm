@@ -150,12 +150,12 @@ public class StatelessSessionMultipleOpsSubsequentBatchTest {
 					.hasSize( 1 );
 			// Verify first batch entities were deleted immediately
 			for ( int i = 0; i < 5; i++ ) {
-				final var p = session.get( Person.class, i );
+				final var p = session.find( Person.class, i );
 				assertThat( p ).as( "Entity %d should be deleted after first batch", i ).isNull();
 			}
 			// Verify second batch entities still exist
 			for ( int i = 5; i < 8; i++ ) {
-				final var p = session.get( Person.class, i );
+				final var p = session.find( Person.class, i );
 				assertThat( p ).as( "Entity %d should still exist before second batch", i ).isNotNull();
 			}
 			inspector.clear();
@@ -166,7 +166,7 @@ public class StatelessSessionMultipleOpsSubsequentBatchTest {
 					.hasSize( 1 );
 			// Verify second batch entities were deleted immediately
 			for ( int i = 5; i < 8; i++ ) {
-				final var p = session.get( Person.class, i );
+				final var p = session.find( Person.class, i );
 				assertThat( p ).as( "Entity %d should be deleted after second batch", i ).isNull();
 			}
 		} );
@@ -203,14 +203,14 @@ public class StatelessSessionMultipleOpsSubsequentBatchTest {
 				}
 			}
 			// Verify entity 8 doesn't exist yet
-			assertThat( session.get( Person.class, 8 ) )
+			assertThat( session.find( Person.class, 8 ) )
 					.as( "Entity 8 should not exist before second batch" )
 					.isNull();
 
 			session.upsertMultiple( secondBatch );
 			// Verify state after second batch: ids 0-2 original, 3-5 from first batch, 6-8 from second batch
 			for ( int i = 0; i < 9; i++ ) {
-				final var p = session.get( Person.class, i );
+				final var p = session.find( Person.class, i );
 				assertThat( p ).as( "Entity %d should exist after second batch", i ).isNotNull();
 				if ( i < 3 ) {
 					assertThat( p.name ).isEqualTo( "person_ " + i );

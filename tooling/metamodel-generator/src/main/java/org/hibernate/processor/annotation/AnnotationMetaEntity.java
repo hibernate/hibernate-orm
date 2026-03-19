@@ -2156,14 +2156,23 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 //			}
 //		}
 		if ( isOrderParam( typeName ) || isRestrictionParam( typeName ) ) {
-			final TypeMirror typeArgument = getTypeArgument( parameterType );
+			TypeMirror typeArgument = getTypeArgument( parameterType );
 			if ( entityType != null ) {
 				if ( typeArgument == null ) {
-					if ( requireTypeArgument( typeName )) {
-						missingTypeArgError( entityType, parameter, typeName );
-					}
+					missingTypeArgError( entityType, parameter, typeName );
+					return;
 				}
-				else if ( !types.isSameType( typeArgument, entityType.asType() ) ) {
+				if ( typeArgument.getKind() == TypeKind.WILDCARD ) {
+					TypeMirror superBound = ( (WildcardType) typeArgument ).getSuperBound();
+					if ( superBound == null ) {
+						if ( requireBoundedWildcard( typeName ) ) {
+							missingTypeArgError( entityType, parameter, typeName );
+						}
+						return;
+					}
+					typeArgument = superBound;
+				}
+				if ( !types.isSameType( typeArgument, entityType.asType() ) ) {
 					wrongTypeArgError( entityType, parameter, typeName );
 				}
 			}
@@ -2221,7 +2230,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				Diagnostic.Kind.ERROR );
 	}
 
-	private boolean requireTypeArgument(String typeName) {
+	private boolean requireBoundedWildcard(String typeName) {
 		return !context.getJakartaDataSortCompliance() || !typeName.startsWith( JD_SORT );
 	}
 
@@ -2315,7 +2324,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						for ( TypeMirror arg : type.getTypeArguments() ) {
 							switch ( arg.getKind() ) {
 								case WILDCARD:
-									return ((WildcardType) arg).getSuperBound();
+									return arg;
 								case ARRAY:
 								case DECLARED:
 								case TYPEVAR:

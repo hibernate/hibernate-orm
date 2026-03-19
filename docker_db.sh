@@ -1,18 +1,26 @@
 #! /bin/bash
 
-if command -v podman > /dev/null; then
+if command -v docker > /dev/null; then
+  CONTAINER_CLI=$(command -v docker)
+  HEALTCHECK_PATH="{{.State.Health.Status}}"
+  PRIVILEGED_CLI=""
+  IS_PODMAN=false
+  if [[ "$(docker version | grep Podman)" == "" ]]; then
+    IS_DOCKER_RUNTIME=true
+  else
+    IS_DOCKER_RUNTIME=false
+  fi
+else
   CONTAINER_CLI=$(command -v podman)
   HEALTCHECK_PATH="{{.State.Healthcheck.Status}}"
+  IS_PODMAN=true
+  IS_DOCKER_RUNTIME=false
   # Only use sudo for podman
   if command -v sudo > /dev/null; then
     PRIVILEGED_CLI="sudo"
   else
     PRIVILEGED_CLI=""
   fi
-else
-  CONTAINER_CLI=$(command -v docker)
-  HEALTCHECK_PATH="{{.State.Health.Status}}"
-  PRIVILEGED_CLI=""
 fi
 
 mysql() {
@@ -712,16 +720,18 @@ EOF\""
 }
 
 disable_userland_proxy() {
-  if [[ "$HEALTCHECK_PATH" == "{{.State.Health.Status}}" ]]; then
-    if [[ ! -f /etc/docker/daemon.json ]]; then
-      sudo service docker stop
-      sudo bash -c "echo '{\"userland-proxy\": false}' > /etc/docker/daemon.json"
-      sudo service docker start
-    elif ! grep -q userland-proxy /etc/docker/daemon.json; then
-      export docker_daemon_json=$(</etc/docker/daemon.json)
-      sudo service docker stop
-      sudo bash -c 'echo "${docker_daemon_json/\}/,}{\"userland-proxy\": false}" > /etc/docker/daemon.json'
-      sudo service docker start
+  if [[ "$IS_DOCKER_RUNTIME" == "true" ]]; then
+    if [[ "$HEALTCHECK_PATH" == "{{.State.Health.Status}}" ]]; then
+      if [[ ! -f /etc/docker/daemon.json ]]; then
+        sudo service docker stop
+        sudo bash -c "echo '{\"userland-proxy\": false}' > /etc/docker/daemon.json"
+        sudo service docker start
+      elif ! grep -q userland-proxy /etc/docker/daemon.json; then
+        export docker_daemon_json=$(</etc/docker/daemon.json)
+        sudo service docker stop
+        sudo bash -c 'echo "${docker_daemon_json/\}/,}{\"userland-proxy\": false}" > /etc/docker/daemon.json'
+        sudo service docker start
+      fi
     fi
   fi
 }

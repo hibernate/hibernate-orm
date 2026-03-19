@@ -373,9 +373,8 @@ jobs:
       - build
       - otp
     if: |
-      always() 
-      && needs.build.result == 'success'
-      && (needs.otp.result == 'success' || needs.otp.result == 'skipped')
+      always() && !cancelled()
+      && needs.build.result != 'cancelled' && needs.otp.result != 'cancelled'
     runs-on: ubuntu-latest
 
     steps:

@@ -35,6 +35,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 
+import org.hibernate.dialect.lock.PessimisticEntityLockException;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -147,7 +148,12 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 							lte.getCause();
 						}
 						catch (PessimisticLockException pe) {
-							fail( "Find with immediate timeout should have thrown LockTimeoutException." );
+							// Per spec, the Hibernate LockTimeoutException is wrapped into a PessimisticLockException
+							// if the transaction was marked for rollback
+							if ( !entityManager.getTransaction().getRollbackOnly()
+								|| !(pe.getCause() instanceof org.hibernate.exception.LockTimeoutException) ) {
+								fail( "Find with immediate timeout should have thrown LockTimeoutException." );
+							}
 						}
 						catch (PersistenceException pe) {
 							log.info(
@@ -199,7 +205,12 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 							lte.getCause();
 						}
 						catch (PessimisticLockException pe) {
-							fail( "Find with immediate timeout should have thrown LockTimeoutException." );
+							// Per spec, the Hibernate LockTimeoutException is wrapped into a PessimisticLockException
+							// if the transaction was marked for rollback
+							if ( !entityManager.getTransaction().getRollbackOnly()
+								|| !(pe.getCause() instanceof org.hibernate.exception.LockTimeoutException) ) {
+								fail( "Find with immediate timeout should have thrown LockTimeoutException." );
+							}
 						}
 						catch (PersistenceException pe) {
 							log.info(
@@ -250,7 +261,12 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 							lte.getCause();
 						}
 						catch (PessimisticLockException pe) {
-							fail( "Find with immediate timeout should have thrown LockTimeoutException." );
+							// Per spec, the Hibernate LockTimeoutException is wrapped into a PessimisticLockException
+							// if the transaction was marked for rollback
+							if ( !entityManager.getTransaction().getRollbackOnly()
+								|| !(pe.getCause() instanceof org.hibernate.exception.LockTimeoutException) ) {
+								fail( "Find with immediate timeout should have thrown LockTimeoutException." );
+							}
 						}
 						catch (PersistenceException pe) {
 							log.info(
@@ -299,7 +315,12 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 							lte.getCause();
 						}
 						catch (PessimisticLockException pe) {
-							fail( "Find with immediate timeout should have thrown LockTimeoutException." );
+							// Per spec, the Hibernate LockTimeoutException is wrapped into a PessimisticLockException
+							// if the transaction was marked for rollback
+							if ( !entityManager.getTransaction().getRollbackOnly()
+								|| !(pe.getCause() instanceof org.hibernate.exception.LockTimeoutException) ) {
+								fail( "Find with immediate timeout should have thrown LockTimeoutException." );
+							}
 						}
 						catch (PersistenceException pe) {
 							log.info(
@@ -895,6 +916,17 @@ public class LockTest extends EntityManagerFactoryBasedFunctionalTest {
 								// success
 								log.info( "testContendedPessimisticWriteLockNoWait: (BG) got expected timeout exception" );
 								timedOut.set( true );
+							}
+							catch (PessimisticLockException pe) {
+								// Per spec, the Hibernate LockTimeoutException is wrapped into a PessimisticLockException
+								// if the transaction was marked for rollback
+								if ( _entityManager.getTransaction().getRollbackOnly()
+									&& pe.getCause() instanceof PessimisticEntityLockException cause
+									&& cause.getCause() instanceof org.hibernate.exception.LockTimeoutException) {
+									// success
+									log.info( "testContendedPessimisticWriteLockNoWait: (BG) got expected timeout exception" );
+									timedOut.set( true );
+								}
 							}
 							catch ( Throwable e ) {
 								log.info( "Expected LockTimeoutException but got unexpected exception", e );

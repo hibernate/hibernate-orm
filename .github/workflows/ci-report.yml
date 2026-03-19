@@ -95,10 +95,14 @@ jobs:
             if [ "${{ github.event.workflow_run.head_repository.owner.login }}" != "${{ github.event.workflow_run.repository.owner.login }}" ]; then
               BRANCH_NAME="$FORK_OWNER:$BRANCH_NAME"
             fi
-            TARGET_BRANCH=$(gh pr view "$BRANCH_NAME" --repo ${{ github.event.workflow_run.repository.full_name }} --json baseRefName -q .baseRefName)
+            GH_RESPONSE=$(gh pr view "$BRANCH_NAME" --repo ${{ github.event.workflow_run.repository.full_name }} --json number,baseRefName)
+            TARGET_BRANCH=$(echo $GH_RESPONSE | jq '.baseRefName')
+            PR_ID=$(echo $GH_RESPONSE | jq '.number')
 
             echo "::notice::PR found. Target branch is: $TARGET_BRANCH"
+            echo "::notice::          Pull Request number is: $PR_ID"
             echo "original_branch_ref=$TARGET_BRANCH" >> "$GITHUB_OUTPUT"
+            echo "pr_id=$PR_ID" >> "$GITHUB_OUTPUT"
           else
             echo "::notice::Triggering workflow was executed for a push event? Using the head_branch value."
             echo "original_branch_ref=${{ github.event.workflow_run.head_branch }}" >> "$GITHUB_OUTPUT"
@@ -126,8 +130,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           if [ "${{ github.event.workflow_run.event }}" == "pull_request" ]; then
-            PR_ID=$(gh pr view "$BRANCH_NAME" --repo ${{ github.event.workflow_run.repository.full_name }} --json number -q .number)
-            gh pr checkout $PR_ID
+            gh pr checkout ${{steps.determine_branch_ref.outputs.pr_id}}
           fi
 
           # so we aren't tempted to run a Gradle command!

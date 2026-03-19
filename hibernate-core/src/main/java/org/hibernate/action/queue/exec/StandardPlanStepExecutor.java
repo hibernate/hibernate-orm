@@ -10,23 +10,36 @@ import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import java.sql.SQLException;
+import java.util.function.Consumer;
 
 /**
  * @author Steve Ebersole
  */
-public class NonBatchingPlanStepExecutor extends AbstractStepPlanner {
+public class NonBatchingPlanStepExecutor extends AbstractStepPlanner implements ExecutionContext {
 	public NonBatchingPlanStepExecutor(SharedSessionContractImplementor session) {
 		super( session );
 	}
 
 	@Override
 	public void executePreparable(PreparableJdbcOperation preparable, PlannedOperation plannedOperation) {
+		// Delegate to BindPlan to drive execution
+		// The BindPlan will call back to executeRow() for each row it needs to execute
+		plannedOperation.getBindPlan().execute( this, plannedOperation, session );
+	}
+
+	@Override
+	public void executeRow(
+			PlannedOperation plannedOperation,
+			Consumer<JdbcValueBindings> binder,
+			OperationResultChecker resultChecker) {
+		final PreparableJdbcOperation preparable = (PreparableJdbcOperation) plannedOperation.getJdbcOperation();
+
 		try (var stmnt = session.getJdbcCoordinator()
 				.getStatementPreparer()
 				.prepareStatement( preparable.getSqlString() ) ) {
 			preparable.getExpectation().prepare( stmnt );
 			var valueBindings = new JdbcValueBindings( plannedOperation.getMutatingTableDescriptor(), preparable );
-			plannedOperation.getBindPlan().bindValues( valueBindings, plannedOperation, session );
+			binder.accept( valueBindings );
 			valueBindings.beforeStatement( stmnt, session );
 
 			final int affectedRowCount =
@@ -34,11 +47,8 @@ public class NonBatchingPlanStepExecutor extends AbstractStepPlanner {
 							.getResultSetReturn()
 							.executeUpdate( stmnt, preparable.getSqlString() );
 
-			if ( plannedOperation.getBindPlan().getOperationResultChecker() != null ) {
-				plannedOperation
-						.getBindPlan()
-						.getOperationResultChecker()
-						.checkResult( affectedRowCount, -1, preparable.getSqlString(),  session.getFactory() );
+			if ( resultChecker != null ) {
+				resultChecker.checkResult( affectedRowCount, -1, preparable.getSqlString(),  session.getFactory() );
 			}
 		}
 		catch (SQLException sqle) {

@@ -99,6 +99,7 @@ public final class Context {
 
 	// keep track of all classes for which model have been generated
 	private final Set<Metamodel> generatedModelClasses = new HashSet<>();
+	private final Set<String> generatedClassNames = new HashSet<>();
 
 	// keep track of which named queries have been checked
 	private final Set<String> checkedNamedQueries = new HashSet<>();
@@ -377,6 +378,7 @@ public final class Context {
 
 	void markGenerated(Metamodel metamodel) {
 		generatedModelClasses.add( metamodel );
+		generatedClassNames.add( ClassWriter.getFullyQualifiedClassName( metamodel ));
 	}
 
 	boolean isAlreadyGenerated(Metamodel metamodel) {
@@ -591,5 +593,9 @@ public final class Context {
 
 	public boolean isIndexing() {
 		return indexing;
+	}
+
+	public boolean isGeneratedClass(String qualifiedName) {
+		return generatedClassNames.contains( qualifiedName );
 	}
 }

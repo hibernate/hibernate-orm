@@ -58,7 +58,7 @@ class TemporalEntityPartitionedTest {
 				}
 		);
 		var instant = getInstant( scope );
-		Thread.sleep( 250 );
+		awaitOracleClockTick();
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity3 entity = session.find( TemporalEntity3.class, 1L );
@@ -72,6 +72,7 @@ class TemporalEntityPartitionedTest {
 					entity.children.get(0).friends.add( friend );
 				}
 		);
+		awaitOracleClockTick();
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity3 entity = session.find( TemporalEntity3.class, 1L );
@@ -139,7 +140,7 @@ class TemporalEntityPartitionedTest {
 			} );
 		}
 		var nextInstant = getInstant( scope );
-		Thread.sleep( 250 );
+		awaitOracleClockTick();
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity3 entity = session.find( TemporalEntity3.class, 1L );
@@ -148,6 +149,7 @@ class TemporalEntityPartitionedTest {
 					entity.children.get(0).friends.clear();
 				}
 		);
+		awaitOracleClockTick();
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity3 entity = session.find( TemporalEntity3.class, 1L );
@@ -179,6 +181,7 @@ class TemporalEntityPartitionedTest {
 					session.remove( entity );
 				}
 		);
+		awaitOracleClockTick();
 		scope.getSessionFactory().inTransaction(
 				session -> {
 					TemporalEntity3 entity = session.find( TemporalEntity3.class, 1L );
@@ -203,7 +206,7 @@ class TemporalEntityPartitionedTest {
 				}
 		);
 		var instant = getInstant( scope );
-		Thread.sleep( 250 );
+		awaitOracleClockTick();
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
 					TemporalEntity3 entity = session.get( TemporalEntity3.class, 2L );
@@ -211,6 +214,7 @@ class TemporalEntityPartitionedTest {
 					session.update( entity );
 				}
 		);
+		awaitOracleClockTick();
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
 					TemporalEntity3 entity = session.get( TemporalEntity3.class, 2L );
@@ -237,6 +241,7 @@ class TemporalEntityPartitionedTest {
 					session.delete( entity );
 				}
 		);
+		awaitOracleClockTick();
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
 					TemporalEntity3 entity = session.get( TemporalEntity3.class, 2L );
@@ -254,6 +259,13 @@ class TemporalEntityPartitionedTest {
 	private static Instant getInstant(SessionFactoryScope scope) {
 		return scope.getSessionFactory().fromSession(
 				s -> s.createSelectionQuery( "select instant", Instant.class ).getSingleResult() );
+	}
+
+	private static void awaitOracleClockTick() throws InterruptedException {
+		// Since the nanosecond resolution clock on the database might be slightly off compared to the JVM clock,
+		// wait some time after doing an insert/update to allow a following "as of period for system_time current_timestamp"
+		// query to actually see the changes
+		Thread.sleep( 100 );
 	}
 
 	@Temporal(rowStart = "effective_from", rowEnd = "effective_to")

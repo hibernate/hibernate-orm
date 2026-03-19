@@ -6,6 +6,7 @@ package org.hibernate.action.queue.bind;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.action.queue.cyclebreak.CycleBreakPatcher;
+import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.op.PlannedOperation;
@@ -100,7 +101,18 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 	}
 
 	@Override
-	public void bindValues(
+	public void execute(
+			ExecutionContext context,
+			PlannedOperation plannedOperation,
+			SharedSessionContractImplementor session) {
+		context.executeRow(
+				plannedOperation,
+				jdbcValueBindings -> bindValues( jdbcValueBindings, plannedOperation, session ),
+				this
+		);
+	}
+
+	private void bindValues(
 			JdbcValueBindings valueBindings,
 			PlannedOperation plannedOperation,
 			SharedSessionContractImplementor session) {

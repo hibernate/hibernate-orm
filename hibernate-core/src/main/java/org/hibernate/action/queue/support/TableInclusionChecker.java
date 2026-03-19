@@ -4,7 +4,6 @@
  */
 package org.hibernate.action.queue.support;
 
-import org.hibernate.Incubating;
 import org.hibernate.action.queue.meta.TableDescriptor;
 
 /**

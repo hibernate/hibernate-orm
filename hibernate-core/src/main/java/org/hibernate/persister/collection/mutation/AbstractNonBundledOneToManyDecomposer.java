@@ -51,8 +51,6 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 
 		final List<PlannedOperation> operations = new ArrayList<>();
 
-		final var indexBase = persister.baseIndex();
-
 		int entryCount = 0;
 		while ( entries.hasNext() ) {
 			final Object entry = entries.next();

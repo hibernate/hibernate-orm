@@ -5,6 +5,7 @@
 package org.hibernate.action.queue.bind;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -31,15 +32,24 @@ public interface BindPlan {
 		return null;
 	}
 
-	default GeneratedValuesCollector getGeneratedValuesCollector() {
-		return null;
-	}
-
-	void bindValues(
-			JdbcValueBindings valueBindings,
+	/**
+	 * Execute this bind plan using the provided execution context.
+	 * <p>
+	 * For standard (non-bundled) operations, this executes a single row.
+	 * For bundled operations, this may execute multiple rows.
+	 *
+	 * @param context the execution context providing batching and statement management
+	 * @param plannedOperation the operation being executed
+	 * @param session the session
+	 */
+	void execute(
+			ExecutionContext context,
 			PlannedOperation plannedOperation,
 			SharedSessionContractImplementor session);
 
+	default GeneratedValuesCollector getGeneratedValuesCollector() {
+		return null;
+	}
 
 	default OperationResultChecker getOperationResultChecker() {
 		return null;

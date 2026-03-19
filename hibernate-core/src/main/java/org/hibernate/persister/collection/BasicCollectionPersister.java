@@ -4,21 +4,13 @@
  */
 package org.hibernate.persister.collection;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
-import org.hibernate.action.queue.MutationKind;
-import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
-import org.hibernate.action.queue.mutation.ast.builder.GraphTableDeleteBuilderStandard;
-import org.hibernate.action.queue.mutation.ast.builder.GraphTableInsertBuilderStandard;
-import org.hibernate.action.queue.mutation.ast.builder.GraphTableUpdateBuilderStandard;
-import org.hibernate.action.queue.mutation.jdbc.JdbcOperation;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
@@ -30,19 +22,12 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.collection.mutation.CollectionJdbcOperations;
-import org.hibernate.persister.collection.mutation.CollectionJdbcOperations.DeleteRowPlan;
-import org.hibernate.persister.collection.mutation.CollectionJdbcOperations.InsertRowPlan;
-import org.hibernate.persister.collection.mutation.CollectionJdbcOperations.UpdateRowPlan;
+import org.hibernate.persister.collection.mutation.BasicCollectionDecomposer;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinator;
 import org.hibernate.persister.collection.mutation.OperationProducer;
-import org.hibernate.persister.collection.mutation.PostCollectionUpdateHandling;
 import org.hibernate.persister.collection.mutation.RemoveCoordinator;
 import org.hibernate.persister.collection.mutation.RowMutationOperations;
-import org.hibernate.persister.collection.mutation.SingleRowDeleteBindPlan;
-import org.hibernate.persister.collection.mutation.SingleRowInsertBindPlan;
-import org.hibernate.persister.collection.mutation.SingleRowUpdateBindPlan;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorStandard;
@@ -63,7 +48,6 @@ import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.type.EntityType;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -73,8 +57,6 @@ import static org.hibernate.internal.util.collections.ArrayHelper.isAnyTrue;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.persister.collection.mutation.RowMutationOperations.DEFAULT_RESTRICTOR;
 import static org.hibernate.persister.collection.mutation.RowMutationOperations.DEFAULT_VALUE_SETTER;
-import static org.hibernate.pretty.MessageHelper.collectionInfoString;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
  * A {@link CollectionPersister} for {@linkplain jakarta.persistence.ElementCollection
@@ -89,7 +71,7 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
 public class BasicCollectionPersister extends AbstractCollectionPersister {
 	private final RowMutationOperations rowMutationOperations;
 
-	private CollectionJdbcOperations jdbcOperations;
+	private BasicCollectionDecomposer decomposer;
 
 	private final InsertRowsCoordinator insertRowsCoordinator;
 	private final UpdateRowsCoordinator updateCoordinator;
@@ -122,11 +104,7 @@ final var stateManagement = collectionBinding.getStateManagement();
 		super.postInstantiate();
 
 		// Build JDBC operations after collectionTableDescriptor is initialized
-		jdbcOperations = buildJdbcOperations();
-	}
-
-	public CollectionJdbcOperations getJdbcOperations() {
-		return jdbcOperations;
+		decomposer = new BasicCollectionDecomposer( this, getFactory() );
 	}
 
 	public RowMutationOperations getRowMutationOperations() {
@@ -187,7 +165,7 @@ final var stateManagement = collectionBinding.getStateManagement();
 		// nothing to do
 	}
 
-	private boolean isPerformingUpdates() {
+	public boolean isPerformingUpdates() {
 		return !isInverse()
 			&& getCollectionSemantics().getCollectionClassification().isRowUpdatePossible()
 			&& isAnyTrue( elementColumnIsSettable );
@@ -839,61 +817,7 @@ final var stateManagement = collectionBinding.getStateManagement();
 			int ordinalBase,
 			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
-		return planRecreateOperation( action.getCollection(), action.getKey(), ordinalBase, session );
-	}
-
-	private @NonNull List<PlannedOperation> planRecreateOperation(
-			PersistentCollection<?> collection,
-			Object key,
-			int ordinalBase,
-			SharedSessionContractImplementor session) {
-		final InsertRowPlan insertRowPlan = jdbcOperations.getInsertRowPlan();
-		if ( insertRowPlan == null ) {
-			return List.of();
-		}
-
-		// Pre-insert callback once for the whole collection
-		collection.preInsert( this );
-
-		final var entries = collection.entries( this );
-		if ( !entries.hasNext() ) {
-			return List.of();
-		}
-
-		final List<PlannedOperation> operations = new ArrayList<>();
-
-		int entryCount = 0;
-		while ( entries.hasNext() ) {
-			final Object entry = entries.next();
-			boolean include = collection.includeInRecreate( entry, entryCount, collection, getAttributeMapping() );
-
-			if ( include ) {
-				// Create ONE PlannedOperation per row
-				final BindPlan bindPlan = new SingleRowInsertBindPlan(
-						this,
-						jdbcOperations.getInsertRowPlan().values(),
-						collection,
-						key,
-						entry,
-						entryCount
-				);
-
-				final PlannedOperation plannedOp = new PlannedOperation(
-						getCollectionTableDescriptor(),
-						MutationKind.INSERT,
-						jdbcOperations.getInsertRowPlan().jdbcOperation(),
-						bindPlan,
-						ordinalBase * 1_000 + entryCount,
-						"InsertRow[" + entryCount + "](" + getRolePath() + ")"
-				);
-
-				operations.add( plannedOp );
-			}
-
-			entryCount++;
-		}
-
-		return operations;
+		return decomposer.decomposeRecreate( action, ordinalBase, postExecCallbackRegistry, session );
 	}
 
 	@Override
@@ -902,192 +826,7 @@ final var stateManagement = collectionBinding.getStateManagement();
 			int ordinalBase,
 			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
-		action.preUpdate();
-
-		var collection = action.getCollection();
-		var key = action.getKey();
-		var attribute = getAttributeMapping();
-
-		final List<PlannedOperation> operations = new ArrayList<>();
-
-		if ( !collection.wasInitialized() ) {
-			// If there were queued operations, they would have
-			// been processed and cleared by now.
-			if ( !collection.isDirty() ) {
-				// The collection should still be dirty.
-				throw new AssertionFailure( "collection is not dirty" );
-			}
-			// Do nothing - we only need to notify the cache
-		}
-		else {
-			final boolean affectedByFilters = isAffectedByEnabledFilters( session );
-			final var eventMonitor = session.getEventMonitor();
-			final var event = eventMonitor.beginCollectionUpdateEvent();
-			boolean success = false;
-			try {
-				if ( !affectedByFilters && collection.empty() ) {
-					if ( !action.isEmptySnapshot() ) {
-						operations.addAll( planRemoveOperation( key, ordinalBase, session ) );
-					}
-					//TODO: else we really shouldn't have sent an update event to JFR
-				}
-				else if ( collection.needsRecreate( this ) ) {
-					if ( affectedByFilters ) {
-						throw new HibernateException( "cannot recreate collection while filter is enabled: "
-												+ collectionInfoString( this, collection, key, session ) );
-					}
-					if ( !action.isEmptySnapshot() ) {
-						operations.addAll( planRemoveOperation( key, ordinalBase, session ) );
-					}
-					operations.addAll( planRecreateOperation(  collection, key, ordinalBase, session ) );
-				}
-				else {
-					planDeleteRowOperations( collection, key, ordinalBase, session, operations::add );
-					planUpdateRowOperations( collection, key, ordinalBase, session, operations::add );
-					planInsertRowOperations( collection, key, ordinalBase, session, operations::add );
-				}
-				success = true;
-			}
-			finally {
-				eventMonitor.completeCollectionUpdateEvent( event, key, getRole(), success, session );
-			}
-		}
-
-		postExecCallbackRegistry.accept( new PostCollectionUpdateHandling(
-				this,
-				collection,
-				key,
-				action.getAffectedOwner(),
-				action.getAffectedOwnerId()
-		) );
-
-		return operations;
-	}
-
-	private void planDeleteRowOperations(
-			PersistentCollection<?> collection,
-			Object key,
-			int ordinalBase,
-			SharedSessionContractImplementor session,
-			Consumer<PlannedOperation> operationConsumer) {
-		var deleteRowPlan = jdbcOperations.getDeleteRowPlan();
-		final var deletes = collection.getDeletes( this, !hasPhysicalIndexColumn() );
-		if ( deleteRowPlan == null || !deletes.hasNext() ) {
-			MODEL_MUTATION_LOGGER.noRowsToDelete();
-			return;
-		}
-
-		int deletionCount = 0;
-
-		while ( deletes.hasNext() ) {
-			final Object removal = deletes.next();
-
-			final BindPlan bindPlan = new SingleRowDeleteBindPlan(
-					collection,
-					key,
-					removal,
-					deleteRowPlan.restrictions()
-			);
-
-			operationConsumer.accept( new PlannedOperation(
-					getCollectionTableDescriptor(),
-					MutationKind.DELETE,
-					deleteRowPlan.jdbcOperation(),
-					bindPlan,
-					ordinalBase * 1_000 + deletionCount,
-					"DeleteRow[" + deletionCount + "](" + getRolePath() + ")"
-			) );
-
-			deletionCount++;
-		}
-	}
-
-	private void planUpdateRowOperations(
-			PersistentCollection<?> collection,
-			Object key,
-			int ordinalBase,
-			SharedSessionContractImplementor session,
-			Consumer<PlannedOperation> operationConsumer) {
-		var updateRowPlan = jdbcOperations.getUpdateRowPlan();
-		final var entries = collection.entries( this );
-
-		if ( updateRowPlan == null || !entries.hasNext() ) {
-			// EARLY EXIT!!
-			return;
-		}
-
-		int entryCount = 0;
-		while ( entries.hasNext() ) {
-			final Object entry = entries.next();
-
-			if ( collection.needsUpdating( entry, entryCount, getAttributeMapping() ) ) {
-				// Create ONE PlannedOperation per row update
-				final BindPlan bindPlan = new SingleRowUpdateBindPlan(
-						collection,
-						key,
-						entry,
-						entryCount,
-						updateRowPlan.values(),
-						updateRowPlan.restrictions()
-				);
-
-				operationConsumer.accept( new PlannedOperation(
-						getCollectionTableDescriptor(),
-						MutationKind.UPDATE,
-						updateRowPlan.jdbcOperation(),
-						bindPlan,
-						ordinalBase * 1_000 + entryCount,
-						"UpdateRow[" + entryCount + "](" + getRolePath() + ")"
-				) );
-			}
-
-			entryCount++;
-		}
-	}
-
-	private void planInsertRowOperations(
-			PersistentCollection<?> collection,
-			Object key,
-			int ordinalBase,
-			SharedSessionContractImplementor session,
-			Consumer<PlannedOperation> operationConsumer) {
-		// Pre-insert callback once for the whole collection
-		collection.preInsert( this );
-
-		var insertRowPlan = jdbcOperations.getInsertRowPlan();
-		final var entries = collection.entries( this );
-
-		if ( insertRowPlan == null || !entries.hasNext() ) {
-			// EARLY EXIT!!
-			return;
-		}
-
-		int entryCount = 0;
-		while ( entries.hasNext() ) {
-			final Object entry = entries.next();
-
-			if ( collection.includeInInsert( entry, entryCount, collection, getAttributeMapping() ) ) {
-				final BindPlan bindPlan = new SingleRowInsertBindPlan(
-						this,
-						insertRowPlan.values(),
-						collection,
-						key,
-						entry,
-						entryCount
-				);
-
-				operationConsumer.accept( new PlannedOperation(
-						getCollectionTableDescriptor(),
-						MutationKind.INSERT,
-						insertRowPlan.jdbcOperation(),
-						bindPlan,
-						ordinalBase * 1_000 + entryCount,
-						"InsertRow[" + entryCount + "](" + getRolePath() + ")"
-				) );
-			}
-
-			entryCount++;
-		}
+		return decomposer.decomposeUpdate( action, ordinalBase, postExecCallbackRegistry, session );
 	}
 
 	@Override
@@ -1096,372 +835,6 @@ final var stateManagement = collectionBinding.getStateManagement();
 			int ordinalBase,
 			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
-		return planRemoveOperation( action.getKey(), ordinalBase,  session );
-	}
-
-	private List<PlannedOperation> planRemoveOperation(Object key, int ordinalBase, SharedSessionContractImplementor session) {
-		final var jdbcOperation = jdbcOperations.getRemoveOperation();
-		if ( jdbcOperation == null ) {
-			return List.of();
-		}
-
-		final PlannedOperation plannedOp = new PlannedOperation(
-				getCollectionTableDescriptor(),
-				MutationKind.DELETE,
-				jdbcOperation,
-				new RemoveBindPlan( key, this ),
-				ordinalBase * 1_000,
-				"RemoveAllRows(" + getRolePath() + ")"
-		);
-
-		return List.of( plannedOp );
-	}
-
-	private static class RemoveBindPlan implements BindPlan {
-		private final Object key;
-		private final BasicCollectionPersister mutationTarget;
-
-		public RemoveBindPlan(Object key, BasicCollectionPersister mutationTarget) {
-			this.key = key;
-			this.mutationTarget = mutationTarget;
-		}
-
-		@Override
-		public void bindValues(
-				org.hibernate.action.queue.bind.JdbcValueBindings valueBindings,
-				PlannedOperation plannedOperation,
-				SharedSessionContractImplementor session) {
-			var fkDescriptor = mutationTarget.getAttributeMapping().getKeyDescriptor();
-			fkDescriptor.getKeyPart().decompose(
-					key,
-					(valueIndex, value, jdbcValueMapping) -> {
-						valueBindings.bindValue(
-								value,
-								jdbcValueMapping.getSelectableName(),
-								ParameterUsage.RESTRICT
-						);
-					},
-					session
-			);
-		}
-	}
-
-
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Decomposer support
-
-	private CollectionJdbcOperations buildJdbcOperations() {
-		final InsertRowPlan insertRowPlan = buildInsertRowPlan();
-
-		final UpdateRowPlan updateRowPlan = buildUpdateRowPlan();
-
-		final DeleteRowPlan deleteRowPlan = buildDeleteRowPlan();
-
-		return new CollectionJdbcOperations(
-				this,
-				insertRowPlan,
-				updateRowPlan,
-				deleteRowPlan,
-				buildRemoveOperation()
-		);
-	}
-
-	private InsertRowPlan buildInsertRowPlan() {
-		if ( isInverse() || !isRowInsertEnabled() ) {
-			return null;
-		}
-
-		// Ignore custom SQL for now...
-		var builder = new GraphTableInsertBuilderStandard(
-				this,
-				getCollectionTableDescriptor(),
-				getFactory()
-		);
-
-		applyInsertDetails( builder );
-
-		return new InsertRowPlan(
-				builder.buildMutation().createMutationOperation(),
-				this::bindInsertRowValues
-		);
-	}
-
-	private void applyInsertDetails(GraphTableInsertBuilderStandard insertBuilder) {
-		final var attributeMapping = getAttributeMapping();
-		attributeMapping.getKeyDescriptor().getKeyPart().forEachInsertable( (i, columnMapping) -> {
-			insertBuilder.addValueColumn( columnMapping );
-		});
-
-		final var identifierDescriptor = attributeMapping.getIdentifierDescriptor();
-		final var indexDescriptor = attributeMapping.getIndexDescriptor();
-		if ( identifierDescriptor != null ) {
-			identifierDescriptor.forEachInsertable( (i, columnMapping) -> {
-				insertBuilder.addValueColumn( columnMapping );
-			} );
-		}
-		else if ( indexDescriptor != null ) {
-			indexDescriptor.forEachInsertable( (i, columnMapping) -> {
-				insertBuilder.addValueColumn( columnMapping );
-			} );
-		}
-
-		// Add element columns
-		attributeMapping.getElementDescriptor().forEachInsertable( (i, columnMapping) -> {
-			insertBuilder.addValueColumn( columnMapping );
-		} );
-
-		final var softDeleteMapping = attributeMapping.getSoftDeleteMapping();
-		if ( softDeleteMapping != null ) {
-			final var columnReference = new ColumnReference( insertBuilder.getTableReference(), softDeleteMapping );
-			insertBuilder.addValueColumn( softDeleteMapping.createNonDeletedValueBinding( columnReference ) );
-		}
-	}
-
-	private void bindInsertRowValues(
-			PersistentCollection<?> collection,
-			Object key,
-			Object rowValue,
-			int rowPosition,
-			SharedSessionContractImplementor session,
-			org.hibernate.action.queue.bind.JdbcValueBindings jdbcValueBindings) {
-		if ( key == null ) {
-			throw new IllegalArgumentException( "null key for collection: " + getNavigableRole().getFullPath() );
-		}
-
-		final var attributeMapping = getAttributeMapping();
-		attributeMapping.getKeyDescriptor().getKeyPart().decompose(
-				key,
-				jdbcValueBindings::bindAssignment,
-				session
-		);
-
-		final var identifierDescriptor = attributeMapping.getIdentifierDescriptor();
-		if ( identifierDescriptor != null ) {
-			identifierDescriptor.decompose(
-					collection.getIdentifier( rowValue, rowPosition ),
-					jdbcValueBindings::bindAssignment,
-					session
-			);
-		}
-		else {
-			final var indexDescriptor = attributeMapping.getIndexDescriptor();
-			if ( indexDescriptor != null ) {
-				indexDescriptor.decompose(
-						incrementIndexByBase( collection.getIndex( rowValue, rowPosition, this ) ),
-						jdbcValueBindings::bindAssignment,
-						session
-				);
-			}
-		}
-
-		attributeMapping.getElementDescriptor().decompose(
-				collection.getElement( rowValue ),
-				jdbcValueBindings::bindAssignment,
-				session
-		);
-	}
-
-	private UpdateRowPlan buildUpdateRowPlan() {
-		if ( !isPerformingUpdates() ) {
-			return null;
-		}
-
-		var tableDescriptor = getCollectionTableDescriptor();
-		var attribute = getTargetPart();
-
-		var builder = new GraphTableUpdateBuilderStandard(
-				this,
-				tableDescriptor,
-				sqlWhereString,
-				getFactory()
-		);
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// SET clause: element columns (and possibly index columns for lists)
-
-		final var indexDescriptor = attribute.getIndexDescriptor();
-		if ( indexDescriptor != null ) {
-			indexDescriptor.forEachUpdatable(
-				(selectionIndex, jdbcMapping) -> {
-					builder.addValueColumn( jdbcMapping );
-				}
-			);
-		}
-
-		attribute.getElementDescriptor().forEachUpdatable(
-			(selectionIndex, jdbcMapping) -> {
-				builder.addValueColumn( jdbcMapping );
-			}
-		);
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// WHERE clause: key columns (restrict by owner FK)
-
-		attribute.getKeyDescriptor().getKeyPart().forEachColumn(
-			(selectionIndex, jdbcMapping) -> {
-				builder.addKeyRestriction( jdbcMapping );
-			}
-		);
-
-		// todo (ActionQueue2) : not collection-identifier?
-
-		return new UpdateRowPlan(
-				builder.buildMutation().createMutationOperation(),
-				this::bindUpdateRowValues,
-				this::bindUpdateRowRestrictions
-		);
-	}
-
-	private void bindUpdateRowValues(
-			PersistentCollection<?> collection,
-			Object key,
-			Object rowValue,
-			int rowPosition,
-			SharedSessionContractImplementor session,
-			org.hibernate.action.queue.bind.JdbcValueBindings jdbcValueBindings) {
-		if ( key == null ) {
-			throw new IllegalArgumentException( "null key for collection: " + getNavigableRole().getFullPath() );
-		}
-
-		var attribute = getAttributeMapping();
-		var indexDescriptor = attribute.getIndexDescriptor();
-		var elementDescriptor = attribute.getElementDescriptor();
-
-		if ( indexDescriptor != null ) {
-			indexDescriptor.decompose(
-					collection.getIndex( rowValue, rowPosition, this ),
-					jdbcValueBindings::bindAssignment,
-					session
-			);
-		}
-
-		elementDescriptor.decompose(
-				rowValue,
-				jdbcValueBindings::bindAssignment,
-				session
-		);
-
-	}
-
-	private void bindUpdateRowRestrictions(
-			PersistentCollection<?> collection,
-			Object key,
-			Object rowValue,
-			int rowPosition,
-			SharedSessionContractImplementor session,
-			org.hibernate.action.queue.bind.JdbcValueBindings jdbcValueBindings) {
-		if ( key == null ) {
-			throw new IllegalArgumentException( "null key for collection: " + getNavigableRole().getFullPath() );
-		}
-
-		final var attribute = getAttributeMapping();
-
-		attribute.getKeyDescriptor().getKeyPart().decompose(
-				key,
-				jdbcValueBindings::bindRestriction,
-				session
-		);
-	}
-
-	private DeleteRowPlan buildDeleteRowPlan() {
-		if ( isInverse() || !isRowDeleteEnabled() ) {
-			return null;
-		}
-
-		var tableDescriptor = getCollectionTableDescriptor();
-		var attribute = getTargetPart();
-
-		var builder = new GraphTableDeleteBuilderStandard(
-				this,
-				tableDescriptor,
-				sqlWhereString,
-				getFactory()
-		);
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// WHERE clause: restrict by
-		// 		- key columns (restrict by owner FK)
-		//		-  element/index
-
-		attribute.getKeyDescriptor().getKeyPart().forEachSelectable( (index, jdbcMapping) -> {
-			builder.addKeyRestriction( jdbcMapping );
-		} );
-
-		// For row-based deletion, also restrict by element/index
-		// This differentiates deleteRows (specific rows) from remove (entire collection)
-		final var indexDescriptor = attribute.getIndexDescriptor();
-		if ( indexDescriptor != null ) {
-			// For indexed collections (lists, maps), restrict by index
-			indexDescriptor.forEachSelectable( (index, jdbcMapping) -> {
-				builder.addKeyRestriction( jdbcMapping );
-			} );
-		}
-		else {
-			// For non-indexed collections (sets, bags), restrict by element
-			attribute.getElementDescriptor().forEachSelectable((index, jdbcMapping) -> {
-				builder.addKeyRestriction( jdbcMapping );
-			} );
-		}
-
-		return new DeleteRowPlan(
-				builder.buildMutation().createMutationOperation(),
-				this::bindDeleteRestrictions
-		);
-	}
-
-	private void bindDeleteRestrictions(
-			PersistentCollection<?> collection,
-			Object key,
-			Object rowValue,
-			int rowPosition,
-			SharedSessionContractImplementor session,
-			org.hibernate.action.queue.bind.JdbcValueBindings jdbcValueBindings) {
-		var attribute = getAttributeMapping();
-
-		attribute.getKeyDescriptor().getKeyPart().decompose(
-				key,
-				jdbcValueBindings::bindRestriction,
-				session
-		);
-
-		// For row-based deletion, also restrict by element/index
-		// This differentiates deleteRows (specific rows) from remove (entire collection)
-		final var indexDescriptor = attribute.getIndexDescriptor();
-		if ( indexDescriptor != null ) {
-			// For indexed collections (lists, maps), restrict by index
-			indexDescriptor.decompose(
-					collection.getIndex( rowValue, rowPosition, this ),
-					jdbcValueBindings::bindRestriction,
-					session
-			);
-		}
-		else {
-			// For non-indexed collections (sets, bags), restrict by element
-			attribute.getElementDescriptor().decompose(
-					rowValue,
-					jdbcValueBindings::bindRestriction,
-					session
-			);
-		}
-	}
-
-	private JdbcOperation buildRemoveOperation() {
-		var tableDescriptor = getCollectionTableDescriptor();
-		var attribute = getTargetPart();
-
-		var builder = new GraphTableDeleteBuilderStandard(
-				this,
-				tableDescriptor,
-				sqlWhereString,
-				getFactory()
-		);
-
-		attribute.getKeyDescriptor().getKeyPart().forEachSelectable( (index, jdbcMapping) -> {
-			builder.addKeyRestriction( jdbcMapping );
-		} );
-
-		return builder.buildMutation().createMutationOperation();
+		return decomposer.decomposeRemove( action, ordinalBase, postExecCallbackRegistry, session );
 	}
 }

@@ -16,7 +16,7 @@ public class PlanStepExecutorFactory {
 			return new BatchingPlanStepExecutor( configuredJdbcBatchSize, session );
 		}
 		else {
-			return new NonBatchingPlanStepExecutor( session );
+			return new StandardPlanStepExecutor( session );
 		}
 	}
 }

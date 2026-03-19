@@ -6,14 +6,19 @@ package org.hibernate.persister.collection.mutation;
 
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.bind.JdbcValueBindings;
+import org.hibernate.action.queue.exec.ExecutionContext;
+import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+
+import java.sql.SQLException;
 
 /// Bind plan for a single collection row update.
 ///
 /// @author Steve Ebersole
-public class SingleRowUpdateBindPlan implements BindPlan {
+public class SingleRowUpdateBindPlan implements BindPlan, OperationResultChecker {
 	private final PersistentCollection<?> collection;
 	private final Object key;
 	private final Object entry;
@@ -37,12 +42,30 @@ public class SingleRowUpdateBindPlan implements BindPlan {
 	}
 
 	@Override
-	public void bindValues(
+	public void execute(ExecutionContext context, PlannedOperation plannedOperation, SharedSessionContractImplementor session) {
+		context.executeRow(
+				plannedOperation,
+				jdbcValueBindings -> bindValues( jdbcValueBindings, plannedOperation, session ),
+				this
+		);
+	}
+
+	private void bindValues(
 			JdbcValueBindings valueBindings,
 			PlannedOperation plannedOperation,
 			SharedSessionContractImplementor session) {
 		updateRowValues.applyValues( collection, key, entry, entryIndex, session, valueBindings );
 		updateRowRestrictions.applyRestrictions( collection, key, entry, entryIndex, session, valueBindings );
+	}
+
+	@Override
+	public boolean checkResult(
+			int affectedRowCount,
+			int batchPosition,
+			String sqlString,
+			SessionFactoryImplementor sessionFactory) throws SQLException {
+		// something we should check here?
+		return true;
 	}
 
 	@Override

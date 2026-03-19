@@ -4,9 +4,6 @@
  */
 package org.hibernate.persister.collection.mutation;
 
-import org.hibernate.action.queue.bind.BindPlan;
-import org.hibernate.action.queue.bind.JdbcValueBindings;
-import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
@@ -18,7 +15,6 @@ import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
-
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
@@ -136,50 +132,5 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 		final var tableReference = new MutatingTableReference( tableMapping );
 		return singleOperation( MutationType.DELETE, mutationTarget,
 				operationProducer.createOperation( tableReference ) );
-	}
-
-//	@Override
-//	public List<PlannedOperation> decomposeRemove(
-//			Object key,
-//			int ordinalBase,
-//			SharedSessionContractImplementor session) {
-//		final var jdbcOperation = collectionJdbcOperations.getRemoveOperation();
-//		if ( jdbcOperation == null ) {
-//			return List.of();
-//		}
-//
-//		final var tableDescriptor = mutationTarget.getCollectionTableDescriptor();
-//
-//		final BindPlan bindPlan = new RemoveBindPlan( key, mutationTarget );
-//
-//		final PlannedOperation plannedOp = new PlannedOperation(
-//				tableDescriptor,
-//				MutationKind.DELETE,
-//				jdbcOperation,
-//				bindPlan,
-//				ordinalBase * 1_000,
-//				"RemoveCoordinator(" + mutationTarget.getRolePath() + ")"
-//		);
-//
-//		return List.of( plannedOp );
-//	}
-
-	private static class RemoveBindPlan implements BindPlan {
-		private final Object key;
-		private final CollectionMutationTarget mutationTarget;
-
-		public RemoveBindPlan(Object key, CollectionMutationTarget mutationTarget) {
-			this.key = key;
-			this.mutationTarget = mutationTarget;
-		}
-
-		@Override
-		public void bindValues(
-				JdbcValueBindings valueBindings,
-				PlannedOperation plannedOperation,
-				SharedSessionContractImplementor session) {
-			// TODO: Implement proper binding for collection remove in graph mode
-			// For now, collections use legacy execution path which handles binding differently
-		}
 	}
 }

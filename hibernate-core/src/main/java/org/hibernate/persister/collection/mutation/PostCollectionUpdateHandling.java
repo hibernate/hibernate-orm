@@ -30,6 +30,7 @@ public class PostCollectionUpdateHandling implements PostExecutionCallback {
 	private final CollectionPersister persister;
 	private final PersistentCollection<?> collection;
 	private final Object key;
+	private final Object cacheKey;
 
 	private final Object affectedOwner;
 	private final Object affectedOwnerId;
@@ -38,11 +39,13 @@ public class PostCollectionUpdateHandling implements PostExecutionCallback {
 			CollectionPersister persister,
 			PersistentCollection<?> collection,
 			Object key,
+			Object cacheKey,
 			Object affectedOwner,
 			Object affectedOwnerId) {
 		this.persister = persister;
 		this.collection = collection;
 		this.key = key;
+		this.cacheKey = cacheKey;
 		this.affectedOwner = affectedOwner;
 		this.affectedOwnerId = affectedOwnerId;
 	}
@@ -58,13 +61,8 @@ public class PostCollectionUpdateHandling implements PostExecutionCallback {
 
 		// Evict from cache
 		if ( persister.hasCache() ) {
+			assert cacheKey != null;
 			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
-			final Object cacheKey = cache.generateCacheKey(
-					key,
-					persister,
-					session.getFactory(),
-					session.getTenantIdentifier()
-			);
 			cache.remove(session, cacheKey);
 		}
 

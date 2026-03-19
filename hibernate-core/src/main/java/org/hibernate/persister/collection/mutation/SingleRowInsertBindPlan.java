@@ -6,15 +6,20 @@ package org.hibernate.persister.collection.mutation;
 
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.bind.JdbcValueBindings;
+import org.hibernate.action.queue.exec.ExecutionContext;
+import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
+
+import java.sql.SQLException;
 
 /// Bind plan for a single collection row insert.
 ///
 /// @author Steve Ebersole
-public class SingleRowInsertBindPlan implements BindPlan {
+public class SingleRowInsertBindPlan implements BindPlan, OperationResultChecker {
 	private final CollectionPersister persister;
 	private final CollectionJdbcOperations.Values values;
 
@@ -39,7 +44,18 @@ public class SingleRowInsertBindPlan implements BindPlan {
 	}
 
 	@Override
-	public void bindValues(
+	public void execute(
+			ExecutionContext context,
+			PlannedOperation plannedOperation,
+			SharedSessionContractImplementor session) {
+		context.executeRow(
+				plannedOperation,
+				jdbcValueBindings -> bindValues( jdbcValueBindings, plannedOperation, session ),
+				this
+		);
+	}
+
+	private void bindValues(
 			JdbcValueBindings jdbcValueBindings,
 			PlannedOperation plannedOperation,
 			SharedSessionContractImplementor session) {
@@ -48,5 +64,15 @@ public class SingleRowInsertBindPlan implements BindPlan {
 		}
 
 		values.applyValues( collection, key, entry, entryIndex, session, jdbcValueBindings );
+	}
+
+	@Override
+	public boolean checkResult(
+			int affectedRowCount,
+			int batchPosition,
+			String sqlString,
+			SessionFactoryImplementor sessionFactory) throws SQLException {
+		// something we should check here?
+		return true;
 	}
 }

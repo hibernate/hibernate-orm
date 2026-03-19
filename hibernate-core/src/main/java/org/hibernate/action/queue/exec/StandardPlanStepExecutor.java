@@ -15,8 +15,8 @@ import java.util.function.Consumer;
 /**
  * @author Steve Ebersole
  */
-public class NonBatchingPlanStepExecutor extends AbstractStepPlanner implements ExecutionContext {
-	public NonBatchingPlanStepExecutor(SharedSessionContractImplementor session) {
+public class StandardPlanStepExecutor extends AbstractStepPlanner implements ExecutionContext {
+	public StandardPlanStepExecutor(SharedSessionContractImplementor session) {
 		super( session );
 	}
 
@@ -37,7 +37,6 @@ public class NonBatchingPlanStepExecutor extends AbstractStepPlanner implements 
 		try (var stmnt = session.getJdbcCoordinator()
 				.getStatementPreparer()
 				.prepareStatement( preparable.getSqlString() ) ) {
-			preparable.getExpectation().prepare( stmnt );
 			var valueBindings = new JdbcValueBindings( plannedOperation.getMutatingTableDescriptor(), preparable );
 			binder.accept( valueBindings );
 			valueBindings.beforeStatement( stmnt, session );

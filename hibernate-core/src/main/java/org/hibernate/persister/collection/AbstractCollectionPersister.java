@@ -542,6 +542,10 @@ public abstract class AbstractCollectionPersister
 				);
 	}
 
+	public String getSqlWhereString() {
+		return sqlWhereString;
+	}
+
 	private static int batchSize(Collection collection, SessionFactoryOptions options) {
 		final int batchSize = collection.getBatchSize();
 		return batchSize >= 0
@@ -934,7 +938,7 @@ public abstract class AbstractCollectionPersister
 		return elementClass;
 	}
 
-	protected Object incrementIndexByBase(Object index) {
+	public Object incrementIndexByBase(Object index) {
 		final int baseIndex = attributeMapping.getIndexMetadata().getListIndexBase();
 		return baseIndex > 0 ? baseIndex + (Integer) index : index;
 	}

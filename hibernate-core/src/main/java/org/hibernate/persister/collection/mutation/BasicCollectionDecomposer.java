@@ -21,7 +21,6 @@ import org.hibernate.action.queue.mutation.jdbc.JdbcOperation;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -49,13 +48,11 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 
 	public BasicCollectionDecomposer(
 			BasicCollectionPersister persister,
-			CollectionTableDescriptor tableDescriptor,
 			SessionFactoryImplementor factory) {
 		assert persister != null;
-		assert tableDescriptor != null;
 
 		this.persister = persister;
-		this.tableDescriptor = tableDescriptor;
+		this.tableDescriptor = persister.getCollectionTableDescriptor();
 
 		var configurationService = factory.getServiceRegistry().requireService( ConfigurationService.class );
 		shouldBundleCollectionOperations = configurationService.getSetting(
@@ -541,41 +538,6 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		return List.of( plannedOp );
 	}
 
-	private static class RemoveBindPlan implements BindPlan {
-		private final Object key;
-		private final BasicCollectionPersister mutationTarget;
-
-		public RemoveBindPlan(Object key, BasicCollectionPersister mutationTarget) {
-			this.key = key;
-			this.mutationTarget = mutationTarget;
-		}
-
-		@Override
-		public void execute(
-				org.hibernate.action.queue.exec.ExecutionContext context,
-				PlannedOperation plannedOperation,
-				SharedSessionContractImplementor session) {
-			context.executeRow(
-					plannedOperation,
-					valueBindings -> {
-						var fkDescriptor = mutationTarget.getAttributeMapping().getKeyDescriptor();
-						fkDescriptor.getKeyPart().decompose(
-								key,
-								(valueIndex, value, jdbcValueMapping) -> {
-									valueBindings.bindValue(
-											value,
-											jdbcValueMapping.getSelectableName(),
-											ParameterUsage.RESTRICT
-									);
-								},
-								session
-						);
-					},
-					null
-			);
-		}
-	}
-
 
 
 
@@ -796,7 +758,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 	}
 
 	private CollectionJdbcOperations.DeleteRowPlan buildDeleteRowPlan(SessionFactoryImplementor factory) {
-		if ( persister.isInverse() || !persister.isRowDeleteEnabled() ) {
+		if ( persister.needsRemove() ) {
 			return null;
 		}
 

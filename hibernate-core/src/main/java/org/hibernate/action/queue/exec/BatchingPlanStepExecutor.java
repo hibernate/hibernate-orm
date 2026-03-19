@@ -13,11 +13,12 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.function.Consumer;
 
 /**
  * @author Steve Ebersole
  */
-public class BatchingPlanStepExecutor extends AbstractStepPlanner {
+public class BatchingPlanStepExecutor extends AbstractStepPlanner implements ExecutionContext {
 	private final int batchSize;
 
 	private StatementShapeKey batchKey;
@@ -35,6 +36,17 @@ public class BatchingPlanStepExecutor extends AbstractStepPlanner {
 
 	@Override
 	protected void executePreparable(PreparableJdbcOperation preparable, PlannedOperation plannedOperation) {
+		plannedOperation.getBindPlan().execute( this, plannedOperation, session );
+	}
+
+	@Override
+	public void executeRow(
+			PlannedOperation plannedOperation,
+			Consumer<JdbcValueBindings> binder,
+			OperationResultChecker resultChecker) {
+		assert plannedOperation.getJdbcOperation() instanceof PreparableJdbcOperation;
+
+		var preparable = (PreparableJdbcOperation) plannedOperation.getJdbcOperation();
 		final StatementShapeKey operationShapeKey = plannedOperation.getShapeKey();
 		if ( batchKey == null ) {
 			newBatch( operationShapeKey, preparable );
@@ -44,7 +56,7 @@ public class BatchingPlanStepExecutor extends AbstractStepPlanner {
 			newBatch( operationShapeKey, preparable );
 		}
 
-		applyToBatch( preparable, plannedOperation );
+		applyToBatch( preparable, plannedOperation, binder );
 	}
 
 	private void newBatch(StatementShapeKey operationShapeKey, PreparableJdbcOperation preparable) {
@@ -55,24 +67,18 @@ public class BatchingPlanStepExecutor extends AbstractStepPlanner {
 				.getStatementPreparer()
 				.prepareStatement( batchSql );
 		resultCheckers = new OperationResultChecker[batchSize];
-
-		try {
-			preparable.getExpectation().prepare( batchStatement );
-		}
-		catch (SQLException e) {
-			throw session.getJdbcServices()
-					.getSqlExceptionHelper()
-					.convert( e, "Error preparing result expectation", batchSql );
-		}
 	}
 
-	private void applyToBatch(PreparableJdbcOperation preparable, PlannedOperation plannedOperation) {
+	private void applyToBatch(
+			PreparableJdbcOperation preparable,
+			PlannedOperation plannedOperation,
+			Consumer<JdbcValueBindings> binder) {
 		if ( currentBatchIndex > 0 ) {
 			session.getJdbcServices().getSqlStatementLogger().logStatement( preparable.getSqlString() );
 		}
 
 		var valueBindings = new JdbcValueBindings( plannedOperation.getMutatingTableDescriptor(), preparable );
-		plannedOperation.getBindPlan().bindValues( valueBindings, plannedOperation, session );
+		binder.accept( valueBindings );
 		valueBindings.beforeStatement( batchStatement, session );
 
 		try {

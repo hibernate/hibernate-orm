@@ -6,8 +6,10 @@ package org.hibernate.action.queue.cyclebreak;
 
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.bind.JdbcValueBindings;
+import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -28,7 +30,18 @@ public class FixupBindPlan implements BindPlan {
 	}
 
 	@Override
-	public void bindValues(
+	public void execute(
+			ExecutionContext context,
+			PlannedOperation plannedOperation,
+			SharedSessionContractImplementor session) {
+		context.executeRow(
+				plannedOperation,
+				jdbcValueBindings -> bindValues( jdbcValueBindings, plannedOperation, session ),
+				this::noopCheck
+		);
+	}
+
+	private void bindValues(
 			JdbcValueBindings valueBindings,
 			PlannedOperation plannedOperation,
 			SharedSessionContractImplementor session) {
@@ -54,5 +67,10 @@ public class FixupBindPlan implements BindPlan {
 				},
 				session
 		);
+	}
+
+	private boolean noopCheck(int affectedRowCount, int batchPosition, String sqlString, SessionFactoryImplementor f) {
+		// technically we could make sure 1 row was affected...
+		return true;
 	}
 }

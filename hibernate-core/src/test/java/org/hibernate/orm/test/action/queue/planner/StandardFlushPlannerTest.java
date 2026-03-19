@@ -8,7 +8,7 @@ import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.PlanningOptions;
 import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.bind.BindPlan;
-import org.hibernate.action.queue.bind.JdbcValueBindings;
+import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.graph.Graph;
 import org.hibernate.action.queue.graph.GraphEdge;
 import org.hibernate.action.queue.graph.GraphTestUtils;
@@ -606,10 +606,7 @@ public class StandardFlushPlannerTest {
 
 	private static class MockBindPlan implements BindPlan {
 		@Override
-		public void bindValues(
-				JdbcValueBindings valueBindings,
-				PlannedOperation plannedOperation,
-				SharedSessionContractImplementor session) {
+		public void execute(ExecutionContext context, PlannedOperation plannedOperation, SharedSessionContractImplementor session) {
 			// no-op for testing
 		}
 	}

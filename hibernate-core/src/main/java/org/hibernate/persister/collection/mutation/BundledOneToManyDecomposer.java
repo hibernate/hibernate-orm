@@ -199,9 +199,9 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 				persister,
 				collection,
 				key,
+				cacheKey,
 				action.getAffectedOwner(),
-				action.getAffectedOwnerId(),
-				cacheKey
+				action.getAffectedOwnerId()
 		) );
 
 		return operations;

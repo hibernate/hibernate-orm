@@ -1,18 +1,26 @@
 #! /bin/bash
 
-if command -v podman > /dev/null; then
+if command -v docker > /dev/null; then
+  CONTAINER_CLI=$(command -v docker)
+  HEALTCHECK_PATH="{{.State.Health.Status}}"
+  PRIVILEGED_CLI=""
+  IS_PODMAN=false
+  if [[ "$(docker version | grep Podman)" == "" ]]; then
+    IS_DOCKER_RUNTIME=true
+  else
+    IS_DOCKER_RUNTIME=false
+  fi
+else
   CONTAINER_CLI=$(command -v podman)
   HEALTCHECK_PATH="{{.State.Healthcheck.Status}}"
+  IS_PODMAN=true
+  IS_DOCKER_RUNTIME=false
   # Only use sudo for podman
   if command -v sudo > /dev/null; then
     PRIVILEGED_CLI="sudo"
   else
     PRIVILEGED_CLI=""
   fi
-else
-  CONTAINER_CLI=$(command -v docker)
-  HEALTCHECK_PATH="{{.State.Health.Status}}"
-  PRIVILEGED_CLI=""
 fi
 
 mysql() {
@@ -658,26 +666,28 @@ EOF\""
 }
 
 disable_userland_proxy() {
-  if [[ "$HEALTCHECK_PATH" == "{{.State.Health.Status}}" ]]; then
-    if [[ ! -f /etc/docker/daemon.json ]]; then
-      echo "Didn't find /etc/docker/daemon.json but need to disable userland-proxy..."
-      echo "Stopping docker..."
-      sudo service docker stop
-      echo "Creating /etc/docker/daemon.json..."
-      sudo bash -c "echo '{\"userland-proxy\": false}' > /etc/docker/daemon.json"
-      echo "Starting docker..."
-      sudo service docker start
-      echo "Docker successfully started with userland proxies disabled"
-    elif ! grep -q userland-proxy /etc/docker/daemon.json; then
-      echo "Userland proxy is still enabled in /etc/docker/daemon.json, but need to disable it..."
-      export docker_daemon_json=$(</etc/docker/daemon.json)
-      echo "Stopping docker..."
-      sudo service docker stop
-      echo "Updating /etc/docker/daemon.json..."
-      sudo bash -c 'echo "${docker_daemon_json/\}/,}\"userland-proxy\": false}" > /etc/docker/daemon.json'
-      echo "Starting docker..."
-      sudo service docker start
-      echo "Docker successfully started with userland proxies disabled"
+  if [[ "$IS_DOCKER_RUNTIME" == "true" ]]; then
+    if [[ "$HEALTCHECK_PATH" == "{{.State.Health.Status}}" ]]; then
+      if [[ ! -f /etc/docker/daemon.json ]]; then
+        echo "Didn't find /etc/docker/daemon.json but need to disable userland-proxy..."
+        echo "Stopping docker..."
+        sudo service docker stop
+        echo "Creating /etc/docker/daemon.json..."
+        sudo bash -c "echo '{\"userland-proxy\": false}' > /etc/docker/daemon.json"
+        echo "Starting docker..."
+        sudo service docker start
+        echo "Docker successfully started with userland proxies disabled"
+      elif ! grep -q userland-proxy /etc/docker/daemon.json; then
+        echo "Userland proxy is still enabled in /etc/docker/daemon.json, but need to disable it..."
+        export docker_daemon_json=$(</etc/docker/daemon.json)
+        echo "Stopping docker..."
+        sudo service docker stop
+        echo "Updating /etc/docker/daemon.json..."
+        sudo bash -c 'echo "${docker_daemon_json/\}/,}\"userland-proxy\": false}" > /etc/docker/daemon.json'
+        echo "Starting docker..."
+        sudo service docker start
+        echo "Docker successfully started with userland proxies disabled"
+      fi
     fi
   fi
 }

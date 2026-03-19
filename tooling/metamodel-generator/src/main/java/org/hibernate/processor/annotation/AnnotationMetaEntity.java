@@ -2193,20 +2193,23 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			if ( entityType != null ) {
 				if ( typeArgument == null ) {
 					missingTypeArgError( entityType, parameter, typeName );
-					return;
 				}
-				if ( typeArgument.getKind() == TypeKind.WILDCARD ) {
-					TypeMirror superBound = ( (WildcardType) typeArgument ).getSuperBound();
-					if ( superBound == null ) {
-						if ( requireBoundedWildcard( typeName ) ) {
-							missingTypeArgError( entityType, parameter, typeName );
+				else {
+					if ( typeArgument.getKind() == TypeKind.WILDCARD ) {
+						final TypeMirror superBound = ((WildcardType) typeArgument).getSuperBound();
+						if ( superBound == null ) {
+							if ( requireBoundedWildcard( typeName ) ) {
+								missingTypeArgError( entityType, parameter, typeName );
+							}
+							// else: allow; see HHH-20230
 						}
-						return;
+						typeArgument = superBound;
 					}
-					typeArgument = superBound;
-				}
-				if ( !types.isSameType( typeArgument, entityType.asType() ) ) {
-					wrongTypeArgError( entityType, parameter, typeName );
+					if ( typeArgument != null ) {
+						if ( !types.isSameType( typeArgument, entityType.asType() ) ) {
+							wrongTypeArgError( entityType, parameter, typeName );
+						}
+					}
 				}
 			}
 			else {

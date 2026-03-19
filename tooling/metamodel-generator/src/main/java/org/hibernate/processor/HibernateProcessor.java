@@ -396,7 +396,12 @@ public class HibernateProcessor extends AbstractProcessor {
 	private boolean included(Element element) {
 		if ( element instanceof TypeElement || element instanceof PackageElement ) {
 			final QualifiedNameable nameable = (QualifiedNameable) element;
-			return context.isIncluded( nameable.getQualifiedName().toString() );
+			String qualifiedName = nameable.getQualifiedName().toString();
+			if ( element instanceof TypeElement
+				&& context.isGeneratedClass( qualifiedName ) ) {
+				return false;
+			}
+			return context.isIncluded( qualifiedName );
 		}
 		else {
 			return false;

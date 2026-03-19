@@ -32,11 +32,12 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.tool.internal.export.java.ImportContextImpl;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
 
 /**
- * Generates JPA-annotated Java entity source files from {@link TableMetadata}
+ * Generates JPA-annotated Java entity source files from {@link ClassDetails}
  * using FreeMarker templates.
  *
  * @author Koen Aers
@@ -46,12 +47,15 @@ public class EntityExporter {
 	private static final String DEFAULT_TEMPLATE_PATH = "/models/entity";
 	private static final String TEMPLATE_NAME = "main.entity.ftl";
 
-	private final List<TableMetadata> tables;
+	private final List<ClassDetails> entities;
+	private final ModelsContext modelsContext;
 	private final boolean annotated;
 	private final Configuration freemarkerConfig;
 
-	private EntityExporter(List<TableMetadata> tables, boolean annotated, String[] templatePath) {
-		this.tables = tables;
+	private EntityExporter(List<ClassDetails> entities, ModelsContext modelsContext,
+						   boolean annotated, String[] templatePath) {
+		this.entities = entities;
+		this.modelsContext = modelsContext;
 		this.annotated = annotated;
 		this.freemarkerConfig = new Configuration(Configuration.VERSION_2_3_33);
 		this.freemarkerConfig.setTemplateLoader(createTemplateLoader(templatePath));
@@ -60,21 +64,25 @@ public class EntityExporter {
 				TemplateExceptionHandler.RETHROW_HANDLER);
 	}
 
-	public static EntityExporter create(List<TableMetadata> tables) {
-		return new EntityExporter(tables, true, new String[0]);
+	public static EntityExporter create(List<ClassDetails> entities, ModelsContext modelsContext) {
+		return new EntityExporter(entities, modelsContext, true, new String[0]);
 	}
 
-	public static EntityExporter create(List<TableMetadata> tables, boolean annotated) {
-		return new EntityExporter(tables, annotated, new String[0]);
+	public static EntityExporter create(List<ClassDetails> entities, ModelsContext modelsContext,
+										boolean annotated) {
+		return new EntityExporter(entities, modelsContext, annotated, new String[0]);
 	}
 
-	public static EntityExporter create(List<TableMetadata> tables, boolean annotated, String[] templatePath) {
-		return new EntityExporter(tables, annotated, templatePath);
+	public static EntityExporter create(List<ClassDetails> entities, ModelsContext modelsContext,
+										boolean annotated, String[] templatePath) {
+		return new EntityExporter(entities, modelsContext, annotated, templatePath);
 	}
 
-	public void export(Writer output, TableMetadata table) {
-		ImportContextImpl importContext = new ImportContextImpl(table.getEntityPackage());
-		TemplateHelper templateHelper = new TemplateHelper(table, importContext, annotated);
+	public void export(Writer output, ClassDetails entity) {
+		String packageName = getPackageName(entity);
+		ImportContextImpl importContext = new ImportContextImpl(packageName);
+		TemplateHelper templateHelper = new TemplateHelper(
+				entity, modelsContext, importContext, annotated);
 		Map<String, Object> model = new HashMap<>();
 		model.put("templateHelper", templateHelper);
 		try {
@@ -82,8 +90,40 @@ public class EntityExporter {
 			template.process(model, output);
 			output.flush();
 		} catch (IOException | TemplateException e) {
-			throw new RuntimeException("Failed to export entity: " + table.getEntityClassName(), e);
+			throw new RuntimeException(
+					"Failed to export entity: " + entity.getClassName(), e);
 		}
+	}
+
+	public void export(Writer output, ClassDetails entity,
+					   Map<String, List<String>> classMetaAttributes,
+					   Map<String, Map<String, List<String>>> fieldMetaAttributes) {
+		String packageName = getPackageName(entity);
+		ImportContextImpl importContext = new ImportContextImpl(packageName);
+		TemplateHelper templateHelper = new TemplateHelper(
+				entity, modelsContext, importContext, annotated,
+				classMetaAttributes, fieldMetaAttributes);
+		Map<String, Object> model = new HashMap<>();
+		model.put("templateHelper", templateHelper);
+		try {
+			Template template = freemarkerConfig.getTemplate(TEMPLATE_NAME);
+			template.process(model, output);
+			output.flush();
+		} catch (IOException | TemplateException e) {
+			throw new RuntimeException(
+					"Failed to export entity: " + entity.getClassName(), e);
+		}
+	}
+
+	public List<ClassDetails> getEntities() {
+		return entities;
+	}
+
+	private String getPackageName(ClassDetails entity) {
+		String className = entity.getClassName();
+		if (className == null) return "";
+		int lastDot = className.lastIndexOf('.');
+		return lastDot > 0 ? className.substring(0, lastDot) : "";
 	}
 
 	private TemplateLoader createTemplateLoader(String[] templatePath) {

@@ -23,6 +23,9 @@ import java.util.List;
 import java.util.Properties;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
+import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +35,13 @@ import org.junit.jupiter.api.Test;
  * @author Koen Aers
  */
 public class CfgXmlExporterTest {
+
+	private ClassDetails buildEntity(DynamicEntityBuilder builder, String tableName,
+									 String className, String pkg) {
+		TableMetadata table = new TableMetadata(tableName, className, pkg);
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		return builder.createEntityFromTable(table);
+	}
 
 	@Test
 	public void testEmptySchema() {
@@ -48,8 +58,9 @@ public class CfgXmlExporterTest {
 
 	@Test
 	public void testSingleEntity() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		CfgXmlExporter exporter = CfgXmlExporter.create(List.of(table));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = buildEntity(builder, "EMPLOYEE", "Employee", "com.example");
+		CfgXmlExporter exporter = CfgXmlExporter.create(List.of(entity));
 		StringWriter writer = new StringWriter();
 		Properties props = new Properties();
 		props.put("ejb3", "true");
@@ -60,8 +71,9 @@ public class CfgXmlExporterTest {
 
 	@Test
 	public void testSingleEntityResourceMapping() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		CfgXmlExporter exporter = CfgXmlExporter.create(List.of(table));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = buildEntity(builder, "EMPLOYEE", "Employee", "com.example");
+		CfgXmlExporter exporter = CfgXmlExporter.create(List.of(entity));
 		StringWriter writer = new StringWriter();
 		exporter.export(writer, new Properties());
 		String xml = writer.toString();
@@ -70,10 +82,10 @@ public class CfgXmlExporterTest {
 
 	@Test
 	public void testMultipleEntities() {
-		List<TableMetadata> tables = List.of(
-				new TableMetadata("EMPLOYEE", "Employee", "com.example"),
-				new TableMetadata("DEPARTMENT", "Department", "com.example"));
-		CfgXmlExporter exporter = CfgXmlExporter.create(tables);
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails employee = buildEntity(builder, "EMPLOYEE", "Employee", "com.example");
+		ClassDetails department = buildEntity(builder, "DEPARTMENT", "Department", "com.example");
+		CfgXmlExporter exporter = CfgXmlExporter.create(List.of(employee, department));
 		StringWriter writer = new StringWriter();
 		Properties props = new Properties();
 		props.put("ejb3", "true");
@@ -127,13 +139,18 @@ public class CfgXmlExporterTest {
 
 	@Test
 	public void testInheritanceHierarchy() {
-		TableMetadata root = new TableMetadata("VEHICLE", "Vehicle", "com.example");
-		TableMetadata child = new TableMetadata("CAR", "Car", "com.example")
-				.parent("Vehicle", "com.example");
-		List<TableMetadata> tables = new ArrayList<>();
-		tables.add(child);
-		tables.add(root);
-		CfgXmlExporter exporter = CfgXmlExporter.create(tables);
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		TableMetadata rootTable = new TableMetadata("VEHICLE", "Vehicle", "com.example");
+		rootTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		ClassDetails root = builder.createEntityFromTable(rootTable);
+		TableMetadata childTable = new TableMetadata("CAR", "Car", "com.example");
+		childTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		childTable.parent("Vehicle", "com.example");
+		ClassDetails child = builder.createEntityFromTable(childTable);
+		List<ClassDetails> entities = new ArrayList<>();
+		entities.add(child);
+		entities.add(root);
+		CfgXmlExporter exporter = CfgXmlExporter.create(entities);
 		StringWriter writer = new StringWriter();
 		Properties props = new Properties();
 		props.put("ejb3", "true");

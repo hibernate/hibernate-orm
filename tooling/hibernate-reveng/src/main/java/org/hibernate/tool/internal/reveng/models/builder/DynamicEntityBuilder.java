@@ -106,8 +106,8 @@ public class DynamicEntityBuilder {
 		for (ForeignKeyMetadata fkMetadata : tableMetadata.getForeignKeys()) {
 			String targetClassName = fkMetadata.getTargetEntityPackage()
 				+ "." + fkMetadata.getTargetEntityClassName();
-			ClassDetails targetClassDetails = modelsContext.getClassDetailsRegistry()
-				.resolveClassDetails(targetClassName);
+			ClassDetails targetClassDetails = resolveOrCreateClassDetails(
+				fkMetadata.getTargetEntityClassName(), targetClassName);
 			ManyToOneFieldBuilder.buildManyToOneField(
 				entityClass, fkMetadata, targetClassDetails, modelsContext);
 		}

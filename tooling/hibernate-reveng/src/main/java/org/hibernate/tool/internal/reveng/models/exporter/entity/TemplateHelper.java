@@ -16,48 +16,83 @@
 package org.hibernate.tool.internal.reveng.models.exporter.entity;
 
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.Basic;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorType;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GenerationType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Version;
 
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.tool.internal.export.java.ImportContext;
-import org.hibernate.tool.internal.reveng.models.metadata.AttributeOverrideMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.EmbeddedFieldMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.InheritanceMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.ManyToManyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToManyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToOneMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
 
 /**
- * Wraps a {@link TableMetadata} and provides template-friendly methods
+ * Wraps a {@link ClassDetails} and provides template-friendly methods
  * for generating JPA-annotated Java entity source code.
  *
  * @author Koen Aers
  */
 public class TemplateHelper {
 
-	private final TableMetadata table;
+	private final ClassDetails classDetails;
+	private final ModelsContext modelsContext;
 	private final ImportContext importContext;
 	private final boolean annotated;
+	private final Map<String, List<String>> classMetaAttributes;
+	private final Map<String, Map<String, List<String>>> fieldMetaAttributes;
 
-	TemplateHelper(TableMetadata table, ImportContext importContext, boolean annotated) {
-		this.table = table;
+	TemplateHelper(ClassDetails classDetails, ModelsContext modelsContext,
+				   ImportContext importContext, boolean annotated) {
+		this(classDetails, modelsContext, importContext, annotated,
+				Collections.emptyMap(), Collections.emptyMap());
+	}
+
+	TemplateHelper(ClassDetails classDetails, ModelsContext modelsContext,
+				   ImportContext importContext, boolean annotated,
+				   Map<String, List<String>> classMetaAttributes,
+				   Map<String, Map<String, List<String>>> fieldMetaAttributes) {
+		this.classDetails = classDetails;
+		this.modelsContext = modelsContext;
 		this.importContext = importContext;
 		this.annotated = annotated;
+		this.classMetaAttributes = classMetaAttributes != null ? classMetaAttributes : Collections.emptyMap();
+		this.fieldMetaAttributes = fieldMetaAttributes != null ? fieldMetaAttributes : Collections.emptyMap();
 	}
 
 	// --- Package / class ---
 
 	public String getPackageDeclaration() {
-		String pkg = table.getEntityPackage();
+		String pkg = getPackageName();
 		if (pkg != null && !pkg.isEmpty()) {
 			return "package " + pkg + ";";
 		}
@@ -65,17 +100,14 @@ public class TemplateHelper {
 	}
 
 	public String getDeclarationName() {
-		return table.getEntityClassName();
+		return classDetails.getName();
 	}
 
 	public String getExtendsDeclaration() {
-		String parent = table.getParentEntityClassName();
-		if (parent != null && !parent.isEmpty()) {
-			String parentPkg = table.getParentEntityPackage();
-			if (parentPkg != null && !parentPkg.isEmpty()) {
-				importType(parentPkg + "." + parent);
-			}
-			return "extends " + parent + " ";
+		ClassDetails superClass = classDetails.getSuperClass();
+		if (superClass != null && !"java.lang.Object".equals(superClass.getClassName())) {
+			importType(superClass.getClassName());
+			return "extends " + superClass.getName() + " ";
 		}
 		return "";
 	}
@@ -95,50 +127,82 @@ public class TemplateHelper {
 		return importContext.importType(fqcn);
 	}
 
-	// --- Table metadata access ---
+	// --- ClassDetails access ---
 
-	public TableMetadata getTable() {
-		return table;
+	public ClassDetails getClassDetails() {
+		return classDetails;
+	}
+
+	// --- Field categorization ---
+
+	public FieldDetails getCompositeIdField() {
+		for (FieldDetails field : classDetails.getFields()) {
+			if (field.hasDirectAnnotationUsage(EmbeddedId.class)) {
+				return field;
+			}
+		}
+		return null;
+	}
+
+	public List<FieldDetails> getBasicFields() {
+		List<FieldDetails> result = new ArrayList<>();
+		for (FieldDetails field : classDetails.getFields()) {
+			if (!isRelationshipField(field) && !isEmbeddedField(field) && !isEmbeddedIdField(field)) {
+				result.add(field);
+			}
+		}
+		return result;
+	}
+
+	public List<FieldDetails> getManyToOneFields() {
+		return getFieldsWithAnnotation(ManyToOne.class);
+	}
+
+	public List<FieldDetails> getOneToOneFields() {
+		return getFieldsWithAnnotation(OneToOne.class);
+	}
+
+	public List<FieldDetails> getOneToManyFields() {
+		return getFieldsWithAnnotation(OneToMany.class);
+	}
+
+	public List<FieldDetails> getManyToManyFields() {
+		return getFieldsWithAnnotation(ManyToMany.class);
+	}
+
+	public List<FieldDetails> getEmbeddedFields() {
+		return getFieldsWithAnnotation(Embedded.class);
+	}
+
+	// --- Field info methods ---
+
+	public boolean isPrimaryKey(FieldDetails field) {
+		return field.hasDirectAnnotationUsage(Id.class);
+	}
+
+	public boolean isVersion(FieldDetails field) {
+		return field.hasDirectAnnotationUsage(Version.class);
+	}
+
+	public boolean isLob(FieldDetails field) {
+		return field.hasDirectAnnotationUsage(Lob.class);
 	}
 
 	// --- Type name resolution ---
 
-	public String getJavaTypeName(ColumnMetadata col) {
-		return importType(col.getJavaType().getName());
+	public String getJavaTypeName(FieldDetails field) {
+		return importType(field.getType().determineRawClass().getClassName());
 	}
 
-	public String getFieldTypeName(ForeignKeyMetadata fk) {
-		String fqcn = fk.getTargetEntityPackage() + "." + fk.getTargetEntityClassName();
-		return importType(fqcn);
-	}
-
-	public String getFieldTypeName(OneToOneMetadata o2o) {
-		String fqcn = o2o.getTargetEntityPackage() + "." + o2o.getTargetEntityClassName();
-		return importType(fqcn);
-	}
-
-	public String getCollectionTypeName(OneToManyMetadata o2m) {
+	public String getCollectionTypeName(FieldDetails field) {
 		importType("java.util.Set");
-		String elementFqcn = o2m.getElementEntityPackage() + "." + o2m.getElementEntityClassName();
-		importType(elementFqcn);
-		return "Set<" + o2m.getElementEntityClassName() + ">";
-	}
-
-	public String getCollectionTypeName(ManyToManyMetadata m2m) {
-		importType("java.util.Set");
-		String targetFqcn = m2m.getTargetEntityPackage() + "." + m2m.getTargetEntityClassName();
-		importType(targetFqcn);
-		return "Set<" + m2m.getTargetEntityClassName() + ">";
-	}
-
-	public String getEmbeddedTypeName(EmbeddedFieldMetadata e) {
-		String fqcn = e.getEmbeddablePackage() + "." + e.getEmbeddableClassName();
-		return importType(fqcn);
-	}
-
-	public String getCompositeIdTypeName(CompositeIdMetadata c) {
-		String fqcn = c.getIdClassPackage() + "." + c.getIdClassName();
-		return importType(fqcn);
+		TypeDetails elementType = field.getElementType();
+		if (elementType != null) {
+			String elementClassName = elementType.determineRawClass().getClassName();
+			importType(elementClassName);
+			return "Set<" + elementType.determineRawClass().getName() + ">";
+		}
+		return "Set<?>";
 	}
 
 	// --- Getter/setter names ---
@@ -159,76 +223,85 @@ public class TemplateHelper {
 		}
 		StringBuilder sb = new StringBuilder();
 		// @Entity
-		sb.append(importType("jakarta.persistence.Entity")).append("\n");
-		sb.append("@Entity\n");
+		if (classDetails.hasDirectAnnotationUsage(Entity.class)) {
+			importType("jakarta.persistence.Entity");
+			sb.append("@Entity\n");
+		}
 		// @Table
-		sb.append(generateTableAnnotation());
-		// Inheritance
-		InheritanceMetadata inh = table.getInheritance();
+		Table table = classDetails.getDirectAnnotationUsage(Table.class);
+		if (table != null) {
+			sb.append(generateTableAnnotation(table));
+		}
+		// @Inheritance
+		Inheritance inh = classDetails.getDirectAnnotationUsage(Inheritance.class);
 		if (inh != null) {
 			sb.append(generateInheritanceAnnotation(inh));
 		}
-		// Discriminator value for subclass
-		String discVal = table.getDiscriminatorValue();
-		if (discVal != null) {
+		// @DiscriminatorValue
+		DiscriminatorValue dv = classDetails.getDirectAnnotationUsage(DiscriminatorValue.class);
+		if (dv != null) {
 			importType("jakarta.persistence.DiscriminatorValue");
-			sb.append("@DiscriminatorValue(\"").append(discVal).append("\")\n");
+			sb.append("@DiscriminatorValue(\"").append(dv.value()).append("\")\n");
 		}
-		// PrimaryKeyJoinColumn for JOINED subclass
-		String pkjc = table.getPrimaryKeyJoinColumnName();
+		// @PrimaryKeyJoinColumn
+		PrimaryKeyJoinColumn pkjc = classDetails.getDirectAnnotationUsage(PrimaryKeyJoinColumn.class);
 		if (pkjc != null) {
 			importType("jakarta.persistence.PrimaryKeyJoinColumn");
-			sb.append("@PrimaryKeyJoinColumn(name = \"").append(pkjc).append("\")\n");
+			sb.append("@PrimaryKeyJoinColumn(name = \"").append(pkjc.name()).append("\")\n");
 		}
 		return sb.toString().stripTrailing();
 	}
 
-	private String generateTableAnnotation() {
+	private String generateTableAnnotation(Table table) {
 		StringBuilder sb = new StringBuilder();
 		importType("jakarta.persistence.Table");
-		sb.append("@Table(name = \"").append(table.getTableName()).append("\"");
-		if (table.getSchema() != null && !table.getSchema().isEmpty()) {
-			sb.append(", schema = \"").append(table.getSchema()).append("\"");
+		sb.append("@Table(name = \"").append(table.name()).append("\"");
+		if (table.schema() != null && !table.schema().isEmpty()) {
+			sb.append(", schema = \"").append(table.schema()).append("\"");
 		}
-		if (table.getCatalog() != null && !table.getCatalog().isEmpty()) {
-			sb.append(", catalog = \"").append(table.getCatalog()).append("\"");
+		if (table.catalog() != null && !table.catalog().isEmpty()) {
+			sb.append(", catalog = \"").append(table.catalog()).append("\"");
 		}
 		sb.append(")\n");
 		return sb.toString();
 	}
 
-	private String generateInheritanceAnnotation(InheritanceMetadata inh) {
+	private String generateInheritanceAnnotation(Inheritance inh) {
 		StringBuilder sb = new StringBuilder();
 		importType("jakarta.persistence.Inheritance");
 		importType("jakarta.persistence.InheritanceType");
-		sb.append("@Inheritance(strategy = InheritanceType.").append(inh.getStrategy().name()).append(")\n");
-		if (inh.getDiscriminatorColumnName() != null) {
+		sb.append("@Inheritance(strategy = InheritanceType.").append(inh.strategy().name()).append(")\n");
+		DiscriminatorColumn dc = classDetails.getDirectAnnotationUsage(DiscriminatorColumn.class);
+		if (dc != null) {
 			importType("jakarta.persistence.DiscriminatorColumn");
-			sb.append("@DiscriminatorColumn(name = \"").append(inh.getDiscriminatorColumnName()).append("\"");
-			if (inh.getDiscriminatorType() != null) {
+			sb.append("@DiscriminatorColumn(name = \"").append(dc.name()).append("\"");
+			if (dc.discriminatorType() != DiscriminatorType.STRING) {
 				importType("jakarta.persistence.DiscriminatorType");
-				sb.append(", discriminatorType = DiscriminatorType.").append(inh.getDiscriminatorType().name());
+				sb.append(", discriminatorType = DiscriminatorType.").append(dc.discriminatorType().name());
 			}
-			if (inh.getDiscriminatorColumnLength() > 0) {
-				sb.append(", length = ").append(inh.getDiscriminatorColumnLength());
+			if (dc.length() != 31) {
+				sb.append(", length = ").append(dc.length());
 			}
 			sb.append(")\n");
 		}
 		return sb.toString();
 	}
 
-	public String generateIdAnnotations(ColumnMetadata col) {
+	public String generateIdAnnotations(FieldDetails field) {
 		if (!annotated) {
 			return "";
 		}
 		StringBuilder sb = new StringBuilder();
-		importType("jakarta.persistence.Id");
-		sb.append("@Id\n");
-		GenerationType gen = col.getGenerationType();
-		if (gen != null) {
-			importType("jakarta.persistence.GeneratedValue");
-			importType("jakarta.persistence.GenerationType");
-			sb.append("    @GeneratedValue(strategy = GenerationType.").append(gen.name()).append(")\n");
+		if (field.hasDirectAnnotationUsage(Id.class)) {
+			importType("jakarta.persistence.Id");
+			sb.append("@Id\n");
+			GeneratedValue gv = field.getDirectAnnotationUsage(GeneratedValue.class);
+			if (gv != null) {
+				importType("jakarta.persistence.GeneratedValue");
+				importType("jakarta.persistence.GenerationType");
+				sb.append("    @GeneratedValue(strategy = GenerationType.")
+						.append(gv.strategy().name()).append(")\n");
+			}
 		}
 		return sb.toString().stripTrailing();
 	}
@@ -241,42 +314,46 @@ public class TemplateHelper {
 		return "@Version";
 	}
 
-	public String generateBasicAnnotation(ColumnMetadata col) {
+	public String generateBasicAnnotation(FieldDetails field) {
 		if (!annotated) {
 			return "";
 		}
-		FetchType fetch = col.getBasicFetchType();
-		boolean optionalSet = col.isBasicOptionalSet();
-		if (fetch == null && !optionalSet) {
+		Basic basic = field.getDirectAnnotationUsage(Basic.class);
+		if (basic == null) {
+			return "";
+		}
+		boolean hasFetch = basic.fetch() != FetchType.EAGER;
+		boolean hasOptional = !basic.optional();
+		if (!hasFetch && !hasOptional) {
 			return "";
 		}
 		importType("jakarta.persistence.Basic");
 		StringBuilder sb = new StringBuilder("@Basic(");
 		boolean needComma = false;
-		if (fetch != null) {
+		if (hasFetch) {
 			importType("jakarta.persistence.FetchType");
-			sb.append("fetch = FetchType.").append(fetch.name());
+			sb.append("fetch = FetchType.").append(basic.fetch().name());
 			needComma = true;
 		}
-		if (optionalSet) {
+		if (hasOptional) {
 			if (needComma) sb.append(", ");
-			sb.append("optional = ").append(col.isBasicOptional());
+			sb.append("optional = ").append(basic.optional());
 		}
 		sb.append(")");
 		return sb.toString();
 	}
 
-	public String generateTemporalAnnotation(ColumnMetadata col) {
+	public String generateTemporalAnnotation(FieldDetails field) {
 		if (!annotated) {
 			return "";
 		}
-		TemporalType tt = col.getTemporalType();
-		if (tt == null) {
+		Temporal temporal = field.getDirectAnnotationUsage(Temporal.class);
+		if (temporal == null) {
 			return "";
 		}
 		importType("jakarta.persistence.Temporal");
 		importType("jakarta.persistence.TemporalType");
-		return "@Temporal(TemporalType." + tt.name() + ")";
+		return "@Temporal(TemporalType." + temporal.value().name() + ")";
 	}
 
 	public String generateLobAnnotation() {
@@ -287,218 +364,267 @@ public class TemplateHelper {
 		return "@Lob";
 	}
 
-	public String generateColumnAnnotation(ColumnMetadata col) {
+	public String generateColumnAnnotation(FieldDetails field) {
 		if (!annotated) {
+			return "";
+		}
+		Column col = field.getDirectAnnotationUsage(Column.class);
+		if (col == null) {
 			return "";
 		}
 		importType("jakarta.persistence.Column");
 		StringBuilder sb = new StringBuilder("@Column(name = \"");
-		sb.append(col.getColumnName()).append("\"");
-		if (!col.isNullable()) {
+		sb.append(col.name()).append("\"");
+		if (!col.nullable()) {
 			sb.append(", nullable = false");
 		}
-		if (col.isUnique()) {
+		if (col.unique()) {
 			sb.append(", unique = true");
 		}
-		if (col.getLength() > 0) {
-			sb.append(", length = ").append(col.getLength());
+		if (col.length() != 255) {
+			sb.append(", length = ").append(col.length());
 		}
-		if (col.getPrecision() > 0) {
-			sb.append(", precision = ").append(col.getPrecision());
+		if (col.precision() != 0) {
+			sb.append(", precision = ").append(col.precision());
 		}
-		if (col.getScale() > 0) {
-			sb.append(", scale = ").append(col.getScale());
+		if (col.scale() != 0) {
+			sb.append(", scale = ").append(col.scale());
 		}
 		sb.append(")");
 		return sb.toString();
 	}
 
-	public String generateManyToOneAnnotation(ForeignKeyMetadata fk) {
+	public String generateManyToOneAnnotation(FieldDetails field) {
 		if (!annotated) {
+			return "";
+		}
+		ManyToOne m2o = field.getDirectAnnotationUsage(ManyToOne.class);
+		if (m2o == null) {
 			return "";
 		}
 		StringBuilder sb = new StringBuilder();
 		importType("jakarta.persistence.ManyToOne");
 		sb.append("@ManyToOne");
-		boolean hasAttrs = fk.getFetchType() != null || !fk.isOptional();
+		boolean hasAttrs = m2o.fetch() != FetchType.EAGER || !m2o.optional();
 		if (hasAttrs) {
 			sb.append("(");
 			boolean needComma = false;
-			if (fk.getFetchType() != null) {
+			if (m2o.fetch() != FetchType.EAGER) {
 				importType("jakarta.persistence.FetchType");
-				sb.append("fetch = FetchType.").append(fk.getFetchType().name());
+				sb.append("fetch = FetchType.").append(m2o.fetch().name());
 				needComma = true;
 			}
-			if (!fk.isOptional()) {
+			if (!m2o.optional()) {
 				if (needComma) sb.append(", ");
 				sb.append("optional = false");
 			}
 			sb.append(")");
 		}
-		sb.append("\n    ");
 		// @JoinColumn
-		importType("jakarta.persistence.JoinColumn");
-		sb.append("@JoinColumn(name = \"").append(fk.getForeignKeyColumnName()).append("\"");
-		if (fk.getReferencedColumnName() != null) {
-			sb.append(", referencedColumnName = \"").append(fk.getReferencedColumnName()).append("\"");
+		JoinColumn jc = field.getDirectAnnotationUsage(JoinColumn.class);
+		if (jc != null) {
+			sb.append("\n    ");
+			importType("jakarta.persistence.JoinColumn");
+			sb.append("@JoinColumn(name = \"").append(jc.name()).append("\"");
+			if (jc.referencedColumnName() != null && !jc.referencedColumnName().isEmpty()) {
+				sb.append(", referencedColumnName = \"")
+						.append(jc.referencedColumnName()).append("\"");
+			}
+			sb.append(")");
 		}
-		sb.append(")");
 		return sb.toString();
 	}
 
-	public String generateOneToManyAnnotation(OneToManyMetadata o2m) {
+	public String generateOneToManyAnnotation(FieldDetails field) {
 		if (!annotated) {
 			return "";
 		}
+		OneToMany o2m = field.getDirectAnnotationUsage(OneToMany.class);
+		if (o2m == null) {
+			return "";
+		}
 		importType("jakarta.persistence.OneToMany");
-		StringBuilder sb = new StringBuilder("@OneToMany(mappedBy = \"");
-		sb.append(o2m.getMappedBy()).append("\"");
-		if (o2m.getFetchType() != null) {
+		StringBuilder sb = new StringBuilder("@OneToMany(");
+		boolean needComma = false;
+		String mappedBy = o2m.mappedBy();
+		if (mappedBy != null && !mappedBy.isEmpty()) {
+			sb.append("mappedBy = \"").append(mappedBy).append("\"");
+			needComma = true;
+		}
+		if (o2m.fetch() != FetchType.LAZY) {
+			if (needComma) sb.append(", ");
 			importType("jakarta.persistence.FetchType");
-			sb.append(", fetch = FetchType.").append(o2m.getFetchType().name());
+			sb.append("fetch = FetchType.").append(o2m.fetch().name());
+			needComma = true;
 		}
-		if (o2m.getCascadeTypes() != null && o2m.getCascadeTypes().length > 0) {
+		if (o2m.cascade().length > 0) {
+			if (needComma) sb.append(", ");
 			importType("jakarta.persistence.CascadeType");
-			sb.append(", cascade = ");
-			appendCascade(sb, o2m.getCascadeTypes());
+			sb.append("cascade = ");
+			appendCascade(sb, o2m.cascade());
+			needComma = true;
 		}
-		if (o2m.isOrphanRemoval()) {
-			sb.append(", orphanRemoval = true");
+		if (o2m.orphanRemoval()) {
+			if (needComma) sb.append(", ");
+			sb.append("orphanRemoval = true");
 		}
 		sb.append(")");
 		return sb.toString();
 	}
 
-	public String generateOneToOneAnnotation(OneToOneMetadata o2o) {
+	public String generateOneToOneAnnotation(FieldDetails field) {
 		if (!annotated) {
+			return "";
+		}
+		OneToOne o2o = field.getDirectAnnotationUsage(OneToOne.class);
+		if (o2o == null) {
 			return "";
 		}
 		StringBuilder sb = new StringBuilder();
 		importType("jakarta.persistence.OneToOne");
 		sb.append("@OneToOne");
-		boolean hasAttrs = o2o.getMappedBy() != null
-				|| o2o.getFetchType() != null
-				|| !o2o.isOptional()
-				|| (o2o.getCascadeTypes() != null && o2o.getCascadeTypes().length > 0)
-				|| o2o.isOrphanRemoval();
+		String mappedBy = o2o.mappedBy();
+		boolean hasMappedBy = mappedBy != null && !mappedBy.isEmpty();
+		boolean hasAttrs = hasMappedBy
+				|| o2o.fetch() != FetchType.EAGER
+				|| !o2o.optional()
+				|| o2o.cascade().length > 0
+				|| o2o.orphanRemoval();
 		if (hasAttrs) {
 			sb.append("(");
 			boolean needComma = false;
-			if (o2o.getMappedBy() != null) {
-				sb.append("mappedBy = \"").append(o2o.getMappedBy()).append("\"");
+			if (hasMappedBy) {
+				sb.append("mappedBy = \"").append(mappedBy).append("\"");
 				needComma = true;
 			}
-			if (o2o.getFetchType() != null) {
+			if (o2o.fetch() != FetchType.EAGER) {
 				if (needComma) sb.append(", ");
 				importType("jakarta.persistence.FetchType");
-				sb.append("fetch = FetchType.").append(o2o.getFetchType().name());
+				sb.append("fetch = FetchType.").append(o2o.fetch().name());
 				needComma = true;
 			}
-			if (!o2o.isOptional()) {
+			if (!o2o.optional()) {
 				if (needComma) sb.append(", ");
 				sb.append("optional = false");
 				needComma = true;
 			}
-			if (o2o.getCascadeTypes() != null && o2o.getCascadeTypes().length > 0) {
+			if (o2o.cascade().length > 0) {
 				if (needComma) sb.append(", ");
 				importType("jakarta.persistence.CascadeType");
 				sb.append("cascade = ");
-				appendCascade(sb, o2o.getCascadeTypes());
+				appendCascade(sb, o2o.cascade());
 				needComma = true;
 			}
-			if (o2o.isOrphanRemoval()) {
+			if (o2o.orphanRemoval()) {
 				if (needComma) sb.append(", ");
 				sb.append("orphanRemoval = true");
 			}
 			sb.append(")");
 		}
 		// @JoinColumn for owning side
-		if (o2o.getForeignKeyColumnName() != null) {
+		JoinColumn jc = field.getDirectAnnotationUsage(JoinColumn.class);
+		if (jc != null) {
 			sb.append("\n    ");
 			importType("jakarta.persistence.JoinColumn");
-			sb.append("@JoinColumn(name = \"").append(o2o.getForeignKeyColumnName()).append("\"");
-			if (o2o.getReferencedColumnName() != null) {
-				sb.append(", referencedColumnName = \"").append(o2o.getReferencedColumnName()).append("\"");
+			sb.append("@JoinColumn(name = \"").append(jc.name()).append("\"");
+			if (jc.referencedColumnName() != null && !jc.referencedColumnName().isEmpty()) {
+				sb.append(", referencedColumnName = \"")
+						.append(jc.referencedColumnName()).append("\"");
 			}
 			sb.append(")");
 		}
 		return sb.toString();
 	}
 
-	public String generateManyToManyAnnotation(ManyToManyMetadata m2m) {
+	public String generateManyToManyAnnotation(FieldDetails field) {
 		if (!annotated) {
+			return "";
+		}
+		ManyToMany m2m = field.getDirectAnnotationUsage(ManyToMany.class);
+		if (m2m == null) {
 			return "";
 		}
 		StringBuilder sb = new StringBuilder();
 		importType("jakarta.persistence.ManyToMany");
 		sb.append("@ManyToMany");
-		boolean hasAttrs = m2m.getMappedBy() != null
-				|| m2m.getFetchType() != null
-				|| (m2m.getCascadeTypes() != null && m2m.getCascadeTypes().length > 0);
+		String mappedBy = m2m.mappedBy();
+		boolean hasMappedBy = mappedBy != null && !mappedBy.isEmpty();
+		boolean hasAttrs = hasMappedBy
+				|| m2m.fetch() != FetchType.LAZY
+				|| m2m.cascade().length > 0;
 		if (hasAttrs) {
 			sb.append("(");
 			boolean needComma = false;
-			if (m2m.getMappedBy() != null) {
-				sb.append("mappedBy = \"").append(m2m.getMappedBy()).append("\"");
+			if (hasMappedBy) {
+				sb.append("mappedBy = \"").append(mappedBy).append("\"");
 				needComma = true;
 			}
-			if (m2m.getFetchType() != null) {
+			if (m2m.fetch() != FetchType.LAZY) {
 				if (needComma) sb.append(", ");
 				importType("jakarta.persistence.FetchType");
-				sb.append("fetch = FetchType.").append(m2m.getFetchType().name());
+				sb.append("fetch = FetchType.").append(m2m.fetch().name());
 				needComma = true;
 			}
-			if (m2m.getCascadeTypes() != null && m2m.getCascadeTypes().length > 0) {
+			if (m2m.cascade().length > 0) {
 				if (needComma) sb.append(", ");
 				importType("jakarta.persistence.CascadeType");
 				sb.append("cascade = ");
-				appendCascade(sb, m2m.getCascadeTypes());
+				appendCascade(sb, m2m.cascade());
 			}
 			sb.append(")");
 		}
 		// @JoinTable for owning side
-		if (m2m.getJoinTableName() != null) {
+		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
+		if (jt != null) {
 			sb.append("\n    ");
 			importType("jakarta.persistence.JoinTable");
 			importType("jakarta.persistence.JoinColumn");
-			sb.append("@JoinTable(name = \"").append(m2m.getJoinTableName()).append("\"");
-			if (m2m.getJoinColumnName() != null) {
-				sb.append(",\n            joinColumns = @JoinColumn(name = \"").append(m2m.getJoinColumnName()).append("\")");
+			sb.append("@JoinTable(name = \"").append(jt.name()).append("\"");
+			if (jt.joinColumns().length > 0) {
+				sb.append(",\n            joinColumns = @JoinColumn(name = \"")
+						.append(jt.joinColumns()[0].name()).append("\")");
 			}
-			if (m2m.getInverseJoinColumnName() != null) {
-				sb.append(",\n            inverseJoinColumns = @JoinColumn(name = \"").append(m2m.getInverseJoinColumnName()).append("\")");
+			if (jt.inverseJoinColumns().length > 0) {
+				sb.append(",\n            inverseJoinColumns = @JoinColumn(name = \"")
+						.append(jt.inverseJoinColumns()[0].name()).append("\")");
 			}
 			sb.append(")");
 		}
 		return sb.toString();
 	}
 
-	public String generateEmbeddedIdAnnotation(CompositeIdMetadata cid) {
+	public String generateEmbeddedIdAnnotation(FieldDetails field) {
 		if (!annotated) {
+			return "";
+		}
+		if (!field.hasDirectAnnotationUsage(EmbeddedId.class)) {
 			return "";
 		}
 		StringBuilder sb = new StringBuilder();
 		importType("jakarta.persistence.EmbeddedId");
 		sb.append("@EmbeddedId");
-		List<AttributeOverrideMetadata> overrides = cid.getAttributeOverrides();
-		if (!overrides.isEmpty()) {
+		AttributeOverrides overrides = field.getDirectAnnotationUsage(AttributeOverrides.class);
+		if (overrides != null && overrides.value().length > 0) {
 			sb.append("\n    ");
-			appendAttributeOverrides(sb, overrides);
+			appendAttributeOverrides(sb, overrides.value());
 		}
 		return sb.toString();
 	}
 
-	public String generateEmbeddedAnnotation(EmbeddedFieldMetadata emb) {
+	public String generateEmbeddedAnnotation(FieldDetails field) {
 		if (!annotated) {
+			return "";
+		}
+		if (!field.hasDirectAnnotationUsage(Embedded.class)) {
 			return "";
 		}
 		StringBuilder sb = new StringBuilder();
 		importType("jakarta.persistence.Embedded");
 		sb.append("@Embedded");
-		List<AttributeOverrideMetadata> overrides = emb.getAttributeOverrides();
-		if (!overrides.isEmpty()) {
+		AttributeOverrides overrides = field.getDirectAnnotationUsage(AttributeOverrides.class);
+		if (overrides != null && overrides.value().length > 0) {
 			sb.append("\n    ");
-			appendAttributeOverrides(sb, overrides);
+			appendAttributeOverrides(sb, overrides.value());
 		}
 		return sb.toString();
 	}
@@ -506,7 +632,8 @@ public class TemplateHelper {
 	// --- Subclass check ---
 
 	public boolean isSubclass() {
-		return table.getParentEntityClassName() != null;
+		ClassDetails superClass = classDetails.getSuperClass();
+		return superClass != null && !"java.lang.Object".equals(superClass.getClassName());
 	}
 
 	// --- Constructor support ---
@@ -518,42 +645,35 @@ public class TemplateHelper {
 	public List<FullConstructorProperty> getFullConstructorProperties() {
 		List<FullConstructorProperty> props = new ArrayList<>();
 		// Composite ID
-		CompositeIdMetadata cid = table.getCompositeId();
+		FieldDetails cid = getCompositeIdField();
 		if (cid != null) {
-			props.add(new FullConstructorProperty(
-					getCompositeIdTypeName(cid), cid.getFieldName()));
+			props.add(new FullConstructorProperty(getJavaTypeName(cid), cid.getName()));
 		}
-		// Basic columns (skip FK columns, skip version, respect gen-property)
-		for (ColumnMetadata col : table.getColumns()) {
-			if (!isForeignKeyColumn(col.getColumnName()) && !col.isVersion() && isGenProperty(col)) {
-				props.add(new FullConstructorProperty(
-						getJavaTypeName(col), col.getFieldName()));
+		// Basic fields (skip version, respect gen-property)
+		for (FieldDetails field : getBasicFields()) {
+			if (!isVersion(field) && isGenProperty(field)) {
+				props.add(new FullConstructorProperty(getJavaTypeName(field), field.getName()));
 			}
 		}
 		// ManyToOne
-		for (ForeignKeyMetadata fk : table.getForeignKeys()) {
-			props.add(new FullConstructorProperty(
-					getFieldTypeName(fk), fk.getFieldName()));
+		for (FieldDetails field : getManyToOneFields()) {
+			props.add(new FullConstructorProperty(getJavaTypeName(field), field.getName()));
 		}
 		// OneToOne
-		for (OneToOneMetadata o2o : table.getOneToOnes()) {
-			props.add(new FullConstructorProperty(
-					getFieldTypeName(o2o), o2o.getFieldName()));
+		for (FieldDetails field : getOneToOneFields()) {
+			props.add(new FullConstructorProperty(getJavaTypeName(field), field.getName()));
 		}
 		// OneToMany
-		for (OneToManyMetadata o2m : table.getOneToManys()) {
-			props.add(new FullConstructorProperty(
-					getCollectionTypeName(o2m), o2m.getFieldName()));
+		for (FieldDetails field : getOneToManyFields()) {
+			props.add(new FullConstructorProperty(getCollectionTypeName(field), field.getName()));
 		}
 		// ManyToMany
-		for (ManyToManyMetadata m2m : table.getManyToManys()) {
-			props.add(new FullConstructorProperty(
-					getCollectionTypeName(m2m), m2m.getFieldName()));
+		for (FieldDetails field : getManyToManyFields()) {
+			props.add(new FullConstructorProperty(getCollectionTypeName(field), field.getName()));
 		}
 		// Embedded
-		for (EmbeddedFieldMetadata emb : table.getEmbeddedFields()) {
-			props.add(new FullConstructorProperty(
-					getEmbeddedTypeName(emb), emb.getFieldName()));
+		for (FieldDetails field : getEmbeddedFields()) {
+			props.add(new FullConstructorProperty(getJavaTypeName(field), field.getName()));
 		}
 		return props;
 	}
@@ -570,25 +690,24 @@ public class TemplateHelper {
 	// --- toString support ---
 
 	public List<ToStringProperty> getToStringProperties() {
-		// If any column has use-in-tostring, only include those
-		boolean hasExplicitToString = table.getColumns().stream()
-				.anyMatch(col -> col.hasMetaAttribute("use-in-tostring"));
+		List<FieldDetails> basicFields = getBasicFields();
+		boolean hasExplicitToString = basicFields.stream()
+				.anyMatch(f -> hasFieldMetaAttribute(f, "use-in-tostring"));
 		List<ToStringProperty> props = new ArrayList<>();
 		if (hasExplicitToString) {
-			for (ColumnMetadata col : table.getColumns()) {
-				if (getColumnMetaAsBool(col, "use-in-tostring", false)) {
-					props.add(new ToStringProperty(col.getFieldName(), getGetterName(col.getFieldName())));
+			for (FieldDetails field : basicFields) {
+				if (getFieldMetaAsBool(field, "use-in-tostring", false)) {
+					props.add(new ToStringProperty(field.getName(), getGetterName(field.getName())));
 				}
 			}
 		} else {
-			// Default: composite ID + all non-FK columns (respecting gen-property)
-			CompositeIdMetadata cid = table.getCompositeId();
+			FieldDetails cid = getCompositeIdField();
 			if (cid != null) {
-				props.add(new ToStringProperty(cid.getFieldName(), getGetterName(cid.getFieldName())));
+				props.add(new ToStringProperty(cid.getName(), getGetterName(cid.getName())));
 			}
-			for (ColumnMetadata col : table.getColumns()) {
-				if (!isForeignKeyColumn(col.getColumnName()) && isGenProperty(col)) {
-					props.add(new ToStringProperty(col.getFieldName(), getGetterName(col.getFieldName())));
+			for (FieldDetails field : basicFields) {
+				if (isGenProperty(field)) {
+					props.add(new ToStringProperty(field.getName(), getGetterName(field.getName())));
 				}
 			}
 		}
@@ -598,47 +717,45 @@ public class TemplateHelper {
 	// --- equals/hashCode support ---
 
 	public boolean hasCompositeId() {
-		return table.getCompositeId() != null;
+		return getCompositeIdField() != null;
 	}
 
 	public boolean needsEqualsHashCode() {
-		// If any column has use-in-equals, we need equals/hashCode
-		boolean hasExplicitEquals = table.getColumns().stream()
-				.anyMatch(col -> col.hasMetaAttribute("use-in-equals"));
+		boolean hasExplicitEquals = getBasicFields().stream()
+				.anyMatch(f -> hasFieldMetaAttribute(f, "use-in-equals"));
 		if (hasExplicitEquals) return true;
-		// Otherwise, need it if we have a PK or composite ID
-		return hasCompositeId() || !getIdentifierColumns().isEmpty();
+		return hasCompositeId() || !getIdentifierFields().isEmpty();
 	}
 
 	public boolean hasExplicitEqualsColumns() {
-		return table.getColumns().stream()
-				.anyMatch(col -> getColumnMetaAsBool(col, "use-in-equals", false));
+		return getBasicFields().stream()
+				.anyMatch(f -> getFieldMetaAsBool(f, "use-in-equals", false));
 	}
 
-	public List<ColumnMetadata> getEqualsColumns() {
-		List<ColumnMetadata> result = new ArrayList<>();
-		for (ColumnMetadata col : table.getColumns()) {
-			if (getColumnMetaAsBool(col, "use-in-equals", false)) {
-				result.add(col);
+	public List<FieldDetails> getEqualsFields() {
+		List<FieldDetails> result = new ArrayList<>();
+		for (FieldDetails field : getBasicFields()) {
+			if (getFieldMetaAsBool(field, "use-in-equals", false)) {
+				result.add(field);
 			}
 		}
 		return result;
 	}
 
-	public List<ColumnMetadata> getIdentifierColumns() {
-		List<ColumnMetadata> result = new ArrayList<>();
-		for (ColumnMetadata col : table.getColumns()) {
-			if (col.isPrimaryKey()) {
-				result.add(col);
+	public List<FieldDetails> getIdentifierFields() {
+		List<FieldDetails> result = new ArrayList<>();
+		for (FieldDetails field : getBasicFields()) {
+			if (isPrimaryKey(field)) {
+				result.add(field);
 			}
 		}
 		return result;
 	}
 
-	public String generateEqualsExpression(ColumnMetadata col) {
-		String getter = getGetterName(col.getFieldName()) + "()";
-		Class<?> type = col.getJavaType();
-		if (type.isPrimitive()) {
+	public String generateEqualsExpression(FieldDetails field) {
+		String getter = getGetterName(field.getName()) + "()";
+		String typeName = field.getType().determineRawClass().getClassName();
+		if (isPrimitiveType(typeName)) {
 			return "this." + getter + " == other." + getter;
 		}
 		return "((this." + getter + " == other." + getter + ") || "
@@ -646,81 +763,77 @@ public class TemplateHelper {
 				+ "this." + getter + ".equals(other." + getter + ")))";
 	}
 
-	public String generateHashCodeExpression(ColumnMetadata col) {
-		String getter = "this." + getGetterName(col.getFieldName()) + "()";
-		Class<?> type = col.getJavaType();
-		if (type == int.class || type == char.class || type == short.class || type == byte.class) {
-			return getter;
-		}
-		if (type == boolean.class) {
-			return "(" + getter + " ? 1 : 0)";
-		}
-		if (type == long.class) {
-			return "(int) " + getter;
-		}
-		if (type == float.class) {
-			importType("java.lang.Float");
-			return "Float.floatToIntBits(" + getter + ")";
-		}
-		if (type == double.class) {
-			importType("java.lang.Double");
-			return "(int) Double.doubleToLongBits(" + getter + ")";
-		}
-		return "(" + getter + " == null ? 0 : " + getter + ".hashCode())";
+	public String generateHashCodeExpression(FieldDetails field) {
+		String getter = "this." + getGetterName(field.getName()) + "()";
+		String typeName = field.getType().determineRawClass().getClassName();
+		return switch (typeName) {
+			case "int", "char", "short", "byte" -> getter;
+			case "boolean" -> "(" + getter + " ? 1 : 0)";
+			case "long" -> "(int) " + getter;
+			case "float" -> {
+				importType("java.lang.Float");
+				yield "Float.floatToIntBits(" + getter + ")";
+			}
+			case "double" -> {
+				importType("java.lang.Double");
+				yield "(int) Double.doubleToLongBits(" + getter + ")";
+			}
+			default -> "(" + getter + " == null ? 0 : " + getter + ".hashCode())";
+		};
 	}
 
 	// --- Meta-attribute support ---
 
 	public boolean hasClassMetaAttribute(String name) {
-		return table.hasMetaAttribute(name);
+		return classMetaAttributes.containsKey(name);
 	}
 
 	public String getClassMetaAttribute(String name) {
-		List<String> values = table.getMetaAttribute(name);
+		List<String> values = classMetaAttributes.getOrDefault(name, Collections.emptyList());
 		return values.isEmpty() ? "" : String.join("\n", values);
 	}
 
-	public boolean hasColumnMetaAttribute(ColumnMetadata col, String name) {
-		return col.hasMetaAttribute(name);
+	public boolean hasFieldMetaAttribute(FieldDetails field, String name) {
+		Map<String, List<String>> attrs = fieldMetaAttributes.getOrDefault(
+				field.getName(), Collections.emptyMap());
+		return attrs.containsKey(name);
 	}
 
-	public boolean getColumnMetaAsBool(ColumnMetadata col, String name, boolean defaultValue) {
-		List<String> values = col.getMetaAttribute(name);
+	public boolean getFieldMetaAsBool(FieldDetails field, String name, boolean defaultValue) {
+		Map<String, List<String>> attrs = fieldMetaAttributes.getOrDefault(
+				field.getName(), Collections.emptyMap());
+		List<String> values = attrs.getOrDefault(name, Collections.emptyList());
 		if (values.isEmpty()) {
 			return defaultValue;
 		}
 		return Boolean.parseBoolean(values.get(0));
 	}
 
-	public String getColumnMetaAttribute(ColumnMetadata col, String name) {
-		List<String> values = col.getMetaAttribute(name);
+	public String getFieldMetaAttribute(FieldDetails field, String name) {
+		Map<String, List<String>> attrs = fieldMetaAttributes.getOrDefault(
+				field.getName(), Collections.emptyMap());
+		List<String> values = attrs.getOrDefault(name, Collections.emptyList());
 		return values.isEmpty() ? "" : String.join("\n", values);
 	}
 
-	public boolean isGenProperty(ColumnMetadata col) {
-		return getColumnMetaAsBool(col, "gen-property", true);
+	public boolean isGenProperty(FieldDetails field) {
+		return getFieldMetaAsBool(field, "gen-property", true);
 	}
 
-	public boolean hasFieldDescription(ColumnMetadata col) {
-		return col.hasMetaAttribute("field-description");
+	public boolean hasFieldDescription(FieldDetails field) {
+		return hasFieldMetaAttribute(field, "field-description");
 	}
 
-	public String getFieldDescription(ColumnMetadata col) {
-		return getColumnMetaAttribute(col, "field-description");
+	public String getFieldDescription(FieldDetails field) {
+		return getFieldMetaAttribute(field, "field-description");
 	}
 
 	public boolean hasExtraClassCode() {
-		return table.hasMetaAttribute("class-code");
+		return hasClassMetaAttribute("class-code");
 	}
 
 	public String getExtraClassCode() {
 		return getClassMetaAttribute("class-code");
-	}
-
-	// --- Utility ---
-
-	public boolean isForeignKeyColumn(String columnName) {
-		return table.isForeignKeyColumn(columnName);
 	}
 
 	// --- Inner record types for template data ---
@@ -731,7 +844,46 @@ public class TemplateHelper {
 
 	// --- Private helpers ---
 
-	private void appendCascade(StringBuilder sb, jakarta.persistence.CascadeType[] types) {
+	private String getPackageName() {
+		String className = classDetails.getClassName();
+		if (className == null) return "";
+		int lastDot = className.lastIndexOf('.');
+		return lastDot > 0 ? className.substring(0, lastDot) : "";
+	}
+
+	private boolean isRelationshipField(FieldDetails field) {
+		return field.hasDirectAnnotationUsage(ManyToOne.class)
+				|| field.hasDirectAnnotationUsage(OneToMany.class)
+				|| field.hasDirectAnnotationUsage(OneToOne.class)
+				|| field.hasDirectAnnotationUsage(ManyToMany.class);
+	}
+
+	private boolean isEmbeddedField(FieldDetails field) {
+		return field.hasDirectAnnotationUsage(Embedded.class);
+	}
+
+	private boolean isEmbeddedIdField(FieldDetails field) {
+		return field.hasDirectAnnotationUsage(EmbeddedId.class);
+	}
+
+	private <A extends Annotation> List<FieldDetails> getFieldsWithAnnotation(Class<A> annotationType) {
+		List<FieldDetails> result = new ArrayList<>();
+		for (FieldDetails field : classDetails.getFields()) {
+			if (field.hasDirectAnnotationUsage(annotationType)) {
+				result.add(field);
+			}
+		}
+		return result;
+	}
+
+	private boolean isPrimitiveType(String className) {
+		return switch (className) {
+			case "int", "long", "short", "byte", "char", "boolean", "float", "double" -> true;
+			default -> false;
+		};
+	}
+
+	private void appendCascade(StringBuilder sb, CascadeType[] types) {
 		if (types.length == 1) {
 			sb.append("CascadeType.").append(types[0].name());
 		} else {
@@ -744,16 +896,16 @@ public class TemplateHelper {
 		}
 	}
 
-	private void appendAttributeOverrides(StringBuilder sb, List<AttributeOverrideMetadata> overrides) {
+	private void appendAttributeOverrides(StringBuilder sb, AttributeOverride[] overrides) {
 		importType("jakarta.persistence.AttributeOverrides");
 		importType("jakarta.persistence.AttributeOverride");
 		importType("jakarta.persistence.Column");
 		sb.append("@AttributeOverrides({\n");
-		for (int i = 0; i < overrides.size(); i++) {
-			AttributeOverrideMetadata ao = overrides.get(i);
-			sb.append("        @AttributeOverride(name = \"").append(ao.getFieldName())
-					.append("\", column = @Column(name = \"").append(ao.getColumnName()).append("\"))");
-			if (i < overrides.size() - 1) {
+		for (int i = 0; i < overrides.length; i++) {
+			AttributeOverride ao = overrides[i];
+			sb.append("        @AttributeOverride(name = \"").append(ao.name())
+					.append("\", column = @Column(name = \"").append(ao.column().name()).append("\"))");
+			if (i < overrides.length - 1) {
 				sb.append(",");
 			}
 			sb.append("\n");

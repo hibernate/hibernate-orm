@@ -25,23 +25,23 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.models.spi.ClassDetails;
 
 /**
- * Generates {@code hibernate.cfg.xml} from a {@code List<TableMetadata>}.
+ * Generates {@code hibernate.cfg.xml} from a {@code List<ClassDetails>}.
  *
  * @author Koen Aers
  */
 public class CfgXmlExporter {
 
-	private final List<TableMetadata> tables;
+	private final List<ClassDetails> entities;
 
-	private CfgXmlExporter(List<TableMetadata> tables) {
-		this.tables = tables;
+	private CfgXmlExporter(List<ClassDetails> entities) {
+		this.entities = entities;
 	}
 
-	public static CfgXmlExporter create(List<TableMetadata> tables) {
-		return new CfgXmlExporter(tables);
+	public static CfgXmlExporter create(List<ClassDetails> entities) {
+		return new CfgXmlExporter(entities);
 	}
 
 	public void export(Writer output, Properties properties) {
@@ -77,9 +77,9 @@ public class CfgXmlExporter {
 						element.getValue().toString()) + "</property>");
 			}
 		}
-		for (TableMetadata table : tables) {
-			if (table.getParentEntityClassName() == null) {
-				dump(pw, ejb3, table);
+		for (ClassDetails entity : entities) {
+			if (!isSubclass(entity)) {
+				dump(pw, ejb3, entity);
 			}
 		}
 		pw.println("    </session-factory>\r\n" +
@@ -87,18 +87,28 @@ public class CfgXmlExporter {
 		pw.flush();
 	}
 
-	private void dump(PrintWriter pw, boolean useClass, TableMetadata table) {
-		String qualifiedName = table.getEntityPackage() + "." + table.getEntityClassName();
+	private void dump(PrintWriter pw, boolean useClass, ClassDetails entity) {
+		String qualifiedName = entity.getClassName();
 		if (useClass) {
 			pw.println("<mapping class=\"" + qualifiedName + "\"/>");
 		} else {
 			pw.println("<mapping resource=\"" + qualifiedName.replace('.', '/') + ".hbm.xml\"/>");
 		}
-		for (TableMetadata child : tables) {
-			if (table.getEntityClassName().equals(child.getParentEntityClassName())) {
+		for (ClassDetails child : entities) {
+			if (isChildOf(child, entity)) {
 				dump(pw, useClass, child);
 			}
 		}
+	}
+
+	private boolean isSubclass(ClassDetails entity) {
+		ClassDetails superClass = entity.getSuperClass();
+		return superClass != null && !"java.lang.Object".equals(superClass.getClassName());
+	}
+
+	private boolean isChildOf(ClassDetails child, ClassDetails parent) {
+		ClassDetails superClass = child.getSuperClass();
+		return superClass != null && parent.getClassName().equals(superClass.getClassName());
 	}
 
 	static String forXML(String text) {

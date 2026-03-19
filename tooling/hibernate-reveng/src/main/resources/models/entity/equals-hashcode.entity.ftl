@@ -1,26 +1,26 @@
 <#if !templateHelper.isSubclass() && templateHelper.needsEqualsHashCode()>
 <#if templateHelper.hasExplicitEqualsColumns()>
-<#assign eqCols = templateHelper.getEqualsColumns()>
+<#assign eqFields = templateHelper.getEqualsFields()>
     @Override
     public boolean equals(Object other) {
         if (this == other) return true;
         if (other == null) return false;
         if (!(other instanceof ${templateHelper.getDeclarationName()})) return false;
         ${templateHelper.getDeclarationName()} castOther = (${templateHelper.getDeclarationName()}) other;
-        return <#list eqCols as col>${templateHelper.generateEqualsExpression(col)}<#if col_has_next>
+        return <#list eqFields as field>${templateHelper.generateEqualsExpression(field)}<#if field_has_next>
                 && </#if></#list>;
     }
 
     @Override
     public int hashCode() {
         int result = 17;
-<#list eqCols as col>
-        result = 37 * result + ${templateHelper.generateHashCodeExpression(col)};
+<#list eqFields as field>
+        result = 37 * result + ${templateHelper.generateHashCodeExpression(field)};
 </#list>
         return result;
     }
 <#elseif templateHelper.hasCompositeId()>
-<#assign idField = templateHelper.getTable().getCompositeId().getFieldName()>
+<#assign idField = templateHelper.getCompositeIdField().getName()>
 <#assign idGetter = templateHelper.getGetterName(idField)>
     @Override
     public boolean equals(Object other) {
@@ -37,22 +37,22 @@
         result = 37 * result + (${idGetter}() == null ? 0 : ${idGetter}().hashCode());
         return result;
     }
-<#elseif (templateHelper.getIdentifierColumns()?size > 0)>
+<#elseif (templateHelper.getIdentifierFields()?size > 0)>
     @Override
     public boolean equals(Object other) {
         if (this == other) return true;
         if (other == null) return false;
         if (!(other instanceof ${templateHelper.getDeclarationName()})) return false;
         ${templateHelper.getDeclarationName()} castOther = (${templateHelper.getDeclarationName()}) other;
-        return <#list templateHelper.getIdentifierColumns() as col>${templateHelper.generateEqualsExpression(col)}<#if col_has_next>
+        return <#list templateHelper.getIdentifierFields() as field>${templateHelper.generateEqualsExpression(field)}<#if field_has_next>
                 && </#if></#list>;
     }
 
     @Override
     public int hashCode() {
         int result = 17;
-<#list templateHelper.getIdentifierColumns() as col>
-        result = 37 * result + ${templateHelper.generateHashCodeExpression(col)};
+<#list templateHelper.getIdentifierFields() as field>
+        result = 37 * result + ${templateHelper.generateHashCodeExpression(field)};
 </#list>
         return result;
     }

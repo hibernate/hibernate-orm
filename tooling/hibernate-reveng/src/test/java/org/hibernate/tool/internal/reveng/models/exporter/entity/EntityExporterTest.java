@@ -17,20 +17,23 @@ package org.hibernate.tool.internal.reveng.models.exporter.entity;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.EmbeddedFieldMetadata;
@@ -55,9 +58,24 @@ public class EntityExporterTest {
 	}
 
 	private String export(TableMetadata table, boolean annotated) {
-		EntityExporter exporter = EntityExporter.create(List.of(table), annotated);
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		EntityExporter exporter = EntityExporter.create(
+				List.of(entity), builder.getModelsContext(), annotated);
 		StringWriter writer = new StringWriter();
-		exporter.export(writer, table);
+		exporter.export(writer, entity);
+		return writer.toString();
+	}
+
+	private String exportWithMeta(TableMetadata table,
+								  Map<String, List<String>> classMetaAttributes,
+								  Map<String, Map<String, List<String>>> fieldMetaAttributes) {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		EntityExporter exporter = EntityExporter.create(
+				List.of(entity), builder.getModelsContext(), true);
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity, classMetaAttributes, fieldMetaAttributes);
 		return writer.toString();
 	}
 
@@ -270,11 +288,11 @@ public class EntityExporterTest {
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		table.inheritance(new InheritanceMetadata(InheritanceType.SINGLE_TABLE)
 				.discriminatorColumn("DTYPE")
-				.discriminatorType(DiscriminatorType.STRING));
+				.discriminatorType(DiscriminatorType.INTEGER));
 		String source = export(table);
 		assertTrue(source.contains("@Inheritance(strategy = InheritanceType.SINGLE_TABLE)"), source);
 		assertTrue(source.contains("@DiscriminatorColumn(name = \"DTYPE\""), source);
-		assertTrue(source.contains("discriminatorType = DiscriminatorType.STRING"), source);
+		assertTrue(source.contains("discriminatorType = DiscriminatorType.INTEGER"), source);
 	}
 
 	@Test
@@ -416,10 +434,11 @@ public class EntityExporterTest {
 	public void testGenPropertyFalseSkipsField() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("INTERNAL", "internal", String.class)
-				.addMetaAttribute("gen-property", "false"));
+		table.addColumn(new ColumnMetadata("INTERNAL", "internal", String.class));
 		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
-		String source = export(table);
+		Map<String, Map<String, List<String>>> fieldMeta = new java.util.HashMap<>();
+		fieldMeta.put("internal", Map.of("gen-property", List.of("false")));
+		String source = exportWithMeta(table, Collections.emptyMap(), fieldMeta);
 		assertFalse(source.contains("private String internal;"), source);
 		assertFalse(source.contains("getInternal()"), source);
 		assertTrue(source.contains("private String name;"), source);
@@ -430,9 +449,10 @@ public class EntityExporterTest {
 	public void testFieldDescription() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class)
-				.addMetaAttribute("field-description", "The employee name"));
-		String source = export(table);
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		Map<String, Map<String, List<String>>> fieldMeta = new java.util.HashMap<>();
+		fieldMeta.put("name", Map.of("field-description", List.of("The employee name")));
+		String source = exportWithMeta(table, Collections.emptyMap(), fieldMeta);
 		assertTrue(source.contains("The employee name"), source);
 	}
 
@@ -440,8 +460,9 @@ public class EntityExporterTest {
 	public void testExtraClassCode() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addMetaAttribute("class-code", "    public void customMethod() { }");
-		String source = export(table);
+		Map<String, List<String>> classMeta = Map.of(
+				"class-code", List.of("    public void customMethod() { }"));
+		String source = exportWithMeta(table, classMeta, Collections.emptyMap());
 		assertTrue(source.contains("extra code specified in the reveng.xml"), source);
 		assertTrue(source.contains("public void customMethod() { }"), source);
 	}
@@ -450,11 +471,12 @@ public class EntityExporterTest {
 	public void testUseInToString() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class)
-				.addMetaAttribute("use-in-tostring", "true"));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
 		table.addColumn(new ColumnMetadata("SECRET", "secret", String.class));
-		String source = export(table);
-		// Extract the toString method body by finding matching braces
+		Map<String, Map<String, List<String>>> fieldMeta = new java.util.HashMap<>();
+		fieldMeta.put("name", Map.of("use-in-tostring", List.of("true")));
+		String source = exportWithMeta(table, Collections.emptyMap(), fieldMeta);
+		// Extract the toString method body
 		int toStringStart = source.indexOf("public String toString()");
 		assertTrue(toStringStart >= 0, "toString() should be generated");
 		int braceStart = source.indexOf("{", toStringStart);
@@ -475,9 +497,10 @@ public class EntityExporterTest {
 	public void testUseInEquals() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class)
-				.addMetaAttribute("use-in-equals", "true"));
-		String source = export(table);
+		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		Map<String, Map<String, List<String>>> fieldMeta = new java.util.HashMap<>();
+		fieldMeta.put("email", Map.of("use-in-equals", List.of("true")));
+		String source = exportWithMeta(table, Collections.emptyMap(), fieldMeta);
 		assertTrue(source.contains("public boolean equals(Object other)"), source);
 		assertTrue(source.contains("getEmail()"), source);
 	}
@@ -604,28 +627,32 @@ public class EntityExporterTest {
 
 	@Test
 	public void testCustomTemplatePath(@TempDir Path tempDir) throws IOException {
-		// Create a custom Entity.ftl that outputs a simple marker
 		Files.writeString(tempDir.resolve("main.entity.ftl"),
 				"// Custom template for ${templateHelper.getDeclarationName()}");
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
 		EntityExporter exporter = EntityExporter.create(
-				List.of(table), true, new String[] { tempDir.toString() });
+				List.of(entity), builder.getModelsContext(), true,
+				new String[] { tempDir.toString() });
 		StringWriter writer = new StringWriter();
-		exporter.export(writer, table);
+		exporter.export(writer, entity);
 		String source = writer.toString();
 		assertEquals("// Custom template for Employee", source);
 	}
 
 	@Test
 	public void testCustomTemplatePathFallsBackToDefault(@TempDir Path tempDir) {
-		// Empty temp dir — should fall back to classpath templates
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
 		EntityExporter exporter = EntityExporter.create(
-				List.of(table), true, new String[] { tempDir.toString() });
+				List.of(entity), builder.getModelsContext(), true,
+				new String[] { tempDir.toString() });
 		StringWriter writer = new StringWriter();
-		exporter.export(writer, table);
+		exporter.export(writer, entity);
 		String source = writer.toString();
 		assertTrue(source.contains("@Entity"), source);
 		assertTrue(source.contains("public class Employee"), source);
@@ -635,10 +662,13 @@ public class EntityExporterTest {
 	public void testCustomTemplatePathNonExistentDirectoryIgnored() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
 		EntityExporter exporter = EntityExporter.create(
-				List.of(table), true, new String[] { "/nonexistent/path" });
+				List.of(entity), builder.getModelsContext(), true,
+				new String[] { "/nonexistent/path" });
 		StringWriter writer = new StringWriter();
-		exporter.export(writer, table);
+		exporter.export(writer, entity);
 		String source = writer.toString();
 		assertTrue(source.contains("@Entity"), source);
 		assertTrue(source.contains("public class Employee"), source);

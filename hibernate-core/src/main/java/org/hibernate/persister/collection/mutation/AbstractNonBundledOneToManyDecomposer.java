@@ -138,7 +138,7 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 		}
 		else {
 			// Fire PRE_COLLECTION_UPDATE events
-			preUpdate( action, session );
+			action.preUpdate();
 
 			// DELETE removed entries
 			applyUpdateRemovals( collection, key, ordinalBase, session, operations::add );

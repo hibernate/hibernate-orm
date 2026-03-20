@@ -174,7 +174,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			int ordinalBase,
 			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
-		preUpdate( action, session );
+		action.preUpdate();
 
 		final Object cacheKey = lockCacheItem(action, session);
 

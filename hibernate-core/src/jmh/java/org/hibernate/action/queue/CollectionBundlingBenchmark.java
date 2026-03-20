@@ -48,7 +48,7 @@ public class CollectionBundlingBenchmark {
 	@Table(name = "document")
 	public static class Document {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue(strategy = GenerationType.SEQUENCE)
 		private Long id;
 
 		private String name;
@@ -67,7 +67,7 @@ public class CollectionBundlingBenchmark {
 	@Table(name = "article")
 	public static class Article {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue(strategy = GenerationType.SEQUENCE)
 		private Long id;
 
 		private String title;

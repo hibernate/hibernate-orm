@@ -18,9 +18,9 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Locale;
 
-/**
- * @author Steve Ebersole
- */
+/// Used to track JDBC value bindings (generally parameters) used in mutation operations.
+///
+/// @author Steve Ebersole
 public class JdbcValueBindings {
 	private final TableDescriptor tableDescriptor;
 	private final JdbcValueDescriptorAccess jdbcValueDescriptorAccess;

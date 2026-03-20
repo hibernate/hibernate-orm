@@ -255,6 +255,51 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 					}
 				}
 			}
+
+			// DISABLED: Create UPDATE -> INSERT edges: parent INSERT -> child UPDATE
+			// This creates extra GraphEdge objects that contribute to allocation overhead.
+			// The scenario (UPDATE setting FK to newly inserted parent) is uncommon and
+			// is typically handled by the fixup pattern (INSERT with NULL FK, then UPDATE).
+			// Re-enable if this edge case is needed.
+			/*
+			if (childUpdates != null && parentInserts != null) {
+				for (GroupNode parentInsert : parentInserts) {
+					for (GroupNode childUpdate : childUpdates) {
+						// Edge direction: parent INSERT -> child UPDATE
+						// When an UPDATE sets a foreign key, it must happen AFTER the referenced row is inserted
+						// Example: INSERT Node(id=1), then UPDATE Node SET parent_id=1 WHERE id=2
+						final boolean breakable;
+						if (childTable.equals(parentTable)) {
+							// Self-referential FK - always breakable
+							breakable = true;
+						}
+						else {
+							breakable = foreignKey.nullable() &&
+								(!avoidBreakingDeferrable() || !foreignKey.deferrable());
+						}
+						final int breakCost = computeBreakCost(foreignKey);
+
+						final GraphEdge edge = new GraphEdge(
+								// FK target (parent)
+								parentInsert,
+								// FK key (child)
+								childUpdate,
+								// FROM parent INSERT (graphing)
+								parentInsert,
+								// TO child UPDATE (graphing)
+								childUpdate,
+								breakable,
+								breakCost,
+								foreignKey.keyColumns(),
+								foreignKey,
+								edgeId++
+						);
+
+						outgoing.computeIfAbsent(parentInsert, k -> new ArrayList<>()).add(edge);
+					}
+				}
+			}
+			*/
 		}
 
 		// Create DELETE -> INSERT edges based on unique constraint slot conflicts

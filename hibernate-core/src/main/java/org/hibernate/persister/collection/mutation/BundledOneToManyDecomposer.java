@@ -144,55 +144,62 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 		final var collection = action.getCollection();
 		final var key = action.getKey();
 
-		// Fire PRE_COLLECTION_UPDATE events
-		preUpdate( action, session );
-
 		// Lock cache item
 		final Object cacheKey = lockCacheItem(action, session);
 
 		final List<PlannedOperation> operations = new ArrayList<>();
 
-		// DELETE removed entries
-		applyUpdateRemovals( collection, key, ordinalBase, session, operations::add );
+		if ( !collection.wasInitialized() ) {
+			// If the collection wasn't initialized, we cannot access entries/deletes
+			// The collection should still be marked dirty for queued operations
+			// We only need to notify the cache via the post-execution callback
+		}
+		else {
+			// Fire PRE_COLLECTION_UPDATE events
+			preUpdate( action, session );
+
+			// DELETE removed entries
+			applyUpdateRemovals( collection, key, ordinalBase, session, operations::add );
 
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Create bundles for changes and additions at the same time to save iterations
-		// since they both use the same set of elements based on PersistenceCollection.entires()
-		var updateRowPlan = jdbcOperations.getUpdateRowPlan();
-		var insertRowPlan = jdbcOperations.getInsertRowPlan();
-		var entries = collection.entries( persister );
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			// Create bundles for changes and additions at the same time to save iterations
+			// since they both use the same set of elements based on PersistenceCollection.entires()
+			var updateRowPlan = jdbcOperations.getUpdateRowPlan();
+			var insertRowPlan = jdbcOperations.getInsertRowPlan();
+			var entries = collection.entries( persister );
 
-		if ( (updateRowPlan != null || insertRowPlan != null) && entries.hasNext() ) {
-			var changeEntries = updateRowPlan == null ? null : new ArrayList<BundledBindPlanEntry>();
-			var additionEntries = insertRowPlan == null ? null : new ArrayList<BundledBindPlanEntry>();
-			int entryCount = 0;
+			if ( (updateRowPlan != null || insertRowPlan != null) && entries.hasNext() ) {
+				var changeEntries = updateRowPlan == null ? null : new ArrayList<BundledBindPlanEntry>();
+				var additionEntries = insertRowPlan == null ? null : new ArrayList<BundledBindPlanEntry>();
+				int entryCount = 0;
 
-			while ( entries.hasNext() ) {
-				final Object entry = entries.next();
+				while ( entries.hasNext() ) {
+					final Object entry = entries.next();
 
-				var isAddition = collection.needsInserting( entry, entryCount, persister.getElementType() );
-				var isChange = collection.needsUpdating( entry, entryCount, persister.getAttributeMapping() );
+					var isAddition = collection.needsInserting( entry, entryCount, persister.getElementType() );
+					var isChange = collection.needsUpdating( entry, entryCount, persister.getAttributeMapping() );
 
-				if ( isAddition && isChange ) {
-					// Log a warning?  This typically means bad equals/hashCode, though can happen I guess
-					// with UserCollectionType too...
+					if ( isAddition && isChange ) {
+						// Log a warning?  This typically means bad equals/hashCode, though can happen I guess
+						// with UserCollectionType too...
+					}
+					if ( updateRowPlan != null && isChange ) {
+						changeEntries.add( new BundledBindPlanEntry( entry, entryCount ) );
+					}
+					if ( insertRowPlan != null && isAddition ) {
+						additionEntries.add( new BundledBindPlanEntry( entry, entryCount ) );
+					}
+
+					entryCount++;
 				}
-				if ( updateRowPlan != null && isChange ) {
-					changeEntries.add( new BundledBindPlanEntry( entry, entryCount ) );
-				}
-				if ( insertRowPlan != null && isAddition ) {
-					additionEntries.add( new BundledBindPlanEntry( entry, entryCount ) );
-				}
 
-				entryCount++;
+				// UPDATE modified entries
+				applyUpdateChanges( collection, key, ordinalBase + 1, changeEntries, updateRowPlan, operations::add );
+
+				// INSERT entries
+				applyUpdateAdditions( collection, key, ordinalBase + 2, additionEntries, insertRowPlan, operations::add );
 			}
-
-			// UPDATE modified entries
-			applyUpdateChanges( collection, key, ordinalBase + 1, changeEntries, updateRowPlan, operations::add );
-
-			// INSERT entries
-			applyUpdateAdditions( collection, key, ordinalBase + 2, additionEntries, insertRowPlan, operations::add );
 		}
 
 		postExecCallbackRegistry.accept( new PostCollectionUpdateHandling(

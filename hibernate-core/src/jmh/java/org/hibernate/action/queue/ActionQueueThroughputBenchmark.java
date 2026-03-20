@@ -146,6 +146,121 @@ public class ActionQueueThroughputBenchmark {
 		}
 	}
 
+	// ========== SEQUENCE Generation Entities (for non-IDENTITY benchmarks) ==========
+
+	@Entity(name = "SeqEntity")
+	@Table(name = "seq_entity")
+	public static class SeqEntity {
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_entity_gen")
+		@SequenceGenerator(name = "seq_entity_gen", sequenceName = "seq_entity_seq", allocationSize = 50)
+		private Long id;
+		private String name;
+
+		@Column(name = "entity_value")
+		private int value;
+
+		public SeqEntity() {}
+		public SeqEntity(String name, int value) {
+			this.name = name;
+			this.value = value;
+		}
+	}
+
+	@Entity(name = "SeqParent")
+	@Table(name = "seq_parent")
+	public static class SeqParent {
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_parent_gen")
+		@SequenceGenerator(name = "seq_parent_gen", sequenceName = "seq_parent_seq", allocationSize = 50)
+		private Long id;
+		private String name;
+
+		@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
+		private List<SeqChild> children = new ArrayList<>();
+
+		public SeqParent() {}
+		public SeqParent(String name) {
+			this.name = name;
+		}
+
+		public void addChild(SeqChild child) {
+			children.add(child);
+			child.parent = this;
+		}
+
+		public void removeChild(SeqChild child) {
+			children.remove(child);
+			child.parent = null;
+		}
+	}
+
+	@Entity(name = "SeqChild")
+	@Table(name = "seq_child")
+	public static class SeqChild {
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_child_gen")
+		@SequenceGenerator(name = "seq_child_gen", sequenceName = "seq_child_seq", allocationSize = 50)
+		private Long id;
+		private String name;
+		private int data;
+
+		@ManyToOne
+		@JoinColumn(name = "parent_id")
+		private SeqParent parent;
+
+		public SeqChild() {}
+		public SeqChild(String name, int data) {
+			this.name = name;
+			this.data = data;
+		}
+	}
+
+	@Entity(name = "SeqOrderedItem")
+	@Table(name = "seq_ordered_item")
+	public static class SeqOrderedItem {
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_item_gen")
+		@SequenceGenerator(name = "seq_item_gen", sequenceName = "seq_item_seq", allocationSize = 50)
+		private Long id;
+		private String description;
+
+		@ManyToOne
+		@JoinColumn(name = "order_id")
+		private SeqOrderHeader order;
+
+		public SeqOrderedItem() {}
+		public SeqOrderedItem(String description) {
+			this.description = description;
+		}
+	}
+
+	@Entity(name = "SeqOrderHeader")
+	@Table(name = "seq_order_header")
+	public static class SeqOrderHeader {
+		@Id
+		@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "seq_order_gen")
+		@SequenceGenerator(name = "seq_order_gen", sequenceName = "seq_order_seq", allocationSize = 50)
+		private Long id;
+		private String orderNumber;
+		private String customerName;
+
+		@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+		@OrderColumn(name = "line_number")
+		private List<SeqOrderedItem> items = new ArrayList<>();
+
+		public SeqOrderHeader() {}
+		public SeqOrderHeader(String orderNumber, String customerName) {
+			this.orderNumber = orderNumber;
+			this.customerName = customerName;
+		}
+
+		public void addItem(SeqOrderedItem item) {
+			items.add(item);
+			item.order = this;
+		}
+	}
+
 	// ========== State Classes ==========
 
 	@State(Scope.Benchmark)
@@ -204,6 +319,11 @@ public class ActionQueueThroughputBenchmark {
 				.addAnnotatedClass(ThroughputChild.class)
 				.addAnnotatedClass(OrderHeader.class)
 				.addAnnotatedClass(OrderedItem.class)
+				.addAnnotatedClass(SeqEntity.class)
+				.addAnnotatedClass(SeqParent.class)
+				.addAnnotatedClass(SeqChild.class)
+				.addAnnotatedClass(SeqOrderHeader.class)
+				.addAnnotatedClass(SeqOrderedItem.class)
 				.buildMetadata()
 				.buildSessionFactory();
 	}
@@ -605,6 +725,183 @@ public class ActionQueueThroughputBenchmark {
 			session.beginTransaction();
 			session.createMutationQuery("delete from ThroughputChild").executeUpdate();
 			session.createMutationQuery("delete from ThroughputParent").executeUpdate();
+			session.getTransaction().commit();
+		}
+	}
+
+	// ========== SEQUENCE Generation Benchmarks (Non-IDENTITY) ==========
+	// These benchmarks use SEQUENCE generation to isolate graph-based batching performance
+	// without the overhead of immediate IDENTITY insert execution
+
+	@Benchmark
+	public void seqSingleEntityInsert_Legacy(LegacyQueueState state, Blackhole bh) {
+		try (Session session = state.sessionFactory.openSession()) {
+			session.beginTransaction();
+			SeqEntity entity = new SeqEntity("Entity", 42);
+			session.persist(entity);
+			session.getTransaction().commit();
+			bh.consume(entity.id);
+		}
+	}
+
+	@Benchmark
+	public void seqSingleEntityInsert_Graph(GraphQueueState state, Blackhole bh) {
+		try (Session session = state.sessionFactory.openSession()) {
+			session.beginTransaction();
+			SeqEntity entity = new SeqEntity("Entity", 42);
+			session.persist(entity);
+			session.getTransaction().commit();
+			bh.consume(entity.id);
+		}
+	}
+
+	@Benchmark
+	public void seqBatchInsert_50_Legacy(LegacyQueueState state, Blackhole bh) {
+		seqBatchInsert(state.sessionFactory, 50, bh);
+	}
+
+	@Benchmark
+	public void seqBatchInsert_50_Graph(GraphQueueState state, Blackhole bh) {
+		seqBatchInsert(state.sessionFactory, 50, bh);
+	}
+
+	private void seqBatchInsert(SessionFactory sf, int count, Blackhole bh) {
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			for (int i = 0; i < count; i++) {
+				session.persist(new SeqEntity("Entity-" + i, i));
+			}
+			session.getTransaction().commit();
+			bh.consume(session);
+		}
+	}
+
+	@Benchmark
+	public void seqParentChildInsert_Legacy(LegacyQueueState state, Blackhole bh) {
+		seqParentChildInsert(state.sessionFactory, bh);
+	}
+
+	@Benchmark
+	public void seqParentChildInsert_Graph(GraphQueueState state, Blackhole bh) {
+		seqParentChildInsert(state.sessionFactory, bh);
+	}
+
+	private void seqParentChildInsert(SessionFactory sf, Blackhole bh) {
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			SeqParent parent = new SeqParent("Parent");
+			for (int i = 0; i < 10; i++) {
+				parent.addChild(new SeqChild("Child-" + i, i));
+			}
+			session.persist(parent);
+			session.getTransaction().commit();
+			bh.consume(parent.id);
+		}
+	}
+
+	@Benchmark
+	public void seqCollectionAdd_Legacy(LegacyQueueState state, Blackhole bh) {
+		seqCollectionAdd(state.sessionFactory, bh);
+	}
+
+	@Benchmark
+	public void seqCollectionAdd_Graph(GraphQueueState state, Blackhole bh) {
+		seqCollectionAdd(state.sessionFactory, bh);
+	}
+
+	private void seqCollectionAdd(SessionFactory sf, Blackhole bh) {
+		// Insert parent with initial children
+		Long parentId;
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			SeqParent parent = new SeqParent("Parent");
+			parent.addChild(new SeqChild("Child-1", 1));
+			session.persist(parent);
+			session.getTransaction().commit();
+			parentId = parent.id;
+		}
+
+		// Add more children
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			SeqParent parent = session.find(SeqParent.class, parentId);
+			for (int i = 2; i <= 5; i++) {
+				parent.addChild(new SeqChild("Child-" + i, i));
+			}
+			session.getTransaction().commit();
+			bh.consume(parent.children.size());
+		}
+
+		// Cleanup
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			SeqParent parent = session.find(SeqParent.class, parentId);
+			session.remove(parent);
+			session.getTransaction().commit();
+		}
+	}
+
+	@Benchmark
+	public void seqOrderColumnInsert_Legacy(LegacyQueueState state, Blackhole bh) {
+		seqOrderColumnInsert(state.sessionFactory, bh);
+	}
+
+	@Benchmark
+	public void seqOrderColumnInsert_Graph(GraphQueueState state, Blackhole bh) {
+		seqOrderColumnInsert(state.sessionFactory, bh);
+	}
+
+	private void seqOrderColumnInsert(SessionFactory sf, Blackhole bh) {
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			SeqOrderHeader order = new SeqOrderHeader("ORD-001", "Customer");
+			for (int i = 0; i < 20; i++) {
+				order.addItem(new SeqOrderedItem("Item-" + i));
+			}
+			session.persist(order);
+			session.getTransaction().commit();
+			bh.consume(order.id);
+		}
+
+		// Cleanup
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			session.createMutationQuery("delete from SeqOrderedItem").executeUpdate();
+			session.createMutationQuery("delete from SeqOrderHeader").executeUpdate();
+			session.getTransaction().commit();
+		}
+	}
+
+	@Benchmark
+	public void seqCascadeExceedBatch_Legacy(LegacyQueueState state, Blackhole bh) {
+		seqCascadeExceedBatch(state.sessionFactory, bh);
+	}
+
+	@Benchmark
+	public void seqCascadeExceedBatch_Graph(GraphQueueState state, Blackhole bh) {
+		seqCascadeExceedBatch(state.sessionFactory, bh);
+	}
+
+	private void seqCascadeExceedBatch(SessionFactory sf, Blackhole bh) {
+		// Create 15 parents with 5 children each = 90 entities total (exceeds batch size)
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			for (int i = 0; i < 15; i++) {
+				SeqParent parent = new SeqParent("Parent-" + i);
+				for (int j = 0; j < 5; j++) {
+					parent.addChild(new SeqChild("Child-" + i + "-" + j, j));
+				}
+				session.persist(parent);
+			}
+			session.getTransaction().commit();
+			bh.consume(session);
+		}
+
+		// Cleanup
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			session.createMutationQuery("delete from SeqChild").executeUpdate();
+			session.createMutationQuery("delete from SeqParent").executeUpdate();
 			session.getTransaction().commit();
 		}
 	}

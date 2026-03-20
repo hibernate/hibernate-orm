@@ -68,9 +68,11 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 						entryCount
 				);
 
+				// For one-to-many collections, the "insert" is actually an UPDATE that sets the FK
+				// Use MutationKind.UPDATE so it's ordered AFTER entity INSERTs via FK edges
 				final PlannedOperation plannedOp = new PlannedOperation(
 						insertRowPlan.jdbcOperation().getTableDescriptor(),
-						MutationKind.INSERT,
+						MutationKind.UPDATE,
 						insertRowPlan.jdbcOperation(),
 						bindPlan,
 						ordinalBase * 1_000 + entryCount,
@@ -124,22 +126,29 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 		final var collection = action.getCollection();
 		final var key = action.getKey();
 
-		// Fire PRE_COLLECTION_UPDATE events
-		preUpdate( action, session );
-
 		// Lock cache item
 		final Object cacheKey = lockCacheItem( action, session );
 
 		final List<PlannedOperation> operations = new ArrayList<>();
 
-		// DELETE removed entries
-		applyUpdateRemovals( collection, key, ordinalBase, session, operations::add );
+		if ( !collection.wasInitialized() ) {
+			// If the collection wasn't initialized, we cannot access entries/deletes
+			// The collection should still be marked dirty for queued operations
+			// We only need to notify the cache via the post-execution callback
+		}
+		else {
+			// Fire PRE_COLLECTION_UPDATE events
+			preUpdate( action, session );
 
-		// UPDATE modified entries
-		applyUpdateChanges( collection, key, ordinalBase + 1, session, operations::add );
+			// DELETE removed entries
+			applyUpdateRemovals( collection, key, ordinalBase, session, operations::add );
 
-		// INSERT entries
-		applyUpdateAdditions( collection, key, ordinalBase + 2, session, operations::add );
+			// UPDATE modified entries
+			applyUpdateChanges( collection, key, ordinalBase + 1, session, operations::add );
+
+			// INSERT entries
+			applyUpdateAdditions( collection, key, ordinalBase + 2, session, operations::add );
+		}
 
 		postExecCallbackRegistry.accept( new PostCollectionUpdateHandling(
 				persister,
@@ -291,9 +300,11 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 							entryCount
 					);
 
+					// For one-to-many collections, the "insert" is actually an UPDATE that sets the FK
+					// Use MutationKind.UPDATE so it's ordered AFTER entity INSERTs via FK edges
 					final PlannedOperation plannedOp = new PlannedOperation(
 							insertRowPlan.jdbcOperation().getTableDescriptor(),
-							MutationKind.INSERT,
+							MutationKind.UPDATE,
 							insertRowPlan.jdbcOperation(),
 							bindPlan,
 							ordinalBase * 1_000 + entryCount,

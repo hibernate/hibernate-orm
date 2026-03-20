@@ -125,6 +125,11 @@ jmh {
     fork = 1
     zip64 = true
 
+    // Force JMH to use minimal logging configuration from src/jmh/resources
+    // Without this, it picks up src/test/resources/log4j2.properties with TRACE logging
+    // which generates millions of log lines and severely degrades benchmark performance
+    jvmArgs = ['-Dlog4j.configurationFile=file:src/jmh/resources/log4j2.properties']
+
     // Can be overridden via -Pjmh.include="pattern"
     if (project.hasProperty('jmh.include')) {
         includes = [project.property('jmh.include')]

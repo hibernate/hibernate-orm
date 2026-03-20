@@ -36,6 +36,14 @@ public class SingleRowDeleteBindPlan implements BindPlan, OperationResultChecker
 	}
 
 	@Override
+	public Object getEntityInstance() {
+		// Collection operations don't represent entity operations - they represent
+		// the collection relationship (FK updates for one-to-many, join table rows for many-to-many).
+		// Returning the element creates artificial dependencies that fragment batches.
+		return null;
+	}
+
+	@Override
 	public void execute(
 			ExecutionContext context,
 			PlannedOperation plannedOperation,

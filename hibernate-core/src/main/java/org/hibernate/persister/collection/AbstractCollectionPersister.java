@@ -13,6 +13,7 @@ import org.hibernate.Internal;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.TransientObjectException;
+import org.hibernate.action.internal.CollectionAction;
 import org.hibernate.action.queue.meta.CollectionTableDescriptor;
 import org.hibernate.action.queue.meta.ColumnDescriptor;
 import org.hibernate.action.queue.meta.TableKeyDescriptor;
@@ -28,6 +29,7 @@ import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
@@ -132,6 +134,8 @@ import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
 import static java.util.Collections.emptyList;
+import static org.hibernate.cfg.FlushSettings.BUNDLE_COLLECTION_OPERATIONS;
+import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -250,6 +254,7 @@ public abstract class AbstractCollectionPersister
 
 	private Collection collectionBootDescriptor;
 
+	protected boolean shouldBundleCollectionOperations;
 	private CollectionTableDescriptor collectionTableDescriptor;
 
 	public AbstractCollectionPersister(
@@ -516,6 +521,13 @@ public abstract class AbstractCollectionPersister
 		cascadeDeleteEnabled =
 				key.isCascadeDeleteEnabled()
 				&& creationContext.getDialect().supportsCascadeDelete();
+
+		var configurationService = factory.getServiceRegistry().requireService( ConfigurationService.class );
+		shouldBundleCollectionOperations = configurationService.getSetting(
+				BUNDLE_COLLECTION_OPERATIONS,
+				BOOLEAN,
+				false
+		);
 	}
 
 	private FilterHelper manyToManyFilterHelper(Collection collection, RuntimeModelCreationContext context) {
@@ -1948,4 +1960,21 @@ public abstract class AbstractCollectionPersister
 	public String getRolePath() {
 		return getNavigableRole().getFullPath();
 	}
+
+	protected Object lockCacheItem(CollectionAction action, SharedSessionContractImplementor session) {
+		if (!action.getPersister().hasCache()) {
+			return null;
+		}
+
+		final CollectionDataAccess cache = action.getPersister().getCacheAccessStrategy();
+		return cache.generateCacheKey(
+				action.getKey(),
+				action.getPersister(),
+				session.getFactory(),
+				session.getTenantIdentifier()
+		);
+		// Note: The actual lock is obtained in CollectionAction.beforeExecutions()
+		// We just generate the cache key here for use in post-execution
+	}
+
 }

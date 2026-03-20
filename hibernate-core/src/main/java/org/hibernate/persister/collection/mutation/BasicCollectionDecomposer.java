@@ -530,7 +530,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 				tableDescriptor,
 				MutationKind.DELETE,
 				jdbcOperation,
-				new RemoveBindPlan( key, persister ),
+				new BasicCollectionPersister.RemoveBindPlan( key, persister ),
 				ordinalBase * 1_000,
 				"RemoveAllRows(" + persister.getRolePath() + ")"
 		);

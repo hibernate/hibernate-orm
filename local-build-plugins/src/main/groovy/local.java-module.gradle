@@ -368,5 +368,10 @@ configurations.configureEach {
         if (details.requested.group == "net.bytebuddy" && details.requested.name == 'byte-buddy-agent') {
             details.useVersion libs.versions.byteBuddy.get()
         }
+
+        // Force all 'checker-qual' (RUNTIME) requests to instead use 'checker-qual-android' (CLASS)
+        if (details.requested.group == 'org.checkerframework' && details.requested.name == 'checker-qual') {
+            details.useTarget("org.checkerframework:checker-qual-android:${details.requested.version}")
+        }
     }
 }

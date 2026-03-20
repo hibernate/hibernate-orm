@@ -2210,24 +2210,22 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 //			}
 //		}
 		if ( isOrderParam( typeName ) || isRestrictionParam( typeName ) ) {
-			TypeMirror typeArgument = getTypeArgument( parameterType );
+			final TypeMirror typeArgument = getTypeArgument( parameterType );
 			if ( entityType != null ) {
 				if ( typeArgument == null ) {
 					missingTypeArgError( entityType, parameter, typeName );
 				}
 				else {
-					if ( typeArgument.getKind() == TypeKind.WILDCARD ) {
-						final TypeMirror superBound = ((WildcardType) typeArgument).getSuperBound();
-						if ( superBound == null ) {
-							if ( requireBoundedWildcard( typeName ) ) {
-								missingTypeArgError( entityType, parameter, typeName );
-							}
-							// else: allow; see HHH-20230
+					final TypeMirror typeArgumentOrUpperBound =
+							typeArgumentUpperBound( typeArgument );
+					if ( typeArgumentOrUpperBound == null ) {
+						if ( requireBoundedWildcard( typeName ) ) {
+							missingTypeArgError( entityType, parameter, typeName );
 						}
-						typeArgument = superBound;
+						// else: allow; see HHH-20230
 					}
-					if ( typeArgument != null ) {
-						if ( !types.isSameType( typeArgument, entityType.asType() ) ) {
+					else {
+						if ( !types.isSameType( typeArgumentOrUpperBound, entityType.asType() ) ) {
 							wrongTypeArgError( entityType, parameter, typeName );
 						}
 					}
@@ -2237,6 +2235,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				message( parameter, "repository method does not return entity type", Diagnostic.Kind.ERROR );
 			}
 		}
+	}
+
+	private static TypeMirror typeArgumentUpperBound(TypeMirror typeArgument) {
+		return typeArgument.getKind() == TypeKind.WILDCARD
+				? ((WildcardType) typeArgument).getSuperBound()
+				: typeArgument;
 	}
 
 	private void createCriteriaDelete(ExecutableElement method) {
@@ -2287,8 +2291,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				Diagnostic.Kind.ERROR );
 	}
 
+	/**
+	 * Jakarta Data 1.0 accidentally allowed {@code Sort<?>}
+	 * which should not really be permitted.
+	 */
 	private boolean requireBoundedWildcard(String typeName) {
-		return !context.getJakartaDataSortCompliance() || !typeName.startsWith( JD_SORT );
+		return !context.getJakartaDataSortCompliance()
+			|| !typeName.startsWith( JD_SORT );
 	}
 
 	private void missingTypeArgError(TypeElement entityType, VariableElement parameter, String parameterType) {

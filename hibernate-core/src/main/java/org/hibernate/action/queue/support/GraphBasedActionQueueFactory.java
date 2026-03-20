@@ -42,7 +42,7 @@ public class GraphBasedActionQueueFactory implements ActionQueueFactory, Seriali
 
 	private static PlanningOptions buildPlanningOptions(ConfigurationService configurationService) {
 		var orderByFk = configurationService.getSetting( ORDER_BY_FOREIGN_KEY, BOOLEAN, true );
-		var orderByUnique = configurationService.getSetting( ORDER_BY_UNIQUE_KEY, BOOLEAN, true );
+		var orderByUnique = configurationService.getSetting( ORDER_BY_UNIQUE_KEY, BOOLEAN, false );
 
 		var avoidBreakingDeferrable = configurationService.getSetting( DEFERRABLE_AVOID_BREAK, BOOLEAN, true );
 		var ignoreDeferrableEdges = configurationService.getSetting( DEFERRABLE_EDGES_IGNORE, BOOLEAN, true );
@@ -58,6 +58,6 @@ public class GraphBasedActionQueueFactory implements ActionQueueFactory, Seriali
 
 	private static ConstraintModel buildConstraintModel(SessionFactoryImplementor factory, PlanningOptions planningOptions) {
 		// todo : account for PlanningOptions - do not build UniqueConstraints if we will not be using them
-		return ConstraintModelBuilder.buildConstraintModel( factory.getMappingMetamodel() );
+		return ConstraintModelBuilder.buildConstraintModel( factory.getMappingMetamodel(), planningOptions );
 	}
 }

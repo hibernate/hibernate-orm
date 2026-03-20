@@ -6,6 +6,7 @@ package org.hibernate.orm.test.action.queue.fk;
 
 import java.util.Set;
 
+import org.hibernate.action.queue.PlanningOptions;
 import org.hibernate.action.queue.constraint.ConstraintModelBuilder;
 import org.hibernate.action.queue.constraint.ForeignKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -35,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Tests for {@link ForeignKeyModelBuilder}
+ * Tests for {@link ConstraintModelBuilder}
  *
  * @author Steve Ebersole
  */
@@ -58,11 +59,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		ForeignKeyModelBuilderTest.CompositeKeyTarget.class
 })
 public class ForeignKeyModelBuilderTest {
+	private final PlanningOptions planningOptions = new PlanningOptions(
+			true,
+			false,
+			true,
+			true,
+			PlanningOptions.UniqueCycleStrategy.IGNORE_UNIQUE_EDGES_IN_CYCLES
+	);
 
 	@Test
 	public void testBasicForeignKeyModelBuilding(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel(),
+				planningOptions );
 		var foreignKeys = constraintModel.foreignKeys();
 
 		assertNotNull(constraintModel);
@@ -73,7 +82,8 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testSecondaryTableForeignKeys(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel(),
+				planningOptions );
 		var foreignKeys = constraintModel.foreignKeys();
 
 		// EntityWithSecondaryTable should have FK from secondary table to primary table
@@ -87,7 +97,8 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testJoinedInheritanceForeignKeys(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel(),
+				planningOptions );
 		var foreignKeys = constraintModel.foreignKeys();
 
 		// ChildEntity table should have FK to ParentEntity table in joined inheritance
@@ -101,7 +112,8 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testToOneForeignKeys(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel(),
+				planningOptions );
 		var foreignKeys = constraintModel.foreignKeys();
 
 		// EntityWithToOne should have FK to TargetEntity
@@ -115,7 +127,8 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testCollectionTableForeignKeys(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel(),
+				planningOptions );
 		var foreignKeys = constraintModel.foreignKeys();
 
 		// Owner's @OneToMany should create FK in Item table
@@ -129,7 +142,8 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testManyToManyForeignKeys(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel(),
+				planningOptions );
 		var foreignKeys = constraintModel.foreignKeys();
 
 		// Many-to-many join table should have two FKs
@@ -143,7 +157,8 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testEmbeddedToOneForeignKeys(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel(),
+				planningOptions );
 		var foreignKeys = constraintModel.foreignKeys();
 
 		// EntityWithEmbedded has embedded component with ToOne - should find FK
@@ -157,7 +172,8 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testNullableForeignKeys(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel(),
+				planningOptions );
 		var foreignKeys = constraintModel.foreignKeys();
 
 		// Find nullable FK (EntityWithNullableFK -> OptionalTarget)
@@ -174,7 +190,8 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testForeignKeyColumns(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel(),
+				planningOptions );
 		var foreignKeys = constraintModel.foreignKeys();
 
 		// Find a specific FK and verify column mappings
@@ -194,7 +211,8 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testNoDuplicateForeignKeys(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel(),
+				planningOptions );
 		var foreignKeys = constraintModel.foreignKeys();
 
 		// Count unique FKs - the builder uses IdentityHashMap to avoid duplicates
@@ -206,7 +224,8 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testElementCollectionForeignKeys(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel(),
+				planningOptions );
 		var foreignKeys = constraintModel.foreignKeys();
 
 		// Element collection table should have FK back to owner
@@ -220,7 +239,8 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testCompositeForeignKeys(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel(),
+				planningOptions );
 		var foreignKeys = constraintModel.foreignKeys();
 
 		// Find composite FK (multi-column)
@@ -239,7 +259,8 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testDeferrableFlagIsAlwaysFalse(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel(),
+				planningOptions );
 		var foreignKeys = constraintModel.foreignKeys();
 
 		// Currently, all FKs are marked as non-deferrable
@@ -252,7 +273,8 @@ public class ForeignKeyModelBuilderTest {
 	@Test
 	public void testForeignKeyTableNames(EntityManagerFactoryScope scope) {
 		SessionFactoryImplementor sessionFactory = (SessionFactoryImplementor) scope.getEntityManagerFactory();
-		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel());
+		var constraintModel = ConstraintModelBuilder.buildConstraintModel(sessionFactory.getMappingMetamodel(),
+				planningOptions );
 		var foreignKeys = constraintModel.foreignKeys();
 
 		// Verify all FKs have non-null, non-empty table names

@@ -4,6 +4,7 @@
  */
 package org.hibernate.action.queue.constraint;
 
+import org.hibernate.action.queue.PlanningOptions;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -55,8 +56,14 @@ public final class ConstraintModelBuilder {
 		return primarySort.thenComparing( EntityTableMapping::getRelativePosition );
 	}
 
-	public static ConstraintModel buildConstraintModel(MappingMetamodelImplementor mappingModel) {
-		return new ConstraintModelBuilder().build( mappingModel );
+	public static ConstraintModel buildConstraintModel(MappingMetamodelImplementor mappingModel, PlanningOptions planningOptions) {
+		return new ConstraintModelBuilder( planningOptions ).build( mappingModel );
+	}
+
+	private final PlanningOptions planningOptions;
+
+	public ConstraintModelBuilder(PlanningOptions planningOptions) {
+		this.planningOptions = planningOptions;
 	}
 
 	public ConstraintModel build(MappingMetamodelImplementor mappingModel) {
@@ -137,7 +144,7 @@ public final class ConstraintModelBuilder {
 		String tableName = descriptor.getTableName();
 		EntityIdentifierMapping identifierMapping = descriptor.getIdentifierMapping();
 
-		if (identifierMapping != null) {
+		if (identifierMapping != null && planningOptions.orderByUniqueKeySlots() ) {
 			uniqueConstraints.add(new UniqueConstraint(
 					tableName,
 					"PRIMARY",
@@ -162,6 +169,10 @@ public final class ConstraintModelBuilder {
 	private void collectNaturalIdConstraint(
 			EntityPersister descriptor,
 			List<UniqueConstraint> uniqueConstraints) {
+		if ( !planningOptions.orderByUniqueKeySlots() ) {
+			return;
+		}
+
 		var naturalIdMapping = descriptor.getNaturalIdMapping();
 		if (naturalIdMapping == null) {
 			return;
@@ -348,7 +359,10 @@ public final class ConstraintModelBuilder {
 		boolean isOneToOne = toOne.getCardinality() == ToOneAttributeMapping.Cardinality.ONE_TO_ONE
 				|| toOne.getCardinality() == ToOneAttributeMapping.Cardinality.LOGICAL_ONE_TO_ONE;
 
-		if (isOneToOne && fk != null && fk.hasConstraint()) {
+		if ( isOneToOne
+				&& fk != null
+				&& fk.hasConstraint()
+				&& planningOptions.orderByUniqueKeySlots() ) {
 			// Add unique constraint for the FK column
 			uniqueConstraints.add(new UniqueConstraint(
 					fk.getKeyTable(),

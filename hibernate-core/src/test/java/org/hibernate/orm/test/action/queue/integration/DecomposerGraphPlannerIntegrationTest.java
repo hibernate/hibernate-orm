@@ -52,6 +52,13 @@ import static org.junit.jupiter.api.Assertions.*;
 })
 @SessionFactory
 public class DecomposerGraphPlannerIntegrationTest {
+	private final PlanningOptions planningOptions = new PlanningOptions(
+			true,
+			false,
+			true,
+			true,
+			PlanningOptions.UniqueCycleStrategy.IGNORE_UNIQUE_EDGES_IN_CYCLES
+	);
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
@@ -84,7 +91,8 @@ public class DecomposerGraphPlannerIntegrationTest {
 			final List<PlannedOperation> operations = decomposer.decompose(action, 0, callback -> {}, sessionImpl);
 			final List<PlannedOperationGroup> groups = groupOperations(operations);
 
-			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel());
+			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel(),
+					planningOptions );
 
 			// Build graph with planning options
 			final PlanningOptions planningOptions = new PlanningOptions(
@@ -162,7 +170,8 @@ public class DecomposerGraphPlannerIntegrationTest {
 			allGroups.addAll(groupOperations(personDecomposer.decompose(personAction, 0, callback -> {}, sessionImpl)));
 			allGroups.addAll(groupOperations(addressDecomposer.decompose(addressAction, 1, callback -> {}, sessionImpl)));
 
-			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel());
+			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel(),
+					planningOptions );
 
 			// Build graph with planning options
 			final PlanningOptions planningOptions = new PlanningOptions(
@@ -253,7 +262,8 @@ public class DecomposerGraphPlannerIntegrationTest {
 			final List<PlannedOperation> operations = decomposer.decompose(action, 0, callback -> {}, sessionImpl);
 			final List<PlannedOperationGroup> groups = groupOperations(operations);
 
-			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel());
+			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel(),
+					planningOptions );
 
 			// Build graph with planning options
 			final PlanningOptions planningOptions = new PlanningOptions(
@@ -316,7 +326,8 @@ public class DecomposerGraphPlannerIntegrationTest {
 			final List<PlannedOperation> operations = decomposer.decompose(action, 0, callback -> {}, sessionImpl);
 			final List<PlannedOperationGroup> groups = groupOperations(operations);
 
-			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel());
+			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel(),
+					planningOptions );
 
 			// Build graph with planning options
 			final PlanningOptions planningOptions = new PlanningOptions(
@@ -419,7 +430,8 @@ public class DecomposerGraphPlannerIntegrationTest {
 			allGroups.addAll(groupOperations(addressInsertDecomposer.decompose(addressInsertAction, 1, callback -> {}, sessionImpl)));
 			allGroups.addAll(groupOperations(personUpdateDecomposer.decompose(person2UpdateAction, 2, callback -> {}, sessionImpl)));
 
-			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel());
+			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel(),
+					planningOptions );
 
 			// Build graph with planning options
 			final PlanningOptions planningOptions = new PlanningOptions(
@@ -508,7 +520,8 @@ public class DecomposerGraphPlannerIntegrationTest {
 			allGroups.addAll(groupOperations(deptDecomposer.decompose(deptAction, 0, callback -> {}, sessionImpl)));
 			allGroups.addAll(groupOperations(empDecomposer.decompose(empAction, 1, callback -> {}, sessionImpl)));
 
-			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel());
+			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel(),
+					planningOptions );
 
 			// Build graph with planning options
 			final PlanningOptions planningOptions = new PlanningOptions(

@@ -9,8 +9,6 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.ToOne;
 import org.hibernate.tool.schema.internal.ColumnValue;
 import org.hibernate.mapping.Index;
 import org.hibernate.mapping.PrimaryKey;
@@ -62,7 +60,7 @@ public class SpannerPostgreSQLTableExporter extends StandardTableExporter {
 	public boolean isElementCollectionTable(Table targetTable, Metadata metadata) {
 		return metadata.getCollectionBindings().stream()
 				.filter( collection -> collection.getCollectionTable() == targetTable )
-				.anyMatch( collection -> collection.getElement() instanceof SimpleValue && !( collection.getElement() instanceof ToOne ));
+				.anyMatch( collection -> !collection.isOneToMany() );
 	}
 
 	@Override

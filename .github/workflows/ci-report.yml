@@ -96,8 +96,8 @@ jobs:
               BRANCH_NAME="$FORK_OWNER:$BRANCH_NAME"
             fi
             GH_RESPONSE=$(gh pr view "$BRANCH_NAME" --repo ${{ github.event.workflow_run.repository.full_name }} --json number,baseRefName)
-            TARGET_BRANCH=$(echo $GH_RESPONSE | jq '.baseRefName')
-            PR_ID=$(echo $GH_RESPONSE | jq '.number')
+            TARGET_BRANCH=$(echo $GH_RESPONSE | jq -r '.baseRefName')
+            PR_ID=$(echo $GH_RESPONSE | jq -r '.number')
 
             echo "::notice::PR found. Target branch is: $TARGET_BRANCH"
             echo "::notice::          Pull Request number is: $PR_ID"

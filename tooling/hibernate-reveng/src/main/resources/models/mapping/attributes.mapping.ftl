@@ -1,98 +1,92 @@
         <attributes>
 <#-- Embedded ID -->
-<#if table.getCompositeId()??>
-<#assign cid = table.getCompositeId()>
-            <embedded-id name="${cid.getFieldName()}">
-<#list cid.getAttributeOverrides() as ao>
-                <attribute-override name="${ao.getFieldName()}">
-                    <column name="${ao.getColumnName()}"/>
+<#if helper.getCompositeIdField()??>
+<#assign cid = helper.getCompositeIdField()>
+            <embedded-id name="${cid.getName()}">
+<#list helper.getAttributeOverrides(cid) as ao>
+                <attribute-override name="${ao.fieldName()}">
+                    <column name="${ao.columnName()}"/>
                 </attribute-override>
 </#list>
             </embedded-id>
 </#if>
-<#-- ID columns (skip if composite ID) -->
-<#if !table.getCompositeId()??>
-<#list table.getColumns() as col>
-<#if col.isPrimaryKey()>
-            <id name="${col.getFieldName()}">
-                <column name="${col.getColumnName()}"<#if !col.isNullable()> nullable="false"</#if><#if col.isUnique()> unique="true"</#if>/>
-<#if col.getGenerationType()??>
-                <generated-value strategy="${col.getGenerationType().name()}"/>
+<#-- ID fields (skip if composite ID) -->
+<#if !helper.getCompositeIdField()??>
+<#list helper.getIdFields() as field>
+            <id name="${field.getName()}">
+                <column name="${helper.getColumnName(field)}"<#if !helper.isNullable(field)> nullable="false"</#if><#if helper.isUnique(field)> unique="true"</#if>/>
+<#if helper.getGenerationType(field)??>
+                <generated-value strategy="${helper.getGenerationType(field)}"/>
 </#if>
             </id>
-</#if>
 </#list>
 </#if>
-<#-- Basic columns (skip PK, version, FK columns) -->
-<#list table.getColumns() as col>
-<#if !col.isPrimaryKey() && !col.isVersion() && !table.isForeignKeyColumn(col.getColumnName())>
-            <basic name="${col.getFieldName()}">
-                <column name="${col.getColumnName()}"<#if !col.isNullable()> nullable="false"</#if><#if col.isUnique()> unique="true"</#if><#if (col.getLength() > 0)> length="${col.getLength()?c}"</#if><#if (col.getPrecision() > 0)> precision="${col.getPrecision()?c}"</#if><#if (col.getScale() > 0)> scale="${col.getScale()?c}"</#if>/>
-<#if col.isLob()>
+<#-- Basic fields (non-PK, non-version, non-FK) -->
+<#list helper.getBasicFields() as field>
+            <basic name="${field.getName()}">
+                <column name="${helper.getColumnName(field)}"<#if !helper.isNullable(field)> nullable="false"</#if><#if helper.isUnique(field)> unique="true"</#if><#if (helper.getLength(field) > 0)> length="${helper.getLength(field)?c}"</#if><#if (helper.getPrecision(field) > 0)> precision="${helper.getPrecision(field)?c}"</#if><#if (helper.getScale(field) > 0)> scale="${helper.getScale(field)?c}"</#if>/>
+<#if helper.isLob(field)>
                 <lob/>
 </#if>
-<#if col.getTemporalType()??>
-                <temporal>${col.getTemporalType().name()}</temporal>
+<#if helper.getTemporalType(field)??>
+                <temporal>${helper.getTemporalType(field)}</temporal>
 </#if>
             </basic>
-</#if>
 </#list>
-<#-- Version columns -->
-<#list table.getColumns() as col>
-<#if col.isVersion()>
-            <version name="${col.getFieldName()}">
-                <column name="${col.getColumnName()}"<#if !col.isNullable()> nullable="false"</#if>/>
+<#-- Version fields -->
+<#list helper.getVersionFields() as field>
+            <version name="${field.getName()}">
+                <column name="${helper.getColumnName(field)}"<#if !helper.isNullable(field)> nullable="false"</#if>/>
             </version>
-</#if>
 </#list>
 <#-- Many-to-one -->
-<#list table.getForeignKeys() as fk>
-            <many-to-one name="${fk.getFieldName()}" target-entity="${fk.getTargetEntityPackage()}.${fk.getTargetEntityClassName()}"<#if fk.getFetchType()??> fetch="${fk.getFetchType().name()}"</#if><#if !fk.isOptional()> optional="false"</#if>>
-                <join-column name="${fk.getForeignKeyColumnName()}"<#if fk.getReferencedColumnName()??> referenced-column-name="${fk.getReferencedColumnName()}"</#if>/>
+<#list helper.getManyToOneFields() as field>
+            <many-to-one name="${field.getName()}" target-entity="${helper.getTargetEntityName(field)}"<#if helper.getManyToOneFetchType(field)??> fetch="${helper.getManyToOneFetchType(field)}"</#if><#if !helper.isManyToOneOptional(field)> optional="false"</#if>>
+                <join-column name="${helper.getJoinColumnName(field)}"<#if helper.getReferencedColumnName(field)??> referenced-column-name="${helper.getReferencedColumnName(field)}"</#if>/>
             </many-to-one>
 </#list>
 <#-- One-to-many -->
-<#list table.getOneToManys() as o2m>
-<#assign o2mHasCascade = o2m.getCascadeTypes()?? && (o2m.getCascadeTypes()?size > 0)>
-            <one-to-many name="${o2m.getFieldName()}" target-entity="${o2m.getElementEntityPackage()}.${o2m.getElementEntityClassName()}" mapped-by="${o2m.getMappedBy()}"<#if o2m.getFetchType()??> fetch="${o2m.getFetchType().name()}"</#if><#if o2m.isOrphanRemoval()> orphan-removal="true"</#if><#if o2mHasCascade>>
-<#assign cascadeTypes = o2m.getCascadeTypes()>
+<#list helper.getOneToManyFields() as field>
+<#assign o2mHasCascade = (helper.getOneToManyCascadeTypes(field)?size > 0)>
+            <one-to-many name="${field.getName()}" target-entity="${helper.getOneToManyTargetEntity(field)}" mapped-by="${helper.getOneToManyMappedBy(field)}"<#if helper.getOneToManyFetchType(field)??> fetch="${helper.getOneToManyFetchType(field)}"</#if><#if helper.isOneToManyOrphanRemoval(field)> orphan-removal="true"</#if><#if o2mHasCascade>>
+<#assign cascadeTypes = helper.getOneToManyCascadeTypes(field)>
 <#include "cascade.mapping.ftl"/>
             </one-to-many>
 <#else/>/>
 </#if>
 </#list>
 <#-- One-to-one -->
-<#list table.getOneToOnes() as o2o>
-<#assign o2oHasCascade = o2o.getCascadeTypes()?? && (o2o.getCascadeTypes()?size > 0)>
-<#assign o2oHasChildren = o2o.getForeignKeyColumnName()?? || o2oHasCascade>
-            <one-to-one name="${o2o.getFieldName()}" target-entity="${o2o.getTargetEntityPackage()}.${o2o.getTargetEntityClassName()}"<#if o2o.getMappedBy()??> mapped-by="${o2o.getMappedBy()}"</#if><#if o2o.getFetchType()??> fetch="${o2o.getFetchType().name()}"</#if><#if !o2o.isOptional()> optional="false"</#if><#if o2o.isOrphanRemoval()> orphan-removal="true"</#if><#if o2oHasChildren>>
+<#list helper.getOneToOneFields() as field>
+<#assign o2oHasCascade = (helper.getOneToOneCascadeTypes(field)?size > 0)>
+<#assign o2oHasChildren = helper.getJoinColumnName(field)?? || o2oHasCascade>
+            <one-to-one name="${field.getName()}" target-entity="${helper.getTargetEntityName(field)}"<#if helper.getOneToOneMappedBy(field)??> mapped-by="${helper.getOneToOneMappedBy(field)}"</#if><#if helper.getOneToOneFetchType(field)??> fetch="${helper.getOneToOneFetchType(field)}"</#if><#if !helper.isOneToOneOptional(field)> optional="false"</#if><#if helper.isOneToOneOrphanRemoval(field)> orphan-removal="true"</#if><#if o2oHasChildren>>
 <#if o2oHasCascade>
-<#assign cascadeTypes = o2o.getCascadeTypes()>
+<#assign cascadeTypes = helper.getOneToOneCascadeTypes(field)>
 <#include "cascade.mapping.ftl"/>
 </#if>
-<#if o2o.getForeignKeyColumnName()??>
-                <join-column name="${o2o.getForeignKeyColumnName()}"<#if o2o.getReferencedColumnName()??> referenced-column-name="${o2o.getReferencedColumnName()}"</#if>/>
+<#if helper.getJoinColumnName(field)??>
+                <join-column name="${helper.getJoinColumnName(field)}"<#if helper.getReferencedColumnName(field)??> referenced-column-name="${helper.getReferencedColumnName(field)}"</#if>/>
 </#if>
             </one-to-one>
 <#else/>/>
 </#if>
 </#list>
 <#-- Many-to-many -->
-<#list table.getManyToManys() as m2m>
-<#assign m2mHasCascade = m2m.getCascadeTypes()?? && (m2m.getCascadeTypes()?size > 0)>
-<#assign m2mHasChildren = m2m.getJoinTableName()?? || m2mHasCascade>
-            <many-to-many name="${m2m.getFieldName()}" target-entity="${m2m.getTargetEntityPackage()}.${m2m.getTargetEntityClassName()}"<#if m2m.getMappedBy()??> mapped-by="${m2m.getMappedBy()}"</#if><#if m2m.getFetchType()??> fetch="${m2m.getFetchType().name()}"</#if><#if m2mHasChildren>>
+<#list helper.getManyToManyFields() as field>
+<#assign m2mHasCascade = (helper.getManyToManyCascadeTypes(field)?size > 0)>
+<#assign m2mHasChildren = helper.getJoinTableName(field)?? || m2mHasCascade>
+            <many-to-many name="${field.getName()}" target-entity="${helper.getManyToManyTargetEntity(field)}"<#if helper.getManyToManyMappedBy(field)??> mapped-by="${helper.getManyToManyMappedBy(field)}"</#if><#if helper.getManyToManyFetchType(field)??> fetch="${helper.getManyToManyFetchType(field)}"</#if><#if m2mHasChildren>>
 <#if m2mHasCascade>
-<#assign cascadeTypes = m2m.getCascadeTypes()>
+<#assign cascadeTypes = helper.getManyToManyCascadeTypes(field)>
 <#include "cascade.mapping.ftl"/>
 </#if>
-<#if m2m.getJoinTableName()??>
-                <join-table name="${m2m.getJoinTableName()}">
-<#if m2m.getJoinColumnName()??>
-                    <join-column name="${m2m.getJoinColumnName()}"/>
+<#if helper.getJoinTableName(field)??>
+                <join-table name="${helper.getJoinTableName(field)}">
+<#if helper.getJoinTableJoinColumnName(field)??>
+                    <join-column name="${helper.getJoinTableJoinColumnName(field)}"/>
 </#if>
-<#if m2m.getInverseJoinColumnName()??>
-                    <inverse-join-column name="${m2m.getInverseJoinColumnName()}"/>
+<#if helper.getJoinTableInverseJoinColumnName(field)??>
+                    <inverse-join-column name="${helper.getJoinTableInverseJoinColumnName(field)}"/>
 </#if>
                 </join-table>
 </#if>
@@ -101,11 +95,11 @@
 </#if>
 </#list>
 <#-- Embedded fields -->
-<#list table.getEmbeddedFields() as emb>
-            <embedded name="${emb.getFieldName()}">
-<#list emb.getAttributeOverrides() as ao>
-                <attribute-override name="${ao.getFieldName()}">
-                    <column name="${ao.getColumnName()}"/>
+<#list helper.getEmbeddedFields() as field>
+            <embedded name="${field.getName()}">
+<#list helper.getAttributeOverrides(field) as ao>
+                <attribute-override name="${ao.fieldName()}">
+                    <column name="${ao.columnName()}"/>
                 </attribute-override>
 </#list>
             </embedded>

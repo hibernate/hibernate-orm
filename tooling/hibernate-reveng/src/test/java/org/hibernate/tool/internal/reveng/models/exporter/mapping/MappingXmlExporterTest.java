@@ -31,6 +31,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.EmbeddedFieldMetadata;
@@ -51,9 +53,11 @@ import org.junit.jupiter.api.io.TempDir;
 public class MappingXmlExporterTest {
 
 	private String export(TableMetadata table) {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
 		MappingXmlExporter exporter = MappingXmlExporter.create();
 		StringWriter writer = new StringWriter();
-		exporter.export(writer, table);
+		exporter.export(writer, entity);
 		return writer.toString();
 	}
 
@@ -369,15 +373,25 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testSeparateFilesPerEntity() {
-		TableMetadata dept = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		dept.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		dept.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		DynamicEntityBuilder builder1 = new DynamicEntityBuilder();
+		TableMetadata deptTable = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		deptTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		deptTable.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		ClassDetails dept = builder1.createEntityFromTable(deptTable);
 
-		TableMetadata emp = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		emp.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder2 = new DynamicEntityBuilder();
+		TableMetadata empTable = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		empTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		ClassDetails emp = builder2.createEntityFromTable(empTable);
 
-		String deptXml = export(dept);
-		String empXml = export(emp);
+		MappingXmlExporter exporter = MappingXmlExporter.create();
+		StringWriter deptWriter = new StringWriter();
+		exporter.export(deptWriter, dept);
+		String deptXml = deptWriter.toString();
+		StringWriter empWriter = new StringWriter();
+		exporter.export(empWriter, emp);
+		String empXml = empWriter.toString();
+
 		assertTrue(deptXml.contains("<entity class=\"com.example.Department\">"), deptXml);
 		assertFalse(deptXml.contains("Employee"), deptXml);
 		assertTrue(empXml.contains("<entity class=\"com.example.Employee\">"), empXml);
@@ -387,13 +401,15 @@ public class MappingXmlExporterTest {
 	@Test
 	public void testCustomTemplatePath(@TempDir Path tempDir) throws IOException {
 		Files.writeString(tempDir.resolve("main.mapping.ftl"),
-				"<!-- Custom mapping for ${table.getEntityClassName()} -->");
+				"<!-- Custom mapping for ${helper.getClassName()} -->");
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		ClassDetails entity = builder.createEntityFromTable(table);
 		MappingXmlExporter exporter = MappingXmlExporter.create(
 				new String[] { tempDir.toString() });
 		StringWriter writer = new StringWriter();
-		exporter.export(writer, table);
-		assertEquals("<!-- Custom mapping for Employee -->", writer.toString());
+		exporter.export(writer, entity);
+		assertEquals("<!-- Custom mapping for com.example.Employee -->", writer.toString());
 	}
 }

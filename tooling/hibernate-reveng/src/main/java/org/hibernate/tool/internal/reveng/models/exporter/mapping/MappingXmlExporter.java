@@ -32,10 +32,10 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.models.spi.ClassDetails;
 
 /**
- * Generates a JPA {@code mapping.xml} file per entity from {@link TableMetadata}
+ * Generates a JPA {@code mapping.xml} file per entity from {@link ClassDetails}
  * using FreeMarker templates.
  *
  * @author Koen Aers
@@ -63,16 +63,17 @@ public class MappingXmlExporter {
 		return new MappingXmlExporter(templatePath);
 	}
 
-	public void export(Writer output, TableMetadata table) {
+	public void export(Writer output, ClassDetails entity) {
+		MappingXmlHelper helper = new MappingXmlHelper(entity);
 		Map<String, Object> model = new HashMap<>();
-		model.put("table", table);
+		model.put("helper", helper);
 		try {
 			Template template = freemarkerConfig.getTemplate(TEMPLATE_NAME);
 			template.process(model, output);
 			output.flush();
 		} catch (IOException | TemplateException e) {
 			throw new RuntimeException(
-					"Failed to export mapping.xml for: " + table.getEntityClassName(), e);
+					"Failed to export mapping.xml for: " + entity.getClassName(), e);
 		}
 	}
 

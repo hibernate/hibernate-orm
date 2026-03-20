@@ -1,1 +1,1 @@
-        <table name="${table.getTableName()}"<#if table.getSchema()?? && table.getSchema()?has_content> schema="${table.getSchema()}"</#if><#if table.getCatalog()?? && table.getCatalog()?has_content> catalog="${table.getCatalog()}"</#if>/>
+        <table name="${helper.getTableName()}"<#if helper.getSchema()??> schema="${helper.getSchema()}"</#if><#if helper.getCatalog()??> catalog="${helper.getCatalog()}"</#if>/>

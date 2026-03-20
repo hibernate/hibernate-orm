@@ -1,13 +1,12 @@
-<#if table.getInheritance()??>
-<#assign inh = table.getInheritance()>
-        <inheritance strategy="${inh.getStrategy().name()}"/>
-<#if inh.getDiscriminatorColumnName()??>
-        <discriminator-column name="${inh.getDiscriminatorColumnName()}"<#if inh.getDiscriminatorType()??> discriminator-type="${inh.getDiscriminatorType().name()}"</#if><#if (inh.getDiscriminatorColumnLength() > 0)> length="${inh.getDiscriminatorColumnLength()?c}"</#if>/>
+<#if helper.hasInheritance()>
+        <inheritance strategy="${helper.getInheritanceStrategy()}"/>
+<#if helper.getDiscriminatorColumnName()??>
+        <discriminator-column name="${helper.getDiscriminatorColumnName()}"<#if helper.getDiscriminatorType()??> discriminator-type="${helper.getDiscriminatorType()}"</#if><#if (helper.getDiscriminatorColumnLength() > 0)> length="${helper.getDiscriminatorColumnLength()?c}"</#if>/>
 </#if>
 </#if>
-<#if table.getDiscriminatorValue()??>
-        <discriminator-value>${table.getDiscriminatorValue()}</discriminator-value>
+<#if helper.getDiscriminatorValue()??>
+        <discriminator-value>${helper.getDiscriminatorValue()}</discriminator-value>
 </#if>
-<#if table.getPrimaryKeyJoinColumnName()??>
-        <primary-key-join-column name="${table.getPrimaryKeyJoinColumnName()}"/>
+<#if helper.getPrimaryKeyJoinColumnName()??>
+        <primary-key-join-column name="${helper.getPrimaryKeyJoinColumnName()}"/>
 </#if>

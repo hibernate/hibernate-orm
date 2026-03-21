@@ -14,12 +14,12 @@ import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.mutation.ColumnDetails;
-
 import java.sql.SQLException;
-import java.util.Map;
 
 /**
+ * Bind plan for entity insert operations.
+ * Uses on-demand decomposition to minimize allocation overhead.
+ *
  * @author Steve Ebersole
  */
 public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
@@ -27,7 +27,7 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 	private final EntityPersister entityPersister;
 	private final Object entity;
 	private final Object identifier;
-	private final Map<ColumnDetails, Object> columnValues;
+	private final Object[] state;
 	private final boolean[] insertable;
 	private final AbstractEntityInsertAction action;
 	private final GeneratedValuesCollector generatedValuesCollector;
@@ -37,7 +37,7 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 			EntityPersister entityPersister,
 			Object entity,
 			Object identifier,
-			Map<ColumnDetails, Object> columnValues,
+			Object[] state,
 			boolean[] insertable,
 			AbstractEntityInsertAction action,
 			GeneratedValuesCollector generatedValuesCollector) {
@@ -45,7 +45,7 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 		this.entityPersister = entityPersister;
 		this.entity = entity;
 		this.identifier = identifier;
-		this.columnValues = columnValues;
+		this.state = state;
 		this.insertable = insertable;
 		this.action = action;
 		this.generatedValuesCollector = generatedValuesCollector;
@@ -90,15 +90,23 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 	}
 
 	private void decomposeForInsert(JdbcValueBindings valueBindings, Object identifier, SharedSessionContractImplementor session) {
-		columnValues.forEach( (columnMapping, columnValue) -> {
-			if ( insertable[columnMapping.attributeIndex()]) {
-				if ( columnMapping.physicalColumn() && columnMapping.insertable() ) {
-					valueBindings.bindValue(
-							columnValue,
-							columnMapping.columnName(),
-							ParameterUsage.SET
-					);
-				}
+		// Decompose attribute values on-demand during binding
+		tableDescriptor.attributes().forEach( attribute -> {
+			if ( !attribute.isPluralAttributeMapping() && insertable[attribute.getStateArrayPosition()] ) {
+				final Object attributeValue = state[attribute.getStateArrayPosition()];
+				attribute.breakDownJdbcValues(
+						attributeValue,
+						(valueIndex, jdbcValue, jdbcValueMapping) -> {
+							if ( jdbcValueMapping.isInsertable() ) {
+								valueBindings.bindValue(
+										jdbcValue,
+										jdbcValueMapping.getSelectableName(),
+										ParameterUsage.SET
+								);
+							}
+						},
+						session
+				);
 			}
 		} );
 

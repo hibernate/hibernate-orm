@@ -75,11 +75,8 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		final Object identifier = action.getId();
 		final Object[] state = action.getState();
 
-		var valuesAnalysis = new InsertValuesAnalysisForDecomposer(entityPersister, state, session);
-		var inclusionChecker = calculateTableInclusionCheck( valuesAnalysis );
-
 		var insertable = entityPersister.getPropertyInsertability();
-
+		var valuesAnalysis = new SimpleInsertValuesAnalysis( entityPersister, state );
 		var effectiveGroup = chooseEffectiveInsertGroup( insertable, entity, identifier, session );
 
 		final var generatedValuesCollector = GeneratedValuesCollector.forInsert( entityPersister );
@@ -96,7 +93,7 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 			var operation = entry.getValue().createMutationOperation();
 			var tableDescriptor = (EntityTableDescriptor) operation.getTableDescriptor();
 
-			if ( !inclusionChecker.include( tableDescriptor ) ) {
+			if ( !valuesAnalysis.include( tableDescriptor ) ) {
 				continue;
 			}
 
@@ -104,7 +101,7 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 					tableDescriptor,
 					entity,
 					identifier,
-					valuesAnalysis,
+					state,
 					insertable,
 					action,
 					generatedValuesCollector
@@ -145,10 +142,6 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 			}
 			return veto;
 		}
-	}
-
-	private org.hibernate.action.queue.support.TableInclusionChecker calculateTableInclusionCheck(InsertValuesAnalysisForDecomposer analysis) {
-		return (tableMapping) -> !tableMapping.isOptional() || analysis.hasNonNullBindings( tableMapping );
 	}
 
 	private Map<String, TableInsert> chooseEffectiveInsertGroup(
@@ -304,40 +297,24 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 			EntityTableDescriptor tableDescriptor,
 			Object entity,
 			Object identifier,
-			InsertValuesAnalysisForDecomposer valuesAnalysis,
+			Object[] state,
 			boolean[] insertable,
 			AbstractEntityInsertAction action,
 			GeneratedValuesCollector generatedValuesCollector) {
-		final EntityTableDescriptor tableDescriptorToUse;
-		final Map<ColumnDetails, Object> columnValuesToUse;
-
-		if ( entityPersister instanceof UnionSubclassEntityPersister ) {
-			tableDescriptorToUse = entityPersister.getIdentifierTableDescriptor();
-			columnValuesToUse = mergeColumnValues( valuesAnalysis );
-		}
-		else {
-			tableDescriptorToUse = tableDescriptor;
-			columnValuesToUse = valuesAnalysis.getColumnValuesForTable( tableDescriptorToUse.name() );
-		}
+		final EntityTableDescriptor tableDescriptorToUse = entityPersister instanceof UnionSubclassEntityPersister
+				? entityPersister.getIdentifierTableDescriptor()
+				: tableDescriptor;
 
 		return new EntityInsertBindPlan(
 				tableDescriptorToUse,
 				entityPersister,
 				entity,
 				identifier,
-				columnValuesToUse,
+				state,
 				insertable,
 				action,
 				generatedValuesCollector
 		);
-	}
-
-	private static Map<ColumnDetails, Object> mergeColumnValues(InsertValuesAnalysisForDecomposer valuesAnalysis) {
-		final Map<ColumnDetails, Object> combined = new HashMap<>();
-		valuesAnalysis.getColumnValuesByTable().forEach( (tableName, columnValues) -> {
-			combined.putAll( columnValues );
-		} );
-		return combined;
 	}
 
 }

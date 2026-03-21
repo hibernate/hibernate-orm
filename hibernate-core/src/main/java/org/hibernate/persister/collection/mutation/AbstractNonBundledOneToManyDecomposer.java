@@ -198,7 +198,8 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 
 			final PlannedOperation plannedOp = new PlannedOperation(
 					deleteRowPlan.jdbcOperation().getTableDescriptor(),
-					MutationKind.DELETE,
+					// technically an UPDATE
+					MutationKind.UPDATE,
 					deleteRowPlan.jdbcOperation(),
 					bindPlan,
 					ordinalBase * 1_000 + deletionCount,
@@ -304,6 +305,7 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 					// Use MutationKind.UPDATE so it's ordered AFTER entity INSERTs via FK edges
 					final PlannedOperation plannedOp = new PlannedOperation(
 							insertRowPlan.jdbcOperation().getTableDescriptor(),
+							// technically an UPDATE
 							MutationKind.UPDATE,
 							insertRowPlan.jdbcOperation(),
 							bindPlan,

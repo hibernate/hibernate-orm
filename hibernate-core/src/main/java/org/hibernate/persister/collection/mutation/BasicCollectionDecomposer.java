@@ -12,6 +12,7 @@ import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.bind.JdbcValueBindings;
+import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.meta.CollectionTableDescriptor;
 import org.hibernate.action.queue.mutation.ast.builder.GraphTableDeleteBuilderStandard;
@@ -20,7 +21,7 @@ import org.hibernate.action.queue.mutation.ast.builder.GraphTableUpdateBuilderSt
 import org.hibernate.action.queue.mutation.jdbc.JdbcOperation;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -32,8 +33,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
 
-import static org.hibernate.cfg.FlushSettings.BUNDLE_COLLECTION_OPERATIONS;
-import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /// Decomposition support for [BasicCollectionPersister] which managed inserts, updates and deletes
@@ -43,24 +42,18 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
 public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 	private final BasicCollectionPersister persister;
 	private final CollectionTableDescriptor tableDescriptor;
-	private final boolean shouldBundleCollectionOperations;
+	private final boolean shouldBundleOperations;
 	private final CollectionJdbcOperations jdbcOperations;
 
 	public BasicCollectionDecomposer(
 			BasicCollectionPersister persister,
+			boolean shouldBundleOperations,
 			SessionFactoryImplementor factory) {
 		assert persister != null;
 
 		this.persister = persister;
+		this.shouldBundleOperations = shouldBundleOperations;
 		this.tableDescriptor = persister.getCollectionTableDescriptor();
-
-		var configurationService = factory.getServiceRegistry().requireService( ConfigurationService.class );
-		shouldBundleCollectionOperations = configurationService.getSetting(
-				BUNDLE_COLLECTION_OPERATIONS,
-				BOOLEAN,
-				false
-		);
-
 		this.jdbcOperations = buildJdbcOperations( factory );
 	}
 
@@ -96,7 +89,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 
 		final List<PlannedOperation> operations = new ArrayList<>();
 
-		if ( shouldBundleCollectionOperations ) {
+		if ( shouldBundleOperations ) {
 			// Bundled: all rows in a single PlannedOperation with a bundled BindPlan
 			final List<Object> entryList = new ArrayList<>();
 			final List<Integer> entryIndices = new ArrayList<>();
@@ -220,7 +213,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 				else {
 					planDeleteRowOperations( collection, key, ordinalBase, session, operations::add );
 
-					if ( shouldBundleCollectionOperations ) {
+					if ( shouldBundleOperations ) {
 						planBundledChangeAndAdditionOperations( collection, key, ordinalBase, session, operations::add );
 					}
 					else {
@@ -260,7 +253,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			return;
 		}
 
-		if ( shouldBundleCollectionOperations ) {
+		if ( shouldBundleOperations ) {
 			// Bundle all rows into a single PlannedOperation with a bundled BindPlan
 			final List<Object> deletionList = new ArrayList<>();
 
@@ -320,7 +313,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			Consumer<PlannedOperation> operationConsumer) {
-		assert shouldBundleCollectionOperations;
+		assert shouldBundleOperations;
 
 		var updateRowPlan = jdbcOperations.getUpdateRowPlan();
 		var insertRowPlan = jdbcOperations.getInsertRowPlan();
@@ -530,7 +523,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 				tableDescriptor,
 				MutationKind.DELETE,
 				jdbcOperation,
-				new BasicCollectionPersister.RemoveBindPlan( key, persister ),
+				new RemoveBindPlan( key, persister ),
 				ordinalBase * 1_000,
 				"RemoveAllRows(" + persister.getRolePath() + ")"
 		);
@@ -857,4 +850,41 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		return builder.buildMutation().createMutationOperation();
 	}
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// BindPlan for collection removals (full deletion).
+
+	public static class RemoveBindPlan implements BindPlan {
+		private final Object key;
+		private final BasicCollectionPersister mutationTarget;
+
+		public RemoveBindPlan(Object key, BasicCollectionPersister mutationTarget) {
+			this.key = key;
+			this.mutationTarget = mutationTarget;
+		}
+
+		@Override
+		public void execute(
+				ExecutionContext context,
+				PlannedOperation plannedOperation,
+				SharedSessionContractImplementor session) {
+			context.executeRow(
+					plannedOperation,
+					valueBindings -> {
+						var fkDescriptor = mutationTarget.getAttributeMapping().getKeyDescriptor();
+						fkDescriptor.getKeyPart().decompose(
+								key,
+								(valueIndex, value, jdbcValueMapping) -> {
+									valueBindings.bindValue(
+											value,
+											jdbcValueMapping.getSelectableName(),
+											ParameterUsage.RESTRICT
+									);
+								},
+								session
+						);
+					},
+					null
+			);
+		}
+	}
 }

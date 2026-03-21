@@ -49,7 +49,8 @@ public class StandardOneToManyDecomposer extends AbstractNonBundledOneToManyDeco
 
 		final PlannedOperation plannedOp = new PlannedOperation(
 				persister.getCollectionTableDescriptor(),
-				MutationKind.DELETE,
+				// technically an UPDATE
+				MutationKind.UPDATE,
 				jdbcOperation,
 				new RemoveBindPlan( action.getKey(), persister ),
 				ordinalBase * 1_000,

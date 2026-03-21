@@ -77,7 +77,8 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 		var removeOperation = jdbcOperations.getRemoveOperation();
 		return List.of( new PlannedOperation(
 				removeOperation.getTableDescriptor(),
-				MutationKind.DELETE,
+				// technically an UPDATE
+				MutationKind.UPDATE,
 				removeOperation,
 				new RemoveBindPlan( action.getKey(), persister ),
 				ordinalBase * 1_000,

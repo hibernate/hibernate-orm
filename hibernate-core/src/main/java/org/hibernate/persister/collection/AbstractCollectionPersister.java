@@ -254,7 +254,7 @@ public abstract class AbstractCollectionPersister
 
 	private Collection collectionBootDescriptor;
 
-	protected boolean shouldBundleCollectionOperations;
+	protected boolean shouldBundleOperations;
 	private CollectionTableDescriptor collectionTableDescriptor;
 
 	public AbstractCollectionPersister(
@@ -523,7 +523,7 @@ public abstract class AbstractCollectionPersister
 				&& creationContext.getDialect().supportsCascadeDelete();
 
 		var configurationService = factory.getServiceRegistry().requireService( ConfigurationService.class );
-		shouldBundleCollectionOperations = configurationService.getSetting(
+		shouldBundleOperations = configurationService.getSetting(
 				BUNDLE_COLLECTION_OPERATIONS,
 				BOOLEAN,
 				false

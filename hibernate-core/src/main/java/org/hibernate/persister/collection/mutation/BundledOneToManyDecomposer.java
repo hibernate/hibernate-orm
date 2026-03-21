@@ -98,7 +98,8 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 
 				operations.add( new PlannedOperation(
 						persister.getCollectionTableDescriptor(),
-						MutationKind.INSERT,
+						// technically an UPDATE
+						MutationKind.UPDATE,
 						insertRowPlan.jdbcOperation(),
 						bundledBindPlan,
 						ordinalBase,
@@ -245,7 +246,8 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 
 			operationConsumer.accept( new PlannedOperation(
 					persister.getCollectionTableDescriptor(),
-					MutationKind.DELETE,
+					// technically an UPDATE
+					MutationKind.UPDATE,
 					deleteRowPlan.jdbcOperation(),
 					bundledBindPlan,
 					ordinalBase,
@@ -306,7 +308,8 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 
 		operationConsumer.accept( new PlannedOperation(
 				persister.getCollectionTableDescriptor(),
-				MutationKind.INSERT,
+				// technically an UPDATE
+				MutationKind.UPDATE,
 				insertRowPlan.jdbcOperation(),
 				bundledBindPlan,
 				ordinalBase,

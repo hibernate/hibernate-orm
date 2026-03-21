@@ -60,14 +60,15 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractNonBundledOneTo
 		for ( int i = 0; i < operationsBySubclassId.length; i++ ) {
 			final CollectionJdbcOperations operation = operationsBySubclassId[i];
 
-			final PlannedOperation plannedOp = new PlannedOperation(
+			operations.add( new PlannedOperation(
 					persister.getCollectionTableDescriptor(),
-					MutationKind.DELETE,
+					// technically an UPDATE
+					MutationKind.UPDATE,
 					operation.getRemoveOperation(),
 					new RemoveBindPlan( action.getKey(), persister ),
 					ordinalBase * 1_000,
 					"RemoveAllRows(" + persister.getRolePath() + ")"
-			);
+			) );
 		}
 
 		return operations;

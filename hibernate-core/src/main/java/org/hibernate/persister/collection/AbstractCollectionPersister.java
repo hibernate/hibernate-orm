@@ -526,7 +526,7 @@ public abstract class AbstractCollectionPersister
 		shouldBundleOperations = configurationService.getSetting(
 				BUNDLE_COLLECTION_OPERATIONS,
 				BOOLEAN,
-				false
+				true
 		);
 	}
 

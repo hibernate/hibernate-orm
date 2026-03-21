@@ -94,19 +94,21 @@ public interface FlushSettings {
 	/// @since 8.0
 	String DEFERRABLE_AVOID_BREAK = "hibernate.flush.plan.deferrable.avoid_break";
 
-	/// Controls whether collection operations should be bundled into single JDBC operations
-	/// when possible (one INSERT for all collection elements instead of one INSERT per element).
+	/// Controls whether collection operations should be bundled into single
+	/// [org.hibernate.action.queue.op.PlannedOperation] (one INSERT for all collection
+	/// elements instead of one INSERT per element).
 	///
-	/// When true:
+	/// When true (default):
 	/// 	- Collection inserts, updates, and deletes are bundled together
-	/// 	- Results in fewer JDBC operations (one per collection instead of one per element)
+	/// 	- Results in fewer [org.hibernate.action.queue.op.PlannedOperation] (one per collection
+	/// 		 instead of one per element)
 	/// 	- Better performance for collections with many elements
 	///
-	/// When false (default):
+	/// When false:
 	/// 	- Each collection element operation is a separate JDBC operation
 	/// 	- More JDBC operations but simpler execution model
 	///
-	/// @settingDefault false
+	/// @settingDefault true
 	///
 	/// @since 8.0
 	String BUNDLE_COLLECTION_OPERATIONS = "hibernate.flush.collection.bundle";

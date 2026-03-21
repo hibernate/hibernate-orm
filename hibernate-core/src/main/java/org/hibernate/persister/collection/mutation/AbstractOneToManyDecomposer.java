@@ -15,7 +15,6 @@ import org.hibernate.action.queue.mutation.ast.builder.GraphTableUpdateBuilderSt
 import org.hibernate.action.queue.mutation.jdbc.JdbcOperation;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -25,8 +24,6 @@ import org.hibernate.persister.collection.OneToManyPersister;
 import java.util.List;
 import java.util.function.Consumer;
 
-import static org.hibernate.cfg.FlushSettings.BUNDLE_COLLECTION_OPERATIONS;
-import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.sql.model.ast.builder.TableMutationBuilder.NULL;
 
 /**
@@ -36,18 +33,11 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 	protected final OneToManyPersister persister;
 	protected final SessionFactoryImplementor factory;
 
-	protected final boolean shouldBundleOperations;
-
-	public AbstractOneToManyDecomposer(OneToManyPersister persister, SessionFactoryImplementor factory) {
+	public AbstractOneToManyDecomposer(
+			OneToManyPersister persister,
+			SessionFactoryImplementor factory) {
 		this.persister = persister;
 		this.factory = factory;
-
-		var configurationService = factory.getServiceRegistry().requireService( ConfigurationService.class );
-		shouldBundleOperations = configurationService.getSetting(
-				BUNDLE_COLLECTION_OPERATIONS,
-				BOOLEAN,
-				false
-		);
 	}
 
 

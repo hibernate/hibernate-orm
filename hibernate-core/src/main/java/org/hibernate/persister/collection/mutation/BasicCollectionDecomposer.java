@@ -171,6 +171,16 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 
 		final Object cacheKey = lockCacheItem(action, session);
 
+		// Register callback to handle post-execution work (afterAction, cache, events, stats)
+		postExecCallbackRegistry.accept( new PostCollectionUpdateHandling(
+				persister,
+				action.getCollection(),
+				action.getKey(),
+				action.getAffectedOwner(),
+				action.getAffectedOwnerId(),
+				cacheKey
+		) );
+
 		var collection = action.getCollection();
 		var key = action.getKey();
 		var attribute = persister.getAttributeMapping();
@@ -227,15 +237,6 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 				eventMonitor.completeCollectionUpdateEvent( event, key, persister.getRole(), success, session );
 			}
 		}
-
-		postExecCallbackRegistry.accept( new PostCollectionUpdateHandling(
-				persister,
-				collection,
-				key,
-				action.getAffectedOwner(),
-				action.getAffectedOwnerId(),
-				cacheKey
-		) );
 
 		return operations;
 	}

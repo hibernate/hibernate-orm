@@ -37,6 +37,10 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 			int ordinalBase,
 			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
+		// Register callback to handle post-execution work (afterAction, cache, events, stats)
+		final Object cacheKey = lockCacheItem( action, session );
+		postExecCallbackRegistry.accept( new PostCollectionRecreateHandling( action, cacheKey ) );
+
 		var attribute = persister.getAttributeMapping();
 		var collection = action.getCollection();
 		var key = action.getKey();
@@ -110,10 +114,6 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 			entryCount++;
 		}
 
-		// Register callback to handle post-execution work (afterAction, cache, events, stats)
-		final Object cacheKey = lockCacheItem( action, session );
-		postExecCallbackRegistry.accept( new PostCollectionRecreateHandling( action, cacheKey ) );
-
 		return operations;
 	}
 
@@ -128,6 +128,16 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 
 		// Lock cache item
 		final Object cacheKey = lockCacheItem( action, session );
+
+		// Register callback to handle post-execution work (afterAction, cache, events, stats)
+		postExecCallbackRegistry.accept( new PostCollectionUpdateHandling(
+				persister,
+				collection,
+				key,
+				action.getAffectedOwner(),
+				action.getAffectedOwnerId(),
+				cacheKey
+		) );
 
 		final List<PlannedOperation> operations = new ArrayList<>();
 
@@ -149,15 +159,6 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 			// INSERT entries
 			applyUpdateAdditions( collection, key, ordinalBase + 2, session, operations::add );
 		}
-
-		postExecCallbackRegistry.accept( new PostCollectionUpdateHandling(
-				persister,
-				collection,
-				key,
-				action.getAffectedOwner(),
-				action.getAffectedOwnerId(),
-				cacheKey
-		) );
 
 		return operations;
 	}

@@ -32,6 +32,7 @@ public abstract class AbstractGraphRestrictedTableMutationBuilder<O extends Jdbc
 
 	protected final List<ColumnValueBinding> keyRestrictionBindings = new ArrayList<>();
 	protected final List<ColumnValueBinding> optimisticLockBindings = new ArrayList<>();
+	protected String whereFragment;
 
 	protected AbstractGraphRestrictedTableMutationBuilder(
 			MutationType mutationType,
@@ -97,10 +98,19 @@ public abstract class AbstractGraphRestrictedTableMutationBuilder<O extends Jdbc
 	}
 
 	public void setWhere(String fragment) {
-		throw new UnsupportedOperationException("Custom WHERE clauses not supported for graph mutations");
+		this.whereFragment = fragment;
 	}
 
 	public void addWhereFragment(String fragment) {
-		throw new UnsupportedOperationException("Custom WHERE fragments not supported for graph mutations");
+		if ( whereFragment == null ) {
+			whereFragment = fragment;
+		}
+		else {
+			whereFragment = whereFragment + " and " + fragment;
+		}
+	}
+
+	public String getWhereFragment() {
+		return whereFragment;
 	}
 }

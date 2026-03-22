@@ -87,6 +87,7 @@ public class GraphTableUpdateBuilderStandard
 				valueBindings,
 				keyRestrictionBindings,
 				optimisticLockBindings,
+				whereFragment,
 				getParameters()
 		);
 	}

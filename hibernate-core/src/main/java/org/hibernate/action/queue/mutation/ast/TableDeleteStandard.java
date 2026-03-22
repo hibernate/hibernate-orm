@@ -32,6 +32,7 @@ public class TableDeleteStandard
 
 	private final List<ColumnValueBinding> keyRestrictionBindings;
 	private final List<ColumnValueBinding> optLockRestrictionBindings;
+	private final String whereFragment;
 
 	public TableDeleteStandard(
 			TableDescriptor tableDescriptor,
@@ -45,6 +46,7 @@ public class TableDeleteStandard
 			"delete for " + mutationTarget.getRolePath(),
 			keyRestrictionBindings,
 			optLockRestrictionBindings,
+			null,
 			parameters
 		);
 	}
@@ -56,6 +58,25 @@ public class TableDeleteStandard
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
 			List<ColumnValueParameter> parameters) {
+		this(
+			tableDescriptor,
+			mutationTarget,
+			sqlComment,
+			keyRestrictionBindings,
+			optLockRestrictionBindings,
+			null,
+			parameters
+		);
+	}
+
+	public TableDeleteStandard(
+			TableDescriptor tableDescriptor,
+			GraphMutationTarget<?> mutationTarget,
+			String sqlComment,
+			List<ColumnValueBinding> keyRestrictionBindings,
+			List<ColumnValueBinding> optLockRestrictionBindings,
+			String whereFragment,
+			List<ColumnValueParameter> parameters) {
 		super(
 			tableDescriptor,
 			MutationType.DELETE,
@@ -65,6 +86,7 @@ public class TableDeleteStandard
 		);
 		this.keyRestrictionBindings = keyRestrictionBindings;
 		this.optLockRestrictionBindings = optLockRestrictionBindings;
+		this.whereFragment = whereFragment;
 	}
 
 	private static List<ColumnValueBinding> combineBindings(
@@ -112,6 +134,7 @@ public class TableDeleteStandard
 			expectation,
 			keyRestrictionBindings,
 			optLockRestrictionBindings,
+			whereFragment,
 			getParameters()
 		);
 	}

@@ -36,12 +36,34 @@ public class JdbcUpdateStandard
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
 			List<ColumnValueParameter> parameters) {
+		this(
+				tableDescriptor,
+				mutationTarget,
+				expectation,
+				valueBindings,
+				keyRestrictionBindings,
+				optLockRestrictionBindings,
+				null,
+				parameters
+		);
+	}
+
+	public JdbcUpdateStandard(
+			TableDescriptor tableDescriptor,
+			GraphMutationTarget<?> mutationTarget,
+			Expectation expectation,
+			List<ColumnValueBinding> valueBindings,
+			List<ColumnValueBinding> keyRestrictionBindings,
+			List<ColumnValueBinding> optLockRestrictionBindings,
+			String whereFragment,
+			List<ColumnValueParameter> parameters) {
 		super(tableDescriptor, mutationTarget, expectation, parameters);
 		this.sql = generateSql(
 				tableDescriptor,
 				valueBindings,
 				keyRestrictionBindings,
-				optLockRestrictionBindings
+				optLockRestrictionBindings,
+				whereFragment
 		);
 		registerValueDescriptors(parameters);
 	}
@@ -50,7 +72,8 @@ public class JdbcUpdateStandard
 			TableDescriptor tableDescriptor,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
-			List<ColumnValueBinding> optLockRestrictionBindings) {
+			List<ColumnValueBinding> optLockRestrictionBindings,
+			String whereFragment) {
 		final var sql = new StringBuilder("update ");
 		sql.append(tableDescriptor.name());
 		sql.append(" set ");
@@ -94,6 +117,12 @@ public class JdbcUpdateStandard
 				sql.append(binding.getColumnReference().getColumnExpression());
 				sql.append("=?");
 			}
+		}
+
+		// WHERE clause - custom WHERE fragment (e.g., collection restrictions)
+		if (whereFragment != null && !whereFragment.isEmpty()) {
+			sql.append(" and ");
+			sql.append(whereFragment);
 		}
 
 		return sql.toString();

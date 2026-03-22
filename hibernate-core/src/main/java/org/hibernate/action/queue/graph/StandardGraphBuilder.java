@@ -189,9 +189,42 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 				}
 			}
 
+
+			// Create INSERT -> UPDATE edges: insert parent before updating child FK
+			// Case 1 - Parent INSERT -> Child UPDATE (parent inserted, then child FK set to point to parent)
+			// This is critical for one-to-many collections where collection operations UPDATE child FK
+			final List<GroupNode> childUpdates = updateNodeByTable.get( childTable );
+			if ( parentInserts != null && childUpdates != null ) {
+				for ( GroupNode parentInsert : parentInserts ) {
+					for ( GroupNode childUpdate : childUpdates ) {
+						// INSERT parent must happen before UPDATE child
+						// Example: INSERT Product, then UPDATE Category SET product_id=1
+						final GraphEdge edge = new GraphEdge(
+								// FK target (parent)
+								parentInsert,
+								// FK key (child)
+								childUpdate,
+								// FROM parent INSERT (graphing)
+								parentInsert,
+								// TO child UPDATE (graphing)
+								childUpdate,
+								// NOT breakable
+								false,
+								// No break cost
+								0,
+								// No columns
+								EMPTY_SELECTABLES,
+								foreignKey,
+								edgeId++
+						);
+
+						outgoing.computeIfAbsent( parentInsert, k -> new ArrayList<>() ).add( edge );
+					}
+				}
+			}
+
 			// Create UPDATE -> DELETE edges: update child/parent FK before deleting parent
 			// Case 1 - Child UPDATE -> Parent DELETE (child FK changes, then orphan parent deleted)
-			final List<GroupNode> childUpdates = updateNodeByTable.get( childTable );
 			if ( childUpdates != null && parentDeletes != null ) {
 				for ( GroupNode childUpdate : childUpdates ) {
 					for ( GroupNode parentDelete : parentDeletes ) {

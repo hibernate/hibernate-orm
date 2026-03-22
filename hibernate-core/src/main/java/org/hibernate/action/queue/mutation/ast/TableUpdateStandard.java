@@ -31,6 +31,7 @@ public class TableUpdateStandard
 
 	private final List<ColumnValueBinding> keyRestrictionBindings;
 	private final List<ColumnValueBinding> optLockRestrictionBindings;
+	private final String whereFragment;
 
 	public TableUpdateStandard(
 			TableDescriptor tableDescriptor,
@@ -46,6 +47,7 @@ public class TableUpdateStandard
 			valueBindings,
 			keyRestrictionBindings,
 			optLockRestrictionBindings,
+			null,
 			parameters
 		);
 	}
@@ -58,6 +60,27 @@ public class TableUpdateStandard
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
 			List<ColumnValueParameter> parameters) {
+		this(
+			tableDescriptor,
+			mutationTarget,
+			sqlComment,
+			valueBindings,
+			keyRestrictionBindings,
+			optLockRestrictionBindings,
+			null,
+			parameters
+		);
+	}
+
+	public TableUpdateStandard(
+			TableDescriptor tableDescriptor,
+			GraphMutationTarget<?> mutationTarget,
+			String sqlComment,
+			List<ColumnValueBinding> valueBindings,
+			List<ColumnValueBinding> keyRestrictionBindings,
+			List<ColumnValueBinding> optLockRestrictionBindings,
+			String whereFragment,
+			List<ColumnValueParameter> parameters) {
 		super(
 				tableDescriptor,
 				MutationType.UPDATE,
@@ -68,6 +91,7 @@ public class TableUpdateStandard
 		);
 		this.keyRestrictionBindings = keyRestrictionBindings;
 		this.optLockRestrictionBindings = optLockRestrictionBindings;
+		this.whereFragment = whereFragment;
 	}
 
 	@Override
@@ -100,6 +124,7 @@ public class TableUpdateStandard
 			valueBindings,
 			keyRestrictionBindings,
 			optLockRestrictionBindings,
+			whereFragment,
 			getParameters()
 		);
 	}

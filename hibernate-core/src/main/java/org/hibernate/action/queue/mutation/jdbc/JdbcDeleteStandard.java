@@ -35,11 +35,31 @@ public class JdbcDeleteStandard
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
 			List<ColumnValueParameter> parameters) {
+		this(
+				tableDescriptor,
+				mutationTarget,
+				expectation,
+				keyRestrictionBindings,
+				optLockRestrictionBindings,
+				null,
+				parameters
+		);
+	}
+
+	public JdbcDeleteStandard(
+			TableDescriptor tableDescriptor,
+			GraphMutationTarget<?> mutationTarget,
+			Expectation expectation,
+			List<ColumnValueBinding> keyRestrictionBindings,
+			List<ColumnValueBinding> optLockRestrictionBindings,
+			String whereFragment,
+			List<ColumnValueParameter> parameters) {
 		super(tableDescriptor, mutationTarget, expectation, parameters);
 		this.sql = generateSql(
 				tableDescriptor,
 				keyRestrictionBindings,
-				optLockRestrictionBindings
+				optLockRestrictionBindings,
+				whereFragment
 		);
 		registerValueDescriptors(parameters);
 	}
@@ -47,7 +67,8 @@ public class JdbcDeleteStandard
 	private static String generateSql(
 			TableDescriptor tableDescriptor,
 			List<ColumnValueBinding> keyRestrictionBindings,
-			List<ColumnValueBinding> optLockRestrictionBindings) {
+			List<ColumnValueBinding> optLockRestrictionBindings,
+			String whereFragment) {
 		final var sql = new StringBuilder("delete from ");
 		sql.append(tableDescriptor.name());
 
@@ -70,6 +91,12 @@ public class JdbcDeleteStandard
 				sql.append(binding.getColumnReference().getColumnExpression());
 				sql.append("=?");
 			}
+		}
+
+		// WHERE clause - custom WHERE fragment (e.g., collection restrictions)
+		if (whereFragment != null && !whereFragment.isEmpty()) {
+			sql.append(" and ");
+			sql.append(whereFragment);
 		}
 
 		return sql.toString();

@@ -83,6 +83,7 @@ public class GraphTableDeleteBuilderStandard
 				getSqlComment(),
 				keyRestrictionBindings,
 				optimisticLockBindings,
+				whereFragment,
 				getParameters()
 		);
 	}

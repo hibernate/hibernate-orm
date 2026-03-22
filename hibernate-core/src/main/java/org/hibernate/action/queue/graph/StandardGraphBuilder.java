@@ -102,6 +102,11 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 			}
 		}
 
+		// Pre-initialize edge lists for all nodes to avoid computeIfAbsent overhead
+		for ( GroupNode n : nodes ) {
+			outgoing.put( n, new ArrayList<>() );
+		}
+
 		long edgeId = 1;
 		for ( ForeignKey foreignKey : constraintModel.foreignKeys() ) {
 			if ( ignoreDeferrableForOrdering() && foreignKey.deferrable() ) {
@@ -114,10 +119,23 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 			final String childTable = (foreignKey.keyTable());
 			final String parentTable = (foreignKey.targetTable());
 
-			// Create INSERT edges: parent -> child (insert parent before child)
-			// When a table has multiple groups (self-referential FK), create edges for all combinations
+			// Hoist all map lookups to avoid redundant lookups in multiple sections below
 			final List<GroupNode> parentInserts = insertNodeByTable.get( parentTable );
 			final List<GroupNode> childInserts = insertNodeByTable.get( childTable );
+			final List<GroupNode> parentDeletes = deleteNodeByTable.get( parentTable );
+			final List<GroupNode> childDeletes = deleteNodeByTable.get( childTable );
+			final List<GroupNode> parentUpdates = updateNodeByTable.get( parentTable );
+			final List<GroupNode> childUpdates = updateNodeByTable.get( childTable );
+
+			// Early exit if this FK doesn't involve any operations in this flush
+			if ( parentInserts == null && childInserts == null
+					&& parentDeletes == null && childDeletes == null
+					&& parentUpdates == null && childUpdates == null ) {
+				continue;
+			}
+
+			// Create INSERT edges: parent -> child (insert parent before child)
+			// When a table has multiple groups (self-referential FK), create edges for all combinations
 
 			if ( parentInserts != null && childInserts != null ) {
 				for ( GroupNode parentInsert : parentInserts ) {
@@ -151,16 +169,13 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 								edgeId++
 						);
 
-						outgoing.computeIfAbsent( parentInsert, k -> new ArrayList<>() ).add( edge );
+						outgoing.get( parentInsert ).add( edge );
 					}
 				}
 			}
 
 			// Create DELETE edges: child -> parent (delete child before parent)
 			// When a table has multiple groups (self-referential FK), create edges for all combinations
-			final List<GroupNode> parentDeletes = deleteNodeByTable.get( parentTable );
-			final List<GroupNode> childDeletes = deleteNodeByTable.get( childTable );
-
 			if ( parentDeletes != null && childDeletes != null ) {
 				for ( GroupNode parentDelete : parentDeletes ) {
 					for ( GroupNode childDelete : childDeletes ) {
@@ -184,16 +199,14 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 								edgeId++
 						);
 
-						outgoing.computeIfAbsent( childDelete, k -> new ArrayList<>() ).add( edge );
+						outgoing.get( childDelete ).add( edge );
 					}
 				}
 			}
 
-
 			// Create INSERT -> UPDATE edges: insert parent before updating child FK
 			// Case 1 - Parent INSERT -> Child UPDATE (parent inserted, then child FK set to point to parent)
 			// This is critical for one-to-many collections where collection operations UPDATE child FK
-			final List<GroupNode> childUpdates = updateNodeByTable.get( childTable );
 			if ( parentInserts != null && childUpdates != null ) {
 				for ( GroupNode parentInsert : parentInserts ) {
 					for ( GroupNode childUpdate : childUpdates ) {
@@ -218,7 +231,7 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 								edgeId++
 						);
 
-						outgoing.computeIfAbsent( parentInsert, k -> new ArrayList<>() ).add( edge );
+						outgoing.get( parentInsert ).add( edge );
 					}
 				}
 			}
@@ -249,13 +262,12 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 								edgeId++
 						);
 
-						outgoing.computeIfAbsent( childUpdate, k -> new ArrayList<>() ).add( edge );
+						outgoing.get( childUpdate ).add( edge );
 					}
 				}
 			}
 
 			// Parent UPDATE -> Child DELETE (parent FK changes, then orphan child deleted)
-			final List<GroupNode> parentUpdates = updateNodeByTable.get( parentTable );
 			if ( parentUpdates != null && childDeletes != null ) {
 				for ( GroupNode parentUpdate : parentUpdates ) {
 					for ( GroupNode childDelete : childDeletes ) {
@@ -279,7 +291,7 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 								edgeId++
 						);
 
-						outgoing.computeIfAbsent( parentUpdate, k -> new ArrayList<>() ).add( edge );
+						outgoing.get( parentUpdate ).add( edge );
 					}
 				}
 			}
@@ -291,10 +303,6 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 		if ( planningOptions.orderByUniqueKeySlots() ) {
 			edgeId = addUniqueSlotEdges( nodes, expandedGroups, deleteNodeByTable, insertNodeByTable, outgoing,
 					edgeId );
-		}
-
-		for ( GroupNode n : nodes ) {
-			outgoing.computeIfAbsent( n, k -> new ArrayList<>() );
 		}
 
 		for ( List<GraphEdge> es : outgoing.values() ) {
@@ -442,7 +450,7 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 								edgeId++
 						);
 
-						outgoing.computeIfAbsent( releaser, k -> new ArrayList<>() ).add( edge );
+						outgoing.get( releaser ).add( edge );
 					}
 				}
 			}
@@ -475,8 +483,8 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 								edgeId++
 						);
 
-						outgoing.computeIfAbsent( update1, k -> new ArrayList<>() ).add( edge1 );
-						outgoing.computeIfAbsent( update2, k -> new ArrayList<>() ).add( edge2 );
+						outgoing.get( update1 ).add( edge1 );
+						outgoing.get( update2 ).add( edge2 );
 					}
 				}
 			}
@@ -510,7 +518,7 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 							null,  // Keep FK null to mark this as a unique constraint edge
 							edgeId++
 					);
-					outgoing.computeIfAbsent( change2.node(), k -> new ArrayList<>() ).add( edge );
+					outgoing.get( change2.node() ).add( edge );
 				}
 			}
 		}

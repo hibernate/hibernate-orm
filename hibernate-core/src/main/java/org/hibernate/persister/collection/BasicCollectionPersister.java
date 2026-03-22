@@ -104,7 +104,9 @@ final var stateManagement = collectionBinding.getStateManagement();
 		super.postInstantiate();
 
 		// Build JDBC operations after collectionTableDescriptor is initialized
-		decomposer = new BasicCollectionDecomposer( this, shouldBundleOperations, getFactory() );
+		// Disable bundling if collection has cascaded associations to preserve operation ordering
+		final boolean enableBundling = shouldBundleOperations && containsNoCascadedAssociations();
+		decomposer = new BasicCollectionDecomposer( this, enableBundling, getFactory() );
 	}
 
 	public RowMutationOperations getRowMutationOperations() {

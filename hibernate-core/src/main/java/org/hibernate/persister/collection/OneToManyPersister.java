@@ -139,7 +139,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			decomposer = new TablePerSubclassOneToManyDecomposer( this, getFactory() );
 		}
 		else {
-			decomposer = shouldBundleOperations
+			// Disable bundling if collection has cascaded associations to preserve operation ordering
+			final boolean enableBundling = shouldBundleOperations && containsNoCascadedAssociations();
+			decomposer = enableBundling
 					? new BundledOneToManyDecomposer( this, getFactory() )
 					: new StandardOneToManyDecomposer( this, getFactory() );
 		}

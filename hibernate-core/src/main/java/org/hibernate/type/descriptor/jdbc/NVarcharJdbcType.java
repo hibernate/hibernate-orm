@@ -4,12 +4,6 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
-import java.sql.CallableStatement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
-
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -19,6 +13,12 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterCharacterData;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 
 /**
  * Descriptor for {@link Types#NVARCHAR NVARCHAR} handling.
@@ -122,7 +122,13 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
 				if ( options.getDialect().supportsNationalizedMethods() ) {
-					st.setNString( name, javaType.unwrap( value, String.class, options ) );
+					try {
+						st.setNString( name, javaType.unwrap( value, String.class, options ) );
+					}
+					// workaround for jTDS driver for Sybase
+					catch ( AbstractMethodError e ) {
+						st.setBytes( name, javaType.unwrap( value, byte[].class, options ) );
+					}
 				}
 				else {
 					st.setString( name, javaType.unwrap( value, String.class, options ) );
@@ -174,7 +180,13 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 				if ( options.getDialect().supportsNationalizedMethods() ) {
-					return javaType.wrap( statement.getNString( index ), options );
+					try {
+						return javaType.wrap( statement.getNString( index ), options );
+					}
+					// workaround for jTDS driver for Sybase
+					catch ( AbstractMethodError e ) {
+						return javaType.wrap( statement.getBytes( index ), options );
+					}
 				}
 				else {
 					return javaType.wrap( statement.getString( index ), options );
@@ -184,7 +196,13 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
 				if ( options.getDialect().supportsNationalizedMethods() ) {
-					return javaType.wrap( statement.getNString( name ), options );
+					try {
+						return javaType.wrap( statement.getNString( name ), options );
+					}
+					// workaround for jTDS driver for Sybase
+					catch ( AbstractMethodError e ) {
+						return javaType.wrap( statement.getBytes( name ), options );
+					}
 				}
 				else {
 					return javaType.wrap( statement.getString( name ), options );

@@ -1,6 +1,20 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.1.20.Final (March 22, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/38219
+
+
+** Bug
+    * HHH-20266 Some unnesting array functions miss ordering on index on aggregation
+    * HHH-20231 Errors when querying 2L-cached native queries with same SQL but different result type
+    * HHH-19818 NPE with stateless insert when Envers is enabled
+
+** Task
+    * HHH-20232 Update c3p0 to 0.12.0
+
 Changes in 7.1.19.Final (March 15, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

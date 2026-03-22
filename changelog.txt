@@ -1,6 +1,18 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.6.45.Final (March 22, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/38115
+
+
+** Bug
+    * HHH-20253 ClassCastException when using hibernate-enhance-maven-plugin plugin
+
+** Task
+    * HHH-20232 Update c3p0 to 0.12.0
+
 Changes in 6.6.44.Final (March 01, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

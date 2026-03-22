@@ -24,6 +24,8 @@ import org.hibernate.persister.collection.OneToManyPersister;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static org.hibernate.action.queue.CollectionOrdinalSupport.Slot;
+import static org.hibernate.action.queue.CollectionOrdinalSupport.calculateOrdinal;
 import static org.hibernate.sql.model.ast.builder.TableMutationBuilder.NULL;
 
 /**
@@ -71,7 +73,7 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 				MutationKind.UPDATE,
 				removeOperation,
 				new RemoveBindPlan( action.getKey(), persister ),
-				ordinalBase * 1_000,
+				calculateOrdinal( ordinalBase, Slot.DELETE ),
 				"RemoveAllRows(" + persister.getRolePath() + ")"
 		) );
 	}

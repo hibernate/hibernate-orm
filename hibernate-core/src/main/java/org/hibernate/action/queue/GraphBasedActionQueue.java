@@ -53,6 +53,11 @@ public class GraphBasedActionQueue implements ActionQueue {
 	private final boolean isTransactionCoordinatorShared;
 	private final TransactionCompletionCallbacksImplementor transactionCompletionCallbacks;
 
+	// Track where collection actions start in pendingActions
+	// All entity actions are kept before this index, all collection actions after
+	// -1 means no collections have been added yet
+	private int collectionStartIndex = -1;
+
 	// counters for stats/logging
 	private int insertCount;
 	private int updateCount;
@@ -81,6 +86,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 	public void clear() {
 		pendingActions.clear();
 		flushCoordinator.getDecomposer().clear();
+		collectionStartIndex = -1;
 
 		insertCount = 0;
 		updateCount = 0;
@@ -150,7 +156,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 
 		// Regular inserts are queued for later execution
 		ACTION_LOGGER.addingResolvedNonEarlyInsertAction();
-		pendingActions.add(insert);
+		addEntityAction(insert);
 		insertCount++;
 
 		// Check for unresolved transient dependencies before making entity managed
@@ -214,6 +220,9 @@ public class GraphBasedActionQueue implements ActionQueue {
 
 		// Remove executed actions from pending list
 		pendingActions.removeAll(insertsToExecute);
+
+		// Recalculate collection boundary after removing inserts
+		recalculateCollectionStartIndex();
 	}
 
 	/// Adds an entity update action.
@@ -221,7 +230,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 	/// @param action The action representing the entity update
 	public void addAction(EntityUpdateAction action) {
 		updateCount++;
-		pendingActions.add(action);
+		addEntityAction(action);
 	}
 
 	/// Adds an entity delete action.
@@ -229,7 +238,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 	/// @param action The action representing the entity deletion
 	public void addAction(EntityDeleteAction action) {
 		deleteCount++;
-		pendingActions.add(action);
+		addEntityAction(action);
 	}
 
 	/**
@@ -238,7 +247,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 	 * @param action The action representing the orphan removal
 	 */
 	public void addAction(OrphanRemovalAction action) {
-		pendingActions.add(action);
+		addEntityAction(action);
 	}
 
 	/**
@@ -249,7 +258,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 	public void addAction(CollectionRecreateAction action) {
 		ACTION_LOGGER.debugf( "GraphBasedActionQueue.addAction(CollectionRecreateAction) - role=%s, key=%s", action.getPersister().getRole(), action.getKey() );
 		collectionCreationCount++;
-		pendingActions.add(action);
+		addCollectionAction(action);
 	}
 
 	/**
@@ -261,7 +270,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 		collectionRemovalCount++;
 		// Check if this should be an orphan collection removal
 		// (handled by FlushCoordinator's ordering instead of special list)
-		pendingActions.add(action);
+		addCollectionAction(action);
 	}
 
 	/**
@@ -271,7 +280,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 	 */
 	public void addAction(CollectionUpdateAction action) {
 		collectionUpdateCount++;
-		pendingActions.add(action);
+		addCollectionAction(action);
 	}
 
 	/**
@@ -280,7 +289,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 	 * @param action The action representing the queued operation
 	 */
 	public void addAction(QueuedOperationCollectionAction action) {
-		pendingActions.add(action);
+		addCollectionAction(action);
 	}
 
 	/**
@@ -303,6 +312,46 @@ public class GraphBasedActionQueue implements ActionQueue {
 		final var afterCompletionCallback = executable.getAfterTransactionCompletionProcess();
 		if (afterCompletionCallback != null) {
 			transactionCompletionCallbacks.registerCallback(afterCompletionCallback);
+		}
+	}
+
+	/// Helper to add an entity action while maintaining entity/collection separation.
+	/// Entity actions are always kept before collection actions in pendingActions.
+	private void addEntityAction(Executable action) {
+		if (collectionStartIndex == -1) {
+			// No collections yet, append normally
+			pendingActions.add(action);
+		}
+		else {
+			// Collections exist, insert before them
+			pendingActions.add(collectionStartIndex, action);
+			collectionStartIndex++;
+		}
+	}
+
+	/// Helper to add a collection action while maintaining entity/collection separation.
+	/// Collection actions are always kept after entity actions in pendingActions.
+	private void addCollectionAction(Executable action) {
+		if (collectionStartIndex == -1) {
+			// First collection - mark the boundary
+			collectionStartIndex = pendingActions.size();
+		}
+		pendingActions.add(action);
+	}
+
+	/// Recalculates the collectionStartIndex by scanning pendingActions.
+	/// Used after operations that rebuild or filter the pendingActions list.
+	private void recalculateCollectionStartIndex() {
+		collectionStartIndex = -1;
+		for (int i = 0; i < pendingActions.size(); i++) {
+			Executable action = pendingActions.get(i);
+			if (action instanceof CollectionRecreateAction
+					|| action instanceof CollectionRemoveAction
+					|| action instanceof CollectionUpdateAction
+					|| action instanceof QueuedOperationCollectionAction) {
+				collectionStartIndex = i;
+				break;
+			}
 		}
 	}
 
@@ -336,6 +385,10 @@ public class GraphBasedActionQueue implements ActionQueue {
 
 			flushCoordinator.executeFlush(insertActions);
 			pendingActions.removeAll(insertActions);
+
+			// Recalculate collection boundary after removing inserts
+			recalculateCollectionStartIndex();
+
 			session.getJdbcCoordinator().executeBatch();
 		}
 	}
@@ -361,6 +414,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 
 			// Clear pending actions
 			pendingActions.clear();
+			collectionStartIndex = -1;
 
 			// Reset counters after execution
 			insertCount = 0;
@@ -612,6 +666,9 @@ public class GraphBasedActionQueue implements ActionQueue {
 		pendingActions.clear();
 		pendingActions.addAll(toKeep);
 
+		// Recalculate collection boundary after rebuilding the list
+		recalculateCollectionStartIndex();
+
 		// Recalculate counters after clearing actions
 		recalculateCounters();
 	}
@@ -664,7 +721,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 		}
 
 		final Object entityToMatch = rescuedEntity;
-		pendingActions.removeIf(action -> {
+		boolean removed = pendingActions.removeIf(action -> {
 			if (action instanceof EntityDeleteAction delete) {
 				return delete.getInstance() == entityToMatch;
 			}
@@ -673,6 +730,11 @@ public class GraphBasedActionQueue implements ActionQueue {
 			}
 			return false;
 		});
+
+		// Recalculate collection boundary if we removed any actions
+		if (removed) {
+			recalculateCollectionStartIndex();
+		}
 	}
 
 	/**
@@ -686,7 +748,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 		final Object identifier = entityPersister.getIdentifier(newEntity, session);
 		final String entityName = entityPersister.getEntityName();
 
-		pendingActions.removeIf(action -> {
+		boolean removed = pendingActions.removeIf(action -> {
 			if (action instanceof EntityDeleteAction delete) {
 				if (delete.getInstance() == null
 						&& delete.getEntityName().equals(entityName)
@@ -698,6 +760,11 @@ public class GraphBasedActionQueue implements ActionQueue {
 			}
 			return false;
 		});
+
+		// Recalculate collection boundary if we removed any actions
+		if (removed) {
+			recalculateCollectionStartIndex();
+		}
 	}
 
 

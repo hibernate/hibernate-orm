@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
 
+import static org.hibernate.action.queue.CollectionOrdinalSupport.Slot;
+import static org.hibernate.action.queue.CollectionOrdinalSupport.calculateOrdinal;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /// Decomposition support for [BasicCollectionPersister] which managed inserts, updates and deletes
@@ -82,6 +84,8 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		// Pre-insert callback once for the whole collection
 		collection.preInsert( persister );
 
+		var insertOrdinal = calculateOrdinal( ordinalBase, Slot.INSERT );
+
 		final var entries = collection.entries( persister );
 		if ( !entries.hasNext() ) {
 			return List.of();
@@ -121,7 +125,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 						MutationKind.INSERT,
 						insertRowPlan.jdbcOperation(),
 						bundledBindPlan,
-						ordinalBase,
+						insertOrdinal,
 						"InsertRows(" + persister.getRolePath() + ")"
 				) );
 			}
@@ -148,7 +152,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 							MutationKind.INSERT,
 							jdbcOperations.getInsertRowPlan().jdbcOperation(),
 							bindPlan,
-							ordinalBase * 1_000 + entryCount,
+							insertOrdinal,
 							"InsertRow[" + entryCount + "](" + persister.getRolePath() + ")"
 					);
 
@@ -218,6 +222,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 					if ( !action.isEmptySnapshot() ) {
 						operations.addAll( planRemoveOperation( key, ordinalBase, session ) );
 					}
+					// Recreate INSERTs use INSERT_OFFSET which is higher than DELETE_OFFSET to avoid unique constraint violations
 					operations.addAll( planRecreateOperation(  collection, key, ordinalBase, session ) );
 				}
 				else {
@@ -254,6 +259,8 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			return;
 		}
 
+		var deleteOrdinal = calculateOrdinal( ordinalBase, Slot.DELETE );
+
 		if ( shouldBundleOperations ) {
 			// Bundle all rows into a single PlannedOperation with a bundled BindPlan
 			final List<Object> deletionList = new ArrayList<>();
@@ -275,7 +282,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 						MutationKind.DELETE,
 						deleteRowPlan.jdbcOperation(),
 						bundledBindPlan,
-						ordinalBase,
+						deleteOrdinal,
 						"DeleteRows(" + persister.getRolePath() + ")"
 				) );
 			}
@@ -283,6 +290,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		else {
 			// Original behavior: one operation per row
 			int deletionCount = 0;
+
 
 			while ( deletes.hasNext() ) {
 				final Object removal = deletes.next();
@@ -299,7 +307,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 						MutationKind.DELETE,
 						deleteRowPlan.jdbcOperation(),
 						bindPlan,
-						ordinalBase * 1_000 + deletionCount,
+						deleteOrdinal,
 						"DeleteRow[" + deletionCount + "](" + persister.getRolePath() + ")"
 				) );
 
@@ -346,10 +354,10 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			}
 
 			// UPDATE modified entries
-			applyBundledUpdateChanges( collection, key, ordinalBase + 1, changeEntries, updateRowPlan, operationConsumer );
+			applyBundledUpdateChanges( collection, key, ordinalBase, changeEntries, updateRowPlan, operationConsumer );
 
 			// INSERT entries
-			applyBundledUpdateAdditions( collection, key, ordinalBase + 2, additionEntries, insertRowPlan, operationConsumer );
+			applyBundledUpdateAdditions( collection, key, ordinalBase, additionEntries, insertRowPlan, operationConsumer );
 		}
 	}
 
@@ -377,7 +385,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 				MutationKind.UPDATE,
 				updateRowPlan.jdbcOperation(),
 				bundledBindPlan,
-				ordinalBase,
+				calculateOrdinal( ordinalBase, Slot.UPDATE ),
 				"BundledUpdateRows(" + persister.getRolePath() + ")"
 		) );
 	}
@@ -408,7 +416,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 				MutationKind.INSERT,
 				insertRowPlan.jdbcOperation(),
 				bundledBindPlan,
-				ordinalBase,
+				calculateOrdinal( ordinalBase, Slot.INSERT ),
 				"BundledInsertRows(" + persister.getRolePath() + ")"
 		) );
 	}
@@ -426,6 +434,8 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			// EARLY EXIT!!
 			return;
 		}
+
+		var updateOrdinal = calculateOrdinal( ordinalBase, Slot.UPDATE );
 
 		// One operation per row
 		int entryCount = 0;
@@ -447,7 +457,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 						MutationKind.UPDATE,
 						updateRowPlan.jdbcOperation(),
 						bindPlan,
-						ordinalBase * 1_000 + entryCount,
+						updateOrdinal,
 						"UpdateRow[" + entryCount + "](" + persister.getRolePath() + ")"
 				) );
 			}
@@ -473,6 +483,8 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			return;
 		}
 
+		var insertOrdinal = calculateOrdinal( ordinalBase, Slot.INSERT );
+
 		// One operation per row
 		int entryCount = 0;
 		while ( entries.hasNext() ) {
@@ -493,7 +505,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 						MutationKind.INSERT,
 						insertRowPlan.jdbcOperation(),
 						bindPlan,
-						ordinalBase * 1_000 + entryCount,
+						insertOrdinal,
 						"InsertRow[" + entryCount + "](" + persister.getRolePath() + ")"
 				) );
 			}
@@ -525,7 +537,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 				MutationKind.DELETE,
 				jdbcOperation,
 				new RemoveBindPlan( key, persister ),
-				ordinalBase * 1_000,
+				calculateOrdinal( ordinalBase, Slot.DELETE ),
 				"RemoveAllRows(" + persister.getRolePath() + ")"
 		);
 

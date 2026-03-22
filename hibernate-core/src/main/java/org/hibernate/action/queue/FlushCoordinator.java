@@ -250,7 +250,7 @@ public class FlushCoordinator {
 			// For self-referential tables, include ordinalBase to avoid false cycles
 			// For other tables, merge across entities for better batching
 			final int ordinalBase = selfReferentialTables.contains(normalizedTable)
-					? operation.getOrdinal() / 1_000
+					? CollectionOrdinalSupport.extractCollectionOrdinal( operation.getOrdinal() )
 					: -1; // -1 means "merge all ordinalBases together"
 
 			final OperationGroupKey key = new OperationGroupKey(shapeKey, ordinalBase);

@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static org.hibernate.action.queue.CollectionOrdinalSupport.Slot;
+import static org.hibernate.action.queue.CollectionOrdinalSupport.calculateOrdinal;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
@@ -55,6 +57,9 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 
 		final List<PlannedOperation> operations = new ArrayList<>();
 
+		var insertOrdinal = calculateOrdinal( ordinalBase, Slot.INSERT );
+		var writeIndexOrdinal = calculateOrdinal( ordinalBase, Slot.WRITEINDEX );
+
 		int entryCount = 0;
 		while ( entries.hasNext() ) {
 			final Object entry = entries.next();
@@ -79,7 +84,7 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 						MutationKind.UPDATE,
 						insertRowPlan.jdbcOperation(),
 						bindPlan,
-						ordinalBase * 1_000 + entryCount,
+						insertOrdinal,
 						"InsertRow[" + entryCount + "](" + persister.getRolePath() + ")"
 				);
 
@@ -102,7 +107,7 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 						MutationKind.UPDATE,
 						jdbcOperations.getUpdateRowPlan().jdbcOperation(),
 						writeIndexBindPlan,
-						ordinalBase * 2_000 + entryCount,
+						writeIndexOrdinal,
 						"WriteIndex[" + entryCount + "](" + persister.getRolePath() + ")"
 				);
 
@@ -182,6 +187,8 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 			return;
 		}
 
+		var deleteOrdinal = calculateOrdinal( ordinalBase, Slot.DELETE );
+
 		int deletionCount = 0;
 		while ( deletes.hasNext() ) {
 			var removal = deletes.next();
@@ -203,7 +210,7 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 					MutationKind.UPDATE,
 					deleteRowPlan.jdbcOperation(),
 					bindPlan,
-					ordinalBase * 1_000 + deletionCount,
+					deleteOrdinal,
 					"DeleteRow[" + deletionCount + "](" + persister.getRole() + ")"
 			);
 
@@ -224,6 +231,8 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 		}
 
 		final var entries = collection.entries( persister);
+
+		var updateOrdinal = calculateOrdinal( ordinalBase, Slot.UPDATE );
 
 		int entryCount = 0;
 		while ( entries.hasNext() ) {
@@ -249,7 +258,7 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 						MutationKind.UPDATE,
 						updateRowPlan.jdbcOperation(),
 						bindPlan,
-						ordinalBase * 1_000 + entryCount,
+						updateOrdinal,
 						"UpdateRow[" + entryCount + "](" + persister.getRolePath() + ")"
 				);
 
@@ -281,6 +290,8 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 
 		collection.preInsert( persister );
 
+		var insertOrdinal = calculateOrdinal( ordinalBase, Slot.INSERT );
+
 		int entryCount = 0;
 		while ( entries.hasNext() ) {
 			final Object entry = entries.next();
@@ -310,7 +321,7 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 							MutationKind.UPDATE,
 							insertRowPlan.jdbcOperation(),
 							bindPlan,
-							ordinalBase * 1_000 + entryCount,
+							insertOrdinal,
 							"InsertRow[" + entryCount + "](" + persister.getRolePath() + ")"
 					);
 

@@ -22,6 +22,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static org.hibernate.action.queue.CollectionOrdinalSupport.Slot;
+import static org.hibernate.action.queue.CollectionOrdinalSupport.calculateOrdinal;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /// Specialized `one-to-many` decomposer which produces bundled operations - one
@@ -106,7 +108,7 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 						MutationKind.UPDATE,
 						insertRowPlan.jdbcOperation(),
 						bundledBindPlan,
-						ordinalBase,
+						calculateOrdinal( ordinalBase, Slot.INSERT ),
 						"BundledInsertRows(" + persister.getRolePath() + ")"
 				) );
 			}
@@ -125,7 +127,7 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 						MutationKind.UPDATE,
 						jdbcOperations.getUpdateRowPlan().jdbcOperation(),
 						bundledBindPlan,
-						ordinalBase * 2_000 + entryCount,
+						calculateOrdinal( ordinalBase, Slot.WRITEINDEX ),
 						"BundledWriteIndex[" + entryCount + "](" + persister.getRolePath() + ")"
 				);
 
@@ -251,7 +253,7 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 					MutationKind.UPDATE,
 					deleteRowPlan.jdbcOperation(),
 					bundledBindPlan,
-					ordinalBase,
+					calculateOrdinal( ordinalBase, Slot.DELETE ),
 					"BundledDeleteRows(" + persister.getRolePath() + ")"
 			) );
 		}
@@ -281,7 +283,7 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 				MutationKind.UPDATE,
 				updateRowPlan.jdbcOperation(),
 				bundledBindPlan,
-				ordinalBase,
+				calculateOrdinal( ordinalBase, Slot.UPDATE ),
 				"BundledUpdateRows(" + persister.getRolePath() + ")"
 		) );
 	}
@@ -313,7 +315,7 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 				MutationKind.UPDATE,
 				insertRowPlan.jdbcOperation(),
 				bundledBindPlan,
-				ordinalBase,
+				calculateOrdinal( ordinalBase, Slot.INSERT ),
 				"BundledInsertRows(" + persister.getRolePath() + ")"
 		) );
 	}

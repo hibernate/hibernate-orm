@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.orm.test.where.hbm;
+package org.hibernate.orm.test.where.xml;
 
 import org.hibernate.Hibernate;
 import org.hibernate.dialect.H2Dialect;
@@ -29,8 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialect(H2Dialect.class)
-@DomainModel(xmlMappings = "hbm/where/LazyElementCollectionWithLazyManyToOneNonUniqueIdWhereTest.hbm.xml")
-@SessionFactory(exportSchema = false)
+@DomainModel(xmlMappings = "mappings/where/LazyElementCollectionWithLazyManyToOneNonUniqueIdWhereTest.orm.xml")
+@SessionFactory(exportSchema = true)
 public class LazyElementCollectionWithLazyManyToOneNonUniqueIdWhereTest {
 	@BeforeAll
 	public void createSchema(SessionFactoryScope factoryScope) {

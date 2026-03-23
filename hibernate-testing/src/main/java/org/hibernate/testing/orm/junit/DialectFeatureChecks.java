@@ -386,7 +386,7 @@ abstract public class DialectFeatureChecks {
 		public boolean apply(Dialect dialect) {
 			return dialect.getLockingSupport()
 					.getMetadata()
-					.getLockTimeoutType( Timeouts.NO_WAIT ) == LockTimeoutType.QUERY;
+					.getLockTimeoutType( Timeouts.NO_WAIT ) != LockTimeoutType.NONE;
 		}
 	}
 
@@ -435,19 +435,19 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsSkipLocked implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect.supportsSkipLocked();
+			return dialect.getLockingSupport().getMetadata().getLockTimeoutType( Timeouts.SKIP_LOCKED ) != LockTimeoutType.NONE;
 		}
 	}
 
 	public static class SupportNoWait implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect.supportsNoWait();
+			return dialect.getLockingSupport().getMetadata().getLockTimeoutType( Timeouts.NO_WAIT ) != LockTimeoutType.NONE;
 		}
 	}
 
 	public static class SupportsWait implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect.supportsWait();
+			return dialect.getLockingSupport().getMetadata().getLockTimeoutType( Timeouts.ONE_SECOND ) != LockTimeoutType.NONE;
 		}
 	}
 

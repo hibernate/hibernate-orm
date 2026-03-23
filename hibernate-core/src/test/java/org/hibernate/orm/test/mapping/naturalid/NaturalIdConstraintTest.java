@@ -65,7 +65,7 @@ public class NaturalIdConstraintTest {
 				.getTable()
 				.getUniqueKeys();
 
-		assertEquals( 1, uniqueKeys.size() );
+		assertEquals( 3, uniqueKeys.size() );
 
 		var uniqueKey = uniqueKeys.values().iterator().next();
 

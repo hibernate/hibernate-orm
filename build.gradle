@@ -7,7 +7,6 @@
 
 buildscript {
 	repositories {
-		jcenter()
 		mavenCentral()
 	}
 	dependencies {
@@ -180,17 +179,20 @@ class HibernateVersion {
 	}
 }
 
-//idea {
-//    project {
-//		jdkName = baselineJavaVersion
-//		languageLevel = baselineJavaVersion
-//
-//		vcs = 'Git'
-//    }
-//    module {
-//        name = "hibernate-orm"
-//    }
-//}
+tasks.register('copyDependenciesSonar', Copy) {
+    description = "Aggregates all runtime dependencies for Sonar CLI analysis."
 
+    def targetProjects = subprojects.findAll { it.name != 'reporting' }
 
+    targetProjects.each { sub ->
+        evaluationDependsOn(sub.path)
 
+        if (sub.plugins.hasPlugin('java')) {
+            from(sub.configurations.runtimeClasspath)
+        }
+    }
+
+    into(layout.buildDirectory.dir("sonar-dependencies"))
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}

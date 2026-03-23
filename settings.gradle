@@ -324,6 +324,7 @@ include 'hibernate-integrationtest-java-modules'
 
 include 'documentation'
 include 'release'
+include 'reporting'
 
 // Not all JDK implementations support JFR
 if ( "OpenJDK Runtime Environment".equals( System.getProperty( "java.runtime.name" ) ) ) {

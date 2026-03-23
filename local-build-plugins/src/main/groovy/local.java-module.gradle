@@ -21,6 +21,11 @@ plugins {
     id "project-report"
 }
 
+def skipJacoco = project.hasProperty('skipJacoco') ? project.getProperty('skipJacoco').toBoolean() : false
+if (!skipJacoco) {
+    plugins.apply('jacoco')
+}
+
 def hibernateVersion = ormBuildDetails.hibernateVersion
 def jpaVersion = ormBuildDetails.jpaVersion
 
@@ -221,6 +226,24 @@ tasks.withType( Test.class ).each { test ->
     if ( project.hasProperty( 'excludeTests' ) ) {
         test.filter {
             excludeTestsMatching project.property('excludeTests').toString()
+        }
+    }
+    if (!skipJacoco) {
+        def coverageReportSuffix = providers.gradleProperty('db').orElse('default')
+                .flatMap { db ->
+                    // Oracle DBs tested on OTP are all using the same db name no matter the version...
+                    // this would be a problem for creating/merging Jacoco reports, hence:
+                    if ("oracle_test_pilot_database" == db) {
+                        return providers.environmentVariable("RDBMS").orElse(db)
+                    } else {
+                        return providers.provider { db }
+                    }
+                }
+        def javaVersion = JavaVersion.current().majorVersion
+        test.jacoco {
+            destinationFile = layout.buildDirectory.file(
+                    coverageReportSuffix.map { db -> "jacoco/report-${db}-jdk${javaVersion}.exec" }
+            ).get().asFile
         }
     }
 }

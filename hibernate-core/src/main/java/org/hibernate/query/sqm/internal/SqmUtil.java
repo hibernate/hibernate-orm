@@ -979,11 +979,7 @@ public class SqmUtil {
 				if ( sqmRoots == null || sqmRoots.isEmpty() ) {
 					throw new IllegalArgumentException( "Criteria did not define any query roots" );
 				}
-				// if there is a single root, use that as the selection
-				if ( sqmRoots.size() == 1 ) {
-					selectClause.add( sqmRoots.get( 0 ), null );
-				}
-				else {
+				if ( sqmRoots.size() != 1 ) {
 					throw new IllegalArgumentException( "Criteria has multiple query roots" );
 				}
 			}

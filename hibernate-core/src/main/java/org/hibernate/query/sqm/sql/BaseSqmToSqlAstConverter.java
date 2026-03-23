@@ -1174,8 +1174,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						r -> new SqmAliasedNodePositionTracker(
 								r,
 								selectQueryPart.getFirstQuerySpec()
-										.getSelectClause()
-										.getSelections()
 						),
 						getCurrentClauseStack()::getCurrent
 				)
@@ -2040,7 +2038,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					sqlQuerySpec,
 					getCurrentProcessingState(),
 					this,
-					resolver -> new SqmAliasedNodePositionTracker( resolver, sqmQuerySpec.getSelectClause().getSelections() ),
+					resolver -> new SqmAliasedNodePositionTracker( resolver, sqmQuerySpec ),
 					currentClauseStack::getCurrent,
 					deduplicateSelectionItems
 			);
@@ -2421,8 +2419,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// To avoid this issue, we determine the position and let the SqlAstTranslator handle the rest.
 			// Usually it will render `select ?, count(*) from dual group by 1` if supported
 			// or force rendering the parameter as literal instead so that the database can see the grouping is fine
-			final SqmQuerySpec<?> querySpec = getCurrentSqmQueryPart().getFirstQuerySpec();
-			sqmPosition = indexOfExpression( querySpec.getSelectClause().getSelections(), groupByClauseExpression );
+			sqmPosition = indexOfExpression( getCurrentSqmQueryPart().getFirstQuerySpec(), groupByClauseExpression );
 			path = null;
 		}
 		else {
@@ -2484,9 +2481,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 	}
 
-	private int indexOfExpression(List<? extends SqmAliasedNode<?>> selections, SqmExpression<?> node) {
-		final int result = indexOfExpression( 0, selections, node );
-		return result < 0 ? -1 : result;
+	private int indexOfExpression(SqmQuerySpec<?> querySpec, SqmExpression<?> node) {
+		final List<? extends SqmAliasedNode<?>> selections = querySpec.getSelectClause().getSelections();
+		if ( selections.isEmpty() ) {
+			final List<SqmRoot<?>> sqmRoots = querySpec.getRootList();
+			// Otherwise it would have failed query validation before already
+			assert sqmRoots.size() == 1;
+			return node == sqmRoots.get( 0 ) ? 0 : -1;
+		}
+		else {
+			final int result = indexOfExpression( 0, selections, node );
+			return result < 0 ? -1 : result;
+		}
 	}
 
 	private int indexOfExpression(int offset, List<? extends SqmAliasedNode<?>> selections, SqmExpression<?> node) {
@@ -8860,10 +8866,29 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		private final List<SqlSelection>[] sqlSelectionsForSqmSelection;
 		private int index = -1;
 
-		@SuppressWarnings("unchecked")
+		public SqmAliasedNodePositionTracker(SqlExpressionResolver delegate, SqmQuerySpec<?> sqmQuerySpec) {
+			this( delegate, countSqmSelections( sqmQuerySpec ) );
+		}
+
 		public SqmAliasedNodePositionTracker(SqlExpressionResolver delegate, List<? extends SqmAliasedNode<?>> selections) {
+			this( delegate, selections.isEmpty() ? 1 : countIndividualSelections( selections ) );
+		}
+
+		@SuppressWarnings("unchecked")
+		public SqmAliasedNodePositionTracker(SqlExpressionResolver delegate, int sqmSelections) {
 			this.delegate = delegate;
-			this.sqlSelectionsForSqmSelection = new List[countIndividualSelections( selections )];
+			this.sqlSelectionsForSqmSelection = new List[sqmSelections];
+		}
+
+		private static int countSqmSelections(SqmQuerySpec<?> sqmQuerySpec) {
+			final List<SqmSelection<?>> selections = sqmQuerySpec.getSelectClause().getSelections();
+			if ( selections.isEmpty() ) {
+				assert sqmQuerySpec.getFromClause().getRoots().size() == 1;
+				return 1;
+			}
+			else {
+				return countIndividualSelections( selections );
+			}
 		}
 
 		private static int countIndividualSelections(List<? extends SqmAliasedNode<?>> selections) {

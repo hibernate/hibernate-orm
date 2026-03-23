@@ -47,8 +47,8 @@ public class TransactSQLLockingSupport extends LockingSupportParameterized {
 	public static final LockingSupport SYBASE_ASE = new TransactSQLLockingSupport(
 			PessimisticLockStyle.TABLE_HINT,
 			LockTimeoutType.CONNECTION,
-			LockTimeoutType.NONE,
-			LockTimeoutType.NONE,
+			LockTimeoutType.CONNECTION,
+			LockTimeoutType.QUERY,
 			RowLockStrategy.TABLE,
 			OuterJoinLockingType.IDENTIFIED,
 			SybaseImpl.IMPL

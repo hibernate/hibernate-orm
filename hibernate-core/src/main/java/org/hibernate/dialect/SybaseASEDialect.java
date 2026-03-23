@@ -120,6 +120,21 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
+	public DatabaseVersion determineDatabaseVersion(DialectResolutionInfo info) {
+		if ( SybaseDriverKind.determineKind( info ) == SybaseDriverKind.JTDS
+			&& info.getDatabaseMinorVersion() != DatabaseVersion.NO_VERSION ) {
+			// The jTDS driver encodes the SP part into the minor version, so we have to unpack this
+			final int infoMinorVersion = info.getDatabaseMinorVersion();
+			final int minorVersion = infoMinorVersion / 10;
+			final int microVersion = infoMinorVersion % 10;
+			return new SimpleDatabaseVersion( info.getDatabaseMajorVersion(), minorVersion, microVersion );
+		}
+		else {
+			return super.determineDatabaseVersion( info );
+		}
+	}
+
+	@Override
 	protected String columnType(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
 			// On Sybase ASE, the 'bit' type cannot be null,

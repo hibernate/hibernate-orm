@@ -12,6 +12,7 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -20,6 +21,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.hibernate.testing.orm.transaction.TransactionUtil;
 import org.hibernate.testing.util.ast.HqlHelper;
 import org.hibernate.testing.util.ast.LoadingAstHelper;
@@ -59,6 +61,8 @@ public class LockingBasedOnSelectClauseTests {
 
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "See https://sourceforge.net/p/hsqldb/bugs/1734/")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 16, minorVersion = 0, microVersion = 2,
+			versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "holdlock isn't the same as updating a row. Bug in our Sybase ASE version?")
 	void testBasicHqlUsage(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			session.createQuery( "select b.author from Book b" )

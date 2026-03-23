@@ -6,6 +6,7 @@ package org.hibernate.orm.test.locking.options;
 
 import jakarta.persistence.LockModeType;
 import org.hibernate.community.dialect.InformixDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -13,6 +14,7 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.VersionMatchMode;
 import org.hibernate.testing.orm.transaction.TransactionUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +45,8 @@ public class ScopeAndSecondaryTableTests {
 	@Test
 	@RequiresDialectFeature(feature=DialectFeatureChecks.SupportsLockingJoins.class, comment = "Come back and rework this to account for follow-on testing")
 	@SkipForDialect( dialectClass = InformixDialect.class, reason = "Cursor must be on simple SELECT for FOR UPDATE")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 16, minorVersion = 0, microVersion = 2,
+			versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "holdlock isn't the same as updating a row. Bug in our Sybase ASE version?")
 	void simpleTest(SessionFactoryScope factoryScope) {
 		final SQLStatementInspector sqlCollector = factoryScope.getCollectingStatementInspector();
 		factoryScope.inTransaction( (session) -> {

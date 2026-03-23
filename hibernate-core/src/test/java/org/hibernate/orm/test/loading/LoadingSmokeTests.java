@@ -80,7 +80,7 @@ public class LoadingSmokeTests {
 				session -> {
 					session.doWork(
 							connection -> {
-								connection.prepareStatement( "delete from BasicEntity" ).execute();
+								connection.prepareStatement( "delete from BasicEntity where 1=1" ).execute();
 							}
 					);
 				}

@@ -40,38 +40,44 @@ public class LazyManyToManyNonUniqueIdWhereTest {
 		factoryScope.inTransaction( (session) -> session.doWork( (connections) -> {
 			var dialect = session.getDialect();
 			try (Statement statement = connections.createStatement()) {
+				final boolean isSpanner = dialect instanceof org.hibernate.dialect.SpannerDialect;
+				final String intType = isSpanner ? "INT64" : "int";
+				final String integerType = isSpanner ? "INT64" : "integer";
+				final String varchar255 = isSpanner ? "STRING(255)" : "varchar(255)";
+				final String varchar10 = isSpanner ? "STRING(10)" : "varchar(10)";
+
 				statement.executeUpdate( dialect.getDropTableString( "MATERIAL_RATINGS" ) );
 				statement.executeUpdate( dialect.getDropTableString( "BUILDING_RATINGS" ) );
 				statement.executeUpdate( dialect.getDropTableString( "ASSOCIATION_TABLE" ) );
 				statement.executeUpdate( dialect.getDropTableString( "MAIN_TABLE" ) );
 
-				statement.executeUpdate( """
+				statement.executeUpdate( String.format( """
 						create table MAIN_TABLE(
-							ID integer not null,
-							NAME varchar(255) not null,
-							CODE varchar(10) not null,
+							ID %s not null,
+							NAME %s not null,
+							CODE %s not null,
 							primary key (ID, CODE)
-						)""" );
-				statement.executeUpdate( """
+						)""", integerType, varchar255, varchar10 ) );
+				statement.executeUpdate( String.format( """
 						create table ASSOCIATION_TABLE(
-							MAIN_ID integer not null,
-							MAIN_CODE varchar(10) not null,
-							ASSOCIATION_ID int not null,
-							ASSOCIATION_CODE varchar(10) not null,
+							MAIN_ID %s not null,
+							MAIN_CODE %s not null,
+							ASSOCIATION_ID %s not null,
+							ASSOCIATION_CODE %s not null,
 							primary key (MAIN_ID, MAIN_CODE, ASSOCIATION_ID, ASSOCIATION_CODE)
-						)""" );
-				statement.executeUpdate("""
+						)""", integerType, varchar10, intType, varchar10 ) );
+				statement.executeUpdate( String.format( """
 						create table MATERIAL_RATINGS(
-							MATERIAL_ID integer not null,
-							RATING_ID integer not null,
+							MATERIAL_ID %s not null,
+							RATING_ID %s not null,
 							primary key (MATERIAL_ID, RATING_ID)
-						)""" );
-				statement.executeUpdate( """
+						)""", integerType, integerType ) );
+				statement.executeUpdate( String.format( """
 						create table BUILDING_RATINGS(
-							BUILDING_ID integer not null,
-							RATING_ID integer not null,
+							BUILDING_ID %s not null,
+							RATING_ID %s not null,
 							primary key (BUILDING_ID, RATING_ID)
-						)""" );
+						)""", integerType, integerType ) );
 
 				statement.executeUpdate( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'plastic', 'MATERIAL' )" );
 				statement.executeUpdate( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'house', 'BUILDING' )" );

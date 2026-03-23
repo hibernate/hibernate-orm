@@ -15,15 +15,21 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.function.SpannerFormatFunction;
 import org.hibernate.dialect.function.SpannerExtractFunction;
 import org.hibernate.dialect.function.SpannerTruncFunction;
+import org.hibernate.dialect.function.array.ArrayAggFunction;
+import org.hibernate.dialect.function.array.ArrayToStringFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SpannerIdentityColumnSupport;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
@@ -33,8 +39,6 @@ import org.hibernate.dialect.sql.ast.SpannerSqlAstTranslator;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
-import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.SchemaNameResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Table;
@@ -60,8 +64,14 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.dialect.function.CountFunction;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -78,7 +88,9 @@ import java.util.regex.Pattern;
 import static org.hibernate.dialect.SimpleDatabaseVersion.ZERO_VERSION;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 import static org.hibernate.sql.ast.internal.NonLockingClauseStrategy.NON_CLAUSE_STRATEGY;
+import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
@@ -122,6 +134,7 @@ public class SpannerDialect extends Dialect {
 	private final SequenceSupport SPANNER_SEQUENCE_SUPPORT = new SpannerSequenceSupport(this);
 
 	private static final Pattern NOT_NULL_PATTERN = Pattern.compile( ".*Cannot specify a null value for column(?:[:]? (.*?) in table|: (.*?(?=$))).*" );
+	private static final Pattern NOT_NULL_PATTERN_2 = Pattern.compile( ".*A new row in table .* does not specify a non-null value for NOT NULL column: (.*?)\\s*" );
 	private static final Pattern UNIQUE_INDEX_PATTERN = Pattern.compile( ".*UNIQUE violation on index (.*?)(?:,|$).*" );
 	private static final Pattern CHECK_PATTERN = Pattern.compile( ".*Check constraint (.*?) is violated.*" );
 	private static final Pattern FK_PATTERN = Pattern.compile( ".*Foreign key (.*?) constraint violation.*" );
@@ -164,6 +177,45 @@ public class SpannerDialect extends Dialect {
 	protected void initDefaultProperties() {
 		super.initDefaultProperties();
 		getDefaultProperties().setProperty( AvailableSettings.PREFERRED_POOLED_OPTIMIZER, "none" );
+	}
+
+	@Override
+	public JdbcType resolveSqlTypeDescriptor(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			JdbcTypeRegistry jdbcTypeRegistry) {
+		if ( jdbcTypeCode == ARRAY && columnTypeName.startsWith( "ARRAY<" ) ) {
+			int startIndex = columnTypeName.indexOf( '<' ) + 1;
+			int endIndex = columnTypeName.indexOf( '>' );
+			if ( startIndex > 0 && endIndex > startIndex ) {
+				String componentTypeName = columnTypeName.substring( startIndex, endIndex ).trim();
+				Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
+				if ( sqlTypeCode != null ) {
+					return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
+							jdbcTypeCode,
+							jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
+							ColumnTypeInformation.EMPTY
+					);
+				}
+			}
+		}
+		return super.resolveSqlTypeDescriptor( columnTypeName, jdbcTypeCode, precision, scale, jdbcTypeRegistry );
+	}
+
+	@Override
+	protected Integer resolveSqlTypeCode(String typeName, String baseTypeName, TypeConfiguration typeConfiguration) {
+		if ( baseTypeName == null ) {
+			return super.resolveSqlTypeCode( typeName, baseTypeName, typeConfiguration );
+		}
+		return switch ( baseTypeName.toLowerCase( java.util.Locale.ROOT ) ) {
+			case "int64" -> BIGINT;
+			case "float64" -> DOUBLE;
+			case "bool" -> BOOLEAN;
+			case "timestamp" -> TIMESTAMP_WITH_TIMEZONE;
+			default -> super.resolveSqlTypeCode( typeName, baseTypeName, typeConfiguration );
+		};
 	}
 
 	@Override
@@ -252,9 +304,18 @@ public class SpannerDialect extends Dialect {
 		functionRegistry.namedAggregateDescriptorBuilder( "any_value" )
 				.setExactArgumentCount( 1 )
 				.register();
-		functionRegistry.namedAggregateDescriptorBuilder( "array_agg" )
-				.setExactArgumentCount( 1 )
-				.register();
+		functionRegistry.register(
+				"count",
+				new CountFunction(
+						this,
+						functionContributions.getTypeConfiguration(),
+						SqlAstNodeRenderingMode.DEFAULT,
+						"||",
+						"string",
+						false
+				)
+		);
+		functionRegistry.register( ArrayAggFunction.FUNCTION_NAME, new ArrayAggFunction( "array_agg", false, true ) );
 		functionRegistry.namedAggregateDescriptorBuilder( "countif" )
 				.setInvariantType( longType )
 				.setExactArgumentCount( 1 )
@@ -291,7 +352,7 @@ public class SpannerDialect extends Dialect {
 				"stddev_pop",
 				"sqrt(avg(?1 * ?1)-power(avg(?1),2))" );
 
-		functionFactory.bitandorxornot_bitAndOrXorNot();
+		functionFactory.bitandorxornot_operator();
 
 		functionRegistry.namedDescriptorBuilder( "is_inf" )
 				.setInvariantType( booleanType )
@@ -345,6 +406,8 @@ public class SpannerDialect extends Dialect {
 		functionFactory.repeat();
 		functionFactory.substr();
 		functionFactory.substring_substr();
+		functionFactory.octetLength();
+		functionFactory.bitLength_pattern( "(octet_length(?1) * 8)" );
 		functionRegistry.namedDescriptorBuilder( "byte_length" )
 				.setInvariantType( longType )
 				.setExactArgumentCount( 1 )
@@ -464,10 +527,7 @@ public class SpannerDialect extends Dialect {
 				.setInvariantType( longType )
 				.setExactArgumentCount( 1 )
 				.register();
-		functionRegistry.namedDescriptorBuilder( "array_to_string" )
-				.setInvariantType( stringType )
-				.setArgumentCountBetween( 2, 3 )
-				.register();
+		functionRegistry.register( "array_to_string", new ArrayToStringFunction( functionContributions.getTypeConfiguration() ) );
 		functionRegistry.namedDescriptorBuilder( "array_reverse" )
 				.setExactArgumentCount( 1 )
 				.register();
@@ -511,10 +571,6 @@ public class SpannerDialect extends Dialect {
 				.register();
 
 		// Timestamp functions
-		functionRegistry.namedDescriptorBuilder( "string" )
-				.setInvariantType( stringType )
-				.setArgumentCountBetween( 1, 2 )
-				.register();
 		functionRegistry.namedDescriptorBuilder( "timestamp" )
 				.setInvariantType( timestampType )
 				.setArgumentCountBetween( 1, 2 )
@@ -1011,6 +1067,35 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
+	public String getQuerySequencesString() {
+		return """
+				select seq.CATALOG as sequence_catalog,
+					seq.SCHEMA as sequence_schema,
+					seq.NAME as sequence_name,
+					coalesce(kind.OPTION_VALUE, 'bit_reversed_positive') as KIND,
+					coalesce(safe_cast(initial.OPTION_VALUE AS INT64),
+						case coalesce(kind.OPTION_VALUE, 'bit_reversed_positive')
+							when 'bit_reversed_positive' then 1
+							when 'bit_reversed_signed' then -pow(2, 63)
+							else 1
+						end
+					) as start_value, 1 as minimum_value, 9223372036854775807 as maximum_value,
+					1 as increment,
+					safe_cast(skip_range_min.OPTION_VALUE as int64) as skip_range_min,
+					safe_cast(skip_range_max.OPTION_VALUE as int64) as skip_range_max
+				from INFORMATION_SCHEMA.SEQUENCES seq
+				left outer join INFORMATION_SCHEMA.SEQUENCE_OPTIONS kind
+					on seq.CATALOG=kind.CATALOG and seq.SCHEMA=kind.SCHEMA and seq.NAME=kind.NAME and kind.OPTION_NAME='sequence_kind'
+				left outer join INFORMATION_SCHEMA.SEQUENCE_OPTIONS initial
+					on seq.CATALOG=initial.CATALOG and seq.SCHEMA=initial.SCHEMA and seq.NAME=initial.NAME and initial.OPTION_NAME='start_with_counter'
+				left outer join INFORMATION_SCHEMA.SEQUENCE_OPTIONS skip_range_min
+					on seq.CATALOG=skip_range_min.CATALOG and seq.SCHEMA=skip_range_min.SCHEMA and seq.NAME=skip_range_min.NAME and skip_range_min.OPTION_NAME='skip_range_min'
+				left outer join INFORMATION_SCHEMA.SEQUENCE_OPTIONS skip_range_max
+					on seq.CATALOG=skip_range_max.CATALOG and seq.SCHEMA=skip_range_max.SCHEMA and seq.NAME=skip_range_max.NAME and skip_range_max.OPTION_NAME='skip_range_max'
+				""";
+	}
+
+	@Override
 	public GenerationType getNativeValueGenerationStrategy() {
 		return GenerationType.SEQUENCE;
 	}
@@ -1184,6 +1269,9 @@ public class SpannerDialect extends Dialect {
 	public IdentifierHelper buildIdentifierHelper(
 			IdentifierHelperBuilder builder,
 			DatabaseMetaData metadata) throws SQLException {
+		if ( metadata == null ) {
+			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
+		}
 		builder.applyReservedWords( metadata );
 		builder.setAutoQuoteKeywords( true );
 		builder.setAutoQuoteDollar( true );
@@ -1255,6 +1343,11 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsTupleDistinctCounts() {
+		return false;
+	}
+
+	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final String sqlMessage = sqlException.getMessage();
@@ -1265,6 +1358,11 @@ public class SpannerDialect extends Dialect {
 					return new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.NOT_NULL, extractConstraintName( group ) );
 				}
 
+				matcher = NOT_NULL_PATTERN_2.matcher( sqlMessage );
+				if ( matcher.matches() ) {
+					return new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.NOT_NULL, extractConstraintName( matcher.group( 1 ) ) );
+				}
+
 				matcher = UNIQUE_INDEX_PATTERN.matcher( sqlMessage );
 				if ( matcher.matches() ) {
 					return new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.UNIQUE, extractConstraintName( matcher.group( 1 ) ) );
@@ -1272,6 +1370,10 @@ public class SpannerDialect extends Dialect {
 
 				if ( sqlMessage.contains( "Failed to insert row with primary key" ) ) {
 					return new ConstraintViolationException( message, sqlException, sql, ConstraintViolationException.ConstraintKind.UNIQUE, null );
+				}
+
+				if ( sqlMessage.contains( "Table not found" ) ) {
+					return new SQLGrammarException( message, sqlException, sql );
 				}
 
 				matcher = CHECK_PATTERN.matcher( sqlMessage );

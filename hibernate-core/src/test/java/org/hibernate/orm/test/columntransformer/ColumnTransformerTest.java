@@ -13,6 +13,7 @@ import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 
 import org.hibernate.community.dialect.TiDBDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -37,6 +38,7 @@ import static org.junit.Assert.assertThat;
 @SessionFactory
 @SkipForDialect(dialectClass = MySQLDialect.class, reason = "MySQL doesn't support casting to a VARCHAR(255)")
 @SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB doesn't support casting to a VARCHAR(255)")
+@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner doesn't support casting to a VARCHAR(255)")
 public class ColumnTransformerTest {
 	public static final double ERROR = 0.01d;
 

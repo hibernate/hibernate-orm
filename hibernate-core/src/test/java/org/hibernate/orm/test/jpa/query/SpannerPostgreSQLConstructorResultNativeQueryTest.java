@@ -17,6 +17,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -33,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Steve Ebersole
  */
 @RequiresDialect(SpannerPostgreSQLDialect.class)
+@RequiresDialect(SpannerDialect.class)
 @Jpa(annotatedClasses = {SpannerPostgreSQLConstructorResultNativeQueryTest.Person.class})
 public class SpannerPostgreSQLConstructorResultNativeQueryTest {
 	@Entity( name = "Person" )

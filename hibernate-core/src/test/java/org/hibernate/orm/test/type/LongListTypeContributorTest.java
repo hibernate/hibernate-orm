@@ -10,11 +10,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
@@ -33,6 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		annotatedClasses = LongListTypeContributorTest.SpecialItem.class
 )
 @SessionFactory
+@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner does not varchar column definition" )
 public class LongListTypeContributorTest {
 	@AfterEach
 	void tearDown(SessionFactoryScope factoryScope) {

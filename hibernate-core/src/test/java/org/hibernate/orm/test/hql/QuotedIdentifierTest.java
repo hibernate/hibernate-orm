@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.hibernate.annotations.processing.Exclude;
 import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 
@@ -32,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DomainModel(annotatedClasses = QuotedIdentifierTest.Person.class)
 @SessionFactory
 @SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support creating tables with spaces")
+@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner doesn't support creating tables with spaces")
 public class QuotedIdentifierTest {
 
 	@BeforeEach

@@ -116,8 +116,8 @@ public class FullLayoutQueryCacheTest {
 									Statement stmt = null;
 									try {
 										stmt = connection.createStatement();
-										stmt.executeUpdate( "DELETE FROM SecondEntity" );
-										stmt.executeUpdate( "DELETE FROM FirstEntity" );
+										stmt.executeUpdate( "DELETE FROM SecondEntity where 1=1" );
+										stmt.executeUpdate( "DELETE FROM FirstEntity where 1=1" );
 									}
 									finally {
 										if ( stmt != null ) {

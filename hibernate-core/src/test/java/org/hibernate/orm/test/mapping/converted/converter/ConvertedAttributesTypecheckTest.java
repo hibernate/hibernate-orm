@@ -10,10 +10,12 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Set;
 
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -96,6 +98,7 @@ public class ConvertedAttributesTypecheckTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = SpannerDialect.class)
 	public void testFromDurationExpressionOnConvertedDuration(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			assertThat( session.createQuery(

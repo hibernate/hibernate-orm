@@ -7,6 +7,7 @@ package org.hibernate.orm.test.type;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -31,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTypedArrays.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsArrayToString.class)
 @SkipForDialect( dialectClass = OracleDialect.class, reason = "External driver fix required")
+@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner ARRAY_TO_STRING does not support boolean arrays directly" )
 @Jira( value = "https://hibernate.atlassian.net/browse/HHH-18765" )
 public class BooleanArrayToStringTest {
 

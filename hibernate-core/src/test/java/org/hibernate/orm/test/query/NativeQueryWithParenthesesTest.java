@@ -6,6 +6,7 @@ package org.hibernate.orm.test.query;
 
 import org.hibernate.community.dialect.FirebirdDialect;
 
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -30,6 +31,7 @@ import jakarta.persistence.Table;
 public class NativeQueryWithParenthesesTest {
 
 	@Test
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "spanner requires explicit UNION ALL or UNION DISTINCT")
 	public void testParseParentheses(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager ->

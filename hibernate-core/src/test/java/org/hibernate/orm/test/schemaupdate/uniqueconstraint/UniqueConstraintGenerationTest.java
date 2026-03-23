@@ -112,7 +112,7 @@ public class UniqueConstraintGenerationTest {
 			String tableName,
 			String columnName,
 			File scriptFile) throws IOException {
-		String regex = "create unique (nonclustered )?index uk.* on " + tableName
+		String regex = "create unique (nonclustered |null_filtered )?index uk.* on " + tableName
 				+ " \\(" + columnName + "\\)( where .*| exclude null keys)?;";
 		final String fileContent = new String( Files.readAllBytes( scriptFile.toPath() ) ).toLowerCase();
 		final String[] split = fileContent.split( System.lineSeparator() );

@@ -7,6 +7,7 @@ package org.hibernate.orm.test.filter;
 import jakarta.persistence.criteria.JoinType;
 import org.hibernate.Hibernate;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -18,6 +19,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -88,6 +90,7 @@ public class DynamicFilterTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnionInSubquery.class)
+	@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner requires explicit UNION ALL or UNION DISTINCT" )
 	public void testSqlSyntaxOfFiltersWithUnions(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			session.enableFilter( "unioned" );

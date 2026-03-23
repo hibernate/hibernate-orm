@@ -6,6 +6,7 @@ package org.hibernate.orm.test.typedescriptor;
 
 
 import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -27,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 )
 @SessionFactory
 @SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support char(8)")
+@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner doesn't support char(8)")
 public class CharInNativeQueryTest {
 
 	@BeforeEach

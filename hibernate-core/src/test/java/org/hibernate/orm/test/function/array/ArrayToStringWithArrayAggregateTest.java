@@ -133,7 +133,7 @@ public class ArrayToStringWithArrayAggregateTest {
 	}
 
 	// Needed for Oracle
-	@Entity
+	@Entity(name = "Dummy")
 	static class Dummy {
 		@Id
 		Long id;

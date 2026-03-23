@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.id.custom;
 
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Property;
 
@@ -13,6 +14,7 @@ import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DomainModel( annotatedClasses = TheEntity.class )
 @SessionFactory
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSequences.class )
+@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner does not support sequences with an increment size != 1")
 public class CustomGeneratorTests {
 	@Test
 	public void verifyModel(DomainModelScope scope) {

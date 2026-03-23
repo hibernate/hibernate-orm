@@ -129,7 +129,7 @@ public class LoadANonExistingNotFoundEntityTest {
 
 		scope.inTransaction( session -> {
 					// Add "not found" associations
-					session.createNativeQuery( "update Employee set employer_id = 0 ").executeUpdate();
+					session.createNativeQuery( "update Employee set employer_id = 0 where 1=1").executeUpdate();
 				}
 		);
 	}

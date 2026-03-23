@@ -47,7 +47,7 @@
 				write="? * 2.54E0"/>
 		</property>        
 
-        <join table="address">
+        <join table="person_address">
             <key column="address_id"/>
             <property name="address"/>
             <property name="zip"/>

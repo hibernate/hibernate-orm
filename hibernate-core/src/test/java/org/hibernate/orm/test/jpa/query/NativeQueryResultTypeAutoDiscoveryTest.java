@@ -31,6 +31,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -117,12 +118,14 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@Test
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle maps integer types to number")
 	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner maps integer types to bigint")
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner maps integer types to bigint")
 	public void smallintType(EntityManagerFactoryScope scope) {
 		doTest( scope, SmallintEntity.class, (short)32767 );
 	}
 
 	@Test
 	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner maps integer types to bigint")
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner maps integer types to bigint")
 	public void integerType(EntityManagerFactoryScope scope) {
 		doTest( scope, IntegerEntity.class, 2147483647 );
 	}
@@ -169,6 +172,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "informix maps tinyint to smallint")
 	@SkipForDialect(dialectClass = GaussDBDialect.class, reason = "type:resolved.Turns tinyints into shorts in result sets and advertises the type as short in the metadata")
 	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner maps integer types to bigint")
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner maps integer types to bigint")
 	public void tinyintType(EntityManagerFactoryScope scope) {
 		doTest( scope, TinyintEntity.class, (byte)127 );
 	}
@@ -177,6 +181,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = H2Dialect.class, reason = "Turns floats into doubles in result sets and advertises the type as double in the metadata")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "Turns floats into doubles in result sets and advertises the type as double in the metadata")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Turns floats into doubles in result sets and advertises the type as double in the metadata")
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner maps float types to double (float64)")
 	public void floatType(EntityManagerFactoryScope scope) {
 		doTest( scope, FloatEntity.class, 15516.125f );
 	}
@@ -199,6 +204,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Value is too big for the maximum allowed precision of Firebird")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Value is too big for the maximum allowed precision of Altibase")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "The scale exceeds the maximum precision specified")
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "The value too big for standard Spanner Numeric precision limits (38.9)")
 	public void numericType(EntityManagerFactoryScope scope) {
 		doTest( scope, NumericEntity.class, new BigDecimal( "5464384284258458485484848458.48465843584584684" ) );
 	}
@@ -212,6 +218,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Value is too big for the maximum allowed precision of Firebird")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Value is too big for the maximum allowed precision of Altibase")
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "The scale exceeds the maximum precision specified")
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "The value too big for standard Spanner Numeric precision limits (38.9)")
 	public void decimalType(EntityManagerFactoryScope scope) {
 		doTest( scope, DecimalEntity.class, new BigDecimal( "5464384284258458485484848458.48465843584584684" )  );
 	}
@@ -234,6 +241,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 
 	@Test
 	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner maps char types to varchar" )
+	@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner maps char types to varchar" )
 	public void charType(EntityManagerFactoryScope scope) {
 		doTest( scope, CharEntity.class, 'c' );
 	}
@@ -293,7 +301,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 		);
 
 		doTest( scope, DateEntity.class, new java.sql.Date( zonedDateTime.toInstant().toEpochMilli() ) );
-		if (!(scope.getDialect() instanceof SpannerPostgreSQLDialect)) {
+		if (!(scope.getDialect() instanceof SpannerPostgreSQLDialect || scope.getDialect() instanceof SpannerDialect)) {
 			doTest( scope, TimeEntity.class, new Time( zonedDateTime.toLocalTime().toNanoOfDay() / 1000 ) );
 		}
 	}

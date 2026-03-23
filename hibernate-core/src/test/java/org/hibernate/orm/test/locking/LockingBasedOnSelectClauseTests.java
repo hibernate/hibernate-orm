@@ -67,6 +67,7 @@ public class LockingBasedOnSelectClauseTests {
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Cursor must be on simple SELECT for FOR UPDATE")
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 16, minorVersion = 0, microVersion = 2,
 			versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "holdlock isn't the same as updating a row. Bug in our Sybase ASE version?")
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsConcurrentTransactions.class )
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSelectLocking.class )
 	void testBasicHqlUsage(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {

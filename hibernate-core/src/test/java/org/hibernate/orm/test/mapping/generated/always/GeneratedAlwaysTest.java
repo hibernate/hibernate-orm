@@ -7,12 +7,14 @@ package org.hibernate.orm.test.mapping.generated.always;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import org.hibernate.annotations.DialectOverride;
 import org.hibernate.annotations.GeneratedColumn;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -71,6 +73,8 @@ public class GeneratedAlwaysTest {
 		private BigDecimal total;
 		@Column(name = "discountedTotal")
 		@GeneratedColumn(value = "unitPrice*quantity*(1.0-discount/100.0)")
+		@DialectOverride.GeneratedColumn(dialect = SpannerDialect.class,
+				override = @GeneratedColumn(value = "CAST(unitPrice*quantity*(1.0-discount/100.0) AS NUMERIC)"))
 		private BigDecimal discounted;
 
 		public OrderLine() {}

@@ -1,4 +1,3 @@
-
 /*
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
@@ -18,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 @JiraKey("HHH-20000")
 @ServiceRegistry
@@ -67,11 +67,16 @@ public class NaturalIdConstraintTest {
 
 		assertEquals( 3, uniqueKeys.size() );
 
-		var uniqueKey = uniqueKeys.values().iterator().next();
+		// The natural id constraint covers both firstName and lastName, thus has 2 columns.
+		// UK_FIRST and UK_LAST each have 1 column.
+		var uniqueKey = uniqueKeys.values().stream()
+				.filter( uk -> uk.getColumnSpan() == 2 )
+				.findFirst()
+				.get();
 
 		// Should NOT use UK_FIRST or UK_LAST
-		assertFalse( uniqueKey.getName().equals( "UK_FIRST" ) );
-		assertFalse( uniqueKey.getName().equals( "UK_LAST" ) );
+		assertNotEquals( "UK_FIRST", uniqueKey.getName() );
+		assertNotEquals( "UK_LAST", uniqueKey.getName() );
 	}
 
 	@Test

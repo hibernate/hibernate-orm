@@ -151,33 +151,27 @@ jobs:
 
   # Job for builds on Atlas (Oracle) infrastructure.
   # This is untrusted, even for pushes, see below.
-  atlas:
+  otp:
     permissions:
       contents: read
     name: GraalVM 21 - ${{matrix.rdbms}}
-    #    runs-on: ubuntu-latest
-    runs-on: [self-hosted, Linux, X64, OCI]
+    runs-on: [ self-hosted, Linux, X64, OracleTestPilot ]
+    if: github.repository == 'hibernate/hibernate-orm'
     strategy:
       fail-fast: false
       matrix:
         include:
-          - rdbms: oracle_atps
-          - rdbms: oracle_db19c
-          - rdbms: oracle_db21c
-          - rdbms: oracle_db23c
+          #- rdbms: autonomous-transaction-processing-serverless-26ai
+          #- rdbms: autonomous-transaction-processing-serverless-19c
+          - rdbms: base-database-service-19c
+          - rdbms: base-database-service-21c
+          - rdbms: base-database-service-26ai
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
-      - name: Reclaim disk space and sanitize user home
-        run: .github/ci-prerequisites-atlas.sh
-      - name: Start database
-        env:
-          RDBMS: ${{ matrix.rdbms }}
-          RUNID: ${{ github.run_number }}
-        run: ci/database-start.sh
       - name: Set up Java 21
-        uses: graalvm/setup-graalvm@v1
+        uses: graalvm/setup-graalvm@aafbedb8d382ed0ca6167d3a051415f20c859274 # v1.2.8
         with:
           distribution: 'graalvm'
           java-version: '21'
@@ -194,16 +188,18 @@ jobs:
           echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
       - name: Cache Maven/Gradle Dependency/Dist Caches
         id: cache-maven
-        uses: actions/cache@v4
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         # if it's not a pull request, we restore and save the cache
         if: github.event_name != 'pull_request'
         with:
           path: |
             ~/.m2/repository/
             ~/.m2/wrapper/
+            ~/.gradle/caches/
             ~/.gradle/caches/modules-2
+            !~/.gradle/caches/build-cache-*
             ~/.gradle/wrapper/
-          # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable but it's not a problem.
+          # A new cache will be stored daily. After that first store of the day, cache save actions will fail because the cache is immutable, but it's not a problem.
           # The whole cache is dropped monthly to prevent unlimited growth.
           # The cache is per branch but in case we don't find a branch for a given branch, we will get a cache from another branch.
           key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
@@ -211,8 +207,8 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
       - name: Restore Maven/Gradle Dependency/Dist Caches
-        uses: actions/cache/restore@v4
-        # if it a pull request, we restore the cache but we don't save it
+        uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        # if it is a pull request, we restore the cache, but we don't save it
         if: github.event_name == 'pull_request'
         with:
           path: |
@@ -225,18 +221,41 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
 
+      - id: create_database
+        uses: loiclefevre/test@a802f8bb53b42b16c253d75f86b06360d150c6e4 # v1.0.22
+        with:
+          oci-service: ${{ matrix.rdbms }}
+          action: create
+          user: hibernate_orm_test
+
       - name: Run build script
         env:
           RDBMS: ${{ matrix.rdbms }}
           RUNID: ${{ github.run_number }}
+          TESTPILOT_CONNECTION_STRING_SUFFIX: ${{ steps.create_database.outputs.connection_string_suffix }}
+          TESTPILOT_PASSWORD: ${{ steps.create_database.outputs.database_password }}
+          API_HOST: ""
+          TESTPILOT_CLIENT_ID: ""
+          TESTPILOT_TOKEN: ""
+          # Needed for TFO (TCP fast open)
+          LD_PRELOAD: /home/ubuntu/libtfojdbc1.so
+          LD_LIBRARY_PATH: /home/ubuntu
         run: ./ci/build-github.sh
         shell: bash
+
+      - uses: loiclefevre/test@a802f8bb53b42b16c253d75f86b06360d150c6e4 # v1.0.22
+        if: always()
+        with:
+          oci-service: ${{ matrix.rdbms }}
+          action: delete
+          user: hibernate_orm_test
+
       # Upload build scan data.
       # The actual publishing must be done in a separate job (see ci-report.yml).
       # We don't write to the remote cache as that would be unsafe.
       # That's even on push, because we do not trust Atlas runners to hold secrets: they are shared infrastructure.
       - name: Upload GitHub Actions artifact for the Develocity build scan
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         if: "${{ !cancelled() }}"
         with:
           name: build-scan-data-${{ matrix.rdbms }}
@@ -249,7 +268,7 @@ jobs:
           path: |
             ./**/target/jacoco/*.exec
       - name: Upload test reports (if Gradle failed)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         if: failure()
         with:
           name: test-reports-java11-${{ matrix.rdbms }}

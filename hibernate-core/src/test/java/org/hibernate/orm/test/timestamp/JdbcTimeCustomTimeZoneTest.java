@@ -19,6 +19,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
@@ -39,6 +40,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 	reason = "Informix JDBC driver seems to misinterpret the JDBC time zone")
 @SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class,
 		reason = "Spanner PG sends UTC as Timezone for Time types to avoid timezone issues")
+@SkipForDialect(dialectClass = SpannerDialect.class,
+		reason = "Spanner sends UTC as Timezone for Time types to avoid timezone issues")
 public class JdbcTimeCustomTimeZoneTest
 		extends BaseSessionFactoryFunctionalTest {
 

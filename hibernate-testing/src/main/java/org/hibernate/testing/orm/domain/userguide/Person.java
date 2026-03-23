@@ -71,12 +71,12 @@ import jakarta.persistence.Version;
 		name = "find_person_by_name",
 		query =
 				"select " +
-						"   p.id AS \"id\", " +
-						"   p.name AS \"name\", " +
-						"   p.nick_name AS \"nick_name\", " +
-						"   p.address AS \"address\", " +
-						"   p.created_on AS \"created_on\", " +
-						"   p.version AS \"version\" " +
+						"   p.id AS id, " +
+						"   p.name AS name, " +
+						"   p.nick_name AS nick_name, " +
+						"   p.address AS address, " +
+						"   p.created_on AS created_on, " +
+						"   p.version AS version " +
 						"from Person p " +
 						"where p.name LIKE :name",
 		resultClass = Person.class
@@ -87,16 +87,16 @@ import jakarta.persistence.Version;
 		name = "find_person_with_phones_by_name",
 		query =
 				"select " +
-						"   pr.id AS \"pr.id\", " +
-						"   pr.name AS \"pr.name\", " +
-						"   pr.nick_name AS \"pr.nick_name\", " +
-						"   pr.address AS \"pr.address\", " +
-						"   pr.created_on AS \"pr.created_on\", " +
-						"   pr.version AS \"pr.version\", " +
-						"   ph.id AS \"ph.id\", " +
-						"   ph.person_id AS \"ph.person_id\", " +
-						"   ph.phone_number AS \"ph.number\", " +
-						"   ph.phone_type AS \"ph.type\" " +
+						"   pr.id AS pr_id, " +
+						"   pr.name AS pr_name, " +
+						"   pr.nick_name AS pr_nick_name, " +
+						"   pr.address AS pr_address, " +
+						"   pr.created_on AS pr_created_on, " +
+						"   pr.version AS pr_version, " +
+						"   ph.id AS ph_id, " +
+						"   ph.person_id AS ph_person_id, " +
+						"   ph.phone_number AS ph_number, " +
+						"   ph.phone_type AS ph_type " +
 						"from Person pr " +
 						"join Phone ph ON pr.id = ph.person_id " +
 						"where pr.name LIKE :name",
@@ -110,21 +110,21 @@ import jakarta.persistence.Version;
 				@EntityResult(
 						entityClass = Person.class,
 						fields = {
-								@FieldResult( name = "id", column = "pr.id" ),
-								@FieldResult( name = "name", column = "pr.name" ),
-								@FieldResult( name = "nickName", column = "pr.nick_name" ),
-								@FieldResult( name = "address", column = "pr.address" ),
-								@FieldResult( name = "createdOn", column = "pr.created_on" ),
-								@FieldResult( name = "version", column = "pr.version" ),
+								@FieldResult( name = "id", column = "pr_id" ),
+								@FieldResult( name = "name", column = "pr_name" ),
+								@FieldResult( name = "nickName", column = "pr_nick_name" ),
+								@FieldResult( name = "address", column = "pr_address" ),
+								@FieldResult( name = "createdOn", column = "pr_created_on" ),
+								@FieldResult( name = "version", column = "pr_version" ),
 						}
 				),
 				@EntityResult(
 						entityClass = Phone.class,
 						fields = {
-								@FieldResult( name = "id", column = "ph.id" ),
-								@FieldResult( name = "person", column = "ph.person_id" ),
-								@FieldResult( name = "number", column = "ph.number" ),
-								@FieldResult( name = "type", column = "ph.type" ),
+								@FieldResult( name = "id", column = "ph_id" ),
+								@FieldResult( name = "person", column = "ph_person_id" ),
+								@FieldResult( name = "number", column = "ph_number" ),
+								@FieldResult( name = "type", column = "ph_type" ),
 						}
 				)
 		}

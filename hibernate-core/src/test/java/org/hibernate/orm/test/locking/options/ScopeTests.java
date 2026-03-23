@@ -47,6 +47,7 @@ import static org.hibernate.orm.test.locking.options.Helper.Table.REPORT_LABELS;
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSelectLocking.class )
 @SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 16, minorVersion = 0, microVersion = 2,
 		versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "holdlock isn't the same as updating a row. Bug in our Sybase ASE version?")
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsConcurrentTransactions.class )
 @Tag("db-locking")
 public class ScopeTests {
 	@BeforeEach

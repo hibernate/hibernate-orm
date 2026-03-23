@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
@@ -71,6 +72,7 @@ public class TruncConvertedDatetimeAttributeTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimestampComparison.class)
+	@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner doesn't support DATE and TIMESTAMP comparison" )
 	public void testTruncComparison(SessionFactoryScope scope) {
 		scope.inSession( session -> {
 			assertThat( session.createQuery(

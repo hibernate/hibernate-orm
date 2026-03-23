@@ -26,7 +26,7 @@ import jakarta.persistence.SqlResultSetMapping;
 	@NamedNativeQuery(name = "find_all_spaceships",
 		query =
 			"SELECT " +
-			"   name as \"name\", " +
+			"   name as name, " +
 			"   model, " +
 			"   speed, " +
 			"   lname as lastn, " +

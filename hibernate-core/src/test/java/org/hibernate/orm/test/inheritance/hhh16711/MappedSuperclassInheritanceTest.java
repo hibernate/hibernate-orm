@@ -49,7 +49,7 @@ public class MappedSuperclassInheritanceTest {
 	@JiraKey( value = "HHH-16711")
 	public void testSelect(EntityManagerFactoryScope scope) {
 		scope.inTransaction(entityManager -> {
-			entityManager.createNativeQuery("INSERT INTO inheriting VALUES ('myId', 'myName')").executeUpdate();
+			entityManager.createNativeQuery("INSERT INTO inheriting (id, name) VALUES ('myId', 'myName')").executeUpdate();
 		});
 
 		scope.inTransaction(entityManager -> {

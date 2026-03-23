@@ -102,7 +102,7 @@ public class PooledHiLoSequenceIdentifierTest {
 				connection -> {
 					PreparedStatement statement = null;
 					try {
-						statement = connection.prepareStatement( "INSERT INTO sequenceIdentifier VALUES (?,?)" );
+						statement = connection.prepareStatement( "INSERT INTO sequenceIdentifier (id, name) VALUES (?,?)" );
 						statement.setObject(
 								1,
 								((BeforeExecutionGenerator) sfi.getMappingMetamodel().getEntityDescriptor( SequenceIdentifier.class).getGenerator())

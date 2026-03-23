@@ -150,7 +150,7 @@ public class LoadANonExistingNotFoundLazyBatchEntityTest {
 
 		scope.inTransaction( session -> {
 					// Add "not found" associations
-					session.createNativeQuery( "update Employee set employer_id = id" ).executeUpdate();
+					session.createNativeQuery( "update Employee set employer_id = id where 1=1" ).executeUpdate();
 				}
 		);
 	}

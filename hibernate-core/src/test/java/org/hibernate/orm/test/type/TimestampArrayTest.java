@@ -19,6 +19,7 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
@@ -198,7 +199,7 @@ public class TimestampArrayTest {
 						} )
 				);
 			}
-			else if ( dialect instanceof SpannerPostgreSQLDialect ) {
+			else if ( dialect instanceof SpannerPostgreSQLDialect || dialect instanceof SpannerDialect ) {
 				// Spanner always stores timestamp with timezone. So it always returns the date time with the timezone
 				assertThat(
 						tuple[1],

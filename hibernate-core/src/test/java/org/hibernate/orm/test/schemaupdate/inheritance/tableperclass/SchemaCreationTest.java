@@ -66,6 +66,8 @@ public class SchemaCreationTest {
 			isUniqueConstraintCreated = isUniqueConstraintCreated
 					|| statement.startsWith("create unique index")
 						&& statement.contains("category (code)")
+					|| statement.startsWith("create unique null_filtered index")
+						&& statement.contains("category (code)")
 					|| statement.startsWith("create unique nonclustered index")
 					&& statement.contains("category (code)")
 					|| statement.startsWith("alter table if exists category add constraint ")

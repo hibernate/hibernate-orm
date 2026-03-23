@@ -54,7 +54,7 @@ public class NativeQuerySchemaPlaceholderTest {
 		scope.inTransaction(
 				session -> {
 					NativeQuery<Tuple> nativeQuery = session.createNativeQuery(
-							"UPDATE {h-schema}TestEntity SET name = 'updated_test'"
+							"UPDATE {h-schema}TestEntity SET name = 'updated_test' WHERE id = 1"
 					);
 					nativeQuery.executeUpdate();
 				}
@@ -71,7 +71,7 @@ public class NativeQuerySchemaPlaceholderTest {
 		scope.inTransaction(
 				session -> {
 					NativeQuery<Tuple> nativeQuery = session.createNativeQuery(
-							"UPDATE {h-schema}TestEntity SET name = '{updated_test'"
+							"UPDATE {h-schema}TestEntity SET name = '{updated_test' where id = 1"
 					);
 					nativeQuery.executeUpdate();
 				}

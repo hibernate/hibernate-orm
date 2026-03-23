@@ -18,6 +18,7 @@ import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
@@ -112,7 +113,8 @@ public class BasicOperationsTest {
 			validateColumn( connection, "ID", java.sql.Types.DATE );
 
 			// timeData -> java.sql.Time (TIME)
-			if (s.getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ) {
+			if (s.getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ||
+				s.getJdbcServices().getDialect() instanceof SpannerDialect ) {
 				validateColumn( connection, "TIMEDATA", Types.TIMESTAMP );
 			}
 			else {

@@ -67,7 +67,7 @@ public class NonTransactionalDataAccessTest {
 	@SessionFactory
 	public void testNativeQueryAllowingOutOfTransactionUpdateOperations(SessionFactoryScope factoryScope) {
 		factoryScope.inSession( (session) -> {
-			session.createNativeQuery( "delete from MY_ENTITY" ).executeUpdate();
+			session.createNativeQuery( "delete from MY_ENTITY where 1=1" ).executeUpdate();
 		} );
 	}
 
@@ -78,7 +78,7 @@ public class NonTransactionalDataAccessTest {
 	@SessionFactory
 	public void testNativeQueryDisallowingOutOfTransactionUpdateOperations(SessionFactoryScope factoryScope) {
 		factoryScope.inSession( (session) -> {
-			session.createNativeQuery( "delete from MY_ENTITY" ).executeUpdate();
+			session.createNativeQuery( "delete from MY_ENTITY where 1=1" ).executeUpdate();
 		} );
 	}
 

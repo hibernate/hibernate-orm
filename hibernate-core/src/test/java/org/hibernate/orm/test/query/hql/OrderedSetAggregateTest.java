@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -156,6 +157,7 @@ public class OrderedSetAggregateTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsInverseDistributionFunctions.class)
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not support inverse distribution functions with WITHIN GROUP")
 	public void testInverseDistribution(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -167,6 +169,7 @@ public class OrderedSetAggregateTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsHypotheticalSetFunctions.class)
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not support hypothetical set functions with WITHIN GROUP")
 	public void testHypotheticalSetPercentRank(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -178,6 +181,7 @@ public class OrderedSetAggregateTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsHypotheticalSetFunctions.class)
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not support hypothetical set functions with WITHIN GROUP")
 	public void testHypotheticalSetRank(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -189,6 +193,7 @@ public class OrderedSetAggregateTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsHypotheticalSetFunctions.class)
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not support hypothetical set functions with WITHIN GROUP")
 	public void testHypotheticalSetRankWithGroupByHavingOrderByLimit(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

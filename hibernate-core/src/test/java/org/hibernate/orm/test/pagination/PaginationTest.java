@@ -12,6 +12,8 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
@@ -195,6 +197,14 @@ public class PaginationTest {
 				.addEntity( DataPoint.class );
 	}
 
+	private int getScale(Dialect dialect) {
+		// Spanner NUMERIC type supports scale up to 9
+		if ( dialect instanceof SpannerDialect ) {
+			return 9;
+		}
+		return 19;
+	}
+
 	@BeforeEach
 	public void prepareTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -202,10 +212,11 @@ public class PaginationTest {
 					for ( int i = 0; i < NUMBER_OF_TEST_ROWS; i++ ) {
 						DataPoint dataPoint = new DataPoint();
 						dataPoint.setSequence( i );
-						BigDecimal x = new BigDecimal( i * 0.1d ).setScale( 19, RoundingMode.DOWN );
+						final int scale = getScale( session.getDialect() );
+						BigDecimal x = new BigDecimal( i * 0.1d ).setScale( scale, RoundingMode.DOWN );
 						dataPoint.setX( x );
 						dataPoint.setY( new BigDecimal( Math.cos( x.doubleValue() ) ).setScale(
-								19,
+								scale,
 								RoundingMode.DOWN
 						) );
 						dataPoint.setDescription( "Description: " + i % 5 );

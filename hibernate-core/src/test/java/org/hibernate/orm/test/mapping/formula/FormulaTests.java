@@ -21,6 +21,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -125,6 +126,8 @@ public class FormulaTests {
 				override = @Formula("trim(concat(to_char(rate * 100,'#&.&&'), '%'))"))
 		@DialectOverride.Formula(dialect = SpannerPostgreSQLDialect.class,
 				override = @Formula("cast(rate * 100 as varchar) || '%'"))
+		@DialectOverride.Formula(dialect = SpannerDialect.class,
+				override = @Formula("cast(rate * 100 as string) || '%'"))
 		private String ratePercent;
 
 		public Long getId() {

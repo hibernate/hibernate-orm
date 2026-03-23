@@ -27,6 +27,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.mapping.BasicValue;
@@ -133,6 +134,7 @@ public class FractionalSecondsTests {
 	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix only supports precision from 1 to 5")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird does not support specifying a precision on timestamps")
 	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support specifying precision on timestamps")
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner doesn't support specifying precision on timestamps")
 	void testUsage0(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final Instant start;
@@ -165,6 +167,7 @@ public class FractionalSecondsTests {
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase does not support specifying a precision on timestamps")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird does not support specifying a precision on timestamps")
 	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support specifying precision on timestamps")
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner doesn't support specifying precision on timestamps")
 	void testUsage3(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final Instant start;

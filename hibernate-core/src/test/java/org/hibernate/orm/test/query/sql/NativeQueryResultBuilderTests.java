@@ -16,6 +16,7 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -74,7 +75,8 @@ public class NativeQueryResultBuilderTests {
 					assertThat( values.length, is(3 ) );
 
 					assertThat( values[0], is( STRING_VALUE ) );
-					if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ) {
+					if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ||
+						scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerDialect ) {
 						assertThat( values[1], is( 2L ) );
 						assertThat( values[2], is( 1L ) );
 					}
@@ -132,7 +134,8 @@ public class NativeQueryResultBuilderTests {
 					final Object[] values = (Object[]) result;
 					assertThat( values.length, is(3 ) );
 
-					if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ) {
+					if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ||
+						scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerDialect) {
 						assertThat( values[0], is( 1L ) );
 						assertThat( values[1], is( 2L ) );
 					}
@@ -166,7 +169,8 @@ public class NativeQueryResultBuilderTests {
 					final Object[] values = (Object[]) result;
 					assertThat( values.length, is(3 ) );
 
-					if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ) {
+					if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ||
+						scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerDialect) {
 						assertThat( values[0], is( 1L ) );
 					}
 					else {
@@ -194,7 +198,8 @@ public class NativeQueryResultBuilderTests {
 					final Object[] values = (Object[]) result;
 					assertThat( values.length, is(3 ) );
 
-					if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ) {
+					if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ||
+						scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerDialect) {
 						assertThat( values[0], is( 1L ) );
 					}
 					else {
@@ -218,7 +223,8 @@ public class NativeQueryResultBuilderTests {
 					assertThat( results.size(), is( 1 ) );
 
 					final Object result = results.get( 0 );
-					if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ) {
+					if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ||
+						scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerDialect) {
 						assertThat( result, instanceOf( String.class ) );
 						assertThat( result, is( "O" ) );
 					}

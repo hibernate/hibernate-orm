@@ -74,8 +74,8 @@ public class BitSetRegisteredUserTypeTest {
 		name = "find_person_by_bitset",
 		query =
 			"SELECT " +
-			"   pr.id AS \"pr.id\", " +
-			"   pr.bitset_col AS \"pr.bitset\" " +
+			"   pr.id AS pr_id, " +
+			"   pr.bitset_col AS pr_bitset " +
 			"FROM Product pr " +
 			"WHERE pr.id = :id",
 		resultSetMapping = "Person"
@@ -85,8 +85,8 @@ public class BitSetRegisteredUserTypeTest {
 		classes = @ConstructorResult(
 			targetClass = Product.class,
 			columns = {
-				@ColumnResult(name = "pr.id"),
-				@ColumnResult(name = "pr.bitset", type = BitSetUserType.class)
+				@ColumnResult(name = "pr_id"),
+				@ColumnResult(name = "pr_bitset", type = BitSetUserType.class)
 			}
 		)
 	)

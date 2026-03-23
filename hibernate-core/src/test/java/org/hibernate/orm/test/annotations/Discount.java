@@ -20,7 +20,7 @@ import jakarta.persistence.ManyToOne;
  *
  * @author Emmanuel Bernard
  */
-@Entity
+@Entity(name = "DiscountTable")
 public class Discount implements Serializable {
 
 	private Long id;

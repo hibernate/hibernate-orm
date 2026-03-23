@@ -188,7 +188,7 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsJdbcEscapes implements DialectFeatureCheck {
 		@Override
 		public boolean apply(Dialect dialect) {
-			return !(dialect instanceof SpannerPostgreSQLDialect);
+			return !(dialect instanceof SpannerPostgreSQLDialect || dialect instanceof SpannerDialect);
 		}
 	}
 
@@ -1098,7 +1098,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsPrimaryKeyUpdate implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return !(dialect instanceof SpannerPostgreSQLDialect);
+			return !(dialect instanceof SpannerPostgreSQLDialect || dialect instanceof SpannerDialect);
 		}
 	}
 

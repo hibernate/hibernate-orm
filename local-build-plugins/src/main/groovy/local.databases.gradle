@@ -362,7 +362,7 @@ ext {
                     'jdbc.pass'       : '',        // Not used by Spanner
                     'connection.init_sql' : '',
                     // autoConfigEmulator=true creates the necessary instances and DBs if they don't exist already
-                    'jdbc.url'        : 'jdbc:cloudspanner://' + dbHost + ':901$worker/projects/orm-test-project/instances/orm-test-instance/databases/orm-test-db?autoConfigEmulator=true;lenient=true',
+                    'jdbc.url'        : 'jdbc:cloudspanner://' + dbHost + ':901$worker/projects/orm-test-project/instances/orm-test-instance/databases/orm-test-db?autoConfigEmulator=true;lenient=true;unknownLength=255',
                     'jdbc.datasource' : 'com.google.cloud.spanner.jdbc.JdbcDriver'
             ],
             spannerpgsql : [

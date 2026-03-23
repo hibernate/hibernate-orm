@@ -64,6 +64,7 @@ public class SQLExceptionConversionTest {
 						}
 						catch (ConstraintViolationException ignore) {
 							// expected outcome
+							session.getTransaction().setRollbackOnly();
 						}
 						finally {
 							releaseStatement( session, ps );
@@ -129,6 +130,7 @@ public class SQLExceptionConversionTest {
 						}
 						catch (ConstraintViolationException ignore) {
 							// expected outcome
+							session.getTransaction().setRollbackOnly();
 						}
 						finally {
 							releaseStatement( session, ps );

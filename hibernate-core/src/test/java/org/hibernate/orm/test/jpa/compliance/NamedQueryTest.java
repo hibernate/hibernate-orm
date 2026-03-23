@@ -10,6 +10,7 @@ import java.util.List;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
@@ -92,7 +93,7 @@ public class NamedQueryTest {
 					namedQuery.setMaxResults( 2 );
 					assertEquals( 2, namedQuery.getMaxResults() );
 
-					if (scope.getDialect() instanceof SpannerPostgreSQLDialect ) {
+					if (scope.getDialect() instanceof SpannerPostgreSQLDialect || scope.getDialect() instanceof SpannerDialect ) {
 						// Spanner doesn't support integer column type
 						final List<Long> ids = namedQuery.getResultList();
 						assertEquals( 2, ids.size() );

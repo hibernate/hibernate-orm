@@ -31,8 +31,10 @@ import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.StandardBasicTypes;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.BeforeAll;
+import org.hibernate.dialect.SpannerDialect;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -446,6 +448,7 @@ public class SQLTest {
 	@Test
 	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
 			reason = "Spanner fails with ambiguous ID columns")
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner fails with ambiguous ID columns")
 	public void test_sql_jpa_multi_entity_query_example(EntityManagerFactoryScope scope) {
 		assertThrows( NonUniqueDiscoveredSqlAliasException.class, () -> scope.inTransaction( entityManager -> {
 			//tag::sql-jpa-multi-entity-query-example[]
@@ -462,6 +465,7 @@ public class SQLTest {
 	@Test
 	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
 			reason = "Spanner fails with ambiguous ID columns")
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner fails with ambiguous ID columns")
 	public void test_sql_hibernate_multi_entity_query_example(EntityManagerFactoryScope scope) {
 		try {
 			scope.inTransaction( entityManager -> {
@@ -509,7 +513,7 @@ public class SQLTest {
 			Session session = entityManager.unwrap( Session.class );
 			//tag::sql-hibernate-dto-query-example[]
 			List<PersonSummaryDTO> dtos = session.createNativeQuery(
-							"SELECT p.id as \"id\", p.name as \"name\" " +
+							"SELECT p.id as id, p.name as name " +
 							"FROM Person p", Tuple.class )
 					.setTupleTransformer(
 							(tuple, aliases) -> {
@@ -528,6 +532,7 @@ public class SQLTest {
 	@Test
 	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
 			reason = "Spanner fails with ambiguous ID columns")
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner fails with ambiguous ID columns")
 	public void test_sql_hibernate_inheritance_query_example(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			Session session = entityManager.unwrap( Session.class );

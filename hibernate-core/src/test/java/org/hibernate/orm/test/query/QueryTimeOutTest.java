@@ -12,6 +12,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -44,7 +45,7 @@ public class QueryTimeOutTest extends BaseSessionFactoryFunctionalTest {
 
 	private static final PreparedStatementSpyConnectionProvider CONNECTION_PROVIDER =
 			new PreparedStatementSpyConnectionProvider();
-	private static final String QUERY = "update AnEntity set name='abc'";
+	private String updateQueryString;
 	private String expectedSqlQuery;
 
 	@Override
@@ -62,13 +63,19 @@ public class QueryTimeOutTest extends BaseSessionFactoryFunctionalTest {
 
 	@BeforeEach
 	public void before() {
+		if ( DialectContext.getDialect() instanceof SpannerDialect ) {
+			updateQueryString = "update AnEntity set name='abc' where 1=1";
+		} else {
+			updateQueryString = "update AnEntity set name='abc'";
+		}
+
 		CONNECTION_PROVIDER.clear();
 		SessionFactoryImplementor sessionFactoryImplementor = sessionFactory();
 		final JdbcType jdbcType = sessionFactoryImplementor.getTypeConfiguration().getJdbcTypeRegistry()
 				.getDescriptor(
 						Types.VARCHAR
 				);
-		final String baseQuery;
+		String baseQuery;
 		if ( DialectContext.getDialect() instanceof OracleDialect ) {
 			baseQuery = "update AnEntity ae1_0 set ae1_0.name=?";
 		}
@@ -77,6 +84,9 @@ public class QueryTimeOutTest extends BaseSessionFactoryFunctionalTest {
 		}
 		else if ( DialectContext.getDialect() instanceof AbstractTransactSQLDialect ) {
 			baseQuery = "update ae1_0 set name=? from AnEntity ae1_0";
+		}
+		else if ( DialectContext.getDialect() instanceof SpannerDialect ) {
+			baseQuery = "update AnEntity ae1_0 set name=? where 1=1";
 		}
 		else if ( DialectContext.getDialect()
 						.getDmlTargetColumnQualifierSupport() == DmlTargetColumnQualifierSupport.NONE ) {
@@ -96,11 +106,12 @@ public class QueryTimeOutTest extends BaseSessionFactoryFunctionalTest {
 		);
 	}
 
+
 	@Test
 	@JiraKey(value = "HHH-12075")
 	public void testCreateQuerySetTimeout() {
 		inTransaction( session -> {
-					MutationQuery query = session.createMutationQuery( QUERY );
+					MutationQuery query = session.createMutationQuery( updateQueryString );
 					query.setTimeout( 123 );
 					query.executeUpdate();
 
@@ -124,7 +135,7 @@ public class QueryTimeOutTest extends BaseSessionFactoryFunctionalTest {
 	@JiraKey(value = "HHH-12075")
 	public void testCreateQuerySetTimeoutHint() {
 		inTransaction( session -> {
-					MutationQuery query = session.createMutationQuery( QUERY );
+					MutationQuery query = session.createMutationQuery( updateQueryString );
 					query.setHint( HINT_SPEC_QUERY_TIMEOUT, 123000 );
 					query.executeUpdate();
 
@@ -148,14 +159,14 @@ public class QueryTimeOutTest extends BaseSessionFactoryFunctionalTest {
 	@JiraKey(value = "HHH-12075")
 	public void testCreateNativeQuerySetTimeout() {
 		inTransaction( session -> {
-					NativeQuery query = session.createNativeQuery( QUERY );
+					NativeQuery query = session.createNativeQuery( updateQueryString );
 					query.setTimeout( 123 );
 					query.executeUpdate();
 
 					try {
 						List<Object[]> setQueryTimeoutCalls = CONNECTION_PROVIDER.spyContext.getCalls(
 								Statement.class.getMethod( "setQueryTimeout", int.class ),
-								CONNECTION_PROVIDER.getPreparedStatement( QUERY )
+								CONNECTION_PROVIDER.getPreparedStatement( updateQueryString )
 						);
 						assertEquals( 2, setQueryTimeoutCalls.size() );
 						assertEquals( 123, setQueryTimeoutCalls.get( 0 )[0] );
@@ -172,14 +183,14 @@ public class QueryTimeOutTest extends BaseSessionFactoryFunctionalTest {
 	@JiraKey(value = "HHH-12075")
 	public void testCreateNativeQuerySetTimeoutHint() {
 		inTransaction( session -> {
-					NativeQuery query = session.createNativeQuery( QUERY );
+					NativeQuery query = session.createNativeQuery( updateQueryString );
 					query.setHint( HINT_SPEC_QUERY_TIMEOUT, 123000 );
 					query.executeUpdate();
 
 					try {
 						List<Object[]> setQueryTimeoutCalls = CONNECTION_PROVIDER.spyContext.getCalls(
 								Statement.class.getMethod( "setQueryTimeout", int.class ),
-								CONNECTION_PROVIDER.getPreparedStatement( QUERY )
+								CONNECTION_PROVIDER.getPreparedStatement( updateQueryString )
 						);
 						assertEquals( 2, setQueryTimeoutCalls.size() );
 						assertEquals( 123, setQueryTimeoutCalls.get( 0 )[0] );
@@ -196,14 +207,14 @@ public class QueryTimeOutTest extends BaseSessionFactoryFunctionalTest {
 	@JiraKey(value = "HHH-12075")
 	public void testCreateSQLQuerySetTimeout() {
 		inTransaction( session -> {
-					NativeQuery query = session.createNativeQuery( QUERY );
+					NativeQuery query = session.createNativeQuery( updateQueryString );
 					query.setTimeout( 123 );
 					query.executeUpdate();
 
 					try {
 						List<Object[]> setQueryTimeoutCalls = CONNECTION_PROVIDER.spyContext.getCalls(
 								Statement.class.getMethod( "setQueryTimeout", int.class ),
-								CONNECTION_PROVIDER.getPreparedStatement( QUERY )
+								CONNECTION_PROVIDER.getPreparedStatement( updateQueryString )
 						);
 						assertEquals( 2, setQueryTimeoutCalls.size() );
 						assertEquals( 123, setQueryTimeoutCalls.get( 0 )[0] );
@@ -220,14 +231,14 @@ public class QueryTimeOutTest extends BaseSessionFactoryFunctionalTest {
 	@JiraKey(value = "HHH-12075")
 	public void testCreateSQLQuerySetTimeoutHint() {
 		inTransaction( session -> {
-					NativeQuery query = session.createNativeQuery( QUERY );
+					NativeQuery query = session.createNativeQuery( updateQueryString );
 					query.setHint( HINT_SPEC_QUERY_TIMEOUT, 123000 );
 					query.executeUpdate();
 
 					try {
 						List<Object[]> setQueryTimeoutCalls = CONNECTION_PROVIDER.spyContext.getCalls(
 								Statement.class.getMethod( "setQueryTimeout", int.class ),
-								CONNECTION_PROVIDER.getPreparedStatement( QUERY )
+								CONNECTION_PROVIDER.getPreparedStatement( updateQueryString )
 						);
 						assertEquals( 2, setQueryTimeoutCalls.size() );
 						assertEquals( 123, setQueryTimeoutCalls.get( 0 )[0] );

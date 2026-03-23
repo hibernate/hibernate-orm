@@ -12,7 +12,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.Locking;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.query.IllegalQueryOperationException;
@@ -40,6 +39,10 @@ import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.ast.tree.expression.Any;
+import org.hibernate.sql.ast.tree.expression.Every;
+import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
@@ -62,20 +65,54 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	protected LockStrategy determineLockingStrategy(
-			QuerySpec querySpec,
-			Locking.FollowOn followOnLocking) {
-		return LockStrategy.NONE;
-	}
-
-	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		renderLimitOffsetClause( queryPart );
 	}
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
-		renderComparisonEmulateIntersect( lhs, operator, rhs );
+		if ( rhs instanceof Every || rhs instanceof Any ) {
+			final boolean all = rhs instanceof Every;
+			final SelectStatement subquery = all ? ( (Every) rhs ).getSubquery() : ( (Any) rhs ).getSubquery();
+
+			final AbstractSqlAstTranslator.SubQueryRelationalRestrictionEmulationRenderer<Expression> singleRenderer = (lhsSelections, singleExpr, op) -> {
+				lhsSelections.get( 0 ).getExpression().accept( this );
+				appendSql( op.invert().sqlText() );
+				singleExpr.accept( this );
+			};
+
+			emulateSubQueryRelationalRestrictionPredicate(
+					null,
+					all,
+					subquery,
+					lhs,
+					singleRenderer,
+					all ? operator.negated() : operator
+			);
+		}
+		else if ( rhs instanceof ModifiedSubQueryExpression expression ) {
+			SelectStatement subquery = expression.getSubQuery();
+			if ( subquery.getQueryPart() instanceof QuerySpec querySpec ) {
+				if ( operator != ComparisonOperator.NOT_EQUAL && operator != ComparisonOperator.NOT_DISTINCT_FROM ) {
+					if ( expression.getModifier() == ModifiedSubQueryExpression.Modifier.ALL ) {
+						// Emulate ALL
+						lhs.accept( this );
+						appendSql( operator.sqlText() );
+						renderQuantifiedEmulationSubQuery( querySpec, operator );
+					}
+					else if ( expression.getModifier() == ModifiedSubQueryExpression.Modifier.ANY ||
+							expression.getModifier() == ModifiedSubQueryExpression.Modifier.SOME ) {
+						// Emulate ANY
+						lhs.accept( this );
+						appendSql( operator.sqlText() );
+						renderQuantifiedEmulationSubQuery( querySpec, operator.invert() );
+					}
+				}
+			}
+		}
+		else {
+			renderComparisonEmulateIntersect( lhs, operator, rhs );
+		}
 	}
 
 	@Override
@@ -84,6 +121,11 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 			SqlTuple tuple,
 			ComparisonOperator operator) {
 		emulateSelectTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
+	}
+
+	@Override
+	protected void renderFetchFirstRow() {
+		appendSql( " limit 1" );
 	}
 
 	@Override

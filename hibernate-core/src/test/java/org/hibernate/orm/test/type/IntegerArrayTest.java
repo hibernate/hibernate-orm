@@ -14,6 +14,7 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
@@ -166,7 +167,8 @@ public class IntegerArrayTest {
 			Query q = em.createNamedQuery( "TableWithIntegerArrays.Native.getByIdUntyped" );
 			q.setParameter( "id", 2L );
 			Object[] tuple = (Object[]) q.getSingleResult();
-			if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ) {
+			if (scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerPostgreSQLDialect ||
+				scope.getSessionFactory().getJdbcServices().getDialect() instanceof SpannerDialect ) {
 				// Spanner doesn't support smallint, tinyint, integer types. It supports only bigint type.
 				assertThat( tuple[1], is( new Long[] { 512L, 112L, null, 0L } ) );
 			}

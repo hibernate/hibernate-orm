@@ -13,6 +13,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -32,7 +33,7 @@ public class NativeQueryWithDatetimesTest {
 	@Test void test(EntityManagerFactoryScope scope) {
 		scope.inTransaction(s -> s.persist(new Datetimes()));
 		Object[] result = scope.fromTransaction(s -> (Object[]) s.createNativeQuery("select ctime, cdate, cdatetime from tdatetimes", Object[].class).getSingleResult());
-		if (scope.getDialect() instanceof SpannerPostgreSQLDialect) {
+		if (scope.getDialect() instanceof SpannerPostgreSQLDialect || scope.getDialect() instanceof SpannerDialect ) {
 			assertInstanceOf( LocalDateTime.class, result[0] );
 		}
 		else {

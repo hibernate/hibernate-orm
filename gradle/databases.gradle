@@ -13,6 +13,8 @@ ext {
         dbHost = System.getProperty( 'dbHost', 'localhost' )
         dbService = System.getProperty( 'dbService', '' )
         runID = System.getProperty( 'runID', '' )
+        dbPassword = System.getProperty( 'dbPassword', '' ).replace('"', '')
+        dbConnectionStringSuffix = System.getProperty( 'dbConnectionStringSuffix', '' ).replace('"', '')
         dbBundle = [
                 h2 : [
                         'db.dialect' : 'org.hibernate.dialect.H2Dialect',
@@ -224,6 +226,15 @@ ext {
                         // To avoid hibernate-spatial tests failure, JVM must be enabled as stated in documentation:
                         // https://docs.oracle.com/en/cloud/paas/autonomous-database/adbsa/autonomous-oracle-java.html
                         'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521/' + dbService,
+                        'connection.init_sql' : ''
+                ],
+                oracle_test_pilot_database: [
+                        'db.dialect' : 'org.hibernate.dialect.OracleDialect',
+                        'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                        'jdbc.user'  : 'hibernate_orm_test_' + runID,
+                        'jdbc.pass'  : dbPassword,
+                        'jdbc.url'   : 'jdbc:oracle:thin:@' + dbConnectionStringSuffix + '?oracle.jdbc.enableQueryResultCache=false',
+                        'jdbc.datasource' : 'oracle.jdbc.OracleDriver',
                         'connection.init_sql' : ''
                 ],
                 mssql : [

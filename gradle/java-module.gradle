@@ -45,6 +45,11 @@ apply plugin: 'project-report'
 
 apply plugin: 'org.jetbrains.gradle.plugin.idea-ext'
 
+def skipJacoco = project.hasProperty('skipJacoco') ? project.getProperty('skipJacoco').toBoolean() : false
+if (!skipJacoco) {
+    plugins.apply('jacoco')
+}
+
 ext {
 	java9ModuleNameBase = project.name.startsWith( 'hibernate-' ) ? name.drop( 'hibernate-'.length() ): name
 	java9ModuleName = "org.hibernate.orm.$project.java9ModuleNameBase".replace('-','.')
@@ -237,6 +242,24 @@ tasks.withType( Test.class ).each { test ->
 			excludeTestsMatching project.property('excludeTests').toString()
 		}
 	}
+    if (!skipJacoco) {
+        def coverageReportSuffix = providers.gradleProperty('db').orElse('default')
+                .flatMap { db ->
+                    // Oracle DBs tested on OTP are all using the same db name no matter the version...
+                    // this would be a problem for creating/merging Jacoco reports, hence:
+                    if ("oracle_test_pilot_database" == db) {
+                        return providers.environmentVariable("RDBMS").orElse(db)
+                    } else {
+                        return providers.provider { db }
+                    }
+                }
+        def javaVersion = JavaVersion.current().majorVersion
+        test.jacoco {
+            destinationFile = layout.buildDirectory.file(
+                    coverageReportSuffix.map { db -> "jacoco/report-${db}-jdk${javaVersion}.exec" }
+            ).get().asFile
+        }
+    }
 }
 
 sourceSets {

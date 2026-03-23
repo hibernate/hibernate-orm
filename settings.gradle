@@ -309,6 +309,7 @@ include 'hibernate-integrationtest-java-modules'
 
 include 'documentation'
 include 'release'
+include 'reporting'
 
 include 'metamodel-generator'
 project(':metamodel-generator').projectDir = new File(rootProject.projectDir, "tooling/metamodel-generator")

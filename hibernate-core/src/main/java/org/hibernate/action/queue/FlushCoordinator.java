@@ -243,13 +243,23 @@ public class FlushCoordinator {
 		// Group operations by their shape, optionally including ordinalBase for self-referential tables
 		final Map<OperationGroupKey, OperationGroupBuilder> builders = new LinkedHashMap<>();
 
+		// Cache: avoid repeated lookups of selfReferentialTables for same table
+		// In batch workloads, many operations target the same table(s)
+		final Map<String, Boolean> isSelfReferential = new java.util.HashMap<>();
+
 		for (PlannedOperation operation : operations) {
 			final StatementShapeKey shapeKey = operation.getShapeKey();
 			final String normalizedTable = (operation.getTableExpression());
 
 			// For self-referential tables, include ordinalBase to avoid false cycles
 			// For other tables, merge across entities for better batching
-			final int ordinalBase = selfReferentialTables.contains(normalizedTable)
+			// Cache the lookup result to avoid redundant set.contains() calls
+			final boolean selfRef = isSelfReferential.computeIfAbsent(
+					normalizedTable,
+					selfReferentialTables::contains
+			);
+
+			final int ordinalBase = selfRef
 					? CollectionOrdinalSupport.extractCollectionOrdinal( operation.getOrdinal() )
 					: -1; // -1 means "merge all ordinalBases together"
 

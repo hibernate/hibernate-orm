@@ -24,6 +24,12 @@ public class StandardFlushPlanner implements FlushPlanner {
 
 	@Override
 	public FlushPlan plan(Graph graph) {
+		// Fast path: if graph has no edges, operations are independent
+		// Skip cycle detection and topological sort - just use natural order
+		if (graph.isEmpty()) {
+			return new FlushPlan(buildSteps(graph.nodes()));
+		}
+
 		// detect cycles and choose edges to break.
 		//		for the broken edge, apply a "binding path"
 		//		which facilitates the pattern of inserting

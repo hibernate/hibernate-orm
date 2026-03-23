@@ -5,6 +5,7 @@
 package org.hibernate.query.sqm.internal;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +31,9 @@ import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
@@ -95,9 +98,10 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				sqm.producesUniqueResults() && !containsCollectionFetches( queryOptions )
 						? ListResultsConsumer.UniqueSemantic.NONE
 						: ListResultsConsumer.UniqueSemantic.ALLOW;
-		this.executeQueryInterpreter = (resultsConsumer, executionContext, sqmInterpretation, jdbcParameterBindings) -> {
-			final SharedSessionContractImplementor session = executionContext.getSession();
-			final JdbcOperationQuerySelect jdbcSelect = sqmInterpretation.jdbcOperation();
+		final var rowTransformer = determineRowTransformer( sqm, resultType, tupleMetadata );
+		executeQueryInterpreter = (resultsConsumer, executionContext, sqmInterpretation, jdbcParameterBindings) -> {
+			final var session = executionContext.getSession();
+			final var jdbcSelect = sqmInterpretation.jdbcOperation();
 			try {
 				final SubselectFetch.RegistrationHandler subSelectFetchKeyHandler = SubselectFetch.createRegistrationHandler(
 						session.getPersistenceContext().getBatchFetchQueue(),
@@ -115,7 +119,9 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						jdbcSelect,
 						jdbcParameterBindings,
 						listInterpreterExecutionContext( hql, executionContext, jdbcSelect, subSelectFetchKeyHandler ),
-						determineRowTransformer( sqm, resultType, tupleMetadata, executionContext.getQueryOptions() ),
+						executionContext.getQueryOptions().getTupleTransformer() != null
+								? makeRowTransformerTupleTransformerAdapter( sqm, executionContext.getQueryOptions() )
+								: rowTransformer,
 						null,
 						resultCountEstimate,
 						resultsConsumer
@@ -147,7 +153,9 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						jdbcSelect,
 						jdbcParameterBindings,
 						listInterpreterExecutionContext( hql, executionContext, jdbcSelect, subSelectFetchKeyHandler ),
-						determineRowTransformer( sqm, resultType, tupleMetadata, executionContext.getQueryOptions() ),
+						executionContext.getQueryOptions().getTupleTransformer() != null
+								? makeRowTransformerTupleTransformerAdapter( sqm, executionContext.getQueryOptions() )
+								: rowTransformer,
 						(Class<R>) executionContext.getResultType(),
 						uniqueSemantic,
 						resultCountEstimate
@@ -183,7 +191,9 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						scrollMode,
 						jdbcParameterBindings,
 						new SqmJdbcExecutionContextAdapter( executionContext, jdbcSelect ),
-						determineRowTransformer( sqm, resultType, tupleMetadata, executionContext.getQueryOptions() ),
+						executionContext.getQueryOptions().getTupleTransformer() != null
+								? makeRowTransformerTupleTransformerAdapter( sqm, executionContext.getQueryOptions() )
+								: rowTransformer,
 						resultCountEstimate
 				);
 			}
@@ -229,7 +239,21 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	}
 
 	private static List<SqmSelection<?>> selections(SqmSelectStatement<?> sqm) {
-		return sqm.getQueryPart().getFirstQuerySpec().getSelectClause().getSelections();
+		final SqmQuerySpec<?> querySpec = sqm.getQueryPart().getFirstQuerySpec();
+		final List<SqmSelection<?>> selections = querySpec.getSelectClause().getSelections();
+		if ( selections == null || selections.isEmpty() ) {
+			final List<SqmRoot<?>> sqmRoots = querySpec.getFromClause().getRoots();
+			if ( sqmRoots == null || sqmRoots.isEmpty() ) {
+				throw new IllegalArgumentException( "Criteria did not define any query roots" );
+			}
+			if ( sqmRoots.size() != 1 ) {
+				throw new IllegalArgumentException( "Criteria has multiple query roots" );
+			}
+			return Collections.singletonList( new SqmSelection<>( sqmRoots.get( 0 ), null ) );
+		}
+		else {
+			return selections;
+		}
 	}
 
 	private static final Map<Class<?>, Class<?>> WRAPPERS
@@ -261,22 +285,35 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		if ( queryOptions.getTupleTransformer() != null ) {
 			return makeRowTransformerTupleTransformerAdapter( sqm, queryOptions );
 		}
-		else if ( resultClass == null || resultClass == Object.class ) {
+		else {
+			return determineRowTransformer( sqm, resultClass, tupleMetadata );
+		}
+	}
+
+	/**
+	 * If the result type of the query is {@link Tuple}, {@link Map}, {@link List},
+	 * or any record or class type with an appropriate constructor, then we attempt
+	 * to repackage the result tuple as an instance of the result type using an
+	 * appropriate {@link RowTransformer}.
+	 *
+	 * @param resultClass The requested result type of the query
+	 * @return A {@link RowTransformer} responsible for repackaging the result type
+	 */
+	protected static <T> RowTransformer<T> determineRowTransformer(
+			SqmSelectStatement<?> sqm,
+			Class<T> resultClass,
+			TupleMetadata tupleMetadata) {
+		if ( resultClass == null || resultClass == Object.class ) {
 			return RowTransformerStandardImpl.instance();
 		}
 		else {
 			final var selections = selections( sqm );
-			if ( selections == null ) {
-				throw new AssertionFailure( "No selections" );
-			}
-			else {
-				final Class<T> resultType = primitiveToWrapper( resultClass );
-				return switch ( selections.size() ) {
-					case 0 -> throw new AssertionFailure( "No selections" );
-					case 1 -> singleItemRowTransformer( sqm, tupleMetadata, selections.get( 0 ), resultType );
-					default -> multipleItemRowTransformer( sqm, tupleMetadata, resultType );
-				};
-			}
+			final Class<T> resultType = primitiveToWrapper( resultClass );
+			return switch ( selections.size() ) {
+				case 0 -> throw new AssertionFailure( "No selections" );
+				case 1 -> singleItemRowTransformer( sqm, tupleMetadata, selections.get( 0 ), resultType );
+				default -> multipleItemRowTransformer( sqm, tupleMetadata, resultType );
+			};
 		}
 	}
 

@@ -36,7 +36,7 @@ class HbmTransformerTests {
 		System.out.println( "Starting execution ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
 		final GradleRunner gradleRunner = usingGradleRunner()
 				.withProjectDir( projectDir.toFile() )
-				.withArguments( "clean", "hbmTransform", "--stacktrace", "--no-build-cache", "--configuration-cache" );
+				.withArguments( "clean", "hbmTransform", "--stacktrace", "--no-build-cache", "--no-configuration-cache" );
 		final BuildResult result = gradleRunner.build();
 
 		final BuildTask transformationResult = result.task( ":hbmTransform" );

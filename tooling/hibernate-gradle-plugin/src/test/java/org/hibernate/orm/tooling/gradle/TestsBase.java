@@ -37,7 +37,7 @@ public abstract class TestsBase {
 		System.out.println( "Starting execution ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
 		final GradleRunner gradleRunner = TestHelper.usingGradleRunner()
 				.withProjectDir( projectDir.toFile() )
-				.withArguments( compileTaskName, "--stacktrace", "--no-build-cache", "--configuration-cache" );
+				.withArguments( compileTaskName, "--stacktrace", "--no-build-cache", "--no-configuration-cache" );
 
 		final BuildResult result = gradleRunner.build();
 		final BuildTask task = result.task( ":" + compileTaskName );
@@ -64,7 +64,7 @@ public abstract class TestsBase {
 			System.out.println( "Starting first execution ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
 			final GradleRunner gradleRunner = TestHelper.usingGradleRunner()
 					.withProjectDir( projectDir.toFile() )
-					.withArguments( compileTaskName, "--stacktrace", "--no-build-cache", "--configuration-cache" );
+					.withArguments( compileTaskName, "--stacktrace", "--no-build-cache", "--no-configuration-cache" );
 
 			final BuildResult result = gradleRunner.build();
 			final BuildTask task = result.task( ":" + compileTaskName );
@@ -80,7 +80,7 @@ public abstract class TestsBase {
 			System.out.println( "Starting second execution ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
 			final GradleRunner gradleRunner = TestHelper.usingGradleRunner()
 					.withProjectDir( projectDir.toFile() )
-					.withArguments( compileTaskName, "--stacktrace", "--no-build-cache", "--configuration-cache" );
+					.withArguments( compileTaskName, "--stacktrace", "--no-build-cache", "--no-configuration-cache" );
 			final BuildResult result = gradleRunner.build();
 			final BuildTask task = result.task( ":" + compileTaskName );
 			assertThat( task ).isNotNull();

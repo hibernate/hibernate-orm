@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import java.io.Serializable;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.CollectionRecreateAction;
@@ -57,6 +59,79 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		this.shouldBundleOperations = shouldBundleOperations;
 		this.tableDescriptor = persister.getCollectionTableDescriptor();
 		this.jdbcOperations = buildJdbcOperations( factory );
+	}
+
+	/// Determines if an indexed collection needs recreate due to position shifts.
+	/// For indexed collections where elements shift positions (e.g., insert at index 0),
+	/// row-by-row UPDATE cannot reliably move elements to new positions because the
+	/// WHERE clause may not uniquely identify rows (nullable elements are excluded).
+	/// In these cases, we must use DELETE-all + INSERT-all (recreate).
+	///
+	/// > [!NOTE]
+	/// > This check works around a limitation that has been in Hibernate forever.
+	/// > The legacy queue code tries to manage these shifts in indexed collection elements
+	/// > via an odd approach which can actually lead to data corruption.
+	/// > Consider code like this (see `org.hibernate.orm.test.collection.original.CollectionTest#testUpdateOrder`
+	/// > for reference):
+	/// >
+	/// > ````
+	/// User u = session.get(...);
+	/// assert u.getEmailAddresses().size() == 2;
+	/// assert u.getEmailAddresses().get(0).equals( "me@first.com" )
+	/// // this should be [0]
+	/// u.getEmailAddresses().add( 0, "me@beforefirst.com" );
+	/// ...
+	/// ````
+	/// >
+	/// > The result of this is -
+	/// >
+	/// > ````
+	/// [0] - "me@first.com"
+	/// [1] - "me@first.com"
+	/// ````
+	/// > That's because the generated SQL is simply restricting on the foreign-key rather than the
+	/// > foreign-key + *old* index.
+	/// >
+	/// > But that's the rub - currently Hibernate does not track the old index for elements.
+	/// > Ultimately I'd like to have this work better, but it would require knowledge of the old index
+	/// > allowing indexed updates where the graph builder and planner manage the unique-key edges for
+	/// > deciding which operations are needed first.
+	private boolean needsRecreateForIndexedShifts(PersistentCollection<?> collection, BasicCollectionPersister persister) {
+		if ( !persister.hasIndex() ) {
+			return false;
+		}
+
+		final Serializable snapshot = collection.getStoredSnapshot();
+		if ( snapshot == null ) {
+			return false;
+		}
+
+		final int snapshotSize;
+		if ( snapshot instanceof java.util.Collection ) {
+			snapshotSize = ((java.util.Collection<?>) snapshot).size();
+		}
+		else {
+			// For maps or other types, no position shift issue
+			return false;
+		}
+
+		// For indexed collections, if the size increased AND there are updates,
+		// we likely have position shifts (elements inserted in the middle).
+		// This is conservative but safe - we use recreate to avoid data corruption.
+		final var entries = collection.entries( persister );
+		boolean hasUpdates = false;
+		int currentSize = 0;
+
+		while ( entries.hasNext() ) {
+			final Object entry = entries.next();
+			if ( collection.needsUpdating( entry, currentSize, persister.getAttributeMapping() ) ) {
+				hasUpdates = true;
+			}
+			currentSize++;
+		}
+
+		// If size increased and there are updates, assume position shifts
+		return currentSize > snapshotSize && hasUpdates;
 	}
 
 	public List<PlannedOperation> decomposeRecreate(
@@ -211,7 +286,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 						operations.addAll( planRemoveOperation( key, ordinalBase, session ) );
 					}
 				}
-				else if ( collection.needsRecreate( persister ) ) {
+				else if ( collection.needsRecreate( persister ) || needsRecreateForIndexedShifts( collection, persister ) ) {
 					if ( affectedByFilters ) {
 						throw new HibernateException( String.format( Locale.ROOT,
 								"cannot recreate collection while filter is enabled [%s : %s]",
@@ -372,12 +447,25 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			return;
 		}
 
+		// For indexed collections where elements have been removed, process UPDATEs in reverse order
+		// to avoid unique constraint violations. When elements shift positions, processing from
+		// highest index to lowest ensures elements move "out of the way" before lower indices
+		// need their positions.
+		final List<BundledBindPlanEntry> orderedEntries;
+		if ( collection.isElementRemoved() ) {
+			orderedEntries = new ArrayList<>( changeEntries );
+			java.util.Collections.reverse( orderedEntries );
+		}
+		else {
+			orderedEntries = changeEntries;
+		}
+
 		final BindPlan bundledBindPlan = new BundledCollectionUpdateBindPlan(
 				collection,
 				key,
 				updateRowPlan.values(),
 				updateRowPlan.restrictions(),
-				changeEntries
+				orderedEntries
 		);
 
 		operationConsumer.accept( new PlannedOperation(
@@ -437,7 +525,9 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 
 		var updateOrdinal = calculateOrdinal( ordinalBase, Slot.UPDATE );
 
-		// One operation per row
+		// Collect all update operations first
+		final List<PlannedOperation> updateOperations = new ArrayList<>();
+
 		int entryCount = 0;
 		while ( entries.hasNext() ) {
 			final Object entry = entries.next();
@@ -452,7 +542,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 						updateRowPlan.restrictions()
 				);
 
-				operationConsumer.accept( new PlannedOperation(
+				updateOperations.add( new PlannedOperation(
 						tableDescriptor,
 						MutationKind.UPDATE,
 						updateRowPlan.jdbcOperation(),
@@ -464,6 +554,15 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 
 			entryCount++;
 		}
+
+		// For indexed collections where elements have been removed, process UPDATEs in reverse order
+		// to avoid unique constraint violations when elements shift positions
+		if ( collection.isElementRemoved() ) {
+			java.util.Collections.reverse( updateOperations );
+		}
+
+		// Add operations to consumer in the correct order
+		updateOperations.forEach( operationConsumer );
 	}
 
 	private void planInsertRowOperations(
@@ -698,13 +797,27 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		);
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// WHERE clause: key columns (restrict by owner FK)
+		// WHERE clause: key columns (restrict by owner FK) + index/element for row identification
 
 		attribute.getKeyDescriptor().getKeyPart().forEachColumn(
 			(selectionIndex, jdbcMapping) -> {
 				builder.addKeyRestriction( jdbcMapping );
 			}
 		);
+
+		// For indexed collections, also restrict by the OLD index value to identify the specific row
+		// This is critical to avoid updating all rows when index values change
+		if ( indexDescriptor != null ) {
+			indexDescriptor.forEachSelectable( (index, jdbcMapping) -> {
+				builder.addKeyRestriction( jdbcMapping );
+			} );
+		}
+		else {
+			// For non-indexed collections (sets, bags), restrict by element
+			attribute.getElementDescriptor().forEachSelectable((index, jdbcMapping) -> {
+				builder.addKeyRestriction( jdbcMapping );
+			} );
+		}
 
 		return new CollectionJdbcOperations.UpdateRowPlan(
 				builder.buildMutation().createMutationOperation(),
@@ -761,10 +874,30 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 				jdbcValueBindings::bindRestriction,
 				session
 		);
+
+		// Bind index/element to identify the specific row to update
+		final var indexDescriptor = attribute.getIndexDescriptor();
+		if ( indexDescriptor != null ) {
+			// For indexed collections (lists, maps), restrict by the index position
+			// This identifies which row in the collection table to update
+			indexDescriptor.decompose(
+					collection.getIndex( rowValue, rowPosition, persister ),
+					jdbcValueBindings::bindRestriction,
+					session
+			);
+		}
+		else {
+			// For non-indexed collections (sets, bags), restrict by element value
+			attribute.getElementDescriptor().decompose(
+					rowValue,
+					jdbcValueBindings::bindRestriction,
+					session
+			);
+		}
 	}
 
 	private CollectionJdbcOperations.DeleteRowPlan buildDeleteRowPlan(SessionFactoryImplementor factory) {
-		if ( persister.needsRemove() ) {
+		if ( !persister.needsRemove() ) {
 			return null;
 		}
 
@@ -828,8 +961,14 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		final var indexDescriptor = attribute.getIndexDescriptor();
 		if ( indexDescriptor != null ) {
 			// For indexed collections (lists, maps), restrict by index
+			// NOTE: For Maps, rowValue from getDeletes() is already the key (or value if indexIsFormula),
+			// not a Map.Entry, so we use it directly instead of calling collection.getIndex()
+			// which expects an Entry.
+			final Object indexValue = (collection instanceof org.hibernate.collection.spi.PersistentMap)
+					? rowValue
+					: collection.getIndex( rowValue, rowPosition, persister );
 			indexDescriptor.decompose(
-					collection.getIndex( rowValue, rowPosition, persister ),
+					indexValue,
 					jdbcValueBindings::bindRestriction,
 					session
 			);

@@ -297,6 +297,11 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 			}
 		}
 
+		// Create table-level DELETE -> INSERT edges to prevent unique constraint violations
+		// For tables with both DELETE and INSERT operations, ensure DELETEs execute first
+		// to avoid conflicts (e.g., moving an element between collections on a join table with unique constraints)
+		edgeId = addTableLevelDeleteInsertEdges( deleteNodeByTable, insertNodeByTable, outgoing, edgeId );
+
 		// Create DELETE -> INSERT edges based on unique constraint slot conflicts
 		// Phase 2: Runtime value tracking - creates edges only when DELETE and INSERT
 		// target the same unique constraint value (not just same table)
@@ -322,6 +327,60 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 		}
 		// If your ForeignKeyDescriptor has useful metadata, incorporate it here.
 		return cost;
+	}
+
+	/**
+	 * Add table-level DELETE → INSERT edges to prevent unique constraint violations.
+	 * For any table that has both DELETE and INSERT operations, create edges from all
+	 * DELETE nodes to all INSERT nodes to ensure DELETEs execute first.
+	 * <p>
+	 * This is critical for join tables with unique constraints (e.g., unidirectional
+	 * @OneToMany) where moving an element between collections requires DELETE-then-INSERT
+	 * ordering to avoid constraint violations.
+	 */
+	private long addTableLevelDeleteInsertEdges(
+			Map<String, List<GroupNode>> deleteNodeByTable,
+			Map<String, List<GroupNode>> insertNodeByTable,
+			Map<GroupNode, List<GraphEdge>> outgoing,
+			long edgeId) {
+
+		// Iterate through all tables that have DELETE operations
+		for ( Map.Entry<String, List<GroupNode>> entry : deleteNodeByTable.entrySet() ) {
+			String tableName = entry.getKey();
+			List<GroupNode> deleteNodes = entry.getValue();
+			List<GroupNode> insertNodes = insertNodeByTable.get( tableName );
+
+			// Only create edges if this table also has INSERT operations
+			if ( insertNodes != null && !insertNodes.isEmpty() ) {
+				// Create DELETE -> INSERT edge for each combination
+				for ( GroupNode deleteNode : deleteNodes ) {
+					for ( GroupNode insertNode : insertNodes ) {
+						final GraphEdge edge = new GraphEdge(
+								// No FK target/key (this is table-level ordering)
+								null,
+								null,
+								// FROM delete (graphing)
+								deleteNode,
+								// TO insert (graphing)
+								insertNode,
+								// NOT breakable - must maintain this order to avoid unique violations
+								false,
+								// No break cost (not breakable)
+								0,
+								// No columns to null (not breakable)
+								EMPTY_SELECTABLES,
+								// No FK (this is table-level ordering)
+								null,
+								edgeId++
+						);
+
+						outgoing.get( deleteNode ).add( edge );
+					}
+				}
+			}
+		}
+
+		return edgeId;
 	}
 
 	/**

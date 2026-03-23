@@ -137,7 +137,7 @@ public final class ForeignKeys {
 			}
 			if ( substitute ) {
 				// todo : need to account for entity mode on the CompositeType interface :(
-				compositeType.setPropertyValues( value, subvalues );
+				return compositeType.replacePropertyValues( value, subvalues, session );
 			}
 			return value;
 		}

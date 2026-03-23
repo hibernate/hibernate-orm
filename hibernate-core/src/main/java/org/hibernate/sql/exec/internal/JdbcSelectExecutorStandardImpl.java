@@ -125,6 +125,14 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			StatementCreator statementCreator,
 			ResultsConsumer<T, R> resultsConsumer) {
 
+		final var session = executionContext.getSession();
+		final var factory = session.getFactory();
+		final var logicalConnection = session.getJdbcCoordinator().getLogicalConnection();
+
+		final var connection = logicalConnection.getPhysicalConnection();
+		final var statementAccess = new StatementAccessImpl( connection, logicalConnection, factory );
+		jdbcSelect.performPreActions( statementAccess, connection, executionContext );
+
 		final var deferredResultSetAccess = new DeferredResultSetAccess(
 				jdbcSelect,
 				jdbcParameterBindings,
@@ -143,9 +151,6 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		if ( rowTransformer == null ) {
 			rowTransformer = getRowTransformer( executionContext, jdbcValues );
 		}
-
-		final var session = executionContext.getSession();
-		final var factory = session.getFactory();
 
 		final boolean stats;
 		long startTime = 0;
@@ -200,12 +205,6 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		);
 
 		final var rowProcessingState = new RowProcessingStateStandardImpl( valuesProcessingState, executionContext, rowReader, jdbcValues );
-
-		final var logicalConnection = session.getJdbcCoordinator().getLogicalConnection();
-
-		final var connection = logicalConnection.getPhysicalConnection();
-		final var statementAccess = new StatementAccessImpl( connection, logicalConnection, factory );
-		jdbcSelect.performPreActions( statementAccess, connection, executionContext );
 
 		try {
 			final T result = resultsConsumer.consume(

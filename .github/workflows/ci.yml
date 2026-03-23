@@ -140,6 +140,17 @@ jobs:
           retention-days: 1
           path: |
             ./**/target/jacoco/*.exec
+      - name: Store build results
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        if: "${{ matrix.rdbms == 'h2' }}"
+        with:
+          name: build-compilation-data
+          retention-days: 1
+          path: |
+            ./**/target/resources/
+            ./**/target/classes/
+            ./**/target/generated/
+            .gradle/caches/build-cache-*
       - name: Upload test reports (if Gradle failed)
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         if: failure()
@@ -369,6 +380,7 @@ jobs:
         run: ./ci/before-cache.sh
 
   prepare-sonar-bundle:
+    name: Prepare build bundle for Sonar scanner
     needs:
       - build
       - otp
@@ -386,6 +398,38 @@ jobs:
         with:
           java-version: '25'
           distribution: 'temurin'
+
+      - name: Generate cache key
+        id: cache-key
+        run: |
+          CURRENT_BRANCH="${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}"
+          CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
+          CURRENT_DAY=$(/bin/date -u "+%d")
+          ROOT_CACHE_KEY="buildtool-cache"
+          echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}" >> $GITHUB_OUTPUT
+          echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}" >> $GITHUB_OUTPUT
+          echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
+      - name: Restore Maven/Gradle Dependency/Dist Caches
+        uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        with:
+          path: |
+            ~/.m2/repository/
+            ~/.m2/wrapper/
+            ~/.gradle/caches/
+            !~/.gradle/caches/build-cache-*
+            ~/.gradle/wrapper/
+          key: ${{ steps.cache-key.outputs.buildtool-cache-key }}
+          restore-keys: |
+            ${{ steps.cache-key.outputs.buildtool-monthly-branch-cache-key }}-
+            ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
+
+      - name: Download compilation results
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # 7.0.0
+        with:
+          name: build-compilation-data
+          path: .
+        # Don't fail the build if there are no matching artifacts (the build will re-compile things then)
+        continue-on-error: true
 
       - name: Download coverage reports
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # 7.0.0
@@ -408,5 +452,6 @@ jobs:
             ./**/target/jacoco/*.exec
             ./**/target/classes/
             ./**/target/generated/
+            ./**/target/resources/
             ./**/target/reports/
             ./**/target/sonar-dependencies/

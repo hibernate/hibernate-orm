@@ -30,7 +30,14 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractNonBundledOneTo
 
 		var elementDescriptor = (EntityCollectionPart) persister.getAttributeMapping().getElementDescriptor();
 		var subclassMappings = elementDescriptor.getAssociatedEntityMappingType().getRootEntityDescriptor().getSubMappingTypes();
-		operationsBySubclassId = new CollectionJdbcOperations[subclassMappings.size()];
+
+		// Find the maximum subclass ID to size the array correctly
+		// Subclass IDs are not necessarily 0-based or contiguous (e.g., 0, 1, 3)
+		int maxSubclassId = 0;
+		for ( var subclassMapping : subclassMappings ) {
+			maxSubclassId = Math.max( maxSubclassId, subclassMapping.getSubclassId() );
+		}
+		operationsBySubclassId = new CollectionJdbcOperations[maxSubclassId + 1];
 
 		subclassMappings.forEach( (subclassMapping) -> {
 			var tableDescriptor = subclassMapping.getEntityPersister().getIdentifierTableDescriptor();

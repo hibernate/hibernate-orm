@@ -47,14 +47,14 @@ public class ColumnValueBinding {
 
 	private static boolean determineAttributeInsertable(ColumnWriteFragment valueExpression) {
 		return valueExpression == null
-		       || !(valueExpression.getSqlTypedMapping() instanceof SelectableMapping selectableMapping)
-		       || selectableMapping.isInsertable();
+			|| !(valueExpression.getSqlTypedMapping() instanceof SelectableMapping selectableMapping)
+			|| selectableMapping.isInsertable();
 	}
 
 	private static boolean determineAttributeUpdatable(ColumnWriteFragment valueExpression) {
 		return valueExpression == null
-		       || !(valueExpression.getSqlTypedMapping() instanceof SelectableMapping selectableMapping)
-		       || selectableMapping.isUpdateable();
+			|| !(valueExpression.getSqlTypedMapping() instanceof SelectableMapping selectableMapping)
+			|| selectableMapping.isUpdateable();
 	}
 
 	@Override

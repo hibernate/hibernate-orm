@@ -53,6 +53,7 @@ public class SelectableMappingsImpl implements SelectableMappings {
 		}
 	}
 
+	@Deprecated(forRemoval = true)
 	public static SelectableMappings from(
 			String containingTableExpression,
 			Value value,
@@ -79,10 +80,40 @@ public class SelectableMappingsImpl implements SelectableMappings {
 		);
 	}
 
+	@Deprecated(forRemoval = true)
 	public static SelectableMappings from(
 			String containingTableExpression,
 			Value value,
 			int[] propertyOrder,
+			@Nullable SelectablePath parentSelectablePath,
+			MappingContext mappingContext,
+			TypeConfiguration typeConfiguration,
+			boolean[] insertable,
+			boolean[] updateable,
+			Dialect dialect,
+			SqmFunctionRegistry sqmFunctionRegistry,
+			RuntimeModelCreationContext creationContext) {
+		return from(
+				containingTableExpression,
+				value,
+				propertyOrder,
+				null,
+				parentSelectablePath,
+				mappingContext,
+				typeConfiguration,
+				insertable,
+				updateable,
+				dialect,
+				sqmFunctionRegistry,
+				creationContext
+		);
+	}
+
+	public static SelectableMappings from(
+			String containingTableExpression,
+			Value value,
+			int[] propertyOrder,
+			@Nullable String propertyPath,
 			@Nullable SelectablePath parentSelectablePath,
 			MappingContext mappingContext,
 			TypeConfiguration typeConfiguration,
@@ -101,11 +132,13 @@ public class SelectableMappingsImpl implements SelectableMappings {
 			selectableMappings[propertyOrder[i]] = SelectableMappingImpl.from(
 					containingTableExpression,
 					selectables.get( i ),
+					selectables.get( i ).isFormula() ? (propertyPath + "_" + i) : null,
 					parentSelectablePath,
 					jdbcMappings.get( propertyOrder[i] ),
 					typeConfiguration,
 					i < insertable.length && insertable[i],
 					i < updateable.length && updateable[i],
+					false,
 					false,
 					dialect,
 					sqmFunctionRegistry,

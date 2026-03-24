@@ -96,8 +96,8 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, FetchBui
 								fetchable.getContainingTableExpression() ),
 						fetchable,
 						fetchable.isFormula()
-								// In case of a formula we look for a result set position with the fetchable name
-								? fetchable.getFetchableName()
+								// In case of a formula we look for a result set position with the selectable name
+								? fetchable.getSelectableName()
 								: fetchable.getSelectionExpression()
 				),
 				fetchable.getJdbcMapping().getJdbcJavaType(),

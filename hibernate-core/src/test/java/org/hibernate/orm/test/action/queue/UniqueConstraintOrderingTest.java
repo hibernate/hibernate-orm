@@ -5,15 +5,19 @@
 package org.hibernate.orm.test.action.queue;
 
 import jakarta.persistence.*;
+import org.hibernate.action.queue.ActionQueueFactory;
+import org.hibernate.action.queue.QueueImplementation;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.cfg.FlushSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -37,7 +41,12 @@ import static org.junit.jupiter.api.Assertions.*;
 		}
 )
 @SessionFactory
+@DisabledIf("notUsingGraphQueue")
 public class UniqueConstraintOrderingTest {
+	boolean notUsingGraphQueue(SessionFactoryScope factoryScope) {
+		ActionQueueFactory actionQueueFactory = factoryScope.getSessionFactory().getActionQueueFactory();
+		return actionQueueFactory.getConfiguredQueueImplementation() == QueueImplementation.LEGACY;
+	}
 
 	@Entity(name = "UserAccount")
 	@Table(name = "user_account")

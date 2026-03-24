@@ -10,6 +10,9 @@ import org.hibernate.engine.spi.SessionImplementor;
 ///
 /// @author Steve Ebersole
 public interface ActionQueueFactory {
+	/// Reports which [queue][ActionQueue] implementation was configured to be used.
+	QueueImplementation getConfiguredQueueImplementation();
+
 	/// Build an ActionQueue instance for the given Session.
 	ActionQueue buildActionQueue(SessionImplementor session);
 }

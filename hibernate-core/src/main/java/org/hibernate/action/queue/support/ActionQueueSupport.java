@@ -5,6 +5,7 @@
 package org.hibernate.action.queue.support;
 
 import org.hibernate.action.queue.ActionQueueFactory;
+import org.hibernate.action.queue.QueueImplementation;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
@@ -17,15 +18,12 @@ import static org.hibernate.engine.config.spi.StandardConverters.STRING;
 public class ActionQueueSupport {
 	public static ActionQueueFactory resolveActionQueueSupport(SessionFactoryImplementor factory) {
 		var configurationService = factory.getServiceRegistry().requireService( ConfigurationService.class );
-		final var implementation = configurationService.getSetting( FLUSH_QUEUE_IMPL, STRING, "legacy" );
+		final var setting = configurationService.getSetting( FLUSH_QUEUE_IMPL, STRING, "legacy" );
+		var implementation = QueueImplementation.fromSetting( setting );
 
-		return switch ( implementation.toLowerCase() ) {
-			case "legacy" -> new LegacyActionQueueFactory();
-			case "graph" -> new GraphBasedActionQueueFactory( factory );
-			default -> throw new IllegalArgumentException(
-					"Unknown ActionQueue implementation: " + implementation +
-					". Valid values are 'graph' and 'legacy'."
-			);
+		return switch ( implementation ) {
+			case LEGACY -> new LegacyActionQueueFactory();
+			case GRAPH -> new GraphBasedActionQueueFactory( factory );
 		};
 
 	}

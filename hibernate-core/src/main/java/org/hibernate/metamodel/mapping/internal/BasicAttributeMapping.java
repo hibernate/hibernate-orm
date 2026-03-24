@@ -167,7 +167,7 @@ public class BasicAttributeMapping
 		this.temporalPrecision = temporalPrecision;
 		this.selectablePath =
 				selectablePath == null
-						? new SelectablePath( mappedColumnExpression )
+						? new SelectablePath( isFormula ? attributeName : mappedColumnExpression )
 						: selectablePath;
 		this.isFormula = isFormula;
 		this.columnDefinition = columnDefinition;

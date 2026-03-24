@@ -360,13 +360,7 @@ public abstract class NClobJdbcType implements JdbcType {
 						throws SQLException {
 					final var characterStream = javaType.unwrap( value, CharacterStream.class, options );
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						try {
-							st.setNCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
-						}
-						// workaround for jTDS driver for Sybase
-						catch (AbstractMethodError e) {
-							st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
-						}
+						st.setNCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
 					}
 					else {
 						st.setCharacterStream( index, characterStream.asReader(), characterStream.getLength() );
@@ -378,13 +372,7 @@ public abstract class NClobJdbcType implements JdbcType {
 						throws SQLException {
 					final var characterStream = javaType.unwrap( value, CharacterStream.class, options );
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						try {
-							st.setNCharacterStream( name, characterStream.asReader(), characterStream.getLength() );
-						}
-						// workaround for jTDS driver for Sybase
-						catch (AbstractMethodError e) {
-							st.setCharacterStream( name, characterStream.asReader(), characterStream.getLength() );
-						}
+						st.setNCharacterStream( name, characterStream.asReader(), characterStream.getLength() );
 					}
 					else {
 						st.setCharacterStream( name, characterStream.asReader(), characterStream.getLength() );

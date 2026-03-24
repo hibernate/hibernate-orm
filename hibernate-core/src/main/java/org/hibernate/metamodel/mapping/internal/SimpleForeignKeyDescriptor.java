@@ -30,6 +30,7 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -606,6 +607,16 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	@Override
 	public String getSelectionExpression() {
 		return keySide.getModelPart().getSelectionExpression();
+	}
+
+	@Override
+	public String getSelectableName() {
+		return keySide.getModelPart().getSelectableName();
+	}
+
+	@Override
+	public SelectablePath getSelectablePath() {
+		return keySide.getModelPart().getSelectablePath();
 	}
 
 	@Override

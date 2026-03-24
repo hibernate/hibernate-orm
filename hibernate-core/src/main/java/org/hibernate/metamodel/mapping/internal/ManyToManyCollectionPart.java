@@ -56,6 +56,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.Objects.requireNonNullElse;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.createInverseModelPart;
+import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getCollectionPropertyPath;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getPropertyOrder;
 
 /**
@@ -429,7 +430,12 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 					return false;
 				}
 
-				foreignKey = createJoinTablePartForeignKey( collectionTableName, elementDescriptor, creationProcess );
+				foreignKey = createJoinTablePartForeignKey(
+						collectionTableName,
+						elementDescriptor,
+						getCollectionPropertyPath( collectionDescriptor ),
+						creationProcess
+				);
 				creationProcess.registerForeignKey( this, foreignKey );
 			}
 			else {
@@ -456,6 +462,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 					element,
 					(EntityType) collectionDescriptor.getElementType(),
 					fkTargetModelPart,
+					getCollectionPropertyPath( collectionDescriptor ),
 					creationProcess,
 					collectionDescriptor.getFactory().getJdbcServices().getDialect()
 			);
@@ -467,6 +474,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 					index,
 					(EntityType) collectionDescriptor.getIndexType(),
 					fkTargetModelPart,
+					null, // No @MapKeyFormula or @OrderFormula
 					creationProcess,
 					collectionDescriptor.getFactory().getJdbcServices().getDialect()
 			);
@@ -478,6 +486,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 	private ForeignKeyDescriptor createJoinTablePartForeignKey(
 			String collectionTableName,
 			ManyToOne elementBootDescriptor,
+			@Nullable String propertyPath,
 			MappingModelCreationProcess creationProcess) {
 		final EntityMappingType associatedEntityMapping = getAssociatedEntityMappingType();
 		final EntityIdentifierMapping associatedIdMapping = associatedEntityMapping.getIdentifierMapping();
@@ -498,9 +507,12 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			final SelectableMapping keySelectableMapping = SelectableMappingImpl.from(
 					collectionTableName,
 					keyColumn,
+					propertyPath,
+					null,
 					targetModelPart.getJdbcMapping(),
 					creationProcess.getCreationContext().getTypeConfiguration(),
 					true,
+					false,
 					false,
 					false,
 					creationProcess.getCreationContext().getDialect(),
@@ -536,6 +548,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 					collectionTableName,
 					elementBootDescriptor,
 					getPropertyOrder( elementBootDescriptor, creationProcess ),
+					propertyPath,
+					null,
 					creationProcess.getCreationContext().getMetadata(),
 					creationProcess.getCreationContext().getTypeConfiguration(),
 					elementBootDescriptor.getColumnInsertability(),
@@ -592,6 +606,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			Value fkBootDescriptorSource,
 			EntityType entityType,
 			ModelPart fkTargetModelPart,
+			@Nullable String propertyPath,
 			MappingModelCreationProcess creationProcess,
 			Dialect dialect) {
 		assert fkTargetModelPart != null;
@@ -604,6 +619,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			return determineForeignKey(
 					toOneAttributeMapping.getForeignKeyDescriptor(),
 					fkBootDescriptorSource,
+					propertyPath,
 					creationProcess
 			);
 		}
@@ -616,6 +632,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			return determineForeignKey(
 					targetModelPart.getForeignKeyDescriptor(),
 					fkBootDescriptorSource,
+					propertyPath,
 					creationProcess
 			);
 		}
@@ -632,16 +649,19 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 					creationProcess,
 					dialect,
 					collectionTableName,
-					basicFkTarget
+					basicFkTarget,
+					propertyPath
 			);
 		}
 
 		if ( fkTargetModelPart instanceof EmbeddableValuedModelPart embeddableValuedModelPart ) {
 			return MappingModelCreationHelper.buildEmbeddableForeignKeyDescriptor(
+					propertyPath,
 					embeddableValuedModelPart,
 					fkBootDescriptorSource,
 					findContainingEntityMapping(),
 					getCollectionDescriptor().getAttributeMapping(),
+					null,
 					false,
 					fkBootDescriptorSource.getColumnInsertability(),
 					fkBootDescriptorSource.getColumnUpdateability(),
@@ -658,6 +678,7 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 	private ForeignKeyDescriptor determineForeignKey(
 			ForeignKeyDescriptor foreignKeyDescriptor,
 			Value fkBootDescriptorSource,
+			@Nullable String propertyPath,
 			MappingModelCreationProcess creationProcess) {
 		final int selectableCount = foreignKeyDescriptor.getJdbcTypeCount();
 		final ValuedModelPart keyPart = foreignKeyDescriptor.getKeyPart();
@@ -672,6 +693,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 						keyPart.getContainingTableExpression(),
 						fkBootDescriptorSource,
 						getPropertyOrder( fkBootDescriptorSource, creationProcess ),
+						propertyPath,
+						null,
 						creationProcess.getCreationContext().getMetadata(),
 						creationProcess.getCreationContext().getTypeConfiguration(),
 						fkBootDescriptorSource.getColumnInsertability(),
@@ -698,7 +721,8 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 			MappingModelCreationProcess creationProcess,
 			Dialect dialect,
 			String fkKeyTableName,
-			BasicValuedModelPart basicFkTargetPart) {
+			BasicValuedModelPart basicFkTargetPart,
+			@Nullable String propertyPath) {
 		final boolean columnInsertable;
 		final boolean columnUpdateable;
 		if ( getNature() == Nature.ELEMENT && !fkBootDescriptorSource.getSelectables().get( 0 ).isFormula() ) {
@@ -714,11 +738,14 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 		final SelectableMapping keySelectableMapping = SelectableMappingImpl.from(
 				fkKeyTableName,
 				fkBootDescriptorSource.getSelectables().get( 0 ),
+				propertyPath,
+				null,
 				basicFkTargetPart.getJdbcMapping(),
 				creationProcess.getCreationContext().getTypeConfiguration(),
 				columnInsertable,
 				columnUpdateable,
 				fkValue.isPartitionKey(),
+				false,
 				dialect,
 				creationProcess.getSqmFunctionRegistry(),
 				creationProcess.getCreationContext()

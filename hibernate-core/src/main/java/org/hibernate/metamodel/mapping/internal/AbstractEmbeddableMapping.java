@@ -58,6 +58,8 @@ import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
+import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getPropertyPath;
+
 /**
  * Base support for EmbeddableMappingType implementations
  */
@@ -502,11 +504,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 	}
 
 	protected String determineEmbeddablePrefix() {
-		var root = getNavigableRole().getParent();
-		while ( !root.isRoot() ) {
-			root = root.getParent();
-		}
-		return getNavigableRole().getFullPath().substring( root.getFullPath().length() + 1 ) + ".";
+		return getPropertyPath( getNavigableRole() );
 	}
 
 	@Override

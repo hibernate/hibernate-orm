@@ -124,12 +124,13 @@ public class GraphBasedActionQueue implements ActionQueue {
 		// IDENTITY inserts must execute immediately to generate IDs
 		// Delegate execution to FlushCoordinator but trigger it now, not at flush time
 		if (insert.isEarlyInsert()) {
-			// IMPORTANT: Check for transient dependencies FIRST, before flushing pending inserts
-			// This prevents a cascade deadlock where:
-			// 1. Entity A (IDENTITY) deferred with transient dep on B
-			// 2. Entity B (IDENTITY) tries to insert
-			// 3. executePendingInserts tries to execute A
-			// 4. But B is still transient (being processed) → fail!
+			// For early inserts, must execute pending inserts BEFORE checking for transient dependencies
+			// This allows cascaded persist operations to complete, preventing circular reference issues
+			// For example: persist(item1) cascades to category, which cascades back to item1 (exampleItem)
+			// If we check transient deps first, both would be deferred causing deadlock
+			ACTION_LOGGER.executingInsertsBeforeFindingNonNullableTransientEntitiesForEarlyInsert(insert);
+			executePendingInserts();
+
 			final var nonNullableTransientDeps = insert.findNonNullableTransientEntities();
 			if (nonNullableTransientDeps != null) {
 				// Defer this IDENTITY insert - DON'T add to pendingActions

@@ -11,7 +11,10 @@ import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.SelectionQuery;
 
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -150,6 +153,18 @@ public class KeyBasedPagingTest {
 			List<Person> resultList5 = list.getResultList();
 			assertEquals( resultList1, resultList5 );
 			assertEquals( resultList2, resultList4 );
+		});
+	}
+
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20283")
+	void testCriteria(SessionFactoryScope scope) {
+		scope.inSession(session -> {
+			HibernateCriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+			JpaCriteriaQuery<Person> query = criteriaBuilder.createQuery( Person.class );
+			query.from( Person.class );
+			session.createSelectionQuery( query )
+					.getKeyedResultList( Page.first( 5 ).keyedBy( Order.asc( Person.class, "ssn" ) ) );
 		});
 	}
 

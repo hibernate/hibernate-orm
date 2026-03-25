@@ -202,4 +202,9 @@ public abstract class EntityAction
 		return session.getFactory().getEventListenerGroups();
 	}
 
+	public String getLoggableDetails() {
+		// for now...
+		return getClass().getSimpleName();
+	}
+
 }

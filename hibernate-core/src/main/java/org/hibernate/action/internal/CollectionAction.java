@@ -166,6 +166,11 @@ public abstract class CollectionAction implements ComparableExecutable {
 						.compare( key, executable.getSecondarySortIndex() );
 	}
 
+	public String getLoggableDetails() {
+		// for now...
+		return getClass().getSimpleName();
+	}
+
 	private static class CacheCleanupProcess implements AfterTransactionCompletionProcess {
 		private final Object key;
 		private final CollectionPersister persister;

@@ -161,7 +161,7 @@ public class FlushCoordinator {
 		}
 	}
 
-	public void executeFlush(List<Executable> actions) {
+	public void executeFlush(List<? extends Executable> actions) {
 		if ( actions.isEmpty() ) {
 			return;
 		}
@@ -182,7 +182,7 @@ public class FlushCoordinator {
 		var plan = flushPlanner.plan( graph );
 
 		// Execute the plan - post-execution callbacks will run inline as operations complete
-		executePlan( plan, actions );
+		executePlan( plan );
 
 		executor.finishUp();
 
@@ -195,7 +195,7 @@ public class FlushCoordinator {
 
 
 	private List<PlannedOperationGroup> decomposeExecutables(
-			List<Executable> executables) {
+			List<? extends Executable> executables) {
 		final ArrayList<PlannedOperation> operations = arrayList( executables.size() * 2);
 		int ordinalBase = 0;
 		for (Executable e : executables) {
@@ -320,9 +320,9 @@ public class FlushCoordinator {
 	///  - run all base steps first
 	///  - enqueue fixups as we go
 	///  - run fixups after base plan finishes (simple + safe)
-	private void executePlan(FlushPlan plan, List<Executable> actions) {
+	private void executePlan(FlushPlan plan) {
 		for ( PlanStep step : plan.steps() ) {
-			executeStep(step, plan, actions);
+			executeStep(step, plan);
 		}
 
 		// Execute deferred FK fixups
@@ -330,7 +330,7 @@ public class FlushCoordinator {
 		executor.execute( plan.drainFixupsInOrder(), null, null );
 	}
 
-	private void executeStep(PlanStep step, FlushPlan plan, List<Executable> actions) {
+	private void executeStep(PlanStep step, FlushPlan plan) {
 		executor.execute(
 				step.operations(),
 				newlyManagedEntities::add,
@@ -371,7 +371,7 @@ public class FlushCoordinator {
 				final var resolvedGroups = groupOperations(resolvedOperations);
 				final var graph = graphBuilder.build(resolvedGroups);
 				final var plan = flushPlanner.plan(graph);
-				executePlan(plan, List.of()); // No actions for resolved inserts
+				executePlan(plan);
 
 				// After recursive execution, try again (might have resolved more dependencies)
 				resolveUnresolvedInserts();

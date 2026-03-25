@@ -179,6 +179,12 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 			if ( parentDeletes != null && childDeletes != null ) {
 				for ( GroupNode parentDelete : parentDeletes ) {
 					for ( GroupNode childDelete : childDeletes ) {
+						// DELETE edges can be breakable if FK is nullable
+						// This allows handling circular FK dependencies by nullifying one FK first
+						final boolean breakable = foreignKey.nullable();
+						final int breakCost = breakable ? computeBreakCost( foreignKey ) : 0;
+						final SelectableMappings columnsToNull = breakable ? foreignKey.keyColumns() : EMPTY_SELECTABLES;
+
 						// Edge direction for DELETE: child -> parent (reversed!)
 						final GraphEdge edge = new GraphEdge(
 								// FK target
@@ -189,12 +195,12 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 								childDelete,
 								// TO parent (graphing)
 								parentDelete,
-								// NOT breakable - can't use NULL strategy for DELETE
-								false,
-								// No break cost (not breakable)
-								0,
-								// No columns to null (not breakable) - pass empty SelectableMappings
-								EMPTY_SELECTABLES,
+								// Breakable if FK is nullable - allows UPDATE to null FK before DELETE
+								breakable,
+								// Break cost
+								breakCost,
+								// Columns to null if edge is broken
+								columnsToNull,
 								foreignKey,
 								edgeId++
 						);

@@ -649,12 +649,13 @@ public class GraphBasedActionQueue implements ActionQueue {
 			// Skip: CollectionRecreateAction, CollectionUpdateAction, QueuedOperationCollectionAction
 		}
 
+		entityActions.clear();
 		if ( !entityActionsToKeep.isEmpty() ) {
-			entityActions.clear();
 			entityActions.addAll(entityActionsToKeep);
 		}
+
+		collectionActions.clear();
 		if ( !collectionActionsToKeep.isEmpty() ) {
-			collectionActions.clear();
 			collectionActions.addAll(collectionActionsToKeep);
 		}
 

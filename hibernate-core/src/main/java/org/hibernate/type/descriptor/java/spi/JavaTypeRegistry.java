@@ -108,8 +108,9 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 		}
 
 		final JavaType<J> created = creator.get();
-		descriptorsByTypeName.put( javaTypeName, created );
-		return created;
+		final JavaType<?> cachedNew = descriptorsByTypeName.putIfAbsent( javaTypeName, created );
+		//noinspection unchecked
+		return cachedNew == null ? created : (JavaType<J>) cachedNew;
 	}
 
 	public <J> JavaType<J> resolveDescriptor(Type javaType) {

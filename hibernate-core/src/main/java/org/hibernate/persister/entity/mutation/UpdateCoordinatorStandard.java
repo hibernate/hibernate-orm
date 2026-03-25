@@ -150,7 +150,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		if ( versionUpdateGroup == null ) {
 			throw new HibernateException( "Cannot force version increment relative to sub-type; use the root type" );
 		}
-		doVersionUpdate( null, id, nextVersion, currentVersion, session );
+		doVersionUpdate( null, id, nextVersion, currentVersion, null, session );
 	}
 
 	@Override
@@ -163,7 +163,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		if ( versionUpdateGroup == null ) {
 			throw new HibernateException( "Cannot force version increment relative to sub-type; use the root type" );
 		}
-		doVersionUpdate( null, id, nextVersion, currentVersion, batching, session );
+		doVersionUpdate( null, id, nextVersion, currentVersion, batching, null, session );
 	}
 
 	@Override
@@ -441,7 +441,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		if ( isSimpleVersionUpdate ) {
 			// we have just the version being updated - use the special handling
 			assert newVersion != null;
-			final GeneratedValues generatedValues = doVersionUpdate( entity, id, newVersion, oldVersion, session );
+			final GeneratedValues generatedValues = doVersionUpdate( entity, id, newVersion, oldVersion, values, session );
 			return () -> generatedValues;
 		}
 		else {
@@ -475,8 +475,17 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object id,
 			Object version,
 			Object oldVersion,
+			Object[] laodedState,
 			SharedSessionContractImplementor session) {
-		return doVersionUpdate( entity, id, version, oldVersion, true, session );
+		return doVersionUpdate(
+				entity,
+				id,
+				version,
+				oldVersion,
+				true,
+				laodedState,
+				session
+		);
 	}
 
 	protected GeneratedValues doVersionUpdate(
@@ -485,6 +494,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object version,
 			Object oldVersion,
 			boolean batching,
+			Object[] loadedState,
 			SharedSessionContractImplementor session) {
 		assert versionUpdateGroup != null;
 
@@ -501,6 +511,13 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				versionMapping.getSelectionExpression(),
 				ParameterUsage.SET
 		);
+
+		if ( loadedState != null && entityPersister.hasPartitionedSelectionMapping() ) {
+			bindPartitionColumnValueBindings(
+					loadedState,
+					session,
+					mutationExecutor.getJdbcValueBindings() );
+		}
 
 		// restrict the key
 		mutatingTableDetails.getKeyMapping().breakDownKeyJdbcValues(

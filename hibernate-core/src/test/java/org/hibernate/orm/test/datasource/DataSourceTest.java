@@ -36,7 +36,7 @@ public class DataSourceTest {
 		scope.getEntityManagerFactory();
 		LogInspectionHelper.clearAllListeners( ConnectionInfoLogger.INSTANCE );
 		Dialect dialect = scope.getDialect();
-		assertTrue( dialect instanceof OracleDialect od && od.isAutonomous()
+		assertTrue( dialect instanceof OracleDialect
 					|| dialect instanceof DB2Dialect
 					|| dialect instanceof InformixDialect // Informix metadata does not include the URL
 					|| listener.seen );

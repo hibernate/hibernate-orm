@@ -17,6 +17,7 @@ import java.time.OffsetTime;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.spi.QueryEngine;
@@ -117,12 +118,10 @@ public class SqmExpressionHelper {
 
 	public static SqmExpression<?> getActualExpression(SqmExpression<?> expression) {
 		if ( isCompositeTemporal( expression ) ) {
-			if ( expression.getJavaTypeDescriptor().getJavaTypeClass() == OffsetTime.class ) {
-				return ( (SqmPath<?>) expression ).get( OffsetTimeCompositeUserType.LOCAL_TIME_NAME );
-			}
-			else {
-				return ( (SqmPath<?>) expression ).get( AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
-			}
+			final SqmPath<?> path = (SqmPath<?>) expression;
+			return expression.getJavaTypeDescriptor().getJavaTypeClass() == OffsetTime.class
+					? get( path, OffsetTimeCompositeUserType.LOCAL_TIME_NAME )
+					: get( path, AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
 		}
 		else {
 			return expression;
@@ -132,13 +131,10 @@ public class SqmExpressionHelper {
 	public static SqmExpression<?> getOffsetAdjustedExpression(SqmExpression<?> expression) {
 		if ( isCompositeTemporal( expression ) ) {
 			final SqmPath<?> compositePath = (SqmPath<?>) expression;
-			final SqmPath<Object> temporalPath;
-			if ( expression.getJavaTypeDescriptor().getJavaTypeClass() == OffsetTime.class ) {
-				temporalPath = compositePath.get( OffsetTimeCompositeUserType.LOCAL_TIME_NAME );
-			}
-			else {
-				temporalPath = compositePath.get( AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
-			}
+			final SqmPath<?> temporalPath =
+					expression.getJavaTypeDescriptor().getJavaTypeClass() == OffsetTime.class
+							? get( compositePath, OffsetTimeCompositeUserType.LOCAL_TIME_NAME )
+							: get( compositePath, AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
 			final NodeBuilder nodeBuilder = temporalPath.nodeBuilder();
 			return new SqmBinaryArithmetic<>(
 					BinaryArithmeticOperator.ADD,
@@ -155,6 +151,22 @@ public class SqmExpressionHelper {
 		}
 		else {
 			return expression;
+		}
+	}
+
+	public static SqmPath<?> get(SqmPath<?> lhs, String attributeName) {
+		// Don't use SqmPath.get() to avoid mutating the SQM tree here, since the SQM tree is shared
+		final SqmPath<?> existingSqmPath = lhs.getReusablePath( attributeName );
+		if ( existingSqmPath != null ) {
+			return existingSqmPath;
+		}
+		else {
+			final SqmPathSource<?> referencedPathSource = lhs.getReferencedPathSource()
+					.getSubPathSource( attributeName );
+			return referencedPathSource.createSqmPath(
+					lhs,
+					lhs.getResolvedModel().getIntermediatePathSource( referencedPathSource )
+			);
 		}
 	}
 

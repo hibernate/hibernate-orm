@@ -437,6 +437,7 @@ import static java.util.Collections.singletonList;
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.createNonSoftDeletedRestriction;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
+import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.MULTIPLY;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.SUBTRACT;
@@ -448,6 +449,7 @@ import static org.hibernate.query.sqm.UnaryArithmeticOperator.UNARY_MINUS;
 import static org.hibernate.query.sqm.internal.SqmUtil.isFkOptimizationAllowed;
 import static org.hibernate.sql.ast.spi.SqlAstTreeHelper.combinePredicates;
 import static org.hibernate.type.spi.TypeConfiguration.isDuration;
+import static org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME;
 
 /**
  * @author Steve Ebersole
@@ -894,9 +896,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		currentClauseStack.push( Clause.SET );
 		final EntityVersionMapping versionMapping = persister.getVersionMapping();
 		final List<ColumnReference> targetColumnReferences = BasicValuedPathInterpretation.from(
-				(SqmBasicValuedSimplePath<?>) sqmStatement
-						.getRoot()
-						.get( versionMapping.getPartName() ),
+				(SqmBasicValuedSimplePath<?>) SqmExpressionHelper.get( sqmStatement
+						.getRoot(), versionMapping.getPartName() ),
 				this,
 				jpaQueryComplianceEnabled
 		).getColumnReferences();
@@ -1386,8 +1387,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		if ( needsVersionInsert ) {
 			final BasicValuedPathInterpretation<?> versionPath = BasicValuedPathInterpretation.from(
-					(SqmBasicValuedSimplePath<?>) sqmStatement.getTarget()
-							.get( versionAttributeName ),
+					(SqmBasicValuedSimplePath<?>) SqmExpressionHelper.get( sqmStatement.getTarget(), versionAttributeName ),
 					this,
 					jpaQueryComplianceEnabled
 			);
@@ -5508,7 +5508,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private Predicate createTreatTypeRestriction(SqmPath<?> lhs, Set<String> subclassEntityNames) {
 		// Do what visitSelfInterpretingSqmPath does, except for calling preparingReusablePath
 		// as that would register a type usage for the table group that we don't want here
-		final EntityDiscriminatorSqmPath discriminatorSqmPath = (EntityDiscriminatorSqmPath) lhs.type();
+		final EntityDiscriminatorSqmPath discriminatorSqmPath =
+				(EntityDiscriminatorSqmPath) SqmExpressionHelper.get( lhs, DISCRIMINATOR_ROLE_NAME );
 		registerTypeUsage( discriminatorSqmPath );
 		return createTreatTypeRestriction(
 				DiscriminatorPathInterpretation.from( discriminatorSqmPath, this ),
@@ -6750,16 +6751,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					if ( lhs != expression.getLeftHandOperand() ) {
 						final SqmPath<?> temporalPath = (SqmPath<?>) expression.getLeftHandOperand();
 						baseNavigablePath = temporalPath.getNavigablePath().getParent();
-						offset = (temporalPath).get(
-								AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME
-						).accept( this );
+						offset = SqmExpressionHelper.get( temporalPath, ZONE_OFFSET_NAME ).accept( this );
 					}
 					else if ( rhs != expression.getRightHandOperand() ) {
 						final SqmPath<?> temporalPath = (SqmPath<?>) expression.getRightHandOperand();
 						baseNavigablePath = temporalPath.getNavigablePath().getParent();
-						offset = ( temporalPath ).get(
-								AbstractTimeZoneStorageCompositeUserType.ZONE_OFFSET_NAME
-						).accept( this );
+						offset = SqmExpressionHelper.get( temporalPath, ZONE_OFFSET_NAME ).accept( this );
 					}
 					else {
 						return result;

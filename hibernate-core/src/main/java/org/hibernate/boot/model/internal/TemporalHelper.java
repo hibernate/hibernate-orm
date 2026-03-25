@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.annotations.Temporal;
+import org.hibernate.boot.model.naming.ColumnNamingContext;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
@@ -66,12 +67,13 @@ public class TemporalHelper {
 		final int secondPrecision = temporal.secondPrecision();
 		final Integer precision = secondPrecision == -1 ? null : secondPrecision;
 		final var transactionIdType = getTransactionIdType( context );
+		ColumnNamingContext columnNamingContext = determineColumnNamingContext( target );
 		final var rowStartColumn =
 				createTemporalColumn( temporal.rowStart(),
-						table, false, precision, transactionIdType, context );
+						table, false, precision, transactionIdType, context, columnNamingContext );
 		final var rowEndColumn =
 				createTemporalColumn( temporal.rowEnd(),
-						table, true, precision, transactionIdType, context );
+						table, true, precision, transactionIdType, context, columnNamingContext );
 		handleTemporalColumnGeneration( rowStartColumn, rowEndColumn, context );
 
 		final var temporalTable =
@@ -96,6 +98,19 @@ public class TemporalHelper {
 		addTemporalCheckConstraint( temporalTable, rowStartColumn, rowEndColumn, context );
 		addAuxiliaryObjects( temporalTable, partitioned, currentPartitionName, historyPartitionName, context );
 		addSecondPass( target, context );
+	}
+
+	private static ColumnNamingContext determineColumnNamingContext(Stateful target) {
+		if ( target instanceof RootClass rootClass ) {
+			return new ColumnNamingContext( rootClass.getEntityName(), rootClass.getClassName() );
+		}
+		if ( target instanceof Collection collection ) {
+			return new ColumnNamingContext(
+					collection.getOwnerEntityName(),
+					collection.getOwner().getClassName()
+			);
+		}
+		return null;
 	}
 
 	static void enableTemporal(
@@ -288,7 +303,8 @@ public class TemporalHelper {
 			boolean nullable,
 			Integer temporalPrecision,
 			Class<?> transactionIdJavaType,
-			MetadataBuildingContext context) {
+			MetadataBuildingContext context,
+			ColumnNamingContext columnNamingContext) {
 		final var basicValue = new BasicValue( context, table );
 		basicValue.setImplicitJavaTypeAccess( typeConfiguration -> transactionIdJavaType );
 		final var column = new Column();
@@ -297,7 +313,7 @@ public class TemporalHelper {
 		basicValue.addColumn( column );
 		final var database = context.getMetadataCollector().getDatabase();
 		setTemporalColumnName( columnName, column, database,
-				context.getBuildingOptions().getPhysicalNamingStrategy() );
+				context.getBuildingOptions().getPhysicalNamingStrategy(), columnNamingContext );
 		setTemporalColumnType( temporalPrecision, column, database, transactionIdJavaType );
 		return column;
 	}
@@ -321,11 +337,13 @@ public class TemporalHelper {
 			String name,
 			Column column,
 			Database database,
-			PhysicalNamingStrategy physicalNamingStrategy) {
+			PhysicalNamingStrategy physicalNamingStrategy,
+			ColumnNamingContext columnNamingContext) {
 		final Identifier physicalColumnName =
 				physicalNamingStrategy.toPhysicalColumnName(
 						database.toIdentifier( name ),
-						database.getJdbcEnvironment()
+						database.getJdbcEnvironment(),
+						columnNamingContext
 				);
 		column.setName( physicalColumnName.render( database.getDialect() ) );
 	}

@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.annotations.Audited;
+import org.hibernate.boot.model.naming.ColumnNamingContext;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
@@ -78,17 +79,39 @@ public final class AuditHelper {
 		collector.addTableNameBinding( table.getNameIdentifier(), auditTable );
 		copyTableColumns( table, auditTable, excludedColumns );
 		final var transactionIdColumn =
-				createAuditColumn( audited.transactionId(),
-						getTransactionIdType( context ), auditTable, context );
-		final var modificationTypeColumn =
-				createAuditColumn( audited.modificationType(),
-						Byte.class, auditTable, context );
+				createAuditColumn(
+						audited.transactionId(),
+						getTransactionIdType( context ),
+						auditTable,
+						context,
+						determineColumnNamingContext( auditable )
+				);
+		final var modificationTypeColumn = createAuditColumn(
+				audited.modificationType(),
+				Byte.class,
+				auditTable,
+				context,
+				determineColumnNamingContext( auditable )
+		);
 		auditTable.addColumn( transactionIdColumn );
 		auditTable.addColumn( modificationTypeColumn );
 		enableAudit( auditable, auditTable, transactionIdColumn, modificationTypeColumn );
 
 		collector.addSecondPass( (OptionalDeterminationSecondPass) ignored ->
 				copyTableColumns( table, auditTable, excludedColumns ) );
+	}
+
+	private static ColumnNamingContext determineColumnNamingContext(Stateful auditable) {
+		if ( auditable instanceof RootClass rootClass ) {
+			return new ColumnNamingContext( rootClass.getEntityName(), rootClass.getClassName() );
+		}
+		if ( auditable instanceof Collection collection ) {
+			return new ColumnNamingContext(
+					collection.getOwnerEntityName(),
+					collection.getOwner().getClassName()
+			);
+		}
+		return null;
 	}
 
 	static void enableAudit(
@@ -118,7 +141,8 @@ public final class AuditHelper {
 			String columnName,
 			Class<?> javaType,
 			Table table,
-			MetadataBuildingContext context) {
+			MetadataBuildingContext context,
+			ColumnNamingContext columnNamingContext) {
 		final var basicValue = new BasicValue( context, table );
 		basicValue.setImplicitJavaTypeAccess( typeConfiguration -> javaType );
 		final var column = new Column();
@@ -127,7 +151,13 @@ public final class AuditHelper {
 		basicValue.addColumn( column );
 
 		final var database = context.getMetadataCollector().getDatabase();
-		setColumnName( columnName, column, database, context.getBuildingOptions().getPhysicalNamingStrategy() );
+		setColumnName(
+				columnName,
+				column,
+				database,
+				context.getBuildingOptions().getPhysicalNamingStrategy(),
+				columnNamingContext
+		);
 		setTemporalColumnType( column, database, javaType );
 
 		return column;
@@ -148,11 +178,13 @@ public final class AuditHelper {
 			String name,
 			Column column,
 			Database database,
-			PhysicalNamingStrategy physicalNamingStrategy) {
+			PhysicalNamingStrategy physicalNamingStrategy,
+			ColumnNamingContext columnNamingContext) {
 		final Identifier physicalColumnName =
 				physicalNamingStrategy.toPhysicalColumnName(
-					database.toIdentifier( name ),
-					database.getJdbcEnvironment()
+						database.toIdentifier( name ),
+						database.getJdbcEnvironment(),
+						columnNamingContext
 				);
 		column.setName( physicalColumnName.render( database.getDialect() ) );
 	}

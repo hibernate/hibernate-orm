@@ -8,10 +8,13 @@ import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.boot.model.convert.internal.ConverterDescriptors;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
+import org.hibernate.boot.model.naming.ColumnNamingContext;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SoftDeletable;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.UnsupportedMappingException;
@@ -47,10 +50,24 @@ public class SoftDeleteHelper {
 		final var softDeleteIndicatorColumn = createSoftDeleteIndicatorColumn(
 				softDeleteConfig,
 				createSoftDeleteIndicatorValue( softDeleteConfig, table, context ),
-				context
+				context,
+				determineColumnNamingContext( target )
 		);
 		table.addColumn( softDeleteIndicatorColumn );
 		target.enableSoftDelete( softDeleteIndicatorColumn, softDeleteConfig.strategy() );
+	}
+
+	private static ColumnNamingContext determineColumnNamingContext(SoftDeletable target) {
+		if ( target instanceof RootClass rootClass ) {
+			return new ColumnNamingContext( rootClass.getEntityName(), rootClass.getClassName() );
+		}
+		if ( target instanceof Collection collection ) {
+			return new ColumnNamingContext(
+					collection.getOwnerEntityName(),
+					collection.getOwner().getClassName()
+			);
+		}
+		return null;
 	}
 
 	private static BasicValue createSoftDeleteIndicatorValue(
@@ -83,13 +100,14 @@ public class SoftDeleteHelper {
 	private static Column createSoftDeleteIndicatorColumn(
 			SoftDelete softDeleteConfig,
 			BasicValue softDeleteIndicatorValue,
-			MetadataBuildingContext context) {
+			MetadataBuildingContext context,
+			ColumnNamingContext columnNamingContext) {
 		final var softDeleteColumn = new Column();
 
 		softDeleteColumn.setValue( softDeleteIndicatorValue );
 		softDeleteIndicatorValue.addColumn( softDeleteColumn );
 
-		applyColumnName( softDeleteColumn, softDeleteConfig, context );
+		applyColumnName( softDeleteColumn, softDeleteConfig, context, columnNamingContext );
 
 		softDeleteColumn.setOptions( softDeleteConfig.options() );
 		if ( isBlank( softDeleteConfig.comment() ) ) {
@@ -115,7 +133,8 @@ public class SoftDeleteHelper {
 	private static void applyColumnName(
 			Column softDeleteColumn,
 			SoftDelete softDeleteConfig,
-			MetadataBuildingContext context) {
+			MetadataBuildingContext context,
+			ColumnNamingContext columnNamingContext) {
 		final var database = context.getMetadataCollector().getDatabase();
 		final var namingStrategy = context.getBuildingOptions().getPhysicalNamingStrategy();
 		// NOTE: the argument order is strange here - the fallback value comes first
@@ -125,7 +144,8 @@ public class SoftDeleteHelper {
 		);
 		final Identifier physicalColumnName = namingStrategy.toPhysicalColumnName(
 				database.toIdentifier( logicalColumnName ),
-				database.getJdbcEnvironment()
+				database.getJdbcEnvironment(),
+				columnNamingContext
 		);
 		softDeleteColumn.setName( physicalColumnName.render( database.getDialect() ) );
 	}

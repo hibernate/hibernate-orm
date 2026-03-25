@@ -7,6 +7,7 @@ package org.hibernate.boot.model.internal;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.JoinFormula;
+import org.hibernate.boot.model.naming.ColumnNamingContext;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
@@ -375,7 +376,11 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			}
 		}
 //		else {
-			return parent.buildDefaultColumnName( referencedEntity, logicalReferencedColumn );
+		return parent.buildDefaultColumnName(
+				referencedEntity,
+				logicalReferencedColumn,
+				new ColumnNamingContext( parent )
+		);
 //		}
 	}
 

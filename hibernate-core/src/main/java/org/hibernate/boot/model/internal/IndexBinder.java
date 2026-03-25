@@ -11,6 +11,7 @@ import java.util.StringTokenizer;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
+import org.hibernate.boot.model.naming.ColumnNamingContext;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -42,9 +43,11 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 class IndexBinder {
 
 	private final MetadataBuildingContext context;
+	private final ColumnNamingContext columnNamingContext;
 
-	IndexBinder(MetadataBuildingContext context) {
+	IndexBinder(MetadataBuildingContext context, ColumnNamingContext columnNamingContext) {
 		this.context = context;
+		this.columnNamingContext = columnNamingContext;
 	}
 
 	private Database getDatabase() {
@@ -107,7 +110,11 @@ class IndexBinder {
 		final Database database = getDatabase();
 		final String physicalName =
 				getPhysicalNamingStrategy()
-						.toPhysicalColumnName( database.toIdentifier( logicalName ), database.getJdbcEnvironment() )
+						.toPhysicalColumnName(
+								database.toIdentifier( logicalName ),
+								database.getJdbcEnvironment(),
+								columnNamingContext
+						)
 						.render( getDialect() );
 		return new Column( physicalName );
 	}
@@ -136,8 +143,8 @@ class IndexBinder {
 		final int size = columnNames.length;
 		if ( size == 0 ) {
 			throw new AnnotationException( "Unique constraint"
-					+ ( isEmpty( name ) ? "" : " '" + name + "'" )
-					+ " on table '" + table.getName() + "' has no columns" );
+												+ ( isEmpty( name ) ? "" : " '" + name + "'" )
+												+ " on table '" + table.getName() + "' has no columns" );
 		}
 		final Column[] columns = new Column[size];
 		for ( int index = 0; index < size; index++ ) {

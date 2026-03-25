@@ -26,6 +26,7 @@ import jakarta.persistence.PrimaryKeyJoinColumns;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.SecondaryTables;
 import jakarta.persistence.UniqueConstraint;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -67,6 +68,7 @@ import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.annotations.View;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.internal.InheritanceState.ElementsToProcess;
+import org.hibernate.boot.model.naming.ColumnNamingContext;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitEntityNameSource;
@@ -448,19 +450,34 @@ public class EntityBinder {
 		final var jpaTableUsage = annotatedClass.getAnnotationUsage( jakarta.persistence.Table.class, models );
 		if ( jpaTableUsage != null ) {
 			final var table = persistentClass.getTable();
-			TableBinder.addJpaIndexes( table, jpaTableUsage.indexes(), context );
+			TableBinder.addJpaIndexes(
+					table,
+					jpaTableUsage.indexes(),
+					context,
+					new ColumnNamingContext(
+							persistentClass.getEntityName(),
+							persistentClass.getClassName()
+					)
+			);
 			TableBinder.addTableCheck( table, jpaTableUsage.check() );
 			TableBinder.addTableComment( table, jpaTableUsage.comment() );
 			TableBinder.addTableOptions( table, jpaTableUsage.options() );
 		}
 
 		final var entityTableXref = getMetadataCollector().getEntityTableXref( persistentClass.getEntityName() );
-		annotatedClass.forEachAnnotationUsage( jakarta.persistence.SecondaryTable.class, models, (usage) -> {
-			final Identifier secondaryTableLogicalName = toIdentifier( usage.name() );
-			final var table = entityTableXref.resolveTable( secondaryTableLogicalName );
-			assert table != null;
-			TableBinder.addJpaIndexes( table, usage.indexes(), context );
-		} );
+		annotatedClass.forEachAnnotationUsage(
+				jakarta.persistence.SecondaryTable.class, models, (usage) -> {
+					final Identifier secondaryTableLogicalName = toIdentifier( usage.name() );
+					final var table = entityTableXref.resolveTable( secondaryTableLogicalName );
+					assert table != null;
+					TableBinder.addJpaIndexes(
+							table,
+							usage.indexes(),
+							context,
+							new ColumnNamingContext( persistentClass.getEntityName(), persistentClass.getClassName() )
+					);
+				}
+		);
 	}
 
 	private Set<String> handleIdClass(
@@ -1974,7 +1991,8 @@ public class EntityBinder {
 				uniqueConstraints,
 				context,
 				subselect,
-				denormalizedSuperTableXref
+				denormalizedSuperTableXref,
+				new ColumnNamingContext( persistentClass.getEntityName(), persistentClass.getClassName() )
 		);
 		table.setRowId( rowId );
 		table.setViewQuery( viewQuery );
@@ -2222,7 +2240,10 @@ public class EntityBinder {
 				secondaryTable.uniqueConstraints()
 		);
 		final var table = join.getTable();
-		new IndexBinder( context ).bindIndexes( table, secondaryTable.indexes() );
+		new IndexBinder(
+				context,
+				columnNamingContext( holder )
+		).bindIndexes( table, secondaryTable.indexes() );
 		TableBinder.addTableCheck( table, secondaryTable.check() );
 		TableBinder.addTableComment( table, secondaryTable.comment() );
 		TableBinder.addTableOptions( table, secondaryTable.options() );
@@ -2251,9 +2272,16 @@ public class EntityBinder {
 						logicalName.getTableName(),
 						false,
 						uniqueConstraints,
-						context
+						context,
+						columnNamingContext( propertyHolder )
 				)
 		);
+	}
+
+	private ColumnNamingContext columnNamingContext(PropertyHolder propertyHolder) {
+		return propertyHolder == null
+				? new ColumnNamingContext( persistentClass.getEntityName(), persistentClass.getClassName() )
+				: new ColumnNamingContext( propertyHolder );
 	}
 
 	private QualifiedTableName logicalTableName(String name, String schema, String catalog) {

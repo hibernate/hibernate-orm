@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.type.BindableType;
 import org.hibernate.type.BindingContext;
 import org.hibernate.query.common.TemporalUnit;
@@ -105,8 +106,8 @@ public class SqmExpressionHelper {
 		if ( isCompositeTemporal( expression ) ) {
 			final SqmPath<?> path = (SqmPath<?>) expression;
 			return castNonNull( expression.getJavaTypeDescriptor() ).getJavaTypeClass() == OffsetTime.class
-					? path.get( OffsetTimeCompositeUserType.LOCAL_TIME_NAME )
-					: path.get( AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
+					? get( path, OffsetTimeCompositeUserType.LOCAL_TIME_NAME )
+					: get( path, AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
 		}
 		else {
 			return expression;
@@ -116,10 +117,10 @@ public class SqmExpressionHelper {
 	public static SqmExpression<?> getOffsetAdjustedExpression(SqmExpression<?> expression) {
 		if ( isCompositeTemporal( expression ) ) {
 			final SqmPath<?> compositePath = (SqmPath<?>) expression;
-			final SqmPath<Object> temporalPath =
+			final SqmPath<?> temporalPath =
 					castNonNull( expression.getJavaTypeDescriptor() ).getJavaTypeClass() == OffsetTime.class
-							? compositePath.get( OffsetTimeCompositeUserType.LOCAL_TIME_NAME )
-							: compositePath.get( AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
+							? get( compositePath, OffsetTimeCompositeUserType.LOCAL_TIME_NAME )
+							: get( compositePath, AbstractTimeZoneStorageCompositeUserType.INSTANT_NAME );
 			final NodeBuilder nodeBuilder = temporalPath.nodeBuilder();
 			return new SqmBinaryArithmetic<>(
 					BinaryArithmeticOperator.ADD,
@@ -136,6 +137,22 @@ public class SqmExpressionHelper {
 		}
 		else {
 			return expression;
+		}
+	}
+
+	public static SqmPath<?> get(SqmPath<?> lhs, String attributeName) {
+		// Don't use SqmPath.get() to avoid mutating the SQM tree here, since the SQM tree is shared
+		final SqmPath<?> existingSqmPath = lhs.getReusablePath( attributeName );
+		if ( existingSqmPath != null ) {
+			return existingSqmPath;
+		}
+		else {
+			final SqmPathSource<?> referencedPathSource = lhs.getReferencedPathSource()
+					.getSubPathSource( attributeName );
+			return referencedPathSource.createSqmPath(
+					lhs,
+					lhs.getResolvedModel().getIntermediatePathSource( referencedPathSource )
+			);
 		}
 	}
 

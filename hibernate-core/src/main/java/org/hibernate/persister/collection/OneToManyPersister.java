@@ -412,8 +412,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 					// set null
 					updateBuilder.addValueColumn( NULL, selectable );
 				}
-				// restrict
-				updateBuilder.addKeyRestriction( selectable );
+				// restrict - use Leniently to include nullable columns
+				// (nullable FKs still need WHERE clause restrictions)
+				updateBuilder.addKeyRestrictionLeniently( selectable );
 			}
 		}
 

@@ -508,8 +508,6 @@ public class StructEmbeddableArrayTest implements AdditionalMappingContributor {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 10, reason = "Procedures were only introduced in version 11")
-	@SkipForDialect(dialectClass = PostgresPlusDialect.class, majorVersion = 10, reason = "Procedures were only introduced in version 11")
 	public void testProcedure(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

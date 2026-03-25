@@ -254,14 +254,6 @@ postgresql() {
   postgresql_18
 }
 
-postgresql_13() {
-    $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres ${POSTGRESQL_PLATFORM_OPTION} -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_13:-docker.io/postgis/postgis:13-3.1} \
-       -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
-    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-13-pgvector'
-    postgresql_setup
-}
-
 postgresql_14() {
     $CONTAINER_CLI rm -f postgres || true
     $CONTAINER_CLI run --name postgres ${POSTGRESQL_PLATFORM_OPTION} -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_14:-docker.io/postgis/postgis:14-3.3} \
@@ -361,17 +353,6 @@ gaussdb() {
 
 edb() {
     edb_17
-}
-
-edb_13() {
-    $CONTAINER_CLI rm -f edb || true
-    if [[ -z "${DB_IMAGE_EDB}" ]]; then
-      DB_IMAGE_EDB="edb-test:13"
-      # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
-      (cd edb; $CONTAINER_CLI build -t edb-test:13 -f edb13.Dockerfile .)
-    fi
-    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d $DB_IMAGE_EDB
-    edb_setup
 }
 
 edb_14() {
@@ -1690,7 +1671,6 @@ if [ -z ${1} ]; then
     echo -e "\tedb_16"
     echo -e "\tedb_15"
     echo -e "\tedb_14"
-    echo -e "\tedb_13"
     echo -e "\thana"
     echo -e "\tmariadb"
     echo -e "\tmariadb_verylatest"
@@ -1729,7 +1709,6 @@ if [ -z ${1} ]; then
     echo -e "\tpostgresql_16"
     echo -e "\tpostgresql_15"
     echo -e "\tpostgresql_14"
-    echo -e "\tpostgresql_13"
     echo -e "\tsybase"
     echo -e "\ttidb"
     echo -e "\ttidb_8_5"

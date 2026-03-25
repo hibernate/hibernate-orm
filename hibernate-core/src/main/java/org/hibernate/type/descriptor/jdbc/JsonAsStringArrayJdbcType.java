@@ -4,6 +4,12 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
+import java.nio.charset.StandardCharsets;
+import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -11,12 +17,6 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
-
-import java.nio.charset.StandardCharsets;
-import java.sql.CallableStatement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 /**
  * Specialized type mapping for {@code JSON_ARRAY} and the JSON SQL data type.
@@ -100,8 +100,8 @@ public class JsonAsStringArrayJdbcType extends JsonArrayJdbcType implements Adju
 							st.setNString( index, json );
 						}
 						// workaround for jTDS driver for Sybase
-						catch (AbstractMethodError e) {
-							st.setBytes( index, json.getBytes(StandardCharsets.UTF_8) );
+						catch ( AbstractMethodError e ) {
+							st.setBytes( index, json.getBytes( StandardCharsets.UTF_8 ) );
 						}
 					}
 					else {
@@ -118,8 +118,8 @@ public class JsonAsStringArrayJdbcType extends JsonArrayJdbcType implements Adju
 							st.setNString( name, json );
 						}
 						// workaround for jTDS driver for Sybase
-						catch (AbstractMethodError e) {
-							st.setBytes( name, json.getBytes(StandardCharsets.UTF_8) );
+						catch ( AbstractMethodError e ) {
+							st.setBytes( name, json.getBytes( StandardCharsets.UTF_8 ) );
 						}
 					}
 					else {
@@ -161,13 +161,16 @@ public class JsonAsStringArrayJdbcType extends JsonArrayJdbcType implements Adju
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						try{
+						try {
 							return getObject( rs.getNString( paramIndex ), options );
 						}
 						// workaround for jTDS driver for Sybase
-						catch ( AbstractMethodError e){
-							byte[] bytes =rs.getBytes( paramIndex );
-							return getObject( bytes == null? null: new String(bytes,StandardCharsets.UTF_8)  , options );
+						catch ( AbstractMethodError e ) {
+							byte[] bytes = rs.getBytes( paramIndex );
+							return getObject(
+									bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
+									options
+							);
 						}
 					}
 					else {
@@ -183,9 +186,12 @@ public class JsonAsStringArrayJdbcType extends JsonArrayJdbcType implements Adju
 							return getObject( statement.getNString( index ), options );
 						}
 						// workaround for jTDS driver for Sybase
-						catch (AbstractMethodError e) {
+						catch ( AbstractMethodError e ) {
 							byte[] bytes = statement.getBytes( index );
-							return getObject( bytes == null? null: new String(bytes,StandardCharsets.UTF_8), options );
+							return getObject(
+									bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
+									options
+							);
 						}
 					}
 					else {
@@ -201,9 +207,12 @@ public class JsonAsStringArrayJdbcType extends JsonArrayJdbcType implements Adju
 							return getObject( statement.getNString( name ), options );
 						}
 						// workaround for jTDS driver for Sybase
-						catch (AbstractMethodError e) {
+						catch ( AbstractMethodError e ) {
 							byte[] bytes = statement.getBytes( name );
-							return getObject(bytes == null? null: new String(bytes,StandardCharsets.UTF_8), options );
+							return getObject(
+									bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
+									options
+							);
 						}
 					}
 					else {

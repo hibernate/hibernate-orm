@@ -4,6 +4,13 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
+import java.nio.charset.StandardCharsets;
+import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -13,12 +20,6 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterCharacterData;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
-
-import java.sql.CallableStatement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
 
 /**
  * Descriptor for {@link Types#NVARCHAR NVARCHAR} handling.
@@ -169,7 +170,11 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 					}
 					// workaround for jTDS driver for Sybase
 					catch ( AbstractMethodError e ) {
-						return javaType.wrap( rs.getBytes( paramIndex ), options );
+						byte[] bytes = rs.getBytes( paramIndex );
+						return javaType.wrap(
+								bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
+								options
+						);
 					}
 				}
 				else {
@@ -185,7 +190,11 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 					}
 					// workaround for jTDS driver for Sybase
 					catch ( AbstractMethodError e ) {
-						return javaType.wrap( statement.getBytes( index ), options );
+						byte[] bytes = statement.getBytes( index );
+						return javaType.wrap(
+								bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
+								options
+						);
 					}
 				}
 				else {
@@ -201,7 +210,11 @@ public class NVarcharJdbcType implements AdjustableJdbcType {
 					}
 					// workaround for jTDS driver for Sybase
 					catch ( AbstractMethodError e ) {
-						return javaType.wrap( statement.getBytes( name ), options );
+						byte[] bytes = statement.getBytes( name );
+						return javaType.wrap(
+								bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
+								options
+						);
 					}
 				}
 				else {

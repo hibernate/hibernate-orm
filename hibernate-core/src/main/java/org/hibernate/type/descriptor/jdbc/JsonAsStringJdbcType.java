@@ -4,6 +4,12 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
+import java.nio.charset.StandardCharsets;
+import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -13,12 +19,6 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
-
-import java.nio.charset.StandardCharsets;
-import java.sql.CallableStatement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 /**
  * Specialized type mapping for {@code JSON} and the JSON SQL data type.
@@ -124,8 +124,8 @@ public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbc
 							st.setNString( index, json );
 						}
 						// workaround for jTDS driver for Sybase
-						catch (AbstractMethodError e){
-							st.setBytes( index, json.getBytes(StandardCharsets.UTF_8) );
+						catch ( AbstractMethodError e ) {
+							st.setBytes( index, json.getBytes( StandardCharsets.UTF_8 ) );
 						}
 					}
 					else {
@@ -142,8 +142,8 @@ public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbc
 							st.setNString( name, json );
 						}
 						// workaround for jTDS driver for Sybase
-						catch (AbstractMethodError e){
-							st.setBytes( name, json.getBytes(StandardCharsets.UTF_8) );
+						catch ( AbstractMethodError e ) {
+							st.setBytes( name, json.getBytes( StandardCharsets.UTF_8 ) );
 						}
 					}
 					else {
@@ -189,9 +189,13 @@ public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbc
 							return fromString( rs.getNString( paramIndex ), getJavaType(), options );
 						}
 						// workaround for jTDS driver for Sybase
-						catch (AbstractMethodError e) {
+						catch ( AbstractMethodError e ) {
 							byte[] bytes = rs.getBytes( paramIndex );
-							return fromString( bytes == null? null: new String(bytes,StandardCharsets.UTF_8), getJavaType(), options );
+							return fromString(
+									bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
+									getJavaType(),
+									options
+							);
 						}
 					}
 					else {
@@ -207,9 +211,13 @@ public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbc
 							return fromString( statement.getNString( index ), getJavaType(), options );
 						}
 						// workaround for jTDS driver for Sybase
-						catch (AbstractMethodError e) {
+						catch ( AbstractMethodError e ) {
 							byte[] bytes = statement.getBytes( index );
-							return fromString( bytes == null? null: new String(bytes,StandardCharsets.UTF_8), getJavaType(), options );
+							return fromString(
+									bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
+									getJavaType(),
+									options
+							);
 						}
 					}
 					else {
@@ -225,9 +233,13 @@ public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbc
 							return fromString( statement.getNString( name ), getJavaType(), options );
 						}
 						// workaround for jTDS driver for Sybase
-						catch (AbstractMethodError e) {
+						catch ( AbstractMethodError e ) {
 							byte[] bytes = statement.getBytes( name );
-							return fromString( bytes == null? null: new String(bytes,StandardCharsets.UTF_8), getJavaType(), options );
+							return fromString(
+									bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
+									getJavaType(),
+									options
+							);
 						}
 					}
 					else {

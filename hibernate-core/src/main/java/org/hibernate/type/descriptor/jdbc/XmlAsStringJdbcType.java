@@ -4,6 +4,12 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
+import java.nio.charset.StandardCharsets;
+import java.sql.CallableStatement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -13,12 +19,6 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
-
-import java.nio.charset.StandardCharsets;
-import java.sql.CallableStatement;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 /**
  * Specialized type mapping for {@code SQLXML} and the XML SQL data type.

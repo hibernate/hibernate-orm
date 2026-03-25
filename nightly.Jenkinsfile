@@ -28,8 +28,8 @@ stage('Configure') {
 		new BuildEnvironment( dbName: 'hsqldb_2_6' ),
 		new BuildEnvironment( dbName: 'mysql_8_0' ),
 		new BuildEnvironment( dbName: 'mariadb_10_6' ),
-		new BuildEnvironment( dbName: 'postgresql_13' ),
-		new BuildEnvironment( dbName: 'edb_13' ),
+		new BuildEnvironment( dbName: 'postgresql_14' ),
+		new BuildEnvironment( dbName: 'edb_14' ),
 		new BuildEnvironment( dbName: 'db2_11_5' ), // Unfortunately there is no SQL Server 11.1 image, but 11.5 should mostly have feature parity
 		new BuildEnvironment( dbName: 'mssql_2017' ), // Unfortunately there is no SQL Server 2008 image, so we have to test with 2017
 // 		new BuildEnvironment( dbName: 'sybase_16' ), // There only is a Sybase ASE 16 image, so no pint in testing that nightly
@@ -116,12 +116,12 @@ stage('Build') {
 									sh "./docker_db.sh mariadb_10_6"
 									state[buildEnv.tag]['containerName'] = "mariadb"
 									break;
-								case "postgresql_13":
-									sh "./docker_db.sh postgresql_13"
+								case "postgresql_14":
+									sh "./docker_db.sh postgresql_14"
 									state[buildEnv.tag]['containerName'] = "postgres"
 									break;
-								case "edb_13":
-									sh "./docker_db.sh edb_13"
+								case "edb_14":
+									sh "./docker_db.sh edb_14"
 									state[buildEnv.tag]['containerName'] = "edb"
 									break;
 								case "db2_11_5":

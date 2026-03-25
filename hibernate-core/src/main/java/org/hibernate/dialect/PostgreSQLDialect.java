@@ -161,7 +161,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
-/// A {@linkplain Dialect SQL dialect} for PostgreSQL 13 and above.
+/// A {@linkplain Dialect SQL dialect} for PostgreSQL 14 and above.
 ///
 /// Please refer to the
 /// <a href="https://www.postgresql.org/docs/current/index.html">PostgreSQL documentation</a>.
@@ -169,7 +169,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 /// @author Gavin King
 /// @author Yoobin Yoon
 public class PostgreSQLDialect extends Dialect {
-	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 13 );
+	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 14 );
 
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 	private final StandardTableExporter postgresqlTableExporter = new StandardTableExporter( this ) {
@@ -558,7 +558,6 @@ public class PostgreSQLDialect extends Dialect {
 		super.initializeFunctionRegistry( functionContributions );
 
 		final var functionFactory = new CommonFunctionFactory( functionContributions );
-		final var functionRegistry = functionContributions.getFunctionRegistry();
 
 		functionFactory.cot();
 		functionFactory.radians();
@@ -724,12 +723,8 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.arrayRemoveIndex_unnest( true );
 		functionFactory.arraySlice_operator();
 		functionFactory.arrayReplace();
-		if ( getVersion().isSameOrAfter( 14 ) ) {
-			functionFactory.arrayTrim_trim_array();
-		}
-		else {
-			functionFactory.arrayTrim_unnest();
-		}
+		functionFactory.arrayTrim_trim_array();
+
 		if ( getVersion().isSameOrAfter( 18 ) ) {
 			functionFactory.arrayReverse();
 			functionFactory.arraySort();
@@ -1675,17 +1670,17 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsRecursiveCycleClause() {
-		return getVersion().isSameOrAfter( 14 );
+		return true;
 	}
 
 	@Override
 	public boolean supportsRecursiveCycleUsingClause() {
-		return getVersion().isSameOrAfter( 14 );
+		return true;
 	}
 
 	@Override
 	public boolean supportsRecursiveSearchClause() {
-		return getVersion().isSameOrAfter( 14 );
+		return true;
 	}
 
 	@Override

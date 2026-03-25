@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 /**
  * @author Steve Ebersole
  */
-public class BatchingPlanStepExecutor extends AbstractStepPlanner implements ExecutionContext {
+public class BatchingPlanStepExecutor extends AbstractStepExecutor implements ExecutionContext {
 	private final int batchSize;
 
 	private StatementShapeKey batchKey;

@@ -15,7 +15,7 @@ import java.util.function.Consumer;
 /**
  * @author Steve Ebersole
  */
-public class StandardPlanStepExecutor extends AbstractStepPlanner implements ExecutionContext {
+public class StandardPlanStepExecutor extends AbstractStepExecutor implements ExecutionContext {
 	public StandardPlanStepExecutor(SharedSessionContractImplementor session) {
 		super( session );
 	}

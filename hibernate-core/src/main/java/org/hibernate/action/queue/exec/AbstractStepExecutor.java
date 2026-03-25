@@ -19,13 +19,13 @@ import java.util.function.Consumer;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractStepPlanner implements PlanStepExecutor {
+public abstract class AbstractStepExecutor implements PlanStepExecutor {
 	private final FixupSynthesizer fixupSynthesizer;
 	private final GeneratedValuesMutationDelegate generatedValuesDelegate;
 
 	protected final SharedSessionContractImplementor session;
 
-	public AbstractStepPlanner(SharedSessionContractImplementor session) {
+	public AbstractStepExecutor(SharedSessionContractImplementor session) {
 		this.session = session;
 
 		fixupSynthesizer = new FixupSynthesizer();

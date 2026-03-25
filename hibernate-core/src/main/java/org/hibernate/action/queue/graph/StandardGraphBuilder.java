@@ -32,7 +32,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 /**
  * @author Steve Ebersole
  */
-public class StandardGraphBuilder extends AbstractGraphBuilder {
+public class StandardGraphBuilder implements GraphBuilder {
 	// Empty SelectableMappings for non-breakable DELETE edges
 	private static final SelectableMappings EMPTY_SELECTABLES = new SelectableMappings() {
 		@Override
@@ -51,18 +51,32 @@ public class StandardGraphBuilder extends AbstractGraphBuilder {
 		}
 	};
 
+	private final ConstraintModel constraintModel;
+	private final PlanningOptions planningOptions;
+	private final SharedSessionContractImplementor session;
 	private final Map<String, EntityPersister> entityPersistersByTable;
 
 	public StandardGraphBuilder(
 			ConstraintModel constraintModel,
 			PlanningOptions planningOptions,
 			SharedSessionContractImplementor session) {
-		super( constraintModel, planningOptions, session );
+		this.constraintModel = constraintModel;
+		this.planningOptions = planningOptions;
+		this.session = session;
 
 		// this map is only used with unique-key cycle detection
 		entityPersistersByTable = planningOptions.orderByUniqueKeySlots()
 				? UniqueSlotExtractor.buildPersisterMap( session )
 				: Map.of();
+	}
+
+	// Convenience accessors for planning options
+	private boolean avoidBreakingDeferrable() {
+		return planningOptions.avoidBreakingDeferrable();
+	}
+
+	private boolean ignoreDeferrableForOrdering() {
+		return planningOptions.ignoreDeferrableForOrdering();
 	}
 
 	@Override

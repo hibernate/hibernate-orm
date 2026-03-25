@@ -51,9 +51,13 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 
 		// Generate static operations based on whether soft delete is enabled
 		// Soft delete uses UPDATE instead of DELETE
-		this.staticDeleteOperations = entityPersister.getSoftDeleteMapping() == null
-				? generateStaticOperations()
-				: generateSoftDeleteOperation();
+		// For joined-subclass hierarchies, only the root entity generates soft-delete operations
+		final boolean shouldGenerateSoftDelete = entityPersister.getSoftDeleteMapping() != null
+				&& entityPersister.getSuperMappingType() == null;  // Only root entities
+
+		this.staticDeleteOperations = shouldGenerateSoftDelete
+				? generateSoftDeleteOperation()
+				: generateStaticOperations();
 	}
 
 	public Map<String, ? extends TableMutation<?>> getStaticDeleteOperations() {

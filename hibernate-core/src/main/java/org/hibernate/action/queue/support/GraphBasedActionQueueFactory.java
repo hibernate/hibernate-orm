@@ -15,6 +15,8 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 
 import static org.hibernate.cfg.FlushSettings.DEFERRABLE_AVOID_BREAK;
@@ -36,6 +38,14 @@ public class GraphBasedActionQueueFactory implements ActionQueueFactory, Seriali
 		constraintModel = buildConstraintModel( factory, planningOptions );
 	}
 
+	public PlanningOptions getPlanningOptions() {
+		return planningOptions;
+	}
+
+	public ConstraintModel getConstraintModel() {
+		return constraintModel;
+	}
+
 	@Override
 	public QueueImplementation getConfiguredQueueImplementation() {
 		return QueueImplementation.GRAPH;
@@ -44,6 +54,13 @@ public class GraphBasedActionQueueFactory implements ActionQueueFactory, Seriali
 	@Override
 	public ActionQueue buildActionQueue(SessionImplementor session) {
 		return new GraphBasedActionQueue( constraintModel, planningOptions, session );
+	}
+
+	@Override
+	public ActionQueue deserialize(
+			ObjectInputStream ois,
+			SessionImplementor session) throws IOException, ClassNotFoundException {
+		return GraphBasedActionQueue.deserialize( ois, this, session );
 	}
 
 	private static PlanningOptions buildPlanningOptions(ConfigurationService configurationService) {
@@ -63,7 +80,6 @@ public class GraphBasedActionQueueFactory implements ActionQueueFactory, Seriali
 	}
 
 	private static ConstraintModel buildConstraintModel(SessionFactoryImplementor factory, PlanningOptions planningOptions) {
-		// todo : account for PlanningOptions - do not build UniqueConstraints if we will not be using them
 		return ConstraintModelBuilder.buildConstraintModel( factory.getMappingMetamodel(), planningOptions );
 	}
 }

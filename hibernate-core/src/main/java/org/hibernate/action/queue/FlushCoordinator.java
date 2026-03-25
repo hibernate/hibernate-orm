@@ -19,9 +19,13 @@ import org.hibernate.action.queue.plan.FlushPlanner;
 import org.hibernate.action.queue.plan.PlanStep;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.action.queue.plan.StandardFlushPlanner;
+import org.hibernate.action.queue.support.GraphBasedActionQueueFactory;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.spi.SessionImplementor;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -93,6 +97,24 @@ public class FlushCoordinator {
 		flushPlanner = new StandardFlushPlanner( planningOptions );
 		executor = PlanStepExecutorFactory.create( session );
 	}
+
+	/// Deserialization constructor.
+	/// @see GraphBasedActionQueue#deserialize(ObjectInputStream, org.hibernate.action.queue.support.GraphBasedActionQueueFactory, SessionImplementor)
+	public FlushCoordinator(
+			Decomposer decomposer,
+			GraphBasedActionQueueFactory actionQueueFactory,
+			SessionImplementor session) {
+		this.session = session;
+		this.decomposer = decomposer;
+
+		// Identify tables with self-referential associations
+		selfReferentialTables = identifySelfReferentialTables(actionQueueFactory.getConstraintModel());
+
+		graphBuilder = new StandardGraphBuilder( actionQueueFactory.getConstraintModel(), actionQueueFactory.getPlanningOptions(), session );
+		flushPlanner = new StandardFlushPlanner( actionQueueFactory.getPlanningOptions() );
+		executor = PlanStepExecutorFactory.create( session );
+	}
+
 
 	/// Identifies tables that have self-referential associations (FK from table to itself).
 	/// These tables need special grouping treatment to avoid creating false cycles in the graph.
@@ -409,4 +431,16 @@ public class FlushCoordinator {
 		}
 	}
 
+
+	public void serialize(ObjectOutputStream oos) throws IOException {
+		decomposer.serialize(oos);
+	}
+
+	public static FlushCoordinator deserialize(
+			ObjectInputStream ois,
+			GraphBasedActionQueueFactory actionQueueFactory,
+			SessionImplementor session) throws IOException, ClassNotFoundException {
+		var decomposer = Decomposer.deserialize(  ois, actionQueueFactory, session );
+		return new FlushCoordinator( decomposer, actionQueueFactory, session );
+	}
 }

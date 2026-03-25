@@ -5,8 +5,6 @@
 package org.hibernate.orm.test.action.queue;
 
 import jakarta.persistence.*;
-import org.hibernate.action.queue.ActionQueueFactory;
-import org.hibernate.action.queue.QueueImplementation;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.cfg.FlushSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -42,9 +40,10 @@ import static org.junit.jupiter.api.Assertions.*;
 @SessionFactory
 @DisabledIf("notUsingGraphQueue")
 public class UniqueConstraintOrderingTest {
-	boolean notUsingGraphQueue(SessionFactoryScope factoryScope) {
-		ActionQueueFactory actionQueueFactory = factoryScope.getSessionFactory().getActionQueueFactory();
-		return actionQueueFactory.getConfiguredQueueImplementation() == QueueImplementation.LEGACY;
+	static boolean notUsingGraphQueue() {
+		// Check system property to determine which queue implementation is configured
+		String queueImpl = System.getProperty("hibernate.flush.queue.impl", "graph");
+		return "legacy".equalsIgnoreCase(queueImpl);
 	}
 
 	@Entity(name = "UserAccount")

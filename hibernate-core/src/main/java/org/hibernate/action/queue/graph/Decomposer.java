@@ -6,7 +6,6 @@ package org.hibernate.action.queue.graph;
 
 import org.hibernate.TransientPropertyValueException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
-import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
@@ -14,10 +13,15 @@ import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.support.GraphBasedActionQueueFactory;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -25,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.hibernate.action.internal.ActionLogging.ACTION_LOGGER;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /// Manages decomposition of [actions][Executable] into table operations for planning.
@@ -46,6 +51,16 @@ public class Decomposer {
 
 	public Decomposer(SessionImplementor session) {
 		this.session = session;
+	}
+
+	/// Deserialization constructor.
+	/// @see #deserialize(ObjectInputStream, GraphBasedActionQueueFactory, SessionImplementor)
+	private Decomposer(
+			ArrayList<AbstractEntityInsertAction> actions,
+			GraphBasedActionQueueFactory actionQueueFactory,
+			SessionImplementor session) {
+		this.session = session;
+		actions.forEach( (action) -> trackUnresolvedInsert( action, action.findNonNullableTransientEntities() ) );
 	}
 
 	public List<PlannedOperation> decompose(
@@ -284,5 +299,28 @@ public class Decomposer {
 	public void clear() {
 		unresolvedInserts.clear();
 		insertsByTransientEntity.clear();
+	}
+
+	public void serialize(ObjectOutputStream oos) throws IOException {
+		final int queueSize = unresolvedInserts.size();
+		ACTION_LOGGER.serializingUnresolvedInsertEntries(queueSize);
+		oos.writeInt( queueSize );
+		for ( AbstractEntityInsertAction unresolvedAction : unresolvedInserts.keySet() ) {
+			oos.writeObject( unresolvedAction );
+		}
+	}
+	public static Decomposer deserialize(
+			ObjectInputStream ois,
+			GraphBasedActionQueueFactory actionQueueFactory,
+			SessionImplementor session) throws IOException, ClassNotFoundException {
+		var queueSize = ois.readInt();
+		ACTION_LOGGER.deserializingUnresolvedInsertEntries(queueSize);
+
+		var actions = CollectionHelper.<AbstractEntityInsertAction>arrayList(queueSize);
+		for ( int i = 0; i < queueSize; i++ ) {
+			actions.add( (AbstractEntityInsertAction) ois.readObject() );
+		}
+
+		return new Decomposer( actions, actionQueueFactory, session );
 	}
 }

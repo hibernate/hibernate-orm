@@ -22,13 +22,16 @@ import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.queue.constraint.ConstraintModel;
+import org.hibernate.action.queue.support.GraphBasedActionQueueFactory;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.internal.TransactionCompletionCallbacksImpl;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacksImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -51,8 +54,8 @@ public class GraphBasedActionQueue implements ActionQueue {
 	private final SessionImplementor session;
 	private final FlushCoordinator flushCoordinator;
 
-	private final List<EntityAction> entityActions = new ArrayList<>();
-	private final List<CollectionAction> collectionActions = new ArrayList<>();
+	private final List<EntityAction> entityActions;
+	private final List<CollectionAction> collectionActions;
 
 	private final boolean isTransactionCoordinatorShared;
 	private final TransactionCompletionCallbacksImplementor transactionCompletionCallbacks;
@@ -74,13 +77,32 @@ public class GraphBasedActionQueue implements ActionQueue {
 		ACTION_LOGGER.usingActionQueue( getClass().getName() );
 		this.session = session;
 		this.flushCoordinator = new FlushCoordinator( constraintModel, planningOptions, session );
+
+		this.entityActions = new ArrayList<>();
+		this.collectionActions = new ArrayList<>();
+
 		this.transactionCompletionCallbacks = new TransactionCompletionCallbacksImpl(session);
 		this.isTransactionCoordinatorShared = false;
 	}
 
-	/**
-	 * Clear all pending actions.
-	 */
+	/// Deserialization constructor.
+	/// @see #deserialize(ObjectInputStream, GraphBasedActionQueueFactory, SessionImplementor)
+	public GraphBasedActionQueue(
+			FlushCoordinator flushCoordinator,
+			ArrayList<EntityAction> entityActions,
+			ArrayList<CollectionAction> collectionActions,
+			SessionImplementor session) {
+		this.session = session;
+		this.flushCoordinator = flushCoordinator;
+
+		this.entityActions = entityActions;
+		this.collectionActions = collectionActions;
+
+		this.transactionCompletionCallbacks = new TransactionCompletionCallbacksImpl(session);
+		this.isTransactionCoordinatorShared = false;
+	}
+
+	/// Clear all pending actions.
 	public void clear() {
 		entityActions.clear();
 		collectionActions.clear();
@@ -98,21 +120,17 @@ public class GraphBasedActionQueue implements ActionQueue {
 	// Action Registration
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	/**
-	 * Adds an entity insert action.
-	 *
-	 * @param action The action representing the entity insertion
-	 */
+	/// Adds an entity insert action.
+	///
+	/// @param action The action representing the entity insertion
 	public void addAction(EntityInsertAction action) {
 		ACTION_LOGGER.addingEntityInsertAction(action.getEntityName());
 		addInsertAction(action);
 	}
 
-	/**
-	 * Adds an entity (IDENTITY) insert action.
-	 *
-	 * @param action The action representing the entity insertion
-	 */
+	/// Adds an entity (IDENTITY) insert action.
+	///
+	/// @param action The action representing the entity insertion
 	public void addAction(EntityIdentityInsertAction action) {
 		ACTION_LOGGER.addingEntityIdentityInsertAction(action.getEntityName());
 		addInsertAction(action);
@@ -177,16 +195,14 @@ public class GraphBasedActionQueue implements ActionQueue {
 		// Decomposer will track and resolve it later
 	}
 
-	/**
-	 * Executes all pending insert actions.
-	 * <p>
-	 * This is necessary before executing IDENTITY inserts to ensure parent entities
-	 * with assigned IDs are in the database before children with IDENTITY generation
-	 * try to insert with foreign keys referencing those parents.
-	 * <p>
-	 * Mirrors the behavior of ActionQueueLegacy.executeInserts() which is called
-	 * before processing early (IDENTITY) inserts.
-	 */
+	/// Executes all pending insert actions.
+	///
+	/// This is necessary before executing IDENTITY inserts to ensure parent entities
+	/// with assigned IDs are in the database before children with IDENTITY generation
+	/// try to insert with foreign keys referencing those parents.
+	///
+	/// Mirrors the behavior of ActionQueueLegacy.executeInserts() which is called
+	/// before processing early (IDENTITY) inserts.
 	private void executePendingInserts() {
 		if (entityActions.isEmpty()) {
 			return;
@@ -234,31 +250,25 @@ public class GraphBasedActionQueue implements ActionQueue {
 		addEntityAction(action);
 	}
 
-	/**
-	 * Adds an orphan removal action.
-	 *
-	 * @param action The action representing the orphan removal
-	 */
+	/// Adds an orphan removal action.
+	///
+	/// @param action The action representing the orphan removal
 	public void addAction(OrphanRemovalAction action) {
 		addEntityAction(action);
 	}
 
-	/**
-	 * Adds a collection (re)create action.
-	 *
-	 * @param action The action representing the (re)creation of a collection
-	 */
+	/// Adds a collection (re)create action.
+	///
+	/// @param action The action representing the (re)creation of a collection
 	public void addAction(CollectionRecreateAction action) {
 		ACTION_LOGGER.debugf( "GraphBasedActionQueue.addAction(CollectionRecreateAction) - role=%s, key=%s", action.getPersister().getRole(), action.getKey() );
 		collectionCreationCount++;
 		addCollectionAction(action);
 	}
 
-	/**
-	 * Adds a collection remove action.
-	 *
-	 * @param action The action representing the removal of a collection
-	 */
+	/// Adds a collection remove action.
+	///
+	/// @param action The action representing the removal of a collection
 	public void addAction(CollectionRemoveAction action) {
 		collectionRemovalCount++;
 		// Check if this should be an orphan collection removal
@@ -266,30 +276,24 @@ public class GraphBasedActionQueue implements ActionQueue {
 		addCollectionAction(action);
 	}
 
-	/**
-	 * Adds a collection update action.
-	 *
-	 * @param action The action representing the update of a collection
-	 */
+	/// Adds a collection update action.
+	///
+	/// @param action The action representing the update of a collection
 	public void addAction(CollectionUpdateAction action) {
 		collectionUpdateCount++;
 		addCollectionAction(action);
 	}
 
-	/**
-	 * Adds an action relating to a collection queued operation (extra lazy).
-	 *
-	 * @param action The action representing the queued operation
-	 */
+	/// Adds an action relating to a collection queued operation (extra lazy).
+	///
+	/// @param action The action representing the queued operation
 	public void addAction(QueuedOperationCollectionAction action) {
 		addCollectionAction(action);
 	}
 
-	/**
-	 * Adds an action defining a cleanup relating to a bulk operation.
-	 *
-	 * @param action The action representing the bulk operation cleanup
-	 */
+	/// Adds an action defining a cleanup relating to a bulk operation.
+	///
+	/// @param action The action representing the bulk operation cleanup
 	public void addAction(BulkOperationCleanupAction action) {
 		registerCleanupActions(action);
 	}
@@ -324,11 +328,9 @@ public class GraphBasedActionQueue implements ActionQueue {
 	// Execution
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	/**
-	 * Perform all currently queued entity-insertion actions.
-	 *
-	 * @throws HibernateException error executing queued insertion actions
-	 */
+	/// Perform all currently queued entity-insertion actions.
+	///
+	/// @throws HibernateException error executing queued insertion actions
 	public void executeInserts() throws HibernateException {
 		List<AbstractEntityInsertAction> insertActions = new ArrayList<>();
 		for (Executable action : entityActions) {
@@ -352,11 +354,9 @@ public class GraphBasedActionQueue implements ActionQueue {
 		}
 	}
 
-	/**
-	 * Perform all currently queued actions.
-	 *
-	 * @throws HibernateException error executing queued actions
-	 */
+	/// Perform all currently queued actions.
+	///
+	/// @throws HibernateException error executing queued actions
 	public void executeActions() throws HibernateException {
 		if ( ACTION_LOGGER.isDebugEnabled() ) {
 			ACTION_LOGGER.debugf( "GraphBasedActionQueue.executeActions() - %d entityActions", entityActions.size() );
@@ -408,14 +408,12 @@ public class GraphBasedActionQueue implements ActionQueue {
 		}
 	}
 
-	/**
-	 * Prepares the internal action queues for execution.
-	 * <p>
-	 * Note: With FlushCoordinator, most preparation happens during decomposition,
-	 * but we maintain this method for API compatibility.
-	 *
-	 * @throws HibernateException error preparing actions
-	 */
+	/// Prepares the internal action queues for execution.
+	///
+	/// Note: With FlushCoordinator, most preparation happens during decomposition,
+	/// but we maintain this method for API compatibility.
+	///
+	/// @throws HibernateException error preparing actions
 	public void prepareActions() throws HibernateException {
 		prepareActions(entityActions);
 		prepareActions(collectionActions);
@@ -432,30 +430,26 @@ public class GraphBasedActionQueue implements ActionQueue {
 		}
 	}
 
-	/**
-	 * Sort entity actions.
-	 * <p>
-	 * Note: With GraphBasedActionQueue, sorting is handled by FlushCoordinator's graph-based
-	 * ordering, so this is a no-op for API compatibility.
-	 *
-	 * @deprecated This method is not used by GraphBasedActionQueue. It exists only for
-	 *             API compatibility with {@link org.hibernate.engine.spi.ActionQueueLegacy}.
-	 */
+	/// Sort entity actions.
+	///
+	/// Note: With GraphBasedActionQueue, sorting is handled by FlushCoordinator's graph-based
+	/// ordering, so this is a no-op for API compatibility.
+	///
+	/// @deprecated This method is not used by GraphBasedActionQueue. It exists only for
+	///             API compatibility with [org.hibernate.engine.spi.ActionQueueLegacy].
 	@Deprecated(since = "7.0", forRemoval = true)
 	@Override
 	public void sortActions() {
 		// No-op: FlushCoordinator handles ordering via graph
 	}
 
-	/**
-	 * Sort collection actions.
-	 * <p>
-	 * Note: With GraphBasedActionQueue, sorting is handled by FlushCoordinator's graph-based
-	 * ordering, so this is a no-op for API compatibility.
-	 *
-	 * @deprecated This method is not used by GraphBasedActionQueue. It exists only for
-	 *             API compatibility with {@link org.hibernate.engine.spi.ActionQueueLegacy}.
-	 */
+	/// Sort collection actions.
+	///
+	/// Note: With GraphBasedActionQueue, sorting is handled by FlushCoordinator's graph-based
+	/// ordering, so this is a no-op for API compatibility.
+	///
+	/// @deprecated This method is not used by GraphBasedActionQueue. It exists only for
+	///             API compatibility with [org.hibernate.engine.spi.ActionQueueLegacy].
 	@Deprecated(since = "7.0", forRemoval = true)
 	@Override
 	public void sortCollectionActions() {
@@ -466,94 +460,74 @@ public class GraphBasedActionQueue implements ActionQueue {
 	// Query Methods
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	/**
-	 * Are there unresolved entity insert actions?
-	 *
-	 * @return true if there are unresolved entity insert actions
-	 */
+	/// Are there unresolved entity insert actions?
+	///
+	/// @return true if there are unresolved entity insert actions
 	public boolean hasUnresolvedEntityInsertActions() {
 		return flushCoordinator.getDecomposer().hasUnresolvedInserts();
 	}
 
-	/**
-	 * Get the number of entity insertions currently queued.
-	 *
-	 * @return count of entity insertions
-	 */
+	/// Get the number of entity insertions currently queued.
+	///
+	/// @return count of entity insertions
 	public int numberOfInsertions() {
 		return insertCount;
 	}
 
-	/**
-	 * Get the number of entity updates currently queued.
-	 *
-	 * @return count of entity updates
-	 */
+	/// Get the number of entity updates currently queued.
+	///
+	/// @return count of entity updates
 	public int numberOfUpdates() {
 		return updateCount;
 	}
 
-	/**
-	 * Get the number of entity deletions currently queued.
-	 *
-	 * @return count of entity deletions
-	 */
+	/// Get the number of entity deletions currently queued.
+	///
+	/// @return count of entity deletions
 	public int numberOfDeletions() {
 		return deleteCount;
 	}
 
-	/**
-	 * Get the number of collection creations currently queued.
-	 *
-	 * @return count of collection creations
-	 */
+	/// Get the number of collection creations currently queued.
+	///
+	/// @return count of collection creations
 	public int numberOfCollectionCreations() {
 		return collectionCreationCount;
 	}
 
-	/**
-	 * Get the number of collection updates currently queued.
-	 *
-	 * @return count of collection updates
-	 */
+	/// Get the number of collection updates currently queued.
+	///
+	/// @return count of collection updates
 	public int numberOfCollectionUpdates() {
 		return collectionUpdateCount;
 	}
 
-	/**
-	 * Get the number of collection removals currently queued.
-	 *
-	 * @return count of collection removals
-	 */
+	/// Get the number of collection removals currently queued.
+	///
+	/// @return count of collection removals
 	public int numberOfCollectionRemovals() {
 		return collectionRemovalCount;
 	}
 
-	/**
-	 * Are there before transaction completion actions registered?
-	 *
-	 * @return true if there are before transaction actions
-	 */
+	/// Are there before transaction completion actions registered?
+	///
+	/// @return true if there are before transaction actions
 	public boolean hasBeforeTransactionActions() {
 		return !isTransactionCoordinatorShared
 				&& transactionCompletionCallbacks.hasBeforeCompletionCallbacks();
 	}
 
-	/**
-	 * Are there after transaction completion actions registered?
-	 *
-	 * @return true if there are after transaction actions
-	 */
+	/// Are there after transaction completion actions registered?
+	///
+	/// @return true if there are after transaction actions
 	public boolean hasAfterTransactionActions() {
 		return !isTransactionCoordinatorShared
 				&& transactionCompletionCallbacks.hasAfterCompletionCallbacks();
 	}
 
-	/**
-	 * Check whether any insertion or deletion actions are currently queued.
-	 *
-	 * @return true if insertions or deletions are currently queued
-	 */
+	/// Check whether any insertion or deletion actions are currently queued.
+	///
+	/// @return true if insertions or deletions are currently queued
 	public boolean areInsertionsOrDeletionsQueued() {
 		for (EntityAction action : entityActions) {
 			if (action instanceof AbstractEntityInsertAction
@@ -564,12 +538,10 @@ public class GraphBasedActionQueue implements ActionQueue {
 		return hasUnresolvedEntityInsertActions();
 	}
 
-	/**
-	 * Check whether the given tables/query-spaces are to be updated.
-	 *
-	 * @param tables The table/query-spaces to check
-	 * @return true if we contain pending actions against any of the given tables
-	 */
+	/// Check whether the given tables/query-spaces are to be updated.
+	///
+	/// @param tables The table/query-spaces to check
+	/// @return true if we contain pending actions against any of the given tables
 	public boolean areTablesToBeUpdated(Set<? extends Serializable> tables) {
 		if (tables.isEmpty()) {
 			return false;
@@ -597,30 +569,24 @@ public class GraphBasedActionQueue implements ActionQueue {
 		return false;
 	}
 
-	/**
-	 * Check if there are any queued actions.
-	 *
-	 * @return true if there are any queued actions
-	 */
+	/// Check if there are any queued actions.
+	///
+	/// @return true if there are any queued actions
 	public boolean hasAnyQueuedActions() {
 		return !entityActions.isEmpty() || !collectionActions.isEmpty() || hasUnresolvedEntityInsertActions();
 	}
 
-	/**
-	 * Validate that there are no unresolved entity insert actions.
-	 *
-	 * @throws PropertyValueException if there are unresolved inserts
-	 */
+	/// Validate that there are no unresolved entity insert actions.
+	///
+	/// @throws PropertyValueException if there are unresolved inserts
 	public void checkNoUnresolvedActionsAfterOperation() throws PropertyValueException {
 		flushCoordinator.getDecomposer().validateNoUnresolvedInserts();
 	}
 
-	/**
-	 * Clear queued actions that were added during a flush-needed check.
-	 * This is used when auto-flush determines that a flush is not actually needed.
-	 *
-	 * @param previousCollectionRemovalSize the size of collection removals before the check
-	 */
+	/// Clear queued actions that were added during a flush-needed check.
+	/// This is used when auto-flush determines that a flush is not actually needed.
+	///
+	/// @param previousCollectionRemovalSize the size of collection removals before the check
 	public void clearFromFlushNeededCheck(int previousCollectionRemovalSize) {
 		// Remove all actions except:
 		// - Inserts (keep them)
@@ -663,10 +629,8 @@ public class GraphBasedActionQueue implements ActionQueue {
 		recalculateCounters();
 	}
 
-	/**
-	 * Recalculate action counters by scanning pending actions.
-	 * Used after clearing actions during auto-flush checks.
-	 */
+	/// Recalculate action counters by scanning pending actions.
+	/// Used after clearing actions during auto-flush checks.
 	private void recalculateCounters() {
 		insertCount = 0;
 		updateCount = 0;
@@ -700,13 +664,11 @@ public class GraphBasedActionQueue implements ActionQueue {
 		}
 	}
 
-	/**
-	 * Remove a scheduled deletion for an entity.
-	 * Used when an entity is rescued from deletion (e.g., during merge).
-	 *
-	 * @param entry the entity entry
-	 * @param rescuedEntity the entity being rescued
-	 */
+	/// Remove a scheduled deletion for an entity.
+	/// Used when an entity is rescued from deletion (e.g., during merge).
+	///
+	/// @param entry the entity entry
+	/// @param rescuedEntity the entity being rescued
 	public void unScheduleDeletion(EntityEntry entry, Object rescuedEntity) {
 		final var lazyInitializer = extractLazyInitializer(rescuedEntity);
 		if (lazyInitializer != null && !lazyInitializer.isUninitialized()) {
@@ -726,12 +688,10 @@ public class GraphBasedActionQueue implements ActionQueue {
 		}
 	}
 
-	/**
-	 * Remove a scheduled deletion for an unloaded entity.
-	 * Used when an entity instance is being merged/saved but was previously scheduled for deletion.
-	 *
-	 * @param newEntity the new entity instance
-	 */
+	/// Remove a scheduled deletion for an unloaded entity.
+	/// Used when an entity instance is being merged/saved but was previously scheduled for deletion.
+	///
+	/// @param newEntity the new entity instance
 	public void unScheduleUnloadedDeletion(Object newEntity) {
 		final var entityPersister = session.getEntityPersister(null, newEntity);
 		final Object identifier = entityPersister.getIdentifier(newEntity, session);
@@ -760,17 +720,15 @@ public class GraphBasedActionQueue implements ActionQueue {
 	// Transaction Completion Callbacks
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	/**
-	 * Set the transaction completion callbacks.
-	 * Used when a session shares a transaction coordinator.
-	 *
-	 * @param callbacks the callbacks to use
-	 * @param isTransactionCoordinatorShared whether the transaction coordinator is shared
-	 *
-	 * @deprecated This method is not used by GraphBasedActionQueue, which manages its own
-	 *             callbacks internally. It exists only for API compatibility with
-	 *             {@link org.hibernate.engine.spi.ActionQueueLegacy}.
-	 */
+	/// Set the transaction completion callbacks.
+	/// Used when a session shares a transaction coordinator.
+	///
+	/// @param callbacks the callbacks to use
+	/// @param isTransactionCoordinatorShared whether the transaction coordinator is shared
+	///
+	/// @deprecated This method is not used by GraphBasedActionQueue, which manages its own
+	///             callbacks internally. It exists only for API compatibility with
+	///             [org.hibernate.engine.spi.ActionQueueLegacy].
 	@Deprecated(since = "7.0", forRemoval = true)
 	@Override
 	public void setTransactionCompletionCallbacks(
@@ -779,11 +737,9 @@ public class GraphBasedActionQueue implements ActionQueue {
 		// No-op: GraphBasedActionQueue manages its own callbacks internally
 	}
 
-	/**
-	 * Get the transaction completion callbacks.
-	 *
-	 * @return the transaction completion callbacks
-	 */
+	/// Get the transaction completion callbacks.
+	///
+	/// @return the transaction completion callbacks
 	public TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacks() {
 		return transactionCompletionCallbacks;
 	}
@@ -798,9 +754,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 		transactionCompletionCallbacks.registerCallback(process);
 	}
 
-	/**
-	 * Execute any registered {@link org.hibernate.action.spi.BeforeTransactionCompletionProcess}.
-	 */
+	/// Execute any registered [org.hibernate.action.spi.BeforeTransactionCompletionProcess].
 	public void beforeTransactionCompletion() {
 		if (!isTransactionCoordinatorShared) {
 			transactionCompletionCallbacks.beforeTransactionCompletion();
@@ -808,20 +762,16 @@ public class GraphBasedActionQueue implements ActionQueue {
 		}
 	}
 
-	/**
-	 * Performs cleanup of any held cache soft locks.
-	 *
-	 * @param success Was the transaction successful
-	 */
+	/// Performs cleanup of any held cache soft locks.
+	///
+	/// @param success Was the transaction successful
 	public void afterTransactionCompletion(boolean success) {
 		if (!isTransactionCoordinatorShared) {
 			transactionCompletionCallbacks.afterTransactionCompletion(success);
 		}
 	}
 
-	/**
-	 * Execute pending bulk operation cleanup actions.
-	 */
+	/// Execute pending bulk operation cleanup actions.
 	public void executePendingBulkOperationCleanUpActions() {
 		if (!isTransactionCoordinatorShared && transactionCompletionCallbacks != null) {
 			transactionCompletionCallbacks.executePendingBulkOperationCleanUpActions();
@@ -841,11 +791,14 @@ public class GraphBasedActionQueue implements ActionQueue {
 		}
 	}
 
-	/**
-	 * Get all pending actions (for debugging/testing).
-	 *
-	 * @return list of pending actions
-	 */
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Testing/debugging
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/// Get all pending actions (for debugging/testing).
+	///
+	/// @return list of pending actions
 	public List<Executable> getPendingActions() {
 		var list = new ArrayList<Executable>();
 		list.addAll(entityActions);
@@ -853,38 +806,73 @@ public class GraphBasedActionQueue implements ActionQueue {
 		return list;
 	}
 
-	/**
-	 * Get the FlushCoordinator (for testing/debugging).
-	 *
-	 * @return the flush coordinator
-	 */
+	/// Get the FlushCoordinator (for testing/debugging).
+	///
+	/// @return the flush coordinator
 	public FlushCoordinator getFlushCoordinator() {
 		return flushCoordinator;
 	}
 
-	/**
-	 * Serialize the action queue.
-	 * <p>
-	 * Note: Serialization is not yet fully implemented for GraphBasedActionQueue.
-	 * This method is a stub for API compatibility.
-	 *
-	 * @param oos the output stream
-	 * @throws IOException if serialization fails
-	 */
-	public void serialize(ObjectOutputStream oos) throws IOException {
-		// TODO: Implement proper serialization for GraphBasedActionQueue
-		// For now, just write minimal state
-		oos.writeInt(0); // Placeholder version number
-	}
-
 	@Override
 	public String toString() {
-
 		return "GraphBasedActionQueue[insertions=" + insertCount
-				+ " updates=" + updateCount
-				+ " deletions=" + deleteCount
-				+ " collections=" + collectionActions.size()
-				+ " unresolved=" + (hasUnresolvedEntityInsertActions() ? "yes" : "no")
-				+ "]";
+			+ " updates=" + updateCount
+			+ " deletions=" + deleteCount
+			+ " collections=" + collectionActions.size()
+			+ " unresolved=" + (hasUnresolvedEntityInsertActions() ? "yes" : "no")
+			+ "]";
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Serialization support
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	/// Serialize the action queue.
+	///
+	/// Note: Serialization is not yet fully implemented for GraphBasedActionQueue.
+	/// This method is a stub for API compatibility.
+	///
+	/// @param oos the output stream
+	/// @throws IOException if serialization fails
+	public void serialize(ObjectOutputStream oos) throws IOException {
+		ACTION_LOGGER.serializingActionQueue();
+		flushCoordinator.getDecomposer().serialize(oos);
+
+		oos.writeInt(entityActions.size());
+		for ( var action : entityActions ) {
+			oos.writeObject(action);
+		}
+
+		oos.writeInt(collectionActions.size());
+		for ( var action : collectionActions ) {
+			oos.writeObject( action );
+		}
+	}
+
+	public static GraphBasedActionQueue deserialize(
+			ObjectInputStream ois,
+			GraphBasedActionQueueFactory actionQueueFactory,
+			SessionImplementor session) throws IOException, ClassNotFoundException {
+		final boolean traceEnabled = ACTION_LOGGER.isTraceEnabled();
+		if ( traceEnabled ) {
+			ACTION_LOGGER.deserializingActionQueue();
+		}
+
+		var flushCoordinator = FlushCoordinator.deserialize(  ois, actionQueueFactory, session );
+
+		var entityActionCount = ois.readInt();
+		var entityActions = CollectionHelper.<EntityAction>arrayList(entityActionCount);
+		for ( int i = 0; i < entityActionCount; i++ ) {
+			entityActions.add( (EntityAction) ois.readObject() );
+		}
+
+		var collectionActionCount = ois.readInt();
+		var collectionActions = CollectionHelper.<CollectionAction>arrayList(collectionActionCount);
+		for ( int i = 0; i < collectionActionCount; i++ ) {
+			collectionActions.add( (CollectionAction) ois.readObject() );
+		}
+
+		return new GraphBasedActionQueue( flushCoordinator, entityActions, collectionActions, session );
 	}
 }

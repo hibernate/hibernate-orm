@@ -2663,15 +2663,12 @@ public class SessionImpl
 		ois.defaultReadObject();
 
 		persistenceContext = PersistenceContexts.deserialize( ois, this );
-		// TODO: Implement serialization support for GraphBasedActionQueue
-		// For now, create a new instance instead of deserializing
-		actionQueue = createActionQueue();
-
-		loadQueryInfluencers = (LoadQueryInfluencers) ois.readObject();
+		actionQueue = getFactory().getActionQueueFactory().deserialize(  ois, this );
 
 		// LoadQueryInfluencers#getEnabledFilters() tries to validate each enabled
 		// filter, which will fail when called before FilterImpl#afterDeserialize( factory );
 		// Instead, look up the filter by name and then call FilterImpl#afterDeserialize( factory ).
+		loadQueryInfluencers = (LoadQueryInfluencers) ois.readObject();
 		for ( String filterName : loadQueryInfluencers.getEnabledFilterNames() ) {
 			( (FilterImpl) loadQueryInfluencers.getEnabledFilter( filterName ) )
 					.afterDeserialize( getFactory() );

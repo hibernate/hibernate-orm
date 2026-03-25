@@ -16,9 +16,11 @@ import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacks;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Set;
@@ -338,6 +340,8 @@ public interface ActionQueue extends TransactionCompletionCallbacks {
 	 *
 	 * @param oos The object output stream
 	 * @throws IOException If an I/O error occurs
+	 *
+	 * @see ActionQueueFactory#deserialize(ObjectInputStream, SessionImplementor)
 	 */
 	void serialize(ObjectOutputStream oos) throws IOException;
 }

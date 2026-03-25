@@ -671,7 +671,6 @@ public abstract class AbstractCollectionPersister
 									creationProcess
 							);
 							buildStaticWhereFragmentSensitiveSql();
-							collectionBootDescriptor = null;
 							return true;
 						}
 				);

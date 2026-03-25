@@ -14,6 +14,7 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -37,25 +38,33 @@ public class KeyBasedPagination {
 			SqmSelectStatement<KeyedResult<R>> statement, NodeBuilder builder) {
 		final SqmQuerySpec<?> querySpec = statement.getQuerySpec();
 		final List<? extends JpaSelection<?>> items = querySpec.getSelectClause().getSelectionItems();
-		if ( items.size() == 1 ) {
-			final JpaSelection<?> selected = items.get(0);
-			if ( selected instanceof SqmFrom<?, ?> root ) {
-				statement.orderBy( keyDefinition.stream().map( order -> sortSpecification( statement, order ) )
-						.collect( toList() ) );
-				statement.select( keySelection( keyDefinition, root, selected, builder ) );
-				if ( keyValues != null ) {
-					final SqmPredicate restriction = keyRestriction( keyDefinition, keyValues, root, builder );
-					final SqmPredicate queryWhere = querySpec.getRestriction();
-					statement.where( queryWhere == null ? restriction : builder.and( queryWhere, restriction ) );
+		final JpaSelection<?> selected = switch ( items.size() ) {
+			case 0 -> {
+				final List<SqmRoot<?>> sqmRoots = querySpec.getRootList();
+				if ( sqmRoots == null || sqmRoots.isEmpty() ) {
+					throw new IllegalArgumentException( "Query did not define any query roots" );
 				}
-				return statement;
+				if ( sqmRoots.size() != 1 ) {
+					throw new IllegalArgumentException( "Query has multiple query roots" );
+				}
+				yield sqmRoots.get( 0 );
 			}
-			else {
-				throw new IllegalQueryOperationException("Select item was not an entity type");
+			case 1 -> items.get( 0 );
+			default -> throw new IllegalQueryOperationException("Query has multiple items in the select list");
+		};
+		if ( selected instanceof SqmFrom<?, ?> root ) {
+			statement.orderBy( keyDefinition.stream().map( order -> sortSpecification( statement, order ) )
+					.collect( toList() ) );
+			statement.select( keySelection( keyDefinition, root, selected, builder ) );
+			if ( keyValues != null ) {
+				final SqmPredicate restriction = keyRestriction( keyDefinition, keyValues, root, builder );
+				final SqmPredicate queryWhere = querySpec.getRestriction();
+				statement.where( queryWhere == null ? restriction : builder.and( queryWhere, restriction ) );
 			}
+			return statement;
 		}
 		else {
-			throw new IllegalQueryOperationException("Query has multiple items in the select list");
+			throw new IllegalQueryOperationException("Select item was not an entity type");
 		}
 	}
 

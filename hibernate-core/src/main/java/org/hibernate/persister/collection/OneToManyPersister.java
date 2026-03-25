@@ -10,7 +10,6 @@ import org.hibernate.MappingException;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
-import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
@@ -635,27 +634,24 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	public List<PlannedOperation> decompose(
 			CollectionRecreateAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
-		return decomposer.decomposeRecreate( action, ordinalBase, postExecCallbackRegistry, session );
+		return decomposer.decomposeRecreate( action, ordinalBase, session );
 	}
 
 	@Override
 	public List<PlannedOperation> decompose(
 			CollectionUpdateAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
-		return decomposer.decomposeUpdate( action, ordinalBase, postExecCallbackRegistry, session );
+		return decomposer.decomposeUpdate( action, ordinalBase, session );
 	}
 
 	@Override
 	public List<PlannedOperation> decompose(
 			CollectionRemoveAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
-		return decomposer.decomposeRemove( action, ordinalBase, postExecCallbackRegistry, session );
+		return decomposer.decomposeRemove( action, ordinalBase, session );
 	}
 
 }

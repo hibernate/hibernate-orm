@@ -6,13 +6,13 @@ package org.hibernate.action.queue.graph;
 
 import org.hibernate.TransientPropertyValueException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
+import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
-import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
@@ -24,7 +24,6 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
@@ -51,8 +50,7 @@ public class Decomposer {
 
 	public List<PlannedOperation> decompose(
 			Executable executable,
-			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry) {
+			int ordinalBase) {
 		// Special handling for entity inserts - check for unresolved transient dependencies
 		if (executable instanceof AbstractEntityInsertAction insert) {
 			final NonNullableTransientDependencies transientDeps = insert.findNonNullableTransientEntities();
@@ -66,7 +64,6 @@ public class Decomposer {
 			return insert.getPersister().getInsertDecomposer().decompose(
 					insert,
 					ordinalBase,
-					postExecCallbackRegistry,
 					session
 			);
 		}
@@ -75,7 +72,6 @@ public class Decomposer {
 			return eua.getPersister().getUpdateDecomposer().decompose(
 					eua,
 					ordinalBase,
-					postExecCallbackRegistry,
 					session
 			);
 		}
@@ -83,7 +79,6 @@ public class Decomposer {
 			return eda.getPersister().getDeleteDecomposer().decompose(
 					eda,
 					ordinalBase,
-					postExecCallbackRegistry,
 					session
 			);
 		}
@@ -93,7 +88,6 @@ public class Decomposer {
 			return cra.getPersister().decompose(
 					cra,
 					ordinalBase,
-					postExecCallbackRegistry,
 					session
 			);
 		}
@@ -102,7 +96,6 @@ public class Decomposer {
 			return cra.getPersister().decompose(
 					cra,
 					ordinalBase,
-					postExecCallbackRegistry,
 					session
 			);
 		}
@@ -110,7 +103,6 @@ public class Decomposer {
 			return cua.getPersister().decompose(
 					cua,
 					ordinalBase,
-					postExecCallbackRegistry,
 					session
 			);
 		}
@@ -219,7 +211,6 @@ public class Decomposer {
 						entityInsert.getPersister().getInsertDecomposer().decompose(
 								entityInsert,
 								0,
-								postCallback -> {}, // No post-execution callbacks for unresolved inserts
 								session
 						)
 				);

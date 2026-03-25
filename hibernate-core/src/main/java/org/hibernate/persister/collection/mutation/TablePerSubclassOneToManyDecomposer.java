@@ -6,7 +6,6 @@ package org.hibernate.persister.collection.mutation;
 
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.queue.MutationKind;
-import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -15,7 +14,6 @@ import org.hibernate.persister.collection.OneToManyPersister;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * One-to-many decomposer for table-per-subclass inheritance where each concrete subclass
@@ -56,11 +54,10 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractNonBundledOneTo
 	public List<PlannedOperation> decomposeRemove(
 			CollectionRemoveAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
-		// Register callback to handle post-execution work (afterAction, cache, events, stats)
+		// Create callback to handle post-execution work (afterAction, cache, events, stats)
 		final Object cacheKey = lockCacheItem( action, session );
-		postExecCallbackRegistry.accept( new PostCollectionRemoveHandling( action, cacheKey ) );
+		final PostCollectionRemoveHandling postCollectionRemoveHandling = new PostCollectionRemoveHandling( action, cacheKey );
 
 		var operations = new ArrayList<PlannedOperation>();
 
@@ -76,6 +73,11 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractNonBundledOneTo
 					ordinalBase * 1_000,
 					"RemoveAllRows(" + persister.getRolePath() + ")"
 			) );
+		}
+
+		// Attach post-execution callback to the last operation
+		if ( !operations.isEmpty() ) {
+			operations.get( operations.size() - 1 ).setPostExecutionCallback( postCollectionRemoveHandling );
 		}
 
 		return operations;

@@ -58,6 +58,11 @@ public abstract class AbstractStepPlanner implements PlanStepExecutor {
 				}
 			}
 
+			// Execute post-execution callback immediately after operation completes
+			if ( plannedOperation.getPostExecutionCallback() != null ) {
+				plannedOperation.getPostExecutionCallback().handle( (org.hibernate.engine.spi.SessionImplementor) session );
+			}
+
 			if ( newlyManagedEntityConsumer != null ) {
 				if ( plannedOperation.getKind() == MutationKind.INSERT ) {
 					final Object entity = plannedOperation.getBindPlan().getEntityInstance();

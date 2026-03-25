@@ -8,7 +8,6 @@ import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.bind.BindPlan;
-import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -37,11 +36,10 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 	public List<PlannedOperation> decomposeRecreate(
 			CollectionRecreateAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
-		// Register callback to handle post-execution work (afterAction, cache, events, stats)
+		// Create callback to handle post-execution work (afterAction, cache, events, stats)
 		final Object cacheKey = lockCacheItem( action, session );
-		postExecCallbackRegistry.accept( new PostCollectionRecreateHandling( action, cacheKey ) );
+		final PostCollectionRecreateHandling postCollectionRecreateHandling = new PostCollectionRecreateHandling( action, cacheKey );
 
 		var attribute = persister.getAttributeMapping();
 		var collection = action.getCollection();
@@ -119,6 +117,11 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 			entryCount++;
 		}
 
+		// Attach post-execution callback to the last operation
+		if ( !operations.isEmpty() ) {
+			operations.get( operations.size() - 1 ).setPostExecutionCallback( postCollectionRecreateHandling );
+		}
+
 		return operations;
 	}
 
@@ -126,7 +129,6 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 	public final List<PlannedOperation> decomposeUpdate(
 			CollectionUpdateAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
 		final var collection = action.getCollection();
 		final var key = action.getKey();
@@ -134,15 +136,15 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 		// Lock cache item
 		final Object cacheKey = lockCacheItem( action, session );
 
-		// Register callback to handle post-execution work (afterAction, cache, events, stats)
-		postExecCallbackRegistry.accept( new PostCollectionUpdateHandling(
+		// Create callback to handle post-execution work (afterAction, cache, events, stats)
+		final PostCollectionUpdateHandling postCollectionUpdateHandling = new PostCollectionUpdateHandling(
 				persister,
 				collection,
 				key,
 				action.getAffectedOwner(),
 				action.getAffectedOwnerId(),
 				cacheKey
-		) );
+		);
 
 		final List<PlannedOperation> operations = new ArrayList<>();
 
@@ -163,6 +165,11 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 
 			// INSERT entries
 			applyUpdateAdditions( collection, key, ordinalBase + 2, session, operations::add );
+		}
+
+		// Attach post-execution callback to the last operation
+		if ( !operations.isEmpty() ) {
+			operations.get( operations.size() - 1 ).setPostExecutionCallback( postCollectionUpdateHandling );
 		}
 
 		return operations;

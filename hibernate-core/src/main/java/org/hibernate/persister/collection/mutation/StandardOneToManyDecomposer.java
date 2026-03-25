@@ -6,14 +6,12 @@ package org.hibernate.persister.collection.mutation;
 
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.queue.MutationKind;
-import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.OneToManyPersister;
 
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  * Standard one-to-many decomposer for single-table and simple joined inheritance
@@ -36,11 +34,10 @@ public class StandardOneToManyDecomposer extends AbstractNonBundledOneToManyDeco
 	public List<PlannedOperation> decomposeRemove(
 			CollectionRemoveAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
-		// Register callback to handle post-execution work (afterAction, cache, events, stats)
+		// Create callback to handle post-execution work (afterAction, cache, events, stats)
 		final Object cacheKey = lockCacheItem( action, session );
-		postExecCallbackRegistry.accept( new PostCollectionRemoveHandling( action, cacheKey ) );
+		final PostCollectionRemoveHandling postCollectionRemoveHandling = new PostCollectionRemoveHandling( action, cacheKey );
 
 		final var jdbcOperation = jdbcOperations.getRemoveOperation();
 		if ( jdbcOperation == null ) {
@@ -56,6 +53,9 @@ public class StandardOneToManyDecomposer extends AbstractNonBundledOneToManyDeco
 				ordinalBase * 1_000,
 				"RemoveAllRows(" + persister.getRolePath() + ")"
 		);
+
+		// Attach post-execution callback to the operation
+		plannedOp.setPostExecutionCallback( postCollectionRemoveHandling );
 
 		return List.of( plannedOp );
 	}

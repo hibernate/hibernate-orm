@@ -9,7 +9,6 @@ import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.bind.EntityInsertBindPlan;
 import org.hibernate.action.queue.bind.GeneratedValuesCollector;
-import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.action.queue.mutation.ast.TableInsert;
@@ -31,7 +30,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 
 /// [Decomposer][org.hibernate.action.queue.graph.MutationDecomposer] for entity insert operations.
@@ -60,7 +58,6 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 	public List<PlannedOperation> decompose(
 			AbstractEntityInsertAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecutionCallbackRegistry,
 			SharedSessionContractImplementor session) {
 		final boolean vetoed = preInsert( action, session );
 		if ( vetoed ) {
@@ -81,7 +78,6 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 
 		final var generatedValuesCollector = GeneratedValuesCollector.forInsert( entityPersister );
 		final PostInsertHandling postInsertHandling = new PostInsertHandling( action, generatedValuesCollector );
-		postExecutionCallbackRegistry.accept( postInsertHandling );
 
 		// Compute whether this entity insert needs identity pre-phase
 		final boolean needsIdPrePhase = Helper.needsIdentityPrePhase(entityPersister, identifier);
@@ -118,6 +114,11 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 			);
 
 			operations.add(op);
+		}
+
+		// Attach post-execution callback to the last operation
+		if ( !operations.isEmpty() ) {
+			operations.get( operations.size() - 1 ).setPostExecutionCallback( postInsertHandling );
 		}
 
 		return operations;

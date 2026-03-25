@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
@@ -167,15 +166,11 @@ public class FlushCoordinator {
 			return;
 		}
 
-		final List<PostExecutionCallback> postExecutionCallbacks = new ArrayList<>();
-
-		var operationGroups = decomposeExecutables( actions, postExecutionCallbacks::add );
+		var operationGroups = decomposeExecutables( actions );
 		if ( operationGroups.isEmpty() ) {
-			// No SQL operations needed, but we must still execute post-execution callbacks
-			// because decomposers may have registered callbacks for event firing, cache updates, etc.
-			// Example: CollectionRecreateAction for an inverse one-to-many has no SQL but still
-			// needs to fire PostCollectionRecreate event and update collection state.
-			afterAllOperationsExecuted( actions, postExecutionCallbacks );
+			// No SQL operations needed - post-execution callbacks (if any) were already
+			// attached to PlannedOperations and would have run during decomposition.
+			// Since there are no operations, there's nothing to finalize.
 			decomposer.validateNoUnresolvedInserts();
 			return;
 		}
@@ -186,14 +181,8 @@ public class FlushCoordinator {
 		var graph = graphBuilder.build( operationGroups );
 		var plan = flushPlanner.plan( graph );
 
-		try {
-			executePlan( plan, actions );
-			// Post-execution phase: finalize actions after all their operations completed
-			afterAllOperationsExecuted( actions, postExecutionCallbacks );
-		}
-		finally {
-			postExecutionCallbacks.clear();
-		}
+		// Execute the plan - post-execution callbacks will run inline as operations complete
+		executePlan( plan, actions );
 
 		executor.finishUp();
 
@@ -206,12 +195,11 @@ public class FlushCoordinator {
 
 
 	private List<PlannedOperationGroup> decomposeExecutables(
-			List<Executable> executables,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry) {
+			List<Executable> executables) {
 		final ArrayList<PlannedOperation> operations = arrayList( executables.size() * 2);
 		int ordinalBase = 0;
 		for (Executable e : executables) {
-			var ops = decomposer.decompose( e, ordinalBase++, postExecCallbackRegistry );
+			var ops = decomposer.decompose( e, ordinalBase++ );
 			operations.addAll( ops );
 		}
 		// Group operations by shape

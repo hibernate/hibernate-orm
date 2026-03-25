@@ -15,7 +15,6 @@ import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.action.queue.exec.ExecutionContext;
-import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.meta.CollectionTableDescriptor;
 import org.hibernate.action.queue.mutation.ast.builder.GraphTableDeleteBuilderStandard;
 import org.hibernate.action.queue.mutation.ast.builder.GraphTableInsertBuilderStandard;
@@ -137,13 +136,19 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 	public List<PlannedOperation> decomposeRecreate(
 			CollectionRecreateAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
-		// Register callback to handle post-execution work (afterAction, cache, events, stats)
+		// Create callback to handle post-execution work (afterAction, cache, events, stats)
 		final Object cacheKey = lockCacheItem( action, session );
-		postExecCallbackRegistry.accept( new PostCollectionRecreateHandling( action, cacheKey ) );
+		final PostCollectionRecreateHandling postCollectionRecreateHandling = new PostCollectionRecreateHandling( action, cacheKey );
 
-		return planRecreateOperation( action.getCollection(), action.getKey(), ordinalBase, session );
+		final List<PlannedOperation> operations = planRecreateOperation( action.getCollection(), action.getKey(), ordinalBase, session );
+
+		// Attach post-execution callback to the last operation
+		if ( !operations.isEmpty() ) {
+			operations.get( operations.size() - 1 ).setPostExecutionCallback( postCollectionRecreateHandling );
+		}
+
+		return operations;
 	}
 
 	private List<PlannedOperation> planRecreateOperation(
@@ -244,21 +249,20 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 	public List<PlannedOperation> decomposeUpdate(
 			CollectionUpdateAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
 		action.preUpdate();
 
 		final Object cacheKey = lockCacheItem(action, session);
 
-		// Register callback to handle post-execution work (afterAction, cache, events, stats)
-		postExecCallbackRegistry.accept( new PostCollectionUpdateHandling(
+		// Create callback to handle post-execution work (afterAction, cache, events, stats)
+		final PostCollectionUpdateHandling postCollectionUpdateHandling = new PostCollectionUpdateHandling(
 				persister,
 				action.getCollection(),
 				action.getKey(),
 				action.getAffectedOwner(),
 				action.getAffectedOwnerId(),
 				cacheKey
-		) );
+		);
 
 		var collection = action.getCollection();
 		var key = action.getKey();
@@ -316,6 +320,11 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			finally {
 				eventMonitor.completeCollectionUpdateEvent( event, key, persister.getRole(), success, session );
 			}
+		}
+
+		// Attach post-execution callback to the last operation
+		if ( !operations.isEmpty() ) {
+			operations.get( operations.size() - 1 ).setPostExecutionCallback( postCollectionUpdateHandling );
 		}
 
 		return operations;
@@ -616,13 +625,19 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 	public List<PlannedOperation> decomposeRemove(
 			CollectionRemoveAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
-		// Register callback to handle post-execution work (afterAction, cache, events, stats)
+		// Create callback to handle post-execution work (afterAction, cache, events, stats)
 		final Object cacheKey = lockCacheItem( action, session );
-		postExecCallbackRegistry.accept( new PostCollectionRemoveHandling( action, cacheKey ) );
+		final PostCollectionRemoveHandling postCollectionRemoveHandling = new PostCollectionRemoveHandling( action, cacheKey );
 
-		return planRemoveOperation( action.getKey(), ordinalBase,  session );
+		final List<PlannedOperation> operations = planRemoveOperation( action.getKey(), ordinalBase,  session );
+
+		// Attach post-execution callback to the last operation
+		if ( !operations.isEmpty() ) {
+			operations.get( operations.size() - 1 ).setPostExecutionCallback( postCollectionRemoveHandling );
+		}
+
+		return operations;
 	}
 
 	private List<PlannedOperation> planRemoveOperation(Object key, int ordinalBase, SharedSessionContractImplementor session) {

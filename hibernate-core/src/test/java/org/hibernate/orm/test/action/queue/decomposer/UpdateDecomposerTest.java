@@ -82,7 +82,7 @@ public class UpdateDecomposerTest {
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
 
 			// Decompose
-			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, session );
 			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			// Verify
@@ -125,7 +125,7 @@ public class UpdateDecomposerTest {
 			assertTrue( entity.version > initialVersion, "Version should be incremented" );
 
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
-			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, session );
 			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			assertNotNull( groups );
@@ -157,7 +157,7 @@ public class UpdateDecomposerTest {
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
-			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, session );
 			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			// Should have 2 groups (primary table + secondary table)
@@ -191,7 +191,7 @@ public class UpdateDecomposerTest {
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
-			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, session );
 			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			// Should have 2 groups (parent table + child table)
@@ -226,7 +226,7 @@ public class UpdateDecomposerTest {
 			assertTrue( persister.isDynamicUpdate(), "Entity should have dynamic update enabled" );
 
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
-			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, session );
 			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			assertNotNull( groups );
@@ -259,7 +259,7 @@ public class UpdateDecomposerTest {
 			assertEquals( OptimisticLockStyle.ALL, persister.optimisticLockStyle() );
 
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
-			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, session );
 			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			assertNotNull( groups );
@@ -292,7 +292,7 @@ public class UpdateDecomposerTest {
 			assertEquals( OptimisticLockStyle.DIRTY, persister.optimisticLockStyle() );
 
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
-			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, session );
 			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			assertNotNull( groups );
@@ -336,7 +336,7 @@ public class UpdateDecomposerTest {
 
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
 			int ordinalBase = 10;
-			List<PlannedOperation> operations = decomposer.decompose( action, ordinalBase, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, ordinalBase, session );
 			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			// Verify ordinals are based on the base
@@ -384,7 +384,7 @@ public class UpdateDecomposerTest {
 					(EventSource) session
 			);
 
-			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, session );
 			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			// Even with no dirty fields, should still create operation groups
@@ -414,7 +414,7 @@ public class UpdateDecomposerTest {
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
-			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, session );
 			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			// Updates should be in forward order (parent before child)
@@ -446,7 +446,7 @@ public class UpdateDecomposerTest {
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
-			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, session );
 			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			// Should have operations for primary table
@@ -480,7 +480,7 @@ public class UpdateDecomposerTest {
 			UpdateDecomposer decomposer = new UpdateDecomposer( persister, factory );
 
 			EntityUpdateAction action = createUpdateAction( entity, session, persister );
-			List<PlannedOperation> operations = decomposer.decompose( action, 0, callback -> {}, session );
+			List<PlannedOperation> operations = decomposer.decompose( action, 0, session );
 			List<PlannedOperationGroup> groups = groupOperations( operations );
 
 			// Should have 2 groups for both tables

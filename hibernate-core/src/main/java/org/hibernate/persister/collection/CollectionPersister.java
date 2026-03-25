@@ -19,7 +19,6 @@ import org.hibernate.MappingException;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
-import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -126,14 +125,12 @@ public interface CollectionPersister extends Restrictable {
 	 */
 ///
 ///
-/// Manages pre-execution phase and registering [PostCollectionRecreateHandling] callback
-/// for post-execution phase.  Delegates to [InsertRowsCoordinator] to create the needed
-/// PlannedOperations.
+/// Manages pre-execution phase and post-execution callbacks.
+/// Delegates to decomposer to create the needed PlannedOperations with callbacks attached.
 
 	List<PlannedOperation> decompose(
 			CollectionRecreateAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session);
 
 	/**
@@ -151,7 +148,6 @@ public interface CollectionPersister extends Restrictable {
 	List<PlannedOperation> decompose(
 			CollectionRemoveAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session);
 
 	/// Decomposes a collection update action into planned operations -
@@ -160,12 +156,10 @@ public interface CollectionPersister extends Restrictable {
 	/// - updates modified entries.  See [CollectionJdbcOperations#getUpdateRowOperation()]
 	/// - "inserts" new entries.  See [CollectionJdbcOperations#getInsertRowOperation()]
 	///
-	/// Manages pre-execution phase and registering [PostCollectionUpdateHandling] callback
-	/// for post-execution phase.
+	/// Manages pre-execution phase and post-execution callbacks.
 	List<PlannedOperation> decompose(
 			CollectionUpdateAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session);
 
 	/**

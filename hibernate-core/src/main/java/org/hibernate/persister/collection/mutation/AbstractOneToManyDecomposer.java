@@ -8,7 +8,6 @@ import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.bind.JdbcValueBindings;
-import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.action.queue.mutation.ast.builder.CollectionRowDeleteByUpdateSetNullBuilder;
 import org.hibernate.action.queue.mutation.ast.builder.GraphTableUpdateBuilderStandard;
@@ -56,18 +55,17 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 			CollectionJdbcOperations jdbcOperations,
 			CollectionRemoveAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
 		if ( !persister.needsRemove() ) {
 			return List.of();
 		}
 
-		// Register callback to handle post-execution work (afterAction, cache, events, stats)
+		// Create callback to handle post-execution work (afterAction, cache, events, stats)
 		final Object cacheKey = lockCacheItem( action, session );
-		postExecCallbackRegistry.accept( new PostCollectionRemoveHandling( action, cacheKey ) );
+		final PostCollectionRemoveHandling postCollectionRemoveHandling = new PostCollectionRemoveHandling( action, cacheKey );
 
 		var removeOperation = jdbcOperations.getRemoveOperation();
-		return List.of( new PlannedOperation(
+		var operation = new PlannedOperation(
 				removeOperation.getTableDescriptor(),
 				// technically an UPDATE
 				MutationKind.UPDATE,
@@ -75,7 +73,12 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 				new RemoveBindPlan( action.getKey(), persister ),
 				calculateOrdinal( ordinalBase, Slot.DELETE ),
 				"RemoveAllRows(" + persister.getRolePath() + ")"
-		) );
+		);
+
+		// Attach post-execution callback to the operation
+		operation.setPostExecutionCallback( postCollectionRemoveHandling );
+
+		return List.of( operation );
 	}
 
 

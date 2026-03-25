@@ -8,7 +8,6 @@ import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.bind.EntityDeleteBindPlan;
 import org.hibernate.action.queue.bind.EntitySoftDeleteBindPlan;
-import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.action.queue.mutation.ast.MutatingTableReference;
@@ -65,7 +64,6 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 	public List<PlannedOperation> decompose(
 			EntityDeleteAction action,
 			int ordinalBase,
-			java.util.function.Consumer<PostExecutionCallback> postExecutionCallbackRegistry,
 			SharedSessionContractImplementor session) {
 		final Object identifier = action.getId();
 		final Object version = action.getVersion();
@@ -81,9 +79,8 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 		// Lock cache item before delete (returns cacheKey for post-execution)
 		final Object cacheKey = action.lockCacheItem();
 
-		// Register post-execution callback for finalization work
+		// Create post-execution callback for finalization work
 		final PostDeleteHandling postDeleteHandling = new PostDeleteHandling(action, cacheKey, veto);
-		postExecutionCallbackRegistry.accept(postDeleteHandling);
 
 		// If vetoed by PRE_DELETE listener, skip creating DELETE operations
 		// Post-execution callback will still run to handle cleanup (cache unlock, etc.)
@@ -125,6 +122,9 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 					"EntityDeleteAction(" + entityPersister.getEntityName() + ")"
 			);
 
+			// Attach post-execution callback to the operation
+			op.setPostExecutionCallback( postDeleteHandling );
+
 			return List.of(op);
 		}
 		else {
@@ -157,6 +157,11 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 				);
 
 				operations.add(op);
+			}
+
+			// Attach post-execution callback to the last operation
+			if ( !operations.isEmpty() ) {
+				operations.get( operations.size() - 1 ).setPostExecutionCallback( postDeleteHandling );
 			}
 
 			return operations;

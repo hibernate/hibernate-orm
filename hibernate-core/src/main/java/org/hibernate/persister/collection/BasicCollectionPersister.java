@@ -10,7 +10,6 @@ import org.hibernate.MappingException;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
-import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
@@ -49,7 +48,6 @@ import org.hibernate.type.EntityType;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.function.Consumer;
 
 import static org.hibernate.temporal.TemporalTableStrategy.NATIVE;
 import static org.hibernate.temporal.TemporalTableStrategy.SINGLE_TABLE;
@@ -826,27 +824,24 @@ final var stateManagement = collectionBinding.getStateManagement();
 	public List<PlannedOperation> decompose(
 			CollectionRecreateAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
-		return decomposer.decomposeRecreate( action, ordinalBase, postExecCallbackRegistry, session );
+		return decomposer.decomposeRecreate( action, ordinalBase, session );
 	}
 
 	@Override
 	public List<PlannedOperation> decompose(
 			CollectionUpdateAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
-		return decomposer.decomposeUpdate( action, ordinalBase, postExecCallbackRegistry, session );
+		return decomposer.decomposeUpdate( action, ordinalBase, session );
 	}
 
 	@Override
 	public List<PlannedOperation> decompose(
 			CollectionRemoveAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
-		return decomposer.decomposeRemove( action, ordinalBase, postExecCallbackRegistry,session );
+		return decomposer.decomposeRemove( action, ordinalBase, session );
 	}
 
 }

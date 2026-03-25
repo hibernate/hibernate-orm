@@ -8,7 +8,6 @@ import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.bind.EntityUpdateBindPlan;
 import org.hibernate.action.queue.bind.GeneratedValuesCollector;
-import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.action.queue.mutation.ast.TableUpdate;
@@ -57,7 +56,6 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 	public List<PlannedOperation> decompose(
 			EntityUpdateAction action,
 			int ordinalBase,
-			java.util.function.Consumer<PostExecutionCallback> postExecutionCallbackRegistry,
 			SharedSessionContractImplementor session) {
 		final boolean vetoed = preUpdate( action, session );
 		if ( vetoed ) {
@@ -105,7 +103,6 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 
 		var generatedValuesCollector = GeneratedValuesCollector.forUpdate( entityPersister );
 		final PostUpdateHandling postUpdateHandling = new PostUpdateHandling( action, cacheKey, version, generatedValuesCollector );
-		postExecutionCallbackRegistry.accept( postUpdateHandling );
 
 		final List<PlannedOperation> operations = CollectionHelper.arrayList( effectiveGroup.size() );
 		int localOrd = 0;
@@ -139,6 +136,11 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			);
 
 			operations.add(op);
+		}
+
+		// Attach post-execution callback to the last operation
+		if ( !operations.isEmpty() ) {
+			operations.get( operations.size() - 1 ).setPostExecutionCallback( postUpdateHandling );
 		}
 
 		return operations;

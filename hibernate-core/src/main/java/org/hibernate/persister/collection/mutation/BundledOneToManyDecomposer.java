@@ -9,7 +9,6 @@ import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.bind.BindPlan;
-import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -48,11 +47,10 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 	public List<PlannedOperation> decomposeRecreate(
 			CollectionRecreateAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
-		// Register callback to handle post-execution work (afterAction, cache, events, stats)
+		// Create callback to handle post-execution work (afterAction, cache, events, stats)
 		final Object cacheKey = lockCacheItem( action, session );
-		postExecCallbackRegistry.accept( new PostCollectionRecreateHandling( action, cacheKey ) );
+		final PostCollectionRecreateHandling postCollectionRecreateHandling = new PostCollectionRecreateHandling( action, cacheKey );
 
 		var collection = action.getCollection();
 		var key = action.getKey();
@@ -135,6 +133,11 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 			}
 		}
 
+		// Attach post-execution callback to the last operation
+		if ( !operations.isEmpty() ) {
+			operations.get( operations.size() - 1 ).setPostExecutionCallback( postCollectionRecreateHandling );
+		}
+
 		return operations;
 	}
 
@@ -142,7 +145,6 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 	public final List<PlannedOperation> decomposeUpdate(
 			CollectionUpdateAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
 		final var collection = action.getCollection();
 		final var key = action.getKey();
@@ -150,15 +152,15 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 		// Lock cache item
 		final Object cacheKey = lockCacheItem(action, session);
 
-		// Register callback to handle post-execution work (afterAction, cache, events, stats)
-		postExecCallbackRegistry.accept( new PostCollectionUpdateHandling(
+		// Create callback to handle post-execution work (afterAction, cache, events, stats)
+		final PostCollectionUpdateHandling postCollectionUpdateHandling = new PostCollectionUpdateHandling(
 				persister,
 				collection,
 				key,
 				cacheKey,
 				action.getAffectedOwner(),
 				action.getAffectedOwnerId()
-		) );
+		);
 
 		final List<PlannedOperation> operations = new ArrayList<>();
 
@@ -213,6 +215,11 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 				// INSERT entries
 				applyUpdateAdditions( collection, key, ordinalBase + 2, additionEntries, insertRowPlan, operations::add );
 			}
+		}
+
+		// Attach post-execution callback to the last operation
+		if ( !operations.isEmpty() ) {
+			operations.get( operations.size() - 1 ).setPostExecutionCallback( postCollectionUpdateHandling );
 		}
 
 		return operations;
@@ -324,8 +331,7 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 	public List<PlannedOperation> decomposeRemove(
 			CollectionRemoveAction action,
 			int ordinalBase,
-			Consumer<PostExecutionCallback> postExecCallbackRegistry,
 			SharedSessionContractImplementor session) {
-		return decomposeRemove( jdbcOperations, action, ordinalBase, postExecCallbackRegistry, session );
+		return decomposeRemove( jdbcOperations, action, ordinalBase, session );
 	}
 }

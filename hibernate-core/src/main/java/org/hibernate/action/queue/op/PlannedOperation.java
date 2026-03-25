@@ -8,6 +8,7 @@ import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.cyclebreak.BindingPatch;
+import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.action.queue.mutation.jdbc.JdbcOperation;
@@ -44,6 +45,11 @@ public class PlannedOperation {
 	// Cached analysis/checker from bind phase (optional)
 	private Object cachedValuesAnalysis;
 	private Object cachedTableInclusionChecker;
+
+	// Optional callback to execute immediately after this operation completes
+	// Used to ensure post-execution callbacks run before subsequent operations that might
+	// remove the entity from persistence context (e.g., DELETE operations)
+	private PostExecutionCallback postExecutionCallback;
 
 	// metadata
 	private final boolean needsIdPrePhase;
@@ -159,5 +165,13 @@ public class PlannedOperation {
 
 	public void setOrigin(String origin) {
 		this.origin = origin;
+	}
+
+	public PostExecutionCallback getPostExecutionCallback() {
+		return postExecutionCallback;
+	}
+
+	public void setPostExecutionCallback(PostExecutionCallback postExecutionCallback) {
+		this.postExecutionCallback = postExecutionCallback;
 	}
 }

@@ -182,9 +182,20 @@ public final class GenericsHelper {
 			return null;
 		}
 
-		if ( clazz == genericType
-				&& base instanceof ParameterizedType result ) {
-			return result;
+		if ( clazz == genericType ) {
+			if ( base instanceof ParameterizedType result ) {
+				return result;
+			}
+			// raw type used as-is (e.g. member declared directly on a generic class)
+			// resolve type parameters to their upper bounds (erasure)
+			final var typeParameters = clazz.getTypeParameters();
+			if ( typeParameters.length > 0 ) {
+				final var bounds = new Type[typeParameters.length];
+				for ( int i = 0; i < typeParameters.length; i++ ) {
+					bounds[i] = typeParameters[i].getBounds()[0];
+				}
+				return new SimpleParameterizedType( clazz, bounds, null );
+			}
 		}
 
 		final var superclass = clazz.getGenericSuperclass();

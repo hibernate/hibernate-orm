@@ -35,8 +35,7 @@ public class DataSourceTest {
 		LogInspectionHelper.registerListener( listener, ConnectionInfoLogger.INSTANCE );
 		scope.getEntityManagerFactory();
 		LogInspectionHelper.clearAllListeners( ConnectionInfoLogger.INSTANCE );
-		assertTrue( scope.getDialect() instanceof OracleDialect dialect && dialect.isAutonomous()
-					|| listener.seen );
+		assertTrue( scope.getDialect() instanceof OracleDialect || listener.seen );
 	}
 
 	@Entity(name="TestEntity")

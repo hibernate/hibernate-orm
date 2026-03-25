@@ -21,9 +21,9 @@ plugins {
 
 	id "org.hibernate.build.version-injection" version "2.3.0" apply false
 	id 'org.hibernate.orm.database-service' apply false
-	id 'biz.aQute.bnd' version '7.2.1' apply false
+	id 'biz.aQute.bnd' version '7.2.2' apply false
 
-	id "com.diffplug.spotless" version "8.3.0"
+	id "com.diffplug.spotless" version "8.4.0"
 	id 'org.checkerframework' version '1.0.2'
 	id 'org.hibernate.orm.build.jdks'
 

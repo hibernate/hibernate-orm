@@ -146,11 +146,11 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 			setBindValues( (Collection<?>) value, temporalTypePrecision );
 		}
 		else {
+			setExplicitTemporalPrecision( temporalTypePrecision );
 			final Object coerced = coerce( value );
 			validate( coerced );
 			initBindType( value );
 			bindSingleValue( coerced );
-			setExplicitTemporalPrecision( temporalTypePrecision );
 		}
 	}
 
@@ -235,8 +235,8 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T> {
 	public void setBindValues(
 			Collection<?> values,
 			@SuppressWarnings("deprecation") TemporalType temporalTypePrecision) {
-		setBindValues( values );
 		setExplicitTemporalPrecision( temporalTypePrecision );
+		setBindValues( values );
 	}
 
 	@Override

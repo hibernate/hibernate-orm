@@ -12,13 +12,16 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.List;
 
+import jakarta.persistence.TemporalType;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -318,6 +321,24 @@ public class PostgreSQLStoredProcedureTest {
 		);
 	}
 
+	@Test
+	@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 14, comment = "Stored procedure OUT parameters are only supported since version 14")
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20281")
+	public void testStoredProcedureTemporalTypeDateParameter(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					StoredProcedureQuery procedureCall = entityManager.createStoredProcedureQuery( "sp_has_person_created_before" );
+					procedureCall.registerStoredProcedureParameter( 1, Date.class, ParameterMode.IN );
+					procedureCall.registerStoredProcedureParameter( 2, Boolean.class, ParameterMode.INOUT );
+					procedureCall.setParameter( 1, new Date(), TemporalType.DATE );
+					procedureCall.setParameter( 2, null );
+
+					procedureCall.execute();
+					assertThat( procedureCall.getOutputParameterValue( 2 ), is( true ) );
+				}
+		);
+	}
+
 	@BeforeEach
 	public void prepareSchema(EntityManagerFactoryScope scope) {
 		scope.inTransaction( (entityManager) -> entityManager.unwrap( Session.class ).doWork( (connection) -> {
@@ -390,6 +411,21 @@ public class PostgreSQLStoredProcedureTest {
 								" $BODY$ " +
 								" LANGUAGE plpgsql"
 				);
+				statement.executeUpdate(
+						"CREATE OR REPLACE PROCEDURE sp_has_person_created_before (" +
+						" IN created_on_in date, " +
+						" INOUT result boolean) " +
+						" AS" +
+						" $BODY$ " +
+						" BEGIN" +
+						" SELECT true into result " +
+						" FROM Person p " +
+						" WHERE " +
+						" p.createdOn <= created_on_in;" +
+						" END; " +
+						" $BODY$ " +
+						" LANGUAGE plpgsql"
+				);
 			}
 			catch (SQLException e) {
 				System.err.println( "Error exporting procedure and function definitions to Oracle database : " + e.getMessage() );
@@ -432,6 +468,7 @@ public class PostgreSQLStoredProcedureTest {
 					statement.executeUpdate( "DROP PROCEDURE singleRefCursor(refcursor)" );
 					statement.executeUpdate( "DROP PROCEDURE sp_is_null(varchar, boolean)" );
 					statement.executeUpdate( "DROP PROCEDURE sp_get_address_by_street_city(varchar,varchar,refcursor)" );
+					statement.executeUpdate( "DROP PROCEDURE sp_has_person_created_before (date, boolean)" );
 				}
 				catch (SQLException ignore) {
 				}

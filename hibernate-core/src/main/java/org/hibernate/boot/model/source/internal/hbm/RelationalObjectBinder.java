@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.boot.model.naming.ColumnNamingContext;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
@@ -43,13 +44,15 @@ public class RelationalObjectBinder {
 			RelationalValueSource relationalValueSource,
 			SimpleValue simpleValue,
 			boolean areColumnsNullableByDefault,
-			ColumnNamingDelegate columnNamingDelegate) {
+			ColumnNamingDelegate columnNamingDelegate,
+			ColumnNamingContext columnNamingContext) {
 		bindColumnsAndFormulas(
 				sourceDocument,
 				Collections.singletonList( relationalValueSource ),
 				simpleValue,
 				areColumnsNullableByDefault,
-				columnNamingDelegate
+				columnNamingDelegate,
+				columnNamingContext
 		);
 	}
 
@@ -58,14 +61,16 @@ public class RelationalObjectBinder {
 			List<ColumnSource> columnSources,
 			SimpleValue simpleValue,
 			boolean areColumnsNullableByDefault,
-			ColumnNamingDelegate columnNamingDelegate) {
+			ColumnNamingDelegate columnNamingDelegate,
+			ColumnNamingContext columnNamingContext) {
 		for ( ColumnSource columnSource : columnSources ) {
 			bindColumn(
 					sourceDocument,
 					columnSource,
 					simpleValue,
 					areColumnsNullableByDefault,
-					columnNamingDelegate
+					columnNamingDelegate,
+					columnNamingContext
 			);
 		}
 	}
@@ -75,7 +80,8 @@ public class RelationalObjectBinder {
 			List<RelationalValueSource> relationalValueSources,
 			SimpleValue simpleValue,
 			boolean areColumnsNullableByDefault,
-			ColumnNamingDelegate columnNamingDelegate) {
+			ColumnNamingDelegate columnNamingDelegate,
+			ColumnNamingContext columnNamingContext) {
 		for ( RelationalValueSource relationalValueSource : relationalValueSources ) {
 			if ( relationalValueSource instanceof ColumnSource columnSource ) {
 				bindColumn(
@@ -83,7 +89,8 @@ public class RelationalObjectBinder {
 						columnSource,
 						simpleValue,
 						areColumnsNullableByDefault,
-						columnNamingDelegate
+						columnNamingDelegate,
+						columnNamingContext
 				);
 			}
 			else if ( relationalValueSource instanceof DerivedValueSource formulaSource ) {
@@ -100,7 +107,8 @@ public class RelationalObjectBinder {
 			ColumnSource columnSource,
 			SimpleValue simpleValue,
 			boolean areColumnsNullableByDefault,
-			ColumnNamingDelegate columnNamingDelegate) {
+			ColumnNamingDelegate columnNamingDelegate,
+			ColumnNamingContext columnNamingContext) {
 		final Table table = simpleValue.getTable();
 
 		final Column column = new Column();
@@ -117,7 +125,8 @@ public class RelationalObjectBinder {
 
 		final Identifier physicalName = physicalNamingStrategy.toPhysicalColumnName(
 				logicalName,
-				database.getJdbcEnvironment()
+				database.getJdbcEnvironment(),
+				columnNamingContext
 		);
 		column.setName( physicalName.render( database.getDialect() ) );
 

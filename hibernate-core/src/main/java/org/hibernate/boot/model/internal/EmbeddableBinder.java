@@ -1395,7 +1395,8 @@ public class EmbeddableBinder {
 						final String physicalName =
 								physicalNamingStrategy
 										.toPhysicalColumnName( database.toIdentifier( columnName ),
-												database.getJdbcEnvironment() )
+												database.getJdbcEnvironment(),
+												ColumnNamingContexts.forEntity( embeddable.getOwner() ) )
 										.render( database.getDialect() );
 						value.addColumn( new org.hibernate.mapping.Column( physicalName ) );
 						if ( joinColumn != null ) {

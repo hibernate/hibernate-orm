@@ -16,6 +16,7 @@ import org.hibernate.annotations.Changelog;
 import org.hibernate.audit.AuditStrategy;
 import org.hibernate.audit.ChangesetListener;
 import org.hibernate.audit.spi.ChangelogSupplier;
+import org.hibernate.boot.model.naming.ColumnNamingContext;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
@@ -141,12 +142,13 @@ public final class AuditHelper {
 					? resolveExcludedColumns( rootClass )
 					: Set.<String>of();
 			copyTableColumns( table, auditLogTable, excludedColumns );
+			final var namingContext = ColumnNamingContexts.forModel( auditable );
 			final var changesetIdColumn =
 					createAuditColumn( csIdColumnName,
-							getChangesetIdType( context ), auditLogTable, context );
+							getChangesetIdType( context ), auditLogTable, context, namingContext );
 			final var modificationTypeColumn =
 					createAuditColumn( modTypeColumnName,
-							Byte.class, auditLogTable, context );
+							Byte.class, auditLogTable, context, namingContext );
 			auditLogTable.addColumn( changesetIdColumn );
 			auditLogTable.addColumn( modificationTypeColumn );
 			if ( auditable instanceof Collection ) {
@@ -159,7 +161,7 @@ public final class AuditHelper {
 			}
 			enableAudit( auditable, auditLogTable, changesetIdColumn, modificationTypeColumn );
 			createChangesetForeignKey( auditLogTable, changesetIdColumn, context );
-			addTransactionEndColumns( auditTable, auditable, auditLogTable, context );
+			addTransactionEndColumns( auditTable, auditable, auditLogTable, context, namingContext );
 		} );
 	}
 
@@ -198,7 +200,8 @@ public final class AuditHelper {
 						nullIfBlank( auditSchema ),
 						nullIfBlank( auditCatalog ),
 						customName,
-						context
+						context,
+						ColumnNamingContexts.forEntity( rootClass )
 				);
 				createAuditTableForeignKey( secondaryAuditTable, rootClass.getEntityName(), rootClass.getAuxiliaryTable() );
 				// Secondary tables only get tx-id (no mod type, no REVEND)
@@ -252,6 +255,7 @@ public final class AuditHelper {
 						.getClassDetails( subclass.getClassName() );
 				final var subclassTable = subclassDetails.getDirectAnnotationUsage( Audited.Table.class );
 				final var effective = subclassTable != null ? subclassTable : auditTable;
+				final var namingContext = ColumnNamingContexts.forEntity( subclass );
 				final var subclassAuditTable = createAuditTable(
 						subclass.getTable(),
 						csIdColumnName,
@@ -259,17 +263,18 @@ public final class AuditHelper {
 						effective != null ? nullIfBlank( effective.schema() ) : null,
 						effective != null ? nullIfBlank( effective.catalog() ) : null,
 						effective != null ? nullIfBlank( effective.name() ) : null,
-						context
+						context,
+						namingContext
 				);
 				subclass.addAuxiliaryColumn( CHANGESET_ID, subclassAuditTable.getPrimaryKey().getColumn( 0 ) );
 				if ( subclass instanceof UnionSubclass ) {
 					// TABLE_PER_CLASS: each table is self-contained, needs its own REVTYPE and REVEND
 					final var modificationTypeColumn =
 							createAuditColumn( modTypeColumnName,
-									Byte.class, subclassAuditTable, context );
+									Byte.class, subclassAuditTable, context, namingContext );
 					subclassAuditTable.addColumn( modificationTypeColumn );
 					subclass.addAuxiliaryColumn( MODIFICATION_TYPE, modificationTypeColumn );
-					addTransactionEndColumns( auditTable, subclass, subclassAuditTable, context );
+					addTransactionEndColumns( auditTable, subclass, subclassAuditTable, context, namingContext );
 				}
 				else {
 					// JOINED: REVTYPE/REVEND only on root table; FK to parent audit table
@@ -365,24 +370,27 @@ public final class AuditHelper {
 				keyColumns.add( copyColumnRemovingUnique( column, middleAuditTable ) );
 			}
 			// Audit columns
+			final var namingContext = ColumnNamingContexts.forCollection( collection );
 			final var changesetIdColumn = createAuditColumn(
 					csIdColumnName,
 					getChangesetIdType( context ),
 					middleAuditTable,
-					context
+					context,
+					namingContext
 			);
 			final var modificationTypeColumn = createAuditColumn(
 					modTypeColumnName,
 					Byte.class,
 					middleAuditTable,
-					context
+					context,
+					namingContext
 			);
 			middleAuditTable.addColumn( changesetIdColumn );
 			middleAuditTable.addColumn( modificationTypeColumn );
 			createAuditPrimaryKey( middleAuditTable, changesetIdColumn, keyColumns );
 			createChangesetForeignKey( middleAuditTable, changesetIdColumn, context );
 			enableAudit( collection, middleAuditTable, changesetIdColumn, modificationTypeColumn );
-			addTransactionEndColumns( auditTable, collection, middleAuditTable, context );
+			addTransactionEndColumns( auditTable, collection, middleAuditTable, context, namingContext );
 		} );
 	}
 
@@ -617,7 +625,8 @@ public final class AuditHelper {
 			@Nullable String schemaOverride,
 			@Nullable String catalogOverride,
 			@Nullable String customAuditTableName,
-			MetadataBuildingContext context) {
+			MetadataBuildingContext context,
+			ColumnNamingContext namingContext) {
 		final var collector = context.getMetadataCollector();
 		final String auditTableName = customAuditTableName != null
 				? customAuditTableName
@@ -632,7 +641,7 @@ public final class AuditHelper {
 				sourceTable.getNameIdentifier().isExplicit()
 		);
 		copyTableColumns( sourceTable, auditTable, excludedColumns );
-		final var revColumn = createAuditColumn( csIdColumnName, getChangesetIdType( context ), auditTable, context );
+		final var revColumn = createAuditColumn( csIdColumnName, getChangesetIdType( context ), auditTable, context, namingContext );
 		auditTable.addColumn( revColumn );
 		createAuditPrimaryKey( auditTable, revColumn, sourceTable.getPrimaryKey().getColumns() );
 		createChangesetForeignKey( auditTable, revColumn, context );
@@ -705,7 +714,8 @@ public final class AuditHelper {
 			String columnName,
 			Class<?> javaType,
 			Table table,
-			MetadataBuildingContext context) {
+			MetadataBuildingContext context,
+			ColumnNamingContext namingContext) {
 		final var column = new Column();
 		column.setNullable( false );
 		final var value = javaType == Instant.class
@@ -716,7 +726,7 @@ public final class AuditHelper {
 
 		final var database = context.getMetadataCollector().getDatabase();
 		setColumnName( columnName, column, database,
-				context.getBuildingOptions().getPhysicalNamingStrategy() );
+				context.getBuildingOptions().getPhysicalNamingStrategy(), namingContext );
 		return column;
 	}
 
@@ -744,11 +754,13 @@ public final class AuditHelper {
 			String name,
 			Column column,
 			Database database,
-			PhysicalNamingStrategy physicalNamingStrategy) {
+			PhysicalNamingStrategy physicalNamingStrategy,
+			ColumnNamingContext namingContext) {
 		final Identifier physicalColumnName =
 				physicalNamingStrategy.toPhysicalColumnName(
 						database.toIdentifier( name ),
-						database.getJdbcEnvironment()
+						database.getJdbcEnvironment(),
+						namingContext
 				);
 		column.setName( physicalColumnName.render( database.getDialect() ) );
 	}
@@ -761,14 +773,15 @@ public final class AuditHelper {
 			@Nullable Audited.Table auditTableAnnotation,
 			AuxiliaryTableHolder holder,
 			Table auditTable,
-			MetadataBuildingContext context) {
+			MetadataBuildingContext context,
+			ColumnNamingContext namingContext) {
 		if ( isValidityStrategy( context ) ) {
 			final var revEndColumn =
 					createAuditColumn(
 							auditTableAnnotation == null
 									? DEFAULT_INVALIDATING_CHANGESET_ID_COLUMN_NAME
 									: auditTableAnnotation.invalidatingChangesetIdColumn(),
-							getChangesetIdType( context ), auditTable, context );
+							getChangesetIdType( context ), auditTable, context, namingContext );
 			revEndColumn.setNullable( true );
 			auditTable.addColumn( revEndColumn );
 			holder.addAuxiliaryColumn( INVALIDATING_CHANGESET_ID, revEndColumn );

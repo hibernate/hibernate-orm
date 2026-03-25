@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.annotations.Temporal;
+import org.hibernate.boot.model.naming.ColumnNamingContext;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
@@ -67,12 +68,13 @@ public class TemporalHelper {
 
 		final int secondPrecision = temporal.secondPrecision();
 		final Integer precision = secondPrecision == -1 ? null : secondPrecision;
+		final var namingContext = ColumnNamingContexts.forModel( target );
 		final var rowStartColumn =
 				createTemporalColumn( temporal.rowStart(),
-						table, false, precision, context );
+						table, false, precision, context, namingContext );
 		final var rowEndColumn =
 				createTemporalColumn( temporal.rowEnd(),
-						table, true, precision, context );
+						table, true, precision, context, namingContext );
 		handleTemporalColumnGeneration( rowStartColumn, rowEndColumn, context );
 
 		final var temporalTable =
@@ -382,7 +384,8 @@ public class TemporalHelper {
 			Table table,
 			boolean nullable,
 			Integer temporalPrecision,
-			MetadataBuildingContext context) {
+			MetadataBuildingContext context,
+			ColumnNamingContext namingContext) {
 		final var database = context.getMetadataCollector().getDatabase();
 		final var basicValue = new BasicValue( context, table );
 		// Defer changeset ID type resolution to BasicValue resolution time,
@@ -393,7 +396,7 @@ public class TemporalHelper {
 		column.setValue( basicValue );
 		basicValue.addColumn( column );
 		setTemporalColumnName( columnName, column, database,
-				context.getBuildingOptions().getPhysicalNamingStrategy() );
+				context.getBuildingOptions().getPhysicalNamingStrategy(), namingContext );
 		context.getMetadataCollector().addSecondPass( (OptionalDeterminationSecondPass) ignored -> {
 			final var changesetIdJavaType = getChangesetIdType( context );
 			setTemporalColumnType( temporalPrecision, column, database, changesetIdJavaType );
@@ -425,11 +428,13 @@ public class TemporalHelper {
 			String name,
 			Column column,
 			Database database,
-			PhysicalNamingStrategy physicalNamingStrategy) {
+			PhysicalNamingStrategy physicalNamingStrategy,
+			ColumnNamingContext namingContext) {
 		final Identifier physicalColumnName =
 				physicalNamingStrategy.toPhysicalColumnName(
 						database.toIdentifier( name ),
-						database.getJdbcEnvironment()
+						database.getJdbcEnvironment(),
+						namingContext
 				);
 		column.setName( physicalColumnName.render( database.getDialect() ) );
 	}

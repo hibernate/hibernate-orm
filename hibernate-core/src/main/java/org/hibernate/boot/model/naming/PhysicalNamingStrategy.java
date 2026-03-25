@@ -62,6 +62,29 @@ public interface PhysicalNamingStrategy {
 	Identifier toPhysicalColumnName(Identifier logicalName, JdbcEnvironment jdbcEnvironment);
 
 	/**
+	 * Determine the physical column name from the given logical name,
+	 * with access to the entity which owns the column.
+	 * <p>
+	 * Hibernate calls this method, not {@link #toPhysicalColumnName(Identifier, JdbcEnvironment)},
+	 * when it determines a column name. Override it when the physical column name depends on the
+	 * entity. The default implementation ignores the context and delegates to
+	 * {@link #toPhysicalColumnName(Identifier, JdbcEnvironment)}.
+	 *
+	 * @param columnNamingContext The entity which owns the column. Never {@code null},
+	 *                            but its components are {@code null} when Hibernate cannot
+	 *                            determine the owning entity.
+	 *
+	 * @since 8.1
+	 */
+	@Incubating(since = "8.1")
+	default Identifier toPhysicalColumnName(
+			Identifier logicalName,
+			JdbcEnvironment jdbcEnvironment,
+			ColumnNamingContext columnNamingContext) {
+		return toPhysicalColumnName( logicalName, jdbcEnvironment );
+	}
+
+	/**
 	 * Determine the physical UDT type name from the given logical name
 	 */
 	default Identifier toPhysicalTypeName(Identifier logicalName, JdbcEnvironment jdbcEnvironment) {

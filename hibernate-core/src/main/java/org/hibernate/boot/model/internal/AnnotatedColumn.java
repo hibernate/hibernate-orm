@@ -401,7 +401,7 @@ public class AnnotatedColumn {
 			final var database = getDatabase();
 			return getPhysicalNamingStrategy()
 					.toPhysicalColumnName( database.toIdentifier( columnName, isExplicit ),
-							database.getJdbcEnvironment() )
+							database.getJdbcEnvironment(), ColumnNamingContexts.forColumns( getParent() ) )
 					.render( database.getDialect() );
 		}
 		else {

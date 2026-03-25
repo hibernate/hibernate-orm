@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SuppressWarnings("JUnitMalformedDeclaration")
 @RequiresDialect(H2Dialect.class)
 @DomainModel(xmlMappings = "mappings/where/LazyElementCollectionWithLazyManyToOneNonUniqueIdWhereTest.orm.xml")
-@SessionFactory(exportSchema = true)
+@SessionFactory(exportSchema = false)
 public class LazyElementCollectionWithLazyManyToOneNonUniqueIdWhereTest {
 	@BeforeAll
 	public void createSchema(SessionFactoryScope factoryScope) {

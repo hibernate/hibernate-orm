@@ -1107,7 +1107,7 @@ oracle_18() {
        --health-interval 5s \
        --health-timeout 5s \
        --health-retries 10 \
-       ${DB_IMAGE_ORACLE_21:-docker.io/gvenzl/oracle-xe:18.4.0}
+       ${DB_IMAGE_ORACLE_18:-docker.io/gvenzl/oracle-xe:18.4.0}
     oracle_setup
 }
 

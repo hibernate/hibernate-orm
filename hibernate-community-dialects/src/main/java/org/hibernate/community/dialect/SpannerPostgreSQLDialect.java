@@ -424,6 +424,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 			case "character varying" -> Types.VARCHAR;
 			case "timestamp with time zone" -> Types.TIMESTAMP_WITH_TIMEZONE;
 			case "bigint" -> Types.BIGINT;
+			case "real" -> Types.REAL; // Use REAL instead of FLOAT to get Float as recommended Java type
 			default -> super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
 		};
 	}

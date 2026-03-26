@@ -1,6 +1,30 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.2.8.Final (March 26, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/38218
+
+
+** Bug
+    * HHH-20283 key-based pagination appears to be broken
+    * HHH-20274 Avoid mutating SqmSelectClause during type validation
+    * HHH-20273 Failed to set List type field in Embeddable record
+    * HHH-20272 JDBC locking pre-actions are not executed before the statement
+    * HHH-20271 SybaseASE reports wrong lock metadata
+    * HHH-20267 Hibernate processor: infinite generation of repositories when extending PanacheRepository
+    * HHH-20266 Some unnesting array functions miss ordering on index on aggregation
+    * HHH-20259 DdlTypeRegistry#addSqlType doesn't handle different type codes registered to same DDL type properly
+    * HHH-20231 Errors when querying 2L-cached native queries with same SQL but different result type
+    * HHH-20230 [Metamodel Generator] AnnotationMetaEntity fails to compile repository methods with unbounded wildcard Sort<?>
+    * HHH-19818 NPE with stateless insert when Envers is enabled
+    * HHH-12986 ConfigLoader does not close file when loading hibernate.cfg.xml
+    * HHH-12590 Postgres subselect: ERROR: subquery in FROM must have an alias
+
+** Task
+    * HHH-20232 Update c3p0 to 0.12.0
+
 Changes in 7.2.7.Final (March 15, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

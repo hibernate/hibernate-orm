@@ -7,6 +7,7 @@ ext {
     // this `db` property is defined in gradle.properties and so we assume it is always available
     assert project.hasProperty('db')
     db = project.getProperty('db')
+    dbVersion = project.getProperty('dbVersion')
     dbHost = System.getProperty( 'dbHost', 'localhost' )
     dbService = System.getProperty( 'dbService', '' )
     dbPassword = System.getProperty( 'dbPassword', '' ).replace('"', '')

@@ -55,6 +55,7 @@ import org.hibernate.type.StandardBasicTypes;
 
 import static java.util.Collections.addAll;
 import static java.util.Collections.unmodifiableList;
+import static java.util.function.Function.identity;
 import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
 import static org.hibernate.jdbc.Expectations.createExpectation;
@@ -94,7 +95,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext)
 			throws HibernateException {
-		this( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, AbstractEntityPersister::createStateManagement );
+		this( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, identity() );
 	}
 
 	protected UnionSubclassEntityPersister(
@@ -102,9 +103,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext,
-			final Function<PersistentClass, StateManagement> stateManagementFactory)
+			final Function<StateManagement, StateManagement> stateManagementConverter)
 					throws HibernateException {
-		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, stateManagementFactory );
+		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, stateManagementConverter );
 
 		validateGenerator();
 

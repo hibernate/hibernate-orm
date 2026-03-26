@@ -54,6 +54,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyMap;
+import static java.util.function.Function.identity;
 import static org.hibernate.internal.util.collections.ArrayHelper.contains;
 import static org.hibernate.internal.util.collections.ArrayHelper.join;
 import static org.hibernate.internal.util.collections.ArrayHelper.reverseFirst;
@@ -152,7 +153,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext)
 			throws HibernateException {
-		this( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, AbstractEntityPersister::createStateManagement );
+		this( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, identity() );
 	}
 
 	protected JoinedSubclassEntityPersister(
@@ -160,9 +161,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext,
-			final Function<PersistentClass, StateManagement> stateManagementFactory)
+			final Function<StateManagement, StateManagement> stateManagementConverter)
 					throws HibernateException {
-		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, stateManagementFactory );
+		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, stateManagementConverter );
 
 		final var dialect = creationContext.getDialect();
 		final var typeConfiguration = creationContext.getTypeConfiguration();

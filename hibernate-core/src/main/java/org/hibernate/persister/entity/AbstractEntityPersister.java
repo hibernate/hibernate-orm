@@ -4,7 +4,6 @@
  */
 package org.hibernate.persister.entity;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -251,6 +250,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
+import static java.util.function.Function.identity;
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
@@ -468,12 +468,8 @@ public abstract class AbstractEntityPersister
 				cacheAccessStrategy,
 				naturalIdRegionAccessStrategy,
 				creationContext,
-				AbstractEntityPersister::createStateManagement
+				identity()
 		);
-	}
-
-	protected static @NonNull StateManagement createStateManagement(PersistentClass persistentClass) {
-		return persistentClass.getRootClass().getStateManagement();
 	}
 
 	protected AbstractEntityPersister(
@@ -481,7 +477,7 @@ public abstract class AbstractEntityPersister
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext,
-			final Function<PersistentClass, StateManagement> statementManagerFactory)
+			final Function<StateManagement, StateManagement> statementManagerConverter)
 				throws HibernateException {
 		super( persistentClass, creationContext );
 		jpaEntityName = persistentClass.getJpaEntityName();
@@ -803,7 +799,8 @@ public abstract class AbstractEntityPersister
 			getNamedQueryMemento( creationContext.getBootModel() );
 		}
 
-		stateManagement = statementManagerFactory.apply( persistentClass );
+		// Hibernate Reactive needs to convert the stateManagement so that it can create reactive coordinators
+		stateManagement = statementManagerConverter.apply( persistentClass.getRootClass().getStateManagement() );
 	}
 
 	private static String renderSqlWhereStringTemplate(

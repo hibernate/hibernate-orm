@@ -259,6 +259,8 @@ tasks.withType( Test.class ).configureEach { test ->
 }
 
 test {
+    inputs.property( "dbVersion", dbVersion )
+
     // Keep system properties in sync with gradle.properties!
     systemProperty 'user.language', 'en'
     systemProperty 'user.country', 'US'

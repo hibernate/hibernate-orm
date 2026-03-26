@@ -7,6 +7,7 @@ package org.hibernate.persister.entity;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -25,6 +26,7 @@ import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.filter.internal.DynamicFilterAliasGenerator;
+import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
@@ -106,8 +108,18 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext)
+			throws HibernateException {
+		this( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, AbstractEntityPersister::createStateManagement );
+	}
+
+	protected SingleTableEntityPersister(
+			final PersistentClass persistentClass,
+			final EntityDataAccess cacheAccessStrategy,
+			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
+			final RuntimeModelCreationContext creationContext,
+			final Function<PersistentClass, StateManagement> statementManagerFactory)
 					throws HibernateException {
-		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
+		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, statementManagerFactory );
 
 		final var dialect = creationContext.getDialect();
 		final var typeConfiguration = creationContext.getTypeConfiguration();

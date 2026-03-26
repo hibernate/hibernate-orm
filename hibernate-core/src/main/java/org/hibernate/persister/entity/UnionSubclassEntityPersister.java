@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
@@ -39,6 +40,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -91,8 +93,18 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext)
+			throws HibernateException {
+		this( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, AbstractEntityPersister::createStateManagement );
+	}
+
+	protected UnionSubclassEntityPersister(
+			final PersistentClass persistentClass,
+			final EntityDataAccess cacheAccessStrategy,
+			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
+			final RuntimeModelCreationContext creationContext,
+			final Function<PersistentClass, StateManagement> stateManagementFactory)
 					throws HibernateException {
-		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
+		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, stateManagementFactory );
 
 		validateGenerator();
 

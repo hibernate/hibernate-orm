@@ -4,6 +4,7 @@
  */
 package org.hibernate.persister.entity;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -243,6 +244,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
@@ -460,6 +462,26 @@ public abstract class AbstractEntityPersister
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext)
+			throws HibernateException {
+		this(
+				persistentClass,
+				cacheAccessStrategy,
+				naturalIdRegionAccessStrategy,
+				creationContext,
+				AbstractEntityPersister::createStateManagement
+		);
+	}
+
+	protected static @NonNull StateManagement createStateManagement(PersistentClass persistentClass) {
+		return persistentClass.getRootClass().getStateManagement();
+	}
+
+	protected AbstractEntityPersister(
+			final PersistentClass persistentClass,
+			final EntityDataAccess cacheAccessStrategy,
+			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
+			final RuntimeModelCreationContext creationContext,
+			final Function<PersistentClass, StateManagement> statementManagerFactory)
 				throws HibernateException {
 		super( persistentClass, creationContext );
 		jpaEntityName = persistentClass.getJpaEntityName();
@@ -781,7 +803,7 @@ public abstract class AbstractEntityPersister
 			getNamedQueryMemento( creationContext.getBootModel() );
 		}
 
-		stateManagement = persistentClass.getRootClass().getStateManagement();
+		stateManagement = statementManagerFactory.apply( persistentClass );
 	}
 
 	private static String renderSqlWhereStringTemplate(

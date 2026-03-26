@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
@@ -132,7 +133,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		if ( versionUpdateGroup == null ) {
 			throw new HibernateException( "Cannot force version increment relative to subtype; use the root type" );
 		}
-		doVersionUpdate( null, id, nextVersion, currentVersion, null, session );
+		doVersionUpdate( null, id, nextVersion, currentVersion, getLoadedState( id, session ), session );
+	}
+
+	private Object @Nullable [] getLoadedState(Object id, SharedSessionContractImplementor session) {
+		return entityPersister.hasPartitionedSelectionMapping()
+				? session.getPersistenceContextInternal()
+				.getEntityHolder( session.generateEntityKey( id, entityPersister ) ).getEntityEntry().getLoadedState()
+				: null;
 	}
 
 	@Override
@@ -145,7 +153,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		if ( versionUpdateGroup == null ) {
 			throw new HibernateException( "Cannot force version increment relative to subtype; use the root type" );
 		}
-		doVersionUpdate( null, id, nextVersion, currentVersion, batching, null, session );
+		doVersionUpdate( null, id, nextVersion, currentVersion, batching, getLoadedState( id, session ), session );
 	}
 
 	@Override
@@ -166,6 +174,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 							entity,
 							id,
 							values,
+							incomingOldValues,
 							oldVersion,
 							incomingDirtyAttributeIndexes,
 							session,
@@ -393,6 +402,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object entity,
 			Object id,
 			Object[] values,
+			Object[] oldValues,
 			Object oldVersion,
 			int[] incomingDirtyAttributeIndexes,
 			SharedSessionContractImplementor session,
@@ -443,7 +453,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		// we have just the version being updated - use the special handling
 		assert newVersion != null;
-		final var generatedValues = doVersionUpdate( entity, id, newVersion, oldVersion, values, session );
+		final var generatedValues = doVersionUpdate(
+				entity,
+				id,
+				newVersion,
+				oldVersion,
+				oldValues == null ? values : oldValues,
+				session
+		);
 		return () -> generatedValues;
 	}
 
@@ -475,7 +492,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object id,
 			Object version,
 			Object oldVersion,
-			Object[] laodedState,
+			Object[] loadedState,
 			SharedSessionContractImplementor session) {
 		return doVersionUpdate(
 				entity,
@@ -483,7 +500,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				version,
 				oldVersion,
 				true,
-				laodedState,
+				loadedState,
 				session
 		);
 	}
@@ -514,12 +531,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				ParameterUsage.SET
 		);
 
-		if ( loadedState != null && entityPersister.hasPartitionedSelectionMapping() ) {
-			bindPartitionColumnValueBindings(
-					loadedState,
-					session,
-					mutationExecutor.getJdbcValueBindings() );
-		}
+		bindPartitionColumnValueBindings( loadedState, session, mutationExecutor.getJdbcValueBindings() );
 
 		// restrict the key
 		mutatingTableDetails.getKeyMapping().breakDownKeyJdbcValues(

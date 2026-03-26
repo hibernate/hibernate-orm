@@ -131,13 +131,18 @@ public class CompositeNestedGeneratedValueGenerator
 				List.of(), null, null, null );
 	}
 
-	// Used by Hibernate Reactive
-	public CompositeNestedGeneratedValueGenerator(
-			GenerationContextLocator generationContextLocator,
-			ComponentType componentType,
-			List<GenerationPlan> generationPlans) {
-		this( generationContextLocator, componentType,
-				List.of(), null, null, null );
+	// Used by Hibernate Reactive to override generation plans
+	public CompositeNestedGeneratedValueGenerator(CompositeNestedGeneratedValueGenerator original, List<GenerationPlan> generationPlans) {
+		this.generationContextLocator = original.generationContextLocator;
+		this.componentType = original.componentType;
+		this.generators = original.generators;
+		this.columnValues = original.columnValues;
+		this.columnInclusions = original.columnInclusions;
+		this.generatedOnExecutionColumns = original.generatedOnExecutionColumns;
+		this.hasOnExecutionGenerators = original.hasOnExecutionGenerators;
+		this.hasIncludedColumns = original.hasIncludedColumns;
+		this.needsValueBinding = original.needsValueBinding;
+		this.hasAssignedValues = original.hasAssignedValues;
 		this.generationPlans.addAll( generationPlans );
 	}
 
@@ -329,7 +334,7 @@ public class CompositeNestedGeneratedValueGenerator
 	}
 
 	// Used by Hibernate Reactive
-	public CompositeType getComponentType() {
+	public ComponentType getComponentType() {
 		return componentType;
 	}
 

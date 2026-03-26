@@ -1639,9 +1639,9 @@ spanner_emulator() {
     # Update DDL (for Timezone)
     local update_statements=""
     if [[ "$dialect" == "POSTGRESQL" ]]; then
-      update_statements='"ALTER DATABASE \"orm-test-db\" SET \"spanner.default_time_zone\" = '"'UTC'"'"'
+      update_statements='"ALTER DATABASE \"orm-test-db\" SET \"spanner.default_time_zone\" = '"'UTC'"'", "ALTER DATABASE \"orm-test-db\" SET \"spanner.version_retention_period\" = '"'10s'"'"'
     else
-      update_statements='"ALTER DATABASE `orm-test-db` SET OPTIONS ( default_time_zone = '"'UTC'"' )"'
+      update_statements='"ALTER DATABASE `orm-test-db` SET OPTIONS ( default_time_zone = '"'UTC'"', version_retention_period = '"'10s'"' )"'
     fi
 
     curl -s -X PATCH "http://${host}/v1/projects/orm-test-project/instances/orm-test-instance/databases/orm-test-db/ddl" \

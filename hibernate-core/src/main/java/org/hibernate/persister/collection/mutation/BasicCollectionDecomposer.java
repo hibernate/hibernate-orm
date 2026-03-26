@@ -902,7 +902,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 	}
 
 	private CollectionJdbcOperations.DeleteRowPlan buildDeleteRowPlan(SessionFactoryImplementor factory) {
-		if ( !persister.needsRemove() ) {
+		if ( persister.isRowDeleteEnabled() ) {
 			return null;
 		}
 
@@ -989,6 +989,10 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 	}
 
 	private JdbcOperation buildRemoveOperation(SessionFactoryImplementor factory) {
+		if ( !persister.needsRemove() ) {
+			return null;
+		}
+
 		var tableDescriptor = persister.getCollectionTableDescriptor();
 		var attribute = persister.getAttributeMapping();
 

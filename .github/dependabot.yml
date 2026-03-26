@@ -17,6 +17,8 @@ updates:
     allow:
       - dependency-name: "actions/*"
       - dependency-name: "redhat-actions/*"
+      - dependency-name: "graalvm/setup-graalvm"
+      - dependency-name: "oracle-actions/setup-testpilot"
   - package-ecosystem: "gradle"
     directory: "/"
     registries:

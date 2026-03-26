@@ -289,8 +289,13 @@ tasks.withType( Test.class ).configureEach { test ->
         test.maxParallelForks = testThreads
         test.systemProperty 'maxParallelForks', test.maxParallelForks
     }
-    else if ( project.db == "oracle_test_pilot_database"|| project.db == "hana_cloud" ) {
-        // Since Oracle TestPilot and HANA Cloud databases run on separate machines, use all threads for testing
+    else if ( project.db == "oracle_test_pilot_database" ) {
+        // Since Oracle TestPilot databases run on separate machines, use all threads for testing
+        test.maxParallelForks = Runtime.runtime.availableProcessors() * 2
+        test.systemProperty 'maxParallelForks', test.maxParallelForks
+    }
+    else if ( project.db == "hana_cloud" ) {
+        // Since HANA Cloud databases run on separate machines, use all threads for testing
         test.maxParallelForks = Runtime.runtime.availableProcessors()
         test.systemProperty 'maxParallelForks', test.maxParallelForks
     }

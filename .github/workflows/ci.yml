@@ -183,7 +183,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up Java 25
-        uses: graalvm/setup-graalvm@aafbedb8d382ed0ca6167d3a051415f20c859274 # v1.2.8
+        uses: graalvm/setup-graalvm@f744c72a42b1995d7b0cbc314bde4bace7ac1fe1 # v1.5.0
         with:
           distribution: 'graalvm'
           java-version: '25'
@@ -193,7 +193,7 @@ jobs:
           CURRENT_BRANCH="${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}"
           CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
           CURRENT_DAY=$(/bin/date -u "+%d")
-          ROOT_CACHE_KEY="buildtool-cache-atlas"
+          ROOT_CACHE_KEY="buildtool-cache-oracle-test-pilot"
           echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}" >> $GITHUB_OUTPUT
           echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}" >> $GITHUB_OUTPUT
           echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
@@ -233,11 +233,11 @@ jobs:
             ${{ steps.cache-key.outputs.buildtool-monthly-cache-key }}-
 
       - id: create_database
-        uses: loiclefevre/test@a802f8bb53b42b16c253d75f86b06360d150c6e4 # v1.0.22
+        uses: oracle-actions/setup-testpilot@f620f11f9f26dacfe80ba1823342e3e92604c55f # v1.0.23
         with:
           oci-service: ${{ matrix.rdbms }}
           action: create
-          user: hibernate_orm_test_1,hibernate_orm_test_2,hibernate_orm_test_3,hibernate_orm_test_4
+          user: hibernate_orm_test_1,hibernate_orm_test_2,hibernate_orm_test_3,hibernate_orm_test_4,hibernate_orm_test_5,hibernate_orm_test_6,hibernate_orm_test_7,hibernate_orm_test_8
 
       - name: Run build script
         env:
@@ -251,20 +251,29 @@ jobs:
           # Needed for TFO (TCP fast open)
           LD_PRELOAD: /home/ubuntu/libtfojdbc1.so
           LD_LIBRARY_PATH: /home/ubuntu
+          # maximum number of worker (upper limit to maxParallelForks property, otherwise number of available CPUs)
+          GRADLE_OPTS: "-Dorg.gradle.workers.max=8"
+          # Better control of RAM for Gradle, must be aligned with gradle.properties
+          # Daemon:
+          ORG_GRADLE_JVMARGS: "-Dlog4j2.disableJmx -Xmx4g -XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8"
+          # Java compiler:
+          ORG_GRADLE_PROJECT_toolchain.compiler.jvmargs: "-Dlog4j2.disableJmx=true -Xmx4g -XX:MaxMetaspaceSize=256m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8"
+          # Gradle workers (Tests...)
+          ORG_GRADLE_PROJECT_toolchain.launcher.jvmargs: "-Dlog4j2.disableJmx=true -Xmx3g -XX:MaxMetaspaceSize=448m -XX:+HeapDumpOnOutOfMemoryError -Duser.language=en -Duser.country=US -Duser.timezone=UTC -Dfile.encoding=UTF-8"
         run: ./ci/build-github.sh
         shell: bash
 
-      - uses: loiclefevre/test@a802f8bb53b42b16c253d75f86b06360d150c6e4 # v1.0.22
+      - uses: oracle-actions/setup-testpilot@f620f11f9f26dacfe80ba1823342e3e92604c55f # v1.0.23
         if: always()
         with:
           oci-service: ${{ matrix.rdbms }}
           action: delete
-          user: hibernate_orm_test_1,hibernate_orm_test_2,hibernate_orm_test_3,hibernate_orm_test_4
+          user: hibernate_orm_test_1,hibernate_orm_test_2,hibernate_orm_test_3,hibernate_orm_test_4,hibernate_orm_test_5,hibernate_orm_test_6,hibernate_orm_test_7,hibernate_orm_test_8
 
       # Upload build scan data.
       # The actual publishing must be done in a separate job (see ci-report.yml).
       # We don't write to the remote cache as that would be unsafe.
-      # That's even on push, because we do not trust Atlas runners to hold secrets: they are shared infrastructure.
+      # That's even on push, because we do not trust Oracle Test Pilot runners to hold secrets: they are shared infrastructure.
       - name: Upload GitHub Actions artifact for the Develocity build scan
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         if: "${{ !cancelled() }}"
@@ -312,7 +321,7 @@ jobs:
           CURRENT_BRANCH="${{ github.repository != 'hibernate/hibernate-orm' && 'fork' || github.base_ref || github.ref_name }}"
           CURRENT_MONTH=$(/bin/date -u "+%Y-%m")
           CURRENT_DAY=$(/bin/date -u "+%d")
-          ROOT_CACHE_KEY="buildtool-cache-atlas"
+          ROOT_CACHE_KEY="buildtool-cache"
           echo "buildtool-monthly-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}" >> $GITHUB_OUTPUT
           echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}" >> $GITHUB_OUTPUT
           echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT

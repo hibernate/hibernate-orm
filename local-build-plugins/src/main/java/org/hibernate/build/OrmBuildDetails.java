@@ -9,6 +9,7 @@ import org.gradle.api.provider.Provider;
 
 import javax.inject.Inject;
 import java.io.File;
+import java.util.Objects;
 
 import static org.hibernate.build.HibernateVersion.fromVersionFile;
 
@@ -22,6 +23,7 @@ public abstract class OrmBuildDetails {
 	private final JpaVersion jpaVersion;
 
 	private final String databaseName;
+	private final String databaseVersion;
 
 	@Inject
 	public OrmBuildDetails(Project project) {
@@ -33,6 +35,7 @@ public abstract class OrmBuildDetails {
 		jpaVersion = JpaVersion.from( project );
 
 		databaseName = (String) project.property( "db" );
+		databaseVersion = Objects.requireNonNullElse( (String) project.findProperty( "dbVersion" ), "latest" );
 	}
 
 	public Provider<File> getVersionFileAccess() {
@@ -55,6 +58,7 @@ public abstract class OrmBuildDetails {
 		return getHibernateVersion().getOsgiVersion();
 	}
 
+	
 	public JpaVersion getJpaVersion() {
 		return jpaVersion;
 	}
@@ -69,5 +73,14 @@ public abstract class OrmBuildDetails {
 
 	public String getDatabaseName() {
 		return databaseName;
+	}
+
+	public String getDatabaseVersion() {
+		return databaseVersion;
+	}
+
+	public String getDatabaseTag() {
+		final String dbSuffix = databaseVersion == null ? "" : ("-" + databaseVersion);
+		return getDatabaseName() + dbSuffix;
 	}
 }

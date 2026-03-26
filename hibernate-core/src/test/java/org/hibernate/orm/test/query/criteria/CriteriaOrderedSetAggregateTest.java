@@ -10,7 +10,6 @@ import java.util.List;
 
 import jakarta.persistence.criteria.Nulls;
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -229,7 +228,6 @@ public class CriteriaOrderedSetAggregateTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsInverseDistributionFunctions.class)
-	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not support WITHIN GROUP for percentile_disc")
 	public void testInverseDistribution(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -285,7 +283,6 @@ public class CriteriaOrderedSetAggregateTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsHypotheticalSetFunctions.class)
-	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not support WITHIN GROUP for percent_rank")
 	public void testHypotheticalSetPercentRank(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
@@ -302,7 +299,6 @@ public class CriteriaOrderedSetAggregateTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsHypotheticalSetFunctions.class)
-	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not support WITHIN GROUP for rank")
 	public void testHypotheticalSetRank(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();

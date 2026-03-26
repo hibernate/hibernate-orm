@@ -25,7 +25,6 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
-import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.orm.test.jpa.Distributor;
 import org.hibernate.orm.test.jpa.Item;
@@ -864,8 +863,7 @@ public class QueryTest {
 	}
 
 	@Test
-	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimestampComparison.class)
-	@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner does not support date and timestamp comparison" )
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimestampWithDateComparison.class)
 	public void testExplicitPositionalParameter(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			Wallet w = new Wallet();

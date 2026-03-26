@@ -40,7 +40,7 @@ import java.util.EnumSet;
 @SkipForDialect(dialectClass = InformixDialect.class,
 		reason = "Informix is far more resistant to the reserved keyword usage.")
 @SkipForDialect(dialectClass = SpannerDialect.class,
-		reason = "AltibaseDialect has autoQuoteKeywords enabled, so it is far more resistant to the reserved keyword usage.")
+		reason = "SpannerDialect has autoQuoteKeywords enabled, so it is far more resistant to the reserved keyword usage.")
 @ServiceRegistry
 @DomainModel(annotatedClasses = SchemaUpdateHaltOnErrorTest.From.class)
 public class SchemaUpdateHaltOnErrorTest {

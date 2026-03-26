@@ -72,19 +72,18 @@ public class SoftDeleteTablePerClassTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = SpannerDialect.class,
+			reason = "Spanner JDBC driver currently doesn't support returning correct precision in the result metadata" )
 	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
 			reason = "Spanner JDBC driver currently doesn't support returning correct precision in the result metadata")
 	void testDeletedFlagsAreSetCorrectly(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			// Cloud Spanner does not support character type and maps char(1) to string(1),
-			final boolean isSpanner = session.getDialect() instanceof SpannerDialect;
-
 			// SpellBook(1) soft-deleted via HQL, SpellBook(2) active
 			assertThat( session.createNativeQuery(
 					"select title, deleted from " + SpellBook.TABLE_NAME + " order by id", Tuple.class
 			).getResultList() )
-					.extracting( t -> t.get( "title" ), t -> isSpanner ? String.valueOf( t.get( "deleted" ) ) : t.get( "deleted" ) )
-					.containsExactly( tuple( "Necronomicon", isSpanner ? "Y" : 'Y' ), tuple( "Book of Shadows", isSpanner ? "N" : 'N' ) );
+					.extracting( t -> t.get( "title" ), t -> t.get( "deleted" ) )
+					.containsExactly( tuple( "Necronomicon", 'Y' ), tuple( "Book of Shadows", 'N' ) );
 
 			// DarkSpellBook(5) deleted via root-level "delete from Book",
 			// DarkSpellBook(7) deleted via mid-level "delete from SpellBook",
@@ -92,19 +91,19 @@ public class SoftDeleteTablePerClassTest {
 			assertThat( session.createNativeQuery(
 					"select title, deleted from " + DarkSpellBook.TABLE_NAME + " order by id", Tuple.class
 			).getResultList() )
-					.extracting( t -> t.get( "title" ), t -> isSpanner ? String.valueOf( t.get( "deleted" ) ) : t.get( "deleted" ) )
+					.extracting( t -> t.get( "title" ), t -> t.get( "deleted" ) )
 					.containsExactly(
-							tuple( "Book of Vile Darkness", isSpanner ? "N" : 'N' ),
-							tuple( "Necronomicon Ex-Mortis", isSpanner ? "Y" : 'Y' ),
-							tuple( "Grimoire of Shadows", isSpanner ? "Y" : 'Y' )
+							tuple( "Book of Vile Darkness", 'N' ),
+							tuple( "Necronomicon Ex-Mortis", 'Y' ),
+							tuple( "Grimoire of Shadows", 'Y' )
 					);
 
 			// Novel(6) soft-deleted via session.remove(), Novel(3) active
 			assertThat( session.createNativeQuery(
 					"select title, deleted from " + Novel.TABLE_NAME + " order by id", Tuple.class
 			).getResultList() )
-					.extracting( t -> t.get( "title" ), t -> isSpanner ? String.valueOf( t.get( "deleted" ) ) : t.get( "deleted" ) )
-					.containsExactly( tuple( "The Hobbit", isSpanner ? "N" : 'N' ), tuple( "1984", isSpanner ? "Y" : 'Y' ) );
+					.extracting( t -> t.get( "title" ), t -> t.get( "deleted" ) )
+					.containsExactly( tuple( "The Hobbit", 'N' ), tuple( "1984", 'Y' ) );
 		} );
 	}
 

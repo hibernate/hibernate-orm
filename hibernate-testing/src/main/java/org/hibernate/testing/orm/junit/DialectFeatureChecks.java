@@ -1463,6 +1463,13 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsTimestampWithDateComparison implements DialectFeatureCheck {
+		@Override
+		public boolean apply(Dialect dialect) {
+			return !( dialect instanceof SpannerDialect || dialect instanceof SpannerPostgreSQLDialect );
+		}
+	}
+
 	private static final HashMap<Dialect, FakeFunctionContributions> FUNCTION_CONTRIBUTIONS = new HashMap<>();
 
 	public static boolean definesFunction(Dialect dialect, String functionName) {

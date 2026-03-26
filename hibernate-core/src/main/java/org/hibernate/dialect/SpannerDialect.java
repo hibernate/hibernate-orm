@@ -71,7 +71,8 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
-import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -186,36 +187,62 @@ public class SpannerDialect extends Dialect {
 			int precision,
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
-		if ( jdbcTypeCode == ARRAY && columnTypeName.startsWith( "ARRAY<" ) ) {
-			int startIndex = columnTypeName.indexOf( '<' ) + 1;
-			int endIndex = columnTypeName.indexOf( '>' );
-			if ( startIndex > 0 && endIndex > startIndex ) {
-				String componentTypeName = columnTypeName.substring( startIndex, endIndex ).trim();
-				Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
-				if ( sqlTypeCode != null ) {
-					return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
-							jdbcTypeCode,
-							jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
-							ColumnTypeInformation.EMPTY
-					);
-				}
+		if ( jdbcTypeCode == ARRAY ) {
+			final int startIndex = columnTypeName.indexOf( '<' ) + 1;
+			final int endIndex = columnTypeName.lastIndexOf( '>' );
+			final String componentTypeName = columnTypeName.substring( startIndex, endIndex ).trim();
+			// Spanner uses STRING for VARCHAR/CLOB. DdlTypeRegistry prefers CLOB for "string".
+			final Integer sqlTypeCode = componentTypeName.equalsIgnoreCase( "STRING" )
+					? VARCHAR
+					: resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
+			if ( sqlTypeCode != null ) {
+				return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
+						jdbcTypeCode,
+						jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
+						ColumnTypeInformation.EMPTY
+				);
 			}
 		}
 		return super.resolveSqlTypeDescriptor( columnTypeName, jdbcTypeCode, precision, scale, jdbcTypeRegistry );
 	}
 
 	@Override
-	protected Integer resolveSqlTypeCode(String typeName, String baseTypeName, TypeConfiguration typeConfiguration) {
-		if ( baseTypeName == null ) {
-			return super.resolveSqlTypeCode( typeName, baseTypeName, typeConfiguration );
-		}
-		return switch ( baseTypeName.toLowerCase( java.util.Locale.ROOT ) ) {
-			case "int64" -> BIGINT;
-			case "float64" -> DOUBLE;
-			case "bool" -> BOOLEAN;
-			case "timestamp" -> TIMESTAMP_WITH_TIMEZONE;
-			default -> super.resolveSqlTypeCode( typeName, baseTypeName, typeConfiguration );
-		};
+	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.registerColumnTypes( typeContributions, serviceRegistry );
+		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder(
+						VARCHAR,
+						columnType( VARCHAR ),
+						castType( VARCHAR ),
+						castType( VARCHAR ),
+						this
+				)
+				.withTypeCapacity( getMaxVarcharLength(), columnType( VARCHAR ) )
+				.build()
+		);
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder(
+						NVARCHAR,
+						columnType( NVARCHAR ),
+						castType( NVARCHAR ),
+						castType( NVARCHAR ),
+						this
+				)
+				.withTypeCapacity( getMaxNVarcharLength(), columnType( NVARCHAR ) )
+				.build()
+		);
+		ddlTypeRegistry.addDescriptor(
+				CapacityDependentDdlType.builder(
+						VARBINARY,
+						columnType( VARBINARY ),
+						castType( VARBINARY ),
+						castType( VARBINARY ),
+						this
+				)
+				.withTypeCapacity( getMaxVarbinaryLength(), columnType( VARBINARY ) )
+				.build()
+		);
 	}
 
 	@Override
@@ -251,8 +278,8 @@ public class SpannerDialect extends Dialect {
 	@Override
 	protected String castType(int sqlTypeCode) {
 		return switch ( sqlTypeCode ) {
-			case CHAR, NCHAR, VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR -> "string";
-			case BINARY, VARBINARY, LONG32VARBINARY -> "bytes";
+			case CHAR, NCHAR, VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR, CLOB, NCLOB -> "string";
+			case BINARY, VARBINARY, LONG32VARBINARY, BLOB -> "bytes";
 			default -> super.castType( sqlTypeCode );
 		};
 	}
@@ -624,8 +651,6 @@ public class SpannerDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 		functionFactory.listagg_stringAgg( "string" );
-		functionFactory.inverseDistributionOrderedSetAggregates();
-		functionFactory.hypotheticalOrderedSetAggregates();
 		functionFactory.array_spanner();
 
 		functionRegistry.register(

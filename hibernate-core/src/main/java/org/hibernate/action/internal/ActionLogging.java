@@ -206,7 +206,7 @@ public interface ActionLogging extends BasicLogger {
 
 	@LogMessage(level = DEBUG)
 	@Message(
-			value = "Using ActionQueue implementation - %s",
+			value = "Using %s ActionQueue implementation",
 			id = NAMESPACE + 23
 	)
 	void usingActionQueue(String name);

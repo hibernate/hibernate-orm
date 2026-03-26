@@ -9,6 +9,7 @@ import org.hibernate.action.queue.QueueImplementation;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
+import static org.hibernate.action.internal.ActionLogging.ACTION_LOGGER;
 import static org.hibernate.cfg.FlushSettings.FLUSH_QUEUE_IMPL;
 import static org.hibernate.engine.config.spi.StandardConverters.STRING;
 
@@ -20,6 +21,8 @@ public class ActionQueueSupport {
 		var configurationService = factory.getServiceRegistry().requireService( ConfigurationService.class );
 		final var setting = configurationService.getSetting( FLUSH_QUEUE_IMPL, STRING, "legacy" );
 		var implementation = QueueImplementation.fromSetting( setting );
+
+		ACTION_LOGGER.usingActionQueue( implementation.name() );
 
 		return switch ( implementation ) {
 			case LEGACY -> new LegacyActionQueueFactory();

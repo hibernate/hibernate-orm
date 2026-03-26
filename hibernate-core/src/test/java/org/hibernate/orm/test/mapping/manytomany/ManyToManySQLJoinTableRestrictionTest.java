@@ -13,11 +13,14 @@ import java.util.Set;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLJoinTableRestriction;
 
+import org.hibernate.cfg.BatchSettings;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,6 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Marco Belladelli
  */
+@ServiceRegistry(settings = @Setting(name = BatchSettings.STATEMENT_BATCH_SIZE, value = "1"))
 @DomainModel( annotatedClasses = {
 		ManyToManySQLJoinTableRestrictionTest.Project.class,
 		ManyToManySQLJoinTableRestrictionTest.User.class,

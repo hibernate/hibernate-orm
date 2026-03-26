@@ -38,9 +38,30 @@ public class JdbcDeleteCustomSql
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
 			List<ColumnValueParameter> parameters) {
+		this(
+				tableDescriptor,
+				mutationTarget,
+				tableDescriptor.deleteDetails().getCustomSql(),
+				tableDescriptor.deleteDetails().isCallable(),
+				expectation,
+				keyRestrictionBindings,
+				optLockRestrictionBindings,
+				parameters
+		);
+	}
+
+	public JdbcDeleteCustomSql(
+			TableDescriptor tableDescriptor,
+			GraphMutationTarget<?> mutationTarget,
+			String customSql,
+			boolean callable,
+			Expectation expectation,
+			List<ColumnValueBinding> keyRestrictionBindings,
+			List<ColumnValueBinding> optLockRestrictionBindings,
+			List<ColumnValueParameter> parameters) {
 		super(tableDescriptor, mutationTarget, expectation, parameters);
-		this.customSql = tableDescriptor.deleteDetails().getCustomSql();
-		this.callable = tableDescriptor.deleteDetails().isCallable();
+		this.customSql = customSql;
+		this.callable = callable;
 		registerValueDescriptors(parameters);
 	}
 

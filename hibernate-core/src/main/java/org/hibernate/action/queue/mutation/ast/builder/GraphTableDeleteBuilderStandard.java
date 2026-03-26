@@ -5,14 +5,16 @@
 package org.hibernate.action.queue.mutation.ast.builder;
 
 import org.hibernate.Incubating;
+import org.hibernate.action.queue.meta.CollectionTableDescriptor;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.action.queue.mutation.GraphMutationTarget;
-import org.hibernate.action.queue.mutation.ast.MutatingTableReference;
 import org.hibernate.action.queue.mutation.ast.TableDelete;
 import org.hibernate.action.queue.mutation.ast.TableDeleteCustomSql;
 import org.hibernate.action.queue.mutation.ast.TableDeleteStandard;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.collection.mutation.CollectionGraphMutationTarget;
+import org.hibernate.sql.model.TableMapping.MutationDetails;
 
 /// Standard builder for graph-based DELETE mutations.
 ///
@@ -26,7 +28,18 @@ public class GraphTableDeleteBuilderStandard
 		extends AbstractGraphTableDeleteBuilder {
 
 	private final String whereFragment;
-	private final boolean isCustomSql;
+	private final MutationDetails customSql;
+
+	public GraphTableDeleteBuilderStandard(
+			CollectionGraphMutationTarget mutationTarget,
+			CollectionTableDescriptor tableDescriptor,
+			String whereFragment,
+			MutationDetails customSql,
+			SessionFactoryImplementor sessionFactory) {
+		super( mutationTarget, tableDescriptor, sessionFactory );
+		this.whereFragment = whereFragment;
+		this.customSql = customSql;
+	}
 
 	public GraphTableDeleteBuilderStandard(
 			GraphMutationTarget<?> mutationTarget,
@@ -42,34 +55,23 @@ public class GraphTableDeleteBuilderStandard
 			SessionFactoryImplementor sessionFactory) {
 		super(mutationTarget, tableDescriptor, sessionFactory);
 		this.whereFragment = whereFragment;
-		this.isCustomSql = tableDescriptor.deleteDetails() != null
-				&& tableDescriptor.deleteDetails().getCustomSql() != null;
+		this.customSql = extractCustomDeleteDetails( tableDescriptor );
 	}
 
-	public GraphTableDeleteBuilderStandard(
-			GraphMutationTarget<?> mutationTarget,
-			MutatingTableReference tableReference,
-			SessionFactoryImplementor sessionFactory) {
-		this( mutationTarget, tableReference, null, sessionFactory );
-	}
-
-	public GraphTableDeleteBuilderStandard(
-			GraphMutationTarget<?> mutationTarget,
-			MutatingTableReference tableReference,
-			String whereFragment,
-			SessionFactoryImplementor sessionFactory) {
-		super(mutationTarget, tableReference, sessionFactory);
-		this.whereFragment = whereFragment;
-		this.isCustomSql = tableReference.tableDescriptor().deleteDetails() != null
-				&& tableReference.tableDescriptor().deleteDetails().getCustomSql() != null;
+	private static MutationDetails extractCustomDeleteDetails(TableDescriptor tableDescriptor) {
+		var deleteDetails = tableDescriptor.deleteDetails();
+		return deleteDetails != null && deleteDetails.getCustomSql() != null
+				? deleteDetails
+				: null;
 	}
 
 	@Override
 	public TableDelete buildMutation() {
-		if (isCustomSql) {
+		if (customSql != null) {
 			return new TableDeleteCustomSql(
 					getTableDescriptor(),
 					getMutationTarget(),
+					customSql,
 					getSqlComment(),
 					keyRestrictionBindings,
 					optimisticLockBindings,

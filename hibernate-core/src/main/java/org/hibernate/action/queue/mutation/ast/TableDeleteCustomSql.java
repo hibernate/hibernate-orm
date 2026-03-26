@@ -12,6 +12,7 @@ import org.hibernate.action.queue.mutation.jdbc.JdbcDelete;
 import org.hibernate.action.queue.mutation.jdbc.JdbcDeleteCustomSql;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.model.TableMapping.MutationDetails;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
 
@@ -30,12 +31,32 @@ public class TableDeleteCustomSql
 		extends AbstractTableMutation<JdbcDelete>
 		implements TableDelete, CustomSqlMutation {
 
+	private final MutationDetails customSql;
 	private final List<ColumnValueBinding> keyRestrictionBindings;
 	private final List<ColumnValueBinding> optLockRestrictionBindings;
 
 	public TableDeleteCustomSql(
 			TableDescriptor tableDescriptor,
 			GraphMutationTarget<?> mutationTarget,
+			String sqlComment,
+			List<ColumnValueBinding> keyRestrictionBindings,
+			List<ColumnValueBinding> optLockRestrictionBindings,
+			List<ColumnValueParameter> parameters) {
+		this(
+				tableDescriptor,
+				mutationTarget,
+				tableDescriptor.deleteDetails(),
+				sqlComment,
+				keyRestrictionBindings,
+				optLockRestrictionBindings,
+				parameters
+		);
+	}
+
+	public TableDeleteCustomSql(
+			TableDescriptor tableDescriptor,
+			GraphMutationTarget<?> mutationTarget,
+			MutationDetails customSql,
 			String sqlComment,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
@@ -47,6 +68,7 @@ public class TableDeleteCustomSql
 			sqlComment,
 			parameters
 		);
+		this.customSql = customSql;
 		this.keyRestrictionBindings = keyRestrictionBindings;
 		this.optLockRestrictionBindings = optLockRestrictionBindings;
 	}
@@ -84,7 +106,9 @@ public class TableDeleteCustomSql
 		return new JdbcDeleteCustomSql(
 			getTableDescriptor(),
 			getMutationTarget(),
-			getTableDescriptor().deleteDetails().getExpectation(),
+			customSql.getCustomSql(),
+			customSql.isCallable(),
+			customSql.getExpectation(),
 			keyRestrictionBindings,
 			optLockRestrictionBindings,
 			getParameters()

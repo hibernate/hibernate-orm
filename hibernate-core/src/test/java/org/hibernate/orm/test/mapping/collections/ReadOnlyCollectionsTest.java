@@ -7,11 +7,14 @@ package org.hibernate.orm.test.mapping.collections;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.cfg.FlushSettings;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Marco Belladelli
  */
+@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_IMPL, value = "legacy"))
 @DomainModel( annotatedClasses = {
 		ReadOnlyCollectionsTest.CollectionsContainer.class,
 		ReadOnlyCollectionsTest.TargetEntity.class,

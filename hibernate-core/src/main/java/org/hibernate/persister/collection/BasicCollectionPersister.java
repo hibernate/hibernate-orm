@@ -46,7 +46,6 @@ import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.type.EntityType;
 
-import java.io.Serializable;
 import java.util.List;
 
 import static org.hibernate.temporal.TemporalTableStrategy.NATIVE;
@@ -470,14 +469,12 @@ final var stateManagement = collectionBinding.getStateManagement();
 		else {
 			updateBuilder.addKeyRestrictionsLeniently( attribute.getKeyDescriptor().getKeyPart() );
 			final var indexDescriptor = attribute.getIndexDescriptor();
-// DISABLED: 			if ( indexDescriptor != null && !indexContainsFormula ) {
-// DISABLED: 				updateBuilder.addKeyRestrictionsLeniently( indexDescriptor );
-// DISABLED: 			}
-// DISABLED: 			else {
-// DISABLED: 				updateBuilder.addKeyRestrictions( attribute.getElementDescriptor() );
-// DISABLED: 			}
-			// Always use element descriptor for restriction (not index)
-			updateBuilder.addKeyRestrictions( attribute.getElementDescriptor() );
+			if ( indexDescriptor != null && !indexContainsFormula ) {
+				updateBuilder.addKeyRestrictionsLeniently( indexDescriptor );
+			}
+			else {
+				updateBuilder.addKeyRestrictions( attribute.getElementDescriptor() );
+			}
 		}
 
 		//noinspection unchecked,rawtypes
@@ -529,46 +526,18 @@ final var stateManagement = collectionBinding.getStateManagement();
 			);
 
 			final var indexDescriptor = attributeMapping.getIndexDescriptor();
-		// For @OrderColumn updates, do NOT include index in WHERE clause
-		// The index is what we're SETTING, not part of row identification
-		// Row is uniquely identified by element and parent key
-		// Including index fails for newly inserted rows where it's NULL
-			if ( false && indexDescriptor != null && !indexContainsFormula ) { // DISABLED - see comment above
-				// For WriteIndexCoordinator updates, we need to know if this row
-				// existed before or was just inserted
-				// - For existing rows: include the old index in WHERE clause
-				// - For newly inserted rows: the index column is NULL, don't include in WHERE
-				final Serializable snapshot = collection.getStoredSnapshot();
-				final boolean includeIndexInWhere;
-
-				if ( snapshot == null || (snapshot instanceof List && ((List<?>) snapshot).isEmpty()) ) {
-					// Empty or null snapshot means this is a newly created collection
-					// All rows were just inserted with NULL for the index column
-					includeIndexInWhere = false;
-				}
-				else if ( snapshot instanceof List ) {
-					// For Lists, check if this entry position existed in the snapshot
-					// If position is beyond snapshot size, it's a newly inserted element
-					includeIndexInWhere = entryPosition < ((List<?>) snapshot).size();
-				}
-				else {
-					// For other indexed collections, include index if snapshot exists
-					includeIndexInWhere = true;
-				}
-				if ( includeIndexInWhere ) {
-					// This is an existing row - include the old index in WHERE clause
-					// For Lists, the old index is the element's position in the snapshot
-					indexDescriptor.decompose(
-							incrementIndexByBase( entryPosition ),
-							0,
-							jdbcValueBindings,
-							null,
-							DEFAULT_RESTRICTOR,
-							session
-					);
-				}
-				// If newly inserted, don't add index to WHERE clause
-				// The index column is still NULL in the database
+			if ( indexDescriptor != null && !indexContainsFormula ) {
+				final Object index =
+						collection.getIndex( entry, entryPosition,
+								attributeMapping.getCollectionDescriptor() );
+				indexDescriptor.decompose(
+						incrementIndexByBase( index ),
+						0,
+						jdbcValueBindings,
+						null,
+						DEFAULT_RESTRICTOR,
+						session
+				);
 			}
 			else {
 				attributeMapping.getElementDescriptor().decompose(

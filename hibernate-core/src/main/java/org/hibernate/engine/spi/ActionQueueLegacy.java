@@ -232,7 +232,6 @@ public class ActionQueueLegacy implements org.hibernate.action.queue.ActionQueue
 	 * @param session The session "owning" this queue.
 	 */
 	public ActionQueueLegacy(SessionImplementor session) {
-		ACTION_LOGGER.usingActionQueue( getClass().getName() );
 		this.session = session;
 		isTransactionCoordinatorShared = false;
 		transactionCompletionCallbacks = new TransactionCompletionCallbacksImpl( session );

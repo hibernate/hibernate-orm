@@ -12,7 +12,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 public class PlanStepExecutorFactory {
 	public static PlanStepExecutor create(SharedSessionContractImplementor session) {
 		final Integer configuredJdbcBatchSize = session.getConfiguredJdbcBatchSize();
-		if ( configuredJdbcBatchSize != null && configuredJdbcBatchSize > 0 ) {
+		if ( configuredJdbcBatchSize != null && configuredJdbcBatchSize > 1 ) {
 			return new BatchingPlanStepExecutor( configuredJdbcBatchSize, session );
 		}
 		else {

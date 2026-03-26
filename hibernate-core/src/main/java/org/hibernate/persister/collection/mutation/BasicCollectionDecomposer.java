@@ -797,13 +797,13 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		// SET clause: element columns (and possibly index columns for lists)
 
 		final var indexDescriptor = attribute.getIndexDescriptor();
-		if ( indexDescriptor != null ) {
-			indexDescriptor.forEachUpdatable(
-				(selectionIndex, jdbcMapping) -> {
-					builder.addValueColumn( jdbcMapping );
-				}
-			);
-		}
+//		if ( indexDescriptor != null ) {
+//			indexDescriptor.forEachUpdatable(
+//				(selectionIndex, jdbcMapping) -> {
+//					builder.addValueColumn( jdbcMapping );
+//				}
+//			);
+//		}
 
 		attribute.getElementDescriptor().forEachUpdatable(
 			(selectionIndex, jdbcMapping) -> {
@@ -855,14 +855,14 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		var attribute = persister.getAttributeMapping();
 		var indexDescriptor = attribute.getIndexDescriptor();
 		var elementDescriptor = attribute.getElementDescriptor();
-
-		if ( indexDescriptor != null ) {
-			indexDescriptor.decompose(
-					collection.getIndex( rowValue, rowPosition, persister ),
-					jdbcValueBindings::bindAssignment,
-					session
-			);
-		}
+//
+//		if ( indexDescriptor != null ) {
+//			indexDescriptor.decompose(
+//					collection.getIndex( rowValue, rowPosition, persister ),
+//					jdbcValueBindings::bindAssignment,
+//					session
+//			);
+//		}
 
 		elementDescriptor.decompose(
 				rowValue,
@@ -1007,6 +1007,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 				persister,
 				tableDescriptor,
 				persister.getSqlWhereString(),
+				tableDescriptor.deleteAllDetails(),
 				factory
 		);
 

@@ -74,7 +74,6 @@ public class GraphBasedActionQueue implements ActionQueue {
 	/// @param planningOptions Options for graph building and planning.
 	/// @param session The session
 	public GraphBasedActionQueue(ConstraintModel constraintModel, PlanningOptions planningOptions, SessionImplementor session) {
-		ACTION_LOGGER.usingActionQueue( getClass().getName() );
 		this.session = session;
 		this.flushCoordinator = new FlushCoordinator( constraintModel, planningOptions, session );
 

@@ -33,6 +33,7 @@ import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.type.BasicType;
 
+import static java.util.function.Function.identity;
 import static org.hibernate.internal.util.collections.ArrayHelper.indexOf;
 import static org.hibernate.internal.util.collections.ArrayHelper.join;
 import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
@@ -109,7 +110,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext)
 			throws HibernateException {
-		this( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, AbstractEntityPersister::createStateManagement );
+		this( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, identity() );
 	}
 
 	protected SingleTableEntityPersister(
@@ -117,9 +118,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext,
-			final Function<PersistentClass, StateManagement> statementManagerFactory)
+			final Function<StateManagement, StateManagement> statementManagerConverter)
 					throws HibernateException {
-		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, statementManagerFactory );
+		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, statementManagerConverter );
 
 		final var dialect = creationContext.getDialect();
 		final var typeConfiguration = creationContext.getTypeConfiguration();

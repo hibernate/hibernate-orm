@@ -67,7 +67,7 @@ public class GraphTableDeleteBuilderStandard
 
 	@Override
 	public TableDelete buildMutation() {
-		if (customSql != null) {
+		if (customSql != null && customSql.getCustomSql() != null) {
 			return new TableDeleteCustomSql(
 					getTableDescriptor(),
 					getMutationTarget(),

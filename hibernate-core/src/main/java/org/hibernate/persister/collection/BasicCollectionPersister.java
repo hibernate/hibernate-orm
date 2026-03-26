@@ -771,15 +771,6 @@ final var stateManagement = collectionBinding.getStateManagement();
 	}
 
 	@Override
-	protected boolean isRowDeleteEnabled() {
-		// For join table collections (BasicCollectionPersister), we always need DELETE operations
-		// to remove rows from the join table, regardless of whether the FK columns are updateable.
-		// The key columns are typically part of the join table's composite PK, making them
-		// non-updateable, but we still need to DELETE entire rows when removing elements.
-		return !isInverse();
-	}
-
-	@Override
 	public FilterAliasGenerator getFilterAliasGenerator(String rootAlias) {
 		return new StaticFilterAliasGenerator( rootAlias );
 	}

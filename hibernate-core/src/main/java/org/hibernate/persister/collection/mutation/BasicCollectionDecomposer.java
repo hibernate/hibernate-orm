@@ -24,6 +24,7 @@ import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.collection.BasicCollectionPersister;
@@ -270,7 +271,10 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 
 		final List<PlannedOperation> operations = new ArrayList<>();
 
-		if ( !collection.wasInitialized() ) {
+		if ( persister.isPerformingUpdates() ) {
+
+		}
+		else if ( !collection.wasInitialized() ) {
 			// If there were queued operations, they would have
 			// been processed and cleared by now.
 			if ( !collection.isDirty() ) {
@@ -325,6 +329,9 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		// Attach post-execution callback to the last operation
 		if ( !operations.isEmpty() ) {
 			operations.get( operations.size() - 1 ).setPostExecutionCallback( postCollectionUpdateHandling );
+		}
+		else {
+			postCollectionUpdateHandling.handle( (SessionImplementor) session );
 		}
 
 		return operations;
@@ -794,16 +801,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		);
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// SET clause: element columns (and possibly index columns for lists)
-
-		final var indexDescriptor = attribute.getIndexDescriptor();
-//		if ( indexDescriptor != null ) {
-//			indexDescriptor.forEachUpdatable(
-//				(selectionIndex, jdbcMapping) -> {
-//					builder.addValueColumn( jdbcMapping );
-//				}
-//			);
-//		}
+		// SET clause: element columns
 
 		attribute.getElementDescriptor().forEachUpdatable(
 			(selectionIndex, jdbcMapping) -> {
@@ -822,6 +820,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 
 		// For indexed collections, also restrict by the OLD index value to identify the specific row
 		// This is critical to avoid updating all rows when index values change
+		final var indexDescriptor = attribute.getIndexDescriptor();
 		if ( indexDescriptor != null ) {
 			indexDescriptor.forEachSelectable( (index, jdbcMapping) -> {
 				builder.addKeyRestriction( jdbcMapping );
@@ -853,16 +852,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		}
 
 		var attribute = persister.getAttributeMapping();
-		var indexDescriptor = attribute.getIndexDescriptor();
 		var elementDescriptor = attribute.getElementDescriptor();
-//
-//		if ( indexDescriptor != null ) {
-//			indexDescriptor.decompose(
-//					collection.getIndex( rowValue, rowPosition, persister ),
-//					jdbcValueBindings::bindAssignment,
-//					session
-//			);
-//		}
 
 		elementDescriptor.decompose(
 				rowValue,
@@ -998,8 +988,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		}
 	}
 
-	private JdbcOperation buildRemoveOperation(
-			SessionFactoryImplementor factory) {
+	private JdbcOperation buildRemoveOperation(SessionFactoryImplementor factory) {
 		var tableDescriptor = persister.getCollectionTableDescriptor();
 		var attribute = persister.getAttributeMapping();
 

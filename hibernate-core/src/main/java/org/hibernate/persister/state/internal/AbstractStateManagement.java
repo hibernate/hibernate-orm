@@ -49,7 +49,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.isAnyTrue;
  *
  * @since 7.4
  */
-abstract class AbstractStateManagement implements StateManagement {
+public abstract class AbstractStateManagement implements StateManagement {
 	@Override
 	public InsertCoordinator createInsertCoordinator(EntityPersister persister) {
 		return new InsertCoordinatorStandard( persister, persister.getFactory() );

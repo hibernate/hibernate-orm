@@ -9,6 +9,8 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -33,28 +35,24 @@ import static org.junit.jupiter.api.Assertions.fail;
 @SuppressWarnings("JUnitMalformedDeclaration")
 @DomainModel(xmlMappings = "hbm/where/LazyOneToManyNonUniqueIdWhereTest.hbm.xml")
 @SessionFactory
+@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner does not support varchar in column definition")
 public class LazyOneToManyNonUniqueIdWhereTest {
 	@BeforeAll
 	public void createSchema(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> session.doWork( (connection) -> {
 			var dialect = session.getDialect();
 			try (Statement statement = connection.createStatement()) {
-				final boolean isSpanner = dialect instanceof org.hibernate.dialect.SpannerDialect;
-				final String integerType = isSpanner ? "INT64" : "integer";
-				final String varchar255 = isSpanner ? "STRING(255)" : "varchar(255)";
-				final String varchar10 = isSpanner ? "STRING(10)" : "varchar(10)";
-
 				statement.executeUpdate( dialect.getDropTableString( "MAIN_TABLE" ) );
 
-				statement.executeUpdate( String.format( """
+				statement.executeUpdate( """
 						create table MAIN_TABLE(
-							ID %s not null,
-							NAME %s not null,
-							CODE %s not null,
-							MATERIAL_OWNER_ID %s,
-							BUILDING_OWNER_ID %s,
+							ID integer not null,
+							NAME varchar(255) not null,
+							CODE varchar(10) not null,
+							MATERIAL_OWNER_ID integer,
+							BUILDING_OWNER_ID integer,
 							primary key (ID, CODE)
-						)""", integerType, varchar255, varchar10, integerType, integerType ) );
+						)""" );
 
 				statement.executeUpdate( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'plastic', 'MATERIAL' )" );
 				statement.executeUpdate( "insert into MAIN_TABLE(ID, NAME, CODE) VALUES( 1, 'house', 'BUILDING' )" );

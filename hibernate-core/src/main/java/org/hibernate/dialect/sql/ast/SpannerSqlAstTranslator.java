@@ -47,8 +47,13 @@ import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
+import org.hibernate.sql.model.ast.RestrictedTableMutation;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 
 /**
  * A SQL AST translator for Spanner.
@@ -204,6 +209,119 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		}
 		else {
 			super.visitUpdateStatementOnly( statement );
+		}
+	}
+
+	@Override
+	public void visitStandardTableUpdate(TableUpdateStandard tableUpdate) {
+		getClauseStack().push( Clause.UPDATE );
+		try {
+			visitSpannerTableUpdate( tableUpdate );
+			if ( tableUpdate.getWhereFragment() != null ) {
+				appendSql( " and (" );
+				appendSql( tableUpdate.getWhereFragment() );
+				appendSql( ")" );
+			}
+
+			if ( tableUpdate.getNumberOfReturningColumns() > 0 ) {
+				visitReturningColumns( tableUpdate::getReturningColumns );
+			}
+		}
+		finally {
+			getClauseStack().pop();
+		}
+	}
+
+	@Override
+	public void visitOptionalTableUpdate(OptionalTableUpdate tableUpdate) {
+		getClauseStack().push( Clause.UPDATE );
+		try {
+			visitSpannerTableUpdate( tableUpdate );
+		}
+		finally {
+			getClauseStack().pop();
+		}
+	}
+
+	/**
+	 * Spanner requires table aliasing in UPDATE statements to disambiguate table and column names
+	 * if they are identical (e.g., table 'Discount' and column 'discount').
+	 * This method overrides standard Hibernate rendering to inject generated aliases.
+	 */
+	private void visitSpannerTableUpdate(RestrictedTableMutation<? extends MutationOperation> tableUpdate) {
+		applySqlComment( tableUpdate.getMutationComment() );
+		final String stem = SqlAliasStemHelper.INSTANCE.generateStemFromEntityName( tableUpdate.getMutatingTable().getTableName() );
+		final String alias = stem + "1_0";
+
+		appendSql( "update " );
+		appendSql( tableUpdate.getMutatingTable().getTableName() );
+		appendSql( " " + alias );
+		registerAffectedTable( tableUpdate.getMutatingTable().getTableName() );
+
+		getClauseStack().push( Clause.SET );
+		try {
+			appendSql( " set" );
+			tableUpdate.forEachValueBinding( (columnPosition, columnValueBinding) -> {
+				if ( columnPosition == 0 ) {
+					appendSql( " " );
+				}
+				else {
+					appendSql( "," );
+				}
+				appendSql( alias + "." );
+				appendSql( columnValueBinding.getColumnReference().getColumnExpression() );
+				appendSql( "=" );
+				columnValueBinding.getValueExpression().accept( this );
+			} );
+		}
+		finally {
+			getClauseStack().pop();
+		}
+
+		getClauseStack().push( Clause.WHERE );
+		try {
+			appendSql( " where" );
+			tableUpdate.forEachKeyBinding( (position, columnValueBinding) -> {
+				if ( position == 0 ) {
+					appendSql( " " );
+				}
+				else {
+					appendSql( " and " );
+				}
+				appendSql( alias + "." );
+				appendSql( columnValueBinding.getColumnReference().getColumnExpression() );
+				appendSql( "=" );
+				columnValueBinding.getValueExpression().accept( this );
+			} );
+
+			if ( tableUpdate.getNumberOfOptimisticLockBindings() > 0 ) {
+				tableUpdate.forEachOptimisticLockBinding( (position, columnValueBinding) -> {
+					appendSql( " and " );
+					appendSql( alias + "." );
+					appendSql( columnValueBinding.getColumnReference().getColumnExpression() );
+					if ( columnValueBinding.getValueExpression() == null
+							|| columnValueBinding.getValueExpression().getFragment() == null ) {
+						appendSql( " is null" );
+					}
+					else {
+						appendSql( "=" );
+						columnValueBinding.getValueExpression().accept( this );
+					}
+				} );
+			}
+		}
+		finally {
+			getClauseStack().pop();
+		}
+	}
+
+	private void applySqlComment(String comment) {
+		if ( getSessionFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
+			if ( comment != null ) {
+				appendSql( "/* " );
+				appendSql( org.hibernate.dialect.Dialect.escapeComment( comment ) );
+				appendSql( " */" );
+			}
 		}
 	}
 

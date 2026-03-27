@@ -14,7 +14,7 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -38,7 +38,7 @@ public class SubqueryLimitOffsetTest {
 				} );
 	}
 
-	@BeforeEach
+	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -67,6 +67,6 @@ public class SubqueryLimitOffsetTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		// scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

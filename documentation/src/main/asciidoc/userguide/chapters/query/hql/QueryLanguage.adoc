@@ -181,7 +181,7 @@ For example:
 ====
 [source, java, indent=0]
 ----
-include::{example-dir-hql}/HQLTest.java[tags=hql-update-example]
+include::{example-dir-hql}/HQLInsertAndUpdateTest.java[tags=hql-update-example]
 ----
 ====
 
@@ -321,7 +321,7 @@ For example:
 ====
 [source, sql, indent=0]
 ----
-include::{example-dir-hql}/HQLTest.java[tags=hql-insert-example]
+include::{example-dir-hql}/HQLInsertAndUpdateTest.java[tags=hql-insert-example]
 ----
 
 [source, sql, indent=0]

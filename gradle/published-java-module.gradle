@@ -9,9 +9,6 @@ apply from: rootProject.file( 'gradle/releasable.gradle' )
 apply from: rootProject.file( 'gradle/java-module.gradle' )
 apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 
-// Make sure that the publishReleaseArtifacts task of the release module runs the release task of this sub module
-tasks.getByPath( ':release:publishReleaseArtifacts' ).dependsOn tasks.release
-
 configurations {
 	javadocSources {
 		description 'Used to aggregate javadocs for the whole project'
@@ -129,10 +126,19 @@ tasks.register('ciBuild') {
 
 tasks.release.dependsOn tasks.test
 
-tasks.preVerifyRelease.dependsOn build
-tasks.preVerifyRelease.dependsOn generateMetadataFileForPublishedArtifactsPublication
-tasks.preVerifyRelease.dependsOn generatePomFileForPublishedArtifactsPublication
-tasks.preVerifyRelease.dependsOn generatePomFileForRelocationPomPublication
+task releasePrepare {
+    group 'Release'
+    description 'Performs release preparations on local check-out, including updating changelog'
+
+    dependsOn build
+    dependsOn generateMetadataFileForPublishedArtifactsPublication
+    dependsOn generatePomFileForPublishedArtifactsPublication
+    dependsOn generatePomFileForRelocationPomPublication
+    dependsOn generatePomFileForRelocationPomPublication
+    // we depend on publishAllPublicationsToStagingRepository to make sure that the artifacts are "published" to a local staging directory
+    // used by JReleaser during the release process
+    dependsOn publishAllPublicationsToStagingRepository
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Ancillary tasks

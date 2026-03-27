@@ -840,4 +840,12 @@ tasks.withType(AsciidoctorTask).configureEach {
 		separateOutputDirs = false
 		backends 'html5'
 	}
+    // See https://docs.asciidoctor.org/gradle-plugin/latest/common-task-configuration/#choosing-an-execution-mode-for-asciidoctorj
+    executionMode = org.ysb33r.grolifant.api.core.jvm.ExecutionMode.JAVA_EXEC
 }
+
+tasks.withType(AsciidoctorPdfTask).configureEach {
+    // See https://docs.asciidoctor.org/gradle-plugin/latest/common-task-configuration/#choosing-an-execution-mode-for-asciidoctorj
+    executionMode = org.ysb33r.grolifant.api.core.jvm.ExecutionMode.JAVA_EXEC
+}
+

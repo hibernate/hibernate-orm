@@ -19,6 +19,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryParameterBindingValidator;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.type.NullType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.expression.NullSqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -266,6 +267,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 
 	@Override @SuppressWarnings("unchecked")
 	public boolean setType(MappingModelExpressible<T> type) {
+		final MappingModelExpressible<T> previousType = this.type;
 		this.type = type;
 		// If the bind type is undetermined or the given type is a model part, then we try to apply a new bind type
 		if ( bindType == null || bindType.getJavaType() == Object.class || type instanceof ModelPart ) {
@@ -278,12 +280,32 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 				final JdbcMapping jdbcMapping = basicValuedMapping.getJdbcMapping();
 				if ( jdbcMapping instanceof BindableType<?> ) {
 					final boolean changed = bindType != null && jdbcMapping != bindType;
-					bindType = (BindableType<? super T>) jdbcMapping;
-					return changed;
+					if ( changed && previousType instanceof BasicValuedMapping previousBasicValuedMapping
+						&& !areTypesCompatible( basicValuedMapping, previousBasicValuedMapping ) ) {
+						// An SQM parameter is used in multiple type-incompatible contexts,
+						// so let's play safe and not force a type onto the binding,
+						// but let SQM type inference dictate the type instead
+						this.type = NullType.INSTANCE;
+						this.bindType = (BindableType<T>) NullType.INSTANCE;
+						return true;
+					}
+					else {
+						this.bindType = (BindableType<? super T>) jdbcMapping;
+						return changed;
+					}
 				}
 			}
 		}
 		return false;
+	}
+
+	private boolean areTypesCompatible(BasicValuedMapping mapping1, BasicValuedMapping mapping2) {
+		final JdbcMapping jdbcMapping1 = mapping1.getSingleJdbcMapping();
+		final JdbcMapping jdbcMapping2 = mapping2.getSingleJdbcMapping();
+		// We can assume the java types are compatible, since this is relevant for cases when using the same parameter
+		// in multiple contexts e.g. assignment or comparison.
+		return jdbcMapping1.getJdbcType() == jdbcMapping2.getJdbcType()
+				&& jdbcMapping1.getValueConverter() == jdbcMapping2.getValueConverter();
 	}
 
 	private void validate(Object value) {

@@ -22,7 +22,7 @@ import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -45,7 +45,7 @@ public class MultiValuedParameterTest extends BaseSessionFactoryFunctionalTest {
 		metadataSources.addAnnotatedClass( EntityWithNumericId.class );
 	}
 
-	@BeforeEach
+	@BeforeAll
 	public void prepareData() {
 		inTransaction(
 				session -> {
@@ -124,7 +124,7 @@ public class MultiValuedParameterTest extends BaseSessionFactoryFunctionalTest {
 
 	@AfterEach
 	public void cleanupData() {
-		sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
+		// sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Entity( name = "EntityWithNumericId" )

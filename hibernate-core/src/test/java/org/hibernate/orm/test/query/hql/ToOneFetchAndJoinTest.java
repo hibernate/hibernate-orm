@@ -14,7 +14,7 @@ import org.hibernate.orm.test.hql.fetchAndJoin.Entity1;
 import org.hibernate.orm.test.hql.fetchAndJoin.Entity2;
 import org.hibernate.orm.test.hql.fetchAndJoin.Entity3;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -112,7 +112,7 @@ public class ToOneFetchAndJoinTest {
 		);
 	}
 
-	@BeforeEach
+	@BeforeAll
 	public void setupData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -139,6 +139,6 @@ public class ToOneFetchAndJoinTest {
 
 	@AfterEach
 	public void cleanupData(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		// scope.getSessionFactory().getSchemaManager().truncate();
 	}
 }

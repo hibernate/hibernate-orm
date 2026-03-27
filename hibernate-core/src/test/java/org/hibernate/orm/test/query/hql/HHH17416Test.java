@@ -16,7 +16,7 @@ import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 @JiraKey(value = "HHH-17416")
@@ -33,14 +33,14 @@ public class HHH17416Test extends BaseSessionFactoryFunctionalTest {
 		return new Class<?>[] {Person.class};
 	}
 
-	@BeforeEach
+	@BeforeAll
 	public void setup() {
 		inTransaction(session -> session.persist(person));
 	}
 
 	@AfterEach
 	public void teardown() {
-		sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
+		// sessionFactoryScope().getSessionFactory().getSchemaManager().truncate();
 	}
 
 	@Test

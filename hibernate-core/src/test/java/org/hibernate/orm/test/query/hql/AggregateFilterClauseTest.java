@@ -85,7 +85,7 @@ public class AggregateFilterClauseTest {
 
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
-		scope.dropData();
+		// scope.dropData();
 	}
 
 	@Test

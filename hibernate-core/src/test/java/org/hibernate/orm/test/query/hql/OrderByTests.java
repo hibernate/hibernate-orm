@@ -18,7 +18,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
@@ -61,7 +61,7 @@ public class OrderByTests {
 	Human zoo2Director2;
 
 
-	@BeforeEach
+	@BeforeAll
 	private void createData(SessionFactoryScope scope) {
 		stateProvince = new StateProvince();
 		stateProvince.setName( "IL" );
@@ -144,7 +144,7 @@ public class OrderByTests {
 
 	@AfterEach
 	private void cleanupData(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
+		// scope.getSessionFactory().getSchemaManager().truncateMappedObjects();
 	}
 
 	@Test

@@ -12,6 +12,14 @@ import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.SybaseDriverKind;
+import org.hibernate.dialect.SybaseJtdsJsonAsStringArrayJdbcTypeConstructor;
+import org.hibernate.dialect.SybaseJtdsJsonAsStringJdbcType;
+import org.hibernate.dialect.SybaseJtdsLongNVarcharJdbcType;
+import org.hibernate.dialect.SybaseJtdsNCharJdbcType;
+import org.hibernate.dialect.SybaseJtdsNClobJdbcType;
+import org.hibernate.dialect.SybaseJtdsNVarcharJdbcType;
+import org.hibernate.dialect.SybaseJtdsXmlAsStringArrayJdbcTypeConstructor;
+import org.hibernate.dialect.SybaseJtdsXmlAsStringJdbcType;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.IntegralTimestampaddFunction;
@@ -57,6 +65,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TinyIntAsSmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -237,21 +246,32 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 		if ( driverKind == SybaseDriverKind.JTDS ) {
-			jdbcTypeRegistry.addDescriptor( Types.TINYINT, TinyIntAsSmallIntJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( TinyIntAsSmallIntJdbcType.INSTANCE );
 
 			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
-			jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.CLOB_BINDING );
+			jdbcTypeRegistry.addDescriptor( ClobJdbcType.CLOB_BINDING );
 
-			// The jTDS driver doesn't support nationalized types
-			jdbcTypeRegistry.addDescriptor( Types.NCLOB, ClobJdbcType.CLOB_BINDING );
-			jdbcTypeRegistry.addDescriptor( Types.NVARCHAR, ClobJdbcType.CLOB_BINDING );
+			// Need to register specialized JdbcType instances for jTDS because it throws an AbstractMethodError
+			// when invoking nationalized methods and requires binding through UTF-16LE bytes
+			jdbcTypeRegistry.addDescriptor( SybaseJtdsNClobJdbcType.JTDS_INSTANCE );
+			jdbcTypeRegistry.addDescriptor( SybaseJtdsNCharJdbcType.JTDS_INSTANCE );
+			jdbcTypeRegistry.addDescriptor( SybaseJtdsNVarcharJdbcType.JTDS_INSTANCE );
+			jdbcTypeRegistry.addDescriptor( SybaseJtdsLongNVarcharJdbcType.JTDS_INSTANCE );
+			jdbcTypeRegistry.addDescriptor( SybaseJtdsJsonAsStringJdbcType.JTDS_INSTANCE );
+			jdbcTypeRegistry.addDescriptor( SybaseJtdsXmlAsStringJdbcType.JTDS_INSTANCE );
+			jdbcTypeRegistry.addTypeConstructor( SybaseJtdsJsonAsStringArrayJdbcTypeConstructor.INSTANCE );
+			jdbcTypeRegistry.addTypeConstructor( SybaseJtdsXmlAsStringArrayJdbcTypeConstructor.INSTANCE );
 		}
 		else {
-			// Some Sybase drivers cannot support getClob.  See HHH-7889
-			jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.STREAM_BINDING_EXTRACTING );
+			// jConnect driver only conditionally supports getClob/getNClob depending on a server setting. See
+			//		- https://help.sap.com/doc/e3cb6844decf441e85e4670e1cf48c9b/16.0.3.6/en-US/SAP_jConnect_Programmers_Reference_en.pdf
+			// 		- https://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc20155.1570/html/OS_SDK_nf/CIHJFDDH.htm
+			//		- HHH-7889
+			jdbcTypeRegistry.addDescriptor( ClobJdbcType.STREAM_BINDING_EXTRACTING );
+			jdbcTypeRegistry.addDescriptor( NClobJdbcType.STREAM_BINDING_EXTRACTING );
 		}
 
-		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcType.PRIMITIVE_ARRAY_BINDING );
+		jdbcTypeRegistry.addDescriptor( BlobJdbcType.PRIMITIVE_ARRAY_BINDING );
 
 		// Sybase requires a custom binder for binding untyped nulls with the NULL type
 		typeContributions.contributeJdbcType( ObjectNullAsBinaryTypeJdbcType.INSTANCE );

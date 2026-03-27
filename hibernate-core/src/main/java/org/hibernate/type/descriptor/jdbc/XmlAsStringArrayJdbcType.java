@@ -4,7 +4,6 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
-import java.nio.charset.StandardCharsets;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -102,13 +101,7 @@ public class XmlAsStringArrayJdbcType extends XmlArrayJdbcType implements Adjust
 				final XmlAsStringArrayJdbcType jdbcType = getXmlAsStringArrayJdbcType();
 				final String xml = jdbcType.toString( value, getJavaType(), options );
 				if ( jdbcType.nationalized && options.getDialect().supportsNationalizedMethods() ) {
-					try {
-						st.setNString( index, xml );
-					}
-					// workaround for jTDS driver for Sybase
-					catch ( AbstractMethodError e ) {
-						st.setBytes( index, xml.getBytes( StandardCharsets.UTF_8 ) );
-					}
+					st.setNString( index, xml );
 				}
 				else {
 					st.setString( index, xml );
@@ -121,13 +114,7 @@ public class XmlAsStringArrayJdbcType extends XmlArrayJdbcType implements Adjust
 				final XmlAsStringArrayJdbcType jdbcType = getXmlAsStringArrayJdbcType();
 				final String xml = jdbcType.toString( value, getJavaType(), options );
 				if ( jdbcType.nationalized && options.getDialect().supportsNationalizedMethods() ) {
-					try {
-						st.setNString( name, xml );
-					}
-					// workaround for jTDS driver for Sybase
-					catch ( AbstractMethodError e ) {
-						st.setBytes( name, xml.getBytes( StandardCharsets.UTF_8 ) );
-					}
+					st.setNString( name, xml );
 				}
 				else {
 					st.setString( name, xml );
@@ -170,14 +157,7 @@ public class XmlAsStringArrayJdbcType extends XmlArrayJdbcType implements Adjust
 				final XmlAsStringArrayJdbcType jdbcType = getXmlAsStringArrayJdbcType();
 				String value;
 				if ( jdbcType.nationalized && options.getDialect().supportsNationalizedMethods() ) {
-					try {
-						value = rs.getNString( paramIndex );
-					}
-					// workaround for jTDS driver for Sybase
-					catch ( AbstractMethodError e ) {
-						byte[] bytes = rs.getBytes( paramIndex );
-						value = ( bytes == null ) ? null : new String( bytes, StandardCharsets.UTF_8 );
-					}
+					value = rs.getNString( paramIndex );
 				}
 				else {
 					value = rs.getString( paramIndex );
@@ -191,14 +171,7 @@ public class XmlAsStringArrayJdbcType extends XmlArrayJdbcType implements Adjust
 				final XmlAsStringArrayJdbcType jdbcType = getXmlAsStringArrayJdbcType();
 				String value;
 				if ( jdbcType.nationalized && options.getDialect().supportsNationalizedMethods() ) {
-					try {
-						value = statement.getNString( index );
-					}
-					// workaround for jTDS driver for Sybase
-					catch ( AbstractMethodError e ) {
-						byte[] bytes = statement.getBytes( index );
-						value = bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 );
-					}
+					value = statement.getNString( index );
 				}
 				else {
 					value = statement.getString( index );
@@ -212,14 +185,7 @@ public class XmlAsStringArrayJdbcType extends XmlArrayJdbcType implements Adjust
 				final XmlAsStringArrayJdbcType jdbcType = getXmlAsStringArrayJdbcType();
 				String value;
 				if ( jdbcType.nationalized && options.getDialect().supportsNationalizedMethods() ) {
-					try {
-						value = statement.getNString( name );
-					}
-					// workaround for jTDS driver for Sybase
-					catch ( AbstractMethodError e ) {
-						byte[] bytes = statement.getBytes( name );
-						value = bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 );
-					}
+					value = statement.getNString( name );
 				}
 				else {
 					value = statement.getString( name );

@@ -18,7 +18,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
-import org.hibernate.action.queue.mutation.ast.builder.GraphTableInsertBuilder;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
@@ -771,9 +770,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public void addDiscriminatorToInsertGroup(Function<String, GraphTableInsertBuilder> insertGroupBuilder) {
+	public void addDiscriminatorToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder) {
 		if ( explicitDiscriminatorColumnName != null ) {
-			final GraphTableInsertBuilder tableInsertBuilder = insertGroupBuilder.apply( getRootTableName() );
+			final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.apply( getRootTableName() );
 			tableInsertBuilder.addValueColumn(
 					getDiscriminatorValueString(),
 					getDiscriminatorMapping()

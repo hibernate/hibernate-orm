@@ -14,10 +14,7 @@ import org.hibernate.sql.model.ast.ColumnValueBindingList;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 
 /**
- * Specialized {@link TableMutationBuilder} implementation for building mutations
- * which have a {@code where} clause.
- *
- * Common operations of {@link TableUpdateBuilder} and {@link TableDeleteBuilder}.
+ * Specialized builder for building mutations which have a restrictions (aka, {@code where} clause).
  *
  * @author Steve Ebersole
  */

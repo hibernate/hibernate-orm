@@ -9,10 +9,11 @@ import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.action.queue.meta.TableDescriptor;
-import org.hibernate.action.queue.mutation.ast.builder.CollectionRowDeleteByUpdateSetNullBuilder;
-import org.hibernate.action.queue.mutation.ast.builder.GraphTableUpdateBuilderStandard;
-import org.hibernate.action.queue.mutation.jdbc.JdbcOperation;
+import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
 import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.ast.MutatingTableReference;
+import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -66,7 +67,7 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 
 		var removeOperation = jdbcOperations.getRemoveOperation();
 		var operation = new PlannedOperation(
-				removeOperation.getTableDescriptor(),
+				persister.getCollectionTableDescriptor(),
 				// technically an UPDATE
 				MutationKind.UPDATE,
 				removeOperation,
@@ -118,7 +119,9 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 	}
 
 
-	protected CollectionJdbcOperations buildJdbcOperations(TableDescriptor tableDescriptor, SessionFactoryImplementor factory) {
+	protected CollectionJdbcOperations buildJdbcOperations(
+			TableDescriptor tableDescriptor,
+			SessionFactoryImplementor factory) {
 		final CollectionJdbcOperations.InsertRowPlan insertRowPlan = buildInsertRowPlan( tableDescriptor );
 		final CollectionJdbcOperations.UpdateRowPlan updateRowPlan = buildUpdateRowPlan( tableDescriptor );
 		final CollectionJdbcOperations.DeleteRowPlan deleteRowPlan = buildDeleteRowPlan( tableDescriptor );
@@ -144,11 +147,17 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 			return null;
 		}
 
-		final GraphTableUpdateBuilderStandard updateBuilder = new GraphTableUpdateBuilderStandard(
-				persister,
+		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
 				tableDescriptor,
-				persister.getSqlWhereString(),
-				factory
+				0, // relativePosition
+				false, // isIdentifierTable
+				false // isInverse
+		);
+		final TableUpdateBuilderStandard updateBuilder = new TableUpdateBuilderStandard(
+				persister,
+				new MutatingTableReference(tableMapping),
+				factory,
+				persister.getSqlWhereString()
 		);
 
 		final var attributeMapping = persister.getAttributeMapping();
@@ -171,7 +180,7 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 
 
 		return new CollectionJdbcOperations.InsertRowPlan(
-				updateBuilder.buildMutation().createMutationOperation(),
+				updateBuilder.buildMutation().createMutationOperation(null, factory),
 				this::applyInsertRowValues
 		);
 	}
@@ -213,11 +222,17 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 			return null;
 		}
 
-		final var updateBuilder = new GraphTableUpdateBuilderStandard(
-				persister,
+		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
 				collectionTableDescriptor,
-				persister.getSqlWhereString(),
-				factory
+				0, // relativePosition
+				false, // isIdentifierTable
+				false // isInverse
+		);
+		final var updateBuilder = new TableUpdateBuilderStandard(
+				persister,
+				new MutatingTableReference(tableMapping),
+				factory,
+				persister.getSqlWhereString()
 		);
 
 		final var attributeMapping = persister.getAttributeMapping();
@@ -234,7 +249,7 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 		} );
 
 		return new CollectionJdbcOperations.UpdateRowPlan(
-				updateBuilder.buildMutation().createMutationOperation(),
+				updateBuilder.buildMutation().createMutationOperation(null, factory),
 				this::applyWriteIndexValues,
 				this::applyWriteIndexRestrictions
 		);
@@ -293,11 +308,17 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 			return null;
 		}
 
-		final var updateBuilder = new CollectionRowDeleteByUpdateSetNullBuilder(
-				persister,
+		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
 				collectionTableDescriptor,
-				persister.getSqlWhereString(),
-				factory
+				0, // relativePosition
+				false, // isIdentifierTable
+				false // isInverse
+		);
+		final var updateBuilder = new TableUpdateBuilderStandard<>(
+				persister,
+				new MutatingTableReference(tableMapping),
+				factory,
+				persister.getSqlWhereString()
 		);
 
 		final var foreignKeyDescriptor = persister.getAttributeMapping().getKeyDescriptor();
@@ -323,7 +344,7 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 		} );
 
 		return new CollectionJdbcOperations.DeleteRowPlan(
-				updateBuilder.buildMutation().createMutationOperation(),
+				updateBuilder.buildMutation().createMutationOperation(null, factory),
 				this::applyDeleteRowRestrictions
 		);
 	}
@@ -347,12 +368,20 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 		);
 	}
 
-	private JdbcOperation buildRemoveOperation(TableDescriptor tableDescriptor) {
-		var builder = new GraphTableUpdateBuilderStandard(
-				persister,
+	private MutationOperation buildRemoveOperation(TableDescriptor tableDescriptor) {
+		// todo : this will pick up the wrong custom-sql.
+		//		need to be able to pass in a MutationDetails to use
+		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
 				tableDescriptor,
-				persister.getSqlWhereString(),
-				factory
+				0, // relativePosition
+				false, // isIdentifierTable
+				false // isInverse
+		);
+		var builder = new TableUpdateBuilderStandard(
+				persister,
+				new MutatingTableReference(tableMapping),
+				factory,
+				persister.getSqlWhereString()
 		);
 
 		final var attributeMapping = persister.getAttributeMapping();
@@ -374,7 +403,7 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 			} );
 		}
 
-		return builder.buildMutation().createMutationOperation();
+		return builder.buildMutation().createMutationOperation(null, factory);
 	}
 
 }

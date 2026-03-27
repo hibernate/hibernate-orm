@@ -13,6 +13,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.model.ast.builder.AssigningTableMutationBuilder;
 
 /// Base support for [EntityAction]-based [MutationDecomposer] implementations.
 ///
@@ -55,7 +56,7 @@ public abstract class AbstractDecomposer<T extends EntityAction> implements Muta
 
 	protected void handleValueGeneration(
 			AttributeMapping attributeMapping,
-			AssigningGraphTableMutationBuilder<?, ?> builder,
+			AssigningTableMutationBuilder<?> builder,
 			OnExecutionGenerator generator) {
 		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
 		final boolean writePropertyValue = generator.writePropertyValue();

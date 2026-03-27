@@ -7,9 +7,9 @@ package org.hibernate.action.queue.cyclebreak;
 import org.hibernate.action.queue.meta.ColumnDescriptor;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptor;
-import org.hibernate.action.queue.mutation.jdbc.JdbcUpdate;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 
 import java.util.HashMap;
@@ -84,7 +84,7 @@ public class FixupTableUpdate {
 		return pkColumnDescriptors;
 	}
 
-	public JdbcUpdate buildJdbcUpdate() {
+	public PreparableMutationOperation buildJdbcUpdate() {
 		return new FixupJdbcUpdate(
 				sql,
 				tableDescriptor,

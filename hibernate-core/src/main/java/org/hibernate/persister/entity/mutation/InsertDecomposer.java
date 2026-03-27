@@ -11,9 +11,11 @@ import org.hibernate.action.queue.bind.EntityInsertBindPlan;
 import org.hibernate.action.queue.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptor;
-import org.hibernate.action.queue.mutation.ast.TableInsert;
-import org.hibernate.action.queue.mutation.ast.builder.GraphTableInsertBuilder;
-import org.hibernate.action.queue.mutation.ast.builder.GraphTableInsertBuilderStandard;
+import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
+import org.hibernate.sql.model.ast.TableInsert;
+import org.hibernate.sql.model.ast.MutatingTableReference;
+import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
+import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.action.queue.support.Helper;
 import org.hibernate.dialect.Dialect;
@@ -86,8 +88,9 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		int localOrd = 0;
 		int i = 0;
 		for ( Map.Entry<String, TableInsert> entry : effectiveGroup.entrySet() ) {
-			var operation = entry.getValue().createMutationOperation();
-			var tableDescriptor = (EntityTableDescriptor) operation.getTableDescriptor();
+			var operation = entry.getValue().createMutationOperation(valuesAnalysis, sessionFactory);
+			var tableMapping = (TableDescriptorAsTableMapping) operation.getTableDetails();
+			var tableDescriptor = (EntityTableDescriptor) tableMapping.getDescriptor();
 
 			if ( !valuesAnalysis.include( tableDescriptor ) ) {
 				continue;
@@ -157,15 +160,15 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 	}
 
 	private Map<String, TableInsert> generateStaticOperations() {
-		final Map<String, GraphTableInsertBuilder> staticOperationBuilders = new HashMap<>();
+		final Map<String, TableInsertBuilder> staticOperationBuilders = new HashMap<>();
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
 			staticOperationBuilders.put(
 					tableDescriptor.name(),
-					createGraphTableInsertBuilder(tableDescriptor, false)
+					createTableInsertBuilder(tableDescriptor, false)
 			);
 		} );
 
-		applyGraphTableInsertDetails(
+		applyTableInsertDetails(
 				staticOperationBuilders,
 				entityPersister.getPropertyInsertability(),
 				null,
@@ -180,21 +183,32 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		return Collections.unmodifiableMap( staticOperations );
 	}
 
-	private GraphTableInsertBuilder createGraphTableInsertBuilder(
+	private TableInsertBuilder createTableInsertBuilder(
 			TableDescriptor tableDescriptor,
 			boolean forceIdentifierBinding) {
 		final var delegate = entityPersister.getInsertDelegate();
-		// TODO: Handle custom insert delegates for graph mutations
+		// TODO: Handle custom insert delegates
 		// For now, always use standard builder
-		return new GraphTableInsertBuilderStandard(
-				entityPersister,
+
+		// Create adapter to convert TableDescriptor to TableMapping
+		final boolean isIdentifierTable = tableDescriptor instanceof EntityTableDescriptor etd
+				&& etd.isIdentifierTable();
+		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
 				tableDescriptor,
+				0, // relativePosition - will be set correctly by persister
+				isIdentifierTable,
+				false // isInverse
+		);
+
+		return new TableInsertBuilderStandard(
+				entityPersister,
+				new MutatingTableReference(tableMapping),
 				sessionFactory
 		);
 	}
 
-	private void applyGraphTableInsertDetails(
-			Map<String, GraphTableInsertBuilder> builders,
+	private void applyTableInsertDetails(
+			Map<String, TableInsertBuilder> builders,
 			boolean[] attributeInclusions,
 			Object object,
 			SharedSessionContractImplementor session,
@@ -202,7 +216,9 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
 
 		builders.forEach( (name, builder) -> {
-			final var tableDescriptor = (EntityTableDescriptor) builder.getTableDescriptor();
+			// Get the TableDescriptor from the adapter
+			final var tableMapping = (TableDescriptorAsTableMapping) builder.getMutatingTable().getTableMapping();
+			final var tableDescriptor = (EntityTableDescriptor) tableMapping.getDescriptor();
 			// Skip inverse tables
 			if (tableDescriptor.isInverse()) {
 				return;
@@ -228,12 +244,16 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 			}
 		} );
 
-		entityPersister.addDiscriminatorToInsertGroup( (tableName) -> builders.get( tableName ) );
-		entityPersister.addSoftDeleteToInsertGroup( (tableName) -> builders.get( tableName ) );
+		entityPersister.addDiscriminatorToInsertGroup( builders::get );
+		entityPersister.addSoftDeleteToInsertGroup( builders::get );
 
 		// add the keys
 		builders.forEach( (name, builder) -> {
-			if ( ( (EntityTableDescriptor) builder.getTableDescriptor() ).isIdentifierTable()
+			// Get the TableDescriptor from the adapter
+			final var tableMapping = (TableDescriptorAsTableMapping) builder.getMutatingTable().getTableMapping();
+			final var tableDescriptor = (EntityTableDescriptor) tableMapping.getDescriptor();
+
+			if ( tableDescriptor.isIdentifierTable()
 				&& entityPersister.isIdentifierAssignedByInsert()
 				&& !forceIdentifierBinding ) {
 				assert entityPersister.getInsertDelegate() != null;
@@ -242,14 +262,14 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 					final String[] columnValues = generator.getReferencedColumnValues( dialect );
 					if ( columnValues != null ) {
 						assert columnValues.length == 1;
-						assert builder.getTableDescriptor().keyDescriptor().columns().size() == 1;
-						builder.addKeyColumn( columnValues[0], builder.getTableDescriptor().keyDescriptor().columns().get( 0 ) );
+						assert tableDescriptor.keyDescriptor().columns().size() == 1;
+						builder.addKeyColumn( columnValues[0], tableDescriptor.keyDescriptor().columns().get( 0 ) );
 					}
 				}
 			}
 			else {
-				for (var keyColumn : builder.getTableDescriptor().keyDescriptor().columns()) {
-					builder.addKeyColumn(keyColumn);
+				for (var keyColumn : tableDescriptor.keyDescriptor().columns()) {
+					builder.addKeyColumn(keyColumn.writeFragment(), keyColumn);
 				}
 			}
 		} );
@@ -260,15 +280,15 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 			Object object,
 			SharedSessionContractImplementor session,
 			boolean forceIdentifierBinding) {
-		final Map<String, GraphTableInsertBuilder> operationBuilders = new HashMap<>();
+		final Map<String, TableInsertBuilder> operationBuilders = new HashMap<>();
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
 			operationBuilders.put(
 					tableDescriptor.name(),
-					createGraphTableInsertBuilder(tableDescriptor, false)
+					createTableInsertBuilder(tableDescriptor, false)
 			);
 		} );
 
-		applyGraphTableInsertDetails(
+		applyTableInsertDetails(
 				operationBuilders,
 				insertable,
 				object,

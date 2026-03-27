@@ -9,6 +9,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.model.ast.AbstractTableUpdate;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
@@ -26,13 +27,19 @@ import static java.util.Collections.emptyList;
 public class TableUpdateBuilderStandard<O extends MutationOperation>
 		extends AbstractTableUpdateBuilder<O> {
 	private final String whereFragment;
+	private TableMapping.MutationDetails mutationDetails;
 
 	public TableUpdateBuilderStandard(
 			MutationTarget<?> mutationTarget,
 			TableMapping tableMapping,
 			SessionFactoryImplementor sessionFactory) {
-		super( mutationTarget, tableMapping, sessionFactory );
-		this.whereFragment = null;
+		this(
+				mutationTarget,
+				new MutatingTableReference( tableMapping ),
+				tableMapping.getUpdateDetails(),
+				null,
+				sessionFactory
+		);
 	}
 
 	public TableUpdateBuilderStandard(
@@ -47,7 +54,23 @@ public class TableUpdateBuilderStandard<O extends MutationOperation>
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory,
 			String whereFragment) {
+		this(
+				mutationTarget,
+				tableReference,
+				tableReference.getTableMapping().getUpdateDetails(),
+				whereFragment,
+				sessionFactory
+		);
+	}
+
+	public TableUpdateBuilderStandard(
+			MutationTarget<?> mutationTarget,
+			MutatingTableReference tableReference,
+			TableMapping.MutationDetails mutationDetails,
+			String whereFragment,
+			SessionFactoryImplementor sessionFactory) {
 		super( mutationTarget, tableReference, sessionFactory );
+		this.mutationDetails = mutationDetails;
 		this.whereFragment = whereFragment;
 	}
 
@@ -61,44 +84,42 @@ public class TableUpdateBuilderStandard<O extends MutationOperation>
 	public RestrictedTableMutation<O> buildMutation() {
 		final var valueBindings = combine( getValueBindings(), getKeyBindings(), getLobValueBindings() );
 		if ( valueBindings.isEmpty() ) {
-			return (RestrictedTableMutation<O>)
-					new TableUpdateNoSet( getMutatingTable(), getMutationTarget() );
+			return (RestrictedTableMutation<O>)	new TableUpdateNoSet( getMutatingTable(), getMutationTarget() );
 		}
 
-		if ( getMutatingTable().getTableMapping().getUpdateDetails().getCustomSql() != null ) {
-			return (RestrictedTableMutation<O>)
-					new TableUpdateCustomSql(
-							getMutatingTable(),
-							getMutationTarget(),
-							getSqlComment(),
-							valueBindings,
-							getKeyRestrictionBindings(),
-							getOptimisticLockBindings()
-					);
+		if ( mutationDetails.getCustomSql() != null ) {
+			return (RestrictedTableMutation<O>) new TableUpdateCustomSql(
+					getMutatingTable(),
+					getMutationTarget(),
+					mutationDetails,
+					getSqlComment(),
+					valueBindings,
+					getKeyRestrictionBindings(),
+					getOptimisticLockBindings(),
+					AbstractTableUpdate.collectParameters( valueBindings, getKeyRestrictionBindings(), getOptimisticLockBindings() )
+			);
 		}
 
 		if ( getMutatingTable().getTableMapping().isOptional() ) {
-			return (RestrictedTableMutation<O>)
-					new OptionalTableUpdate(
-							getMutatingTable(),
-							getMutationTarget(),
-							valueBindings,
-							getKeyRestrictionBindings(),
-							getOptimisticLockBindings()
-					);
+			return (RestrictedTableMutation<O>)	new OptionalTableUpdate(
+					getMutatingTable(),
+					getMutationTarget(),
+					valueBindings,
+					getKeyRestrictionBindings(),
+					getOptimisticLockBindings()
+			);
 		}
 
-		return (RestrictedTableMutation<O>)
-				new TableUpdateStandard(
-						getMutatingTable(),
-						getMutationTarget(),
-						getSqlComment(),
-						valueBindings,
-						getKeyRestrictionBindings(),
-						getOptimisticLockBindings(),
-						whereFragment,
-						null,
-						emptyList()
-				);
+		return (RestrictedTableMutation<O>)	new TableUpdateStandard(
+				getMutatingTable(),
+				getMutationTarget(),
+				getSqlComment(),
+				valueBindings,
+				getKeyRestrictionBindings(),
+				getOptimisticLockBindings(),
+				whereFragment,
+				null,
+				emptyList()
+		);
 	}
 }

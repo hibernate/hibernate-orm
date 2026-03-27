@@ -6,12 +6,12 @@ package org.hibernate.action.queue.exec;
 
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.cyclebreak.FixupSynthesizer;
-import org.hibernate.action.queue.mutation.jdbc.JdbcOperation;
-import org.hibernate.action.queue.mutation.jdbc.PreparableJdbcOperation;
 import org.hibernate.action.queue.mutation.jdbc.SelfExecutingJdbcOperation;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.PreparableMutationOperation;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -45,8 +45,8 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 				executeWithGeneratedValues( plannedOperation );
 			}
 			else {
-				final JdbcOperation jdbcOperation = plannedOperation.getJdbcOperation();
-				if ( jdbcOperation instanceof PreparableJdbcOperation preparable ) {
+				final MutationOperation jdbcOperation = plannedOperation.getJdbcOperation();
+				if ( jdbcOperation instanceof PreparableMutationOperation preparable ) {
 					executePreparable( preparable, plannedOperation );
 				}
 				else if ( jdbcOperation instanceof SelfExecutingJdbcOperation selfExecuting ) {
@@ -117,7 +117,7 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 		generatedValuesCollector.apply( generatedValues );
 	}
 
-	protected abstract void executePreparable(PreparableJdbcOperation preparable, PlannedOperation plannedOperation);
+	protected abstract void executePreparable(PreparableMutationOperation preparable, PlannedOperation plannedOperation);
 
 	@Override
 	public void finishUp() {

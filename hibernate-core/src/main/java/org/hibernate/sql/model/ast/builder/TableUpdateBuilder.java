@@ -16,7 +16,7 @@ import org.hibernate.sql.model.ast.RestrictedTableMutation;
  */
 public interface TableUpdateBuilder<O extends MutationOperation>
 		extends RestrictedTableMutationBuilder<O, RestrictedTableMutation<O>>,
-		ColumnValuesTableMutationBuilder<RestrictedTableMutation<O>>,
+		AssigningTableMutationBuilder<RestrictedTableMutation<O>>,
 		SelectableConsumer {
 
 	/**

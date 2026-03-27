@@ -6,8 +6,8 @@ package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.mutation.GraphMutationTarget;
-import org.hibernate.action.queue.mutation.ast.builder.GraphTableInsertBuilder;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 
 import java.util.function.Function;
 
@@ -25,6 +25,6 @@ public interface EntityGraphMutationTarget extends GraphMutationTarget<EntityTab
 
 	EntityTableDescriptor getIdentifierTableDescriptor();
 
-	void addDiscriminatorToInsertGroup(Function<String, GraphTableInsertBuilder> insertGroupBuilder);
-	void addSoftDeleteToInsertGroup(Function<String, GraphTableInsertBuilder> insertGroupBuilder);
+	void addDiscriminatorToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder);
+	void addSoftDeleteToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder);
 }

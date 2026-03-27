@@ -16,12 +16,10 @@ import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.meta.CollectionTableDescriptor;
-import org.hibernate.action.queue.mutation.ast.builder.GraphTableDeleteBuilderStandard;
-import org.hibernate.action.queue.mutation.ast.builder.GraphTableInsertBuilderStandard;
-import org.hibernate.action.queue.mutation.ast.builder.GraphTableUpdateBuilderStandard;
-import org.hibernate.action.queue.mutation.jdbc.JdbcOperation;
+import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -29,6 +27,10 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.model.ast.MutatingTableReference;
+import org.hibernate.sql.model.ast.builder.TableDeleteBuilderStandard;
+import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
+import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -693,22 +695,28 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		}
 
 		// Ignore custom SQL for now...
-		var builder = new GraphTableInsertBuilderStandard(
-				persister,
+		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
 				tableDescriptor,
+				0, // relativePosition
+				false, // isIdentifierTable
+				false // isInverse
+		);
+		var builder = new TableInsertBuilderStandard(
+				persister,
+				new MutatingTableReference(tableMapping),
 				factory
 		);
 
 		applyInsertDetails( builder, persister, factory );
 
 		return new CollectionJdbcOperations.InsertRowPlan(
-				builder.buildMutation().createMutationOperation(),
+				builder.buildMutation().createMutationOperation(null, factory),
 				this::bindInsertRowValues
 		);
 	}
 
 	private void applyInsertDetails(
-			GraphTableInsertBuilderStandard insertBuilder,
+			TableInsertBuilderStandard insertBuilder,
 			BasicCollectionPersister persister,
 			SessionFactoryImplementor factory) {
 		final var attributeMapping = persister.getAttributeMapping();
@@ -736,7 +744,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 
 		final var softDeleteMapping = attributeMapping.getSoftDeleteMapping();
 		if ( softDeleteMapping != null ) {
-			final var columnReference = new ColumnReference( insertBuilder.getTableReference(), softDeleteMapping );
+			final var columnReference = new ColumnReference( insertBuilder.getMutatingTable(), softDeleteMapping );
 			insertBuilder.addValueColumn( softDeleteMapping.createNonDeletedValueBinding( columnReference ) );
 		}
 	}
@@ -793,11 +801,17 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 
 		var attribute = persister.getAttributeMapping();
 
-		var builder = new GraphTableUpdateBuilderStandard(
-				persister,
+		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
 				tableDescriptor,
-				persister.getSqlWhereString(),
-				factory
+				0, // relativePosition
+				false, // isIdentifierTable
+				false // isInverse
+		);
+		var builder = new TableUpdateBuilderStandard(
+				persister,
+				new MutatingTableReference(tableMapping),
+				factory,
+				persister.getSqlWhereString()
 		);
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -834,7 +848,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		}
 
 		return new CollectionJdbcOperations.UpdateRowPlan(
-				builder.buildMutation().createMutationOperation(),
+				builder.buildMutation().createMutationOperation(null, factory),
 				this::bindUpdateRowValues,
 				this::bindUpdateRowRestrictions
 		);
@@ -908,11 +922,18 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 
 		var attribute = persister.getAttributeMapping();
 
-		var builder = new GraphTableDeleteBuilderStandard(
+		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
+				persister.getCollectionTableDescriptor(),
+				0, // relativePosition
+				false, // isIdentifierTable
+				false // isInverse
+		);
+
+		var builder = new TableDeleteBuilderStandard(
 				persister,
-				tableDescriptor,
-				persister.getSqlWhereString(),
-				factory
+				new MutatingTableReference(tableMapping),
+				factory,
+				persister.getSqlWhereString()
 		);
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -941,7 +962,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		}
 
 		return new CollectionJdbcOperations.DeleteRowPlan(
-				builder.buildMutation().createMutationOperation(),
+				builder.buildMutation().createMutationOperation( null, factory ),
 				this::bindDeleteRestrictions
 		);
 	}
@@ -988,7 +1009,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		}
 	}
 
-	private JdbcOperation buildRemoveOperation(SessionFactoryImplementor factory) {
+	private MutationOperation buildRemoveOperation(SessionFactoryImplementor factory) {
 		if ( !persister.needsRemove() ) {
 			return null;
 		}
@@ -996,11 +1017,17 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		var tableDescriptor = persister.getCollectionTableDescriptor();
 		var attribute = persister.getAttributeMapping();
 
-		var builder = new GraphTableDeleteBuilderStandard(
-				persister,
+		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
 				tableDescriptor,
-				persister.getSqlWhereString(),
+				0, // relativePosition
+				false, // isIdentifierTable
+				false // isInverse
+		);
+		var builder = new TableDeleteBuilderStandard(
+				persister,
+				new MutatingTableReference(tableMapping),
 				tableDescriptor.deleteAllDetails(),
+				persister.getSqlWhereString(),
 				factory
 		);
 
@@ -1008,7 +1035,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			builder.addKeyRestriction( jdbcMapping );
 		} );
 
-		return builder.buildMutation().createMutationOperation();
+		return builder.buildMutation().createMutationOperation(null, factory);
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

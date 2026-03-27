@@ -15,8 +15,6 @@ import org.hibernate.action.queue.graph.GraphTestUtils;
 import org.hibernate.action.queue.graph.GroupNode;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptor;
-import org.hibernate.action.queue.mutation.GraphMutationTarget;
-import org.hibernate.action.queue.mutation.jdbc.JdbcOperation;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.action.queue.plan.FlushPlan;
 import org.hibernate.action.queue.plan.PlanStep;
@@ -24,8 +22,10 @@ import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.action.queue.plan.StandardFlushPlanner;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.jdbc.Expectation;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 import org.junit.jupiter.api.Test;
 
@@ -577,24 +577,19 @@ public class StandardFlushPlannerTest {
 	// Mock classes
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private static class MockMutationOperation implements JdbcOperation {
+	private static class MockMutationOperation implements MutationOperation {
 		@Override
 		public MutationType getMutationType() {
 			return MutationType.INSERT;
 		}
 
 		@Override
-		public GraphMutationTarget<?> getMutationTarget() {
+		public MutationTarget<?> getMutationTarget() {
 			return null;
 		}
 
 		@Override
-		public Expectation getExpectation() {
-			return null;
-		}
-
-		@Override
-		public TableDescriptor getTableDescriptor() {
+		public TableMapping getTableDetails() {
 			return null;
 		}
 

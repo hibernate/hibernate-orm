@@ -8,11 +8,20 @@ import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.exec.internal.AbstractJdbcParameter;
 
-/**
- * Parameter descriptor specific to mutations.  It exposes metadata about the parameter
- *
- * @author Steve Ebersole
- */
+/// Parameter descriptor specific to mutations.
+/// It exposes metadata about the parameter.
+///
+/// [!NOTE]
+/// > Especially note the [usage][#getUsage] - we track parameters separately for
+/// > [assignments][ParameterUsage#SET] and [restrictions][ParameterUsage#RESTRICT]
+/// > to allow different values in each clause.  E.g.
+/// > ````
+/// update ...
+/// set col = newValue
+/// where col = oldValue
+/// ````
+///
+/// @author Steve Ebersole
 public class ColumnValueParameter extends AbstractJdbcParameter {
 	private final ColumnReference columnReference;
 	private final ParameterUsage usage;

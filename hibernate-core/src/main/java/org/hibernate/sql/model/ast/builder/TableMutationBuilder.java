@@ -27,4 +27,6 @@ public interface TableMutationBuilder<M extends TableMutation<?>> {
 	 * Build the mutation descriptor
 	 */
 	M buildMutation();
+
+	boolean hasValueBindings();
 }

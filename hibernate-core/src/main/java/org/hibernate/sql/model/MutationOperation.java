@@ -7,6 +7,7 @@ package org.hibernate.sql.model;
 import org.hibernate.Incubating;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.group.UnknownParameterException;
+import org.hibernate.engine.jdbc.mutation.spi.JdbcValueDescriptorAccess;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 
 /**
@@ -55,10 +56,15 @@ import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
  * [1] For insertions with optional secondary tables, if the values are all null for that table we
  * do not want to perform the "add-to-batch" handling for that specific "row"
  *
+ * @implSpec MutationOperation extends JdbcValueDescriptorAccess for easily bridging between
+ * coordinators (legacy queue) and decomposers (graph-based queue).  JdbcValueDescriptorAccess contract
+ * passes in a table-name, but here we'll just verify (assert) that the passed name matches the name of
+ * the table being mutated here.
+ *
  * @author Steve Ebersole
  */
 @Incubating
-public interface MutationOperation {
+public interface MutationOperation extends JdbcValueDescriptorAccess {
 	/**
 	 * The type of operation (INSERT, etc)
 	 */
@@ -93,5 +99,17 @@ public interface MutationOperation {
 			throw new UnknownParameterException( getMutationType(), getMutationTarget(), getTableDetails().getTableName(), columnName, usage );
 		}
 		return parameterDescriptor;
+	}
+
+	@Override
+	default String resolvePhysicalTableName(String tableName) {
+		assert getTableDetails().getTableName().equals( tableName );
+		return tableName;
+	}
+
+	@Override
+	default JdbcValueDescriptor resolveValueDescriptor(String tableName, String columnName, ParameterUsage usage) {
+		assert getTableDetails().getTableName().equals( tableName );
+		return findValueDescriptor( columnName, usage );
 	}
 }

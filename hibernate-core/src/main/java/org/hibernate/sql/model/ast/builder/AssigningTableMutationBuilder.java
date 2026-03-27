@@ -11,12 +11,12 @@ import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.TableMutation;
 
 /**
- * Common operations of {@link TableUpdateBuilder} and {@link TableInsertBuilder}.
+ * Specialized builder for building mutations which allow assigning values (INSERT or UPDATE).
  *
  * @author Steve Ebersole
  * @author Gavin King
  */
-public interface ColumnValuesTableMutationBuilder<M extends TableMutation<?>> extends TableMutationBuilder<M> {
+public interface AssigningTableMutationBuilder<M extends TableMutation<?>> extends TableMutationBuilder<M> {
 	/**
 	 * Adds a restriction, which is assumed to be based on a table key.
 	 *
@@ -59,4 +59,6 @@ public interface ColumnValuesTableMutationBuilder<M extends TableMutation<?>> ex
 				selectableMapping
 		);
 	}
+
+	boolean hasValueBindings();
 }

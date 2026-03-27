@@ -14,7 +14,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
-import org.hibernate.action.queue.mutation.ast.builder.GraphTableInsertBuilder;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.persister.filter.FilterAliasGenerator;
@@ -481,9 +480,9 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public void addDiscriminatorToInsertGroup(Function<String, GraphTableInsertBuilder> insertGroupBuilder) {
+	public void addDiscriminatorToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder) {
 		if ( discriminatorInsertable ) {
-			final GraphTableInsertBuilder tableInsertBuilder = insertGroupBuilder.apply( getRootTableName() );
+			final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.apply( getRootTableName() );
 			tableInsertBuilder.addValueColumn(
 					discriminatorValue == NULL_DISCRIMINATOR ? NULL : discriminatorSQLValue,
 					getDiscriminatorMapping()

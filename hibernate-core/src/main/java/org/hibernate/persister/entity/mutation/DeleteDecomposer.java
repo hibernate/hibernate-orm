@@ -10,14 +10,15 @@ import org.hibernate.action.queue.bind.EntityDeleteBindPlan;
 import org.hibernate.action.queue.bind.EntitySoftDeleteBindPlan;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptor;
-import org.hibernate.action.queue.mutation.ast.MutatingTableReference;
-import org.hibernate.action.queue.mutation.ast.TableDelete;
-import org.hibernate.action.queue.mutation.ast.TableMutation;
-import org.hibernate.action.queue.mutation.ast.TableUpdate;
-import org.hibernate.action.queue.mutation.ast.builder.GraphTableDeleteBuilder;
-import org.hibernate.action.queue.mutation.ast.builder.GraphTableDeleteBuilderStandard;
-import org.hibernate.action.queue.mutation.ast.builder.GraphTableUpdateBuilder;
-import org.hibernate.action.queue.mutation.ast.builder.GraphTableUpdateBuilderStandard;
+import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
+import org.hibernate.sql.model.ast.MutatingTableReference;
+import org.hibernate.sql.model.ast.TableDelete;
+import org.hibernate.sql.model.ast.TableMutation;
+import org.hibernate.sql.model.ast.TableUpdate;
+import org.hibernate.sql.model.ast.builder.TableDeleteBuilder;
+import org.hibernate.sql.model.ast.builder.TableDeleteBuilderStandard;
+import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
+import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -44,7 +45,8 @@ import java.util.Map;
 ///
 /// @author Steve Ebersole
 public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
-	private final Map<String, ? extends TableMutation<?>> staticDeleteOperations;  // Map<String, GraphTableDelete> or GraphTableUpdate for soft delete
+	// Map<String, GraphTableDelete> or GraphTableUpdate for soft delete
+	private final Map<String, ? extends TableMutation<?>> staticDeleteOperations;
 
 	public DeleteDecomposer(EntityPersister entityPersister, SessionFactoryImplementor sessionFactory) {
 		super( entityPersister, sessionFactory );
@@ -105,8 +107,9 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 		if ( isSoftDelete ) {
 			// Handle soft delete (single UPDATE operation)
 			final var effectiveOperation = chooseEffectiveSoftDeleteOperation( identifier, version, state, session, applyOptimisticLocking );
-			final var mutation = effectiveOperation.createMutationOperation();
-			final var tableDescriptor = (EntityTableDescriptor) mutation.getTableDescriptor();
+			final var mutation = effectiveOperation.createMutationOperation(null, sessionFactory);
+			final var tableMapping = (TableDescriptorAsTableMapping) mutation.getTableDetails();
+			final var tableDescriptor = (EntityTableDescriptor) tableMapping.getDescriptor();
 
 			final EntitySoftDeleteBindPlan bindPlan = new EntitySoftDeleteBindPlan(
 					tableDescriptor,
@@ -139,8 +142,9 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			int localOrd = 0;
 
 			for ( Map.Entry<String, TableDelete> entry : effectiveGroup.entrySet() ) {
-				var mutation = entry.getValue().createMutationOperation();
-				var tableDescriptor = (EntityTableDescriptor) mutation.getTableDescriptor();
+				var mutation = entry.getValue().createMutationOperation(null, sessionFactory);
+				var tableMapping = (TableDescriptorAsTableMapping) mutation.getTableDetails();
+				var tableDescriptor = (EntityTableDescriptor) tableMapping.getDescriptor();
 
 				final EntityDeleteBindPlan bindPlan = new EntityDeleteBindPlan(
 						tableDescriptor,
@@ -203,14 +207,14 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 	}
 
 	private Map<String, TableDelete> generateStaticOperations() {
-		final Map<String, GraphTableDeleteBuilder> staticOperationBuilders = new HashMap<>();
+		final Map<String, TableDeleteBuilder> staticOperationBuilders = new HashMap<>();
 
 		// Process tables in reverse order (child tables before parent)
 		entityPersister.forEachMutableTableDescriptorReverse( (tableDescriptor) -> {
 			if ( !tableDescriptor.cascadeDeleteEnabled() ) {
 				staticOperationBuilders.put(
 						tableDescriptor.name(),
-						createGraphTableDeleteBuilder(tableDescriptor)
+						createTableDeleteBuilder(tableDescriptor)
 				);
 			}
 		} );
@@ -224,10 +228,20 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 		return staticOperations;
 	}
 
-	private GraphTableDeleteBuilder createGraphTableDeleteBuilder(TableDescriptor tableDescriptor) {
-		return new GraphTableDeleteBuilderStandard(
-				entityPersister,
+	private TableDeleteBuilder createTableDeleteBuilder(TableDescriptor tableDescriptor) {
+		// Create adapter to convert TableDescriptor to TableMapping
+		final boolean isIdentifierTable = tableDescriptor instanceof EntityTableDescriptor etd
+				&& etd.isIdentifierTable();
+		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
 				tableDescriptor,
+				0, // relativePosition - will be set correctly by persister
+				isIdentifierTable,
+				false // isInverse
+		);
+
+		return new TableDeleteBuilderStandard(
+				entityPersister,
+				new MutatingTableReference(tableMapping),
 				sessionFactory
 		);
 	}
@@ -237,14 +251,14 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			Object version,
 			Object[] state,
 			SharedSessionContractImplementor session) {
-		final Map<String, GraphTableDeleteBuilder> operationBuilders = new HashMap<>();
+		final Map<String, TableDeleteBuilder> operationBuilders = new HashMap<>();
 
 		// Process tables in reverse order
 		entityPersister.forEachMutableTableDescriptorReverse( (tableDescriptor) -> {
 			if ( !tableDescriptor.cascadeDeleteEnabled() ) {
 				operationBuilders.put(
 						tableDescriptor.name(),
-						createGraphTableDeleteBuilder(tableDescriptor)
+						createTableDeleteBuilder(tableDescriptor)
 				);
 			}
 		} );
@@ -258,7 +272,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 		return operations;
 	}
 
-	private void applyStaticDeleteDetails(Map<String, GraphTableDeleteBuilder> builders) {
+	private void applyStaticDeleteDetails(Map<String, TableDeleteBuilder> builders) {
 		// Apply key restrictions for all tables
 		builders.forEach( (name, builder) -> {
 			applyKeyRestriction( builder );
@@ -271,7 +285,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 	}
 
 	private void applyDynamicDeleteDetails(
-			Map<String, GraphTableDeleteBuilder> builders,
+			Map<String, TableDeleteBuilder> builders,
 			Object version,
 			Object[] state,
 			SharedSessionContractImplementor session) {
@@ -295,16 +309,19 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 		}
 	}
 
-	private void applyKeyRestriction(GraphTableDeleteBuilder tableDeleteBuilder) {
-		tableDeleteBuilder.addKeyRestrictions( tableDeleteBuilder.getTableDescriptor().keyDescriptor() );
+	private void applyKeyRestriction(TableDeleteBuilder tableDeleteBuilder) {
+		// Get the TableDescriptor from the adapter
+		final var tableMapping = (TableDescriptorAsTableMapping) tableDeleteBuilder.getMutatingTable().getTableMapping();
+		final var tableDescriptor = tableMapping.getDescriptor();
+		tableDeleteBuilder.addKeyRestrictions( tableDescriptor.keyDescriptor() );
 	}
 
-	private void applyVersionBasedOptLocking(Map<String, GraphTableDeleteBuilder> builders) {
+	private void applyVersionBasedOptLocking(Map<String, TableDeleteBuilder> builders) {
 		assert entityPersister.optimisticLockStyle() == OptimisticLockStyle.VERSION;
 		assert entityPersister.getVersionMapping() != null;
 
 		final String tableNameForMutation = entityPersister.physicalTableNameForMutation( entityPersister.getVersionMapping() );
-		final GraphTableDeleteBuilder builder = builders.get( tableNameForMutation );
+		final TableDeleteBuilder builder = builders.get( tableNameForMutation );
 		if ( builder != null ) {
 			builder.addOptimisticLockRestriction( entityPersister.getVersionMapping() );
 		}
@@ -312,7 +329,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 
 	private void applyNonVersionOptLocking(
 			OptimisticLockStyle lockStyle,
-			Map<String, GraphTableDeleteBuilder> builders,
+			Map<String, TableDeleteBuilder> builders,
 			Object[] loadedState,
 			SharedSessionContractImplementor session) {
 		assert loadedState != null;
@@ -332,7 +349,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 	}
 
 	private void applyPartitionedSelectionRestrictions(
-			Map<String, GraphTableDeleteBuilder> builders,
+			Map<String, TableDeleteBuilder> builders,
 			Object[] state) {
 		final var attributeMappings = entityPersister.getAttributeMappings();
 
@@ -343,7 +360,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 				final var selectableMapping = attributeMapping.getSelectable( i );
 				if ( selectableMapping.isPartitioned() ) {
 					final String tableNameForMutation = entityPersister.physicalTableNameForMutation( selectableMapping );
-					final GraphTableDeleteBuilder builder = builders.get( tableNameForMutation );
+					final TableDeleteBuilder builder = builders.get( tableNameForMutation );
 					if ( builder != null ) {
 						builder.addKeyRestriction( selectableMapping );
 					}
@@ -353,12 +370,12 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 	}
 
 	private void breakDownJdbcValues(
-			Map<String, GraphTableDeleteBuilder> builders,
+			Map<String, TableDeleteBuilder> builders,
 			SharedSessionContractImplementor session,
 			AttributeMapping attribute,
 			Object loadedValue) {
 		final String tableName = attribute.getContainingTableExpression();
-		final GraphTableDeleteBuilder builder = builders.get( tableName );
+		final TableDeleteBuilder builder = builders.get( tableName );
 		if ( builder != null ) {
 			final var optimisticLockBindings = builder.getOptimisticLockBindings();
 			if ( optimisticLockBindings != null ) {
@@ -366,7 +383,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 						loadedValue,
 						(valueIndex, value, jdbcValueMapping) -> {
 							if ( !containsColumn( builder.getKeyRestrictionBindings(), jdbcValueMapping ) ) {
-								builder.addOptimisticLockRestriction( value, jdbcValueMapping );
+								optimisticLockBindings.consume( valueIndex, value, jdbcValueMapping );
 							}
 						},
 						session
@@ -387,7 +404,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Soft Delete Support
 
-	private TableUpdate chooseEffectiveSoftDeleteOperation(
+	private TableUpdate<?> chooseEffectiveSoftDeleteOperation(
 			Object identifier,
 			Object version,
 			Object[] state,
@@ -400,21 +417,29 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 
 		return needsDynamicSoftDelete
 				? generateDynamicSoftDeleteOperation( identifier, version, state, session )
-				: (TableUpdate) staticDeleteOperations.get( entityPersister.getIdentifierTableDescriptor().name() );
+				: (TableUpdate<?>) staticDeleteOperations.get( entityPersister.getIdentifierTableDescriptor().name() );
 	}
 
-	private Map<String, TableUpdate> generateSoftDeleteOperation() {
+	private Map<String, TableUpdate<?>> generateSoftDeleteOperation() {
 		final var softDeleteMapping = entityPersister.getSoftDeleteMapping();
 		assert softDeleteMapping != null;
 
 		// Soft delete only operates on the root/identifier table
 		final var rootTableDescriptor = entityPersister.getIdentifierTableDescriptor();
-		final GraphTableUpdateBuilder tableUpdateBuilder =
-				new GraphTableUpdateBuilderStandard(
-						entityPersister,
-						rootTableDescriptor,
-						sessionFactory
-				);
+
+		// Create adapter to convert TableDescriptor to TableMapping
+		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
+				rootTableDescriptor,
+				0, // relativePosition
+				true, // isIdentifierTable
+				false // isInverse
+		);
+
+		final TableUpdateBuilder<?> tableUpdateBuilder = new TableUpdateBuilderStandard<>(
+				entityPersister,
+				new MutatingTableReference(tableMapping),
+				sessionFactory
+		);
 
 		// Apply key restriction (WHERE id = ?)
 		tableUpdateBuilder.addKeyRestrictions( rootTableDescriptor.keyDescriptor() );
@@ -430,10 +455,10 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			tableUpdateBuilder.addOptimisticLockRestriction( entityPersister.getVersionMapping() );
 		}
 
-		return Map.of( rootTableDescriptor.name(), tableUpdateBuilder.buildMutation() );
+		return Map.of( rootTableDescriptor.name(), (TableUpdate<?>) tableUpdateBuilder.buildMutation() );
 	}
 
-	protected TableUpdate generateDynamicSoftDeleteOperation(
+	protected TableUpdate<?> generateDynamicSoftDeleteOperation(
 			Object identifier,
 			Object version,
 			Object[] state,
@@ -443,12 +468,20 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 
 		// Soft delete only operates on the root/identifier table
 		final var rootTableDescriptor = entityPersister.getIdentifierTableDescriptor();
-		final GraphTableUpdateBuilder tableUpdateBuilder =
-				new GraphTableUpdateBuilderStandard(
-						entityPersister,
-						rootTableDescriptor,
-						sessionFactory
-				);
+
+		// Create adapter to convert TableDescriptor to TableMapping
+		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
+				rootTableDescriptor,
+				0, // relativePosition
+				true, // isIdentifierTable
+				false // isInverse
+		);
+
+		final TableUpdateBuilder<?> tableUpdateBuilder = new TableUpdateBuilderStandard<>(
+				entityPersister,
+				new MutatingTableReference(tableMapping),
+				sessionFactory
+		);
 
 		// Apply key restriction (WHERE id = ?)
 		tableUpdateBuilder.addKeyRestrictions( rootTableDescriptor.keyDescriptor() );
@@ -468,14 +501,14 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			applyNonVersionOptLockingForSoftDelete( tableUpdateBuilder, state, session );
 		}
 
-		return tableUpdateBuilder.buildMutation();
+		return (TableUpdate<?>) tableUpdateBuilder.buildMutation();
 	}
 
 	private void applySoftDelete(
 			SoftDeleteMapping softDeleteMapping,
-			GraphTableUpdateBuilder tableUpdateBuilder) {
+			TableUpdateBuilder<?> tableUpdateBuilder) {
 		final var softDeleteColumnReference = new ColumnReference(
-				new MutatingTableReference( tableUpdateBuilder.getTableDescriptor() ),
+				tableUpdateBuilder.getMutatingTable(),
 				softDeleteMapping
 		);
 
@@ -486,7 +519,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 		tableUpdateBuilder.addNonKeyRestriction( softDeleteMapping.createNonDeletedValueBinding( softDeleteColumnReference ) );
 	}
 
-	private void applyPartitionKeyRestrictionForSoftDelete(GraphTableUpdateBuilder tableUpdateBuilder) {
+	private void applyPartitionKeyRestrictionForSoftDelete(TableUpdateBuilder<?> tableUpdateBuilder) {
 		if ( entityPersister.hasPartitionedSelectionMapping() ) {
 			final var attributeMappings = entityPersister.getAttributeMappings();
 			for ( int m = 0; m < attributeMappings.size(); m++ ) {
@@ -503,7 +536,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 	}
 
 	private void applyNonVersionOptLockingForSoftDelete(
-			GraphTableUpdateBuilder tableUpdateBuilder,
+			TableUpdateBuilder<?> tableUpdateBuilder,
 			Object[] loadedState,
 			SharedSessionContractImplementor session) {
 		final boolean[] versionability = entityPersister.getPropertyVersionability();
@@ -518,11 +551,13 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 	}
 
 	private void breakDownJdbcValuesForSoftDelete(
-			GraphTableUpdateBuilder tableUpdateBuilder,
+			TableUpdateBuilder<?> tableUpdateBuilder,
 			SharedSessionContractImplementor session,
 			AttributeMapping attribute,
 			Object loadedValue) {
-		final String builderTableName = tableUpdateBuilder.getTableDescriptor().name();
+		// Get the TableDescriptor from the adapter
+		final var tableMapping = (TableDescriptorAsTableMapping) tableUpdateBuilder.getMutatingTable().getTableMapping();
+		final String builderTableName = tableMapping.getDescriptor().name();
 		final String attributeTableName = attribute.getContainingTableExpression();
 		if ( builderTableName.equals( attributeTableName ) ) {
 			final var optimisticLockBindings = tableUpdateBuilder.getOptimisticLockBindings();
@@ -531,7 +566,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 						loadedValue,
 						(valueIndex, value, jdbcValueMapping) -> {
 							if ( !containsColumn( tableUpdateBuilder.getKeyRestrictionBindings(), jdbcValueMapping ) ) {
-								tableUpdateBuilder.addOptimisticLockRestriction( value, jdbcValueMapping );
+								optimisticLockBindings.consume( valueIndex, value, jdbcValueMapping );
 							}
 						},
 						session

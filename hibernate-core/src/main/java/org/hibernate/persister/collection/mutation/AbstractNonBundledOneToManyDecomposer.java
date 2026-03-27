@@ -78,7 +78,7 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 				// For one-to-many collections, the "insert" is actually an UPDATE that sets the FK
 				// Use MutationKind.UPDATE so it's ordered AFTER entity INSERTs via FK edges
 				final PlannedOperation plannedOp = new PlannedOperation(
-						insertRowPlan.jdbcOperation().getTableDescriptor(),
+						persister.getCollectionTableDescriptor(),
 						MutationKind.UPDATE,
 						insertRowPlan.jdbcOperation(),
 						bindPlan,
@@ -101,7 +101,7 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 
 
 				var  writeIndexPlannedOp = new PlannedOperation(
-						jdbcOperations.getUpdateRowPlan().jdbcOperation().getTableDescriptor(),
+						persister.getCollectionTableDescriptor(),
 						MutationKind.UPDATE,
 						jdbcOperations.getUpdateRowPlan().jdbcOperation(),
 						writeIndexBindPlan,
@@ -212,7 +212,7 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 			);
 
 			final PlannedOperation plannedOp = new PlannedOperation(
-					deleteRowPlan.jdbcOperation().getTableDescriptor(),
+					persister.getCollectionTableDescriptor(),
 					// technically an UPDATE
 					MutationKind.UPDATE,
 					deleteRowPlan.jdbcOperation(),
@@ -261,7 +261,7 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 				);
 
 				final PlannedOperation plannedOp = new PlannedOperation(
-						updateRowPlan.jdbcOperation().getTableDescriptor(),
+						persister.getCollectionTableDescriptor(),
 						MutationKind.UPDATE,
 						updateRowPlan.jdbcOperation(),
 						bindPlan,
@@ -323,7 +323,7 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 					// For one-to-many collections, the "insert" is actually an UPDATE that sets the FK
 					// Use MutationKind.UPDATE so it's ordered AFTER entity INSERTs via FK edges
 					final PlannedOperation plannedOp = new PlannedOperation(
-							insertRowPlan.jdbcOperation().getTableDescriptor(),
+							persister.getCollectionTableDescriptor(),
 							// technically an UPDATE
 							MutationKind.UPDATE,
 							insertRowPlan.jdbcOperation(),

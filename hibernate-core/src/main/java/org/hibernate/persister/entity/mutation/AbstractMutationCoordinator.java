@@ -27,6 +27,7 @@ import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.ValuesAnalysis;
 import org.hibernate.sql.model.ast.MutationGroup;
 import org.hibernate.sql.model.ast.TableMutation;
+import org.hibernate.sql.model.ast.builder.AssigningTableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.ColumnValuesTableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;

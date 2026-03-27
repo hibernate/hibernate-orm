@@ -5,9 +5,9 @@
 package org.hibernate.action.queue.exec;
 
 import org.hibernate.action.queue.bind.JdbcValueBindings;
-import org.hibernate.action.queue.mutation.jdbc.PreparableJdbcOperation;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.sql.model.PreparableMutationOperation;
 
 import java.sql.SQLException;
 import java.util.function.Consumer;
@@ -21,7 +21,7 @@ public class StandardPlanStepExecutor extends AbstractStepExecutor implements Ex
 	}
 
 	@Override
-	public void executePreparable(PreparableJdbcOperation preparable, PlannedOperation plannedOperation) {
+	public void executePreparable(PreparableMutationOperation preparable, PlannedOperation plannedOperation) {
 		// Delegate to BindPlan to drive execution
 		// The BindPlan will call back to executeRow() for each row it needs to execute
 		plannedOperation.getBindPlan().execute( this, plannedOperation, session );
@@ -32,7 +32,7 @@ public class StandardPlanStepExecutor extends AbstractStepExecutor implements Ex
 			PlannedOperation plannedOperation,
 			Consumer<JdbcValueBindings> binder,
 			OperationResultChecker resultChecker) {
-		final PreparableJdbcOperation preparable = (PreparableJdbcOperation) plannedOperation.getJdbcOperation();
+		final PreparableMutationOperation preparable = (PreparableMutationOperation) plannedOperation.getJdbcOperation();
 
 		try (var stmnt = session.getJdbcCoordinator()
 				.getStatementPreparer()

@@ -22,11 +22,10 @@ import org.hibernate.Timeouts;
 import org.hibernate.action.queue.meta.ColumnDescriptor;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableKeyDescriptor;
-import org.hibernate.action.queue.mutation.ast.TableInsert;
-import org.hibernate.action.queue.mutation.ast.TableMutation;
-import org.hibernate.action.queue.mutation.ast.TableUpdate;
-import org.hibernate.action.queue.mutation.ast.builder.GraphTableInsertBuilder;
-import org.hibernate.action.queue.mutation.jdbc.PreparableJdbcOperation;
+import org.hibernate.sql.model.ast.RestrictedTableMutation;
+import org.hibernate.sql.model.ast.TableInsert;
+import org.hibernate.sql.model.ast.TableMutation;
+import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -2887,7 +2886,7 @@ public abstract class AbstractEntityPersister
 				final var staticInsertOperations = insertDecomposer.getStaticInsertOperations();
 				int i = 0;
 				for ( Map.Entry<String, TableInsert> insertEntry : staticInsertOperations.entrySet() ) {
-					if ( insertEntry.getValue() instanceof PreparableJdbcOperation jdbcOperation ) {
+					if ( insertEntry.getValue() instanceof JdbcMutationOperation jdbcOperation ) {
 						MODEL_MUTATION_LOGGER.insertOperationSql( i++, jdbcOperation.getSqlString() );
 					}
 				}
@@ -2896,8 +2895,8 @@ public abstract class AbstractEntityPersister
 			{
 				final var staticUpdateOperations = updateDecomposer.getStaticUpdateOperations();
 				int i = 0;
-				for ( Map.Entry<String, TableUpdate> updateEntry : staticUpdateOperations.entrySet() ) {
-					if ( updateEntry.getValue() instanceof PreparableJdbcOperation jdbcOperation ) {
+				for ( Map.Entry<String, RestrictedTableMutation<?>> updateEntry : staticUpdateOperations.entrySet() ) {
+					if ( updateEntry.getValue() instanceof JdbcMutationOperation jdbcOperation ) {
 						MODEL_MUTATION_LOGGER.updateOperationSql( i++, jdbcOperation.getSqlString() );
 					}
 				}
@@ -2907,7 +2906,7 @@ public abstract class AbstractEntityPersister
 				final var staticDeleteOperations = deleteDecomposer.getStaticDeleteOperations();
 				int i = 0;
 				for ( Map.Entry<String, ? extends TableMutation<?>> updateEntry : staticDeleteOperations.entrySet() ) {
-					if ( updateEntry.getValue() instanceof PreparableJdbcOperation jdbcOperation ) {
+					if ( updateEntry.getValue() instanceof JdbcMutationOperation jdbcOperation ) {
 						MODEL_MUTATION_LOGGER.updateOperationSql( i++, jdbcOperation.getSqlString() );
 					}
 				}
@@ -3797,7 +3796,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void addDiscriminatorToInsertGroup(Function<String, GraphTableInsertBuilder> insertGroupBuilder) {
+	public void addDiscriminatorToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder) {
 	}
 
 	@Override
@@ -3808,10 +3807,10 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void addSoftDeleteToInsertGroup(Function<String, GraphTableInsertBuilder> insertGroupBuilder) {
+	public void addSoftDeleteToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder) {
 		if ( softDeleteMapping != null ) {
-			final GraphTableInsertBuilder insertBuilder = insertGroupBuilder.apply( getIdentifierTableName() );
-			final var mutatingTable = insertBuilder.getTableReference();
+			final TableInsertBuilder insertBuilder = insertGroupBuilder.apply( getIdentifierTableName() );
+			final var mutatingTable = insertBuilder.getMutatingTable();
 			final var columnReference = new ColumnReference( mutatingTable, softDeleteMapping );
 			final var nonDeletedValueBinding = softDeleteMapping.createNonDeletedValueBinding( columnReference );
 			insertBuilder.addValueColumn( nonDeletedValueBinding );

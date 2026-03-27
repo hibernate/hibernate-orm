@@ -15,7 +15,7 @@ import org.hibernate.sql.model.ast.TableInsert;
  */
 public interface TableInsertBuilder
 		extends TableMutationBuilder<TableInsert>,
-		ColumnValuesTableMutationBuilder<TableInsert>,
+		AssigningTableMutationBuilder<TableInsert>,
 		SelectableConsumer {
 
 

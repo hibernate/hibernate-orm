@@ -10,8 +10,8 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 
 /**
- * Represents the binding of a value to a column.  Uniformly
- * models both value assignments and value restrictions in
+ * Represents the binding of a value to a column.
+ * Uniformly models both assignments and restrictions in
  * relation to inserts, updates and upserts.
  *
  * @author Steve Ebersole
@@ -57,14 +57,14 @@ public class ColumnValueBinding {
 			|| selectableMapping.isUpdateable();
 	}
 
+	public boolean matches(SelectableMapping selectableMapping) {
+		return columnReference.isColumnExpressionFormula() == selectableMapping.isFormula()
+			   && Objects.equals( columnReference.getColumnExpression(), selectableMapping.getSelectableName() );
+	}
+
 	@Override
 	public String toString() {
 		return "ColumnValueBinding(" + valueExpression + ")";
-	}
-
-	public boolean matches(SelectableMapping selectableMapping) {
-		return columnReference.isColumnExpressionFormula() == selectableMapping.isFormula()
-			&& Objects.equals( columnReference.getColumnExpression(), selectableMapping.getSelectableName() );
 	}
 
 	@Override

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
@@ -106,5 +107,10 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 	@Override
 	public void addKeyColumn(String columnWriteFragment, SelectableMapping selectableMapping) {
 		addColumn( columnWriteFragment, selectableMapping, keyBindings );
+	}
+
+	@Override
+	public boolean hasValueBindings() {
+		return !valueBindings.isEmpty() || CollectionHelper.isNotEmpty( lobValueBindings );
 	}
 }

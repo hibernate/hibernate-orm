@@ -85,4 +85,9 @@ public class TableUpdateBuilderSkipped implements TableUpdateBuilder {
 	public void setWhere(String fragment) {
 		// nothing to do
 	}
+
+	@Override
+	public boolean hasValueBindings() {
+		return false;
+	}
 }

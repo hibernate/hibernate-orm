@@ -9,17 +9,15 @@ import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.cyclebreak.BindingPatch;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
-import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptor;
-import org.hibernate.action.queue.mutation.jdbc.JdbcOperation;
+import org.hibernate.sql.model.MutationOperation;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /// Represents a single SQL operation to be executed.
 ///
-/// Uses graph-based {@link JdbcOperation} which works with
-/// {@link EntityTableDescriptor} instead of legacy {@link org.hibernate.sql.model.TableMapping}.
+/// Uses standard {@link MutationOperation} from the SQL model package.
 ///
 /// @author Steve Ebersole
 public class PlannedOperation {
@@ -28,7 +26,7 @@ public class PlannedOperation {
 	private final StatementShapeKey shapeKey;
 
 	// SINGLE operation (one table)
-	private final JdbcOperation jdbcOperation;
+	private final MutationOperation jdbcOperation;
 
 	// The binder/executor plan for this mutation row
 	private final BindPlan bindPlan;
@@ -59,7 +57,7 @@ public class PlannedOperation {
 	public PlannedOperation(
 			TableDescriptor tableDescriptor,
 			MutationKind kind,
-			JdbcOperation jdbcOperation,
+			MutationOperation jdbcOperation,
 			BindPlan bindPlan,
 			int ordinal,
 			String origin) {
@@ -69,7 +67,7 @@ public class PlannedOperation {
 	public PlannedOperation(
 			TableDescriptor tableDescriptor,
 			MutationKind kind,
-			JdbcOperation jdbcOperation,
+			MutationOperation jdbcOperation,
 			BindPlan bindPlan,
 			int ordinal,
 			String origin,
@@ -105,7 +103,7 @@ public class PlannedOperation {
 		return shapeKey;
 	}
 
-	public JdbcOperation getJdbcOperation() {
+	public MutationOperation getJdbcOperation() {
 		return jdbcOperation;
 	}
 

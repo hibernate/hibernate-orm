@@ -7,9 +7,9 @@ package org.hibernate.action.queue.exec;
 import org.hibernate.AssertionFailure;
 import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.bind.JdbcValueBindings;
-import org.hibernate.action.queue.mutation.jdbc.PreparableJdbcOperation;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.sql.model.PreparableMutationOperation;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -35,7 +35,7 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ex
 	}
 
 	@Override
-	protected void executePreparable(PreparableJdbcOperation preparable, PlannedOperation plannedOperation) {
+	protected void executePreparable(PreparableMutationOperation preparable, PlannedOperation plannedOperation) {
 		plannedOperation.getBindPlan().execute( this, plannedOperation, session );
 	}
 
@@ -44,9 +44,9 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ex
 			PlannedOperation plannedOperation,
 			Consumer<JdbcValueBindings> binder,
 			OperationResultChecker resultChecker) {
-		assert plannedOperation.getJdbcOperation() instanceof PreparableJdbcOperation;
+		assert plannedOperation.getJdbcOperation() instanceof PreparableMutationOperation;
 
-		var preparable = (PreparableJdbcOperation) plannedOperation.getJdbcOperation();
+		var preparable = (PreparableMutationOperation) plannedOperation.getJdbcOperation();
 		final StatementShapeKey operationShapeKey = plannedOperation.getShapeKey();
 		if ( batchKey == null ) {
 			newBatch( operationShapeKey, preparable );
@@ -59,7 +59,7 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ex
 		applyToBatch( preparable, plannedOperation, binder );
 	}
 
-	private void newBatch(StatementShapeKey operationShapeKey, PreparableJdbcOperation preparable) {
+	private void newBatch(StatementShapeKey operationShapeKey, PreparableMutationOperation preparable) {
 		batchKey = operationShapeKey;
 		currentBatchIndex = 0;
 		batchSql = preparable.getSqlString();
@@ -70,7 +70,7 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ex
 	}
 
 	private void applyToBatch(
-			PreparableJdbcOperation preparable,
+			PreparableMutationOperation preparable,
 			PlannedOperation plannedOperation,
 			Consumer<JdbcValueBindings> binder) {
 		if ( currentBatchIndex > 0 ) {

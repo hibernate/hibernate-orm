@@ -5,11 +5,11 @@
 package org.hibernate.persister.collection.mutation;
 
 import org.hibernate.action.queue.bind.JdbcValueBindings;
-import org.hibernate.action.queue.mutation.jdbc.JdbcOperation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.sql.model.MutationOperation;
 
-/// Manages graph-based JdbcOperation, as well as parameter binding details, for collection mutations.
+/// Manages standard MutationOperation, as well as parameter binding details, for collection mutations.
 ///
 /// Built by collection persisters for use in decomposers.
 ///
@@ -21,18 +21,18 @@ public class CollectionJdbcOperations {
 	private final UpdateRowPlan updateRowPlan;
 	private final DeleteRowPlan deleteRowPlan;
 
-	private final JdbcOperation removeOperation;
+	private final MutationOperation removeOperation;
 
 	public CollectionJdbcOperations(
 			CollectionGraphMutationTarget target,
-			JdbcOperation insertRowOperation,
+			MutationOperation insertRowOperation,
 			Values insertRowValues,
-			JdbcOperation updateRowOperation,
+			MutationOperation updateRowOperation,
 			Values updateRowValues,
 			Restrictions updateRowRestrictions,
-			JdbcOperation deleteRowOperation,
+			MutationOperation deleteRowOperation,
 			Restrictions deleteRowRestrictions,
-			JdbcOperation removeOperation) {
+			MutationOperation removeOperation) {
 		this(
 				target,
 				new InsertRowPlan( insertRowOperation, insertRowValues ),
@@ -47,7 +47,7 @@ public class CollectionJdbcOperations {
 			InsertRowPlan insertRowPlan,
 			UpdateRowPlan updateRowPlan,
 			DeleteRowPlan deleteRowPlan,
-			JdbcOperation removeOperation) {
+			MutationOperation removeOperation) {
 		this.target = target;
 		this.insertRowPlan = insertRowPlan;
 		this.updateRowPlan = updateRowPlan;
@@ -71,7 +71,7 @@ public class CollectionJdbcOperations {
 		return deleteRowPlan;
 	}
 
-	public JdbcOperation getRemoveOperation() {
+	public MutationOperation getRemoveOperation() {
 		return removeOperation;
 	}
 
@@ -105,18 +105,18 @@ public class CollectionJdbcOperations {
 	}
 
 	public record InsertRowPlan(
-			JdbcOperation jdbcOperation,
+			MutationOperation jdbcOperation,
 			Values values) {
 	}
 
 	public record UpdateRowPlan(
-			JdbcOperation jdbcOperation,
+			MutationOperation jdbcOperation,
 			Values values,
 			Restrictions restrictions) {
 	}
 
 	public record DeleteRowPlan(
-			JdbcOperation jdbcOperation,
+			MutationOperation jdbcOperation,
 			Restrictions restrictions) {
 	}
 }

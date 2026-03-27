@@ -16,6 +16,8 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.model.ast.builder.ColumnValueBindingBuilder;
 
+/// List of [value bindings][ColumnValueBinding] allowing the grouping to act as
+/// a consumer for JDBC value mappings.
 @Internal
 public class ColumnValueBindingList extends ArrayList<ColumnValueBinding> implements ModelPart.JdbcValueConsumer {
 

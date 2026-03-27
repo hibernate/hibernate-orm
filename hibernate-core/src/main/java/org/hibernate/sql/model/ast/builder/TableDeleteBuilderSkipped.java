@@ -64,4 +64,9 @@ public class TableDeleteBuilderSkipped implements TableDeleteBuilder {
 	public TableDelete buildMutation() {
 		return null;
 	}
+
+	@Override
+	public boolean hasValueBindings() {
+		return false;
+	}
 }

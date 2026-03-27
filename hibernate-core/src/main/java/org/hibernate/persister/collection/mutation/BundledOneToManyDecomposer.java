@@ -121,7 +121,7 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 				);
 
 				var  writeIndexPlannedOp = new PlannedOperation(
-						jdbcOperations.getUpdateRowPlan().jdbcOperation().getTableDescriptor(),
+						persister.getCollectionTableDescriptor(),
 						MutationKind.UPDATE,
 						jdbcOperations.getUpdateRowPlan().jdbcOperation(),
 						bundledBindPlan,

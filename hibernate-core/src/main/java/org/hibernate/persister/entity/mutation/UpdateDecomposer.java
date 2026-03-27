@@ -10,9 +10,7 @@ import org.hibernate.action.queue.bind.EntityUpdateBindPlan;
 import org.hibernate.action.queue.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptor;
-import org.hibernate.action.queue.mutation.ast.TableUpdate;
-import org.hibernate.action.queue.mutation.ast.builder.GraphTableUpdateBuilder;
-import org.hibernate.action.queue.mutation.ast.builder.GraphTableUpdateBuilderStandard;
+import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
 import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -22,6 +20,10 @@ import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+import org.hibernate.sql.model.ast.MutatingTableReference;
+import org.hibernate.sql.model.ast.RestrictedTableMutation;
+import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
+import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,7 +39,7 @@ import java.util.Map;
 ///
 /// @author Steve Ebersole
 public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
-	private final Map<String, TableUpdate> staticUpdateOperations;
+	private final Map<String, RestrictedTableMutation<?>> staticUpdateOperations;
 
 	public UpdateDecomposer(EntityPersister entityPersister, SessionFactoryImplementor sessionFactory) {
 		super( entityPersister, sessionFactory );
@@ -48,7 +50,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				: generateStaticOperations();
 	}
 
-	public Map<String, TableUpdate> getStaticUpdateOperations() {
+	public Map<String, RestrictedTableMutation<?>> getStaticUpdateOperations() {
 		return staticUpdateOperations;
 	}
 
@@ -107,9 +109,10 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		final List<PlannedOperation> operations = CollectionHelper.arrayList( effectiveGroup.size() );
 		int localOrd = 0;
 
-		for ( Map.Entry<String, TableUpdate> entry : effectiveGroup.entrySet() ) {
-			var operation = entry.getValue().createMutationOperation();
-			var tableDescriptor = (EntityTableDescriptor) operation.getTableDescriptor();
+		for ( Map.Entry<String, RestrictedTableMutation<?>> entry : effectiveGroup.entrySet() ) {
+			var operation = entry.getValue().createMutationOperation(null, sessionFactory);
+			var tableMapping = (TableDescriptorAsTableMapping) operation.getTableDetails();
+			var tableDescriptor = (EntityTableDescriptor) tableMapping.getDescriptor();
 
 			final EntityUpdateBindPlan bindPlan = createUpdateBindPlan(
 					tableDescriptor,
@@ -181,7 +184,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		return false;
 	}
 
-	private Map<String, TableUpdate> chooseEffectiveUpdateGroup(
+	private Map<String, RestrictedTableMutation<?>> chooseEffectiveUpdateGroup(
 			Object identifier,
 			Object rowId,
 			Object[] state,
@@ -203,22 +206,23 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				: staticUpdateOperations;
 	}
 
-	private Map<String, TableUpdate> generateStaticOperations() {
-		final Map<String, GraphTableUpdateBuilder> staticOperationBuilders = new HashMap<>();
+	private Map<String, RestrictedTableMutation<?>> generateStaticOperations() {
+		final Map<String, TableUpdateBuilder<?>> staticOperationBuilders = new HashMap<>();
 
 		// Process tables in forward order
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
 			staticOperationBuilders.put(
 					tableDescriptor.name(),
-					createGraphTableUpdateBuilder(tableDescriptor)
+					createTableUpdateBuilder(tableDescriptor)
 			);
 		} );
 
 		applyStaticUpdateDetails( staticOperationBuilders );
 
-		final Map<String, TableUpdate> staticOperations = new HashMap<>();
+		final Map<String, RestrictedTableMutation<?>> staticOperations = new HashMap<>();
 		staticOperationBuilders.forEach( (name, operationBuilder) -> {
 			// Only build mutation if there are columns to update
+			// todo : hmmm, technically we might also need to delete for optional tables
 			if ( operationBuilder.hasValueBindings() ) {
 				staticOperations.put( name, operationBuilder.buildMutation() );
 			}
@@ -226,15 +230,25 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		return Collections.unmodifiableMap( staticOperations );
 	}
 
-	private GraphTableUpdateBuilder createGraphTableUpdateBuilder(TableDescriptor tableDescriptor) {
-		return new GraphTableUpdateBuilderStandard(
-				entityPersister,
+	private TableUpdateBuilder<?> createTableUpdateBuilder(TableDescriptor tableDescriptor) {
+		// Create adapter to convert TableDescriptor to TableMapping
+		final boolean isIdentifierTable = tableDescriptor instanceof EntityTableDescriptor etd
+				&& etd.isIdentifierTable();
+		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
 				tableDescriptor,
+				0, // relativePosition - will be set correctly by persister
+				isIdentifierTable,
+				false // isInverse
+		);
+
+		return new TableUpdateBuilderStandard<>(
+				entityPersister,
+				new MutatingTableReference(tableMapping),
 				sessionFactory
 		);
 	}
 
-	protected Map<String, TableUpdate> generateDynamicUpdateOperations(
+	protected Map<String, RestrictedTableMutation<?>> generateDynamicUpdateOperations(
 			Object identifier,
 			Object rowId,
 			Object[] state,
@@ -244,21 +258,21 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			boolean[] updateable,
 			UpdateValuesAnalysisForDecomposer valuesAnalysis,
 			SharedSessionContractImplementor session) {
-		final Map<String, GraphTableUpdateBuilder> operationBuilders = new HashMap<>();
+		final Map<String, TableUpdateBuilder<?>> operationBuilders = new HashMap<>();
 
 		// Process tables in forward order
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
 			if ( valuesAnalysis.needsUpdate( tableDescriptor ) ) {
 				operationBuilders.put(
 						tableDescriptor.name(),
-						createGraphTableUpdateBuilder(tableDescriptor)
+						createTableUpdateBuilder(tableDescriptor)
 				);
 			}
 		} );
 
 		applyDynamicUpdateDetails( operationBuilders, state, previousState, version, dirtyFields, updateable, session );
 
-		final Map<String, TableUpdate> operations = new HashMap<>();
+		final Map<String, RestrictedTableMutation<?>> operations = new HashMap<>();
 		operationBuilders.forEach( (name, operationBuilder) -> {
 			// Only build mutation if there are columns to update
 			if ( operationBuilder.hasValueBindings() ) {
@@ -268,12 +282,14 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		return operations;
 	}
 
-	private void applyStaticUpdateDetails(Map<String, GraphTableUpdateBuilder> builders) {
+	private void applyStaticUpdateDetails(Map<String, TableUpdateBuilder<?>> builders) {
 		final boolean[] propertyUpdateability = entityPersister.getPropertyUpdateability();
 
 		// Apply SET clause columns
 		builders.forEach( (name, builder) -> {
-			final var tableDescriptor = (EntityTableDescriptor) builder.getTableDescriptor();
+			// Get the TableDescriptor from the adapter
+			final var tableMapping = (TableDescriptorAsTableMapping) builder.getMutatingTable().getTableMapping();
+			final var tableDescriptor = (EntityTableDescriptor) tableMapping.getDescriptor();
 			// Skip inverse tables
 			if (tableDescriptor.isInverse()) {
 				return;
@@ -300,7 +316,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 	}
 
 	private void applyDynamicUpdateDetails(
-			Map<String, GraphTableUpdateBuilder> builders,
+			Map<String, TableUpdateBuilder<?>> builders,
 			Object[] state,
 			Object[] previousState,
 			Object version,
@@ -311,7 +327,9 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 
 		// Apply SET clause columns
 		builders.forEach( (name, builder) -> {
-			final var tableDescriptor = (EntityTableDescriptor) builder.getTableDescriptor();
+			// Get the TableDescriptor from the adapter
+			final var tableMapping = (TableDescriptorAsTableMapping) builder.getMutatingTable().getTableMapping();
+			final var tableDescriptor = (EntityTableDescriptor) tableMapping.getDescriptor();
 			// Skip inverse tables
 			if (tableDescriptor.isInverse()) {
 				return;
@@ -355,11 +373,14 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		return true;
 	}
 
-	private void applyKeyRestriction(GraphTableUpdateBuilder tableUpdateBuilder) {
-		tableUpdateBuilder.addKeyRestrictions( tableUpdateBuilder.getTableDescriptor().keyDescriptor() );
+	private void applyKeyRestriction(TableUpdateBuilder<?> tableUpdateBuilder) {
+		// Get the TableDescriptor from the adapter
+		final var tableMapping = (TableDescriptorAsTableMapping) tableUpdateBuilder.getMutatingTable().getTableMapping();
+		final var tableDescriptor = tableMapping.getDescriptor();
+		tableUpdateBuilder.addKeyRestrictions( tableDescriptor.keyDescriptor() );
 	}
 
-	private void applyOptimisticLocking(GraphTableUpdateBuilder tableUpdateBuilder) {
+	private void applyOptimisticLocking(TableUpdateBuilder<?> tableUpdateBuilder) {
 		final var optimisticLockStyle = entityPersister.optimisticLockStyle();
 
 		if ( optimisticLockStyle.isVersion() && entityPersister.getVersionMapping() != null ) {
@@ -370,9 +391,11 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		}
 	}
 
-	private void applyVersionBasedOptLocking(GraphTableUpdateBuilder tableUpdateBuilder) {
+	private void applyVersionBasedOptLocking(TableUpdateBuilder<?> tableUpdateBuilder) {
 		final var versionMapping = entityPersister.getVersionMapping();
-		final var tableDescriptor = tableUpdateBuilder.getTableDescriptor();
+		// Get the TableDescriptor from the adapter
+		final var tableMapping = (TableDescriptorAsTableMapping) tableUpdateBuilder.getMutatingTable().getTableMapping();
+		final var tableDescriptor = tableMapping.getDescriptor();
 		if ( versionMapping != null
 				&& tableDescriptor.name().equals(
 					versionMapping.getContainingTableExpression() ) ) {
@@ -380,10 +403,12 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		}
 	}
 
-	private void applyNonVersionOptLocking(GraphTableUpdateBuilder tableUpdateBuilder) {
+	private void applyNonVersionOptLocking(TableUpdateBuilder<?> tableUpdateBuilder) {
 		final boolean[] versionability = entityPersister.getPropertyVersionability();
 		final var attributeMappings = entityPersister.getAttributeMappings();
-		final var tableDescriptor = tableUpdateBuilder.getTableDescriptor();
+		// Get the TableDescriptor from the adapter
+		final var tableMapping = (TableDescriptorAsTableMapping) tableUpdateBuilder.getMutatingTable().getTableMapping();
+		final var tableDescriptor = tableMapping.getDescriptor();
 
 		for ( int attributeIndex = 0; attributeIndex < versionability.length; attributeIndex++ ) {
 			if ( versionability[attributeIndex] ) {
@@ -404,7 +429,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		}
 	}
 
-	private void applyPartitionedSelectionRestrictions(Map<String, GraphTableUpdateBuilder> builders) {
+	private void applyPartitionedSelectionRestrictions(Map<String, TableUpdateBuilder<?>> builders) {
 		final var attributeMappings = entityPersister.getAttributeMappings();
 
 		for ( int m = 0; m < attributeMappings.size(); m++ ) {
@@ -415,7 +440,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				if ( selectableMapping.isPartitioned() ) {
 					final String tableNameForMutation =
 							entityPersister.physicalTableNameForMutation( selectableMapping );
-					final GraphTableUpdateBuilder builder = builders.get( tableNameForMutation );
+					final TableUpdateBuilder<?> builder = builders.get( tableNameForMutation );
 					if ( builder != null ) {
 						builder.addKeyRestriction( selectableMapping );
 					}

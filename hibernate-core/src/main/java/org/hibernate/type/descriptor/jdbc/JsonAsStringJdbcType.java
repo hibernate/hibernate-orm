@@ -4,7 +4,6 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
-import java.nio.charset.StandardCharsets;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -120,13 +119,7 @@ public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbc
 						throws SQLException {
 					final String json = ( (JsonAsStringJdbcType) getJdbcType() ).toString( value, getJavaType(), options );
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						try {
-							st.setNString( index, json );
-						}
-						// workaround for jTDS driver for Sybase
-						catch ( AbstractMethodError e ) {
-							st.setBytes( index, json.getBytes( StandardCharsets.UTF_8 ) );
-						}
+						st.setNString( index, json );
 					}
 					else {
 						st.setString( index, json );
@@ -138,13 +131,7 @@ public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbc
 						throws SQLException {
 					final String json = ( (JsonAsStringJdbcType) getJdbcType() ).toString( value, getJavaType(), options );
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						try {
-							st.setNString( name, json );
-						}
-						// workaround for jTDS driver for Sybase
-						catch ( AbstractMethodError e ) {
-							st.setBytes( name, json.getBytes( StandardCharsets.UTF_8 ) );
-						}
+						st.setNString( name, json );
 					}
 					else {
 						st.setString( name, json );
@@ -185,18 +172,7 @@ public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbc
 				@Override
 				protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						try {
-							return fromString( rs.getNString( paramIndex ), getJavaType(), options );
-						}
-						// workaround for jTDS driver for Sybase
-						catch ( AbstractMethodError e ) {
-							byte[] bytes = rs.getBytes( paramIndex );
-							return fromString(
-									bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
-									getJavaType(),
-									options
-							);
-						}
+						return fromString( rs.getNString( paramIndex ), getJavaType(), options );
 					}
 					else {
 						return fromString( rs.getString( paramIndex ), getJavaType(), options );
@@ -207,18 +183,7 @@ public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbc
 				protected X doExtract(CallableStatement statement, int index, WrapperOptions options)
 						throws SQLException {
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						try {
-							return fromString( statement.getNString( index ), getJavaType(), options );
-						}
-						// workaround for jTDS driver for Sybase
-						catch ( AbstractMethodError e ) {
-							byte[] bytes = statement.getBytes( index );
-							return fromString(
-									bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
-									getJavaType(),
-									options
-							);
-						}
+						return fromString( statement.getNString( index ), getJavaType(), options );
 					}
 					else {
 						return fromString( statement.getString( index ), getJavaType(), options );
@@ -229,18 +194,7 @@ public class JsonAsStringJdbcType extends JsonJdbcType implements AdjustableJdbc
 				protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 						throws SQLException {
 					if ( options.getDialect().supportsNationalizedMethods() ) {
-						try {
-							return fromString( statement.getNString( name ), getJavaType(), options );
-						}
-						// workaround for jTDS driver for Sybase
-						catch ( AbstractMethodError e ) {
-							byte[] bytes = statement.getBytes( name );
-							return fromString(
-									bytes == null ? null : new String( bytes, StandardCharsets.UTF_8 ),
-									getJavaType(),
-									options
-							);
-						}
+						return fromString( statement.getNString( name ), getJavaType(), options );
 					}
 					else {
 						return fromString( statement.getString( name ), getJavaType(), options );

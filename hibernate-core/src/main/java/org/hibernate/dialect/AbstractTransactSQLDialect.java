@@ -98,6 +98,14 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
+		jdbcTypeRegistry.addDescriptor( JsonAsStringJdbcType.NVARCHAR_INSTANCE );
+		jdbcTypeRegistry.addDescriptor( XmlAsStringJdbcType.NVARCHAR_INSTANCE );
+	}
+
+	@Override
 	public int getDefaultStatementBatchSize() {
 		return 0;
 	}
@@ -378,13 +386,5 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "0x" );
 		PrimitiveByteArrayJavaType.INSTANCE.appendString( appender, bytes );
-	}
-
-	@Override
-	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		super.registerColumnTypes( typeContributions, serviceRegistry );
-		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
-		jdbcTypeRegistry.addDescriptor( JsonAsStringJdbcType.NVARCHAR_INSTANCE );
-		jdbcTypeRegistry.addDescriptor( XmlAsStringJdbcType.NVARCHAR_INSTANCE );
 	}
 }

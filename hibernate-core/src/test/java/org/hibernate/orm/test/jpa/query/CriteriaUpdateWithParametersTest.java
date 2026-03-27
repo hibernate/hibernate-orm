@@ -4,6 +4,8 @@
  */
 package org.hibernate.orm.test.jpa.query;
 
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -18,6 +20,7 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
 
@@ -104,6 +107,23 @@ public class CriteriaUpdateWithParametersTest {
 		} );
 	}
 
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20297")
+	public void testCriteriaUpdate4(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			// test with the same cb.value( "1" ) parameter instance
+			final HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) em.getCriteriaBuilder();
+			final CriteriaUpdate<Process> cu = cb.createCriteriaUpdate( Process.class );
+			final Root<Process> root = cu.from( Process.class );
+			final Expression<String> newValue = cb.value( "1" );
+			final Path<String> name = root.get( "name" );
+			final Path<String> ageString = root.get( "ageString" );
+			cu.set( name, newValue );
+			cu.set( ageString, newValue );
+			em.createQuery( cu ).executeUpdate();
+		} );
+	}
+
 	private static <X> Expression<? extends X> cast(Expression<?> expression) {
 		//noinspection unchecked
 		return (Expression<? extends X>) expression;
@@ -143,8 +163,22 @@ public class CriteriaUpdateWithParametersTest {
 		// All attributes below are necessary to reproduce the issue
 
 		private String name;
+		@Convert(converter = IntegerConverter.class)
+		private String ageString;
 
 		@Lob
 		private byte[] payload;
+	}
+
+	public static class IntegerConverter implements AttributeConverter<String, Integer> {
+		@Override
+		public Integer convertToDatabaseColumn(String attribute) {
+			return attribute == null ? null : Integer.parseInt( attribute );
+		}
+
+		@Override
+		public String convertToEntityAttribute(Integer dbData) {
+			return dbData == null ? null : dbData.toString();
+		}
 	}
 }

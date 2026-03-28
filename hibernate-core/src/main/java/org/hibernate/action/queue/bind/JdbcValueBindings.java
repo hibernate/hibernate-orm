@@ -88,7 +88,7 @@ public class JdbcValueBindings {
 	 * @see ModelPart.JdbcValueConsumer#consume(int, Object, SelectableMapping)
 	 */
 	public void bindAssignment(@SuppressWarnings("unused") int valueIndex, Object value, SelectableMapping jdbcValueMapping) {
-		bindValue( value, jdbcValueMapping.getSelectableName(), ParameterUsage.SET );
+		bindValue( value, jdbcValueMapping.getSelectionExpression(), ParameterUsage.SET );
 	}
 
 	/**
@@ -98,6 +98,6 @@ public class JdbcValueBindings {
 	 * @see ModelPart.JdbcValueConsumer#consume(int, Object, SelectableMapping)
 	 */
 	public void bindRestriction(@SuppressWarnings("unused") int valueIndex, Object value, SelectableMapping jdbcValueMapping) {
-		bindValue( value, jdbcValueMapping.getSelectableName(), ParameterUsage.RESTRICT );
+		bindValue( value, jdbcValueMapping.getSelectionExpression(), ParameterUsage.RESTRICT );
 	}
 }

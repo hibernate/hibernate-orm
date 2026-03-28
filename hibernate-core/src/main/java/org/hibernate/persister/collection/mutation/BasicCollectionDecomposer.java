@@ -17,7 +17,7 @@ import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.meta.CollectionTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -159,7 +159,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			Object key,
 			int ordinalBase,
 			SharedSessionContractImplementor session) {
-		final CollectionJdbcOperations.InsertRowPlan insertRowPlan = jdbcOperations.getInsertRowPlan();
+		final CollectionJdbcOperations.InsertRowPlan insertRowPlan = jdbcOperations.insertRowPlan();
 		if ( insertRowPlan == null ) {
 			return List.of();
 		}
@@ -223,7 +223,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 				if ( include ) {
 					final BindPlan bindPlan = new SingleRowInsertBindPlan(
 							persister,
-							jdbcOperations.getInsertRowPlan().values(),
+							jdbcOperations.insertRowPlan().values(),
 							collection,
 							key,
 							entry,
@@ -233,7 +233,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 					final PlannedOperation plannedOp = new PlannedOperation(
 							tableDescriptor,
 							MutationKind.INSERT,
-							jdbcOperations.getInsertRowPlan().jdbcOperation(),
+							jdbcOperations.insertRowPlan().jdbcOperation(),
 							bindPlan,
 							insertOrdinal,
 							"InsertRow[" + entryCount + "](" + persister.getRolePath() + ")"
@@ -345,7 +345,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			Consumer<PlannedOperation> operationConsumer) {
-		var deleteRowPlan = jdbcOperations.getDeleteRowPlan();
+		var deleteRowPlan = jdbcOperations.deleteRowPlan();
 		final var deletes = collection.getDeletes( persister, !persister.hasPhysicalIndexColumn() );
 		if ( deleteRowPlan == null || !deletes.hasNext() ) {
 			MODEL_MUTATION_LOGGER.noRowsToDelete();
@@ -417,8 +417,8 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			Consumer<PlannedOperation> operationConsumer) {
 		assert shouldBundleOperations;
 
-		var updateRowPlan = jdbcOperations.getUpdateRowPlan();
-		var insertRowPlan = jdbcOperations.getInsertRowPlan();
+		var updateRowPlan = jdbcOperations.updateRowPlan();
+		var insertRowPlan = jdbcOperations.insertRowPlan();
 		var entries = collection.entries( persister );
 
 		if ( (updateRowPlan != null || insertRowPlan != null) && entries.hasNext() ) {
@@ -533,7 +533,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			Consumer<PlannedOperation> operationConsumer) {
-		var updateRowPlan = jdbcOperations.getUpdateRowPlan();
+		var updateRowPlan = jdbcOperations.updateRowPlan();
 		final var entries = collection.entries( persister );
 
 		if ( updateRowPlan == null || !entries.hasNext() ) {
@@ -592,7 +592,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		// Pre-insert callback once for the whole collection
 		collection.preInsert( persister );
 
-		var insertRowPlan = jdbcOperations.getInsertRowPlan();
+		var insertRowPlan = jdbcOperations.insertRowPlan();
 		final var entries = collection.entries( persister );
 
 		if ( insertRowPlan == null || !entries.hasNext() ) {
@@ -650,7 +650,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 	}
 
 	private List<PlannedOperation> planRemoveOperation(Object key, int ordinalBase, SharedSessionContractImplementor session) {
-		final var jdbcOperation = jdbcOperations.getRemoveOperation();
+		final var jdbcOperation = jdbcOperations.removeOperation();
 		if ( jdbcOperation == null ) {
 			return List.of();
 		}
@@ -1057,14 +1057,14 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 				SharedSessionContractImplementor session) {
 			context.executeRow(
 					plannedOperation,
-					valueBindings -> {
+					(valueBindings, s) -> {
 						var fkDescriptor = mutationTarget.getAttributeMapping().getKeyDescriptor();
 						fkDescriptor.getKeyPart().decompose(
 								key,
 								(valueIndex, value, jdbcValueMapping) -> {
 									valueBindings.bindValue(
 											value,
-											jdbcValueMapping.getSelectableName(),
+											jdbcValueMapping.getSelectionExpression(),
 											ParameterUsage.RESTRICT
 									);
 								},

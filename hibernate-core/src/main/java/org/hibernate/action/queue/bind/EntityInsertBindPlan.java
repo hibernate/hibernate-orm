@@ -9,7 +9,7 @@ import org.hibernate.action.queue.cyclebreak.CycleBreakPatcher;
 import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -73,7 +73,7 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 			SharedSessionContractImplementor session) {
 		context.executeRow(
 				plannedOperation,
-				jdbcValueBindings -> bindValues( jdbcValueBindings, plannedOperation, session ),
+				(jdbcValueBindings, s) -> bindValues( jdbcValueBindings, plannedOperation, session ),
 				this
 		);
 	}
@@ -100,7 +100,7 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 							if ( jdbcValueMapping.isInsertable() ) {
 								valueBindings.bindValue(
 										jdbcValue,
-										jdbcValueMapping.getSelectableName(),
+										jdbcValueMapping.getSelectionExpression(),
 										ParameterUsage.SET
 								);
 							}
@@ -110,23 +110,31 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 			}
 		} );
 
-		if ( identifier == null ) {
-			assert entityPersister.getInsertDelegate() != null;
+		// Bind the key columns (identifier for root table, FK for joined subclass tables)
+		// unless using identity generation (identifier == null)
+		if ( identifier != null ) {
+			breakDownKeyJdbcValue( valueBindings, session );
 		}
 		else {
-			breakDownKeyJdbcValue( valueBindings, session );
+			assert entityPersister.getInsertDelegate() != null;
 		}
 	}
 
 	private void breakDownKeyJdbcValue(
 			JdbcValueBindings valueBindings,
 			SharedSessionContractImplementor session) {
+		// For joined subclasses, use the table's key columns (which may be FK columns)
+		// rather than the entity's identifier columns
+		final var keyColumns = tableDescriptor.keyDescriptor().columns();
+
 		entityPersister.getIdentifierMapping().breakDownJdbcValues(
 				identifier,
-				(index, jdbcValue, columnMapping) -> {
+				(index, jdbcValue, jdbcValueMapping) -> {
+					// Use the table's key column name, not the identifier column name
+					final var keyColumn = keyColumns.get(index);
 					valueBindings.bindValue(
 							jdbcValue,
-							columnMapping.getSelectableName(),
+							keyColumn.selectionExpression(),
 							ParameterUsage.SET
 					);
 				},

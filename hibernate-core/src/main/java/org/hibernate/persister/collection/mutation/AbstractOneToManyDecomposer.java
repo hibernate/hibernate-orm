@@ -10,7 +10,7 @@ import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
@@ -65,7 +65,7 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 		final Object cacheKey = lockCacheItem( action, session );
 		final PostCollectionRemoveHandling postCollectionRemoveHandling = new PostCollectionRemoveHandling( action, cacheKey );
 
-		var removeOperation = jdbcOperations.getRemoveOperation();
+		var removeOperation = jdbcOperations.removeOperation();
 		var operation = new PlannedOperation(
 				persister.getCollectionTableDescriptor(),
 				// technically an UPDATE
@@ -99,14 +99,14 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 				SharedSessionContractImplementor session) {
 			context.executeRow(
 					plannedOperation,
-					valueBindings -> {
+					(valueBindings, s) -> {
 						var fkDescriptor = mutationTarget.getAttributeMapping().getKeyDescriptor();
 						fkDescriptor.getKeyPart().decompose(
 								key,
 								(valueIndex, value, jdbcValueMapping) -> {
 									valueBindings.bindValue(
 											value,
-											jdbcValueMapping.getSelectableName(),
+											jdbcValueMapping.getSelectionExpression(),
 											ParameterUsage.RESTRICT
 									);
 								},
@@ -268,7 +268,7 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 					if ( jdbcValueMapping.isUpdateable() ) {
 						jdbcValueBindings.bindValue(
 								jdbcValue,
-								jdbcValueMapping.getSelectableName(),
+								jdbcValueMapping.getSelectionExpression(),
 								ParameterUsage.SET
 						);
 					}
@@ -361,7 +361,7 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 				keyValue,
 				(index, val, jdbcMapping) -> jdbcValueBindings.bindValue(
 						val,
-						( jdbcMapping.getSelectableName() ),
+						( jdbcMapping.getSelectionExpression() ),
 						ParameterUsage.RESTRICT
 				),
 				session
@@ -392,7 +392,7 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 
 		foreignKeyDescriptor.getKeyPart().forEachSelectable( (selectionIndex, selectableMapping) -> {
 			builder.addValueColumn( NULL, selectableMapping );
-			builder.addKeyRestriction( selectableMapping );
+			builder.addKeyRestrictionLeniently( selectableMapping );
 		} );
 
 		if ( persister.hasPhysicalIndexColumn() ) {

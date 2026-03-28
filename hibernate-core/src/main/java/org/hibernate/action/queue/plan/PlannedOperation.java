@@ -11,6 +11,7 @@ import org.hibernate.action.queue.cyclebreak.BindingPatch;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.ValuesAnalysis;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -41,7 +42,7 @@ public class PlannedOperation {
 	private final Map<String, Object> intendedUniqueValues = new LinkedHashMap<>();
 
 	// Cached analysis/checker from bind phase (optional)
-	private Object cachedValuesAnalysis;
+	private ValuesAnalysis cachedValuesAnalysis;
 	private Object cachedTableInclusionChecker;
 
 	// Optional callback to execute immediately after this operation completes

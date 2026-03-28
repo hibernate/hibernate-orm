@@ -9,7 +9,7 @@ import org.hibernate.action.queue.cyclebreak.CycleBreakPatcher;
 import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -107,7 +107,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			SharedSessionContractImplementor session) {
 		context.executeRow(
 				plannedOperation,
-				jdbcValueBindings -> bindValues( jdbcValueBindings, plannedOperation, session ),
+				(jdbcValueBindings, s) -> bindValues( jdbcValueBindings, plannedOperation, session ),
 				this
 		);
 	}
@@ -175,7 +175,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 					if ( selectableMapping.isUpdateable() && !selectableMapping.isFormula() ) {
 						bindings.bindValue(
 								jdbcValue,
-								( selectableMapping.getSelectableName() ),
+								( selectableMapping.getSelectionExpression() ),
 								ParameterUsage.SET
 						);
 					}
@@ -201,14 +201,17 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 	private void breakDownKeyJdbcValue(
 			JdbcValueBindings valueBindings,
 			SharedSessionContractImplementor session) {
+		// Bind using the table's key columns, which match what was used
+		// when building the static UPDATE operation
+		final var keyDescriptor = tableDescriptor.keyDescriptor();
+
 		entityPersister.getIdentifierMapping().breakDownJdbcValues(
 				identifier,
-				(index, jdbcValue, columnMapping) -> {
-					valueBindings.bindValue(
-							jdbcValue,
-							( columnMapping.getSelectableName() ),
-							ParameterUsage.RESTRICT
-					);
+				(index, jdbcValue, jdbcValueMapping) -> {
+					// Use the table key column (e.g., FK column for joined subclass)
+					// not the entity identifier column
+					final var keyColumn = keyDescriptor.getSelectable(index);
+					valueBindings.bindRestriction(index, jdbcValue, keyColumn);
 				},
 				session
 		);

@@ -22,7 +22,6 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.persister.entity.mutation.UpdateValuesAnalysis;
-import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.SelfExecutingUpdateOperation;
@@ -74,10 +73,10 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	private final List<JdbcValueDescriptor> jdbcValueDescriptors;
 
 	public OptionalTableUpdateOperation(
-			MutationTarget<?> mutationTarget,
+			EntityMutationTarget mutationTarget,
 			OptionalTableUpdate upsert,
 			@SuppressWarnings("unused") SessionFactoryImplementor factory) {
-		this.mutationTarget = (EntityMutationTarget) mutationTarget;
+		this.mutationTarget = mutationTarget;
 		this.tableMapping = (EntityTableMapping) upsert.getMutatingTable().getTableMapping();
 		this.expectation = upsert.getExpectation();
 		this.valueBindings = upsert.getValueBindings();
@@ -98,7 +97,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 	}
 
 	@Override
-	public MutationTarget<?> getMutationTarget() {
+	public EntityMutationTarget getMutationTarget() {
 		return mutationTarget;
 	}
 

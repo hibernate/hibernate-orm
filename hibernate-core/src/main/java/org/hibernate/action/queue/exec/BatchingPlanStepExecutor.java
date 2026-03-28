@@ -7,13 +7,13 @@ package org.hibernate.action.queue.exec;
 import org.hibernate.AssertionFailure;
 import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.bind.JdbcValueBindings;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.PreparableMutationOperation;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 /**
  * @author Steve Ebersole
@@ -42,7 +42,7 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ex
 	@Override
 	public void executeRow(
 			PlannedOperation plannedOperation,
-			Consumer<JdbcValueBindings> binder,
+			BiConsumer<JdbcValueBindings, SharedSessionContractImplementor> binder,
 			OperationResultChecker resultChecker) {
 		assert plannedOperation.getJdbcOperation() instanceof PreparableMutationOperation;
 
@@ -72,13 +72,13 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ex
 	private void applyToBatch(
 			PreparableMutationOperation preparable,
 			PlannedOperation plannedOperation,
-			Consumer<JdbcValueBindings> binder) {
+			BiConsumer<JdbcValueBindings, SharedSessionContractImplementor> binder) {
 		if ( currentBatchIndex > 0 ) {
 			session.getJdbcServices().getSqlStatementLogger().logStatement( preparable.getSqlString() );
 		}
 
 		var valueBindings = new JdbcValueBindings( plannedOperation.getMutatingTableDescriptor(), preparable );
-		binder.accept( valueBindings );
+		binder.accept( valueBindings, session );
 		valueBindings.beforeStatement( batchStatement, session );
 
 		try {

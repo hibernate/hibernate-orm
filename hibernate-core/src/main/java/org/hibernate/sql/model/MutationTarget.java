@@ -6,6 +6,7 @@ package org.hibernate.sql.model;
 
 import java.util.function.Consumer;
 
+import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 
@@ -14,7 +15,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
  *
  * @author Steve Ebersole
  */
-public interface MutationTarget<T extends TableMapping> {
+public interface MutationTarget<T extends TableMapping, TD extends TableDescriptor> {
 	/**
 	 * The model role of this target
 	 */
@@ -45,6 +46,16 @@ public interface MutationTarget<T extends TableMapping> {
 	 * 		relative to this mapping
 	 */
 	void forEachMutableTableReverse(Consumer<T> consumer);
+
+	/**
+	 * Visit each mutable (non-inverse) table.
+	 */
+	void forEachMutableTableDescriptor(Consumer<TD> consumer);
+
+	/**
+	 * Visit each mutable (non-inverse) table, but in reverse (delete) order.
+	 */
+	void forEachMutableTableDescriptorReverse(Consumer<TD> consumer);
 
 	/**
 	 * The name of the table defining the identifier for this target

@@ -92,4 +92,8 @@ public record EntityTableDescriptor(
 				.toList();
 	}
 
+	@Override
+	public int getRelativePosition() {
+		return relativePosition;
+	}
 }

@@ -68,7 +68,7 @@ public class FixupJdbcUpdate implements PreparableMutationOperation {
 	}
 
 	@Override
-	public MutationTarget<?> getMutationTarget() {
+	public MutationTarget<?,?> getMutationTarget() {
 		return entityPersister;
 	}
 

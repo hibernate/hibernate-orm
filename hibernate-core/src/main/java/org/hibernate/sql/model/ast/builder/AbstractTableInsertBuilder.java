@@ -25,14 +25,13 @@ import org.hibernate.sql.model.ast.TableInsert;
 public abstract class AbstractTableInsertBuilder
 		extends AbstractTableMutationBuilder<TableInsert>
 		implements TableInsertBuilder {
-	private final List<ColumnValueBinding> keyBindingList = new ArrayList<>();
 	private final List<ColumnValueBinding> valueBindingList = new ArrayList<>();
 	private List<ColumnValueBinding> lobValueBindingList;
 
 	private String sqlComment;
 
 	public AbstractTableInsertBuilder(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			TableMapping table,
 			SessionFactoryImplementor sessionFactory) {
 		super( MutationType.INSERT, mutationTarget, table, sessionFactory );
@@ -40,7 +39,7 @@ public abstract class AbstractTableInsertBuilder
 	}
 
 	public AbstractTableInsertBuilder(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory) {
 		super( MutationType.INSERT, mutationTarget, tableReference, sessionFactory );
@@ -55,10 +54,6 @@ public abstract class AbstractTableInsertBuilder
 		this.sqlComment = sqlComment;
 	}
 
-	protected List<ColumnValueBinding> getKeyBindingList() {
-		return keyBindingList;
-	}
-
 	protected List<ColumnValueBinding> getValueBindingList() {
 		return valueBindingList;
 	}
@@ -68,10 +63,9 @@ public abstract class AbstractTableInsertBuilder
 	}
 
 	@Override
-	public void addValueColumn(String columnWriteFragment, SelectableMapping selectableMapping) {
-		final ColumnValueBinding valueBinding = createValueBinding( columnWriteFragment, selectableMapping );
-
-		if ( selectableMapping.isLob() && getJdbcServices().getDialect().forceLobAsLastValue() ) {
+	public void addColumnAssignment(ColumnValueBinding valueBinding) {
+		if ( valueBinding.getColumnReference().getJdbcMapping().getJdbcType().isLob()
+				&& getJdbcServices().getDialect().forceLobAsLastValue() ) {
 			if ( lobValueBindingList == null ) {
 				lobValueBindingList = new ArrayList<>();
 			}
@@ -83,17 +77,18 @@ public abstract class AbstractTableInsertBuilder
 	}
 
 	@Override
-	public void addValueColumn(ColumnValueBinding valueBinding) {
-		valueBindingList.add( valueBinding );
+	public void addColumnAssignment(SelectableMapping columnMapping) {
+		addColumnAssignment( columnMapping, columnMapping.getWriteExpression() );
 	}
 
 	@Override
-	public void addKeyColumn(String columnWriteFragment, SelectableMapping selectableMapping) {
-		addColumn( columnWriteFragment, selectableMapping, keyBindingList );
+	public void addColumnAssignment(SelectableMapping columnMapping, String assignment) {
+		addColumnAssignment( createValueBinding( assignment, columnMapping ) );
 	}
 
+
 	@Override
-	public boolean hasValueBindings() {
+	public boolean hasAssignmentBindings() {
 		return !valueBindingList.isEmpty() || CollectionHelper.isNotEmpty( lobValueBindingList );
 	}
 }

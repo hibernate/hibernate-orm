@@ -14,17 +14,14 @@ import org.hibernate.sql.model.MutationOperation;
 /// Built by collection persisters for use in decomposers.
 ///
 /// @author Steve Ebersole
-public class CollectionJdbcOperations {
-	private final CollectionGraphMutationTarget target;
-
-	private final InsertRowPlan insertRowPlan;
-	private final UpdateRowPlan updateRowPlan;
-	private final DeleteRowPlan deleteRowPlan;
-
-	private final MutationOperation removeOperation;
-
+public record CollectionJdbcOperations(
+		CollectionMutationTarget target,
+		InsertRowPlan insertRowPlan,
+		UpdateRowPlan updateRowPlan,
+		DeleteRowPlan deleteRowPlan,
+		MutationOperation removeOperation) {
 	public CollectionJdbcOperations(
-			CollectionGraphMutationTarget target,
+			CollectionMutationTarget target,
 			MutationOperation insertRowOperation,
 			Values insertRowValues,
 			MutationOperation updateRowOperation,
@@ -40,39 +37,6 @@ public class CollectionJdbcOperations {
 				new DeleteRowPlan( deleteRowOperation, deleteRowRestrictions ),
 				removeOperation
 		);
-	}
-
-	public CollectionJdbcOperations(
-			CollectionGraphMutationTarget target,
-			InsertRowPlan insertRowPlan,
-			UpdateRowPlan updateRowPlan,
-			DeleteRowPlan deleteRowPlan,
-			MutationOperation removeOperation) {
-		this.target = target;
-		this.insertRowPlan = insertRowPlan;
-		this.updateRowPlan = updateRowPlan;
-		this.deleteRowPlan = deleteRowPlan;
-		this.removeOperation = removeOperation;
-	}
-
-	public CollectionGraphMutationTarget getTarget() {
-		return target;
-	}
-
-	public InsertRowPlan getInsertRowPlan() {
-		return insertRowPlan;
-	}
-
-	public UpdateRowPlan getUpdateRowPlan() {
-		return updateRowPlan;
-	}
-
-	public DeleteRowPlan getDeleteRowPlan() {
-		return deleteRowPlan;
-	}
-
-	public MutationOperation getRemoveOperation() {
-		return removeOperation;
 	}
 
 

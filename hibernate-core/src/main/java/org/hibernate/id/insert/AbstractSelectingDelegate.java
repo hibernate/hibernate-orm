@@ -4,12 +4,7 @@
  */
 package org.hibernate.id.insert;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import org.hibernate.action.queue.mutation.jdbc.PreparableJdbcOperation;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -17,6 +12,11 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.AbstractGeneratedValuesMutationDelegate;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.model.PreparableMutationOperation;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import static java.sql.Statement.NO_GENERATED_KEYS;
 import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getGeneratedValues;
@@ -71,7 +71,7 @@ public abstract class AbstractSelectingDelegate
 			PlannedOperation operation,
 			Object entity,
 			SharedSessionContractImplementor session) {
-		var jdbcOperation = (PreparableJdbcOperation) operation.getJdbcOperation();
+		var jdbcOperation = (PreparableMutationOperation) operation.getJdbcOperation();
 		final String sql = jdbcOperation.getSqlString();
 		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
 
@@ -82,7 +82,7 @@ public abstract class AbstractSelectingDelegate
 			);
 			operation.getBindPlan().execute(
 					(plannedOperation, binder, resultChecker) -> {
-						binder.accept( valueBindings );
+						binder.accept( valueBindings, session );
 						valueBindings.beforeStatement( preparedStatement, session );
 
 						session.getJdbcCoordinator()

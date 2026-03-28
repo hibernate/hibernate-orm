@@ -7,8 +7,8 @@ package org.hibernate.sql.model.ast.builder;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueBindingList;
+import org.hibernate.sql.model.ast.LogicalTableUpdate;
 import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 /**
@@ -27,7 +27,7 @@ public class TableUpdateBuilderSkipped implements TableUpdateBuilder {
 	}
 
 	@Override
-	public RestrictedTableMutation<JdbcMutationOperation> buildMutation() {
+	public LogicalTableUpdate<JdbcMutationOperation> buildMutation() {
 		return null;
 	}
 
@@ -67,17 +67,12 @@ public class TableUpdateBuilderSkipped implements TableUpdateBuilder {
 	}
 
 	@Override
-	public void addValueColumn(String columnWriteFragment, SelectableMapping selectableMapping) {
+	public void addColumnAssignment(SelectableMapping columnMapping, String assignment) {
 		// nothing to do
 	}
 
 	@Override
-	public void addValueColumn(ColumnValueBinding valueBinding) {
-		// nothing to do
-	}
-
-	@Override
-	public void addKeyColumn(String valueExpression, SelectableMapping selectableMapping) {
+	public void addColumnAssignment(ColumnValueBinding valueBinding) {
 		// nothing to do
 	}
 
@@ -87,7 +82,7 @@ public class TableUpdateBuilderSkipped implements TableUpdateBuilder {
 	}
 
 	@Override
-	public boolean hasValueBindings() {
+	public boolean hasAssignmentBindings() {
 		return false;
 	}
 }

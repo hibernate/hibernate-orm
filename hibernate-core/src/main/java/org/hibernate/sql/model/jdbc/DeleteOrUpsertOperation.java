@@ -19,7 +19,6 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.persister.entity.mutation.UpdateValuesAnalysis;
-import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.SelfExecutingUpdateOperation;
 import org.hibernate.sql.model.TableMapping;
@@ -67,7 +66,7 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 	}
 
 	@Override
-	public MutationTarget<?> getMutationTarget() {
+	public EntityMutationTarget getMutationTarget() {
 		return mutationTarget;
 	}
 

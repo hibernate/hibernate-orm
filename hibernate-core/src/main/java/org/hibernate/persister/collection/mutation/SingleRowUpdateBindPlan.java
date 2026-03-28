@@ -8,7 +8,7 @@ import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.exec.OperationResultChecker;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -51,16 +51,11 @@ public class SingleRowUpdateBindPlan implements BindPlan, OperationResultChecker
 
 	@Override
 	public void execute(ExecutionContext context, PlannedOperation plannedOperation, SharedSessionContractImplementor session) {
-		context.executeRow(
-				plannedOperation,
-				jdbcValueBindings -> bindValues( jdbcValueBindings, plannedOperation, session ),
-				this
-		);
+		context.executeRow( plannedOperation, this::bindValues, this );
 	}
 
 	private void bindValues(
 			JdbcValueBindings valueBindings,
-			PlannedOperation plannedOperation,
 			SharedSessionContractImplementor session) {
 		updateRowValues.applyValues( collection, key, entry, entryIndex, session, valueBindings );
 		updateRowRestrictions.applyRestrictions( collection, key, entry, entryIndex, session, valueBindings );

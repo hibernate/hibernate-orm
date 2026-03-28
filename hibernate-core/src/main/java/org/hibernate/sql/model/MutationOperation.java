@@ -73,7 +73,7 @@ public interface MutationOperation extends JdbcValueDescriptorAccess {
 	/**
 	 * The thing being mutated
 	 */
-	MutationTarget<?> getMutationTarget();
+	MutationTarget<?,?> getMutationTarget();
 
 	/**
 	 * The table against which operation is to be performed

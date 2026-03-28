@@ -12,7 +12,7 @@ import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.support.GraphBasedActionQueueFactory;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;

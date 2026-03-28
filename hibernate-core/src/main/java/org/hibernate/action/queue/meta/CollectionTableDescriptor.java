@@ -25,4 +25,9 @@ public record CollectionTableDescriptor(
 	public boolean isOptional() {
 		return false;
 	}
+
+	@Override
+	public int getRelativePosition() {
+		return 0;
+	}
 }

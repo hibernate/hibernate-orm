@@ -4,19 +4,19 @@
  */
 package org.hibernate.sql.model.ast.builder;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jdbc.Expectation;
+import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
 import org.hibernate.persister.collection.mutation.CollectionTableMapping;
 import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.model.ast.LogicalTableUpdate;
 import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Custom table update builder for one-to-many collections that handles row deletes
@@ -25,7 +25,7 @@ import org.hibernate.sql.model.internal.TableUpdateStandard;
  */
 public class CollectionRowDeleteByUpdateSetNullBuilder<O extends MutationOperation> extends TableUpdateBuilderStandard<O> {
 	public CollectionRowDeleteByUpdateSetNullBuilder(
-			MutationTarget<?> mutationTarget,
+			CollectionMutationTarget mutationTarget,
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory,
 			String whereFragment) {
@@ -35,7 +35,7 @@ public class CollectionRowDeleteByUpdateSetNullBuilder<O extends MutationOperati
 
 	@SuppressWarnings( "unchecked" )
 	@Override
-	public RestrictedTableMutation<O> buildMutation() {
+	public LogicalTableUpdate<O> buildMutation() {
 		final CollectionTableMapping tableMapping = (CollectionTableMapping) getMutatingTable().getTableMapping();
 		final List<ColumnValueBinding> valueBindings = combine(
 				getValueBindings(),
@@ -43,7 +43,7 @@ public class CollectionRowDeleteByUpdateSetNullBuilder<O extends MutationOperati
 				getLobValueBindings()
 		);
 		if ( tableMapping.getDeleteRowDetails().getCustomSql() != null ) {
-			return (RestrictedTableMutation<O>) new TableUpdateCustomSql(
+			return (LogicalTableUpdate<O>) new TableUpdateCustomSql(
 					getMutatingTable(),
 					getMutationTarget(),
 					getSqlComment(),
@@ -67,7 +67,7 @@ public class CollectionRowDeleteByUpdateSetNullBuilder<O extends MutationOperati
 				}
 			};
 		}
-		return (RestrictedTableMutation<O>) new TableUpdateStandard(
+		return (LogicalTableUpdate<O>) new TableUpdateStandard(
 				getMutatingTable(),
 				getMutationTarget(),
 				getSqlComment(),

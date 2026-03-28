@@ -33,7 +33,7 @@ public class TableUpdateCustomSql
 
 	public TableUpdateCustomSql(
 			MutatingTableReference mutatingTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String sqlComment,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
@@ -44,7 +44,7 @@ public class TableUpdateCustomSql
 
 	public TableUpdateCustomSql(
 			MutatingTableReference mutatingTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String sqlComment,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
@@ -56,7 +56,7 @@ public class TableUpdateCustomSql
 
 	public TableUpdateCustomSql(
 			MutatingTableReference mutatingTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			TableMapping.MutationDetails mutationDetails,
 			String sqlComment,
 			List<ColumnValueBinding> valueBindings,

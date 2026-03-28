@@ -20,7 +20,7 @@ public class OptionalTableInsert extends TableInsertStandard {
 
 	public OptionalTableInsert(
 			MutatingTableReference mutatingTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnReference> returningColumns,
 			List<ColumnValueParameter> parameters,

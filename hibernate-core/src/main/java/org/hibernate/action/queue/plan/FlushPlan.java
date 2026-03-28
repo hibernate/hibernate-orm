@@ -4,8 +4,6 @@
  */
 package org.hibernate.action.queue.plan;
 
-import org.hibernate.action.queue.op.PlannedOperation;
-
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;

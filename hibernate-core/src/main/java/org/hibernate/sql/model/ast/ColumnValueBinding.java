@@ -59,7 +59,7 @@ public class ColumnValueBinding {
 
 	public boolean matches(SelectableMapping selectableMapping) {
 		return columnReference.isColumnExpressionFormula() == selectableMapping.isFormula()
-			   && Objects.equals( columnReference.getColumnExpression(), selectableMapping.getSelectableName() );
+			&& Objects.equals( columnReference.getColumnExpression(), selectableMapping.getSelectableName() );
 	}
 
 	@Override

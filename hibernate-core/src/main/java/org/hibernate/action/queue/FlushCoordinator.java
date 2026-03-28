@@ -13,7 +13,7 @@ import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.graph.Decomposer;
 import org.hibernate.action.queue.graph.GraphBuilder;
 import org.hibernate.action.queue.graph.StandardGraphBuilder;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.plan.FlushPlan;
 import org.hibernate.action.queue.plan.FlushPlanner;
 import org.hibernate.action.queue.plan.PlanStep;

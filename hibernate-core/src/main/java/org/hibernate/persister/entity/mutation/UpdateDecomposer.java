@@ -11,19 +11,22 @@ import org.hibernate.action.queue.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
+import org.hibernate.sql.model.ast.LogicalTableUpdate;
 import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.model.ast.builder.VersionUpdateBuilder;
+import org.hibernate.sql.model.internal.TableUpdateStandard;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,7 +42,8 @@ import java.util.Map;
 ///
 /// @author Steve Ebersole
 public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
-	private final Map<String, RestrictedTableMutation<?>> staticUpdateOperations;
+	private final Map<String, LogicalTableUpdate<?>> staticUpdateOperations;
+	private final TableUpdateStandard versionUpdate;
 
 	public UpdateDecomposer(EntityPersister entityPersister, SessionFactoryImplementor sessionFactory) {
 		super( entityPersister, sessionFactory );
@@ -48,9 +52,13 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				// entity specified dynamic-update - skip static operations
 				? null
 				: generateStaticOperations();
+
+		this.versionUpdate = entityPersister.getVersionMapping() != null
+				? new VersionUpdateBuilder( entityPersister ).buildMutation()
+				: null;
 	}
 
-	public Map<String, RestrictedTableMutation<?>> getStaticUpdateOperations() {
+	public Map<String, LogicalTableUpdate<?>> getStaticUpdateOperations() {
 		return staticUpdateOperations;
 	}
 
@@ -69,14 +77,33 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		final Object rowId = action.getRowId();
 		final Object[] state = action.getState();
 		final Object[] previousState = action.getPreviousState();
-		final Object version = action.getPreviousVersion();
+		final Object previousVersion = action.getPreviousVersion();
 		final int[] dirtyFields = action.getDirtyFields();
 
 		action.handleNaturalIdLocalResolutions( identifier, entityPersister, session.getPersistenceContext() );
-		final Object cacheKey = action.lockCacheItem( version );
+		final Object cacheKey = action.lockCacheItem( previousVersion );
+
+		final var versionMapping = entityPersister.getVersionMapping();
+		if ( versionMapping != null ) {
+			var forceIncrementOperation = possiblyBuildForcedVersionIncrementOperation(
+					action,
+					ordinalBase,
+					cacheKey,
+					entity,
+					identifier,
+					state,
+					previousVersion,
+					dirtyFields,
+					versionMapping,
+					session
+			);
+			if ( forceIncrementOperation != null ) {
+				return List.of( forceIncrementOperation );
+			}
+		}
 
 		// Determine if we need to apply optimistic locking
-		final boolean applyOptimisticLocking = shouldApplyOptimisticLocking( version, previousState );
+		final boolean applyOptimisticLocking = shouldApplyOptimisticLocking( previousVersion, previousState );
 
 		// Determine which fields are updateable
 		final boolean[] updateable = entityPersister.getPropertyUpdateability();
@@ -95,7 +122,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				rowId,
 				state,
 				previousState,
-				version,
+				previousVersion,
 				dirtyFields,
 				updateable,
 				applyOptimisticLocking,
@@ -104,12 +131,12 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		);
 
 		var generatedValuesCollector = GeneratedValuesCollector.forUpdate( entityPersister );
-		final PostUpdateHandling postUpdateHandling = new PostUpdateHandling( action, cacheKey, version, generatedValuesCollector );
+		final PostUpdateHandling postUpdateHandling = new PostUpdateHandling( action, cacheKey, previousVersion, generatedValuesCollector );
 
 		final List<PlannedOperation> operations = CollectionHelper.arrayList( effectiveGroup.size() );
 		int localOrd = 0;
 
-		for ( Map.Entry<String, RestrictedTableMutation<?>> entry : effectiveGroup.entrySet() ) {
+		for ( Map.Entry<String, LogicalTableUpdate<?>> entry : effectiveGroup.entrySet() ) {
 			var operation = entry.getValue().createMutationOperation(null, sessionFactory);
 			var tableMapping = (TableDescriptorAsTableMapping) operation.getTableDetails();
 			var tableDescriptor = (EntityTableDescriptor) tableMapping.getDescriptor();
@@ -121,7 +148,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 					rowId,
 					state,
 					previousState,
-					version,
+					previousVersion,
 					dirtyFields,
 					updateable,
 					applyOptimisticLocking,
@@ -147,6 +174,86 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		}
 
 		return operations;
+	}
+
+	/// Handle the case where the only value being updated is the version.
+	/// We treat this case specially in `#coordinateUpdate` to leverage
+	/// `#doVersionUpdate`.
+	private PlannedOperation possiblyBuildForcedVersionIncrementOperation(
+			EntityUpdateAction action,
+			int ordinalBase,
+			Object cacheKey,
+			Object entity,
+			Object identifier,
+			Object[] state,
+			Object previousVersion,
+			int[] dirtyFields,
+			EntityVersionMapping versionMapping,
+			SharedSessionContractImplementor session) {
+		if ( entityPersister.hasUpdateGeneratedProperties() || entityPersister.hasPreUpdateGeneratedProperties() ) {
+			// if we have any fields generated by the UPDATE event,
+			// then we have to include the generated fields in the
+			// update statement
+			return null;
+		}
+
+		Object newVersion = null;
+		if ( dirtyFields != null ) {
+			switch ( dirtyFields.length ) {
+				case 1:
+					final int dirtyAttributeIndex = dirtyFields[0];
+					final var versionAttribute = versionMapping.getVersionAttribute();
+					final var dirtyAttribute = entityPersister.getAttributeMapping( dirtyAttributeIndex );
+					if ( versionAttribute == dirtyAttribute ) {
+						// only the version attribute itself is dirty
+						newVersion = state[dirtyAttributeIndex];
+					}
+					else {
+						// the dirty field is some other field
+						return null;
+					}
+					break;
+				case 0:
+					if ( previousVersion != null ) {
+						newVersion = state[versionMapping.getVersionAttribute().getStateArrayPosition()];
+						if ( versionMapping.areEqual( newVersion, previousVersion, session ) ) {
+							return null;
+						}
+					}
+					else {
+						return null;
+					}
+					break;
+				default:
+					return null;
+			}
+		}
+		else {
+			return null;
+		}
+
+		// we have just the version being updated - use the special handling
+		assert newVersion != null;
+
+		var jdbcUpdate = versionUpdate.createMutationOperation( null, sessionFactory );
+		var bindPlan = new ForceVersionBindPlan( entityPersister, entity, identifier, previousVersion, newVersion );
+		final PlannedOperation op = new PlannedOperation(
+				entityPersister.getIdentifierTableDescriptor(),
+				MutationKind.UPDATE,
+				jdbcUpdate,
+				bindPlan,
+				ordinalBase * 1_000,
+				"EntityUpdateAction(" + entityPersister.getEntityName() + ")"
+		);
+
+		op.setPostExecutionCallback( new PostUpdateHandling(
+				action,
+				cacheKey,
+				newVersion,
+				null
+		) );
+
+		return op;
 	}
 
 	protected boolean preUpdate(EntityUpdateAction action, SharedSessionContractImplementor session) {
@@ -184,7 +291,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		return false;
 	}
 
-	private Map<String, RestrictedTableMutation<?>> chooseEffectiveUpdateGroup(
+	private Map<String, LogicalTableUpdate<?>> chooseEffectiveUpdateGroup(
 			Object identifier,
 			Object rowId,
 			Object[] state,
@@ -206,7 +313,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				: staticUpdateOperations;
 	}
 
-	private Map<String, RestrictedTableMutation<?>> generateStaticOperations() {
+	private Map<String, LogicalTableUpdate<?>> generateStaticOperations() {
 		final Map<String, TableUpdateBuilder<?>> staticOperationBuilders = new HashMap<>();
 
 		// Process tables in forward order
@@ -219,7 +326,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 
 		applyStaticUpdateDetails( staticOperationBuilders );
 
-		final Map<String, RestrictedTableMutation<?>> staticOperations = new HashMap<>();
+		final Map<String, LogicalTableUpdate<?>> staticOperations = new HashMap<>();
 		staticOperationBuilders.forEach( (name, operationBuilder) -> {
 			// Only build mutation if there are columns to update
 			// todo : hmmm, technically we might also need to delete for optional tables
@@ -248,7 +355,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		);
 	}
 
-	protected Map<String, RestrictedTableMutation<?>> generateDynamicUpdateOperations(
+	protected Map<String, LogicalTableUpdate<?>> generateDynamicUpdateOperations(
 			Object identifier,
 			Object rowId,
 			Object[] state,
@@ -272,7 +379,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 
 		applyDynamicUpdateDetails( operationBuilders, state, previousState, version, dirtyFields, updateable, session );
 
-		final Map<String, RestrictedTableMutation<?>> operations = new HashMap<>();
+		final Map<String, LogicalTableUpdate<?>> operations = new HashMap<>();
 		operationBuilders.forEach( (name, operationBuilder) -> {
 			// Only build mutation if there are columns to update
 			if ( operationBuilder.hasValueBindings() ) {

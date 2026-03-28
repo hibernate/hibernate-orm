@@ -5,9 +5,10 @@
 package org.hibernate.action.queue.exec;
 
 import org.hibernate.action.queue.bind.JdbcValueBindings;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 /// Execution context for BindPlan execution, providing batch consolidation
 /// and statement management services.
@@ -33,6 +34,6 @@ public interface ExecutionContext {
 	 */
 	void executeRow(
 			PlannedOperation plannedOperation,
-			Consumer<JdbcValueBindings> binder,
+			BiConsumer<JdbcValueBindings, SharedSessionContractImplementor> binder,
 			OperationResultChecker resultChecker);
 }

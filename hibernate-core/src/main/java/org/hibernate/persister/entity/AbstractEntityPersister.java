@@ -22,10 +22,6 @@ import org.hibernate.Timeouts;
 import org.hibernate.action.queue.meta.ColumnDescriptor;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableKeyDescriptor;
-import org.hibernate.sql.model.ast.RestrictedTableMutation;
-import org.hibernate.sql.model.ast.TableInsert;
-import org.hibernate.sql.model.ast.TableMutation;
-import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -131,7 +127,6 @@ import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
@@ -141,6 +136,7 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
+import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
@@ -165,10 +161,17 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.models.internal.util.CollectionHelper;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
-import org.hibernate.persister.entity.mutation.EntityMutationTarget;
+import org.hibernate.persister.entity.mutation.DeleteDecomposer;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
+import org.hibernate.persister.entity.mutation.InsertCoordinatorStandard;
+import org.hibernate.persister.entity.mutation.InsertDecomposer;
+import org.hibernate.persister.entity.mutation.MergeCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
+import org.hibernate.persister.entity.mutation.UpdateCoordinatorNoOp;
+import org.hibernate.persister.entity.mutation.UpdateCoordinatorStandard;
+import org.hibernate.persister.entity.mutation.UpdateDecomposer;
+import org.hibernate.persister.filter.internal.FilterHelper;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.property.access.spi.Getter;
@@ -215,7 +218,12 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.model.ast.LogicalTableUpdate;
+import org.hibernate.sql.model.ast.TableInsert;
+import org.hibernate.sql.model.ast.TableMutation;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
+import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
+import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -312,8 +320,7 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
 @SuppressWarnings("deprecation")
 public abstract class AbstractEntityPersister
 		extends EntityMetamodel
-		implements EntityPersister, InFlightEntityMappingType, EntityGraphMutationTarget,
-				EntityMutationTarget, LazyPropertyInitializer, FetchProfileAffectee, Joinable {
+		implements EntityPersister, InFlightEntityMappingType, LazyPropertyInitializer, FetchProfileAffectee, Joinable {
 
 	/**
 	 * The property name of the "special" identifier property in HQL
@@ -2895,7 +2902,7 @@ public abstract class AbstractEntityPersister
 			{
 				final var staticUpdateOperations = updateDecomposer.getStaticUpdateOperations();
 				int i = 0;
-				for ( Map.Entry<String, RestrictedTableMutation<?>> updateEntry : staticUpdateOperations.entrySet() ) {
+				for ( Map.Entry<String, LogicalTableUpdate<?>> updateEntry : staticUpdateOperations.entrySet() ) {
 					if ( updateEntry.getValue() instanceof JdbcMutationOperation jdbcOperation ) {
 						MODEL_MUTATION_LOGGER.updateOperationSql( i++, jdbcOperation.getSqlString() );
 					}

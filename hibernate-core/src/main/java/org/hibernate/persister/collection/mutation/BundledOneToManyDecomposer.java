@@ -9,7 +9,7 @@ import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.bind.BindPlan;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -55,8 +55,8 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 		var collection = action.getCollection();
 		var key = action.getKey();
 
-		final CollectionJdbcOperations.InsertRowPlan insertRowPlan = jdbcOperations.getInsertRowPlan();
-		final CollectionJdbcOperations.UpdateRowPlan updateRowPlan = jdbcOperations.getUpdateRowPlan();
+		final CollectionJdbcOperations.InsertRowPlan insertRowPlan = jdbcOperations.insertRowPlan();
+		final CollectionJdbcOperations.UpdateRowPlan updateRowPlan = jdbcOperations.updateRowPlan();
 
 		if ( insertRowPlan == null && updateRowPlan == null ) {
 			return Collections.emptyList();
@@ -123,7 +123,7 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 				var  writeIndexPlannedOp = new PlannedOperation(
 						persister.getCollectionTableDescriptor(),
 						MutationKind.UPDATE,
-						jdbcOperations.getUpdateRowPlan().jdbcOperation(),
+						jdbcOperations.updateRowPlan().jdbcOperation(),
 						bundledBindPlan,
 						calculateOrdinal( ordinalBase, Slot.WRITEINDEX ),
 						"BundledWriteIndex[" + entryCount + "](" + persister.getRolePath() + ")"
@@ -180,8 +180,8 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// Create bundles for changes and additions at the same time to save iterations
 			// since they both use the same set of elements based on PersistenceCollection.entires()
-			var updateRowPlan = jdbcOperations.getUpdateRowPlan();
-			var insertRowPlan = jdbcOperations.getInsertRowPlan();
+			var updateRowPlan = jdbcOperations.updateRowPlan();
+			var insertRowPlan = jdbcOperations.insertRowPlan();
 			var entries = collection.entries( persister );
 
 			if ( (updateRowPlan != null || insertRowPlan != null) && entries.hasNext() ) {
@@ -232,7 +232,7 @@ public class BundledOneToManyDecomposer extends AbstractOneToManyDecomposer {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			Consumer<PlannedOperation> operationConsumer) {
-		var deleteRowPlan = jdbcOperations.getDeleteRowPlan();
+		var deleteRowPlan = jdbcOperations.deleteRowPlan();
 		final var deletes = collection.getDeletes( persister, !persister.hasPhysicalIndexColumn() );
 		if ( deleteRowPlan == null || !deletes.hasNext() ) {
 			MODEL_MUTATION_LOGGER.noRowsToDelete();

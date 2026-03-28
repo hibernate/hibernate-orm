@@ -7,7 +7,7 @@ package org.hibernate.action.queue.cyclebreak;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 

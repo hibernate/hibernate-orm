@@ -7,7 +7,7 @@ package org.hibernate.persister.collection.mutation;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import java.util.List;

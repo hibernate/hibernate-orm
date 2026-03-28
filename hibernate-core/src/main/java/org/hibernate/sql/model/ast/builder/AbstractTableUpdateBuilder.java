@@ -34,7 +34,7 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 	private String sqlComment;
 
 	public AbstractTableUpdateBuilder(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			TableMapping tableMapping,
 			SessionFactoryImplementor sessionFactory) {
 		super( MutationType.UPDATE, mutationTarget, tableMapping, sessionFactory );
@@ -42,7 +42,7 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 	}
 
 	public AbstractTableUpdateBuilder(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory) {
 		super( MutationType.UPDATE, mutationTarget, tableReference, sessionFactory );
@@ -86,9 +86,14 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 	}
 
 	@Override
-	public void addValueColumn(String columnWriteFragment, SelectableMapping selectableMapping) {
-		final var valueBinding = createValueBinding( columnWriteFragment, selectableMapping );
-		if ( selectableMapping.isLob() && getJdbcServices().getDialect().forceLobAsLastValue() ) {
+	public boolean hasAssignmentBindings() {
+		return !valueBindings.isEmpty() || CollectionHelper.isNotEmpty( lobValueBindings );
+	}
+
+	@Override
+	public void addColumnAssignment(ColumnValueBinding valueBinding) {
+		if ( valueBinding.getColumnReference().getJdbcMapping().getJdbcType().isLob()
+				&& getJdbcServices().getDialect().forceLobAsLastValue() ) {
 			if ( lobValueBindings == null ) {
 				lobValueBindings = new ArrayList<>();
 			}
@@ -100,17 +105,7 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 	}
 
 	@Override
-	public void addValueColumn(ColumnValueBinding valueBinding) {
-		valueBindings.add( valueBinding );
-	}
-
-	@Override
-	public void addKeyColumn(String columnWriteFragment, SelectableMapping selectableMapping) {
-		addColumn( columnWriteFragment, selectableMapping, keyBindings );
-	}
-
-	@Override
-	public boolean hasValueBindings() {
-		return !valueBindings.isEmpty() || CollectionHelper.isNotEmpty( lobValueBindings );
+	public void addColumnAssignment(SelectableMapping columnMapping, String assignment) {
+		addColumnAssignment( createValueBinding( assignment, columnMapping ) );
 	}
 }

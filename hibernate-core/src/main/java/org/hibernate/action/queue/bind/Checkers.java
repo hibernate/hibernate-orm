@@ -25,7 +25,7 @@ public class Checkers {
 			Expectation expectation,
 			int affectedRowCount,
 			int batchPosition,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			TableDescriptor mutatingTable,
 			Object id,
 			String sqlString,

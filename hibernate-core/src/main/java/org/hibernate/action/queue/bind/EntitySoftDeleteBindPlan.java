@@ -8,7 +8,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -59,7 +59,7 @@ public class EntitySoftDeleteBindPlan implements BindPlan, OperationResultChecke
 			SharedSessionContractImplementor session) {
 		context.executeRow(
 				plannedOperation,
-				jdbcValueBindings -> bindValues( jdbcValueBindings, plannedOperation, session ),
+				(jdbcValueBindings, s) -> bindValues( jdbcValueBindings, plannedOperation, session ),
 				this
 		);
 	}

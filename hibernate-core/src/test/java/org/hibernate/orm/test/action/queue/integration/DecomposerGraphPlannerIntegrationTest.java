@@ -19,7 +19,7 @@ import org.hibernate.action.queue.constraint.ConstraintModel;
 import org.hibernate.action.queue.constraint.ConstraintModelBuilder;
 import org.hibernate.action.queue.graph.Graph;
 import org.hibernate.action.queue.graph.StandardGraphBuilder;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.plan.FlushPlan;
 import org.hibernate.action.queue.plan.PlanStep;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;

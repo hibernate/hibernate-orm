@@ -27,7 +27,7 @@ import java.util.Map;
  */
 public class JdbcValueBindingsImpl implements JdbcValueBindingsImplementor {
 	private final MutationType mutationType;
-	private final MutationTarget<?> mutationTarget;
+	private final MutationTarget<?,?> mutationTarget;
 	private final JdbcValueDescriptorAccess jdbcValueDescriptorAccess;
 	private final SharedSessionContractImplementor session;
 
@@ -35,7 +35,7 @@ public class JdbcValueBindingsImpl implements JdbcValueBindingsImplementor {
 
 	public JdbcValueBindingsImpl(
 			MutationType mutationType,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			JdbcValueDescriptorAccess jdbcValueDescriptorAccess,
 			SharedSessionContractImplementor session) {
 		this.mutationType = mutationType;

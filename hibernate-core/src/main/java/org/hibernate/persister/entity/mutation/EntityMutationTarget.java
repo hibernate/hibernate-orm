@@ -10,6 +10,7 @@ import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.queue.graph.MutationDecomposer;
+import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
@@ -19,6 +20,9 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
+import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
+
+import java.util.function.Function;
 
 /**
  * Anything that can be the target of {@linkplain MutationExecutor mutations}
@@ -26,10 +30,17 @@ import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
  * @author Steve Ebersole
  */
 @Incubating
-public interface EntityMutationTarget extends MutationTarget<EntityTableMapping> {
+public interface EntityMutationTarget extends MutationTarget<EntityTableMapping, EntityTableDescriptor> {
 
 	@Override
 	EntityMappingType getTargetPart();
+
+	/**
+	 * Get all table descriptors.
+	 */
+	EntityTableDescriptor[] getTableDescriptors();
+
+	EntityTableDescriptor getIdentifierTableDescriptor();
 
 	@Override
 	EntityTableMapping getIdentifierTableMapping();
@@ -47,6 +58,9 @@ public interface EntityMutationTarget extends MutationTarget<EntityTableMapping>
 	void addDiscriminatorToInsertGroup(MutationGroupBuilder insertGroupBuilder);
 
 	void addAuxiliaryToInsertGroup(MutationGroupBuilder insertGroupBuilder);
+
+	void addDiscriminatorToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder);
+	void addSoftDeleteToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder);
 
 	/**
 	 * The name of the table to use when performing mutations (INSERT,UPDATE,DELETE)

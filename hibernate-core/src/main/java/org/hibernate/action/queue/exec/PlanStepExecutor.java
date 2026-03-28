@@ -4,7 +4,7 @@
  */
 package org.hibernate.action.queue.exec;
 
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 
 import java.util.List;
 import java.util.function.Consumer;

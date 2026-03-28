@@ -24,4 +24,6 @@ public interface TableDescriptor {
 	TableMapping.MutationDetails updateDetails();
 
 	TableMapping.MutationDetails deleteDetails();
+
+	int getRelativePosition();
 }

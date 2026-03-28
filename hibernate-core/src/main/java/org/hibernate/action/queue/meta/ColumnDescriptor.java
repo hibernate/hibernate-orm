@@ -5,7 +5,6 @@
 package org.hibernate.action.queue.meta;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.action.queue.op.JdbcValueDescriptorImpl;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -18,12 +17,14 @@ import java.io.Serializable;
 /// Extends existing ColumnDetails with additional mutation context.
 ///
 /// @param name Column name from the mapping model.
+/// @param selectionExpression The SQL selection expression for this column.
 /// @param tableName Table name containing this column.
 /// @param jdbcMapping Details about the JDBC type of the column.
 ///
 /// @author Steve Ebersole
 public record ColumnDescriptor(
 		String name,
+		String selectionExpression,
 		String tableName,
 		JdbcMapping jdbcMapping,
 		String writeFragment,
@@ -36,6 +37,7 @@ public record ColumnDescriptor(
 	public static ColumnDescriptor from(SelectableMapping selectable) {
 		return new ColumnDescriptor(
 				selectable.getSelectableName(),
+				selectable.getSelectionExpression(),
 				selectable.getContainingTableExpression(),
 				selectable.getJdbcMapping(),
 				selectable.getWriteExpression(),
@@ -58,6 +60,11 @@ public record ColumnDescriptor(
 
 	@Override
 	public String getSelectionExpression() {
+		return selectionExpression;
+	}
+
+	@Override
+	public String getSelectableName() {
 		return name;
 	}
 

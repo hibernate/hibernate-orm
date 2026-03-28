@@ -7,8 +7,6 @@ package org.hibernate.persister.entity.mutation;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * Values analysis for update operations in the decomposer.
@@ -17,13 +15,14 @@ import java.util.Set;
  * @author Steve Ebersole
  */
 public class UpdateValuesAnalysisForDecomposer {
-	private final Set<EntityTableDescriptor> tablesWithNonNullValues = new HashSet<>();
-	private final Set<EntityTableDescriptor> tablesWithPreviousNonNullValues = new HashSet<>();
-	private final Set<EntityTableDescriptor> tablesNeedingUpdate = new HashSet<>();
+	private final TableDescriptorSet tablesWithNonNullValues = new TableDescriptorSet();
+	private final TableDescriptorSet tablesWithPreviousNonNullValues = new TableDescriptorSet();
+	private final TableDescriptorSet tablesNeedingUpdate = new TableDescriptorSet();
+	private final TableDescriptorSet tablesNeedingDynamicUpdate = new TableDescriptorSet();
 	private final int[] dirtyAttributeIndexes;
 
 	public UpdateValuesAnalysisForDecomposer(
-			EntityGraphMutationTarget mutationTarget,
+			EntityMutationTarget mutationTarget,
 			Object[] values,
 			Object[] previousValues,
 			int[] dirtyAttributeIndexes) {

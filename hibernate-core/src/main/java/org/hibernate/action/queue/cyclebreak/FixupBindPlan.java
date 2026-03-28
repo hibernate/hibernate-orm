@@ -7,7 +7,7 @@ package org.hibernate.action.queue.cyclebreak;
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.action.queue.exec.ExecutionContext;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -34,17 +34,10 @@ public class FixupBindPlan implements BindPlan {
 			ExecutionContext context,
 			PlannedOperation plannedOperation,
 			SharedSessionContractImplementor session) {
-		context.executeRow(
-				plannedOperation,
-				jdbcValueBindings -> bindValues( jdbcValueBindings, plannedOperation, session ),
-				this::noopCheck
-		);
+		context.executeRow(	plannedOperation, this::bindValues, this::noopCheck );
 	}
 
-	private void bindValues(
-			JdbcValueBindings valueBindings,
-			PlannedOperation plannedOperation,
-			SharedSessionContractImplementor session) {
+	private void bindValues(JdbcValueBindings valueBindings, SharedSessionContractImplementor session) {
 
 		// SET fk columns
 		for (var e : intendedValues.entrySet()) {

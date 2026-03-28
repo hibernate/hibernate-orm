@@ -20,7 +20,7 @@ public class JdbcDeleteMutation extends AbstractJdbcMutation {
 
 	public JdbcDeleteMutation(
 			TableMapping tableDetails,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String sql,
 			boolean callable,
 			Expectation expectation,
@@ -31,7 +31,7 @@ public class JdbcDeleteMutation extends AbstractJdbcMutation {
 	public JdbcDeleteMutation(
 			TableMapping tableDetails,
 			MutationType mutationType,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String sql,
 			boolean callable,
 			Expectation expectation,

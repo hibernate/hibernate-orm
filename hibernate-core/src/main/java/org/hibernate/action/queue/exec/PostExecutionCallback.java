@@ -4,11 +4,12 @@
  */
 package org.hibernate.action.queue.exec;
 
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.spi.SessionImplementor;
 
 /// Support for callbacks after the execution of a PlannedOperation.
 ///
-/// @see org.hibernate.action.queue.op.PlannedOperation#getPostExecutionCallback()
+/// @see PlannedOperation#getPostExecutionCallback()
 ///
 /// @author Steve Ebersole
 public interface PostExecutionCallback {

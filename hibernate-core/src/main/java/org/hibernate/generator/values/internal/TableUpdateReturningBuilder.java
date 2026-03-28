@@ -9,8 +9,8 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
+import org.hibernate.sql.model.ast.LogicalTableUpdate;
 import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.ast.builder.AbstractTableUpdateBuilder;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
@@ -37,7 +37,7 @@ public class TableUpdateReturningBuilder
 	}
 
 	@Override
-	public RestrictedTableMutation<JdbcMutationOperation> buildMutation() {
+	public LogicalTableUpdate<JdbcMutationOperation> buildMutation() {
 		return new TableUpdateStandard(
 				getMutatingTable(),
 				getMutationTarget(),

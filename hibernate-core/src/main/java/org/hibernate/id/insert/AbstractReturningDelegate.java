@@ -4,11 +4,7 @@
  */
 package org.hibernate.id.insert;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
-import org.hibernate.action.queue.mutation.jdbc.PreparableJdbcOperation;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -17,6 +13,10 @@ import org.hibernate.generator.values.AbstractGeneratedValuesMutationDelegate;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.internal.util.MutableObject;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.model.PreparableMutationOperation;
+
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 import static org.hibernate.pretty.MessageHelper.infoString;
 
@@ -45,7 +45,7 @@ public abstract class AbstractReturningDelegate
 			PlannedOperation operation,
 			Object entity,
 			SharedSessionContractImplementor session) {
-		var jdbcOperation = (PreparableJdbcOperation) operation.getJdbcOperation();
+		var jdbcOperation = (PreparableMutationOperation) operation.getJdbcOperation();
 		final String sql = jdbcOperation.getSqlString();
 		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
 
@@ -61,7 +61,7 @@ public abstract class AbstractReturningDelegate
 			var ref = new MutableObject<GeneratedValues>();
 			operation.getBindPlan().execute(
 					(plannedOperation, binder, resultChecker) -> {
-						binder.accept( valueBindings );
+						binder.accept( valueBindings, session );
 						valueBindings.beforeStatement( preparedStatement, session );
 						var generatedValues = executeAndExtractReturning( sql, preparedStatement, session );
 						ref.set(  generatedValues );

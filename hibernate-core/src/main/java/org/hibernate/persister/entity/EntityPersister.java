@@ -44,7 +44,6 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
-import org.hibernate.persister.entity.mutation.EntityGraphMutationTarget;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
@@ -120,7 +119,7 @@ import static org.hibernate.internal.util.StringHelper.unqualifyEntityName;
  * @see org.hibernate.persister.spi.PersisterFactory
  * @see org.hibernate.persister.spi.PersisterClassResolver
  */
-public interface EntityPersister extends EntityMappingType, EntityGraphMutationTarget, EntityMutationTarget, RootTableGroupProducer, AttributeSource {
+public interface EntityPersister extends EntityMappingType, EntityMutationTarget, RootTableGroupProducer, AttributeSource {
 
 	/**
 	 * Finish the initialization of this object.

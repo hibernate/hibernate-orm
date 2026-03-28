@@ -20,7 +20,7 @@ import org.hibernate.sql.model.internal.TableDeleteStandard;
  */
 public class CollectionRowDeleteBuilder extends TableDeleteBuilderStandard {
 	public CollectionRowDeleteBuilder(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory,
 			String whereFragment) {

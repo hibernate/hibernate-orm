@@ -20,7 +20,7 @@ import org.hibernate.sql.model.TableMapping;
 public class MergeOperation extends AbstractJdbcMutation {
 	public MergeOperation(
 			TableMapping tableDetails,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String sql,
 			List<? extends JdbcParameterBinder> parameterBinders) {
 		this( tableDetails, mutationTarget, sql, new Expectation.RowCount(), parameterBinders );
@@ -28,7 +28,7 @@ public class MergeOperation extends AbstractJdbcMutation {
 
 	public MergeOperation(
 			TableMapping tableDetails,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String sql,
 			Expectation expectation,
 			List<? extends JdbcParameterBinder> parameterBinders) {

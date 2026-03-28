@@ -4,8 +4,6 @@
  */
 package org.hibernate.action.queue.plan;
 
-import org.hibernate.action.queue.op.PlannedOperation;
-
 import java.util.List;
 
 /// Simple implementation of PlanStep

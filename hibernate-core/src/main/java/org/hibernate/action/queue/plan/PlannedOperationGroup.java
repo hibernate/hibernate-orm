@@ -6,7 +6,6 @@ package org.hibernate.action.queue.plan;
 
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.StatementShapeKey;
-import org.hibernate.action.queue.op.PlannedOperation;
 
 import java.util.List;
 

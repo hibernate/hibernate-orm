@@ -15,7 +15,7 @@ import org.hibernate.action.queue.graph.GraphTestUtils;
 import org.hibernate.action.queue.graph.GroupNode;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptor;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.plan.FlushPlan;
 import org.hibernate.action.queue.plan.PlanStep;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
@@ -584,7 +584,7 @@ public class StandardFlushPlannerTest {
 		}
 
 		@Override
-		public MutationTarget<?> getMutationTarget() {
+		public MutationTarget<?, ?> getMutationTarget() {
 			return null;
 		}
 

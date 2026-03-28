@@ -15,20 +15,23 @@ import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.ast.AbstractTableUpdate;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
+import org.hibernate.sql.model.ast.GeneratedMutation;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 /**
  * @author Steve Ebersole
  */
-public class TableUpdateStandard extends AbstractTableUpdate<JdbcMutationOperation> {
+public class TableUpdateStandard
+		extends AbstractTableUpdate<JdbcMutationOperation>
+		implements GeneratedMutation<JdbcMutationOperation> {
 	private final String whereFragment;
 	private final Expectation expectation;
 	private final List<ColumnReference> returningColumns;
 
 	public TableUpdateStandard(
 			MutatingTableReference mutatingTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String sqlComment,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
@@ -48,7 +51,7 @@ public class TableUpdateStandard extends AbstractTableUpdate<JdbcMutationOperati
 
 	public TableUpdateStandard(
 			MutatingTableReference mutatingTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String sqlComment,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
@@ -64,7 +67,7 @@ public class TableUpdateStandard extends AbstractTableUpdate<JdbcMutationOperati
 
 	public TableUpdateStandard(
 			MutatingTableReference tableReference,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String sqlComment,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
@@ -85,7 +88,7 @@ public class TableUpdateStandard extends AbstractTableUpdate<JdbcMutationOperati
 
 	public TableUpdateStandard(
 			MutatingTableReference tableReference,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String sqlComment,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,

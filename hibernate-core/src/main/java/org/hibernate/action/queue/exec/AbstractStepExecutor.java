@@ -6,12 +6,13 @@ package org.hibernate.action.queue.exec;
 
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.cyclebreak.FixupSynthesizer;
-import org.hibernate.action.queue.mutation.jdbc.SelfExecutingJdbcOperation;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.PreparableMutationOperation;
+import org.hibernate.sql.model.SelfExecutingUpdateOperation;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -21,7 +22,6 @@ import java.util.function.Consumer;
  */
 public abstract class AbstractStepExecutor implements PlanStepExecutor {
 	private final FixupSynthesizer fixupSynthesizer;
-	private final GeneratedValuesMutationDelegate generatedValuesDelegate;
 
 	protected final SharedSessionContractImplementor session;
 
@@ -29,7 +29,6 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 		this.session = session;
 
 		fixupSynthesizer = new FixupSynthesizer();
-		generatedValuesDelegate = null;
 	}
 
 	@Override
@@ -49,8 +48,9 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 				if ( jdbcOperation instanceof PreparableMutationOperation preparable ) {
 					executePreparable( preparable, plannedOperation );
 				}
-				else if ( jdbcOperation instanceof SelfExecutingJdbcOperation selfExecuting ) {
-					selfExecuting.execute( session );
+				else if ( jdbcOperation instanceof SelfExecutingUpdateOperation selfExecuting ) {
+					// todo : need to figure out how to get these (currently null) values here
+					selfExecuting.performMutation( null, null, session );
 				}
 				else {
 					throw new IllegalStateException(
@@ -107,6 +107,17 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 	private void executeWithGeneratedValues(PlannedOperation plannedOperation) {
 		var bindPlan = plannedOperation.getBindPlan();
 		var generatedValuesCollector = bindPlan.getGeneratedValuesCollector();
+
+		final GeneratedValuesMutationDelegate generatedValuesDelegate;
+		var mutationTarget = plannedOperation.getJdbcOperation().getMutationTarget();
+		if ( mutationTarget instanceof EntityPersister entityPersister ) {
+			generatedValuesDelegate = plannedOperation.getKind() == MutationKind.INSERT
+					? entityPersister.getInsertDelegate()
+					: entityPersister.getUpdateDelegate();
+		}
+		else {
+			generatedValuesDelegate = null;
+		}
 
 		var generatedValues = generatedValuesDelegate.performGraphMutation(
 				plannedOperation,

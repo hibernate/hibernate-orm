@@ -8,7 +8,7 @@ import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.PlanningOptions;
 import org.hibernate.action.queue.bind.EntityUpdateBindPlan;
 import org.hibernate.action.queue.constraint.ForeignKey;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.action.queue.constraint.ConstraintModel;
 import org.hibernate.action.queue.constraint.UniqueConstraint;

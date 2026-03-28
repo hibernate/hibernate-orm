@@ -4,8 +4,6 @@
  */
 package org.hibernate.sql.model.ast.builder;
 
-import java.util.Collections;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.TableMapping;
@@ -13,6 +11,8 @@ import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.TableInsert;
 import org.hibernate.sql.model.internal.TableInsertCustomSql;
 import org.hibernate.sql.model.internal.TableInsertStandard;
+
+import java.util.Collections;
 
 /**
  * Standard TableInsertBuilder
@@ -23,7 +23,7 @@ public class TableInsertBuilderStandard extends AbstractTableInsertBuilder {
 	private final boolean isCustomSql;
 
 	public TableInsertBuilderStandard(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			TableMapping table,
 			SessionFactoryImplementor sessionFactory) {
 		super( mutationTarget, table, sessionFactory );
@@ -31,7 +31,7 @@ public class TableInsertBuilderStandard extends AbstractTableInsertBuilder {
 	}
 
 	public TableInsertBuilderStandard(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory) {
 		super( mutationTarget, tableReference, sessionFactory );
@@ -44,7 +44,7 @@ public class TableInsertBuilderStandard extends AbstractTableInsertBuilder {
 			return new TableInsertCustomSql(
 					getMutatingTable(),
 					getMutationTarget(),
-					combine( getValueBindingList(), getKeyBindingList(), getLobValueBindingList() ),
+					combine( getValueBindingList(), getLobValueBindingList() ),
 					getParameters()
 			);
 		}
@@ -52,7 +52,7 @@ public class TableInsertBuilderStandard extends AbstractTableInsertBuilder {
 		return new TableInsertStandard(
 				getMutatingTable(),
 				getMutationTarget(),
-				combine( getValueBindingList(), getKeyBindingList(), getLobValueBindingList() ),
+				combine( getValueBindingList(), getLobValueBindingList() ),
 				Collections.emptyList(),
 				getParameters()
 		);

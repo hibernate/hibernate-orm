@@ -20,7 +20,7 @@ import java.util.Set;
 public class SimpleInsertValuesAnalysis implements ValuesAnalysis, TableInclusionChecker {
 	private final Set<TableDescriptor> tablesWithNonNullValues = new IdentitySet<>();
 
-	public SimpleInsertValuesAnalysis(EntityGraphMutationTarget mutationTarget, Object[] values) {
+	public SimpleInsertValuesAnalysis(EntityMutationTarget mutationTarget, Object[] values) {
 		mutationTarget.forEachMutableTableDescriptor( (tableDescriptor) -> {
 			// Check if any attribute mapped to this table has a non-null value
 			for ( var attribute : tableDescriptor.attributes() ) {

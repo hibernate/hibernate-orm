@@ -6,7 +6,7 @@ package org.hibernate.persister.collection.mutation;
 
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.bind.JdbcValueBindings;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -66,7 +66,7 @@ public class BundledCollectionUpdateBindPlan implements BindPlan {
 		for (final BundledBindPlanEntry entryData : entries) {
 			context.executeRow(
 					plannedOperation,
-					valueBindings -> bindEntry(entryData, valueBindings, session),
+					(valueBindings, s) -> bindEntry(entryData, valueBindings, session),
 					null
 			);
 		}

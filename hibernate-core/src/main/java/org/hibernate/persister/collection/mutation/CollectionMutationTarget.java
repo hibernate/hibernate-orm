@@ -4,17 +4,21 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import org.hibernate.action.queue.meta.CollectionTableDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.sql.model.MutationTarget;
+
 
 /**
  * @author Steve Ebersole
  */
-public interface CollectionMutationTarget extends MutationTarget<CollectionTableMapping> {
+public interface CollectionMutationTarget extends MutationTarget<CollectionTableMapping, CollectionTableDescriptor> {
 	@Override
 	PluralAttributeMapping getTargetPart();
 
 	CollectionTableMapping getCollectionTableMapping();
+
+	CollectionTableDescriptor getCollectionTableDescriptor();
 
 	@Override
 	default CollectionTableMapping getIdentifierTableMapping() {
@@ -25,4 +29,7 @@ public interface CollectionMutationTarget extends MutationTarget<CollectionTable
 	 * Whether the collection has at least one physical index column
 	 */
 	boolean hasPhysicalIndexColumn();
+
+	@Override
+	String getIdentifierTableName();
 }

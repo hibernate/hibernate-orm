@@ -4,13 +4,14 @@
  */
 package org.hibernate.action.queue.exec;
 
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.hibernate.action.queue.bind.JdbcValueBindings;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.PreparableMutationOperation;
 
 import java.sql.SQLException;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 /**
  * @author Steve Ebersole
@@ -30,7 +31,7 @@ public class StandardPlanStepExecutor extends AbstractStepExecutor implements Ex
 	@Override
 	public void executeRow(
 			PlannedOperation plannedOperation,
-			Consumer<JdbcValueBindings> binder,
+			@MonotonicNonNull BiConsumer<JdbcValueBindings, SharedSessionContractImplementor> binder,
 			OperationResultChecker resultChecker) {
 		final PreparableMutationOperation preparable = (PreparableMutationOperation) plannedOperation.getJdbcOperation();
 
@@ -38,7 +39,7 @@ public class StandardPlanStepExecutor extends AbstractStepExecutor implements Ex
 				.getStatementPreparer()
 				.prepareStatement( preparable.getSqlString() ) ) {
 			var valueBindings = new JdbcValueBindings( plannedOperation.getMutatingTableDescriptor(), preparable );
-			binder.accept( valueBindings );
+			binder.accept( valueBindings, session );
 			valueBindings.beforeStatement( stmnt, session );
 
 			final int affectedRowCount =

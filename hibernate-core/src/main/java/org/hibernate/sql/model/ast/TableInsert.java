@@ -17,7 +17,7 @@ import org.hibernate.sql.model.jdbc.JdbcInsertMutation;
  *
  * @author Steve Ebersole
  */
-public interface TableInsert extends TableMutation<JdbcInsertMutation> {
+public interface TableInsert extends AssigningTableMutation<JdbcInsertMutation> {
 	/**
 	 * The value bindings for each column, including table key(s)
 	 */

@@ -193,7 +193,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	protected void decomposeForInsert(
+	protected void 	decomposeForInsert(
 			MutationExecutor mutationExecutor,
 			Object id,
 			Object[] values,
@@ -591,12 +591,12 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 					if ( columnValues != null ) {
 						assert columnValues.length == 1;
 						assert keyColumnCount == 1;
-						tableInsertBuilder.addKeyColumn( columnValues[0], keyMapping.getKeyColumn( 0 ) );
+						tableInsertBuilder.addValueColumn( columnValues[0], keyMapping.getKeyColumn( 0 ) );
 					}
 				}
 			}
 			else {
-				keyMapping.forEachKeyColumn( tableInsertBuilder::addKeyColumn );
+				keyMapping.forEachKeyColumn( tableInsertBuilder::addValueColumn );
 			}
 		} );
 	}

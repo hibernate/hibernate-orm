@@ -20,14 +20,14 @@ import org.hibernate.sql.model.MutationType;
  */
 public class UnknownParameterException extends HibernateException {
 	private final MutationType mutationType;
-	private final MutationTarget<?> mutationTarget;
+	private final MutationTarget<?,?> mutationTarget;
 	private final String tableName;
 	private final String columnName;
 	private final ParameterUsage usage;
 
 	public UnknownParameterException(
 			MutationType mutationType,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String tableName,
 			String columnName,
 			ParameterUsage usage) {

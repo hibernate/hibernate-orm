@@ -19,7 +19,7 @@ import org.hibernate.sql.model.ast.builder.TableDeleteBuilder;
 import org.hibernate.sql.model.ast.builder.TableDeleteBuilderStandard;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -241,7 +241,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 
 		return new TableDeleteBuilderStandard(
 				entityPersister,
-				new MutatingTableReference(tableMapping),
+				tableMapping,
 				sessionFactory
 		);
 	}

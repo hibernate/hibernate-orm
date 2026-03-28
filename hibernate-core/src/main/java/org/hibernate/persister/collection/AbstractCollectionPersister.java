@@ -73,7 +73,6 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.PluralAttributeMappingImpl;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.collection.mutation.CollectionGraphMutationTarget;
 import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
 import org.hibernate.persister.collection.mutation.CollectionTableMapping;
 import org.hibernate.persister.collection.mutation.RemoveCoordinator;
@@ -163,8 +162,8 @@ import static org.hibernate.temporal.TemporalTableStrategy.HISTORY_TABLE;
  */
 @Internal
 public abstract class AbstractCollectionPersister
-		implements CollectionPersister, InFlightCollectionMapping, CollectionGraphMutationTarget,
-				CollectionMutationTarget, PluralAttributeMappingImpl.Aware, FetchProfileAffectee, Joinable {
+		implements CollectionPersister, InFlightCollectionMapping, CollectionMutationTarget,
+		PluralAttributeMappingImpl.Aware, FetchProfileAffectee, Joinable {
 
 	private final NavigableRole navigableRole;
 	private final CollectionSemantics<?,?> collectionSemantics;

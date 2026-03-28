@@ -19,7 +19,7 @@ public abstract class AbstractTableDelete extends AbstractRestrictedTableMutatio
 
 	public AbstractTableDelete(
 			MutatingTableReference mutatingTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
 			List<ColumnValueParameter> parameters) {
@@ -35,7 +35,7 @@ public abstract class AbstractTableDelete extends AbstractRestrictedTableMutatio
 
 	public AbstractTableDelete(
 			MutatingTableReference mutatingTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String sqlComment,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,

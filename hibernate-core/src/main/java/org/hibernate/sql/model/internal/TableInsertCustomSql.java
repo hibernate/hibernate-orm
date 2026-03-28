@@ -29,7 +29,7 @@ public class TableInsertCustomSql extends AbstractTableInsert implements CustomS
 
 	public TableInsertCustomSql(
 			MutatingTableReference mutatingTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueParameter> parameters) {
 		super( mutatingTable, mutationTarget, parameters, valueBindings );

@@ -6,7 +6,7 @@ package org.hibernate.persister.collection.mutation;
 
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.queue.MutationKind;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.OneToManyPersister;
@@ -39,7 +39,7 @@ public class StandardOneToManyDecomposer extends AbstractNonBundledOneToManyDeco
 		final Object cacheKey = lockCacheItem( action, session );
 		final PostCollectionRemoveHandling postCollectionRemoveHandling = new PostCollectionRemoveHandling( action, cacheKey );
 
-		final var jdbcOperation = jdbcOperations.getRemoveOperation();
+		final var jdbcOperation = jdbcOperations.removeOperation();
 		if ( jdbcOperation == null ) {
 			return List.of();
 		}

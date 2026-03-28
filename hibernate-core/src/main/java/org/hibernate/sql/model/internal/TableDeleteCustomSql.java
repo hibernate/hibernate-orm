@@ -28,7 +28,7 @@ public class TableDeleteCustomSql extends AbstractTableDelete implements CustomS
 
 	public TableDeleteCustomSql(
 			MutatingTableReference mutatingTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String sqlComment,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
@@ -47,7 +47,7 @@ public class TableDeleteCustomSql extends AbstractTableDelete implements CustomS
 	public TableDeleteCustomSql(
 			MutatingTableReference mutatingTable,
 			TableMapping.MutationDetails mutationDetails,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String sqlComment,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,

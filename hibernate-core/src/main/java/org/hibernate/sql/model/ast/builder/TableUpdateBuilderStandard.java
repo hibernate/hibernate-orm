@@ -6,12 +6,13 @@ package org.hibernate.sql.model.ast.builder;
 
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ast.AbstractTableUpdate;
+import org.hibernate.sql.model.ast.LogicalTableUpdate;
 import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateNoSet;
@@ -30,7 +31,7 @@ public class TableUpdateBuilderStandard<O extends MutationOperation>
 	private TableMapping.MutationDetails mutationDetails;
 
 	public TableUpdateBuilderStandard(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			TableMapping tableMapping,
 			SessionFactoryImplementor sessionFactory) {
 		this(
@@ -43,14 +44,14 @@ public class TableUpdateBuilderStandard<O extends MutationOperation>
 	}
 
 	public TableUpdateBuilderStandard(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory) {
 		this( mutationTarget, tableReference, sessionFactory, null );
 	}
 
 	public TableUpdateBuilderStandard(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory,
 			String whereFragment) {
@@ -64,7 +65,7 @@ public class TableUpdateBuilderStandard<O extends MutationOperation>
 	}
 
 	public TableUpdateBuilderStandard(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			MutatingTableReference tableReference,
 			TableMapping.MutationDetails mutationDetails,
 			String whereFragment,
@@ -81,14 +82,14 @@ public class TableUpdateBuilderStandard<O extends MutationOperation>
 	//TODO: The unchecked typecasts here are horrible
 	@SuppressWarnings("unchecked")
 	@Override
-	public RestrictedTableMutation<O> buildMutation() {
+	public LogicalTableUpdate<O> buildMutation() {
 		final var valueBindings = combine( getValueBindings(), getKeyBindings(), getLobValueBindings() );
 		if ( valueBindings.isEmpty() ) {
-			return (RestrictedTableMutation<O>)	new TableUpdateNoSet( getMutatingTable(), getMutationTarget() );
+			return (LogicalTableUpdate<O>)	new TableUpdateNoSet( getMutatingTable(), getMutationTarget() );
 		}
 
 		if ( mutationDetails.getCustomSql() != null ) {
-			return (RestrictedTableMutation<O>) new TableUpdateCustomSql(
+			return (LogicalTableUpdate<O>) new TableUpdateCustomSql(
 					getMutatingTable(),
 					getMutationTarget(),
 					mutationDetails,
@@ -101,16 +102,16 @@ public class TableUpdateBuilderStandard<O extends MutationOperation>
 		}
 
 		if ( getMutatingTable().getTableMapping().isOptional() ) {
-			return (RestrictedTableMutation<O>)	new OptionalTableUpdate(
+			return (LogicalTableUpdate<O>)	new OptionalTableUpdate(
 					getMutatingTable(),
-					getMutationTarget(),
+					(EntityMutationTarget) getMutationTarget(),
 					valueBindings,
 					getKeyRestrictionBindings(),
 					getOptimisticLockBindings()
 			);
 		}
 
-		return (RestrictedTableMutation<O>)	new TableUpdateStandard(
+		return (LogicalTableUpdate<O>)	new TableUpdateStandard(
 				getMutatingTable(),
 				getMutationTarget(),
 				getSqlComment(),

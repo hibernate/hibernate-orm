@@ -279,7 +279,7 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	private Set<String> resolvePrimaryKeyColumns(InsertSelectStatement statement) {
-		MutationTarget<?> target = statement.getMutationTarget();
+		MutationTarget<?,?> target = statement.getMutationTarget();
 		assert target != null;
 		TableMapping tableMapping = target.getIdentifierTableMapping();
 		if ( tableMapping != null ) {

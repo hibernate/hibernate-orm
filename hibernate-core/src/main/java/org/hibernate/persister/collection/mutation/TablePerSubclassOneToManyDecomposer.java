@@ -6,7 +6,7 @@ package org.hibernate.persister.collection.mutation;
 
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.queue.MutationKind;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
@@ -68,7 +68,7 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractNonBundledOneTo
 					persister.getCollectionTableDescriptor(),
 					// technically an UPDATE
 					MutationKind.UPDATE,
-					operation.getRemoveOperation(),
+					operation.removeOperation(),
 					new RemoveBindPlan( action.getKey(), persister ),
 					ordinalBase * 1_000,
 					"RemoveAllRows(" + persister.getRolePath() + ")"

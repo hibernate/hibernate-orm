@@ -8,7 +8,7 @@ import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.bind.BindPlan;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -62,7 +62,7 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 		while ( entries.hasNext() ) {
 			final Object entry = entries.next();
 			var jdbcOperations = selectJdbcOperations( entry, session );
-			var insertRowPlan = jdbcOperations.getInsertRowPlan();
+			var insertRowPlan = jdbcOperations.insertRowPlan();
 
 			// For inverse one-to-many collections, insertRowPlan will be null (inserts are managed by the owning side)
 			if ( insertRowPlan != null && collection.includeInRecreate( entry, entryCount, collection, attribute ) ) {
@@ -89,21 +89,21 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 				operations.add( plannedOp );
 			}
 
-			if ( jdbcOperations.getUpdateRowPlan() != null ) {
+			if ( jdbcOperations.updateRowPlan() != null ) {
 				var writeIndexBindPlan = new SingleRowUpdateBindPlan(
 						collection,
 						key,
 						entry,
 						entryCount,
-						jdbcOperations.getUpdateRowPlan().values(),
-						jdbcOperations.getUpdateRowPlan().restrictions()
+						jdbcOperations.updateRowPlan().values(),
+						jdbcOperations.updateRowPlan().restrictions()
 				);
 
 
 				var  writeIndexPlannedOp = new PlannedOperation(
 						persister.getCollectionTableDescriptor(),
 						MutationKind.UPDATE,
-						jdbcOperations.getUpdateRowPlan().jdbcOperation(),
+						jdbcOperations.updateRowPlan().jdbcOperation(),
 						writeIndexBindPlan,
 						writeIndexOrdinal,
 						"WriteIndex[" + entryCount + "](" + persister.getRolePath() + ")"
@@ -202,7 +202,7 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 
 			var jdbcOperations = selectJdbcOperations( removal, session );
 			assert jdbcOperations != null;
-			var deleteRowPlan = jdbcOperations.getDeleteRowPlan();
+			var deleteRowPlan = jdbcOperations.deleteRowPlan();
 
 			final BindPlan bindPlan = new SingleRowDeleteBindPlan(
 					collection,
@@ -247,7 +247,7 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 
 			var jdbcOperations = selectJdbcOperations( entry, session );
 			assert jdbcOperations != null;
-			var updateRowPlan = jdbcOperations.getUpdateRowPlan();
+			var updateRowPlan = jdbcOperations.updateRowPlan();
 
 			// For inverse collections, updateRowPlan will be null
 			if ( updateRowPlan != null && collection.needsUpdating( entry, entryCount, persister.getAttributeMapping() ) ) {
@@ -306,7 +306,7 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 
 				var jdbcOperations = selectJdbcOperations( entry, session );
 				assert jdbcOperations != null;
-				var insertRowPlan = jdbcOperations.getInsertRowPlan();
+				var insertRowPlan = jdbcOperations.insertRowPlan();
 
 				// For inverse one-to-many collections, insertRowPlan will be null
 				// (inserts are managed by the owning side)

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.action.queue.op;
+package org.hibernate.action.queue.plan;
 
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.StatementShapeKey;
@@ -148,7 +148,7 @@ public class PlannedOperation {
 		this.bindingPatch = bindingPatch;
 	}
 
-	public void setCachedInsertValuesAnalysis(Object cachedInsertValuesAnalysis) {
+	public void setCachedInsertValuesAnalysis(ValuesAnalysis cachedInsertValuesAnalysis) {
 		// todo (GraphBasedActionQueue) : does this ever change after we calculate them in the decomposer?
 		this.cachedValuesAnalysis = cachedInsertValuesAnalysis;
 	}

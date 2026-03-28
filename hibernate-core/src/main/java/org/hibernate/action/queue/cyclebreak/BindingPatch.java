@@ -5,7 +5,7 @@
 package org.hibernate.action.queue.cyclebreak;
 
 import org.hibernate.action.queue.plan.CycleBreaker;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 
 import java.util.Set;

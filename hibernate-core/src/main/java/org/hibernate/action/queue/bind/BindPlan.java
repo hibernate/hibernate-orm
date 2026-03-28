@@ -7,7 +7,7 @@ package org.hibernate.action.queue.bind;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.exec.OperationResultChecker;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /// Represents JDBC parameter binding for graph-based operation execution

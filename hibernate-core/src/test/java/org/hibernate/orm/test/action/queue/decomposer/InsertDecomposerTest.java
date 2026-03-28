@@ -12,7 +12,7 @@ import java.util.Map;
 import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.StatementShapeKey;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.engine.spi.SessionFactoryImplementor;

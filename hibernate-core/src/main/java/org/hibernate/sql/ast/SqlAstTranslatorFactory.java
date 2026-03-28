@@ -4,7 +4,6 @@
  */
 package org.hibernate.sql.ast;
 
-import org.hibernate.action.queue.mutation.jdbc.JdbcOperation;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -28,15 +27,6 @@ public interface SqlAstTranslatorFactory {
 	 * Builds a single-use mutation translator
 	 */
 	SqlAstTranslator<? extends JdbcOperationQueryMutation> buildMutationTranslator(SessionFactoryImplementor sessionFactory, MutationStatement statement);
-
-	/**
-	 * Builds a single-use translator for dealing with model mutations
-	 */
-	default <O extends JdbcOperation> SqlAstTranslator buildGraphMutationTranslator(
-			org.hibernate.action.queue.mutation.ast.TableMutation<O> mutation,
-			SessionFactoryImplementor sessionFactory) {
-		throw new UnsupportedOperationException( "Not yet implemented" );
-	}
 
 	<O extends JdbcMutationOperation> SqlAstTranslator<O> buildModelMutationTranslator(TableMutation<O> mutation, SessionFactoryImplementor sessionFactory);
 

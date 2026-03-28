@@ -4,9 +4,9 @@
  */
 package org.hibernate.action.queue;
 
-import org.hibernate.action.queue.mutation.jdbc.PreparableJdbcOperation;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.sql.model.PreparableMutationOperation;
 
 /// Helps identify similar mutations more concretely that just type+table.  This
 /// takes into consideration [#shapeHash] as well, which might be based on columns
@@ -41,7 +41,7 @@ public record StatementShapeKey(String tableExpression, MutationKind kind, int s
 		hash = 31 * hash + normalizedTableName.hashCode();
 		hash = 31 * hash + kind.hashCode();
 
-		if ( plannedOperation.getJdbcOperation() instanceof PreparableJdbcOperation pmo ) {
+		if ( plannedOperation.getJdbcOperation() instanceof PreparableMutationOperation pmo ) {
 			hash = 31 * hash + pmo.getSqlString().hashCode();
 		}
 		else {

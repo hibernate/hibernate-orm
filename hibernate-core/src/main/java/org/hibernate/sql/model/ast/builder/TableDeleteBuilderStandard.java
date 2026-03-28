@@ -15,12 +15,15 @@ import org.hibernate.sql.model.internal.TableDeleteCustomSql;
 import org.hibernate.sql.model.internal.TableDeleteStandard;
 import org.hibernate.sql.model.jdbc.JdbcDeleteMutation;
 
-/**
- * Standard TableDeleteBuilder implementation used when Hibernate
- * generates the delete statement
- *
- * @author Steve Ebersole
- */
+/// Standard TableDeleteBuilder implementation used when
+/// Hibernate generates the delete statement.
+///
+/// Used for -
+/// * entity table deletes
+/// * collection row deletes
+/// * collection removals ("delete all")
+///
+/// @author Steve Ebersole
 public class TableDeleteBuilderStandard
 		extends AbstractRestrictedTableMutationBuilder<JdbcDeleteMutation, TableDelete>
 		implements TableDeleteBuilder {
@@ -30,7 +33,7 @@ public class TableDeleteBuilderStandard
 	private final String whereFragment;
 
 	public TableDeleteBuilderStandard(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			TableMapping table,
 			SessionFactoryImplementor sessionFactory) {
 		this(
@@ -43,20 +46,7 @@ public class TableDeleteBuilderStandard
 	}
 
 	public TableDeleteBuilderStandard(
-			MutationTarget<?> mutationTarget,
-			MutatingTableReference tableReference,
-			SessionFactoryImplementor sessionFactory) {
-		this(
-				mutationTarget,
-				tableReference,
-				tableReference.getTableMapping().getDeleteDetails(),
-				null,
-				sessionFactory
-		);
-	}
-
-	public TableDeleteBuilderStandard(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory,
 			String whereFragment) {
@@ -70,7 +60,7 @@ public class TableDeleteBuilderStandard
 	}
 
 	public TableDeleteBuilderStandard(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			MutatingTableReference tableReference,
 			TableMapping.MutationDetails mutationDetails,
 			String whereFragment,

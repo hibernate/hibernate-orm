@@ -8,7 +8,7 @@ import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.exec.OperationResultChecker;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -56,16 +56,11 @@ public class SingleRowInsertBindPlan implements BindPlan, OperationResultChecker
 			ExecutionContext context,
 			PlannedOperation plannedOperation,
 			SharedSessionContractImplementor session) {
-		context.executeRow(
-				plannedOperation,
-				jdbcValueBindings -> bindValues( jdbcValueBindings, plannedOperation, session ),
-				this
-		);
+		context.executeRow( plannedOperation, this::bindValues, this );
 	}
 
 	private void bindValues(
 			JdbcValueBindings jdbcValueBindings,
-			PlannedOperation plannedOperation,
 			SharedSessionContractImplementor session) {
 		if ( key == null ) {
 			throw new IllegalArgumentException( "null key for collection: " + persister.getNavigableRole().getFullPath() );

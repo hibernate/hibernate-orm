@@ -16,7 +16,7 @@ import org.hibernate.sql.model.ast.TableInsert;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.support.Helper;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -254,8 +254,8 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 			final var tableDescriptor = (EntityTableDescriptor) tableMapping.getDescriptor();
 
 			if ( tableDescriptor.isIdentifierTable()
-				&& entityPersister.isIdentifierAssignedByInsert()
-				&& !forceIdentifierBinding ) {
+					&& entityPersister.isIdentifierAssignedByInsert()
+					&& !forceIdentifierBinding ) {
 				assert entityPersister.getInsertDelegate() != null;
 				final var generator = (OnExecutionGenerator) entityPersister.getGenerator();
 				if ( generator.referenceColumnsInSql( dialect ) ) {
@@ -263,13 +263,13 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 					if ( columnValues != null ) {
 						assert columnValues.length == 1;
 						assert tableDescriptor.keyDescriptor().columns().size() == 1;
-						builder.addKeyColumn( columnValues[0], tableDescriptor.keyDescriptor().columns().get( 0 ) );
+						builder.addValueColumn( columnValues[0], tableDescriptor.keyDescriptor().columns().get( 0 ) );
 					}
 				}
 			}
 			else {
 				for (var keyColumn : tableDescriptor.keyDescriptor().columns()) {
-					builder.addKeyColumn(keyColumn.writeFragment(), keyColumn);
+					builder.addValueColumn( keyColumn );
 				}
 			}
 		} );

@@ -9,7 +9,6 @@ import org.hibernate.action.queue.cyclebreak.BindingPatch;
 import org.hibernate.action.queue.graph.Graph;
 import org.hibernate.action.queue.graph.GraphEdge;
 import org.hibernate.action.queue.graph.GroupNode;
-import org.hibernate.action.queue.op.PlannedOperation;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 

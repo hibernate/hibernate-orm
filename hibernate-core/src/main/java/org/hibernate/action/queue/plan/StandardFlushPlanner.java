@@ -8,7 +8,6 @@ import org.hibernate.action.queue.PlanningOptions;
 import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.graph.Graph;
 import org.hibernate.action.queue.graph.GroupNode;
-import org.hibernate.action.queue.op.PlannedOperation;
 
 import java.util.ArrayList;
 import java.util.List;

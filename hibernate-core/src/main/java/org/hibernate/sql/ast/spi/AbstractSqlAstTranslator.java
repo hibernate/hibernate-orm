@@ -192,7 +192,7 @@ import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
-import org.hibernate.sql.model.ast.RestrictedTableMutation;
+import org.hibernate.sql.model.ast.LogicalTableUpdate;
 import org.hibernate.sql.model.ast.TableMutation;
 import org.hibernate.sql.model.internal.OptionalTableInsert;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
@@ -8824,7 +8824,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	private void visitTableUpdate(RestrictedTableMutation<? extends MutationOperation> tableUpdate) {
+	private void visitTableUpdate(LogicalTableUpdate<? extends MutationOperation> tableUpdate) {
 		applySqlComment( tableUpdate.getMutationComment() );
 
 		sqlBuffer.append( "update " );

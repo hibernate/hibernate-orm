@@ -7,9 +7,12 @@ package org.hibernate.orm.test.action.queue.bundling;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.action.queue.exec.ExecutionContext;
-import org.hibernate.action.queue.op.PlannedOperation;
+import org.hibernate.action.queue.exec.OperationResultChecker;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -21,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -124,8 +128,8 @@ public class BundledBindPlanTest {
 			@Override
 			public void executeRow(
 					PlannedOperation plannedOperation,
-					java.util.function.Consumer<org.hibernate.action.queue.bind.JdbcValueBindings> binder,
-					org.hibernate.action.queue.exec.OperationResultChecker resultChecker) {
+					BiConsumer<JdbcValueBindings, SharedSessionContractImplementor> binder,
+					OperationResultChecker resultChecker) {
 				executeRowCallCount++;
 				executedOperations.add(plannedOperation);
 				// In real execution, this would bind and execute SQL

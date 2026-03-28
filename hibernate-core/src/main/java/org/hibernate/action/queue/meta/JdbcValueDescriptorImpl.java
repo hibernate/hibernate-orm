@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.action.queue.op;
+package org.hibernate.action.queue.meta;
 
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.metamodel.mapping.JdbcMapping;

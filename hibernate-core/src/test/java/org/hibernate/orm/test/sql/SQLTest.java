@@ -7,7 +7,7 @@ package org.hibernate.orm.test.sql;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Tuple;
 import org.hibernate.Session;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;

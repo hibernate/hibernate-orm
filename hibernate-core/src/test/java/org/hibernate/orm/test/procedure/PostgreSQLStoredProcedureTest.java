@@ -18,7 +18,7 @@ import java.util.List;
 import jakarta.persistence.TemporalType;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.testing.orm.junit.Jira;

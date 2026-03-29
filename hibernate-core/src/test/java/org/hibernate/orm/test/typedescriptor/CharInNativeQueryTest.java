@@ -5,7 +5,7 @@
 package org.hibernate.orm.test.typedescriptor;
 
 
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;

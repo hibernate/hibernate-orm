@@ -9,7 +9,7 @@ import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;

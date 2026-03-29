@@ -15,7 +15,7 @@ import jakarta.persistence.Version;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.cfg.StateManagementSettings;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;

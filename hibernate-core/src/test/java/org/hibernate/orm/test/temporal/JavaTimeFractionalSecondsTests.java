@@ -18,7 +18,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.InformixDialect;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;

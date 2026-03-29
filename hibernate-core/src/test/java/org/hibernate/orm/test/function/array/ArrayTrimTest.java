@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
 
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;

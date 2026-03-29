@@ -8,7 +8,7 @@ import java.time.LocalDate;
 
 import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseASEDialect;

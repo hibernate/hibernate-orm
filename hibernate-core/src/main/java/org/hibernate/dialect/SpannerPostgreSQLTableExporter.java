@@ -2,11 +2,10 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.community.dialect;
+package org.hibernate.dialect;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.tool.schema.internal.ColumnValue;

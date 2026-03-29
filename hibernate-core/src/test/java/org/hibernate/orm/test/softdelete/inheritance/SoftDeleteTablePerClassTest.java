@@ -11,7 +11,7 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 import jakarta.persistence.Tuple;
 import org.hibernate.annotations.SoftDelete;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.YesNoConverter;
 import org.hibernate.testing.orm.junit.DomainModel;

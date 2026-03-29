@@ -9,7 +9,7 @@ import java.time.Instant;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;

@@ -2,11 +2,10 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.community.dialect.sequence;
+package org.hibernate.dialect.sequence;
 
 import org.hibernate.MappingException;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
-import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 
 public class SpannerPostgreSQLSequenceSupport extends PostgreSQLSequenceSupport {
 

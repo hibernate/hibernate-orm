@@ -7,7 +7,7 @@ package org.hibernate.orm.test.hql;
 import java.util.List;
 
 import org.hibernate.annotations.processing.Exclude;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 

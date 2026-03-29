@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.community.dialect;
+package org.hibernate.dialect;
 
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
@@ -14,10 +14,9 @@ import org.hibernate.Timeouts;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.community.dialect.aggregate.SpannerPostgreSQLAggregateSupport;
-import org.hibernate.community.dialect.sequence.SpannerPostgreSQLSequenceSupport;
-import org.hibernate.community.dialect.sql.ast.SpannerPostgreSQLSqlAstTranslator;
-import org.hibernate.dialect.DatabaseVersion;
+import org.hibernate.dialect.aggregate.SpannerPostgreSQLAggregateSupport;
+import org.hibernate.dialect.sequence.SpannerPostgreSQLSequenceSupport;
+import org.hibernate.dialect.sql.ast.SpannerPostgreSQLSqlAstTranslator;
 import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
@@ -25,9 +24,6 @@ import org.hibernate.dialect.function.array.ArrayIncludesOperatorFunction;
 import org.hibernate.dialect.function.json.SpannerPostgreSQLJsonArrayFunction;
 import org.hibernate.dialect.function.json.SpannerPostgreSQLJsonObjectFunction;
 import org.hibernate.query.sqm.CastType;
-import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
-import org.hibernate.dialect.FunctionalDependencyAnalysisSupportImpl;
-import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.SpannerConcatFunction;
@@ -36,7 +32,6 @@ import org.hibernate.dialect.function.array.SpannerPostgreSQLArrayTrimEmulation;
 import org.hibernate.dialect.function.array.SpannerPostgreSQLArrayReplaceFunction;
 import org.hibernate.dialect.function.array.SpannerPostgreSQLArrayRemoveFunction;
 import org.hibernate.dialect.function.array.SpannerPostgreSQLArrayRemoveIndexFunction;
-import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.function.SpannerPostgreSQLRegexpLikeFunction;
 import org.hibernate.dialect.function.SpannerPostgreSQLTruncFunction;
 import org.hibernate.dialect.lock.internal.NoLockingSupport;

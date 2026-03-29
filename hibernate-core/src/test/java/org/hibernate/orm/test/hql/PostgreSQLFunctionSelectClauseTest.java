@@ -9,7 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;

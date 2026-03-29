@@ -11,7 +11,7 @@ import java.time.Instant;
 import java.util.List;
 
 import org.hibernate.community.dialect.InformixDialect;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.OracleDialect;

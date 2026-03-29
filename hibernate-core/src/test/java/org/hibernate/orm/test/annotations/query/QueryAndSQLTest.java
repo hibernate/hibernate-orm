@@ -14,7 +14,7 @@ import org.hibernate.MappingException;
 import org.hibernate.Transaction;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NativeQuery;

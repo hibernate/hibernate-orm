@@ -43,7 +43,7 @@ abstract public class DialectChecks {
 
 	public static class SupportsIdentityColumns implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			if ( dialect instanceof org.hibernate.community.dialect.SpannerPostgreSQLDialect ) {
+			if ( dialect instanceof org.hibernate.dialect.SpannerPostgreSQLDialect ) {
 				// Spanner supports identity columns but it doesn't support returning integer type since
 				// Spanner supports only bit reversed positive
 				return false;

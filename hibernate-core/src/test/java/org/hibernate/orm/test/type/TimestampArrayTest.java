@@ -10,7 +10,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
 import org.hibernate.community.dialect.InformixDialect;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HANADialect;

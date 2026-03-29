@@ -9,7 +9,7 @@ import java.sql.Clob;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.Query;
 

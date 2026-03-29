@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.test.query.hql;
 
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;

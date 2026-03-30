@@ -98,6 +98,21 @@
 <#else/>/>
 </#if>
 </#list>
+<#-- Element collections -->
+<#list helper.getElementCollectionFields() as field>
+            <element-collection name="${field.getName()}"<#if helper.getElementCollectionTargetClass(field)??> target-class="${helper.getElementCollectionTargetClass(field)}"</#if>>
+<#if helper.getElementCollectionColumnName(field)??>
+                <column name="${helper.getElementCollectionColumnName(field)}"/>
+</#if>
+<#if helper.getElementCollectionTableName(field)??>
+                <collection-table name="${helper.getElementCollectionTableName(field)}">
+<#if helper.getElementCollectionKeyColumnName(field)??>
+                    <join-column name="${helper.getElementCollectionKeyColumnName(field)}"/>
+</#if>
+                </collection-table>
+</#if>
+            </element-collection>
+</#list>
 <#-- Embedded fields -->
 <#list helper.getEmbeddedFields() as field>
             <embedded name="${field.getName()}">
@@ -107,5 +122,44 @@
                 </attribute-override>
 </#list>
             </embedded>
+</#list>
+<#-- Any fields -->
+<#list helper.getAnyFields() as field>
+            <any name="${field.getName()}">
+                <discriminator>
+<#list helper.getAnyDiscriminatorMappings(field) as mapping>
+                    <mapping value="${mapping.value()}">${mapping.entityClass()}</mapping>
+</#list>
+                </discriminator>
+                <key>
+                    <java-class>${helper.getAnyKeyType(field)}</java-class>
+<#if helper.getJoinColumnName(field)??>
+                    <column name="${helper.getJoinColumnName(field)}"/>
+</#if>
+                </key>
+            </any>
+</#list>
+<#-- Many-to-any fields -->
+<#list helper.getManyToAnyFields() as field>
+            <many-to-any name="${field.getName()}">
+                <discriminator>
+<#list helper.getAnyDiscriminatorMappings(field) as mapping>
+                    <mapping value="${mapping.value()}">${mapping.entityClass()}</mapping>
+</#list>
+                </discriminator>
+                <key>
+                    <java-class>${helper.getAnyKeyType(field)}</java-class>
+                </key>
+<#if helper.getJoinTableName(field)??>
+                <join-table name="${helper.getJoinTableName(field)}">
+<#if helper.getJoinTableJoinColumnName(field)??>
+                    <join-column name="${helper.getJoinTableJoinColumnName(field)}"/>
+</#if>
+<#if helper.getJoinTableInverseJoinColumnName(field)??>
+                    <inverse-join-column name="${helper.getJoinTableInverseJoinColumnName(field)}"/>
+</#if>
+                </join-table>
+</#if>
+            </many-to-any>
 </#list>
         </attributes>

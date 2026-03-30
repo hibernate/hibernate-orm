@@ -18,9 +18,11 @@ package org.hibernate.tool.internal.reveng.models.exporter.mapping;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.DiscriminatorType;
@@ -34,12 +36,21 @@ import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
+import org.hibernate.annotations.AnyDiscriminatorValue;
+import org.hibernate.boot.models.annotations.internal.AnyAnnotation;
+import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorAnnotation;
+import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValueAnnotation;
+import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValuesAnnotation;
+import org.hibernate.boot.models.annotations.internal.AnyKeyJavaClassAnnotation;
 import org.hibernate.boot.models.annotations.internal.BasicJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterDefAnnotation;
 import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
 import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ManyToAnyAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedNativeQueryJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedQueryJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OptimisticLockAnnotation;
@@ -55,6 +66,7 @@ import org.hibernate.models.internal.SimpleClassLoading;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
+import org.hibernate.models.internal.ParameterizedTypeDetailsImpl;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.ModelsContext;
@@ -98,6 +110,22 @@ public class MappingXmlHelperTest {
 				.resolveClassDetails(javaType.getName());
 		TypeDetails fieldType = new ClassTypeDetailsImpl(typeClass, TypeDetails.Kind.CLASS);
 		return entity.applyAttribute(fieldName, fieldType, false, false, ctx);
+	}
+
+	private DynamicFieldDetails addElementCollectionField(
+			DynamicClassDetails entity, String fieldName, Class<?> elementJavaType, ModelsContext ctx) {
+		ClassDetails elementClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(elementJavaType.getName());
+		ClassDetails setClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(Set.class.getName());
+		TypeDetails elementType = new ClassTypeDetailsImpl(elementClass, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				setClass, Collections.singletonList(elementType), null);
+		DynamicFieldDetails field = entity.applyAttribute(
+				fieldName, fieldType, false, true, ctx);
+		ElementCollectionJpaAnnotation ec = JpaAnnotations.ELEMENT_COLLECTION.createUsage(ctx);
+		field.addAnnotationUsage(ec);
+		return field;
 	}
 
 	// --- Entity / class ---
@@ -1379,5 +1407,188 @@ public class MappingXmlHelperTest {
 		ol.excluded(true);
 		field.addAnnotationUsage(ol);
 		assertTrue(new MappingXmlHelper(entity).isOptimisticLockExcluded(field));
+	}
+
+	// --- getAnyFields ---
+
+	@Test
+	public void testGetAnyFieldsNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		addBasicField(entity, "name", String.class, ctx);
+		assertTrue(new MappingXmlHelper(entity).getAnyFields().isEmpty());
+	}
+
+	@Test
+	public void testGetAnyFieldsPresent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "payment", Object.class, ctx);
+		field.addAnnotationUsage(HibernateAnnotations.ANY.createUsage(ctx));
+		List<FieldDetails> anyFields = new MappingXmlHelper(entity).getAnyFields();
+		assertEquals(1, anyFields.size());
+		assertEquals("payment", anyFields.get(0).getName());
+	}
+
+	@Test
+	public void testGetAnyFieldsExcludedFromBasicFields() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		addBasicField(entity, "name", String.class, ctx);
+		DynamicFieldDetails anyField = addBasicField(entity, "payment", Object.class, ctx);
+		anyField.addAnnotationUsage(HibernateAnnotations.ANY.createUsage(ctx));
+		MappingXmlHelper helper = new MappingXmlHelper(entity);
+		assertEquals(1, helper.getBasicFields().size());
+		assertEquals("name", helper.getBasicFields().get(0).getName());
+	}
+
+	// --- getAnyDiscriminatorType ---
+
+	@Test
+	public void testGetAnyDiscriminatorTypeDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "payment", Object.class, ctx);
+		assertEquals("STRING", new MappingXmlHelper(entity).getAnyDiscriminatorType(field));
+	}
+
+	@Test
+	public void testGetAnyDiscriminatorTypeInteger() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "payment", Object.class, ctx);
+		AnyDiscriminatorAnnotation ad = HibernateAnnotations.ANY_DISCRIMINATOR.createUsage(ctx);
+		ad.value(jakarta.persistence.DiscriminatorType.INTEGER);
+		field.addAnnotationUsage(ad);
+		assertEquals("INTEGER", new MappingXmlHelper(entity).getAnyDiscriminatorType(field));
+	}
+
+	// --- getAnyKeyType ---
+
+	@Test
+	public void testGetAnyKeyTypeDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "payment", Object.class, ctx);
+		assertEquals("java.lang.Long", new MappingXmlHelper(entity).getAnyKeyType(field));
+	}
+
+	@Test
+	public void testGetAnyKeyTypeWithAnnotation() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "payment", Object.class, ctx);
+		AnyKeyJavaClassAnnotation akjc = HibernateAnnotations.ANY_KEY_JAVA_CLASS.createUsage(ctx);
+		akjc.value(Integer.class);
+		field.addAnnotationUsage(akjc);
+		assertEquals("java.lang.Integer", new MappingXmlHelper(entity).getAnyKeyType(field));
+	}
+
+	// --- getAnyDiscriminatorMappings ---
+
+	@Test
+	public void testGetAnyDiscriminatorMappingsNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "payment", Object.class, ctx);
+		assertTrue(new MappingXmlHelper(entity).getAnyDiscriminatorMappings(field).isEmpty());
+	}
+
+	@Test
+	public void testGetAnyDiscriminatorMappingsWithValues() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "payment", Object.class, ctx);
+		AnyDiscriminatorValueAnnotation v1 = HibernateAnnotations.ANY_DISCRIMINATOR_VALUE.createUsage(ctx);
+		v1.discriminator("CC");
+		v1.entity(String.class);
+		AnyDiscriminatorValueAnnotation v2 = HibernateAnnotations.ANY_DISCRIMINATOR_VALUE.createUsage(ctx);
+		v2.discriminator("WI");
+		v2.entity(Long.class);
+		AnyDiscriminatorValuesAnnotation container = HibernateAnnotations.ANY_DISCRIMINATOR_VALUES.createUsage(ctx);
+		container.value(new AnyDiscriminatorValue[] { v1, v2 });
+		field.addAnnotationUsage(container);
+		List<MappingXmlHelper.AnyDiscriminatorMapping> mappings =
+				new MappingXmlHelper(entity).getAnyDiscriminatorMappings(field);
+		assertEquals(2, mappings.size());
+		assertEquals("CC", mappings.get(0).value());
+		assertEquals("java.lang.String", mappings.get(0).entityClass());
+		assertEquals("WI", mappings.get(1).value());
+		assertEquals("java.lang.Long", mappings.get(1).entityClass());
+	}
+
+	// --- getManyToAnyFields ---
+
+	@Test
+	public void testGetManyToAnyFieldsNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		addBasicField(entity, "name", String.class, ctx);
+		assertTrue(new MappingXmlHelper(entity).getManyToAnyFields().isEmpty());
+	}
+
+	@Test
+	public void testGetManyToAnyFieldsExcludedFromBasicFields() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		addBasicField(entity, "name", String.class, ctx);
+		DynamicFieldDetails m2aField = addBasicField(entity, "payments", Object.class, ctx);
+		m2aField.addAnnotationUsage(HibernateAnnotations.MANY_TO_ANY.createUsage(ctx));
+		MappingXmlHelper helper = new MappingXmlHelper(entity);
+		assertEquals(1, helper.getBasicFields().size());
+		assertEquals("name", helper.getBasicFields().get(0).getName());
+		assertEquals(1, helper.getManyToAnyFields().size());
+	}
+
+	// --- getElementCollectionFields ---
+
+	@Test
+	public void testGetElementCollectionFieldsNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		addBasicField(entity, "name", String.class, ctx);
+		assertTrue(new MappingXmlHelper(entity).getElementCollectionFields().isEmpty());
+	}
+
+	@Test
+	public void testGetElementCollectionFieldsPresent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		addElementCollectionField(entity, "tags", String.class, ctx);
+		List<FieldDetails> ecFields = new MappingXmlHelper(entity).getElementCollectionFields();
+		assertEquals(1, ecFields.size());
+		assertEquals("tags", ecFields.get(0).getName());
+	}
+
+	@Test
+	public void testGetElementCollectionExcludedFromBasicFields() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		addBasicField(entity, "name", String.class, ctx);
+		addElementCollectionField(entity, "tags", String.class, ctx);
+		MappingXmlHelper helper = new MappingXmlHelper(entity);
+		assertEquals(1, helper.getBasicFields().size());
+		assertEquals("name", helper.getBasicFields().get(0).getName());
+	}
+
+	// --- ElementCollection table/column ---
+
+	@Test
+	public void testGetElementCollectionTableName() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addElementCollectionField(entity, "tags", String.class, ctx);
+		CollectionTableJpaAnnotation ct = JpaAnnotations.COLLECTION_TABLE.createUsage(ctx);
+		ct.name("EMPLOYEE_TAGS");
+		field.addAnnotationUsage(ct);
+		assertEquals("EMPLOYEE_TAGS", new MappingXmlHelper(entity).getElementCollectionTableName(field));
+	}
+
+	@Test
+	public void testGetElementCollectionTargetClass() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addElementCollectionField(entity, "tags", String.class, ctx);
+		assertEquals("java.lang.String", new MappingXmlHelper(entity).getElementCollectionTargetClass(field));
 	}
 }

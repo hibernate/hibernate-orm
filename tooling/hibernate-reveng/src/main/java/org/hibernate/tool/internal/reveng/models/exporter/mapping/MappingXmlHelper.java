@@ -42,6 +42,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Basic;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
@@ -53,6 +55,11 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.Version;
 
+import org.hibernate.annotations.Any;
+import org.hibernate.annotations.AnyDiscriminator;
+import org.hibernate.annotations.AnyDiscriminatorValue;
+import org.hibernate.annotations.AnyDiscriminatorValues;
+import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.annotations.DynamicInsert;
@@ -63,6 +70,7 @@ import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.OptimisticLockType;
@@ -224,7 +232,10 @@ public class MappingXmlHelper {
 			if (!isRelationshipField(field) && !isEmbeddedField(field)
 					&& !field.hasDirectAnnotationUsage(EmbeddedId.class)
 					&& !field.hasDirectAnnotationUsage(Id.class)
-					&& !field.hasDirectAnnotationUsage(Version.class)) {
+					&& !field.hasDirectAnnotationUsage(Version.class)
+					&& !field.hasDirectAnnotationUsage(Any.class)
+					&& !field.hasDirectAnnotationUsage(ManyToAny.class)
+					&& !field.hasDirectAnnotationUsage(ElementCollection.class)) {
 				result.add(field);
 			}
 		}
@@ -253,6 +264,18 @@ public class MappingXmlHelper {
 
 	public List<FieldDetails> getEmbeddedFields() {
 		return getFieldsWithAnnotation(Embedded.class);
+	}
+
+	public List<FieldDetails> getAnyFields() {
+		return getFieldsWithAnnotation(Any.class);
+	}
+
+	public List<FieldDetails> getManyToAnyFields() {
+		return getFieldsWithAnnotation(ManyToAny.class);
+	}
+
+	public List<FieldDetails> getElementCollectionFields() {
+		return getFieldsWithAnnotation(ElementCollection.class);
 	}
 
 	// --- Column attributes ---
@@ -575,6 +598,72 @@ public class MappingXmlHelper {
 	public boolean isOptimisticLockExcluded(FieldDetails field) {
 		OptimisticLock ol = field.getDirectAnnotationUsage(OptimisticLock.class);
 		return ol != null && ol.excluded();
+	}
+
+	// --- Any ---
+
+	public String getAnyDiscriminatorType(FieldDetails field) {
+		AnyDiscriminator ad = field.getDirectAnnotationUsage(AnyDiscriminator.class);
+		if (ad == null) {
+			return "STRING";
+		}
+		return ad.value().name();
+	}
+
+	public String getAnyKeyType(FieldDetails field) {
+		AnyKeyJavaClass akjc = field.getDirectAnnotationUsage(AnyKeyJavaClass.class);
+		return akjc != null ? akjc.value().getName() : "java.lang.Long";
+	}
+
+	public List<AnyDiscriminatorMapping> getAnyDiscriminatorMappings(FieldDetails field) {
+		List<AnyDiscriminatorMapping> result = new ArrayList<>();
+		AnyDiscriminatorValue single = field.getDirectAnnotationUsage(AnyDiscriminatorValue.class);
+		if (single != null) {
+			result.add(new AnyDiscriminatorMapping(single.discriminator(), single.entity().getName()));
+		}
+		AnyDiscriminatorValues container = field.getDirectAnnotationUsage(AnyDiscriminatorValues.class);
+		if (container != null) {
+			for (AnyDiscriminatorValue adv : container.value()) {
+				result.add(new AnyDiscriminatorMapping(adv.discriminator(), adv.entity().getName()));
+			}
+		}
+		return result;
+	}
+
+	public record AnyDiscriminatorMapping(String value, String entityClass) {}
+
+	// --- ElementCollection ---
+
+	public boolean isElementCollectionOfEmbeddable(FieldDetails field) {
+		TypeDetails elementType = field.getElementType();
+		if (elementType == null) {
+			return false;
+		}
+		ClassDetails rawClass = elementType.determineRawClass();
+		return rawClass.hasDirectAnnotationUsage(jakarta.persistence.Embeddable.class);
+	}
+
+	public String getElementCollectionTableName(FieldDetails field) {
+		CollectionTable ct = field.getDirectAnnotationUsage(CollectionTable.class);
+		return ct != null && ct.name() != null && !ct.name().isEmpty() ? ct.name() : null;
+	}
+
+	public String getElementCollectionKeyColumnName(FieldDetails field) {
+		CollectionTable ct = field.getDirectAnnotationUsage(CollectionTable.class);
+		if (ct != null && ct.joinColumns() != null && ct.joinColumns().length > 0) {
+			return ct.joinColumns()[0].name();
+		}
+		return null;
+	}
+
+	public String getElementCollectionTargetClass(FieldDetails field) {
+		TypeDetails elementType = field.getElementType();
+		return elementType != null ? elementType.determineRawClass().getClassName() : null;
+	}
+
+	public String getElementCollectionColumnName(FieldDetails field) {
+		Column col = field.getDirectAnnotationUsage(Column.class);
+		return col != null && col.name() != null && !col.name().isEmpty() ? col.name() : null;
 	}
 
 	// --- Private helpers ---

@@ -99,10 +99,10 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 		final boolean isSoftDelete = softDeleteMapping != null;
 
 		// Determine if we need to apply optimistic locking
-		final var effectiveOptLockStyle = effectiveOptimisticLockStyle( version, state );
+		final var definedOptimisticLockStyle = definedOptimisticLockStyle();
 		final Object[] loadedState;
 		final Object rowId;
-		if ( effectiveOptLockStyle.isAllOrDirty() ) {
+		if ( definedOptimisticLockStyle.isAllOrDirty() ) {
 			final var entityEntry = session.getPersistenceContextInternal().getEntry( action.getInstance() );
 			loadedState = entityEntry != null ? entityEntry.getLoadedState() : null;
 			rowId = entityEntry != null ? entityEntry.getRowId() : null;
@@ -111,6 +111,8 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			loadedState = null;
 			rowId = null;
 		}
+
+		final var effectiveOptLockStyle = effectiveOptimisticLockStyle( definedOptimisticLockStyle, version, state );
 
 		// For soft deletes, use UPDATE mutation kind; for hard deletes, use DELETE
 		final MutationKind mutationKind = isSoftDelete ? MutationKind.UPDATE : MutationKind.DELETE;
@@ -121,8 +123,8 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 					identifier,
 					version,
 					state,
-					loadedState,
 					rowId,
+					definedOptimisticLockStyle,
 					effectiveOptLockStyle,
 					session
 			);
@@ -159,8 +161,8 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 					identifier,
 					version,
 					state,
-					loadedState,
 					rowId,
+					definedOptimisticLockStyle,
 					effectiveOptLockStyle,
 					session
 			);
@@ -204,11 +206,29 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 		}
 	}
 
-	private OptimisticLockStyle effectiveOptimisticLockStyle(Object version, Object[] state) {
+	private OptimisticLockStyle definedOptimisticLockStyle() {
 		final OptimisticLockStyle optimisticLockStyle = entityPersister.optimisticLockStyle();
 
-		if ( optimisticLockStyle.isVersion() && version != null && entityPersister.getVersionMapping() != null ) {
-			return OptimisticLockStyle.VERSION;
+		if ( optimisticLockStyle.isVersion() && entityPersister.getVersionMapping() == null ) {
+			return OptimisticLockStyle.NONE;
+		}
+
+		return optimisticLockStyle;
+	}
+
+	private OptimisticLockStyle effectiveOptimisticLockStyle(
+			OptimisticLockStyle optimisticLockStyle,
+			Object loadedVersion,
+			Object[] loadedState) {
+		if ( optimisticLockStyle.isVersion()  ) {
+			if ( loadedVersion == null ) {
+				return OptimisticLockStyle.NONE;
+			}
+		}
+		else if ( optimisticLockStyle.isAllOrDirty() ) {
+			if ( loadedState == null ) {
+				return OptimisticLockStyle.NONE;
+			}
 		}
 
 		return optimisticLockStyle;
@@ -219,14 +239,14 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			Object identifier,
 			Object version,
 			Object[] state,
-			Object[] loadedState,
 			Object rowId,
+			OptimisticLockStyle definedOptLockStyle,
 			OptimisticLockStyle effectiveOptLockStyle,
 			SharedSessionContractImplementor session) {
-		// If we need optimistic locking with dirty-check (state-based),
-		// we need to generate a dynamic delete group
-		return effectiveOptLockStyle.isAllOrDirty()
-				? generateDynamicDeleteOperations( identifier, version, state, loadedState, rowId, session )
+		// If we need optimistic locking with dirty-check (state-based), we need to generate a dynamic delete group.
+		// NOTE: if loadedState is null we can just use the static operations as there is no locking to apply
+		return definedOptLockStyle != effectiveOptLockStyle
+				? generateDynamicDeleteOperations( identifier, version, state, rowId, session )
 				: (Map<String, TableDelete>) staticDeleteOperations;
 	}
 
@@ -274,7 +294,6 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			Object identifier,
 			Object version,
 			Object[] state,
-			Object[] previousState,
 			Object rowId,
 			SharedSessionContractImplementor session) {
 		final Map<String, TableDeleteBuilder> operationBuilders = new HashMap<>();
@@ -289,7 +308,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			}
 		} );
 
-		applyDynamicDeleteDetails( operationBuilders, version, state, previousState, session );
+		applyDynamicDeleteDetails( operationBuilders, version, state, session );
 
 		final Map<String, TableDelete> operations = new HashMap<>();
 		operationBuilders.forEach( (name, operationBuilder) -> {
@@ -314,7 +333,6 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			Map<String, TableDeleteBuilder> builders,
 			Object version,
 			Object[] state,
-			Object[] previousState,
 			SharedSessionContractImplementor session) {
 		// Apply key restrictions for all tables
 		builders.forEach( (name, builder) -> {
@@ -460,16 +478,17 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			Object identifier,
 			Object version,
 			Object[] state,
-			Object[] loadedState,
 			Object rowId,
+			OptimisticLockStyle definedOptimisticLockStyle,
 			OptimisticLockStyle effectiveOptLockStyle,
 			SharedSessionContractImplementor session) {
 		// If we need optimistic locking with dirty-check (state-based),
 		// we need to generate a dynamic soft delete operation
-		final boolean needsDynamicSoftDelete = effectiveOptLockStyle.isAllOrDirty();
+		final boolean needsDynamicSoftDelete = effectiveOptLockStyle.isAllOrDirty()
+				|| definedOptimisticLockStyle != effectiveOptLockStyle;
 
 		return needsDynamicSoftDelete
-				? generateDynamicSoftDeleteOperation( identifier, version, loadedState, effectiveOptLockStyle, session )
+				? generateDynamicSoftDeleteOperation( identifier, version, state, effectiveOptLockStyle, session )
 				: (TableUpdate<?>) staticDeleteOperations.get( entityPersister.getIdentifierTableDescriptor().name() );
 	}
 
@@ -593,7 +612,11 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			Object[] loadedState,
 			SharedSessionContractImplementor session) {
 		if ( loadedState == null ) {
-			throw new IllegalStateException( "Loaded state is null" );
+			// this indicates that the state was never loaded from the database -
+			// there is no locking to apply
+			//
+			// EARLY EXIT!!
+			return;
 		}
 
 		final boolean[] versionability = entityPersister.getPropertyVersionability();

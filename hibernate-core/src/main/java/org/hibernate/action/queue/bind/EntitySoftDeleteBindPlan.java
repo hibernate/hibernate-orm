@@ -132,6 +132,10 @@ public class EntitySoftDeleteBindPlan implements BindPlan, OperationResultChecke
 	protected void applyNonVersionOptLocking(
 			JdbcValueBindings jdbcValueBindings,
 			SharedSessionContractImplementor session) {
+		if ( loadedState == null ) {
+			throw new IllegalStateException( "This should never happen based on previous handling" );
+		}
+
 		final boolean[] versionability = entityPersister.getPropertyVersionability();
 		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
 			var attribute = tableDescriptor.attributes().get( i );

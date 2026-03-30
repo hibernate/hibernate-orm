@@ -6,6 +6,7 @@ package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 
 
 /**
@@ -19,14 +20,27 @@ public class UpdateValuesAnalysisForDecomposer {
 	private final TableDescriptorSet tablesWithPreviousNonNullValues = new TableDescriptorSet();
 	private final TableDescriptorSet tablesNeedingUpdate = new TableDescriptorSet();
 	private final TableDescriptorSet tablesNeedingDynamicUpdate = new TableDescriptorSet();
-	private final int[] dirtyAttributeIndexes;
+	private final boolean[] dirtiness;
+	private final boolean hasDirtyAttributes;
 
 	public UpdateValuesAnalysisForDecomposer(
 			EntityMutationTarget mutationTarget,
 			Object[] values,
 			Object[] previousValues,
 			int[] dirtyAttributeIndexes) {
-		this.dirtyAttributeIndexes = dirtyAttributeIndexes;
+		if ( dirtyAttributeIndexes == null ) {
+			dirtiness = null;
+			hasDirtyAttributes = false;
+		}
+		else {
+			dirtiness = new boolean[mutationTarget.getTargetPart().getNumberOfAttributeMappings()];
+			hasDirtyAttributes = dirtyAttributeIndexes.length > 0;
+			if ( hasDirtyAttributes ) {
+				for ( int i = 0; i < dirtyAttributeIndexes.length; i++ ) {
+					dirtiness[dirtyAttributeIndexes[i]] = true;
+				}
+			}
+		}
 
 		mutationTarget.forEachMutableTableDescriptor( (table) -> {
 			boolean checkForNonNull = true;
@@ -67,12 +81,16 @@ public class UpdateValuesAnalysisForDecomposer {
 				}
 
 				if ( checkForDirtiness ) {
-					if ( isAttributeDirty( attribute, dirtyAttributeIndexes ) ) {
+					if ( dirtiness[attribute.getStateArrayPosition()] ) {
 						tablesNeedingUpdate.add( table );
 					}
 				}
 			}
 		} );
+	}
+
+	private boolean[] buildDirtinessArray(EntityMappingType targetPart, int[] dirtyAttributeIndexes) {
+		return dirtiness;
 	}
 
 	private boolean isAttributeDirty(AttributeMapping attribute, int[] dirtyAttributeIndexes) {
@@ -96,7 +114,11 @@ public class UpdateValuesAnalysisForDecomposer {
 		return tablesNeedingUpdate.contains( table );
 	}
 
+	public boolean[] getDirtiness() {
+		return dirtiness;
+	}
+
 	public boolean hasDirtyAttributes() {
-		return dirtyAttributeIndexes != null && dirtyAttributeIndexes.length > 0;
+		return hasDirtyAttributes;
 	}
 }

@@ -12,6 +12,7 @@ import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
 import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -103,7 +104,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		}
 
 		// Determine if we need to apply optimistic locking
-		final boolean applyOptimisticLocking = shouldApplyOptimisticLocking( previousVersion, previousState );
+		final var effectiveOptLockStyle = effectiveOptLockStyle( previousVersion, previousState );
 
 		// Determine which fields are updateable
 		final boolean[] updateable = entityPersister.getPropertyUpdateability();
@@ -116,19 +117,18 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				dirtyFields
 		);
 
-		// Choose between static or dynamic update group
-		final var effectiveGroup = chooseEffectiveUpdateGroup(
-				identifier,
-				rowId,
-				state,
-				previousState,
-				previousVersion,
-				dirtyFields,
-				updateable,
-				applyOptimisticLocking,
-				valuesAnalysis,
-				session
-		);
+
+		// Choose between static or dynamic update group.  Use dynamic update if:
+		// 		1. Entity specifies dynamic-update
+		// 		2. We need optimistic locking with DIRTY check
+		//		3. The entity has any uninitialized state
+		final boolean needsDynamicUpdate = entityPersister.isDynamicUpdate()
+				|| effectiveOptLockStyle.isAllOrDirty()
+				|| entityPersister.hasUninitializedLazyProperties( entity );
+
+		final Map<String, LogicalTableUpdate<?>> effectiveGroup = needsDynamicUpdate
+				? generateDynamicUpdateOperations( identifier, rowId, state, previousState, previousState, updateable, valuesAnalysis, session )
+				: staticUpdateOperations;
 
 		var generatedValuesCollector = GeneratedValuesCollector.forUpdate( entityPersister );
 		final PostUpdateHandling postUpdateHandling = new PostUpdateHandling( action, cacheKey, previousVersion, generatedValuesCollector );
@@ -149,10 +149,10 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 					state,
 					previousState,
 					previousVersion,
-					dirtyFields,
 					updateable,
-					applyOptimisticLocking,
+					effectiveOptLockStyle,
 					valuesAnalysis,
+					needsDynamicUpdate,
 					generatedValuesCollector
 			);
 
@@ -278,39 +278,22 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		}
 	}
 
-	private boolean shouldApplyOptimisticLocking(Object version, Object[] previousState) {
+	private OptimisticLockStyle effectiveOptLockStyle(Object version, Object[] previousState) {
 		final OptimisticLockStyle optimisticLockStyle = entityPersister.optimisticLockStyle();
 
 		if ( optimisticLockStyle.isVersion() ) {
-			return version != null && entityPersister.getVersionMapping() != null;
+			if ( version == null || entityPersister.getVersionMapping() == null) {
+				return OptimisticLockStyle.NONE;
+			}
 		}
-		else if ( optimisticLockStyle.isAllOrDirty() ) {
-			return previousState != null;
+
+		if ( optimisticLockStyle.isAllOrDirty() ) {
+			if ( previousState == null ) {
+				return OptimisticLockStyle.NONE;
+			}
 		}
 
-		return false;
-	}
-
-	private Map<String, LogicalTableUpdate<?>> chooseEffectiveUpdateGroup(
-			Object identifier,
-			Object rowId,
-			Object[] state,
-			Object[] previousState,
-			Object version,
-			int[] dirtyFields,
-			boolean[] updateable,
-			boolean applyOptimisticLocking,
-			UpdateValuesAnalysisForDecomposer valuesAnalysis,
-			SharedSessionContractImplementor session) {
-		// Use dynamic update if:
-		// 1. Entity specifies dynamic-update
-		// 2. We need optimistic locking with DIRTY check
-		final boolean needsDynamicUpdate = entityPersister.isDynamicUpdate()
-				|| (applyOptimisticLocking && entityPersister.optimisticLockStyle() == OptimisticLockStyle.DIRTY);
-
-		return needsDynamicUpdate
-				? generateDynamicUpdateOperations( identifier, rowId, state, previousState, version, dirtyFields, updateable, valuesAnalysis, session )
-				: staticUpdateOperations;
+		return optimisticLockStyle;
 	}
 
 	private Map<String, LogicalTableUpdate<?>> generateStaticOperations() {
@@ -361,7 +344,6 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			Object[] state,
 			Object[] previousState,
 			Object version,
-			int[] dirtyFields,
 			boolean[] updateable,
 			UpdateValuesAnalysisForDecomposer valuesAnalysis,
 			SharedSessionContractImplementor session) {
@@ -377,12 +359,12 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			}
 		} );
 
-		applyDynamicUpdateDetails( operationBuilders, state, previousState, version, dirtyFields, updateable, session );
+		applyDynamicUpdateDetails( operationBuilders, state, previousState, version, valuesAnalysis, updateable, session );
 
 		final Map<String, LogicalTableUpdate<?>> operations = new HashMap<>();
 		operationBuilders.forEach( (name, operationBuilder) -> {
 			// Only build mutation if there are columns to update
-			if ( operationBuilder.hasValueBindings() ) {
+			if ( operationBuilder.hasAssignmentBindings() ) {
 				operations.put( name, operationBuilder.buildMutation() );
 			}
 		} );
@@ -427,7 +409,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			Object[] state,
 			Object[] previousState,
 			Object version,
-			int[] dirtyFields,
+			UpdateValuesAnalysisForDecomposer valuesAnalysis,
 			boolean[] updateable,
 			SharedSessionContractImplementor session) {
 		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
@@ -444,8 +426,13 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 
 			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
 				var attribute = tableDescriptor.attributes().get( i );
-				if ( shouldIncludeInDynamicUpdate( attribute.getStateArrayPosition(), updateable, dirtyFields ) ) {
-					tableDescriptor.forEachAttributeColumn( attribute, builder::addValueColumn );
+				if ( shouldIncludeInDynamicUpdate( attribute.getStateArrayPosition(), updateable, valuesAnalysis ) ) {
+					if ( state[attribute.getStateArrayPosition()] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+						// it was not fetched and so could not have changed, skip it
+						continue;
+					}
+
+					tableDescriptor.forEachAttributeColumn( attribute, builder::addColumnAssignment );
 				}
 			}
 
@@ -453,7 +440,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			applyKeyRestriction( builder );
 
 			// Apply optimistic locking
-			applyOptimisticLocking( builder, previousState, dirtyFields, session );
+			applyOptimisticLocking( builder, previousState, valuesAnalysis, session );
 		} );
 
 		// Apply partitioned selection restrictions if needed
@@ -462,19 +449,17 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		}
 	}
 
-	private boolean shouldIncludeInDynamicUpdate(int attributeIndex, boolean[] updateable, int[] dirtyFields) {
+	private boolean shouldIncludeInDynamicUpdate(
+			int attributeIndex,
+			boolean[] updateable,
+			UpdateValuesAnalysisForDecomposer valuesAnalysis) {
 		if ( !updateable[attributeIndex] ) {
 			return false;
 		}
 
 		// If we have dirty fields, only include dirty ones
-		if ( dirtyFields != null ) {
-			for ( int dirtyField : dirtyFields ) {
-				if ( dirtyField == attributeIndex ) {
-					return true;
-				}
-			}
-			return false;
+		if ( valuesAnalysis.hasDirtyAttributes() ) {
+			return valuesAnalysis.getDirtiness()[attributeIndex];
 		}
 
 		return true;
@@ -490,7 +475,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 	private void applyOptimisticLocking(
 			TableUpdateBuilder<?> tableUpdateBuilder,
 			Object[] previousState,
-			int[] dirtyFields,
+			UpdateValuesAnalysisForDecomposer valuesAnalysis,
 			SharedSessionContractImplementor session) {
 		final var optimisticLockStyle = entityPersister.optimisticLockStyle();
 
@@ -498,7 +483,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			applyVersionBasedOptLocking( tableUpdateBuilder );
 		}
 		else if ( optimisticLockStyle.isAllOrDirty() ) {
-			applyNonVersionOptLocking( tableUpdateBuilder, previousState, dirtyFields, session );
+			applyNonVersionOptLocking( tableUpdateBuilder, previousState, optimisticLockStyle, valuesAnalysis, session );
 		}
 	}
 
@@ -517,10 +502,15 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 	private void applyNonVersionOptLocking(
 			TableUpdateBuilder<?> tableUpdateBuilder,
 			Object[] previousState,
-			int[] dirtyFields,
+			OptimisticLockStyle optimisticLockStyle,
+			UpdateValuesAnalysisForDecomposer valuesAnalysis,
 			SharedSessionContractImplementor session) {
 		if ( previousState == null ) {
-			throw new IllegalStateException( "Previous state is null" );
+			// this indicates that the state was never loaded from the database -
+			// there is no locking to apply
+			//
+			// EARLY EXIT!!
+			return;
 		}
 
 		final boolean[] versionability = entityPersister.getPropertyVersionability();
@@ -531,6 +521,10 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
 			var attribute = tableDescriptor.attributes().get( i );
 			if ( !versionability[attribute.getStateArrayPosition()] ) {
+				continue;
+			}
+
+			if ( optimisticLockStyle.isDirty() && !valuesAnalysis.getDirtiness()[attribute.getStateArrayPosition()] ) {
 				continue;
 			}
 
@@ -587,10 +581,10 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			Object[] state,
 			Object[] previousState,
 			Object version,
-			int[] dirtyFields,
 			boolean[] updateable,
-			boolean applyOptimisticLocking,
+			OptimisticLockStyle effectiveOptLockStyle,
 			UpdateValuesAnalysisForDecomposer valuesAnalysis,
+			boolean needsDynamicUpdate,
 			GeneratedValuesCollector generatedValuesCollector) {
 		final EntityTableDescriptor tableDescriptorToUse;
 
@@ -610,10 +604,10 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				state,
 				previousState,
 				version,
-				dirtyFields,
 				updateable,
-				applyOptimisticLocking,
+				effectiveOptLockStyle,
 				valuesAnalysis,
+				needsDynamicUpdate,
 				generatedValuesCollector
 		);
 	}

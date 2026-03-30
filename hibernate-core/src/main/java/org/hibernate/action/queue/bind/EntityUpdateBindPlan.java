@@ -10,6 +10,7 @@ import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -19,8 +20,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.UpdateValuesAnalysisForDecomposer;
 
 import java.sql.SQLException;
-
-import static org.hibernate.internal.util.collections.ArrayHelper.contains;
 
 /**
  * @author Steve Ebersole
@@ -34,10 +33,10 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 	private final Object[] state;
 	private final Object[] previousState;
 	private final Object version;
-	private final int[] dirtyFields;
 	private final boolean[] propertyUpdateability;
-	private final boolean applyOptimisticLocking;
+	private final OptimisticLockStyle effectiveOptLockStyle;
 	private final UpdateValuesAnalysisForDecomposer valuesAnalysis;
+	private final boolean isDynamic;
 	private final GeneratedValuesCollector generatedValuesCollector;
 
 	public EntityUpdateBindPlan(
@@ -49,10 +48,10 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			Object[] state,
 			Object[] previousState,
 			Object version,
-			int[] dirtyFields,
 			boolean[] propertyUpdateability,
-			boolean applyOptimisticLocking,
+			OptimisticLockStyle effectiveOptLockStyle,
 			UpdateValuesAnalysisForDecomposer valuesAnalysis,
+			boolean isDynamic,
 			GeneratedValuesCollector generatedValuesCollector) {
 		this.tableDescriptor = tableDescriptor;
 		this.entityPersister = entityPersister;
@@ -62,10 +61,10 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 		this.state = state;
 		this.previousState = previousState;
 		this.version = version;
-		this.dirtyFields = dirtyFields;
 		this.propertyUpdateability = propertyUpdateability;
-		this.applyOptimisticLocking = applyOptimisticLocking;
+		this.effectiveOptLockStyle = effectiveOptLockStyle;
 		this.valuesAnalysis = valuesAnalysis;
+		this.isDynamic = isDynamic;
 		this.generatedValuesCollector = generatedValuesCollector;
 	}
 
@@ -136,7 +135,9 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			if ( shouldIncludeInUpdate( attribute.getStateArrayPosition(), propertyUpdateability ) ) {
 				decomposeAttributeForSet(
 						state[attribute.getStateArrayPosition()],
-						attribute, valueBindings, session
+						attribute,
+						valueBindings,
+						session
 				);
 			}
 		}
@@ -149,8 +150,13 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 		}
 
 		// Apply optimistic locking if needed
-		if ( applyOptimisticLocking ) {
-			applyOptimisticLockingRestrictions( valueBindings, session );
+		if ( effectiveOptLockStyle.isVersion() ) {
+			assert entityPersister.getVersionMapping() != null;
+			applyVersionBasedOptLocking( valueBindings, session );
+		}
+		else if ( effectiveOptLockStyle.isAllOrDirty() ) {
+			assert previousState != null;
+			applyNonVersionOptLocking( valueBindings, session );
 		}
 
 		// Apply partitioned selection restrictions if needed
@@ -166,16 +172,19 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			SharedSessionContractImplementor session) {
 		assert !attribute.isPluralAttributeMapping();
 
+		if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+			// it was not fetched and so could not have changed, skip it
+			// EARLY EXIT!!!
+			return;
+		}
+
 		attribute.decompose(
 				value,
-				0,
-				valueBindings,
-				null,
-				(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
+				(valueIndex, jdbcValue, selectableMapping) -> {
 					if ( selectableMapping.isUpdateable() && !selectableMapping.isFormula() ) {
-						bindings.bindValue(
+						valueBindings.bindValue(
 								jdbcValue,
-								( selectableMapping.getSelectionExpression() ),
+								selectableMapping.getSelectionExpression(),
 								ParameterUsage.SET
 						);
 					}
@@ -191,8 +200,8 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 		}
 
 		// If dynamic update with dirty fields, check if field is dirty
-		if ( entityPersister.isDynamicUpdate() && dirtyFields != null ) {
-			return contains( dirtyFields, attributeIndex );
+		if ( isDynamic && valuesAnalysis.hasDirtyAttributes() ) {
+			return valuesAnalysis.getDirtiness()[attributeIndex];
 		}
 
 		return true;
@@ -215,19 +224,6 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 				},
 				session
 		);
-	}
-
-	protected void applyOptimisticLockingRestrictions(
-			JdbcValueBindings jdbcValueBindings,
-			SharedSessionContractImplementor session) {
-		final OptimisticLockStyle optimisticLockStyle = entityPersister.optimisticLockStyle();
-
-		if ( optimisticLockStyle.isVersion() && entityPersister.getVersionMapping() != null ) {
-			applyVersionBasedOptLocking( jdbcValueBindings, session );
-		}
-		else if ( previousState != null && optimisticLockStyle.isAllOrDirty() ) {
-			applyNonVersionOptLocking( jdbcValueBindings, session );
-		}
 	}
 
 	protected void applyVersionBasedOptLocking(
@@ -259,6 +255,10 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 	protected void applyNonVersionOptLocking(
 			JdbcValueBindings jdbcValueBindings,
 			SharedSessionContractImplementor session) {
+		if ( previousState == null ) {
+			throw new IllegalStateException( "This should never happen based on previous handling" );
+		}
+
 		final boolean[] versionability = entityPersister.getPropertyVersionability();
 
 		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
@@ -297,7 +297,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 				jdbcValueBindings,
 				null,
 				(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
-					if ( selectableMapping.isUpdateable() && !selectableMapping.isFormula() ) {
+					if ( selectableMapping.isUpdateable() && !selectableMapping.isFormula() && jdbcValue != null ) {
 						bindings.bindValue(
 								jdbcValue,
 								( selectableMapping.getSelectionExpression() ),
@@ -328,7 +328,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 								jdbcValueBindings,
 								null,
 								(valueIndex, bindings, noop, jdbcValue, selectable) -> {
-									if ( selectable.isPartitioned() ) {
+									if ( selectable.isPartitioned() && jdbcValue != null ) {
 										bindings.bindValue(
 												jdbcValue,
 												selectable.getSelectionExpression(),

@@ -1,6 +1,19 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.2.9.Final (March 30, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/38419
+
+
+** Bug
+    * HHH-20251 NPE: query with fetch graph and read-only hint on bytecode enhanced entities
+    * HHH-20209 Race Condition in JavaTypeRegistry causing SemanticException during parallel UNION queries with projection.
+    * HHH-20126 NPE when querying with a lockMode/lockScope
+    * HHH-20053 HQL grammar ambiguity for NOT keyword
+    * HHH-19429 ConcurrentModificationException observed while executing JPQL update query with VERSIONED clause
+
 Changes in 7.2.8.Final (March 26, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

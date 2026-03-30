@@ -24,20 +24,31 @@ import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.InheritanceType;
 
+import java.util.Collections;
+import java.util.Set;
+
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
+import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
+import org.hibernate.boot.models.annotations.internal.OneToManyJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OptimisticLockingAnnotation;
+import org.hibernate.boot.models.annotations.internal.OrderColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.RowIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLRestrictionAnnotation;
 import org.hibernate.boot.models.annotations.internal.SubselectAnnotation;
 import org.hibernate.models.internal.BasicModelsContextImpl;
+import org.hibernate.models.internal.ClassTypeDetailsImpl;
+import org.hibernate.models.internal.ParameterizedTypeDetailsImpl;
 import org.hibernate.models.internal.SimpleClassLoading;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.InheritanceMetadata;
@@ -68,6 +79,23 @@ public class HbmTemplateHelperTest {
 		entity.addAnnotationUsage(
 				org.hibernate.boot.models.JpaAnnotations.ENTITY.createUsage(ctx));
 		return entity;
+	}
+
+	private DynamicFieldDetails addOneToManySetField(
+			DynamicClassDetails entity, String fieldName, ModelsContext ctx) {
+		ClassDetails elementClass = new DynamicClassDetails(
+				"Item", "com.example.Item", false, null, null, ctx);
+		ClassDetails setClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(Set.class.getName());
+		TypeDetails elementType = new ClassTypeDetailsImpl(elementClass, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				setClass, Collections.singletonList(elementType), null);
+		DynamicFieldDetails field = entity.applyAttribute(
+				fieldName, fieldType, false, true, ctx);
+		OneToManyJpaAnnotation o2m = JpaAnnotations.ONE_TO_MANY.createUsage(ctx);
+		o2m.mappedBy("parent");
+		field.addAnnotationUsage(o2m);
+		return field;
 	}
 
 	// --- getHibernateTypeName ---
@@ -649,5 +677,187 @@ public class HbmTemplateHelperTest {
 		entityAnnotation.name("CustomName");
 		entity.addAnnotationUsage(entityAnnotation);
 		assertEquals("CustomName", new HbmTemplateHelper(entity).getEntityName());
+	}
+
+	// --- getCollectionTag ---
+
+	@Test
+	public void testGetCollectionTagDefaultSet() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		assertEquals("set", new HbmTemplateHelper(entity).getCollectionTag(field));
+	}
+
+	@Test
+	public void testGetCollectionTagBag() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		field.addAnnotationUsage(HibernateAnnotations.BAG.createUsage(ctx));
+		assertEquals("bag", new HbmTemplateHelper(entity).getCollectionTag(field));
+	}
+
+	@Test
+	public void testGetCollectionTagList() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		OrderColumnJpaAnnotation oc = JpaAnnotations.ORDER_COLUMN.createUsage(ctx);
+		oc.name("POSITION");
+		field.addAnnotationUsage(oc);
+		assertEquals("list", new HbmTemplateHelper(entity).getCollectionTag(field));
+	}
+
+	// --- isCollectionInverse ---
+
+	@Test
+	public void testIsCollectionInverseWithMappedBy() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		assertTrue(new HbmTemplateHelper(entity).isCollectionInverse(field));
+	}
+
+	@Test
+	public void testIsCollectionInverseWithoutMappedBy() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		ClassDetails elementClass = new DynamicClassDetails(
+				"Item", "com.example.Item", false, null, null, ctx);
+		ClassDetails setClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(Set.class.getName());
+		TypeDetails elementType = new ClassTypeDetailsImpl(elementClass, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				setClass, Collections.singletonList(elementType), null);
+		DynamicFieldDetails field = entity.applyAttribute(
+				"items", fieldType, false, true, ctx);
+		OneToManyJpaAnnotation o2m = JpaAnnotations.ONE_TO_MANY.createUsage(ctx);
+		field.addAnnotationUsage(o2m);
+		assertFalse(new HbmTemplateHelper(entity).isCollectionInverse(field));
+	}
+
+	// --- getCollectionLazy ---
+
+	@Test
+	public void testGetCollectionLazyDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		assertNull(new HbmTemplateHelper(entity).getCollectionLazy(field));
+	}
+
+	@Test
+	public void testGetCollectionLazyEager() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		ClassDetails elementClass = new DynamicClassDetails(
+				"Item", "com.example.Item", false, null, null, ctx);
+		ClassDetails setClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(Set.class.getName());
+		TypeDetails elementType = new ClassTypeDetailsImpl(elementClass, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				setClass, Collections.singletonList(elementType), null);
+		DynamicFieldDetails field = entity.applyAttribute(
+				"items", fieldType, false, true, ctx);
+		OneToManyJpaAnnotation o2m = JpaAnnotations.ONE_TO_MANY.createUsage(ctx);
+		o2m.fetch(jakarta.persistence.FetchType.EAGER);
+		field.addAnnotationUsage(o2m);
+		assertEquals("false", new HbmTemplateHelper(entity).getCollectionLazy(field));
+	}
+
+	// --- getCollectionFetchMode ---
+
+	@Test
+	public void testGetCollectionFetchModeDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		assertNull(new HbmTemplateHelper(entity).getCollectionFetchMode(field));
+	}
+
+	@Test
+	public void testGetCollectionFetchModeJoin() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		FetchAnnotation fetch = HibernateAnnotations.FETCH.createUsage(ctx);
+		fetch.value(FetchMode.JOIN);
+		field.addAnnotationUsage(fetch);
+		assertEquals("join", new HbmTemplateHelper(entity).getCollectionFetchMode(field));
+	}
+
+	@Test
+	public void testGetCollectionFetchModeSubselect() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		FetchAnnotation fetch = HibernateAnnotations.FETCH.createUsage(ctx);
+		fetch.value(FetchMode.SUBSELECT);
+		field.addAnnotationUsage(fetch);
+		assertEquals("subselect", new HbmTemplateHelper(entity).getCollectionFetchMode(field));
+	}
+
+	// --- getCollectionBatchSize ---
+
+	@Test
+	public void testGetCollectionBatchSizeDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		assertEquals(0, new HbmTemplateHelper(entity).getCollectionBatchSize(field));
+	}
+
+	@Test
+	public void testGetCollectionBatchSizeSet() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		BatchSizeAnnotation bs = HibernateAnnotations.BATCH_SIZE.createUsage(ctx);
+		bs.size(10);
+		field.addAnnotationUsage(bs);
+		assertEquals(10, new HbmTemplateHelper(entity).getCollectionBatchSize(field));
+	}
+
+	// --- getListIndexColumnName ---
+
+	@Test
+	public void testGetListIndexColumnName() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		OrderColumnJpaAnnotation oc = JpaAnnotations.ORDER_COLUMN.createUsage(ctx);
+		oc.name("POSITION");
+		field.addAnnotationUsage(oc);
+		assertEquals("POSITION", new HbmTemplateHelper(entity).getListIndexColumnName(field));
+	}
+
+	// --- getCollectionCascadeString ---
+
+	@Test
+	public void testGetCollectionCascadeStringDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		assertNull(new HbmTemplateHelper(entity).getCollectionCascadeString(field));
+	}
+
+	@Test
+	public void testGetCollectionCascadeStringWithCascade() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		ClassDetails elementClass = new DynamicClassDetails(
+				"Item", "com.example.Item", false, null, null, ctx);
+		ClassDetails setClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(Set.class.getName());
+		TypeDetails elementType = new ClassTypeDetailsImpl(elementClass, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				setClass, Collections.singletonList(elementType), null);
+		DynamicFieldDetails field = entity.applyAttribute(
+				"items", fieldType, false, true, ctx);
+		OneToManyJpaAnnotation o2m = JpaAnnotations.ONE_TO_MANY.createUsage(ctx);
+		o2m.cascade(new CascadeType[] { CascadeType.ALL });
+		field.addAnnotationUsage(o2m);
+		assertEquals("all", new HbmTemplateHelper(entity).getCollectionCascadeString(field));
 	}
 }

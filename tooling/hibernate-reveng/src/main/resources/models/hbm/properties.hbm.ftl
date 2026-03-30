@@ -26,40 +26,66 @@
         cascade="${helper.getOneToOneCascadeString(field)}"</#if><#if helper.isOneToOneConstrained(field)>
         constrained="true"</#if>/>
 </#list>
-<#-- Sets (one-to-many) -->
+<#-- Collections (one-to-many) -->
 <#list helper.getOneToManyFields() as field>
-    <set name="${field.getName()}"
-        inverse="true"<#if helper.getOneToManyCascadeString(field)??>
-        cascade="${helper.getOneToManyCascadeString(field)}"</#if><#if helper.isOneToManyEager(field)>
-        lazy="false"</#if>>
+<#assign collTag = helper.getCollectionTag(field)>
+    <${collTag} name="${field.getName()}"<#if helper.isCollectionInverse(field)>
+        inverse="true"</#if><#if helper.getCollectionCascadeString(field)??>
+        cascade="${helper.getCollectionCascadeString(field)}"</#if><#if helper.getCollectionLazy(field)??>
+        lazy="${helper.getCollectionLazy(field)}"</#if><#if helper.getCollectionFetchMode(field)??>
+        fetch="${helper.getCollectionFetchMode(field)}"</#if><#if (helper.getCollectionBatchSize(field) gt 1)>
+        batch-size="${helper.getCollectionBatchSize(field)?c}"</#if>>
         <key>
             <column name="${helper.getOneToManyMappedBy(field)}"/>
         </key>
+<#if collTag == "list">
+        <list-index column="${helper.getListIndexColumnName(field)}"/>
+</#if>
+<#if collTag == "map">
+        <map-key column="${helper.getMapKeyColumnName(field)!field.getName() + '_KEY'}" type="${helper.getMapKeyType(field)!'string'}"/>
+</#if>
         <one-to-many class="${helper.getOneToManyTargetEntity(field)}"/>
-    </set>
+    </${collTag}>
 </#list>
-<#-- Sets (many-to-many) -->
+<#-- Collections (many-to-many) -->
 <#list helper.getManyToManyFields() as field>
+<#assign collTag = helper.getCollectionTag(field)>
 <#if helper.getJoinTableName(field)??>
-    <set name="${field.getName()}"
-        table="${helper.getJoinTableName(field)}"<#if helper.getManyToManyCascadeString(field)??>
-        cascade="${helper.getManyToManyCascadeString(field)}"</#if>>
+    <${collTag} name="${field.getName()}"
+        table="${helper.getJoinTableName(field)}"<#if helper.getCollectionCascadeString(field)??>
+        cascade="${helper.getCollectionCascadeString(field)}"</#if><#if helper.getCollectionLazy(field)??>
+        lazy="${helper.getCollectionLazy(field)}"</#if><#if helper.getCollectionFetchMode(field)??>
+        fetch="${helper.getCollectionFetchMode(field)}"</#if><#if (helper.getCollectionBatchSize(field) gt 1)>
+        batch-size="${helper.getCollectionBatchSize(field)?c}"</#if>>
         <key>
             <column name="${helper.getJoinTableJoinColumnName(field)}"/>
         </key>
+<#if collTag == "list">
+        <list-index column="${helper.getListIndexColumnName(field)}"/>
+</#if>
+<#if collTag == "map">
+        <map-key column="${helper.getMapKeyColumnName(field)!field.getName() + '_KEY'}" type="${helper.getMapKeyType(field)!'string'}"/>
+</#if>
+<#if collTag == "idbag">
+        <collection-id column="${helper.getCollectionIdColumnName(field)}" type="long">
+            <generator class="${helper.getCollectionIdGenerator(field)!'native'}"/>
+        </collection-id>
+</#if>
         <many-to-many class="${helper.getManyToManyTargetEntity(field)}">
             <column name="${helper.getJoinTableInverseJoinColumnName(field)}"/>
         </many-to-many>
-    </set>
+    </${collTag}>
 <#else>
-    <set name="${field.getName()}"
-        inverse="true"<#if helper.getManyToManyCascadeString(field)??>
-        cascade="${helper.getManyToManyCascadeString(field)}"</#if>>
+    <${collTag} name="${field.getName()}"
+        inverse="true"<#if helper.getCollectionCascadeString(field)??>
+        cascade="${helper.getCollectionCascadeString(field)}"</#if><#if helper.getCollectionLazy(field)??>
+        lazy="${helper.getCollectionLazy(field)}"</#if><#if helper.getCollectionFetchMode(field)??>
+        fetch="${helper.getCollectionFetchMode(field)}"</#if>>
         <key>
             <column name="${field.getName()}"/>
         </key>
         <many-to-many class="${helper.getManyToManyTargetEntity(field)}"/>
-    </set>
+    </${collTag}>
 </#if>
 </#list>
 <#-- Components (embedded) -->

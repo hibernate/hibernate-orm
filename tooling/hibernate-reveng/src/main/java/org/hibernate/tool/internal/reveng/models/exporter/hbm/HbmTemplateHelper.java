@@ -36,18 +36,25 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.OrderColumn;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
+import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
@@ -443,6 +450,128 @@ public class HbmTemplateHelper {
 			return null;
 		}
 		return getCascadeString(m2m.cascade());
+	}
+
+	// --- Collection type ---
+
+	public String getCollectionTag(FieldDetails field) {
+		if (field.hasDirectAnnotationUsage(Bag.class)) {
+			return "bag";
+		}
+		if (field.hasDirectAnnotationUsage(OrderColumn.class)) {
+			return "list";
+		}
+		if (field.hasDirectAnnotationUsage(CollectionId.class)) {
+			return "idbag";
+		}
+		TypeDetails type = field.getType();
+		if (type.isImplementor(java.util.Map.class)) {
+			return "map";
+		}
+		if (field.isArray()) {
+			TypeDetails elementType = field.getElementType();
+			if (elementType != null
+					&& elementType.getTypeKind() == TypeDetails.Kind.PRIMITIVE) {
+				return "primitive-array";
+			}
+			return "array";
+		}
+		return "set";
+	}
+
+	public boolean isCollectionInverse(FieldDetails field) {
+		OneToMany o2m = field.getDirectAnnotationUsage(OneToMany.class);
+		if (o2m != null) {
+			return o2m.mappedBy() != null && !o2m.mappedBy().isEmpty();
+		}
+		ManyToMany m2m = field.getDirectAnnotationUsage(ManyToMany.class);
+		if (m2m != null) {
+			return m2m.mappedBy() != null && !m2m.mappedBy().isEmpty();
+		}
+		return false;
+	}
+
+	public String getCollectionLazy(FieldDetails field) {
+		OneToMany o2m = field.getDirectAnnotationUsage(OneToMany.class);
+		if (o2m != null && o2m.fetch() == FetchType.EAGER) {
+			return "false";
+		}
+		ManyToMany m2m = field.getDirectAnnotationUsage(ManyToMany.class);
+		if (m2m != null && m2m.fetch() == FetchType.EAGER) {
+			return "false";
+		}
+		return null;
+	}
+
+	public String getCollectionFetchMode(FieldDetails field) {
+		Fetch fetch = field.getDirectAnnotationUsage(Fetch.class);
+		if (fetch == null) {
+			return null;
+		}
+		return switch (fetch.value()) {
+			case JOIN -> "join";
+			case SELECT -> "select";
+			case SUBSELECT -> "subselect";
+		};
+	}
+
+	public int getCollectionBatchSize(FieldDetails field) {
+		BatchSize bs = field.getDirectAnnotationUsage(BatchSize.class);
+		return bs != null ? bs.size() : 0;
+	}
+
+	public String getCollectionCascadeString(FieldDetails field) {
+		OneToMany o2m = field.getDirectAnnotationUsage(OneToMany.class);
+		if (o2m != null && o2m.cascade().length > 0) {
+			return getCascadeString(o2m.cascade());
+		}
+		ManyToMany m2m = field.getDirectAnnotationUsage(ManyToMany.class);
+		if (m2m != null && m2m.cascade().length > 0) {
+			return getCascadeString(m2m.cascade());
+		}
+		return null;
+	}
+
+	// --- List-specific ---
+
+	public String getListIndexColumnName(FieldDetails field) {
+		OrderColumn oc = field.getDirectAnnotationUsage(OrderColumn.class);
+		return oc != null ? oc.name() : null;
+	}
+
+	// --- Map-specific ---
+
+	public String getMapKeyColumnName(FieldDetails field) {
+		MapKeyColumn mkc = field.getDirectAnnotationUsage(MapKeyColumn.class);
+		return mkc != null ? mkc.name() : null;
+	}
+
+	public String getMapKeyType(FieldDetails field) {
+		TypeDetails mapKeyType = field.getMapKeyType();
+		if (mapKeyType != null) {
+			return mapKeyType.determineRawClass().getClassName();
+		}
+		return null;
+	}
+
+	// --- IdBag-specific ---
+
+	public String getCollectionIdColumnName(FieldDetails field) {
+		CollectionId cid = field.getDirectAnnotationUsage(CollectionId.class);
+		return cid != null ? cid.column().name() : null;
+	}
+
+	public String getCollectionIdGenerator(FieldDetails field) {
+		CollectionId cid = field.getDirectAnnotationUsage(CollectionId.class);
+		return cid != null && cid.generator() != null && !cid.generator().isEmpty()
+				? cid.generator() : null;
+	}
+
+	// --- Collection element type ---
+
+	public String getCollectionElementType(FieldDetails field) {
+		TypeDetails elementType = field.getElementType();
+		return elementType != null ? elementType.determineRawClass().getClassName() : null;
 	}
 
 	// --- Embedded / EmbeddedId attribute overrides ---

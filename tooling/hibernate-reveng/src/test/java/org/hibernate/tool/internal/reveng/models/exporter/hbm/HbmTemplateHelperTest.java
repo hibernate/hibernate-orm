@@ -18,7 +18,9 @@ package org.hibernate.tool.internal.reveng.models.exporter.hbm;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
+import jakarta.persistence.AccessType;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.GenerationType;
@@ -28,17 +30,23 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
 import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
+import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NotFoundAnnotation;
 import org.hibernate.boot.models.annotations.internal.OneToManyJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OptimisticLockingAnnotation;
 import org.hibernate.boot.models.annotations.internal.OrderColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.RowIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLRestrictionAnnotation;
+import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.SubselectAnnotation;
+import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
 import org.hibernate.models.internal.BasicModelsContextImpl;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.internal.ParameterizedTypeDetailsImpl;
@@ -79,6 +87,14 @@ public class HbmTemplateHelperTest {
 		entity.addAnnotationUsage(
 				org.hibernate.boot.models.JpaAnnotations.ENTITY.createUsage(ctx));
 		return entity;
+	}
+
+	private DynamicFieldDetails addBasicField(
+			DynamicClassDetails entity, String fieldName, Class<?> javaType, ModelsContext ctx) {
+		ClassDetails typeClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(javaType.getName());
+		TypeDetails fieldType = new ClassTypeDetailsImpl(typeClass, TypeDetails.Kind.CLASS);
+		return entity.applyAttribute(fieldName, fieldType, false, false, ctx);
 	}
 
 	private DynamicFieldDetails addOneToManySetField(
@@ -859,5 +875,250 @@ public class HbmTemplateHelperTest {
 		o2m.cascade(new CascadeType[] { CascadeType.ALL });
 		field.addAnnotationUsage(o2m);
 		assertEquals("all", new HbmTemplateHelper(entity).getCollectionCascadeString(field));
+	}
+
+	// --- getFormula ---
+
+	@Test
+	public void testGetFormulaDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "total", BigDecimal.class, ctx);
+		assertNull(new HbmTemplateHelper(entity).getFormula(field));
+	}
+
+	@Test
+	public void testGetFormulaSet() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "total", BigDecimal.class, ctx);
+		FormulaAnnotation formula = HibernateAnnotations.FORMULA.createUsage(ctx);
+		formula.value("price * quantity");
+		field.addAnnotationUsage(formula);
+		assertEquals("price * quantity", new HbmTemplateHelper(entity).getFormula(field));
+	}
+
+	// --- getAccessType ---
+
+	@Test
+	public void testGetAccessTypeDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		assertNull(new HbmTemplateHelper(entity).getAccessType(field));
+	}
+
+	@Test
+	public void testGetAccessTypeField() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		AccessJpaAnnotation access = JpaAnnotations.ACCESS.createUsage(ctx);
+		access.value(AccessType.FIELD);
+		field.addAnnotationUsage(access);
+		assertNull(new HbmTemplateHelper(entity).getAccessType(field));
+	}
+
+	@Test
+	public void testGetAccessTypeProperty() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		AccessJpaAnnotation access = JpaAnnotations.ACCESS.createUsage(ctx);
+		access.value(AccessType.PROPERTY);
+		field.addAnnotationUsage(access);
+		assertEquals("property", new HbmTemplateHelper(entity).getAccessType(field));
+	}
+
+	// --- getFetchMode ---
+
+	@Test
+	public void testGetFetchModeDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		assertNull(new HbmTemplateHelper(entity).getFetchMode(field));
+	}
+
+	@Test
+	public void testGetFetchModeJoin() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		FetchAnnotation fetch = HibernateAnnotations.FETCH.createUsage(ctx);
+		fetch.value(FetchMode.JOIN);
+		field.addAnnotationUsage(fetch);
+		assertEquals("join", new HbmTemplateHelper(entity).getFetchMode(field));
+	}
+
+	@Test
+	public void testGetFetchModeSelect() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		FetchAnnotation fetch = HibernateAnnotations.FETCH.createUsage(ctx);
+		fetch.value(FetchMode.SELECT);
+		field.addAnnotationUsage(fetch);
+		assertEquals("select", new HbmTemplateHelper(entity).getFetchMode(field));
+	}
+
+	@Test
+	public void testGetFetchModeSubselect() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		FetchAnnotation fetch = HibernateAnnotations.FETCH.createUsage(ctx);
+		fetch.value(FetchMode.SUBSELECT);
+		field.addAnnotationUsage(fetch);
+		assertEquals("subselect", new HbmTemplateHelper(entity).getFetchMode(field));
+	}
+
+	// --- getNotFoundAction ---
+
+	@Test
+	public void testGetNotFoundActionDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		assertNull(new HbmTemplateHelper(entity).getNotFoundAction(field));
+	}
+
+	@Test
+	public void testGetNotFoundActionException() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		NotFoundAnnotation nf = HibernateAnnotations.NOT_FOUND.createUsage(ctx);
+		nf.action(NotFoundAction.EXCEPTION);
+		field.addAnnotationUsage(nf);
+		assertNull(new HbmTemplateHelper(entity).getNotFoundAction(field));
+	}
+
+	@Test
+	public void testGetNotFoundActionIgnore() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		NotFoundAnnotation nf = HibernateAnnotations.NOT_FOUND.createUsage(ctx);
+		nf.action(NotFoundAction.IGNORE);
+		field.addAnnotationUsage(nf);
+		assertEquals("ignore", new HbmTemplateHelper(entity).getNotFoundAction(field));
+	}
+
+	// --- isTimestamp ---
+
+	@Test
+	public void testIsTimestampString() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		assertFalse(new HbmTemplateHelper(entity).isTimestamp(field));
+	}
+
+	@Test
+	public void testIsTimestampLong() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "version", Long.class, ctx);
+		assertFalse(new HbmTemplateHelper(entity).isTimestamp(field));
+	}
+
+	@Test
+	public void testIsTimestampDate() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "updated", java.util.Date.class, ctx);
+		assertTrue(new HbmTemplateHelper(entity).isTimestamp(field));
+	}
+
+	@Test
+	public void testIsTimestampSqlTimestamp() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "updated", java.sql.Timestamp.class, ctx);
+		assertTrue(new HbmTemplateHelper(entity).isTimestamp(field));
+	}
+
+	@Test
+	public void testIsTimestampCalendar() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "updated", java.util.Calendar.class, ctx);
+		assertTrue(new HbmTemplateHelper(entity).isTimestamp(field));
+	}
+
+	@Test
+	public void testIsTimestampInstant() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "updated", java.time.Instant.class, ctx);
+		assertTrue(new HbmTemplateHelper(entity).isTimestamp(field));
+	}
+
+	@Test
+	public void testIsTimestampLocalDateTime() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "updated", java.time.LocalDateTime.class, ctx);
+		assertTrue(new HbmTemplateHelper(entity).isTimestamp(field));
+	}
+
+	// --- getGeneratorParameters ---
+
+	@Test
+	public void testGetGeneratorParametersNoAnnotation() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "id", Long.class, ctx);
+		Map<String, String> params = new HbmTemplateHelper(entity).getGeneratorParameters(field);
+		assertTrue(params.isEmpty());
+	}
+
+	@Test
+	public void testGetGeneratorParametersSequenceGenerator() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "id", Long.class, ctx);
+		SequenceGeneratorJpaAnnotation sg = JpaAnnotations.SEQUENCE_GENERATOR.createUsage(ctx);
+		sg.sequenceName("MY_SEQ");
+		sg.allocationSize(10);
+		sg.initialValue(100);
+		field.addAnnotationUsage(sg);
+		Map<String, String> params = new HbmTemplateHelper(entity).getGeneratorParameters(field);
+		assertEquals("MY_SEQ", params.get("sequence"));
+		assertEquals("10", params.get("increment_size"));
+		assertEquals("100", params.get("initial_value"));
+	}
+
+	@Test
+	public void testGetGeneratorParametersSequenceGeneratorDefaults() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "id", Long.class, ctx);
+		SequenceGeneratorJpaAnnotation sg = JpaAnnotations.SEQUENCE_GENERATOR.createUsage(ctx);
+		sg.sequenceName("MY_SEQ");
+		field.addAnnotationUsage(sg);
+		Map<String, String> params = new HbmTemplateHelper(entity).getGeneratorParameters(field);
+		assertEquals("MY_SEQ", params.get("sequence"));
+		assertNull(params.get("increment_size"));
+		assertNull(params.get("initial_value"));
+	}
+
+	@Test
+	public void testGetGeneratorParametersTableGenerator() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "id", Long.class, ctx);
+		TableGeneratorJpaAnnotation tg = JpaAnnotations.TABLE_GENERATOR.createUsage(ctx);
+		tg.table("ID_GEN");
+		tg.pkColumnName("GEN_NAME");
+		tg.valueColumnName("GEN_VAL");
+		tg.pkColumnValue("MY_ENTITY");
+		field.addAnnotationUsage(tg);
+		Map<String, String> params = new HbmTemplateHelper(entity).getGeneratorParameters(field);
+		assertEquals("ID_GEN", params.get("table"));
+		assertEquals("GEN_NAME", params.get("segment_column_name"));
+		assertEquals("GEN_VAL", params.get("value_column_name"));
+		assertEquals("MY_ENTITY", params.get("segment_value"));
 	}
 }

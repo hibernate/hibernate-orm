@@ -69,13 +69,20 @@
         type="${helper.getDiscriminatorTypeName()}"<#if (helper.getDiscriminatorColumnLength() gt 0)>
         length="${helper.getDiscriminatorColumnLength()?c}"</#if>/>
 </#if>
-<#-- Version -->
+<#-- Version / Timestamp -->
 <#list helper.getVersionFields() as field>
+<#if helper.isTimestamp(field)>
+    <timestamp
+        name="${field.getName()}"
+        column="${helper.getColumnName(field)}"/>
+<#else>
     <version
         name="${field.getName()}"
-        type="${helper.getHibernateTypeName(field)}">
+        type="${helper.getHibernateTypeName(field)}"<#if helper.getAccessType(field)??>
+        access="${helper.getAccessType(field)}"</#if>>
         <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
     </version>
+</#if>
 </#list>
 <#-- Properties -->
 <#include "properties.hbm.ftl"/>

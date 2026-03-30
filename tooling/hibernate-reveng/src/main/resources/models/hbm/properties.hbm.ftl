@@ -2,8 +2,12 @@
 <#list helper.getBasicFields() as field>
     <property
         name="${field.getName()}"
-        type="${helper.getHibernateTypeName(field)}">
+        type="${helper.getHibernateTypeName(field)}"<#if helper.getAccessType(field)??>
+        access="${helper.getAccessType(field)}"</#if><#if helper.getFormula(field)??>
+        formula="${helper.getFormula(field)}"</#if>>
+<#if !helper.getFormula(field)??>
         <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
+</#if>
     </property>
 </#list>
 <#-- Many-to-one -->
@@ -12,8 +16,11 @@
         name="${field.getName()}"
         class="${helper.getTargetEntityName(field)}"<#if helper.isManyToOneLazy(field)>
         fetch="select"
-        lazy="proxy"</#if><#if !helper.isManyToOneOptional(field)>
-        not-null="true"</#if>>
+        lazy="proxy"</#if><#if helper.getFetchMode(field)??>
+        fetch="${helper.getFetchMode(field)}"</#if><#if !helper.isManyToOneOptional(field)>
+        not-null="true"</#if><#if helper.getAccessType(field)??>
+        access="${helper.getAccessType(field)}"</#if><#if helper.getNotFoundAction(field)??>
+        not-found="${helper.getNotFoundAction(field)}"</#if>>
         <column name="${helper.getJoinColumnName(field)}"/>
     </many-to-one>
 </#list>

@@ -36,6 +36,8 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
@@ -44,7 +46,9 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.persistence.TableGenerator;
 import jakarta.persistence.Version;
 
 import org.hibernate.annotations.Bag;
@@ -55,7 +59,10 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.annotations.RowId;
@@ -307,6 +314,85 @@ public class HbmTemplateHelper {
 
 	public List<FieldDetails> getEmbeddedFields() {
 		return getFieldsWithAnnotation(Embedded.class);
+	}
+
+	// --- Property-level attributes ---
+
+	public String getFormula(FieldDetails field) {
+		Formula formula = field.getDirectAnnotationUsage(Formula.class);
+		return formula != null ? formula.value() : null;
+	}
+
+	public String getAccessType(FieldDetails field) {
+		Access access = field.getDirectAnnotationUsage(Access.class);
+		if (access == null || access.value() == AccessType.FIELD) {
+			return null;
+		}
+		return access.value().name().toLowerCase();
+	}
+
+	public String getFetchMode(FieldDetails field) {
+		Fetch fetch = field.getDirectAnnotationUsage(Fetch.class);
+		if (fetch == null) {
+			return null;
+		}
+		return switch (fetch.value()) {
+			case JOIN -> "join";
+			case SELECT -> "select";
+			case SUBSELECT -> "subselect";
+		};
+	}
+
+	public String getNotFoundAction(FieldDetails field) {
+		NotFound nf = field.getDirectAnnotationUsage(NotFound.class);
+		if (nf == null || nf.action() == NotFoundAction.EXCEPTION) {
+			return null;
+		}
+		return "ignore";
+	}
+
+	public boolean isTimestamp(FieldDetails field) {
+		String className = field.getType().determineRawClass().getClassName();
+		return "java.util.Date".equals(className)
+				|| "java.sql.Timestamp".equals(className)
+				|| "java.util.Calendar".equals(className)
+				|| "java.time.Instant".equals(className)
+				|| "java.time.LocalDateTime".equals(className);
+	}
+
+	// --- Generator parameters ---
+
+	public Map<String, String> getGeneratorParameters(FieldDetails field) {
+		Map<String, String> params = new java.util.LinkedHashMap<>();
+		SequenceGenerator sg = field.getDirectAnnotationUsage(SequenceGenerator.class);
+		if (sg != null) {
+			if (sg.sequenceName() != null && !sg.sequenceName().isEmpty()) {
+				params.put("sequence", sg.sequenceName());
+			}
+			if (sg.allocationSize() != 50) {
+				params.put("increment_size", String.valueOf(sg.allocationSize()));
+			}
+			if (sg.initialValue() != 1) {
+				params.put("initial_value", String.valueOf(sg.initialValue()));
+			}
+			return params;
+		}
+		TableGenerator tg = field.getDirectAnnotationUsage(TableGenerator.class);
+		if (tg != null) {
+			if (tg.table() != null && !tg.table().isEmpty()) {
+				params.put("table", tg.table());
+			}
+			if (tg.pkColumnName() != null && !tg.pkColumnName().isEmpty()) {
+				params.put("segment_column_name", tg.pkColumnName());
+			}
+			if (tg.valueColumnName() != null && !tg.valueColumnName().isEmpty()) {
+				params.put("value_column_name", tg.valueColumnName());
+			}
+			if (tg.pkColumnValue() != null && !tg.pkColumnValue().isEmpty()) {
+				params.put("segment_value", tg.pkColumnValue());
+			}
+		}
+		return params;
 	}
 
 	// --- Column / type attributes ---

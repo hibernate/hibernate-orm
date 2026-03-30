@@ -13,9 +13,19 @@
 <#list helper.getIdFields() as field>
     <id
         name="${field.getName()}"
-        type="${helper.getHibernateTypeName(field)}">
+        type="${helper.getHibernateTypeName(field)}"<#if helper.getAccessType(field)??>
+        access="${helper.getAccessType(field)}"</#if>>
         <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
+<#assign genParams = helper.getGeneratorParameters(field)>
+<#if genParams?has_content>
+        <generator class="${helper.getGeneratorClass(field)}">
+<#list genParams?keys as paramName>
+            <param name="${paramName}">${genParams[paramName]}</param>
+</#list>
+        </generator>
+<#else>
         <generator class="${helper.getGeneratorClass(field)}"/>
+</#if>
     </id>
 </#list>
 </#if>

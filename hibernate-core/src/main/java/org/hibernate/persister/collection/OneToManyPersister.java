@@ -88,7 +88,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	private final RemoveCoordinator removeCoordinator;
 	private final WriteIndexCoordinator writeIndexCoordinator;
 
-	private boolean isAssociationTablePerSubclass;
+	private boolean useTablePerSubclassDecomposition;
 	private final boolean keyIsNullable;
 
 	final boolean doWriteEvenWhenInverse; // contrary to intent of JPA
@@ -122,10 +122,10 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		super.prepareMappingModel( creationProcess );
 
 		if ( getElementPersister() instanceof UnionSubclassEntityPersister ) {
-			isAssociationTablePerSubclass = true;
+			useTablePerSubclassDecomposition = getElementPersister().hasSubclasses();
 		}
 		else {
-			isAssociationTablePerSubclass = false;
+			useTablePerSubclassDecomposition = false;
 		}
 	}
 
@@ -134,7 +134,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		super.postInstantiate();
 
 		// Initialize JDBC operations after entity persisters have completed their initialization
-		if ( isAssociationTablePerSubclass ) {
+		if ( useTablePerSubclassDecomposition ) {
 			decomposer = new TablePerSubclassOneToManyDecomposer( this, getFactory() );
 		}
 		else {

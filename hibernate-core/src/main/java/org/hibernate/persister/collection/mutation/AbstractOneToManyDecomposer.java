@@ -369,6 +369,10 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 	}
 
 	private MutationOperation buildRemoveOperation(TableDescriptor tableDescriptor) {
+		if ( !persister.needsRemove() ) {
+			return null;
+		}
+
 		// todo : this will pick up the wrong custom-sql.
 		//		need to be able to pass in a MutationDetails to use
 		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
@@ -391,14 +395,14 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 		assert foreignKeyDescriptor != null;
 
 		foreignKeyDescriptor.getKeyPart().forEachSelectable( (selectionIndex, selectableMapping) -> {
-			builder.addValueColumn( NULL, selectableMapping );
+			builder.addColumnAssignment( selectableMapping, NULL );
 			builder.addKeyRestrictionLeniently( selectableMapping );
 		} );
 
 		if ( persister.hasPhysicalIndexColumn() ) {
 			attributeMapping.getIndexDescriptor().forEachColumn( (selectionIndex, selectableMapping) -> {
 				if ( selectableMapping.isUpdateable() ) {
-					builder.addValueColumn( NULL, selectableMapping );
+					builder.addColumnAssignment( selectableMapping, NULL );
 				}
 			} );
 		}

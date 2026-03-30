@@ -21,6 +21,8 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.action.queue.meta.ColumnDescriptor;
+import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
@@ -194,6 +196,27 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		initSubclassPropertyAliasesMap( persistentClass );
 
 		postConstruct( creationContext.getMetadata() );
+	}
+
+	protected EntityTableDescriptor[] buildTableDescriptors() {
+		var builder = createTableDescriptorBuilder(
+				tableName,
+				0,
+				() -> columnConsumer -> columnConsumer.accept(
+						getIdentifierMapping(),
+						tableName,
+						getIdentifierColumnNames()
+				)
+		);
+
+		visitAttributeMappings( (attribute) -> {
+			builder.addAttribute( attribute );
+			attribute.forEachSelectable( (selectableIndex, selectable) -> {
+				builder.addColumn( attribute, ColumnDescriptor.from( selectable ) );
+			} );
+		} );
+
+		return new EntityTableDescriptor[] { builder.build() };
 	}
 
 	protected void validateGenerator() {

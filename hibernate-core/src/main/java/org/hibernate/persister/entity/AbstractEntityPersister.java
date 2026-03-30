@@ -3397,7 +3397,7 @@ public abstract class AbstractEntityPersister
 		return getGeneratedValuesDelegate( this, UPDATE );
 	}
 
-	private EntityTableDescriptor[] buildTableDescriptors() {
+	protected EntityTableDescriptor[] buildTableDescriptors() {
 		var tableBuilderMap = new LinkedHashMap<String, TableDescriptorBuilder>();
 		visitMutabilityOrderedTables( (name, relativePosition, tableKeyColumnVisitationSupplier) -> {
 			final var tableMappingBuilder = getTableDescriptorBuilder(
@@ -3409,18 +3409,7 @@ public abstract class AbstractEntityPersister
 			tableBuilderMap.put( name, tableMappingBuilder );
 		} );
 
-		forEachAttributeMapping( (attributeIndex, attribute) -> {
-			if ( !attribute.isPluralAttributeMapping() ) {
-				final var tableName = attribute.getContainingTableExpression();
-				final var builder = tableBuilderMap.get( tableName );
-				if ( builder != null && !builder.isInverse ) {
-					builder.addAttribute( attribute );
-					attribute.forEachSelectable( (selectableIndex, selectable) -> {
-						builder.addColumn( attribute, ColumnDescriptor.from( selectable ) );
-					} );
-				}
-			}
-		} );
+		applyAttributes( tableBuilderMap );
 
 		final EntityTableDescriptor[] tableDescriptors = new EntityTableDescriptor[tableBuilderMap.size()];
 		int i = 0;
@@ -3428,6 +3417,25 @@ public abstract class AbstractEntityPersister
 			tableDescriptors[i++] = entry.getValue().build();
 		}
 		return tableDescriptors;
+	}
+
+	private void applyAttributes(LinkedHashMap<String, TableDescriptorBuilder> tableBuilderMap) {
+		forEachAttributeMapping( (attributeIndex, attribute) -> {
+			applyAttribute( tableBuilderMap, attribute );
+		} );
+	}
+
+	protected static void applyAttribute(LinkedHashMap<String, TableDescriptorBuilder> tableBuilderMap, AttributeMapping attribute) {
+		if ( !attribute.isPluralAttributeMapping() ) {
+			final var tableName = attribute.getContainingTableExpression();
+			final var builder = tableBuilderMap.get( tableName );
+			if ( builder != null && !builder.isInverse ) {
+				builder.addAttribute( attribute );
+				attribute.forEachSelectable( (selectableIndex, selectable) -> {
+					builder.addColumn( attribute, ColumnDescriptor.from( selectable ) );
+				} );
+			}
+		}
 	}
 
 	private TableDescriptorBuilder getTableDescriptorBuilder(
@@ -3450,7 +3458,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private TableDescriptorBuilder createTableDescriptorBuilder(
+	protected TableDescriptorBuilder createTableDescriptorBuilder(
 			String tableName,
 			int relativePosition,
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier) {
@@ -3484,7 +3492,7 @@ public abstract class AbstractEntityPersister
 	}
 
 
-	private static class TableDescriptorBuilder {
+	protected static class TableDescriptorBuilder {
 		private final String tableName;
 		private final int relativePosition;
 		private final boolean isIdentifierTable;
@@ -3551,7 +3559,7 @@ public abstract class AbstractEntityPersister
 			this.keyDescriptor = keyDescriptor;
 		}
 
-		private EntityTableDescriptor build() {
+		protected EntityTableDescriptor build() {
 			return new EntityTableDescriptor(
 					tableName,
 					relativePosition,

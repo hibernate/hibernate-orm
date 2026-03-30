@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.model.ast;
 
+import java.util.Locale;
 import java.util.Objects;
 
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -64,7 +65,18 @@ public class ColumnValueBinding {
 
 	@Override
 	public String toString() {
-		return "ColumnValueBinding(" + valueExpression + ")";
+		return String.format( Locale.ROOT, "ColumnValueBinding(%s=%s)",
+				columnReference.getColumnExpression(),
+				valueExpressionString( valueExpression )
+		);
+	}
+
+	private String valueExpressionString(ColumnWriteFragment valueExpression) {
+		return switch ( valueExpression.getParameters().size() ) {
+			case 0 -> valueExpression.getFragment();
+			case 1 -> "?";
+			default -> "(?,...)";
+		};
 	}
 
 	@Override

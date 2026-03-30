@@ -9,8 +9,10 @@ import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.persister.collection.OneToManyPersister;
+import org.hibernate.persister.entity.EntityPersister;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,33 +23,30 @@ import java.util.List;
  * @author Steve Ebersole
  */
 public class TablePerSubclassOneToManyDecomposer extends AbstractNonBundledOneToManyDecomposer {
-	private final CollectionJdbcOperations[] operationsBySubclassId;
+	private final IdentityMap<EntityPersister,CollectionJdbcOperations> operationsBySubclass;
 
 	public TablePerSubclassOneToManyDecomposer(OneToManyPersister persister, SessionFactoryImplementor factory) {
 		super( persister, factory );
 
 		var elementDescriptor = (EntityCollectionPart) persister.getAttributeMapping().getElementDescriptor();
-		var subclassMappings = elementDescriptor.getAssociatedEntityMappingType().getRootEntityDescriptor().getSubMappingTypes();
+		var associatedType = elementDescriptor.getAssociatedEntityMappingType();
 
-		// Find the maximum subclass ID to size the array correctly
-		// Subclass IDs are not necessarily 0-based or contiguous (e.g., 0, 1, 3)
-		int maxSubclassId = 0;
-		for ( var subclassMapping : subclassMappings ) {
-			maxSubclassId = Math.max( maxSubclassId, subclassMapping.getSubclassId() );
-		}
-		operationsBySubclassId = new CollectionJdbcOperations[maxSubclassId + 1];
+		int count = associatedType.getSubMappingTypes().size() + 1;
+		operationsBySubclass = IdentityMap.instantiateSequenced( count );
 
-		subclassMappings.forEach( (subclassMapping) -> {
+		var baseTableDescriptor = associatedType.getEntityPersister().getIdentifierTableDescriptor();
+		operationsBySubclass.put( associatedType.getEntityPersister(), buildJdbcOperations( baseTableDescriptor, factory ) );
+
+		associatedType.getSubMappingTypes().forEach(  subclassMapping -> {
 			var tableDescriptor = subclassMapping.getEntityPersister().getIdentifierTableDescriptor();
-			operationsBySubclassId[subclassMapping.getSubclassId()] = buildJdbcOperations( tableDescriptor, factory );
+			operationsBySubclass.put( subclassMapping.getEntityPersister(), buildJdbcOperations( tableDescriptor, factory ) );
 		} );
 	}
 
 	@Override
 	protected CollectionJdbcOperations selectJdbcOperations(Object entry, SharedSessionContractImplementor session) {
 		final var entityEntry = session.getPersistenceContextInternal().getEntry( entry );
-		final int subclassId = entityEntry.getPersister().getSubclassId();
-		return operationsBySubclassId[subclassId];
+		return operationsBySubclass.get( entityEntry.getPersister() );
 	}
 
 	@Override
@@ -55,25 +54,26 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractNonBundledOneTo
 			CollectionRemoveAction action,
 			int ordinalBase,
 			SharedSessionContractImplementor session) {
+		if ( !persister.needsRemove() ) {
+			return List.of();
+		}
+
 		// Create callback to handle post-execution work (afterAction, cache, events, stats)
 		final Object cacheKey = lockCacheItem( action, session );
 		final PostCollectionRemoveHandling postCollectionRemoveHandling = new PostCollectionRemoveHandling( action, cacheKey );
 
 		var operations = new ArrayList<PlannedOperation>();
-
-		for ( int i = 0; i < operationsBySubclassId.length; i++ ) {
-			final CollectionJdbcOperations operation = operationsBySubclassId[i];
-
+		operationsBySubclass.forEach( (entityPersister, jdbcOperations) -> {
 			operations.add( new PlannedOperation(
 					persister.getCollectionTableDescriptor(),
 					// technically an UPDATE
 					MutationKind.UPDATE,
-					operation.removeOperation(),
+					jdbcOperations.removeOperation(),
 					new RemoveBindPlan( action.getKey(), persister ),
 					ordinalBase * 1_000,
 					"RemoveAllRows(" + persister.getRolePath() + ")"
 			) );
-		}
+		} );
 
 		// Attach post-execution callback to the last operation
 		if ( !operations.isEmpty() ) {

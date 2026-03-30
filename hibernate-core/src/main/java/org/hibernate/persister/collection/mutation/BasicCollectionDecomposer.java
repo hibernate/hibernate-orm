@@ -1032,7 +1032,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		);
 
 		attribute.getKeyDescriptor().getKeyPart().forEachSelectable( (index, jdbcMapping) -> {
-			builder.addKeyRestriction( jdbcMapping );
+			builder.addKeyRestrictionLeniently( jdbcMapping );
 		} );
 
 		return builder.buildMutation().createMutationOperation(null, factory);

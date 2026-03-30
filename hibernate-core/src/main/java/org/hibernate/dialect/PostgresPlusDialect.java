@@ -55,6 +55,7 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 		final var functionFactory = new CommonFunctionFactory( functionContributions );
 		final var functionRegistry = functionContributions.getFunctionRegistry();
 
+		functionFactory.arrayGet_bracket( false );
 		functionFactory.soundex();
 		functionFactory.rownumRowid();
 		functionFactory.sysdate();

@@ -289,13 +289,18 @@ public class TemporalHelper {
 			Integer temporalPrecision,
 			Class<?> transactionIdJavaType,
 			MetadataBuildingContext context) {
+		final var database = context.getMetadataCollector().getDatabase();
 		final var basicValue = new BasicValue( context, table );
 		basicValue.setImplicitJavaTypeAccess( typeConfiguration -> transactionIdJavaType );
+		if ( Instant.class.equals( transactionIdJavaType ) ) {
+			final var temporalColumnType = database.getDialect().getTemporalTableSupport().getTemporalColumnType();
+			basicValue.setExplicitJdbcTypeAccess( typeConfiguration ->
+					typeConfiguration.getJdbcTypeRegistry().findDescriptor( temporalColumnType ) );
+		}
 		final var column = new Column();
 		column.setNullable( nullable );
 		column.setValue( basicValue );
 		basicValue.addColumn( column );
-		final var database = context.getMetadataCollector().getDatabase();
 		setTemporalColumnName( columnName, column, database,
 				context.getBuildingOptions().getPhysicalNamingStrategy() );
 		setTemporalColumnType( temporalPrecision, column, database, transactionIdJavaType );

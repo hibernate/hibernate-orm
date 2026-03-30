@@ -298,45 +298,17 @@ public sealed class Column
 	}
 
 	private int getSqlTypeCode(MappingContext mapping, Type type) {
-		final int[] sqlTypeCodes;
-		try {
-			sqlTypeCodes = type.getSqlTypeCodes( mapping );
-		}
-		catch ( Exception cause ) {
-			throw new MappingException(
-					String.format(
-							Locale.ROOT,
-							"Unable to resolve JDBC type code for column '%s' of table '%s'",
-							getName(),
-							getValue().getTable().getName()
-					),
-					cause
-			);
-		}
-		final int index = getTypeIndex();
-		if ( index >= sqlTypeCodes.length ) {
-			throw new MappingException(
-					String.format(
-							Locale.ROOT,
-							"Unable to resolve JDBC type code for column '%s' of table '%s'",
-							getName(),
-							getValue().getTable().getName()
-					)
-			);
-		}
-		return sqlTypeCodes[index];
+		return ( (BasicType<?>) getUnderlyingType( mapping, type, typeIndex ) )
+				.getJdbcType()
+				.getDefaultSqlTypeCode();
 	}
 
 	private String getSqlTypeName(TypeConfiguration typeConfiguration, Dialect dialect, MappingContext mapping) {
 		if ( sqlTypeName == null ) {
 			final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
-			final var jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
-			final int sqlTypeCode = getSqlTypeCode( mapping );
-			final var jdbcType =
-					jdbcTypeRegistry.getConstructor( sqlTypeCode ) == null
-							? jdbcTypeRegistry.findDescriptor( sqlTypeCode )
-							: ( (BasicType<?>) getUnderlyingType( mapping, getValue().getType(), typeIndex ) ).getJdbcType();
-			final var descriptor = jdbcType == null ? null : ddlTypeRegistry.getDescriptor( jdbcType.getDdlTypeCode() );
+			final var type = ( (BasicType<?>) getUnderlyingType( mapping, getValue().getType(), typeIndex ) );
+			final var jdbcType = type.getJdbcType();
+			final var descriptor = ddlTypeRegistry.getDescriptor( jdbcType.getDdlTypeCode() );
 			if ( descriptor == null ) {
 				throw new MappingException(
 						String.format(
@@ -344,18 +316,14 @@ public sealed class Column
 								"Unable to determine SQL type name for column '%s' of table '%s' because there is no type mapping for org.hibernate.type.SqlTypes code: %s (%s)",
 								getName(),
 								getValue().getTable().getName(),
-								sqlTypeCode,
-								JdbcTypeNameMapper.getTypeName( sqlTypeCode )
+								jdbcType.getDefaultSqlTypeCode(),
+								JdbcTypeNameMapper.getTypeName( jdbcType.getDefaultSqlTypeCode() )
 						)
 				);
 			}
 			try {
 				final var size = getColumnSize( dialect, mapping );
-				sqlTypeName = descriptor.getTypeName(
-						size,
-						getUnderlyingType( mapping, getValue().getType(), typeIndex ),
-						ddlTypeRegistry
-				);
+				sqlTypeName = descriptor.getTypeName( size, type, ddlTypeRegistry );
 				sqlTypeLob = descriptor.isLob( size );
 				// TODO: this is rubbish (could not find another way)
 				if ( dialect.getAggregateSupport().useLengthsInCasts() ) {

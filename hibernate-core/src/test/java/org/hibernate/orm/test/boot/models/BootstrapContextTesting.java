@@ -31,6 +31,8 @@ import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.jandex.IndexView;
@@ -245,6 +247,20 @@ public class BootstrapContextTesting implements BootstrapContext {
 	public <T> BasicTypeImpl<T> resolveAdHocBasicType(String key) {
 		//noinspection unchecked
 		return (BasicTypeImpl<T>) adHocBasicTypeRegistrations.get( key );
+	}
+
+	@Override
+	public <T> BasicType<T> findAdHocBasicType(JavaType<T> javaType, JdbcType jdbcType) {
+		for ( BasicType<?> basicType : adHocBasicTypeRegistrations.values() ) {
+			if ( basicType.getClass() == BasicTypeImpl.class
+				&& basicType.getJavaTypeDescriptor() == javaType
+				&& basicType.getJdbcType() == jdbcType ) {
+				//noinspection unchecked
+				return (BasicType<T>) basicType;
+			}
+		}
+
+		return null;
 	}
 
 	@Override

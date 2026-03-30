@@ -1,6 +1,16 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.6.46.Final (March 30, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/38385
+
+
+** Bug
+    * HHH-20209 Race Condition in JavaTypeRegistry causing SemanticException during parallel UNION queries with projection.
+    * HHH-19429 ConcurrentModificationException observed while executing JPQL update query with VERSIONED clause
+
 Changes in 6.6.45.Final (March 22, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

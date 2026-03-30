@@ -32,9 +32,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.models.internal.BasicModelsContextImpl;
+import org.hibernate.models.internal.SimpleClassLoading;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
+import org.hibernate.tool.internal.reveng.models.builder.EmbeddableClassBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
+import org.hibernate.tool.internal.reveng.models.metadata.EmbeddableMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.EmbeddedFieldMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
@@ -672,5 +677,86 @@ public class EntityExporterTest {
 		String source = writer.toString();
 		assertTrue(source.contains("@Entity"), source);
 		assertTrue(source.contains("public class Employee"), source);
+	}
+
+	// --- Embeddable export ---
+
+	private String exportEmbeddable(EmbeddableMetadata metadata) {
+		ModelsContext ctx = new BasicModelsContextImpl(
+				SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		ClassDetails embeddable = EmbeddableClassBuilder.buildEmbeddableClass(metadata, ctx);
+		EntityExporter exporter = EntityExporter.create(
+				List.of(embeddable), ctx, true);
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, embeddable);
+		return writer.toString();
+	}
+
+	@Test
+	public void testEmbeddableExport() {
+		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
+				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		String source = exportEmbeddable(metadata);
+		assertTrue(source.contains("package com.example;"), source);
+		assertTrue(source.contains("@Embeddable"), source);
+		assertFalse(source.contains("@Entity"), source);
+		assertFalse(source.contains("@Table"), source);
+		assertTrue(source.contains("public class OrderLineId"), source);
+		assertTrue(source.contains("implements Serializable"), source);
+	}
+
+	@Test
+	public void testEmbeddableExportFields() {
+		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
+				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		String source = exportEmbeddable(metadata);
+		assertTrue(source.contains("private Long orderId;"), source);
+		assertTrue(source.contains("private Integer lineNumber;"), source);
+	}
+
+	@Test
+	public void testEmbeddableExportGettersSetters() {
+		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
+				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		String source = exportEmbeddable(metadata);
+		assertTrue(source.contains("public Long getOrderId()"), source);
+		assertTrue(source.contains("public void setOrderId(Long orderId)"), source);
+		assertTrue(source.contains("public Integer getLineNumber()"), source);
+		assertTrue(source.contains("public void setLineNumber(Integer lineNumber)"), source);
+	}
+
+	@Test
+	public void testEmbeddableExportEqualsHashCode() {
+		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
+				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		String source = exportEmbeddable(metadata);
+		assertTrue(source.contains("public boolean equals(Object other)"), source);
+		assertTrue(source.contains("public int hashCode()"), source);
+		assertTrue(source.contains("getOrderId()"), source);
+		assertTrue(source.contains("getLineNumber()"), source);
+	}
+
+	@Test
+	public void testEmbeddableExportConstructor() {
+		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
+				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		String source = exportEmbeddable(metadata);
+		assertTrue(source.contains("public OrderLineId()"), source);
+		assertTrue(source.contains("public OrderLineId(Long orderId, Integer lineNumber)"), source);
+	}
+
+	@Test
+	public void testEmbeddableExportColumnAnnotations() {
+		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
+				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		String source = exportEmbeddable(metadata);
+		assertTrue(source.contains("@Column(name = \"ORDER_ID\")"), source);
+		assertTrue(source.contains("@Column(name = \"LINE_NUMBER\")"), source);
 	}
 }

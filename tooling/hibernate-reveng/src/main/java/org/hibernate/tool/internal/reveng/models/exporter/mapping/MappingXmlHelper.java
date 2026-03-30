@@ -28,6 +28,7 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.FetchType;
@@ -98,6 +99,10 @@ public class MappingXmlHelper {
 	}
 
 	// --- Entity / class ---
+
+	public boolean isEmbeddable() {
+		return classDetails.hasDirectAnnotationUsage(Embeddable.class);
+	}
 
 	public String getClassName() {
 		return classDetails.getClassName();

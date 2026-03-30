@@ -4,6 +4,11 @@
 <#if helper.getPackageName()??>
     <package>${helper.getPackageName()}</package>
 </#if>
+<#if helper.isEmbeddable()>
+    <embeddable class="${helper.getClassName()}">
+<#include "attributes.mapping.ftl"/>
+    </embeddable>
+<#else>
 <#list helper.getFilterDefs() as fd>
     <filter-def name="${fd.name()}">
 <#if fd.defaultCondition()?has_content>
@@ -25,4 +30,5 @@
         <query>${nnq.query()}</query>
     </named-native-query>
 </#list>
+</#if>
 </entity-mappings>

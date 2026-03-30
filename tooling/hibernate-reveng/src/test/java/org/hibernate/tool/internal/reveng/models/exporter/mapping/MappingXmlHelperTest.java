@@ -1591,4 +1591,23 @@ public class MappingXmlHelperTest {
 		DynamicFieldDetails field = addElementCollectionField(entity, "tags", String.class, ctx);
 		assertEquals("java.lang.String", new MappingXmlHelper(entity).getElementCollectionTargetClass(field));
 	}
+
+	// --- Embeddable ---
+
+	@Test
+	public void testIsEmbeddableTrue() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails embeddable = new DynamicClassDetails(
+				"OrderLineId", "com.example.OrderLineId",
+				false, null, null, ctx);
+		embeddable.addAnnotationUsage(JpaAnnotations.EMBEDDABLE.createUsage(ctx));
+		assertTrue(new MappingXmlHelper(embeddable).isEmbeddable());
+	}
+
+	@Test
+	public void testIsEmbeddableFalse() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertFalse(new MappingXmlHelper(entity).isEmbeddable());
+	}
 }

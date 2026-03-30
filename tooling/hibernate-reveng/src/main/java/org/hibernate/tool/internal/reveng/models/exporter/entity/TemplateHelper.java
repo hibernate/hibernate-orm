@@ -32,6 +32,7 @@ import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -141,6 +142,10 @@ public class TemplateHelper {
 
 	public ClassDetails getClassDetails() {
 		return classDetails;
+	}
+
+	public boolean isEmbeddable() {
+		return classDetails.hasDirectAnnotationUsage(Embeddable.class);
 	}
 
 	// --- Field categorization ---
@@ -254,6 +259,12 @@ public class TemplateHelper {
 			return "";
 		}
 		StringBuilder sb = new StringBuilder();
+		// @Embeddable
+		if (classDetails.hasDirectAnnotationUsage(Embeddable.class)) {
+			importType("jakarta.persistence.Embeddable");
+			sb.append("@Embeddable\n");
+			return sb.toString().stripTrailing();
+		}
 		// @Entity
 		if (classDetails.hasDirectAnnotationUsage(Entity.class)) {
 			importType("jakarta.persistence.Entity");
@@ -917,6 +928,7 @@ public class TemplateHelper {
 	}
 
 	public boolean needsEqualsHashCode() {
+		if (isEmbeddable()) return true;
 		boolean hasExplicitEquals = getBasicFields().stream()
 				.anyMatch(f -> hasFieldMetaAttribute(f, "use-in-equals"));
 		if (hasExplicitEquals) return true;
@@ -939,6 +951,9 @@ public class TemplateHelper {
 	}
 
 	public List<FieldDetails> getIdentifierFields() {
+		if (isEmbeddable()) {
+			return getBasicFields();
+		}
 		List<FieldDetails> result = new ArrayList<>();
 		for (FieldDetails field : getBasicFields()) {
 			if (isPrimaryKey(field)) {

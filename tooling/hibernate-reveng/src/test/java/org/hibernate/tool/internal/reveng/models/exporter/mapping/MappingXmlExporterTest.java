@@ -31,9 +31,14 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.models.internal.BasicModelsContextImpl;
+import org.hibernate.models.internal.SimpleClassLoading;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
+import org.hibernate.tool.internal.reveng.models.builder.EmbeddableClassBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
+import org.hibernate.tool.internal.reveng.models.metadata.EmbeddableMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.EmbeddedFieldMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
@@ -411,5 +416,57 @@ public class MappingXmlExporterTest {
 		StringWriter writer = new StringWriter();
 		exporter.export(writer, entity);
 		assertEquals("<!-- Custom mapping for com.example.Employee -->", writer.toString());
+	}
+
+	// --- Embeddable export ---
+
+	private String exportEmbeddable(EmbeddableMetadata metadata) {
+		ModelsContext ctx = new BasicModelsContextImpl(
+				SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		ClassDetails embeddable = EmbeddableClassBuilder.buildEmbeddableClass(metadata, ctx);
+		MappingXmlExporter exporter = MappingXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, embeddable);
+		return writer.toString();
+	}
+
+	@Test
+	public void testEmbeddableExport() {
+		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
+				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		String xml = exportEmbeddable(metadata);
+		assertTrue(xml.contains("<embeddable class=\"com.example.OrderLineId\">"), xml);
+		assertFalse(xml.contains("<entity "), xml);
+	}
+
+	@Test
+	public void testEmbeddableExportAttributes() {
+		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
+				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		String xml = exportEmbeddable(metadata);
+		assertTrue(xml.contains("<basic name=\"orderId\">"), xml);
+		assertTrue(xml.contains("<column name=\"ORDER_ID\""), xml);
+		assertTrue(xml.contains("<basic name=\"lineNumber\">"), xml);
+		assertTrue(xml.contains("<column name=\"LINE_NUMBER\""), xml);
+	}
+
+	@Test
+	public void testEmbeddableExportPackage() {
+		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
+				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class));
+		String xml = exportEmbeddable(metadata);
+		assertTrue(xml.contains("<package>com.example</package>"), xml);
+	}
+
+	@Test
+	public void testEmbeddableExportNoEntityElements() {
+		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
+				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class));
+		String xml = exportEmbeddable(metadata);
+		assertFalse(xml.contains("<filter-def"), xml);
+		assertFalse(xml.contains("<named-query"), xml);
+		assertFalse(xml.contains("<named-native-query"), xml);
 	}
 }

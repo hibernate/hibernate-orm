@@ -56,7 +56,9 @@ import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.tool.internal.export.java.ImportContextImpl;
 import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
+import org.hibernate.tool.internal.reveng.models.builder.EmbeddableClassBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
+import org.hibernate.tool.internal.reveng.models.metadata.EmbeddableMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.EmbeddedFieldMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
@@ -1125,6 +1127,110 @@ public class TemplateHelperTest {
 		FieldDetails field = helper.getBasicFields().get(0);
 		String ann = helper.generateColumnAnnotation(field);
 		assertTrue(ann.contains("updatable = false"), ann);
+	}
+
+	// --- Embeddable support ---
+
+	private TemplateHelper createEmbeddable(EmbeddableMetadata metadata) {
+		ModelsContext ctx = new BasicModelsContextImpl(
+				SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		ClassDetails classDetails = EmbeddableClassBuilder.buildEmbeddableClass(metadata, ctx);
+		return new TemplateHelper(classDetails, ctx,
+				new ImportContextImpl(metadata.getPackageName()), true,
+				Collections.emptyMap(), Collections.emptyMap());
+	}
+
+	@Test
+	public void testEmbeddableIsEmbeddable() {
+		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
+				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		TemplateHelper helper = createEmbeddable(metadata);
+		assertTrue(helper.isEmbeddable());
+	}
+
+	@Test
+	public void testEmbeddableClassAnnotations() {
+		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
+				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class));
+		TemplateHelper helper = createEmbeddable(metadata);
+		String result = helper.generateClassAnnotations();
+		assertTrue(result.contains("@Embeddable"), result);
+		assertFalse(result.contains("@Entity"), result);
+		assertFalse(result.contains("@Table"), result);
+	}
+
+	@Test
+	public void testEmbeddableNeedsEqualsHashCode() {
+		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
+				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		TemplateHelper helper = createEmbeddable(metadata);
+		assertTrue(helper.needsEqualsHashCode());
+	}
+
+	@Test
+	public void testEmbeddableIdentifierFieldsReturnsAllFields() {
+		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
+				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		TemplateHelper helper = createEmbeddable(metadata);
+		List<FieldDetails> idFields = helper.getIdentifierFields();
+		assertEquals(2, idFields.size());
+		assertEquals("orderId", idFields.get(0).getName());
+		assertEquals("lineNumber", idFields.get(1).getName());
+	}
+
+	@Test
+	public void testEmbeddableBasicFields() {
+		EmbeddableMetadata metadata = new EmbeddableMetadata("Address", "com.example")
+				.addColumn(new ColumnMetadata("STREET", "street", String.class))
+				.addColumn(new ColumnMetadata("CITY", "city", String.class))
+				.addColumn(new ColumnMetadata("ZIP", "zip", String.class));
+		TemplateHelper helper = createEmbeddable(metadata);
+		List<FieldDetails> fields = helper.getBasicFields();
+		assertEquals(3, fields.size());
+	}
+
+	@Test
+	public void testEmbeddableDeclarationName() {
+		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
+				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class));
+		TemplateHelper helper = createEmbeddable(metadata);
+		assertEquals("OrderLineId", helper.getDeclarationName());
+	}
+
+	@Test
+	public void testEmbeddablePackageDeclaration() {
+		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
+				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class));
+		TemplateHelper helper = createEmbeddable(metadata);
+		assertEquals("package com.example;", helper.getPackageDeclaration());
+	}
+
+	@Test
+	public void testEmbeddableNotSubclass() {
+		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
+				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class));
+		TemplateHelper helper = createEmbeddable(metadata);
+		assertFalse(helper.isSubclass());
+	}
+
+	@Test
+	public void testEmbeddableFullConstructor() {
+		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
+				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		TemplateHelper helper = createEmbeddable(metadata);
+		assertTrue(helper.needsFullConstructor());
+		assertEquals("Long orderId, Integer lineNumber",
+				helper.getFullConstructorParameterList());
+	}
+
+	@Test
+	public void testEntityIsNotEmbeddable() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		assertFalse(create(table).isEmbeddable());
 	}
 
 	// --- Hibernate-specific class annotations ---

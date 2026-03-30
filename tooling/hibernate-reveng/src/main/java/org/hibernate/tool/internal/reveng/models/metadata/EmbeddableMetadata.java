@@ -27,6 +27,7 @@ public class EmbeddableMetadata {
 	private final String className;
 	private final String packageName;
 	private final List<ColumnMetadata> columns = new ArrayList<>();
+	private boolean idClass;
 
 	public EmbeddableMetadata(String className, String packageName) {
 		this.className = className;
@@ -38,8 +39,14 @@ public class EmbeddableMetadata {
 		return this;
 	}
 
+	public EmbeddableMetadata idClass(boolean idClass) {
+		this.idClass = idClass;
+		return this;
+	}
+
 	// Getters
 	public String getClassName() { return className; }
 	public String getPackageName() { return packageName; }
 	public List<ColumnMetadata> getColumns() { return columns; }
+	public boolean isIdClass() { return idClass; }
 }

@@ -170,6 +170,12 @@ public class BasicFieldBuilder {
 		if (columnMetadata.isUnique()) {
 			columnAnnotation.unique(true);
 		}
+		if (!columnMetadata.isInsertable()) {
+			columnAnnotation.insertable(false);
+		}
+		if (!columnMetadata.isUpdatable()) {
+			columnAnnotation.updatable(false);
+		}
 		field.addAnnotationUsage(columnAnnotation);
 	}
 }

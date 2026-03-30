@@ -1044,4 +1044,65 @@ public class TemplateHelperTest {
 		FieldDetails field = helper.getBasicFields().get(0);
 		assertTrue(helper.isLob(field));
 	}
+
+	// --- Boolean getter prefix ---
+
+	@Test
+	public void testGetterNameBooleanField() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("ACTIVE", "active", boolean.class));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getBasicFields().stream()
+				.filter(f -> f.getName().equals("active")).findFirst().orElseThrow();
+		assertEquals("isActive", helper.getGetterName(field));
+	}
+
+	@Test
+	public void testGetterNameNonBooleanField() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getBasicFields().stream()
+				.filter(f -> f.getName().equals("name")).findFirst().orElseThrow();
+		assertEquals("getName", helper.getGetterName(field));
+	}
+
+	@Test
+	public void testGetterNameBooleanWrapperUsesGet() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("ACTIVE", "active", Boolean.class));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getBasicFields().stream()
+				.filter(f -> f.getName().equals("active")).findFirst().orElseThrow();
+		assertEquals("getActive", helper.getGetterName(field));
+	}
+
+	// --- @Column insertable/updatable ---
+
+	@Test
+	public void testColumnAnnotationInsertableFalse() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		ColumnMetadata col = new ColumnMetadata("COMPUTED", "computed", String.class);
+		col.insertable(false);
+		table.addColumn(col);
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getBasicFields().get(0);
+		String ann = helper.generateColumnAnnotation(field);
+		assertTrue(ann.contains("insertable = false"), ann);
+	}
+
+	@Test
+	public void testColumnAnnotationUpdatableFalse() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		ColumnMetadata col = new ColumnMetadata("COMPUTED", "computed", String.class);
+		col.updatable(false);
+		table.addColumn(col);
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getBasicFields().get(0);
+		String ann = helper.generateColumnAnnotation(field);
+		assertTrue(ann.contains("updatable = false"), ann);
+	}
 }

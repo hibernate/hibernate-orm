@@ -41,7 +41,7 @@
     <#if colAnn?has_content>
     ${colAnn}
     </#if>
-    public ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
+    public ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
         return this.${field.getName()};
     }
 
@@ -57,7 +57,7 @@
 <#if ann?has_content>
     ${ann}
 </#if>
-    public ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
+    public ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
         return this.${field.getName()};
     }
 
@@ -72,7 +72,7 @@
 <#if ann?has_content>
     ${ann}
 </#if>
-    public ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
+    public ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
         return this.${field.getName()};
     }
 
@@ -117,7 +117,7 @@
 <#if ann?has_content>
     ${ann}
 </#if>
-    public ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
+    public ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
         return this.${field.getName()};
     }
 

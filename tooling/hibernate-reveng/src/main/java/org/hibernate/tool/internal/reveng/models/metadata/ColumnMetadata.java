@@ -48,6 +48,8 @@ public class ColumnMetadata {
 	private String comment;
 	private GenerationType generationType;
 	private boolean unique;
+	private boolean insertable = true;
+	private boolean updatable = true;
 	private String hibernateTypeName;
 	private Map<String, List<String>> metaAttributes = new LinkedHashMap<>();
 
@@ -129,6 +131,16 @@ public class ColumnMetadata {
 		return this;
 	}
 
+	public ColumnMetadata insertable(boolean insertable) {
+		this.insertable = insertable;
+		return this;
+	}
+
+	public ColumnMetadata updatable(boolean updatable) {
+		this.updatable = updatable;
+		return this;
+	}
+
 	public ColumnMetadata hibernateTypeName(String hibernateTypeName) {
 		this.hibernateTypeName = hibernateTypeName;
 		return this;
@@ -153,6 +165,8 @@ public class ColumnMetadata {
 	public String getComment() { return comment; }
 	public GenerationType getGenerationType() { return generationType; }
 	public boolean isUnique() { return unique; }
+	public boolean isInsertable() { return insertable; }
+	public boolean isUpdatable() { return updatable; }
 	public String getHibernateTypeName() { return hibernateTypeName; }
 
 	public Map<String, List<String>> getMetaAttributes() { return metaAttributes; }

@@ -211,6 +211,12 @@ public class TemplateHelper {
 		return "get" + capitalize(fieldName);
 	}
 
+	public String getGetterName(FieldDetails field) {
+		String prefix = "boolean".equals(
+				field.getType().determineRawClass().getClassName()) ? "is" : "get";
+		return prefix + capitalize(field.getName());
+	}
+
 	public String getSetterName(String fieldName) {
 		return "set" + capitalize(fieldName);
 	}
@@ -389,6 +395,12 @@ public class TemplateHelper {
 		}
 		if (col.scale() != 0) {
 			sb.append(", scale = ").append(col.scale());
+		}
+		if (!col.insertable()) {
+			sb.append(", insertable = false");
+		}
+		if (!col.updatable()) {
+			sb.append(", updatable = false");
 		}
 		sb.append(")");
 		return sb.toString();
@@ -697,17 +709,17 @@ public class TemplateHelper {
 		if (hasExplicitToString) {
 			for (FieldDetails field : basicFields) {
 				if (getFieldMetaAsBool(field, "use-in-tostring", false)) {
-					props.add(new ToStringProperty(field.getName(), getGetterName(field.getName())));
+					props.add(new ToStringProperty(field.getName(), getGetterName(field)));
 				}
 			}
 		} else {
 			FieldDetails cid = getCompositeIdField();
 			if (cid != null) {
-				props.add(new ToStringProperty(cid.getName(), getGetterName(cid.getName())));
+				props.add(new ToStringProperty(cid.getName(), getGetterName(cid)));
 			}
 			for (FieldDetails field : basicFields) {
 				if (isGenProperty(field)) {
-					props.add(new ToStringProperty(field.getName(), getGetterName(field.getName())));
+					props.add(new ToStringProperty(field.getName(), getGetterName(field)));
 				}
 			}
 		}
@@ -753,7 +765,7 @@ public class TemplateHelper {
 	}
 
 	public String generateEqualsExpression(FieldDetails field) {
-		String getter = getGetterName(field.getName()) + "()";
+		String getter = getGetterName(field) + "()";
 		String typeName = field.getType().determineRawClass().getClassName();
 		if (isPrimitiveType(typeName)) {
 			return "this." + getter + " == other." + getter;
@@ -764,7 +776,7 @@ public class TemplateHelper {
 	}
 
 	public String generateHashCodeExpression(FieldDetails field) {
-		String getter = "this." + getGetterName(field.getName()) + "()";
+		String getter = "this." + getGetterName(field) + "()";
 		String typeName = field.getType().determineRawClass().getClassName();
 		return switch (typeName) {
 			case "int", "char", "short", "byte" -> getter;

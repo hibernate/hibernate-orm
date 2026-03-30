@@ -45,6 +45,10 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.NamedNativeQueries;
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderColumn;
@@ -61,6 +65,7 @@ import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.AnyKeyJavaClass;
+import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CollectionId;
@@ -117,6 +122,12 @@ public class HbmTemplateHelper {
 	public String getClassName() {
 		String name = classDetails.getClassName();
 		return name.startsWith(".") ? name.substring(1) : name;
+	}
+
+	public String getPackageName() {
+		String name = getClassName();
+		int dot = name.lastIndexOf('.');
+		return dot > 0 ? name.substring(0, dot) : null;
 	}
 
 	// --- Table ---
@@ -304,6 +315,7 @@ public class HbmTemplateHelper {
 					&& !field.hasDirectAnnotationUsage(Version.class)
 					&& !field.hasDirectAnnotationUsage(Any.class)
 					&& !field.hasDirectAnnotationUsage(ElementCollection.class)
+					&& !field.hasDirectAnnotationUsage(ManyToAny.class)
 					&& !isSecondaryTableField(field)) {
 				result.add(field);
 			}
@@ -341,6 +353,10 @@ public class HbmTemplateHelper {
 
 	public List<FieldDetails> getElementCollectionFields() {
 		return getFieldsWithAnnotation(ElementCollection.class);
+	}
+
+	public List<FieldDetails> getManyToAnyFields() {
+		return getFieldsWithAnnotation(ManyToAny.class);
 	}
 
 	// --- ElementCollection ---
@@ -858,6 +874,40 @@ public class HbmTemplateHelper {
 	public record FilterInfo(String name, String condition) {}
 
 	public record FilterDefInfo(String name, String defaultCondition, Map<String, String> parameters) {}
+
+	// --- Named queries ---
+
+	public List<NamedQueryInfo> getNamedQueries() {
+		List<NamedQueryInfo> result = new ArrayList<>();
+		NamedQuery single = classDetails.getDirectAnnotationUsage(NamedQuery.class);
+		if (single != null) {
+			result.add(new NamedQueryInfo(single.name(), single.query()));
+		}
+		NamedQueries container = classDetails.getDirectAnnotationUsage(NamedQueries.class);
+		if (container != null) {
+			for (NamedQuery nq : container.value()) {
+				result.add(new NamedQueryInfo(nq.name(), nq.query()));
+			}
+		}
+		return result;
+	}
+
+	public List<NamedQueryInfo> getNamedNativeQueries() {
+		List<NamedQueryInfo> result = new ArrayList<>();
+		NamedNativeQuery single = classDetails.getDirectAnnotationUsage(NamedNativeQuery.class);
+		if (single != null) {
+			result.add(new NamedQueryInfo(single.name(), single.query()));
+		}
+		NamedNativeQueries container = classDetails.getDirectAnnotationUsage(NamedNativeQueries.class);
+		if (container != null) {
+			for (NamedNativeQuery nnq : container.value()) {
+				result.add(new NamedQueryInfo(nnq.name(), nnq.query()));
+			}
+		}
+		return result;
+	}
+
+	public record NamedQueryInfo(String name, String query) {}
 
 	// --- SecondaryTable / Joins ---
 

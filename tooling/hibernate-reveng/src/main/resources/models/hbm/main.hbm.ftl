@@ -3,7 +3,7 @@
 	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping>
+<hibernate-mapping<#if helper.getPackageName()??> package="${helper.getPackageName()}"</#if>>
 <#include "class.hbm.ftl"/>
 <#list helper.getFilterDefs() as fd>
 <#if fd.parameters()?size == 0>
@@ -15,5 +15,11 @@
 </#list>
     </filter-def>
 </#if>
+</#list>
+<#list helper.getNamedQueries() as nq>
+    <query name="${nq.name()}"><![CDATA[${nq.query()}]]></query>
+</#list>
+<#list helper.getNamedNativeQueries() as nq>
+    <sql-query name="${nq.name()}"><![CDATA[${nq.query()}]]></sql-query>
 </#list>
 </hibernate-mapping>

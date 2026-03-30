@@ -74,7 +74,7 @@ public class HbmXmlExporterTest {
 		String xml = export(table);
 		assertTrue(xml.contains("<?xml version=\"1.0\"?>"), xml);
 		assertTrue(xml.contains("<!DOCTYPE hibernate-mapping"), xml);
-		assertTrue(xml.contains("<hibernate-mapping>"), xml);
+		assertTrue(xml.contains("<hibernate-mapping"), xml);
 		assertTrue(xml.contains("</hibernate-mapping>"), xml);
 	}
 

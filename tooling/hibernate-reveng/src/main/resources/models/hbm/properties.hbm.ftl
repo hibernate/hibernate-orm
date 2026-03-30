@@ -156,3 +156,23 @@
 </#if>
     </${collTag}>
 </#list>
+<#-- ManyToAny -->
+<#list helper.getManyToAnyFields() as field>
+<#assign collTag = helper.getCollectionTag(field)>
+    <${collTag} name="${field.getName()}"<#if helper.getJoinTableName(field)??> table="${helper.getJoinTableName(field)}"</#if>>
+        <key>
+            <column name="${helper.getJoinTableJoinColumnName(field)}"/>
+        </key>
+        <many-to-any id-type="${helper.getAnyIdType(field)}" meta-type="${helper.getAnyMetaType(field)}">
+<#list helper.getAnyMetaValues(field) as mv>
+            <meta-value value="${mv.value()}" class="${mv.entityClass()}"/>
+</#list>
+<#if helper.getColumnName(field)??>
+            <column name="${helper.getColumnName(field)}"/>
+</#if>
+<#if helper.getJoinColumnName(field)??>
+            <column name="${helper.getJoinColumnName(field)}"/>
+</#if>
+        </many-to-any>
+    </${collTag}>
+</#list>

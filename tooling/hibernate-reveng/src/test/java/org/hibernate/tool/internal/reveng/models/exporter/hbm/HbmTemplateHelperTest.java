@@ -43,6 +43,7 @@ import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorAnnotation
 import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValueAnnotation;
 import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValuesAnnotation;
 import org.hibernate.boot.models.annotations.internal.AnyKeyJavaClassAnnotation;
+import org.hibernate.boot.models.annotations.internal.ManyToAnyAnnotation;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.SecondaryTableJpaAnnotation;
@@ -55,9 +56,12 @@ import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterDefAnnotation;
 import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
 import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedNativeQueryJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedQueryJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NotFoundAnnotation;
 import org.hibernate.boot.models.annotations.internal.OneToManyJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.JoinTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OptimisticLockAnnotation;
 import org.hibernate.boot.models.annotations.internal.OptimisticLockingAnnotation;
 import org.hibernate.boot.models.annotations.internal.OrderColumnJpaAnnotation;
@@ -1598,5 +1602,159 @@ public class HbmTemplateHelperTest {
 		embeddable.addAnnotationUsage(JpaAnnotations.EMBEDDABLE.createUsage(ctx));
 		DynamicFieldDetails field = addElementCollectionField(entity, "addresses", embeddable, ctx);
 		assertTrue(new HbmTemplateHelper(entity).isElementCollectionOfEmbeddable(field));
+	}
+
+	// --- getPackageName ---
+
+	@Test
+	public void testGetPackageNameWithPackage() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertEquals("com.example", new HbmTemplateHelper(entity).getPackageName());
+	}
+
+	@Test
+	public void testGetPackageNameNoPackage() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = new DynamicClassDetails(
+				"TestEntity", "TestEntity", false, null, null, ctx);
+		entity.addAnnotationUsage(JpaAnnotations.ENTITY.createUsage(ctx));
+		assertNull(new HbmTemplateHelper(entity).getPackageName());
+	}
+
+	// --- getNamedQueries ---
+
+	@Test
+	public void testGetNamedQueriesNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertTrue(new HbmTemplateHelper(entity).getNamedQueries().isEmpty());
+	}
+
+	@Test
+	public void testGetNamedQueriesSingle() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		NamedQueryJpaAnnotation nq = JpaAnnotations.NAMED_QUERY.createUsage(ctx);
+		nq.name("findAll");
+		nq.query("SELECT e FROM TestEntity e");
+		entity.addAnnotationUsage(nq);
+		List<HbmTemplateHelper.NamedQueryInfo> queries = new HbmTemplateHelper(entity).getNamedQueries();
+		assertEquals(1, queries.size());
+		assertEquals("findAll", queries.get(0).name());
+		assertEquals("SELECT e FROM TestEntity e", queries.get(0).query());
+	}
+
+	// --- getNamedNativeQueries ---
+
+	@Test
+	public void testGetNamedNativeQueriesNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertTrue(new HbmTemplateHelper(entity).getNamedNativeQueries().isEmpty());
+	}
+
+	@Test
+	public void testGetNamedNativeQueriesSingle() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		NamedNativeQueryJpaAnnotation nnq = JpaAnnotations.NAMED_NATIVE_QUERY.createUsage(ctx);
+		nnq.name("findAllNative");
+		nnq.query("SELECT * FROM TEST_ENTITY");
+		entity.addAnnotationUsage(nnq);
+		List<HbmTemplateHelper.NamedQueryInfo> queries = new HbmTemplateHelper(entity).getNamedNativeQueries();
+		assertEquals(1, queries.size());
+		assertEquals("findAllNative", queries.get(0).name());
+		assertEquals("SELECT * FROM TEST_ENTITY", queries.get(0).query());
+	}
+
+	// --- getManyToAnyFields ---
+
+	@Test
+	public void testGetManyToAnyFieldsNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		addBasicField(entity, "name", String.class, ctx);
+		assertTrue(new HbmTemplateHelper(entity).getManyToAnyFields().isEmpty());
+	}
+
+	@Test
+	public void testGetManyToAnyFieldsPresent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		ClassDetails elementClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(Object.class.getName());
+		ClassDetails setClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(Set.class.getName());
+		TypeDetails elementType = new ClassTypeDetailsImpl(elementClass, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				setClass, Collections.singletonList(elementType), null);
+		DynamicFieldDetails field = entity.applyAttribute(
+				"properties", fieldType, false, true, ctx);
+		ManyToAnyAnnotation m2a = HibernateAnnotations.MANY_TO_ANY.createUsage(ctx);
+		field.addAnnotationUsage(m2a);
+		List<FieldDetails> m2aFields = new HbmTemplateHelper(entity).getManyToAnyFields();
+		assertEquals(1, m2aFields.size());
+		assertEquals("properties", m2aFields.get(0).getName());
+	}
+
+	@Test
+	public void testGetManyToAnyFieldsExcludedFromBasicFields() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		addBasicField(entity, "name", String.class, ctx);
+		ClassDetails elementClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(Object.class.getName());
+		ClassDetails setClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(Set.class.getName());
+		TypeDetails elementType = new ClassTypeDetailsImpl(elementClass, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				setClass, Collections.singletonList(elementType), null);
+		DynamicFieldDetails field = entity.applyAttribute(
+				"properties", fieldType, false, true, ctx);
+		field.addAnnotationUsage(HibernateAnnotations.MANY_TO_ANY.createUsage(ctx));
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertEquals(1, helper.getBasicFields().size());
+		assertEquals("name", helper.getBasicFields().get(0).getName());
+	}
+
+	// --- ManyToAny with join table ---
+
+	@Test
+	public void testManyToAnyWithJoinTable() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		ClassDetails elementClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(Object.class.getName());
+		ClassDetails setClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(Set.class.getName());
+		TypeDetails elementType = new ClassTypeDetailsImpl(elementClass, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				setClass, Collections.singletonList(elementType), null);
+		DynamicFieldDetails field = entity.applyAttribute(
+				"properties", fieldType, false, true, ctx);
+		field.addAnnotationUsage(HibernateAnnotations.MANY_TO_ANY.createUsage(ctx));
+		JoinColumnJpaAnnotation jc = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+		jc.name("PROP_ID");
+		field.addAnnotationUsage(jc);
+		JoinColumnJpaAnnotation joinKeyCol = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+		joinKeyCol.name("OWNER_ID");
+		JoinTableJpaAnnotation jt = JpaAnnotations.JOIN_TABLE.createUsage(ctx);
+		jt.name("ENTITY_PROPS");
+		jt.joinColumns(new jakarta.persistence.JoinColumn[] { joinKeyCol });
+		field.addAnnotationUsage(jt);
+		ColumnJpaAnnotation col = JpaAnnotations.COLUMN.createUsage(ctx);
+		col.name("PROP_TYPE");
+		field.addAnnotationUsage(col);
+		AnyKeyJavaClassAnnotation akjc = HibernateAnnotations.ANY_KEY_JAVA_CLASS.createUsage(ctx);
+		akjc.value(Long.class);
+		field.addAnnotationUsage(akjc);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertEquals("ENTITY_PROPS", helper.getJoinTableName(field));
+		assertEquals("OWNER_ID", helper.getJoinTableJoinColumnName(field));
+		assertEquals("PROP_TYPE", helper.getColumnName(field));
+		assertEquals("PROP_ID", helper.getJoinColumnName(field));
+		assertEquals("java.lang.Long", helper.getAnyIdType(field));
+		assertEquals("string", helper.getAnyMetaType(field));
 	}
 }

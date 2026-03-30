@@ -24,8 +24,20 @@ import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.InheritanceType;
 
+import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
+import org.hibernate.boot.models.annotations.internal.OptimisticLockingAnnotation;
+import org.hibernate.boot.models.annotations.internal.RowIdAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLRestrictionAnnotation;
+import org.hibernate.boot.models.annotations.internal.SubselectAnnotation;
+import org.hibernate.models.internal.BasicModelsContextImpl;
+import org.hibernate.models.internal.SimpleClassLoading;
+import org.hibernate.models.internal.dynamic.DynamicClassDetails;
+import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.InheritanceMetadata;
@@ -43,6 +55,19 @@ public class HbmTemplateHelperTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails classDetails = builder.createEntityFromTable(table);
 		return new HbmTemplateHelper(classDetails);
+	}
+
+	private DynamicClassDetails createMinimalEntity(ModelsContext ctx) {
+		return createMinimalEntity(ctx, false);
+	}
+
+	private DynamicClassDetails createMinimalEntity(ModelsContext ctx, boolean isAbstract) {
+		DynamicClassDetails entity = new DynamicClassDetails(
+				"TestEntity", "com.example.TestEntity",
+				isAbstract, null, null, ctx);
+		entity.addAnnotationUsage(
+				org.hibernate.boot.models.JpaAnnotations.ENTITY.createUsage(ctx));
+		return entity;
 	}
 
 	// --- getHibernateTypeName ---
@@ -404,5 +429,225 @@ public class HbmTemplateHelperTest {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		assertEquals("string", create(table).getDiscriminatorTypeName());
+	}
+
+	// --- isMutable ---
+
+	@Test
+	public void testIsMutableDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertTrue(new HbmTemplateHelper(entity).isMutable());
+	}
+
+	@Test
+	public void testIsMutableFalseWhenImmutable() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		entity.addAnnotationUsage(HibernateAnnotations.IMMUTABLE.createUsage(ctx));
+		assertFalse(new HbmTemplateHelper(entity).isMutable());
+	}
+
+	// --- isDynamicUpdate ---
+
+	@Test
+	public void testIsDynamicUpdateDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertFalse(new HbmTemplateHelper(entity).isDynamicUpdate());
+	}
+
+	@Test
+	public void testIsDynamicUpdateTrue() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		entity.addAnnotationUsage(HibernateAnnotations.DYNAMIC_UPDATE.createUsage(ctx));
+		assertTrue(new HbmTemplateHelper(entity).isDynamicUpdate());
+	}
+
+	// --- isDynamicInsert ---
+
+	@Test
+	public void testIsDynamicInsertDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertFalse(new HbmTemplateHelper(entity).isDynamicInsert());
+	}
+
+	@Test
+	public void testIsDynamicInsertTrue() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		entity.addAnnotationUsage(HibernateAnnotations.DYNAMIC_INSERT.createUsage(ctx));
+		assertTrue(new HbmTemplateHelper(entity).isDynamicInsert());
+	}
+
+	// --- getBatchSize ---
+
+	@Test
+	public void testGetBatchSizeDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertEquals(0, new HbmTemplateHelper(entity).getBatchSize());
+	}
+
+	@Test
+	public void testGetBatchSizeSet() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		BatchSizeAnnotation bs = HibernateAnnotations.BATCH_SIZE.createUsage(ctx);
+		bs.size(25);
+		entity.addAnnotationUsage(bs);
+		assertEquals(25, new HbmTemplateHelper(entity).getBatchSize());
+	}
+
+	// --- getWhere ---
+
+	@Test
+	public void testGetWhereDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertNull(new HbmTemplateHelper(entity).getWhere());
+	}
+
+	@Test
+	public void testGetWhereSet() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		SQLRestrictionAnnotation sr = HibernateAnnotations.SQL_RESTRICTION.createUsage(ctx);
+		sr.value("active = true");
+		entity.addAnnotationUsage(sr);
+		assertEquals("active = true", new HbmTemplateHelper(entity).getWhere());
+	}
+
+	// --- isAbstract ---
+
+	@Test
+	public void testIsAbstractDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertFalse(new HbmTemplateHelper(entity).isAbstract());
+	}
+
+	@Test
+	public void testIsAbstractTrue() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx, true);
+		assertTrue(new HbmTemplateHelper(entity).isAbstract());
+	}
+
+	// --- getOptimisticLockMode ---
+
+	@Test
+	public void testGetOptimisticLockModeDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertNull(new HbmTemplateHelper(entity).getOptimisticLockMode());
+	}
+
+	@Test
+	public void testGetOptimisticLockModeVersion() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		OptimisticLockingAnnotation ol = HibernateAnnotations.OPTIMISTIC_LOCKING.createUsage(ctx);
+		ol.type(OptimisticLockType.VERSION);
+		entity.addAnnotationUsage(ol);
+		assertNull(new HbmTemplateHelper(entity).getOptimisticLockMode());
+	}
+
+	@Test
+	public void testGetOptimisticLockModeAll() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		OptimisticLockingAnnotation ol = HibernateAnnotations.OPTIMISTIC_LOCKING.createUsage(ctx);
+		ol.type(OptimisticLockType.ALL);
+		entity.addAnnotationUsage(ol);
+		assertEquals("all", new HbmTemplateHelper(entity).getOptimisticLockMode());
+	}
+
+	@Test
+	public void testGetOptimisticLockModeDirty() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		OptimisticLockingAnnotation ol = HibernateAnnotations.OPTIMISTIC_LOCKING.createUsage(ctx);
+		ol.type(OptimisticLockType.DIRTY);
+		entity.addAnnotationUsage(ol);
+		assertEquals("dirty", new HbmTemplateHelper(entity).getOptimisticLockMode());
+	}
+
+	// --- getRowId ---
+
+	@Test
+	public void testGetRowIdDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertNull(new HbmTemplateHelper(entity).getRowId());
+	}
+
+	@Test
+	public void testGetRowIdSet() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		RowIdAnnotation rid = HibernateAnnotations.ROW_ID.createUsage(ctx);
+		rid.value("ROWID");
+		entity.addAnnotationUsage(rid);
+		assertEquals("ROWID", new HbmTemplateHelper(entity).getRowId());
+	}
+
+	// --- getSubselect ---
+
+	@Test
+	public void testGetSubselectDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertNull(new HbmTemplateHelper(entity).getSubselect());
+	}
+
+	@Test
+	public void testGetSubselectSet() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		SubselectAnnotation ss = HibernateAnnotations.SUBSELECT.createUsage(ctx);
+		ss.value("select * from EMPLOYEE where active = true");
+		entity.addAnnotationUsage(ss);
+		assertEquals("select * from EMPLOYEE where active = true", new HbmTemplateHelper(entity).getSubselect());
+	}
+
+	// --- isConcreteProxy ---
+
+	@Test
+	public void testIsConcreteProxyDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertFalse(new HbmTemplateHelper(entity).isConcreteProxy());
+	}
+
+	@Test
+	public void testIsConcreteProxyTrue() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		entity.addAnnotationUsage(HibernateAnnotations.CONCRETE_PROXY.createUsage(ctx));
+		assertTrue(new HbmTemplateHelper(entity).isConcreteProxy());
+	}
+
+	// --- getEntityName ---
+
+	@Test
+	public void testGetEntityNameDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertNull(new HbmTemplateHelper(entity).getEntityName());
+	}
+
+	@Test
+	public void testGetEntityNameCustom() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = new DynamicClassDetails(
+				"TestEntity", "com.example.TestEntity",
+				false, null, null, ctx);
+		var entityAnnotation = org.hibernate.boot.models.JpaAnnotations.ENTITY.createUsage(ctx);
+		entityAnnotation.name("CustomName");
+		entity.addAnnotationUsage(entityAnnotation);
+		assertEquals("CustomName", new HbmTemplateHelper(entity).getEntityName());
 	}
 }

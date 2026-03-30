@@ -44,6 +44,17 @@ import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.ConcreteProxy;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.annotations.OptimisticLocking;
+import org.hibernate.annotations.RowId;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.Subselect;
+
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.TypeDetails;
@@ -99,6 +110,70 @@ public class HbmTemplateHelper {
 
 	public String getComment() {
 		return comment;
+	}
+
+	// --- Class-level attributes ---
+
+	public boolean isMutable() {
+		return !classDetails.hasDirectAnnotationUsage(Immutable.class);
+	}
+
+	public boolean isDynamicUpdate() {
+		return classDetails.hasDirectAnnotationUsage(DynamicUpdate.class);
+	}
+
+	public boolean isDynamicInsert() {
+		return classDetails.hasDirectAnnotationUsage(DynamicInsert.class);
+	}
+
+	public int getBatchSize() {
+		BatchSize bs = classDetails.getDirectAnnotationUsage(BatchSize.class);
+		return bs != null ? bs.size() : 0;
+	}
+
+	public String getWhere() {
+		SQLRestriction sr = classDetails.getDirectAnnotationUsage(SQLRestriction.class);
+		return sr != null ? sr.value() : null;
+	}
+
+	public boolean isAbstract() {
+		return classDetails.isAbstract();
+	}
+
+	public String getOptimisticLockMode() {
+		OptimisticLocking ol = classDetails.getDirectAnnotationUsage(OptimisticLocking.class);
+		if (ol == null || ol.type() == OptimisticLockType.VERSION) {
+			return null;
+		}
+		return ol.type().name().toLowerCase();
+	}
+
+	public String getRowId() {
+		RowId rid = classDetails.getDirectAnnotationUsage(RowId.class);
+		return rid != null && rid.value() != null && !rid.value().isEmpty()
+				? rid.value() : null;
+	}
+
+	public String getSubselect() {
+		Subselect ss = classDetails.getDirectAnnotationUsage(Subselect.class);
+		return ss != null ? ss.value() : null;
+	}
+
+	public boolean isConcreteProxy() {
+		return classDetails.hasDirectAnnotationUsage(ConcreteProxy.class);
+	}
+
+	public String getEntityName() {
+		jakarta.persistence.Entity entity = classDetails.getDirectAnnotationUsage(jakarta.persistence.Entity.class);
+		if (entity == null || entity.name() == null || entity.name().isEmpty()) {
+			return null;
+		}
+		String simpleName = getClassName();
+		int dot = simpleName.lastIndexOf('.');
+		if (dot >= 0) {
+			simpleName = simpleName.substring(dot + 1);
+		}
+		return entity.name().equals(simpleName) ? null : entity.name();
 	}
 
 	// --- Inheritance ---

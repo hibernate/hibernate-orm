@@ -15,6 +15,39 @@
 <#if helper.getDiscriminatorValue()??>
     discriminator-value="${helper.getDiscriminatorValue()}"
 </#if>
+<#if !helper.isMutable()>
+    mutable="false"
+</#if>
+<#if helper.isDynamicUpdate()>
+    dynamic-update="true"
+</#if>
+<#if helper.isDynamicInsert()>
+    dynamic-insert="true"
+</#if>
+<#if helper.isAbstract()>
+    abstract="true"
+</#if>
+<#if helper.isConcreteProxy()>
+    lazy="false"
+</#if>
+<#if (helper.getBatchSize() gt 1)>
+    batch-size="${helper.getBatchSize()?c}"
+</#if>
+<#if helper.getWhere()??>
+    where="${helper.getWhere()}"
+</#if>
+<#if helper.getOptimisticLockMode()??>
+    optimistic-lock="${helper.getOptimisticLockMode()}"
+</#if>
+<#if helper.getRowId()??>
+    rowid="${helper.getRowId()}"
+</#if>
+<#if helper.getSubselect()??>
+    subselect="${helper.getSubselect()}"
+</#if>
+<#if helper.getEntityName()??>
+    entity-name="${helper.getEntityName()}"
+</#if>
 >
 <#if helper.getComment()?? && helper.getComment()?trim?length != 0>
     <comment>${helper.getComment()}</comment>

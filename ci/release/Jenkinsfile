@@ -56,8 +56,8 @@ pipeline {
 		label 'Release'
 	}
 	triggers {
-		// Run every week Monday midnight
-		cron('0 0 * * 1')
+		// Run every week Tuesday midnight
+		cron('0 0 * * 2')
 	}
 	tools {
 		maven 'Apache Maven 3.9'
@@ -68,6 +68,11 @@ pipeline {
 		disableConcurrentBuilds(abortPrevious: false)
 	}
 	parameters {
+		booleanParam(
+				name: 'FULLY_AUTOMATIC',
+				defaultValue: true,
+				description: 'If true, simulate the "timer triggered release", without asking for any release/development versions and trigger the Jira release.'
+		)
 		string(
 				name: 'RELEASE_VERSION',
 				defaultValue: '',
@@ -87,12 +92,36 @@ pipeline {
 		)
 	}
 	stages {
+		stage('Validate release type') {
+			steps {
+				script {
+					if (params.FULLY_AUTOMATIC) {
+						print "INFO: Manually requested a fully automatic release."
+						def warning = ''
+						if (params.RELEASE_VERSION) {
+							warning += "Release version MUST be empty, but got '${params.RELEASE_VERSION}'."
+						}
+						if (params.DEVELOPMENT_VERSION) {
+							warning += "Development version MUST be empty, but got '${params.DEVELOPMENT_VERSION}'."
+						}
+						if (warning) {
+							throw new Exception("Cannot proceed with a release: ${warning}")
+						}
+						manualRelease = false
+						cronRelease = true
+					}
+				}
+			}
+		}
 		stage('Release') {
 			steps {
 				script {
 					print "INFO: params.RELEASE_VERSION = ${params.RELEASE_VERSION}"
 					print "INFO: params.DEVELOPMENT_VERSION = ${params.DEVELOPMENT_VERSION}"
 					print "INFO: params.RELEASE_DRY_RUN? = ${params.RELEASE_DRY_RUN}"
+
+					print "INFO: manualRelease = ${manualRelease}"
+					print "INFO: cronRelease = ${cronRelease}"
 
 					checkoutReleaseScripts()
 					def derivedDryRun = params.RELEASE_DRY_RUN

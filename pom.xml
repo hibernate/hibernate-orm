@@ -98,7 +98,7 @@
 
     <properties>
 
-        <maven.version>3.9.13</maven.version>
+        <maven.version>3.9.14</maven.version>
         <gradle.version>9.4.0</gradle.version>
         <gradle.min.test.version>8.14</gradle.min.test.version>
 
@@ -125,7 +125,7 @@
         <hibernate-asciidoctor-theme.version>6.1.2.Final</hibernate-asciidoctor-theme.version>
 
         <!-- Plugins not managed by the JBoss parent POM: -->
-        <maven-plugin-api.version>3.9.13</maven-plugin-api.version>
+        <maven-plugin-api.version>3.9.14</maven-plugin-api.version>
         <maven-plugin-annotations.version>3.15.2</maven-plugin-annotations.version>
         <maven-wrapper-plugin.version>3.3.4</maven-wrapper-plugin.version>
         <flatten-maven-plugin.version>1.7.3</flatten-maven-plugin.version>

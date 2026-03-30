@@ -1341,6 +1341,99 @@ public class TemplateHelperTest {
 		assertEquals("", helper.generateElementCollectionAnnotation(field));
 	}
 
+	// --- Minimal constructor ---
+
+	@Test
+	public void testNeedsMinimalConstructorTrue() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class).nullable(false));
+		table.addColumn(new ColumnMetadata("NICKNAME", "nickname", String.class));
+		TemplateHelper helper = create(table);
+		assertTrue(helper.needsMinimalConstructor());
+	}
+
+	@Test
+	public void testNeedsMinimalConstructorFalseAllRequired() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class).nullable(false));
+		TemplateHelper helper = create(table);
+		// minimal = [id (assigned), name (non-nullable)] same size as full = [id, name]
+		assertFalse(helper.needsMinimalConstructor());
+	}
+
+	@Test
+	public void testNeedsMinimalConstructorFalseNoRequired() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class)
+				.primaryKey(true).generationType(GenerationType.IDENTITY));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TemplateHelper helper = create(table);
+		// minimal = [] (ID has generator, NAME is nullable), full = [id, name]
+		assertFalse(helper.needsMinimalConstructor());
+	}
+
+	@Test
+	public void testMinimalConstructorProperties() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class).nullable(false));
+		table.addColumn(new ColumnMetadata("NICKNAME", "nickname", String.class));
+		TemplateHelper helper = create(table);
+		List<TemplateHelper.FullConstructorProperty> props = helper.getMinimalConstructorProperties();
+		assertEquals(2, props.size());
+		assertEquals("id", props.get(0).fieldName());
+		assertEquals("name", props.get(1).fieldName());
+	}
+
+	@Test
+	public void testMinimalConstructorSkipsGeneratedId() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class)
+				.primaryKey(true).generationType(GenerationType.IDENTITY));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class).nullable(false));
+		table.addColumn(new ColumnMetadata("NICKNAME", "nickname", String.class));
+		TemplateHelper helper = create(table);
+		List<TemplateHelper.FullConstructorProperty> props = helper.getMinimalConstructorProperties();
+		assertEquals(1, props.size());
+		assertEquals("name", props.get(0).fieldName());
+	}
+
+	@Test
+	public void testMinimalConstructorSkipsVersion() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("VERSION", "version", Integer.class)
+				.version(true).nullable(false));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class).nullable(false));
+		TemplateHelper helper = create(table);
+		List<TemplateHelper.FullConstructorProperty> props = helper.getMinimalConstructorProperties();
+		assertTrue(props.stream().noneMatch(p -> p.fieldName().equals("version")));
+	}
+
+	@Test
+	public void testMinimalConstructorIncludesNonOptionalManyToOne() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyMetadata(
+				"department", "DEPT_ID", "Department", "com.example")
+				.optional(false));
+		TemplateHelper helper = create(table);
+		List<TemplateHelper.FullConstructorProperty> props = helper.getMinimalConstructorProperties();
+		assertTrue(props.stream().anyMatch(p -> p.fieldName().equals("department")));
+	}
+
+	@Test
+	public void testMinimalConstructorParameterList() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class).nullable(false));
+		table.addColumn(new ColumnMetadata("NICKNAME", "nickname", String.class));
+		assertEquals("Long id, String name", create(table).getMinimalConstructorParameterList());
+	}
+
 	private DynamicFieldDetails addElementCollectionField(
 			DynamicClassDetails entity, String fieldName, Class<?> elementJavaType, ModelsContext ctx) {
 		ClassDetails elementClass = ctx.getClassDetailsRegistry()

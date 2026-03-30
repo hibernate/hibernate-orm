@@ -817,6 +817,52 @@ public class TemplateHelper {
 		return props;
 	}
 
+	public boolean needsMinimalConstructor() {
+		List<FullConstructorProperty> minProps = getMinimalConstructorProperties();
+		List<FullConstructorProperty> fullProps = getFullConstructorProperties();
+		return !minProps.isEmpty() && minProps.size() < fullProps.size();
+	}
+
+	public List<FullConstructorProperty> getMinimalConstructorProperties() {
+		List<FullConstructorProperty> props = new ArrayList<>();
+		// Basic fields: non-nullable, non-version, non-generated-id, respects gen-property
+		for (FieldDetails field : getBasicFields()) {
+			if (isVersion(field) || !isGenProperty(field)) {
+				continue;
+			}
+			if (isPrimaryKey(field)) {
+				// Include ID only if no generator (assigned)
+				GeneratedValue gv = field.getDirectAnnotationUsage(GeneratedValue.class);
+				if (gv != null) {
+					continue;
+				}
+				props.add(new FullConstructorProperty(getJavaTypeName(field), field.getName()));
+			} else {
+				Column col = field.getDirectAnnotationUsage(Column.class);
+				if (col != null && !col.nullable()) {
+					props.add(new FullConstructorProperty(getJavaTypeName(field), field.getName()));
+				}
+			}
+		}
+		// ManyToOne: non-optional
+		for (FieldDetails field : getManyToOneFields()) {
+			ManyToOne m2o = field.getDirectAnnotationUsage(ManyToOne.class);
+			if (m2o != null && !m2o.optional()) {
+				props.add(new FullConstructorProperty(getJavaTypeName(field), field.getName()));
+			}
+		}
+		return props;
+	}
+
+	public String getMinimalConstructorParameterList() {
+		StringBuilder sb = new StringBuilder();
+		for (FullConstructorProperty prop : getMinimalConstructorProperties()) {
+			if (!sb.isEmpty()) sb.append(", ");
+			sb.append(prop.typeName()).append(" ").append(prop.fieldName());
+		}
+		return sb.toString();
+	}
+
 	public String getFullConstructorParameterList() {
 		StringBuilder sb = new StringBuilder();
 		for (FullConstructorProperty prop : getFullConstructorProperties()) {

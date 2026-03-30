@@ -1,76 +1,73 @@
 <#-- Basic properties (skip PK, version, FK columns) -->
-<#list table.getColumns() as col>
-<#if !col.isPrimaryKey() && !col.isVersion() && !table.isForeignKeyColumn(col.getColumnName())>
+<#list helper.getBasicFields() as field>
     <property
-        name="${col.getFieldName()}"
-        type="${helper.getHibernateTypeName(col)}">
-        <column name="${col.getColumnName()}" ${helper.getColumnAttributes(col)}/>
+        name="${field.getName()}"
+        type="${helper.getHibernateTypeName(field)}">
+        <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
     </property>
-</#if>
 </#list>
 <#-- Many-to-one -->
-<#list table.getForeignKeys() as fk>
+<#list helper.getManyToOneFields() as field>
     <many-to-one
-        name="${fk.getFieldName()}"
-        class="${fk.getTargetEntityPackage()}.${fk.getTargetEntityClassName()}"<#if fk.getFetchType()??><#if fk.getFetchType().name() == "LAZY">
+        name="${field.getName()}"
+        class="${helper.getTargetEntityName(field)}"<#if helper.isManyToOneLazy(field)>
         fetch="select"
-        lazy="proxy"<#else>
-        fetch="join"</#if></#if><#if !fk.isOptional()>
+        lazy="proxy"</#if><#if !helper.isManyToOneOptional(field)>
         not-null="true"</#if>>
-        <column name="${fk.getForeignKeyColumnName()}"/>
+        <column name="${helper.getJoinColumnName(field)}"/>
     </many-to-one>
 </#list>
 <#-- One-to-one -->
-<#list table.getOneToOnes() as o2o>
+<#list helper.getOneToOneFields() as field>
     <one-to-one
-        name="${o2o.getFieldName()}"
-        class="${o2o.getTargetEntityPackage()}.${o2o.getTargetEntityClassName()}"<#if o2o.getMappedBy()??>
-        property-ref="${o2o.getMappedBy()}"</#if><#if o2o.getCascadeTypes()?? && (o2o.getCascadeTypes()?size gt 0)>
-        cascade="${helper.getCascadeString(o2o.getCascadeTypes())}"</#if><#if o2o.getForeignKeyColumnName()??>
+        name="${field.getName()}"
+        class="${helper.getTargetEntityName(field)}"<#if helper.getOneToOneMappedBy(field)??>
+        property-ref="${helper.getOneToOneMappedBy(field)}"</#if><#if helper.getOneToOneCascadeString(field)??>
+        cascade="${helper.getOneToOneCascadeString(field)}"</#if><#if helper.isOneToOneConstrained(field)>
         constrained="true"</#if>/>
 </#list>
 <#-- Sets (one-to-many) -->
-<#list table.getOneToManys() as o2m>
-    <set name="${o2m.getFieldName()}"
-        inverse="true"<#if o2m.getCascadeTypes()?? && (o2m.getCascadeTypes()?size gt 0)>
-        cascade="${helper.getCascadeString(o2m.getCascadeTypes())}"</#if><#if o2m.getFetchType()??><#if o2m.getFetchType().name() == "EAGER">
-        lazy="false"</#if></#if>>
+<#list helper.getOneToManyFields() as field>
+    <set name="${field.getName()}"
+        inverse="true"<#if helper.getOneToManyCascadeString(field)??>
+        cascade="${helper.getOneToManyCascadeString(field)}"</#if><#if helper.isOneToManyEager(field)>
+        lazy="false"</#if>>
         <key>
-            <column name="${o2m.getMappedBy()}"/>
+            <column name="${helper.getOneToManyMappedBy(field)}"/>
         </key>
-        <one-to-many class="${o2m.getElementEntityPackage()}.${o2m.getElementEntityClassName()}"/>
+        <one-to-many class="${helper.getOneToManyTargetEntity(field)}"/>
     </set>
 </#list>
 <#-- Sets (many-to-many) -->
-<#list table.getManyToManys() as m2m>
-<#if m2m.getJoinTableName()??>
-    <set name="${m2m.getFieldName()}"
-        table="${m2m.getJoinTableName()}"<#if m2m.getCascadeTypes()?? && (m2m.getCascadeTypes()?size gt 0)>
-        cascade="${helper.getCascadeString(m2m.getCascadeTypes())}"</#if>>
+<#list helper.getManyToManyFields() as field>
+<#if helper.getJoinTableName(field)??>
+    <set name="${field.getName()}"
+        table="${helper.getJoinTableName(field)}"<#if helper.getManyToManyCascadeString(field)??>
+        cascade="${helper.getManyToManyCascadeString(field)}"</#if>>
         <key>
-            <column name="${m2m.getJoinColumnName()}"/>
+            <column name="${helper.getJoinTableJoinColumnName(field)}"/>
         </key>
-        <many-to-many class="${m2m.getTargetEntityPackage()}.${m2m.getTargetEntityClassName()}">
-            <column name="${m2m.getInverseJoinColumnName()}"/>
+        <many-to-many class="${helper.getManyToManyTargetEntity(field)}">
+            <column name="${helper.getJoinTableInverseJoinColumnName(field)}"/>
         </many-to-many>
     </set>
 <#else>
-    <set name="${m2m.getFieldName()}"
-        inverse="true"<#if m2m.getCascadeTypes()?? && (m2m.getCascadeTypes()?size gt 0)>
-        cascade="${helper.getCascadeString(m2m.getCascadeTypes())}"</#if>>
+    <set name="${field.getName()}"
+        inverse="true"<#if helper.getManyToManyCascadeString(field)??>
+        cascade="${helper.getManyToManyCascadeString(field)}"</#if>>
         <key>
-            <column name="${m2m.getFieldName()}"/>
+            <column name="${field.getName()}"/>
         </key>
-        <many-to-many class="${m2m.getTargetEntityPackage()}.${m2m.getTargetEntityClassName()}"/>
+        <many-to-many class="${helper.getManyToManyTargetEntity(field)}"/>
     </set>
 </#if>
 </#list>
 <#-- Components (embedded) -->
-<#list table.getEmbeddedFields() as emb>
-    <component name="${emb.getFieldName()}" class="${emb.getEmbeddablePackage()}.${emb.getEmbeddableClassName()}">
-<#list emb.getAttributeOverrides() as ao>
-        <property name="${ao.getFieldName()}">
-            <column name="${ao.getColumnName()}"/>
+<#list helper.getEmbeddedFields() as field>
+    <component name="${field.getName()}" class="${helper.getEmbeddableClassName(field)}">
+<#list helper.getAttributeOverrides(field) as ao>
+        <property name="${ao.fieldName()}">
+            <column name="${ao.columnName()}"/>
         </property>
 </#list>
     </component>

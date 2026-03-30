@@ -24,6 +24,9 @@ import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.InheritanceType;
 
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.InheritanceMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
@@ -37,77 +40,101 @@ import org.junit.jupiter.api.Test;
 public class HbmTemplateHelperTest {
 
 	private HbmTemplateHelper create(TableMetadata table) {
-		return new HbmTemplateHelper(table);
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails classDetails = builder.createEntityFromTable(table);
+		return new HbmTemplateHelper(classDetails);
 	}
 
 	// --- getHibernateTypeName ---
 
 	@Test
-	public void testGetHibernateTypeNameFromStoredValue() {
+	public void testGetHibernateTypeNameString() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
-		ColumnMetadata col = new ColumnMetadata("NAME", "name", String.class)
-				.hibernateTypeName("string");
-		assertEquals("string", create(table).getHibernateTypeName(col));
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		HbmTemplateHelper helper = create(table);
+		FieldDetails field = helper.getBasicFields().get(0);
+		assertEquals("string", helper.getHibernateTypeName(field));
 	}
 
 	@Test
-	public void testGetHibernateTypeNameFallbackFromJavaClass() {
+	public void testGetHibernateTypeNameWrapperType() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
-		ColumnMetadata col = new ColumnMetadata("NAME", "name", String.class);
-		assertEquals("string", create(table).getHibernateTypeName(col));
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		HbmTemplateHelper helper = create(table);
+		FieldDetails field = helper.getIdFields().get(0);
+		assertEquals("java.lang.Long", helper.getHibernateTypeName(field));
 	}
 
 	@Test
-	public void testGetHibernateTypeNameFallbackWrapperType() {
+	public void testGetHibernateTypeNameBigDecimal() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
-		ColumnMetadata col = new ColumnMetadata("ID", "id", Long.class);
-		assertEquals("java.lang.Long", create(table).getHibernateTypeName(col));
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("PRICE", "price", BigDecimal.class));
+		HbmTemplateHelper helper = create(table);
+		FieldDetails field = helper.getBasicFields().get(0);
+		assertEquals("big_decimal", helper.getHibernateTypeName(field));
 	}
 
-	@Test
-	public void testGetHibernateTypeNameStoredOverridesFallback() {
-		TableMetadata table = new TableMetadata("T", "T", "com.example");
-		ColumnMetadata col = new ColumnMetadata("ID", "id", Long.class)
-				.hibernateTypeName("long");
-		assertEquals("long", create(table).getHibernateTypeName(col));
-	}
-
-	// --- getGeneratorClass ---
+	// --- toGeneratorClass ---
 
 	@Test
 	public void testGetGeneratorClassIdentity() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
-		assertEquals("identity", create(table).getGeneratorClass(GenerationType.IDENTITY));
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		assertEquals("identity", create(table).toGeneratorClass(GenerationType.IDENTITY));
 	}
 
 	@Test
 	public void testGetGeneratorClassSequence() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
-		assertEquals("sequence", create(table).getGeneratorClass(GenerationType.SEQUENCE));
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		assertEquals("sequence", create(table).toGeneratorClass(GenerationType.SEQUENCE));
 	}
 
 	@Test
 	public void testGetGeneratorClassTable() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
-		assertEquals("table", create(table).getGeneratorClass(GenerationType.TABLE));
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		assertEquals("table", create(table).toGeneratorClass(GenerationType.TABLE));
 	}
 
 	@Test
 	public void testGetGeneratorClassAuto() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
-		assertEquals("native", create(table).getGeneratorClass(GenerationType.AUTO));
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		assertEquals("native", create(table).toGeneratorClass(GenerationType.AUTO));
 	}
 
 	@Test
 	public void testGetGeneratorClassUuid() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
-		assertEquals("uuid2", create(table).getGeneratorClass(GenerationType.UUID));
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		assertEquals("uuid2", create(table).toGeneratorClass(GenerationType.UUID));
 	}
 
 	@Test
 	public void testGetGeneratorClassNull() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
-		assertEquals("assigned", create(table).getGeneratorClass(null));
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		assertEquals("assigned", create(table).toGeneratorClass(null));
+	}
+
+	@Test
+	public void testGetGeneratorClassFromField() {
+		TableMetadata table = new TableMetadata("T", "T", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class)
+				.primaryKey(true).generationType(GenerationType.IDENTITY));
+		HbmTemplateHelper helper = create(table);
+		assertEquals("identity", helper.getGeneratorClass(helper.getIdFields().get(0)));
+	}
+
+	@Test
+	public void testGetGeneratorClassFromFieldNoGeneration() {
+		TableMetadata table = new TableMetadata("T", "T", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		HbmTemplateHelper helper = create(table);
+		assertEquals("assigned", helper.getGeneratorClass(helper.getIdFields().get(0)));
 	}
 
 	// --- getClassTag ---
@@ -115,12 +142,14 @@ public class HbmTemplateHelperTest {
 	@Test
 	public void testGetClassTagRootEntity() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		assertEquals("class", create(table).getClassTag());
 	}
 
 	@Test
 	public void testGetClassTagSingleTableSubclass() {
 		TableMetadata table = new TableMetadata("CAR", "Car", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		table.parent("Vehicle", "com.example");
 		assertEquals("subclass", create(table).getClassTag());
 	}
@@ -128,6 +157,7 @@ public class HbmTemplateHelperTest {
 	@Test
 	public void testGetClassTagJoinedSubclass() {
 		TableMetadata table = new TableMetadata("CAR", "Car", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		table.parent("Vehicle", "com.example");
 		table.primaryKeyJoinColumn("VEHICLE_ID");
 		assertEquals("joined-subclass", create(table).getClassTag());
@@ -136,45 +166,43 @@ public class HbmTemplateHelperTest {
 	@Test
 	public void testGetClassTagTablePerClassSubclass() {
 		TableMetadata table = new TableMetadata("CAR", "Car", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		table.parent("Vehicle", "com.example");
 		table.inheritance(new InheritanceMetadata(InheritanceType.TABLE_PER_CLASS));
 		assertEquals("union-subclass", create(table).getClassTag());
 	}
 
-	// --- getFullClassName ---
+	// --- getClassName ---
 
 	@Test
-	public void testGetFullClassName() {
+	public void testGetClassName() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		assertEquals("com.example.Employee", create(table).getFullClassName());
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		assertEquals("com.example.Employee", create(table).getClassName());
 	}
 
 	@Test
-	public void testGetFullClassNameNoPackage() {
+	public void testGetClassNameNoPackage() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "");
-		assertEquals("Employee", create(table).getFullClassName());
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		assertEquals("Employee", create(table).getClassName());
 	}
 
-	@Test
-	public void testGetFullClassNameNullPackage() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", null);
-		assertEquals("Employee", create(table).getFullClassName());
-	}
-
-	// --- getFullParentClassName ---
+	// --- getParentClassName ---
 
 	@Test
-	public void testGetFullParentClassName() {
+	public void testGetParentClassName() {
 		TableMetadata table = new TableMetadata("CAR", "Car", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		table.parent("Vehicle", "com.example");
-		assertEquals("com.example.Vehicle", create(table).getFullParentClassName());
+		assertEquals("com.example.Vehicle", create(table).getParentClassName());
 	}
 
 	@Test
-	public void testGetFullParentClassNameNoPackage() {
-		TableMetadata table = new TableMetadata("CAR", "Car", "com.example");
-		table.parent("Vehicle", "");
-		assertEquals("Vehicle", create(table).getFullParentClassName());
+	public void testGetParentClassNameNoParent() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		assertNull(create(table).getParentClassName());
 	}
 
 	// --- getColumnAttributes ---
@@ -182,37 +210,47 @@ public class HbmTemplateHelperTest {
 	@Test
 	public void testGetColumnAttributesAllDefaults() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
-		ColumnMetadata col = new ColumnMetadata("NAME", "name", String.class);
-		assertEquals("", create(table).getColumnAttributes(col));
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		HbmTemplateHelper helper = create(table);
+		assertEquals("", helper.getColumnAttributes(helper.getBasicFields().get(0)));
 	}
 
 	@Test
 	public void testGetColumnAttributesNotNull() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
-		ColumnMetadata col = new ColumnMetadata("NAME", "name", String.class).nullable(false);
-		assertTrue(create(table).getColumnAttributes(col).contains("not-null=\"true\""));
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class).nullable(false));
+		HbmTemplateHelper helper = create(table);
+		assertTrue(helper.getColumnAttributes(helper.getBasicFields().get(0)).contains("not-null=\"true\""));
 	}
 
 	@Test
 	public void testGetColumnAttributesUnique() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
-		ColumnMetadata col = new ColumnMetadata("EMAIL", "email", String.class).unique(true);
-		assertTrue(create(table).getColumnAttributes(col).contains("unique=\"true\""));
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class).unique(true));
+		HbmTemplateHelper helper = create(table);
+		assertTrue(helper.getColumnAttributes(helper.getBasicFields().get(0)).contains("unique=\"true\""));
 	}
 
 	@Test
 	public void testGetColumnAttributesLength() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
-		ColumnMetadata col = new ColumnMetadata("NAME", "name", String.class).length(100);
-		assertTrue(create(table).getColumnAttributes(col).contains("length=\"100\""));
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class).length(100));
+		HbmTemplateHelper helper = create(table);
+		assertTrue(helper.getColumnAttributes(helper.getBasicFields().get(0)).contains("length=\"100\""));
 	}
 
 	@Test
 	public void testGetColumnAttributesPrecisionAndScale() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
-		ColumnMetadata col = new ColumnMetadata("PRICE", "price", BigDecimal.class)
-				.precision(10).scale(2);
-		String attrs = create(table).getColumnAttributes(col);
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("PRICE", "price", BigDecimal.class)
+				.precision(10).scale(2));
+		HbmTemplateHelper helper = create(table);
+		String attrs = helper.getColumnAttributes(helper.getBasicFields().get(0));
 		assertTrue(attrs.contains("precision=\"10\""), attrs);
 		assertTrue(attrs.contains("scale=\"2\""), attrs);
 	}
@@ -220,12 +258,14 @@ public class HbmTemplateHelperTest {
 	@Test
 	public void testGetColumnAttributesCombined() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
-		ColumnMetadata col = new ColumnMetadata("NAME", "name", String.class)
-				.nullable(false).unique(true).length(255);
-		String attrs = create(table).getColumnAttributes(col);
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class)
+				.nullable(false).unique(true).length(100));
+		HbmTemplateHelper helper = create(table);
+		String attrs = helper.getColumnAttributes(helper.getBasicFields().get(0));
 		assertTrue(attrs.contains("not-null=\"true\""), attrs);
 		assertTrue(attrs.contains("unique=\"true\""), attrs);
-		assertTrue(attrs.contains("length=\"255\""), attrs);
+		assertTrue(attrs.contains("length=\"100\""), attrs);
 	}
 
 	// --- getCascadeString ---
@@ -233,54 +273,63 @@ public class HbmTemplateHelperTest {
 	@Test
 	public void testGetCascadeStringNone() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		assertEquals("none", create(table).getCascadeString(null));
 	}
 
 	@Test
 	public void testGetCascadeStringEmpty() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		assertEquals("none", create(table).getCascadeString(new CascadeType[0]));
 	}
 
 	@Test
 	public void testGetCascadeStringAll() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		assertEquals("all", create(table).getCascadeString(new CascadeType[] { CascadeType.ALL }));
 	}
 
 	@Test
 	public void testGetCascadeStringPersist() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		assertEquals("persist", create(table).getCascadeString(new CascadeType[] { CascadeType.PERSIST }));
 	}
 
 	@Test
 	public void testGetCascadeStringMerge() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		assertEquals("merge", create(table).getCascadeString(new CascadeType[] { CascadeType.MERGE }));
 	}
 
 	@Test
 	public void testGetCascadeStringRemove() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		assertEquals("delete", create(table).getCascadeString(new CascadeType[] { CascadeType.REMOVE }));
 	}
 
 	@Test
 	public void testGetCascadeStringRefresh() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		assertEquals("refresh", create(table).getCascadeString(new CascadeType[] { CascadeType.REFRESH }));
 	}
 
 	@Test
 	public void testGetCascadeStringDetach() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		assertEquals("evict", create(table).getCascadeString(new CascadeType[] { CascadeType.DETACH }));
 	}
 
 	@Test
 	public void testGetCascadeStringMultiple() {
 		TableMetadata table = new TableMetadata("T", "T", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		assertEquals("persist, merge", create(table).getCascadeString(
 				new CascadeType[] { CascadeType.PERSIST, CascadeType.MERGE }));
 	}
@@ -290,12 +339,14 @@ public class HbmTemplateHelperTest {
 	@Test
 	public void testIsSubclassFalse() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		assertFalse(create(table).isSubclass());
 	}
 
 	@Test
 	public void testIsSubclassTrue() {
 		TableMetadata table = new TableMetadata("CAR", "Car", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		table.parent("Vehicle", "com.example");
 		assertTrue(create(table).isSubclass());
 	}
@@ -305,12 +356,14 @@ public class HbmTemplateHelperTest {
 	@Test
 	public void testNeedsDiscriminatorNoInheritance() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		assertFalse(create(table).needsDiscriminator());
 	}
 
 	@Test
 	public void testNeedsDiscriminatorNoColumn() {
 		TableMetadata table = new TableMetadata("VEHICLE", "Vehicle", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		table.inheritance(new InheritanceMetadata(InheritanceType.SINGLE_TABLE));
 		assertFalse(create(table).needsDiscriminator());
 	}
@@ -318,6 +371,7 @@ public class HbmTemplateHelperTest {
 	@Test
 	public void testNeedsDiscriminatorWithColumn() {
 		TableMetadata table = new TableMetadata("VEHICLE", "Vehicle", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		table.inheritance(new InheritanceMetadata(InheritanceType.SINGLE_TABLE)
 				.discriminatorColumn("DTYPE"));
 		assertTrue(create(table).needsDiscriminator());
@@ -326,17 +380,11 @@ public class HbmTemplateHelperTest {
 	// --- getDiscriminatorTypeName ---
 
 	@Test
-	public void testGetDiscriminatorTypeNameString() {
-		TableMetadata table = new TableMetadata("VEHICLE", "Vehicle", "com.example");
-		table.inheritance(new InheritanceMetadata(InheritanceType.SINGLE_TABLE)
-				.discriminatorType(DiscriminatorType.STRING));
-		assertEquals("string", create(table).getDiscriminatorTypeName());
-	}
-
-	@Test
 	public void testGetDiscriminatorTypeNameChar() {
 		TableMetadata table = new TableMetadata("VEHICLE", "Vehicle", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		table.inheritance(new InheritanceMetadata(InheritanceType.SINGLE_TABLE)
+				.discriminatorColumn("DTYPE")
 				.discriminatorType(DiscriminatorType.CHAR));
 		assertEquals("character", create(table).getDiscriminatorTypeName());
 	}
@@ -344,21 +392,17 @@ public class HbmTemplateHelperTest {
 	@Test
 	public void testGetDiscriminatorTypeNameInteger() {
 		TableMetadata table = new TableMetadata("VEHICLE", "Vehicle", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		table.inheritance(new InheritanceMetadata(InheritanceType.SINGLE_TABLE)
+				.discriminatorColumn("DTYPE")
 				.discriminatorType(DiscriminatorType.INTEGER));
 		assertEquals("integer", create(table).getDiscriminatorTypeName());
 	}
 
 	@Test
-	public void testGetDiscriminatorTypeNameDefault() {
-		TableMetadata table = new TableMetadata("VEHICLE", "Vehicle", "com.example");
-		table.inheritance(new InheritanceMetadata(InheritanceType.SINGLE_TABLE));
-		assertEquals("string", create(table).getDiscriminatorTypeName());
-	}
-
-	@Test
 	public void testGetDiscriminatorTypeNameNoInheritance() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		assertEquals("string", create(table).getDiscriminatorTypeName());
 	}
 }

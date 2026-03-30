@@ -1,23 +1,21 @@
-<#if table.getCompositeId()??>
-<#assign cid = table.getCompositeId()>
+<#if helper.getCompositeIdField()??>
+<#assign cid = helper.getCompositeIdField()>
     <composite-id
-        name="${cid.getFieldName()}"
-        class="${cid.getIdClassPackage()}.${cid.getIdClassName()}">
-<#list cid.getAttributeOverrides() as ao>
-        <key-property name="${ao.getFieldName()}">
-            <column name="${ao.getColumnName()}"/>
+        name="${cid.getName()}"
+        class="${helper.getCompositeIdClassName()}">
+<#list helper.getAttributeOverrides(cid) as ao>
+        <key-property name="${ao.fieldName()}">
+            <column name="${ao.columnName()}"/>
         </key-property>
 </#list>
     </composite-id>
 <#else>
-<#list table.getColumns() as col>
-<#if col.isPrimaryKey()>
+<#list helper.getIdFields() as field>
     <id
-        name="${col.getFieldName()}"
-        type="${helper.getHibernateTypeName(col)}">
-        <column name="${col.getColumnName()}" ${helper.getColumnAttributes(col)}/>
-        <generator class="${helper.getGeneratorClass(col.getGenerationType())}"/>
+        name="${field.getName()}"
+        type="${helper.getHibernateTypeName(field)}">
+        <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
+        <generator class="${helper.getGeneratorClass(field)}"/>
     </id>
-</#if>
 </#list>
 </#if>

@@ -159,7 +159,7 @@ public class JavaClassToHibernateTypeTest {
 
 	@Test
 	public void testNull() {
-		assertEquals("serializable", JavaClassToHibernateType.toHibernateType(null));
+		assertEquals("serializable", JavaClassToHibernateType.toHibernateType((Class<?>) null));
 	}
 
 	// --- Unknown class falls back to class name ---

@@ -22,6 +22,9 @@ import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.DiscriminatorType;
@@ -29,6 +32,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.InheritanceType;
 
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.EmbeddedFieldMetadata;
@@ -49,9 +54,16 @@ import org.junit.jupiter.api.io.TempDir;
 public class HbmXmlExporterTest {
 
 	private String export(TableMetadata table) {
+		return export(table, null, Collections.emptyMap());
+	}
+
+	private String export(TableMetadata table, String comment,
+						   Map<String, List<String>> metaAttributes) {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
 		HbmXmlExporter exporter = HbmXmlExporter.create();
 		StringWriter writer = new StringWriter();
-		exporter.export(writer, table);
+		exporter.export(writer, entity, comment, metaAttributes);
 		return writer.toString();
 	}
 
@@ -92,8 +104,7 @@ public class HbmXmlExporterTest {
 	public void testTableComment() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.comment("Employee table");
-		String xml = export(table);
+		String xml = export(table, "Employee table", Collections.emptyMap());
 		assertTrue(xml.contains("<comment>Employee table</comment>"), xml);
 	}
 
@@ -130,17 +141,7 @@ public class HbmXmlExporterTest {
 	}
 
 	@Test
-	public void testIdWithHibernateTypeName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class)
-				.primaryKey(true)
-				.hibernateTypeName("long"));
-		String xml = export(table);
-		assertTrue(xml.contains("type=\"long\""), xml);
-	}
-
-	@Test
-	public void testIdWithFallbackTypeName() {
+	public void testIdTypeName() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		String xml = export(table);
@@ -151,8 +152,7 @@ public class HbmXmlExporterTest {
 	public void testBasicProperty() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class)
-				.hibernateTypeName("string"));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
 		String xml = export(table);
 		assertTrue(xml.contains("<property"), xml);
 		assertTrue(xml.contains("name=\"name\""), xml);
@@ -181,12 +181,11 @@ public class HbmXmlExporterTest {
 	public void testVersionProperty() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("VERSION", "version", Integer.class)
-				.version(true).hibernateTypeName("integer"));
+		table.addColumn(new ColumnMetadata("VERSION", "version", Integer.class).version(true));
 		String xml = export(table);
 		assertTrue(xml.contains("<version"), xml);
 		assertTrue(xml.contains("name=\"version\""), xml);
-		assertTrue(xml.contains("type=\"integer\""), xml);
+		assertTrue(xml.contains("type=\"java.lang.Integer\""), xml);
 		assertTrue(xml.contains("<column name=\"VERSION\""), xml);
 		assertTrue(xml.contains("</version>"), xml);
 		assertFalse(xml.contains("<property\n        name=\"version\""), xml);
@@ -234,15 +233,15 @@ public class HbmXmlExporterTest {
 	}
 
 	@Test
-	public void testManyToOneEager() {
+	public void testManyToOneDefaultFetch() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
 		table.addForeignKey(new ForeignKeyMetadata(
-				"department", "DEPT_ID", "Department", "com.example")
-				.fetchType(FetchType.EAGER));
+				"department", "DEPT_ID", "Department", "com.example"));
 		String xml = export(table);
-		assertTrue(xml.contains("fetch=\"join\""), xml);
+		assertFalse(xml.contains("fetch="), xml);
+		assertFalse(xml.contains("lazy="), xml);
 	}
 
 	@Test
@@ -396,14 +395,14 @@ public class HbmXmlExporterTest {
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		table.inheritance(new InheritanceMetadata(InheritanceType.SINGLE_TABLE)
 				.discriminatorColumn("DTYPE")
-				.discriminatorType(DiscriminatorType.STRING)
-				.discriminatorColumnLength(31));
+				.discriminatorType(DiscriminatorType.INTEGER)
+				.discriminatorColumnLength(10));
 		String xml = export(table);
 		assertTrue(xml.contains("<class"), xml);
 		assertTrue(xml.contains("<discriminator"), xml);
 		assertTrue(xml.contains("column=\"DTYPE\""), xml);
-		assertTrue(xml.contains("type=\"string\""), xml);
-		assertTrue(xml.contains("length=\"31\""), xml);
+		assertTrue(xml.contains("type=\"integer\""), xml);
+		assertTrue(xml.contains("length=\"10\""), xml);
 	}
 
 	@Test
@@ -440,8 +439,9 @@ public class HbmXmlExporterTest {
 	public void testMetaAttributes() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addMetaAttribute("class-description", "Employee entity");
-		String xml = export(table);
+		Map<String, List<String>> metaAttributes = Map.of(
+				"class-description", List.of("Employee entity"));
+		String xml = export(table, null, metaAttributes);
 		assertTrue(xml.contains("<meta attribute=\"class-description\">Employee entity</meta>"), xml);
 	}
 
@@ -460,14 +460,16 @@ public class HbmXmlExporterTest {
 	@Test
 	public void testCustomTemplatePath(@TempDir Path tempDir) throws IOException {
 		Files.writeString(tempDir.resolve("main.hbm.ftl"),
-				"<!-- Custom HBM for ${table.getEntityClassName()} -->");
+				"<!-- Custom HBM for ${helper.getClassName()} -->");
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		ClassDetails entity = builder.createEntityFromTable(table);
 		HbmXmlExporter exporter = HbmXmlExporter.create(
 				new String[] { tempDir.toString() });
 		StringWriter writer = new StringWriter();
-		exporter.export(writer, table);
-		assertEquals("<!-- Custom HBM for Employee -->", writer.toString());
+		exporter.export(writer, entity);
+		assertEquals("<!-- Custom HBM for com.example.Employee -->", writer.toString());
 	}
 
 	@Test

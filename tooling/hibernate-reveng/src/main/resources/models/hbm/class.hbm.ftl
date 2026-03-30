@@ -1,50 +1,48 @@
 <${helper.getClassTag()}
-    name="${helper.getFullClassName()}"
+    name="${helper.getClassName()}"
 <#if helper.isSubclass()>
-    extends="${helper.getFullParentClassName()}"
+    extends="${helper.getParentClassName()}"
 </#if>
 <#if !helper.isSubclass()>
-    table="${table.getTableName()}"
-<#if table.getSchema()??>
-    schema="${table.getSchema()}"
+    table="${helper.getTableName()}"
+<#if helper.getSchema()??>
+    schema="${helper.getSchema()}"
 </#if>
-<#if table.getCatalog()??>
-    catalog="${table.getCatalog()}"
+<#if helper.getCatalog()??>
+    catalog="${helper.getCatalog()}"
 </#if>
 </#if>
-<#if table.getDiscriminatorValue()??>
-    discriminator-value="${table.getDiscriminatorValue()}"
+<#if helper.getDiscriminatorValue()??>
+    discriminator-value="${helper.getDiscriminatorValue()}"
 </#if>
 >
-<#if table.getComment()?? && table.getComment()?trim?length != 0>
-    <comment>${table.getComment()}</comment>
+<#if helper.getComment()?? && helper.getComment()?trim?length != 0>
+    <comment>${helper.getComment()}</comment>
 </#if>
 <#-- Meta attributes -->
 <#include "meta.hbm.ftl"/>
 <#-- ID / Key -->
 <#if !helper.isSubclass()>
 <#include "id.hbm.ftl"/>
-<#elseif table.getPrimaryKeyJoinColumnName()??>
+<#elseif helper.getPrimaryKeyJoinColumnName()??>
     <key>
-        <column name="${table.getPrimaryKeyJoinColumnName()}"/>
+        <column name="${helper.getPrimaryKeyJoinColumnName()}"/>
     </key>
 </#if>
 <#-- Discriminator -->
 <#if helper.needsDiscriminator()>
     <discriminator
-        column="${table.getInheritance().getDiscriminatorColumnName()}"
-        type="${helper.getDiscriminatorTypeName()}"<#if table.getInheritance().getDiscriminatorColumnLength() gt 0>
-        length="${table.getInheritance().getDiscriminatorColumnLength()?c}"</#if>/>
+        column="${helper.getDiscriminatorColumnName()}"
+        type="${helper.getDiscriminatorTypeName()}"<#if (helper.getDiscriminatorColumnLength() gt 0)>
+        length="${helper.getDiscriminatorColumnLength()?c}"</#if>/>
 </#if>
 <#-- Version -->
-<#list table.getColumns() as col>
-<#if col.isVersion()>
+<#list helper.getVersionFields() as field>
     <version
-        name="${col.getFieldName()}"
-        type="${helper.getHibernateTypeName(col)}">
-        <column name="${col.getColumnName()}" ${helper.getColumnAttributes(col)}/>
+        name="${field.getName()}"
+        type="${helper.getHibernateTypeName(field)}">
+        <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
     </version>
-</#if>
 </#list>
 <#-- Properties -->
 <#include "properties.hbm.ftl"/>

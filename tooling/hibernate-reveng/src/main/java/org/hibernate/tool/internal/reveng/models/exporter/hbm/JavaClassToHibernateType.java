@@ -83,4 +83,21 @@ public class JavaClassToHibernateType {
 		String result = TYPE_MAP.get(javaClass);
 		return result != null ? result : javaClass.getName();
 	}
+
+	/**
+	 * Returns the Hibernate type name for the given Java class name.
+	 *
+	 * @param className the fully qualified Java class name
+	 * @return the Hibernate type name, or the class name if not found
+	 */
+	public static String toHibernateType(String className) {
+		if (className == null) {
+			return "serializable";
+		}
+		try {
+			return toHibernateType(Class.forName(className));
+		} catch (ClassNotFoundException e) {
+			return className;
+		}
+	}
 }

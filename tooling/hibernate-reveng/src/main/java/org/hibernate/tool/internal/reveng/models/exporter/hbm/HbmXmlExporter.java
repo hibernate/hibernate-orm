@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,11 +33,11 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.models.spi.ClassDetails;
 
 /**
  * Generates Hibernate {@code hbm.xml} mapping files per entity from
- * {@link TableMetadata} using FreeMarker templates.
+ * {@link ClassDetails} using FreeMarker templates.
  *
  * @author Koen Aers
  */
@@ -63,10 +64,14 @@ public class HbmXmlExporter {
 		return new HbmXmlExporter(templatePath);
 	}
 
-	public void export(Writer output, TableMetadata table) {
-		HbmTemplateHelper helper = new HbmTemplateHelper(table);
+	public void export(Writer output, ClassDetails entity) {
+		export(output, entity, null, Collections.emptyMap());
+	}
+
+	public void export(Writer output, ClassDetails entity, String comment,
+					   Map<String, List<String>> metaAttributes) {
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity, comment, metaAttributes);
 		Map<String, Object> model = new HashMap<>();
-		model.put("table", table);
 		model.put("helper", helper);
 		try {
 			Template template = freemarkerConfig.getTemplate(TEMPLATE_NAME);
@@ -74,7 +79,7 @@ public class HbmXmlExporter {
 			output.flush();
 		} catch (IOException | TemplateException e) {
 			throw new RuntimeException(
-					"Failed to export hbm.xml for: " + table.getEntityClassName(), e);
+					"Failed to export hbm.xml for: " + entity.getClassName(), e);
 		}
 	}
 

@@ -23,16 +23,37 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
+import org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
+import org.hibernate.boot.models.annotations.internal.GeneratedValueJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
+import org.hibernate.models.internal.BasicModelsContextImpl;
+import org.hibernate.models.internal.ClassTypeDetailsImpl;
+import org.hibernate.models.internal.ParameterizedTypeDetailsImpl;
+import org.hibernate.models.internal.SimpleClassLoading;
+import org.hibernate.models.internal.dynamic.DynamicClassDetails;
+import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.spi.MutableAnnotationTarget;
+import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.tool.internal.export.java.ImportContextImpl;
 import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
@@ -1104,5 +1125,235 @@ public class TemplateHelperTest {
 		FieldDetails field = helper.getBasicFields().get(0);
 		String ann = helper.generateColumnAnnotation(field);
 		assertTrue(ann.contains("updatable = false"), ann);
+	}
+
+	// --- Hibernate-specific class annotations ---
+
+	private record TestContext(TemplateHelper helper, ModelsContext modelsContext) {}
+
+	private TestContext createWithContext(TableMetadata table) {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails classDetails = builder.createEntityFromTable(table);
+		String pkg = table.getEntityPackage() != null ? table.getEntityPackage() : "";
+		TemplateHelper helper = new TemplateHelper(classDetails, builder.getModelsContext(),
+				new ImportContextImpl(pkg), true,
+				Collections.emptyMap(), Collections.emptyMap());
+		return new TestContext(helper, builder.getModelsContext());
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsImmutable() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		dc.addAnnotationUsage(HibernateAnnotations.IMMUTABLE.createUsage(ctx.modelsContext()));
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@Immutable"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsDynamicInsert() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		dc.addAnnotationUsage(HibernateAnnotations.DYNAMIC_INSERT.createUsage(ctx.modelsContext()));
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@DynamicInsert"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsDynamicUpdate() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		dc.addAnnotationUsage(HibernateAnnotations.DYNAMIC_UPDATE.createUsage(ctx.modelsContext()));
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@DynamicUpdate"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsBatchSize() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		BatchSizeAnnotation bs = HibernateAnnotations.BATCH_SIZE.createUsage(ctx.modelsContext());
+		bs.size(25);
+		dc.addAnnotationUsage(bs);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@BatchSize(size = 25)"), result);
+	}
+
+	// --- @Formula ---
+
+	@Test
+	public void testGenerateFormulaAnnotation() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("FULL_NAME", "fullName", String.class));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getBasicFields().stream()
+				.filter(f -> f.getName().equals("fullName")).findFirst().orElseThrow();
+		FormulaAnnotation formula = HibernateAnnotations.FORMULA.createUsage(ctx.modelsContext());
+		formula.value("first_name || ' ' || last_name");
+		((MutableAnnotationTarget) field).addAnnotationUsage(formula);
+		String result = ctx.helper().generateFormulaAnnotation(field);
+		assertEquals("@Formula(\"first_name || ' ' || last_name\")", result);
+	}
+
+	@Test
+	public void testGenerateFormulaAnnotationNone() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getBasicFields().get(0);
+		assertEquals("", helper.generateFormulaAnnotation(field));
+	}
+
+	@Test
+	public void testHasFormula() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("FULL_NAME", "fullName", String.class));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getBasicFields().get(0);
+		assertFalse(ctx.helper().hasFormula(field));
+		FormulaAnnotation formula = HibernateAnnotations.FORMULA.createUsage(ctx.modelsContext());
+		formula.value("1+1");
+		((MutableAnnotationTarget) field).addAnnotationUsage(formula);
+		assertTrue(ctx.helper().hasFormula(field));
+	}
+
+	// --- @SequenceGenerator / @TableGenerator ---
+
+	@Test
+	public void testGenerateIdAnnotationsWithSequenceGenerator() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class)
+				.primaryKey(true).generationType(GenerationType.SEQUENCE));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getBasicFields().stream()
+				.filter(f -> f.getName().equals("id")).findFirst().orElseThrow();
+		// Add generator name to @GeneratedValue
+		GeneratedValueJpaAnnotation gv = (GeneratedValueJpaAnnotation) field.getDirectAnnotationUsage(GeneratedValue.class);
+		gv.generator("emp_seq");
+		// Add @SequenceGenerator
+		SequenceGeneratorJpaAnnotation sg = JpaAnnotations.SEQUENCE_GENERATOR.createUsage(ctx.modelsContext());
+		sg.name("emp_seq");
+		sg.sequenceName("EMPLOYEE_SEQ");
+		sg.allocationSize(1);
+		((MutableAnnotationTarget) field).addAnnotationUsage(sg);
+		String result = ctx.helper().generateIdAnnotations(field);
+		assertTrue(result.contains("@Id"), result);
+		assertTrue(result.contains("GenerationType.SEQUENCE"), result);
+		assertTrue(result.contains("generator = \"emp_seq\""), result);
+		assertTrue(result.contains("@SequenceGenerator(name = \"emp_seq\""), result);
+		assertTrue(result.contains("sequenceName = \"EMPLOYEE_SEQ\""), result);
+		assertTrue(result.contains("allocationSize = 1"), result);
+	}
+
+	@Test
+	public void testGenerateIdAnnotationsWithTableGenerator() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class)
+				.primaryKey(true).generationType(GenerationType.TABLE));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getBasicFields().stream()
+				.filter(f -> f.getName().equals("id")).findFirst().orElseThrow();
+		GeneratedValueJpaAnnotation gv = (GeneratedValueJpaAnnotation) field.getDirectAnnotationUsage(GeneratedValue.class);
+		gv.generator("emp_tbl_gen");
+		TableGeneratorJpaAnnotation tg = JpaAnnotations.TABLE_GENERATOR.createUsage(ctx.modelsContext());
+		tg.name("emp_tbl_gen");
+		tg.table("ID_GEN");
+		tg.pkColumnName("GEN_NAME");
+		tg.valueColumnName("GEN_VALUE");
+		tg.allocationSize(10);
+		((MutableAnnotationTarget) field).addAnnotationUsage(tg);
+		String result = ctx.helper().generateIdAnnotations(field);
+		assertTrue(result.contains("@Id"), result);
+		assertTrue(result.contains("GenerationType.TABLE"), result);
+		assertTrue(result.contains("generator = \"emp_tbl_gen\""), result);
+		assertTrue(result.contains("@TableGenerator(name = \"emp_tbl_gen\""), result);
+		assertTrue(result.contains("table = \"ID_GEN\""), result);
+		assertTrue(result.contains("pkColumnName = \"GEN_NAME\""), result);
+		assertTrue(result.contains("valueColumnName = \"GEN_VALUE\""), result);
+		assertTrue(result.contains("allocationSize = 10"), result);
+	}
+
+	// --- @ElementCollection ---
+
+	@Test
+	public void testGetElementCollectionFields() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		addElementCollectionField(dc, "nicknames", String.class, ctx.modelsContext());
+		List<FieldDetails> ecFields = ctx.helper().getElementCollectionFields();
+		assertEquals(1, ecFields.size());
+		assertEquals("nicknames", ecFields.get(0).getName());
+	}
+
+	@Test
+	public void testBasicFieldsExcludesElementCollection() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		addElementCollectionField(dc, "nicknames", String.class, ctx.modelsContext());
+		List<FieldDetails> basicFields = ctx.helper().getBasicFields();
+		assertEquals(2, basicFields.size());
+		assertTrue(basicFields.stream().noneMatch(f -> f.getName().equals("nicknames")));
+	}
+
+	@Test
+	public void testGenerateElementCollectionAnnotation() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		DynamicFieldDetails field = addElementCollectionField(
+				dc, "nicknames", String.class, ctx.modelsContext());
+		// Add @CollectionTable
+		CollectionTableJpaAnnotation ct = JpaAnnotations.COLLECTION_TABLE.createUsage(ctx.modelsContext());
+		ct.name("EMPLOYEE_NICKNAMES");
+		field.addAnnotationUsage(ct);
+		// Add @Column for element
+		ColumnJpaAnnotation col = JpaAnnotations.COLUMN.createUsage(ctx.modelsContext());
+		col.name("NICKNAME");
+		field.addAnnotationUsage(col);
+		String result = ctx.helper().generateElementCollectionAnnotation(field);
+		assertTrue(result.contains("@ElementCollection"), result);
+		assertTrue(result.contains("@CollectionTable(name = \"EMPLOYEE_NICKNAMES\""), result);
+		assertTrue(result.contains("@Column(name = \"NICKNAME\")"), result);
+	}
+
+	@Test
+	public void testGenerateElementCollectionAnnotationNoAnnotated() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails classDetails = builder.createEntityFromTable(table);
+		DynamicClassDetails dc = (DynamicClassDetails) classDetails;
+		DynamicFieldDetails field = addElementCollectionField(
+				dc, "nicknames", String.class, builder.getModelsContext());
+		TemplateHelper helper = new TemplateHelper(classDetails, builder.getModelsContext(),
+				new ImportContextImpl("com.example"), false,
+				Collections.emptyMap(), Collections.emptyMap());
+		assertEquals("", helper.generateElementCollectionAnnotation(field));
+	}
+
+	private DynamicFieldDetails addElementCollectionField(
+			DynamicClassDetails entity, String fieldName, Class<?> elementJavaType, ModelsContext ctx) {
+		ClassDetails elementClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(elementJavaType.getName());
+		ClassDetails setClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(Set.class.getName());
+		TypeDetails elementType = new ClassTypeDetailsImpl(elementClass, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				setClass, Collections.singletonList(elementType), null);
+		DynamicFieldDetails field = entity.applyAttribute(
+				fieldName, fieldType, false, true, ctx);
+		ElementCollectionJpaAnnotation ec = JpaAnnotations.ELEMENT_COLLECTION.createUsage(ctx);
+		field.addAnnotationUsage(ec);
+		return field;
 	}
 }

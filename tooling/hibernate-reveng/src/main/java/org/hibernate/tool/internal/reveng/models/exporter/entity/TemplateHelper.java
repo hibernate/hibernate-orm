@@ -30,6 +30,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -45,10 +47,18 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.persistence.TableGenerator;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Version;
+
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.Immutable;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
@@ -147,7 +157,8 @@ public class TemplateHelper {
 	public List<FieldDetails> getBasicFields() {
 		List<FieldDetails> result = new ArrayList<>();
 		for (FieldDetails field : classDetails.getFields()) {
-			if (!isRelationshipField(field) && !isEmbeddedField(field) && !isEmbeddedIdField(field)) {
+			if (!isRelationshipField(field) && !isEmbeddedField(field) && !isEmbeddedIdField(field)
+					&& !field.hasDirectAnnotationUsage(ElementCollection.class)) {
 				result.add(field);
 			}
 		}
@@ -172,6 +183,10 @@ public class TemplateHelper {
 
 	public List<FieldDetails> getEmbeddedFields() {
 		return getFieldsWithAnnotation(Embedded.class);
+	}
+
+	public List<FieldDetails> getElementCollectionFields() {
+		return getFieldsWithAnnotation(ElementCollection.class);
 	}
 
 	// --- Field info methods ---
@@ -255,6 +270,24 @@ public class TemplateHelper {
 			importType("jakarta.persistence.PrimaryKeyJoinColumn");
 			sb.append("@PrimaryKeyJoinColumn(name = \"").append(pkjc.name()).append("\")\n");
 		}
+		// Hibernate-specific class annotations
+		if (classDetails.hasDirectAnnotationUsage(Immutable.class)) {
+			importType("org.hibernate.annotations.Immutable");
+			sb.append("@Immutable\n");
+		}
+		if (classDetails.hasDirectAnnotationUsage(DynamicInsert.class)) {
+			importType("org.hibernate.annotations.DynamicInsert");
+			sb.append("@DynamicInsert\n");
+		}
+		if (classDetails.hasDirectAnnotationUsage(DynamicUpdate.class)) {
+			importType("org.hibernate.annotations.DynamicUpdate");
+			sb.append("@DynamicUpdate\n");
+		}
+		BatchSize bs = classDetails.getDirectAnnotationUsage(BatchSize.class);
+		if (bs != null) {
+			importType("org.hibernate.annotations.BatchSize");
+			sb.append("@BatchSize(size = ").append(bs.size()).append(")\n");
+		}
 		return sb.toString().stripTrailing();
 	}
 
@@ -306,7 +339,46 @@ public class TemplateHelper {
 				importType("jakarta.persistence.GeneratedValue");
 				importType("jakarta.persistence.GenerationType");
 				sb.append("    @GeneratedValue(strategy = GenerationType.")
-						.append(gv.strategy().name()).append(")\n");
+						.append(gv.strategy().name());
+				if (gv.generator() != null && !gv.generator().isEmpty()) {
+					sb.append(", generator = \"").append(gv.generator()).append("\"");
+				}
+				sb.append(")\n");
+				// @SequenceGenerator
+				SequenceGenerator sg = field.getDirectAnnotationUsage(SequenceGenerator.class);
+				if (sg != null) {
+					importType("jakarta.persistence.SequenceGenerator");
+					sb.append("    @SequenceGenerator(name = \"").append(sg.name()).append("\"");
+					if (sg.sequenceName() != null && !sg.sequenceName().isEmpty()) {
+						sb.append(", sequenceName = \"").append(sg.sequenceName()).append("\"");
+					}
+					if (sg.allocationSize() != 50) {
+						sb.append(", allocationSize = ").append(sg.allocationSize());
+					}
+					if (sg.initialValue() != 1) {
+						sb.append(", initialValue = ").append(sg.initialValue());
+					}
+					sb.append(")\n");
+				}
+				// @TableGenerator
+				TableGenerator tg = field.getDirectAnnotationUsage(TableGenerator.class);
+				if (tg != null) {
+					importType("jakarta.persistence.TableGenerator");
+					sb.append("    @TableGenerator(name = \"").append(tg.name()).append("\"");
+					if (tg.table() != null && !tg.table().isEmpty()) {
+						sb.append(", table = \"").append(tg.table()).append("\"");
+					}
+					if (tg.pkColumnName() != null && !tg.pkColumnName().isEmpty()) {
+						sb.append(", pkColumnName = \"").append(tg.pkColumnName()).append("\"");
+					}
+					if (tg.valueColumnName() != null && !tg.valueColumnName().isEmpty()) {
+						sb.append(", valueColumnName = \"").append(tg.valueColumnName()).append("\"");
+					}
+					if (tg.allocationSize() != 50) {
+						sb.append(", allocationSize = ").append(tg.allocationSize());
+					}
+					sb.append(")\n");
+				}
 			}
 		}
 		return sb.toString().stripTrailing();
@@ -368,6 +440,61 @@ public class TemplateHelper {
 		}
 		importType("jakarta.persistence.Lob");
 		return "@Lob";
+	}
+
+	public String generateFormulaAnnotation(FieldDetails field) {
+		if (!annotated) {
+			return "";
+		}
+		Formula formula = field.getDirectAnnotationUsage(Formula.class);
+		if (formula == null) {
+			return "";
+		}
+		importType("org.hibernate.annotations.Formula");
+		return "@Formula(\"" + formula.value() + "\")";
+	}
+
+	public boolean hasFormula(FieldDetails field) {
+		return field.hasDirectAnnotationUsage(Formula.class);
+	}
+
+	public String generateElementCollectionAnnotation(FieldDetails field) {
+		if (!annotated) {
+			return "";
+		}
+		ElementCollection ec = field.getDirectAnnotationUsage(ElementCollection.class);
+		if (ec == null) {
+			return "";
+		}
+		StringBuilder sb = new StringBuilder();
+		importType("jakarta.persistence.ElementCollection");
+		sb.append("@ElementCollection");
+		if (ec.fetch() != FetchType.LAZY) {
+			sb.append("(fetch = ");
+			importType("jakarta.persistence.FetchType");
+			sb.append("FetchType.").append(ec.fetch().name()).append(")");
+		}
+		// @CollectionTable
+		CollectionTable ct = field.getDirectAnnotationUsage(CollectionTable.class);
+		if (ct != null) {
+			sb.append("\n    ");
+			importType("jakarta.persistence.CollectionTable");
+			sb.append("@CollectionTable(name = \"").append(ct.name()).append("\"");
+			if (ct.joinColumns() != null && ct.joinColumns().length > 0) {
+				importType("jakarta.persistence.JoinColumn");
+				sb.append(",\n            joinColumns = @JoinColumn(name = \"")
+						.append(ct.joinColumns()[0].name()).append("\")");
+			}
+			sb.append(")");
+		}
+		// @Column for element
+		Column col = field.getDirectAnnotationUsage(Column.class);
+		if (col != null) {
+			sb.append("\n    ");
+			importType("jakarta.persistence.Column");
+			sb.append("@Column(name = \"").append(col.name()).append("\")");
+		}
+		return sb.toString();
 	}
 
 	public String generateColumnAnnotation(FieldDetails field) {

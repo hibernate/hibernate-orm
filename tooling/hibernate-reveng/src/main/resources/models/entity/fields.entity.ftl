@@ -41,3 +41,8 @@
     private ${templateHelper.getJavaTypeName(field)} ${field.getName()};
 
 </#list>
+<#-- ElementCollection fields -->
+<#list templateHelper.getElementCollectionFields() as field>
+    private ${templateHelper.getCollectionTypeName(field)} ${field.getName()} = new ${templateHelper.importType("java.util.HashSet")}<>(0);
+
+</#list>

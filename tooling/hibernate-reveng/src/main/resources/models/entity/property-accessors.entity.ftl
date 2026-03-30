@@ -37,9 +37,14 @@
     <#if lobAnn?has_content>
     ${lobAnn}
     </#if>
+    <#assign formulaAnn = templateHelper.generateFormulaAnnotation(field)>
+    <#if formulaAnn?has_content>
+    ${formulaAnn}
+    <#else>
     <#assign colAnn = templateHelper.generateColumnAnnotation(field)>
     <#if colAnn?has_content>
     ${colAnn}
+    </#if>
     </#if>
     public ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
         return this.${field.getName()};
@@ -122,6 +127,21 @@
     }
 
     public void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getJavaTypeName(field)} ${field.getName()}) {
+        this.${field.getName()} = ${field.getName()};
+    }
+
+</#list>
+<#-- ElementCollection accessors -->
+<#list templateHelper.getElementCollectionFields() as field>
+<#assign ann = templateHelper.generateElementCollectionAnnotation(field)>
+<#if ann?has_content>
+    ${ann}
+</#if>
+    public ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
+        return this.${field.getName()};
+    }
+
+    public void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getCollectionTypeName(field)} ${field.getName()}) {
         this.${field.getName()} = ${field.getName()};
     }
 

@@ -3,11 +3,7 @@ name: Dependabot auto-merge Hibernate ORM update
 on:
   pull_request:
     branches:
-      # Only include the branches for which we want
-      # the automerge capabilities to be applied:
-      - '7.2'
-      - '6.6'
-
+      - '7.4'
 
 permissions:
   contents: write
@@ -35,38 +31,6 @@ jobs:
             echo "passed=false" >> $GITHUB_OUTPUT
             exit 0
           fi
-
-      - name: Checkout PR Branch
-        if: steps.orm-update-check.outputs.passed == 'true'
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 0
-
-      - name: Attempt to update commit message
-        if: steps.orm-update-check.outputs.passed == 'true'
-        run: |
-          ORM_NEW_VERSION="${{steps.metadata.outputs.new-version}}"
-          
-          JIRA_JSON=$(curl -s -G "https://hibernate.atlassian.net/rest/api/3/search/jql" \
-            --data-urlencode "fields=key" \
-            --data-urlencode "maxResults=1" \
-            --data-urlencode "jql=project=HBX and summary ~ \"Update Hibernate ORM dependency to $ORM_NEW_VERSION\"")
-          
-          JIRA_KEY=$(echo "$JIRA_JSON" | jq -r '.issues[0].key // empty')
-
-          if [ -z "$JIRA_KEY" ]; then
-            echo "Unable to find the JIRA for this verison of ORM $ORM_NEW_VERSION"
-          else
-            git config user.email ci@hibernate.org
-            git config user.name Hibernate-CI
-            gh pr checkout "$PR_URL"
-            ORIGINAL_MSG=$(git log -1 --pretty=%B)
-            git commit --amend -m "$JIRA_KEY $ORIGINAL_MSG"
-            git push --force-with-lease
-          fi
-        env:
-          PR_URL: ${{github.event.pull_request.html_url}}
-          GH_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
       - name: Enable auto-merge for Dependabot PRs
         if: steps.orm-update-check.outputs.passed == 'true'

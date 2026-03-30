@@ -3,7 +3,11 @@
     <property
         name="${field.getName()}"
         type="${helper.getHibernateTypeName(field)}"<#if helper.getAccessType(field)??>
-        access="${helper.getAccessType(field)}"</#if><#if helper.getFormula(field)??>
+        access="${helper.getAccessType(field)}"</#if><#if !helper.isPropertyUpdatable(field)>
+        update="false"</#if><#if !helper.isPropertyInsertable(field)>
+        insert="false"</#if><#if helper.isPropertyLazy(field)>
+        lazy="true"</#if><#if helper.isOptimisticLockExcluded(field)>
+        optimistic-lock="false"</#if><#if helper.getFormula(field)??>
         formula="${helper.getFormula(field)}"</#if>>
 <#if !helper.getFormula(field)??>
         <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
@@ -119,4 +123,36 @@
         <column name="${helper.getJoinColumnName(field)}"/>
 </#if>
     </any>
+</#list>
+<#-- Element collections -->
+<#list helper.getElementCollectionFields() as field>
+<#assign collTag = helper.getCollectionTag(field)>
+    <${collTag} name="${field.getName()}"<#if helper.getElementCollectionTableName(field)??>
+        table="${helper.getElementCollectionTableName(field)}"</#if><#if helper.getCollectionLazy(field)??>
+        lazy="${helper.getCollectionLazy(field)}"</#if><#if helper.getCollectionFetchMode(field)??>
+        fetch="${helper.getCollectionFetchMode(field)}"</#if>>
+        <key>
+<#if helper.getElementCollectionKeyColumnName(field)??>
+            <column name="${helper.getElementCollectionKeyColumnName(field)}"/>
+</#if>
+        </key>
+<#if collTag == "list">
+        <list-index column="${helper.getListIndexColumnName(field)!'POSITION'}"/>
+</#if>
+<#if helper.isElementCollectionOfEmbeddable(field)>
+        <composite-element class="${helper.getCollectionElementType(field)}">
+<#list helper.getAttributeOverrides(field) as ao>
+            <property name="${ao.fieldName()}">
+                <column name="${ao.columnName()}"/>
+            </property>
+</#list>
+        </composite-element>
+<#else>
+        <element type="${helper.getElementCollectionElementType(field)!'string'}">
+<#if helper.getElementCollectionElementColumnName(field)??>
+            <column name="${helper.getElementCollectionElementColumnName(field)}"/>
+</#if>
+        </element>
+</#if>
+    </${collTag}>
 </#list>

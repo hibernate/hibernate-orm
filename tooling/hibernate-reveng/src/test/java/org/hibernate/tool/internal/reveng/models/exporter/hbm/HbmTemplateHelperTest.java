@@ -46,7 +46,10 @@ import org.hibernate.boot.models.annotations.internal.AnyKeyJavaClassAnnotation;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.SecondaryTableJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.BasicJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
+import org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterDefAnnotation;
@@ -54,6 +57,8 @@ import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
 import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NotFoundAnnotation;
 import org.hibernate.boot.models.annotations.internal.OneToManyJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.OptimisticLockAnnotation;
 import org.hibernate.boot.models.annotations.internal.OptimisticLockingAnnotation;
 import org.hibernate.boot.models.annotations.internal.OrderColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ParamDefAnnotation;
@@ -110,6 +115,27 @@ public class HbmTemplateHelperTest {
 				.resolveClassDetails(javaType.getName());
 		TypeDetails fieldType = new ClassTypeDetailsImpl(typeClass, TypeDetails.Kind.CLASS);
 		return entity.applyAttribute(fieldName, fieldType, false, false, ctx);
+	}
+
+	private DynamicFieldDetails addElementCollectionField(
+			DynamicClassDetails entity, String fieldName, Class<?> elementJavaType, ModelsContext ctx) {
+		ClassDetails elementClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(elementJavaType.getName());
+		return addElementCollectionField(entity, fieldName, elementClass, ctx);
+	}
+
+	private DynamicFieldDetails addElementCollectionField(
+			DynamicClassDetails entity, String fieldName, ClassDetails elementClass, ModelsContext ctx) {
+		ClassDetails setClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(Set.class.getName());
+		TypeDetails elementType = new ClassTypeDetailsImpl(elementClass, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				setClass, Collections.singletonList(elementType), null);
+		DynamicFieldDetails field = entity.applyAttribute(
+				fieldName, fieldType, false, true, ctx);
+		ElementCollectionJpaAnnotation ec = JpaAnnotations.ELEMENT_COLLECTION.createUsage(ctx);
+		field.addAnnotationUsage(ec);
+		return field;
 	}
 
 	private DynamicFieldDetails addOneToManySetField(
@@ -1389,5 +1415,188 @@ public class HbmTemplateHelperTest {
 		assertEquals("java.lang.String", metaValues.get(0).entityClass());
 		assertEquals("WI", metaValues.get(1).value());
 		assertEquals("java.lang.Long", metaValues.get(1).entityClass());
+	}
+
+	// --- isPropertyUpdatable ---
+
+	@Test
+	public void testIsPropertyUpdatableDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		assertTrue(new HbmTemplateHelper(entity).isPropertyUpdatable(field));
+	}
+
+	@Test
+	public void testIsPropertyUpdatableFalse() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		ColumnJpaAnnotation col = JpaAnnotations.COLUMN.createUsage(ctx);
+		col.updatable(false);
+		field.addAnnotationUsage(col);
+		assertFalse(new HbmTemplateHelper(entity).isPropertyUpdatable(field));
+	}
+
+	// --- isPropertyInsertable ---
+
+	@Test
+	public void testIsPropertyInsertableDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		assertTrue(new HbmTemplateHelper(entity).isPropertyInsertable(field));
+	}
+
+	@Test
+	public void testIsPropertyInsertableFalse() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		ColumnJpaAnnotation col = JpaAnnotations.COLUMN.createUsage(ctx);
+		col.insertable(false);
+		field.addAnnotationUsage(col);
+		assertFalse(new HbmTemplateHelper(entity).isPropertyInsertable(field));
+	}
+
+	// --- isPropertyLazy ---
+
+	@Test
+	public void testIsPropertyLazyDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		assertFalse(new HbmTemplateHelper(entity).isPropertyLazy(field));
+	}
+
+	@Test
+	public void testIsPropertyLazyTrue() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		BasicJpaAnnotation basic = JpaAnnotations.BASIC.createUsage(ctx);
+		basic.fetch(jakarta.persistence.FetchType.LAZY);
+		field.addAnnotationUsage(basic);
+		assertTrue(new HbmTemplateHelper(entity).isPropertyLazy(field));
+	}
+
+	// --- isOptimisticLockExcluded ---
+
+	@Test
+	public void testIsOptimisticLockExcludedDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		assertFalse(new HbmTemplateHelper(entity).isOptimisticLockExcluded(field));
+	}
+
+	@Test
+	public void testIsOptimisticLockExcludedTrue() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		OptimisticLockAnnotation ol = HibernateAnnotations.OPTIMISTIC_LOCK.createUsage(ctx);
+		ol.excluded(true);
+		field.addAnnotationUsage(ol);
+		assertTrue(new HbmTemplateHelper(entity).isOptimisticLockExcluded(field));
+	}
+
+	// --- getElementCollectionFields ---
+
+	@Test
+	public void testGetElementCollectionFieldsNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		addBasicField(entity, "name", String.class, ctx);
+		assertTrue(new HbmTemplateHelper(entity).getElementCollectionFields().isEmpty());
+	}
+
+	@Test
+	public void testGetElementCollectionFieldsPresent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addElementCollectionField(entity, "tags", String.class, ctx);
+		List<FieldDetails> ecFields = new HbmTemplateHelper(entity).getElementCollectionFields();
+		assertEquals(1, ecFields.size());
+		assertEquals("tags", ecFields.get(0).getName());
+	}
+
+	@Test
+	public void testGetElementCollectionFieldsExcludedFromBasicFields() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		addBasicField(entity, "name", String.class, ctx);
+		addElementCollectionField(entity, "tags", String.class, ctx);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertEquals(1, helper.getBasicFields().size());
+		assertEquals("name", helper.getBasicFields().get(0).getName());
+	}
+
+	// --- getElementCollectionTableName ---
+
+	@Test
+	public void testGetElementCollectionTableNameDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addElementCollectionField(entity, "tags", String.class, ctx);
+		assertNull(new HbmTemplateHelper(entity).getElementCollectionTableName(field));
+	}
+
+	@Test
+	public void testGetElementCollectionTableNameSet() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addElementCollectionField(entity, "tags", String.class, ctx);
+		CollectionTableJpaAnnotation ct = JpaAnnotations.COLLECTION_TABLE.createUsage(ctx);
+		ct.name("ENTITY_TAGS");
+		field.addAnnotationUsage(ct);
+		assertEquals("ENTITY_TAGS", new HbmTemplateHelper(entity).getElementCollectionTableName(field));
+	}
+
+	// --- getElementCollectionKeyColumnName ---
+
+	@Test
+	public void testGetElementCollectionKeyColumnName() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addElementCollectionField(entity, "tags", String.class, ctx);
+		JoinColumnJpaAnnotation jc = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+		jc.name("ENTITY_ID");
+		CollectionTableJpaAnnotation ct = JpaAnnotations.COLLECTION_TABLE.createUsage(ctx);
+		ct.name("ENTITY_TAGS");
+		ct.joinColumns(new jakarta.persistence.JoinColumn[] { jc });
+		field.addAnnotationUsage(ct);
+		assertEquals("ENTITY_ID", new HbmTemplateHelper(entity).getElementCollectionKeyColumnName(field));
+	}
+
+	// --- getElementCollectionElementType ---
+
+	@Test
+	public void testGetElementCollectionElementTypeBasic() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addElementCollectionField(entity, "tags", String.class, ctx);
+		assertEquals("string", new HbmTemplateHelper(entity).getElementCollectionElementType(field));
+	}
+
+	// --- isElementCollectionOfEmbeddable ---
+
+	@Test
+	public void testIsElementCollectionOfEmbeddableBasic() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addElementCollectionField(entity, "tags", String.class, ctx);
+		assertFalse(new HbmTemplateHelper(entity).isElementCollectionOfEmbeddable(field));
+	}
+
+	@Test
+	public void testIsElementCollectionOfEmbeddableTrue() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicClassDetails embeddable = new DynamicClassDetails(
+				"Address", "com.example.Address", false, null, null, ctx);
+		embeddable.addAnnotationUsage(JpaAnnotations.EMBEDDABLE.createUsage(ctx));
+		DynamicFieldDetails field = addElementCollectionField(entity, "addresses", embeddable, ctx);
+		assertTrue(new HbmTemplateHelper(entity).isElementCollectionOfEmbeddable(field));
 	}
 }

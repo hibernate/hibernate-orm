@@ -23,10 +23,13 @@ import java.util.Map;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.GeneratedValue;
@@ -74,6 +77,7 @@ import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.annotations.ParamDef;
@@ -299,6 +303,7 @@ public class HbmTemplateHelper {
 					&& !field.hasDirectAnnotationUsage(Id.class)
 					&& !field.hasDirectAnnotationUsage(Version.class)
 					&& !field.hasDirectAnnotationUsage(Any.class)
+					&& !field.hasDirectAnnotationUsage(ElementCollection.class)
 					&& !isSecondaryTableField(field)) {
 				result.add(field);
 			}
@@ -332,6 +337,48 @@ public class HbmTemplateHelper {
 
 	public List<FieldDetails> getAnyFields() {
 		return getFieldsWithAnnotation(Any.class);
+	}
+
+	public List<FieldDetails> getElementCollectionFields() {
+		return getFieldsWithAnnotation(ElementCollection.class);
+	}
+
+	// --- ElementCollection ---
+
+	public boolean isElementCollectionOfEmbeddable(FieldDetails field) {
+		TypeDetails elementType = field.getElementType();
+		if (elementType == null) {
+			return false;
+		}
+		ClassDetails rawClass = elementType.determineRawClass();
+		return rawClass.hasDirectAnnotationUsage(jakarta.persistence.Embeddable.class);
+	}
+
+	public String getElementCollectionTableName(FieldDetails field) {
+		CollectionTable ct = field.getDirectAnnotationUsage(CollectionTable.class);
+		return ct != null && ct.name() != null && !ct.name().isEmpty() ? ct.name() : null;
+	}
+
+	public String getElementCollectionKeyColumnName(FieldDetails field) {
+		CollectionTable ct = field.getDirectAnnotationUsage(CollectionTable.class);
+		if (ct != null && ct.joinColumns() != null && ct.joinColumns().length > 0) {
+			return ct.joinColumns()[0].name();
+		}
+		return null;
+	}
+
+	public String getElementCollectionElementType(FieldDetails field) {
+		TypeDetails elementType = field.getElementType();
+		if (elementType != null) {
+			return JavaClassToHibernateType.toHibernateType(
+					elementType.determineRawClass().getClassName());
+		}
+		return null;
+	}
+
+	public String getElementCollectionElementColumnName(FieldDetails field) {
+		Column col = field.getDirectAnnotationUsage(Column.class);
+		return col != null && col.name() != null && !col.name().isEmpty() ? col.name() : null;
 	}
 
 	// --- Any ---
@@ -415,6 +462,26 @@ public class HbmTemplateHelper {
 				|| "java.util.Calendar".equals(className)
 				|| "java.time.Instant".equals(className)
 				|| "java.time.LocalDateTime".equals(className);
+	}
+
+	public boolean isPropertyUpdatable(FieldDetails field) {
+		Column col = field.getDirectAnnotationUsage(Column.class);
+		return col == null || col.updatable();
+	}
+
+	public boolean isPropertyInsertable(FieldDetails field) {
+		Column col = field.getDirectAnnotationUsage(Column.class);
+		return col == null || col.insertable();
+	}
+
+	public boolean isPropertyLazy(FieldDetails field) {
+		Basic basic = field.getDirectAnnotationUsage(Basic.class);
+		return basic != null && basic.fetch() == FetchType.LAZY;
+	}
+
+	public boolean isOptimisticLockExcluded(FieldDetails field) {
+		OptimisticLock ol = field.getDirectAnnotationUsage(OptimisticLock.class);
+		return ol != null && ol.excluded();
 	}
 
 	// --- Generator parameters ---

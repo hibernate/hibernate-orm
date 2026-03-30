@@ -18,7 +18,9 @@ package org.hibernate.tool.internal.reveng.models.exporter.mapping;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
@@ -40,6 +42,10 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.NamedNativeQueries;
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.Version;
@@ -48,7 +54,12 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.annotations.RowId;
@@ -428,6 +439,86 @@ public class MappingXmlHelper {
 	}
 
 	public record AttributeOverrideInfo(String fieldName, String columnName) {}
+
+	// --- Filters ---
+
+	public List<FilterInfo> getFilters() {
+		List<FilterInfo> result = new ArrayList<>();
+		Filter single = classDetails.getDirectAnnotationUsage(Filter.class);
+		if (single != null) {
+			result.add(new FilterInfo(single.name(), single.condition()));
+		}
+		Filters container = classDetails.getDirectAnnotationUsage(Filters.class);
+		if (container != null) {
+			for (Filter f : container.value()) {
+				result.add(new FilterInfo(f.name(), f.condition()));
+			}
+		}
+		return result;
+	}
+
+	public List<FilterDefInfo> getFilterDefs() {
+		List<FilterDefInfo> result = new ArrayList<>();
+		FilterDef single = classDetails.getDirectAnnotationUsage(FilterDef.class);
+		if (single != null) {
+			result.add(toFilterDefInfo(single));
+		}
+		FilterDefs container = classDetails.getDirectAnnotationUsage(FilterDefs.class);
+		if (container != null) {
+			for (FilterDef fd : container.value()) {
+				result.add(toFilterDefInfo(fd));
+			}
+		}
+		return result;
+	}
+
+	private FilterDefInfo toFilterDefInfo(FilterDef fd) {
+		Map<String, String> params = new LinkedHashMap<>();
+		if (fd.parameters() != null) {
+			for (ParamDef pd : fd.parameters()) {
+				params.put(pd.name(), pd.type().getName());
+			}
+		}
+		return new FilterDefInfo(fd.name(), fd.defaultCondition(), params);
+	}
+
+	public record FilterInfo(String name, String condition) {}
+
+	public record FilterDefInfo(String name, String defaultCondition, Map<String, String> parameters) {}
+
+	// --- Named queries ---
+
+	public List<NamedQueryInfo> getNamedQueries() {
+		List<NamedQueryInfo> result = new ArrayList<>();
+		NamedQuery single = classDetails.getDirectAnnotationUsage(NamedQuery.class);
+		if (single != null) {
+			result.add(new NamedQueryInfo(single.name(), single.query()));
+		}
+		NamedQueries container = classDetails.getDirectAnnotationUsage(NamedQueries.class);
+		if (container != null) {
+			for (NamedQuery nq : container.value()) {
+				result.add(new NamedQueryInfo(nq.name(), nq.query()));
+			}
+		}
+		return result;
+	}
+
+	public List<NamedQueryInfo> getNamedNativeQueries() {
+		List<NamedQueryInfo> result = new ArrayList<>();
+		NamedNativeQuery single = classDetails.getDirectAnnotationUsage(NamedNativeQuery.class);
+		if (single != null) {
+			result.add(new NamedQueryInfo(single.name(), single.query()));
+		}
+		NamedNativeQueries container = classDetails.getDirectAnnotationUsage(NamedNativeQueries.class);
+		if (container != null) {
+			for (NamedNativeQuery nnq : container.value()) {
+				result.add(new NamedQueryInfo(nnq.name(), nnq.query()));
+			}
+		}
+		return result;
+	}
+
+	public record NamedQueryInfo(String name, String query) {}
 
 	// --- Private helpers ---
 

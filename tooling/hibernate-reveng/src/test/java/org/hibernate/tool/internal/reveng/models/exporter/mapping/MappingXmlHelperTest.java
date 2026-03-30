@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.DiscriminatorType;
@@ -28,11 +29,18 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
+import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
+import org.hibernate.boot.models.annotations.internal.FilterDefAnnotation;
+import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedNativeQueryJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedQueryJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OptimisticLockingAnnotation;
+import org.hibernate.boot.models.annotations.internal.ParamDefAnnotation;
 import org.hibernate.boot.models.annotations.internal.RowIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLRestrictionAnnotation;
 import org.hibernate.boot.models.annotations.internal.SubselectAnnotation;
@@ -1112,5 +1120,136 @@ public class MappingXmlHelperTest {
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		entity.addAnnotationUsage(HibernateAnnotations.CONCRETE_PROXY.createUsage(ctx));
 		assertTrue(new MappingXmlHelper(entity).isConcreteProxy());
+	}
+
+	// --- getFilters ---
+
+	@Test
+	public void testGetFiltersNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertTrue(new MappingXmlHelper(entity).getFilters().isEmpty());
+	}
+
+	@Test
+	public void testGetFiltersSingle() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		FilterAnnotation filter = HibernateAnnotations.FILTER.createUsage(ctx);
+		filter.name("activeFilter");
+		filter.condition("active = :isActive");
+		entity.addAnnotationUsage(filter);
+		List<MappingXmlHelper.FilterInfo> filters = new MappingXmlHelper(entity).getFilters();
+		assertEquals(1, filters.size());
+		assertEquals("activeFilter", filters.get(0).name());
+		assertEquals("active = :isActive", filters.get(0).condition());
+	}
+
+	@Test
+	public void testGetFiltersMultiple() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		FilterAnnotation f1 = HibernateAnnotations.FILTER.createUsage(ctx);
+		f1.name("activeFilter");
+		f1.condition("active = true");
+		FilterAnnotation f2 = HibernateAnnotations.FILTER.createUsage(ctx);
+		f2.name("tenantFilter");
+		f2.condition("tenant_id = :tid");
+		FiltersAnnotation filters = HibernateAnnotations.FILTERS.createUsage(ctx);
+		filters.value(new Filter[] { f1, f2 });
+		entity.addAnnotationUsage(filters);
+		List<MappingXmlHelper.FilterInfo> result = new MappingXmlHelper(entity).getFilters();
+		assertEquals(2, result.size());
+		assertEquals("activeFilter", result.get(0).name());
+		assertEquals("tenantFilter", result.get(1).name());
+	}
+
+	// --- getFilterDefs ---
+
+	@Test
+	public void testGetFilterDefsNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertTrue(new MappingXmlHelper(entity).getFilterDefs().isEmpty());
+	}
+
+	@Test
+	public void testGetFilterDefsSimple() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		FilterDefAnnotation fd = HibernateAnnotations.FILTER_DEF.createUsage(ctx);
+		fd.name("activeFilter");
+		fd.defaultCondition("active = true");
+		entity.addAnnotationUsage(fd);
+		List<MappingXmlHelper.FilterDefInfo> defs = new MappingXmlHelper(entity).getFilterDefs();
+		assertEquals(1, defs.size());
+		assertEquals("activeFilter", defs.get(0).name());
+		assertEquals("active = true", defs.get(0).defaultCondition());
+		assertTrue(defs.get(0).parameters().isEmpty());
+	}
+
+	@Test
+	public void testGetFilterDefsWithParams() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		ParamDefAnnotation pd = new ParamDefAnnotation(ctx);
+		pd.name("isActive");
+		pd.type(Boolean.class);
+		FilterDefAnnotation fd = HibernateAnnotations.FILTER_DEF.createUsage(ctx);
+		fd.name("activeFilter");
+		fd.defaultCondition("active = :isActive");
+		fd.parameters(new org.hibernate.annotations.ParamDef[] { pd });
+		entity.addAnnotationUsage(fd);
+		List<MappingXmlHelper.FilterDefInfo> defs = new MappingXmlHelper(entity).getFilterDefs();
+		assertEquals(1, defs.size());
+		Map<String, String> params = defs.get(0).parameters();
+		assertEquals(1, params.size());
+		assertEquals("java.lang.Boolean", params.get("isActive"));
+	}
+
+	// --- getNamedQueries ---
+
+	@Test
+	public void testGetNamedQueriesNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertTrue(new MappingXmlHelper(entity).getNamedQueries().isEmpty());
+	}
+
+	@Test
+	public void testGetNamedQueriesSingle() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		NamedQueryJpaAnnotation nq = JpaAnnotations.NAMED_QUERY.createUsage(ctx);
+		nq.name("findAll");
+		nq.query("SELECT e FROM TestEntity e");
+		entity.addAnnotationUsage(nq);
+		List<MappingXmlHelper.NamedQueryInfo> queries = new MappingXmlHelper(entity).getNamedQueries();
+		assertEquals(1, queries.size());
+		assertEquals("findAll", queries.get(0).name());
+		assertEquals("SELECT e FROM TestEntity e", queries.get(0).query());
+	}
+
+	// --- getNamedNativeQueries ---
+
+	@Test
+	public void testGetNamedNativeQueriesNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertTrue(new MappingXmlHelper(entity).getNamedNativeQueries().isEmpty());
+	}
+
+	@Test
+	public void testGetNamedNativeQueriesSingle() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		NamedNativeQueryJpaAnnotation nnq = JpaAnnotations.NAMED_NATIVE_QUERY.createUsage(ctx);
+		nnq.name("findAllNative");
+		nnq.query("SELECT * FROM TEST_ENTITY");
+		entity.addAnnotationUsage(nnq);
+		List<MappingXmlHelper.NamedQueryInfo> queries = new MappingXmlHelper(entity).getNamedNativeQueries();
+		assertEquals(1, queries.size());
+		assertEquals("findAllNative", queries.get(0).name());
+		assertEquals("SELECT * FROM TEST_ENTITY", queries.get(0).query());
 	}
 }

@@ -30,4 +30,11 @@
         <optimistic-locking>${helper.getOptimisticLockMode()}</optimistic-locking>
 </#if>
 <#include "attributes.mapping.ftl"/>
+<#list helper.getFilters() as filter>
+        <filter name="${filter.name()}">
+<#if filter.condition()?has_content>
+            <condition>${filter.condition()}</condition>
+</#if>
+        </filter>
+</#list>
     </entity>

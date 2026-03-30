@@ -49,6 +49,9 @@ dependencies {
         api project( ":hibernate-assistant" )
         api "org.hibernate:hibernate-assistant:$version"
 
+        api project( ":hibernate-reveng" )
+        api "org.hibernate:hibernate-reveng:$version"
+
         // Not all JDK implementations support JFR
         if ( "OpenJDK Runtime Environment".equals( System.getProperty( "java.runtime.name" ) ) ) {
             api project(":hibernate-jfr")

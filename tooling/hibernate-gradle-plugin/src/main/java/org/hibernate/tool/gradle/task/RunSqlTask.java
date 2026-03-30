@@ -15,7 +15,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.work.DisableCachingByDefault;
 
+@DisableCachingByDefault(because = "Reverse engineering tasks perform JDBC operations and are not cacheable")
 public class RunSqlTask extends AbstractTask {
 
 	@TaskAction

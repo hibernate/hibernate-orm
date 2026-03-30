@@ -7,11 +7,13 @@ package org.hibernate.tool.gradle.task;
 import java.io.File;
 
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.work.DisableCachingByDefault;
 import org.hibernate.tool.reveng.api.export.Exporter;
 import org.hibernate.tool.reveng.api.export.ExporterConstants;
 import org.hibernate.tool.reveng.api.export.ExporterFactory;
 import org.hibernate.tool.reveng.api.export.ExporterType;
 
+@DisableCachingByDefault(because = "Reverse engineering tasks perform JDBC operations and are not cacheable")
 public class GenerateDaoTask extends AbstractTask {
 
 	@TaskAction

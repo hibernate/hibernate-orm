@@ -413,7 +413,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			applyKeyRestriction( builder );
 
 			// Apply optimistic locking
-			applyOptimisticLocking( builder );
+			applyOptimisticLocking( builder, null, null, null );
 		} );
 
 		// Apply partitioned selection restrictions if needed
@@ -453,7 +453,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			applyKeyRestriction( builder );
 
 			// Apply optimistic locking
-			applyOptimisticLocking( builder );
+			applyOptimisticLocking( builder, previousState, dirtyFields, session );
 		} );
 
 		// Apply partitioned selection restrictions if needed
@@ -487,14 +487,18 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		tableUpdateBuilder.addKeyRestrictions( tableDescriptor.keyDescriptor() );
 	}
 
-	private void applyOptimisticLocking(TableUpdateBuilder<?> tableUpdateBuilder) {
+	private void applyOptimisticLocking(
+			TableUpdateBuilder<?> tableUpdateBuilder,
+			Object[] previousState,
+			int[] dirtyFields,
+			SharedSessionContractImplementor session) {
 		final var optimisticLockStyle = entityPersister.optimisticLockStyle();
 
 		if ( optimisticLockStyle.isVersion() && entityPersister.getVersionMapping() != null ) {
 			applyVersionBasedOptLocking( tableUpdateBuilder );
 		}
 		else if ( optimisticLockStyle.isAllOrDirty() ) {
-			applyNonVersionOptLocking( tableUpdateBuilder );
+			applyNonVersionOptLocking( tableUpdateBuilder, previousState, dirtyFields, session );
 		}
 	}
 
@@ -510,29 +514,48 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		}
 	}
 
-	private void applyNonVersionOptLocking(TableUpdateBuilder<?> tableUpdateBuilder) {
+	private void applyNonVersionOptLocking(
+			TableUpdateBuilder<?> tableUpdateBuilder,
+			Object[] previousState,
+			int[] dirtyFields,
+			SharedSessionContractImplementor session) {
+		if ( previousState == null ) {
+			throw new IllegalStateException( "Previous state is null" );
+		}
+
 		final boolean[] versionability = entityPersister.getPropertyVersionability();
-		final var attributeMappings = entityPersister.getAttributeMappings();
 		// Get the TableDescriptor from the adapter
 		final var tableMapping = (TableDescriptorAsTableMapping) tableUpdateBuilder.getMutatingTable().getTableMapping();
-		final var tableDescriptor = tableMapping.getDescriptor();
+		final var tableDescriptor = (EntityTableDescriptor) tableMapping.getDescriptor();
 
-		for ( int attributeIndex = 0; attributeIndex < versionability.length; attributeIndex++ ) {
-			if ( versionability[attributeIndex] ) {
-				final var attribute = attributeMappings.get( attributeIndex );
-				if ( !attribute.isPluralAttributeMapping()
-						&& tableDescriptor.name().equals(
-							attribute.getContainingTableExpression() ) ) {
-					// Add each selectable (column) as an optimistic lock restriction
-					final int jdbcTypeCount = attribute.getJdbcTypeCount();
-					for ( int i = 0; i < jdbcTypeCount; i++ ) {
-						final var selectableMapping = attribute.getSelectable( i );
-						if ( !selectableMapping.isFormula() ) {
-							tableUpdateBuilder.addOptimisticLockRestriction( selectableMapping );
-						}
-					}
-				}
+		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
+			var attribute = tableDescriptor.attributes().get( i );
+			if ( !versionability[attribute.getStateArrayPosition()] ) {
+				continue;
 			}
+
+			// we know the attribute is part of optimistically locking the entity.
+			// check the loaded state to determine if we need `where col = ?` or `where col is null`
+			var previousValue = previousState[attribute.getStateArrayPosition()];
+			// todo : not sure how all ModelParts handle `null` for breakDownJdbcValues...
+			//		we may need explicit handling of that here...
+			attribute.breakDownJdbcValues(
+					previousValue,
+					(valueIndex, value, jdbcValueMapping) -> {
+						if ( jdbcValueMapping.isFormula() ) {
+							// skip formulas
+						}
+						else {
+							if ( value == null ) {
+								tableUpdateBuilder.addNullOptimisticLockRestriction( jdbcValueMapping );
+							}
+							else {
+								tableUpdateBuilder.addOptimisticLockRestriction( jdbcValueMapping );
+							}
+						}
+					},
+					session
+			);
 		}
 	}
 

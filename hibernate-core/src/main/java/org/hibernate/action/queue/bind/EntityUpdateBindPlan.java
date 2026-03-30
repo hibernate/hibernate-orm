@@ -260,7 +260,6 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			JdbcValueBindings jdbcValueBindings,
 			SharedSessionContractImplementor session) {
 		final boolean[] versionability = entityPersister.getPropertyVersionability();
-		final var attributeMappings = entityPersister.getAttributeMappings();
 
 		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
 			var attribute = tableDescriptor.attributes().get( i );
@@ -268,13 +267,18 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 			if ( !versionability[attribute.getStateArrayPosition()] ) {
 				continue;
 			}
-			// Note: Even for DIRTY locking, we must bind all versionable fields to the WHERE clause
-			// because the SQL generator includes all versionable fields in the WHERE clause.
-			// The "DIRTY" aspect is handled at the SQL generation level, not at the binding level.
-			decomposeAttributeForRestriction(
+
+			attribute.decompose(
 					previousState[attribute.getStateArrayPosition()],
-					jdbcValueBindings,
-					attribute,
+					(valueIndex, jdbcValue, selectableMapping) -> {
+						if ( selectableMapping.isUpdateable() && !selectableMapping.isFormula() && jdbcValue != null) {
+							jdbcValueBindings.bindValue(
+									jdbcValue,
+									( selectableMapping.getSelectionExpression() ),
+									ParameterUsage.RESTRICT
+							);
+						}
+					},
 					session
 			);
 		}

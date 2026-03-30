@@ -99,14 +99,33 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 		final boolean isSoftDelete = softDeleteMapping != null;
 
 		// Determine if we need to apply optimistic locking
-		final boolean applyOptimisticLocking = shouldApplyOptimisticLocking( version, state );
+		final var effectiveOptLockStyle = effectiveOptimisticLockStyle( version, state );
+		final Object[] loadedState;
+		final Object rowId;
+		if ( effectiveOptLockStyle.isAllOrDirty() ) {
+			final var entityEntry = session.getPersistenceContextInternal().getEntry( action.getInstance() );
+			loadedState = entityEntry != null ? entityEntry.getLoadedState() : null;
+			rowId = entityEntry != null ? entityEntry.getRowId() : null;
+		}
+		else {
+			loadedState = null;
+			rowId = null;
+		}
 
 		// For soft deletes, use UPDATE mutation kind; for hard deletes, use DELETE
 		final MutationKind mutationKind = isSoftDelete ? MutationKind.UPDATE : MutationKind.DELETE;
 
 		if ( isSoftDelete ) {
 			// Handle soft delete (single UPDATE operation)
-			final var effectiveOperation = chooseEffectiveSoftDeleteOperation( identifier, version, state, session, applyOptimisticLocking );
+			final var effectiveOperation = chooseEffectiveSoftDeleteOperation(
+					identifier,
+					version,
+					state,
+					loadedState,
+					rowId,
+					effectiveOptLockStyle,
+					session
+			);
 			final var mutation = effectiveOperation.createMutationOperation(null, sessionFactory);
 			final var tableMapping = (TableDescriptorAsTableMapping) mutation.getTableDetails();
 			final var tableDescriptor = (EntityTableDescriptor) tableMapping.getDescriptor();
@@ -116,8 +135,8 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 					entityPersister,
 					identifier,
 					version,
-					state,
-					applyOptimisticLocking
+					loadedState,
+					effectiveOptLockStyle
 			);
 
 			final PlannedOperation op = new PlannedOperation(
@@ -136,7 +155,15 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 		}
 		else {
 			// Handle hard delete (multiple DELETE operations in reverse order)
-			final var effectiveGroup = chooseEffectiveDeleteGroup( identifier, version, state, session, applyOptimisticLocking );
+			final var effectiveGroup = chooseEffectiveDeleteGroup(
+					identifier,
+					version,
+					state,
+					loadedState,
+					rowId,
+					effectiveOptLockStyle,
+					session
+			);
 
 			final List<PlannedOperation> operations = CollectionHelper.arrayList( effectiveGroup.size() );
 			int localOrd = 0;
@@ -152,7 +179,8 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 						identifier,
 						version,
 						state,
-						applyOptimisticLocking
+						loadedState,
+						effectiveOptLockStyle
 				);
 
 				final PlannedOperation op = new PlannedOperation(
@@ -176,17 +204,14 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 		}
 	}
 
-	private boolean shouldApplyOptimisticLocking(Object version, Object[] state) {
+	private OptimisticLockStyle effectiveOptimisticLockStyle(Object version, Object[] state) {
 		final OptimisticLockStyle optimisticLockStyle = entityPersister.optimisticLockStyle();
 
-		if ( optimisticLockStyle.isVersion() ) {
-			return version != null && entityPersister.getVersionMapping() != null;
-		}
-		else if ( optimisticLockStyle.isAllOrDirty() ) {
-			return state != null;
+		if ( optimisticLockStyle.isVersion() && version != null && entityPersister.getVersionMapping() != null ) {
+			return OptimisticLockStyle.VERSION;
 		}
 
-		return false;
+		return optimisticLockStyle;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -194,15 +219,14 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			Object identifier,
 			Object version,
 			Object[] state,
-			SharedSessionContractImplementor session,
-			boolean applyOptimisticLocking) {
+			Object[] loadedState,
+			Object rowId,
+			OptimisticLockStyle effectiveOptLockStyle,
+			SharedSessionContractImplementor session) {
 		// If we need optimistic locking with dirty-check (state-based),
 		// we need to generate a dynamic delete group
-		final boolean needsDynamicDelete = applyOptimisticLocking
-				&& entityPersister.optimisticLockStyle().isAllOrDirty();
-
-		return needsDynamicDelete
-				? generateDynamicDeleteOperations( identifier, version, state, session )
+		return effectiveOptLockStyle.isAllOrDirty()
+				? generateDynamicDeleteOperations( identifier, version, state, loadedState, rowId, session )
 				: (Map<String, TableDelete>) staticDeleteOperations;
 	}
 
@@ -250,6 +274,8 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			Object identifier,
 			Object version,
 			Object[] state,
+			Object[] previousState,
+			Object rowId,
 			SharedSessionContractImplementor session) {
 		final Map<String, TableDeleteBuilder> operationBuilders = new HashMap<>();
 
@@ -263,7 +289,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			}
 		} );
 
-		applyDynamicDeleteDetails( operationBuilders, version, state, session );
+		applyDynamicDeleteDetails( operationBuilders, version, state, previousState, session );
 
 		final Map<String, TableDelete> operations = new HashMap<>();
 		operationBuilders.forEach( (name, operationBuilder) -> {
@@ -288,6 +314,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			Map<String, TableDeleteBuilder> builders,
 			Object version,
 			Object[] state,
+			Object[] previousState,
 			SharedSessionContractImplementor session) {
 		// Apply key restrictions for all tables
 		builders.forEach( (name, builder) -> {
@@ -337,12 +364,37 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 		assert entityPersister.optimisticLockStyle().isAllOrDirty();
 		assert session != null;
 
+		builders.forEach( (name, builder) -> {
+			var adapter = (TableDescriptorAsTableMapping) builder.getMutatingTable().getTableMapping();
+			var tableDescriptor = (EntityTableDescriptor) adapter.getDescriptor();
+			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
+				var attribute = tableDescriptor.attributes().get( i );
+				if ( attribute.isPluralAttributeMapping() ) {
+					continue;
+				}
+
+				attribute.breakDownJdbcValues(
+						loadedState[attribute.getStateArrayPosition()],
+						(valueIndex, jdbcValue, jdbcValueMapping) -> {
+							if ( !jdbcValueMapping.isFormula() ) {
+								if ( jdbcValue == null ) {
+									builder.addNullOptimisticLockRestriction( jdbcValueMapping );
+								}
+								else {
+									builder.addOptimisticLockRestriction( jdbcValueMapping );
+								}
+							}
+						},
+						session
+				);
+			}
+		} );
+
 		final boolean[] versionability = entityPersister.getPropertyVersionability();
 		for ( int attributeIndex = 0; attributeIndex < versionability.length; attributeIndex++ ) {
 			if ( versionability[attributeIndex] ) {
 				final var attribute = entityPersister.getAttributeMapping( attributeIndex );
 				if ( !attribute.isPluralAttributeMapping() ) {
-					breakDownJdbcValues( builders, session, attribute, loadedState[attributeIndex] );
 				}
 			}
 		}
@@ -408,15 +460,16 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			Object identifier,
 			Object version,
 			Object[] state,
-			SharedSessionContractImplementor session,
-			boolean applyOptimisticLocking) {
+			Object[] loadedState,
+			Object rowId,
+			OptimisticLockStyle effectiveOptLockStyle,
+			SharedSessionContractImplementor session) {
 		// If we need optimistic locking with dirty-check (state-based),
 		// we need to generate a dynamic soft delete operation
-		final boolean needsDynamicSoftDelete = applyOptimisticLocking
-				&& entityPersister.optimisticLockStyle().isAllOrDirty();
+		final boolean needsDynamicSoftDelete = effectiveOptLockStyle.isAllOrDirty();
 
 		return needsDynamicSoftDelete
-				? generateDynamicSoftDeleteOperation( identifier, version, state, session )
+				? generateDynamicSoftDeleteOperation( identifier, version, loadedState, effectiveOptLockStyle, session )
 				: (TableUpdate<?>) staticDeleteOperations.get( entityPersister.getIdentifierTableDescriptor().name() );
 	}
 
@@ -462,6 +515,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			Object identifier,
 			Object version,
 			Object[] state,
+			OptimisticLockStyle effectiveOptLockStyle,
 			SharedSessionContractImplementor session) {
 		final var softDeleteMapping = entityPersister.getSoftDeleteMapping();
 		assert softDeleteMapping != null;
@@ -493,11 +547,10 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 		applyPartitionKeyRestrictionForSoftDelete( tableUpdateBuilder );
 
 		// Apply optimistic locking
-		final var optimisticLockStyle = entityPersister.optimisticLockStyle();
-		if ( optimisticLockStyle.isVersion() && entityPersister.getVersionMapping() != null ) {
+		if ( effectiveOptLockStyle.isVersion() ) {
 			tableUpdateBuilder.addOptimisticLockRestriction( entityPersister.getVersionMapping() );
 		}
-		else if ( state != null && optimisticLockStyle.isAllOrDirty() ) {
+		else if ( effectiveOptLockStyle.isAllOrDirty() ) {
 			applyNonVersionOptLockingForSoftDelete( tableUpdateBuilder, state, session );
 		}
 
@@ -539,6 +592,10 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			TableUpdateBuilder<?> tableUpdateBuilder,
 			Object[] loadedState,
 			SharedSessionContractImplementor session) {
+		if ( loadedState == null ) {
+			throw new IllegalStateException( "Loaded state is null" );
+		}
+
 		final boolean[] versionability = entityPersister.getPropertyVersionability();
 		for ( int attributeIndex = 0; attributeIndex < versionability.length; attributeIndex++ ) {
 			if ( versionability[attributeIndex] ) {

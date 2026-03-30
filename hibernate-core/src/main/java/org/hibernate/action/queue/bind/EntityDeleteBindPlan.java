@@ -12,7 +12,6 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.sql.SQLException;
@@ -26,21 +25,22 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 	private final Object identifier;
 	private final Object version;
 	private final Object[] loadedState;
-	private final boolean applyOptimisticLocking;
+	private final OptimisticLockStyle effectiveOptLockStyle;
 
 	public EntityDeleteBindPlan(
 			EntityTableDescriptor tableDescriptor,
 			EntityPersister entityPersister,
 			Object identifier,
 			Object version,
+			Object[] state,
 			Object[] loadedState,
-			boolean applyOptimisticLocking) {
+			OptimisticLockStyle effectiveOptLockStyle) {
 		this.tableDescriptor = tableDescriptor;
 		this.entityPersister = entityPersister;
 		this.identifier = identifier;
 		this.version = version;
 		this.loadedState = loadedState;
-		this.applyOptimisticLocking = applyOptimisticLocking;
+		this.effectiveOptLockStyle = effectiveOptLockStyle;
 	}
 
 	@Override
@@ -69,8 +69,11 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 		breakDownKeyJdbcValue( valueBindings, session );
 
 		// Apply optimistic locking if needed
-		if ( applyOptimisticLocking ) {
-			applyOptimisticLockingRestrictions( valueBindings, session );
+		if ( effectiveOptLockStyle == OptimisticLockStyle.VERSION ) {
+			applyVersionBasedOptLocking( valueBindings, session );
+		}
+		else if ( effectiveOptLockStyle.isAllOrDirty() ) {
+			applyNonVersionOptLocking( valueBindings, session );
 		}
 
 		// Apply partitioned selection restrictions if needed
@@ -96,19 +99,6 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 				},
 				session
 		);
-	}
-
-	protected void applyOptimisticLockingRestrictions(
-			JdbcValueBindings jdbcValueBindings,
-			SharedSessionContractImplementor session) {
-		final OptimisticLockStyle optimisticLockStyle = entityPersister.optimisticLockStyle();
-
-		if ( optimisticLockStyle.isVersion() && entityPersister.getVersionMapping() != null ) {
-			applyVersionBasedOptLocking( jdbcValueBindings, session );
-		}
-		else if ( loadedState != null && optimisticLockStyle.isAllOrDirty() ) {
-			applyNonVersionOptLocking( jdbcValueBindings, session );
-		}
 	}
 
 	protected void applyVersionBasedOptLocking(
@@ -145,36 +135,20 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 			if ( !versionability[attribute.getStateArrayPosition()] ) {
 				continue;
 			}
-			decomposeAttributeForRestriction(
+			attribute.decompose(
 					loadedState[attribute.getStateArrayPosition()],
-					jdbcValueBindings,
-					attribute,
+					(valueIndex, jdbcValue, selectableMapping) -> {
+						if ( !selectableMapping.isFormula() && jdbcValue != null ) {
+							jdbcValueBindings.bindValue(
+									jdbcValue,
+									selectableMapping.getSelectionExpression(),
+									ParameterUsage.RESTRICT
+							);
+						}
+					},
 					session
 			);
 		}
-	}
-
-	protected void decomposeAttributeForRestriction(
-			Object value,
-			JdbcValueBindings jdbcValueBindings,
-			AttributeMapping mapping,
-			SharedSessionContractImplementor session) {
-		mapping.decompose(
-				value,
-				0,
-				jdbcValueBindings,
-				null,
-				(valueIndex, bindings, noop, jdbcValue, selectableMapping) -> {
-					if ( selectableMapping.isUpdateable() ) {
-						bindings.bindValue(
-								jdbcValue,
-								selectableMapping.getSelectionExpression(),
-								ParameterUsage.RESTRICT
-						);
-					}
-				},
-				session
-		);
 	}
 
 	protected void applyPartitionedSelectionRestrictions(

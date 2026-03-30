@@ -19,8 +19,11 @@ import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -110,37 +113,39 @@ public class JsonEmbeddableArrayTest {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-18717", reason = "Requires array functions to work with JSON_ARRAY")
+	// Full support requires, HHH-18717 array functions to work with JSON_ARRAY
+	@RequiresDialect(value = H2Dialect.class)
+	@RequiresDialect(value = PostgreSQLDialect.class)
 	public void testSelectionItems(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {
 					List<Tuple> tuples = session.createQuery(
 							"select " +
-									"b.aggregateArray[0].theInt," +
-									"b.aggregateArray[0].theDouble," +
-									"b.aggregateArray[0].theBoolean," +
-									"b.aggregateArray[0].theNumericBoolean," +
-									"b.aggregateArray[0].theStringBoolean," +
-									"b.aggregateArray[0].theString," +
-									"b.aggregateArray[0].theInteger," +
-									"b.aggregateArray[0].theUrl," +
-									"b.aggregateArray[0].theClob," +
-									"b.aggregateArray[0].theBinary," +
-									"b.aggregateArray[0].theDate," +
-									"b.aggregateArray[0].theTime," +
-									"b.aggregateArray[0].theTimestamp," +
-									"b.aggregateArray[0].theInstant," +
-									"b.aggregateArray[0].theUuid," +
-									"b.aggregateArray[0].gender," +
-									"b.aggregateArray[0].convertedGender," +
-									"b.aggregateArray[0].ordinalGender," +
-									"b.aggregateArray[0].theDuration," +
-									"b.aggregateArray[0].theLocalDateTime," +
-									"b.aggregateArray[0].theLocalDate," +
-									"b.aggregateArray[0].theLocalTime," +
-									"b.aggregateArray[0].theZonedDateTime," +
-									"b.aggregateArray[0].theOffsetDateTime," +
-									"b.aggregateArray[0].mutableValue " +
+									"b.aggregateArray[1].theInt," +
+									"b.aggregateArray[1].theDouble," +
+									"b.aggregateArray[1].theBoolean," +
+									"b.aggregateArray[1].theNumericBoolean," +
+									"b.aggregateArray[1].theStringBoolean," +
+									"b.aggregateArray[1].theString," +
+									"b.aggregateArray[1].theInteger," +
+									"b.aggregateArray[1].theUrl," +
+									"b.aggregateArray[1].theClob," +
+									"b.aggregateArray[1].theBinary," +
+									"b.aggregateArray[1].theDate," +
+									"b.aggregateArray[1].theTime," +
+									"b.aggregateArray[1].theTimestamp," +
+									"b.aggregateArray[1].theInstant," +
+									"b.aggregateArray[1].theUuid," +
+									"b.aggregateArray[1].gender," +
+									"b.aggregateArray[1].convertedGender," +
+									"b.aggregateArray[1].ordinalGender," +
+									"b.aggregateArray[1].theDuration," +
+									"b.aggregateArray[1].theLocalDateTime," +
+									"b.aggregateArray[1].theLocalDate," +
+									"b.aggregateArray[1].theLocalTime," +
+									"b.aggregateArray[1].theZonedDateTime," +
+									"b.aggregateArray[1].theOffsetDateTime," +
+									"b.aggregateArray[1].mutableValue " +
 									"from JsonArrayHolder b where b.id = 1",
 							Tuple.class
 					).getResultList();
@@ -203,7 +208,7 @@ public class JsonEmbeddableArrayTest {
 	public void testUpdateAggregateMember(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createMutationQuery( "update JsonArrayHolder b set b.aggregateArray[0].theString = null where b.id = 1" ).executeUpdate();
+					session.createMutationQuery( "update JsonArrayHolder b set b.aggregateArray[1].theString = null where b.id = 1" ).executeUpdate();
 					EmbeddableAggregate[] struct = EmbeddableAggregate.createAggregateArray1();
 					struct[0].setTheString( null );
 					EmbeddableAggregate.assertArraysEquals( struct, session.find( JsonArrayHolder.class, 1L ).getAggregateArray() );
@@ -216,7 +221,7 @@ public class JsonEmbeddableArrayTest {
 	public void testUpdateMultipleAggregateMembers(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createMutationQuery( "update JsonArrayHolder b set b.aggregateArray.theString = null, b.aggregateArray[0].theUuid = null" ).executeUpdate();
+					session.createMutationQuery( "update JsonArrayHolder b set b.aggregateArray.theString = null, b.aggregateArray[1].theUuid = null" ).executeUpdate();
 					EmbeddableAggregate[] struct = EmbeddableAggregate.createAggregateArray1();
 					struct[0].setTheString( null );
 					struct[0].setTheUuid( null );
@@ -233,31 +238,31 @@ public class JsonEmbeddableArrayTest {
 					EmbeddableAggregate[] struct = EmbeddableAggregate.createAggregateArray1();
 					session.createMutationQuery(
 									"update JsonArrayHolder b set " +
-											"b.aggregateArray[0].theInt = :theInt," +
-											"b.aggregateArray[0].theDouble = :theDouble," +
-											"b.aggregateArray[0].theBoolean = :theBoolean," +
-											"b.aggregateArray[0].theNumericBoolean = :theNumericBoolean," +
-											"b.aggregateArray[0].theStringBoolean = :theStringBoolean," +
-											"b.aggregateArray[0].theString = :theString," +
-											"b.aggregateArray[0].theInteger = :theInteger," +
-											"b.aggregateArray[0].theUrl = :theUrl," +
-											"b.aggregateArray[0].theClob = :theClob," +
-											"b.aggregateArray[0].theBinary = :theBinary," +
-											"b.aggregateArray[0].theDate = :theDate," +
-											"b.aggregateArray[0].theTime = :theTime," +
-											"b.aggregateArray[0].theTimestamp = :theTimestamp," +
-											"b.aggregateArray[0].theInstant = :theInstant," +
-											"b.aggregateArray[0].theUuid = :theUuid," +
-											"b.aggregateArray[0].gender = :gender," +
-											"b.aggregateArray[0].convertedGender = :convertedGender," +
-											"b.aggregateArray[0].ordinalGender = :ordinalGender," +
-											"b.aggregateArray[0].theDuration = :theDuration," +
-											"b.aggregateArray[0].theLocalDateTime = :theLocalDateTime," +
-											"b.aggregateArray[0].theLocalDate = :theLocalDate," +
-											"b.aggregateArray[0].theLocalTime = :theLocalTime," +
-											"b.aggregateArray[0].theZonedDateTime = :theZonedDateTime," +
-											"b.aggregateArray[0].theOffsetDateTime = :theOffsetDateTime," +
-											"b.aggregateArray[0].mutableValue = :mutableValue " +
+											"b.aggregateArray[1].theInt = :theInt," +
+											"b.aggregateArray[1].theDouble = :theDouble," +
+											"b.aggregateArray[1].theBoolean = :theBoolean," +
+											"b.aggregateArray[1].theNumericBoolean = :theNumericBoolean," +
+											"b.aggregateArray[1].theStringBoolean = :theStringBoolean," +
+											"b.aggregateArray[1].theString = :theString," +
+											"b.aggregateArray[1].theInteger = :theInteger," +
+											"b.aggregateArray[1].theUrl = :theUrl," +
+											"b.aggregateArray[1].theClob = :theClob," +
+											"b.aggregateArray[1].theBinary = :theBinary," +
+											"b.aggregateArray[1].theDate = :theDate," +
+											"b.aggregateArray[1].theTime = :theTime," +
+											"b.aggregateArray[1].theTimestamp = :theTimestamp," +
+											"b.aggregateArray[1].theInstant = :theInstant," +
+											"b.aggregateArray[1].theUuid = :theUuid," +
+											"b.aggregateArray[1].gender = :gender," +
+											"b.aggregateArray[1].convertedGender = :convertedGender," +
+											"b.aggregateArray[1].ordinalGender = :ordinalGender," +
+											"b.aggregateArray[1].theDuration = :theDuration," +
+											"b.aggregateArray[1].theLocalDateTime = :theLocalDateTime," +
+											"b.aggregateArray[1].theLocalDate = :theLocalDate," +
+											"b.aggregateArray[1].theLocalTime = :theLocalTime," +
+											"b.aggregateArray[1].theZonedDateTime = :theZonedDateTime," +
+											"b.aggregateArray[1].theOffsetDateTime = :theOffsetDateTime," +
+											"b.aggregateArray[1].mutableValue = :mutableValue " +
 											"where b.id = 2"
 							)
 							.setParameter( "theInt", struct[0].getTheInt() )

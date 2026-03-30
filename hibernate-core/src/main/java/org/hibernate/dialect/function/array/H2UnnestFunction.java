@@ -8,7 +8,6 @@ import java.util.List;
 
 import org.hibernate.dialect.function.UnnestSetReturningFunctionTypeResolver;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -232,7 +231,6 @@ public class H2UnnestFunction extends UnnestFunction {
 				// For column references we render an emulation through system_range(),
 				// so we need to render an array access to get to the element
 				final String elementReadExpression = "array_get(" + arrayColumnReference.getExpressionText() + "," + Template.TEMPLATE + ".x)";
-				final String arrayReadExpression = NullnessUtil.castNonNull( arrayColumnReference.getReadExpression() );
 				final EmbeddableMappingType embeddableMappingType = aggregateJdbcType.getEmbeddableMappingType();
 				final int jdbcValueCount = embeddableMappingType.getJdbcValueCount();
 				returnType = new SelectableMapping[jdbcValueCount + (indexMapping == null ? 0 : 1)];
@@ -240,7 +238,7 @@ public class H2UnnestFunction extends UnnestFunction {
 					final SelectableMapping selectableMapping = embeddableMappingType.getJdbcValueSelectable( i );
 					// The array expression has to be replaced with the actual array_get read expression in this emulation
 					final String customReadExpression = selectableMapping.getCustomReadExpression()
-							.replace( arrayReadExpression, elementReadExpression );
+							.replace( Template.TEMPLATE, elementReadExpression );
 					returnType[i] = new SelectableMappingImpl(
 							selectableMapping.getContainingTableExpression(),
 							selectableMapping.getSelectablePath().getSelectableName(),

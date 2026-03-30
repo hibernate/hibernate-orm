@@ -305,9 +305,7 @@ public class BasicTypeRegistry implements Serializable {
 				}
 			}
 		}
-		final var createdType = creator.get();
-		register( javaType, jdbcType, createdType );
-		return createdType;
+		return getOrRegister( javaType, jdbcType, creator.get() );
 	}
 
 	private static boolean registeredTypeMatches(JavaType<?> javaType, JdbcType jdbcType, @Nullable BasicType<?> registeredType) {
@@ -316,16 +314,24 @@ public class BasicTypeRegistry implements Serializable {
 			&& registeredType.getMappedJavaType() == javaType;
 	}
 
-	private <J> void register(JavaType<J> javaType, JdbcType jdbcType, BasicType<J> createdType) {
-		if ( createdType != null ) {
-			// if we are still building mappings, register this adhoc
-			// type via a unique code. (This is to support Envers.)
-			try {
-				getBootstrapContext().registerAdHocBasicType( createdType );
+	private <J> BasicType<J> getOrRegister(JavaType<J> javaType, JdbcType jdbcType, BasicType<J> createdType) {
+		// if we are still building mappings, register this adhoc
+		// type via a unique code. (This is to support Envers.)
+		try {
+			final BootstrapContext bootstrapContext = getBootstrapContext();
+			final BasicType<J> existingAdHocBasicType = bootstrapContext.findAdHocBasicType( javaType, jdbcType );
+			if ( existingAdHocBasicType != null ) {
+				return existingAdHocBasicType;
 			}
-			catch (Exception ignore) {
+			else {
+				bootstrapContext.registerAdHocBasicType( createdType );
 			}
 		}
+		catch (Exception ignore) {
+			// todo: Should we also call register?
+//			register( createdType );
+		}
+		return createdType;
 	}
 
 	private BootstrapContext getBootstrapContext() {

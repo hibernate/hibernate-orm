@@ -3193,21 +3193,16 @@ public class CommonFunctionFactory {
 				.setArgumentListSignature( "(ARRAY array, INTEGER index)" )
 				.register();
 	}
+
+	public void arrayGet_bracket() {
+		arrayGet_bracket( true );
+	}
+
 	/**
 	 * CockroachDB and PostgreSQL array_get() function via bracket syntax
 	 */
-	public void arrayGet_bracket() {
-		functionRegistry.patternDescriptorBuilder( "array_get", "?1[?2]" )
-				.setReturnTypeResolver( ElementViaArrayArgumentReturnTypeResolver.DEFAULT_INSTANCE )
-				.setArgumentsValidator(
-						StandardArgumentsValidators.composite(
-								ArrayArgumentValidator.DEFAULT_INSTANCE,
-								new ArgumentTypesValidator( null, ANY, INTEGER )
-						)
-				)
-				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.invariant( ANY, INTEGER ) )
-				.setArgumentListSignature( "(ARRAY array, INTEGER index)" )
-				.register();
+	public void arrayGet_bracket(boolean supportsJsonBracket) {
+		functionRegistry.register( "array_get", new ArrayGetBracketFunction( supportsJsonBracket ) );
 	}
 
 	/**

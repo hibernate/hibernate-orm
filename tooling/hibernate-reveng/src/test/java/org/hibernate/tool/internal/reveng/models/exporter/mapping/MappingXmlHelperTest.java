@@ -34,12 +34,18 @@ import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
+import org.hibernate.boot.models.annotations.internal.BasicJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterDefAnnotation;
 import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
+import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedNativeQueryJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedQueryJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.OptimisticLockAnnotation;
 import org.hibernate.boot.models.annotations.internal.OptimisticLockingAnnotation;
+import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.SecondaryTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ParamDefAnnotation;
 import org.hibernate.boot.models.annotations.internal.RowIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLRestrictionAnnotation;
@@ -47,9 +53,12 @@ import org.hibernate.boot.models.annotations.internal.SubselectAnnotation;
 import org.hibernate.models.internal.BasicModelsContextImpl;
 import org.hibernate.models.internal.SimpleClassLoading;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
+import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
+import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
@@ -81,6 +90,14 @@ public class MappingXmlHelperTest {
 				false, null, null, ctx);
 		entity.addAnnotationUsage(JpaAnnotations.ENTITY.createUsage(ctx));
 		return entity;
+	}
+
+	private DynamicFieldDetails addBasicField(
+			DynamicClassDetails entity, String fieldName, Class<?> javaType, ModelsContext ctx) {
+		ClassDetails typeClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(javaType.getName());
+		TypeDetails fieldType = new ClassTypeDetailsImpl(typeClass, TypeDetails.Kind.CLASS);
+		return entity.applyAttribute(fieldName, fieldType, false, false, ctx);
 	}
 
 	// --- Entity / class ---
@@ -1251,5 +1268,116 @@ public class MappingXmlHelperTest {
 		assertEquals(1, queries.size());
 		assertEquals("findAllNative", queries.get(0).name());
 		assertEquals("SELECT * FROM TEST_ENTITY", queries.get(0).query());
+	}
+
+	// --- getSecondaryTables ---
+
+	@Test
+	public void testGetSecondaryTablesNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertTrue(new MappingXmlHelper(entity).getSecondaryTables().isEmpty());
+	}
+
+	@Test
+	public void testGetSecondaryTablesSingle() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		PrimaryKeyJoinColumnJpaAnnotation pkjc = JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN.createUsage(ctx);
+		pkjc.name("EMP_ID");
+		SecondaryTableJpaAnnotation st = JpaAnnotations.SECONDARY_TABLE.createUsage(ctx);
+		st.name("EMP_DETAIL");
+		st.pkJoinColumns(new jakarta.persistence.PrimaryKeyJoinColumn[] { pkjc });
+		entity.addAnnotationUsage(st);
+		List<MappingXmlHelper.SecondaryTableInfo> tables = new MappingXmlHelper(entity).getSecondaryTables();
+		assertEquals(1, tables.size());
+		assertEquals("EMP_DETAIL", tables.get(0).tableName());
+		assertEquals(1, tables.get(0).keyColumns().size());
+		assertEquals("EMP_ID", tables.get(0).keyColumns().get(0));
+	}
+
+	// --- getColumnTable ---
+
+	@Test
+	public void testGetColumnTableNull() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		assertNull(new MappingXmlHelper(entity).getColumnTable(field));
+	}
+
+	@Test
+	public void testGetColumnTableSet() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "bio", String.class, ctx);
+		ColumnJpaAnnotation col = JpaAnnotations.COLUMN.createUsage(ctx);
+		col.name("BIO");
+		col.table("EMP_DETAIL");
+		field.addAnnotationUsage(col);
+		assertEquals("EMP_DETAIL", new MappingXmlHelper(entity).getColumnTable(field));
+	}
+
+	// --- getFormula ---
+
+	@Test
+	public void testGetFormulaNull() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		assertNull(new MappingXmlHelper(entity).getFormula(field));
+	}
+
+	@Test
+	public void testGetFormulaSet() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "fullName", String.class, ctx);
+		FormulaAnnotation formula = HibernateAnnotations.FORMULA.createUsage(ctx);
+		formula.value("FIRST_NAME || ' ' || LAST_NAME");
+		field.addAnnotationUsage(formula);
+		assertEquals("FIRST_NAME || ' ' || LAST_NAME", new MappingXmlHelper(entity).getFormula(field));
+	}
+
+	// --- isPropertyLazy ---
+
+	@Test
+	public void testIsPropertyLazyDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		assertFalse(new MappingXmlHelper(entity).isPropertyLazy(field));
+	}
+
+	@Test
+	public void testIsPropertyLazyTrue() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "data", byte[].class, ctx);
+		BasicJpaAnnotation basic = JpaAnnotations.BASIC.createUsage(ctx);
+		basic.fetch(FetchType.LAZY);
+		field.addAnnotationUsage(basic);
+		assertTrue(new MappingXmlHelper(entity).isPropertyLazy(field));
+	}
+
+	// --- isOptimisticLockExcluded ---
+
+	@Test
+	public void testIsOptimisticLockExcludedDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		assertFalse(new MappingXmlHelper(entity).isOptimisticLockExcluded(field));
+	}
+
+	@Test
+	public void testIsOptimisticLockExcludedTrue() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "counter", Integer.class, ctx);
+		OptimisticLockAnnotation ol = HibernateAnnotations.OPTIMISTIC_LOCK.createUsage(ctx);
+		ol.excluded(true);
+		field.addAnnotationUsage(ol);
+		assertTrue(new MappingXmlHelper(entity).isOptimisticLockExcluded(field));
 	}
 }

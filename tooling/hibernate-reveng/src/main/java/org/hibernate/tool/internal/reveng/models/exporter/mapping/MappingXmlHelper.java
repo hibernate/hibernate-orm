@@ -41,11 +41,14 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Basic;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
+import jakarta.persistence.SecondaryTable;
+import jakarta.persistence.SecondaryTables;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.Version;
@@ -58,7 +61,9 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
@@ -519,6 +524,58 @@ public class MappingXmlHelper {
 	}
 
 	public record NamedQueryInfo(String name, String query) {}
+
+	// --- Secondary tables ---
+
+	public List<SecondaryTableInfo> getSecondaryTables() {
+		List<SecondaryTableInfo> result = new ArrayList<>();
+		SecondaryTable single = classDetails.getDirectAnnotationUsage(SecondaryTable.class);
+		if (single != null) {
+			result.add(toSecondaryTableInfo(single));
+		}
+		SecondaryTables container = classDetails.getDirectAnnotationUsage(SecondaryTables.class);
+		if (container != null) {
+			for (SecondaryTable st : container.value()) {
+				result.add(toSecondaryTableInfo(st));
+			}
+		}
+		return result;
+	}
+
+	private SecondaryTableInfo toSecondaryTableInfo(SecondaryTable st) {
+		List<String> keyColumns = new ArrayList<>();
+		if (st.pkJoinColumns() != null) {
+			for (PrimaryKeyJoinColumn pkjc : st.pkJoinColumns()) {
+				keyColumns.add(pkjc.name());
+			}
+		}
+		return new SecondaryTableInfo(st.name(), keyColumns);
+	}
+
+	public record SecondaryTableInfo(String tableName, List<String> keyColumns) {}
+
+	// --- Property-level attributes ---
+
+	public String getColumnTable(FieldDetails field) {
+		Column col = field.getDirectAnnotationUsage(Column.class);
+		return col != null && col.table() != null && !col.table().isEmpty()
+				? col.table() : null;
+	}
+
+	public String getFormula(FieldDetails field) {
+		Formula formula = field.getDirectAnnotationUsage(Formula.class);
+		return formula != null ? formula.value() : null;
+	}
+
+	public boolean isPropertyLazy(FieldDetails field) {
+		Basic basic = field.getDirectAnnotationUsage(Basic.class);
+		return basic != null && basic.fetch() == FetchType.LAZY;
+	}
+
+	public boolean isOptimisticLockExcluded(FieldDetails field) {
+		OptimisticLock ol = field.getDirectAnnotationUsage(OptimisticLock.class);
+		return ol != null && ol.excluded();
+	}
 
 	// --- Private helpers ---
 

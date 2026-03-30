@@ -4,6 +4,13 @@
 <#else>
 <#include "table.mapping.ftl"/>
 </#if>
+<#list helper.getSecondaryTables() as st>
+        <secondary-table name="${st.tableName()}">
+<#list st.keyColumns() as kc>
+            <primary-key-join-column name="${kc}"/>
+</#list>
+        </secondary-table>
+</#list>
 <#include "inheritance.mapping.ftl"/>
 <#if helper.getRowId()??>
         <rowid>${helper.getRowId()}</rowid>

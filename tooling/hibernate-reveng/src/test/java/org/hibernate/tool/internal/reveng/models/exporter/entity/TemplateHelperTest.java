@@ -1434,6 +1434,57 @@ public class TemplateHelperTest {
 		assertEquals("Long id, String name", create(table).getMinimalConstructorParameterList());
 	}
 
+	// --- Collection type differentiation ---
+
+	@Test
+	public void testGetCollectionTypeNameSet() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getOneToManyFields().get(0);
+		assertEquals("Set<Employee>", helper.getCollectionTypeName(field));
+	}
+
+	@Test
+	public void testGetCollectionInitializerTypeSet() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getOneToManyFields().get(0);
+		assertEquals("HashSet", helper.getCollectionInitializerType(field));
+	}
+
+	@Test
+	public void testGetCollectionTypeNameList() {
+		ModelsContext ctx = new BasicModelsContextImpl(
+				SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = new DynamicClassDetails(
+				"Department", "com.example.Department",
+				false, null, null, ctx);
+		entity.addAnnotationUsage(JpaAnnotations.ENTITY.createUsage(ctx));
+		// Create a List<Employee> field
+		ClassDetails elementClass = new DynamicClassDetails(
+				"Employee", "com.example.Employee",
+				false, null, null, ctx);
+		ClassDetails listClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(java.util.List.class.getName());
+		TypeDetails elementType = new ClassTypeDetailsImpl(elementClass, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				listClass, Collections.singletonList(elementType), null);
+		DynamicFieldDetails field = entity.applyAttribute(
+				"employees", fieldType, false, true, ctx);
+		field.addAnnotationUsage(JpaAnnotations.ONE_TO_MANY.createUsage(ctx));
+		TemplateHelper helper = new TemplateHelper(entity, ctx,
+				new ImportContextImpl("com.example"), true,
+				Collections.emptyMap(), Collections.emptyMap());
+		assertEquals("List<Employee>", helper.getCollectionTypeName(field));
+		assertEquals("ArrayList", helper.getCollectionInitializerType(field));
+	}
+
 	private DynamicFieldDetails addElementCollectionField(
 			DynamicClassDetails entity, String fieldName, Class<?> elementJavaType, ModelsContext ctx) {
 		ClassDetails elementClass = ctx.getClassDetailsRegistry()

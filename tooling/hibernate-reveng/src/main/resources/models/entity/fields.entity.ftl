@@ -28,12 +28,12 @@
 </#list>
 <#-- OneToMany fields -->
 <#list templateHelper.getOneToManyFields() as field>
-    private ${templateHelper.getCollectionTypeName(field)} ${field.getName()} = new ${templateHelper.importType("java.util.HashSet")}<>(0);
+    private ${templateHelper.getCollectionTypeName(field)} ${field.getName()} = new ${templateHelper.getCollectionInitializerType(field)}<>(0);
 
 </#list>
 <#-- ManyToMany fields -->
 <#list templateHelper.getManyToManyFields() as field>
-    private ${templateHelper.getCollectionTypeName(field)} ${field.getName()} = new ${templateHelper.importType("java.util.HashSet")}<>(0);
+    private ${templateHelper.getCollectionTypeName(field)} ${field.getName()} = new ${templateHelper.getCollectionInitializerType(field)}<>(0);
 
 </#list>
 <#-- Embedded fields -->
@@ -43,6 +43,6 @@
 </#list>
 <#-- ElementCollection fields -->
 <#list templateHelper.getElementCollectionFields() as field>
-    private ${templateHelper.getCollectionTypeName(field)} ${field.getName()} = new ${templateHelper.importType("java.util.HashSet")}<>(0);
+    private ${templateHelper.getCollectionTypeName(field)} ${field.getName()} = new ${templateHelper.getCollectionInitializerType(field)}<>(0);
 
 </#list>

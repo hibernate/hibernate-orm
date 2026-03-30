@@ -210,14 +210,25 @@ public class TemplateHelper {
 	}
 
 	public String getCollectionTypeName(FieldDetails field) {
-		importType("java.util.Set");
+		String rawClassName = field.getType().determineRawClass().getClassName();
+		String simpleName = importType(rawClassName);
 		TypeDetails elementType = field.getElementType();
 		if (elementType != null) {
 			String elementClassName = elementType.determineRawClass().getClassName();
 			importType(elementClassName);
-			return "Set<" + elementType.determineRawClass().getName() + ">";
+			return simpleName + "<" + elementType.determineRawClass().getName() + ">";
 		}
-		return "Set<?>";
+		return simpleName + "<?>";
+	}
+
+	public String getCollectionInitializerType(FieldDetails field) {
+		String rawClassName = field.getType().determineRawClass().getClassName();
+		return switch (rawClassName) {
+			case "java.util.List" -> importType("java.util.ArrayList");
+			case "java.util.Map" -> importType("java.util.HashMap");
+			case "java.util.Collection" -> importType("java.util.ArrayList");
+			default -> importType("java.util.HashSet");
+		};
 	}
 
 	// --- Getter/setter names ---

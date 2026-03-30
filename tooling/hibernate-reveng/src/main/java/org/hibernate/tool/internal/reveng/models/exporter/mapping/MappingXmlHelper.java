@@ -44,6 +44,17 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.Version;
 
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.ConcreteProxy;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.annotations.OptimisticLocking;
+import org.hibernate.annotations.RowId;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.Subselect;
+
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.TypeDetails;
@@ -66,6 +77,59 @@ public class MappingXmlHelper {
 
 	public String getClassName() {
 		return classDetails.getClassName();
+	}
+
+	public String getPackageName() {
+		String name = getClassName();
+		int dot = name.lastIndexOf('.');
+		return dot > 0 ? name.substring(0, dot) : null;
+	}
+
+	// --- Entity-level Hibernate extensions ---
+
+	public boolean isMutable() {
+		return !classDetails.hasDirectAnnotationUsage(Immutable.class);
+	}
+
+	public boolean isDynamicUpdate() {
+		return classDetails.hasDirectAnnotationUsage(DynamicUpdate.class);
+	}
+
+	public boolean isDynamicInsert() {
+		return classDetails.hasDirectAnnotationUsage(DynamicInsert.class);
+	}
+
+	public int getBatchSize() {
+		BatchSize bs = classDetails.getDirectAnnotationUsage(BatchSize.class);
+		return bs != null ? bs.size() : 0;
+	}
+
+	public String getSqlRestriction() {
+		SQLRestriction sr = classDetails.getDirectAnnotationUsage(SQLRestriction.class);
+		return sr != null ? sr.value() : null;
+	}
+
+	public String getOptimisticLockMode() {
+		OptimisticLocking ol = classDetails.getDirectAnnotationUsage(OptimisticLocking.class);
+		if (ol == null || ol.type() == OptimisticLockType.VERSION) {
+			return null;
+		}
+		return ol.type().name();
+	}
+
+	public String getRowId() {
+		RowId rid = classDetails.getDirectAnnotationUsage(RowId.class);
+		return rid != null && rid.value() != null && !rid.value().isEmpty()
+				? rid.value() : null;
+	}
+
+	public String getSubselect() {
+		Subselect ss = classDetails.getDirectAnnotationUsage(Subselect.class);
+		return ss != null ? ss.value() : null;
+	}
+
+	public boolean isConcreteProxy() {
+		return classDetails.hasDirectAnnotationUsage(ConcreteProxy.class);
 	}
 
 	// --- Table ---

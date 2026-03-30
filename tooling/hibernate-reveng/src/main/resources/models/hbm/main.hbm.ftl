@@ -5,4 +5,15 @@
 
 <hibernate-mapping>
 <#include "class.hbm.ftl"/>
+<#list helper.getFilterDefs() as fd>
+<#if fd.parameters()?size == 0>
+    <filter-def name="${fd.name()}"<#if fd.defaultCondition()?? && fd.defaultCondition()?length != 0> condition="${fd.defaultCondition()}"</#if>/>
+<#else>
+    <filter-def name="${fd.name()}"<#if fd.defaultCondition()?? && fd.defaultCondition()?length != 0> condition="${fd.defaultCondition()}"</#if>>
+<#list fd.parameters()?keys as paramName>
+        <filter-param name="${paramName}" type="${fd.parameters()[paramName]}"/>
+</#list>
+    </filter-def>
+</#if>
+</#list>
 </hibernate-mapping>

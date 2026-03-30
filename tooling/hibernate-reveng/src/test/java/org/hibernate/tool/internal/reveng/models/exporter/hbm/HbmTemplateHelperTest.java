@@ -18,6 +18,7 @@ package org.hibernate.tool.internal.reveng.models.exporter.hbm;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 import jakarta.persistence.AccessType;
@@ -34,14 +35,28 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.annotations.Filter;
 import org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation;
+import org.hibernate.annotations.AnyDiscriminatorValue;
+import org.hibernate.boot.models.annotations.internal.AnyAnnotation;
+import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorAnnotation;
+import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValueAnnotation;
+import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValuesAnnotation;
+import org.hibernate.boot.models.annotations.internal.AnyKeyJavaClassAnnotation;
+import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.SecondaryTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
 import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
+import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
+import org.hibernate.boot.models.annotations.internal.FilterDefAnnotation;
+import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
 import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NotFoundAnnotation;
 import org.hibernate.boot.models.annotations.internal.OneToManyJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OptimisticLockingAnnotation;
 import org.hibernate.boot.models.annotations.internal.OrderColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ParamDefAnnotation;
 import org.hibernate.boot.models.annotations.internal.RowIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLRestrictionAnnotation;
 import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
@@ -1120,5 +1135,259 @@ public class HbmTemplateHelperTest {
 		assertEquals("GEN_NAME", params.get("segment_column_name"));
 		assertEquals("GEN_VAL", params.get("value_column_name"));
 		assertEquals("MY_ENTITY", params.get("segment_value"));
+	}
+
+	// --- getFilters ---
+
+	@Test
+	public void testGetFiltersNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertTrue(new HbmTemplateHelper(entity).getFilters().isEmpty());
+	}
+
+	@Test
+	public void testGetFiltersSingle() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		FilterAnnotation filter = HibernateAnnotations.FILTER.createUsage(ctx);
+		filter.name("activeFilter");
+		filter.condition("active = :isActive");
+		entity.addAnnotationUsage(filter);
+		List<HbmTemplateHelper.FilterInfo> filters = new HbmTemplateHelper(entity).getFilters();
+		assertEquals(1, filters.size());
+		assertEquals("activeFilter", filters.get(0).name());
+		assertEquals("active = :isActive", filters.get(0).condition());
+	}
+
+	@Test
+	public void testGetFiltersMultiple() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		FilterAnnotation f1 = HibernateAnnotations.FILTER.createUsage(ctx);
+		f1.name("activeFilter");
+		f1.condition("active = true");
+		FilterAnnotation f2 = HibernateAnnotations.FILTER.createUsage(ctx);
+		f2.name("tenantFilter");
+		f2.condition("tenant_id = :tid");
+		FiltersAnnotation filters = HibernateAnnotations.FILTERS.createUsage(ctx);
+		filters.value(new Filter[] { f1, f2 });
+		entity.addAnnotationUsage(filters);
+		List<HbmTemplateHelper.FilterInfo> result = new HbmTemplateHelper(entity).getFilters();
+		assertEquals(2, result.size());
+		assertEquals("activeFilter", result.get(0).name());
+		assertEquals("tenantFilter", result.get(1).name());
+	}
+
+	// --- getFilterDefs ---
+
+	@Test
+	public void testGetFilterDefsNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertTrue(new HbmTemplateHelper(entity).getFilterDefs().isEmpty());
+	}
+
+	@Test
+	public void testGetFilterDefsSimple() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		FilterDefAnnotation fd = HibernateAnnotations.FILTER_DEF.createUsage(ctx);
+		fd.name("activeFilter");
+		fd.defaultCondition("active = true");
+		entity.addAnnotationUsage(fd);
+		List<HbmTemplateHelper.FilterDefInfo> defs = new HbmTemplateHelper(entity).getFilterDefs();
+		assertEquals(1, defs.size());
+		assertEquals("activeFilter", defs.get(0).name());
+		assertEquals("active = true", defs.get(0).defaultCondition());
+		assertTrue(defs.get(0).parameters().isEmpty());
+	}
+
+	@Test
+	public void testGetFilterDefsWithParams() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		ParamDefAnnotation pd = new ParamDefAnnotation(ctx);
+		pd.name("isActive");
+		pd.type(Boolean.class);
+		FilterDefAnnotation fd = HibernateAnnotations.FILTER_DEF.createUsage(ctx);
+		fd.name("activeFilter");
+		fd.defaultCondition("active = :isActive");
+		fd.parameters(new org.hibernate.annotations.ParamDef[] { pd });
+		entity.addAnnotationUsage(fd);
+		List<HbmTemplateHelper.FilterDefInfo> defs = new HbmTemplateHelper(entity).getFilterDefs();
+		assertEquals(1, defs.size());
+		assertEquals("activeFilter", defs.get(0).name());
+		Map<String, String> params = defs.get(0).parameters();
+		assertEquals(1, params.size());
+		assertEquals("java.lang.Boolean", params.get("isActive"));
+	}
+
+	// --- getJoins ---
+
+	@Test
+	public void testGetJoinsNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertTrue(new HbmTemplateHelper(entity).getJoins().isEmpty());
+	}
+
+	@Test
+	public void testGetJoinsSingle() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		PrimaryKeyJoinColumnJpaAnnotation pkjc = JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN.createUsage(ctx);
+		pkjc.name("EMP_ID");
+		SecondaryTableJpaAnnotation st = JpaAnnotations.SECONDARY_TABLE.createUsage(ctx);
+		st.name("EMP_DETAIL");
+		st.pkJoinColumns(new jakarta.persistence.PrimaryKeyJoinColumn[] { pkjc });
+		entity.addAnnotationUsage(st);
+		List<HbmTemplateHelper.JoinInfo> joins = new HbmTemplateHelper(entity).getJoins();
+		assertEquals(1, joins.size());
+		assertEquals("EMP_DETAIL", joins.get(0).tableName());
+		assertEquals(1, joins.get(0).keyColumns().size());
+		assertEquals("EMP_ID", joins.get(0).keyColumns().get(0));
+	}
+
+	// --- getJoinProperties ---
+
+	@Test
+	public void testGetJoinPropertiesEmpty() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		addBasicField(entity, "name", String.class, ctx);
+		assertTrue(new HbmTemplateHelper(entity).getJoinProperties("EMP_DETAIL").isEmpty());
+	}
+
+	@Test
+	public void testGetJoinPropertiesMatchesTable() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails mainField = addBasicField(entity, "name", String.class, ctx);
+		ColumnJpaAnnotation mainCol = JpaAnnotations.COLUMN.createUsage(ctx);
+		mainCol.name("NAME");
+		mainField.addAnnotationUsage(mainCol);
+		DynamicFieldDetails joinField = addBasicField(entity, "bio", String.class, ctx);
+		ColumnJpaAnnotation joinCol = JpaAnnotations.COLUMN.createUsage(ctx);
+		joinCol.name("BIO");
+		joinCol.table("EMP_DETAIL");
+		joinField.addAnnotationUsage(joinCol);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		List<FieldDetails> joinProps = helper.getJoinProperties("EMP_DETAIL");
+		assertEquals(1, joinProps.size());
+		assertEquals("bio", joinProps.get(0).getName());
+		// main field should NOT appear in basic fields (excluded from primary table)
+		// but the join field should NOT appear in basic fields either
+		List<FieldDetails> basicFields = helper.getBasicFields();
+		assertEquals(1, basicFields.size());
+		assertEquals("name", basicFields.get(0).getName());
+	}
+
+	// --- getAnyFields ---
+
+	@Test
+	public void testGetAnyFieldsNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		addBasicField(entity, "name", String.class, ctx);
+		assertTrue(new HbmTemplateHelper(entity).getAnyFields().isEmpty());
+	}
+
+	@Test
+	public void testGetAnyFieldsPresent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "payment", Object.class, ctx);
+		AnyAnnotation any = HibernateAnnotations.ANY.createUsage(ctx);
+		field.addAnnotationUsage(any);
+		List<FieldDetails> anyFields = new HbmTemplateHelper(entity).getAnyFields();
+		assertEquals(1, anyFields.size());
+		assertEquals("payment", anyFields.get(0).getName());
+	}
+
+	@Test
+	public void testGetAnyFieldsExcludedFromBasicFields() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails nameField = addBasicField(entity, "name", String.class, ctx);
+		DynamicFieldDetails anyField = addBasicField(entity, "payment", Object.class, ctx);
+		anyField.addAnnotationUsage(HibernateAnnotations.ANY.createUsage(ctx));
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertEquals(1, helper.getBasicFields().size());
+		assertEquals("name", helper.getBasicFields().get(0).getName());
+	}
+
+	// --- getAnyIdType ---
+
+	@Test
+	public void testGetAnyIdTypeDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "payment", Object.class, ctx);
+		assertEquals("long", new HbmTemplateHelper(entity).getAnyIdType(field));
+	}
+
+	@Test
+	public void testGetAnyIdTypeWithAnnotation() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "payment", Object.class, ctx);
+		AnyKeyJavaClassAnnotation akjc = HibernateAnnotations.ANY_KEY_JAVA_CLASS.createUsage(ctx);
+		akjc.value(Long.class);
+		field.addAnnotationUsage(akjc);
+		assertEquals("java.lang.Long", new HbmTemplateHelper(entity).getAnyIdType(field));
+	}
+
+	// --- getAnyMetaType ---
+
+	@Test
+	public void testGetAnyMetaTypeDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "payment", Object.class, ctx);
+		assertEquals("string", new HbmTemplateHelper(entity).getAnyMetaType(field));
+	}
+
+	@Test
+	public void testGetAnyMetaTypeInteger() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "payment", Object.class, ctx);
+		AnyDiscriminatorAnnotation ad = HibernateAnnotations.ANY_DISCRIMINATOR.createUsage(ctx);
+		ad.value(jakarta.persistence.DiscriminatorType.INTEGER);
+		field.addAnnotationUsage(ad);
+		assertEquals("integer", new HbmTemplateHelper(entity).getAnyMetaType(field));
+	}
+
+	// --- getAnyMetaValues ---
+
+	@Test
+	public void testGetAnyMetaValuesNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "payment", Object.class, ctx);
+		assertTrue(new HbmTemplateHelper(entity).getAnyMetaValues(field).isEmpty());
+	}
+
+	@Test
+	public void testGetAnyMetaValuesWithContainer() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "payment", Object.class, ctx);
+		AnyDiscriminatorValueAnnotation v1 = HibernateAnnotations.ANY_DISCRIMINATOR_VALUE.createUsage(ctx);
+		v1.discriminator("CC");
+		v1.entity(String.class);
+		AnyDiscriminatorValueAnnotation v2 = HibernateAnnotations.ANY_DISCRIMINATOR_VALUE.createUsage(ctx);
+		v2.discriminator("WI");
+		v2.entity(Long.class);
+		AnyDiscriminatorValuesAnnotation container = HibernateAnnotations.ANY_DISCRIMINATOR_VALUES.createUsage(ctx);
+		container.value(new AnyDiscriminatorValue[] { v1, v2 });
+		field.addAnnotationUsage(container);
+		List<HbmTemplateHelper.AnyMetaValue> metaValues = new HbmTemplateHelper(entity).getAnyMetaValues(field);
+		assertEquals(2, metaValues.size());
+		assertEquals("CC", metaValues.get(0).value());
+		assertEquals("java.lang.String", metaValues.get(0).entityClass());
+		assertEquals("WI", metaValues.get(1).value());
+		assertEquals("java.lang.Long", metaValues.get(1).entityClass());
 	}
 }

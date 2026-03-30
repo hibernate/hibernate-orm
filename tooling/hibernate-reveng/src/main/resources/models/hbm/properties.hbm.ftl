@@ -105,3 +105,18 @@
 </#list>
     </component>
 </#list>
+<#-- Any -->
+<#list helper.getAnyFields() as field>
+    <any name="${field.getName()}"
+        id-type="${helper.getAnyIdType(field)}"
+        meta-type="${helper.getAnyMetaType(field)}"<#if helper.getAccessType(field)??>
+        access="${helper.getAccessType(field)}"</#if>>
+<#list helper.getAnyMetaValues(field) as mv>
+        <meta-value value="${mv.value()}" class="${mv.entityClass()}"/>
+</#list>
+        <column name="${helper.getColumnName(field)}"/>
+<#if helper.getJoinColumnName(field)??>
+        <column name="${helper.getJoinColumnName(field)}"/>
+</#if>
+    </any>
+</#list>

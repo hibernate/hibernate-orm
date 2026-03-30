@@ -86,4 +86,26 @@
 </#list>
 <#-- Properties -->
 <#include "properties.hbm.ftl"/>
+<#-- Joins (SecondaryTable) -->
+<#list helper.getJoins() as join>
+    <join table="${join.tableName()}">
+        <key>
+<#list join.keyColumns() as colName>
+            <column name="${colName}"/>
+</#list>
+        </key>
+<#list helper.getJoinProperties(join.tableName()) as field>
+        <property
+            name="${field.getName()}"
+            type="${helper.getHibernateTypeName(field)}"<#if helper.getAccessType(field)??>
+            access="${helper.getAccessType(field)}"</#if>>
+            <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
+        </property>
+</#list>
+    </join>
+</#list>
+<#-- Filters -->
+<#list helper.getFilters() as filter>
+    <filter name="${filter.name()}"<#if filter.condition()?? && filter.condition()?length != 0> condition="${filter.condition()}"</#if>/>
+</#list>
 </${helper.getClassTag()}>

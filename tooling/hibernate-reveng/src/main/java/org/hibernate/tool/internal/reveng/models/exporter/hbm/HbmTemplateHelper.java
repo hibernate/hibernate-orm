@@ -46,11 +46,18 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.SecondaryTable;
+import jakarta.persistence.SecondaryTables;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
 import jakarta.persistence.Version;
 
+import org.hibernate.annotations.Any;
+import org.hibernate.annotations.AnyDiscriminator;
+import org.hibernate.annotations.AnyDiscriminatorValue;
+import org.hibernate.annotations.AnyDiscriminatorValues;
+import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CollectionId;
@@ -59,12 +66,17 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
+import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.Subselect;
@@ -285,7 +297,9 @@ public class HbmTemplateHelper {
 			if (!isRelationshipField(field) && !isEmbeddedField(field)
 					&& !field.hasDirectAnnotationUsage(EmbeddedId.class)
 					&& !field.hasDirectAnnotationUsage(Id.class)
-					&& !field.hasDirectAnnotationUsage(Version.class)) {
+					&& !field.hasDirectAnnotationUsage(Version.class)
+					&& !field.hasDirectAnnotationUsage(Any.class)
+					&& !isSecondaryTableField(field)) {
 				result.add(field);
 			}
 		}
@@ -315,6 +329,49 @@ public class HbmTemplateHelper {
 	public List<FieldDetails> getEmbeddedFields() {
 		return getFieldsWithAnnotation(Embedded.class);
 	}
+
+	public List<FieldDetails> getAnyFields() {
+		return getFieldsWithAnnotation(Any.class);
+	}
+
+	// --- Any ---
+
+	public String getAnyIdType(FieldDetails field) {
+		AnyKeyJavaClass akjc = field.getDirectAnnotationUsage(AnyKeyJavaClass.class);
+		if (akjc != null) {
+			return JavaClassToHibernateType.toHibernateType(akjc.value().getName());
+		}
+		return "long";
+	}
+
+	public String getAnyMetaType(FieldDetails field) {
+		AnyDiscriminator ad = field.getDirectAnnotationUsage(AnyDiscriminator.class);
+		if (ad == null) {
+			return "string";
+		}
+		return switch (ad.value()) {
+			case STRING -> "string";
+			case CHAR -> "character";
+			case INTEGER -> "integer";
+		};
+	}
+
+	public List<AnyMetaValue> getAnyMetaValues(FieldDetails field) {
+		List<AnyMetaValue> result = new ArrayList<>();
+		AnyDiscriminatorValue single = field.getDirectAnnotationUsage(AnyDiscriminatorValue.class);
+		if (single != null) {
+			result.add(new AnyMetaValue(single.discriminator(), single.entity().getName()));
+		}
+		AnyDiscriminatorValues container = field.getDirectAnnotationUsage(AnyDiscriminatorValues.class);
+		if (container != null) {
+			for (AnyDiscriminatorValue adv : container.value()) {
+				result.add(new AnyMetaValue(adv.discriminator(), adv.entity().getName()));
+			}
+		}
+		return result;
+	}
+
+	public record AnyMetaValue(String value, String entityClass) {}
 
 	// --- Property-level attributes ---
 
@@ -689,6 +746,92 @@ public class HbmTemplateHelper {
 		return metaAttributes.getOrDefault(name, Collections.emptyList());
 	}
 
+	// --- Filters ---
+
+	public List<FilterInfo> getFilters() {
+		List<FilterInfo> result = new ArrayList<>();
+		Filter single = classDetails.getDirectAnnotationUsage(Filter.class);
+		if (single != null) {
+			result.add(new FilterInfo(single.name(), single.condition()));
+		}
+		Filters container = classDetails.getDirectAnnotationUsage(Filters.class);
+		if (container != null) {
+			for (Filter f : container.value()) {
+				result.add(new FilterInfo(f.name(), f.condition()));
+			}
+		}
+		return result;
+	}
+
+	public List<FilterDefInfo> getFilterDefs() {
+		List<FilterDefInfo> result = new ArrayList<>();
+		FilterDef single = classDetails.getDirectAnnotationUsage(FilterDef.class);
+		if (single != null) {
+			result.add(toFilterDefInfo(single));
+		}
+		FilterDefs container = classDetails.getDirectAnnotationUsage(FilterDefs.class);
+		if (container != null) {
+			for (FilterDef fd : container.value()) {
+				result.add(toFilterDefInfo(fd));
+			}
+		}
+		return result;
+	}
+
+	private FilterDefInfo toFilterDefInfo(FilterDef fd) {
+		Map<String, String> params = new java.util.LinkedHashMap<>();
+		if (fd.parameters() != null) {
+			for (ParamDef pd : fd.parameters()) {
+				params.put(pd.name(), JavaClassToHibernateType.toHibernateType(pd.type().getName()));
+			}
+		}
+		return new FilterDefInfo(fd.name(), fd.defaultCondition(), params);
+	}
+
+	public record FilterInfo(String name, String condition) {}
+
+	public record FilterDefInfo(String name, String defaultCondition, Map<String, String> parameters) {}
+
+	// --- SecondaryTable / Joins ---
+
+	public List<JoinInfo> getJoins() {
+		List<JoinInfo> result = new ArrayList<>();
+		SecondaryTable single = classDetails.getDirectAnnotationUsage(SecondaryTable.class);
+		if (single != null) {
+			result.add(toJoinInfo(single));
+		}
+		SecondaryTables container = classDetails.getDirectAnnotationUsage(SecondaryTables.class);
+		if (container != null) {
+			for (SecondaryTable st : container.value()) {
+				result.add(toJoinInfo(st));
+			}
+		}
+		return result;
+	}
+
+	public List<FieldDetails> getJoinProperties(String tableName) {
+		List<FieldDetails> result = new ArrayList<>();
+		for (FieldDetails field : classDetails.getFields()) {
+			Column col = field.getDirectAnnotationUsage(Column.class);
+			if (col != null && tableName.equals(col.table())) {
+				result.add(field);
+			}
+		}
+		return result;
+	}
+
+	private JoinInfo toJoinInfo(SecondaryTable st) {
+		List<String> keyColumns = new ArrayList<>();
+		if (st.pkJoinColumns() != null) {
+			for (PrimaryKeyJoinColumn pkjc : st.pkJoinColumns()) {
+				keyColumns.add(pkjc.name());
+			}
+		}
+		return new JoinInfo(st.name(), keyColumns);
+	}
+
+	public record JoinInfo(String tableName, List<String> keyColumns) {}
+
 	// --- Utilities ---
 
 	public String getCascadeString(CascadeType[] cascadeTypes) {
@@ -727,6 +870,11 @@ public class HbmTemplateHelper {
 
 	private boolean isEmbeddedField(FieldDetails field) {
 		return field.hasDirectAnnotationUsage(Embedded.class);
+	}
+
+	private boolean isSecondaryTableField(FieldDetails field) {
+		Column col = field.getDirectAnnotationUsage(Column.class);
+		return col != null && col.table() != null && !col.table().isEmpty();
 	}
 
 	private <A extends Annotation> List<FieldDetails> getFieldsWithAnnotation(Class<A> annotationType) {

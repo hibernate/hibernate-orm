@@ -104,6 +104,10 @@
 <#if orderColAnn?has_content>
     ${orderColAnn}
 </#if>
+<#assign filterAnns = templateHelper.generateFilterAnnotations(field)>
+<#if filterAnns?has_content>
+    ${filterAnns}
+</#if>
     public ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
         return this.${field.getName()};
     }
@@ -126,6 +130,10 @@
 <#assign orderColAnn = templateHelper.generateOrderColumnAnnotation(field)>
 <#if orderColAnn?has_content>
     ${orderColAnn}
+</#if>
+<#assign filterAnns = templateHelper.generateFilterAnnotations(field)>
+<#if filterAnns?has_content>
+    ${filterAnns}
 </#if>
     public ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
         return this.${field.getName()};
@@ -164,6 +172,10 @@
 <#assign orderColAnn = templateHelper.generateOrderColumnAnnotation(field)>
 <#if orderColAnn?has_content>
     ${orderColAnn}
+</#if>
+<#assign filterAnns = templateHelper.generateFilterAnnotations(field)>
+<#if filterAnns?has_content>
+    ${filterAnns}
 </#if>
     public ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
         return this.${field.getName()};

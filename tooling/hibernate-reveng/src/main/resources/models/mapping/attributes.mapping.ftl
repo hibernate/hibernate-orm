@@ -64,7 +64,8 @@
 <#assign o2mHasCascade = (helper.getOneToManyCascadeTypes(field)?size > 0)>
 <#assign o2mHasOrderBy = helper.getOrderBy(field)??>
 <#assign o2mHasOrderCol = helper.getOrderColumnName(field)??>
-<#assign o2mHasChildren = o2mHasCascade || o2mHasOrderBy || o2mHasOrderCol>
+<#assign o2mHasFilters = (helper.getCollectionFilters(field)?size > 0)>
+<#assign o2mHasChildren = o2mHasCascade || o2mHasOrderBy || o2mHasOrderCol || o2mHasFilters>
             <one-to-many name="${field.getName()}" target-entity="${helper.getOneToManyTargetEntity(field)}" mapped-by="${helper.getOneToManyMappedBy(field)}"<#if helper.getOneToManyFetchType(field)??> fetch="${helper.getOneToManyFetchType(field)}"</#if><#if helper.isOneToManyOrphanRemoval(field)> orphan-removal="true"</#if><#if o2mHasChildren>>
 <#if o2mHasOrderBy>
                 <order-by>${helper.getOrderBy(field)}</order-by>
@@ -76,6 +77,9 @@
 <#assign cascadeTypes = helper.getOneToManyCascadeTypes(field)>
 <#include "cascade.mapping.ftl"/>
 </#if>
+<#list helper.getCollectionFilters(field) as fi>
+                <filter name="${fi.name()}"<#if fi.condition()?has_content> condition="${fi.condition()}"</#if>/>
+</#list>
             </one-to-many>
 <#else/>/>
 </#if>
@@ -101,7 +105,8 @@
 <#assign m2mHasCascade = (helper.getManyToManyCascadeTypes(field)?size > 0)>
 <#assign m2mHasOrderBy = helper.getOrderBy(field)??>
 <#assign m2mHasOrderCol = helper.getOrderColumnName(field)??>
-<#assign m2mHasChildren = helper.getJoinTableName(field)?? || m2mHasCascade || m2mHasOrderBy || m2mHasOrderCol>
+<#assign m2mHasFilters = (helper.getCollectionFilters(field)?size > 0)>
+<#assign m2mHasChildren = helper.getJoinTableName(field)?? || m2mHasCascade || m2mHasOrderBy || m2mHasOrderCol || m2mHasFilters>
             <many-to-many name="${field.getName()}" target-entity="${helper.getManyToManyTargetEntity(field)}"<#if helper.getManyToManyMappedBy(field)??> mapped-by="${helper.getManyToManyMappedBy(field)}"</#if><#if helper.getManyToManyFetchType(field)??> fetch="${helper.getManyToManyFetchType(field)}"</#if><#if m2mHasChildren>>
 <#if m2mHasOrderBy>
                 <order-by>${helper.getOrderBy(field)}</order-by>
@@ -123,6 +128,9 @@
 </#if>
                 </join-table>
 </#if>
+<#list helper.getCollectionFilters(field) as fi>
+                <filter name="${fi.name()}"<#if fi.condition()?has_content> condition="${fi.condition()}"</#if>/>
+</#list>
             </many-to-many>
 <#else/>/>
 </#if>

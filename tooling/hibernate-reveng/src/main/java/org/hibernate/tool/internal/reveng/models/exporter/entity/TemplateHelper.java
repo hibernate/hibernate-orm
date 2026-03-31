@@ -632,6 +632,41 @@ public class TemplateHelper {
 		return "@OrderColumn";
 	}
 
+	public String generateFilterAnnotations(FieldDetails field) {
+		if (!annotated) {
+			return "";
+		}
+		List<FilterInfo> filters = getFieldFilters(field);
+		if (filters.isEmpty()) {
+			return "";
+		}
+		importType("org.hibernate.annotations.Filter");
+		StringBuilder sb = new StringBuilder();
+		for (FilterInfo fi : filters) {
+			sb.append("@Filter(name = \"").append(fi.name()).append("\"");
+			if (!fi.condition().isEmpty()) {
+				sb.append(", condition = \"").append(fi.condition()).append("\"");
+			}
+			sb.append(")\n    ");
+		}
+		return sb.toString().stripTrailing();
+	}
+
+	public List<FilterInfo> getFieldFilters(FieldDetails field) {
+		List<FilterInfo> result = new ArrayList<>();
+		Filter single = field.getDirectAnnotationUsage(Filter.class);
+		if (single != null) {
+			result.add(new FilterInfo(single.name(), single.condition()));
+		}
+		Filters container = field.getDirectAnnotationUsage(Filters.class);
+		if (container != null) {
+			for (Filter f : container.value()) {
+				result.add(new FilterInfo(f.name(), f.condition()));
+			}
+		}
+		return result;
+	}
+
 	public String generateColumnAnnotation(FieldDetails field) {
 		if (!annotated) {
 			return "";

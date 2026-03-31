@@ -1412,6 +1412,31 @@ public class HbmTemplateHelperTest {
 		assertEquals("java.lang.Boolean", params.get("isActive"));
 	}
 
+	// --- getCollectionFilters ---
+
+	@Test
+	public void testGetCollectionFiltersNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		assertTrue(new HbmTemplateHelper(entity).getCollectionFilters(field).isEmpty());
+	}
+
+	@Test
+	public void testGetCollectionFiltersSingle() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		FilterAnnotation filter = HibernateAnnotations.FILTER.createUsage(ctx);
+		filter.name("activeFilter");
+		filter.condition("active = true");
+		field.addAnnotationUsage(filter);
+		List<HbmTemplateHelper.FilterInfo> filters = new HbmTemplateHelper(entity).getCollectionFilters(field);
+		assertEquals(1, filters.size());
+		assertEquals("activeFilter", filters.get(0).name());
+		assertEquals("active = true", filters.get(0).condition());
+	}
+
 	// --- getJoins ---
 
 	@Test

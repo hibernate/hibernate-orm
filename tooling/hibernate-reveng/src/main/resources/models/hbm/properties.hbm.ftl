@@ -57,6 +57,9 @@
         <map-key column="${helper.getMapKeyColumnName(field)!field.getName() + '_KEY'}" type="${helper.getMapKeyType(field)!'string'}"/>
 </#if>
         <one-to-many class="${helper.getOneToManyTargetEntity(field)}"/>
+<#list helper.getCollectionFilters(field) as fi>
+        <filter name="${fi.name()}"<#if fi.condition()?has_content> condition="${fi.condition()}"</#if>/>
+</#list>
     </${collTag}>
 </#list>
 <#-- Collections (many-to-many) -->
@@ -87,6 +90,9 @@
         <many-to-many class="${helper.getManyToManyTargetEntity(field)}">
             <column name="${helper.getJoinTableInverseJoinColumnName(field)}"/>
         </many-to-many>
+<#list helper.getCollectionFilters(field) as fi>
+        <filter name="${fi.name()}"<#if fi.condition()?has_content> condition="${fi.condition()}"</#if>/>
+</#list>
     </${collTag}>
 <#else>
     <${collTag} name="${field.getName()}"

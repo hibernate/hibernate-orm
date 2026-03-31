@@ -448,6 +448,23 @@ public class MappingXmlHelper {
 				? oc.name() : null;
 	}
 
+	// --- Collection-level filters ---
+
+	public List<FilterInfo> getCollectionFilters(FieldDetails field) {
+		List<FilterInfo> result = new ArrayList<>();
+		Filter single = field.getDirectAnnotationUsage(Filter.class);
+		if (single != null) {
+			result.add(new FilterInfo(single.name(), single.condition()));
+		}
+		Filters container = field.getDirectAnnotationUsage(Filters.class);
+		if (container != null) {
+			for (Filter f : container.value()) {
+				result.add(new FilterInfo(f.name(), f.condition()));
+			}
+		}
+		return result;
+	}
+
 	// --- OneToOne ---
 
 	public String getOneToOneMappedBy(FieldDetails field) {

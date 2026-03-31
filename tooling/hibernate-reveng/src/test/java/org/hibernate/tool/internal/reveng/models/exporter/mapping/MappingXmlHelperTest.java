@@ -745,6 +745,31 @@ public class MappingXmlHelperTest {
 		assertEquals("SORT_ORDER", new MappingXmlHelper(entity).getOrderColumnName(field));
 	}
 
+	// --- Collection-level filters ---
+
+	@Test
+	public void testGetCollectionFiltersNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
+		assertTrue(new MappingXmlHelper(entity).getCollectionFilters(field).isEmpty());
+	}
+
+	@Test
+	public void testGetCollectionFiltersSingle() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
+		FilterAnnotation filter = HibernateAnnotations.FILTER.createUsage(ctx);
+		filter.name("activeFilter");
+		filter.condition("active = true");
+		field.addAnnotationUsage(filter);
+		List<MappingXmlHelper.FilterInfo> filters = new MappingXmlHelper(entity).getCollectionFilters(field);
+		assertEquals(1, filters.size());
+		assertEquals("activeFilter", filters.get(0).name());
+		assertEquals("active = true", filters.get(0).condition());
+	}
+
 	// --- OneToOne ---
 
 	@Test

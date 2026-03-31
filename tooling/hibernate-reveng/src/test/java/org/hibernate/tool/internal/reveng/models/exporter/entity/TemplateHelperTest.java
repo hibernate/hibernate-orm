@@ -1888,6 +1888,57 @@ public class TemplateHelperTest {
 		assertTrue(ctx.helper().getFilterDefs().isEmpty());
 	}
 
+	// --- Collection-level @Filter ---
+
+	@Test
+	public void testGenerateFilterAnnotationsOnOneToMany() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
+		FilterAnnotation filter = HibernateAnnotations.FILTER.createUsage(ctx.modelsContext());
+		filter.name("activeFilter");
+		filter.condition("active = true");
+		((MutableAnnotationTarget) field).addAnnotationUsage(filter);
+		String result = ctx.helper().generateFilterAnnotations(field);
+		assertTrue(result.contains("@Filter(name = \"activeFilter\", condition = \"active = true\")"), result);
+	}
+
+	@Test
+	public void testGenerateFilterAnnotationsNone() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getOneToManyFields().get(0);
+		assertEquals("", helper.generateFilterAnnotations(field));
+	}
+
+	@Test
+	public void testGenerateFilterAnnotationsMultiple() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
+		FilterAnnotation f1 = HibernateAnnotations.FILTER.createUsage(ctx.modelsContext());
+		f1.name("activeFilter");
+		f1.condition("active = true");
+		FilterAnnotation f2 = HibernateAnnotations.FILTER.createUsage(ctx.modelsContext());
+		f2.name("tenantFilter");
+		f2.condition("tenant_id = :tid");
+		FiltersAnnotation filters = HibernateAnnotations.FILTERS.createUsage(ctx.modelsContext());
+		filters.value(new Filter[] { f1, f2 });
+		((MutableAnnotationTarget) field).addAnnotationUsage(filters);
+		String result = ctx.helper().generateFilterAnnotations(field);
+		assertTrue(result.contains("@Filter(name = \"activeFilter\""), result);
+		assertTrue(result.contains("@Filter(name = \"tenantFilter\""), result);
+	}
+
 	// --- @NamedQuery / @NamedNativeQuery ---
 
 	@Test

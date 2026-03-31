@@ -67,6 +67,7 @@ import org.hibernate.generator.internal.VersionGeneration;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
+import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.metamodel.mapping.AuditMapping;
@@ -219,6 +220,7 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ManyToOneType;
+import org.hibernate.type.MappingContext;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -885,7 +887,23 @@ public abstract class AbstractEntityPersister
 	}
 
 	private String getIdentitySelectString(Dialect dialect) {
-		if ( getIdentifierType() instanceof BasicType<?> identifierType ) {
+		final BasicType<?> identifierType;
+		if ( getIdentifierType() instanceof BasicType<?> type ) {
+			identifierType = type;
+		}
+		else {
+			final ComponentType componentType = (ComponentType) getIdentifierType();
+			final CompositeNestedGeneratedValueGenerator compositeGenerator = (CompositeNestedGeneratedValueGenerator) getGenerator();
+			int position = 0;
+			for ( boolean generatedOnExecution : compositeGenerator.getGeneratedOnExecutionColumnInclusions() ) {
+				if ( generatedOnExecution ) {
+					break;
+				}
+				position++;
+			}
+			identifierType = getUnderlyingType( factory.getRuntimeMetamodels(), componentType, position );
+		}
+		if ( identifierType != null ) {
 			try {
 				return dialect.getIdentityColumnSupport()
 						.getIdentitySelectString( getTableName( 0 ), getKeyColumns( 0 )[0],
@@ -898,6 +916,27 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			return null;
+		}
+	}
+
+	private static BasicType<?> getUnderlyingType(MappingContext mappingContext, Type type, int typeIndex) {
+		if ( type instanceof ComponentType componentType ) {
+			int cols = 0;
+			for ( var subtype : componentType.getSubtypes() ) {
+				final int columnSpan = subtype.getColumnSpan( mappingContext );
+				if ( cols+columnSpan > typeIndex ) {
+					return getUnderlyingType( mappingContext, subtype, typeIndex-cols );
+				}
+				cols += columnSpan;
+			}
+			throw new IndexOutOfBoundsException();
+		}
+		else if ( type instanceof EntityType entityType ) {
+			final var idType = entityType.getIdentifierOrUniqueKeyType( mappingContext );
+			return getUnderlyingType( mappingContext, idType, typeIndex );
+		}
+		else {
+			return (BasicType<?>) type;
 		}
 	}
 

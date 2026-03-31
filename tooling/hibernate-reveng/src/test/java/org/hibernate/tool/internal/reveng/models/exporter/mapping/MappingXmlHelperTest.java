@@ -50,6 +50,7 @@ import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValuesAnno
 import org.hibernate.boot.models.annotations.internal.AnyKeyJavaClassAnnotation;
 import org.hibernate.boot.models.annotations.internal.BasicJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ConvertJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
@@ -747,6 +748,40 @@ public class MappingXmlHelperTest {
 		oc.name("SORT_ORDER");
 		field.addAnnotationUsage(oc);
 		assertEquals("SORT_ORDER", new MappingXmlHelper(entity).getOrderColumnName(field));
+	}
+
+	// --- Convert ---
+
+	@Test
+	public void testGetConverterClassName() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "active", Boolean.class, ctx);
+		ConvertJpaAnnotation convert = JpaAnnotations.CONVERT.createUsage(ctx);
+		convert.converter(org.hibernate.type.YesNoConverter.class);
+		field.addAnnotationUsage(convert);
+		assertEquals("org.hibernate.type.YesNoConverter",
+				new MappingXmlHelper(entity).getConverterClassName(field));
+	}
+
+	@Test
+	public void testGetConverterClassNameNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		assertNull(new MappingXmlHelper(entity).getConverterClassName(field));
+	}
+
+	@Test
+	public void testGetConverterClassNameDisabled() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "active", Boolean.class, ctx);
+		ConvertJpaAnnotation convert = JpaAnnotations.CONVERT.createUsage(ctx);
+		convert.converter(org.hibernate.type.YesNoConverter.class);
+		convert.disableConversion(true);
+		field.addAnnotationUsage(convert);
+		assertNull(new MappingXmlHelper(entity).getConverterClassName(field));
 	}
 
 	// --- Fetch mode ---

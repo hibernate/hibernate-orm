@@ -45,6 +45,9 @@
 <#if helper.getTemporalType(field)??>
                 <temporal>${helper.getTemporalType(field)}</temporal>
 </#if>
+<#if helper.getConverterClassName(field)??>
+                <convert converter="${helper.getConverterClassName(field)}"/>
+</#if>
             </basic>
 </#list>
 <#-- Version fields -->

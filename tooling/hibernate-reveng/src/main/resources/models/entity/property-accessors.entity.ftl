@@ -37,6 +37,10 @@
     <#if lobAnn?has_content>
     ${lobAnn}
     </#if>
+    <#assign convertAnn = templateHelper.generateConvertAnnotation(field)>
+    <#if convertAnn?has_content>
+    ${convertAnn}
+    </#if>
     <#assign naturalIdAnn = templateHelper.generateNaturalIdAnnotation(field)>
     <#if naturalIdAnn?has_content>
     ${naturalIdAnn}

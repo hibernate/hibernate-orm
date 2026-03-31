@@ -27,6 +27,7 @@ import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.DiscriminatorValue;
@@ -712,6 +713,23 @@ public class TemplateHelper {
 		importType("org.hibernate.annotations.Fetch");
 		importType("org.hibernate.annotations.FetchMode");
 		return "@Fetch(FetchMode." + fetch.value().name() + ")";
+	}
+
+	public String generateConvertAnnotation(FieldDetails field) {
+		if (!annotated) {
+			return "";
+		}
+		Convert convert = field.getDirectAnnotationUsage(Convert.class);
+		if (convert == null || convert.disableConversion()) {
+			return "";
+		}
+		Class<?> converterClass = convert.converter();
+		if (converterClass == null || converterClass == jakarta.persistence.AttributeConverter.class) {
+			return "";
+		}
+		importType("jakarta.persistence.Convert");
+		String simpleType = importType(converterClass.getName());
+		return "@Convert(converter = " + simpleType + ".class)";
 	}
 
 	public String generateColumnAnnotation(FieldDetails field) {

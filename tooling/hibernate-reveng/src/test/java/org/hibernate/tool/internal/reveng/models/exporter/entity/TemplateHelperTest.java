@@ -40,6 +40,7 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Filter;
 import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
 import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
+import org.hibernate.boot.models.annotations.internal.ConvertJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterDefAnnotation;
 import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
@@ -1481,6 +1482,49 @@ public class TemplateHelperTest {
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getOneToManyFields().get(0);
 		assertEquals("", helper.generateOrderColumnAnnotation(field));
+	}
+
+	// --- @Convert ---
+
+	@Test
+	public void testGenerateConvertAnnotation() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("ACTIVE", "active", Boolean.class));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getBasicFields().stream()
+				.filter(f -> f.getName().equals("active")).findFirst().orElseThrow();
+		ConvertJpaAnnotation convert = JpaAnnotations.CONVERT.createUsage(ctx.modelsContext());
+		convert.converter(org.hibernate.type.YesNoConverter.class);
+		((MutableAnnotationTarget) field).addAnnotationUsage(convert);
+		String result = ctx.helper().generateConvertAnnotation(field);
+		assertTrue(result.contains("@Convert(converter = YesNoConverter.class)"), result);
+	}
+
+	@Test
+	public void testGenerateConvertAnnotationNone() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getBasicFields().stream()
+				.filter(f -> f.getName().equals("name")).findFirst().orElseThrow();
+		assertEquals("", helper.generateConvertAnnotation(field));
+	}
+
+	@Test
+	public void testGenerateConvertAnnotationDisabled() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("ACTIVE", "active", Boolean.class));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getBasicFields().stream()
+				.filter(f -> f.getName().equals("active")).findFirst().orElseThrow();
+		ConvertJpaAnnotation convert = JpaAnnotations.CONVERT.createUsage(ctx.modelsContext());
+		convert.converter(org.hibernate.type.YesNoConverter.class);
+		convert.disableConversion(true);
+		((MutableAnnotationTarget) field).addAnnotationUsage(convert);
+		assertEquals("", ctx.helper().generateConvertAnnotation(field));
 	}
 
 	// --- @Fetch ---

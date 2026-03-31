@@ -26,6 +26,7 @@ import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Embeddable;
@@ -472,6 +473,20 @@ public class MappingXmlHelper {
 			return null;
 		}
 		return fetch.value().name();
+	}
+
+	// --- Convert ---
+
+	public String getConverterClassName(FieldDetails field) {
+		Convert convert = field.getDirectAnnotationUsage(Convert.class);
+		if (convert == null || convert.disableConversion()) {
+			return null;
+		}
+		Class<?> converterClass = convert.converter();
+		if (converterClass == null || converterClass == jakarta.persistence.AttributeConverter.class) {
+			return null;
+		}
+		return converterClass.getName();
 	}
 
 	// --- Collection-level filters ---

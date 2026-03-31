@@ -17,6 +17,7 @@ import java.util.List;
 import jakarta.persistence.criteria.ParameterExpression;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaExpression;
@@ -160,6 +161,7 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
+	@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner FORMAT_DATE does not support time specifiers for DATE types")
 	public void testFormatWithJavaUtilDate(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();

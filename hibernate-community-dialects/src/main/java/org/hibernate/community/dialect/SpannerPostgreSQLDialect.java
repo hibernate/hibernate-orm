@@ -246,7 +246,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 				new SpannerPostgreSQLJsonObjectFunction( functionContributions.getTypeConfiguration() ) );
 
 		functionFactory.unnest_postgresql( false );
-		functionFactory.arrayLength_spanner();
+		functionFactory.arrayLength_spannerpg();
 
 		functionRegistry.register( "array_prepend", new SpannerPostgreSQLArrayConcatElementFunction( true ) );
 		functionRegistry.register( "array_append", new SpannerPostgreSQLArrayConcatElementFunction( false ) );

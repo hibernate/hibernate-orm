@@ -55,6 +55,8 @@ import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
+import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.SecondaryTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NotFoundAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyColumnJpaAnnotation;
@@ -311,6 +313,46 @@ public class TemplateHelperTest {
 		table.primaryKeyJoinColumn("VEHICLE_ID");
 		String result = create(table).generateClassAnnotations();
 		assertTrue(result.contains("@PrimaryKeyJoinColumn(name = \"VEHICLE_ID\")"), result);
+	}
+
+	// --- @SecondaryTable ---
+
+	@Test
+	public void testGenerateClassAnnotationsSecondaryTable() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TestContext ctx = createWithContext(table);
+		PrimaryKeyJoinColumnJpaAnnotation pkjc = JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN.createUsage(ctx.modelsContext());
+		pkjc.name("EMP_ID");
+		SecondaryTableJpaAnnotation st = JpaAnnotations.SECONDARY_TABLE.createUsage(ctx.modelsContext());
+		st.name("EMP_DETAIL");
+		st.pkJoinColumns(new jakarta.persistence.PrimaryKeyJoinColumn[] { pkjc });
+		((MutableAnnotationTarget) ctx.classDetails()).addAnnotationUsage(st);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@SecondaryTable(name = \"EMP_DETAIL\""), result);
+		assertTrue(result.contains("@PrimaryKeyJoinColumn(name = \"EMP_ID\")"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsSecondaryTableNoPkJoinColumn() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TestContext ctx = createWithContext(table);
+		SecondaryTableJpaAnnotation st = JpaAnnotations.SECONDARY_TABLE.createUsage(ctx.modelsContext());
+		st.name("EMP_DETAIL");
+		st.pkJoinColumns(new jakarta.persistence.PrimaryKeyJoinColumn[] {});
+		((MutableAnnotationTarget) ctx.classDetails()).addAnnotationUsage(st);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@SecondaryTable(name = \"EMP_DETAIL\")"), result);
+		assertFalse(result.contains("PrimaryKeyJoinColumn"), result);
+	}
+
+	@Test
+	public void testGetSecondaryTablesNone() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TemplateHelper helper = create(table);
+		assertTrue(helper.getSecondaryTables().isEmpty());
 	}
 
 	@Test
@@ -1254,7 +1296,7 @@ public class TemplateHelperTest {
 
 	// --- Hibernate-specific class annotations ---
 
-	private record TestContext(TemplateHelper helper, ModelsContext modelsContext) {}
+	private record TestContext(TemplateHelper helper, ModelsContext modelsContext, ClassDetails classDetails) {}
 
 	private TestContext createWithContext(TableMetadata table) {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
@@ -1263,7 +1305,7 @@ public class TemplateHelperTest {
 		TemplateHelper helper = new TemplateHelper(classDetails, builder.getModelsContext(),
 				new ImportContextImpl(pkg), true,
 				Collections.emptyMap(), Collections.emptyMap());
-		return new TestContext(helper, builder.getModelsContext());
+		return new TestContext(helper, builder.getModelsContext(), classDetails);
 	}
 
 	@Test

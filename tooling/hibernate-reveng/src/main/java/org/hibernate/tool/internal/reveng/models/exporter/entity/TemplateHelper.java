@@ -57,6 +57,8 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.SecondaryTable;
+import jakarta.persistence.SecondaryTables;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
@@ -295,6 +297,27 @@ public class TemplateHelper {
 		Table table = classDetails.getDirectAnnotationUsage(Table.class);
 		if (table != null) {
 			sb.append(generateTableAnnotation(table));
+		}
+		// @SecondaryTable(s)
+		for (SecondaryTableInfo st : getSecondaryTables()) {
+			importType("jakarta.persistence.SecondaryTable");
+			sb.append("@SecondaryTable(name = \"").append(st.tableName()).append("\"");
+			if (!st.keyColumns().isEmpty()) {
+				importType("jakarta.persistence.PrimaryKeyJoinColumn");
+				if (st.keyColumns().size() == 1) {
+					sb.append(", pkJoinColumns = @PrimaryKeyJoinColumn(name = \"")
+							.append(st.keyColumns().get(0)).append("\")");
+				} else {
+					sb.append(", pkJoinColumns = {");
+					for (int i = 0; i < st.keyColumns().size(); i++) {
+						if (i > 0) sb.append(", ");
+						sb.append("@PrimaryKeyJoinColumn(name = \"")
+								.append(st.keyColumns().get(i)).append("\")");
+					}
+					sb.append("}");
+				}
+			}
+			sb.append(")\n");
 		}
 		// @Inheritance
 		Inheritance inh = classDetails.getDirectAnnotationUsage(Inheritance.class);
@@ -1258,6 +1281,35 @@ public class TemplateHelper {
 	public record FilterInfo(String name, String condition) {}
 
 	public record FilterDefInfo(String name, String defaultCondition, Map<String, Class<?>> parameters) {}
+
+	public record SecondaryTableInfo(String tableName, List<String> keyColumns) {}
+
+	public List<SecondaryTableInfo> getSecondaryTables() {
+		List<SecondaryTableInfo> result = new ArrayList<>();
+		SecondaryTable single = classDetails.getDirectAnnotationUsage(SecondaryTable.class);
+		if (single != null) {
+			result.add(toSecondaryTableInfo(single));
+		}
+		SecondaryTables container = classDetails.getDirectAnnotationUsage(SecondaryTables.class);
+		if (container != null) {
+			for (SecondaryTable st : container.value()) {
+				result.add(toSecondaryTableInfo(st));
+			}
+		}
+		return result;
+	}
+
+	private SecondaryTableInfo toSecondaryTableInfo(SecondaryTable st) {
+		List<String> keyColumns = new ArrayList<>();
+		if (st.pkJoinColumns() != null) {
+			for (PrimaryKeyJoinColumn pkjc : st.pkJoinColumns()) {
+				if (pkjc.name() != null && !pkjc.name().isEmpty()) {
+					keyColumns.add(pkjc.name());
+				}
+			}
+		}
+		return new SecondaryTableInfo(st.name(), keyColumns);
+	}
 
 	public boolean hasExplicitEqualsColumns() {
 		return getBasicFields().stream()

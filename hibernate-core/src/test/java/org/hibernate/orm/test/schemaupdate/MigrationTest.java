@@ -11,7 +11,9 @@ import jakarta.persistence.Table;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
@@ -76,6 +78,7 @@ public class MigrationTest {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportAlterColumnType.class)
 	public void testSimpleColumnTypeChange(ServiceRegistryScope registryScope) {
 		String resource1 = "org/hibernate/orm/test/schemaupdate/1_Version.hbm.xml";
 		String resource4 = "org/hibernate/orm/test/schemaupdate/4_Version.hbm.xml";

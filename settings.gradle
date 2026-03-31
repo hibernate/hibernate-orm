@@ -134,6 +134,10 @@ dependencyResolutionManagement {
             library( "micrometer", "io.micrometer", "micrometer-core" ).versionRef( micrometerVersion )
 
             library( "ant", "org.apache.ant", "ant" ).versionRef( antVersion )
+
+            library( "commonsCollections4", "org.apache.commons", "commons-collections4" ).version( "4.5.0" )
+            library( "googleJavaFormatter", "com.google.googlejavaformat", "google-java-format" ).version( "1.27.0" )
+            library( "freemarker", "org.freemarker", "freemarker" ).version( "2.3.34" )
         }
         jakartaLibs {
             // `jakartaJpaVersion` comes from the local-build-plugins to allow for command-line overriding of the JPA version to use
@@ -166,6 +170,7 @@ dependencyResolutionManagement {
             library( "inject", "jakarta.inject", "jakarta.inject-api" ).versionRef( injectVersion )
             library( "jaxbApi", "jakarta.xml.bind", "jakarta.xml.bind-api" ).versionRef( jaxbApiVersion )
             library( "jaxb", "org.glassfish.jaxb", "jaxb-runtime" ).versionRef( jaxbRuntimeVersion )
+            library( "ejb", "jakarta.ejb", "jakarta.ejb-api" ).version( "4.0.1" )
         }
         testLibs {
             def junitJupiterVersion = version "junitJupiter", "6.0.1"
@@ -218,6 +223,8 @@ dependencyResolutionManagement {
             library( "weld", "org.jboss.weld.se", "weld-se-shaded" ).versionRef( weldVersion )
 
             library( "jfrUnit", "org.moditect.jfrunit", "jfrunit-core" ).versionRef( jfrUnitVersion )
+
+            library( "logbackClassic", "ch.qos.logback", "logback-classic" ).version( "1.5.18" )
         }
         jdbcLibs {
             def h2Version = version "h2", overrideableVersion( "gradle.libs.versions.h2", "2.4.240" )
@@ -270,14 +277,20 @@ dependencyResolutionManagement {
             library( "spanner", "com.google.cloud", "google-cloud-spanner-jdbc" ).versionRef( spannerVersion )
         }
         mavenLibs {
-            def mavenCoreVersion = version "mavenCore", "3.9.9"
-            def mavenVersion = version "maven", "3.9.9"
-            def mavenPluginToolsVersion = version "mavenPluginTools", "3.15.1"
+            def mavenVersion = version "maven", "3.9.14"
+            def mavenPluginToolsVersion = version "mavenPluginTools", "3.15.2"
+            def mavenResolverVersion = version "mavenResolver", "1.9.27"
 
-            library( "mavenCore", "org.apache.maven", "maven-core" ).versionRef( mavenCoreVersion )
+            library( "mavenCore", "org.apache.maven", "maven-core" ).versionRef( mavenVersion )
             library( "mavenArtifact", "org.apache.maven", "maven-artifact" ).versionRef( mavenVersion )
             library( "mavenPlugin", "org.apache.maven", "maven-plugin-api" ).versionRef( mavenVersion )
+            library( "mavenEmbedder", "org.apache.maven", "maven-embedder" ).versionRef( mavenVersion )
+            library( "mavenCompat", "org.apache.maven", "maven-compat" ).versionRef( mavenVersion )
             library( "mavenPluginTools", "org.apache.maven.plugin-tools", "maven-plugin-annotations" ).versionRef( mavenPluginToolsVersion )
+            library( "mavenPluginToolsAnnotations", "org.apache.maven.plugin-tools", "maven-plugin-tools-annotations" ).versionRef( mavenPluginToolsVersion )
+            library( "mavenSharedFileManagement", "org.apache.maven.shared", "file-management" ).version( "3.2.0" )
+            library( "mavenResolverTransportHttp", "org.apache.maven.resolver", "maven-resolver-transport-http" ).versionRef( mavenResolverVersion )
+            library( "mavenResolverConnectorBasic", "org.apache.maven.resolver", "maven-resolver-connector-basic" ).versionRef( mavenResolverVersion )
         }
         buildscriptLibs {
             def forbiddenapisversion = version "forbiddenapis", "3.8"

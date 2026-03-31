@@ -22,7 +22,7 @@ configurations {
 dependencies {
     compileOnly libs.ant
     implementation project(':hibernate-core')
-    implementation project(':hibernate-reveng')
+    api project(':hibernate-reveng')
     testImplementation libs.ant
     testRuntimeOnly project(':hibernate-scan-jandex')
 }

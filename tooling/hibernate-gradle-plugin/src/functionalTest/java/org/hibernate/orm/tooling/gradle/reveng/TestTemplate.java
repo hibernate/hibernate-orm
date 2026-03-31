@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.tool.it.gradle;
+package org.hibernate.orm.tooling.gradle.reveng;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -33,7 +33,7 @@ public class TestTemplate {
 	private File databaseFile;
 
 	private String[] databaseCreationScript;
-	private String hibernateToolsExtensionSection;
+	private String revengExtensionSection;
 	private String gradleTaskToPerform;
 	private BuildResult buildResult;
 
@@ -46,8 +46,8 @@ public class TestTemplate {
 	protected void setDatabaseFile(File f) { databaseFile = f; }
 	protected String[] getDatabaseCreationScript() { return databaseCreationScript; }
 	protected void setDatabaseCreationScript(String[] script) { databaseCreationScript = script; }
-	protected String getHibernateToolsExtensionSection() { return hibernateToolsExtensionSection; }
-	protected void setHibernateToolsExtensionSection(String s) { hibernateToolsExtensionSection = s; }
+	protected String getRevengExtensionSection() { return revengExtensionSection; }
+	protected void setRevengExtensionSection(String s) { revengExtensionSection = s; }
 	protected String getGradleTaskToPerform() { return gradleTaskToPerform; }
 	protected void setGradleTaskToPerform(String command) { gradleTaskToPerform = command; }
 	protected BuildResult getBuildResult() { return buildResult; }
@@ -102,14 +102,14 @@ public class TestTemplate {
 	protected void editGradleBuildFile() throws Exception {
 		StringBuffer gradleBuildFileContents = new StringBuffer(
 				new String(Files.readAllBytes(getGradleBuildFile().toPath())));
-		addHibernateToolsPluginLine(gradleBuildFileContents);
+		addPluginLine(gradleBuildFileContents);
 		addH2DatabaseDependencyLine(gradleBuildFileContents);
-		addHibernateToolsExtension(gradleBuildFileContents);
+		addRevengExtension(gradleBuildFileContents);
 		Files.writeString(getGradleBuildFile().toPath(), gradleBuildFileContents.toString());
 	}
 
 	protected void editGradlePropertiesFile() throws Exception {
-		// The Hibernate Tools Gradle plugin does not support the configuration cache.
+		// The reverse engineering tasks do not support the configuration cache.
 		// As this is enabled by default when initializing a new Gradle project, the setting needs to be commented out
 		// in the gradle.properties file.
 		StringBuffer gradlePropertiesFileContents = new StringBuffer(
@@ -152,8 +152,8 @@ public class TestTemplate {
 		return "    implementation 'com.h2database:h2:" + System.getProperty("h2.version") + "'";
 	}
 
-	protected String constructHibernateToolsPluginLine() {
-		return "    id 'org.hibernate.tool.hibernate-tools-gradle'";
+	protected String constructPluginLine() {
+		return "    id 'org.hibernate.orm'";
 	}
 
 	protected String constructJdbcConnectionString() {
@@ -167,19 +167,26 @@ public class TestTemplate {
 		gradleBuildFileContents.insert(pos, constructH2DatabaseDependencyLine() + System.lineSeparator());
 	}
 
-	protected void addHibernateToolsPluginLine(StringBuffer gradleBuildFileContents) {
+	protected void addPluginLine(StringBuffer gradleBuildFileContents) {
 		int pos = gradleBuildFileContents.indexOf("plugins {");
 		pos = gradleBuildFileContents.indexOf("}", pos);
-		gradleBuildFileContents.insert(pos, constructHibernateToolsPluginLine() + System.lineSeparator());
+		gradleBuildFileContents.insert(pos, constructPluginLine() + System.lineSeparator());
 	}
 
-	protected void addHibernateToolsExtension(StringBuffer gradleBuildFileContents) {
-		String extension = getHibernateToolsExtensionSection();
-		if (extension != null) {
-			int pos = gradleBuildFileContents.indexOf("dependencies {");
-			pos = gradleBuildFileContents.indexOf("}", pos);
-			gradleBuildFileContents.insert(pos + 1, System.lineSeparator() + System.lineSeparator() + extension);
+	protected void addRevengExtension(StringBuffer gradleBuildFileContents) {
+		String revengSection = getRevengExtensionSection();
+		StringBuilder extension = new StringBuilder();
+		extension.append("hibernate {").append(System.lineSeparator());
+		extension.append("  useSameVersion = false").append(System.lineSeparator());
+		extension.append("  reveng {").append(System.lineSeparator());
+		if (revengSection != null) {
+			extension.append(revengSection).append(System.lineSeparator());
 		}
+		extension.append("  }").append(System.lineSeparator());
+		extension.append("}");
+		int pos = gradleBuildFileContents.indexOf("dependencies {");
+		pos = gradleBuildFileContents.indexOf("}", pos);
+		gradleBuildFileContents.insert(pos + 1, System.lineSeparator() + System.lineSeparator() + extension);
 	}
 
 }

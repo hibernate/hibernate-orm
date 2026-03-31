@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.tool.gradle.task;
+package org.hibernate.orm.tooling.gradle.reveng;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
@@ -16,70 +16,69 @@ import java.net.URL;
 import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.hibernate.tool.reveng.api.core.RevengStrategy;
-import org.hibernate.tool.gradle.Extension;
 import org.hibernate.tool.reveng.internal.core.strategy.AbstractStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class AbstractTaskTest {
+public class RevengTaskTest {
 
 	private static ClassLoader USED_CLASS_LOADER;
 	private static URL[] URLS = new URL[] {};
 
-	private AbstractTask abstractTask = null;
+	private RevengTask revengTask = null;
 
-	private Field extensionField = null;
-	private Extension extension = null;
+	private Field revengSpecField = null;
+	private RevengSpec revengSpec = null;
 
 	@BeforeEach
 	void beforeEach() throws Exception {
 		USED_CLASS_LOADER = null;
 		Project project = ProjectBuilder.builder().build();
-		abstractTask = project.getTasks().create("foo", FooTask.class);
-		extensionField = AbstractTask.class.getDeclaredField("extension");
-		extensionField.setAccessible(true);
-		extension = new Extension(project);
+		revengTask = project.getTasks().create("foo", FooTask.class);
+		revengSpecField = RevengTask.class.getDeclaredField("revengSpec");
+		revengSpecField.setAccessible(true);
+		revengSpec = new RevengSpec();
 	}
 
 	@Test
 	void testInitialize() throws Exception {
-		assertNull(extensionField.get(abstractTask));
-		abstractTask.initialize(extension);
-		assertSame(extension, extensionField.get(abstractTask));
+		assertNull(revengSpecField.get(revengTask));
+		revengTask.initialize(revengSpec);
+		assertSame(revengSpec, revengSpecField.get(revengTask));
 	}
 
 	@Test
-	void testGetExtension() throws Exception {
-		assertNull(abstractTask.getExtension());
-		extensionField.set(abstractTask, extension);
-		assertSame(extension, abstractTask.getExtension());
+	void testGetRevengSpec() throws Exception {
+		assertNull(revengTask.getRevengSpec());
+		revengSpecField.set(revengTask, revengSpec);
+		assertSame(revengSpec, revengTask.getRevengSpec());
 	}
 
 	@Test
 	void testPerform() {
 		ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
 		assertNull(USED_CLASS_LOADER);
-		abstractTask.perform();
+		revengTask.perform();
 		assertNotNull(USED_CLASS_LOADER);
 		assertNotSame(contextClassLoader, USED_CLASS_LOADER);
 	}
 
 	@Test
 	void testResolveProjectClassPath() {
-		assertSame(URLS, abstractTask.resolveProjectClassPath());
+		assertSame(URLS, revengTask.resolveProjectClassPath());
 	}
 
 	@Test
 	public void testSetupReverseEngineeringStrategy() throws Exception {
-		extension.revengStrategy = FooStrategy.class.getName();
-		extensionField.set(abstractTask, extension);
-		RevengStrategy revengStrategy = abstractTask.setupReverseEngineeringStrategy();
+		revengSpec.revengStrategy = FooStrategy.class.getName();
+		revengSpecField.set(revengTask, revengSpec);
+		RevengStrategy revengStrategy = revengTask.setupReverseEngineeringStrategy();
 		assertTrue(revengStrategy instanceof FooStrategy);
 	}
 
 	public static class FooStrategy extends AbstractStrategy {}
 
-	public static class FooTask extends AbstractTask {
+	public static class FooTask extends RevengTask {
 		void doWork() {
 			USED_CLASS_LOADER = Thread.currentThread().getContextClassLoader();
 		}

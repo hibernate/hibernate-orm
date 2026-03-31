@@ -36,8 +36,13 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Filter;
 import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
 import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
+import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
+import org.hibernate.boot.models.annotations.internal.FilterDefAnnotation;
+import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
+import org.hibernate.boot.models.annotations.internal.ParamDefAnnotation;
 import org.hibernate.boot.models.annotations.internal.NaturalIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedNativeQueryJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedQueryJpaAnnotation;
@@ -1774,6 +1779,113 @@ public class TemplateHelperTest {
 				Collections.emptyMap(), Collections.emptyMap());
 		assertEquals("List<Employee>", helper.getCollectionTypeName(field));
 		assertEquals("ArrayList", helper.getCollectionInitializerType(field));
+	}
+
+	// --- @FilterDef / @Filter ---
+
+	@Test
+	public void testGenerateClassAnnotationsFilterSimple() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		FilterAnnotation filter = HibernateAnnotations.FILTER.createUsage(ctx.modelsContext());
+		filter.name("activeFilter");
+		filter.condition("active = true");
+		dc.addAnnotationUsage(filter);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@Filter(name = \"activeFilter\", condition = \"active = true\")"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsFilterNoCondition() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		FilterAnnotation filter = HibernateAnnotations.FILTER.createUsage(ctx.modelsContext());
+		filter.name("activeFilter");
+		filter.condition("");
+		dc.addAnnotationUsage(filter);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@Filter(name = \"activeFilter\")"), result);
+		assertFalse(result.contains("condition"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsMultipleFilters() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		FilterAnnotation f1 = HibernateAnnotations.FILTER.createUsage(ctx.modelsContext());
+		f1.name("activeFilter");
+		f1.condition("active = true");
+		FilterAnnotation f2 = HibernateAnnotations.FILTER.createUsage(ctx.modelsContext());
+		f2.name("tenantFilter");
+		f2.condition("tenant_id = :tid");
+		FiltersAnnotation filters = HibernateAnnotations.FILTERS.createUsage(ctx.modelsContext());
+		filters.value(new Filter[] { f1, f2 });
+		dc.addAnnotationUsage(filters);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@Filter(name = \"activeFilter\", condition = \"active = true\")"), result);
+		assertTrue(result.contains("@Filter(name = \"tenantFilter\", condition = \"tenant_id = :tid\")"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsFilterDefSimple() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		FilterDefAnnotation fd = HibernateAnnotations.FILTER_DEF.createUsage(ctx.modelsContext());
+		fd.name("activeFilter");
+		fd.defaultCondition("active = true");
+		dc.addAnnotationUsage(fd);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@FilterDef(name = \"activeFilter\", defaultCondition = \"active = true\")"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsFilterDefNoCondition() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		FilterDefAnnotation fd = HibernateAnnotations.FILTER_DEF.createUsage(ctx.modelsContext());
+		fd.name("activeFilter");
+		fd.defaultCondition("");
+		dc.addAnnotationUsage(fd);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@FilterDef(name = \"activeFilter\")"), result);
+		assertFalse(result.contains("defaultCondition"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsFilterDefWithParams() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		ParamDefAnnotation pd = new ParamDefAnnotation(ctx.modelsContext());
+		pd.name("isActive");
+		pd.type(Boolean.class);
+		FilterDefAnnotation fd = HibernateAnnotations.FILTER_DEF.createUsage(ctx.modelsContext());
+		fd.name("activeFilter");
+		fd.defaultCondition("active = :isActive");
+		fd.parameters(new org.hibernate.annotations.ParamDef[] { pd });
+		dc.addAnnotationUsage(fd);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@FilterDef(name = \"activeFilter\", defaultCondition = \"active = :isActive\", parameters = {"), result);
+		assertTrue(result.contains("@ParamDef(name = \"isActive\", type = Boolean.class)"), result);
+	}
+
+	@Test
+	public void testGetFiltersNone() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		assertTrue(ctx.helper().getFilters().isEmpty());
+	}
+
+	@Test
+	public void testGetFilterDefsNone() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		assertTrue(ctx.helper().getFilterDefs().isEmpty());
 	}
 
 	// --- @NamedQuery / @NamedNativeQuery ---

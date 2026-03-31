@@ -66,9 +66,14 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.ParamDef;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
@@ -342,6 +347,36 @@ public class TemplateHelper {
 			importType("jakarta.persistence.NamedNativeQuery");
 			sb.append("@NamedNativeQuery(name = \"").append(nnq.name())
 					.append("\", query = \"").append(nnq.query()).append("\")\n");
+		}
+		// @FilterDef / @Filter
+		for (FilterDefInfo fd : getFilterDefs()) {
+			importType("org.hibernate.annotations.FilterDef");
+			sb.append("@FilterDef(name = \"").append(fd.name()).append("\"");
+			if (!fd.defaultCondition().isEmpty()) {
+				sb.append(", defaultCondition = \"").append(fd.defaultCondition()).append("\"");
+			}
+			if (!fd.parameters().isEmpty()) {
+				importType("org.hibernate.annotations.ParamDef");
+				sb.append(", parameters = {");
+				boolean first = true;
+				for (Map.Entry<String, Class<?>> entry : fd.parameters().entrySet()) {
+					if (!first) sb.append(", ");
+					first = false;
+					String simpleType = importType(entry.getValue().getName());
+					sb.append("@ParamDef(name = \"").append(entry.getKey())
+							.append("\", type = ").append(simpleType).append(".class)");
+				}
+				sb.append("}");
+			}
+			sb.append(")\n");
+		}
+		for (FilterInfo fi : getFilters()) {
+			importType("org.hibernate.annotations.Filter");
+			sb.append("@Filter(name = \"").append(fi.name()).append("\"");
+			if (!fi.condition().isEmpty()) {
+				sb.append(", condition = \"").append(fi.condition()).append("\"");
+			}
+			sb.append(")\n");
 		}
 		return sb.toString().stripTrailing();
 	}
@@ -1062,6 +1097,52 @@ public class TemplateHelper {
 	}
 
 	public record NamedQueryInfo(String name, String query) {}
+
+	// --- Filters ---
+
+	public List<FilterInfo> getFilters() {
+		List<FilterInfo> result = new ArrayList<>();
+		Filter single = classDetails.getDirectAnnotationUsage(Filter.class);
+		if (single != null) {
+			result.add(new FilterInfo(single.name(), single.condition()));
+		}
+		Filters container = classDetails.getDirectAnnotationUsage(Filters.class);
+		if (container != null) {
+			for (Filter f : container.value()) {
+				result.add(new FilterInfo(f.name(), f.condition()));
+			}
+		}
+		return result;
+	}
+
+	public List<FilterDefInfo> getFilterDefs() {
+		List<FilterDefInfo> result = new ArrayList<>();
+		FilterDef single = classDetails.getDirectAnnotationUsage(FilterDef.class);
+		if (single != null) {
+			result.add(toFilterDefInfo(single));
+		}
+		FilterDefs container = classDetails.getDirectAnnotationUsage(FilterDefs.class);
+		if (container != null) {
+			for (FilterDef fd : container.value()) {
+				result.add(toFilterDefInfo(fd));
+			}
+		}
+		return result;
+	}
+
+	private FilterDefInfo toFilterDefInfo(FilterDef fd) {
+		Map<String, Class<?>> params = new java.util.LinkedHashMap<>();
+		if (fd.parameters() != null) {
+			for (ParamDef pd : fd.parameters()) {
+				params.put(pd.name(), pd.type());
+			}
+		}
+		return new FilterDefInfo(fd.name(), fd.defaultCondition(), params);
+	}
+
+	public record FilterInfo(String name, String condition) {}
+
+	public record FilterDefInfo(String name, String defaultCondition, Map<String, Class<?>> parameters) {}
 
 	public boolean hasExplicitEqualsColumns() {
 		return getBasicFields().stream()

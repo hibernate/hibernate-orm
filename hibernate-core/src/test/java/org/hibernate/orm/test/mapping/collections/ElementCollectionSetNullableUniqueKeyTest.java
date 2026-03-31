@@ -18,6 +18,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -68,7 +69,8 @@ public class ElementCollectionSetNullableUniqueKeyTest {
 				new SchemaCreatorImpl( ssr )
 						.generateCreationCommands( metadata, false );
 
-		final String topicsTableCreateCommand = findCreateTableCommand( commands, "book_topics" );
+		final Dialect dialect = metadata.getDatabase().getDialect();
+		final String topicsTableCreateCommand = findCreateTableCommand( dialect, commands, "book_topics" );
 		assertNotNull( topicsTableCreateCommand );
 
 		assertThat( topicsTableCreateCommand )
@@ -76,7 +78,7 @@ public class ElementCollectionSetNullableUniqueKeyTest {
 				.doesNotContainPattern( "\\bprimary\\s+key\\b" );
 		assertTrue( hasUniqueTupleDefinition( commands, "book_topics", "book_isbn", "topics" ) );
 
-		final String commentsTableCreateCommand = findCreateTableCommand( commands, "book_comments" );
+		final String commentsTableCreateCommand = findCreateTableCommand( dialect, commands, "book_comments" );
 		assertNotNull( commentsTableCreateCommand );
 
 		assertThat( commentsTableCreateCommand )
@@ -90,10 +92,11 @@ public class ElementCollectionSetNullableUniqueKeyTest {
 		assertFalse( hasUniqueTupleDefinition( commands, "book_comments", "book_isbn", "comments" ) );
 	}
 
-	private static String findCreateTableCommand(List<String> commands, String tableName) {
+	private static String findCreateTableCommand(Dialect dialect, List<String> commands, String tableName) {
+		final String createTableString = dialect.getCreateTableString().toLowerCase( Locale.ROOT );
 		for ( String command : commands ) {
 			final String lowerCaseCommand = command.toLowerCase( Locale.ROOT );
-			if ( lowerCaseCommand.contains( "create table" ) && lowerCaseCommand.contains( tableName ) ) {
+			if ( lowerCaseCommand.contains( createTableString ) && lowerCaseCommand.contains( tableName ) ) {
 				return lowerCaseCommand;
 			}
 		}

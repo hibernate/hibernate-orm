@@ -168,7 +168,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 
 	public String getLoggableDetails() {
 		// for now...
-		return getClass().getSimpleName();
+		return getClass().getSimpleName() + "(" + collectionRole + ")";
 	}
 
 	private static class CacheCleanupProcess implements AfterTransactionCompletionProcess {

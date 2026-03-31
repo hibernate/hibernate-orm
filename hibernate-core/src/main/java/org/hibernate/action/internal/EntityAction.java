@@ -204,7 +204,7 @@ public abstract class EntityAction
 
 	public String getLoggableDetails() {
 		// for now...
-		return getClass().getSimpleName();
+		return getClass().getSimpleName() + "(" + getPersister().getEntityName() + ")";
 	}
 
 }

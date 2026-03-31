@@ -14,6 +14,7 @@ import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.SelfExecutingUpdateOperation;
 
+import java.sql.Connection;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -36,6 +37,24 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 			List<PlannedOperation> plannedOperations,
 			Consumer<Object> newlyManagedEntityConsumer,
 			Consumer<PlannedOperation> fixupOperationConsumer) {
+		// todo : not a fan of this overall, but it largely fits the expectations of tests.
+
+		// grab a reference to the physical connection and hold it for the flush processing
+		var physicalConnection = session.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
+		try {
+			doExecution(
+					physicalConnection,
+					plannedOperations,
+					newlyManagedEntityConsumer,
+					fixupOperationConsumer
+			);
+		}
+		finally {
+			session.getJdbcCoordinator().getLogicalConnection().afterStatement();
+		}
+	}
+
+	private void doExecution(Connection physicalConnection, List<PlannedOperation> plannedOperations, Consumer<Object> newlyManagedEntityConsumer, Consumer<PlannedOperation> fixupOperationConsumer) {
 		for ( int i = 0; i < plannedOperations.size(); i++ ) {
 			var plannedOperation = plannedOperations.get( i );
 

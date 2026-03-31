@@ -269,14 +269,10 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 
 		var collection = action.getCollection();
 		var key = action.getKey();
-		var attribute = persister.getAttributeMapping();
 
 		final List<PlannedOperation> operations = new ArrayList<>();
 
-		if ( persister.isPerformingUpdates() ) {
-
-		}
-		else if ( !collection.wasInitialized() ) {
+		if ( !collection.wasInitialized() ) {
 			// If there were queued operations, they would have
 			// been processed and cleared by now.
 			if ( !collection.isDirty() ) {
@@ -916,7 +912,8 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 	}
 
 	private CollectionJdbcOperations.DeleteRowPlan buildDeleteRowPlan(SessionFactoryImplementor factory) {
-		if ( persister.isRowDeleteEnabled() ) {
+		if ( !persister.isRowDeleteEnabled() ) {
+			// Row delete not enabled - no plan needed
 			return null;
 		}
 

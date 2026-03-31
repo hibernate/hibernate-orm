@@ -219,7 +219,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	final transient JdbcValuesMappingProducerProvider jdbcValuesMappingProducerProvider;
 	final transient TransactionIdentifierService transactionIdentifierService;
 
-	private final ActionQueueFactory actionQueueFactory;
+	private final transient ActionQueueFactory actionQueueFactory;
 
 	public SessionFactoryImpl(
 			final MetadataImplementor bootMetamodel,

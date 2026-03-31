@@ -754,9 +754,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		if ( explicitDiscriminatorColumnName != null ) {
 			final TableInsertBuilder tableInsertBuilder =
 					insertGroupBuilder.getTableDetailsBuilder( getRootTableName() );
-			tableInsertBuilder.addValueColumn(
-					getDiscriminatorValueString(),
-					getDiscriminatorMapping()
+			tableInsertBuilder.addColumnAssignment(
+					getDiscriminatorMapping(),
+					getDiscriminatorValueString()
 			);
 		}
 	}
@@ -773,9 +773,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	public void addDiscriminatorToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder) {
 		if ( explicitDiscriminatorColumnName != null ) {
 			final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.apply( getRootTableName() );
-			tableInsertBuilder.addValueColumn(
-					getDiscriminatorValueString(),
-					getDiscriminatorMapping()
+			tableInsertBuilder.addColumnAssignment(
+					getDiscriminatorMapping(),
+					getDiscriminatorValueString()
 			);
 		}
 	}

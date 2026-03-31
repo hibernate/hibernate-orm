@@ -78,6 +78,8 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.ParamDef;
 
 import org.hibernate.models.spi.ClassDetails;
@@ -713,6 +715,19 @@ public class TemplateHelper {
 		importType("org.hibernate.annotations.Fetch");
 		importType("org.hibernate.annotations.FetchMode");
 		return "@Fetch(FetchMode." + fetch.value().name() + ")";
+	}
+
+	public String generateNotFoundAnnotation(FieldDetails field) {
+		if (!annotated) {
+			return "";
+		}
+		NotFound nf = field.getDirectAnnotationUsage(NotFound.class);
+		if (nf == null || nf.action() == NotFoundAction.EXCEPTION) {
+			return "";
+		}
+		importType("org.hibernate.annotations.NotFound");
+		importType("org.hibernate.annotations.NotFoundAction");
+		return "@NotFound(action = NotFoundAction." + nf.action().name() + ")";
 	}
 
 	public String generateConvertAnnotation(FieldDetails field) {

@@ -53,8 +53,10 @@ import org.hibernate.boot.models.annotations.internal.OrderColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
 import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NotFoundAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.GeneratedValueJpaAnnotation;
@@ -1566,6 +1568,51 @@ public class TemplateHelperTest {
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getOneToManyFields().get(0);
 		assertEquals("", helper.generateFetchAnnotation(field));
+	}
+
+	// --- @NotFound ---
+
+	@Test
+	public void testGenerateNotFoundAnnotationIgnore() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyMetadata(
+				"department", "DEPT_ID", "Department", "com.example"));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getManyToOneFields().get(0);
+		NotFoundAnnotation nf = HibernateAnnotations.NOT_FOUND.createUsage(ctx.modelsContext());
+		nf.action(NotFoundAction.IGNORE);
+		((MutableAnnotationTarget) field).addAnnotationUsage(nf);
+		assertEquals("@NotFound(action = NotFoundAction.IGNORE)",
+				ctx.helper().generateNotFoundAnnotation(field));
+	}
+
+	@Test
+	public void testGenerateNotFoundAnnotationExceptionSkipped() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyMetadata(
+				"department", "DEPT_ID", "Department", "com.example"));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getManyToOneFields().get(0);
+		NotFoundAnnotation nf = HibernateAnnotations.NOT_FOUND.createUsage(ctx.modelsContext());
+		nf.action(NotFoundAction.EXCEPTION);
+		((MutableAnnotationTarget) field).addAnnotationUsage(nf);
+		assertEquals("", ctx.helper().generateNotFoundAnnotation(field));
+	}
+
+	@Test
+	public void testGenerateNotFoundAnnotationNone() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyMetadata(
+				"department", "DEPT_ID", "Department", "com.example"));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getManyToOneFields().get(0);
+		assertEquals("", helper.generateNotFoundAnnotation(field));
 	}
 
 	// --- @MapKey / @MapKeyColumn ---

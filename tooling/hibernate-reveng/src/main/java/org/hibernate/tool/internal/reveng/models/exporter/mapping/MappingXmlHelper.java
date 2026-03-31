@@ -79,6 +79,8 @@ import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.OptimisticLock;
@@ -473,6 +475,16 @@ public class MappingXmlHelper {
 			return null;
 		}
 		return fetch.value().name();
+	}
+
+	// --- NotFound ---
+
+	public String getNotFoundAction(FieldDetails field) {
+		NotFound nf = field.getDirectAnnotationUsage(NotFound.class);
+		if (nf == null || nf.action() == NotFoundAction.EXCEPTION) {
+			return null;
+		}
+		return nf.action().name();
 	}
 
 	// --- Convert ---

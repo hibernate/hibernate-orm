@@ -58,7 +58,7 @@
 </#list>
 <#-- Many-to-one -->
 <#list helper.getManyToOneFields() as field>
-            <many-to-one name="${field.getName()}" target-entity="${helper.getTargetEntityName(field)}"<#if helper.getManyToOneFetchType(field)??> fetch="${helper.getManyToOneFetchType(field)}"</#if><#if helper.getFetchMode(field)??> fetch-mode="${helper.getFetchMode(field)}"</#if><#if !helper.isManyToOneOptional(field)> optional="false"</#if>>
+            <many-to-one name="${field.getName()}" target-entity="${helper.getTargetEntityName(field)}"<#if helper.getManyToOneFetchType(field)??> fetch="${helper.getManyToOneFetchType(field)}"</#if><#if helper.getFetchMode(field)??> fetch-mode="${helper.getFetchMode(field)}"</#if><#if !helper.isManyToOneOptional(field)> optional="false"</#if><#if helper.getNotFoundAction(field)??> not-found="${helper.getNotFoundAction(field)}"</#if>>
                 <join-column name="${helper.getJoinColumnName(field)}"<#if helper.getReferencedColumnName(field)??> referenced-column-name="${helper.getReferencedColumnName(field)}"</#if>/>
             </many-to-one>
 </#list>
@@ -98,7 +98,7 @@
 <#list helper.getOneToOneFields() as field>
 <#assign o2oHasCascade = (helper.getOneToOneCascadeTypes(field)?size > 0)>
 <#assign o2oHasChildren = helper.getJoinColumnName(field)?? || o2oHasCascade>
-            <one-to-one name="${field.getName()}" target-entity="${helper.getTargetEntityName(field)}"<#if helper.getOneToOneMappedBy(field)??> mapped-by="${helper.getOneToOneMappedBy(field)}"</#if><#if helper.getOneToOneFetchType(field)??> fetch="${helper.getOneToOneFetchType(field)}"</#if><#if helper.getFetchMode(field)??> fetch-mode="${helper.getFetchMode(field)}"</#if><#if !helper.isOneToOneOptional(field)> optional="false"</#if><#if helper.isOneToOneOrphanRemoval(field)> orphan-removal="true"</#if><#if o2oHasChildren>>
+            <one-to-one name="${field.getName()}" target-entity="${helper.getTargetEntityName(field)}"<#if helper.getOneToOneMappedBy(field)??> mapped-by="${helper.getOneToOneMappedBy(field)}"</#if><#if helper.getOneToOneFetchType(field)??> fetch="${helper.getOneToOneFetchType(field)}"</#if><#if helper.getFetchMode(field)??> fetch-mode="${helper.getFetchMode(field)}"</#if><#if !helper.isOneToOneOptional(field)> optional="false"</#if><#if helper.isOneToOneOrphanRemoval(field)> orphan-removal="true"</#if><#if helper.getNotFoundAction(field)??> not-found="${helper.getNotFoundAction(field)}"</#if><#if o2oHasChildren>>
 <#if o2oHasCascade>
 <#assign cascadeTypes = helper.getOneToOneCascadeTypes(field)>
 <#include "cascade.mapping.ftl"/>

@@ -33,6 +33,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
@@ -55,6 +56,7 @@ import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
+import org.hibernate.boot.models.annotations.internal.NotFoundAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterDefAnnotation;
 import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
 import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
@@ -814,6 +816,38 @@ public class MappingXmlHelperTest {
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
 		assertNull(new MappingXmlHelper(entity).getFetchMode(field));
+	}
+
+	// --- NotFound ---
+
+	@Test
+	public void testGetNotFoundActionIgnore() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "parent", String.class, ctx);
+		NotFoundAnnotation nf = HibernateAnnotations.NOT_FOUND.createUsage(ctx);
+		nf.action(NotFoundAction.IGNORE);
+		field.addAnnotationUsage(nf);
+		assertEquals("IGNORE", new MappingXmlHelper(entity).getNotFoundAction(field));
+	}
+
+	@Test
+	public void testGetNotFoundActionExceptionReturnsNull() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "parent", String.class, ctx);
+		NotFoundAnnotation nf = HibernateAnnotations.NOT_FOUND.createUsage(ctx);
+		nf.action(NotFoundAction.EXCEPTION);
+		field.addAnnotationUsage(nf);
+		assertNull(new MappingXmlHelper(entity).getNotFoundAction(field));
+	}
+
+	@Test
+	public void testGetNotFoundActionNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "parent", String.class, ctx);
+		assertNull(new MappingXmlHelper(entity).getNotFoundAction(field));
 	}
 
 	// --- Map key ---

@@ -74,6 +74,10 @@
 <#if fetchAnn?has_content>
     ${fetchAnn}
 </#if>
+<#assign notFoundAnn = templateHelper.generateNotFoundAnnotation(field)>
+<#if notFoundAnn?has_content>
+    ${notFoundAnn}
+</#if>
     public ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
         return this.${field.getName()};
     }
@@ -92,6 +96,10 @@
 <#assign fetchAnn = templateHelper.generateFetchAnnotation(field)>
 <#if fetchAnn?has_content>
     ${fetchAnn}
+</#if>
+<#assign notFoundAnn = templateHelper.generateNotFoundAnnotation(field)>
+<#if notFoundAnn?has_content>
+    ${notFoundAnn}
 </#if>
     public ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
         return this.${field.getName()};

@@ -39,6 +39,8 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
 import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
 import org.hibernate.boot.models.annotations.internal.NaturalIdAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedNativeQueryJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedQueryJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OrderByJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OrderColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation;
@@ -1772,6 +1774,48 @@ public class TemplateHelperTest {
 				Collections.emptyMap(), Collections.emptyMap());
 		assertEquals("List<Employee>", helper.getCollectionTypeName(field));
 		assertEquals("ArrayList", helper.getCollectionInitializerType(field));
+	}
+
+	// --- @NamedQuery / @NamedNativeQuery ---
+
+	@Test
+	public void testGenerateClassAnnotationsNamedQuery() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		NamedQueryJpaAnnotation nq = JpaAnnotations.NAMED_QUERY.createUsage(ctx.modelsContext());
+		nq.name("Employee.findAll");
+		nq.query("SELECT e FROM Employee e");
+		dc.addAnnotationUsage(nq);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@NamedQuery(name = \"Employee.findAll\", query = \"SELECT e FROM Employee e\")"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsNamedNativeQuery() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		NamedNativeQueryJpaAnnotation nnq = JpaAnnotations.NAMED_NATIVE_QUERY.createUsage(ctx.modelsContext());
+		nnq.name("Employee.findAllNative");
+		nnq.query("SELECT * FROM EMPLOYEE");
+		dc.addAnnotationUsage(nnq);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@NamedNativeQuery(name = \"Employee.findAllNative\", query = \"SELECT * FROM EMPLOYEE\")"), result);
+	}
+
+	@Test
+	public void testGetNamedQueriesNone() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		assertTrue(ctx.helper().getNamedQueries().isEmpty());
+	}
+
+	@Test
+	public void testGetNamedNativeQueriesNone() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		assertTrue(ctx.helper().getNamedNativeQueries().isEmpty());
 	}
 
 	private DynamicFieldDetails addElementCollectionField(

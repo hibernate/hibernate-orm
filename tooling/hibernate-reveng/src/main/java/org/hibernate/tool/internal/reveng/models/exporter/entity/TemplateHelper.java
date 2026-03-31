@@ -45,6 +45,10 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedNativeQueries;
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderBy;
@@ -327,6 +331,17 @@ public class TemplateHelper {
 				sb.append(", includeLazy = false");
 			}
 			sb.append(")\n");
+		}
+		// @NamedQuery / @NamedNativeQuery
+		for (NamedQueryInfo nq : getNamedQueries()) {
+			importType("jakarta.persistence.NamedQuery");
+			sb.append("@NamedQuery(name = \"").append(nq.name())
+					.append("\", query = \"").append(nq.query()).append("\")\n");
+		}
+		for (NamedQueryInfo nnq : getNamedNativeQueries()) {
+			importType("jakarta.persistence.NamedNativeQuery");
+			sb.append("@NamedNativeQuery(name = \"").append(nnq.name())
+					.append("\", query = \"").append(nnq.query()).append("\")\n");
 		}
 		return sb.toString().stripTrailing();
 	}
@@ -1013,6 +1028,40 @@ public class TemplateHelper {
 		}
 		return result;
 	}
+
+	// --- Named queries ---
+
+	public List<NamedQueryInfo> getNamedQueries() {
+		List<NamedQueryInfo> result = new ArrayList<>();
+		NamedQuery single = classDetails.getDirectAnnotationUsage(NamedQuery.class);
+		if (single != null) {
+			result.add(new NamedQueryInfo(single.name(), single.query()));
+		}
+		NamedQueries container = classDetails.getDirectAnnotationUsage(NamedQueries.class);
+		if (container != null) {
+			for (NamedQuery nq : container.value()) {
+				result.add(new NamedQueryInfo(nq.name(), nq.query()));
+			}
+		}
+		return result;
+	}
+
+	public List<NamedQueryInfo> getNamedNativeQueries() {
+		List<NamedQueryInfo> result = new ArrayList<>();
+		NamedNativeQuery single = classDetails.getDirectAnnotationUsage(NamedNativeQuery.class);
+		if (single != null) {
+			result.add(new NamedQueryInfo(single.name(), single.query()));
+		}
+		NamedNativeQueries container = classDetails.getDirectAnnotationUsage(NamedNativeQueries.class);
+		if (container != null) {
+			for (NamedNativeQuery nnq : container.value()) {
+				result.add(new NamedQueryInfo(nnq.name(), nnq.query()));
+			}
+		}
+		return result;
+	}
+
+	public record NamedQueryInfo(String name, String query) {}
 
 	public boolean hasExplicitEqualsColumns() {
 		return getBasicFields().stream()

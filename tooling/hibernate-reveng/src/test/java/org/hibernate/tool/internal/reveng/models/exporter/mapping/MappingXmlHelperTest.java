@@ -56,6 +56,8 @@ import org.hibernate.boot.models.annotations.internal.FilterDefAnnotation;
 import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
 import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ManyToAnyAnnotation;
+import org.hibernate.boot.models.annotations.internal.MapKeyColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.MapKeyJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedNativeQueryJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedQueryJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OptimisticLockAnnotation;
@@ -743,6 +745,46 @@ public class MappingXmlHelperTest {
 		oc.name("SORT_ORDER");
 		field.addAnnotationUsage(oc);
 		assertEquals("SORT_ORDER", new MappingXmlHelper(entity).getOrderColumnName(field));
+	}
+
+	// --- Map key ---
+
+	@Test
+	public void testGetMapKeyName() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
+		MapKeyJpaAnnotation mk = JpaAnnotations.MAP_KEY.createUsage(ctx);
+		mk.name("itemId");
+		field.addAnnotationUsage(mk);
+		assertEquals("itemId", new MappingXmlHelper(entity).getMapKeyName(field));
+	}
+
+	@Test
+	public void testGetMapKeyNameNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
+		assertNull(new MappingXmlHelper(entity).getMapKeyName(field));
+	}
+
+	@Test
+	public void testGetMapKeyColumnName() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
+		MapKeyColumnJpaAnnotation mkc = JpaAnnotations.MAP_KEY_COLUMN.createUsage(ctx);
+		mkc.name("ITEM_KEY");
+		field.addAnnotationUsage(mkc);
+		assertEquals("ITEM_KEY", new MappingXmlHelper(entity).getMapKeyColumnName(field));
+	}
+
+	@Test
+	public void testGetMapKeyColumnNameNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
+		assertNull(new MappingXmlHelper(entity).getMapKeyColumnName(field));
 	}
 
 	// --- Collection-level filters ---

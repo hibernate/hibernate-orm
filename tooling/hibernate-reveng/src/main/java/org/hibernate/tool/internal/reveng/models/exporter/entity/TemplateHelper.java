@@ -45,6 +45,8 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapKey;
+import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.NamedQueries;
@@ -665,6 +667,36 @@ public class TemplateHelper {
 			}
 		}
 		return result;
+	}
+
+	public String generateMapKeyAnnotation(FieldDetails field) {
+		if (!annotated) {
+			return "";
+		}
+		MapKey mk = field.getDirectAnnotationUsage(MapKey.class);
+		if (mk == null) {
+			return "";
+		}
+		importType("jakarta.persistence.MapKey");
+		if (mk.name() != null && !mk.name().isEmpty()) {
+			return "@MapKey(name = \"" + mk.name() + "\")";
+		}
+		return "@MapKey";
+	}
+
+	public String generateMapKeyColumnAnnotation(FieldDetails field) {
+		if (!annotated) {
+			return "";
+		}
+		MapKeyColumn mkc = field.getDirectAnnotationUsage(MapKeyColumn.class);
+		if (mkc == null) {
+			return "";
+		}
+		importType("jakarta.persistence.MapKeyColumn");
+		if (mkc.name() != null && !mkc.name().isEmpty()) {
+			return "@MapKeyColumn(name = \"" + mkc.name() + "\")";
+		}
+		return "@MapKeyColumn";
 	}
 
 	public String generateColumnAnnotation(FieldDetails field) {

@@ -65,8 +65,15 @@
 <#assign o2mHasOrderBy = helper.getOrderBy(field)??>
 <#assign o2mHasOrderCol = helper.getOrderColumnName(field)??>
 <#assign o2mHasFilters = (helper.getCollectionFilters(field)?size > 0)>
-<#assign o2mHasChildren = o2mHasCascade || o2mHasOrderBy || o2mHasOrderCol || o2mHasFilters>
+<#assign o2mHasMapKey = helper.getMapKeyName(field)?? || helper.getMapKeyColumnName(field)??>
+<#assign o2mHasChildren = o2mHasCascade || o2mHasOrderBy || o2mHasOrderCol || o2mHasFilters || o2mHasMapKey>
             <one-to-many name="${field.getName()}" target-entity="${helper.getOneToManyTargetEntity(field)}" mapped-by="${helper.getOneToManyMappedBy(field)}"<#if helper.getOneToManyFetchType(field)??> fetch="${helper.getOneToManyFetchType(field)}"</#if><#if helper.isOneToManyOrphanRemoval(field)> orphan-removal="true"</#if><#if o2mHasChildren>>
+<#if helper.getMapKeyName(field)??>
+                <map-key name="${helper.getMapKeyName(field)}"/>
+</#if>
+<#if helper.getMapKeyColumnName(field)??>
+                <map-key-column name="${helper.getMapKeyColumnName(field)}"/>
+</#if>
 <#if o2mHasOrderBy>
                 <order-by>${helper.getOrderBy(field)}</order-by>
 </#if>
@@ -106,8 +113,15 @@
 <#assign m2mHasOrderBy = helper.getOrderBy(field)??>
 <#assign m2mHasOrderCol = helper.getOrderColumnName(field)??>
 <#assign m2mHasFilters = (helper.getCollectionFilters(field)?size > 0)>
-<#assign m2mHasChildren = helper.getJoinTableName(field)?? || m2mHasCascade || m2mHasOrderBy || m2mHasOrderCol || m2mHasFilters>
+<#assign m2mHasMapKey = helper.getMapKeyName(field)?? || helper.getMapKeyColumnName(field)??>
+<#assign m2mHasChildren = helper.getJoinTableName(field)?? || m2mHasCascade || m2mHasOrderBy || m2mHasOrderCol || m2mHasFilters || m2mHasMapKey>
             <many-to-many name="${field.getName()}" target-entity="${helper.getManyToManyTargetEntity(field)}"<#if helper.getManyToManyMappedBy(field)??> mapped-by="${helper.getManyToManyMappedBy(field)}"</#if><#if helper.getManyToManyFetchType(field)??> fetch="${helper.getManyToManyFetchType(field)}"</#if><#if m2mHasChildren>>
+<#if helper.getMapKeyName(field)??>
+                <map-key name="${helper.getMapKeyName(field)}"/>
+</#if>
+<#if helper.getMapKeyColumnName(field)??>
+                <map-key-column name="${helper.getMapKeyColumnName(field)}"/>
+</#if>
 <#if m2mHasOrderBy>
                 <order-by>${helper.getOrderBy(field)}</order-by>
 </#if>

@@ -40,6 +40,8 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapKey;
+import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderBy;
@@ -446,6 +448,19 @@ public class MappingXmlHelper {
 		OrderColumn oc = field.getDirectAnnotationUsage(OrderColumn.class);
 		return oc != null && oc.name() != null && !oc.name().isEmpty()
 				? oc.name() : null;
+	}
+
+	// --- Map key ---
+
+	public String getMapKeyName(FieldDetails field) {
+		MapKey mk = field.getDirectAnnotationUsage(MapKey.class);
+		return mk != null ? mk.name() : null;
+	}
+
+	public String getMapKeyColumnName(FieldDetails field) {
+		MapKeyColumn mkc = field.getDirectAnnotationUsage(MapKeyColumn.class);
+		return mkc != null && mkc.name() != null && !mkc.name().isEmpty()
+				? mkc.name() : null;
 	}
 
 	// --- Collection-level filters ---

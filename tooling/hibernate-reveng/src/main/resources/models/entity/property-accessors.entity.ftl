@@ -96,6 +96,14 @@
 <#if ann?has_content>
     ${ann}
 </#if>
+<#assign mapKeyAnn = templateHelper.generateMapKeyAnnotation(field)>
+<#if mapKeyAnn?has_content>
+    ${mapKeyAnn}
+</#if>
+<#assign mapKeyColAnn = templateHelper.generateMapKeyColumnAnnotation(field)>
+<#if mapKeyColAnn?has_content>
+    ${mapKeyColAnn}
+</#if>
 <#assign orderByAnn = templateHelper.generateOrderByAnnotation(field)>
 <#if orderByAnn?has_content>
     ${orderByAnn}
@@ -122,6 +130,14 @@
 <#assign ann = templateHelper.generateManyToManyAnnotation(field)>
 <#if ann?has_content>
     ${ann}
+</#if>
+<#assign mapKeyAnn = templateHelper.generateMapKeyAnnotation(field)>
+<#if mapKeyAnn?has_content>
+    ${mapKeyAnn}
+</#if>
+<#assign mapKeyColAnn = templateHelper.generateMapKeyColumnAnnotation(field)>
+<#if mapKeyColAnn?has_content>
+    ${mapKeyColAnn}
 </#if>
 <#assign orderByAnn = templateHelper.generateOrderByAnnotation(field)>
 <#if orderByAnn?has_content>

@@ -52,6 +52,8 @@ import org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotati
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
+import org.hibernate.boot.models.annotations.internal.MapKeyColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.MapKeyJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.GeneratedValueJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
@@ -1477,6 +1479,64 @@ public class TemplateHelperTest {
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getOneToManyFields().get(0);
 		assertEquals("", helper.generateOrderColumnAnnotation(field));
+	}
+
+	// --- @MapKey / @MapKeyColumn ---
+
+	@Test
+	public void testGenerateMapKeyAnnotation() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
+		MapKeyJpaAnnotation mk = JpaAnnotations.MAP_KEY.createUsage(ctx.modelsContext());
+		mk.name("employeeId");
+		((MutableAnnotationTarget) field).addAnnotationUsage(mk);
+		assertEquals("@MapKey(name = \"employeeId\")",
+				ctx.helper().generateMapKeyAnnotation(field));
+	}
+
+	@Test
+	public void testGenerateMapKeyAnnotationNoName() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
+		MapKeyJpaAnnotation mk = JpaAnnotations.MAP_KEY.createUsage(ctx.modelsContext());
+		mk.name("");
+		((MutableAnnotationTarget) field).addAnnotationUsage(mk);
+		assertEquals("@MapKey", ctx.helper().generateMapKeyAnnotation(field));
+	}
+
+	@Test
+	public void testGenerateMapKeyColumnAnnotation() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
+		MapKeyColumnJpaAnnotation mkc = JpaAnnotations.MAP_KEY_COLUMN.createUsage(ctx.modelsContext());
+		mkc.name("EMP_KEY");
+		((MutableAnnotationTarget) field).addAnnotationUsage(mkc);
+		assertEquals("@MapKeyColumn(name = \"EMP_KEY\")",
+				ctx.helper().generateMapKeyColumnAnnotation(field));
+	}
+
+	@Test
+	public void testGenerateMapKeyAnnotationNone() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getOneToManyFields().get(0);
+		assertEquals("", helper.generateMapKeyAnnotation(field));
+		assertEquals("", helper.generateMapKeyColumnAnnotation(field));
 	}
 
 	// --- @Formula ---

@@ -4,6 +4,10 @@ plugins {
 
 description = "Library providing functionality to perform reverse engineering Hibernate related artefacts from an existing database"
 
+// Legacy tests originated from Hibernate Tools and require a live JDBC connection
+// (they create schemas and perform actual reverse engineering against an in-memory database).
+// They are kept in a separate source set to preserve them as-is until they can be rewritten
+// or replaced and integrated into the normal test structure.
 sourceSets {
     legacyTest {
         compileClasspath += sourceSets.main.output

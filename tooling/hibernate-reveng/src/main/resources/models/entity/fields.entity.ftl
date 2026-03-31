@@ -46,3 +46,13 @@
     private ${templateHelper.getCollectionTypeName(field)} ${field.getName()} = new ${templateHelper.getCollectionInitializerType(field)}<>(0);
 
 </#list>
+<#-- Any fields -->
+<#list templateHelper.getAnyFields() as field>
+    private ${templateHelper.getJavaTypeName(field)} ${field.getName()};
+
+</#list>
+<#-- ManyToAny fields -->
+<#list templateHelper.getManyToAnyFields() as field>
+    private ${templateHelper.getCollectionTypeName(field)} ${field.getName()} = new ${templateHelper.getCollectionInitializerType(field)}<>(0);
+
+</#list>

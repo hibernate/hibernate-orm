@@ -55,6 +55,11 @@ import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
+import org.hibernate.annotations.AnyDiscriminatorValue;
+import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorAnnotation;
+import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValueAnnotation;
+import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValuesAnnotation;
+import org.hibernate.boot.models.annotations.internal.AnyKeyJavaClassAnnotation;
 import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.SecondaryTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
@@ -1655,6 +1660,71 @@ public class TemplateHelperTest {
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getManyToOneFields().get(0);
 		assertEquals("", helper.generateNotFoundAnnotation(field));
+	}
+
+	// --- @Any / @ManyToAny ---
+
+	@Test
+	public void testGenerateAnyAnnotation() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails entity = (DynamicClassDetails) ctx.classDetails();
+		ClassDetails objClass = ctx.modelsContext().getClassDetailsRegistry()
+				.resolveClassDetails(Object.class.getName());
+		TypeDetails objType = new ClassTypeDetailsImpl(objClass, TypeDetails.Kind.CLASS);
+		DynamicFieldDetails field = entity.applyAttribute(
+				"payment", objType, false, false, ctx.modelsContext());
+		field.addAnnotationUsage(HibernateAnnotations.ANY.createUsage(ctx.modelsContext()));
+		AnyDiscriminatorAnnotation ad = HibernateAnnotations.ANY_DISCRIMINATOR.createUsage(ctx.modelsContext());
+		ad.value(DiscriminatorType.STRING);
+		field.addAnnotationUsage(ad);
+		AnyDiscriminatorValueAnnotation v1 = HibernateAnnotations.ANY_DISCRIMINATOR_VALUE.createUsage(ctx.modelsContext());
+		v1.discriminator("CC");
+		v1.entity(String.class);
+		AnyDiscriminatorValuesAnnotation container = HibernateAnnotations.ANY_DISCRIMINATOR_VALUES.createUsage(ctx.modelsContext());
+		container.value(new AnyDiscriminatorValue[] { v1 });
+		field.addAnnotationUsage(container);
+		AnyKeyJavaClassAnnotation akjc = HibernateAnnotations.ANY_KEY_JAVA_CLASS.createUsage(ctx.modelsContext());
+		akjc.value(Long.class);
+		field.addAnnotationUsage(akjc);
+		String result = ctx.helper().generateAnyAnnotation(field);
+		assertTrue(result.contains("@Any"), result);
+		assertTrue(result.contains("@AnyDiscriminator(DiscriminatorType.STRING)"), result);
+		assertTrue(result.contains("@AnyDiscriminatorValue(discriminator = \"CC\""), result);
+		assertTrue(result.contains("@AnyKeyJavaClass(Long.class)"), result);
+	}
+
+	@Test
+	public void testGenerateAnyAnnotationNone() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TemplateHelper helper = create(table);
+		assertTrue(helper.getAnyFields().isEmpty());
+	}
+
+	@Test
+	public void testGenerateManyToAnyAnnotation() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails entity = (DynamicClassDetails) ctx.classDetails();
+		ClassDetails objClass = ctx.modelsContext().getClassDetailsRegistry()
+				.resolveClassDetails(Object.class.getName());
+		ClassDetails setClass = ctx.modelsContext().getClassDetailsRegistry()
+				.resolveClassDetails(Set.class.getName());
+		TypeDetails objType = new ClassTypeDetailsImpl(objClass, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				setClass, Collections.singletonList(objType), null);
+		DynamicFieldDetails field = entity.applyAttribute(
+				"payments", fieldType, false, true, ctx.modelsContext());
+		field.addAnnotationUsage(HibernateAnnotations.MANY_TO_ANY.createUsage(ctx.modelsContext()));
+		AnyDiscriminatorAnnotation ad = HibernateAnnotations.ANY_DISCRIMINATOR.createUsage(ctx.modelsContext());
+		ad.value(DiscriminatorType.STRING);
+		field.addAnnotationUsage(ad);
+		String result = ctx.helper().generateManyToAnyAnnotation(field);
+		assertTrue(result.contains("@ManyToAny"), result);
+		assertTrue(result.contains("@AnyDiscriminator(DiscriminatorType.STRING)"), result);
 	}
 
 	// --- @MapKey / @MapKeyColumn ---

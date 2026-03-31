@@ -230,3 +230,37 @@
     }
 
 </#list>
+<#-- Any field accessors -->
+<#list templateHelper.getAnyFields() as field>
+<#assign ann = templateHelper.generateAnyAnnotation(field)>
+<#if ann?has_content>
+    ${ann}
+</#if>
+<#assign colAnn = templateHelper.generateColumnAnnotation(field)>
+<#if colAnn?has_content>
+    ${colAnn}
+</#if>
+    public ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
+        return this.${field.getName()};
+    }
+
+    public void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getJavaTypeName(field)} ${field.getName()}) {
+        this.${field.getName()} = ${field.getName()};
+    }
+
+</#list>
+<#-- ManyToAny field accessors -->
+<#list templateHelper.getManyToAnyFields() as field>
+<#assign ann = templateHelper.generateManyToAnyAnnotation(field)>
+<#if ann?has_content>
+    ${ann}
+</#if>
+    public ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
+        return this.${field.getName()};
+    }
+
+    public void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getCollectionTypeName(field)} ${field.getName()}) {
+        this.${field.getName()} = ${field.getName()};
+    }
+
+</#list>

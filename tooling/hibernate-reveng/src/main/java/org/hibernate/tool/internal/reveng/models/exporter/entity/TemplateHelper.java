@@ -66,6 +66,11 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Version;
 
+import org.hibernate.annotations.Any;
+import org.hibernate.annotations.AnyDiscriminator;
+import org.hibernate.annotations.AnyDiscriminatorValue;
+import org.hibernate.annotations.AnyDiscriminatorValues;
+import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -79,6 +84,7 @@ import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
@@ -215,6 +221,14 @@ public class TemplateHelper {
 
 	public List<FieldDetails> getElementCollectionFields() {
 		return getFieldsWithAnnotation(ElementCollection.class);
+	}
+
+	public List<FieldDetails> getAnyFields() {
+		return getFieldsWithAnnotation(Any.class);
+	}
+
+	public List<FieldDetails> getManyToAnyFields() {
+		return getFieldsWithAnnotation(ManyToAny.class);
 	}
 
 	// --- Field info methods ---
@@ -751,6 +765,71 @@ public class TemplateHelper {
 		importType("org.hibernate.annotations.NotFound");
 		importType("org.hibernate.annotations.NotFoundAction");
 		return "@NotFound(action = NotFoundAction." + nf.action().name() + ")";
+	}
+
+	public String generateAnyAnnotation(FieldDetails field) {
+		if (!annotated) {
+			return "";
+		}
+		if (!field.hasDirectAnnotationUsage(Any.class)) {
+			return "";
+		}
+		StringBuilder sb = new StringBuilder();
+		importType("org.hibernate.annotations.Any");
+		sb.append("@Any\n");
+		sb.append(generateAnyDiscriminatorAnnotations(field));
+		return sb.toString().stripTrailing();
+	}
+
+	public String generateManyToAnyAnnotation(FieldDetails field) {
+		if (!annotated) {
+			return "";
+		}
+		if (!field.hasDirectAnnotationUsage(ManyToAny.class)) {
+			return "";
+		}
+		StringBuilder sb = new StringBuilder();
+		importType("org.hibernate.annotations.ManyToAny");
+		sb.append("@ManyToAny\n");
+		sb.append(generateAnyDiscriminatorAnnotations(field));
+		return sb.toString().stripTrailing();
+	}
+
+	private String generateAnyDiscriminatorAnnotations(FieldDetails field) {
+		StringBuilder sb = new StringBuilder();
+		// @AnyDiscriminator
+		AnyDiscriminator ad = field.getDirectAnnotationUsage(AnyDiscriminator.class);
+		if (ad != null) {
+			importType("org.hibernate.annotations.AnyDiscriminator");
+			importType("jakarta.persistence.DiscriminatorType");
+			sb.append("    @AnyDiscriminator(DiscriminatorType.").append(ad.value().name()).append(")\n");
+		}
+		// @AnyDiscriminatorValue(s)
+		List<AnyDiscriminatorValue> values = new ArrayList<>();
+		AnyDiscriminatorValue single = field.getDirectAnnotationUsage(AnyDiscriminatorValue.class);
+		if (single != null) {
+			values.add(single);
+		}
+		AnyDiscriminatorValues container = field.getDirectAnnotationUsage(AnyDiscriminatorValues.class);
+		if (container != null) {
+			for (AnyDiscriminatorValue adv : container.value()) {
+				values.add(adv);
+			}
+		}
+		for (AnyDiscriminatorValue adv : values) {
+			importType("org.hibernate.annotations.AnyDiscriminatorValue");
+			String simpleEntity = importType(adv.entity().getName());
+			sb.append("    @AnyDiscriminatorValue(discriminator = \"").append(adv.discriminator())
+					.append("\", entity = ").append(simpleEntity).append(".class)\n");
+		}
+		// @AnyKeyJavaClass
+		AnyKeyJavaClass akjc = field.getDirectAnnotationUsage(AnyKeyJavaClass.class);
+		if (akjc != null) {
+			importType("org.hibernate.annotations.AnyKeyJavaClass");
+			String simpleType = importType(akjc.value().getName());
+			sb.append("    @AnyKeyJavaClass(").append(simpleType).append(".class)\n");
+		}
+		return sb.toString();
 	}
 
 	public String generateConvertAnnotation(FieldDetails field) {

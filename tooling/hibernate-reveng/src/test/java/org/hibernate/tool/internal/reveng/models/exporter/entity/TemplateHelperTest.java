@@ -61,6 +61,7 @@ import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValueAnnot
 import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValuesAnnotation;
 import org.hibernate.boot.models.annotations.internal.AnyKeyJavaClassAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionIdAnnotation;
+import org.hibernate.boot.models.annotations.internal.FetchProfileAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLDeleteAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLInsertAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLUpdateAnnotation;
@@ -2436,6 +2437,27 @@ public class TemplateHelperTest {
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getOneToManyFields().get(0);
 		assertEquals("", helper.generateSortAnnotation(field));
+	}
+
+	// --- @FetchProfile ---
+
+	@Test
+	public void testGenerateClassAnnotationsFetchProfile() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		FetchProfileAnnotation fp = HibernateAnnotations.FETCH_PROFILE.createUsage(ctx.modelsContext());
+		fp.name("employee-with-dept");
+		fp.fetchOverrides(new org.hibernate.annotations.FetchProfile.FetchOverride[] {});
+		((MutableAnnotationTarget) ctx.classDetails()).addAnnotationUsage(fp);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@FetchProfile(name = \"employee-with-dept\")"), result);
+	}
+
+	@Test
+	public void testGetFetchProfilesNone() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TemplateHelper helper = create(table);
+		assertTrue(helper.getFetchProfiles().isEmpty());
 	}
 
 	private DynamicFieldDetails addElementCollectionField(

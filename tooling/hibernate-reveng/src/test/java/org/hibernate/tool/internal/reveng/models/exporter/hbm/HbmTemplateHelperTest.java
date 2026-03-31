@@ -62,6 +62,7 @@ import org.hibernate.boot.models.annotations.internal.NamedNativeQueryJpaAnnotat
 import org.hibernate.boot.models.annotations.internal.NamedQueryJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NaturalIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.NotFoundAnnotation;
+import org.hibernate.boot.models.annotations.internal.FetchProfileAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLDeleteAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLInsertAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLUpdateAnnotation;
@@ -2009,5 +2010,27 @@ public class HbmTemplateHelperTest {
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
 		assertNull(new HbmTemplateHelper(entity).getSort(field));
+	}
+
+	// --- Fetch profiles ---
+
+	@Test
+	public void testGetFetchProfilesPresent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		FetchProfileAnnotation fp = HibernateAnnotations.FETCH_PROFILE.createUsage(ctx);
+		fp.name("eager-loading");
+		fp.fetchOverrides(new org.hibernate.annotations.FetchProfile.FetchOverride[] {});
+		entity.addAnnotationUsage(fp);
+		List<HbmTemplateHelper.FetchProfileInfo> profiles = new HbmTemplateHelper(entity).getFetchProfiles();
+		assertEquals(1, profiles.size());
+		assertEquals("eager-loading", profiles.get(0).name());
+	}
+
+	@Test
+	public void testGetFetchProfilesNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertTrue(new HbmTemplateHelper(entity).getFetchProfiles().isEmpty());
 	}
 }

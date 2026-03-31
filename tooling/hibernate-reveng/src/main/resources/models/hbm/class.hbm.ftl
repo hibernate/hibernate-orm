@@ -130,6 +130,14 @@
 <#if helper.getSQLDelete()??>
     <sql-delete<#if helper.getSQLDelete().callable()> callable="true"</#if>>${helper.getSQLDelete().sql()}</sql-delete>
 </#if>
+<#-- Fetch profiles -->
+<#list helper.getFetchProfiles() as fp>
+    <fetch-profile name="${fp.name()}">
+<#list fp.overrides() as fo>
+        <fetch entity="${fo.entity()}" association="${fo.association()}" style="${fo.style()}"/>
+</#list>
+    </fetch-profile>
+</#list>
 <#-- Filters -->
 <#list helper.getFilters() as filter>
     <filter name="${filter.name()}"<#if filter.condition()?? && filter.condition()?length != 0> condition="${filter.condition()}"</#if>/>

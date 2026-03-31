@@ -84,6 +84,8 @@ import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.FetchProfile;
+import org.hibernate.annotations.FetchProfiles;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.ManyToAny;
@@ -464,6 +466,25 @@ public class TemplateHelper {
 			sb.append("@SQLDeleteAll(sql = \"").append(sda.sql()).append("\"");
 			if (sda.callable()) {
 				sb.append(", callable = true");
+			}
+			sb.append(")\n");
+		}
+		// @FetchProfile
+		for (FetchProfile fp : getFetchProfiles()) {
+			importType("org.hibernate.annotations.FetchProfile");
+			sb.append("@FetchProfile(name = \"").append(fp.name()).append("\"");
+			if (fp.fetchOverrides().length > 0) {
+				importType("org.hibernate.annotations.FetchMode");
+				sb.append(", fetchOverrides = {");
+				for (int i = 0; i < fp.fetchOverrides().length; i++) {
+					if (i > 0) sb.append(", ");
+					FetchProfile.FetchOverride fo = fp.fetchOverrides()[i];
+					String simpleEntity = importType(fo.entity().getName());
+					sb.append("@FetchProfile.FetchOverride(entity = ").append(simpleEntity)
+							.append(".class, association = \"").append(fo.association())
+							.append("\", mode = FetchMode.").append(fo.mode().name()).append(")");
+				}
+				sb.append("}");
 			}
 			sb.append(")\n");
 		}
@@ -1500,6 +1521,21 @@ public class TemplateHelper {
 		if (container != null) {
 			for (SQLDelete sd : container.value()) {
 				result.add(sd);
+			}
+		}
+		return result;
+	}
+
+	public List<FetchProfile> getFetchProfiles() {
+		List<FetchProfile> result = new ArrayList<>();
+		FetchProfile single = classDetails.getDirectAnnotationUsage(FetchProfile.class);
+		if (single != null) {
+			result.add(single);
+		}
+		FetchProfiles container = classDetails.getDirectAnnotationUsage(FetchProfiles.class);
+		if (container != null) {
+			for (FetchProfile fp : container.value()) {
+				result.add(fp);
 			}
 		}
 		return result;

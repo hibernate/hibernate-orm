@@ -56,6 +56,7 @@ import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
+import org.hibernate.boot.models.annotations.internal.FetchProfileAnnotation;
 import org.hibernate.boot.models.annotations.internal.NotFoundAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLDeleteAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLInsertAnnotation;
@@ -2061,5 +2062,27 @@ public class MappingXmlHelperTest {
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
 		assertNull(new MappingXmlHelper(entity).getSortComparatorClass(field));
+	}
+
+	// --- Fetch profiles ---
+
+	@Test
+	public void testGetFetchProfilesPresent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		FetchProfileAnnotation fp = HibernateAnnotations.FETCH_PROFILE.createUsage(ctx);
+		fp.name("eager-loading");
+		fp.fetchOverrides(new org.hibernate.annotations.FetchProfile.FetchOverride[] {});
+		entity.addAnnotationUsage(fp);
+		List<MappingXmlHelper.FetchProfileInfo> profiles = new MappingXmlHelper(entity).getFetchProfiles();
+		assertEquals(1, profiles.size());
+		assertEquals("eager-loading", profiles.get(0).name());
+	}
+
+	@Test
+	public void testGetFetchProfilesNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertTrue(new MappingXmlHelper(entity).getFetchProfiles().isEmpty());
 	}
 }

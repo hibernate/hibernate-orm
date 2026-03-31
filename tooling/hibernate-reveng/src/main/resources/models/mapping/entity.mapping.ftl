@@ -49,6 +49,13 @@
 <#if helper.getSQLDelete()??>
         <sql-delete<#if helper.getSQLDelete().callable()> callable="true"</#if>>${helper.getSQLDelete().sql()}</sql-delete>
 </#if>
+<#list helper.getFetchProfiles() as fp>
+        <fetch-profile name="${fp.name()}">
+<#list fp.overrides() as fo>
+            <fetch entity="${fo.entity()}" association="${fo.association()}" style="${fo.style()}"/>
+</#list>
+        </fetch-profile>
+</#list>
 <#list helper.getFilters() as filter>
         <filter name="${filter.name()}">
 <#if filter.condition()?has_content>

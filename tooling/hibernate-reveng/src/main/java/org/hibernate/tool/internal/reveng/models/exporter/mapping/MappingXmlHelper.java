@@ -93,6 +93,8 @@ import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLDeletes;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLInserts;
+import org.hibernate.annotations.FetchProfile;
+import org.hibernate.annotations.FetchProfiles;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SQLUpdates;
@@ -820,6 +822,36 @@ public class MappingXmlHelper {
 
 	private boolean isEmbeddedField(FieldDetails field) {
 		return field.hasDirectAnnotationUsage(Embedded.class);
+	}
+
+	// --- Fetch profiles ---
+
+	public record FetchProfileInfo(String name, List<FetchOverrideInfo> overrides) {}
+
+	public record FetchOverrideInfo(String entity, String association, String style) {}
+
+	public List<FetchProfileInfo> getFetchProfiles() {
+		List<FetchProfileInfo> result = new ArrayList<>();
+		FetchProfile single = classDetails.getDirectAnnotationUsage(FetchProfile.class);
+		if (single != null) {
+			result.add(toFetchProfileInfo(single));
+		}
+		FetchProfiles container = classDetails.getDirectAnnotationUsage(FetchProfiles.class);
+		if (container != null) {
+			for (FetchProfile fp : container.value()) {
+				result.add(toFetchProfileInfo(fp));
+			}
+		}
+		return result;
+	}
+
+	private FetchProfileInfo toFetchProfileInfo(FetchProfile fp) {
+		List<FetchOverrideInfo> overrides = new ArrayList<>();
+		for (FetchProfile.FetchOverride fo : fp.fetchOverrides()) {
+			overrides.add(new FetchOverrideInfo(
+					fo.entity().getName(), fo.association(), fo.mode().name().toLowerCase()));
+		}
+		return new FetchProfileInfo(fp.name(), overrides);
 	}
 
 	// --- SQL operations ---

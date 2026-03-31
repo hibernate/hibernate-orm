@@ -4,6 +4,15 @@
  */
 package org.hibernate.tool.hbm2ddl;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
@@ -36,15 +45,6 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 
@@ -261,11 +261,12 @@ public class SchemaExport {
 				serviceRegistry
 		);
 
-		doExecution( action, metadata, serviceRegistry, targetDescriptor );
+		doExecution( action, needsJdbcConnection( targetTypes ), metadata, serviceRegistry, targetDescriptor );
 	}
 
 	public void doExecution(
 			Action action,
+			boolean needsJdbc,
 			Metadata metadata,
 			ServiceRegistry serviceRegistry,
 			TargetDescriptor targetDescriptor) {
@@ -367,6 +368,7 @@ public class SchemaExport {
 	public void perform(Action action, Metadata metadata, ScriptTargetOutput target) {
 		doExecution(
 				action,
+				false,
 				metadata,
 				( (MetadataImplementor) metadata ).getMetadataBuildingOptions().getServiceRegistry(),
 				new TargetDescriptorImpl( EnumSet.of( TargetType.SCRIPT ), target )

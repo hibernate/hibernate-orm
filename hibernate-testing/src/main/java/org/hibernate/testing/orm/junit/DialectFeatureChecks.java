@@ -484,6 +484,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportAlterColumnType implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsAlterColumnType();
+		}
+	}
+
 	public static class SupportFollowOnLocking implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.useFollowOnLocking( null, null );

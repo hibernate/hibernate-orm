@@ -159,26 +159,24 @@ public class HibernateToolTask extends Task {
 		validateParameters();
 		Iterator<ExporterTask> iterator = generators.iterator();
 
-		AntClassLoader loader = getProject().createClassLoader(classPath);
+		try (AntClassLoader loader = getProject().createClassLoader(classPath)) {
+			ExporterTask generatorTask = null;
+			int count = 1;
+			try {
+				ClassLoader classLoader = this.getClass().getClassLoader();
+				loader.setParent(classLoader ); // if this is not set, classes from the taskdef cannot be found - which is crucial for e.g. annotations.
+				loader.setThreadContextLoader();
 
-		ExporterTask generatorTask = null;
-		int count = 1;
-		try {
-			ClassLoader classLoader = this.getClass().getClassLoader();
-			loader.setParent(classLoader ); // if this is not set, classes from the taskdef cannot be found - which is crucial for e.g. annotations.
-			loader.setThreadContextLoader();
-
-			while (iterator.hasNext() ) {
-				generatorTask = iterator.next();
-				log(count++ + ". task: " + generatorTask.getName() );
-				generatorTask.execute();
+				while (iterator.hasNext() ) {
+					generatorTask = iterator.next();
+					log(count++ + ". task: " + generatorTask.getName() );
+					generatorTask.execute();
+				}
 			}
-		}
-		catch (RuntimeException re) {
-			reportException(re, count, generatorTask);
-		}
-		finally {
-			if (loader != null) {
+			catch (RuntimeException re) {
+				reportException(re, count, generatorTask);
+			}
+			finally {
 				loader.resetThreadContextLoader();
 				loader.cleanup();
 			}

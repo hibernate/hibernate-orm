@@ -54,11 +54,13 @@ public class OneToManyJoinTableSetPrimaryKeyTest {
 		metadata.validate();
 
 		final List<String> commands = new SchemaCreatorImpl( ssr ).generateCreationCommands( metadata, false );
+		final String createTableString =
+				metadata.getDatabase().getDialect().getCreateTableString().toLowerCase( Locale.ROOT );
 		final String joinTableCreateCommand;
 		String found = null;
 		for ( String command : commands ) {
 			final String lowerCaseCommand = command.toLowerCase( Locale.ROOT );
-			if ( lowerCaseCommand.contains( "create table" )
+			if ( lowerCaseCommand.contains( createTableString )
 				&& lowerCaseCommand.contains( "publishedauthors" ) ) {
 				found = lowerCaseCommand;
 				break;

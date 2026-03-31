@@ -57,10 +57,12 @@ public class ManyToOneJoinTableForeignKeyNullabilityTest {
 				new SchemaCreatorImpl( ssr )
 						.generateCreationCommands( metadata, false );
 
+		final String createTableString =
+				metadata.getDatabase().getDialect().getCreateTableString().toLowerCase( Locale.ROOT );
 		String found = null;
 		for ( String command : commands ) {
 			final String lowerCaseCommand = command.toLowerCase( Locale.ROOT );
-			if ( lowerCaseCommand.contains( "create table" )
+			if ( lowerCaseCommand.contains( createTableString )
 				&& lowerCaseCommand.contains( "authorpublisher" ) ) {
 				found = lowerCaseCommand;
 				break;

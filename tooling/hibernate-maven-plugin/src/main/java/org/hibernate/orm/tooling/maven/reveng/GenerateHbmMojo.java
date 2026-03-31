@@ -22,7 +22,10 @@ import static org.apache.maven.plugins.annotations.LifecyclePhase.GENERATE_SOURC
  * Mojo to generate hbm.xml files from an existing database.
  * <p>
  * See: https://docs.jboss.org/tools/latest/en/hibernatetools/html_single/#d0e4821
+ *
+ * @deprecated Use the {@code hbm2java} goal to generate annotated Java entities instead.
  */
+@Deprecated(forRemoval = true)
 @Mojo(
 	name = "generateHbm",
 	defaultPhase = GENERATE_SOURCES,
@@ -37,6 +40,8 @@ public class GenerateHbmMojo extends AbstractGenerationMojo {
 	private String templatePath;
 
 	protected void executeExporter(MetadataDescriptor metadataDescriptor) throws MojoFailureException {
+		getLog().warn( "The generateHbm goal is deprecated and will be removed in a future version. "
+				+ "Use the hbm2java goal to generate annotated Java entities instead." );
 		try {
 			Exporter hbmExporter = ExporterFactory.createExporter(ExporterType.HBM);
 			hbmExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);

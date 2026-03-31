@@ -13,11 +13,14 @@ import org.hibernate.tool.reveng.api.export.ExporterConstants;
 import org.hibernate.tool.reveng.api.export.ExporterFactory;
 import org.hibernate.tool.reveng.api.export.ExporterType;
 
+@Deprecated(forRemoval = true)
 @DisableCachingByDefault(because = "Reverse engineering tasks perform JDBC operations and are not cacheable")
 public class GenerateHbmTask extends RevengTask {
 
 	@TaskAction
 	public void performTask() {
+		getLogger().warn( "The generateHbm task is deprecated and will be removed in a future version. "
+				+ "Use the generateJava task to generate annotated Java entities instead." );
 		super.perform();
 	}
 

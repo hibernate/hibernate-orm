@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.tool.maven;
+package org.hibernate.orm.tooling.maven.reveng;
 
 import org.apache.maven.project.MavenProject;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;

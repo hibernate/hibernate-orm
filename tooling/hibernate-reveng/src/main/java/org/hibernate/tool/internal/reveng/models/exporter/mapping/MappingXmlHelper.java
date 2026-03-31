@@ -71,6 +71,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
@@ -461,6 +462,16 @@ public class MappingXmlHelper {
 		MapKeyColumn mkc = field.getDirectAnnotationUsage(MapKeyColumn.class);
 		return mkc != null && mkc.name() != null && !mkc.name().isEmpty()
 				? mkc.name() : null;
+	}
+
+	// --- Fetch mode ---
+
+	public String getFetchMode(FieldDetails field) {
+		Fetch fetch = field.getDirectAnnotationUsage(Fetch.class);
+		if (fetch == null) {
+			return null;
+		}
+		return fetch.value().name();
 	}
 
 	// --- Collection-level filters ---

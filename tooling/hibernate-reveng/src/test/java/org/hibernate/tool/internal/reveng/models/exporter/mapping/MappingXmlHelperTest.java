@@ -31,6 +31,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.boot.models.HibernateAnnotations;
@@ -51,6 +52,7 @@ import org.hibernate.boot.models.annotations.internal.BasicJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterDefAnnotation;
 import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
@@ -745,6 +747,38 @@ public class MappingXmlHelperTest {
 		oc.name("SORT_ORDER");
 		field.addAnnotationUsage(oc);
 		assertEquals("SORT_ORDER", new MappingXmlHelper(entity).getOrderColumnName(field));
+	}
+
+	// --- Fetch mode ---
+
+	@Test
+	public void testGetFetchModeJoin() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
+		FetchAnnotation fetch = HibernateAnnotations.FETCH.createUsage(ctx);
+		fetch.value(FetchMode.JOIN);
+		field.addAnnotationUsage(fetch);
+		assertEquals("JOIN", new MappingXmlHelper(entity).getFetchMode(field));
+	}
+
+	@Test
+	public void testGetFetchModeSubselect() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
+		FetchAnnotation fetch = HibernateAnnotations.FETCH.createUsage(ctx);
+		fetch.value(FetchMode.SUBSELECT);
+		field.addAnnotationUsage(fetch);
+		assertEquals("SUBSELECT", new MappingXmlHelper(entity).getFetchMode(field));
+	}
+
+	@Test
+	public void testGetFetchModeNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
+		assertNull(new MappingXmlHelper(entity).getFetchMode(field));
 	}
 
 	// --- Map key ---

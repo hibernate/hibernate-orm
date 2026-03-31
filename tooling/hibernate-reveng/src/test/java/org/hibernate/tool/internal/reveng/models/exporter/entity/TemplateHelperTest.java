@@ -36,6 +36,7 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Filter;
 import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
 import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
@@ -51,6 +52,7 @@ import org.hibernate.boot.models.annotations.internal.OrderColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
 import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyJpaAnnotation;
@@ -1479,6 +1481,47 @@ public class TemplateHelperTest {
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getOneToManyFields().get(0);
 		assertEquals("", helper.generateOrderColumnAnnotation(field));
+	}
+
+	// --- @Fetch ---
+
+	@Test
+	public void testGenerateFetchAnnotationJoin() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
+		FetchAnnotation fetch = HibernateAnnotations.FETCH.createUsage(ctx.modelsContext());
+		fetch.value(FetchMode.JOIN);
+		((MutableAnnotationTarget) field).addAnnotationUsage(fetch);
+		assertEquals("@Fetch(FetchMode.JOIN)", ctx.helper().generateFetchAnnotation(field));
+	}
+
+	@Test
+	public void testGenerateFetchAnnotationSubselect() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
+		FetchAnnotation fetch = HibernateAnnotations.FETCH.createUsage(ctx.modelsContext());
+		fetch.value(FetchMode.SUBSELECT);
+		((MutableAnnotationTarget) field).addAnnotationUsage(fetch);
+		assertEquals("@Fetch(FetchMode.SUBSELECT)", ctx.helper().generateFetchAnnotation(field));
+	}
+
+	@Test
+	public void testGenerateFetchAnnotationNone() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getOneToManyFields().get(0);
+		assertEquals("", helper.generateFetchAnnotation(field));
 	}
 
 	// --- @MapKey / @MapKeyColumn ---

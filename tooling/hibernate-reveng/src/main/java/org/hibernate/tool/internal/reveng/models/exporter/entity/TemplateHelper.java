@@ -72,6 +72,8 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.NaturalId;
@@ -697,6 +699,19 @@ public class TemplateHelper {
 			return "@MapKeyColumn(name = \"" + mkc.name() + "\")";
 		}
 		return "@MapKeyColumn";
+	}
+
+	public String generateFetchAnnotation(FieldDetails field) {
+		if (!annotated) {
+			return "";
+		}
+		Fetch fetch = field.getDirectAnnotationUsage(Fetch.class);
+		if (fetch == null) {
+			return "";
+		}
+		importType("org.hibernate.annotations.Fetch");
+		importType("org.hibernate.annotations.FetchMode");
+		return "@Fetch(FetchMode." + fetch.value().name() + ")";
 	}
 
 	public String generateColumnAnnotation(FieldDetails field) {

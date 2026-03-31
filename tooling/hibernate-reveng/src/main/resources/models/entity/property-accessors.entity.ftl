@@ -66,6 +66,10 @@
 <#if ann?has_content>
     ${ann}
 </#if>
+<#assign fetchAnn = templateHelper.generateFetchAnnotation(field)>
+<#if fetchAnn?has_content>
+    ${fetchAnn}
+</#if>
     public ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
         return this.${field.getName()};
     }
@@ -81,6 +85,10 @@
 <#if ann?has_content>
     ${ann}
 </#if>
+<#assign fetchAnn = templateHelper.generateFetchAnnotation(field)>
+<#if fetchAnn?has_content>
+    ${fetchAnn}
+</#if>
     public ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
         return this.${field.getName()};
     }
@@ -95,6 +103,10 @@
 <#assign ann = templateHelper.generateOneToManyAnnotation(field)>
 <#if ann?has_content>
     ${ann}
+</#if>
+<#assign fetchAnn = templateHelper.generateFetchAnnotation(field)>
+<#if fetchAnn?has_content>
+    ${fetchAnn}
 </#if>
 <#assign mapKeyAnn = templateHelper.generateMapKeyAnnotation(field)>
 <#if mapKeyAnn?has_content>
@@ -130,6 +142,10 @@
 <#assign ann = templateHelper.generateManyToManyAnnotation(field)>
 <#if ann?has_content>
     ${ann}
+</#if>
+<#assign fetchAnn = templateHelper.generateFetchAnnotation(field)>
+<#if fetchAnn?has_content>
+    ${fetchAnn}
 </#if>
 <#assign mapKeyAnn = templateHelper.generateMapKeyAnnotation(field)>
 <#if mapKeyAnn?has_content>

@@ -45,7 +45,8 @@
         cascade="${helper.getCollectionCascadeString(field)}"</#if><#if helper.getCollectionLazy(field)??>
         lazy="${helper.getCollectionLazy(field)}"</#if><#if helper.getCollectionFetchMode(field)??>
         fetch="${helper.getCollectionFetchMode(field)}"</#if><#if (helper.getCollectionBatchSize(field) gt 1)>
-        batch-size="${helper.getCollectionBatchSize(field)?c}"</#if>>
+        batch-size="${helper.getCollectionBatchSize(field)?c}"</#if><#if helper.getCollectionOrderBy(field)??>
+        order-by="${helper.getCollectionOrderBy(field)}"</#if>>
         <key>
             <column name="${helper.getOneToManyMappedBy(field)}"/>
         </key>
@@ -67,7 +68,8 @@
         cascade="${helper.getCollectionCascadeString(field)}"</#if><#if helper.getCollectionLazy(field)??>
         lazy="${helper.getCollectionLazy(field)}"</#if><#if helper.getCollectionFetchMode(field)??>
         fetch="${helper.getCollectionFetchMode(field)}"</#if><#if (helper.getCollectionBatchSize(field) gt 1)>
-        batch-size="${helper.getCollectionBatchSize(field)?c}"</#if>>
+        batch-size="${helper.getCollectionBatchSize(field)?c}"</#if><#if helper.getCollectionOrderBy(field)??>
+        order-by="${helper.getCollectionOrderBy(field)}"</#if>>
         <key>
             <column name="${helper.getJoinTableJoinColumnName(field)}"/>
         </key>
@@ -130,7 +132,8 @@
     <${collTag} name="${field.getName()}"<#if helper.getElementCollectionTableName(field)??>
         table="${helper.getElementCollectionTableName(field)}"</#if><#if helper.getCollectionLazy(field)??>
         lazy="${helper.getCollectionLazy(field)}"</#if><#if helper.getCollectionFetchMode(field)??>
-        fetch="${helper.getCollectionFetchMode(field)}"</#if>>
+        fetch="${helper.getCollectionFetchMode(field)}"</#if><#if helper.getCollectionOrderBy(field)??>
+        order-by="${helper.getCollectionOrderBy(field)}"</#if>>
         <key>
 <#if helper.getElementCollectionKeyColumnName(field)??>
             <column name="${helper.getElementCollectionKeyColumnName(field)}"/>

@@ -66,6 +66,7 @@ import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.JoinTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OptimisticLockAnnotation;
 import org.hibernate.boot.models.annotations.internal.OptimisticLockingAnnotation;
+import org.hibernate.boot.models.annotations.internal.OrderByJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OrderColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ParamDefAnnotation;
 import org.hibernate.boot.models.annotations.internal.RowIdAnnotation;
@@ -982,6 +983,27 @@ public class HbmTemplateHelperTest {
 		oc.name("POSITION");
 		field.addAnnotationUsage(oc);
 		assertEquals("POSITION", new HbmTemplateHelper(entity).getListIndexColumnName(field));
+	}
+
+	// --- getCollectionOrderBy ---
+
+	@Test
+	public void testGetCollectionOrderByDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		assertNull(new HbmTemplateHelper(entity).getCollectionOrderBy(field));
+	}
+
+	@Test
+	public void testGetCollectionOrderBySet() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		OrderByJpaAnnotation ob = JpaAnnotations.ORDER_BY.createUsage(ctx);
+		ob.value("name ASC");
+		field.addAnnotationUsage(ob);
+		assertEquals("name ASC", new HbmTemplateHelper(entity).getCollectionOrderBy(field));
 	}
 
 	// --- getCollectionCascadeString ---

@@ -52,9 +52,20 @@
 <#-- One-to-many -->
 <#list helper.getOneToManyFields() as field>
 <#assign o2mHasCascade = (helper.getOneToManyCascadeTypes(field)?size > 0)>
-            <one-to-many name="${field.getName()}" target-entity="${helper.getOneToManyTargetEntity(field)}" mapped-by="${helper.getOneToManyMappedBy(field)}"<#if helper.getOneToManyFetchType(field)??> fetch="${helper.getOneToManyFetchType(field)}"</#if><#if helper.isOneToManyOrphanRemoval(field)> orphan-removal="true"</#if><#if o2mHasCascade>>
+<#assign o2mHasOrderBy = helper.getOrderBy(field)??>
+<#assign o2mHasOrderCol = helper.getOrderColumnName(field)??>
+<#assign o2mHasChildren = o2mHasCascade || o2mHasOrderBy || o2mHasOrderCol>
+            <one-to-many name="${field.getName()}" target-entity="${helper.getOneToManyTargetEntity(field)}" mapped-by="${helper.getOneToManyMappedBy(field)}"<#if helper.getOneToManyFetchType(field)??> fetch="${helper.getOneToManyFetchType(field)}"</#if><#if helper.isOneToManyOrphanRemoval(field)> orphan-removal="true"</#if><#if o2mHasChildren>>
+<#if o2mHasOrderBy>
+                <order-by>${helper.getOrderBy(field)}</order-by>
+</#if>
+<#if o2mHasOrderCol>
+                <order-column name="${helper.getOrderColumnName(field)}"/>
+</#if>
+<#if o2mHasCascade>
 <#assign cascadeTypes = helper.getOneToManyCascadeTypes(field)>
 <#include "cascade.mapping.ftl"/>
+</#if>
             </one-to-many>
 <#else/>/>
 </#if>
@@ -78,8 +89,16 @@
 <#-- Many-to-many -->
 <#list helper.getManyToManyFields() as field>
 <#assign m2mHasCascade = (helper.getManyToManyCascadeTypes(field)?size > 0)>
-<#assign m2mHasChildren = helper.getJoinTableName(field)?? || m2mHasCascade>
+<#assign m2mHasOrderBy = helper.getOrderBy(field)??>
+<#assign m2mHasOrderCol = helper.getOrderColumnName(field)??>
+<#assign m2mHasChildren = helper.getJoinTableName(field)?? || m2mHasCascade || m2mHasOrderBy || m2mHasOrderCol>
             <many-to-many name="${field.getName()}" target-entity="${helper.getManyToManyTargetEntity(field)}"<#if helper.getManyToManyMappedBy(field)??> mapped-by="${helper.getManyToManyMappedBy(field)}"</#if><#if helper.getManyToManyFetchType(field)??> fetch="${helper.getManyToManyFetchType(field)}"</#if><#if m2mHasChildren>>
+<#if m2mHasOrderBy>
+                <order-by>${helper.getOrderBy(field)}</order-by>
+</#if>
+<#if m2mHasOrderCol>
+                <order-column name="${helper.getOrderColumnName(field)}"/>
+</#if>
 <#if m2mHasCascade>
 <#assign cascadeTypes = helper.getManyToManyCascadeTypes(field)>
 <#include "cascade.mapping.ftl"/>
@@ -101,6 +120,12 @@
 <#-- Element collections -->
 <#list helper.getElementCollectionFields() as field>
             <element-collection name="${field.getName()}"<#if helper.getElementCollectionTargetClass(field)??> target-class="${helper.getElementCollectionTargetClass(field)}"</#if>>
+<#if helper.getOrderBy(field)??>
+                <order-by>${helper.getOrderBy(field)}</order-by>
+</#if>
+<#if helper.getOrderColumnName(field)??>
+                <order-column name="${helper.getOrderColumnName(field)}"/>
+</#if>
 <#if helper.getElementCollectionColumnName(field)??>
                 <column name="${helper.getElementCollectionColumnName(field)}"/>
 </#if>

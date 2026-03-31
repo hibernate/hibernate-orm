@@ -92,6 +92,14 @@
 <#if ann?has_content>
     ${ann}
 </#if>
+<#assign orderByAnn = templateHelper.generateOrderByAnnotation(field)>
+<#if orderByAnn?has_content>
+    ${orderByAnn}
+</#if>
+<#assign orderColAnn = templateHelper.generateOrderColumnAnnotation(field)>
+<#if orderColAnn?has_content>
+    ${orderColAnn}
+</#if>
     public ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
         return this.${field.getName()};
     }
@@ -106,6 +114,14 @@
 <#assign ann = templateHelper.generateManyToManyAnnotation(field)>
 <#if ann?has_content>
     ${ann}
+</#if>
+<#assign orderByAnn = templateHelper.generateOrderByAnnotation(field)>
+<#if orderByAnn?has_content>
+    ${orderByAnn}
+</#if>
+<#assign orderColAnn = templateHelper.generateOrderColumnAnnotation(field)>
+<#if orderColAnn?has_content>
+    ${orderColAnn}
 </#if>
     public ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
         return this.${field.getName()};
@@ -136,6 +152,14 @@
 <#assign ann = templateHelper.generateElementCollectionAnnotation(field)>
 <#if ann?has_content>
     ${ann}
+</#if>
+<#assign orderByAnn = templateHelper.generateOrderByAnnotation(field)>
+<#if orderByAnn?has_content>
+    ${orderByAnn}
+</#if>
+<#assign orderColAnn = templateHelper.generateOrderColumnAnnotation(field)>
+<#if orderColAnn?has_content>
+    ${orderColAnn}
 </#if>
     public ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
         return this.${field.getName()};

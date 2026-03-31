@@ -38,6 +38,8 @@ import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
 import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
+import org.hibernate.boot.models.annotations.internal.OrderByJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.OrderColumnJpaAnnotation;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.boot.models.annotations.internal.AnyAnnotation;
 import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorAnnotation;
@@ -112,6 +114,24 @@ public class MappingXmlHelperTest {
 				.resolveClassDetails(javaType.getName());
 		TypeDetails fieldType = new ClassTypeDetailsImpl(typeClass, TypeDetails.Kind.CLASS);
 		return entity.applyAttribute(fieldName, fieldType, false, false, ctx);
+	}
+
+	private DynamicFieldDetails addOneToManyField(
+			DynamicClassDetails entity, String fieldName, ModelsContext ctx) {
+		DynamicClassDetails targetClass = new DynamicClassDetails(
+				"Item", "com.example.Item", false, null, null, ctx);
+		ClassDetails setClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(Set.class.getName());
+		TypeDetails elementType = new ClassTypeDetailsImpl(targetClass, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				setClass, Collections.singletonList(elementType), null);
+		DynamicFieldDetails field = entity.applyAttribute(
+				fieldName, fieldType, false, true, ctx);
+		org.hibernate.boot.models.annotations.internal.OneToManyJpaAnnotation o2m =
+				JpaAnnotations.ONE_TO_MANY.createUsage(ctx);
+		o2m.mappedBy("parent");
+		field.addAnnotationUsage(o2m);
+		return field;
 	}
 
 	private DynamicFieldDetails addElementCollectionField(
@@ -676,6 +696,52 @@ public class MappingXmlHelperTest {
 				"employees", "department", "Employee", "com.example"));
 		MappingXmlHelper helper = create(table);
 		assertTrue(helper.getOneToManyCascadeTypes(helper.getOneToManyFields().get(0)).isEmpty());
+	}
+
+	// --- Ordering ---
+
+	@Test
+	public void testGetOrderByDefault() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		MappingXmlHelper helper = create(table);
+		FieldDetails field = helper.getOneToManyFields().get(0);
+		assertNull(helper.getOrderBy(field));
+	}
+
+	@Test
+	public void testGetOrderBySet() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
+		OrderByJpaAnnotation ob = JpaAnnotations.ORDER_BY.createUsage(ctx);
+		ob.value("name ASC");
+		field.addAnnotationUsage(ob);
+		assertEquals("name ASC", new MappingXmlHelper(entity).getOrderBy(field));
+	}
+
+	@Test
+	public void testGetOrderColumnNameDefault() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		MappingXmlHelper helper = create(table);
+		FieldDetails field = helper.getOneToManyFields().get(0);
+		assertNull(helper.getOrderColumnName(field));
+	}
+
+	@Test
+	public void testGetOrderColumnNameSet() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
+		OrderColumnJpaAnnotation oc = JpaAnnotations.ORDER_COLUMN.createUsage(ctx);
+		oc.name("SORT_ORDER");
+		field.addAnnotationUsage(oc);
+		assertEquals("SORT_ORDER", new MappingXmlHelper(entity).getOrderColumnName(field));
 	}
 
 	// --- OneToOne ---

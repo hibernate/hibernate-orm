@@ -38,6 +38,8 @@ import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
 import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
+import org.hibernate.boot.models.annotations.internal.OrderByJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.OrderColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
@@ -1343,6 +1345,62 @@ public class TemplateHelperTest {
 		dc.addAnnotationUsage(cache);
 		String result = ctx.helper().generateClassAnnotations();
 		assertFalse(result.contains("@Cache"), result);
+	}
+
+	// --- @OrderBy ---
+
+	@Test
+	public void testGenerateOrderByAnnotation() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
+		OrderByJpaAnnotation ob = JpaAnnotations.ORDER_BY.createUsage(ctx.modelsContext());
+		ob.value("lastName ASC, firstName ASC");
+		((MutableAnnotationTarget) field).addAnnotationUsage(ob);
+		assertEquals("@OrderBy(\"lastName ASC, firstName ASC\")",
+				ctx.helper().generateOrderByAnnotation(field));
+	}
+
+	@Test
+	public void testGenerateOrderByAnnotationEmpty() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getOneToManyFields().get(0);
+		assertEquals("", helper.generateOrderByAnnotation(field));
+	}
+
+	// --- @OrderColumn ---
+
+	@Test
+	public void testGenerateOrderColumnAnnotation() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
+		OrderColumnJpaAnnotation oc = JpaAnnotations.ORDER_COLUMN.createUsage(ctx.modelsContext());
+		oc.name("POSITION");
+		((MutableAnnotationTarget) field).addAnnotationUsage(oc);
+		assertEquals("@OrderColumn(name = \"POSITION\")",
+				ctx.helper().generateOrderColumnAnnotation(field));
+	}
+
+	@Test
+	public void testGenerateOrderColumnAnnotationEmpty() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getOneToManyFields().get(0);
+		assertEquals("", helper.generateOrderColumnAnnotation(field));
 	}
 
 	// --- @Formula ---

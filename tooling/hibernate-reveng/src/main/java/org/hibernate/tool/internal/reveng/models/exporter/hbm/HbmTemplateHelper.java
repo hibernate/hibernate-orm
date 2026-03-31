@@ -51,6 +51,7 @@ import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SecondaryTable;
@@ -777,6 +778,12 @@ public class HbmTemplateHelper {
 			return getCascadeString(m2m.cascade());
 		}
 		return null;
+	}
+
+	public String getCollectionOrderBy(FieldDetails field) {
+		OrderBy ob = field.getDirectAnnotationUsage(OrderBy.class);
+		return ob != null && ob.value() != null && !ob.value().isEmpty()
+				? ob.value() : null;
 	}
 
 	// --- List-specific ---

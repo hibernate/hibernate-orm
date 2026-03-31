@@ -47,6 +47,8 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.OrderColumn;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
@@ -532,6 +534,36 @@ public class TemplateHelper {
 			sb.append("@Column(name = \"").append(col.name()).append("\")");
 		}
 		return sb.toString();
+	}
+
+	public String generateOrderByAnnotation(FieldDetails field) {
+		if (!annotated) {
+			return "";
+		}
+		OrderBy ob = field.getDirectAnnotationUsage(OrderBy.class);
+		if (ob == null) {
+			return "";
+		}
+		importType("jakarta.persistence.OrderBy");
+		if (ob.value() != null && !ob.value().isEmpty()) {
+			return "@OrderBy(\"" + ob.value() + "\")";
+		}
+		return "@OrderBy";
+	}
+
+	public String generateOrderColumnAnnotation(FieldDetails field) {
+		if (!annotated) {
+			return "";
+		}
+		OrderColumn oc = field.getDirectAnnotationUsage(OrderColumn.class);
+		if (oc == null) {
+			return "";
+		}
+		importType("jakarta.persistence.OrderColumn");
+		if (oc.name() != null && !oc.name().isEmpty()) {
+			return "@OrderColumn(name = \"" + oc.name() + "\")";
+		}
+		return "@OrderColumn";
 	}
 
 	public String generateColumnAnnotation(FieldDetails field) {

@@ -42,6 +42,8 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Basic;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
@@ -408,6 +410,20 @@ public class MappingXmlHelper {
 		OneToMany o2m = field.getDirectAnnotationUsage(OneToMany.class);
 		return o2m != null && o2m.cascade().length > 0
 				? Arrays.asList(o2m.cascade()) : List.of();
+	}
+
+	// --- Ordering ---
+
+	public String getOrderBy(FieldDetails field) {
+		OrderBy ob = field.getDirectAnnotationUsage(OrderBy.class);
+		return ob != null && ob.value() != null && !ob.value().isEmpty()
+				? ob.value() : null;
+	}
+
+	public String getOrderColumnName(FieldDetails field) {
+		OrderColumn oc = field.getDirectAnnotationUsage(OrderColumn.class);
+		return oc != null && oc.name() != null && !oc.name().isEmpty()
+				? oc.name() : null;
 	}
 
 	// --- OneToOne ---

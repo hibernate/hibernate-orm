@@ -62,6 +62,8 @@ import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -131,6 +133,25 @@ public class MappingXmlHelper {
 	public int getBatchSize() {
 		BatchSize bs = classDetails.getDirectAnnotationUsage(BatchSize.class);
 		return bs != null ? bs.size() : 0;
+	}
+
+	public String getCacheAccessType() {
+		Cache cache = classDetails.getDirectAnnotationUsage(Cache.class);
+		if (cache == null || cache.usage() == CacheConcurrencyStrategy.NONE) {
+			return null;
+		}
+		return cache.usage().name();
+	}
+
+	public String getCacheRegion() {
+		Cache cache = classDetails.getDirectAnnotationUsage(Cache.class);
+		return cache != null && cache.region() != null && !cache.region().isEmpty()
+				? cache.region() : null;
+	}
+
+	public boolean isCacheIncludeLazy() {
+		Cache cache = classDetails.getDirectAnnotationUsage(Cache.class);
+		return cache == null || cache.includeLazy();
 	}
 
 	public String getSqlRestriction() {

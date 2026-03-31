@@ -35,7 +35,9 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
+import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
@@ -1287,6 +1289,60 @@ public class TemplateHelperTest {
 		dc.addAnnotationUsage(bs);
 		String result = ctx.helper().generateClassAnnotations();
 		assertTrue(result.contains("@BatchSize(size = 25)"), result);
+	}
+
+	// --- @Cache ---
+
+	@Test
+	public void testGenerateClassAnnotationsCacheReadWrite() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx.modelsContext());
+		cache.usage(CacheConcurrencyStrategy.READ_WRITE);
+		dc.addAnnotationUsage(cache);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsCacheWithRegion() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx.modelsContext());
+		cache.usage(CacheConcurrencyStrategy.READ_ONLY);
+		cache.region("employee-cache");
+		dc.addAnnotationUsage(cache);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("CacheConcurrencyStrategy.READ_ONLY"), result);
+		assertTrue(result.contains("region = \"employee-cache\""), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsCacheIncludeLazyFalse() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx.modelsContext());
+		cache.usage(CacheConcurrencyStrategy.NONSTRICT_READ_WRITE);
+		cache.includeLazy(false);
+		dc.addAnnotationUsage(cache);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("CacheConcurrencyStrategy.NONSTRICT_READ_WRITE"), result);
+		assertTrue(result.contains("includeLazy = false"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsCacheNoneSkipped() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx.modelsContext());
+		cache.usage(CacheConcurrencyStrategy.NONE);
+		dc.addAnnotationUsage(cache);
+		String result = ctx.helper().generateClassAnnotations();
+		assertFalse(result.contains("@Cache"), result);
 	}
 
 	// --- @Formula ---

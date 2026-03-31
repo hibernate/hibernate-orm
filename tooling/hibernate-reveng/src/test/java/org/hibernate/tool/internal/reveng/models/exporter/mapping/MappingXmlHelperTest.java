@@ -35,7 +35,9 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
+import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.boot.models.annotations.internal.AnyAnnotation;
 import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorAnnotation;
@@ -1071,6 +1073,85 @@ public class MappingXmlHelperTest {
 		bs.size(25);
 		entity.addAnnotationUsage(bs);
 		assertEquals(25, new MappingXmlHelper(entity).getBatchSize());
+	}
+
+	// --- getCacheAccessType ---
+
+	@Test
+	public void testGetCacheAccessTypeDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertNull(new MappingXmlHelper(entity).getCacheAccessType());
+	}
+
+	@Test
+	public void testGetCacheAccessTypeReadWrite() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx);
+		cache.usage(CacheConcurrencyStrategy.READ_WRITE);
+		entity.addAnnotationUsage(cache);
+		assertEquals("READ_WRITE", new MappingXmlHelper(entity).getCacheAccessType());
+	}
+
+	@Test
+	public void testGetCacheAccessTypeTransactional() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx);
+		cache.usage(CacheConcurrencyStrategy.TRANSACTIONAL);
+		entity.addAnnotationUsage(cache);
+		assertEquals("TRANSACTIONAL", new MappingXmlHelper(entity).getCacheAccessType());
+	}
+
+	@Test
+	public void testGetCacheAccessTypeNoneReturnsNull() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx);
+		cache.usage(CacheConcurrencyStrategy.NONE);
+		entity.addAnnotationUsage(cache);
+		assertNull(new MappingXmlHelper(entity).getCacheAccessType());
+	}
+
+	// --- getCacheRegion ---
+
+	@Test
+	public void testGetCacheRegionDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertNull(new MappingXmlHelper(entity).getCacheRegion());
+	}
+
+	@Test
+	public void testGetCacheRegionSet() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx);
+		cache.usage(CacheConcurrencyStrategy.READ_WRITE);
+		cache.region("employee-cache");
+		entity.addAnnotationUsage(cache);
+		assertEquals("employee-cache", new MappingXmlHelper(entity).getCacheRegion());
+	}
+
+	// --- isCacheIncludeLazy ---
+
+	@Test
+	public void testIsCacheIncludeLazyDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertTrue(new MappingXmlHelper(entity).isCacheIncludeLazy());
+	}
+
+	@Test
+	public void testIsCacheIncludeLazyFalse() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx);
+		cache.usage(CacheConcurrencyStrategy.READ_WRITE);
+		cache.includeLazy(false);
+		entity.addAnnotationUsage(cache);
+		assertFalse(new MappingXmlHelper(entity).isCacheIncludeLazy());
 	}
 
 	// --- getSqlRestriction ---

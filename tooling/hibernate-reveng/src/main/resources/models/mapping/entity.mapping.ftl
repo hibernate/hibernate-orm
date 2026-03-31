@@ -27,6 +27,9 @@
 <#if (helper.getBatchSize() > 1)>
         <batch-size>${helper.getBatchSize()?c}</batch-size>
 </#if>
+<#if helper.getCacheAccessType()??>
+        <caching access="${helper.getCacheAccessType()}"<#if helper.getCacheRegion()??> region="${helper.getCacheRegion()}"</#if><#if !helper.isCacheIncludeLazy()> includeLazy="false"</#if>/>
+</#if>
 <#if helper.isConcreteProxy()>
         <lazy>false</lazy>
 </#if>

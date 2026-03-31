@@ -56,6 +56,8 @@ import jakarta.persistence.TemporalType;
 import jakarta.persistence.Version;
 
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Formula;
@@ -309,6 +311,19 @@ public class TemplateHelper {
 		if (bs != null) {
 			importType("org.hibernate.annotations.BatchSize");
 			sb.append("@BatchSize(size = ").append(bs.size()).append(")\n");
+		}
+		Cache cache = classDetails.getDirectAnnotationUsage(Cache.class);
+		if (cache != null && cache.usage() != CacheConcurrencyStrategy.NONE) {
+			importType("org.hibernate.annotations.Cache");
+			importType("org.hibernate.annotations.CacheConcurrencyStrategy");
+			sb.append("@Cache(usage = CacheConcurrencyStrategy.").append(cache.usage().name());
+			if (cache.region() != null && !cache.region().isEmpty()) {
+				sb.append(", region = \"").append(cache.region()).append("\"");
+			}
+			if (!cache.includeLazy()) {
+				sb.append(", includeLazy = false");
+			}
+			sb.append(")\n");
 		}
 		return sb.toString().stripTrailing();
 	}

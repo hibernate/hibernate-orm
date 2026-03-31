@@ -54,6 +54,10 @@
 </#if>
 <#-- Meta attributes -->
 <#include "meta.hbm.ftl"/>
+<#-- Cache -->
+<#if helper.getCacheUsage()??>
+    <cache usage="${helper.getCacheUsage()}"<#if helper.getCacheRegion()??> region="${helper.getCacheRegion()}"</#if><#if helper.getCacheInclude()??> include="${helper.getCacheInclude()}"</#if>/>
+</#if>
 <#-- ID / Key -->
 <#if !helper.isSubclass()>
 <#include "id.hbm.ftl"/>

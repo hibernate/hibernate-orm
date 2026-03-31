@@ -48,7 +48,9 @@ import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.SecondaryTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.BasicJpaAnnotation;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
+import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
@@ -588,6 +590,95 @@ public class HbmTemplateHelperTest {
 		bs.size(25);
 		entity.addAnnotationUsage(bs);
 		assertEquals(25, new HbmTemplateHelper(entity).getBatchSize());
+	}
+
+	// --- getCacheUsage ---
+
+	@Test
+	public void testGetCacheUsageDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertNull(new HbmTemplateHelper(entity).getCacheUsage());
+	}
+
+	@Test
+	public void testGetCacheUsageReadWrite() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx);
+		cache.usage(CacheConcurrencyStrategy.READ_WRITE);
+		entity.addAnnotationUsage(cache);
+		assertEquals("read-write", new HbmTemplateHelper(entity).getCacheUsage());
+	}
+
+	@Test
+	public void testGetCacheUsageReadOnly() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx);
+		cache.usage(CacheConcurrencyStrategy.READ_ONLY);
+		entity.addAnnotationUsage(cache);
+		assertEquals("read-only", new HbmTemplateHelper(entity).getCacheUsage());
+	}
+
+	@Test
+	public void testGetCacheUsageNonstrictReadWrite() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx);
+		cache.usage(CacheConcurrencyStrategy.NONSTRICT_READ_WRITE);
+		entity.addAnnotationUsage(cache);
+		assertEquals("nonstrict-read-write", new HbmTemplateHelper(entity).getCacheUsage());
+	}
+
+	@Test
+	public void testGetCacheUsageNoneReturnsNull() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx);
+		cache.usage(CacheConcurrencyStrategy.NONE);
+		entity.addAnnotationUsage(cache);
+		assertNull(new HbmTemplateHelper(entity).getCacheUsage());
+	}
+
+	// --- getCacheRegion ---
+
+	@Test
+	public void testGetCacheRegionDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertNull(new HbmTemplateHelper(entity).getCacheRegion());
+	}
+
+	@Test
+	public void testGetCacheRegionSet() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx);
+		cache.usage(CacheConcurrencyStrategy.READ_WRITE);
+		cache.region("employee-cache");
+		entity.addAnnotationUsage(cache);
+		assertEquals("employee-cache", new HbmTemplateHelper(entity).getCacheRegion());
+	}
+
+	// --- getCacheInclude ---
+
+	@Test
+	public void testGetCacheIncludeDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertNull(new HbmTemplateHelper(entity).getCacheInclude());
+	}
+
+	@Test
+	public void testGetCacheIncludeNonLazy() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx);
+		cache.usage(CacheConcurrencyStrategy.READ_WRITE);
+		cache.includeLazy(false);
+		entity.addAnnotationUsage(cache);
+		assertEquals("non-lazy", new HbmTemplateHelper(entity).getCacheInclude());
 	}
 
 	// --- getWhere ---

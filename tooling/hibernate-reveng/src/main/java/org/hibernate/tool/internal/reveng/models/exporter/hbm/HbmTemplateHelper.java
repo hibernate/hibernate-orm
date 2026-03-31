@@ -68,6 +68,8 @@ import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.annotations.DynamicInsert;
@@ -170,6 +172,25 @@ public class HbmTemplateHelper {
 	public int getBatchSize() {
 		BatchSize bs = classDetails.getDirectAnnotationUsage(BatchSize.class);
 		return bs != null ? bs.size() : 0;
+	}
+
+	public String getCacheUsage() {
+		Cache cache = classDetails.getDirectAnnotationUsage(Cache.class);
+		if (cache == null || cache.usage() == CacheConcurrencyStrategy.NONE) {
+			return null;
+		}
+		return cache.usage().name().toLowerCase().replace('_', '-');
+	}
+
+	public String getCacheRegion() {
+		Cache cache = classDetails.getDirectAnnotationUsage(Cache.class);
+		return cache != null && cache.region() != null && !cache.region().isEmpty()
+				? cache.region() : null;
+	}
+
+	public String getCacheInclude() {
+		Cache cache = classDetails.getDirectAnnotationUsage(Cache.class);
+		return cache != null && !cache.includeLazy() ? "non-lazy" : null;
 	}
 
 	public String getWhere() {

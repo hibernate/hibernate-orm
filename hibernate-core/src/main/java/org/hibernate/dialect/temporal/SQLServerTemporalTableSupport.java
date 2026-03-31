@@ -32,8 +32,10 @@ public class SQLServerTemporalTableSupport extends DefaultTemporalTableSupport {
 			String rowStartColumn, String rowEndColumn,
 			boolean partitioned) {
 		return strategy == TemporalTableStrategy.NATIVE
-				? "transaction_start_id bigint generated always as transaction_id start hidden not null"
-				+ ", period for system_time (" + rowStartColumn + ", " + rowEndColumn + ")"
+				// Transaction id support was only added in SQL Server 2022 (16.x)
+				? (dialect.getVersion().isSameOrAfter( 16 )
+				? "transaction_start_id bigint generated always as transaction_id start hidden not null, " : "")
+				+ "period for system_time (" + rowStartColumn + ", " + rowEndColumn + ")"
 				: null;
 	}
 

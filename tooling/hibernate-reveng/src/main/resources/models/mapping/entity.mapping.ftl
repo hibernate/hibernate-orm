@@ -40,6 +40,15 @@
         <optimistic-locking>${helper.getOptimisticLockMode()}</optimistic-locking>
 </#if>
 <#include "attributes.mapping.ftl"/>
+<#if helper.getSQLInsert()??>
+        <sql-insert<#if helper.getSQLInsert().callable()> callable="true"</#if>>${helper.getSQLInsert().sql()}</sql-insert>
+</#if>
+<#if helper.getSQLUpdate()??>
+        <sql-update<#if helper.getSQLUpdate().callable()> callable="true"</#if>>${helper.getSQLUpdate().sql()}</sql-update>
+</#if>
+<#if helper.getSQLDelete()??>
+        <sql-delete<#if helper.getSQLDelete().callable()> callable="true"</#if>>${helper.getSQLDelete().sql()}</sql-delete>
+</#if>
 <#list helper.getFilters() as filter>
         <filter name="${filter.name()}">
 <#if filter.condition()?has_content>

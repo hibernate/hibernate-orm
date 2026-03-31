@@ -148,6 +148,10 @@
 <#if filterAnns?has_content>
     ${filterAnns}
 </#if>
+<#assign sortAnn = templateHelper.generateSortAnnotation(field)>
+<#if sortAnn?has_content>
+    ${sortAnn}
+</#if>
     public ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
         return this.${field.getName()};
     }
@@ -194,6 +198,10 @@
 <#assign filterAnns = templateHelper.generateFilterAnnotations(field)>
 <#if filterAnns?has_content>
     ${filterAnns}
+</#if>
+<#assign sortAnn = templateHelper.generateSortAnnotation(field)>
+<#if sortAnn?has_content>
+    ${sortAnn}
 </#if>
     public ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
         return this.${field.getName()};

@@ -61,6 +61,10 @@ import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValueAnnot
 import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValuesAnnotation;
 import org.hibernate.boot.models.annotations.internal.AnyKeyJavaClassAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionIdAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLDeleteAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLInsertAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLUpdateAnnotation;
+import org.hibernate.boot.models.annotations.internal.SortComparatorAnnotation;
 import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.SecondaryTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
@@ -2343,6 +2347,95 @@ public class TemplateHelperTest {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		assertTrue(ctx.helper().getNamedNativeQueries().isEmpty());
+	}
+
+	// --- @SQLInsert / @SQLUpdate / @SQLDelete ---
+
+	@Test
+	public void testGenerateClassAnnotationsSQLInsert() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		SQLInsertAnnotation si = HibernateAnnotations.SQL_INSERT.createUsage(ctx.modelsContext());
+		si.sql("INSERT INTO EMPLOYEE (name) VALUES (?)");
+		((MutableAnnotationTarget) ctx.classDetails()).addAnnotationUsage(si);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@SQLInsert(sql = \"INSERT INTO EMPLOYEE (name) VALUES (?)\")"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsSQLUpdate() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		SQLUpdateAnnotation su = HibernateAnnotations.SQL_UPDATE.createUsage(ctx.modelsContext());
+		su.sql("UPDATE EMPLOYEE SET name = ? WHERE id = ?");
+		((MutableAnnotationTarget) ctx.classDetails()).addAnnotationUsage(su);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@SQLUpdate(sql = \"UPDATE EMPLOYEE SET name = ? WHERE id = ?\")"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsSQLDelete() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		SQLDeleteAnnotation sd = HibernateAnnotations.SQL_DELETE.createUsage(ctx.modelsContext());
+		sd.sql("DELETE FROM EMPLOYEE WHERE id = ?");
+		((MutableAnnotationTarget) ctx.classDetails()).addAnnotationUsage(sd);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@SQLDelete(sql = \"DELETE FROM EMPLOYEE WHERE id = ?\")"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsSQLInsertCallable() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		SQLInsertAnnotation si = HibernateAnnotations.SQL_INSERT.createUsage(ctx.modelsContext());
+		si.sql("{call insertEmployee(?)}");
+		si.callable(true);
+		((MutableAnnotationTarget) ctx.classDetails()).addAnnotationUsage(si);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("callable = true"), result);
+	}
+
+	// --- @SortNatural / @SortComparator ---
+
+	@Test
+	public void testGenerateSortNaturalAnnotation() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
+		((MutableAnnotationTarget) field).addAnnotationUsage(
+				HibernateAnnotations.SORT_NATURAL.createUsage(ctx.modelsContext()));
+		assertEquals("@SortNatural", ctx.helper().generateSortAnnotation(field));
+	}
+
+	@Test
+	public void testGenerateSortComparatorAnnotation() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
+		SortComparatorAnnotation sc = HibernateAnnotations.SORT_COMPARATOR.createUsage(ctx.modelsContext());
+		sc.value(java.text.Collator.class);
+		((MutableAnnotationTarget) field).addAnnotationUsage(sc);
+		String result = ctx.helper().generateSortAnnotation(field);
+		assertTrue(result.contains("@SortComparator("), result);
+		assertTrue(result.contains("Collator.class"), result);
+	}
+
+	@Test
+	public void testGenerateSortAnnotationNone() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getOneToManyFields().get(0);
+		assertEquals("", helper.generateSortAnnotation(field));
 	}
 
 	private DynamicFieldDetails addElementCollectionField(

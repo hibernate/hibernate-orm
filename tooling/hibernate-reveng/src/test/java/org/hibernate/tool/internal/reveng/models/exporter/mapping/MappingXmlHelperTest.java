@@ -57,6 +57,10 @@ import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnota
 import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
 import org.hibernate.boot.models.annotations.internal.NotFoundAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLDeleteAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLInsertAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLUpdateAnnotation;
+import org.hibernate.boot.models.annotations.internal.SortComparatorAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterDefAnnotation;
 import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
 import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
@@ -1972,5 +1976,90 @@ public class MappingXmlHelperTest {
 		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		assertFalse(new MappingXmlHelper(entity).isEmbeddable());
+	}
+
+	// --- SQL operations ---
+
+	@Test
+	public void testGetSQLInsert() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		SQLInsertAnnotation si = HibernateAnnotations.SQL_INSERT.createUsage(ctx);
+		si.sql("INSERT INTO T (name) VALUES (?)");
+		entity.addAnnotationUsage(si);
+		MappingXmlHelper.CustomSqlInfo info = new MappingXmlHelper(entity).getSQLInsert();
+		assertNotNull(info);
+		assertEquals("INSERT INTO T (name) VALUES (?)", info.sql());
+		assertFalse(info.callable());
+	}
+
+	@Test
+	public void testGetSQLInsertNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertNull(new MappingXmlHelper(entity).getSQLInsert());
+	}
+
+	@Test
+	public void testGetSQLUpdateCallable() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		SQLUpdateAnnotation su = HibernateAnnotations.SQL_UPDATE.createUsage(ctx);
+		su.sql("{call updateEntity(?)}");
+		su.callable(true);
+		entity.addAnnotationUsage(su);
+		MappingXmlHelper.CustomSqlInfo info = new MappingXmlHelper(entity).getSQLUpdate();
+		assertNotNull(info);
+		assertTrue(info.callable());
+	}
+
+	@Test
+	public void testGetSQLDelete() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		SQLDeleteAnnotation sd = HibernateAnnotations.SQL_DELETE.createUsage(ctx);
+		sd.sql("DELETE FROM T WHERE id = ?");
+		entity.addAnnotationUsage(sd);
+		MappingXmlHelper.CustomSqlInfo info = new MappingXmlHelper(entity).getSQLDelete();
+		assertNotNull(info);
+		assertEquals("DELETE FROM T WHERE id = ?", info.sql());
+	}
+
+	// --- Sort ---
+
+	@Test
+	public void testIsSortNatural() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
+		field.addAnnotationUsage(HibernateAnnotations.SORT_NATURAL.createUsage(ctx));
+		assertTrue(new MappingXmlHelper(entity).isSortNatural(field));
+	}
+
+	@Test
+	public void testIsSortNaturalFalse() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
+		assertFalse(new MappingXmlHelper(entity).isSortNatural(field));
+	}
+
+	@Test
+	public void testGetSortComparatorClass() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
+		SortComparatorAnnotation sc = HibernateAnnotations.SORT_COMPARATOR.createUsage(ctx);
+		sc.value(java.text.Collator.class);
+		field.addAnnotationUsage(sc);
+		assertEquals("java.text.Collator", new MappingXmlHelper(entity).getSortComparatorClass(field));
+	}
+
+	@Test
+	public void testGetSortComparatorClassNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
+		assertNull(new MappingXmlHelper(entity).getSortComparatorClass(field));
 	}
 }

@@ -91,6 +91,15 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.ParamDef;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLDeleteAll;
+import org.hibernate.annotations.SQLDeletes;
+import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLInserts;
+import org.hibernate.annotations.SQLUpdate;
+import org.hibernate.annotations.SQLUpdates;
+import org.hibernate.annotations.SortComparator;
+import org.hibernate.annotations.SortNatural;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
@@ -424,6 +433,40 @@ public class TemplateHelper {
 			}
 			sb.append(")\n");
 		}
+		// @SQLInsert / @SQLUpdate / @SQLDelete / @SQLDeleteAll
+		for (SQLInsert si : getSQLInserts()) {
+			importType("org.hibernate.annotations.SQLInsert");
+			sb.append("@SQLInsert(sql = \"").append(si.sql()).append("\"");
+			if (si.callable()) {
+				sb.append(", callable = true");
+			}
+			sb.append(")\n");
+		}
+		for (SQLUpdate su : getSQLUpdates()) {
+			importType("org.hibernate.annotations.SQLUpdate");
+			sb.append("@SQLUpdate(sql = \"").append(su.sql()).append("\"");
+			if (su.callable()) {
+				sb.append(", callable = true");
+			}
+			sb.append(")\n");
+		}
+		for (SQLDelete sd : getSQLDeletes()) {
+			importType("org.hibernate.annotations.SQLDelete");
+			sb.append("@SQLDelete(sql = \"").append(sd.sql()).append("\"");
+			if (sd.callable()) {
+				sb.append(", callable = true");
+			}
+			sb.append(")\n");
+		}
+		SQLDeleteAll sda = classDetails.getDirectAnnotationUsage(SQLDeleteAll.class);
+		if (sda != null) {
+			importType("org.hibernate.annotations.SQLDeleteAll");
+			sb.append("@SQLDeleteAll(sql = \"").append(sda.sql()).append("\"");
+			if (sda.callable()) {
+				sb.append(", callable = true");
+			}
+			sb.append(")\n");
+		}
 		return sb.toString().stripTrailing();
 	}
 
@@ -746,6 +789,23 @@ public class TemplateHelper {
 			result = result.substring(0, result.length() - 2);
 		}
 		return result + ")";
+	}
+
+	public String generateSortAnnotation(FieldDetails field) {
+		if (!annotated) {
+			return "";
+		}
+		if (field.hasDirectAnnotationUsage(SortNatural.class)) {
+			importType("org.hibernate.annotations.SortNatural");
+			return "@SortNatural";
+		}
+		SortComparator sc = field.getDirectAnnotationUsage(SortComparator.class);
+		if (sc != null) {
+			importType("org.hibernate.annotations.SortComparator");
+			String simpleType = importType(sc.value().getName());
+			return "@SortComparator(" + simpleType + ".class)";
+		}
+		return "";
 	}
 
 	public String generateMapKeyAnnotation(FieldDetails field) {
@@ -1399,6 +1459,51 @@ public class TemplateHelper {
 	public record FilterDefInfo(String name, String defaultCondition, Map<String, Class<?>> parameters) {}
 
 	public record SecondaryTableInfo(String tableName, List<String> keyColumns) {}
+
+	public List<SQLInsert> getSQLInserts() {
+		List<SQLInsert> result = new ArrayList<>();
+		SQLInsert single = classDetails.getDirectAnnotationUsage(SQLInsert.class);
+		if (single != null) {
+			result.add(single);
+		}
+		SQLInserts container = classDetails.getDirectAnnotationUsage(SQLInserts.class);
+		if (container != null) {
+			for (SQLInsert si : container.value()) {
+				result.add(si);
+			}
+		}
+		return result;
+	}
+
+	public List<SQLUpdate> getSQLUpdates() {
+		List<SQLUpdate> result = new ArrayList<>();
+		SQLUpdate single = classDetails.getDirectAnnotationUsage(SQLUpdate.class);
+		if (single != null) {
+			result.add(single);
+		}
+		SQLUpdates container = classDetails.getDirectAnnotationUsage(SQLUpdates.class);
+		if (container != null) {
+			for (SQLUpdate su : container.value()) {
+				result.add(su);
+			}
+		}
+		return result;
+	}
+
+	public List<SQLDelete> getSQLDeletes() {
+		List<SQLDelete> result = new ArrayList<>();
+		SQLDelete single = classDetails.getDirectAnnotationUsage(SQLDelete.class);
+		if (single != null) {
+			result.add(single);
+		}
+		SQLDeletes container = classDetails.getDirectAnnotationUsage(SQLDeletes.class);
+		if (container != null) {
+			for (SQLDelete sd : container.value()) {
+				result.add(sd);
+			}
+		}
+		return result;
+	}
 
 	public List<SecondaryTableInfo> getSecondaryTables() {
 		List<SecondaryTableInfo> result = new ArrayList<>();

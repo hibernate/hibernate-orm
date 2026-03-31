@@ -91,7 +91,16 @@ import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.RowId;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLDeleteAll;
+import org.hibernate.annotations.SQLDeletes;
+import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLInserts;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.SQLUpdate;
+import org.hibernate.annotations.SQLUpdates;
+import org.hibernate.annotations.SortComparator;
+import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Subselect;
 
 import org.hibernate.models.spi.ClassDetails;
@@ -1078,5 +1087,42 @@ public class HbmTemplateHelper {
 			case REFRESH -> "refresh";
 			case DETACH -> "evict";
 		};
+	}
+
+	// --- SQL operations ---
+
+	public record CustomSqlInfo(String sql, boolean callable) {}
+
+	public CustomSqlInfo getSQLInsert() {
+		SQLInsert si = classDetails.getDirectAnnotationUsage(SQLInsert.class);
+		return si != null ? new CustomSqlInfo(si.sql(), si.callable()) : null;
+	}
+
+	public CustomSqlInfo getSQLUpdate() {
+		SQLUpdate su = classDetails.getDirectAnnotationUsage(SQLUpdate.class);
+		return su != null ? new CustomSqlInfo(su.sql(), su.callable()) : null;
+	}
+
+	public CustomSqlInfo getSQLDelete() {
+		SQLDelete sd = classDetails.getDirectAnnotationUsage(SQLDelete.class);
+		return sd != null ? new CustomSqlInfo(sd.sql(), sd.callable()) : null;
+	}
+
+	public CustomSqlInfo getSQLDeleteAll() {
+		SQLDeleteAll sda = classDetails.getDirectAnnotationUsage(SQLDeleteAll.class);
+		return sda != null ? new CustomSqlInfo(sda.sql(), sda.callable()) : null;
+	}
+
+	// --- Sort ---
+
+	public String getSort(FieldDetails field) {
+		if (field.hasDirectAnnotationUsage(SortNatural.class)) {
+			return "natural";
+		}
+		SortComparator sc = field.getDirectAnnotationUsage(SortComparator.class);
+		if (sc != null) {
+			return sc.value().getName();
+		}
+		return null;
 	}
 }

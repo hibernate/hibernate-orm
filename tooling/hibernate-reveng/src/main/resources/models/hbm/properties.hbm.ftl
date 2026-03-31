@@ -46,7 +46,8 @@
         lazy="${helper.getCollectionLazy(field)}"</#if><#if helper.getCollectionFetchMode(field)??>
         fetch="${helper.getCollectionFetchMode(field)}"</#if><#if (helper.getCollectionBatchSize(field) gt 1)>
         batch-size="${helper.getCollectionBatchSize(field)?c}"</#if><#if helper.getCollectionOrderBy(field)??>
-        order-by="${helper.getCollectionOrderBy(field)}"</#if>>
+        order-by="${helper.getCollectionOrderBy(field)}"</#if><#if helper.getSort(field)??>
+        sort="${helper.getSort(field)}"</#if>>
         <key>
             <column name="${helper.getOneToManyMappedBy(field)}"/>
         </key>
@@ -72,7 +73,8 @@
         lazy="${helper.getCollectionLazy(field)}"</#if><#if helper.getCollectionFetchMode(field)??>
         fetch="${helper.getCollectionFetchMode(field)}"</#if><#if (helper.getCollectionBatchSize(field) gt 1)>
         batch-size="${helper.getCollectionBatchSize(field)?c}"</#if><#if helper.getCollectionOrderBy(field)??>
-        order-by="${helper.getCollectionOrderBy(field)}"</#if>>
+        order-by="${helper.getCollectionOrderBy(field)}"</#if><#if helper.getSort(field)??>
+        sort="${helper.getSort(field)}"</#if>>
         <key>
             <column name="${helper.getJoinTableJoinColumnName(field)}"/>
         </key>

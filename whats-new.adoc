@@ -36,4 +36,4 @@ See the link:{userGuideBase}#reveng[Reverse Engineering] chapter in the User Gui
 
 The Maven plugin now includes a `transformHbm` goal that transforms legacy `hbm.xml` mapping files into ORM `mapping.xml` files. This does not involve reverse engineering from a database -- it converts existing HBM mappings.
 
-See the link:{userGuideBase}#tooling-maven-reveng-transformhbm-params[transformHbm Parameters] section in the User Guide for details.
+See the link:{userGuideBase}#tooling-maven-transformhbm[HBM XML Transformation] section in the User Guide for details.

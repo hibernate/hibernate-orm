@@ -46,16 +46,14 @@ public class RunSqlTask extends RevengTask {
 	}
 
 	private void runSql() {
-		try {
-			String databaseUrl = getHibernateProperty("hibernate.connection.url");
-			getLogger().lifecycle("Connecting to database: " + databaseUrl);
-			Connection connection = DriverManager
-					.getConnection(databaseUrl, "sa", "");
-			Statement statement = connection.createStatement();
+		String databaseUrl = getHibernateProperty("hibernate.connection.url");
+		String username = getHibernateProperty("hibernate.connection.username");
+		String password = getHibernateProperty("hibernate.connection.password");
+		getLogger().lifecycle("Connecting to database: " + databaseUrl);
+		try (Connection connection = DriverManager.getConnection(databaseUrl, username, password);
+				Statement statement = connection.createStatement()) {
 			getLogger().lifecycle("Running SQL: " + getRevengSpec().sqlToRun);
 			statement.execute(getRevengSpec().sqlToRun);
-			statement.close();
-			connection.close();
 		}
 		catch (SQLException e) {
 			getLogger().error("SQLException");

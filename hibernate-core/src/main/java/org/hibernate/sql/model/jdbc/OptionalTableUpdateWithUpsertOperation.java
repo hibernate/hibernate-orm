@@ -7,6 +7,7 @@ package org.hibernate.sql.model.jdbc;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -33,13 +34,15 @@ public class OptionalTableUpdateWithUpsertOperation extends OptionalTableUpdateO
 
 	@Override
 	protected JdbcMutationOperation createJdbcOptionalInsert(SharedSessionContractImplementor session) {
-		if ( getTableDetails().getInsertDetails() != null
-			&& getTableDetails().getInsertDetails().getCustomSql() != null
-			|| !getValueBindings().isEmpty() ) {
+		final var tableDetails = getTableDetails();
+		final var insertDetails = tableDetails.getInsertDetails();
+		if ( insertDetails != null && insertDetails.getCustomSql() != null ) {
 			return super.createJdbcOptionalInsert( session );
 		}
 		else {
-			// Ignore a primary key violation on insert when inserting just the primary key columns
+			final var mutationTarget = (EntityPersister) getMutationTarget();
+			// Ignore a primary key violation on insert
+			final int tableIndex = ArrayHelper.indexOf( mutationTarget.getTableNames(), tableDetails.getTableName() );
 			final TableMutation<? extends JdbcMutationOperation> tableInsert = new OptionalTableInsert(
 					new MutatingTableReference( getTableDetails() ),
 					getMutationTarget(),
@@ -47,7 +50,7 @@ public class OptionalTableUpdateWithUpsertOperation extends OptionalTableUpdateO
 					Collections.emptyList(),
 					getParameters(),
 					null,
-					Arrays.asList( ((EntityPersister) getMutationTarget()).getIdentifierColumnNames() )
+					Arrays.asList( ((EntityPersister) getMutationTarget()).getKeyColumns( tableIndex ) )
 			);
 
 			final SessionFactoryImplementor factory = session.getSessionFactory();

@@ -219,7 +219,7 @@ The plugin provides the following goals:
 `hbm2ddl`:: Generates DDL scripts from the database schema. Binds to the `generate-resources` phase by default.
 `hbm2dao`:: Generates Data Access Object (DAO) classes. Binds to the `generate-sources` phase by default.
 `generateHbm`:: Generates `hbm.xml` mapping files from the database schema. Binds to the `generate-sources` phase by default.
-`hbm2orm`:: Transforms existing `hbm.xml` mapping files into ORM annotated entities. Binds to the `generate-resources` phase by default. This goal does not perform reverse engineering from a database -- it converts existing HBM mappings.
+`transformHbm`:: Transforms existing `hbm.xml` mapping files into ORM `mapping.xml` files. Binds to the `generate-resources` phase by default. This goal does not perform reverse engineering from a database -- it converts existing HBM mappings.
 
 
 [[tooling-maven-reveng-common-params]]
@@ -268,10 +268,10 @@ The following parameters are shared by the `hbm2java`, `hbm2ddl`, `hbm2dao`, and
 `templatePath`:: Path to a directory containing custom FreeMarker templates.
 
 
-[[tooling-maven-reveng-hbm2orm-params]]
-===== hbm2orm Parameters
+[[tooling-maven-reveng-transformhbm-params]]
+===== transformHbm Parameters
 
-The `hbm2orm` goal transforms existing `hbm.xml` files into ORM `mapping.xml` files. It does not connect to a database.
+The `transformHbm` goal transforms existing `hbm.xml` files into ORM `mapping.xml` files. It does not connect to a database.
 
 `inputFolder`:: The folder containing `hbm.xml` files to transform. Files are discovered recursively. Default: `${project.basedir}/src/main/resources`.
 `format`:: Whether to format the output XML. Default: `true`.

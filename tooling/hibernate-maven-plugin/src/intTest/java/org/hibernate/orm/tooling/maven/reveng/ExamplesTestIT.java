@@ -130,7 +130,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 			projectFolder = new File(baseFolder, "hbm2orm/simple-default");
 			File ormXmlFile = new File(projectFolder, "src/main/resources/simple.mapping.xml");
 			assertFalse(ormXmlFile.exists());
-			runMavenCommand( "org.hibernate.orm:hibernate-maven-plugin:" + Version.versionString() + ":hbm2orm");
+			runMavenCommand( "org.hibernate.orm:hibernate-maven-plugin:" + Version.versionString() + ":transformHbm");
 			assertTrue(ormXmlFile.exists());
 			String ormXmlContents = Files.readString( ormXmlFile.toPath() );
 			assertTrue(ormXmlContents.contains("entity-mappings"));

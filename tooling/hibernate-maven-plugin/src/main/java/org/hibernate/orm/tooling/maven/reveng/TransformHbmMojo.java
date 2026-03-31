@@ -24,7 +24,7 @@ import org.apache.maven.project.MavenProject;
 import org.hibernate.tool.reveng.internal.export.mapping.MappingExporter;
 
 @Mojo(
-		name = "hbm2orm",
+		name = "transformHbm",
 		defaultPhase = GENERATE_RESOURCES,
 		requiresDependencyResolution = ResolutionScope.RUNTIME)
 public class TransformHbmMojo extends AbstractMojo {

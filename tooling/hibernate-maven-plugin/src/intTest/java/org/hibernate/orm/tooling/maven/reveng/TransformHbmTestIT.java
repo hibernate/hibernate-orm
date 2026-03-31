@@ -62,7 +62,7 @@ public class TransformHbmTestIT {
 		new MavenCli().doMain(
 				new String[] {
 						"compile",
-						"org.hibernate.orm:hibernate-maven-plugin:" + Version.versionString() + ":hbm2orm"
+						"org.hibernate.orm:hibernate-maven-plugin:" + Version.versionString() + ":transformHbm"
 				},
 				projectPath.toAbsolutePath().toString(),
 				null,

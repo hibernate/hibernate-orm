@@ -60,6 +60,7 @@ import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorAnnotation
 import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValueAnnotation;
 import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValuesAnnotation;
 import org.hibernate.boot.models.annotations.internal.AnyKeyJavaClassAnnotation;
+import org.hibernate.boot.models.annotations.internal.CollectionIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.SecondaryTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
@@ -1725,6 +1726,63 @@ public class TemplateHelperTest {
 		String result = ctx.helper().generateManyToAnyAnnotation(field);
 		assertTrue(result.contains("@ManyToAny"), result);
 		assertTrue(result.contains("@AnyDiscriminator(DiscriminatorType.STRING)"), result);
+	}
+
+	// --- @Bag / @CollectionId ---
+
+	@Test
+	public void testGenerateBagAnnotation() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
+		((MutableAnnotationTarget) field).addAnnotationUsage(
+				HibernateAnnotations.BAG.createUsage(ctx.modelsContext()));
+		assertEquals("@Bag", ctx.helper().generateBagAnnotation(field));
+	}
+
+	@Test
+	public void testGenerateBagAnnotationNone() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getOneToManyFields().get(0);
+		assertEquals("", helper.generateBagAnnotation(field));
+	}
+
+	@Test
+	public void testGenerateCollectionIdAnnotation() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
+		CollectionIdAnnotation cid = HibernateAnnotations.COLLECTION_ID.createUsage(ctx.modelsContext());
+		ColumnJpaAnnotation col = JpaAnnotations.COLUMN.createUsage(ctx.modelsContext());
+		col.name("COLL_ID");
+		cid.column(col);
+		cid.generator("increment");
+		((MutableAnnotationTarget) field).addAnnotationUsage(cid);
+		String result = ctx.helper().generateCollectionIdAnnotation(field);
+		assertTrue(result.contains("@CollectionId("), result);
+		assertTrue(result.contains("@Column(name = \"COLL_ID\")"), result);
+		assertTrue(result.contains("generator = \"increment\""), result);
+	}
+
+	@Test
+	public void testGenerateCollectionIdAnnotationNone() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "department", "Employee", "com.example"));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getOneToManyFields().get(0);
+		assertEquals("", helper.generateCollectionIdAnnotation(field));
 	}
 
 	// --- @MapKey / @MapKeyColumn ---

@@ -120,6 +120,14 @@
 <#if fetchAnn?has_content>
     ${fetchAnn}
 </#if>
+<#assign bagAnn = templateHelper.generateBagAnnotation(field)>
+<#if bagAnn?has_content>
+    ${bagAnn}
+</#if>
+<#assign collIdAnn = templateHelper.generateCollectionIdAnnotation(field)>
+<#if collIdAnn?has_content>
+    ${collIdAnn}
+</#if>
 <#assign mapKeyAnn = templateHelper.generateMapKeyAnnotation(field)>
 <#if mapKeyAnn?has_content>
     ${mapKeyAnn}
@@ -158,6 +166,14 @@
 <#assign fetchAnn = templateHelper.generateFetchAnnotation(field)>
 <#if fetchAnn?has_content>
     ${fetchAnn}
+</#if>
+<#assign bagAnn = templateHelper.generateBagAnnotation(field)>
+<#if bagAnn?has_content>
+    ${bagAnn}
+</#if>
+<#assign collIdAnn = templateHelper.generateCollectionIdAnnotation(field)>
+<#if collIdAnn?has_content>
+    ${collIdAnn}
 </#if>
 <#assign mapKeyAnn = templateHelper.generateMapKeyAnnotation(field)>
 <#if mapKeyAnn?has_content>

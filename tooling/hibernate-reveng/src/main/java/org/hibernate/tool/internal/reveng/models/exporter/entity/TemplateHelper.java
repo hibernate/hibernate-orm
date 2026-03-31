@@ -71,7 +71,9 @@ import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.AnyKeyJavaClass;
+import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.DynamicInsert;
@@ -709,6 +711,41 @@ public class TemplateHelper {
 			}
 		}
 		return result;
+	}
+
+	public String generateBagAnnotation(FieldDetails field) {
+		if (!annotated) {
+			return "";
+		}
+		if (!field.hasDirectAnnotationUsage(Bag.class)) {
+			return "";
+		}
+		importType("org.hibernate.annotations.Bag");
+		return "@Bag";
+	}
+
+	public String generateCollectionIdAnnotation(FieldDetails field) {
+		if (!annotated) {
+			return "";
+		}
+		CollectionId cid = field.getDirectAnnotationUsage(CollectionId.class);
+		if (cid == null) {
+			return "";
+		}
+		importType("org.hibernate.annotations.CollectionId");
+		StringBuilder sb = new StringBuilder("@CollectionId(");
+		if (cid.column() != null && cid.column().name() != null && !cid.column().name().isEmpty()) {
+			importType("jakarta.persistence.Column");
+			sb.append("column = @Column(name = \"").append(cid.column().name()).append("\"), ");
+		}
+		if (cid.generator() != null && !cid.generator().isEmpty()) {
+			sb.append("generator = \"").append(cid.generator()).append("\"");
+		}
+		String result = sb.toString();
+		if (result.endsWith(", ")) {
+			result = result.substring(0, result.length() - 2);
+		}
+		return result + ")";
 	}
 
 	public String generateMapKeyAnnotation(FieldDetails field) {

@@ -30,3 +30,10 @@ The reverse engineering plugins can generate:
 The process is customizable via XML configuration files and custom strategy classes.
 
 See the link:{userGuideBase}#reveng[Reverse Engineering] chapter in the User Guide for details.
+
+[[transform-hbm]]
+== HBM XML Transformation
+
+The Maven plugin now includes a `transformHbm` goal that transforms legacy `hbm.xml` mapping files into ORM `mapping.xml` files. This does not involve reverse engineering from a database -- it converts existing HBM mappings.
+
+See the link:{userGuideBase}#tooling-maven-reveng-transformhbm-params[transformHbm Parameters] section in the User Guide for details.

@@ -72,14 +72,7 @@ gradlePlugin {
 			implementationClass = "org.hibernate.orm.tooling.gradle.HibernateOrmPlugin"
 			displayName = 'Gradle plugin for Hibernate ORM'
 			description = 'Applies Hibernate aspects into the build'
-			tags = ['hibernate','orm','bytecode','enhancement','bytebuddy']
-		}
-		hibernate {
-			id = 'org.hibernate.tool.hibernate-tools-gradle'
-			implementationClass = 'org.hibernate.tool.gradle.Plugin'
-			displayName = 'Hibernate Tools Gradle Plugin'
-			description = project.description
-			tags = ['hibernate','tools','reverse engineering','reveng','generation']
+			tags = ['hibernate','orm','bytecode','enhancement','bytebuddy','reverse engineering','reveng','generation']
 		}
 	}
 }

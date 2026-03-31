@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.tool.gradle;
+package org.hibernate.orm.tooling.gradle.reveng;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -11,7 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;
 import java.nio.file.Files;
 
-import org.hibernate.tool.it.gradle.TestTemplate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -43,10 +42,8 @@ class GenerateJavaTest extends TestTemplate {
 
 	@Test
 	public void testNoAnnotations() throws Exception {
-		setHibernateToolsExtensionSection(
-				"hibernateTools { \n" +
-						"  generateAnnotations=false \n" +
-						"}"
+		setRevengExtensionSection(
+				"    generateAnnotations=false"
 		);
 		createProjectAndExecuteGradleCommand();
 		File generatedOutputFolder = new File(getProjectDir(), "app/generated-sources");
@@ -69,10 +66,8 @@ class GenerateJavaTest extends TestTemplate {
 				"create table ITEM (ID int not null,  NAME varchar(20), OWNER_ID int not null, " +
 						"   primary key (ID), foreign key (OWNER_ID) references PERSON(ID))"
 		});
-		setHibernateToolsExtensionSection(
-				"hibernateTools { \n" +
-						"  useGenerics=false \n" +
-						"}"
+		setRevengExtensionSection(
+				"    useGenerics=false"
 		);
 		createProjectAndExecuteGradleCommand();
 		executeGradleCommand("generateJava");
@@ -125,10 +120,8 @@ class GenerateJavaTest extends TestTemplate {
 
 	@Test
 	public void testPackageName() throws Exception {
-		setHibernateToolsExtensionSection(
-				"hibernateTools { \n" +
-				"  packageName = 'foo.model' \n" +
-				"}"
+		setRevengExtensionSection(
+				"    packageName = 'foo.model'"
 		);
 		createProjectAndExecuteGradleCommand();
 		File generatedSourcesFolder = new File(getProjectDir(), "app/generated-sources");

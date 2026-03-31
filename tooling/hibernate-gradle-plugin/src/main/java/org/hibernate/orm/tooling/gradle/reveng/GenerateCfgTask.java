@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.tool.gradle.task;
+package org.hibernate.orm.tooling.gradle.reveng;
 
 import java.io.File;
 
@@ -14,7 +14,7 @@ import org.hibernate.tool.reveng.api.export.ExporterFactory;
 import org.hibernate.tool.reveng.api.export.ExporterType;
 
 @DisableCachingByDefault(because = "Reverse engineering tasks perform JDBC operations and are not cacheable")
-public class GenerateCfgTask extends AbstractTask {
+public class GenerateCfgTask extends RevengTask {
 
 	@TaskAction
 	public void performTask() {

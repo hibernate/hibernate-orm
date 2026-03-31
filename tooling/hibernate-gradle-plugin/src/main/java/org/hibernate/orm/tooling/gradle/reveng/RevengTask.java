@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.tool.gradle.task;
+package org.hibernate.orm.tooling.gradle.reveng;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -31,23 +31,22 @@ import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.reveng.api.core.RevengSettings;
 import org.hibernate.tool.reveng.api.core.RevengStrategy;
 import org.hibernate.tool.reveng.api.core.RevengStrategyFactory;
-import org.hibernate.tool.gradle.Extension;
 
 @DisableCachingByDefault(because = "Reverse engineering tasks perform JDBC operations and are not cacheable")
-public abstract class AbstractTask extends DefaultTask {
+public abstract class RevengTask extends DefaultTask {
 
 	@Internal
-	private Extension extension = null;
+	private RevengSpec revengSpec = null;
 
 	@Internal
 	private Properties hibernateProperties = null;
 
-	public void initialize(Extension extension) {
-		this.extension = extension;
+	public void initialize(RevengSpec revengSpec) {
+		this.revengSpec = revengSpec;
 	}
 
-	Extension getExtension() {
-		return this.extension;
+	RevengSpec getRevengSpec() {
+		return this.revengSpec;
 	}
 
 	void perform() {
@@ -105,15 +104,15 @@ public abstract class AbstractTask extends DefaultTask {
 
 	@Internal
 	File getOutputFolder() {
-		return new File(getProject().getProjectDir(), getExtension().outputFolder);
+		return new File(getProject().getProjectDir(), getRevengSpec().outputFolder);
 	}
 
 	RevengStrategy setupReverseEngineeringStrategy() {
 		File[] revengFiles = getRevengFiles();
 		RevengStrategy result = RevengStrategyFactory
-				.createReverseEngineeringStrategy(getExtension().revengStrategy, revengFiles);
+				.createReverseEngineeringStrategy(getRevengSpec().revengStrategy, revengFiles);
 		RevengSettings settings = new RevengSettings(result);
-		settings.setDefaultPackageName(getExtension().packageName);
+		settings.setDefaultPackageName(getRevengSpec().packageName);
 		result.setSettings(settings);
 		return result;
 	}
@@ -131,11 +130,11 @@ public abstract class AbstractTask extends DefaultTask {
 	}
 
 	private File getPropertyFile() {
-		return getFile(getExtension().hibernateProperties);
+		return getFile(getRevengSpec().hibernateProperties);
 	}
 
 	private File[] getRevengFiles() {
-		String revengFile = getExtension().revengFile;
+		String revengFile = getRevengSpec().revengFile;
 		if (revengFile == null) {
 			return null;
 		}

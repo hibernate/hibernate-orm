@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.tool.gradle.task;
+package org.hibernate.orm.tooling.gradle.reveng;
 
 import java.io.File;
 
@@ -14,7 +14,7 @@ import org.hibernate.tool.reveng.api.export.ExporterFactory;
 import org.hibernate.tool.reveng.api.export.ExporterType;
 
 @DisableCachingByDefault(because = "Reverse engineering tasks perform JDBC operations and are not cacheable")
-public class GenerateDaoTask extends AbstractTask {
+public class GenerateHbmTask extends RevengTask {
 
 	@TaskAction
 	public void performTask() {
@@ -22,19 +22,19 @@ public class GenerateDaoTask extends AbstractTask {
 	}
 
 	void doWork() {
-		getLogger().lifecycle("Creating DAO exporter");
-		Exporter hbmExporter = ExporterFactory.createExporter(ExporterType.DAO);
+		getLogger().lifecycle("Creating HBM exporter");
+		Exporter hbmExporter = ExporterFactory.createExporter(ExporterType.HBM);
 		File outputFolder = getOutputFolder();
 		hbmExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, createJdbcDescriptor());
 		hbmExporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);
-		String templatePath = getExtension().templatePath;
+		String templatePath = getRevengSpec().templatePath;
 		if (templatePath != null) {
 			getLogger().lifecycle("Setting template path to: " + templatePath);
 			hbmExporter.getProperties().put(ExporterConstants.TEMPLATE_PATH, new String[] { templatePath });
 		}
-		getLogger().lifecycle("Starting DAO export to directory: " + outputFolder + "...");
+		getLogger().lifecycle("Starting HBM export to directory: " + outputFolder + "...");
 		hbmExporter.start();
-		getLogger().lifecycle("DAO export finished");
+		getLogger().lifecycle("HBM export finished");
 	}
 
 }

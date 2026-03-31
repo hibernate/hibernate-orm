@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.tool.gradle.task;
+package org.hibernate.orm.tooling.gradle.reveng;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
@@ -18,7 +18,7 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.work.DisableCachingByDefault;
 
 @DisableCachingByDefault(because = "Reverse engineering tasks perform JDBC operations and are not cacheable")
-public class RunSqlTask extends AbstractTask {
+public class RunSqlTask extends RevengTask {
 
 	@TaskAction
 	public void performTask() {
@@ -52,8 +52,8 @@ public class RunSqlTask extends AbstractTask {
 			Connection connection = DriverManager
 					.getConnection(databaseUrl, "sa", "");
 			Statement statement = connection.createStatement();
-			getLogger().lifecycle("Running SQL: " + getExtension().sqlToRun);
-			statement.execute(getExtension().sqlToRun);
+			getLogger().lifecycle("Running SQL: " + getRevengSpec().sqlToRun);
+			statement.execute(getRevengSpec().sqlToRun);
 			statement.close();
 			connection.close();
 		}

@@ -2,13 +2,12 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.tool.gradle;
+package org.hibernate.orm.tooling.gradle.reveng;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.hibernate.tool.it.gradle.TestTemplate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,10 +20,8 @@ class RunSqlTest extends TestTemplate {
 
 	@Test
 	void testRunSql() throws Exception {
-		setHibernateToolsExtensionSection(
-				"hibernateTools {\n" +
-				"  sqlToRun = 'create table foo (id int not null primary key, baz varchar(256))'\n" +
-				"}\n"
+		setRevengExtensionSection(
+				"    sqlToRun = 'create table foo (id int not null primary key, baz varchar(256))'"
 		);
 		assertNull(getDatabaseFile());
 		createProjectAndExecuteGradleCommand();

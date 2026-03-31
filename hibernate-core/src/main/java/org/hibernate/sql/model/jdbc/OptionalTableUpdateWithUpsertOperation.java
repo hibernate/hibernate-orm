@@ -7,11 +7,13 @@ package org.hibernate.sql.model.jdbc;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.internal.OptionalTableInsert;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
+
 
 
 import static java.util.Arrays.asList;
@@ -35,13 +37,13 @@ public class OptionalTableUpdateWithUpsertOperation extends OptionalTableUpdateO
 	protected JdbcMutationOperation createJdbcOptionalInsert(SharedSessionContractImplementor session) {
 		final var tableDetails = getTableDetails();
 		final var insertDetails = tableDetails.getInsertDetails();
-		if ( insertDetails != null && insertDetails.getCustomSql() != null
-				|| !getValueBindings().isEmpty() ) {
+		if ( insertDetails != null && insertDetails.getCustomSql() != null ) {
 			return super.createJdbcOptionalInsert( session );
 		}
 		else {
 			final var mutationTarget = (EntityPersister) getMutationTarget();
-			// Ignore a primary key violation on insert when inserting just the primary key columns
+			// Ignore a primary key violation on insert
+			final int tableIndex = ArrayHelper.indexOf( mutationTarget.getTableNames(), tableDetails.getTableName() );
 			final var tableInsert = new OptionalTableInsert(
 					new MutatingTableReference( tableDetails ),
 					getMutationTarget(),
@@ -49,7 +51,7 @@ public class OptionalTableUpdateWithUpsertOperation extends OptionalTableUpdateO
 					emptyList(),
 					getParameters(),
 					null,
-					asList( mutationTarget.getIdentifierColumnNames() )
+					asList( mutationTarget.getKeyColumns( tableIndex ) )
 			);
 
 			final var factory = session.getSessionFactory();

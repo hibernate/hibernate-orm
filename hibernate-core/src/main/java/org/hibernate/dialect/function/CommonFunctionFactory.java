@@ -3089,9 +3089,9 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * Spanner array_length() function
+	 * Spanner Postgres array_length() function
 	 */
-	public void arrayLength_spanner() {
+	public void arrayLength_spannerpg() {
 		functionRegistry.patternDescriptorBuilder( "array_length", "case when ?1 is null then null else coalesce(array_length(?1, 1), 0) end" )
 				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( integerType ) )
 				.setArgumentsValidator(
@@ -3104,6 +3104,23 @@ public class CommonFunctionFactory {
 				.register();
 		functionRegistry.register( "length", new DynamicDispatchFunction( functionRegistry, "character_length", "array_length" ) );
 		functionRegistry.registerAlternateKey( "cardinality", "array_length" );
+	}
+
+	/**
+	 * Spanner array_length() function
+	 */
+	public void arrayLength_spanner() {
+		functionRegistry.patternDescriptorBuilder( "array_length", "array_length(?1)" )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( integerType ) )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+								StandardArgumentsValidators.exactly( 1 ),
+								ArrayArgumentValidator.DEFAULT_INSTANCE
+						)
+				)
+				.setArgumentListSignature( "(ARRAY array)" )
+				.register();
+		functionRegistry.register( "length", new DynamicDispatchFunction( functionRegistry, "character_length", "array_length" ) );
 	}
 
 	/**

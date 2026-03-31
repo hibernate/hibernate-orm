@@ -13,13 +13,16 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.array.SpannerArrayConcatElementFunction;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
+import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.SpannerFormatFunction;
 import org.hibernate.dialect.function.SpannerExtractFunction;
 import org.hibernate.dialect.function.SpannerTruncFunction;
@@ -35,6 +38,9 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sequence.SpannerSequenceSupport;
+import org.hibernate.dialect.type.SpannerJsonJdbcType;
+import org.hibernate.dialect.function.json.SpannerJsonValueFunction;
+import org.hibernate.dialect.function.json.SpannerJsonQueryFunction;
 import org.hibernate.dialect.sql.ast.SpannerSqlAstTranslator;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
@@ -96,6 +102,7 @@ import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.CHAR;
+import static org.hibernate.type.SqlTypes.JSON;
 import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.DECIMAL;
 import static org.hibernate.type.SqlTypes.DOUBLE;
@@ -112,7 +119,6 @@ import static org.hibernate.type.SqlTypes.REAL;
 import static org.hibernate.type.SqlTypes.SMALLINT;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
@@ -127,6 +133,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * @author Chengyuan Zhao
  * @author Daniel Zou
  * @author Dmitry Solomakha
+ * @author Rayudu Abbireddy
  */
 public class SpannerDialect extends Dialect {
 
@@ -172,6 +179,8 @@ public class SpannerDialect extends Dialect {
 				StandardConverters.BOOLEAN,
 				false
 		);
+		final var jdbcTypeRegistry = typeContributions.getTypeConfiguration().getJdbcTypeRegistry();
+		jdbcTypeRegistry.addDescriptor( SpannerJsonJdbcType.INSTANCE );
 	}
 
 	@Override
@@ -210,6 +219,7 @@ public class SpannerDialect extends Dialect {
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, columnType( JSON ),this ));
 		ddlTypeRegistry.addDescriptor(
 				CapacityDependentDdlType.builder(
 						VARCHAR,
@@ -260,6 +270,7 @@ public class SpannerDialect extends Dialect {
 			case BINARY, VARBINARY -> "bytes($l)";
 			case CLOB, NCLOB -> "string(max)";
 			case BLOB -> "bytes(max)";
+			case JSON -> "json";
 			default -> super.columnType( sqlTypeCode );
 		};
 	}
@@ -535,25 +546,21 @@ public class SpannerDialect extends Dialect {
 				.setArgumentListSignature( "(STRING pattern, STRING string[, INTEGER start])" );
 
 		// JSON Functions
-		functionRegistry.namedDescriptorBuilder( "json_query" )
-				.setInvariantType( stringType )
-				.setExactArgumentCount( 2 )
-				.register();
-		functionRegistry.namedDescriptorBuilder( "json_value" )
-				.setInvariantType( stringType )
-				.setExactArgumentCount( 2 )
-				.register();
+		functionRegistry.register(
+				"json_value",
+				new SpannerJsonValueFunction( functionContributions.getTypeConfiguration() ) );
+		functionRegistry.register(
+				"json_query",
+				new SpannerJsonQueryFunction( functionContributions.getTypeConfiguration() ) );
 
 		// Array Functions
 		functionRegistry.namedDescriptorBuilder( "array" )
 				.setExactArgumentCount( 1 )
 				.register();
-		functionRegistry.namedDescriptorBuilder( "array_concat" )
-				.register();
-		functionRegistry.namedDescriptorBuilder( "array_length" )
-				.setInvariantType( longType )
-				.setExactArgumentCount( 1 )
-				.register();
+		functionFactory.arrayConcat_operator();
+		functionRegistry.register( "array_append", new SpannerArrayConcatElementFunction( false ) );
+		functionRegistry.register( "array_prepend", new SpannerArrayConcatElementFunction( true ) );
+		functionFactory.arrayLength_spanner();
 		functionRegistry.register( "array_to_string", new ArrayToStringFunction( functionContributions.getTypeConfiguration() ) );
 		functionRegistry.namedDescriptorBuilder( "array_reverse" )
 				.setExactArgumentCount( 1 )
@@ -661,6 +668,17 @@ public class SpannerDialect extends Dialect {
 		functionRegistry.register(
 				"format",
 				new SpannerFormatFunction( functionContributions.getTypeConfiguration() )
+		);
+
+		functionRegistry.register(
+				"concat",
+				new CastingConcatFunction(
+						this,
+						"||",
+						false,
+						SqlAstNodeRenderingMode.DEFAULT,
+						functionContributions.getTypeConfiguration()
+				)
 		);
 
 		functionRegistry.register( "trunc", new SpannerTruncFunction() );

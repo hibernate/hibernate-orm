@@ -12,6 +12,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -75,9 +76,16 @@ class MixedTypeEmbeddableGeneratorsTest2 {
 			event.name = "concert";
 		} );
 
-		assertEquals( "update Event set created=?,updated=%s,name=? where id=?"
-						.formatted( getDialect( scope ).currentTimestamp() ),
-				statementInspector.getSqlQueries().get( 1 ) );
+		if ( getDialect( scope ) instanceof SpannerDialect ) {
+			assertEquals( "update Event e1_0 set e1_0.created=?,e1_0.updated=%s,e1_0.name=? where e1_0.id=?"
+							.formatted( getDialect( scope ).currentTimestamp() ),
+					statementInspector.getSqlQueries().get( 1 ) );
+		}
+		else {
+			assertEquals( "update Event set created=?,updated=%s,name=? where id=?"
+							.formatted( getDialect( scope ).currentTimestamp() ),
+					statementInspector.getSqlQueries().get( 1 ) );
+		}
 
 		scope.inTransaction( session -> {
 			Event event = session.get( Event.class, 1L );

@@ -13,6 +13,8 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -37,6 +39,7 @@ import static org.assertj.core.api.Assertions.fail;
 } )
 @SessionFactory
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17491" )
+@SkipForDialect(dialectClass = SpannerDialect.class, reason = "Spanner lacks implicit type coercion between INT64 and FLOAT64, which fails for shared columns in single-table inheritance with conflicting types")
 public class MappedSuperclassAttributeInMultipleSubtypesTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {

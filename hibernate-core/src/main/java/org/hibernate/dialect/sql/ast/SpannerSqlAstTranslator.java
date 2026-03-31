@@ -18,6 +18,7 @@ import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
@@ -365,11 +366,57 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	public void visitLikePredicate(LikePredicate likePredicate) {
-		if ( likePredicate.getEscapeCharacter() != null ) {
-			throw new UnsupportedOperationException( "Escape character is not supported by Spanner" );
+	protected void renderLikePredicate(LikePredicate likePredicate) {
+		// Spanner uses the backslash character as the default escape character
+		if (likePredicate.getEscapeCharacter() == null) {
+			renderBackslashEscapedLikePattern( likePredicate.getPattern(), likePredicate.getEscapeCharacter(), false );
 		}
-		super.visitLikePredicate( likePredicate );
+		else {
+			renderLikePattern( likePredicate.getPattern(), likePredicate.getEscapeCharacter() );
+		}
+	}
+
+	@Override
+	protected void renderLikePattern(Expression pattern, Expression escapeCharacter) {
+		if (escapeCharacter == null) {
+			super.renderLikePattern( pattern, escapeCharacter );
+		}
+		else {
+			appendSql( "replace(replace(replace(" );
+			pattern.accept( this );
+			appendSql( ", " );
+			escapeCharacter.accept( this );
+			appendSql( "||" );
+			escapeCharacter.accept( this );
+			appendSql( ", '\\\\\\\\'), " );
+			escapeCharacter.accept( this );
+			appendSql( "||'%', '\\\\%'), " );
+			escapeCharacter.accept( this );
+			appendSql( "||'_', '\\\\_')" );
+		}
+	}
+
+	@Override
+	protected void renderEscapeCharacter(Expression escapeCharacter) {
+		// Spanner doesn't support passing escape character
+	}
+
+	@Override
+	protected void appendBackslashEscapedLikeLiteral(SqlAppender appender, String literal, boolean noBackslashEscapes) {
+		appender.appendSql( '\'' );
+		for ( int i = 0; i < literal.length(); i++ ) {
+			final char c = literal.charAt( i );
+			switch ( c ) {
+				case '\'':
+					appender.appendSql( '\\' );
+					break;
+				case '\\':
+					appender.appendSql( "\\\\\\" );
+					break;
+			}
+			appender.appendSql( c );
+		}
+		appender.appendSql( '\'' );
 	}
 
 	@Override

@@ -916,7 +916,8 @@ abstract public class DialectFeatureChecks {
 			return definesFunction( dialect, "json_query" )
 				&& !( dialect instanceof SQLServerDialect )
 				&& !( dialect instanceof H2Dialect )
-				&& !( dialect instanceof CockroachDialect );
+				&& !( dialect instanceof CockroachDialect )
+				&& !( dialect instanceof SpannerDialect );
 		}
 	}
 
@@ -938,15 +939,17 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
-	public static class SupportsJsonValueErrorBehavior implements DialectFeatureCheck {
+	public static class SupportsJsonFunctionErrorBehavior implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "json_value" )
 				// H2 emulation doesn't support error behavior
 				&& !( dialect instanceof H2Dialect )
-				// MariaDB simply doesn't support the on error and on empty clauses
+				// MariaDB reports the error 4038 as warning and simply returns null
 				&& !( dialect instanceof MariaDBDialect )
 				// Cockroach doesn't have a native json_value function
 				&& !( dialect instanceof CockroachDialect )
+				// Spanner does not support ON ERROR or ON EMPTY clauses
+				&& !( dialect instanceof SpannerDialect )
 				// PostgreSQL added support for native json_value in version 17
 				&& !( dialect instanceof PostgreSQLDialect && dialect.getVersion().isBefore( 17 ) );
 		}

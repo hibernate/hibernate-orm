@@ -13,6 +13,7 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
@@ -54,6 +55,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 )
 @DomainModel(annotatedClasses = FloatArrayTest.TableWithFloatArrays.class)
 @SessionFactory
+@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner jdbc driver currently doesn't accept float arrays for float64 type")
 public class FloatArrayTest {
 
 	private BasicType<Float[]> arrayType;

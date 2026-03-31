@@ -18,6 +18,7 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
@@ -58,6 +59,7 @@ import static org.hamcrest.core.Is.is;
 )
 @DomainModel(annotatedClasses = TimeArrayTest.TableWithTimeArrays.class)
 @SessionFactory
+@SkipForDialect( dialectClass = SpannerDialect.class, reason = "Spanner jdbc driver currently doesn't support time arrays")
 public class TimeArrayTest {
 
 	private LocalTime time1;

@@ -64,6 +64,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.NaturalId;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
@@ -536,6 +537,21 @@ public class TemplateHelper {
 		return sb.toString();
 	}
 
+	public String generateNaturalIdAnnotation(FieldDetails field) {
+		if (!annotated) {
+			return "";
+		}
+		NaturalId nid = field.getDirectAnnotationUsage(NaturalId.class);
+		if (nid == null) {
+			return "";
+		}
+		importType("org.hibernate.annotations.NaturalId");
+		if (nid.mutable()) {
+			return "@NaturalId(mutable = true)";
+		}
+		return "@NaturalId";
+	}
+
 	public String generateOrderByAnnotation(FieldDetails field) {
 		if (!annotated) {
 			return "";
@@ -976,10 +992,26 @@ public class TemplateHelper {
 
 	public boolean needsEqualsHashCode() {
 		if (isEmbeddable()) return true;
+		if (hasNaturalId()) return true;
 		boolean hasExplicitEquals = getBasicFields().stream()
 				.anyMatch(f -> hasFieldMetaAttribute(f, "use-in-equals"));
 		if (hasExplicitEquals) return true;
 		return hasCompositeId() || !getIdentifierFields().isEmpty();
+	}
+
+	public boolean hasNaturalId() {
+		return getBasicFields().stream()
+				.anyMatch(f -> f.hasDirectAnnotationUsage(NaturalId.class));
+	}
+
+	public List<FieldDetails> getNaturalIdFields() {
+		List<FieldDetails> result = new ArrayList<>();
+		for (FieldDetails field : getBasicFields()) {
+			if (field.hasDirectAnnotationUsage(NaturalId.class)) {
+				result.add(field);
+			}
+		}
+		return result;
 	}
 
 	public boolean hasExplicitEqualsColumns() {
@@ -1000,6 +1032,11 @@ public class TemplateHelper {
 	public List<FieldDetails> getIdentifierFields() {
 		if (isEmbeddable()) {
 			return getBasicFields();
+		}
+		// Prefer @NaturalId fields for equals/hashCode
+		List<FieldDetails> naturalIdFields = getNaturalIdFields();
+		if (!naturalIdFields.isEmpty()) {
+			return naturalIdFields;
 		}
 		List<FieldDetails> result = new ArrayList<>();
 		for (FieldDetails field : getBasicFields()) {

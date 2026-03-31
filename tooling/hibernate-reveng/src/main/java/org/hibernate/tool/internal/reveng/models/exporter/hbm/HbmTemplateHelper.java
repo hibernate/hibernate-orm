@@ -83,6 +83,7 @@ import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OptimisticLock;
@@ -338,11 +339,32 @@ public class HbmTemplateHelper {
 					&& !field.hasDirectAnnotationUsage(Any.class)
 					&& !field.hasDirectAnnotationUsage(ElementCollection.class)
 					&& !field.hasDirectAnnotationUsage(ManyToAny.class)
+					&& !field.hasDirectAnnotationUsage(NaturalId.class)
 					&& !isSecondaryTableField(field)) {
 				result.add(field);
 			}
 		}
 		return result;
+	}
+
+	public List<FieldDetails> getNaturalIdFields() {
+		List<FieldDetails> result = new ArrayList<>();
+		for (FieldDetails field : classDetails.getFields()) {
+			if (field.hasDirectAnnotationUsage(NaturalId.class)) {
+				result.add(field);
+			}
+		}
+		return result;
+	}
+
+	public boolean isNaturalIdMutable() {
+		for (FieldDetails field : classDetails.getFields()) {
+			NaturalId nid = field.getDirectAnnotationUsage(NaturalId.class);
+			if (nid != null) {
+				return nid.mutable();
+			}
+		}
+		return false;
 	}
 
 	public List<FieldDetails> getVersionFields() {

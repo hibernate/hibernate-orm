@@ -37,6 +37,10 @@
     <#if lobAnn?has_content>
     ${lobAnn}
     </#if>
+    <#assign naturalIdAnn = templateHelper.generateNaturalIdAnnotation(field)>
+    <#if naturalIdAnn?has_content>
+    ${naturalIdAnn}
+    </#if>
     <#assign formulaAnn = templateHelper.generateFormulaAnnotation(field)>
     <#if formulaAnn?has_content>
     ${formulaAnn}

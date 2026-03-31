@@ -75,6 +75,7 @@ import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.ParamDef;
@@ -263,11 +264,32 @@ public class MappingXmlHelper {
 					&& !field.hasDirectAnnotationUsage(Version.class)
 					&& !field.hasDirectAnnotationUsage(Any.class)
 					&& !field.hasDirectAnnotationUsage(ManyToAny.class)
-					&& !field.hasDirectAnnotationUsage(ElementCollection.class)) {
+					&& !field.hasDirectAnnotationUsage(ElementCollection.class)
+					&& !field.hasDirectAnnotationUsage(NaturalId.class)) {
 				result.add(field);
 			}
 		}
 		return result;
+	}
+
+	public List<FieldDetails> getNaturalIdFields() {
+		List<FieldDetails> result = new ArrayList<>();
+		for (FieldDetails field : classDetails.getFields()) {
+			if (field.hasDirectAnnotationUsage(NaturalId.class)) {
+				result.add(field);
+			}
+		}
+		return result;
+	}
+
+	public boolean isNaturalIdMutable() {
+		for (FieldDetails field : classDetails.getFields()) {
+			NaturalId nid = field.getDirectAnnotationUsage(NaturalId.class);
+			if (nid != null) {
+				return nid.mutable();
+			}
+		}
+		return false;
 	}
 
 	public List<FieldDetails> getVersionFields() {

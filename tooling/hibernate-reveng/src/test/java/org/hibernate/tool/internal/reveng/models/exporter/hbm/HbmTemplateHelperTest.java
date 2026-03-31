@@ -60,6 +60,7 @@ import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
 import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedNativeQueryJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedQueryJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NaturalIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.NotFoundAnnotation;
 import org.hibernate.boot.models.annotations.internal.OneToManyJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
@@ -680,6 +681,51 @@ public class HbmTemplateHelperTest {
 		cache.includeLazy(false);
 		entity.addAnnotationUsage(cache);
 		assertEquals("non-lazy", new HbmTemplateHelper(entity).getCacheInclude());
+	}
+
+	// --- getNaturalIdFields ---
+
+	@Test
+	public void testGetNaturalIdFieldsEmpty() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertTrue(new HbmTemplateHelper(entity).getNaturalIdFields().isEmpty());
+	}
+
+	@Test
+	public void testGetNaturalIdFieldsPresent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "email", String.class, ctx);
+		NaturalIdAnnotation nid = HibernateAnnotations.NATURAL_ID.createUsage(ctx);
+		field.addAnnotationUsage(nid);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertEquals(1, helper.getNaturalIdFields().size());
+		assertEquals("email", helper.getNaturalIdFields().get(0).getName());
+		// Should not appear in basic fields
+		assertFalse(helper.getBasicFields().stream()
+				.anyMatch(f -> f.getName().equals("email")));
+	}
+
+	@Test
+	public void testIsNaturalIdMutableDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "email", String.class, ctx);
+		NaturalIdAnnotation nid = HibernateAnnotations.NATURAL_ID.createUsage(ctx);
+		field.addAnnotationUsage(nid);
+		assertFalse(new HbmTemplateHelper(entity).isNaturalIdMutable());
+	}
+
+	@Test
+	public void testIsNaturalIdMutableTrue() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "email", String.class, ctx);
+		NaturalIdAnnotation nid = HibernateAnnotations.NATURAL_ID.createUsage(ctx);
+		nid.mutable(true);
+		field.addAnnotationUsage(nid);
+		assertTrue(new HbmTemplateHelper(entity).isNaturalIdMutable());
 	}
 
 	// --- getWhere ---

@@ -21,6 +21,16 @@
             </id>
 </#list>
 </#if>
+<#-- Natural ID -->
+<#if (helper.getNaturalIdFields()?size > 0)>
+            <natural-id mutable="${helper.isNaturalIdMutable()?c}">
+<#list helper.getNaturalIdFields() as field>
+                <basic name="${field.getName()}">
+                    <column name="${helper.getColumnName(field)}"<#if !helper.isNullable(field)> nullable="false"</#if><#if helper.isUnique(field)> unique="true"</#if>/>
+                </basic>
+</#list>
+            </natural-id>
+</#if>
 <#-- Basic fields (non-PK, non-version, non-FK) -->
 <#list helper.getBasicFields() as field>
             <basic name="${field.getName()}"<#if helper.isPropertyLazy(field)> fetch="LAZY"</#if><#if helper.isOptimisticLockExcluded(field)> optimistic-lock="false"</#if>>

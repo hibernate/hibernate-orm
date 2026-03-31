@@ -38,6 +38,7 @@ import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
 import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
+import org.hibernate.boot.models.annotations.internal.NaturalIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.OrderByJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OrderColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation;
@@ -1345,6 +1346,74 @@ public class TemplateHelperTest {
 		dc.addAnnotationUsage(cache);
 		String result = ctx.helper().generateClassAnnotations();
 		assertFalse(result.contains("@Cache"), result);
+	}
+
+	// --- @NaturalId ---
+
+	@Test
+	public void testGenerateNaturalIdAnnotation() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getBasicFields().stream()
+				.filter(f -> f.getName().equals("email")).findFirst().orElseThrow();
+		NaturalIdAnnotation nid = HibernateAnnotations.NATURAL_ID.createUsage(ctx.modelsContext());
+		((MutableAnnotationTarget) field).addAnnotationUsage(nid);
+		assertEquals("@NaturalId", ctx.helper().generateNaturalIdAnnotation(field));
+	}
+
+	@Test
+	public void testGenerateNaturalIdAnnotationMutable() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getBasicFields().stream()
+				.filter(f -> f.getName().equals("email")).findFirst().orElseThrow();
+		NaturalIdAnnotation nid = HibernateAnnotations.NATURAL_ID.createUsage(ctx.modelsContext());
+		nid.mutable(true);
+		((MutableAnnotationTarget) field).addAnnotationUsage(nid);
+		assertEquals("@NaturalId(mutable = true)", ctx.helper().generateNaturalIdAnnotation(field));
+	}
+
+	@Test
+	public void testGenerateNaturalIdAnnotationNone() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getBasicFields().get(0);
+		assertEquals("", helper.generateNaturalIdAnnotation(field));
+	}
+
+	@Test
+	public void testHasNaturalId() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TestContext ctx = createWithContext(table);
+		assertFalse(ctx.helper().hasNaturalId());
+		FieldDetails field = ctx.helper().getBasicFields().stream()
+				.filter(f -> f.getName().equals("email")).findFirst().orElseThrow();
+		NaturalIdAnnotation nid = HibernateAnnotations.NATURAL_ID.createUsage(ctx.modelsContext());
+		((MutableAnnotationTarget) field).addAnnotationUsage(nid);
+		assertTrue(ctx.helper().hasNaturalId());
+	}
+
+	@Test
+	public void testNaturalIdUsedForEqualsHashCode() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getBasicFields().stream()
+				.filter(f -> f.getName().equals("email")).findFirst().orElseThrow();
+		NaturalIdAnnotation nid = HibernateAnnotations.NATURAL_ID.createUsage(ctx.modelsContext());
+		((MutableAnnotationTarget) field).addAnnotationUsage(nid);
+		assertTrue(ctx.helper().needsEqualsHashCode());
+		List<FieldDetails> idFields = ctx.helper().getIdentifierFields();
+		assertEquals(1, idFields.size());
+		assertEquals("email", idFields.get(0).getName());
 	}
 
 	// --- @OrderBy ---

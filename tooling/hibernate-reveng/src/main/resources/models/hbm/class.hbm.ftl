@@ -66,6 +66,18 @@
         <column name="${helper.getPrimaryKeyJoinColumnName()}"/>
     </key>
 </#if>
+<#-- Natural ID -->
+<#if (helper.getNaturalIdFields()?size > 0)>
+    <natural-id mutable="${helper.isNaturalIdMutable()?c}">
+<#list helper.getNaturalIdFields() as field>
+        <property
+            name="${field.getName()}"
+            type="${helper.getHibernateTypeName(field)}">
+            <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
+        </property>
+</#list>
+    </natural-id>
+</#if>
 <#-- Discriminator -->
 <#if helper.needsDiscriminator()>
     <discriminator

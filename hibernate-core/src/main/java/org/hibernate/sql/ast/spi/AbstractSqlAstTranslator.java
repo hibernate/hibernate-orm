@@ -70,7 +70,6 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
 import org.hibernate.sql.ast.internal.TableGroupHelper;
@@ -215,7 +214,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -6350,19 +6348,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( WHITESPACE );
 			appendSql( dialect.getTemporalTableSupport().getAsOfOperator( getTemporalTableStrategy() ) );
 			appendSql( WHITESPACE );
-			final var temporalInstant = tableReference.getTemporalIdentifier();
-			if ( temporalInstant == null ) {
+			if ( sessionFactory.getTransactionIdentifierService().isDisabled() ) {
 				// we are querying current data,
 				// so we can use the server timestamp
 				appendSql( dialect.currentTimestamp() );
 			}
 			else {
-				visitParameterAsParameter(
-						new TemporalValueParameter(
-								tableReference.getTemporalJdbcMapping(),
-								temporalInstant
-						)
-				);
+				tableReference.getAsOfTransactionIdentifier().accept( this );
 			}
 		}
 		renderTableReferenceIdentificationVariable( tableReference );
@@ -6370,11 +6362,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private boolean renderAsOfClause(NamedTableReference tableReference) {
-		return tableReference.getTemporalJdbcMapping() != null
+		return tableReference.getAsOfTransactionIdentifier() != null
 			&& sessionFactory.getTransactionIdentifierService().isIdentifierTypeInstant()
 			&& statementStack.getCurrent() instanceof SelectStatement
-			&& dialect.getTemporalTableSupport().useAsOfOperator( getTemporalTableStrategy(),
-				(Instant) tableReference.getTemporalIdentifier() );
+			&& dialect.getTemporalTableSupport().useAsOfOperator( getTemporalTableStrategy() );
 	}
 
 	private TemporalTableStrategy getTemporalTableStrategy() {
@@ -9003,49 +8994,5 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void simpleColumnWriteFragmentRendering(ColumnWriteFragment columnWriteFragment) {
 		appendSql( columnWriteFragment.getFragment() );
 		columnWriteFragment.getParameters().forEach( this::addParameterBinder );
-	}
-
-	private static class TemporalValueParameter implements JdbcParameter, JdbcParameterBinder {
-		private final JdbcMapping jdbcMapping;
-		private final Object value;
-
-		private TemporalValueParameter(JdbcMapping jdbcMapping, Object value) {
-			this.jdbcMapping = jdbcMapping;
-			this.value = value;
-		}
-
-		@Override
-		public JdbcParameterBinder getParameterBinder() {
-			return this;
-		}
-
-		@Override
-		public Integer getParameterId() {
-			return null;
-		}
-
-		@Override
-		public void bindParameterValue(
-				PreparedStatement statement,
-				int startPosition,
-				JdbcParameterBindings jdbcParameterBindings,
-				ExecutionContext executionContext) throws SQLException {
-			jdbcMapping.getJdbcValueBinder().bind(
-					statement,
-					jdbcMapping.convertToRelationalValue( value ),
-					startPosition,
-					executionContext.getSession()
-			);
-		}
-
-		@Override
-		public JdbcMappingContainer getExpressionType() {
-			return jdbcMapping;
-		}
-
-		@Override
-		public void accept(SqlAstWalker sqlTreeWalker) {
-			sqlTreeWalker.visitParameter( this );
-		}
 	}
 }

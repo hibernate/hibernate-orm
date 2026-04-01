@@ -24,33 +24,34 @@ public final class TemporalParameterBindingsHelper {
 			JdbcParameterBindings jdbcParameterBindings,
 			List<JdbcParameterBinder> parameterBinders,
 			LoadQueryInfluencers loadQueryInfluencers) {
-		if ( parameterBinders == null || parameterBinders.isEmpty() ) {
-			return jdbcParameterBindings;
-		}
-
-		var effectiveBindings =
-				jdbcParameterBindings == null
-						? JdbcParameterBindings.NO_BINDINGS
-						: jdbcParameterBindings;
-		Object temporalIdentifier = null;
-
-		for ( var binder : parameterBinders ) {
-			if ( binder instanceof TemporalJdbcParameter parameter ) {
-				if ( loadQueryInfluencers != null && temporalIdentifier == null ) {
-					temporalIdentifier = loadQueryInfluencers.getTemporalIdentifier();
-				}
-				if ( effectiveBindings == JdbcParameterBindings.NO_BINDINGS ) {
-					effectiveBindings = new JdbcParameterBindingsImpl( 1 );
-				}
-				if ( effectiveBindings.getBinding( parameter ) == null ) {
-					final var jdbcMapping = parameter.getJdbcMapping();
-					final var jdbcValue = jdbcMapping.convertToRelationalValue( temporalIdentifier );
-					effectiveBindings.addBinding( parameter,
-							new JdbcParameterBindingImpl( jdbcMapping, jdbcValue ) );
-				}
-			}
-		}
-
-		return effectiveBindings;
+		return jdbcParameterBindings;
+//		if ( parameterBinders == null || parameterBinders.isEmpty() ) {
+//			return jdbcParameterBindings;
+//		}
+//
+//		var effectiveBindings =
+//				jdbcParameterBindings == null
+//						? JdbcParameterBindings.NO_BINDINGS
+//						: jdbcParameterBindings;
+//		Object temporalIdentifier = null;
+//
+//		for ( var binder : parameterBinders ) {
+//			if ( binder instanceof TemporalJdbcParameter parameter ) {
+//				if ( loadQueryInfluencers != null && temporalIdentifier == null ) {
+//					temporalIdentifier = loadQueryInfluencers.getTemporalIdentifier();
+//				}
+//				if ( effectiveBindings == JdbcParameterBindings.NO_BINDINGS ) {
+//					effectiveBindings = new JdbcParameterBindingsImpl( 1 );
+//				}
+//				if ( effectiveBindings.getBinding( parameter ) == null ) {
+//					final var jdbcMapping = parameter.getJdbcMapping();
+//					final var jdbcValue = jdbcMapping.convertToRelationalValue( temporalIdentifier );
+//					effectiveBindings.addBinding( parameter,
+//							new JdbcParameterBindingImpl( jdbcMapping, jdbcValue ) );
+//				}
+//			}
+//		}
+//
+//		return effectiveBindings;
 	}
 }

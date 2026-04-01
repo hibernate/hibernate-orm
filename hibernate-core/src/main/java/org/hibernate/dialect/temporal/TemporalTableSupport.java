@@ -12,8 +12,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.SqlTypes;
 
-import java.time.Instant;
-
 /**
  * Abstracts the support for temporal tables.
  *
@@ -142,10 +140,10 @@ public interface TemporalTableSupport {
 	 * operator when querying temporal tables? We usually only use it
 	 * for querying native temporal tables at a historical instant, but
 	 * in Oracle we use it all the time.
+	 *
 	 * @param strategy The strategy
-	 * @param historicalInstant The instant if this is a historical query
 	 */
-	boolean useAsOfOperator(TemporalTableStrategy strategy, Instant historicalInstant);
+	boolean useAsOfOperator(TemporalTableStrategy strategy);
 
 	/**
 	 * Should we use temporal restrictions on the {@code row start} and

@@ -4,17 +4,20 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
-import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Function;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
-import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
+import org.hibernate.sql.exec.internal.TemporalJdbcParameter;
 
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 
@@ -27,8 +30,7 @@ public class NamedTableReference extends AbstractTableReference {
 	private final String tableExpression;
 
 	private String prunedTableExpression;
-	private Object temporalIdentifier;
-	private JdbcMapping temporalJdbcMapping;
+	private Expression asOfTransactionIdentifier;
 
 	public NamedTableReference(
 			String tableExpression,
@@ -52,8 +54,17 @@ public class NamedTableReference extends AbstractTableReference {
 	public void applyAuxiliaryTable(AuxiliaryMapping mapping, LoadQueryInfluencers influencers) {
 		if ( useAsOfOperator( influencers, mapping )
 				&& mapping.getTableName().equals( getTableExpression() ) ) {
-			this.temporalIdentifier = influencers.getTemporalIdentifier();
-			this.temporalJdbcMapping = mapping.getJdbcMapping();
+			if ( influencers.getSessionFactory().getTransactionIdentifierService().isDisabled() ) {
+				// we are querying current data,
+				// so we can use the server timestamp
+				final Dialect dialect = influencers.getSessionFactory().getJdbcServices().getDialect();
+				this.asOfTransactionIdentifier =
+						new SelfRenderingSqlFragmentExpression( dialect.currentTimestamp(), mapping.getJdbcMapping() );
+			}
+			else {
+				this.asOfTransactionIdentifier =
+						new TemporalJdbcParameter( ((TemporalMapping) mapping).getStartingColumnMapping() );
+			}
 		}
 	}
 
@@ -65,17 +76,12 @@ public class NamedTableReference extends AbstractTableReference {
 			final var sessionFactory = influencers.getSessionFactory();
 			return sessionFactory.getTransactionIdentifierService().isIdentifierTypeInstant()
 				&& sessionFactory.getJdbcServices().getDialect().getTemporalTableSupport()
-						.useAsOfOperator( sessionFactory.getSessionFactoryOptions().getTemporalTableStrategy(),
-								(Instant) influencers.getTemporalIdentifier() );
+						.useAsOfOperator( sessionFactory.getSessionFactoryOptions().getTemporalTableStrategy() );
 		}
 	}
 
-	public Object getTemporalIdentifier() {
-		return temporalIdentifier;
-	}
-
-	public JdbcMapping getTemporalJdbcMapping() {
-		return temporalJdbcMapping;
+	public Expression getAsOfTransactionIdentifier() {
+		return asOfTransactionIdentifier;
 	}
 
 	@Override

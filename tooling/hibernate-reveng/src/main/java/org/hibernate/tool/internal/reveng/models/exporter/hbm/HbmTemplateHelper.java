@@ -454,6 +454,18 @@ public class HbmTemplateHelper {
 		return ct != null && ct.name() != null && !ct.name().isEmpty() ? ct.name() : null;
 	}
 
+	public String getElementCollectionTableSchema(FieldDetails field) {
+		CollectionTable ct = field.getDirectAnnotationUsage(CollectionTable.class);
+		return ct != null && ct.schema() != null && !ct.schema().isEmpty()
+				? ct.schema() : null;
+	}
+
+	public String getElementCollectionTableCatalog(FieldDetails field) {
+		CollectionTable ct = field.getDirectAnnotationUsage(CollectionTable.class);
+		return ct != null && ct.catalog() != null && !ct.catalog().isEmpty()
+				? ct.catalog() : null;
+	}
+
 	public String getElementCollectionKeyColumnName(FieldDetails field) {
 		CollectionTable ct = field.getDirectAnnotationUsage(CollectionTable.class);
 		if (ct != null && ct.joinColumns() != null && ct.joinColumns().length > 0) {
@@ -751,6 +763,18 @@ public class HbmTemplateHelper {
 	public String getJoinTableName(FieldDetails field) {
 		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
 		return jt != null ? jt.name() : null;
+	}
+
+	public String getJoinTableSchema(FieldDetails field) {
+		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
+		return jt != null && jt.schema() != null && !jt.schema().isEmpty()
+				? jt.schema() : null;
+	}
+
+	public String getJoinTableCatalog(FieldDetails field) {
+		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
+		return jt != null && jt.catalog() != null && !jt.catalog().isEmpty()
+				? jt.catalog() : null;
 	}
 
 	public String getJoinTableJoinColumnName(FieldDetails field) {

@@ -22,6 +22,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Basic;
@@ -106,15 +108,22 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.ParamDef;
+import org.hibernate.annotations.ConcreteProxy;
+import org.hibernate.annotations.OptimisticLock;
+import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.annotations.OptimisticLocking;
+import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLDeletes;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLInserts;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SQLUpdates;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
+import org.hibernate.annotations.Subselect;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
@@ -431,6 +440,43 @@ public class TemplateHelper {
 			}
 			sb.append(")\n");
 		}
+		// @OptimisticLocking
+		OptimisticLocking ol = classDetails.getDirectAnnotationUsage(OptimisticLocking.class);
+		if (ol != null && ol.type() != OptimisticLockType.VERSION) {
+			importType("org.hibernate.annotations.OptimisticLocking");
+			importType("org.hibernate.annotations.OptimisticLockType");
+			sb.append("@OptimisticLocking(type = OptimisticLockType.").append(ol.type().name()).append(")\n");
+		}
+		// @RowId
+		RowId rowId = classDetails.getDirectAnnotationUsage(RowId.class);
+		if (rowId != null && rowId.value() != null && !rowId.value().isEmpty()) {
+			importType("org.hibernate.annotations.RowId");
+			sb.append("@RowId(\"").append(rowId.value()).append("\")\n");
+		}
+		// @Subselect
+		Subselect subselect = classDetails.getDirectAnnotationUsage(Subselect.class);
+		if (subselect != null) {
+			importType("org.hibernate.annotations.Subselect");
+			sb.append("@Subselect(\"").append(subselect.value()).append("\")\n");
+		}
+		// @ConcreteProxy
+		if (classDetails.hasDirectAnnotationUsage(ConcreteProxy.class)) {
+			importType("org.hibernate.annotations.ConcreteProxy");
+			sb.append("@ConcreteProxy\n");
+		}
+		// @SQLRestriction
+		SQLRestriction sqlRestriction = classDetails.getDirectAnnotationUsage(SQLRestriction.class);
+		if (sqlRestriction != null) {
+			importType("org.hibernate.annotations.SQLRestriction");
+			sb.append("@SQLRestriction(\"").append(sqlRestriction.value()).append("\")\n");
+		}
+		// @Access (class-level)
+		Access classAccess = classDetails.getDirectAnnotationUsage(Access.class);
+		if (classAccess != null && classAccess.value() != AccessType.FIELD) {
+			importType("jakarta.persistence.Access");
+			importType("jakarta.persistence.AccessType");
+			sb.append("@Access(AccessType.").append(classAccess.value().name()).append(")\n");
+		}
 		// @NamedQuery / @NamedNativeQuery
 		for (NamedQueryInfo nq : getNamedQueries()) {
 			importType("jakarta.persistence.NamedQuery");
@@ -723,6 +769,31 @@ public class TemplateHelper {
 		}
 		sb.append(")");
 		return sb.toString();
+	}
+
+	public String generateOptimisticLockAnnotation(FieldDetails field) {
+		if (!annotated) {
+			return "";
+		}
+		OptimisticLock ol = field.getDirectAnnotationUsage(OptimisticLock.class);
+		if (ol == null || !ol.excluded()) {
+			return "";
+		}
+		importType("org.hibernate.annotations.OptimisticLock");
+		return "@OptimisticLock(excluded = true)";
+	}
+
+	public String generateAccessAnnotation(FieldDetails field) {
+		if (!annotated) {
+			return "";
+		}
+		Access access = field.getDirectAnnotationUsage(Access.class);
+		if (access == null || access.value() == AccessType.FIELD) {
+			return "";
+		}
+		importType("jakarta.persistence.Access");
+		importType("jakarta.persistence.AccessType");
+		return "@Access(AccessType." + access.value().name() + ")";
 	}
 
 	public String generateTemporalAnnotation(FieldDetails field) {

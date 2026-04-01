@@ -2498,4 +2498,80 @@ public class HbmTemplateHelperTest {
 		assertEquals("INV1", invCols.get(0));
 		assertEquals("INV2", invCols.get(1));
 	}
+
+	// --- JoinTable schema/catalog ---
+
+	@Test
+	public void testGetJoinTableSchemaDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "tags", String.class, ctx);
+		org.hibernate.boot.models.annotations.internal.JoinTableJpaAnnotation jt =
+				JpaAnnotations.JOIN_TABLE.createUsage(ctx);
+		jt.name("TAG_MAP");
+		field.addAnnotationUsage(jt);
+		assertNull(new HbmTemplateHelper(entity).getJoinTableSchema(field));
+	}
+
+	@Test
+	public void testGetJoinTableSchemaPresent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "tags", String.class, ctx);
+		org.hibernate.boot.models.annotations.internal.JoinTableJpaAnnotation jt =
+				JpaAnnotations.JOIN_TABLE.createUsage(ctx);
+		jt.name("TAG_MAP");
+		jt.schema("HR");
+		field.addAnnotationUsage(jt);
+		assertEquals("HR", new HbmTemplateHelper(entity).getJoinTableSchema(field));
+	}
+
+	@Test
+	public void testGetJoinTableCatalogPresent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "tags", String.class, ctx);
+		org.hibernate.boot.models.annotations.internal.JoinTableJpaAnnotation jt =
+				JpaAnnotations.JOIN_TABLE.createUsage(ctx);
+		jt.name("TAG_MAP");
+		jt.catalog("MY_CATALOG");
+		field.addAnnotationUsage(jt);
+		assertEquals("MY_CATALOG", new HbmTemplateHelper(entity).getJoinTableCatalog(field));
+	}
+
+	// --- ElementCollection table schema/catalog ---
+
+	@Test
+	public void testGetElementCollectionTableSchemaDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addElementCollectionField(entity, "tags", String.class, ctx);
+		assertNull(new HbmTemplateHelper(entity).getElementCollectionTableSchema(field));
+	}
+
+	@Test
+	public void testGetElementCollectionTableSchemaPresent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addElementCollectionField(entity, "tags", String.class, ctx);
+		org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation ct =
+				JpaAnnotations.COLLECTION_TABLE.createUsage(ctx);
+		ct.name("EMPLOYEE_TAGS");
+		ct.schema("HR");
+		field.addAnnotationUsage(ct);
+		assertEquals("HR", new HbmTemplateHelper(entity).getElementCollectionTableSchema(field));
+	}
+
+	@Test
+	public void testGetElementCollectionTableCatalogPresent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addElementCollectionField(entity, "tags", String.class, ctx);
+		org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation ct =
+				JpaAnnotations.COLLECTION_TABLE.createUsage(ctx);
+		ct.name("EMPLOYEE_TAGS");
+		ct.catalog("MY_CATALOG");
+		field.addAnnotationUsage(ct);
+		assertEquals("MY_CATALOG", new HbmTemplateHelper(entity).getElementCollectionTableCatalog(field));
+	}
 }

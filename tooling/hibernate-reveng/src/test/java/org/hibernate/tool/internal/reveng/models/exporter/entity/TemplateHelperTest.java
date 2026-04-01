@@ -2857,4 +2857,177 @@ public class TemplateHelperTest {
 		String result = ctx.helper().generateClassAnnotations();
 		assertTrue(result.contains("resultSetMapping = \"empMapping\""), result);
 	}
+
+	// --- @OptimisticLocking (class-level) ---
+
+	@Test
+	public void testGenerateClassAnnotationsOptimisticLocking() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		org.hibernate.boot.models.annotations.internal.OptimisticLockingAnnotation ol =
+				HibernateAnnotations.OPTIMISTIC_LOCKING.createUsage(ctx.modelsContext());
+		ol.type(org.hibernate.annotations.OptimisticLockType.ALL);
+		dc.addAnnotationUsage(ol);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@OptimisticLocking(type = OptimisticLockType.ALL)"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsOptimisticLockingVersionNotRendered() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		org.hibernate.boot.models.annotations.internal.OptimisticLockingAnnotation ol =
+				HibernateAnnotations.OPTIMISTIC_LOCKING.createUsage(ctx.modelsContext());
+		ol.type(org.hibernate.annotations.OptimisticLockType.VERSION);
+		dc.addAnnotationUsage(ol);
+		String result = ctx.helper().generateClassAnnotations();
+		assertFalse(result.contains("@OptimisticLocking"), result);
+	}
+
+	// --- @RowId (class-level) ---
+
+	@Test
+	public void testGenerateClassAnnotationsRowId() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		org.hibernate.boot.models.annotations.internal.RowIdAnnotation rid =
+				HibernateAnnotations.ROW_ID.createUsage(ctx.modelsContext());
+		rid.value("ROWID");
+		dc.addAnnotationUsage(rid);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@RowId(\"ROWID\")"), result);
+	}
+
+	// --- @Subselect (class-level) ---
+
+	@Test
+	public void testGenerateClassAnnotationsSubselect() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		org.hibernate.boot.models.annotations.internal.SubselectAnnotation ss =
+				HibernateAnnotations.SUBSELECT.createUsage(ctx.modelsContext());
+		ss.value("SELECT * FROM EMPLOYEE WHERE active = 1");
+		dc.addAnnotationUsage(ss);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@Subselect(\"SELECT * FROM EMPLOYEE WHERE active = 1\")"), result);
+	}
+
+	// --- @ConcreteProxy (class-level) ---
+
+	@Test
+	public void testGenerateClassAnnotationsConcreteProxy() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		dc.addAnnotationUsage(HibernateAnnotations.CONCRETE_PROXY.createUsage(ctx.modelsContext()));
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@ConcreteProxy"), result);
+	}
+
+	// --- @SQLRestriction (class-level) ---
+
+	@Test
+	public void testGenerateClassAnnotationsSQLRestriction() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		org.hibernate.boot.models.annotations.internal.SQLRestrictionAnnotation sr =
+				HibernateAnnotations.SQL_RESTRICTION.createUsage(ctx.modelsContext());
+		sr.value("active = 1");
+		dc.addAnnotationUsage(sr);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@SQLRestriction(\"active = 1\")"), result);
+	}
+
+	// --- @Access (class-level) ---
+
+	@Test
+	public void testGenerateClassAnnotationsAccessProperty() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation access =
+				JpaAnnotations.ACCESS.createUsage(ctx.modelsContext());
+		access.value(jakarta.persistence.AccessType.PROPERTY);
+		dc.addAnnotationUsage(access);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@Access(AccessType.PROPERTY)"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsAccessFieldNotRendered() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation access =
+				JpaAnnotations.ACCESS.createUsage(ctx.modelsContext());
+		access.value(jakarta.persistence.AccessType.FIELD);
+		dc.addAnnotationUsage(access);
+		String result = ctx.helper().generateClassAnnotations();
+		assertFalse(result.contains("@Access"), result);
+	}
+
+	// --- @OptimisticLock (field-level) ---
+
+	@Test
+	public void testGenerateOptimisticLockAnnotationExcluded() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TestContext ctx = createWithContext(table);
+		FieldDetails nameField = ctx.helper().getBasicFields().stream()
+				.filter(f -> "name".equals(f.getName())).findFirst().orElseThrow();
+		org.hibernate.boot.models.annotations.internal.OptimisticLockAnnotation ol =
+				HibernateAnnotations.OPTIMISTIC_LOCK.createUsage(ctx.modelsContext());
+		ol.excluded(true);
+		((org.hibernate.models.spi.MutableAnnotationTarget) nameField).addAnnotationUsage(ol);
+		String result = ctx.helper().generateOptimisticLockAnnotation(nameField);
+		assertEquals("@OptimisticLock(excluded = true)", result);
+	}
+
+	@Test
+	public void testGenerateOptimisticLockAnnotationNotExcluded() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TestContext ctx = createWithContext(table);
+		FieldDetails nameField = ctx.helper().getBasicFields().stream()
+				.filter(f -> "name".equals(f.getName())).findFirst().orElseThrow();
+		String result = ctx.helper().generateOptimisticLockAnnotation(nameField);
+		assertEquals("", result);
+	}
+
+	// --- @Access (field-level) ---
+
+	@Test
+	public void testGenerateAccessAnnotationProperty() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TestContext ctx = createWithContext(table);
+		FieldDetails nameField = ctx.helper().getBasicFields().stream()
+				.filter(f -> "name".equals(f.getName())).findFirst().orElseThrow();
+		org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation access =
+				JpaAnnotations.ACCESS.createUsage(ctx.modelsContext());
+		access.value(jakarta.persistence.AccessType.PROPERTY);
+		((org.hibernate.models.spi.MutableAnnotationTarget) nameField).addAnnotationUsage(access);
+		String result = ctx.helper().generateAccessAnnotation(nameField);
+		assertEquals("@Access(AccessType.PROPERTY)", result);
+	}
+
+	@Test
+	public void testGenerateAccessAnnotationFieldNotRendered() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TestContext ctx = createWithContext(table);
+		FieldDetails nameField = ctx.helper().getBasicFields().stream()
+				.filter(f -> "name".equals(f.getName())).findFirst().orElseThrow();
+		String result = ctx.helper().generateAccessAnnotation(nameField);
+		assertEquals("", result);
+	}
 }

@@ -45,6 +45,14 @@
     <#if naturalIdAnn?has_content>
     ${naturalIdAnn}
     </#if>
+    <#assign olAnn = templateHelper.generateOptimisticLockAnnotation(field)>
+    <#if olAnn?has_content>
+    ${olAnn}
+    </#if>
+    <#assign accessAnn = templateHelper.generateAccessAnnotation(field)>
+    <#if accessAnn?has_content>
+    ${accessAnn}
+    </#if>
     <#assign formulaAnn = templateHelper.generateFormulaAnnotation(field)>
     <#if formulaAnn?has_content>
     ${formulaAnn}
@@ -78,6 +86,10 @@
 <#if notFoundAnn?has_content>
     ${notFoundAnn}
 </#if>
+<#assign accessAnn = templateHelper.generateAccessAnnotation(field)>
+<#if accessAnn?has_content>
+    ${accessAnn}
+</#if>
     ${templateHelper.getPropertyGetModifiers(field)} ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
         return this.${field.getName()};
     }
@@ -100,6 +112,10 @@
 <#assign notFoundAnn = templateHelper.generateNotFoundAnnotation(field)>
 <#if notFoundAnn?has_content>
     ${notFoundAnn}
+</#if>
+<#assign accessAnn = templateHelper.generateAccessAnnotation(field)>
+<#if accessAnn?has_content>
+    ${accessAnn}
 </#if>
     ${templateHelper.getPropertyGetModifiers(field)} ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
         return this.${field.getName()};
@@ -152,6 +168,10 @@
 <#if sortAnn?has_content>
     ${sortAnn}
 </#if>
+<#assign accessAnn = templateHelper.generateAccessAnnotation(field)>
+<#if accessAnn?has_content>
+    ${accessAnn}
+</#if>
     ${templateHelper.getPropertyGetModifiers(field)} ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
         return this.${field.getName()};
     }
@@ -203,6 +223,10 @@
 <#if sortAnn?has_content>
     ${sortAnn}
 </#if>
+<#assign accessAnn = templateHelper.generateAccessAnnotation(field)>
+<#if accessAnn?has_content>
+    ${accessAnn}
+</#if>
     ${templateHelper.getPropertyGetModifiers(field)} ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
         return this.${field.getName()};
     }
@@ -217,6 +241,10 @@
 <#assign ann = templateHelper.generateEmbeddedAnnotation(field)>
 <#if ann?has_content>
     ${ann}
+</#if>
+<#assign accessAnn = templateHelper.generateAccessAnnotation(field)>
+<#if accessAnn?has_content>
+    ${accessAnn}
 </#if>
     ${templateHelper.getPropertyGetModifiers(field)} ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
         return this.${field.getName()};
@@ -244,6 +272,10 @@
 <#assign filterAnns = templateHelper.generateFilterAnnotations(field)>
 <#if filterAnns?has_content>
     ${filterAnns}
+</#if>
+<#assign accessAnn = templateHelper.generateAccessAnnotation(field)>
+<#if accessAnn?has_content>
+    ${accessAnn}
 </#if>
     ${templateHelper.getPropertyGetModifiers(field)} ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
         return this.${field.getName()};

@@ -115,7 +115,9 @@
 <#assign collTag = helper.getCollectionTag(field)>
 <#if helper.getJoinTableName(field)??>
     <${collTag} name="${field.getName()}"
-        table="${helper.getJoinTableName(field)}"<#if helper.getCollectionCascadeString(field)??>
+        table="${helper.getJoinTableName(field)}"<#if helper.getJoinTableSchema(field)??>
+        schema="${helper.getJoinTableSchema(field)}"</#if><#if helper.getJoinTableCatalog(field)??>
+        catalog="${helper.getJoinTableCatalog(field)}"</#if><#if helper.getCollectionCascadeString(field)??>
         cascade="${helper.getCollectionCascadeString(field)}"</#if><#if helper.getCollectionLazy(field)??>
         lazy="${helper.getCollectionLazy(field)}"</#if><#if helper.getCollectionFetchMode(field)??>
         fetch="${helper.getCollectionFetchMode(field)}"</#if><#if (helper.getCollectionBatchSize(field) gt 1)>
@@ -227,7 +229,9 @@
 <#list helper.getElementCollectionFields() as field>
 <#assign collTag = helper.getCollectionTag(field)>
     <${collTag} name="${field.getName()}"<#if helper.getElementCollectionTableName(field)??>
-        table="${helper.getElementCollectionTableName(field)}"</#if><#if helper.getCollectionLazy(field)??>
+        table="${helper.getElementCollectionTableName(field)}"</#if><#if helper.getElementCollectionTableSchema(field)??>
+        schema="${helper.getElementCollectionTableSchema(field)}"</#if><#if helper.getElementCollectionTableCatalog(field)??>
+        catalog="${helper.getElementCollectionTableCatalog(field)}"</#if><#if helper.getCollectionLazy(field)??>
         lazy="${helper.getCollectionLazy(field)}"</#if><#if helper.getCollectionFetchMode(field)??>
         fetch="${helper.getCollectionFetchMode(field)}"</#if><#if helper.getCollectionOrderBy(field)??>
         order-by="${helper.getCollectionOrderBy(field)}"</#if>>

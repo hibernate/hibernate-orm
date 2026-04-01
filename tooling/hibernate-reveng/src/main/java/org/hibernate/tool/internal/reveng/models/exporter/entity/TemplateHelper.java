@@ -149,12 +149,17 @@ public class TemplateHelper {
 		this.annotated = annotated;
 		this.classMetaAttributes = classMetaAttributes != null ? classMetaAttributes : Collections.emptyMap();
 		this.fieldMetaAttributes = fieldMetaAttributes != null ? fieldMetaAttributes : Collections.emptyMap();
+		// Process extra-import meta-attribute
+		List<String> extraImports = this.classMetaAttributes.getOrDefault("extra-import", Collections.emptyList());
+		for (String fqcn : extraImports) {
+			importType(fqcn);
+		}
 	}
 
 	// --- Package / class ---
 
 	public String getPackageDeclaration() {
-		String pkg = getPackageName();
+		String pkg = getGeneratedPackageName();
 		if (pkg != null && !pkg.isEmpty()) {
 			return "package " + pkg + ";";
 		}
@@ -162,6 +167,11 @@ public class TemplateHelper {
 	}
 
 	public String getDeclarationName() {
+		if (hasClassMetaAttribute("generated-class")) {
+			String generatedClass = getClassMetaAttribute("generated-class");
+			int lastDot = generatedClass.lastIndexOf('.');
+			return lastDot > 0 ? generatedClass.substring(lastDot + 1) : generatedClass;
+		}
 		return classDetails.getName();
 	}
 
@@ -171,12 +181,25 @@ public class TemplateHelper {
 			importType(superClass.getClassName());
 			return "extends " + superClass.getName() + " ";
 		}
+		if (hasClassMetaAttribute("extends")) {
+			String extendsFqcn = getClassMetaAttribute("extends");
+			String simpleName = importType(extendsFqcn);
+			return "extends " + simpleName + " ";
+		}
 		return "";
 	}
 
 	public String getImplementsDeclaration() {
 		importType(Serializable.class.getName());
-		return "implements Serializable";
+		List<String> interfaces = new ArrayList<>();
+		if (hasClassMetaAttribute("implements")) {
+			for (String fqcn : classMetaAttributes.get("implements")) {
+				String simpleName = importType(fqcn);
+				interfaces.add(simpleName);
+			}
+		}
+		interfaces.add("Serializable");
+		return "implements " + String.join(", ", interfaces);
 	}
 
 	public String generateImports() {
@@ -1693,6 +1716,35 @@ public class TemplateHelper {
 		return values.isEmpty() ? "" : String.join("\n", values);
 	}
 
+	public String getFieldModifiers(FieldDetails field) {
+		if (hasFieldMetaAttribute(field, "scope-field")) {
+			return getFieldMetaAttribute(field, "scope-field");
+		}
+		return "private";
+	}
+
+	public String getPropertyGetModifiers(FieldDetails field) {
+		if (hasFieldMetaAttribute(field, "scope-get")) {
+			return getFieldMetaAttribute(field, "scope-get");
+		}
+		return "public";
+	}
+
+	public String getPropertySetModifiers(FieldDetails field) {
+		if (hasFieldMetaAttribute(field, "scope-set")) {
+			return getFieldMetaAttribute(field, "scope-set");
+		}
+		return "public";
+	}
+
+	public boolean hasClassDescription() {
+		return hasClassMetaAttribute("class-description");
+	}
+
+	public String getClassDescription() {
+		return getClassMetaAttribute("class-description");
+	}
+
 	public boolean isGenProperty(FieldDetails field) {
 		return getFieldMetaAsBool(field, "gen-property", true);
 	}
@@ -1768,6 +1820,15 @@ public class TemplateHelper {
 		if (className == null) return "";
 		int lastDot = className.lastIndexOf('.');
 		return lastDot > 0 ? className.substring(0, lastDot) : "";
+	}
+
+	private String getGeneratedPackageName() {
+		if (hasClassMetaAttribute("generated-class")) {
+			String generatedClass = getClassMetaAttribute("generated-class");
+			int lastDot = generatedClass.lastIndexOf('.');
+			return lastDot > 0 ? generatedClass.substring(0, lastDot) : "";
+		}
+		return getPackageName();
 	}
 
 	private boolean isRelationshipField(FieldDetails field) {

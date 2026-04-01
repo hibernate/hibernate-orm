@@ -2571,4 +2571,182 @@ public class TemplateHelperTest {
 		field.addAnnotationUsage(ec);
 		return field;
 	}
+
+	// --- Meta-attribute: scope-field ---
+
+	@Test
+	public void testGetFieldModifiersDefault() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getBasicFields().get(0);
+		assertEquals("private", helper.getFieldModifiers(field));
+	}
+
+	@Test
+	public void testGetFieldModifiersProtected() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		Map<String, Map<String, List<String>>> fieldMeta = fieldMeta("name", "scope-field", "protected");
+		TemplateHelper helper = create(table, true, Collections.emptyMap(), fieldMeta);
+		FieldDetails field = helper.getBasicFields().get(0);
+		assertEquals("protected", helper.getFieldModifiers(field));
+	}
+
+	// --- Meta-attribute: scope-get ---
+
+	@Test
+	public void testGetPropertyGetModifiersDefault() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getBasicFields().get(0);
+		assertEquals("public", helper.getPropertyGetModifiers(field));
+	}
+
+	@Test
+	public void testGetPropertyGetModifiersProtected() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		Map<String, Map<String, List<String>>> fieldMeta = fieldMeta("name", "scope-get", "protected");
+		TemplateHelper helper = create(table, true, Collections.emptyMap(), fieldMeta);
+		FieldDetails field = helper.getBasicFields().get(0);
+		assertEquals("protected", helper.getPropertyGetModifiers(field));
+	}
+
+	// --- Meta-attribute: scope-set ---
+
+	@Test
+	public void testGetPropertySetModifiersDefault() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getBasicFields().get(0);
+		assertEquals("public", helper.getPropertySetModifiers(field));
+	}
+
+	@Test
+	public void testGetPropertySetModifiersPrivate() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		Map<String, Map<String, List<String>>> fieldMeta = fieldMeta("name", "scope-set", "private");
+		TemplateHelper helper = create(table, true, Collections.emptyMap(), fieldMeta);
+		FieldDetails field = helper.getBasicFields().get(0);
+		assertEquals("private", helper.getPropertySetModifiers(field));
+	}
+
+	// --- Meta-attribute: implements ---
+
+	@Test
+	public void testGetImplementsDeclarationDefault() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TemplateHelper helper = create(table);
+		assertEquals("implements Serializable", helper.getImplementsDeclaration());
+	}
+
+	@Test
+	public void testGetImplementsDeclarationWithMeta() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		Map<String, List<String>> classMeta = Map.of("implements", List.of("java.lang.Comparable"));
+		TemplateHelper helper = create(table, true, classMeta, Collections.emptyMap());
+		String result = helper.getImplementsDeclaration();
+		assertTrue(result.contains("Comparable"), result);
+		assertTrue(result.contains("Serializable"), result);
+	}
+
+	@Test
+	public void testGetImplementsDeclarationMultiple() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		Map<String, List<String>> classMeta = Map.of("implements",
+				List.of("java.lang.Comparable", "java.lang.Cloneable"));
+		TemplateHelper helper = create(table, true, classMeta, Collections.emptyMap());
+		String result = helper.getImplementsDeclaration();
+		assertTrue(result.contains("Comparable"), result);
+		assertTrue(result.contains("Cloneable"), result);
+		assertTrue(result.contains("Serializable"), result);
+	}
+
+	// --- Meta-attribute: extends ---
+
+	@Test
+	public void testGetExtendsDeclarationDefault() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TemplateHelper helper = create(table);
+		assertEquals("", helper.getExtendsDeclaration());
+	}
+
+	@Test
+	public void testGetExtendsDeclarationWithMeta() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		Map<String, List<String>> classMeta = Map.of("extends", List.of("com.example.BaseEntity"));
+		TemplateHelper helper = create(table, true, classMeta, Collections.emptyMap());
+		String result = helper.getExtendsDeclaration();
+		assertTrue(result.contains("extends"), result);
+		assertTrue(result.contains("BaseEntity"), result);
+	}
+
+	// --- Meta-attribute: class-description ---
+
+	@Test
+	public void testHasClassDescriptionFalse() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TemplateHelper helper = create(table);
+		assertFalse(helper.hasClassDescription());
+	}
+
+	@Test
+	public void testHasClassDescriptionTrue() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		Map<String, List<String>> classMeta = Map.of("class-description", List.of("Employee entity"));
+		TemplateHelper helper = create(table, true, classMeta, Collections.emptyMap());
+		assertTrue(helper.hasClassDescription());
+		assertEquals("Employee entity", helper.getClassDescription());
+	}
+
+	// --- Meta-attribute: extra-import ---
+
+	@Test
+	public void testExtraImport() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		Map<String, List<String>> classMeta = Map.of("extra-import", List.of("com.example.util.MyHelper"));
+		TemplateHelper helper = create(table, true, classMeta, Collections.emptyMap());
+		String imports = helper.generateImports();
+		assertTrue(imports.contains("com.example.util.MyHelper"), imports);
+	}
+
+	@Test
+	public void testExtraImportMultiple() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		Map<String, List<String>> classMeta = Map.of("extra-import",
+				List.of("com.example.util.MyHelper", "com.example.util.AnotherHelper"));
+		TemplateHelper helper = create(table, true, classMeta, Collections.emptyMap());
+		String imports = helper.generateImports();
+		assertTrue(imports.contains("com.example.util.MyHelper"), imports);
+		assertTrue(imports.contains("com.example.util.AnotherHelper"), imports);
+	}
+
+	// --- Meta-attribute: generated-class ---
+
+	@Test
+	public void testGetDeclarationNameDefault() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TemplateHelper helper = create(table);
+		assertEquals("Employee", helper.getDeclarationName());
+	}
+
+	@Test
+	public void testGetDeclarationNameWithGeneratedClass() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		Map<String, List<String>> classMeta = Map.of("generated-class", List.of("com.generated.EmployeeBase"));
+		TemplateHelper helper = create(table, true, classMeta, Collections.emptyMap());
+		assertEquals("EmployeeBase", helper.getDeclarationName());
+	}
+
+	@Test
+	public void testGetPackageDeclarationWithGeneratedClass() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		Map<String, List<String>> classMeta = Map.of("generated-class", List.of("com.generated.EmployeeBase"));
+		TemplateHelper helper = create(table, true, classMeta, Collections.emptyMap());
+		assertEquals("package com.generated;", helper.getPackageDeclaration());
+	}
 }

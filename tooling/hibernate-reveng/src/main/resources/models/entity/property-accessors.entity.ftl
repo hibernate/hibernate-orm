@@ -5,11 +5,11 @@
 <#if ann?has_content>
     ${ann}
 </#if>
-    public ${templateHelper.getJavaTypeName(cid)} ${templateHelper.getGetterName(cid.getName())}() {
+    ${templateHelper.getPropertyGetModifiers(cid)} ${templateHelper.getJavaTypeName(cid)} ${templateHelper.getGetterName(cid.getName())}() {
         return this.${cid.getName()};
     }
 
-    public void ${templateHelper.getSetterName(cid.getName())}(${templateHelper.getJavaTypeName(cid)} ${cid.getName()}) {
+    ${templateHelper.getPropertySetModifiers(cid)} void ${templateHelper.getSetterName(cid.getName())}(${templateHelper.getJavaTypeName(cid)} ${cid.getName()}) {
         this.${cid.getName()} = ${cid.getName()};
     }
 
@@ -54,11 +54,11 @@
     ${colAnn}
     </#if>
     </#if>
-    public ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
+    ${templateHelper.getPropertyGetModifiers(field)} ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
         return this.${field.getName()};
     }
 
-    public void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getJavaTypeName(field)} ${field.getName()}) {
+    ${templateHelper.getPropertySetModifiers(field)} void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getJavaTypeName(field)} ${field.getName()}) {
         this.${field.getName()} = ${field.getName()};
     }
 
@@ -78,11 +78,11 @@
 <#if notFoundAnn?has_content>
     ${notFoundAnn}
 </#if>
-    public ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
+    ${templateHelper.getPropertyGetModifiers(field)} ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
         return this.${field.getName()};
     }
 
-    public void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getJavaTypeName(field)} ${field.getName()}) {
+    ${templateHelper.getPropertySetModifiers(field)} void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getJavaTypeName(field)} ${field.getName()}) {
         this.${field.getName()} = ${field.getName()};
     }
 
@@ -101,11 +101,11 @@
 <#if notFoundAnn?has_content>
     ${notFoundAnn}
 </#if>
-    public ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
+    ${templateHelper.getPropertyGetModifiers(field)} ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
         return this.${field.getName()};
     }
 
-    public void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getJavaTypeName(field)} ${field.getName()}) {
+    ${templateHelper.getPropertySetModifiers(field)} void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getJavaTypeName(field)} ${field.getName()}) {
         this.${field.getName()} = ${field.getName()};
     }
 
@@ -152,11 +152,11 @@
 <#if sortAnn?has_content>
     ${sortAnn}
 </#if>
-    public ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
+    ${templateHelper.getPropertyGetModifiers(field)} ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
         return this.${field.getName()};
     }
 
-    public void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getCollectionTypeName(field)} ${field.getName()}) {
+    ${templateHelper.getPropertySetModifiers(field)} void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getCollectionTypeName(field)} ${field.getName()}) {
         this.${field.getName()} = ${field.getName()};
     }
 
@@ -203,11 +203,11 @@
 <#if sortAnn?has_content>
     ${sortAnn}
 </#if>
-    public ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
+    ${templateHelper.getPropertyGetModifiers(field)} ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
         return this.${field.getName()};
     }
 
-    public void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getCollectionTypeName(field)} ${field.getName()}) {
+    ${templateHelper.getPropertySetModifiers(field)} void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getCollectionTypeName(field)} ${field.getName()}) {
         this.${field.getName()} = ${field.getName()};
     }
 
@@ -218,11 +218,11 @@
 <#if ann?has_content>
     ${ann}
 </#if>
-    public ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
+    ${templateHelper.getPropertyGetModifiers(field)} ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
         return this.${field.getName()};
     }
 
-    public void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getJavaTypeName(field)} ${field.getName()}) {
+    ${templateHelper.getPropertySetModifiers(field)} void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getJavaTypeName(field)} ${field.getName()}) {
         this.${field.getName()} = ${field.getName()};
     }
 
@@ -245,11 +245,11 @@
 <#if filterAnns?has_content>
     ${filterAnns}
 </#if>
-    public ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
+    ${templateHelper.getPropertyGetModifiers(field)} ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
         return this.${field.getName()};
     }
 
-    public void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getCollectionTypeName(field)} ${field.getName()}) {
+    ${templateHelper.getPropertySetModifiers(field)} void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getCollectionTypeName(field)} ${field.getName()}) {
         this.${field.getName()} = ${field.getName()};
     }
 
@@ -264,11 +264,11 @@
 <#if colAnn?has_content>
     ${colAnn}
 </#if>
-    public ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
+    ${templateHelper.getPropertyGetModifiers(field)} ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
         return this.${field.getName()};
     }
 
-    public void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getJavaTypeName(field)} ${field.getName()}) {
+    ${templateHelper.getPropertySetModifiers(field)} void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getJavaTypeName(field)} ${field.getName()}) {
         this.${field.getName()} = ${field.getName()};
     }
 
@@ -279,11 +279,11 @@
 <#if ann?has_content>
     ${ann}
 </#if>
-    public ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
+    ${templateHelper.getPropertyGetModifiers(field)} ${templateHelper.getCollectionTypeName(field)} ${templateHelper.getGetterName(field.getName())}() {
         return this.${field.getName()};
     }
 
-    public void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getCollectionTypeName(field)} ${field.getName()}) {
+    ${templateHelper.getPropertySetModifiers(field)} void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getCollectionTypeName(field)} ${field.getName()}) {
         this.${field.getName()} = ${field.getName()};
     }
 

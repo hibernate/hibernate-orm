@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -813,5 +814,99 @@ public class EntityExporterTest {
 		assertTrue(source.contains("protected void onPrePersist()"), source);
 		assertTrue(source.contains("@PostLoad"), source);
 		assertTrue(source.contains("protected void onPostLoad()"), source);
+	}
+
+	@Test
+	public void testScopeMetaAttributes() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		Map<String, Map<String, List<String>>> fieldMeta = new HashMap<>();
+		fieldMeta.put("name", Map.of(
+				"scope-field", List.of("protected"),
+				"scope-get", List.of("protected"),
+				"scope-set", List.of("private")));
+		EntityExporter exporter = EntityExporter.create(List.of(entity), builder.getModelsContext(), true);
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity, Collections.emptyMap(), fieldMeta);
+		String source = writer.toString();
+		assertTrue(source.contains("protected String name;"), source);
+		assertTrue(source.contains("protected String getName()"), source);
+		assertTrue(source.contains("private void setName("), source);
+	}
+
+	@Test
+	public void testImplementsMetaAttribute() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		Map<String, List<String>> classMeta = Map.of("implements", List.of("java.lang.Comparable"));
+		EntityExporter exporter = EntityExporter.create(List.of(entity), builder.getModelsContext(), true);
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity, classMeta, Collections.emptyMap());
+		String source = writer.toString();
+		assertTrue(source.contains("implements Comparable, Serializable"), source);
+	}
+
+	@Test
+	public void testExtendsMetaAttribute() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		Map<String, List<String>> classMeta = Map.of("extends", List.of("com.example.BaseEntity"));
+		EntityExporter exporter = EntityExporter.create(List.of(entity), builder.getModelsContext(), true);
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity, classMeta, Collections.emptyMap());
+		String source = writer.toString();
+		assertTrue(source.contains("extends BaseEntity"), source);
+	}
+
+	@Test
+	public void testClassDescriptionMetaAttribute() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		Map<String, List<String>> classMeta = Map.of("class-description", List.of("Employee entity representation"));
+		EntityExporter exporter = EntityExporter.create(List.of(entity), builder.getModelsContext(), true);
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity, classMeta, Collections.emptyMap());
+		String source = writer.toString();
+		assertTrue(source.contains("/**"), source);
+		assertTrue(source.contains("Employee entity representation"), source);
+		assertTrue(source.contains("*/"), source);
+	}
+
+	@Test
+	public void testExtraImportMetaAttribute() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		Map<String, List<String>> classMeta = Map.of("extra-import", List.of("com.example.util.MyHelper"));
+		EntityExporter exporter = EntityExporter.create(List.of(entity), builder.getModelsContext(), true);
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity, classMeta, Collections.emptyMap());
+		String source = writer.toString();
+		assertTrue(source.contains("import com.example.util.MyHelper;"), source);
+	}
+
+	@Test
+	public void testGeneratedClassMetaAttribute() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		Map<String, List<String>> classMeta = Map.of("generated-class", List.of("com.generated.EmployeeBase"));
+		EntityExporter exporter = EntityExporter.create(List.of(entity), builder.getModelsContext(), true);
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity, classMeta, Collections.emptyMap());
+		String source = writer.toString();
+		assertTrue(source.contains("package com.generated;"), source);
+		assertTrue(source.contains("class EmployeeBase"), source);
 	}
 }

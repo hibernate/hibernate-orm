@@ -1,3 +1,8 @@
+<#if templateHelper.hasClassDescription()>
+/**
+ * ${templateHelper.getClassDescription()}
+ */
+</#if>
 <#assign classAnnotations = templateHelper.generateClassAnnotations()>
 <#if classAnnotations?has_content>
 ${classAnnotations}

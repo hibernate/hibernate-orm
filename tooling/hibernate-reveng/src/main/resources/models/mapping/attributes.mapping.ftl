@@ -16,7 +16,15 @@
             <id name="${field.getName()}">
                 <column name="${helper.getColumnName(field)}"<#if !helper.isNullable(field)> nullable="false"</#if><#if helper.isUnique(field)> unique="true"</#if>/>
 <#if helper.getGenerationType(field)??>
-                <generated-value strategy="${helper.getGenerationType(field)}"/>
+                <generated-value strategy="${helper.getGenerationType(field)}"<#if helper.getGeneratorName(field)??> generator="${helper.getGeneratorName(field)}"</#if>/>
+</#if>
+<#if helper.getSequenceGenerator(field)??>
+<#assign sg = helper.getSequenceGenerator(field)>
+                <sequence-generator name="${sg.name()}"<#if sg.sequenceName()??> sequence-name="${sg.sequenceName()}"</#if><#if sg.allocationSize()??> allocation-size="${sg.allocationSize()?c}"</#if><#if sg.initialValue()??> initial-value="${sg.initialValue()?c}"</#if>/>
+</#if>
+<#if helper.getTableGenerator(field)??>
+<#assign tg = helper.getTableGenerator(field)>
+                <table-generator name="${tg.name()}"<#if tg.table()??> table="${tg.table()}"</#if><#if tg.pkColumnName()??> pk-column-name="${tg.pkColumnName()}"</#if><#if tg.valueColumnName()??> value-column-name="${tg.valueColumnName()}"</#if><#if tg.pkColumnValue()??> pk-column-value="${tg.pkColumnValue()}"</#if><#if tg.allocationSize()??> allocation-size="${tg.allocationSize()?c}"</#if><#if tg.initialValue()??> initial-value="${tg.initialValue()?c}"</#if>/>
 </#if>
             </id>
 </#list>

@@ -67,7 +67,9 @@ import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.SecondaryTables;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.persistence.TableGenerator;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.Version;
 
@@ -426,6 +428,46 @@ public class MappingXmlHelper {
 		GeneratedValue gv = field.getDirectAnnotationUsage(GeneratedValue.class);
 		return gv != null ? gv.strategy().name() : null;
 	}
+
+	public String getGeneratorName(FieldDetails field) {
+		GeneratedValue gv = field.getDirectAnnotationUsage(GeneratedValue.class);
+		return gv != null && gv.generator() != null && !gv.generator().isEmpty()
+				? gv.generator() : null;
+	}
+
+	public SequenceGeneratorInfo getSequenceGenerator(FieldDetails field) {
+		SequenceGenerator sg = field.getDirectAnnotationUsage(SequenceGenerator.class);
+		if (sg == null) {
+			return null;
+		}
+		return new SequenceGeneratorInfo(
+				sg.name(),
+				sg.sequenceName() != null && !sg.sequenceName().isEmpty() ? sg.sequenceName() : null,
+				sg.allocationSize() != 50 ? sg.allocationSize() : null,
+				sg.initialValue() != 1 ? sg.initialValue() : null);
+	}
+
+	public record SequenceGeneratorInfo(String name, String sequenceName,
+			Integer allocationSize, Integer initialValue) {}
+
+	public TableGeneratorInfo getTableGenerator(FieldDetails field) {
+		TableGenerator tg = field.getDirectAnnotationUsage(TableGenerator.class);
+		if (tg == null) {
+			return null;
+		}
+		return new TableGeneratorInfo(
+				tg.name(),
+				tg.table() != null && !tg.table().isEmpty() ? tg.table() : null,
+				tg.pkColumnName() != null && !tg.pkColumnName().isEmpty() ? tg.pkColumnName() : null,
+				tg.valueColumnName() != null && !tg.valueColumnName().isEmpty() ? tg.valueColumnName() : null,
+				tg.pkColumnValue() != null && !tg.pkColumnValue().isEmpty() ? tg.pkColumnValue() : null,
+				tg.allocationSize() != 50 ? tg.allocationSize() : null,
+				tg.initialValue() != 0 ? tg.initialValue() : null);
+	}
+
+	public record TableGeneratorInfo(String name, String table, String pkColumnName,
+			String valueColumnName, String pkColumnValue,
+			Integer allocationSize, Integer initialValue) {}
 
 	// --- ManyToOne ---
 

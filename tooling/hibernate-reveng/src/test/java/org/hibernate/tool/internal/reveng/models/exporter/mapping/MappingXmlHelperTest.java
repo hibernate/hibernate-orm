@@ -2252,6 +2252,111 @@ public class MappingXmlHelperTest {
 		assertEquals("PROPERTY", new MappingXmlHelper(entity).getAccessType(field));
 	}
 
+	// --- Generator name ---
+
+	@Test
+	public void testGetGeneratorNameDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "id", Long.class, ctx);
+		assertNull(new MappingXmlHelper(entity).getGeneratorName(field));
+	}
+
+	@Test
+	public void testGetGeneratorNamePresent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "id", Long.class, ctx);
+		org.hibernate.boot.models.annotations.internal.GeneratedValueJpaAnnotation gv =
+				JpaAnnotations.GENERATED_VALUE.createUsage(ctx);
+		gv.generator("emp_seq");
+		field.addAnnotationUsage(gv);
+		assertEquals("emp_seq", new MappingXmlHelper(entity).getGeneratorName(field));
+	}
+
+	// --- Sequence generator ---
+
+	@Test
+	public void testGetSequenceGeneratorNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "id", Long.class, ctx);
+		assertNull(new MappingXmlHelper(entity).getSequenceGenerator(field));
+	}
+
+	@Test
+	public void testGetSequenceGeneratorPresent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "id", Long.class, ctx);
+		org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation sg =
+				JpaAnnotations.SEQUENCE_GENERATOR.createUsage(ctx);
+		sg.name("emp_seq");
+		sg.sequenceName("EMPLOYEE_SEQ");
+		sg.allocationSize(20);
+		sg.initialValue(100);
+		field.addAnnotationUsage(sg);
+		MappingXmlHelper.SequenceGeneratorInfo info = new MappingXmlHelper(entity).getSequenceGenerator(field);
+		assertNotNull(info);
+		assertEquals("emp_seq", info.name());
+		assertEquals("EMPLOYEE_SEQ", info.sequenceName());
+		assertEquals(20, info.allocationSize());
+		assertEquals(100, info.initialValue());
+	}
+
+	@Test
+	public void testGetSequenceGeneratorDefaults() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "id", Long.class, ctx);
+		org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation sg =
+				JpaAnnotations.SEQUENCE_GENERATOR.createUsage(ctx);
+		sg.name("emp_seq");
+		field.addAnnotationUsage(sg);
+		MappingXmlHelper.SequenceGeneratorInfo info = new MappingXmlHelper(entity).getSequenceGenerator(field);
+		assertNotNull(info);
+		assertEquals("emp_seq", info.name());
+		assertNull(info.sequenceName());
+		assertNull(info.allocationSize());
+		assertNull(info.initialValue());
+	}
+
+	// --- Table generator ---
+
+	@Test
+	public void testGetTableGeneratorNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "id", Long.class, ctx);
+		assertNull(new MappingXmlHelper(entity).getTableGenerator(field));
+	}
+
+	@Test
+	public void testGetTableGeneratorPresent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "id", Long.class, ctx);
+		org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation tg =
+				JpaAnnotations.TABLE_GENERATOR.createUsage(ctx);
+		tg.name("emp_gen");
+		tg.table("ID_GEN");
+		tg.pkColumnName("GEN_NAME");
+		tg.valueColumnName("GEN_VALUE");
+		tg.pkColumnValue("EMP_ID");
+		tg.allocationSize(10);
+		tg.initialValue(5);
+		field.addAnnotationUsage(tg);
+		MappingXmlHelper.TableGeneratorInfo info = new MappingXmlHelper(entity).getTableGenerator(field);
+		assertNotNull(info);
+		assertEquals("emp_gen", info.name());
+		assertEquals("ID_GEN", info.table());
+		assertEquals("GEN_NAME", info.pkColumnName());
+		assertEquals("GEN_VALUE", info.valueColumnName());
+		assertEquals("EMP_ID", info.pkColumnValue());
+		assertEquals(10, info.allocationSize());
+		assertEquals(5, info.initialValue());
+	}
+
 	// --- Column definition ---
 
 	@Test

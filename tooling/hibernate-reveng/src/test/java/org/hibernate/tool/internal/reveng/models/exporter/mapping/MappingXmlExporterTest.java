@@ -608,6 +608,66 @@ public class MappingXmlExporterTest {
 		assertFalse(xml.contains("updatable="), xml);
 	}
 
+	// --- Generator ---
+
+	@Test
+	public void testGeneratorWithSequenceGenerator() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		for (var field : entity.getFields()) {
+			if ("id".equals(field.getName())) {
+				org.hibernate.boot.models.annotations.internal.GeneratedValueJpaAnnotation gv =
+						JpaAnnotations.GENERATED_VALUE.createUsage(builder.getModelsContext());
+				gv.strategy(GenerationType.SEQUENCE);
+				gv.generator("emp_seq");
+				((MutableAnnotationTarget) field).addAnnotationUsage(gv);
+				org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation sg =
+						JpaAnnotations.SEQUENCE_GENERATOR.createUsage(builder.getModelsContext());
+				sg.name("emp_seq");
+				sg.sequenceName("EMPLOYEE_SEQ");
+				sg.allocationSize(20);
+				((MutableAnnotationTarget) field).addAnnotationUsage(sg);
+			}
+		}
+		MappingXmlExporter exporter = MappingXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("generator=\"emp_seq\""), xml);
+		assertTrue(xml.contains("<sequence-generator name=\"emp_seq\" sequence-name=\"EMPLOYEE_SEQ\" allocation-size=\"20\""), xml);
+	}
+
+	@Test
+	public void testGeneratorWithTableGenerator() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		for (var field : entity.getFields()) {
+			if ("id".equals(field.getName())) {
+				org.hibernate.boot.models.annotations.internal.GeneratedValueJpaAnnotation gv =
+						JpaAnnotations.GENERATED_VALUE.createUsage(builder.getModelsContext());
+				gv.strategy(GenerationType.TABLE);
+				gv.generator("emp_gen");
+				((MutableAnnotationTarget) field).addAnnotationUsage(gv);
+				org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation tg =
+						JpaAnnotations.TABLE_GENERATOR.createUsage(builder.getModelsContext());
+				tg.name("emp_gen");
+				tg.table("ID_GEN");
+				tg.pkColumnName("GEN_NAME");
+				((MutableAnnotationTarget) field).addAnnotationUsage(tg);
+			}
+		}
+		MappingXmlExporter exporter = MappingXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("generator=\"emp_gen\""), xml);
+		assertTrue(xml.contains("<table-generator name=\"emp_gen\" table=\"ID_GEN\" pk-column-name=\"GEN_NAME\""), xml);
+	}
+
 	// --- Column definition ---
 
 	@Test

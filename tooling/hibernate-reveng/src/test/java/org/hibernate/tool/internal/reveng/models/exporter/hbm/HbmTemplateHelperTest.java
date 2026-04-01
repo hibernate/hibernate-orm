@@ -58,10 +58,14 @@ import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterDefAnnotation;
 import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
 import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ColumnResultJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.EntityResultJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.FieldResultJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedNativeQueryAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedNativeQueryJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedQueryAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedQueryJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.SqlResultSetMappingJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NaturalIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.NotFoundAnnotation;
 import org.hibernate.boot.models.annotations.internal.FetchProfileAnnotation;
@@ -1935,6 +1939,82 @@ public class HbmTemplateHelperTest {
 		assertEquals(2, info.querySpaces().size());
 		assertEquals("TEST_ENTITY", info.querySpaces().get(0));
 		assertEquals("OTHER_TABLE", info.querySpaces().get(1));
+	}
+
+	@Test
+	public void testGetNamedNativeQueriesWithResultClass() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		NamedNativeQueryAnnotation nnq = HibernateAnnotations.NAMED_NATIVE_QUERY.createUsage(ctx);
+		nnq.name("findEmployees");
+		nnq.query("SELECT * FROM EMPLOYEE");
+		nnq.resultClass(String.class);
+		entity.addAnnotationUsage(nnq);
+		List<HbmTemplateHelper.NamedNativeQueryInfo> queries = new HbmTemplateHelper(entity).getNamedNativeQueries();
+		assertEquals(1, queries.size());
+		HbmTemplateHelper.NamedNativeQueryInfo info = queries.get(0);
+		assertEquals(1, info.entityReturns().size());
+		assertEquals("java.lang.String", info.entityReturns().get(0).entityClass());
+		assertTrue(info.scalarReturns().isEmpty());
+	}
+
+	@Test
+	public void testGetNamedNativeQueriesWithResultSetMapping() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		// Create @SqlResultSetMapping
+		SqlResultSetMappingJpaAnnotation mapping = JpaAnnotations.SQL_RESULT_SET_MAPPING.createUsage(ctx);
+		mapping.name("empMapping");
+		EntityResultJpaAnnotation er = JpaAnnotations.ENTITY_RESULT.createUsage(ctx);
+		er.entityClass(String.class);
+		FieldResultJpaAnnotation fr1 = JpaAnnotations.FIELD_RESULT.createUsage(ctx);
+		fr1.name("id");
+		fr1.column("EMP_ID");
+		FieldResultJpaAnnotation fr2 = JpaAnnotations.FIELD_RESULT.createUsage(ctx);
+		fr2.name("name");
+		fr2.column("EMP_NAME");
+		er.fields(new jakarta.persistence.FieldResult[]{fr1, fr2});
+		mapping.entities(new jakarta.persistence.EntityResult[]{er});
+		ColumnResultJpaAnnotation cr = JpaAnnotations.COLUMN_RESULT.createUsage(ctx);
+		cr.name("DEPT_NAME");
+		mapping.columns(new jakarta.persistence.ColumnResult[]{cr});
+		entity.addAnnotationUsage(mapping);
+		// Create @NamedNativeQuery referencing the mapping
+		NamedNativeQueryAnnotation nnq = HibernateAnnotations.NAMED_NATIVE_QUERY.createUsage(ctx);
+		nnq.name("findWithMapping");
+		nnq.query("SELECT e.*, d.name AS DEPT_NAME FROM EMPLOYEE e JOIN DEPT d ON e.dept_id = d.id");
+		nnq.resultSetMapping("empMapping");
+		entity.addAnnotationUsage(nnq);
+		List<HbmTemplateHelper.NamedNativeQueryInfo> queries = new HbmTemplateHelper(entity).getNamedNativeQueries();
+		assertEquals(1, queries.size());
+		HbmTemplateHelper.NamedNativeQueryInfo info = queries.get(0);
+		// Entity returns
+		assertEquals(1, info.entityReturns().size());
+		HbmTemplateHelper.EntityReturnInfo entityReturn = info.entityReturns().get(0);
+		assertEquals("java.lang.String", entityReturn.entityClass());
+		assertEquals(2, entityReturn.fieldMappings().size());
+		assertEquals("id", entityReturn.fieldMappings().get(0).name());
+		assertEquals("EMP_ID", entityReturn.fieldMappings().get(0).column());
+		assertEquals("name", entityReturn.fieldMappings().get(1).name());
+		assertEquals("EMP_NAME", entityReturn.fieldMappings().get(1).column());
+		// Scalar returns
+		assertEquals(1, info.scalarReturns().size());
+		assertEquals("DEPT_NAME", info.scalarReturns().get(0).column());
+	}
+
+	@Test
+	public void testGetNamedNativeQueriesJpaWithResultClass() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		NamedNativeQueryJpaAnnotation nnq = JpaAnnotations.NAMED_NATIVE_QUERY.createUsage(ctx);
+		nnq.name("findJpa");
+		nnq.query("SELECT * FROM EMPLOYEE");
+		nnq.resultClass(String.class);
+		entity.addAnnotationUsage(nnq);
+		List<HbmTemplateHelper.NamedNativeQueryInfo> queries = new HbmTemplateHelper(entity).getNamedNativeQueries();
+		assertEquals(1, queries.size());
+		assertEquals(1, queries.get(0).entityReturns().size());
+		assertEquals("java.lang.String", queries.get(0).entityReturns().get(0).entityClass());
 	}
 
 	// --- getManyToAnyFields ---

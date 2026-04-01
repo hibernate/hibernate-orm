@@ -33,8 +33,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.InheritanceType;
 
 import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.internal.ColumnResultJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.EntityResultJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.FieldResultJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedNativeQueryAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedQueryAnnotation;
+import org.hibernate.boot.models.annotations.internal.SqlResultSetMappingJpaAnnotation;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
@@ -534,5 +539,61 @@ public class HbmXmlExporterTest {
 		assertTrue(xml.contains("cacheable=\"true\""), xml);
 		assertTrue(xml.contains("<synchronize table=\"EMPLOYEE\"/>"), xml);
 		assertTrue(xml.contains("<synchronize table=\"DEPARTMENT\"/>"), xml);
+	}
+
+	@Test
+	public void testNamedNativeQueryWithResultClass() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		NamedNativeQueryAnnotation nnq = HibernateAnnotations.NAMED_NATIVE_QUERY.createUsage(ctx);
+		nnq.name("findAll");
+		nnq.query("SELECT * FROM EMPLOYEE");
+		nnq.resultClass(String.class);
+		((DynamicClassDetails) entity).addAnnotationUsage(nnq);
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<return alias=\"java.lang.String\" class=\"java.lang.String\"/>"), xml);
+	}
+
+	@Test
+	public void testNamedNativeQueryWithResultSetMapping() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		// Create @SqlResultSetMapping
+		SqlResultSetMappingJpaAnnotation mapping = JpaAnnotations.SQL_RESULT_SET_MAPPING.createUsage(ctx);
+		mapping.name("empMapping");
+		EntityResultJpaAnnotation er = JpaAnnotations.ENTITY_RESULT.createUsage(ctx);
+		er.entityClass(String.class);
+		FieldResultJpaAnnotation fr = JpaAnnotations.FIELD_RESULT.createUsage(ctx);
+		fr.name("id");
+		fr.column("EMP_ID");
+		er.fields(new jakarta.persistence.FieldResult[]{fr});
+		mapping.entities(new jakarta.persistence.EntityResult[]{er});
+		ColumnResultJpaAnnotation cr = JpaAnnotations.COLUMN_RESULT.createUsage(ctx);
+		cr.name("EXTRA_COL");
+		mapping.columns(new jakarta.persistence.ColumnResult[]{cr});
+		((DynamicClassDetails) entity).addAnnotationUsage(mapping);
+		// Create @NamedNativeQuery referencing the mapping
+		NamedNativeQueryAnnotation nnq = HibernateAnnotations.NAMED_NATIVE_QUERY.createUsage(ctx);
+		nnq.name("findWithMapping");
+		nnq.query("SELECT * FROM EMPLOYEE");
+		nnq.resultSetMapping("empMapping");
+		((DynamicClassDetails) entity).addAnnotationUsage(nnq);
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<return alias=\"java.lang.String\" class=\"java.lang.String\">"), xml);
+		assertTrue(xml.contains("<return-property name=\"id\" column=\"EMP_ID\"/>"), xml);
+		assertTrue(xml.contains("</return>"), xml);
+		assertTrue(xml.contains("<return-scalar column=\"EXTRA_COL\"/>"), xml);
 	}
 }

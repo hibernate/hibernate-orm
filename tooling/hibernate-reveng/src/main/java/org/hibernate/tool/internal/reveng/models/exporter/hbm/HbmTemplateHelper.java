@@ -42,6 +42,9 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ColumnResult;
+import jakarta.persistence.EntityResult;
+import jakarta.persistence.FieldResult;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapKeyColumn;
@@ -51,6 +54,8 @@ import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.SqlResultSetMapping;
+import jakarta.persistence.SqlResultSetMappings;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.PrimaryKeyJoinColumn;
@@ -1001,41 +1006,94 @@ public class HbmTemplateHelper {
 		org.hibernate.annotations.NamedNativeQuery hibSingle =
 				classDetails.getDirectAnnotationUsage(org.hibernate.annotations.NamedNativeQuery.class);
 		if (hibSingle != null) {
-			result.add(toNamedNativeQueryInfo(hibSingle));
+			result.add(toNamedNativeQueryInfo(hibSingle.name(), hibSingle.query(),
+					hibSingle.flushMode(), hibSingle.cacheable(), hibSingle.cacheRegion(),
+					hibSingle.fetchSize(), hibSingle.timeout(), hibSingle.comment(),
+					hibSingle.readOnly(), hibSingle.querySpaces(),
+					hibSingle.resultClass(), hibSingle.resultSetMapping()));
 		}
 		org.hibernate.annotations.NamedNativeQueries hibContainer =
 				classDetails.getDirectAnnotationUsage(org.hibernate.annotations.NamedNativeQueries.class);
 		if (hibContainer != null) {
 			for (org.hibernate.annotations.NamedNativeQuery nnq : hibContainer.value()) {
-				result.add(toNamedNativeQueryInfo(nnq));
+				result.add(toNamedNativeQueryInfo(nnq.name(), nnq.query(),
+						nnq.flushMode(), nnq.cacheable(), nnq.cacheRegion(),
+						nnq.fetchSize(), nnq.timeout(), nnq.comment(),
+						nnq.readOnly(), nnq.querySpaces(),
+						nnq.resultClass(), nnq.resultSetMapping()));
 			}
 		}
-		// Check JPA @NamedNativeQuery (no typed attributes)
+		// Check JPA @NamedNativeQuery (no typed attributes for flush-mode etc.)
 		if (result.isEmpty()) {
 			NamedNativeQuery single = classDetails.getDirectAnnotationUsage(NamedNativeQuery.class);
 			if (single != null) {
-				result.add(new NamedNativeQueryInfo(single.name(), single.query(),
-						"", false, "", -1, -1, "", false, List.of()));
+				result.add(toNamedNativeQueryInfo(single.name(), single.query(),
+						FlushModeType.PERSISTENCE_CONTEXT, false, "", -1, -1, "",
+						false, new String[0], single.resultClass(), single.resultSetMapping()));
 			}
 			NamedNativeQueries container = classDetails.getDirectAnnotationUsage(NamedNativeQueries.class);
 			if (container != null) {
 				for (NamedNativeQuery nnq : container.value()) {
-					result.add(new NamedNativeQueryInfo(nnq.name(), nnq.query(),
-							"", false, "", -1, -1, "", false, List.of()));
+					result.add(toNamedNativeQueryInfo(nnq.name(), nnq.query(),
+							FlushModeType.PERSISTENCE_CONTEXT, false, "", -1, -1, "",
+							false, new String[0], nnq.resultClass(), nnq.resultSetMapping()));
 				}
 			}
 		}
 		return result;
 	}
 
-	private NamedNativeQueryInfo toNamedNativeQueryInfo(org.hibernate.annotations.NamedNativeQuery nnq) {
-		String flushMode = nnq.flushMode() != FlushModeType.PERSISTENCE_CONTEXT
-				? nnq.flushMode().name().toLowerCase() : "";
-		List<String> querySpaces = nnq.querySpaces() != null && nnq.querySpaces().length > 0
-				? List.of(nnq.querySpaces()) : List.of();
-		return new NamedNativeQueryInfo(nnq.name(), nnq.query(), flushMode,
-				nnq.cacheable(), nnq.cacheRegion(), nnq.fetchSize(), nnq.timeout(),
-				nnq.comment(), nnq.readOnly(), querySpaces);
+	private NamedNativeQueryInfo toNamedNativeQueryInfo(
+			String name, String query, FlushModeType flushModeType,
+			boolean cacheable, String cacheRegion, int fetchSize, int timeout,
+			String comment, boolean readOnly, String[] spaces,
+			Class<?> resultClass, String resultSetMapping) {
+		String flushMode = flushModeType != FlushModeType.PERSISTENCE_CONTEXT
+				? flushModeType.name().toLowerCase() : "";
+		List<String> querySpaces = spaces != null && spaces.length > 0
+				? List.of(spaces) : List.of();
+		List<EntityReturnInfo> entityReturns = new ArrayList<>();
+		List<ScalarReturnInfo> scalarReturns = new ArrayList<>();
+		// Resolve returns from resultClass
+		if (resultClass != null && resultClass != void.class) {
+			entityReturns.add(new EntityReturnInfo(resultClass.getName(), "", List.of()));
+		}
+		// Resolve returns from @SqlResultSetMapping
+		if (resultSetMapping != null && !resultSetMapping.isEmpty()) {
+			SqlResultSetMapping mapping = findSqlResultSetMapping(resultSetMapping);
+			if (mapping != null) {
+				for (EntityResult er : mapping.entities()) {
+					List<FieldMappingInfo> fieldMappings = new ArrayList<>();
+					for (FieldResult fr : er.fields()) {
+						fieldMappings.add(new FieldMappingInfo(fr.name(), fr.column()));
+					}
+					entityReturns.add(new EntityReturnInfo(
+							er.entityClass().getName(), er.discriminatorColumn(), fieldMappings));
+				}
+				for (ColumnResult cr : mapping.columns()) {
+					scalarReturns.add(new ScalarReturnInfo(cr.name()));
+				}
+			}
+		}
+		return new NamedNativeQueryInfo(name, query, flushMode, cacheable, cacheRegion,
+				fetchSize, timeout, comment, readOnly, querySpaces,
+				entityReturns, scalarReturns);
+	}
+
+	private SqlResultSetMapping findSqlResultSetMapping(String name) {
+		SqlResultSetMapping single = classDetails.getDirectAnnotationUsage(SqlResultSetMapping.class);
+		if (single != null && name.equals(single.name())) {
+			return single;
+		}
+		SqlResultSetMappings container = classDetails.getDirectAnnotationUsage(SqlResultSetMappings.class);
+		if (container != null) {
+			for (SqlResultSetMapping mapping : container.value()) {
+				if (name.equals(mapping.name())) {
+					return mapping;
+				}
+			}
+		}
+		return null;
 	}
 
 	public record NamedQueryInfo(String name, String query, String flushMode,
@@ -1045,7 +1103,16 @@ public class HbmTemplateHelper {
 	public record NamedNativeQueryInfo(String name, String query, String flushMode,
 									   boolean cacheable, String cacheRegion, int fetchSize,
 									   int timeout, String comment, boolean readOnly,
-									   List<String> querySpaces) {}
+									   List<String> querySpaces,
+									   List<EntityReturnInfo> entityReturns,
+									   List<ScalarReturnInfo> scalarReturns) {}
+
+	public record EntityReturnInfo(String entityClass, String discriminatorColumn,
+								   List<FieldMappingInfo> fieldMappings) {}
+
+	public record FieldMappingInfo(String name, String column) {}
+
+	public record ScalarReturnInfo(String column) {}
 
 	// --- SecondaryTable / Joins ---
 

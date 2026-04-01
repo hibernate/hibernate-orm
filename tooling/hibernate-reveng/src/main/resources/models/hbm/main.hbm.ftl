@@ -40,6 +40,20 @@
 <#list nq.querySpaces() as tableName>
         <synchronize table="${tableName}"/>
 </#list>
+<#list nq.entityReturns() as ret>
+<#if (ret.fieldMappings()?size == 0)>
+        <return alias="${ret.entityClass()}" class="${ret.entityClass()}"<#if ret.discriminatorColumn()?has_content> discriminator-value="${ret.discriminatorColumn()}"</#if>/>
+<#else>
+        <return alias="${ret.entityClass()}" class="${ret.entityClass()}"<#if ret.discriminatorColumn()?has_content> discriminator-value="${ret.discriminatorColumn()}"</#if>>
+<#list ret.fieldMappings() as fm>
+            <return-property name="${fm.name()}" column="${fm.column()}"/>
+</#list>
+        </return>
+</#if>
+</#list>
+<#list nq.scalarReturns() as sr>
+        <return-scalar column="${sr.column()}"/>
+</#list>
         <![CDATA[${nq.query()}]]>
     </sql-query>
 </#list>

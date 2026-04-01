@@ -35,29 +35,17 @@ public class TemplateProducer {
 			log.warn("Generated output is empty. Skipped creation for file " + destination);
 			return;
 		}
-		FileWriter fileWriter = null;
 		try {
-
 			th.ensureExistence( destination );
 
 			ac.addFile(destination, fileType);
 			log.debug("Writing " + identifier + " to " + destination.getAbsolutePath() );
-			fileWriter = new FileWriter(destination);
-			fileWriter.write(tempResult);
+			try (FileWriter fileWriter = new FileWriter(destination)) {
+				fileWriter.write(tempResult);
+			}
 		}
 		catch (Exception e) {
 			throw new RuntimeException("Error while writing result to file", e);
-		}
-		finally {
-			if(fileWriter!=null) {
-				try {
-					fileWriter.flush();
-					fileWriter.close();
-				}
-				catch (IOException e) {
-					log.warn("Exception while flushing/closing " + destination,e);
-				}
-			}
 		}
 
 	}

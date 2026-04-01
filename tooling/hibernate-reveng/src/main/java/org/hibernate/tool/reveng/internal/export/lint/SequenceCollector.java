@@ -5,6 +5,7 @@
 package org.hibernate.tool.reveng.internal.export.lint;
 
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.jboss.logging.Logger;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -14,6 +15,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class SequenceCollector {
+
+	private static final Logger log = Logger.getLogger(SequenceCollector.class);
 
 	public static SequenceCollector create(ConnectionProvider provider) {
 		return new SequenceCollector(provider);
@@ -36,10 +39,9 @@ public class SequenceCollector {
 						sequences.add( rs.getString( "SEQUENCE_NAME" ).toLowerCase().trim() );
 					}
 				}
-
 			}
 			catch (SQLException e) {
-				throw new RuntimeException("Problem while closing connection", e);
+				throw new RuntimeException("Problem while reading sequences", e);
 			}
 			finally {
 				if (connection != null) {
@@ -47,7 +49,7 @@ public class SequenceCollector {
 						provider.closeConnection( connection );
 					}
 					catch (SQLException e) {
-						throw new RuntimeException( "Problem while closing connection", e );
+						log.warn( "Problem while closing connection", e );
 					}
 				}
 			}

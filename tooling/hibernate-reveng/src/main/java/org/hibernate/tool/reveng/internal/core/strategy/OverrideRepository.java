@@ -165,6 +165,8 @@ public class OverrideRepository  {
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance(
 					"com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl",
 					Thread.currentThread().getContextClassLoader());
+			dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
+			dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
 			DocumentBuilder db = dbf.newDocumentBuilder();
 			db.setErrorHandler(errorHandler);
 			Document document = db.parse(xmlInputStream);

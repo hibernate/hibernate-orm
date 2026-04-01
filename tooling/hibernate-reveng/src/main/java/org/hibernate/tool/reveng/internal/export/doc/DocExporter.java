@@ -272,6 +272,10 @@ public class DocExporter extends AbstractExporter {
 				log.error("Error " + i + " while executing: " + cmdAsString);
 			}
 		}
+		catch(InterruptedException ie){
+			Thread.currentThread().interrupt();
+			log.error( "Error while executing: " + cmdAsString, ie );
+		}
 		catch(Exception ie){
 			log.error( "Error while executing: " + cmdAsString, ie );
 		}
@@ -373,16 +377,13 @@ public class DocExporter extends AbstractExporter {
 	}
 
 	private void appendFile(StringBuffer sb, String fileName) {
-		try {
-			BufferedReader in = new BufferedReader(new FileReader(new File(getOutputDirectory(), fileName)));
+		try (BufferedReader in = new BufferedReader(new FileReader(new File(getOutputDirectory(), fileName)))) {
 			String str;
 
 			while ((str = in.readLine()) != null) {
 				sb.append(str);
 				sb.append( System.lineSeparator() );
 			}
-
-			in.close();
 		}
 		catch (IOException ignored) {}
 	}

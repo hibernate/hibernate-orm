@@ -2187,6 +2187,71 @@ public class MappingXmlHelperTest {
 		assertNull(new MappingXmlHelper(entity).getSQLDeleteAll());
 	}
 
+	// --- Access type (entity-level) ---
+
+	@Test
+	public void testGetAccessTypeEntityDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertNull(new MappingXmlHelper(entity).getAccessType());
+	}
+
+	@Test
+	public void testGetAccessTypeEntityField() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation access =
+				JpaAnnotations.ACCESS.createUsage(ctx);
+		access.value(jakarta.persistence.AccessType.FIELD);
+		entity.addAnnotationUsage(access);
+		assertNull(new MappingXmlHelper(entity).getAccessType());
+	}
+
+	@Test
+	public void testGetAccessTypeEntityProperty() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation access =
+				JpaAnnotations.ACCESS.createUsage(ctx);
+		access.value(jakarta.persistence.AccessType.PROPERTY);
+		entity.addAnnotationUsage(access);
+		assertEquals("PROPERTY", new MappingXmlHelper(entity).getAccessType());
+	}
+
+	// --- Access type (field-level) ---
+
+	@Test
+	public void testGetAccessTypeFieldDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		assertNull(new MappingXmlHelper(entity).getAccessType(field));
+	}
+
+	@Test
+	public void testGetAccessTypeFieldField() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation access =
+				JpaAnnotations.ACCESS.createUsage(ctx);
+		access.value(jakarta.persistence.AccessType.FIELD);
+		field.addAnnotationUsage(access);
+		assertNull(new MappingXmlHelper(entity).getAccessType(field));
+	}
+
+	@Test
+	public void testGetAccessTypeFieldProperty() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation access =
+				JpaAnnotations.ACCESS.createUsage(ctx);
+		access.value(jakarta.persistence.AccessType.PROPERTY);
+		field.addAnnotationUsage(access);
+		assertEquals("PROPERTY", new MappingXmlHelper(entity).getAccessType(field));
+	}
+
 	private void addMethodsFrom(Class<?> source, DynamicClassDetails target, ModelsContext modelsContext) {
 		for (java.lang.reflect.Method method : source.getDeclaredMethods()) {
 			target.addMethod(new JdkMethodDetails(

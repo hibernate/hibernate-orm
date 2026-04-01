@@ -1,4 +1,4 @@
-    <entity class="${helper.getClassName()}">
+    <entity class="${helper.getClassName()}"<#if helper.getAccessType()??> access="${helper.getAccessType()}"</#if>>
 <#if helper.getSubselect()??>
         <table-expression>${helper.getSubselect()}</table-expression>
 <#else>

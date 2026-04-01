@@ -528,6 +528,56 @@ public class MappingXmlExporterTest {
 		assertTrue(xml.contains("<post-load method-name=\"onPostLoad\"/>"), xml);
 	}
 
+	// --- Access type ---
+
+	@Test
+	public void testEntityAccessTypeProperty() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation access =
+				JpaAnnotations.ACCESS.createUsage(builder.getModelsContext());
+		access.value(jakarta.persistence.AccessType.PROPERTY);
+		((DynamicClassDetails) entity).addAnnotationUsage(access);
+		MappingXmlExporter exporter = MappingXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("access=\"PROPERTY\""), xml);
+	}
+
+	@Test
+	public void testEntityAccessTypeDefault() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		String xml = export(table);
+		assertFalse(xml.contains("access="), xml);
+	}
+
+	@Test
+	public void testFieldAccessTypeProperty() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		// Find the "name" field and add @Access(PROPERTY)
+		for (var field : entity.getFields()) {
+			if ("name".equals(field.getName())) {
+				org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation access =
+						JpaAnnotations.ACCESS.createUsage(builder.getModelsContext());
+				access.value(jakarta.persistence.AccessType.PROPERTY);
+				((MutableAnnotationTarget) field).addAnnotationUsage(access);
+			}
+		}
+		MappingXmlExporter exporter = MappingXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<basic name=\"name\" access=\"PROPERTY\""), xml);
+	}
+
 	// --- @SQLDeleteAll ---
 
 	@Test

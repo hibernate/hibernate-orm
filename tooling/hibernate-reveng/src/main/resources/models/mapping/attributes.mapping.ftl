@@ -33,7 +33,7 @@
 </#if>
 <#-- Basic fields (non-PK, non-version, non-FK) -->
 <#list helper.getBasicFields() as field>
-            <basic name="${field.getName()}"<#if helper.isPropertyLazy(field)> fetch="LAZY"</#if><#if helper.isOptimisticLockExcluded(field)> optimistic-lock="false"</#if>>
+            <basic name="${field.getName()}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if><#if helper.isPropertyLazy(field)> fetch="LAZY"</#if><#if helper.isOptimisticLockExcluded(field)> optimistic-lock="false"</#if>>
 <#if helper.getFormula(field)??>
                 <formula>${helper.getFormula(field)}</formula>
 <#else>
@@ -58,7 +58,7 @@
 </#list>
 <#-- Many-to-one -->
 <#list helper.getManyToOneFields() as field>
-            <many-to-one name="${field.getName()}" target-entity="${helper.getTargetEntityName(field)}"<#if helper.getManyToOneFetchType(field)??> fetch="${helper.getManyToOneFetchType(field)}"</#if><#if helper.getFetchMode(field)??> fetch-mode="${helper.getFetchMode(field)}"</#if><#if !helper.isManyToOneOptional(field)> optional="false"</#if><#if helper.getNotFoundAction(field)??> not-found="${helper.getNotFoundAction(field)}"</#if>>
+            <many-to-one name="${field.getName()}" target-entity="${helper.getTargetEntityName(field)}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if><#if helper.getManyToOneFetchType(field)??> fetch="${helper.getManyToOneFetchType(field)}"</#if><#if helper.getFetchMode(field)??> fetch-mode="${helper.getFetchMode(field)}"</#if><#if !helper.isManyToOneOptional(field)> optional="false"</#if><#if helper.getNotFoundAction(field)??> not-found="${helper.getNotFoundAction(field)}"</#if>>
                 <join-column name="${helper.getJoinColumnName(field)}"<#if helper.getReferencedColumnName(field)??> referenced-column-name="${helper.getReferencedColumnName(field)}"</#if>/>
             </many-to-one>
 </#list>
@@ -71,7 +71,7 @@
 <#assign o2mHasMapKey = helper.getMapKeyName(field)?? || helper.getMapKeyColumnName(field)??>
 <#assign o2mHasSort = helper.isSortNatural(field) || helper.getSortComparatorClass(field)??>
 <#assign o2mHasChildren = o2mHasCascade || o2mHasOrderBy || o2mHasOrderCol || o2mHasFilters || o2mHasMapKey || o2mHasSort>
-            <one-to-many name="${field.getName()}" target-entity="${helper.getOneToManyTargetEntity(field)}" mapped-by="${helper.getOneToManyMappedBy(field)}"<#if helper.getOneToManyFetchType(field)??> fetch="${helper.getOneToManyFetchType(field)}"</#if><#if helper.getFetchMode(field)??> fetch-mode="${helper.getFetchMode(field)}"</#if><#if helper.isOneToManyOrphanRemoval(field)> orphan-removal="true"</#if><#if o2mHasChildren>>
+            <one-to-many name="${field.getName()}" target-entity="${helper.getOneToManyTargetEntity(field)}" mapped-by="${helper.getOneToManyMappedBy(field)}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if><#if helper.getOneToManyFetchType(field)??> fetch="${helper.getOneToManyFetchType(field)}"</#if><#if helper.getFetchMode(field)??> fetch-mode="${helper.getFetchMode(field)}"</#if><#if helper.isOneToManyOrphanRemoval(field)> orphan-removal="true"</#if><#if o2mHasChildren>>
 <#if helper.getMapKeyName(field)??>
                 <map-key name="${helper.getMapKeyName(field)}"/>
 </#if>
@@ -105,7 +105,7 @@
 <#list helper.getOneToOneFields() as field>
 <#assign o2oHasCascade = (helper.getOneToOneCascadeTypes(field)?size > 0)>
 <#assign o2oHasChildren = helper.getJoinColumnName(field)?? || o2oHasCascade>
-            <one-to-one name="${field.getName()}" target-entity="${helper.getTargetEntityName(field)}"<#if helper.getOneToOneMappedBy(field)??> mapped-by="${helper.getOneToOneMappedBy(field)}"</#if><#if helper.getOneToOneFetchType(field)??> fetch="${helper.getOneToOneFetchType(field)}"</#if><#if helper.getFetchMode(field)??> fetch-mode="${helper.getFetchMode(field)}"</#if><#if !helper.isOneToOneOptional(field)> optional="false"</#if><#if helper.isOneToOneOrphanRemoval(field)> orphan-removal="true"</#if><#if helper.getNotFoundAction(field)??> not-found="${helper.getNotFoundAction(field)}"</#if><#if o2oHasChildren>>
+            <one-to-one name="${field.getName()}" target-entity="${helper.getTargetEntityName(field)}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if><#if helper.getOneToOneMappedBy(field)??> mapped-by="${helper.getOneToOneMappedBy(field)}"</#if><#if helper.getOneToOneFetchType(field)??> fetch="${helper.getOneToOneFetchType(field)}"</#if><#if helper.getFetchMode(field)??> fetch-mode="${helper.getFetchMode(field)}"</#if><#if !helper.isOneToOneOptional(field)> optional="false"</#if><#if helper.isOneToOneOrphanRemoval(field)> orphan-removal="true"</#if><#if helper.getNotFoundAction(field)??> not-found="${helper.getNotFoundAction(field)}"</#if><#if o2oHasChildren>>
 <#if o2oHasCascade>
 <#assign cascadeTypes = helper.getOneToOneCascadeTypes(field)>
 <#include "cascade.mapping.ftl"/>
@@ -126,7 +126,7 @@
 <#assign m2mHasMapKey = helper.getMapKeyName(field)?? || helper.getMapKeyColumnName(field)??>
 <#assign m2mHasSort = helper.isSortNatural(field) || helper.getSortComparatorClass(field)??>
 <#assign m2mHasChildren = helper.getJoinTableName(field)?? || m2mHasCascade || m2mHasOrderBy || m2mHasOrderCol || m2mHasFilters || m2mHasMapKey || m2mHasSort>
-            <many-to-many name="${field.getName()}" target-entity="${helper.getManyToManyTargetEntity(field)}"<#if helper.getManyToManyMappedBy(field)??> mapped-by="${helper.getManyToManyMappedBy(field)}"</#if><#if helper.getManyToManyFetchType(field)??> fetch="${helper.getManyToManyFetchType(field)}"</#if><#if helper.getFetchMode(field)??> fetch-mode="${helper.getFetchMode(field)}"</#if><#if m2mHasChildren>>
+            <many-to-many name="${field.getName()}" target-entity="${helper.getManyToManyTargetEntity(field)}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if><#if helper.getManyToManyMappedBy(field)??> mapped-by="${helper.getManyToManyMappedBy(field)}"</#if><#if helper.getManyToManyFetchType(field)??> fetch="${helper.getManyToManyFetchType(field)}"</#if><#if helper.getFetchMode(field)??> fetch-mode="${helper.getFetchMode(field)}"</#if><#if m2mHasChildren>>
 <#if helper.getMapKeyName(field)??>
                 <map-key name="${helper.getMapKeyName(field)}"/>
 </#if>
@@ -168,7 +168,7 @@
 </#list>
 <#-- Element collections -->
 <#list helper.getElementCollectionFields() as field>
-            <element-collection name="${field.getName()}"<#if helper.getElementCollectionTargetClass(field)??> target-class="${helper.getElementCollectionTargetClass(field)}"</#if>>
+            <element-collection name="${field.getName()}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if><#if helper.getElementCollectionTargetClass(field)??> target-class="${helper.getElementCollectionTargetClass(field)}"</#if>>
 <#if helper.getOrderBy(field)??>
                 <order-by>${helper.getOrderBy(field)}</order-by>
 </#if>
@@ -189,7 +189,7 @@
 </#list>
 <#-- Embedded fields -->
 <#list helper.getEmbeddedFields() as field>
-            <embedded name="${field.getName()}">
+            <embedded name="${field.getName()}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if>>
 <#list helper.getAttributeOverrides(field) as ao>
                 <attribute-override name="${ao.fieldName()}">
                     <column name="${ao.columnName()}"/>
@@ -199,7 +199,7 @@
 </#list>
 <#-- Any fields -->
 <#list helper.getAnyFields() as field>
-            <any name="${field.getName()}">
+            <any name="${field.getName()}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if>>
                 <discriminator>
 <#list helper.getAnyDiscriminatorMappings(field) as mapping>
                     <mapping value="${mapping.value()}">${mapping.entityClass()}</mapping>
@@ -215,7 +215,7 @@
 </#list>
 <#-- Many-to-any fields -->
 <#list helper.getManyToAnyFields() as field>
-            <many-to-any name="${field.getName()}">
+            <many-to-any name="${field.getName()}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if>>
                 <discriminator>
 <#list helper.getAnyDiscriminatorMappings(field) as mapping>
                     <mapping value="${mapping.value()}">${mapping.entityClass()}</mapping>

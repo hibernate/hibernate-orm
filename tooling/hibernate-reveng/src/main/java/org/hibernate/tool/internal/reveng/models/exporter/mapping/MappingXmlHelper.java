@@ -22,6 +22,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.CascadeType;
@@ -209,6 +211,14 @@ public class MappingXmlHelper {
 
 	public boolean isConcreteProxy() {
 		return classDetails.hasDirectAnnotationUsage(ConcreteProxy.class);
+	}
+
+	public String getAccessType() {
+		Access access = classDetails.getDirectAnnotationUsage(Access.class);
+		if (access == null || access.value() == AccessType.FIELD) {
+			return null;
+		}
+		return access.value().name();
 	}
 
 	// --- Table ---
@@ -747,6 +757,14 @@ public class MappingXmlHelper {
 	public boolean isPropertyLazy(FieldDetails field) {
 		Basic basic = field.getDirectAnnotationUsage(Basic.class);
 		return basic != null && basic.fetch() == FetchType.LAZY;
+	}
+
+	public String getAccessType(FieldDetails field) {
+		Access access = field.getDirectAnnotationUsage(Access.class);
+		if (access == null || access.value() == AccessType.FIELD) {
+			return null;
+		}
+		return access.value().name();
 	}
 
 	public boolean isOptimisticLockExcluded(FieldDetails field) {

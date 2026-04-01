@@ -136,6 +136,7 @@ dependencyResolutionManagement {
             library( "ant", "org.apache.ant", "ant" ).versionRef( antVersion )
 
             library( "commonsCollections4", "org.apache.commons", "commons-collections4" ).version( "4.5.0" )
+            library( "googleJavaFormatter", "com.google.googlejavaformat", "google-java-format" ).version( "1.27.0" )
             library( "freemarker", "org.freemarker", "freemarker" ).version( "2.3.34" )
         }
         jakartaLibs {

@@ -11,6 +11,12 @@ ${templateHelper.getPackageDeclaration()}
 
 <#include "property-accessors.entity.ftl"/>
 
+<#list templateHelper.getLifecycleCallbacks() as callback>
+    ${templateHelper.generateLifecycleCallbackAnnotation(callback)}
+    protected void ${callback.methodName()}() {
+    }
+
+</#list>
 <#include "to-string.entity.ftl"/>
 
 <#include "equals-hashcode.entity.ftl"/>

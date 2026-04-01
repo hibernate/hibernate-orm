@@ -32,10 +32,16 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.internal.EntityListenersJpaAnnotation;
 import org.hibernate.models.internal.BasicModelsContextImpl;
 import org.hibernate.models.internal.SimpleClassLoading;
+import org.hibernate.models.internal.dynamic.DynamicClassDetails;
+import org.hibernate.models.internal.jdk.JdkMethodDetails;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.builder.EmbeddableClassBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
@@ -758,5 +764,54 @@ public class EntityExporterTest {
 		String source = exportEmbeddable(metadata);
 		assertTrue(source.contains("@Column(name = \"ORDER_ID\")"), source);
 		assertTrue(source.contains("@Column(name = \"LINE_NUMBER\")"), source);
+	}
+
+	// --- @EntityListeners ---
+
+	@Test
+	public void testEntityListenersAnnotation() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		EntityListenersJpaAnnotation el = JpaAnnotations.ENTITY_LISTENERS.createUsage(builder.getModelsContext());
+		el.value(new Class<?>[] { java.io.Serializable.class });
+		((MutableAnnotationTarget) entity).addAnnotationUsage(el);
+		EntityExporter exporter = EntityExporter.create(List.of(entity), builder.getModelsContext(), true);
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String source = writer.toString();
+		assertTrue(source.contains("@EntityListeners(Serializable.class)"), source);
+		assertTrue(source.contains("import jakarta.persistence.EntityListeners;"), source);
+	}
+
+	// --- Lifecycle callbacks ---
+
+	static class WithCallbacks {
+		@jakarta.persistence.PrePersist
+		void onPrePersist() {}
+		@jakarta.persistence.PostLoad
+		void onPostLoad() {}
+	}
+
+	@Test
+	public void testLifecycleCallbackMethods() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		DynamicClassDetails dc = (DynamicClassDetails) entity;
+		for (java.lang.reflect.Method method : WithCallbacks.class.getDeclaredMethods()) {
+			dc.addMethod(new JdkMethodDetails(
+					method, MethodDetails.MethodKind.OTHER, null, dc, builder.getModelsContext()));
+		}
+		EntityExporter exporter = EntityExporter.create(List.of(entity), builder.getModelsContext(), true);
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String source = writer.toString();
+		assertTrue(source.contains("@PrePersist"), source);
+		assertTrue(source.contains("protected void onPrePersist()"), source);
+		assertTrue(source.contains("@PostLoad"), source);
+		assertTrue(source.contains("protected void onPostLoad()"), source);
 	}
 }

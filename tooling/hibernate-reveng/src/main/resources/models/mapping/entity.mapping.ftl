@@ -39,6 +39,16 @@
 <#if helper.getOptimisticLockMode()??>
         <optimistic-locking>${helper.getOptimisticLockMode()}</optimistic-locking>
 </#if>
+<#if (helper.getEntityListenerClassNames()?size > 0)>
+        <entity-listeners>
+<#list helper.getEntityListenerClassNames() as listenerClass>
+            <entity-listener class="${listenerClass}"/>
+</#list>
+        </entity-listeners>
+</#if>
+<#list helper.getLifecycleCallbacks() as callback>
+        <${callback.elementName()} method-name="${callback.methodName()}"/>
+</#list>
 <#include "attributes.mapping.ftl"/>
 <#if helper.getSQLInsert()??>
         <sql-insert<#if helper.getSQLInsert().callable()> callable="true"</#if>>${helper.getSQLInsert().sql()}</sql-insert>

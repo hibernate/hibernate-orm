@@ -61,6 +61,7 @@ import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValueAnnot
 import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValuesAnnotation;
 import org.hibernate.boot.models.annotations.internal.AnyKeyJavaClassAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionIdAnnotation;
+import org.hibernate.boot.models.annotations.internal.EntityListenersJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.FetchProfileAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLDeleteAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLInsertAnnotation;
@@ -81,8 +82,10 @@ import org.hibernate.models.internal.ParameterizedTypeDetailsImpl;
 import org.hibernate.models.internal.SimpleClassLoading;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
+import org.hibernate.models.internal.jdk.JdkMethodDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.TypeDetails;
@@ -2458,6 +2461,99 @@ public class TemplateHelperTest {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		TemplateHelper helper = create(table);
 		assertTrue(helper.getFetchProfiles().isEmpty());
+	}
+
+	// --- @EntityListeners ---
+
+	@Test
+	public void testGenerateClassAnnotationsEntityListenersSingle() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		EntityListenersJpaAnnotation el = JpaAnnotations.ENTITY_LISTENERS.createUsage(ctx.modelsContext());
+		el.value(new Class<?>[] { java.io.Serializable.class });
+		((MutableAnnotationTarget) ctx.classDetails()).addAnnotationUsage(el);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@EntityListeners(Serializable.class)"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsEntityListenersMultiple() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		EntityListenersJpaAnnotation el = JpaAnnotations.ENTITY_LISTENERS.createUsage(ctx.modelsContext());
+		el.value(new Class<?>[] { java.io.Serializable.class, java.lang.Comparable.class });
+		((MutableAnnotationTarget) ctx.classDetails()).addAnnotationUsage(el);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@EntityListeners({Serializable.class, Comparable.class})"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsNoEntityListeners() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		String result = ctx.helper().generateClassAnnotations();
+		assertFalse(result.contains("@EntityListeners"), result);
+	}
+
+	// --- Lifecycle callbacks ---
+
+	static class WithPrePersist {
+		@jakarta.persistence.PrePersist
+		void onPrePersist() {}
+	}
+
+	static class WithMultipleCallbacks {
+		@jakarta.persistence.PrePersist
+		void onPrePersist() {}
+		@jakarta.persistence.PostLoad
+		void onPostLoad() {}
+		@jakarta.persistence.PreUpdate
+		void onPreUpdate() {}
+	}
+
+	@Test
+	public void testGetLifecycleCallbacksSingle() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		addMethodsFrom(WithPrePersist.class, (DynamicClassDetails) ctx.classDetails(), ctx.modelsContext());
+		List<TemplateHelper.LifecycleCallbackInfo> callbacks = ctx.helper().getLifecycleCallbacks();
+		assertEquals(1, callbacks.size());
+		assertEquals("PrePersist", callbacks.get(0).annotationType());
+		assertEquals("onPrePersist", callbacks.get(0).methodName());
+	}
+
+	@Test
+	public void testGetLifecycleCallbacksMultiple() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		addMethodsFrom(WithMultipleCallbacks.class, (DynamicClassDetails) ctx.classDetails(), ctx.modelsContext());
+		List<TemplateHelper.LifecycleCallbackInfo> callbacks = ctx.helper().getLifecycleCallbacks();
+		assertEquals(3, callbacks.size());
+	}
+
+	@Test
+	public void testGetLifecycleCallbacksNone() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TemplateHelper helper = create(table);
+		assertTrue(helper.getLifecycleCallbacks().isEmpty());
+	}
+
+	@Test
+	public void testGenerateLifecycleCallbackAnnotation() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		TemplateHelper.LifecycleCallbackInfo callback =
+				new TemplateHelper.LifecycleCallbackInfo("PrePersist", "onPrePersist");
+		String result = ctx.helper().generateLifecycleCallbackAnnotation(callback);
+		assertEquals("@PrePersist", result);
+	}
+
+	private void addMethodsFrom(Class<?> source, DynamicClassDetails target, ModelsContext modelsContext) {
+		for (java.lang.reflect.Method method : source.getDeclaredMethods()) {
+			JdkMethodDetails md = new JdkMethodDetails(
+					method, MethodDetails.MethodKind.OTHER, null, target, modelsContext);
+			target.addMethod(md);
+		}
 	}
 
 	private DynamicFieldDetails addElementCollectionField(

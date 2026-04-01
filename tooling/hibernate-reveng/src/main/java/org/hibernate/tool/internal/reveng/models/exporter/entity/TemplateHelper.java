@@ -37,6 +37,7 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -56,6 +57,13 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.OrderColumn;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PostPersist;
+import jakarta.persistence.PostRemove;
+import jakarta.persistence.PostUpdate;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreRemove;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.SecondaryTables;
@@ -105,6 +113,7 @@ import org.hibernate.annotations.SortNatural;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.tool.internal.export.java.ImportContext;
@@ -483,6 +492,25 @@ public class TemplateHelper {
 					sb.append("@FetchProfile.FetchOverride(entity = ").append(simpleEntity)
 							.append(".class, association = \"").append(fo.association())
 							.append("\", mode = FetchMode.").append(fo.mode().name()).append(")");
+				}
+				sb.append("}");
+			}
+			sb.append(")\n");
+		}
+		// @EntityListeners
+		EntityListeners el = classDetails.getDirectAnnotationUsage(EntityListeners.class);
+		if (el != null && el.value() != null && el.value().length > 0) {
+			importType("jakarta.persistence.EntityListeners");
+			sb.append("@EntityListeners(");
+			if (el.value().length == 1) {
+				String simpleType = importType(el.value()[0].getName());
+				sb.append(simpleType).append(".class");
+			} else {
+				sb.append("{");
+				for (int i = 0; i < el.value().length; i++) {
+					if (i > 0) sb.append(", ");
+					String simpleType = importType(el.value()[i].getName());
+					sb.append(simpleType).append(".class");
 				}
 				sb.append("}");
 			}
@@ -1690,6 +1718,48 @@ public class TemplateHelper {
 	public record FullConstructorProperty(String typeName, String fieldName) {}
 
 	public record ToStringProperty(String fieldName, String getterName) {}
+
+	// --- Lifecycle callbacks ---
+
+	@SuppressWarnings("unchecked")
+	private static final Class<? extends java.lang.annotation.Annotation>[] LIFECYCLE_ANNOTATIONS = new Class[] {
+			PrePersist.class, PostPersist.class,
+			PreRemove.class, PostRemove.class,
+			PreUpdate.class, PostUpdate.class,
+			PostLoad.class
+	};
+
+	public List<LifecycleCallbackInfo> getLifecycleCallbacks() {
+		List<LifecycleCallbackInfo> result = new ArrayList<>();
+		for (MethodDetails method : classDetails.getMethods()) {
+			for (Class<? extends java.lang.annotation.Annotation> ann : LIFECYCLE_ANNOTATIONS) {
+				if (method.hasDirectAnnotationUsage(ann)) {
+					result.add(new LifecycleCallbackInfo(ann.getSimpleName(), method.getName()));
+				}
+			}
+		}
+		return result;
+	}
+
+	public String generateLifecycleCallbackAnnotation(LifecycleCallbackInfo callback) {
+		if (!annotated) {
+			return "";
+		}
+		String fqcn = switch (callback.annotationType()) {
+			case "PrePersist" -> "jakarta.persistence.PrePersist";
+			case "PostPersist" -> "jakarta.persistence.PostPersist";
+			case "PreRemove" -> "jakarta.persistence.PreRemove";
+			case "PostRemove" -> "jakarta.persistence.PostRemove";
+			case "PreUpdate" -> "jakarta.persistence.PreUpdate";
+			case "PostUpdate" -> "jakarta.persistence.PostUpdate";
+			case "PostLoad" -> "jakarta.persistence.PostLoad";
+			default -> throw new IllegalArgumentException("Unknown lifecycle annotation: " + callback.annotationType());
+		};
+		importType(fqcn);
+		return "@" + callback.annotationType();
+	}
+
+	public record LifecycleCallbackInfo(String annotationType, String methodName) {}
 
 	// --- Private helpers ---
 

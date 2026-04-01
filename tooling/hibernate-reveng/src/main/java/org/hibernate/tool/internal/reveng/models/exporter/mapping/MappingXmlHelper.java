@@ -32,6 +32,7 @@ import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -50,6 +51,13 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Basic;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PostPersist;
+import jakarta.persistence.PostRemove;
+import jakarta.persistence.PostUpdate;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreRemove;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
@@ -104,6 +112,7 @@ import org.hibernate.annotations.Subselect;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.TypeDetails;
 
 /**
@@ -888,6 +897,56 @@ public class MappingXmlHelper {
 		SortComparator sc = field.getDirectAnnotationUsage(SortComparator.class);
 		return sc != null ? sc.value().getName() : null;
 	}
+
+	// --- Entity listeners ---
+
+	public List<String> getEntityListenerClassNames() {
+		EntityListeners el = classDetails.getDirectAnnotationUsage(EntityListeners.class);
+		if (el == null || el.value() == null || el.value().length == 0) {
+			return List.of();
+		}
+		List<String> result = new ArrayList<>();
+		for (Class<?> c : el.value()) {
+			result.add(c.getName());
+		}
+		return result;
+	}
+
+	// --- Lifecycle callbacks ---
+
+	@SuppressWarnings("unchecked")
+	private static final Class<? extends Annotation>[] LIFECYCLE_ANNOTATIONS = new Class[] {
+			PrePersist.class, PostPersist.class,
+			PreRemove.class, PostRemove.class,
+			PreUpdate.class, PostUpdate.class,
+			PostLoad.class
+	};
+
+	public List<LifecycleCallbackInfo> getLifecycleCallbacks() {
+		List<LifecycleCallbackInfo> result = new ArrayList<>();
+		for (MethodDetails method : classDetails.getMethods()) {
+			for (Class<? extends Annotation> ann : LIFECYCLE_ANNOTATIONS) {
+				if (method.hasDirectAnnotationUsage(ann)) {
+					result.add(new LifecycleCallbackInfo(toElementName(ann), method.getName()));
+				}
+			}
+		}
+		return result;
+	}
+
+	private String toElementName(Class<? extends Annotation> ann) {
+		// Convert e.g. "PrePersist" → "pre-persist"
+		StringBuilder sb = new StringBuilder();
+		for (char c : ann.getSimpleName().toCharArray()) {
+			if (Character.isUpperCase(c) && !sb.isEmpty()) {
+				sb.append('-');
+			}
+			sb.append(Character.toLowerCase(c));
+		}
+		return sb.toString();
+	}
+
+	public record LifecycleCallbackInfo(String elementName, String methodName) {}
 
 	private <A extends Annotation> List<FieldDetails> getFieldsWithAnnotation(Class<A> annotationType) {
 		List<FieldDetails> result = new ArrayList<>();

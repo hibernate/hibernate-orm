@@ -78,14 +78,17 @@ import org.hibernate.boot.models.annotations.internal.ParamDefAnnotation;
 import org.hibernate.boot.models.annotations.internal.RowIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLRestrictionAnnotation;
 import org.hibernate.boot.models.annotations.internal.SubselectAnnotation;
+import org.hibernate.boot.models.annotations.internal.EntityListenersJpaAnnotation;
 import org.hibernate.models.internal.BasicModelsContextImpl;
 import org.hibernate.models.internal.SimpleClassLoading;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.internal.ParameterizedTypeDetailsImpl;
+import org.hibernate.models.internal.jdk.JdkMethodDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
@@ -2084,5 +2087,74 @@ public class MappingXmlHelperTest {
 		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		assertTrue(new MappingXmlHelper(entity).getFetchProfiles().isEmpty());
+	}
+
+	// --- Entity listeners ---
+
+	@Test
+	public void testGetEntityListenerClassNamesSingle() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		EntityListenersJpaAnnotation el = JpaAnnotations.ENTITY_LISTENERS.createUsage(ctx);
+		el.value(new Class<?>[] { java.io.Serializable.class });
+		entity.addAnnotationUsage(el);
+		List<String> listeners = new MappingXmlHelper(entity).getEntityListenerClassNames();
+		assertEquals(1, listeners.size());
+		assertEquals("java.io.Serializable", listeners.get(0));
+	}
+
+	@Test
+	public void testGetEntityListenerClassNamesMultiple() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		EntityListenersJpaAnnotation el = JpaAnnotations.ENTITY_LISTENERS.createUsage(ctx);
+		el.value(new Class<?>[] { java.io.Serializable.class, java.lang.Comparable.class });
+		entity.addAnnotationUsage(el);
+		List<String> listeners = new MappingXmlHelper(entity).getEntityListenerClassNames();
+		assertEquals(2, listeners.size());
+	}
+
+	@Test
+	public void testGetEntityListenerClassNamesNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertTrue(new MappingXmlHelper(entity).getEntityListenerClassNames().isEmpty());
+	}
+
+	// --- Lifecycle callbacks ---
+
+	static class WithCallbacks {
+		@jakarta.persistence.PrePersist
+		void onPrePersist() {}
+		@jakarta.persistence.PostLoad
+		void onPostLoad() {}
+		@jakarta.persistence.PreUpdate
+		void onPreUpdate() {}
+	}
+
+	@Test
+	public void testGetLifecycleCallbacks() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		addMethodsFrom(WithCallbacks.class, entity, ctx);
+		List<MappingXmlHelper.LifecycleCallbackInfo> callbacks = new MappingXmlHelper(entity).getLifecycleCallbacks();
+		assertEquals(3, callbacks.size());
+		assertTrue(callbacks.stream().anyMatch(c -> "pre-persist".equals(c.elementName()) && "onPrePersist".equals(c.methodName())));
+		assertTrue(callbacks.stream().anyMatch(c -> "post-load".equals(c.elementName()) && "onPostLoad".equals(c.methodName())));
+		assertTrue(callbacks.stream().anyMatch(c -> "pre-update".equals(c.elementName()) && "onPreUpdate".equals(c.methodName())));
+	}
+
+	@Test
+	public void testGetLifecycleCallbacksNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertTrue(new MappingXmlHelper(entity).getLifecycleCallbacks().isEmpty());
+	}
+
+	private void addMethodsFrom(Class<?> source, DynamicClassDetails target, ModelsContext modelsContext) {
+		for (java.lang.reflect.Method method : source.getDeclaredMethods()) {
+			target.addMethod(new JdkMethodDetails(
+					method, MethodDetails.MethodKind.OTHER, null, target, modelsContext));
+		}
 	}
 }

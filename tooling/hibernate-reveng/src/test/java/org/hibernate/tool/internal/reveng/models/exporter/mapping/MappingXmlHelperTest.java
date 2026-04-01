@@ -2252,6 +2252,27 @@ public class MappingXmlHelperTest {
 		assertEquals("PROPERTY", new MappingXmlHelper(entity).getAccessType(field));
 	}
 
+	// --- Column definition ---
+
+	@Test
+	public void testGetColumnDefinitionDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		assertNull(new MappingXmlHelper(entity).getColumnDefinition(field));
+	}
+
+	@Test
+	public void testGetColumnDefinitionPresent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		ColumnJpaAnnotation col = JpaAnnotations.COLUMN.createUsage(ctx);
+		col.columnDefinition("TEXT NOT NULL");
+		field.addAnnotationUsage(col);
+		assertEquals("TEXT NOT NULL", new MappingXmlHelper(entity).getColumnDefinition(field));
+	}
+
 	// --- Column insertable/updatable ---
 
 	@Test

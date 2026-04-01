@@ -397,6 +397,12 @@ public class MappingXmlHelper {
 		return col != null ? col.scale() : 0;
 	}
 
+	public String getColumnDefinition(FieldDetails field) {
+		Column col = field.getDirectAnnotationUsage(Column.class);
+		return col != null && col.columnDefinition() != null && !col.columnDefinition().isEmpty()
+				? col.columnDefinition() : null;
+	}
+
 	public boolean isInsertable(FieldDetails field) {
 		Column col = field.getDirectAnnotationUsage(Column.class);
 		return col == null || col.insertable();

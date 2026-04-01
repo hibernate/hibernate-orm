@@ -608,6 +608,40 @@ public class MappingXmlExporterTest {
 		assertFalse(xml.contains("updatable="), xml);
 	}
 
+	// --- Column definition ---
+
+	@Test
+	public void testColumnDefinition() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("BIO", "bio", String.class));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		for (var field : entity.getFields()) {
+			if ("bio".equals(field.getName())) {
+				org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation col =
+						JpaAnnotations.COLUMN.createUsage(builder.getModelsContext());
+				col.name("BIO");
+				col.columnDefinition("TEXT NOT NULL");
+				((MutableAnnotationTarget) field).addAnnotationUsage(col);
+			}
+		}
+		MappingXmlExporter exporter = MappingXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("column-definition=\"TEXT NOT NULL\""), xml);
+	}
+
+	@Test
+	public void testColumnDefinitionDefault() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		String xml = export(table);
+		assertFalse(xml.contains("column-definition="), xml);
+	}
+
 	// --- @SQLDeleteAll ---
 
 	@Test

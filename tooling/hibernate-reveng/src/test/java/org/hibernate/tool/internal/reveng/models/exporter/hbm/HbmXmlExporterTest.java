@@ -778,4 +778,57 @@ public class HbmXmlExporterTest {
 		// The class-level cache check — collection has no cache
 		assertFalse(xml.contains("<cache usage="), xml);
 	}
+
+	// --- Collection SQL operations ---
+
+	@Test
+	public void testCollectionSQLDeleteAll() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata("employees", "department", "Employee", "com.example"));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		for (var field : entity.getFields()) {
+			if ("employees".equals(field.getName())) {
+				org.hibernate.boot.models.annotations.internal.SQLDeleteAllAnnotation sda =
+						HibernateAnnotations.SQL_DELETE_ALL.createUsage(ctx);
+				sda.sql("DELETE FROM EMP WHERE dept_id = ?");
+				((org.hibernate.models.internal.dynamic.DynamicFieldDetails) field)
+						.addAnnotationUsage(sda);
+				break;
+			}
+		}
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<sql-delete-all>DELETE FROM EMP WHERE dept_id = ?</sql-delete-all>"), xml);
+	}
+
+	@Test
+	public void testCollectionSQLDeleteAllCallable() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata("employees", "department", "Employee", "com.example"));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		for (var field : entity.getFields()) {
+			if ("employees".equals(field.getName())) {
+				org.hibernate.boot.models.annotations.internal.SQLDeleteAllAnnotation sda =
+						HibernateAnnotations.SQL_DELETE_ALL.createUsage(ctx);
+				sda.sql("{call deleteAllEmps(?)}");
+				sda.callable(true);
+				((org.hibernate.models.internal.dynamic.DynamicFieldDetails) field)
+						.addAnnotationUsage(sda);
+				break;
+			}
+		}
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<sql-delete-all callable=\"true\">{call deleteAllEmps(?)}</sql-delete-all>"), xml);
+	}
 }

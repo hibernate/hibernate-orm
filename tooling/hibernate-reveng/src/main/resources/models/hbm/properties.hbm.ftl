@@ -94,6 +94,18 @@
 <#list helper.getCollectionFilters(field) as fi>
         <filter name="${fi.name()}"<#if fi.condition()?has_content> condition="${fi.condition()}"</#if>/>
 </#list>
+<#if helper.getCollectionSQLInsert(field)??>
+        <sql-insert<#if helper.getCollectionSQLInsert(field).callable()> callable="true"</#if>>${helper.getCollectionSQLInsert(field).sql()}</sql-insert>
+</#if>
+<#if helper.getCollectionSQLUpdate(field)??>
+        <sql-update<#if helper.getCollectionSQLUpdate(field).callable()> callable="true"</#if>>${helper.getCollectionSQLUpdate(field).sql()}</sql-update>
+</#if>
+<#if helper.getCollectionSQLDelete(field)??>
+        <sql-delete<#if helper.getCollectionSQLDelete(field).callable()> callable="true"</#if>>${helper.getCollectionSQLDelete(field).sql()}</sql-delete>
+</#if>
+<#if helper.getCollectionSQLDeleteAll(field)??>
+        <sql-delete-all<#if helper.getCollectionSQLDeleteAll(field).callable()> callable="true"</#if>>${helper.getCollectionSQLDeleteAll(field).sql()}</sql-delete-all>
+</#if>
     </${collTag}>
 </#list>
 <#-- Collections (many-to-many) -->
@@ -136,6 +148,18 @@
 <#list helper.getCollectionFilters(field) as fi>
         <filter name="${fi.name()}"<#if fi.condition()?has_content> condition="${fi.condition()}"</#if>/>
 </#list>
+<#if helper.getCollectionSQLInsert(field)??>
+        <sql-insert<#if helper.getCollectionSQLInsert(field).callable()> callable="true"</#if>>${helper.getCollectionSQLInsert(field).sql()}</sql-insert>
+</#if>
+<#if helper.getCollectionSQLUpdate(field)??>
+        <sql-update<#if helper.getCollectionSQLUpdate(field).callable()> callable="true"</#if>>${helper.getCollectionSQLUpdate(field).sql()}</sql-update>
+</#if>
+<#if helper.getCollectionSQLDelete(field)??>
+        <sql-delete<#if helper.getCollectionSQLDelete(field).callable()> callable="true"</#if>>${helper.getCollectionSQLDelete(field).sql()}</sql-delete>
+</#if>
+<#if helper.getCollectionSQLDeleteAll(field)??>
+        <sql-delete-all<#if helper.getCollectionSQLDeleteAll(field).callable()> callable="true"</#if>>${helper.getCollectionSQLDeleteAll(field).sql()}</sql-delete-all>
+</#if>
     </${collTag}>
 <#else>
     <${collTag} name="${field.getName()}"

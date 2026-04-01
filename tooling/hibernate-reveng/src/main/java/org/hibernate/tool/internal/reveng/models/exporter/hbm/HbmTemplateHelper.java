@@ -1299,6 +1299,26 @@ public class HbmTemplateHelper {
 		return sda != null ? new CustomSqlInfo(sda.sql(), sda.callable()) : null;
 	}
 
+	public CustomSqlInfo getCollectionSQLInsert(FieldDetails field) {
+		SQLInsert si = field.getDirectAnnotationUsage(SQLInsert.class);
+		return si != null ? new CustomSqlInfo(si.sql(), si.callable()) : null;
+	}
+
+	public CustomSqlInfo getCollectionSQLUpdate(FieldDetails field) {
+		SQLUpdate su = field.getDirectAnnotationUsage(SQLUpdate.class);
+		return su != null ? new CustomSqlInfo(su.sql(), su.callable()) : null;
+	}
+
+	public CustomSqlInfo getCollectionSQLDelete(FieldDetails field) {
+		SQLDelete sd = field.getDirectAnnotationUsage(SQLDelete.class);
+		return sd != null ? new CustomSqlInfo(sd.sql(), sd.callable()) : null;
+	}
+
+	public CustomSqlInfo getCollectionSQLDeleteAll(FieldDetails field) {
+		SQLDeleteAll sda = field.getDirectAnnotationUsage(SQLDeleteAll.class);
+		return sda != null ? new CustomSqlInfo(sda.sql(), sda.callable()) : null;
+	}
+
 	// --- Sort ---
 
 	public String getSort(FieldDetails field) {

@@ -69,6 +69,7 @@ import org.hibernate.boot.models.annotations.internal.SqlResultSetMappingJpaAnno
 import org.hibernate.boot.models.annotations.internal.NaturalIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.NotFoundAnnotation;
 import org.hibernate.boot.models.annotations.internal.FetchProfileAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLDeleteAllAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLDeleteAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLInsertAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLUpdateAnnotation;
@@ -2344,5 +2345,85 @@ public class HbmTemplateHelperTest {
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
 		assertNull(new HbmTemplateHelper(entity).getCollectionCacheRegion(field));
+	}
+
+	// --- Collection SQL operations ---
+
+	@Test
+	public void testGetCollectionSQLInsert() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		SQLInsertAnnotation si = HibernateAnnotations.SQL_INSERT.createUsage(ctx);
+		si.sql("INSERT INTO ITEMS (parent_id, item_id) VALUES (?, ?)");
+		field.addAnnotationUsage(si);
+		HbmTemplateHelper.CustomSqlInfo info = new HbmTemplateHelper(entity).getCollectionSQLInsert(field);
+		assertNotNull(info);
+		assertEquals("INSERT INTO ITEMS (parent_id, item_id) VALUES (?, ?)", info.sql());
+		assertFalse(info.callable());
+	}
+
+	@Test
+	public void testGetCollectionSQLUpdate() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		SQLUpdateAnnotation su = HibernateAnnotations.SQL_UPDATE.createUsage(ctx);
+		su.sql("UPDATE ITEMS SET parent_id = ? WHERE item_id = ?");
+		field.addAnnotationUsage(su);
+		HbmTemplateHelper.CustomSqlInfo info = new HbmTemplateHelper(entity).getCollectionSQLUpdate(field);
+		assertNotNull(info);
+		assertEquals("UPDATE ITEMS SET parent_id = ? WHERE item_id = ?", info.sql());
+	}
+
+	@Test
+	public void testGetCollectionSQLDelete() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		SQLDeleteAnnotation sd = HibernateAnnotations.SQL_DELETE.createUsage(ctx);
+		sd.sql("DELETE FROM ITEMS WHERE item_id = ?");
+		field.addAnnotationUsage(sd);
+		HbmTemplateHelper.CustomSqlInfo info = new HbmTemplateHelper(entity).getCollectionSQLDelete(field);
+		assertNotNull(info);
+		assertEquals("DELETE FROM ITEMS WHERE item_id = ?", info.sql());
+	}
+
+	@Test
+	public void testGetCollectionSQLDeleteAll() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		SQLDeleteAllAnnotation sda = HibernateAnnotations.SQL_DELETE_ALL.createUsage(ctx);
+		sda.sql("DELETE FROM ITEMS WHERE parent_id = ?");
+		field.addAnnotationUsage(sda);
+		HbmTemplateHelper.CustomSqlInfo info = new HbmTemplateHelper(entity).getCollectionSQLDeleteAll(field);
+		assertNotNull(info);
+		assertEquals("DELETE FROM ITEMS WHERE parent_id = ?", info.sql());
+	}
+
+	@Test
+	public void testGetCollectionSQLDeleteAllCallable() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		SQLDeleteAllAnnotation sda = HibernateAnnotations.SQL_DELETE_ALL.createUsage(ctx);
+		sda.sql("{call deleteAllItems(?)}");
+		sda.callable(true);
+		field.addAnnotationUsage(sda);
+		HbmTemplateHelper.CustomSqlInfo info = new HbmTemplateHelper(entity).getCollectionSQLDeleteAll(field);
+		assertTrue(info.callable());
+	}
+
+	@Test
+	public void testGetCollectionSQLOperationsNull() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertNull(helper.getCollectionSQLInsert(field));
+		assertNull(helper.getCollectionSQLUpdate(field));
+		assertNull(helper.getCollectionSQLDelete(field));
+		assertNull(helper.getCollectionSQLDeleteAll(field));
 	}
 }

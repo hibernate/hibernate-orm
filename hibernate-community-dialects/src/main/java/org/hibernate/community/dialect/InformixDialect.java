@@ -573,6 +573,16 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
+	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
+		return "modify (" + columnName + " " + columnDefinition + ")";
+	}
+
+	@Override
+	public boolean supportsAlterColumnType() {
+		return true;
+	}
+
+	@Override
 	public String getTruncateTableStatement(String tableName) {
 		// Use delete instead of truncate, because truncate will fail if another connection still holds a lock
 		// https://www.ibm.com/docs/en/informix-servers/12.10.0?topic=statement-restrictions-truncate

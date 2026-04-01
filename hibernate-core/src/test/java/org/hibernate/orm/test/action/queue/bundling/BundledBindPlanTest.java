@@ -50,7 +50,7 @@ public class BundledBindPlanTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph")
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph")
 			// bundling NOT enabled
 	})
 	public void testSingleRowBindPlanUsedWhenBundlingDisabled(SessionFactoryScope scope) {
@@ -83,7 +83,7 @@ public class BundledBindPlanTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph"),
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph"),
 			@Setting(name = "hibernate.bundle_collection_operations", value = "true")
 	})
 	public void testBundledBindPlanUsedWhenBundlingEnabled(SessionFactoryScope scope) {
@@ -116,7 +116,7 @@ public class BundledBindPlanTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph"),
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph"),
 			@Setting(name = "hibernate.bundle_collection_operations", value = "true")
 	})
 	public void testBundledBindPlanExecutionFlow(SessionFactoryScope scope) {
@@ -163,7 +163,7 @@ public class BundledBindPlanTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph"),
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph"),
 			@Setting(name = "hibernate.bundle_collection_operations", value = "true")
 	})
 	public void testBundledUpdateBindPlan(SessionFactoryScope scope) {
@@ -202,7 +202,7 @@ public class BundledBindPlanTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph"),
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph"),
 			@Setting(name = "hibernate.bundle_collection_operations", value = "true")
 	})
 	public void testBundledDeleteBindPlan(SessionFactoryScope scope) {
@@ -240,7 +240,7 @@ public class BundledBindPlanTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph"),
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph"),
 			@Setting(name = "hibernate.bundle_collection_operations", value = "true"),
 			@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "10")
 	})

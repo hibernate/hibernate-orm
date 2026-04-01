@@ -66,8 +66,7 @@ public class JdbcValueBindingsImpl implements JdbcValueBindingsImplementor {
 		}
 		// Normalize table name for storage to match cycle breaking lookups
 		final String physicalTableName = jdbcValueDescriptorAccess.resolvePhysicalTableName( tableName );
-		final String normalizedTableName = ( physicalTableName );
-		resolveBindingGroup( normalizedTableName )
+		resolveBindingGroup( ( physicalTableName ) )
 				.bindValue( normalizedColumnName, value, jdbcValueDescriptor );
 	}
 

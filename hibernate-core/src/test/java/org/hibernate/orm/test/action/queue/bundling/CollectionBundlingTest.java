@@ -54,7 +54,7 @@ public class CollectionBundlingTest {
 			generateStatistics = true
 	)
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph")
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph")
 			// bundling NOT enabled - default is false
 	})
 	public void testCollectionOperationsWithoutBundling(SessionFactoryScope scope) {
@@ -109,7 +109,7 @@ public class CollectionBundlingTest {
 			generateStatistics = true
 	)
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph"),
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph"),
 			@Setting(name = "hibernate.bundle_collection_operations", value = "true")
 	})
 	public void testCollectionOperationsWithBundling(SessionFactoryScope scope) {
@@ -163,7 +163,7 @@ public class CollectionBundlingTest {
 			generateStatistics = true
 	)
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph"),
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph"),
 			@Setting(name = "hibernate.bundle_collection_operations", value = "true"),
 			@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "20")
 	})
@@ -229,7 +229,7 @@ public class CollectionBundlingTest {
 			generateStatistics = true
 	)
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph"),
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph"),
 			@Setting(name = "hibernate.bundle_collection_operations", value = "true")
 	})
 	public void testSetCollectionWithBundling(SessionFactoryScope scope) {
@@ -281,7 +281,7 @@ public class CollectionBundlingTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph"),
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph"),
 			@Setting(name = "hibernate.bundle_collection_operations", value = "true")
 	})
 	public void testEmptyCollectionWithBundling(SessionFactoryScope scope) {

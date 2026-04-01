@@ -7,9 +7,9 @@ package org.hibernate.persister.collection.mutation;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.event.spi.PostCollectionRecreateEvent;
-import org.hibernate.event.spi.PostCollectionRecreateEventListener;
+import org.hibernate.persister.collection.CollectionPersister;
 
 /// Post-execution callback for collection recreate actions.
 ///
@@ -25,19 +25,27 @@ import org.hibernate.event.spi.PostCollectionRecreateEventListener;
 ///
 /// @author Steve Ebersole
 public class PostCollectionRecreateHandling implements PostExecutionCallback {
-	private final CollectionRecreateAction action;
+	private final CollectionPersister persister;
+	private final PersistentCollection<?> collection;
+	private final Object affectedOwner;
+	private final Object affectedOwnerId;
 	private final Object cacheKey;
 
-	public PostCollectionRecreateHandling(CollectionRecreateAction action, Object cacheKey) {
-		this.action = action;
+	public PostCollectionRecreateHandling(
+			CollectionPersister persister,
+			PersistentCollection<?> collection,
+			Object affectedOwner,
+			Object affectedOwnerId,
+			Object cacheKey) {
+		this.persister = persister;
+		this.collection = collection;
+		this.affectedOwner = affectedOwner;
+		this.affectedOwnerId = affectedOwnerId;
 		this.cacheKey = cacheKey;
 	}
 
 	@Override
 	public void handle(SessionImplementor session) {
-		final var collection = action.getCollection();
-		final var persister = action.getPersister();
-
 		// 1. Update CollectionEntry state
 		if (collection != null) {
 			session.getPersistenceContextInternal()
@@ -49,7 +57,13 @@ public class PostCollectionRecreateHandling implements PostExecutionCallback {
 		evict(session, cacheKey);
 
 		// 3. Fire POST_COLLECTION_RECREATE event
-		postRecreate(session);
+		DecompositionSupport.firePostRecreate(
+				persister,
+				collection,
+				affectedOwner,
+				affectedOwnerId,
+				session
+		);
 
 		// 4. Update statistics
 		final var statistics = session.getFactory().getStatistics();
@@ -59,29 +73,9 @@ public class PostCollectionRecreateHandling implements PostExecutionCallback {
 	}
 
 	private void evict(SessionImplementor session, Object cacheKey) {
-		if (action.getPersister().hasCache() && cacheKey != null) {
-			final CollectionDataAccess cache = action.getPersister().getCacheAccessStrategy();
+		if (persister.hasCache() && cacheKey != null) {
+			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
 			cache.remove(session, cacheKey);
 		}
-	}
-
-	private void postRecreate(SessionImplementor session) {
-		session.getFactory()
-				.getEventListenerGroups()
-				.eventListenerGroup_POST_COLLECTION_RECREATE
-				.fireLazyEventOnEachListener(
-						() -> newPostCollectionRecreateEvent(session),
-						PostCollectionRecreateEventListener::onPostRecreateCollection
-				);
-	}
-
-	private PostCollectionRecreateEvent newPostCollectionRecreateEvent(SessionImplementor session) {
-		return new PostCollectionRecreateEvent(
-				action.getPersister(),
-				action.getCollection(),
-				(org.hibernate.event.spi.EventSource) session,
-				action.getAffectedOwner(),
-				action.getAffectedOwnerId()
-		);
 	}
 }

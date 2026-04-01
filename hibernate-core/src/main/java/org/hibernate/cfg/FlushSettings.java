@@ -28,7 +28,7 @@ public interface FlushSettings {
 	/// @settingDefault `"legacy"`
 	///
 	/// @since 8.0
-	String FLUSH_QUEUE_IMPL = "hibernate.flush.queue.impl";
+	String FLUSH_QUEUE_TYPE = "hibernate.flush.queue.impl";
 
 	/// Whether to order operations by foreign-key as part of graph-based flush planning.
 	///

@@ -3335,6 +3335,11 @@ public abstract class AbstractEntityPersister
 
 		lazyLoadPlanByFetchGroup = getLazyLoadPlanByFetchGroup();
 
+		// delay these until very late... we need `tableDescriptors` across the entire hierarchy...
+		insertDecomposer = new InsertDecomposer( this, factory );
+		updateDecomposer = new UpdateDecomposer( this, factory );
+		deleteDecomposer = new DeleteDecomposer( this, factory );
+
 		logStaticSQL();
 	}
 
@@ -3370,9 +3375,6 @@ public abstract class AbstractEntityPersister
 		}
 
 		tableDescriptors = buildTableDescriptors();
-		insertDecomposer = new InsertDecomposer( this, factory );
-		updateDecomposer = new UpdateDecomposer( this, factory );;
-		deleteDecomposer = new DeleteDecomposer( this, factory );;
 
 		insertCoordinator = stateManagement.createInsertCoordinator( this );
 		updateCoordinator = stateManagement.createUpdateCoordinator( this );

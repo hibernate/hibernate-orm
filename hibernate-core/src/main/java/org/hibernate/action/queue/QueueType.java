@@ -4,14 +4,14 @@
  */
 package org.hibernate.action.queue;
 
-/// Defines the valid values for [org.hibernate.cfg.FlushSettings#FLUSH_QUEUE_IMPL].
+/// Defines the valid values for [org.hibernate.cfg.FlushSettings#FLUSH_QUEUE_TYPE].
 ///
 /// @author Steve Ebersole
-public enum QueueImplementation {
+public enum QueueType {
 	GRAPH,
 	LEGACY;
 
-	public static QueueImplementation fromSetting(String setting) {
+	public static QueueType fromSetting(String setting) {
 		return switch ( setting.toLowerCase() ) {
 			case "legacy" -> LEGACY;
 			case "graph" -> GRAPH;

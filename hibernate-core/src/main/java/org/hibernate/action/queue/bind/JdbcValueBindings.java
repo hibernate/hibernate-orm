@@ -4,6 +4,7 @@
  */
 package org.hibernate.action.queue.bind;
 
+import org.hibernate.HibernateException;
 import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.spi.Binding;
@@ -68,6 +69,9 @@ public class JdbcValueBindings {
 				columnName,
 				parameterUsage
 		);
+		if ( jdbcValueDescriptor == null ) {
+			throw new HibernateException( "Unable to locate JdbcValueDescriptor for column `" + columnName + "`" );
+		}
 		bindingGroup.bindValue( columnName, columnValue, jdbcValueDescriptor );
 	}
 

@@ -19,10 +19,10 @@ import org.hibernate.action.queue.meta.CollectionTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.metamodel.mapping.internal.ManyToManyCollectionPart;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.persister.collection.BasicCollectionPersister;
@@ -45,7 +45,7 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
 /// into the collection table.
 ///
 /// @author Steve Ebersole
-public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
+public class BasicCollectionDecomposer implements CollectionDecomposer {
 	private final BasicCollectionPersister persister;
 	private final CollectionTableDescriptor tableDescriptor;
 	private final boolean shouldBundleOperations;
@@ -140,18 +140,39 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			CollectionRecreateAction action,
 			int ordinalBase,
 			SharedSessionContractImplementor session) {
-		// Create callback to handle post-execution work (afterAction, cache, events, stats)
-		final Object cacheKey = lockCacheItem( action, session );
-		final PostCollectionRecreateHandling postCollectionRecreateHandling = new PostCollectionRecreateHandling( action, cacheKey );
 
-		final List<PlannedOperation> operations = planRecreateOperation( action.getCollection(), action.getKey(), ordinalBase, session );
+		// Always fire PRE event, even if no SQL operations will be needed
+		DecompositionSupport.firePreRecreate( persister, action.getCollection(), session );
 
-		// Attach post-execution callback to the last operation
-		if ( !operations.isEmpty() ) {
-			operations.get( operations.size() - 1 ).setPostExecutionCallback( postCollectionRecreateHandling );
+		var operations = planRecreateOperation(
+				action.getCollection(),
+				action.getKey(),
+				ordinalBase,
+				session
+		);
+
+		// Create post-execution callback to handle post-execution work (afterAction, cache, events, stats)
+		var postRecreateHandling = new PostCollectionRecreateHandling(
+				persister,
+				action.getCollection(),
+				action.getAffectedOwner(),
+				action.getAffectedOwnerId(),
+				DecompositionSupport.generateCacheKey( action, session )
+		);
+
+		if ( operations != null && !operations.isEmpty() ) {
+			// Attach it to the last operation
+			operations.get( operations.size() - 1 ).setPostExecutionCallback( postRecreateHandling );
+			return operations;
 		}
-
-		return operations;
+		else {
+			// Operations unexpectedly empty - create no-op to defer POST callback
+			return List.of( DecompositionSupport.createNoOpCallbackCarrier(
+					tableDescriptor,
+					calculateOrdinal( ordinalBase, Slot.INSERT ),
+					postRecreateHandling
+			) );
+		}
 	}
 
 	private List<PlannedOperation> planRecreateOperation(
@@ -159,6 +180,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			Object key,
 			int ordinalBase,
 			SharedSessionContractImplementor session) {
+
 		final CollectionJdbcOperations.InsertRowPlan insertRowPlan = jdbcOperations.insertRowPlan();
 		if ( insertRowPlan == null ) {
 			return List.of();
@@ -253,22 +275,10 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			CollectionUpdateAction action,
 			int ordinalBase,
 			SharedSessionContractImplementor session) {
-		action.preUpdate();
-
-		final Object cacheKey = lockCacheItem(action, session);
-
-		// Create callback to handle post-execution work (afterAction, cache, events, stats)
-		final PostCollectionUpdateHandling postCollectionUpdateHandling = new PostCollectionUpdateHandling(
-				persister,
-				action.getCollection(),
-				action.getKey(),
-				action.getAffectedOwner(),
-				action.getAffectedOwnerId(),
-				cacheKey
-		);
-
 		var collection = action.getCollection();
 		var key = action.getKey();
+
+		DecompositionSupport.firePreUpdate( persister, collection, session );
 
 		final List<PlannedOperation> operations = new ArrayList<>();
 
@@ -289,7 +299,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			try {
 				if ( !affectedByFilters && collection.empty() ) {
 					if ( !action.isEmptySnapshot() ) {
-						operations.addAll( planRemoveOperation( key, ordinalBase, session ) );
+						operations.addAll( planRemoveOperation( key, ordinalBase ) );
 					}
 				}
 				else if ( collection.needsRecreate( persister ) || needsRecreateForIndexedShifts( collection, persister ) ) {
@@ -301,10 +311,15 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 						) );
 					}
 					if ( !action.isEmptySnapshot() ) {
-						operations.addAll( planRemoveOperation( key, ordinalBase, session ) );
+						operations.addAll( planRemoveOperation( key, ordinalBase ) );
 					}
 					// Recreate INSERTs use INSERT_OFFSET which is higher than DELETE_OFFSET to avoid unique constraint violations
-					operations.addAll( planRecreateOperation(  collection, key, ordinalBase, session ) );
+					operations.addAll( planRecreateOperation(
+							collection,
+							key,
+							ordinalBase,
+							session
+					) );
 				}
 				else {
 					planDeleteRowOperations( collection, key, ordinalBase, session, operations::add );
@@ -324,15 +339,30 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			}
 		}
 
-		// Attach post-execution callback to the last operation
+		// Create callback to handle post-execution work (afterAction, cache, events, stats)
+		final PostCollectionUpdateHandling postUpdateHandling = new PostCollectionUpdateHandling(
+				persister,
+				collection,
+				key,
+				action.getAffectedOwner(),
+				action.getAffectedOwnerId(),
+				DecompositionSupport.generateCacheKey(action, session)
+		);
 		if ( !operations.isEmpty() ) {
-			operations.get( operations.size() - 1 ).setPostExecutionCallback( postCollectionUpdateHandling );
+			// Attach post-execution callback to the last operation
+			final PlannedOperation lastOperation = operations.get( operations.size() - 1 );
+			lastOperation.setPostExecutionCallback( postUpdateHandling );
+			return operations;
 		}
 		else {
-			postCollectionUpdateHandling.handle( (SessionImplementor) session );
+			// Operations empty - create no-op to defer POST callback
+			// This can happen for uninitialized dirty collections
+			return List.of( DecompositionSupport.createNoOpCallbackCarrier(
+					tableDescriptor,
+					calculateOrdinal( ordinalBase, Slot.UPDATE ),
+					postUpdateHandling
+			) );
 		}
-
-		return operations;
 	}
 
 	private void planDeleteRowOperations(
@@ -631,21 +661,40 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			CollectionRemoveAction action,
 			int ordinalBase,
 			SharedSessionContractImplementor session) {
+		var collection = action.getCollection();
+		var affectedOwner = action.getAffectedOwner();
+
+		// Always fire PRE event, even if no SQL operations will be needed
+		DecompositionSupport.firePreRemove( persister, collection, affectedOwner, session );
+
 		// Create callback to handle post-execution work (afterAction, cache, events, stats)
-		final Object cacheKey = lockCacheItem( action, session );
-		final PostCollectionRemoveHandling postCollectionRemoveHandling = new PostCollectionRemoveHandling( action, cacheKey );
+		var postRemoveHandling = new PostCollectionRemoveHandling(
+				persister,
+				collection,
+				affectedOwner,
+				action.getAffectedOwnerId(),
+				DecompositionSupport.generateCacheKey( action, session )
+		);
 
-		final List<PlannedOperation> operations = planRemoveOperation( action.getKey(), ordinalBase,  session );
+		var operations = planRemoveOperation( action.getKey(), ordinalBase );
 
-		// Attach post-execution callback to the last operation
 		if ( !operations.isEmpty() ) {
-			operations.get( operations.size() - 1 ).setPostExecutionCallback( postCollectionRemoveHandling );
+			// should be just one...
+			operations.get(0).setPostExecutionCallback( postRemoveHandling );
+			return operations;
 		}
-
-		return operations;
+		else {
+			return List.of( DecompositionSupport.createNoOpCallbackCarrier(
+					tableDescriptor,
+					calculateOrdinal( ordinalBase, Slot.DELETE ),
+					postRemoveHandling
+			) );
+		}
 	}
 
-	private List<PlannedOperation> planRemoveOperation(Object key, int ordinalBase, SharedSessionContractImplementor session) {
+	private List<PlannedOperation> planRemoveOperation(
+			Object key,
+			int ordinalBase) {
 		final var jdbcOperation = jdbcOperations.removeOperation();
 		if ( jdbcOperation == null ) {
 			return List.of();
@@ -662,9 +711,6 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 
 		return List.of( plannedOp );
 	}
-
-
-
 
 
 	private CollectionJdbcOperations buildJdbcOperations(
@@ -717,31 +763,31 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 			SessionFactoryImplementor factory) {
 		final var attributeMapping = persister.getAttributeMapping();
 		attributeMapping.getKeyDescriptor().getKeyPart().forEachInsertable( (i, columnMapping) -> {
-			insertBuilder.addValueColumn( columnMapping );
+			insertBuilder.addColumnAssignment( columnMapping );
 		});
 
 		final var identifierDescriptor = attributeMapping.getIdentifierDescriptor();
 		final var indexDescriptor = attributeMapping.getIndexDescriptor();
 		if ( identifierDescriptor != null ) {
 			identifierDescriptor.forEachInsertable( (i, columnMapping) -> {
-				insertBuilder.addValueColumn( columnMapping );
+				insertBuilder.addColumnAssignment( columnMapping );
 			} );
 		}
 		else if ( indexDescriptor != null ) {
 			indexDescriptor.forEachInsertable( (i, columnMapping) -> {
-				insertBuilder.addValueColumn( columnMapping );
+				insertBuilder.addColumnAssignment( columnMapping );
 			} );
 		}
 
 		// Add element columns
 		attributeMapping.getElementDescriptor().forEachInsertable( (i, columnMapping) -> {
-			insertBuilder.addValueColumn( columnMapping );
+			insertBuilder.addColumnAssignment( columnMapping );
 		} );
 
 		final var softDeleteMapping = attributeMapping.getSoftDeleteMapping();
 		if ( softDeleteMapping != null ) {
 			final var columnReference = new ColumnReference( insertBuilder.getMutatingTable(), softDeleteMapping );
-			insertBuilder.addValueColumn( softDeleteMapping.createNonDeletedValueBinding( columnReference ) );
+			insertBuilder.addColumnAssignment( softDeleteMapping.createNonDeletedValueBinding( columnReference ) );
 		}
 	}
 
@@ -803,7 +849,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 				false, // isIdentifierTable
 				false // isInverse
 		);
-		var builder = new TableUpdateBuilderStandard(
+		var builder = new TableUpdateBuilderStandard<>(
 				persister,
 				new MutatingTableReference(tableMapping),
 				factory,
@@ -815,7 +861,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 
 		attribute.getElementDescriptor().forEachUpdatable(
 			(selectionIndex, jdbcMapping) -> {
-				builder.addValueColumn( jdbcMapping );
+				builder.addColumnAssignment( jdbcMapping );
 			}
 		);
 
@@ -824,7 +870,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 
 		attribute.getKeyDescriptor().getKeyPart().forEachColumn(
 			(selectionIndex, jdbcMapping) -> {
-				builder.addKeyRestriction( jdbcMapping );
+				builder.addKeyRestrictionLeniently( jdbcMapping );
 			}
 		);
 
@@ -939,7 +985,7 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		//		-  element/index
 
 		attribute.getKeyDescriptor().getKeyPart().forEachSelectable( (index, jdbcMapping) -> {
-			builder.addKeyRestriction( jdbcMapping );
+			builder.addKeyRestrictionLeniently( jdbcMapping );
 		} );
 
 		// For row-based deletion, also restrict by element/index
@@ -953,9 +999,21 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		}
 		else {
 			// For non-indexed collections (sets, bags), restrict by element
-			attribute.getElementDescriptor().forEachSelectable((index, jdbcMapping) -> {
-				builder.addKeyRestriction( jdbcMapping );
-			} );
+			// todo : consider adding some form of `forEachSelectable` and `decompose` which is
+			//  	local to the element descriptor -
+			//  		* the value column(s) for element collections
+			//			* the fk column(s) for to-many with join-table
+			var elementDescriptor = attribute.getElementDescriptor();
+			if ( elementDescriptor instanceof ManyToManyCollectionPart manyToMany ) {
+				manyToMany.getForeignKeyDescriptor().getKeyPart().forEachSelectable( (index, jdbcMapping) -> {
+					builder.addKeyRestriction( jdbcMapping );
+				} );
+			}
+			else {
+				elementDescriptor.forEachSelectable( (index, jdbcMapping) -> {
+					builder.addKeyRestriction( jdbcMapping );
+				} );
+			}
 		}
 
 		return new CollectionJdbcOperations.DeleteRowPlan(
@@ -998,11 +1056,22 @@ public class BasicCollectionDecomposer extends AbstractCollectionDecomposer {
 		}
 		else {
 			// For non-indexed collections (sets, bags), restrict by element
-			attribute.getElementDescriptor().decompose(
-					rowValue,
-					jdbcValueBindings::bindRestriction,
-					session
-			);
+			var elementDescriptor = attribute.getElementDescriptor();
+			if ( elementDescriptor instanceof ManyToManyCollectionPart manyToMany ) {
+				var id = manyToMany.getAssociatedEntityMappingType().getIdentifierMapping().getIdentifier( rowValue );
+				manyToMany.getForeignKeyDescriptor().getKeyPart().decompose(
+						id,
+						jdbcValueBindings::bindRestriction,
+						session
+				);
+			}
+			else {
+				elementDescriptor.decompose(
+						rowValue,
+						jdbcValueBindings::bindRestriction,
+						session
+				);
+			}
 		}
 	}
 

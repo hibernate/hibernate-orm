@@ -5,6 +5,7 @@
 package org.hibernate.action.queue;
 
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.service.Service;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -12,9 +13,9 @@ import java.io.ObjectInputStream;
 /// Factory for ActionQueue instances.
 ///
 /// @author Steve Ebersole
-public interface ActionQueueFactory {
-	/// Reports which [queue][ActionQueue] implementation was configured to be used.
-	QueueImplementation getConfiguredQueueImplementation();
+public interface ActionQueueFactory extends Service {
+	/// Reports which [queue][ActionQueue] type was configured to be used.
+	QueueType getConfiguredQueueType();
 
 	/// Build an ActionQueue instance for the given Session.
 	ActionQueue buildActionQueue(SessionImplementor session);

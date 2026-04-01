@@ -31,7 +31,7 @@ import static org.hibernate.sql.model.ast.builder.TableMutationBuilder.NULL;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDecomposer implements OneToManyDecomposer {
+public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer {
 	protected final OneToManyPersister persister;
 	protected final SessionFactoryImplementor factory;
 
@@ -57,14 +57,27 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 			CollectionRemoveAction action,
 			int ordinalBase,
 			SharedSessionContractImplementor session) {
+		// Always fire PRE event, even if no SQL operations will be needed
+		DecompositionSupport.firePreRemove( persister, action.getCollection(), action.getAffectedOwner(), session );
+
+		// Create callback to handle post-execution work (afterAction, cache, events, stats)
+		var postRemoveHandling = new PostCollectionRemoveHandling(
+				persister,
+				action.getCollection(),
+				action.getAffectedOwner(),
+				action.getAffectedOwnerId(),
+				DecompositionSupport.generateCacheKey( action, session )
+		);
+
 		if ( !persister.needsRemove() ) {
-			return List.of();
+			return List.of( DecompositionSupport.createNoOpCallbackCarrier(
+					persister.getCollectionTableDescriptor(),
+					calculateOrdinal( ordinalBase, Slot.DELETE ),
+					postRemoveHandling
+			) );
 		}
 
 		// Create callback to handle post-execution work (afterAction, cache, events, stats)
-		final Object cacheKey = lockCacheItem( action, session );
-		final PostCollectionRemoveHandling postCollectionRemoveHandling = new PostCollectionRemoveHandling( action, cacheKey );
-
 		var removeOperation = jdbcOperations.removeOperation();
 		var operation = new PlannedOperation(
 				persister.getCollectionTableDescriptor(),
@@ -77,7 +90,7 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 		);
 
 		// Attach post-execution callback to the operation
-		operation.setPostExecutionCallback( postCollectionRemoveHandling );
+		operation.setPostExecutionCallback( postRemoveHandling );
 
 		return List.of( operation );
 	}
@@ -153,7 +166,7 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 				false, // isIdentifierTable
 				false // isInverse
 		);
-		final TableUpdateBuilderStandard updateBuilder = new TableUpdateBuilderStandard(
+		var updateBuilder = new TableUpdateBuilderStandard<>(
 				persister,
 				new MutatingTableReference(tableMapping),
 				factory,
@@ -162,13 +175,13 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 
 		final var attributeMapping = persister.getAttributeMapping();
 		attributeMapping.getKeyDescriptor().getKeyPart().forEachUpdatable( (index, selectableMapping) -> {
-			updateBuilder.addValueColumn( selectableMapping );
+			updateBuilder.addColumnAssignment( selectableMapping );
 		} );
 
 		final var indexDescriptor = attributeMapping.getIndexDescriptor();
 		if ( indexDescriptor != null ) {
 			indexDescriptor.forEachUpdatable( (index, selectableMapping) -> {
-				updateBuilder.addValueColumn( selectableMapping );
+				updateBuilder.addColumnAssignment( selectableMapping );
 			} );
 		}
 
@@ -228,7 +241,7 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 				false, // isIdentifierTable
 				false // isInverse
 		);
-		final var updateBuilder = new TableUpdateBuilderStandard(
+		final var updateBuilder = new TableUpdateBuilderStandard<>(
 				persister,
 				new MutatingTableReference(tableMapping),
 				factory,
@@ -238,7 +251,7 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 		final var attributeMapping = persister.getAttributeMapping();
 
 		attributeMapping.getIndexDescriptor().forEachUpdatable( (index, selectableMapping) -> {
-			updateBuilder.addValueColumn( selectableMapping );
+			updateBuilder.addColumnAssignment( selectableMapping );
 		} );
 
 		// Add element identifier restrictions (WHERE clause for element's PK)
@@ -324,7 +337,7 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 		final var foreignKeyDescriptor = persister.getAttributeMapping().getKeyDescriptor();
 		foreignKeyDescriptor.getKeyPart().forEachUpdatable( (index, selectableMapping) -> {
 			// set null
-			updateBuilder.addValueColumn( NULL, selectableMapping );
+			updateBuilder.addColumnAssignment( selectableMapping, NULL );
 		} );
 
 		// set the value for each index column to null
@@ -332,7 +345,7 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 			final var indexDescriptor = persister.getAttributeMapping().getIndexDescriptor();
 			assert indexDescriptor != null;
 			indexDescriptor.forEachUpdatable( (index, selectableMapping) -> {
-				updateBuilder.addValueColumn( NULL, selectableMapping );
+				updateBuilder.addColumnAssignment( selectableMapping, NULL );
 			} );
 		}
 
@@ -373,15 +386,13 @@ public abstract class AbstractOneToManyDecomposer extends AbstractCollectionDeco
 			return null;
 		}
 
-		// todo : this will pick up the wrong custom-sql.
-		//		need to be able to pass in a MutationDetails to use
 		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
 				tableDescriptor,
 				0, // relativePosition
 				false, // isIdentifierTable
 				false // isInverse
 		);
-		var builder = new TableUpdateBuilderStandard(
+		var builder = new TableUpdateBuilderStandard<>(
 				persister,
 				new MutatingTableReference(tableMapping),
 				factory,

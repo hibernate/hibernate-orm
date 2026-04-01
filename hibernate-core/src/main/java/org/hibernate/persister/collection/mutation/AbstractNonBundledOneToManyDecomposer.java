@@ -37,20 +37,32 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 			CollectionRecreateAction action,
 			int ordinalBase,
 			SharedSessionContractImplementor session) {
-		// Create callback to handle post-execution work (afterAction, cache, events, stats)
-		final Object cacheKey = lockCacheItem( action, session );
-		final PostCollectionRecreateHandling postCollectionRecreateHandling = new PostCollectionRecreateHandling( action, cacheKey );
-
-		var attribute = persister.getAttributeMapping();
 		var collection = action.getCollection();
 		var key = action.getKey();
 
-		// Pre-insert callback once for the whole collection
+		var attribute = persister.getAttributeMapping();
+
+		// Always fire PRE event, even if no SQL operations will be needed
+		DecompositionSupport.firePreRecreate( persister, collection, session );
 		collection.preInsert( persister );
+
+		// Create post-execution callback to handle post-execution work (afterAction, cache, events, stats)
+		var postRecreateHandling = new PostCollectionRecreateHandling(
+				persister,
+				collection,
+				action.getAffectedOwner(),
+				action.getAffectedOwnerId(),
+				DecompositionSupport.generateCacheKey( action, session )
+		);
 
 		final var entries = collection.entries( persister );
 		if ( !entries.hasNext() ) {
-			return List.of();
+			// No entries - create no-op to defer POST callback
+			return List.of( DecompositionSupport.createNoOpCallbackCarrier(
+					persister.getCollectionTableDescriptor(),
+					calculateOrdinal( ordinalBase, Slot.INSERT ),
+					postRecreateHandling
+			) );
 		}
 
 		final List<PlannedOperation> operations = new ArrayList<>();
@@ -117,12 +129,19 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 			entryCount++;
 		}
 
-		// Attach post-execution callback to the last operation
 		if ( !operations.isEmpty() ) {
-			operations.get( operations.size() - 1 ).setPostExecutionCallback( postCollectionRecreateHandling );
+			// Attach it to the last operation
+			operations.get( operations.size() - 1 ).setPostExecutionCallback( postRecreateHandling );
+			return operations;
 		}
-
-		return operations;
+		else {
+			// Operations unexpectedly empty - create no-op to defer POST callback
+			return List.of( DecompositionSupport.createNoOpCallbackCarrier(
+					persister.getCollectionTableDescriptor(),
+					calculateOrdinal( ordinalBase, Slot.INSERT ),
+					postRecreateHandling
+			) );
+		}
 	}
 
 	@Override
@@ -133,17 +152,17 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 		final var collection = action.getCollection();
 		final var key = action.getKey();
 
-		// Lock cache item
-		final Object cacheKey = lockCacheItem( action, session );
+		// Always fire PRE event, even if collection is not initialized
+		DecompositionSupport.firePreUpdate( persister, collection, session );
 
 		// Create callback to handle post-execution work (afterAction, cache, events, stats)
-		final PostCollectionUpdateHandling postCollectionUpdateHandling = new PostCollectionUpdateHandling(
+		var postUpdateHandling = new PostCollectionUpdateHandling(
 				persister,
 				collection,
 				key,
 				action.getAffectedOwner(),
 				action.getAffectedOwnerId(),
-				cacheKey
+				DecompositionSupport.generateCacheKey( action, session )
 		);
 
 		final List<PlannedOperation> operations = new ArrayList<>();
@@ -154,25 +173,24 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 			// We only need to notify the cache via the post-execution callback
 		}
 		else {
-			// Fire PRE_COLLECTION_UPDATE events
-			action.preUpdate();
-
-			// DELETE removed entries
 			applyUpdateRemovals( collection, key, ordinalBase, session, operations::add );
-
-			// UPDATE modified entries
 			applyUpdateChanges( collection, key, ordinalBase + 1, session, operations::add );
-
-			// INSERT entries
 			applyUpdateAdditions( collection, key, ordinalBase + 2, session, operations::add );
 		}
 
-		// Attach post-execution callback to the last operation
 		if ( !operations.isEmpty() ) {
-			operations.get( operations.size() - 1 ).setPostExecutionCallback( postCollectionUpdateHandling );
+			// Attach post-execution callback to the last operation
+			operations.get( operations.size() - 1 ).setPostExecutionCallback( postUpdateHandling );
+			return operations;
 		}
-
-		return operations;
+		else {
+			// Operations empty (e.g., uninitialized dirty collection) - create no-op to defer POST callback
+			return List.of( DecompositionSupport.createNoOpCallbackCarrier(
+					persister.getCollectionTableDescriptor(),
+					calculateOrdinal( ordinalBase, Slot.UPDATE ),
+					postUpdateHandling
+			) );
+		}
 	}
 
 	@Override

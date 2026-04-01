@@ -152,7 +152,7 @@ public class CollectionBundlingBenchmark {
 				.applySetting(AvailableSettings.FORMAT_SQL, "false")
 				.applySetting(AvailableSettings.USE_SQL_COMMENTS, "false")
 				.applySetting(AvailableSettings.STATEMENT_BATCH_SIZE, "50")
-				.applySetting(AvailableSettings.FLUSH_QUEUE_IMPL, queueImpl);
+				.applySetting(AvailableSettings.FLUSH_QUEUE_TYPE, queueImpl);
 
 		if (bundling) {
 			builder.applySetting("hibernate.bundle_collection_operations", "true");

@@ -13,12 +13,15 @@ public enum MutationKind {
 	// Update a single row
 	UPDATE,
 	// Delete a single row
-	DELETE;
+	DELETE,
+	// No-op operation (callback carrier)
+	NO_OP;
 
 	public boolean canSkipTables() {
 		return switch(this) {
 			case INSERT, UPDATE -> true;
 			case DELETE -> false;
+			case NO_OP -> true;  // No SQL execution
 		};
 	}
 }

@@ -58,26 +58,30 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 		for ( int i = 0; i < plannedOperations.size(); i++ ) {
 			var plannedOperation = plannedOperations.get( i );
 
-			if ( plannedOperation.getBindPlan().getGeneratedValuesCollector() != null ) {
-				// we need to execute these without batching
-				executeWithGeneratedValues( plannedOperation );
-			}
-			else {
-				final MutationOperation jdbcOperation = plannedOperation.getJdbcOperation();
-				if ( jdbcOperation instanceof PreparableMutationOperation preparable ) {
-					executePreparable( preparable, plannedOperation );
-				}
-				else if ( jdbcOperation instanceof SelfExecutingUpdateOperation selfExecuting ) {
-					// todo : need to figure out how to get these (currently null) values here
-					selfExecuting.performMutation( null, null, session );
+			// No-op operations: only carry post-execution callback, skip SQL execution
+			if ( plannedOperation.getKind() != MutationKind.NO_OP ) {
+				final var bindPlan = plannedOperation.getBindPlan();
+				if ( bindPlan.getGeneratedValuesCollector() != null ) {
+					// we need to execute these without batching
+					executeWithGeneratedValues( plannedOperation );
 				}
 				else {
-					throw new IllegalStateException(
-							"Unsupported JdbcOperation type: " + jdbcOperation.getClass().getName() );
+					final MutationOperation jdbcOperation = plannedOperation.getJdbcOperation();
+					if ( jdbcOperation instanceof PreparableMutationOperation preparable ) {
+						executePreparable( preparable, plannedOperation );
+					}
+					else if ( jdbcOperation instanceof SelfExecutingUpdateOperation selfExecuting ) {
+						// todo : need to figure out how to get these (currently null) values here
+						selfExecuting.performMutation( null, null, session );
+					}
+					else {
+						throw new IllegalStateException(
+								"Unsupported JdbcOperation type: " + jdbcOperation.getClass().getName() );
+					}
 				}
 			}
 
-			// Execute post-execution callback immediately after operation completes
+			// Execute post-execution callback immediately after operation completes (for both no-op and real operations)
 			if ( plannedOperation.getPostExecutionCallback() != null ) {
 				plannedOperation.getPostExecutionCallback().handle( (org.hibernate.engine.spi.SessionImplementor) session );
 			}

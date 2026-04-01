@@ -32,6 +32,14 @@ public record StatementShapeKey(String tableExpression, MutationKind kind, int s
 		return new StatementShapeKey( tableName, MutationKind.DELETE, h);
 	}
 
+	public static StatementShapeKey forNoOp(String tableName) {
+		// No-op operations don't have jdbcOperation, just use table + kind for hash
+		int hash = 17;
+		hash = 31 * hash + tableName.hashCode();
+		hash = 31 * hash + MutationKind.NO_OP.hashCode();
+		return new StatementShapeKey( tableName, MutationKind.NO_OP, hash);
+	}
+
 	private static int hashMutationShape(
 			String normalizedTableName,
 			MutationKind kind,

@@ -673,6 +673,7 @@ public class UpdateDecomposerTest {
 			case INSERT -> StatementShapeKey.forInsert(table, operation);
 			case UPDATE -> StatementShapeKey.forUpdate(table, operation);
 			case DELETE -> StatementShapeKey.forDelete(table, operation);
+			case NO_OP -> StatementShapeKey.forNoOp(table);
 		};
 	}
 

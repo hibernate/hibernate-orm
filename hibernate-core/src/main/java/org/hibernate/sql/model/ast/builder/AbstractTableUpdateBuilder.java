@@ -46,6 +46,7 @@ public abstract class AbstractTableUpdateBuilder<O extends MutationOperation>
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory) {
 		super( MutationType.UPDATE, mutationTarget, tableReference, sessionFactory );
+		this.sqlComment = "update for " + mutationTarget.getRolePath();
 	}
 
 	public String getSqlComment() {

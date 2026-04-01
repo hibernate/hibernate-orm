@@ -8,7 +8,7 @@ import org.hibernate.action.queue.ActionQueue;
 import org.hibernate.action.queue.ActionQueueFactory;
 import org.hibernate.action.queue.GraphBasedActionQueue;
 import org.hibernate.action.queue.PlanningOptions;
-import org.hibernate.action.queue.QueueImplementation;
+import org.hibernate.action.queue.QueueType;
 import org.hibernate.action.queue.constraint.ConstraintModel;
 import org.hibernate.action.queue.constraint.ConstraintModelBuilder;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -47,8 +47,8 @@ public class GraphBasedActionQueueFactory implements ActionQueueFactory, Seriali
 	}
 
 	@Override
-	public QueueImplementation getConfiguredQueueImplementation() {
-		return QueueImplementation.GRAPH;
+	public QueueType getConfiguredQueueType() {
+		return QueueType.GRAPH;
 	}
 
 	@Override

@@ -54,13 +54,26 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractNonBundledOneTo
 			CollectionRemoveAction action,
 			int ordinalBase,
 			SharedSessionContractImplementor session) {
-		if ( !persister.needsRemove() ) {
-			return List.of();
-		}
+		// Always fire PRE event, even if no SQL operations will be needed
+		DecompositionSupport.firePreRemove( persister, action.getCollection(), action.getAffectedOwner(), session );
 
 		// Create callback to handle post-execution work (afterAction, cache, events, stats)
-		final Object cacheKey = lockCacheItem( action, session );
-		final PostCollectionRemoveHandling postCollectionRemoveHandling = new PostCollectionRemoveHandling( action, cacheKey );
+		var postRemoveHandling = new PostCollectionRemoveHandling(
+				persister,
+				action.getCollection(),
+				action.getAffectedOwner(),
+				action.getAffectedOwnerId(),
+				DecompositionSupport.generateCacheKey( action, session )
+		);
+
+		if ( !persister.needsRemove() ) {
+			// No remove needed - create no-op to defer POST callback
+			return List.of( DecompositionSupport.createNoOpCallbackCarrier(
+					persister.getCollectionTableDescriptor(),
+					ordinalBase * 1_000,
+					postRemoveHandling
+			) );
+		}
 
 		var operations = new ArrayList<PlannedOperation>();
 		operationsBySubclass.forEach( (entityPersister, jdbcOperations) -> {
@@ -75,11 +88,18 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractNonBundledOneTo
 			) );
 		} );
 
-		// Attach post-execution callback to the last operation
 		if ( !operations.isEmpty() ) {
-			operations.get( operations.size() - 1 ).setPostExecutionCallback( postCollectionRemoveHandling );
+			// Attach post-execution callback to the last operation
+			operations.get( operations.size() - 1 ).setPostExecutionCallback( postRemoveHandling );
+			return operations;
 		}
-
-		return operations;
+		else {
+			// Operations unexpectedly empty - create no-op to defer POST callback
+			return List.of( DecompositionSupport.createNoOpCallbackCarrier(
+					persister.getCollectionTableDescriptor(),
+					ordinalBase * 1_000,
+					postRemoveHandling
+			) );
+		}
 	}
 }

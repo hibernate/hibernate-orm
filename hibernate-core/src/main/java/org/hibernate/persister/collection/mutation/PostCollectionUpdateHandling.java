@@ -9,8 +9,6 @@ import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.event.spi.PostCollectionUpdateEvent;
-import org.hibernate.event.spi.PostCollectionUpdateEventListener;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /// Post-execution callback for collection update actions.
@@ -39,15 +37,15 @@ public class PostCollectionUpdateHandling implements PostExecutionCallback {
 			CollectionPersister persister,
 			PersistentCollection<?> collection,
 			Object key,
-			Object cacheKey,
 			Object affectedOwner,
-			Object affectedOwnerId) {
+			Object affectedOwnerId,
+			Object cacheKey) {
 		this.persister = persister;
 		this.collection = collection;
 		this.key = key;
-		this.cacheKey = cacheKey;
 		this.affectedOwner = affectedOwner;
 		this.affectedOwnerId = affectedOwnerId;
+		this.cacheKey = cacheKey;
 	}
 
 	@Override
@@ -67,32 +65,12 @@ public class PostCollectionUpdateHandling implements PostExecutionCallback {
 		}
 
 		// Fire POST_COLLECTION_UPDATE event
-		postUpdate(session);
+		DecompositionSupport.firePostUpdate( persister, collection, affectedOwner, affectedOwnerId, session );
 
 		// Update statistics
 		final var statistics = session.getFactory().getStatistics();
 		if (statistics.isStatisticsEnabled()) {
 			statistics.updateCollection(persister.getRole());
 		}
-	}
-
-	private void postUpdate(SessionImplementor session) {
-		session.getFactory()
-				.getEventListenerGroups()
-				.eventListenerGroup_POST_COLLECTION_UPDATE
-				.fireLazyEventOnEachListener(
-						() -> newPostCollectionUpdateEvent(session),
-						PostCollectionUpdateEventListener::onPostUpdateCollection
-				);
-	}
-
-	private PostCollectionUpdateEvent newPostCollectionUpdateEvent(SessionImplementor session) {
-		return new PostCollectionUpdateEvent(
-				persister,
-				collection,
-				(org.hibernate.event.spi.EventSource) session,
-				affectedOwner,
-				affectedOwnerId
-		);
 	}
 }

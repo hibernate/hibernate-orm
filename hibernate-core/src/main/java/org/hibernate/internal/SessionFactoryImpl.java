@@ -31,7 +31,7 @@ import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.UnknownFilterException;
 import org.hibernate.action.queue.ActionQueueFactory;
-import org.hibernate.action.queue.support.ActionQueueSupport;
+import org.hibernate.action.queue.support.ActionQueueFactoryService;
 import org.hibernate.binder.internal.TenantIdBinder;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
@@ -337,7 +337,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			// we're in an incompletely-initialized state
 			typeConfiguration.scope( this );
 
-			actionQueueFactory = ActionQueueSupport.resolveActionQueueSupport( this );
+			actionQueueFactory = serviceRegistry.requireService( ActionQueueFactoryService.class )
+					.buildActionQueueFactory( this );
 
 			observerChain.sessionFactoryCreated( this );
 		}

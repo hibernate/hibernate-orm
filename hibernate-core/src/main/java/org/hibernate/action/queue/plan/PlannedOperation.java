@@ -8,6 +8,7 @@ import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.cyclebreak.BindingPatch;
+import org.hibernate.action.queue.exec.ChainedPostExecutionCallback;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.sql.model.MutationOperation;
@@ -85,6 +86,7 @@ public class PlannedOperation {
 			case INSERT -> StatementShapeKey.forInsert(tableDescriptor.name(), this);
 			case UPDATE -> StatementShapeKey.forUpdate(tableDescriptor.name(), this);
 			case DELETE -> StatementShapeKey.forDelete(tableDescriptor.name(), this);
+			case NO_OP -> StatementShapeKey.forNoOp(tableDescriptor.name());
 		};
 	}
 
@@ -171,6 +173,14 @@ public class PlannedOperation {
 	}
 
 	public void setPostExecutionCallback(PostExecutionCallback postExecutionCallback) {
-		this.postExecutionCallback = postExecutionCallback;
+		if ( this.postExecutionCallback == null ) {
+			this.postExecutionCallback = postExecutionCallback;
+		}
+		else {
+			this.postExecutionCallback = new ChainedPostExecutionCallback(
+					this.postExecutionCallback,
+					postExecutionCallback
+			);
+		}
 	}
 }

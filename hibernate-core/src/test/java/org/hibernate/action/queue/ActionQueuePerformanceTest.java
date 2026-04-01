@@ -114,7 +114,7 @@ public class ActionQueuePerformanceTest {
 	 */
 	@DomainModel(annotatedClasses = SimpleEntity.class)
 	@SessionFactory
-	@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_IMPL, value = "legacy"))
+	@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "legacy"))
 	public static class SimpleLegacyTest {
 		@Test
 		public void testSimpleInserts(SessionFactoryScope scope) {
@@ -124,7 +124,7 @@ public class ActionQueuePerformanceTest {
 
 	@DomainModel(annotatedClasses = SimpleEntity.class)
 	@SessionFactory
-	@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_IMPL, value = "graph"))
+	@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "graph"))
 	public static class SimpleGraphTest {
 		@Test
 		public void testSimpleInserts(SessionFactoryScope scope) {
@@ -137,7 +137,7 @@ public class ActionQueuePerformanceTest {
 	 */
 	@DomainModel(annotatedClasses = {Parent.class, Child.class})
 	@SessionFactory
-	@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_IMPL, value = "legacy"))
+	@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "legacy"))
 	public static class ParentChildLegacyTest {
 		@Test
 		public void testParentChildInserts(SessionFactoryScope scope) {
@@ -147,7 +147,7 @@ public class ActionQueuePerformanceTest {
 
 	@DomainModel(annotatedClasses = {Parent.class, Child.class})
 	@SessionFactory
-	@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_IMPL, value = "graph"))
+	@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "graph"))
 	public static class ParentChildGraphTest {
 		@Test
 		public void testParentChildInserts(SessionFactoryScope scope) {
@@ -160,7 +160,7 @@ public class ActionQueuePerformanceTest {
 	 */
 	@DomainModel(annotatedClasses = Node.class)
 	@SessionFactory
-	@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_IMPL, value = "legacy"))
+	@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "legacy"))
 	public static class SelfRefLegacyTest {
 		@Test
 		public void testSelfReferencingInserts(SessionFactoryScope scope) {
@@ -170,7 +170,7 @@ public class ActionQueuePerformanceTest {
 
 	@DomainModel(annotatedClasses = Node.class)
 	@SessionFactory
-	@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_IMPL, value = "graph"))
+	@ServiceRegistry(settings = @Setting(name = FlushSettings.FLUSH_QUEUE_TYPE, value = "graph"))
 	public static class SelfRefGraphTest {
 		@Test
 		public void testSelfReferencingInserts(SessionFactoryScope scope) {

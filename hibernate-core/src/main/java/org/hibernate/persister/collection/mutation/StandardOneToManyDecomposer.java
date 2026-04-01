@@ -35,13 +35,26 @@ public class StandardOneToManyDecomposer extends AbstractNonBundledOneToManyDeco
 			CollectionRemoveAction action,
 			int ordinalBase,
 			SharedSessionContractImplementor session) {
-		// Create callback to handle post-execution work (afterAction, cache, events, stats)
-		final Object cacheKey = lockCacheItem( action, session );
-		final PostCollectionRemoveHandling postCollectionRemoveHandling = new PostCollectionRemoveHandling( action, cacheKey );
+		// Always fire PRE event, even if no SQL operations will be needed
+		DecompositionSupport.firePreRemove( persister, action.getCollection(), action.getAffectedOwner(), session );
+
+		// Create post-execution callback to handle post-execution work (afterAction, cache, events, stats)
+		var postRemoveHandling = new PostCollectionRemoveHandling(
+				persister,
+				action.getCollection(),
+				action.getAffectedOwner(),
+				action.getAffectedOwnerId(),
+				DecompositionSupport.generateCacheKey( action, session )
+		);
 
 		final var jdbcOperation = jdbcOperations.removeOperation();
 		if ( jdbcOperation == null ) {
-			return List.of();
+			// No remove operation - create no-op to defer POST callback
+			return List.of( DecompositionSupport.createNoOpCallbackCarrier(
+					persister.getCollectionTableDescriptor(),
+					ordinalBase * 1_000,
+					postRemoveHandling
+			) );
 		}
 
 		final PlannedOperation plannedOp = new PlannedOperation(
@@ -54,8 +67,8 @@ public class StandardOneToManyDecomposer extends AbstractNonBundledOneToManyDeco
 				"RemoveAllRows(" + persister.getRolePath() + ")"
 		);
 
-		// Attach post-execution callback to the operation
-		plannedOp.setPostExecutionCallback( postCollectionRemoveHandling );
+		// and attach to the operation
+		plannedOp.setPostExecutionCallback( postRemoveHandling );
 
 		return List.of( plannedOp );
 	}

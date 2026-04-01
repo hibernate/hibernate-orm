@@ -6,7 +6,7 @@ package org.hibernate.action.queue.support;
 
 import org.hibernate.action.queue.ActionQueue;
 import org.hibernate.action.queue.ActionQueueFactory;
-import org.hibernate.action.queue.QueueImplementation;
+import org.hibernate.action.queue.QueueType;
 import org.hibernate.engine.spi.ActionQueueLegacy;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
@@ -20,8 +20,8 @@ import java.io.Serializable;
 /// @author Steve Ebersole
 public class LegacyActionQueueFactory implements ActionQueueFactory, Serializable {
 	@Override
-	public QueueImplementation getConfiguredQueueImplementation() {
-		return QueueImplementation.LEGACY;
+	public QueueType getConfiguredQueueType() {
+		return QueueType.LEGACY;
 	}
 
 	@Override

@@ -49,7 +49,7 @@ public class CollectionOperationBenchmarkTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "legacy")
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "legacy")
 	})
 	public void benchmarkSmallCollectionInsert_Legacy(SessionFactoryScope scope) {
 		BenchmarkResult result = runInsertBenchmark(scope, 10, 100, "Small Insert - Legacy");
@@ -59,7 +59,7 @@ public class CollectionOperationBenchmarkTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph")
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph")
 	})
 	public void benchmarkSmallCollectionInsert_GraphNoBundling(SessionFactoryScope scope) {
 		BenchmarkResult result = runInsertBenchmark(scope, 10, 100, "Small Insert - Graph (No Bundling)");
@@ -69,7 +69,7 @@ public class CollectionOperationBenchmarkTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph"),
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph"),
 			@Setting(name = "hibernate.bundle_collection_operations", value = "true")
 	})
 	public void benchmarkSmallCollectionInsert_GraphWithBundling(SessionFactoryScope scope) {
@@ -84,7 +84,7 @@ public class CollectionOperationBenchmarkTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "legacy")
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "legacy")
 	})
 	public void benchmarkMediumCollectionInsert_Legacy(SessionFactoryScope scope) {
 		BenchmarkResult result = runInsertBenchmark(scope, 50, 50, "Medium Insert - Legacy");
@@ -94,7 +94,7 @@ public class CollectionOperationBenchmarkTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph")
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph")
 	})
 	public void benchmarkMediumCollectionInsert_GraphNoBundling(SessionFactoryScope scope) {
 		BenchmarkResult result = runInsertBenchmark(scope, 50, 50, "Medium Insert - Graph (No Bundling)");
@@ -104,7 +104,7 @@ public class CollectionOperationBenchmarkTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph"),
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph"),
 			@Setting(name = "hibernate.bundle_collection_operations", value = "true")
 	})
 	public void benchmarkMediumCollectionInsert_GraphWithBundling(SessionFactoryScope scope) {
@@ -119,7 +119,7 @@ public class CollectionOperationBenchmarkTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "legacy")
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "legacy")
 	})
 	public void benchmarkLargeCollectionInsert_Legacy(SessionFactoryScope scope) {
 		BenchmarkResult result = runInsertBenchmark(scope, 200, 20, "Large Insert - Legacy");
@@ -129,7 +129,7 @@ public class CollectionOperationBenchmarkTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph")
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph")
 	})
 	public void benchmarkLargeCollectionInsert_GraphNoBundling(SessionFactoryScope scope) {
 		BenchmarkResult result = runInsertBenchmark(scope, 200, 20, "Large Insert - Graph (No Bundling)");
@@ -139,7 +139,7 @@ public class CollectionOperationBenchmarkTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph"),
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph"),
 			@Setting(name = "hibernate.bundle_collection_operations", value = "true")
 	})
 	public void benchmarkLargeCollectionInsert_GraphWithBundling(SessionFactoryScope scope) {
@@ -154,7 +154,7 @@ public class CollectionOperationBenchmarkTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "legacy")
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "legacy")
 	})
 	public void benchmarkCollectionUpdate_Legacy(SessionFactoryScope scope) {
 		BenchmarkResult result = runUpdateBenchmark(scope, 50, 50, "Update - Legacy");
@@ -164,7 +164,7 @@ public class CollectionOperationBenchmarkTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph")
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph")
 	})
 	public void benchmarkCollectionUpdate_GraphNoBundling(SessionFactoryScope scope) {
 		BenchmarkResult result = runUpdateBenchmark(scope, 50, 50, "Update - Graph (No Bundling)");
@@ -174,7 +174,7 @@ public class CollectionOperationBenchmarkTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph"),
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph"),
 			@Setting(name = "hibernate.bundle_collection_operations", value = "true")
 	})
 	public void benchmarkCollectionUpdate_GraphWithBundling(SessionFactoryScope scope) {
@@ -189,7 +189,7 @@ public class CollectionOperationBenchmarkTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "legacy")
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "legacy")
 	})
 	public void benchmarkMixedOperations_Legacy(SessionFactoryScope scope) {
 		BenchmarkResult result = runMixedOperationsBenchmark(scope, 30, "Mixed Ops - Legacy");
@@ -199,7 +199,7 @@ public class CollectionOperationBenchmarkTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph")
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph")
 	})
 	public void benchmarkMixedOperations_GraphNoBundling(SessionFactoryScope scope) {
 		BenchmarkResult result = runMixedOperationsBenchmark(scope, 30, "Mixed Ops - Graph (No Bundling)");
@@ -209,7 +209,7 @@ public class CollectionOperationBenchmarkTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph"),
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph"),
 			@Setting(name = "hibernate.bundle_collection_operations", value = "true")
 	})
 	public void benchmarkMixedOperations_GraphWithBundling(SessionFactoryScope scope) {
@@ -224,7 +224,7 @@ public class CollectionOperationBenchmarkTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "legacy"),
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "legacy"),
 			@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "50")
 	})
 	public void benchmarkBatchProcessing_Legacy(SessionFactoryScope scope) {
@@ -235,7 +235,7 @@ public class CollectionOperationBenchmarkTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph"),
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph"),
 			@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "50")
 	})
 	public void benchmarkBatchProcessing_GraphNoBundling(SessionFactoryScope scope) {
@@ -246,7 +246,7 @@ public class CollectionOperationBenchmarkTest {
 	@Test
 	@SessionFactory
 	@ServiceRegistry(settings = {
-			@Setting(name = AvailableSettings.FLUSH_QUEUE_IMPL, value = "graph"),
+			@Setting(name = AvailableSettings.FLUSH_QUEUE_TYPE, value = "graph"),
 			@Setting(name = "hibernate.bundle_collection_operations", value = "true"),
 			@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "50")
 	})

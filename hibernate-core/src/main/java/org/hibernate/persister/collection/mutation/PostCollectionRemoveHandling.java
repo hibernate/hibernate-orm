@@ -7,9 +7,9 @@ package org.hibernate.persister.collection.mutation;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.event.spi.PostCollectionRemoveEvent;
-import org.hibernate.event.spi.PostCollectionRemoveEventListener;
+import org.hibernate.persister.collection.CollectionPersister;
 
 /// Post-execution callback for collection remove actions.
 ///
@@ -25,19 +25,27 @@ import org.hibernate.event.spi.PostCollectionRemoveEventListener;
 ///
 /// @author Steve Ebersole
 public class PostCollectionRemoveHandling implements PostExecutionCallback {
-	private final CollectionRemoveAction action;
+	private final CollectionPersister persister;
+	private final PersistentCollection<?> collection;
+	private final Object affectedOwner;
+	private final Object affectedOwnerId;
 	private final Object cacheKey;
 
-	public PostCollectionRemoveHandling(CollectionRemoveAction action, Object cacheKey) {
-		this.action = action;
+	public PostCollectionRemoveHandling(
+			CollectionPersister persister,
+			PersistentCollection<?> collection,
+			Object affectedOwner,
+			Object affectedOwnerId,
+			Object cacheKey) {
+		this.persister = persister;
+		this.collection = collection;
+		this.affectedOwner = affectedOwner;
+		this.affectedOwnerId = affectedOwnerId;
 		this.cacheKey = cacheKey;
 	}
 
 	@Override
 	public void handle(SessionImplementor session) {
-		final var collection = action.getCollection();
-		final var persister = action.getPersister();
-
 		// 1. Update CollectionEntry state
 		if (collection != null) {
 			session.getPersistenceContextInternal()
@@ -49,7 +57,13 @@ public class PostCollectionRemoveHandling implements PostExecutionCallback {
 		evict(session, cacheKey);
 
 		// 3. Fire POST_COLLECTION_REMOVE event
-		postRemove(session);
+		DecompositionSupport.firePostRemove(
+				persister,
+				collection,
+				affectedOwner,
+				affectedOwnerId,
+				session
+		);
 
 		// 4. Update statistics
 		final var statistics = session.getFactory().getStatistics();
@@ -59,29 +73,9 @@ public class PostCollectionRemoveHandling implements PostExecutionCallback {
 	}
 
 	private void evict(SessionImplementor session, Object cacheKey) {
-		if (action.getPersister().hasCache() && cacheKey != null) {
-			final CollectionDataAccess cache = action.getPersister().getCacheAccessStrategy();
+		if (persister.hasCache() && cacheKey != null) {
+			final CollectionDataAccess cache = persister.getCacheAccessStrategy();
 			cache.remove(session, cacheKey);
 		}
-	}
-
-	private void postRemove(SessionImplementor session) {
-		session.getFactory()
-				.getEventListenerGroups()
-				.eventListenerGroup_POST_COLLECTION_REMOVE
-				.fireLazyEventOnEachListener(
-						() -> newPostCollectionRemoveEvent(session),
-						PostCollectionRemoveEventListener::onPostRemoveCollection
-				);
-	}
-
-	private PostCollectionRemoveEvent newPostCollectionRemoveEvent(SessionImplementor session) {
-		return new PostCollectionRemoveEvent(
-				action.getPersister(),
-				action.getCollection(),
-				(org.hibernate.event.spi.EventSource) session,
-				action.getAffectedOwner(),
-				action.getAffectedOwnerId()
-		);
 	}
 }

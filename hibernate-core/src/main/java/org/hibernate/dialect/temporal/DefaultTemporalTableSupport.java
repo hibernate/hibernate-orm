@@ -12,8 +12,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.SqlTypes;
 
-import java.time.Instant;
-
 import static org.hibernate.temporal.TemporalTableStrategy.HISTORY_TABLE;
 
 /**
@@ -92,9 +90,8 @@ public class DefaultTemporalTableSupport implements TemporalTableSupport {
 	}
 
 	@Override
-	public boolean useAsOfOperator(TemporalTableStrategy strategy, Instant historicalInstant) {
-		return strategy == TemporalTableStrategy.NATIVE
-			&& historicalInstant != null;
+	public boolean useAsOfOperator(TemporalTableStrategy strategy) {
+		return strategy == TemporalTableStrategy.NATIVE;
 	}
 
 	@Override

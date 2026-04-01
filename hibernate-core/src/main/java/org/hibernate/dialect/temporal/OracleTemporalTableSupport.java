@@ -12,8 +12,6 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.mapping.Table;
 
-import java.time.Instant;
-
 import static java.util.Collections.emptySet;
 import static org.hibernate.temporal.TemporalTableStrategy.HISTORY_TABLE;
 
@@ -48,12 +46,8 @@ public class OracleTemporalTableSupport extends DefaultTemporalTableSupport {
 	}
 
 	@Override
-	public boolean useAsOfOperator(TemporalTableStrategy strategy, Instant historicalInstant) {
-		return switch ( strategy ) {
-			case HISTORY_TABLE -> false;
-			case NATIVE -> historicalInstant != null;
-			default -> true;
-		};
+	public boolean useAsOfOperator(TemporalTableStrategy strategy) {
+		return strategy != HISTORY_TABLE;
 	}
 
 	@Override

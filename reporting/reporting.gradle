@@ -26,7 +26,8 @@ ext {
             'hibernate-assistant',
             'hibernate-gradle-plugin',
             'hibernate-maven-plugin',
-            'hibernate-processor'
+            'hibernate-processor',
+            'hibernate-reveng'
     ]
 }
 

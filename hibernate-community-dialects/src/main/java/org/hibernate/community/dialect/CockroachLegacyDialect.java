@@ -517,6 +517,7 @@ public class CockroachLegacyDialect extends Dialect {
 		functionContributions.getFunctionRegistry().register(
 				"trunc",
 				new PostgreSQLTruncFunction(
+						true,
 						getVersion().isSameOrAfter( 22, 2 ),
 						functionContributions.getTypeConfiguration()
 				)

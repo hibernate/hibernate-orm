@@ -6,15 +6,18 @@ package org.hibernate.temporal.internal;
 
 import java.time.Instant;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.StateManagementSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.temporal.spi.TransactionIdentifierService;
+import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
 
 import static org.hibernate.cfg.StateManagementSettings.TRANSACTION_ID_SUPPLIER;
 import static org.hibernate.cfg.StateManagementSettings.USE_SERVER_TRANSACTION_TIMESTAMPS;
@@ -34,10 +37,10 @@ import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
  *
  * @since 7.4
  */
-public class TransactionIdentifierServiceImpl implements TransactionIdentifierService, Supplier<Instant> {
+public class TransactionIdentifierServiceImpl implements TransactionIdentifierService, TransactionIdentifierSupplier<Instant> {
 
 	private final Class<?> identifierValueType;
-	private final Supplier<?> identifierValueSupplier;
+	private final TransactionIdentifierSupplier<?> identifierValueSupplier;
 	private final boolean useServerTransactionTimestamps;
 
 	public TransactionIdentifierServiceImpl(ServiceRegistry serviceRegistry) {
@@ -53,7 +56,10 @@ public class TransactionIdentifierServiceImpl implements TransactionIdentifierSe
 						+ TRANSACTION_ID_SUPPLIER + "' are mutually exclusive"
 				);
 			}
-			identifierValueSupplier = null;
+			final Dialect dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
+			identifierValueSupplier = dialect.isCurrentTimestampStable()
+					? null
+					: new CurrentTimestampTransactionIdentifierSupplier();
 			identifierValueType = Instant.class;
 		}
 		else {
@@ -61,13 +67,13 @@ public class TransactionIdentifierServiceImpl implements TransactionIdentifierSe
 					transactionIdSupplier( settings,
 							serviceRegistry.requireService( StrategySelector.class ) );
 			@SuppressWarnings( "unchecked" ) // completely safe
-			final var supplierClass = (Class<Supplier<?>>) identifierValueSupplier.getClass();
+			final var supplierClass = (Class<TransactionIdentifierSupplier<?>>) identifierValueSupplier.getClass();
 			identifierValueType = resolveSuppliedType( supplierClass );
 		}
 	}
 
 	@Override
-	public Instant get() {
+	public Instant generateTransactionIdentifier(SharedSessionContract session) {
 		return Instant.now();
 	}
 
@@ -82,7 +88,7 @@ public class TransactionIdentifierServiceImpl implements TransactionIdentifierSe
 	}
 
 	@Override
-	public Supplier<?> getIdentifierSupplier() {
+	public TransactionIdentifierSupplier<?> getIdentifierSupplier() {
 		return identifierValueSupplier;
 	}
 
@@ -91,8 +97,8 @@ public class TransactionIdentifierServiceImpl implements TransactionIdentifierSe
 		return useServerTransactionTimestamps;
 	}
 
-	private static Class<?> resolveSuppliedType(Class<? extends Supplier<?>> supplierClass) {
-		final var supplierInstantiation = supertypeInstantiation( Supplier.class, supplierClass );
+	private static Class<?> resolveSuppliedType(Class<? extends TransactionIdentifierSupplier<?>> supplierClass) {
+		final var supplierInstantiation = supertypeInstantiation( TransactionIdentifierSupplier.class, supplierClass );
 		if ( supplierInstantiation == null ) {
 			return null;
 		}
@@ -102,32 +108,32 @@ public class TransactionIdentifierServiceImpl implements TransactionIdentifierSe
 		}
 	}
 
-	public Supplier<?> transactionIdSupplier(
+	public TransactionIdentifierSupplier<?> transactionIdSupplier(
 			Map<String,Object> settings,
 			StrategySelector strategySelector) {
 		final Object setting = settings.get( TRANSACTION_ID_SUPPLIER );
 		if ( setting == null ) {
 			return this;
 		}
-		else if ( setting instanceof Supplier<?> supplier ) {
+		else if ( setting instanceof TransactionIdentifierSupplier<?> supplier ) {
 			return supplier;
 		}
 		else if ( setting instanceof Class<?> clazz ) {
-			if ( !Supplier.class.isAssignableFrom( clazz ) ) {
+			if ( !TransactionIdentifierSupplier.class.isAssignableFrom( clazz ) ) {
 				throw new HibernateException(
 						"Setting '" + TRANSACTION_ID_SUPPLIER + "' must specify a '"
-								+ Supplier.class.getName() + "' or a class name"
+								+ TransactionIdentifierSupplier.class.getName() + "' or a class name"
 				);
 			}
-			return strategySelector.resolveStrategy( Supplier.class, clazz );
+			return strategySelector.resolveStrategy( TransactionIdentifierSupplier.class, clazz );
 		}
 		else if ( setting instanceof String name ) {
-			return strategySelector.resolveStrategy( Supplier.class, name );
+			return strategySelector.resolveStrategy( TransactionIdentifierSupplier.class, name );
 		}
 		else {
 			throw new HibernateException(
 					"Setting '" + TRANSACTION_ID_SUPPLIER + "' must specify a '"
-							+ Supplier.class.getName() + "' or a class name"
+							+ TransactionIdentifierSupplier.class.getName() + "' or a class name"
 			);
 		}
 	}

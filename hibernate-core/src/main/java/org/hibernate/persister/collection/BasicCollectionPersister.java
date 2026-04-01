@@ -719,7 +719,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	private static boolean isUsingTransactionIdParameters(SharedSessionContractImplementor session) {
 		final var factory = session.getFactory();
 		return factory.getSessionFactoryOptions().getTemporalTableStrategy() == SINGLE_TABLE
-			&& !factory.getTransactionIdentifierService().isDisabled();
+			&& (!factory.getTransactionIdentifierService().isDisabled()
+				|| !factory.getJdbcServices().getDialect().isCurrentTimestampStable());
 	}
 
 	private boolean isNativeTemporalTablesEnabled() {

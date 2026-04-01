@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql.exec.internal;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.sql.exec.ExecutionException;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -26,7 +27,11 @@ public class TemporalJdbcParameter extends SqlTypedMappingJdbcParameter {
 	@Override
 	public void bindParameterValue(PreparedStatement statement, int startPosition, JdbcParameterBindings jdbcParamBindings, ExecutionContext executionContext)
 			throws SQLException {
-		final Object currentTransactionIdentifier = executionContext.getSession().getCurrentTransactionIdentifier();
+		final SharedSessionContractImplementor session = executionContext.getSession();
+		final Object temporalIdentifier = session.getLoadQueryInfluencers().getTemporalIdentifier();
+		final Object currentTransactionIdentifier = temporalIdentifier != null
+				? temporalIdentifier
+				: session.getCurrentTransactionIdentifier();
 		if ( currentTransactionIdentifier == null ) {
 			throw new ExecutionException( "JDBC parameter value not bound - " + this );
 		}

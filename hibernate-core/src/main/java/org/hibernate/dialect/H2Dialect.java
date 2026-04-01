@@ -873,6 +873,11 @@ public class H2Dialect extends Dialect {
 		return "call current_timestamp()";
 	}
 
+	@Override
+	public boolean isCurrentTimestampStable() {
+		return true;
+	}
+
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

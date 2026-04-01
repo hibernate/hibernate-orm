@@ -3427,6 +3427,16 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return true;
 	}
 
+	/**
+	 * Is the result of {@code current_timestamp} stable i.e. does it always produce the same value
+	 * within a transaction?
+	 *
+	 * @return {@code true} if it is stable; false otherwise.
+	 */
+	public boolean isCurrentTimestampStable() {
+		return false;
+	}
+
 
 	// SQLException support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

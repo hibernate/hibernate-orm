@@ -6348,14 +6348,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( WHITESPACE );
 			appendSql( dialect.getTemporalTableSupport().getAsOfOperator( getTemporalTableStrategy() ) );
 			appendSql( WHITESPACE );
-			if ( sessionFactory.getTransactionIdentifierService().isDisabled() ) {
-				// we are querying current data,
-				// so we can use the server timestamp
-				appendSql( dialect.currentTimestamp() );
-			}
-			else {
-				tableReference.getAsOfTransactionIdentifier().accept( this );
-			}
+			tableReference.getAsOfTransactionIdentifier().accept( this );
 		}
 		renderTableReferenceIdentificationVariable( tableReference );
 		return false;

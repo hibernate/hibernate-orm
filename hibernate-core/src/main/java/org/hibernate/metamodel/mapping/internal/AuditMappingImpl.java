@@ -116,8 +116,8 @@ public class AuditMappingImpl implements AuditMapping {
 				creationContext
 		);
 
-		currentTimestampFunctionName =
-				sessionFactory.getTransactionIdentifierService().isDisabled()
+		currentTimestampFunctionName = sessionFactory.getTransactionIdentifierService().isDisabled()
+				&& sessionFactory.getJdbcServices().getDialect().isCurrentTimestampStable()
 						? sessionFactory.getJdbcServices().getDialect().currentTimestamp()
 						: null;
 

@@ -564,6 +564,11 @@ public class CockroachLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public boolean isCurrentTimestampStable() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsDistinctFromPredicate() {
 		return true;
 	}

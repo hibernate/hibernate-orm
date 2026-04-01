@@ -59,7 +59,7 @@ public class InstrumentationDetector extends EntityModelDetector {
 			Class<?>[] interfaces = mappedClass.getInterfaces();
 			boolean enhanced = false;
 			for (Class<?> intface : interfaces) {
-				if (intface.getName().equals(Managed.class.getName())) {
+				if (Managed.class.isAssignableFrom(intface)) {
 					enhanced = true;
 					break;
 				}

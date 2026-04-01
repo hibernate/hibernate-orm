@@ -105,24 +105,11 @@ public class TemplateHelper {
 	public class Templates {
 
 		public void createFile(String content, String fileName) {
-			Writer fw = null;
-			try {
-				fw = new BufferedWriter(new FileWriter(new File(getOutputDirectory(), fileName)));
+			try (Writer fw = new BufferedWriter(new FileWriter(new File(getOutputDirectory(), fileName)))) {
 				fw.write(content);
 			}
 			catch(IOException io) {
 				throw new RuntimeException("Problem when writing to " + fileName, io);
-			}
-			finally {
-				if(fw!=null) {
-					try {
-						fw.flush();
-						fw.close();
-					}
-					catch(IOException io ) {
-						//TODO: warn
-					}
-				}
 			}
 		}
 	}

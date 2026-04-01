@@ -4,6 +4,8 @@
  */
 package org.hibernate.tool.reveng.internal.core.strategy;
 
+import java.util.Objects;
+
 public class SQLTypeMapping implements Comparable<SQLTypeMapping> {
 
 	//static public final int UNKNOWN_TYPE = Integer.MAX_VALUE;
@@ -85,7 +87,7 @@ public class SQLTypeMapping implements Comparable<SQLTypeMapping> {
 			if(matchlength==this.length || this.length == UNKNOWN_LENGTH) {
 				if(matchprecision==this.precision || this.precision == UNKNOWN_PRECISION) {
 					if(matchscale==this.scale || this.scale == UNKNOWN_SCALE ) {
-						return this.nullable == UNKNOWN_NULLABLE || nullable.equals( matchnullable );
+						return this.nullable == null || nullable.equals( matchnullable );
 					}
 				}
 			}
@@ -121,12 +123,11 @@ public class SQLTypeMapping implements Comparable<SQLTypeMapping> {
 		return Integer.compare( value, other );
 	}
 
-	// complete ordering of the tri-state: false, true, UNKNOWN_NULLABLE
+	// complete ordering of the tri-state: false, true, null (UNKNOWN_NULLABLE)
 	private int compare(Boolean value, Boolean other) {
-		if(value==other) return 0;
-		if(value==UNKNOWN_NULLABLE) return 1;
-		if(other==UNKNOWN_NULLABLE) return -1;
-		if(value.equals(other)) return 0;
+		if(Objects.equals(value, other)) return 0;
+		if(value == null) return 1;
+		if(other == null) return -1;
 		if(value.equals(Boolean.TRUE)) {
 			return 1;
 		}
@@ -146,7 +147,7 @@ public class SQLTypeMapping implements Comparable<SQLTypeMapping> {
 	}
 
 	public int hashCode() {
-		return (jdbcType + length + precision + scale + (nullable==UNKNOWN_NULLABLE?1:nullable.hashCode())) % 17;
+		return (jdbcType + length + precision + scale + (nullable == null ? 1 : nullable.hashCode())) % 17;
 	}
 
 

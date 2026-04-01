@@ -457,41 +457,16 @@ public class DocFileManager {
 	 * @throws IOException in case of error.
 	 */
 	public static void copy(ClassLoader loader, String fileName, File to) throws IOException {
-		InputStream is = null;
-		FileOutputStream out = null;
-		try {
-			/*ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-			if (classLoader == null) {
-				classLoader = DocFileManager.class.getClassLoader();
-			}
+		InputStream is = loader.getResourceAsStream( fileName );
 
-			is = classLoader.getResourceAsStream(fileName);*/
+		if(is==null) {
+			throw new IllegalArgumentException("File not found: " + fileName);
+		}
 
-			/*if (is == null && classLoader!=DocFileManager.class.getClassLoader() ) {
-				is = DocFileManager.class.getClassLoader().getResourceAsStream(fileName); // HACK: workaround since eclipse for some reason doesnt provide the right classloader;
-
-			} */
-			is = loader.getResourceAsStream( fileName );
-
-			if(is==null) {
-				throw new IllegalArgumentException("File not found: "
-						+ fileName);
-			}
-
-			out = new FileOutputStream(to);
-
+		try (is; FileOutputStream out = new FileOutputStream(to)) {
 			int value;
 			while ( (value = is.read() ) != -1) {
 				out.write(value);
-			}
-
-		}
-		finally {
-			if (is != null) {
-				is.close();
-			}
-			if (out != null) {
-				out.close();
 			}
 		}
 	}

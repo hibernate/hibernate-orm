@@ -2252,6 +2252,46 @@ public class MappingXmlHelperTest {
 		assertEquals("PROPERTY", new MappingXmlHelper(entity).getAccessType(field));
 	}
 
+	// --- Column insertable/updatable ---
+
+	@Test
+	public void testIsInsertableDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		assertTrue(new MappingXmlHelper(entity).isInsertable(field));
+	}
+
+	@Test
+	public void testIsInsertableFalse() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		ColumnJpaAnnotation col = JpaAnnotations.COLUMN.createUsage(ctx);
+		col.insertable(false);
+		field.addAnnotationUsage(col);
+		assertFalse(new MappingXmlHelper(entity).isInsertable(field));
+	}
+
+	@Test
+	public void testIsUpdatableDefault() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		assertTrue(new MappingXmlHelper(entity).isUpdatable(field));
+	}
+
+	@Test
+	public void testIsUpdatableFalse() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		ColumnJpaAnnotation col = JpaAnnotations.COLUMN.createUsage(ctx);
+		col.updatable(false);
+		field.addAnnotationUsage(col);
+		assertFalse(new MappingXmlHelper(entity).isUpdatable(field));
+	}
+
 	private void addMethodsFrom(Class<?> source, DynamicClassDetails target, ModelsContext modelsContext) {
 		for (java.lang.reflect.Method method : source.getDeclaredMethods()) {
 			target.addMethod(new JdkMethodDetails(

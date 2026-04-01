@@ -578,6 +578,36 @@ public class MappingXmlExporterTest {
 		assertTrue(xml.contains("<basic name=\"name\" access=\"PROPERTY\""), xml);
 	}
 
+	// --- Column insertable/updatable ---
+
+	@Test
+	public void testColumnInsertableFalse() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class).insertable(false));
+		String xml = export(table);
+		assertTrue(xml.contains("insertable=\"false\""), xml);
+	}
+
+	@Test
+	public void testColumnUpdatableFalse() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class).updatable(false));
+		String xml = export(table);
+		assertTrue(xml.contains("updatable=\"false\""), xml);
+	}
+
+	@Test
+	public void testColumnInsertableUpdatableDefault() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		String xml = export(table);
+		assertFalse(xml.contains("insertable="), xml);
+		assertFalse(xml.contains("updatable="), xml);
+	}
+
 	// --- @SQLDeleteAll ---
 
 	@Test

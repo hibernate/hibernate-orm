@@ -37,7 +37,7 @@
 <#if helper.getFormula(field)??>
                 <formula>${helper.getFormula(field)}</formula>
 <#else>
-                <column name="${helper.getColumnName(field)}"<#if !helper.isNullable(field)> nullable="false"</#if><#if helper.isUnique(field)> unique="true"</#if><#if (helper.getLength(field) > 0)> length="${helper.getLength(field)?c}"</#if><#if (helper.getPrecision(field) > 0)> precision="${helper.getPrecision(field)?c}"</#if><#if (helper.getScale(field) > 0)> scale="${helper.getScale(field)?c}"</#if><#if helper.getColumnTable(field)??> table="${helper.getColumnTable(field)}"</#if>/>
+                <column name="${helper.getColumnName(field)}"<#if !helper.isNullable(field)> nullable="false"</#if><#if helper.isUnique(field)> unique="true"</#if><#if !helper.isInsertable(field)> insertable="false"</#if><#if !helper.isUpdatable(field)> updatable="false"</#if><#if (helper.getLength(field) > 0)> length="${helper.getLength(field)?c}"</#if><#if (helper.getPrecision(field) > 0)> precision="${helper.getPrecision(field)?c}"</#if><#if (helper.getScale(field) > 0)> scale="${helper.getScale(field)?c}"</#if><#if helper.getColumnTable(field)??> table="${helper.getColumnTable(field)}"</#if>/>
 </#if>
 <#if helper.isLob(field)>
                 <lob/>

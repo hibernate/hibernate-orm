@@ -38,6 +38,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
@@ -674,6 +675,21 @@ public class HbmTemplateHelper {
 		return jc != null ? jc.name() : null;
 	}
 
+	public List<String> getJoinColumnNames(FieldDetails field) {
+		List<String> result = new ArrayList<>();
+		JoinColumn single = field.getDirectAnnotationUsage(JoinColumn.class);
+		if (single != null) {
+			result.add(single.name());
+		}
+		JoinColumns container = field.getDirectAnnotationUsage(JoinColumns.class);
+		if (container != null) {
+			for (JoinColumn jc : container.value()) {
+				result.add(jc.name());
+			}
+		}
+		return result;
+	}
+
 	// --- OneToOne ---
 
 	public String getOneToOneMappedBy(FieldDetails field) {
@@ -742,10 +758,32 @@ public class HbmTemplateHelper {
 		return jt != null && jt.joinColumns().length > 0 ? jt.joinColumns()[0].name() : null;
 	}
 
+	public List<String> getJoinTableJoinColumnNames(FieldDetails field) {
+		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
+		List<String> result = new ArrayList<>();
+		if (jt != null) {
+			for (JoinColumn jc : jt.joinColumns()) {
+				result.add(jc.name());
+			}
+		}
+		return result;
+	}
+
 	public String getJoinTableInverseJoinColumnName(FieldDetails field) {
 		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
 		return jt != null && jt.inverseJoinColumns().length > 0
 				? jt.inverseJoinColumns()[0].name() : null;
+	}
+
+	public List<String> getJoinTableInverseJoinColumnNames(FieldDetails field) {
+		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
+		List<String> result = new ArrayList<>();
+		if (jt != null) {
+			for (JoinColumn jc : jt.inverseJoinColumns()) {
+				result.add(jc.name());
+			}
+		}
+		return result;
 	}
 
 	public String getManyToManyCascadeString(FieldDetails field) {

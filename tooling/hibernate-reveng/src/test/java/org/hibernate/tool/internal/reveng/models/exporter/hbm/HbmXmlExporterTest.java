@@ -831,4 +831,37 @@ public class HbmXmlExporterTest {
 		String xml = writer.toString();
 		assertTrue(xml.contains("<sql-delete-all callable=\"true\">{call deleteAllEmps(?)}</sql-delete-all>"), xml);
 	}
+
+	// --- Composite join columns ---
+
+	@Test
+	public void testCompositeJoinColumnsOnManyToOne() {
+		TableMetadata table = new TableMetadata("ORDER_ITEM", "OrderItem", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addForeignKey(new ForeignKeyMetadata(
+				"order", "ORDER_ID", "Order", "com.example"));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		// Replace the single @JoinColumn with @JoinColumns containing two columns
+		for (var field : entity.getFields()) {
+			if ("order".equals(field.getName())) {
+				var df = (org.hibernate.models.internal.dynamic.DynamicFieldDetails) field;
+				var jc1 = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+				jc1.name("ORDER_ID");
+				var jc2 = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+				jc2.name("ORDER_SEQ");
+				var jcs = JpaAnnotations.JOIN_COLUMNS.createUsage(ctx);
+				jcs.value(new jakarta.persistence.JoinColumn[]{jc1, jc2});
+				df.addAnnotationUsage(jcs);
+				break;
+			}
+		}
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<column name=\"ORDER_ID\"/>"), xml);
+		assertTrue(xml.contains("<column name=\"ORDER_SEQ\"/>"), xml);
+	}
 }

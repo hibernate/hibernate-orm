@@ -76,6 +76,7 @@ import org.hibernate.boot.models.annotations.internal.SQLUpdateAnnotation;
 import org.hibernate.boot.models.annotations.internal.SortComparatorAnnotation;
 import org.hibernate.boot.models.annotations.internal.OneToManyJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.JoinColumnsJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.JoinTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OptimisticLockAnnotation;
 import org.hibernate.boot.models.annotations.internal.OptimisticLockingAnnotation;
@@ -2425,5 +2426,76 @@ public class HbmTemplateHelperTest {
 		assertNull(helper.getCollectionSQLUpdate(field));
 		assertNull(helper.getCollectionSQLDelete(field));
 		assertNull(helper.getCollectionSQLDeleteAll(field));
+	}
+
+	// --- Composite join columns ---
+
+	@Test
+	public void testGetJoinColumnNamesSingle() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "parent", String.class, ctx);
+		JoinColumnJpaAnnotation jc = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+		jc.name("PARENT_ID");
+		field.addAnnotationUsage(jc);
+		List<String> names = new HbmTemplateHelper(entity).getJoinColumnNames(field);
+		assertEquals(1, names.size());
+		assertEquals("PARENT_ID", names.get(0));
+	}
+
+	@Test
+	public void testGetJoinColumnNamesMultiple() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "parent", String.class, ctx);
+		JoinColumnJpaAnnotation jc1 = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+		jc1.name("PARENT_ID1");
+		JoinColumnJpaAnnotation jc2 = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+		jc2.name("PARENT_ID2");
+		JoinColumnsJpaAnnotation jcs = JpaAnnotations.JOIN_COLUMNS.createUsage(ctx);
+		jcs.value(new jakarta.persistence.JoinColumn[]{jc1, jc2});
+		field.addAnnotationUsage(jcs);
+		List<String> names = new HbmTemplateHelper(entity).getJoinColumnNames(field);
+		assertEquals(2, names.size());
+		assertEquals("PARENT_ID1", names.get(0));
+		assertEquals("PARENT_ID2", names.get(1));
+	}
+
+	@Test
+	public void testGetJoinColumnNamesEmpty() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "parent", String.class, ctx);
+		assertTrue(new HbmTemplateHelper(entity).getJoinColumnNames(field).isEmpty());
+	}
+
+	@Test
+	public void testGetJoinTableJoinColumnNamesMultiple() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "tags", String.class, ctx);
+		JoinColumnJpaAnnotation jc1 = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+		jc1.name("FK1");
+		JoinColumnJpaAnnotation jc2 = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+		jc2.name("FK2");
+		JoinColumnJpaAnnotation inv1 = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+		inv1.name("INV1");
+		JoinColumnJpaAnnotation inv2 = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+		inv2.name("INV2");
+		org.hibernate.boot.models.annotations.internal.JoinTableJpaAnnotation jt =
+				JpaAnnotations.JOIN_TABLE.createUsage(ctx);
+		jt.name("TAG_MAP");
+		jt.joinColumns(new jakarta.persistence.JoinColumn[]{jc1, jc2});
+		jt.inverseJoinColumns(new jakarta.persistence.JoinColumn[]{inv1, inv2});
+		field.addAnnotationUsage(jt);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		List<String> joinCols = helper.getJoinTableJoinColumnNames(field);
+		assertEquals(2, joinCols.size());
+		assertEquals("FK1", joinCols.get(0));
+		assertEquals("FK2", joinCols.get(1));
+		List<String> invCols = helper.getJoinTableInverseJoinColumnNames(field);
+		assertEquals(2, invCols.size());
+		assertEquals("INV1", invCols.get(0));
+		assertEquals("INV2", invCols.get(1));
 	}
 }

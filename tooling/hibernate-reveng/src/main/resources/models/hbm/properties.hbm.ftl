@@ -35,7 +35,9 @@
         <meta attribute="${metaName}">${metaValue}</meta>
 </#list>
 </#list>
-        <column name="${helper.getJoinColumnName(field)}"/>
+<#list helper.getJoinColumnNames(field) as colName>
+        <column name="${colName}"/>
+</#list>
     </many-to-one>
 </#list>
 <#-- One-to-one -->
@@ -129,7 +131,9 @@
         <cache usage="${helper.getCollectionCacheUsage(field)}"<#if helper.getCollectionCacheRegion(field)??> region="${helper.getCollectionCacheRegion(field)}"</#if>/>
 </#if>
         <key>
-            <column name="${helper.getJoinTableJoinColumnName(field)}"/>
+<#list helper.getJoinTableJoinColumnNames(field) as colName>
+            <column name="${colName}"/>
+</#list>
         </key>
 <#if collTag == "list">
         <list-index column="${helper.getListIndexColumnName(field)}"/>
@@ -143,7 +147,9 @@
         </collection-id>
 </#if>
         <many-to-many class="${helper.getManyToManyTargetEntity(field)}">
-            <column name="${helper.getJoinTableInverseJoinColumnName(field)}"/>
+<#list helper.getJoinTableInverseJoinColumnNames(field) as colName>
+            <column name="${colName}"/>
+</#list>
         </many-to-many>
 <#list helper.getCollectionFilters(field) as fi>
         <filter name="${fi.name()}"<#if fi.condition()?has_content> condition="${fi.condition()}"</#if>/>
@@ -265,7 +271,9 @@
 </#list>
 </#list>
         <key>
-            <column name="${helper.getJoinTableJoinColumnName(field)}"/>
+<#list helper.getJoinTableJoinColumnNames(field) as colName>
+            <column name="${colName}"/>
+</#list>
         </key>
         <many-to-any id-type="${helper.getAnyIdType(field)}" meta-type="${helper.getAnyMetaType(field)}">
 <#list helper.getAnyMetaValues(field) as mv>

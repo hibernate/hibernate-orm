@@ -29,6 +29,7 @@ import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.NullOrdering;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.function.TruncFunction;
 import org.hibernate.dialect.function.TrimFunction;
@@ -426,6 +427,23 @@ public class InformixDialect extends Dialect {
 				)
 		);
 		functionRegistry.registerAlternateKey( "truncate", "trunc" );
+
+		// For the count distinct emulation distinct
+		functionContributions.getFunctionRegistry().register(
+				"count",
+				new CountFunction(
+						this,
+						functionContributions.getTypeConfiguration(),
+						SqlAstNodeRenderingMode.DEFAULT,
+						"count",
+						"||",
+						null,
+						false,
+						null,
+						// Use chr(1), because chr(0) produces NULL
+						1
+				)
+		);
 	}
 
 	@Override
@@ -1183,6 +1201,11 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsTupleDistinctCounts() {
 		return false;
 	}
 

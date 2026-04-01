@@ -4,6 +4,9 @@
 	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping<#if helper.getPackageName()??> package="${helper.getPackageName()}"</#if>>
+<#list helper.getImports() as imp>
+    <import class="${imp.className()}" rename="${imp.rename()}"/>
+</#list>
 <#include "class.hbm.ftl"/>
 <#list helper.getFilterDefs() as fd>
 <#if fd.parameters()?size == 0>

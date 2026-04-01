@@ -9,6 +9,11 @@
         lazy="true"</#if><#if helper.isOptimisticLockExcluded(field)>
         optimistic-lock="false"</#if><#if helper.getFormula(field)??>
         formula="${helper.getFormula(field)}"</#if>>
+<#list helper.getFieldMetaAttributes(field)?keys as metaName>
+<#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
+        <meta attribute="${metaName}">${metaValue}</meta>
+</#list>
+</#list>
 <#if !helper.getFormula(field)??>
         <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
 </#if>
@@ -25,17 +30,37 @@
         not-null="true"</#if><#if helper.getAccessType(field)??>
         access="${helper.getAccessType(field)}"</#if><#if helper.getNotFoundAction(field)??>
         not-found="${helper.getNotFoundAction(field)}"</#if>>
+<#list helper.getFieldMetaAttributes(field)?keys as metaName>
+<#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
+        <meta attribute="${metaName}">${metaValue}</meta>
+</#list>
+</#list>
         <column name="${helper.getJoinColumnName(field)}"/>
     </many-to-one>
 </#list>
 <#-- One-to-one -->
 <#list helper.getOneToOneFields() as field>
+<#if (helper.getFieldMetaAttributes(field)?size == 0)>
     <one-to-one
         name="${field.getName()}"
         class="${helper.getTargetEntityName(field)}"<#if helper.getOneToOneMappedBy(field)??>
         property-ref="${helper.getOneToOneMappedBy(field)}"</#if><#if helper.getOneToOneCascadeString(field)??>
         cascade="${helper.getOneToOneCascadeString(field)}"</#if><#if helper.isOneToOneConstrained(field)>
         constrained="true"</#if>/>
+<#else>
+    <one-to-one
+        name="${field.getName()}"
+        class="${helper.getTargetEntityName(field)}"<#if helper.getOneToOneMappedBy(field)??>
+        property-ref="${helper.getOneToOneMappedBy(field)}"</#if><#if helper.getOneToOneCascadeString(field)??>
+        cascade="${helper.getOneToOneCascadeString(field)}"</#if><#if helper.isOneToOneConstrained(field)>
+        constrained="true"</#if>>
+<#list helper.getFieldMetaAttributes(field)?keys as metaName>
+<#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
+        <meta attribute="${metaName}">${metaValue}</meta>
+</#list>
+</#list>
+    </one-to-one>
+</#if>
 </#list>
 <#-- Collections (one-to-many) -->
 <#list helper.getOneToManyFields() as field>
@@ -48,6 +73,11 @@
         batch-size="${helper.getCollectionBatchSize(field)?c}"</#if><#if helper.getCollectionOrderBy(field)??>
         order-by="${helper.getCollectionOrderBy(field)}"</#if><#if helper.getSort(field)??>
         sort="${helper.getSort(field)}"</#if>>
+<#list helper.getFieldMetaAttributes(field)?keys as metaName>
+<#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
+        <meta attribute="${metaName}">${metaValue}</meta>
+</#list>
+</#list>
         <key>
             <column name="${helper.getOneToManyMappedBy(field)}"/>
         </key>
@@ -75,6 +105,11 @@
         batch-size="${helper.getCollectionBatchSize(field)?c}"</#if><#if helper.getCollectionOrderBy(field)??>
         order-by="${helper.getCollectionOrderBy(field)}"</#if><#if helper.getSort(field)??>
         sort="${helper.getSort(field)}"</#if>>
+<#list helper.getFieldMetaAttributes(field)?keys as metaName>
+<#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
+        <meta attribute="${metaName}">${metaValue}</meta>
+</#list>
+</#list>
         <key>
             <column name="${helper.getJoinTableJoinColumnName(field)}"/>
         </key>
@@ -102,6 +137,11 @@
         cascade="${helper.getCollectionCascadeString(field)}"</#if><#if helper.getCollectionLazy(field)??>
         lazy="${helper.getCollectionLazy(field)}"</#if><#if helper.getCollectionFetchMode(field)??>
         fetch="${helper.getCollectionFetchMode(field)}"</#if>>
+<#list helper.getFieldMetaAttributes(field)?keys as metaName>
+<#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
+        <meta attribute="${metaName}">${metaValue}</meta>
+</#list>
+</#list>
         <key>
             <column name="${field.getName()}"/>
         </key>
@@ -112,6 +152,11 @@
 <#-- Components (embedded) -->
 <#list helper.getEmbeddedFields() as field>
     <component name="${field.getName()}" class="${helper.getEmbeddableClassName(field)}">
+<#list helper.getFieldMetaAttributes(field)?keys as metaName>
+<#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
+        <meta attribute="${metaName}">${metaValue}</meta>
+</#list>
+</#list>
 <#list helper.getAttributeOverrides(field) as ao>
         <property name="${ao.fieldName()}">
             <column name="${ao.columnName()}"/>
@@ -125,6 +170,11 @@
         id-type="${helper.getAnyIdType(field)}"
         meta-type="${helper.getAnyMetaType(field)}"<#if helper.getAccessType(field)??>
         access="${helper.getAccessType(field)}"</#if>>
+<#list helper.getFieldMetaAttributes(field)?keys as metaName>
+<#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
+        <meta attribute="${metaName}">${metaValue}</meta>
+</#list>
+</#list>
 <#list helper.getAnyMetaValues(field) as mv>
         <meta-value value="${mv.value()}" class="${mv.entityClass()}"/>
 </#list>
@@ -142,6 +192,11 @@
         lazy="${helper.getCollectionLazy(field)}"</#if><#if helper.getCollectionFetchMode(field)??>
         fetch="${helper.getCollectionFetchMode(field)}"</#if><#if helper.getCollectionOrderBy(field)??>
         order-by="${helper.getCollectionOrderBy(field)}"</#if>>
+<#list helper.getFieldMetaAttributes(field)?keys as metaName>
+<#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
+        <meta attribute="${metaName}">${metaValue}</meta>
+</#list>
+</#list>
         <key>
 <#if helper.getElementCollectionKeyColumnName(field)??>
             <column name="${helper.getElementCollectionKeyColumnName(field)}"/>
@@ -171,6 +226,11 @@
 <#list helper.getManyToAnyFields() as field>
 <#assign collTag = helper.getCollectionTag(field)>
     <${collTag} name="${field.getName()}"<#if helper.getJoinTableName(field)??> table="${helper.getJoinTableName(field)}"</#if>>
+<#list helper.getFieldMetaAttributes(field)?keys as metaName>
+<#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
+        <meta attribute="${metaName}">${metaValue}</meta>
+</#list>
+</#list>
         <key>
             <column name="${helper.getJoinTableJoinColumnName(field)}"/>
         </key>

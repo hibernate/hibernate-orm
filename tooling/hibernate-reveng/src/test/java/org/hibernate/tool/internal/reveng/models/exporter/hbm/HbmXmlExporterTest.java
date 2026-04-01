@@ -596,4 +596,116 @@ public class HbmXmlExporterTest {
 		assertTrue(xml.contains("</return>"), xml);
 		assertTrue(xml.contains("<return-scalar column=\"EXTRA_COL\"/>"), xml);
 	}
+
+	// --- Import elements ---
+
+	@Test
+	public void testImportElements() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		Map<String, String> imports = new java.util.LinkedHashMap<>();
+		imports.put("com.example.Employee", "Emp");
+		imports.put("com.example.Department", "Dept");
+		exporter.export(writer, entity, null, Collections.emptyMap(), imports);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<import class=\"com.example.Employee\" rename=\"Emp\"/>"), xml);
+		assertTrue(xml.contains("<import class=\"com.example.Department\" rename=\"Dept\"/>"), xml);
+	}
+
+	@Test
+	public void testImportElementsExcludesSameName() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		Map<String, String> imports = Map.of("com.example.Employee", "com.example.Employee");
+		exporter.export(writer, entity, null, Collections.emptyMap(), imports);
+		String xml = writer.toString();
+		assertFalse(xml.contains("<import"), xml);
+	}
+
+	@Test
+	public void testNoImportElements() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, new DynamicEntityBuilder().createEntityFromTable(table));
+		String xml = writer.toString();
+		assertFalse(xml.contains("<import"), xml);
+	}
+
+	// --- Field meta-attributes ---
+
+	@Test
+	public void testFieldMetaAttributeOnProperty() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		Map<String, Map<String, List<String>>> fieldMeta = Map.of(
+				"name", Map.of("default-value", List.of("N/A")));
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity, null, Collections.emptyMap(),
+				Collections.emptyMap(), fieldMeta);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<meta attribute=\"default-value\">N/A</meta>"), xml);
+	}
+
+	@Test
+	public void testFieldMetaAttributeOnCollection() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata("employees", "department", "Employee", "com.example"));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		Map<String, Map<String, List<String>>> fieldMeta = Map.of(
+				"employees", Map.of("property-type", List.of("java.util.List")));
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity, null, Collections.emptyMap(),
+				Collections.emptyMap(), fieldMeta);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<meta attribute=\"property-type\">java.util.List</meta>"), xml);
+	}
+
+	@Test
+	public void testFieldMetaAttributeMultipleValues() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		Map<String, Map<String, List<String>>> fieldMeta = Map.of(
+				"name", Map.of("scope-field", List.of("protected"),
+						"use-in-tostring", List.of("true")));
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity, null, Collections.emptyMap(),
+				Collections.emptyMap(), fieldMeta);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<meta attribute=\"scope-field\">protected</meta>"), xml);
+		assertTrue(xml.contains("<meta attribute=\"use-in-tostring\">true</meta>"), xml);
+	}
+
+	@Test
+	public void testNoFieldMetaAttributes() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, new DynamicEntityBuilder().createEntityFromTable(table));
+		String xml = writer.toString();
+		// Should have no <meta> at all (no class-level or field-level)
+		assertFalse(xml.contains("<meta attribute="), xml);
+	}
 }

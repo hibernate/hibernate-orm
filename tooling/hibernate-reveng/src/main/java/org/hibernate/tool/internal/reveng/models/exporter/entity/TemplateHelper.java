@@ -49,10 +49,15 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapKey;
 import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.ColumnResult;
+import jakarta.persistence.EntityResult;
+import jakarta.persistence.FieldResult;
 import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
+import jakarta.persistence.SqlResultSetMapping;
+import jakarta.persistence.SqlResultSetMappings;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderBy;
@@ -432,10 +437,58 @@ public class TemplateHelper {
 			sb.append("@NamedQuery(name = \"").append(nq.name())
 					.append("\", query = \"").append(nq.query()).append("\")\n");
 		}
-		for (NamedQueryInfo nnq : getNamedNativeQueries()) {
+		for (SqlResultSetMappingInfo mapping : getSqlResultSetMappings()) {
+			importType("jakarta.persistence.SqlResultSetMapping");
+			sb.append("@SqlResultSetMapping(name = \"").append(mapping.name()).append("\"");
+			if (!mapping.entityResults().isEmpty()) {
+				importType("jakarta.persistence.EntityResult");
+				sb.append(", entities = {");
+				for (int i = 0; i < mapping.entityResults().size(); i++) {
+					if (i > 0) sb.append(", ");
+					EntityResultInfo er = mapping.entityResults().get(i);
+					String simpleEntityClass = importType(er.entityClass());
+					sb.append("@EntityResult(entityClass = ").append(simpleEntityClass).append(".class");
+					if (er.discriminatorColumn() != null) {
+						sb.append(", discriminatorColumn = \"").append(er.discriminatorColumn()).append("\"");
+					}
+					if (!er.fieldResults().isEmpty()) {
+						importType("jakarta.persistence.FieldResult");
+						sb.append(", fields = {");
+						for (int j = 0; j < er.fieldResults().size(); j++) {
+							if (j > 0) sb.append(", ");
+							FieldResultInfo fr = er.fieldResults().get(j);
+							sb.append("@FieldResult(name = \"").append(fr.name())
+									.append("\", column = \"").append(fr.column()).append("\")");
+						}
+						sb.append("}");
+					}
+					sb.append(")");
+				}
+				sb.append("}");
+			}
+			if (!mapping.columnResults().isEmpty()) {
+				importType("jakarta.persistence.ColumnResult");
+				sb.append(", columns = {");
+				for (int i = 0; i < mapping.columnResults().size(); i++) {
+					if (i > 0) sb.append(", ");
+					sb.append("@ColumnResult(name = \"").append(mapping.columnResults().get(i).name()).append("\")");
+				}
+				sb.append("}");
+			}
+			sb.append(")\n");
+		}
+		for (NamedNativeQueryInfo nnq : getNamedNativeQueries()) {
 			importType("jakarta.persistence.NamedNativeQuery");
 			sb.append("@NamedNativeQuery(name = \"").append(nnq.name())
-					.append("\", query = \"").append(nnq.query()).append("\")\n");
+					.append("\", query = \"").append(nnq.query()).append("\"");
+			if (nnq.resultClass() != null) {
+				String simpleResultClass = importType(nnq.resultClass());
+				sb.append(", resultClass = ").append(simpleResultClass).append(".class");
+			}
+			if (nnq.resultSetMapping() != null) {
+				sb.append(", resultSetMapping = \"").append(nnq.resultSetMapping()).append("\"");
+			}
+			sb.append(")\n");
 		}
 		// @FilterDef / @Filter
 		for (FilterDefInfo fd : getFilterDefs()) {
@@ -1467,22 +1520,78 @@ public class TemplateHelper {
 		return result;
 	}
 
-	public List<NamedQueryInfo> getNamedNativeQueries() {
-		List<NamedQueryInfo> result = new ArrayList<>();
+	public List<NamedNativeQueryInfo> getNamedNativeQueries() {
+		List<NamedNativeQueryInfo> result = new ArrayList<>();
 		NamedNativeQuery single = classDetails.getDirectAnnotationUsage(NamedNativeQuery.class);
 		if (single != null) {
-			result.add(new NamedQueryInfo(single.name(), single.query()));
+			result.add(toNamedNativeQueryInfo(single));
 		}
 		NamedNativeQueries container = classDetails.getDirectAnnotationUsage(NamedNativeQueries.class);
 		if (container != null) {
 			for (NamedNativeQuery nnq : container.value()) {
-				result.add(new NamedQueryInfo(nnq.name(), nnq.query()));
+				result.add(toNamedNativeQueryInfo(nnq));
 			}
 		}
 		return result;
 	}
 
+	private NamedNativeQueryInfo toNamedNativeQueryInfo(NamedNativeQuery nnq) {
+		String resultClassName = null;
+		if (nnq.resultClass() != null && nnq.resultClass() != void.class) {
+			resultClassName = nnq.resultClass().getName();
+		}
+		String resultSetMapping = nnq.resultSetMapping() != null && !nnq.resultSetMapping().isEmpty()
+				? nnq.resultSetMapping() : null;
+		return new NamedNativeQueryInfo(nnq.name(), nnq.query(), resultClassName, resultSetMapping);
+	}
+
+	public List<SqlResultSetMappingInfo> getSqlResultSetMappings() {
+		List<SqlResultSetMappingInfo> result = new ArrayList<>();
+		SqlResultSetMapping single = classDetails.getDirectAnnotationUsage(SqlResultSetMapping.class);
+		if (single != null) {
+			result.add(toSqlResultSetMappingInfo(single));
+		}
+		SqlResultSetMappings container = classDetails.getDirectAnnotationUsage(SqlResultSetMappings.class);
+		if (container != null) {
+			for (SqlResultSetMapping mapping : container.value()) {
+				result.add(toSqlResultSetMappingInfo(mapping));
+			}
+		}
+		return result;
+	}
+
+	private SqlResultSetMappingInfo toSqlResultSetMappingInfo(SqlResultSetMapping mapping) {
+		List<EntityResultInfo> entityResults = new ArrayList<>();
+		for (EntityResult er : mapping.entities()) {
+			List<FieldResultInfo> fieldResults = new ArrayList<>();
+			for (FieldResult fr : er.fields()) {
+				fieldResults.add(new FieldResultInfo(fr.name(), fr.column()));
+			}
+			String discriminator = er.discriminatorColumn() != null && !er.discriminatorColumn().isEmpty()
+					? er.discriminatorColumn() : null;
+			entityResults.add(new EntityResultInfo(er.entityClass().getName(), discriminator, fieldResults));
+		}
+		List<ColumnResultInfo> columnResults = new ArrayList<>();
+		for (ColumnResult cr : mapping.columns()) {
+			columnResults.add(new ColumnResultInfo(cr.name()));
+		}
+		return new SqlResultSetMappingInfo(mapping.name(), entityResults, columnResults);
+	}
+
 	public record NamedQueryInfo(String name, String query) {}
+
+	public record NamedNativeQueryInfo(String name, String query,
+									   String resultClass, String resultSetMapping) {}
+
+	public record SqlResultSetMappingInfo(String name, List<EntityResultInfo> entityResults,
+										  List<ColumnResultInfo> columnResults) {}
+
+	public record EntityResultInfo(String entityClass, String discriminatorColumn,
+								   List<FieldResultInfo> fieldResults) {}
+
+	public record FieldResultInfo(String name, String column) {}
+
+	public record ColumnResultInfo(String name) {}
 
 	// --- Filters ---
 

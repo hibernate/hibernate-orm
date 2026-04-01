@@ -126,16 +126,33 @@ public class HbmTemplateHelper {
 	private final ClassDetails classDetails;
 	private final String comment;
 	private final Map<String, List<String>> metaAttributes;
+	private final Map<String, String> imports;
+	private final Map<String, Map<String, List<String>>> fieldMetaAttributes;
 
 	HbmTemplateHelper(ClassDetails classDetails) {
-		this(classDetails, null, Collections.emptyMap());
+		this(classDetails, null, Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap());
 	}
 
 	HbmTemplateHelper(ClassDetails classDetails, String comment,
 					   Map<String, List<String>> metaAttributes) {
+		this(classDetails, comment, metaAttributes, Collections.emptyMap(), Collections.emptyMap());
+	}
+
+	HbmTemplateHelper(ClassDetails classDetails, String comment,
+					   Map<String, List<String>> metaAttributes,
+					   Map<String, String> imports) {
+		this(classDetails, comment, metaAttributes, imports, Collections.emptyMap());
+	}
+
+	HbmTemplateHelper(ClassDetails classDetails, String comment,
+					   Map<String, List<String>> metaAttributes,
+					   Map<String, String> imports,
+					   Map<String, Map<String, List<String>>> fieldMetaAttributes) {
 		this.classDetails = classDetails;
 		this.comment = comment;
 		this.metaAttributes = metaAttributes != null ? metaAttributes : Collections.emptyMap();
+		this.imports = imports != null ? imports : Collections.emptyMap();
+		this.fieldMetaAttributes = fieldMetaAttributes != null ? fieldMetaAttributes : Collections.emptyMap();
 	}
 
 	// --- Entity / class ---
@@ -910,6 +927,30 @@ public class HbmTemplateHelper {
 	public List<String> getMetaAttribute(String name) {
 		return metaAttributes.getOrDefault(name, Collections.emptyList());
 	}
+
+	public Map<String, List<String>> getFieldMetaAttributes(FieldDetails field) {
+		return fieldMetaAttributes.getOrDefault(field.getName(), Collections.emptyMap());
+	}
+
+	public List<String> getFieldMetaAttribute(FieldDetails field, String name) {
+		Map<String, List<String>> attrs = fieldMetaAttributes.getOrDefault(
+				field.getName(), Collections.emptyMap());
+		return attrs.getOrDefault(name, Collections.emptyList());
+	}
+
+	// --- Imports ---
+
+	public List<ImportInfo> getImports() {
+		List<ImportInfo> result = new ArrayList<>();
+		for (Map.Entry<String, String> entry : imports.entrySet()) {
+			if (!entry.getKey().equals(entry.getValue())) {
+				result.add(new ImportInfo(entry.getKey(), entry.getValue()));
+			}
+		}
+		return result;
+	}
+
+	public record ImportInfo(String className, String rename) {}
 
 	// --- Filters ---
 

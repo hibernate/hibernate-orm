@@ -2193,4 +2193,114 @@ public class HbmTemplateHelperTest {
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		assertTrue(new HbmTemplateHelper(entity).getFetchProfiles().isEmpty());
 	}
+
+	// --- Imports ---
+
+	@Test
+	public void testGetImportsEmpty() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertTrue(new HbmTemplateHelper(entity).getImports().isEmpty());
+	}
+
+	@Test
+	public void testGetImportsWithRename() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		Map<String, String> imports = Map.of("com.example.Foo", "Bar");
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity, null, Collections.emptyMap(), imports);
+		List<HbmTemplateHelper.ImportInfo> result = helper.getImports();
+		assertEquals(1, result.size());
+		assertEquals("com.example.Foo", result.get(0).className());
+		assertEquals("Bar", result.get(0).rename());
+	}
+
+	@Test
+	public void testGetImportsSameNameExcluded() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		Map<String, String> imports = Map.of("com.example.Foo", "com.example.Foo");
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity, null, Collections.emptyMap(), imports);
+		assertTrue(helper.getImports().isEmpty());
+	}
+
+	@Test
+	public void testGetImportsMultiple() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		Map<String, String> imports = new java.util.LinkedHashMap<>();
+		imports.put("com.example.Foo", "FooAlias");
+		imports.put("com.example.Bar", "BarAlias");
+		imports.put("com.example.Baz", "com.example.Baz"); // same — excluded
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity, null, Collections.emptyMap(), imports);
+		List<HbmTemplateHelper.ImportInfo> result = helper.getImports();
+		assertEquals(2, result.size());
+	}
+
+	// --- Field meta-attributes ---
+
+	@Test
+	public void testGetFieldMetaAttributesEmpty() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertTrue(helper.getFieldMetaAttributes(field).isEmpty());
+	}
+
+	@Test
+	public void testGetFieldMetaAttributesPresent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		Map<String, Map<String, List<String>>> fieldMeta = Map.of(
+				"name", Map.of("default-value", List.of("N/A")));
+		HbmTemplateHelper helper = new HbmTemplateHelper(
+				entity, null, Collections.emptyMap(), Collections.emptyMap(), fieldMeta);
+		Map<String, List<String>> attrs = helper.getFieldMetaAttributes(field);
+		assertEquals(1, attrs.size());
+		assertEquals(List.of("N/A"), attrs.get("default-value"));
+	}
+
+	@Test
+	public void testGetFieldMetaAttributeSingle() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		Map<String, Map<String, List<String>>> fieldMeta = Map.of(
+				"name", Map.of("scope-field", List.of("protected")));
+		HbmTemplateHelper helper = new HbmTemplateHelper(
+				entity, null, Collections.emptyMap(), Collections.emptyMap(), fieldMeta);
+		assertEquals(List.of("protected"), helper.getFieldMetaAttribute(field, "scope-field"));
+		assertTrue(helper.getFieldMetaAttribute(field, "nonexistent").isEmpty());
+	}
+
+	@Test
+	public void testGetFieldMetaAttributesMultipleKeys() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "tags", String.class, ctx);
+		Map<String, Map<String, List<String>>> fieldMeta = Map.of(
+				"tags", Map.of("use-in-tostring", List.of("true"),
+						"use-in-equals", List.of("true")));
+		HbmTemplateHelper helper = new HbmTemplateHelper(
+				entity, null, Collections.emptyMap(), Collections.emptyMap(), fieldMeta);
+		assertEquals(List.of("true"), helper.getFieldMetaAttribute(field, "use-in-tostring"));
+		assertEquals(List.of("true"), helper.getFieldMetaAttribute(field, "use-in-equals"));
+	}
+
+	@Test
+	public void testGetFieldMetaAttributesDifferentFields() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails nameField = addBasicField(entity, "name", String.class, ctx);
+		DynamicFieldDetails ageField = addBasicField(entity, "age", int.class, ctx);
+		Map<String, Map<String, List<String>>> fieldMeta = Map.of(
+				"name", Map.of("scope-field", List.of("protected")),
+				"age", Map.of("scope-field", List.of("public")));
+		HbmTemplateHelper helper = new HbmTemplateHelper(
+				entity, null, Collections.emptyMap(), Collections.emptyMap(), fieldMeta);
+		assertEquals(List.of("protected"), helper.getFieldMetaAttribute(nameField, "scope-field"));
+		assertEquals(List.of("public"), helper.getFieldMetaAttribute(ageField, "scope-field"));
+	}
 }

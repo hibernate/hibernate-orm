@@ -46,8 +46,12 @@ import org.hibernate.boot.models.annotations.internal.FilterDefAnnotation;
 import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
 import org.hibernate.boot.models.annotations.internal.ParamDefAnnotation;
 import org.hibernate.boot.models.annotations.internal.NaturalIdAnnotation;
+import org.hibernate.boot.models.annotations.internal.ColumnResultJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.EntityResultJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.FieldResultJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedNativeQueryJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedQueryJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.SqlResultSetMappingJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OrderByJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OrderColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation;
@@ -2748,5 +2752,109 @@ public class TemplateHelperTest {
 		Map<String, List<String>> classMeta = Map.of("generated-class", List.of("com.generated.EmployeeBase"));
 		TemplateHelper helper = create(table, true, classMeta, Collections.emptyMap());
 		assertEquals("package com.generated;", helper.getPackageDeclaration());
+	}
+
+	// --- @SqlResultSetMapping ---
+
+	@Test
+	public void testGetSqlResultSetMappingsNone() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		assertTrue(ctx.helper().getSqlResultSetMappings().isEmpty());
+	}
+
+	@Test
+	public void testGetSqlResultSetMappingsWithEntityResult() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		SqlResultSetMappingJpaAnnotation mapping = JpaAnnotations.SQL_RESULT_SET_MAPPING.createUsage(ctx.modelsContext());
+		mapping.name("empMapping");
+		EntityResultJpaAnnotation er = JpaAnnotations.ENTITY_RESULT.createUsage(ctx.modelsContext());
+		er.entityClass(String.class);
+		FieldResultJpaAnnotation fr = JpaAnnotations.FIELD_RESULT.createUsage(ctx.modelsContext());
+		fr.name("id");
+		fr.column("EMP_ID");
+		er.fields(new jakarta.persistence.FieldResult[]{fr});
+		mapping.entities(new jakarta.persistence.EntityResult[]{er});
+		mapping.columns(new jakarta.persistence.ColumnResult[]{});
+		((MutableAnnotationTarget) ctx.classDetails()).addAnnotationUsage(mapping);
+		List<TemplateHelper.SqlResultSetMappingInfo> result = ctx.helper().getSqlResultSetMappings();
+		assertEquals(1, result.size());
+		assertEquals("empMapping", result.get(0).name());
+		assertEquals(1, result.get(0).entityResults().size());
+		assertEquals("java.lang.String", result.get(0).entityResults().get(0).entityClass());
+		assertEquals(1, result.get(0).entityResults().get(0).fieldResults().size());
+		assertEquals("id", result.get(0).entityResults().get(0).fieldResults().get(0).name());
+		assertEquals("EMP_ID", result.get(0).entityResults().get(0).fieldResults().get(0).column());
+	}
+
+	@Test
+	public void testGetSqlResultSetMappingsWithColumnResult() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		SqlResultSetMappingJpaAnnotation mapping = JpaAnnotations.SQL_RESULT_SET_MAPPING.createUsage(ctx.modelsContext());
+		mapping.name("scalarMapping");
+		mapping.entities(new jakarta.persistence.EntityResult[]{});
+		ColumnResultJpaAnnotation cr = JpaAnnotations.COLUMN_RESULT.createUsage(ctx.modelsContext());
+		cr.name("TOTAL");
+		mapping.columns(new jakarta.persistence.ColumnResult[]{cr});
+		((MutableAnnotationTarget) ctx.classDetails()).addAnnotationUsage(mapping);
+		List<TemplateHelper.SqlResultSetMappingInfo> result = ctx.helper().getSqlResultSetMappings();
+		assertEquals(1, result.size());
+		assertEquals(1, result.get(0).columnResults().size());
+		assertEquals("TOTAL", result.get(0).columnResults().get(0).name());
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsSqlResultSetMapping() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		SqlResultSetMappingJpaAnnotation mapping = JpaAnnotations.SQL_RESULT_SET_MAPPING.createUsage(ctx.modelsContext());
+		mapping.name("empMapping");
+		EntityResultJpaAnnotation er = JpaAnnotations.ENTITY_RESULT.createUsage(ctx.modelsContext());
+		er.entityClass(String.class);
+		er.discriminatorColumn("DTYPE");
+		FieldResultJpaAnnotation fr = JpaAnnotations.FIELD_RESULT.createUsage(ctx.modelsContext());
+		fr.name("id");
+		fr.column("EMP_ID");
+		er.fields(new jakarta.persistence.FieldResult[]{fr});
+		mapping.entities(new jakarta.persistence.EntityResult[]{er});
+		ColumnResultJpaAnnotation cr = JpaAnnotations.COLUMN_RESULT.createUsage(ctx.modelsContext());
+		cr.name("EXTRA");
+		mapping.columns(new jakarta.persistence.ColumnResult[]{cr});
+		((MutableAnnotationTarget) ctx.classDetails()).addAnnotationUsage(mapping);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@SqlResultSetMapping(name = \"empMapping\""), result);
+		assertTrue(result.contains("@EntityResult(entityClass = String.class, discriminatorColumn = \"DTYPE\""), result);
+		assertTrue(result.contains("@FieldResult(name = \"id\", column = \"EMP_ID\")"), result);
+		assertTrue(result.contains("@ColumnResult(name = \"EXTRA\")"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsNamedNativeQueryWithResultClass() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		NamedNativeQueryJpaAnnotation nnq = JpaAnnotations.NAMED_NATIVE_QUERY.createUsage(ctx.modelsContext());
+		nnq.name("findAll");
+		nnq.query("SELECT * FROM EMPLOYEE");
+		nnq.resultClass(String.class);
+		dc.addAnnotationUsage(nnq);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("resultClass = String.class"), result);
+	}
+
+	@Test
+	public void testGenerateClassAnnotationsNamedNativeQueryWithResultSetMapping() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TestContext ctx = createWithContext(table);
+		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
+		NamedNativeQueryJpaAnnotation nnq = JpaAnnotations.NAMED_NATIVE_QUERY.createUsage(ctx.modelsContext());
+		nnq.name("findWithMapping");
+		nnq.query("SELECT * FROM EMPLOYEE");
+		nnq.resultSetMapping("empMapping");
+		dc.addAnnotationUsage(nnq);
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("resultSetMapping = \"empMapping\""), result);
 	}
 }

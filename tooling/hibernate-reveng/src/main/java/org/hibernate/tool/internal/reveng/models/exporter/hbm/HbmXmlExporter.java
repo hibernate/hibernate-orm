@@ -70,7 +70,21 @@ public class HbmXmlExporter {
 
 	public void export(Writer output, ClassDetails entity, String comment,
 					   Map<String, List<String>> metaAttributes) {
-		HbmTemplateHelper helper = new HbmTemplateHelper(entity, comment, metaAttributes);
+		export(output, entity, comment, metaAttributes, Collections.emptyMap());
+	}
+
+	public void export(Writer output, ClassDetails entity, String comment,
+					   Map<String, List<String>> metaAttributes,
+					   Map<String, String> imports) {
+		export(output, entity, comment, metaAttributes, imports, Collections.emptyMap());
+	}
+
+	public void export(Writer output, ClassDetails entity, String comment,
+					   Map<String, List<String>> metaAttributes,
+					   Map<String, String> imports,
+					   Map<String, Map<String, List<String>>> fieldMetaAttributes) {
+		HbmTemplateHelper helper = new HbmTemplateHelper(
+				entity, comment, metaAttributes, imports, fieldMetaAttributes);
 		Map<String, Object> model = new HashMap<>();
 		model.put("helper", helper);
 		try {

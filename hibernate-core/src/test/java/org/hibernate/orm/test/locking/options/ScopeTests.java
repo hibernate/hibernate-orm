@@ -6,7 +6,6 @@ package org.hibernate.orm.test.locking.options;
 
 import org.hibernate.EnabledFetchProfile;
 import org.hibernate.Hibernate;
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -61,7 +60,6 @@ public class ScopeTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = InformixDialect.class, reason = "update does not block")
 	void testFind(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			final Book theTalisman = session.find( Book.class, 3, PESSIMISTIC_WRITE );
@@ -74,7 +72,6 @@ public class ScopeTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = InformixDialect.class, reason = "update does not block")
 	void testFindWithExtended(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			final Book theTalisman = session.find( Book.class, 3, PESSIMISTIC_WRITE, EXTENDED );
@@ -89,7 +86,6 @@ public class ScopeTests {
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "See https://sourceforge.net/p/hsqldb/bugs/1734/")
 	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 seems to not extend locks across joins")
-	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Cursor must be on simple SELECT for FOR UPDATE")
 	void testFindWithExtendedAndFetch(SessionFactoryScope factoryScope) {
 
 		// note that this is not strictly spec compliant as it says EXTENDED should extend
@@ -111,7 +107,6 @@ public class ScopeTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = InformixDialect.class, reason = "update does not block")
 	void testLock(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			final Book theTalisman = session.find( Book.class, 3 );
@@ -126,7 +121,6 @@ public class ScopeTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = InformixDialect.class, reason = "update does not block")
 	void testLockWithExtended(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			final Book theTalisman = session.find( Book.class, 3 );
@@ -141,7 +135,6 @@ public class ScopeTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = InformixDialect.class, reason = "update does not block")
 	void testRefresh(SessionFactoryScope factoryScope) {
 
 		factoryScope.inTransaction( (session) -> {
@@ -157,7 +150,6 @@ public class ScopeTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = InformixDialect.class, reason = "update does not block")
 	void testRefreshWithExtended(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			final Book theTalisman = session.find( Book.class, 3 );
@@ -173,7 +165,6 @@ public class ScopeTests {
 
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "See https://sourceforge.net/p/hsqldb/bugs/1734/")
-	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Cursor must be on simple SELECT for FOR UPDATE")
 	void testEagerFind(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			final Report report = session.find( Report.class, 2, PESSIMISTIC_WRITE );
@@ -184,7 +175,6 @@ public class ScopeTests {
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "See https://sourceforge.net/p/hsqldb/bugs/1734/")
 	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 seems to not extend locks across joins")
-	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Cursor must be on simple SELECT for FOR UPDATE")
 	void testEagerFindWithExtended(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			final Report report = session.find( Report.class, 2, PESSIMISTIC_WRITE, EXTENDED );
@@ -211,7 +201,6 @@ public class ScopeTests {
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "See https://sourceforge.net/p/hsqldb/bugs/1734/")
 	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 seems to not extend locks across joins")
-	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Cursor must be on simple SELECT for FOR UPDATE")
 	void testEagerFindWithFetchScope(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			final Report report = session.find( Report.class, 2, PESSIMISTIC_WRITE, INCLUDE_FETCHES );

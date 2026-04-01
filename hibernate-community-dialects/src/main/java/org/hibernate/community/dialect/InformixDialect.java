@@ -46,7 +46,6 @@ import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.type.BasicType;
-import org.hibernate.dialect.lock.internal.LockingSupportSimple;
 import org.hibernate.dialect.lock.spi.LockingSupport;
 import org.hibernate.type.descriptor.jdbc.VarcharUUIDJdbcType;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
@@ -557,9 +556,9 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String getTruncateTableStatement(String tableName) {
-		return super.getTruncateTableStatement( tableName )
-				+ " reuse storage"
-				+ ( getVersion().isSameOrAfter( 12, 10 ) ? " keep statistics" : "" );
+		// Use delete instead of truncate, because truncate will fail if another connection still holds a lock
+		// https://www.ibm.com/docs/en/informix-servers/12.10.0?topic=statement-restrictions-truncate
+		return "delete from " + tableName;
 	}
 
 	@Override
@@ -594,16 +593,7 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		// TODO: need a custom impl, because:
-		//       1. Informix does not support 'skip locked'
-		//       2. Informix does not allow 'for update' with joins
-		return LockingSupportSimple.STANDARD_SUPPORT;
-	}
-
-	// TODO: remove once we have a custom LockingSupport impl
-	@Override @Deprecated(forRemoval = true)
-	public boolean supportsSkipLocked() {
-		return false;
+		return InformixLockingSupport.LOCKING_SUPPORT;
 	}
 
 	@Override

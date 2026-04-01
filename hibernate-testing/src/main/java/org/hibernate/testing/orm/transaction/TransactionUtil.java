@@ -14,9 +14,11 @@ import jakarta.persistence.QueryTimeoutException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.SharedSessionContract;
+import org.hibernate.Timeouts;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 
@@ -203,7 +205,7 @@ public abstract class TransactionUtil {
 
 	public static void assertRowLock(SessionFactoryScope factoryScope, String tableName, String columnName, String idColumn, Number id, boolean expectingToBlock) {
 		final Dialect dialect = factoryScope.getSessionFactory().getJdbcServices().getDialect();
-		final boolean skipLocked = dialect.getLockingSupport().getMetadata().supportsSkipLocked();
+		final boolean skipLocked = dialect.getLockingSupport().getMetadata().getLockTimeoutType( Timeouts.SKIP_LOCKED ) != LockTimeoutType.NONE;
 		// SQL Server readpast hint doesn't really work unfortunately
 		if ( skipLocked && !( dialect instanceof SQLServerDialect ) ) {
 			factoryScope.inTransaction( (session) -> {

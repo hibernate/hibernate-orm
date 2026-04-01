@@ -11,7 +11,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.spi.NavigablePath;
@@ -64,7 +63,6 @@ public class LockingBasedOnSelectClauseTests {
 
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "See https://sourceforge.net/p/hsqldb/bugs/1734/")
-	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Cursor must be on simple SELECT for FOR UPDATE")
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 16, minorVersion = 0, microVersion = 2,
 			versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "holdlock isn't the same as updating a row. Bug in our Sybase ASE version?")
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsConcurrentTransactions.class )

@@ -20,12 +20,10 @@ import org.hibernate.ReadOnlyMode;
 import org.hibernate.Session;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfileOverride;
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -40,8 +38,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
 public class FindOptionsTest {
 	@Test
-	@SkipForDialect(dialectClass = InformixDialect.class,
-			reason = "Informix disallows FOR UPDATE with multi-table queries")
 	void test(EntityManagerFactoryScope scope) {
 		MyEntity hello = new MyEntity("Hello");
 		scope.getEntityManagerFactory()

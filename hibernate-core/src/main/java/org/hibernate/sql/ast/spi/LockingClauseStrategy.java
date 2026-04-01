@@ -49,6 +49,10 @@ public interface LockingClauseStrategy {
 	/// of [roots][#registerRoot] and [joins][#registerJoin]
 	boolean containsOuterJoins();
 
+	/// Are any joins encountered during registration
+	/// of [roots][#registerRoot] and [joins][#registerJoin]
+	boolean containsJoins();
+
 	/// For cases where a locking clause is to be used,
 	/// render that locking clause.
 	void render(SqlAppender sqlAppender);

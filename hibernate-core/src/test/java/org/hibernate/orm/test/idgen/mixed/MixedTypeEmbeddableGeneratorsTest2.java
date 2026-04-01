@@ -16,14 +16,12 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.generator.internal.CurrentTimestampGeneration;
-import org.hibernate.orm.test.annotations.MutableClock;
 import org.hibernate.orm.test.annotations.MutableClockSettingProvider;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SettingProvider;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,16 +42,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 )
 class MixedTypeEmbeddableGeneratorsTest2 {
 
-	private MutableClock clock;
-
-	@BeforeEach
-	void setUp(SessionFactoryScope scope) {
-		clock = CurrentTimestampGeneration.getClock( scope.getSessionFactory() );
-		clock.reset();
-	}
-
 	@Test
-	void testMixedTiming(SessionFactoryScope scope) {
+	void testMixedTiming(SessionFactoryScope scope) throws InterruptedException {
 		final var statementInspector = scope.getCollectingStatementInspector();
 
 		statementInspector.clear();
@@ -76,7 +66,8 @@ class MixedTypeEmbeddableGeneratorsTest2 {
 			return new LocalDateTime[] { event.history.created, event.history.updated };
 		} );
 
-		clock.tick();
+		// Sleep a while to let the database clock tick
+		Thread.sleep( 1000 );
 
 		statementInspector.clear();
 		scope.inTransaction( session -> {

@@ -66,7 +66,7 @@ class TemporalEntityHistoryTest {
 				}
 		);
 		Thread.sleep( 250 );
-		var instant = getInstant( scope );
+		var instant = Instant.now();
 		Thread.sleep( 250 );
 		scope.getSessionFactory().inTransaction(
 				session -> {
@@ -152,7 +152,7 @@ class TemporalEntityHistoryTest {
 			} );
 		}
 		Thread.sleep( 250 );
-		var nextInstant = getInstant( scope );
+		var nextInstant = Instant.now();
 		Thread.sleep( 250 );
 		scope.getSessionFactory().inTransaction(
 				session -> {
@@ -218,7 +218,7 @@ class TemporalEntityHistoryTest {
 				}
 		);
 		Thread.sleep( 250 );
-		var instant = getInstant( scope );
+		var instant = Instant.now();
 		Thread.sleep( 250 );
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
@@ -282,7 +282,7 @@ class TemporalEntityHistoryTest {
 			entity.list.add( "N" );
 			s.persist( entity );
 		} );
-		var instant = getInstant( scope );
+		var instant = Instant.now();
 		Thread.sleep( 250 );
 		scope.inTransaction( s -> {
 			TemporalEntity4 entity = s.find( TemporalEntity4.class, 3L);
@@ -382,11 +382,6 @@ class TemporalEntityHistoryTest {
 			assertEquals( Map.of( "a", "A", "b", "B", "c", "C" ), entity.map );
 			assertEquals( List.of( "M", "N" ), entity.list );
 		} );
-	}
-
-	private static Instant getInstant(SessionFactoryScope scope) {
-		return scope.getSessionFactory().fromSession(
-				s -> s.createSelectionQuery( "select instant", Instant.class ).getSingleResult() );
 	}
 
 	@Temporal(rowStart = "effective_from", rowEnd = "effective_to")

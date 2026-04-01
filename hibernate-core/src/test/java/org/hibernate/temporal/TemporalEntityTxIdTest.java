@@ -14,8 +14,10 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Version;
 import org.hibernate.Hibernate;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.cfg.StateManagementSettings;
+import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -29,7 +31,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -46,9 +47,9 @@ class TemporalEntityTxIdTest {
 
 	private static int currentTxId;
 
-	public static class TxIdSupplier implements Supplier<Integer> {
+	public static class TxIdSupplier implements TransactionIdentifierSupplier<Integer> {
 		@Override
-		public Integer get() {
+		public Integer generateTransactionIdentifier(SharedSessionContract session) {
 			return ++currentTxId;
 		}
 	}

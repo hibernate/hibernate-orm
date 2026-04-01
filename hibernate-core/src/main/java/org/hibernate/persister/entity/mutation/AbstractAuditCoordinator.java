@@ -59,7 +59,8 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator {
 		}
 		this.transactionIdMapping = auditMapping.getTransactionIdMapping();
 		this.modificationTypeMapping = auditMapping.getModificationTypeMapping();
-		this.useServerTransactionTimestamps = factory.getTransactionIdentifierService().isDisabled();
+		this.useServerTransactionTimestamps = factory.getTransactionIdentifierService().isDisabled()
+											&& factory.getJdbcServices().getDialect().isCurrentTimestampStable();
 		this.currentTimestampFunctionName = useServerTransactionTimestamps ? dialect().currentTimestamp() : null;
 		this.auditBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#AUDIT_INSERT" );
 		this.staticAuditInsertGroup = entityPersister.isDynamicInsert()

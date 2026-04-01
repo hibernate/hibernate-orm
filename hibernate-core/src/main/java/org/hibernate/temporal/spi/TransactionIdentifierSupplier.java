@@ -5,8 +5,8 @@
 package org.hibernate.temporal.spi;
 
 import org.hibernate.Incubating;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.cfg.StateManagementSettings;
-import org.hibernate.service.Service;
 
 
 /**
@@ -14,7 +14,7 @@ import org.hibernate.service.Service;
  * with {@linkplain org.hibernate.annotations.Temporal temporal}
  * or {@linkplain org.hibernate.annotations.Audited audited} data.
  * <p>
- * Transaction ids produced by the {@linkplain #getIdentifierSupplier
+ * Transaction ids produced by the {@linkplain #generateTransactionIdentifier
  * supplier} must be distinct and monotonically increasing. Note,
  * however, that unless the database is in serializable isolation
  * mode, transactions themselves do not have a well-defined total
@@ -28,38 +28,22 @@ import org.hibernate.service.Service;
  * are written to the history table or audit log.
  *
  * @apiNote A transaction id or timestamp is assumed to be constant
- * during a transaction. This service is not aware of transaction
- * contexts, and so it is the responsibility of the client to ensure
- * that the {@linkplain #getIdentifierSupplier supplier} is called
- * no more than once in a transaction.
+ * during a transaction. The supplier does not have to be aware of
+ * transaction contexts, and so it is the responsibility of the client
+ * to ensure that the {@linkplain #generateTransactionIdentifier supplier}
+ * is called no more than once in a transaction.
+ *
+ * @see StateManagementSettings#TRANSACTION_ID_SUPPLIER
  *
  * @author Gavin King
  *
  * @since 7.4
  */
 @Incubating
-public interface TransactionIdentifierService extends Service {
-	/**
-	 * The Java type of the transaction identifiers or timestamps.
-	 */
-	Class<?> getIdentifierType();
+public interface TransactionIdentifierSupplier<T> {
 
 	/**
-	 * A supplier of transaction identifiers or timestamps.
-	 *
-	 * @see StateManagementSettings#TRANSACTION_ID_SUPPLIER
+	 * Generates the transaction identifier or timestamp for a transaction.
 	 */
-	TransactionIdentifierSupplier<?> getIdentifierSupplier();
-
-	/**
-	 * Whether the timestamps or identifiers are assigned by the database server.
-	 *
-	 * @see StateManagementSettings#USE_SERVER_TRANSACTION_TIMESTAMPS
-	 */
-	boolean isDisabled();
-
-	/**
-	 * Whether the transaction identifiers are actually timestamps.
-	 */
-	boolean isIdentifierTypeInstant();
+	T generateTransactionIdentifier(SharedSessionContract session);
 }

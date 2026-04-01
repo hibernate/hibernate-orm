@@ -49,7 +49,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.event.monitor.spi.EventMonitor;
-import java.util.function.Supplier;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
@@ -103,6 +102,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
 import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -167,7 +167,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	private final boolean readOnly;
 	private final TimeZone jdbcTimeZone;
 
-	private transient Supplier<?> transactionIdSupplier;
+	private transient TransactionIdentifierSupplier<?> transactionIdSupplier;
 
 	// mutable state
 	private CacheMode cacheMode;
@@ -257,9 +257,9 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		}
 	}
 
-	private static Supplier<?> initializeTransactionIdSupplier(SessionFactoryImplementor factory) {
+	private static TransactionIdentifierSupplier<?> initializeTransactionIdSupplier(SessionFactoryImplementor factory) {
 		final var transactionIdentifierService = factory.getTransactionIdentifierService();
-		return transactionIdentifierService.isDisabled()
+		return transactionIdentifierService.isDisabled() && factory.getJdbcServices().getDialect().isCurrentTimestampStable()
 				? null
 				: transactionIdentifierService.getIdentifierSupplier();
 	}
@@ -635,7 +635,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	private Object generateCurrentTransactionIdentifier() {
 		return transactionIdSupplier == null
 				? null
-				: transactionIdSupplier.get();
+				: transactionIdSupplier.generateTransactionIdentifier( this );
 	}
 
 	@Override

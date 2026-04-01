@@ -57,7 +57,7 @@ class TemporalEntityPartitionedTest {
 					session.persist( child );
 				}
 		);
-		var instant = getInstant( scope );
+		var instant = Instant.now();
 		awaitOracleClockTick();
 		scope.getSessionFactory().inTransaction(
 				session -> {
@@ -139,7 +139,7 @@ class TemporalEntityPartitionedTest {
 				assertEquals( 0, friends );
 			} );
 		}
-		var nextInstant = getInstant( scope );
+		var nextInstant = Instant.now();
 		awaitOracleClockTick();
 		scope.getSessionFactory().inTransaction(
 				session -> {
@@ -205,7 +205,7 @@ class TemporalEntityPartitionedTest {
 					session.insert( entity );
 				}
 		);
-		var instant = getInstant( scope );
+		var instant = Instant.now();
 		awaitOracleClockTick();
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
@@ -254,11 +254,6 @@ class TemporalEntityPartitionedTest {
 				assertEquals( "hello", entity.text );
 			} );
 		}
-	}
-
-	private static Instant getInstant(SessionFactoryScope scope) {
-		return scope.getSessionFactory().fromSession(
-				s -> s.createSelectionQuery( "select instant", Instant.class ).getSingleResult() );
 	}
 
 	private static void awaitOracleClockTick() throws InterruptedException {

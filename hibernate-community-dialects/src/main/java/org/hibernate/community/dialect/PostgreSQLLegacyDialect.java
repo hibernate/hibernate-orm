@@ -989,6 +989,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public boolean isCurrentTimestampStable() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsTupleCounts() {
 		return true;
 	}

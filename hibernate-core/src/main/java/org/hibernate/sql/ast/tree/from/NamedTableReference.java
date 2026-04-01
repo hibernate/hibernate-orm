@@ -11,6 +11,7 @@ import java.util.function.Function;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
+import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.spi.NavigablePath;
@@ -54,16 +55,23 @@ public class NamedTableReference extends AbstractTableReference {
 	public void applyAuxiliaryTable(AuxiliaryMapping mapping, LoadQueryInfluencers influencers) {
 		if ( useAsOfOperator( influencers, mapping )
 				&& mapping.getTableName().equals( getTableExpression() ) ) {
-			if ( influencers.getSessionFactory().getTransactionIdentifierService().isDisabled() ) {
+			if ( influencers.getTemporalIdentifier() == null
+				&& influencers.getSessionFactory().getTransactionIdentifierService().isDisabled()
+				&& influencers.getSessionFactory().getJdbcServices().getDialect().isCurrentTimestampStable() ) {
 				// we are querying current data,
 				// so we can use the server timestamp
 				final Dialect dialect = influencers.getSessionFactory().getJdbcServices().getDialect();
 				this.asOfTransactionIdentifier =
 						new SelfRenderingSqlFragmentExpression( dialect.currentTimestamp(), mapping.getJdbcMapping() );
 			}
+			else if ( mapping instanceof TemporalMapping temporalMapping ) {
+				this.asOfTransactionIdentifier = new TemporalJdbcParameter( temporalMapping.getEndingColumnMapping() );
+			}
+			else if ( mapping instanceof AuditMapping auditMapping ) {
+				this.asOfTransactionIdentifier = new TemporalJdbcParameter( auditMapping.getTransactionIdMapping() );
+			}
 			else {
-				this.asOfTransactionIdentifier =
-						new TemporalJdbcParameter( ((TemporalMapping) mapping).getStartingColumnMapping() );
+				this.asOfTransactionIdentifier = null;
 			}
 		}
 	}

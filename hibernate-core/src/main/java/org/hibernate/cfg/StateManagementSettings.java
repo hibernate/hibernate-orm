@@ -64,7 +64,7 @@ public interface StateManagementSettings {
 	String USE_SERVER_TRANSACTION_TIMESTAMPS = "hibernate.temporal.use_server_transaction_timestamps";
 
 	/**
-	 * Specify a {@link java.util.function.Supplier SUpplier} which
+	 * Specify a {@link org.hibernate.temporal.spi.TransactionIdentifierSupplier TransactionIdentifierSupplier} which
 	 * provides unique, monotonically increasing transaction IDs for
 	 * {@linkplain org.hibernate.annotations.Temporal temporal data}
 	 * when using the {@link TemporalTableStrategy#SINGLE_TABLE} or
@@ -73,7 +73,7 @@ public interface StateManagementSettings {
 	 * data}.
 	 * <p>
 	 * The Java type of the transaction id is inferred from the type
-	 * argument {@code T} in the instantiation of {@code Supplier<T>}
+	 * argument {@code T} in the instantiation of {@code TransactionIdentifierSupplier<T>}
 	 * implemented by the supplier class, and is used instead of
 	 * {@link java.time.Instant} for the effectivity column mappings.
 	 * <p>

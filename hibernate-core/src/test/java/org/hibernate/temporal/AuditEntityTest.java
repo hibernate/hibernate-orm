@@ -8,8 +8,10 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Version;
+import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Audited;
 import org.hibernate.cfg.StateManagementSettings;
+import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -19,7 +21,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -32,9 +33,9 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 class AuditEntityTest {
 	private static int currentTxId;
 
-	public static class TxIdSupplier implements Supplier<Integer> {
+	public static class TxIdSupplier implements TransactionIdentifierSupplier<Integer> {
 		@Override
-		public Integer get() {
+		public Integer generateTransactionIdentifier(SharedSessionContract session) {
 			return ++currentTxId;
 		}
 	}

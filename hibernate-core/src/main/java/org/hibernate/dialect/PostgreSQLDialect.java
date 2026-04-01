@@ -1002,6 +1002,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean isCurrentTimestampStable() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsTupleCounts() {
 		return true;
 	}

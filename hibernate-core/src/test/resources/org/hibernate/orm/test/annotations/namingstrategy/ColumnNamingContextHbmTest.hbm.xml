@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+		"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+		"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+	<class name="org.hibernate.orm.test.annotations.namingstrategy.ColumnNamingContextHbmTest$HbmPerson" table="hbm_person">
+		<id name="id" column="person_id" type="long"/>
+		<property name="name" column="person_name"/>
+	</class>
+
+	<joined-subclass
+			name="org.hibernate.orm.test.annotations.namingstrategy.ColumnNamingContextHbmTest$HbmEmployee"
+			extends="org.hibernate.orm.test.annotations.namingstrategy.ColumnNamingContextHbmTest$HbmPerson"
+			table="hbm_employee">
+		<key column="person_id"/>
+		<many-to-one
+				name="manager"
+				class="org.hibernate.orm.test.annotations.namingstrategy.ColumnNamingContextHbmTest$HbmEmployee"
+				column="manager_fk"/>
+	</joined-subclass>
+</hibernate-mapping>

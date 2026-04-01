@@ -73,7 +73,7 @@ public interface PropertyHolder {
 	JoinColumn[] getOverriddenJoinColumn(String propertyName);
 
 	/**
-	 * return null if hte foreign key is not overridden, or the foreign key if true
+	 * return null if the foreign key is not overridden, or the foreign key if true
 	 */
 	default ForeignKey getOverriddenForeignKey(String propertyName) {
 		// todo: does this necessarily need to be a default method?

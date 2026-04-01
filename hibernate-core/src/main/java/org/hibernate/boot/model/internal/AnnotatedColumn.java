@@ -16,6 +16,7 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.FractionalSeconds;
 import org.hibernate.annotations.GeneratedColumn;
+import org.hibernate.boot.model.naming.ColumnNamingContext;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitBasicColumnNameSource;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -404,8 +405,11 @@ public class AnnotatedColumn {
 		if ( applyNamingStrategy ) {
 			final var database = getDatabase();
 			return getPhysicalNamingStrategy()
-					.toPhysicalColumnName( database.toIdentifier( columnName, isExplicit ),
-							database.getJdbcEnvironment() )
+					.toPhysicalColumnName(
+							database.toIdentifier( columnName, isExplicit ),
+							database.getJdbcEnvironment(),
+							new ColumnNamingContext( getParent() )
+					)
 					.render( database.getDialect() );
 		}
 		else {

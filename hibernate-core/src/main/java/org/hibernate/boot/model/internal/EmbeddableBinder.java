@@ -17,6 +17,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -24,6 +25,7 @@ import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.annotations.EmbeddedColumnNaming;
 import org.hibernate.annotations.Instantiator;
 import org.hibernate.annotations.TypeBinderType;
+import org.hibernate.boot.model.naming.ColumnNamingContext;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -1352,8 +1354,14 @@ public class EmbeddableBinder {
 
 						final String physicalName =
 								physicalNamingStrategy
-										.toPhysicalColumnName( database.toIdentifier( columnName ),
-												database.getJdbcEnvironment() )
+										.toPhysicalColumnName(
+												database.toIdentifier( columnName ),
+												database.getJdbcEnvironment(),
+												new ColumnNamingContext(
+														embeddable.getOwner().getEntityName(),
+														embeddable.getOwner().getClassName()
+												)
+										)
 										.render( database.getDialect() );
 						value.addColumn( new org.hibernate.mapping.Column( physicalName ) );
 						if ( joinColumn != null ) {

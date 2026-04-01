@@ -31,12 +31,11 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
  * A {@code PhysicalNamingStrategy} may be selected using the configuration property
  * {@value org.hibernate.cfg.MappingSettings#PHYSICAL_NAMING_STRATEGY}.
  *
+ * @author Steve Ebersole
  * @see ImplicitNamingStrategy
  * @see org.hibernate.cfg.Configuration#setPhysicalNamingStrategy(PhysicalNamingStrategy)
  * @see org.hibernate.boot.MetadataBuilder#applyPhysicalNamingStrategy(PhysicalNamingStrategy)
  * @see org.hibernate.cfg.MappingSettings#PHYSICAL_NAMING_STRATEGY
- *
- * @author Steve Ebersole
  */
 @Incubating
 public interface PhysicalNamingStrategy {
@@ -64,6 +63,17 @@ public interface PhysicalNamingStrategy {
 	 * Determine the physical column name from the given logical name
 	 */
 	Identifier toPhysicalColumnName(Identifier logicalName, JdbcEnvironment jdbcEnvironment);
+
+	/**
+	 * Determine the physical column name from the given logical name.
+	 * Default implementation for backwards compatibility, it's not likely lots of users will need this method.
+	 */
+	default Identifier toPhysicalColumnName(
+			Identifier logicalName,
+			JdbcEnvironment jdbcEnvironment,
+			ColumnNamingContext columnNamingContext) {
+		return toPhysicalColumnName( logicalName, jdbcEnvironment );
+	}
 
 	/**
 	 * Determine the physical UDT type name from the given logical name

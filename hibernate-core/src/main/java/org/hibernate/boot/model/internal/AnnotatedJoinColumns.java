@@ -16,6 +16,7 @@ import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.PropertyRef;
 import org.hibernate.boot.internal.FailedSecondPassException;
+import org.hibernate.boot.model.naming.ColumnNamingContext;
 import org.hibernate.boot.model.naming.EntityNaming;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource;
@@ -403,7 +404,10 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		}
 	}
 
-	String buildDefaultColumnName(PersistentClass referencedEntity, String logicalReferencedColumn) {
+	String buildDefaultColumnName(
+			PersistentClass referencedEntity,
+			String logicalReferencedColumn,
+			ColumnNamingContext columnNamingContext) {
 		final var context = getBuildingContext();
 		final var options = context.getBuildingOptions();
 		final var collector = context.getMetadataCollector();
@@ -417,7 +421,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 				database
 		);
 		return options.getPhysicalNamingStrategy()
-				.toPhysicalColumnName( columnIdentifier, jdbcEnvironment )
+				.toPhysicalColumnName( columnIdentifier, jdbcEnvironment, columnNamingContext )
 				.render( jdbcEnvironment.getDialect() );
 	}
 

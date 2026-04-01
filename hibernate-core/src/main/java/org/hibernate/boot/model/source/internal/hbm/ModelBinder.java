@@ -21,6 +21,7 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SourceType;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.model.naming.ColumnNamingContext;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.TypeDefinition;
@@ -485,7 +486,11 @@ public class ModelBinder {
 						return primaryTable.getPrimaryKey().getColumn( count++ )
 								.getNameIdentifier( metadataBuildingContext );
 					}
-				}
+				},
+				new ColumnNamingContext(
+						entitySource.getEntityNamingSource().getEntityName(),
+						entitySource.getEntityNamingSource().getClassName()
+				)
 		);
 		keyBinding.sortProperties();
 		setForeignKeyName( keyBinding,
@@ -604,7 +609,11 @@ public class ModelBinder {
 							}
 					);
 					return database.toIdentifier( propertyName );
-				}
+				},
+				new ColumnNamingContext(
+						hierarchySource.getRoot().getEntityNamingSource().getEntityName(),
+						hierarchySource.getRoot().getEntityNamingSource().getClassName()
+				)
 		);
 
 		if ( propertyName != null ) {
@@ -801,7 +810,11 @@ public class ModelBinder {
 				versionAttributeSource.getRelationalValueSources(),
 				versionValue,
 				false,
-				context -> implicitNamingStrategy.determineBasicColumnName( versionAttributeSource )
+				context -> implicitNamingStrategy.determineBasicColumnName( versionAttributeSource ),
+				new ColumnNamingContext(
+						hierarchySource.getRoot().getEntityNamingSource().getEntityName(),
+						hierarchySource.getRoot().getEntityNamingSource().getClassName()
+				)
 		);
 
 		final var property = new Property();
@@ -845,7 +858,11 @@ public class ModelBinder {
 				discriminatorSource.getDiscriminatorRelationalValueSource(),
 				discriminatorValue,
 				false,
-				context -> implicitNamingStrategy.determineDiscriminatorColumnName( discriminatorSource )
+				context -> implicitNamingStrategy.determineDiscriminatorColumnName( discriminatorSource ),
+				new ColumnNamingContext(
+						hierarchySource.getRoot().getEntityNamingSource().getEntityName(),
+						hierarchySource.getRoot().getEntityNamingSource().getClassName()
+				)
 		);
 
 		rootEntityDescriptor.setPolymorphic( true );
@@ -904,7 +921,11 @@ public class ModelBinder {
 							mappingDocument,
 							basicAttributeSource,
 							new BasicValue( mappingDocument, table ),
-							entityDescriptor.getClassName()
+							entityDescriptor.getClassName(),
+							new ColumnNamingContext(
+									entitySource.getEntityNamingSource().getEntityName(),
+									entitySource.getEntityNamingSource().getClassName()
+							)
 					);
 
 					handleAttribute( attribute, secondaryTableJoin, attributeContainer, mappingDocument,
@@ -950,7 +971,8 @@ public class ModelBinder {
 							mappingDocument,
 							manyToOneAttributeSource,
 							new ManyToOne( mappingDocument, table ),
-							entityDescriptor.getClassName()
+							entityDescriptor.getClassName(),
+							new ColumnNamingContext( entityDescriptor.getEntityName(), entityDescriptor.getClassName() )
 					);
 
 					handleAttribute(
@@ -996,7 +1018,7 @@ public class ModelBinder {
 							mappingDocument,
 							anyAttributeSource,
 							new Any( mappingDocument, table ),
-							entityDescriptor.getEntityName()
+							new ColumnNamingContext( entityDescriptor.getEntityName(), entityDescriptor.getClassName() )
 					);
 
 					handleAttribute(
@@ -1313,8 +1335,10 @@ public class ModelBinder {
 				if ( tableName != null ) {
 					throw new MappingException(
 							"Attribute [%s] referenced columns from multiple tables: %s, %s"
-									.formatted( embeddedAttributeSource.getAttributeRole().getFullPath(),
-											tableName, determinedName ),
+									.formatted(
+											embeddedAttributeSource.getAttributeRole().getFullPath(),
+											tableName, determinedName
+									),
 							mappingDocument.getOrigin()
 					);
 				}
@@ -1451,7 +1475,11 @@ public class ModelBinder {
 						return entityTableXref.getPrimaryTable().getPrimaryKey().getColumn( count++ )
 								.getNameIdentifier( metadataBuildingContext );
 					}
-				}
+				},
+				new ColumnNamingContext(
+						persistentClass.getEntityName(),
+						persistentClass.getClassName()
+				)
 		);
 
 		keyBinding.sortProperties();
@@ -1511,7 +1539,8 @@ public class ModelBinder {
 			MappingDocument sourceDocument,
 			final SingularAttributeSourceBasic attributeSource,
 			SimpleValue value,
-			String containingClassName) {
+			String containingClassName,
+			ColumnNamingContext columnNamingContext) {
 
 		bindSimpleValueType( sourceDocument, attributeSource.getTypeInformation(), value );
 
@@ -1520,7 +1549,8 @@ public class ModelBinder {
 				attributeSource.getRelationalValueSources(),
 				value,
 				attributeSource.areValuesNullableByDefault(),
-				context -> implicitNamingStrategy.determineBasicColumnName( attributeSource )
+				context -> implicitNamingStrategy.determineBasicColumnName( attributeSource ),
+				columnNamingContext
 		);
 
 
@@ -1743,8 +1773,10 @@ public class ModelBinder {
 			DEPRECATION_LOGGER.logDeprecationOfEmbedXmlSupport();
 		}
 
-		setForeignKeyName( oneToOneBinding,
-				oneToOneSource.getExplicitForeignKeyName() );
+		setForeignKeyName(
+				oneToOneBinding,
+				oneToOneSource.getExplicitForeignKeyName()
+		);
 
 		oneToOneBinding.setOnDeleteAction( getOnDeleteAction( oneToOneSource ) );
 	}
@@ -1764,7 +1796,8 @@ public class ModelBinder {
 			MappingDocument sourceDocument,
 			SingularAttributeSourceManyToOne manyToOneSource,
 			ManyToOne manyToOneBinding,
-			String containingClassName) {
+			String containingClassName,
+			ColumnNamingContext columnNamingContext) {
 		final String referencedEntityName =
 				handleReferencedEntity( sourceDocument, manyToOneSource, manyToOneBinding, containingClassName );
 
@@ -1772,7 +1805,14 @@ public class ModelBinder {
 			manyToOneBinding.markAsLogicalOneToOne();
 		}
 
-		bindManyToOneAttribute( sourceDocument, manyToOneSource, manyToOneBinding, referencedEntityName );
+		bindManyToOneAttribute(
+				sourceDocument,
+				manyToOneSource,
+				manyToOneBinding,
+				referencedEntityName,
+				containingClassName,
+				columnNamingContext
+		);
 
 		handlePropertyRef( sourceDocument, manyToOneBinding,
 				"<many-to-one name=\"" + manyToOneSource.getName() + "\"/>" );
@@ -1860,7 +1900,9 @@ public class ModelBinder {
 			final MappingDocument sourceDocument,
 			final SingularAttributeSourceManyToOne manyToOneSource,
 			ManyToOne manyToOneBinding,
-			String referencedEntityName) {
+			String referencedEntityName,
+			String containingClassName,
+			ColumnNamingContext columnNamingContext) {
 		// NOTE: no type information to bind
 
 		handleReferencedEntity( manyToOneBinding, referencedEntityName,
@@ -1881,7 +1923,8 @@ public class ModelBinder {
 				sourceDocument,
 				manyToOneSource,
 				manyToOneBinding,
-				referencedEntityName
+				referencedEntityName,
+				columnNamingContext
 		);
 		final boolean canBindColumnsImmediately = columnBinder.canProcessImmediately();
 		if ( canBindColumnsImmediately ) {
@@ -1938,10 +1981,16 @@ public class ModelBinder {
 			MappingDocument sourceDocument,
 			SingularAttributeSourceAny anyMapping,
 			Any anyBinding,
-			String entityName) {
+			ColumnNamingContext columnNamingContext) {
 		final var attributeRole = anyMapping.getAttributeRole();
-		bindAny( sourceDocument, anyMapping, anyBinding, attributeRole );
-		prepareValueTypeViaReflection( sourceDocument, anyBinding, entityName, anyMapping.getName(), attributeRole );
+		bindAny( sourceDocument, anyMapping, anyBinding, attributeRole, columnNamingContext );
+		prepareValueTypeViaReflection(
+				sourceDocument,
+				anyBinding,
+				columnNamingContext.entityName(),
+				anyMapping.getName(),
+				attributeRole
+		);
 		anyBinding.createForeignKey();
 
 		final var property = new Property();
@@ -1954,7 +2003,8 @@ public class ModelBinder {
 			MappingDocument sourceDocument,
 			AnyMappingSource anyMapping,
 			Any anyBinding,
-			AttributeRole attributeRole) {
+			AttributeRole attributeRole,
+			ColumnNamingContext columnNamingContext) {
 
 		anyBinding.setLazy( anyMapping.isLazy() );
 
@@ -1978,7 +2028,8 @@ public class ModelBinder {
 				discriminatorSource.getRelationalValueSource(),
 				anyBinding.getMetaMapping(),
 				true,
-				context -> implicitNamingStrategy.determineAnyDiscriminatorColumnName( discriminatorSource )
+				context -> implicitNamingStrategy.determineAnyDiscriminatorColumnName( discriminatorSource ),
+				columnNamingContext
 		);
 
 		relationalObjectBinder.bindColumnsAndFormulas(
@@ -1986,7 +2037,8 @@ public class ModelBinder {
 				anyMapping.getKeySource().getRelationalValueSources(),
 				anyBinding.getKeyMapping(),
 				true,
-				context -> implicitNamingStrategy.determineAnyKeyColumnName( anyMapping.getKeySource() )
+				context -> implicitNamingStrategy.determineAnyKeyColumnName( anyMapping.getKeySource() ),
+				columnNamingContext
 		);
 	}
 
@@ -2415,7 +2467,11 @@ public class ModelBinder {
 						sourceDocument,
 						singularAttributeSourceBasic,
 						new BasicValue( sourceDocument, component.getTable() ),
-						component.getComponentClassName()
+						component.getComponentClassName(),
+						new ColumnNamingContext(
+								component.getOwner().getEntityName(),
+								component.getOwner().getClassName()
+						)
 				);
 			}
 			else if ( attributeSource instanceof SingularAttributeSourceEmbedded singularAttributeSourceEmbedded ) {
@@ -2431,7 +2487,11 @@ public class ModelBinder {
 						sourceDocument,
 						singularAttributeSourceManyToOne,
 						new ManyToOne( sourceDocument, component.getTable() ),
-						component.getComponentClassName()
+						component.getComponentClassName(),
+						new ColumnNamingContext(
+								component.getOwner().getEntityName(),
+								component.getOwner().getClassName()
+						)
 				);
 			}
 			else if ( attributeSource instanceof SingularAttributeSourceOneToOne singularAttributeSourceOneToOne ) {
@@ -2447,7 +2507,10 @@ public class ModelBinder {
 						sourceDocument,
 						singularAttributeSourceAny,
 						new Any( sourceDocument, component.getTable() ),
-						component.getComponentClassName()
+						new ColumnNamingContext(
+								component.getOwner().getEntityName(),
+								component.getOwner().getClassName()
+						)
 				);
 			}
 			else if ( attributeSource instanceof PluralAttributeSource pluralAttributeSource ) {
@@ -3054,7 +3117,11 @@ public class ModelBinder {
 					key,
 					keySource.areValuesNullableByDefault(),
 					context -> context.getMetadataCollector().getDatabase()
-							.toIdentifier( Collection.DEFAULT_KEY_COLUMN_NAME )
+							.toIdentifier( Collection.DEFAULT_KEY_COLUMN_NAME ),
+					new ColumnNamingContext(
+							collectionBinding.getOwnerEntityName(),
+							collectionBinding.getOwner().getClassName()
+					)
 			);
 
 			key.sortProperties();
@@ -3084,7 +3151,11 @@ public class ModelBinder {
 						idSource.getColumnSource(),
 						idBinding,
 						false,
-						context -> database.toIdentifier( IdentifierCollection.DEFAULT_IDENTIFIER_COLUMN_NAME )
+						context -> database.toIdentifier( IdentifierCollection.DEFAULT_IDENTIFIER_COLUMN_NAME ),
+						new ColumnNamingContext(
+								getCollectionBinding().getOwnerEntityName(),
+								getCollectionBinding().getOwner().getClassName()
+						)
 				);
 
 				idBagBinding.setIdentifier( idBinding );
@@ -3126,10 +3197,18 @@ public class ModelBinder {
 
 		private void bindManyToAnyElement(PluralAttributeElementSourceManyToAny elementSource) {
 			final var elementBinding =
-					new Any( mappingDocument,
-							collectionBinding.getCollectionTable() );
-			bindAny( mappingDocument, elementSource, elementBinding,
-					pluralAttributeSource.getAttributeRole().append( "element" ) );
+					new Any(
+							mappingDocument,
+							collectionBinding.getCollectionTable()
+					);
+			bindAny(
+					mappingDocument, elementSource, elementBinding,
+					pluralAttributeSource.getAttributeRole().append( "element" ),
+					new ColumnNamingContext(
+							collectionBinding.getOwnerEntityName(),
+							collectionBinding.getOwner().getClassName()
+					)
+			);
 			collectionBinding.setElement( elementBinding );
 			// Collection#setWhere is used to set the "where" clause that applies to the collection table
 			// (which is the join table for a many-to-any association).
@@ -3147,7 +3226,11 @@ public class ModelBinder {
 					elementBinding,
 					false,
 					context -> context.getMetadataCollector().getDatabase()
-							.toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME )
+							.toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME ),
+					new ColumnNamingContext(
+							collectionBinding.getOwnerEntityName(),
+							collectionBinding.getOwner().getClassName()
+					)
 			);
 			handleFetchCharacteristics( elementSource, elementBinding );
 			setForeignKeyName( elementBinding,
@@ -3273,7 +3356,11 @@ public class ModelBinder {
 					elementBinding,
 					elementSource.areValuesNullableByDefault(),
 					context -> context.getMetadataCollector().getDatabase()
-							.toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME )
+							.toIdentifier( Collection.DEFAULT_ELEMENT_COLUMN_NAME ),
+					new ColumnNamingContext(
+							collectionBinding.getOwnerEntityName(),
+							collectionBinding.getOwner().getClassName()
+					)
 			);
 			collectionBinding.setElement( elementBinding );
 			// Collection#setWhere is used to set the "where" clause that applies to the collection table
@@ -3566,6 +3653,10 @@ public class ModelBinder {
 								return context;
 							}
 						}
+				),
+				new ColumnNamingContext(
+						collectionBinding.getOwnerEntityName(),
+						collectionBinding.getOwner().getClassName()
 				)
 		);
 
@@ -3598,10 +3689,18 @@ public class ModelBinder {
 			org.hibernate.mapping.Map collectionBinding,
 			PluralAttributeMapKeyManyToAnySource mapKeySource) {
 		final var mapKeyBinding =
-				new Any( mappingDocument,
-						collectionBinding.getCollectionTable() );
-		bindAny( mappingDocument, mapKeySource, mapKeyBinding,
-				pluralAttributeSource.getAttributeRole().append( "key" ) );
+				new Any(
+						mappingDocument,
+						collectionBinding.getCollectionTable()
+				);
+		bindAny(
+				mappingDocument, mapKeySource, mapKeyBinding,
+				pluralAttributeSource.getAttributeRole().append( "key" ),
+				new ColumnNamingContext(
+						collectionBinding.getOwnerEntityName(),
+						collectionBinding.getOwner().getClassName()
+				)
+		);
 		collectionBinding.setIndex( mapKeyBinding );
 	}
 
@@ -3632,6 +3731,10 @@ public class ModelBinder {
 								return context;
 							}
 						}
+				),
+				new ColumnNamingContext(
+						collectionBinding.getOwnerEntityName(),
+						collectionBinding.getOwner().getClassName()
 				)
 		);
 		collectionBinding.setIndex( mapKeyBinding );
@@ -3676,7 +3779,11 @@ public class ModelBinder {
 				mapKeySource.getRelationalValueSources(),
 				value,
 				true,
-				context -> database.toIdentifier( IndexedCollection.DEFAULT_INDEX_COLUMN_NAME )
+				context -> database.toIdentifier( IndexedCollection.DEFAULT_INDEX_COLUMN_NAME ),
+				new ColumnNamingContext(
+						collectionBinding.getOwnerEntityName(),
+						collectionBinding.getOwner().getClassName()
+				)
 		);
 
 		collectionBinding.setIndex( value );
@@ -3688,6 +3795,7 @@ public class ModelBinder {
 		private final ManyToOne manyToOneBinding;
 
 		private final String referencedEntityName;
+		private final ColumnNamingContext columnNamingContext;
 
 		private final boolean allColumnsNamed;
 
@@ -3695,11 +3803,13 @@ public class ModelBinder {
 				MappingDocument mappingDocument,
 				SingularAttributeSourceManyToOne manyToOneSource,
 				ManyToOne manyToOneBinding,
-				String referencedEntityName) {
+				String referencedEntityName,
+				ColumnNamingContext columnNamingContext) {
 			this.mappingDocument = mappingDocument;
 			this.manyToOneSource = manyToOneSource;
 			this.manyToOneBinding = manyToOneBinding;
 			this.referencedEntityName = referencedEntityName;
+			this.columnNamingContext = columnNamingContext;
 
 			boolean allNamed = true;
 			for ( var relationalValueSource : manyToOneSource.getRelationalValueSources() ) {
@@ -3743,7 +3853,8 @@ public class ModelBinder {
 						manyToOneSource.areValuesNullableByDefault(),
 						context -> {
 							throw new AssertionFailure( "Should not be called" );
-						}
+						},
+						columnNamingContext
 				);
 			}
 			else {
@@ -3784,7 +3895,8 @@ public class ModelBinder {
 										return context;
 									}
 								}
-						)
+						),
+						columnNamingContext
 				);
 			}
 		}

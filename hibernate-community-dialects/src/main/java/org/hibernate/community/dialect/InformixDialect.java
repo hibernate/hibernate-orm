@@ -396,7 +396,7 @@ public class InformixDialect extends Dialect {
 
 		if ( supportsWindowFunctions() ) {
 			functionFactory.windowFunctions();
-			functionFactory.hypotheticalOrderedSetAggregates();
+			functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 		}
 
 		functionRegistry.register( "overlay",

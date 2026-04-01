@@ -2303,4 +2303,46 @@ public class HbmTemplateHelperTest {
 		assertEquals(List.of("protected"), helper.getFieldMetaAttribute(nameField, "scope-field"));
 		assertEquals(List.of("public"), helper.getFieldMetaAttribute(ageField, "scope-field"));
 	}
+
+	// --- Collection cache ---
+
+	@Test
+	public void testGetCollectionCacheUsage() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx);
+		cache.usage(CacheConcurrencyStrategy.READ_WRITE);
+		field.addAnnotationUsage(cache);
+		assertEquals("read-write", new HbmTemplateHelper(entity).getCollectionCacheUsage(field));
+	}
+
+	@Test
+	public void testGetCollectionCacheUsageNone() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		assertNull(new HbmTemplateHelper(entity).getCollectionCacheUsage(field));
+	}
+
+	@Test
+	public void testGetCollectionCacheRegion() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx);
+		cache.usage(CacheConcurrencyStrategy.READ_ONLY);
+		cache.region("items-cache");
+		field.addAnnotationUsage(cache);
+		assertEquals("read-only", new HbmTemplateHelper(entity).getCollectionCacheUsage(field));
+		assertEquals("items-cache", new HbmTemplateHelper(entity).getCollectionCacheRegion(field));
+	}
+
+	@Test
+	public void testGetCollectionCacheRegionNull() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addOneToManySetField(entity, "items", ctx);
+		assertNull(new HbmTemplateHelper(entity).getCollectionCacheRegion(field));
+	}
 }

@@ -842,6 +842,20 @@ public class HbmTemplateHelper {
 				? ob.value() : null;
 	}
 
+	public String getCollectionCacheUsage(FieldDetails field) {
+		Cache cache = field.getDirectAnnotationUsage(Cache.class);
+		if (cache == null || cache.usage() == CacheConcurrencyStrategy.NONE) {
+			return null;
+		}
+		return cache.usage().name().toLowerCase().replace('_', '-');
+	}
+
+	public String getCollectionCacheRegion(FieldDetails field) {
+		Cache cache = field.getDirectAnnotationUsage(Cache.class);
+		return cache != null && cache.region() != null && !cache.region().isEmpty()
+				? cache.region() : null;
+	}
+
 	public List<FilterInfo> getCollectionFilters(FieldDetails field) {
 		List<FilterInfo> result = new ArrayList<>();
 		Filter single = field.getDirectAnnotationUsage(Filter.class);

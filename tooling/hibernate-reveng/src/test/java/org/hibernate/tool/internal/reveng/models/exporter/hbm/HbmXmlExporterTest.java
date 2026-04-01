@@ -708,4 +708,74 @@ public class HbmXmlExporterTest {
 		// Should have no <meta> at all (no class-level or field-level)
 		assertFalse(xml.contains("<meta attribute="), xml);
 	}
+
+	// --- Collection cache ---
+
+	@Test
+	public void testCollectionCacheOnOneToMany() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata("employees", "department", "Employee", "com.example"));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		// Add @Cache to the collection field
+		for (var field : entity.getFields()) {
+			if ("employees".equals(field.getName())) {
+				org.hibernate.boot.models.annotations.internal.CacheAnnotation cache =
+						HibernateAnnotations.CACHE.createUsage(ctx);
+				cache.usage(org.hibernate.annotations.CacheConcurrencyStrategy.READ_WRITE);
+				((DynamicClassDetails) entity).getFields().stream()
+						.filter(f -> f.getName().equals("employees"))
+						.findFirst()
+						.ifPresent(f -> ((org.hibernate.models.internal.dynamic.DynamicFieldDetails) f)
+								.addAnnotationUsage(cache));
+				break;
+			}
+		}
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<cache usage=\"read-write\"/>"), xml);
+	}
+
+	@Test
+	public void testCollectionCacheWithRegion() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata("employees", "department", "Employee", "com.example"));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		for (var field : entity.getFields()) {
+			if ("employees".equals(field.getName())) {
+				org.hibernate.boot.models.annotations.internal.CacheAnnotation cache =
+						HibernateAnnotations.CACHE.createUsage(ctx);
+				cache.usage(org.hibernate.annotations.CacheConcurrencyStrategy.READ_ONLY);
+				cache.region("emp-cache");
+				((org.hibernate.models.internal.dynamic.DynamicFieldDetails) field)
+						.addAnnotationUsage(cache);
+				break;
+			}
+		}
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<cache usage=\"read-only\" region=\"emp-cache\"/>"), xml);
+	}
+
+	@Test
+	public void testNoCollectionCache() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata("employees", "department", "Employee", "com.example"));
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, new DynamicEntityBuilder().createEntityFromTable(table));
+		String xml = writer.toString();
+		// The class-level cache check — collection has no cache
+		assertFalse(xml.contains("<cache usage="), xml);
+	}
 }

@@ -78,6 +78,9 @@
         <meta attribute="${metaName}">${metaValue}</meta>
 </#list>
 </#list>
+<#if helper.getCollectionCacheUsage(field)??>
+        <cache usage="${helper.getCollectionCacheUsage(field)}"<#if helper.getCollectionCacheRegion(field)??> region="${helper.getCollectionCacheRegion(field)}"</#if>/>
+</#if>
         <key>
             <column name="${helper.getOneToManyMappedBy(field)}"/>
         </key>
@@ -110,6 +113,9 @@
         <meta attribute="${metaName}">${metaValue}</meta>
 </#list>
 </#list>
+<#if helper.getCollectionCacheUsage(field)??>
+        <cache usage="${helper.getCollectionCacheUsage(field)}"<#if helper.getCollectionCacheRegion(field)??> region="${helper.getCollectionCacheRegion(field)}"</#if>/>
+</#if>
         <key>
             <column name="${helper.getJoinTableJoinColumnName(field)}"/>
         </key>
@@ -142,6 +148,9 @@
         <meta attribute="${metaName}">${metaValue}</meta>
 </#list>
 </#list>
+<#if helper.getCollectionCacheUsage(field)??>
+        <cache usage="${helper.getCollectionCacheUsage(field)}"<#if helper.getCollectionCacheRegion(field)??> region="${helper.getCollectionCacheRegion(field)}"</#if>/>
+</#if>
         <key>
             <column name="${field.getName()}"/>
         </key>

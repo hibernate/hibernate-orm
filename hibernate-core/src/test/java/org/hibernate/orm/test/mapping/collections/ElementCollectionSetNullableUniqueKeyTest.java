@@ -17,6 +17,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SpannerDialect;
@@ -57,6 +58,7 @@ public class ElementCollectionSetNullableUniqueKeyTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = InformixDialect.class, reason = "Informix treats two nulls as equal, which is why we don't create a unique constraint")
 	void createsUniqueKeyForSetAndPrimaryKeyForOrderedList() {
 		final var metadata = (MetadataImplementor)
 				new MetadataSources( ssr )

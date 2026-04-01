@@ -137,4 +137,59 @@ public class TestCase {
 		assertTrue(formattedFile.exists());
 		assertTrue(formattedFile.length() > 0);
 	}
+
+	@Test
+	public void testDdlExportSchemaUpdateNoTargets() {
+		Exporter exporter = ExporterFactory.createExporter(ExporterType.DDL);
+		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
+		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);
+		exporter.getProperties().put(ExporterConstants.EXPORT_TO_DATABASE, false);
+		exporter.getProperties().put(ExporterConstants.EXPORT_TO_CONSOLE, false);
+		exporter.getProperties().put(ExporterConstants.SCHEMA_UPDATE, true);
+		exporter.getProperties().put(ExporterConstants.HALT_ON_ERROR, true);
+		exporter.getProperties().put(ExporterConstants.FORMAT, true);
+		exporter.start();
+	}
+
+	@Test
+	public void testDdlExportWithHaltOnError() {
+		Exporter exporter = ExporterFactory.createExporter(ExporterType.DDL);
+		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
+		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);
+		exporter.getProperties().put(ExporterConstants.OUTPUT_FILE_NAME, "halt.sql");
+		exporter.getProperties().put(ExporterConstants.EXPORT_TO_DATABASE, false);
+		exporter.getProperties().put(ExporterConstants.EXPORT_TO_CONSOLE, false);
+		exporter.getProperties().put(ExporterConstants.HALT_ON_ERROR, true);
+		exporter.start();
+
+		File haltFile = new File(outputFolder, "halt.sql");
+		assertTrue(haltFile.exists());
+	}
+
+	@Test
+	public void testDdlExportDropOnly() {
+		Exporter exporter = ExporterFactory.createExporter(ExporterType.DDL);
+		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
+		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);
+		exporter.getProperties().put(ExporterConstants.OUTPUT_FILE_NAME, "droponly.sql");
+		exporter.getProperties().put(ExporterConstants.EXPORT_TO_DATABASE, false);
+		exporter.getProperties().put(ExporterConstants.EXPORT_TO_CONSOLE, false);
+		exporter.getProperties().put(ExporterConstants.CREATE_DATABASE, false);
+		exporter.getProperties().put(ExporterConstants.DROP_DATABASE, true);
+		exporter.getProperties().put(ExporterConstants.FORMAT, true);
+		exporter.getProperties().put(ExporterConstants.HALT_ON_ERROR, true);
+		exporter.start();
+	}
+
+	@Test
+	public void testDdlExportToConsoleOnly() {
+		Exporter exporter = ExporterFactory.createExporter(ExporterType.DDL);
+		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
+		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);
+		exporter.getProperties().put(ExporterConstants.EXPORT_TO_DATABASE, false);
+		exporter.getProperties().put(ExporterConstants.EXPORT_TO_CONSOLE, true);
+		exporter.getProperties().put(ExporterConstants.CREATE_DATABASE, true);
+		exporter.getProperties().put(ExporterConstants.DROP_DATABASE, false);
+		exporter.start();
+	}
 }

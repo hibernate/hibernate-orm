@@ -2151,6 +2151,42 @@ public class MappingXmlHelperTest {
 		assertTrue(new MappingXmlHelper(entity).getLifecycleCallbacks().isEmpty());
 	}
 
+	// --- @SQLDeleteAll ---
+
+	@Test
+	public void testGetSQLDeleteAll() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		org.hibernate.boot.models.annotations.internal.SQLDeleteAllAnnotation sda =
+				HibernateAnnotations.SQL_DELETE_ALL.createUsage(ctx);
+		sda.sql("DELETE FROM T WHERE parent_id = ?");
+		entity.addAnnotationUsage(sda);
+		MappingXmlHelper.CustomSqlInfo info = new MappingXmlHelper(entity).getSQLDeleteAll();
+		assertNotNull(info);
+		assertEquals("DELETE FROM T WHERE parent_id = ?", info.sql());
+		assertFalse(info.callable());
+	}
+
+	@Test
+	public void testGetSQLDeleteAllCallable() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		org.hibernate.boot.models.annotations.internal.SQLDeleteAllAnnotation sda =
+				HibernateAnnotations.SQL_DELETE_ALL.createUsage(ctx);
+		sda.sql("{call deleteAll(?)}");
+		sda.callable(true);
+		entity.addAnnotationUsage(sda);
+		MappingXmlHelper.CustomSqlInfo info = new MappingXmlHelper(entity).getSQLDeleteAll();
+		assertTrue(info.callable());
+	}
+
+	@Test
+	public void testGetSQLDeleteAllNull() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		assertNull(new MappingXmlHelper(entity).getSQLDeleteAll());
+	}
+
 	private void addMethodsFrom(Class<?> source, DynamicClassDetails target, ModelsContext modelsContext) {
 		for (java.lang.reflect.Method method : source.getDeclaredMethods()) {
 			target.addMethod(new JdkMethodDetails(

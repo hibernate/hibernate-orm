@@ -59,6 +59,9 @@
 <#if helper.getSQLDelete()??>
         <sql-delete<#if helper.getSQLDelete().callable()> callable="true"</#if>>${helper.getSQLDelete().sql()}</sql-delete>
 </#if>
+<#if helper.getSQLDeleteAll()??>
+        <sql-delete-all<#if helper.getSQLDeleteAll().callable()> callable="true"</#if>>${helper.getSQLDeleteAll().sql()}</sql-delete-all>
+</#if>
 <#list helper.getFetchProfiles() as fp>
         <fetch-profile name="${fp.name()}">
 <#list fp.overrides() as fo>

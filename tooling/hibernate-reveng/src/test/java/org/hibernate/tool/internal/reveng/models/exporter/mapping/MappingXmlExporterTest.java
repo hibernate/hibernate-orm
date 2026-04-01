@@ -33,6 +33,7 @@ import jakarta.persistence.TemporalType;
 
 import java.util.List;
 
+import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.EntityListenersJpaAnnotation;
 import org.hibernate.models.internal.BasicModelsContextImpl;
@@ -525,5 +526,24 @@ public class MappingXmlExporterTest {
 		String xml = writer.toString();
 		assertTrue(xml.contains("<pre-persist method-name=\"onPrePersist\"/>"), xml);
 		assertTrue(xml.contains("<post-load method-name=\"onPostLoad\"/>"), xml);
+	}
+
+	// --- @SQLDeleteAll ---
+
+	@Test
+	public void testSQLDeleteAll() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		org.hibernate.boot.models.annotations.internal.SQLDeleteAllAnnotation sda =
+				HibernateAnnotations.SQL_DELETE_ALL.createUsage(builder.getModelsContext());
+		sda.sql("DELETE FROM EMPLOYEE WHERE dept_id = ?");
+		((DynamicClassDetails) entity).addAnnotationUsage(sda);
+		MappingXmlExporter exporter = MappingXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<sql-delete-all>DELETE FROM EMPLOYEE WHERE dept_id = ?</sql-delete-all>"), xml);
 	}
 }

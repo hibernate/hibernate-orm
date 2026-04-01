@@ -58,7 +58,9 @@ import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterDefAnnotation;
 import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
 import org.hibernate.boot.models.annotations.internal.FormulaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedNativeQueryAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedNativeQueryJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedQueryAnnotation;
 import org.hibernate.boot.models.annotations.internal.NamedQueryJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NaturalIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.NotFoundAnnotation;
@@ -1834,6 +1836,52 @@ public class HbmTemplateHelperTest {
 		assertEquals("SELECT e FROM TestEntity e", queries.get(0).query());
 	}
 
+	@Test
+	public void testGetNamedQueriesHibernateWithAttributes() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		NamedQueryAnnotation nq = HibernateAnnotations.NAMED_QUERY.createUsage(ctx);
+		nq.name("findActive");
+		nq.query("SELECT e FROM TestEntity e WHERE e.active = true");
+		nq.flushMode(org.hibernate.annotations.FlushModeType.AUTO);
+		nq.cacheable(true);
+		nq.cacheRegion("myRegion");
+		nq.fetchSize(25);
+		nq.timeout(5000);
+		nq.comment("Find active entities");
+		nq.readOnly(true);
+		entity.addAnnotationUsage(nq);
+		List<HbmTemplateHelper.NamedQueryInfo> queries = new HbmTemplateHelper(entity).getNamedQueries();
+		assertEquals(1, queries.size());
+		HbmTemplateHelper.NamedQueryInfo info = queries.get(0);
+		assertEquals("findActive", info.name());
+		assertEquals("auto", info.flushMode());
+		assertTrue(info.cacheable());
+		assertEquals("myRegion", info.cacheRegion());
+		assertEquals(25, info.fetchSize());
+		assertEquals(5000, info.timeout());
+		assertEquals("Find active entities", info.comment());
+		assertTrue(info.readOnly());
+	}
+
+	@Test
+	public void testGetNamedQueriesJpaDefaultAttributes() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		NamedQueryJpaAnnotation nq = JpaAnnotations.NAMED_QUERY.createUsage(ctx);
+		nq.name("findAll");
+		nq.query("SELECT e FROM TestEntity e");
+		entity.addAnnotationUsage(nq);
+		List<HbmTemplateHelper.NamedQueryInfo> queries = new HbmTemplateHelper(entity).getNamedQueries();
+		assertEquals(1, queries.size());
+		HbmTemplateHelper.NamedQueryInfo info = queries.get(0);
+		assertEquals("", info.flushMode());
+		assertFalse(info.cacheable());
+		assertEquals("", info.cacheRegion());
+		assertEquals(-1, info.fetchSize());
+		assertEquals(-1, info.timeout());
+	}
+
 	// --- getNamedNativeQueries ---
 
 	@Test
@@ -1851,10 +1899,42 @@ public class HbmTemplateHelperTest {
 		nnq.name("findAllNative");
 		nnq.query("SELECT * FROM TEST_ENTITY");
 		entity.addAnnotationUsage(nnq);
-		List<HbmTemplateHelper.NamedQueryInfo> queries = new HbmTemplateHelper(entity).getNamedNativeQueries();
+		List<HbmTemplateHelper.NamedNativeQueryInfo> queries = new HbmTemplateHelper(entity).getNamedNativeQueries();
 		assertEquals(1, queries.size());
 		assertEquals("findAllNative", queries.get(0).name());
 		assertEquals("SELECT * FROM TEST_ENTITY", queries.get(0).query());
+	}
+
+	@Test
+	public void testGetNamedNativeQueriesHibernateWithAttributes() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		NamedNativeQueryAnnotation nnq = HibernateAnnotations.NAMED_NATIVE_QUERY.createUsage(ctx);
+		nnq.name("findNativeActive");
+		nnq.query("SELECT * FROM TEST_ENTITY WHERE ACTIVE = 1");
+		nnq.flushMode(org.hibernate.annotations.FlushModeType.COMMIT);
+		nnq.cacheable(true);
+		nnq.cacheRegion("nativeRegion");
+		nnq.fetchSize(50);
+		nnq.timeout(3000);
+		nnq.comment("Native find active");
+		nnq.readOnly(true);
+		nnq.querySpaces(new String[]{"TEST_ENTITY", "OTHER_TABLE"});
+		entity.addAnnotationUsage(nnq);
+		List<HbmTemplateHelper.NamedNativeQueryInfo> queries = new HbmTemplateHelper(entity).getNamedNativeQueries();
+		assertEquals(1, queries.size());
+		HbmTemplateHelper.NamedNativeQueryInfo info = queries.get(0);
+		assertEquals("findNativeActive", info.name());
+		assertEquals("commit", info.flushMode());
+		assertTrue(info.cacheable());
+		assertEquals("nativeRegion", info.cacheRegion());
+		assertEquals(50, info.fetchSize());
+		assertEquals(3000, info.timeout());
+		assertEquals("Native find active", info.comment());
+		assertTrue(info.readOnly());
+		assertEquals(2, info.querySpaces().size());
+		assertEquals("TEST_ENTITY", info.querySpaces().get(0));
+		assertEquals("OTHER_TABLE", info.querySpaces().get(1));
 	}
 
 	// --- getManyToAnyFields ---

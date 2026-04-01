@@ -32,7 +32,12 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.InheritanceType;
 
+import org.hibernate.boot.models.HibernateAnnotations;
+import org.hibernate.boot.models.annotations.internal.NamedNativeQueryAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedQueryAnnotation;
+import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
@@ -478,5 +483,56 @@ public class HbmXmlExporterTest {
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
 		String xml = export(table);
 		assertTrue(xml.contains("name=\"Employee\""), xml);
+	}
+
+	@Test
+	public void testNamedQueryWithAttributes() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		NamedQueryAnnotation nq = HibernateAnnotations.NAMED_QUERY.createUsage(ctx);
+		nq.name("findActive");
+		nq.query("SELECT e FROM Employee e WHERE e.active = true");
+		nq.flushMode(org.hibernate.annotations.FlushModeType.AUTO);
+		nq.cacheable(true);
+		nq.cacheRegion("empRegion");
+		nq.fetchSize(20);
+		nq.timeout(1000);
+		((DynamicClassDetails) entity).addAnnotationUsage(nq);
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("name=\"findActive\""), xml);
+		assertTrue(xml.contains("flush-mode=\"auto\""), xml);
+		assertTrue(xml.contains("cacheable=\"true\""), xml);
+		assertTrue(xml.contains("cache-region=\"empRegion\""), xml);
+		assertTrue(xml.contains("fetch-size=\"20\""), xml);
+		assertTrue(xml.contains("timeout=\"1000\""), xml);
+	}
+
+	@Test
+	public void testNamedNativeQueryWithQuerySpaces() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		NamedNativeQueryAnnotation nnq = HibernateAnnotations.NAMED_NATIVE_QUERY.createUsage(ctx);
+		nnq.name("findNative");
+		nnq.query("SELECT * FROM EMPLOYEE WHERE ACTIVE = 1");
+		nnq.cacheable(true);
+		nnq.querySpaces(new String[]{"EMPLOYEE", "DEPARTMENT"});
+		((DynamicClassDetails) entity).addAnnotationUsage(nnq);
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("name=\"findNative\""), xml);
+		assertTrue(xml.contains("cacheable=\"true\""), xml);
+		assertTrue(xml.contains("<synchronize table=\"EMPLOYEE\"/>"), xml);
+		assertTrue(xml.contains("<synchronize table=\"DEPARTMENT\"/>"), xml);
 	}
 }

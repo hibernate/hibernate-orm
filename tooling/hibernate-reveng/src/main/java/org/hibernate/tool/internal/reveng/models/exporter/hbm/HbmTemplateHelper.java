@@ -104,6 +104,7 @@ import org.hibernate.annotations.SQLUpdates;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Subselect;
+import org.hibernate.annotations.FlushModeType;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
@@ -955,35 +956,96 @@ public class HbmTemplateHelper {
 
 	public List<NamedQueryInfo> getNamedQueries() {
 		List<NamedQueryInfo> result = new ArrayList<>();
-		NamedQuery single = classDetails.getDirectAnnotationUsage(NamedQuery.class);
-		if (single != null) {
-			result.add(new NamedQueryInfo(single.name(), single.query()));
+		// Check Hibernate @NamedQuery (has typed attributes)
+		org.hibernate.annotations.NamedQuery hibSingle =
+				classDetails.getDirectAnnotationUsage(org.hibernate.annotations.NamedQuery.class);
+		if (hibSingle != null) {
+			result.add(toNamedQueryInfo(hibSingle));
 		}
-		NamedQueries container = classDetails.getDirectAnnotationUsage(NamedQueries.class);
-		if (container != null) {
-			for (NamedQuery nq : container.value()) {
-				result.add(new NamedQueryInfo(nq.name(), nq.query()));
+		org.hibernate.annotations.NamedQueries hibContainer =
+				classDetails.getDirectAnnotationUsage(org.hibernate.annotations.NamedQueries.class);
+		if (hibContainer != null) {
+			for (org.hibernate.annotations.NamedQuery nq : hibContainer.value()) {
+				result.add(toNamedQueryInfo(nq));
+			}
+		}
+		// Check JPA @NamedQuery (no typed attributes for flush-mode etc.)
+		if (result.isEmpty()) {
+			NamedQuery single = classDetails.getDirectAnnotationUsage(NamedQuery.class);
+			if (single != null) {
+				result.add(new NamedQueryInfo(single.name(), single.query(),
+						"", false, "", -1, -1, "", false));
+			}
+			NamedQueries container = classDetails.getDirectAnnotationUsage(NamedQueries.class);
+			if (container != null) {
+				for (NamedQuery nq : container.value()) {
+					result.add(new NamedQueryInfo(nq.name(), nq.query(),
+							"", false, "", -1, -1, "", false));
+				}
 			}
 		}
 		return result;
 	}
 
-	public List<NamedQueryInfo> getNamedNativeQueries() {
-		List<NamedQueryInfo> result = new ArrayList<>();
-		NamedNativeQuery single = classDetails.getDirectAnnotationUsage(NamedNativeQuery.class);
-		if (single != null) {
-			result.add(new NamedQueryInfo(single.name(), single.query()));
+	private NamedQueryInfo toNamedQueryInfo(org.hibernate.annotations.NamedQuery nq) {
+		String flushMode = nq.flushMode() != FlushModeType.PERSISTENCE_CONTEXT
+				? nq.flushMode().name().toLowerCase() : "";
+		return new NamedQueryInfo(nq.name(), nq.query(), flushMode,
+				nq.cacheable(), nq.cacheRegion(), nq.fetchSize(), nq.timeout(),
+				nq.comment(), nq.readOnly());
+	}
+
+	public List<NamedNativeQueryInfo> getNamedNativeQueries() {
+		List<NamedNativeQueryInfo> result = new ArrayList<>();
+		// Check Hibernate @NamedNativeQuery (has typed attributes)
+		org.hibernate.annotations.NamedNativeQuery hibSingle =
+				classDetails.getDirectAnnotationUsage(org.hibernate.annotations.NamedNativeQuery.class);
+		if (hibSingle != null) {
+			result.add(toNamedNativeQueryInfo(hibSingle));
 		}
-		NamedNativeQueries container = classDetails.getDirectAnnotationUsage(NamedNativeQueries.class);
-		if (container != null) {
-			for (NamedNativeQuery nnq : container.value()) {
-				result.add(new NamedQueryInfo(nnq.name(), nnq.query()));
+		org.hibernate.annotations.NamedNativeQueries hibContainer =
+				classDetails.getDirectAnnotationUsage(org.hibernate.annotations.NamedNativeQueries.class);
+		if (hibContainer != null) {
+			for (org.hibernate.annotations.NamedNativeQuery nnq : hibContainer.value()) {
+				result.add(toNamedNativeQueryInfo(nnq));
+			}
+		}
+		// Check JPA @NamedNativeQuery (no typed attributes)
+		if (result.isEmpty()) {
+			NamedNativeQuery single = classDetails.getDirectAnnotationUsage(NamedNativeQuery.class);
+			if (single != null) {
+				result.add(new NamedNativeQueryInfo(single.name(), single.query(),
+						"", false, "", -1, -1, "", false, List.of()));
+			}
+			NamedNativeQueries container = classDetails.getDirectAnnotationUsage(NamedNativeQueries.class);
+			if (container != null) {
+				for (NamedNativeQuery nnq : container.value()) {
+					result.add(new NamedNativeQueryInfo(nnq.name(), nnq.query(),
+							"", false, "", -1, -1, "", false, List.of()));
+				}
 			}
 		}
 		return result;
 	}
 
-	public record NamedQueryInfo(String name, String query) {}
+	private NamedNativeQueryInfo toNamedNativeQueryInfo(org.hibernate.annotations.NamedNativeQuery nnq) {
+		String flushMode = nnq.flushMode() != FlushModeType.PERSISTENCE_CONTEXT
+				? nnq.flushMode().name().toLowerCase() : "";
+		List<String> querySpaces = nnq.querySpaces() != null && nnq.querySpaces().length > 0
+				? List.of(nnq.querySpaces()) : List.of();
+		return new NamedNativeQueryInfo(nnq.name(), nnq.query(), flushMode,
+				nnq.cacheable(), nnq.cacheRegion(), nnq.fetchSize(), nnq.timeout(),
+				nnq.comment(), nnq.readOnly(), querySpaces);
+	}
+
+	public record NamedQueryInfo(String name, String query, String flushMode,
+								 boolean cacheable, String cacheRegion, int fetchSize,
+								 int timeout, String comment, boolean readOnly) {}
+
+	public record NamedNativeQueryInfo(String name, String query, String flushMode,
+									   boolean cacheable, String cacheRegion, int fetchSize,
+									   int timeout, String comment, boolean readOnly,
+									   List<String> querySpaces) {}
 
 	// --- SecondaryTable / Joins ---
 

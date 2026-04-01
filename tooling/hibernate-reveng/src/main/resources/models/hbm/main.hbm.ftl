@@ -17,9 +17,30 @@
 </#if>
 </#list>
 <#list helper.getNamedQueries() as nq>
-    <query name="${nq.name()}"><![CDATA[${nq.query()}]]></query>
+    <query
+        name="${nq.name()}"<#if nq.flushMode()?has_content>
+        flush-mode="${nq.flushMode()}"</#if><#if nq.cacheable()>
+        cacheable="true"</#if><#if nq.cacheRegion()?has_content>
+        cache-region="${nq.cacheRegion()}"</#if><#if (nq.fetchSize() > 0)>
+        fetch-size="${nq.fetchSize()?c}"</#if><#if (nq.timeout() > 0)>
+        timeout="${nq.timeout()?c}"</#if><#if nq.readOnly()>
+        read-only="true"</#if><#if nq.comment()?has_content>
+        comment="${nq.comment()}"</#if>><![CDATA[${nq.query()}]]></query>
 </#list>
 <#list helper.getNamedNativeQueries() as nq>
-    <sql-query name="${nq.name()}"><![CDATA[${nq.query()}]]></sql-query>
+    <sql-query
+        name="${nq.name()}"<#if nq.flushMode()?has_content>
+        flush-mode="${nq.flushMode()}"</#if><#if nq.cacheable()>
+        cacheable="true"</#if><#if nq.cacheRegion()?has_content>
+        cache-region="${nq.cacheRegion()}"</#if><#if (nq.fetchSize() > 0)>
+        fetch-size="${nq.fetchSize()?c}"</#if><#if (nq.timeout() > 0)>
+        timeout="${nq.timeout()?c}"</#if><#if nq.readOnly()>
+        read-only="true"</#if><#if nq.comment()?has_content>
+        comment="${nq.comment()}"</#if>>
+<#list nq.querySpaces() as tableName>
+        <synchronize table="${tableName}"/>
+</#list>
+        <![CDATA[${nq.query()}]]>
+    </sql-query>
 </#list>
 </hibernate-mapping>

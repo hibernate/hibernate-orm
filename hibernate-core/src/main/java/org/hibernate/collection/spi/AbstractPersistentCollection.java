@@ -65,7 +65,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	private @Nullable Object owner;
 	private int cachedSize = -1;
 
-	private @Nullable String role;
+	protected @Nullable String role;
 	private @Nullable Object key;
 	// collections detect changes made via their public interface and mark
 	// themselves as dirty as a performance optimization

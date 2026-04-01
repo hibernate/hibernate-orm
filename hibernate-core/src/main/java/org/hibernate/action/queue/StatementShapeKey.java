@@ -49,6 +49,14 @@ public record StatementShapeKey(String tableExpression, MutationKind kind, int s
 		hash = 31 * hash + normalizedTableName.hashCode();
 		hash = 31 * hash + kind.hashCode();
 
+		// Include navigableRole for collections to distinguish multiple collections on same table
+		var tableDescriptor = plannedOperation.getMutatingTableDescriptor();
+		if ( tableDescriptor instanceof org.hibernate.action.queue.meta.CollectionTableDescriptor ctd ) {
+			if ( ctd.navigableRole() != null ) {
+				hash = 31 * hash + ctd.navigableRole().hashCode();
+			}
+		}
+
 		if ( plannedOperation.getJdbcOperation() instanceof PreparableMutationOperation pmo ) {
 			hash = 31 * hash + pmo.getSqlString().hashCode();
 		}

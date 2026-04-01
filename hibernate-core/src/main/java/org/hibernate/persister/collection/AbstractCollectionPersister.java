@@ -1799,6 +1799,7 @@ public abstract class AbstractCollectionPersister
 			PluralAttributeMapping attributeMapping) {
 		return new CollectionTableDescriptor(
 				qualifiedTableName,
+				attributeMapping.getNavigableRole(),
 				!collectionBootDescriptor.isOneToMany(),
 				collectionBootDescriptor.isInverse(),
 				collectionBootDescriptor.getKey().isCascadeDeleteEnabled(),

@@ -322,14 +322,23 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 					) );
 				}
 				else {
+					System.out.println("DEBUG BasicCollectionDecomposer.decomposeCollectionUpdate(): role=" + persister.getRole()
+							+ ", shouldBundleOperations=" + shouldBundleOperations);
+					int beforeCount = operations.size();
 					planDeleteRowOperations( collection, key, ordinalBase, session, operations::add );
+					System.out.println("DEBUG   After planDeleteRowOperations: " + (operations.size() - beforeCount) + " operations");
 
+					beforeCount = operations.size();
 					if ( shouldBundleOperations ) {
 						planBundledChangeAndAdditionOperations( collection, key, ordinalBase, session, operations::add );
+						System.out.println("DEBUG   After planBundledChangeAndAdditionOperations: " + (operations.size() - beforeCount) + " operations");
 					}
 					else {
 						planUpdateRowOperations( collection, key, ordinalBase, session, operations::add );
+						System.out.println("DEBUG   After planUpdateRowOperations: " + (operations.size() - beforeCount) + " operations");
+						beforeCount = operations.size();
 						planInsertRowOperations( collection, key, ordinalBase, session, operations::add );
+						System.out.println("DEBUG   After planInsertRowOperations: " + (operations.size() - beforeCount) + " operations");
 					}
 				}
 				success = true;
@@ -337,6 +346,12 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			finally {
 				eventMonitor.completeCollectionUpdateEvent( event, key, persister.getRole(), success, session );
 			}
+		}
+
+		System.out.println("DEBUG   Total operations: " + operations.size());
+		for (int i = 0; i < operations.size(); i++) {
+			PlannedOperation op = operations.get(i);
+			System.out.println("DEBUG     [" + i + "] " + op.getKind() + " " + op.getTableExpression() + " - " + op.getOrigin());
 		}
 
 		// Create callback to handle post-execution work (afterAction, cache, events, stats)
@@ -1042,14 +1057,8 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		final var indexDescriptor = attribute.getIndexDescriptor();
 		if ( indexDescriptor != null ) {
 			// For indexed collections (lists, maps), restrict by index
-			// NOTE: For Maps, rowValue from getDeletes() is already the key (or value if indexIsFormula),
-			// not a Map.Entry, so we use it directly instead of calling collection.getIndex()
-			// which expects an Entry.
-			final Object indexValue = (collection instanceof org.hibernate.collection.spi.PersistentMap)
-					? rowValue
-					: collection.getIndex( rowValue, rowPosition, persister );
 			indexDescriptor.decompose(
-					indexValue,
+					persister.incrementIndexByBase( rowValue ),
 					jdbcValueBindings::bindRestriction,
 					session
 			);

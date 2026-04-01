@@ -7,6 +7,7 @@ package org.hibernate.orm.test.collection.list;
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -36,7 +37,7 @@ public class ListElementNullBasicTest {
 		int entityId = scope.fromTransaction(
 				session -> {
 					AnEntity e = new AnEntity();
-					e.aCollection.add( null );
+					e.theStrings.add( null );
 					session.persist( e );
 					return e.id;
 				}
@@ -45,7 +46,7 @@ public class ListElementNullBasicTest {
 		scope.inTransaction(
 				session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
-					assertEquals( 0, e.aCollection.size() );
+					assertEquals( 0, e.theStrings.size() );
 					assertEquals( 0, getCollectionElementRows( entityId, scope ).size() );
 					session.remove( e );
 				}
@@ -65,16 +66,16 @@ public class ListElementNullBasicTest {
 		scope.inTransaction(
 				session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
-					assertEquals( 0, e.aCollection.size() );
+					assertEquals( 0, e.theStrings.size() );
 					assertEquals( 0, getCollectionElementRows( entityId, scope ).size() );
-					e.aCollection.add( null );
+					e.theStrings.add( null );
 				}
 		);
 
 		scope.inTransaction(
 				session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
-					assertEquals( 0, e.aCollection.size() );
+					assertEquals( 0, e.theStrings.size() );
 					assertEquals( 0, getCollectionElementRows( entityId, scope ).size() );
 					session.remove( e );
 				}
@@ -86,7 +87,7 @@ public class ListElementNullBasicTest {
 		int entityId = scope.fromTransaction(
 				session -> {
 					AnEntity e = new AnEntity();
-					e.aCollection.add( "def" );
+					e.theStrings.add( "def" );
 					session.persist( e );
 					return e.id;
 				}
@@ -95,16 +96,16 @@ public class ListElementNullBasicTest {
 		scope.inTransaction(
 				session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
-					assertEquals( 1, e.aCollection.size() );
+					assertEquals( 1, e.theStrings.size() );
 					assertEquals( 1, getCollectionElementRows( entityId, scope ).size() );
-					e.aCollection.set( 0, null );
+					e.theStrings.set( 0, null );
 				}
 		);
 
 		scope.inTransaction(
 				session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
-					assertEquals( 0, e.aCollection.size() );
+					assertEquals( 0, e.theStrings.size() );
 					assertEquals( 0, getCollectionElementRows( entityId, scope ).size() );
 					session.remove( e );
 				}
@@ -116,8 +117,8 @@ public class ListElementNullBasicTest {
 		int entityId = scope.fromTransaction(
 				session -> {
 					AnEntity e = new AnEntity();
-					e.aCollection.add( "def" );
-					e.aCollection.add( "ghi" );
+					e.theStrings.add( "def" );
+					e.theStrings.add( "ghi" );
 					session.persist( e );
 					return e.id;
 				}
@@ -126,40 +127,39 @@ public class ListElementNullBasicTest {
 		scope.inTransaction(
 				session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
-					assertEquals( 2, e.aCollection.size() );
+					assertEquals( 2, e.theStrings.size() );
 					assertEquals( 2, getCollectionElementRows( e.id, scope ).size() );
-					e.aCollection.set( 0, null );
+					e.theStrings.set( 0, null );
 				}
 		);
 
 		scope.inTransaction(
 				session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
-					assertEquals( 2, e.aCollection.size() );
+					assertEquals( 2, e.theStrings.size() );
 					assertEquals( 1, getCollectionElementRows( e.id, scope ).size() );
-					e.aCollection.set( 0, "not null" );
+					e.theStrings.set( 0, "not null" );
 				}
 		);
 
 		scope.inTransaction(
 				session -> {
 					AnEntity e = session.get( AnEntity.class, entityId );
-					assertEquals( 2, e.aCollection.size() );
+					assertEquals( 2, e.theStrings.size() );
 					assertEquals( 2, getCollectionElementRows( e.id, scope ).size() );
-					assertEquals( "not null", e.aCollection.get( 0 ) );
-					assertEquals( "ghi", e.aCollection.get( 1 ) );
+					assertEquals( "not null", e.theStrings.get( 0 ) );
+					assertEquals( "ghi", e.theStrings.get( 1 ) );
 					session.remove( e );
 				}
 		);
 	}
 
-	private List getCollectionElementRows(int id, SessionFactoryScope scope) {
+	private List<String> getCollectionElementRows(int id, SessionFactoryScope scope) {
 		return scope.fromTransaction(
-				session -> {
-					return session.createNativeQuery(
-							"SELECT aCollection FROM AnEntity_aCollection where AnEntity_id = " + id
-					).list();
-				}
+				session -> session.createNativeQuery(
+						"select val from the_strings where entity_fk = " + id,
+						String.class
+				).list()
 		);
 	}
 
@@ -171,8 +171,9 @@ public class ListElementNullBasicTest {
 		private int id;
 
 		@ElementCollection
-		@CollectionTable(name = "AnEntity_aCollection", joinColumns = { @JoinColumn(name = "AnEntity_id") })
-		@OrderColumn
-		private List<String> aCollection = new ArrayList<>();
+		@CollectionTable(name = "the_strings", joinColumns = @JoinColumn(name = "entity_fk") )
+		@OrderColumn(name = "position")
+		@Column(name = "val")
+		private List<String> theStrings = new ArrayList<>();
 	}
 }

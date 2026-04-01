@@ -4,6 +4,7 @@
  */
 package org.hibernate.action.queue.meta;
 
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.sql.model.TableMapping.MutationDetails;
 
 import java.io.Serializable;
@@ -13,6 +14,7 @@ import java.io.Serializable;
  */
 public record CollectionTableDescriptor(
 		String name,
+		NavigableRole navigableRole,
 		boolean isJoinTable,
 		boolean isInverse,
 		boolean cascadeDeleteEnabled,

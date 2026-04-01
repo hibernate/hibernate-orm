@@ -509,7 +509,7 @@ public class CockroachDialect extends Dialect {
 
 		functionContributions.getFunctionRegistry().register(
 				"trunc",
-				new PostgreSQLTruncFunction( true, functionContributions.getTypeConfiguration() )
+				new PostgreSQLTruncFunction( true, true, functionContributions.getTypeConfiguration() )
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 

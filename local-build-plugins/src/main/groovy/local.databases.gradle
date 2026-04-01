@@ -274,7 +274,8 @@ ext {
                     'jdbc.driver': 'com.informix.jdbc.IfxDriver',
                     'jdbc.user'  : 'informix',
                     'jdbc.pass'  : 'in4mix',
-                    'jdbc.url'   : 'jdbc:informix-sqli://' + dbHost + ':9088/dev:INFORMIXSERVER=informix;user=informix;password=in4mix;DBDATE=Y4MD-;DELIMIDENT=Y;DB_LOCALE=en_US.utf8',
+                    // IFX_LOCK_MODE_WAIT=-1 makes Informix behave like other databases i.e. block and wait for a lock. Default behavior is nowait
+                    'jdbc.url'   : 'jdbc:informix-sqli://' + dbHost + ':9088/dev:INFORMIXSERVER=informix;user=informix;password=in4mix;DBDATE=Y4MD-;DELIMIDENT=Y;DB_LOCALE=en_US.utf8;IFX_LOCK_MODE_WAIT=-1',
                     'jdbc.datasource' : 'com.informix.jdbc.IfxDriver',
 //                        'jdbc.datasource' : 'com.informix.jdbcx.IfxDataSource',
                     'connection.init_sql' : ''

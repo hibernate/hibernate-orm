@@ -47,6 +47,7 @@ public class StandardLockingClauseStrategy extends AbstractLockingClauseStrategy
 	private final Timeout timeout;
 
 	private boolean queryHasOuterJoins = false;
+	private boolean queryHasJoins = false;
 
 	private Set<TableGroup> rootsToLock;
 	private Set<TableGroupJoin> joinsToLock;
@@ -73,6 +74,7 @@ public class StandardLockingClauseStrategy extends AbstractLockingClauseStrategy
 			if ( CollectionHelper.isNotEmpty( root.getTableReferenceJoins() ) ) {
 				// joined inheritance and/or secondary tables - inherently has outer joins
 				queryHasOuterJoins = true;
+				queryHasJoins = true;
 			}
 		}
 
@@ -91,6 +93,7 @@ public class StandardLockingClauseStrategy extends AbstractLockingClauseStrategy
 	@Override
 	public boolean registerJoin(TableGroupJoin join) {
 		checkForOuterJoins( join );
+		queryHasJoins = true;
 		return super.registerJoin( join );
 	}
 
@@ -131,6 +134,11 @@ public class StandardLockingClauseStrategy extends AbstractLockingClauseStrategy
 	@Override
 	public boolean containsOuterJoins() {
 		return queryHasOuterJoins;
+	}
+
+	@Override
+	public boolean containsJoins() {
+		return queryHasJoins;
 	}
 
 	@Override

@@ -7,7 +7,6 @@ package org.hibernate.orm.test.locking.options;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Timeout;
 import org.hibernate.PessimisticLockException;
-import org.hibernate.community.dialect.InformixDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.lock.PessimisticEntityLockException;
@@ -69,12 +68,10 @@ public class LockedRowsTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportNoWait.class)
-	@SkipForDialect(dialectClass = InformixDialect.class, reason = "no failure")
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 16, minorVersion = 0, microVersion = 2,
 			versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "holdlock isn't the same as updating a row. Bug in our Sybase ASE version?")
 	void testFindNoWait(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			assert session.getDialect().supportsNoWait();
 			session.find(Book.class,1, PESSIMISTIC_WRITE);
 
 			factoryScope.inTransaction( (session2) -> {
@@ -90,7 +87,6 @@ public class LockedRowsTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportNoWait.class)
-	@SkipForDialect(dialectClass = InformixDialect.class, reason = "no failure")
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Seems FOR UPDATE locks might block read accesses of other TXs")
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, majorVersion = 16, minorVersion = 0, microVersion = 2,
 			versionMatchMode = VersionMatchMode.SAME_OR_OLDER, reason = "holdlock isn't the same as updating a row. Bug in our Sybase ASE version?")
@@ -131,7 +127,6 @@ public class LockedRowsTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSkipLocked.class)
-	@SkipForDialect(dialectClass = InformixDialect.class, reason = "no failure")
 	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "Sybase ASE supports SKIP_LOCKED only with PESSIMISTIC_READ")
 	void testFindSkipLocked(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {

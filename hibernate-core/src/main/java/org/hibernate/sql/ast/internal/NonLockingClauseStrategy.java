@@ -41,6 +41,11 @@ public class NonLockingClauseStrategy implements LockingClauseStrategy {
 	}
 
 	@Override
+	public boolean containsJoins() {
+		return false;
+	}
+
+	@Override
 	public void render(SqlAppender sqlAppender) {
 		// nothing to do
 	}

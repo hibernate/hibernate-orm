@@ -6,11 +6,13 @@ package org.hibernate.community.dialect;
 
 import java.util.List;
 
+import org.hibernate.Locking;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.spi.LockingClauseStrategy;
 import org.hibernate.sql.ast.spi.SqlAstTranslatorWithMerge;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
@@ -336,6 +338,27 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends SqlAstTra
 		}
 		else {
 			super.visitUpdateStatementOnly( statement );
+		}
+	}
+
+	@Override
+	protected LockStrategy determineLockingStrategy(QuerySpec querySpec, Locking.FollowOn followOnStrategy) {
+		final LockStrategy lockStrategy = super.determineLockingStrategy( querySpec, followOnStrategy );
+		final LockingClauseStrategy lockingClauseStrategy = getLockingClauseStrategy();
+		if ( lockingClauseStrategy != null && lockingClauseStrategy.containsJoins() ) {
+			// Informix does not allow FOR UPDATE when the query also contains joins
+			if ( followOnStrategy == Locking.FollowOn.DISALLOW ) {
+				throw new IllegalQueryOperationException( "Locking with joins is not supported" );
+			}
+			else if ( followOnStrategy == Locking.FollowOn.IGNORE ) {
+				return LockStrategy.NONE;
+			}
+			else {
+				return LockStrategy.FOLLOW_ON;
+			}
+		}
+		else {
+			return lockStrategy;
 		}
 	}
 }

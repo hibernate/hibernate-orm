@@ -1466,7 +1466,8 @@ informix() {
 
 informix_15() {
     temp_dir=$(mktemp -d)
-    echo "ALLOW_NEWLINE 1" >$temp_dir/onconfig.mod
+    echo "ALLOW_NEWLINE 1
+USEOSTIME 1" >$temp_dir/onconfig.mod
     chmod 777 -R $temp_dir
     $PRIVILEGED_CLI $CONTAINER_CLI rm -f informix || true
     $PRIVILEGED_CLI $CONTAINER_CLI run --name informix --privileged -p 9088:9088 -v $temp_dir:/opt/ibm/config -e LICENSE=accept -e GL_USEGLU=1 -d ${DB_IMAGE_INFORMIX_15:-icr.io/informix/informix-developer-edition-database:15.0.0.0}
@@ -1495,7 +1496,8 @@ informix_15() {
 
 informix_14_10() {
     temp_dir=$(mktemp -d)
-    echo "ALLOW_NEWLINE 1" >$temp_dir/onconfig.mod
+    echo "ALLOW_NEWLINE 1
+USEOSTIME 1" >$temp_dir/onconfig.mod
     chmod 777 -R $temp_dir
     $PRIVILEGED_CLI $CONTAINER_CLI rm -f informix || true
     $PRIVILEGED_CLI $CONTAINER_CLI run --name informix --privileged -p 9088:9088 -v $temp_dir:/opt/ibm/config -e LICENSE=accept -e GL_USEGLU=1 -d ${DB_IMAGE_INFORMIX_14_10:-icr.io/informix/informix-developer-database:14.10.FC9W1DE}

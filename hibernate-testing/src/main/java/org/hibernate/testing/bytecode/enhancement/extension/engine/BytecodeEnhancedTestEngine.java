@@ -57,10 +57,24 @@ import org.junit.platform.engine.support.descriptor.EngineDescriptor;
 import org.junit.platform.engine.support.hierarchical.EngineExecutionContext;
 import org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine;
 import org.junit.platform.engine.support.hierarchical.ThrowableCollector;
+import org.junit.platform.engine.support.store.NamespacedHierarchicalStore;
 
 public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEngineExecutionContext> {
 
+	private static final Class<?> LAUNCHER_STORE_FACADE_BEFORE_JUNIT_5_14;
 	public static final String ENHANCEMENT_EXTENSION_ENGINE_ENABLED = "hibernate.testing.bytecode.enhancement.extension.engine.enabled";
+
+	static {
+		Class<?> launcherStoreFacadeBeforeJunit514 = null;
+		try {
+			// The class was moved to a different package in 5.14
+			launcherStoreFacadeBeforeJunit514 = Class.forName( "org.junit.jupiter.engine.descriptor.LauncherStoreFacade" );
+		}
+		catch (ClassNotFoundException e) {
+			// ignore
+		}
+		LAUNCHER_STORE_FACADE_BEFORE_JUNIT_5_14 = launcherStoreFacadeBeforeJunit514;
+	}
 
 	public static boolean isEnabled() {
 		return "true".equalsIgnoreCase( System.getProperty( ENHANCEMENT_EXTENSION_ENGINE_ENABLED, "false" ) );
@@ -263,6 +277,24 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 		}
 		catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
 			// Ignore errors as they are probably due to version mismatches and try the 5.13 way
+		}
+		if ( LAUNCHER_STORE_FACADE_BEFORE_JUNIT_5_14 != null ) {
+			try {
+				// Try constructing the JupiterEngineExecutionContext the way it was done in 5.13 and before
+				final Constructor<JupiterEngineExecutionContext> constructorV5_12 = JupiterEngineExecutionContext.class
+						.getConstructor( EngineExecutionListener.class, JupiterConfiguration.class, LAUNCHER_STORE_FACADE_BEFORE_JUNIT_5_14 );
+				final Constructor<?> launcherStoreFacadeConstructor =
+						LAUNCHER_STORE_FACADE_BEFORE_JUNIT_5_14.getConstructor( NamespacedHierarchicalStore.class );
+				return constructorV5_12.newInstance(
+						request.getEngineExecutionListener(),
+						this.getJupiterConfiguration( request ),
+						launcherStoreFacadeConstructor.newInstance( request.getStore() )
+				);
+			}
+			catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
+			       InvocationTargetException e) {
+				// Ignore errors as they are probably due to version mismatches and try the 5.13 way
+			}
 		}
 
 		return new JupiterEngineExecutionContext(

@@ -29,6 +29,7 @@ public class CompositeIdMetadata {
 	private final String idClassName;
 	private final String idClassPackage;
 	private final List<AttributeOverrideMetadata> attributeOverrides = new ArrayList<>();
+	private final List<KeyManyToOneMetadata> keyManyToOnes = new ArrayList<>();
 
 	public CompositeIdMetadata(
 			String fieldName,
@@ -44,9 +45,18 @@ public class CompositeIdMetadata {
 		return this;
 	}
 
+	public CompositeIdMetadata addKeyManyToOne(
+			String fieldName, String columnName,
+			String targetEntityClassName, String targetEntityPackage) {
+		this.keyManyToOnes.add(new KeyManyToOneMetadata(
+				fieldName, columnName, targetEntityClassName, targetEntityPackage));
+		return this;
+	}
+
 	// Getters
 	public String getFieldName() { return fieldName; }
 	public String getIdClassName() { return idClassName; }
 	public String getIdClassPackage() { return idClassPackage; }
 	public List<AttributeOverrideMetadata> getAttributeOverrides() { return attributeOverrides; }
+	public List<KeyManyToOneMetadata> getKeyManyToOnes() { return keyManyToOnes; }
 }

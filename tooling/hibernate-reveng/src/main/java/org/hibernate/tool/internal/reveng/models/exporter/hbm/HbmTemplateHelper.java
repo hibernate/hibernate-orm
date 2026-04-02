@@ -360,6 +360,43 @@ public class HbmTemplateHelper {
 		return cid != null ? cid.getType().determineRawClass().getClassName() : null;
 	}
 
+	public List<FieldDetails> getCompositeIdKeyProperties() {
+		FieldDetails cid = getCompositeIdField();
+		if (cid == null) {
+			return Collections.emptyList();
+		}
+		List<FieldDetails> result = new ArrayList<>();
+		for (FieldDetails field : cid.getType().determineRawClass().getFields()) {
+			if (!field.hasDirectAnnotationUsage(ManyToOne.class)) {
+				result.add(field);
+			}
+		}
+		return result;
+	}
+
+	public List<FieldDetails> getCompositeIdKeyManyToOnes() {
+		FieldDetails cid = getCompositeIdField();
+		if (cid == null) {
+			return Collections.emptyList();
+		}
+		List<FieldDetails> result = new ArrayList<>();
+		for (FieldDetails field : cid.getType().determineRawClass().getFields()) {
+			if (field.hasDirectAnnotationUsage(ManyToOne.class)) {
+				result.add(field);
+			}
+		}
+		return result;
+	}
+
+	public String getKeyManyToOneClassName(FieldDetails field) {
+		return field.getType().determineRawClass().getClassName();
+	}
+
+	public String getKeyManyToOneColumnName(FieldDetails field) {
+		JoinColumn jc = field.getDirectAnnotationUsage(JoinColumn.class);
+		return jc != null ? jc.name() : field.getName();
+	}
+
 	public List<FieldDetails> getIdFields() {
 		return getFieldsWithAnnotation(Id.class);
 	}

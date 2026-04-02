@@ -8,6 +8,11 @@
             <column name="${ao.columnName()}"/>
         </key-property>
 </#list>
+<#list helper.getCompositeIdKeyManyToOnes() as km2o>
+        <key-many-to-one name="${km2o.getName()}" class="${helper.getKeyManyToOneClassName(km2o)}">
+            <column name="${helper.getKeyManyToOneColumnName(km2o)}"/>
+        </key-many-to-one>
+</#list>
     </composite-id>
 <#else>
 <#list helper.getIdFields() as field>

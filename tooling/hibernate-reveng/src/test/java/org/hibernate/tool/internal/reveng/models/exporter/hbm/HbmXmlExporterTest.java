@@ -392,6 +392,38 @@ public class HbmXmlExporterTest {
 	}
 
 	@Test
+	public void testCompositeIdWithKeyManyToOne() {
+		TableMetadata table = new TableMetadata("CUSTOMER_ORDER", "CustomerOrder", "com.example");
+		table.compositeId(new CompositeIdMetadata("id", "CustomerOrderId", "com.example")
+				.addAttributeOverride("orderNumber", "ORDER_NUMBER")
+				.addKeyManyToOne("customer", "CUSTOMER_ID", "Customer", "com.example"));
+		String xml = export(table);
+		assertTrue(xml.contains("<composite-id"), xml);
+		assertTrue(xml.contains("name=\"id\""), xml);
+		assertTrue(xml.contains("class=\"com.example.CustomerOrderId\""), xml);
+		assertTrue(xml.contains("<key-property name=\"orderNumber\">"), xml);
+		assertTrue(xml.contains("<column name=\"ORDER_NUMBER\"/>"), xml);
+		assertTrue(xml.contains("<key-many-to-one name=\"customer\" class=\"com.example.Customer\">"), xml);
+		assertTrue(xml.contains("<column name=\"CUSTOMER_ID\"/>"), xml);
+		assertTrue(xml.contains("</key-many-to-one>"), xml);
+		assertTrue(xml.contains("</composite-id>"), xml);
+	}
+
+	@Test
+	public void testCompositeIdWithMultipleKeyManyToOnes() {
+		TableMetadata table = new TableMetadata("ENROLLMENT", "Enrollment", "com.example");
+		table.compositeId(new CompositeIdMetadata("id", "EnrollmentId", "com.example")
+				.addKeyManyToOne("student", "STUDENT_ID", "Student", "com.example")
+				.addKeyManyToOne("course", "COURSE_ID", "Course", "com.example"));
+		String xml = export(table);
+		assertTrue(xml.contains("<key-many-to-one name=\"student\" class=\"com.example.Student\">"), xml);
+		assertTrue(xml.contains("<column name=\"STUDENT_ID\"/>"), xml);
+		assertTrue(xml.contains("<key-many-to-one name=\"course\" class=\"com.example.Course\">"), xml);
+		assertTrue(xml.contains("<column name=\"COURSE_ID\"/>"), xml);
+		assertFalse(xml.contains("<key-property"), xml);
+	}
+
+	@Test
 	public void testEmbeddedComponent() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));

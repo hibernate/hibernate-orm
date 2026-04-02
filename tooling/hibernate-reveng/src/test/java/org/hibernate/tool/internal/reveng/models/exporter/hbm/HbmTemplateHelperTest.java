@@ -2574,4 +2574,66 @@ public class HbmTemplateHelperTest {
 		field.addAnnotationUsage(ct);
 		assertEquals("MY_CATALOG", new HbmTemplateHelper(entity).getElementCollectionTableCatalog(field));
 	}
+
+	// --- Composite ID key-many-to-one ---
+
+	@Test
+	public void testGetCompositeIdKeyPropertiesNoManyToOne() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		// Create embeddable ID class with two basic fields
+		DynamicClassDetails idClass = new DynamicClassDetails(
+				"TestId", "com.example.TestId", false, null, null, ctx);
+		addBasicField(idClass, "orderId", Long.class, ctx);
+		addBasicField(idClass, "lineNumber", Integer.class, ctx);
+		// Add @EmbeddedId field
+		TypeDetails idType = new ClassTypeDetailsImpl(idClass, TypeDetails.Kind.CLASS);
+		DynamicFieldDetails cidField = entity.applyAttribute("id", idType, false, false, ctx);
+		cidField.addAnnotationUsage(JpaAnnotations.EMBEDDED_ID.createUsage(ctx));
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertEquals(2, helper.getCompositeIdKeyProperties().size());
+		assertTrue(helper.getCompositeIdKeyManyToOnes().isEmpty());
+	}
+
+	@Test
+	public void testGetCompositeIdKeyManyToOnes() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		// Create embeddable ID class
+		DynamicClassDetails idClass = new DynamicClassDetails(
+				"TestId", "com.example.TestId", false, null, null, ctx);
+		// Basic field
+		addBasicField(idClass, "orderNumber", Integer.class, ctx);
+		// ManyToOne field
+		DynamicClassDetails customerClass = new DynamicClassDetails(
+				"Customer", "com.example.Customer", false, null, null, ctx);
+		TypeDetails customerType = new ClassTypeDetailsImpl(customerClass, TypeDetails.Kind.CLASS);
+		DynamicFieldDetails m2oField = idClass.applyAttribute("customer", customerType, false, false, ctx);
+		m2oField.addAnnotationUsage(JpaAnnotations.MANY_TO_ONE.createUsage(ctx));
+		JoinColumnJpaAnnotation jc = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+		jc.name("CUSTOMER_ID");
+		m2oField.addAnnotationUsage(jc);
+		// Add @EmbeddedId field
+		TypeDetails idType = new ClassTypeDetailsImpl(idClass, TypeDetails.Kind.CLASS);
+		DynamicFieldDetails cidField = entity.applyAttribute("id", idType, false, false, ctx);
+		cidField.addAnnotationUsage(JpaAnnotations.EMBEDDED_ID.createUsage(ctx));
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertEquals(1, helper.getCompositeIdKeyProperties().size());
+		assertEquals("orderNumber", helper.getCompositeIdKeyProperties().get(0).getName());
+		assertEquals(1, helper.getCompositeIdKeyManyToOnes().size());
+		assertEquals("customer", helper.getCompositeIdKeyManyToOnes().get(0).getName());
+		assertEquals("com.example.Customer", helper.getKeyManyToOneClassName(
+				helper.getCompositeIdKeyManyToOnes().get(0)));
+		assertEquals("CUSTOMER_ID", helper.getKeyManyToOneColumnName(
+				helper.getCompositeIdKeyManyToOnes().get(0)));
+	}
+
+	@Test
+	public void testGetCompositeIdKeyManyToOnesNoCompositeId() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertTrue(helper.getCompositeIdKeyProperties().isEmpty());
+		assertTrue(helper.getCompositeIdKeyManyToOnes().isEmpty());
+	}
 }

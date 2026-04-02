@@ -22,7 +22,10 @@ import org.hibernate.boot.models.annotations.internal.AttributeOverrideJpaAnnota
 import org.hibernate.boot.models.annotations.internal.AttributeOverridesJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.EmbeddedIdJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ManyToOneJpaAnnotation;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
+import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
 import org.hibernate.models.spi.ClassDetails;
@@ -31,11 +34,15 @@ import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.tool.internal.reveng.models.metadata.AttributeOverrideMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
+import org.hibernate.tool.internal.reveng.models.metadata.KeyManyToOneMetadata;
 
 /**
  * Builds an {@code @EmbeddedId} field on a dynamic class and attaches
  * the appropriate JPA annotations ({@code @EmbeddedId},
  * {@code @AttributeOverrides}) based on {@link CompositeIdMetadata}.
+ * <p>
+ * For key-many-to-one entries, adds {@code @ManyToOne} and
+ * {@code @JoinColumn} fields to the embeddable ID class.
  *
  * @author Koen Aers
  */
@@ -59,6 +66,8 @@ public class CompositeIdFieldBuilder {
 			entityClass, compositeId, idClassDetails, modelsContext);
 		addEmbeddedIdAnnotation(field, modelsContext);
 		addAttributeOverrides(field, compositeId, modelsContext);
+		addKeyManyToOneFields(
+			(DynamicClassDetails) idClassDetails, compositeId, modelsContext);
 	}
 
 	private static DynamicFieldDetails createField(
@@ -114,5 +123,41 @@ public class CompositeIdFieldBuilder {
 			overridesContainer.value(overrideArray);
 			field.addAnnotationUsage(overridesContainer);
 		}
+	}
+
+	private static void addKeyManyToOneFields(
+			DynamicClassDetails idClassDetails,
+			CompositeIdMetadata compositeId,
+			ModelsContext modelsContext) {
+		for (KeyManyToOneMetadata km2o : compositeId.getKeyManyToOnes()) {
+			String targetClassName = km2o.getTargetEntityPackage()
+					+ "." + km2o.getTargetEntityClassName();
+			ClassDetails targetClassDetails = resolveOrCreateClassDetails(
+					km2o.getTargetEntityClassName(), targetClassName, modelsContext);
+
+			TypeDetails fieldType = new ClassTypeDetailsImpl(
+					targetClassDetails, TypeDetails.Kind.CLASS);
+			DynamicFieldDetails field = idClassDetails.applyAttribute(
+					km2o.getFieldName(), fieldType, false, false, modelsContext);
+
+			ManyToOneJpaAnnotation m2oAnnotation =
+					JpaAnnotations.MANY_TO_ONE.createUsage(modelsContext);
+			field.addAnnotationUsage(m2oAnnotation);
+
+			JoinColumnJpaAnnotation jcAnnotation =
+					JpaAnnotations.JOIN_COLUMN.createUsage(modelsContext);
+			jcAnnotation.name(km2o.getColumnName());
+			field.addAnnotationUsage(jcAnnotation);
+		}
+	}
+
+	private static ClassDetails resolveOrCreateClassDetails(
+			String simpleName, String className, ModelsContext modelsContext) {
+		MutableClassDetailsRegistry registry =
+				(MutableClassDetailsRegistry) modelsContext.getClassDetailsRegistry();
+		return registry.resolveClassDetails(
+				className,
+				name -> new DynamicClassDetails(simpleName, name, false, null, null, modelsContext)
+		);
 	}
 }

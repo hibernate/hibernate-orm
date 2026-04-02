@@ -27,6 +27,11 @@ public record StatementShapeKey(String tableExpression, MutationKind kind, int s
 		return new StatementShapeKey( tableName, MutationKind.UPDATE, h);
 	}
 
+	public static StatementShapeKey forUpdateOrder(String tableName, PlannedOperation plannedOperation) {
+		final int h = hashMutationShape(tableName, MutationKind.UPDATE_ORDER, plannedOperation);
+		return new StatementShapeKey( tableName, MutationKind.UPDATE_ORDER, h);
+	}
+
 	public static StatementShapeKey forDelete(String tableName, PlannedOperation plannedOperation) {
 		final int h = hashMutationShape(tableName, MutationKind.DELETE, plannedOperation);
 		return new StatementShapeKey( tableName, MutationKind.DELETE, h);

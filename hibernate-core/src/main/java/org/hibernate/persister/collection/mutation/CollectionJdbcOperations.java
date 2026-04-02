@@ -18,6 +18,7 @@ public record CollectionJdbcOperations(
 		CollectionMutationTarget target,
 		InsertRowPlan insertRowPlan,
 		UpdateRowPlan updateRowPlan,
+		UpdateRowPlan orderUpdatePlan,
 		DeleteRowPlan deleteRowPlan,
 		MutationOperation removeOperation) {
 	public CollectionJdbcOperations(
@@ -34,6 +35,7 @@ public record CollectionJdbcOperations(
 				target,
 				new InsertRowPlan( insertRowOperation, insertRowValues ),
 				new UpdateRowPlan( updateRowOperation, updateRowValues, updateRowRestrictions ),
+				null, // orderUpdatePlan
 				new DeleteRowPlan( deleteRowOperation, deleteRowRestrictions ),
 				removeOperation
 		);

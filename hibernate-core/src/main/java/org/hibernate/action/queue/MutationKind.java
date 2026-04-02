@@ -12,6 +12,9 @@ public enum MutationKind {
 	INSERT,
 	// Update a single row
 	UPDATE,
+	// Update a single row's order/index column only (no FK changes)
+	// Used for indexed collections where only position changed, not entity identity
+	UPDATE_ORDER,
 	// Delete a single row
 	DELETE,
 	// No-op operation (callback carrier)
@@ -19,7 +22,7 @@ public enum MutationKind {
 
 	public boolean canSkipTables() {
 		return switch(this) {
-			case INSERT, UPDATE -> true;
+			case INSERT, UPDATE, UPDATE_ORDER -> true;
 			case DELETE -> false;
 			case NO_OP -> true;  // No SQL execution
 		};

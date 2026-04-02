@@ -143,6 +143,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 				persister,
 				insertRowPlan,
 				updateRowPlan,
+				null, // orderUpdatePlan - not needed for one-to-many FK associations
 				deleteRowPlan,
 				buildRemoveOperation( tableDescriptor )
 		);

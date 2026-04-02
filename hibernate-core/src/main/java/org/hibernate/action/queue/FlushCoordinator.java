@@ -73,24 +73,22 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 ///
 /// @author Steve Ebersole
 public class FlushCoordinator {
-	private final SessionImplementor session;
-	private final GraphBuilder graphBuilder;
+	private final transient SessionImplementor session;
+	private final transient GraphBuilder graphBuilder;
 
-	private final Decomposer decomposer;
-	private final FlushPlanner flushPlanner;
-	private final PlanStepExecutor executor;
+	private final transient Decomposer decomposer;
+	private final transient FlushPlanner flushPlanner;
+	private final transient PlanStepExecutor executor;
 
 	// Track entities that became managed during the current flush
-	private final List<Object> newlyManagedEntities = new ArrayList<>();
+	private final transient List<Object> newlyManagedEntities = new ArrayList<>();
 
 	// Tables involved in self-referential associations (need ordinalBase separation to avoid false cycles)
-	private final java.util.Set<String> selfReferentialTables;
+	private final transient ConstraintModel constraintModel;
 
 	public FlushCoordinator(ConstraintModel constraintModel, PlanningOptions planningOptions, SessionImplementor session) {
+		this.constraintModel = constraintModel;
 		this.session = session;
-
-		// Identify tables with self-referential associations
-		selfReferentialTables = identifySelfReferentialTables(constraintModel);
 
 		decomposer = new Decomposer( session );
 		graphBuilder = new StandardGraphBuilder( constraintModel, planningOptions, session );
@@ -104,32 +102,13 @@ public class FlushCoordinator {
 			Decomposer decomposer,
 			GraphBasedActionQueueFactory actionQueueFactory,
 			SessionImplementor session) {
-		this.session = session;
+		this.constraintModel = actionQueueFactory.getConstraintModel();
 		this.decomposer = decomposer;
-
-		// Identify tables with self-referential associations
-		selfReferentialTables = identifySelfReferentialTables(actionQueueFactory.getConstraintModel());
+		this.session = session;
 
 		graphBuilder = new StandardGraphBuilder( actionQueueFactory.getConstraintModel(), actionQueueFactory.getPlanningOptions(), session );
 		flushPlanner = new StandardFlushPlanner( actionQueueFactory.getPlanningOptions() );
 		executor = PlanStepExecutorFactory.create( session );
-	}
-
-
-	/// Identifies tables that have self-referential associations (FK from table to itself).
-	/// These tables need special grouping treatment to avoid creating false cycles in the graph.
-	private java.util.Set<String> identifySelfReferentialTables(ConstraintModel constraintModel) {
-		final java.util.Set<String> tables = new java.util.HashSet<>();
-		for (var fk : constraintModel.foreignKeys()) {
-			if (fk.isAssociation()) {
-				String keyTable = (fk.keyTable());
-				String targetTable = (fk.targetTable());
-				if (keyTable.equals(targetTable)) {
-					tables.add(keyTable);
-				}
-			}
-		}
-		return tables;
 	}
 
 	/// Get the Decomposer (for accessing unresolved insert tracking).
@@ -266,7 +245,7 @@ public class FlushCoordinator {
 			// Cache the lookup result to avoid redundant set.contains() calls
 			final boolean selfRef = isSelfReferential.computeIfAbsent(
 					normalizedTable,
-					selfReferentialTables::contains
+					constraintModel.selfReferentialTables()::contains
 			);
 
 			final int ordinalBase = selfRef

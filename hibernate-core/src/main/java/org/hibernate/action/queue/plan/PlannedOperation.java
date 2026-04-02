@@ -85,6 +85,7 @@ public class PlannedOperation {
 		this.shapeKey = switch (kind) {
 			case INSERT -> StatementShapeKey.forInsert(tableDescriptor.name(), this);
 			case UPDATE -> StatementShapeKey.forUpdate(tableDescriptor.name(), this);
+			case UPDATE_ORDER -> StatementShapeKey.forUpdateOrder(tableDescriptor.name(), this);
 			case DELETE -> StatementShapeKey.forDelete(tableDescriptor.name(), this);
 			case NO_OP -> StatementShapeKey.forNoOp(tableDescriptor.name());
 		};

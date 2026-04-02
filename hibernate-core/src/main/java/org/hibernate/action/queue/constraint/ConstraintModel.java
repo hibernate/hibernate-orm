@@ -17,7 +17,8 @@ import java.util.Map;
 public record ConstraintModel(
 		List<ForeignKey> foreignKeys,
 		List<UniqueConstraint> uniqueConstraints,
-		Map<String, List<UniqueConstraint>> uniqueConstraintsByTable) implements Serializable {
+		Map<String, List<UniqueConstraint>> uniqueConstraintsByTable,
+		java.util.Set<String> selfReferentialTables) implements Serializable {
 
 	/**
 	 * Get unique constraints for a specific table

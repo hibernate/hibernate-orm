@@ -4,6 +4,7 @@
  */
 package org.hibernate.action.queue.constraint;
 
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.hibernate.action.queue.PlanningOptions;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -94,7 +95,16 @@ public final class ConstraintModelBuilder {
 		Map<String, List<UniqueConstraint>> uniqueConstraintsByTable = uniqueConstraints.stream()
 				.collect(Collectors.groupingBy(UniqueConstraint::tableName));
 
-		return new ConstraintModel(foreignKeys, uniqueConstraints, uniqueConstraintsByTable);
+
+		// Identify tables with self-referential associations
+		var selfReferentialTables = identifySelfReferentialTables( foreignKeys );
+
+		return new ConstraintModel(
+				foreignKeys,
+				uniqueConstraints,
+				uniqueConstraintsByTable,
+				selfReferentialTables
+		);
 	}
 
 	private void collectFromEntityPersister(
@@ -476,5 +486,22 @@ public final class ConstraintModelBuilder {
 		}
 
 		return true;
+	}
+
+
+	/// Identifies tables that have self-referential associations (FK from table to itself).
+	/// These tables need special grouping treatment to avoid creating false cycles in the graph.
+	private java.util.Set<String> identifySelfReferentialTables(ArrayList<ForeignKey> foreignKeys) {
+		final java.util.Set<String> tables = new java.util.HashSet<>();
+		for (var fk : foreignKeys) {
+			if (fk.isAssociation()) {
+				String keyTable = (fk.keyTable());
+				String targetTable = (fk.targetTable());
+				if (keyTable.equals(targetTable)) {
+					tables.add(keyTable);
+				}
+			}
+		}
+		return tables;
 	}
 }

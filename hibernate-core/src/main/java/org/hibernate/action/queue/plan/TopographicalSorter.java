@@ -66,6 +66,7 @@ public class TopographicalSorter {
 		if (order.size() != graph.nodes().size()) {
 			throw new IllegalStateException("Graph still cyclic after breaks (bug).");
 		}
+
 		return order;
 	}
 }

@@ -108,7 +108,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 			if ( g.kind() == MutationKind.INSERT ) {
 				insertNodeByTable.computeIfAbsent( (g.tableExpression()), k -> new ArrayList<>() ).add( n );
 			}
-			else if ( g.kind() == MutationKind.UPDATE ) {
+			else if ( g.kind() == MutationKind.UPDATE || g.kind() == MutationKind.UPDATE_ORDER ) {
 				updateNodeByTable.computeIfAbsent( (g.tableExpression()), k -> new ArrayList<>() ).add( n );
 			}
 			else if ( g.kind() == MutationKind.DELETE ) {
@@ -227,9 +227,15 @@ public class StandardGraphBuilder implements GraphBuilder {
 			// Create INSERT -> UPDATE edges: insert parent before updating child FK
 			// Case 1 - Parent INSERT -> Child UPDATE (parent inserted, then child FK set to point to parent)
 			// This is critical for one-to-many collections where collection operations UPDATE child FK
+			// SKIP UPDATE_ORDER groups as they only update order columns, not FKs
 			if ( parentInserts != null && childUpdates != null ) {
 				for ( GroupNode parentInsert : parentInserts ) {
 					for ( GroupNode childUpdate : childUpdates ) {
+						// Skip order-only updates - they don't set FK values
+						if ( childUpdate.group().kind() == MutationKind.UPDATE_ORDER ) {
+							continue;
+						}
+
 						// INSERT parent must happen before UPDATE child
 						// Example: INSERT Product, then UPDATE Category SET product_id=1
 						final GraphEdge edge = new GraphEdge(
@@ -258,8 +264,14 @@ public class StandardGraphBuilder implements GraphBuilder {
 
 			// Create UPDATE -> DELETE edges: update child/parent FK before deleting parent
 			// Case 1 - Child UPDATE -> Parent DELETE (child FK changes, then orphan parent deleted)
+			// SKIP UPDATE_ORDER groups as they only update order columns, not FKs
 			if ( childUpdates != null && parentDeletes != null ) {
 				for ( GroupNode childUpdate : childUpdates ) {
+					// Skip order-only updates - they don't change FK values
+					if ( childUpdate.group().kind() == MutationKind.UPDATE_ORDER ) {
+						continue;
+					}
+
 					for ( GroupNode parentDelete : parentDeletes ) {
 						// UPDATE child must happen before DELETE parent
 						// Example: UPDATE Car SET engine_id=2, then DELETE Engine WHERE id=1
@@ -288,8 +300,14 @@ public class StandardGraphBuilder implements GraphBuilder {
 			}
 
 			// Parent UPDATE -> Child DELETE (parent FK changes, then orphan child deleted)
+			// SKIP UPDATE_ORDER groups as they only update order columns, not FKs
 			if ( parentUpdates != null && childDeletes != null ) {
 				for ( GroupNode parentUpdate : parentUpdates ) {
+					// Skip order-only updates - they don't change FK values
+					if ( parentUpdate.group().kind() == MutationKind.UPDATE_ORDER ) {
+						continue;
+					}
+
 					for ( GroupNode childDelete : childDeletes ) {
 						// UPDATE parent must happen before DELETE child
 						final GraphEdge edge = new GraphEdge(

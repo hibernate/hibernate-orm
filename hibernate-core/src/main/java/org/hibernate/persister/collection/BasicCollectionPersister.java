@@ -103,10 +103,6 @@ final var stateManagement = collectionBinding.getStateManagement();
 		// Build JDBC operations after collectionTableDescriptor is initialized
 		// Disable bundling if collection has cascaded associations to preserve operation ordering
 		final boolean enableBundling = shouldBundleOperations && containsNoCascadedAssociations();
-		System.out.println("DEBUG BasicCollectionPersister.postInstantiate(): role=" + getRole()
-				+ ", shouldBundleOperations=" + shouldBundleOperations
-				+ ", containsNoCascadedAssociations=" + containsNoCascadedAssociations()
-				+ ", enableBundling=" + enableBundling);
 		decomposer = new BasicCollectionDecomposer( this, enableBundling, getFactory() );
 	}
 

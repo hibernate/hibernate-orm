@@ -102,7 +102,7 @@
         <gradle.version>9.4.1</gradle.version>
         <gradle.min.test.version>8.14</gradle.min.test.version>
 
-        <ant.version>1.10.15</ant.version>
+        <ant.version>1.10.16</ant.version>
         <antlr.version>4.13.2</antlr.version>
         <commons-collections.version>4.5.0</commons-collections.version>
         <freemarker.version>2.3.34</freemarker.version>

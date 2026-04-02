@@ -50,6 +50,7 @@ import jakarta.persistence.FieldResult;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.NamedQueries;
@@ -1025,6 +1026,23 @@ public class HbmTemplateHelper {
 	}
 
 	public String getMapKeyType(FieldDetails field) {
+		TypeDetails mapKeyType = field.getMapKeyType();
+		if (mapKeyType != null) {
+			return mapKeyType.determineRawClass().getClassName();
+		}
+		return null;
+	}
+
+	public boolean hasMapKeyJoinColumn(FieldDetails field) {
+		return field.hasDirectAnnotationUsage(MapKeyJoinColumn.class);
+	}
+
+	public String getMapKeyJoinColumnName(FieldDetails field) {
+		MapKeyJoinColumn mkjc = field.getDirectAnnotationUsage(MapKeyJoinColumn.class);
+		return mkjc != null ? mkjc.name() : null;
+	}
+
+	public String getMapKeyEntityClass(FieldDetails field) {
 		TypeDetails mapKeyType = field.getMapKeyType();
 		if (mapKeyType != null) {
 			return mapKeyType.determineRawClass().getClassName();

@@ -2783,4 +2783,78 @@ public class HbmTemplateHelperTest {
 		assertEquals("orderId", idFields.get(0).getName());
 		assertEquals("lineNumber", idFields.get(1).getName());
 	}
+
+	// --- <map-key-many-to-many> ---
+
+	@Test
+	public void testHasMapKeyJoinColumnTrue() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicClassDetails keyEntity = new DynamicClassDetails(
+				"Product", "com.example.Product", false, null, null, ctx);
+		DynamicClassDetails valueEntity = new DynamicClassDetails(
+				"OrderItem", "com.example.OrderItem", false, null, null, ctx);
+		ClassDetails mapClass = ctx.getClassDetailsRegistry().resolveClassDetails(Map.class.getName());
+		TypeDetails keyType = new ClassTypeDetailsImpl(keyEntity, TypeDetails.Kind.CLASS);
+		TypeDetails valueType = new ClassTypeDetailsImpl(valueEntity, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				mapClass, java.util.List.of(keyType, valueType), null);
+		DynamicFieldDetails field = entity.applyAttribute("items", fieldType, false, true, ctx);
+		field.addAnnotationUsage(JpaAnnotations.ONE_TO_MANY.createUsage(ctx));
+		var mkjc = JpaAnnotations.MAP_KEY_JOIN_COLUMN.createUsage(ctx);
+		mkjc.name("PRODUCT_ID");
+		field.addAnnotationUsage(mkjc);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertTrue(helper.hasMapKeyJoinColumn(field));
+	}
+
+	@Test
+	public void testHasMapKeyJoinColumnFalse() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertFalse(helper.hasMapKeyJoinColumn(field));
+	}
+
+	@Test
+	public void testGetMapKeyJoinColumnName() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicClassDetails keyEntity = new DynamicClassDetails(
+				"Product", "com.example.Product", false, null, null, ctx);
+		DynamicClassDetails valueEntity = new DynamicClassDetails(
+				"OrderItem", "com.example.OrderItem", false, null, null, ctx);
+		ClassDetails mapClass = ctx.getClassDetailsRegistry().resolveClassDetails(Map.class.getName());
+		TypeDetails keyType = new ClassTypeDetailsImpl(keyEntity, TypeDetails.Kind.CLASS);
+		TypeDetails valueType = new ClassTypeDetailsImpl(valueEntity, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				mapClass, java.util.List.of(keyType, valueType), null);
+		DynamicFieldDetails field = entity.applyAttribute("items", fieldType, false, true, ctx);
+		field.addAnnotationUsage(JpaAnnotations.ONE_TO_MANY.createUsage(ctx));
+		var mkjc = JpaAnnotations.MAP_KEY_JOIN_COLUMN.createUsage(ctx);
+		mkjc.name("PRODUCT_ID");
+		field.addAnnotationUsage(mkjc);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertEquals("PRODUCT_ID", helper.getMapKeyJoinColumnName(field));
+	}
+
+	@Test
+	public void testGetMapKeyEntityClass() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicClassDetails keyEntity = new DynamicClassDetails(
+				"Product", "com.example.Product", false, null, null, ctx);
+		DynamicClassDetails valueEntity = new DynamicClassDetails(
+				"OrderItem", "com.example.OrderItem", false, null, null, ctx);
+		ClassDetails mapClass = ctx.getClassDetailsRegistry().resolveClassDetails(Map.class.getName());
+		TypeDetails keyType = new ClassTypeDetailsImpl(keyEntity, TypeDetails.Kind.CLASS);
+		TypeDetails valueType = new ClassTypeDetailsImpl(valueEntity, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				mapClass, java.util.List.of(keyType, valueType), null);
+		DynamicFieldDetails field = entity.applyAttribute("items", fieldType, false, true, ctx);
+		field.addAnnotationUsage(JpaAnnotations.ONE_TO_MANY.createUsage(ctx));
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertEquals("com.example.Product", helper.getMapKeyEntityClass(field));
+	}
 }

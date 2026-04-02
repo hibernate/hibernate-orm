@@ -98,7 +98,11 @@
         <list-index column="${helper.getListIndexColumnName(field)}"/>
 </#if>
 <#if collTag == "map">
+<#if helper.hasMapKeyJoinColumn(field)>
+        <map-key-many-to-many class="${helper.getMapKeyEntityClass(field)}" column="${helper.getMapKeyJoinColumnName(field)}"/>
+<#else>
         <map-key column="${helper.getMapKeyColumnName(field)!field.getName() + '_KEY'}" type="${helper.getMapKeyType(field)!'string'}"/>
+</#if>
 </#if>
         <one-to-many class="${helper.getOneToManyTargetEntity(field)}"/>
 <#list helper.getCollectionFilters(field) as fi>
@@ -149,7 +153,11 @@
         <list-index column="${helper.getListIndexColumnName(field)}"/>
 </#if>
 <#if collTag == "map">
+<#if helper.hasMapKeyJoinColumn(field)>
+        <map-key-many-to-many class="${helper.getMapKeyEntityClass(field)}" column="${helper.getMapKeyJoinColumnName(field)}"/>
+<#else>
         <map-key column="${helper.getMapKeyColumnName(field)!field.getName() + '_KEY'}" type="${helper.getMapKeyType(field)!'string'}"/>
+</#if>
 </#if>
 <#if collTag == "idbag">
         <collection-id column="${helper.getCollectionIdColumnName(field)}" type="long">

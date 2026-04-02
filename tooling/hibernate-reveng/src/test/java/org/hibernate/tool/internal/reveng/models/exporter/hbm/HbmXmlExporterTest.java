@@ -1132,4 +1132,45 @@ public class HbmXmlExporterTest {
 		assertTrue(xml.contains("name=\"lineNumber\""), xml);
 		assertFalse(xml.contains("<id"), xml);
 	}
+
+	// --- <map-key-many-to-many> ---
+
+	@Test
+	public void testMapKeyManyToMany() {
+		TableMetadata table = new TableMetadata("ORDERS", "Order", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		// Manually add a Map<Product, OrderItem> field with @OneToMany + @MapKeyJoinColumn
+		DynamicClassDetails keyEntity = new DynamicClassDetails(
+				"Product", "com.example.Product", false, null, null, ctx);
+		DynamicClassDetails valueEntity = new DynamicClassDetails(
+				"OrderItem", "com.example.OrderItem", false, null, null, ctx);
+		ClassDetails mapClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(java.util.Map.class.getName());
+		org.hibernate.models.spi.TypeDetails keyType =
+				new org.hibernate.models.internal.ClassTypeDetailsImpl(
+						keyEntity, org.hibernate.models.spi.TypeDetails.Kind.CLASS);
+		org.hibernate.models.spi.TypeDetails valueType =
+				new org.hibernate.models.internal.ClassTypeDetailsImpl(
+						valueEntity, org.hibernate.models.spi.TypeDetails.Kind.CLASS);
+		org.hibernate.models.spi.TypeDetails fieldType =
+				new org.hibernate.models.internal.ParameterizedTypeDetailsImpl(
+						mapClass, java.util.List.of(keyType, valueType), null);
+		var field = ((DynamicClassDetails) entity).applyAttribute(
+				"items", fieldType, false, true, ctx);
+		var o2m = org.hibernate.boot.models.JpaAnnotations.ONE_TO_MANY.createUsage(ctx);
+		o2m.mappedBy("order");
+		field.addAnnotationUsage(o2m);
+		var mkjc = org.hibernate.boot.models.JpaAnnotations.MAP_KEY_JOIN_COLUMN.createUsage(ctx);
+		mkjc.name("PRODUCT_ID");
+		field.addAnnotationUsage(mkjc);
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<map-key-many-to-many class=\"com.example.Product\" column=\"PRODUCT_ID\"/>"), xml);
+		assertFalse(xml.contains("<map-key column="), xml);
+	}
 }

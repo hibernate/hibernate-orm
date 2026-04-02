@@ -51,9 +51,9 @@ public class NativeQueryConstructorErrorTest {
 
 			String msg = ex.getMessage();
 
-			assertTrue( msg.contains(
-					"Result class must have exactly one constructor with 2 parameters, found: [Ambiguous(Number, CharSequence), Ambiguous(Object, Object)] 'org.hibernate.orm.test.query.NativeQueryConstructorErrorTest$Ambiguous'" ) );
-
+			assertTrue( msg.contains( "Result class must have exactly one constructor with 2 parameters, found: " ) );
+			assertTrue( msg.contains( "Ambiguous(Object, Object)" ) );
+			assertTrue( msg.contains( "Ambiguous(Number, CharSequence)" ) );
 
 		} );
 	}

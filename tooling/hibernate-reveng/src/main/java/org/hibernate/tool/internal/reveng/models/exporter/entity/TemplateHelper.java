@@ -92,6 +92,7 @@ import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.DynamicInsert;
@@ -1266,6 +1267,39 @@ public class TemplateHelper {
 		}
 		if (!col.updatable()) {
 			sb.append(", updatable = false");
+		}
+		sb.append(")");
+		return sb.toString();
+	}
+
+	public String generateColumnTransformerAnnotation(FieldDetails field) {
+		if (!annotated) {
+			return "";
+		}
+		ColumnTransformer ct = field.getDirectAnnotationUsage(ColumnTransformer.class);
+		if (ct == null) {
+			return "";
+		}
+		boolean hasRead = ct.read() != null && !ct.read().isEmpty();
+		boolean hasWrite = ct.write() != null && !ct.write().isEmpty();
+		if (!hasRead && !hasWrite) {
+			return "";
+		}
+		importType("org.hibernate.annotations.ColumnTransformer");
+		StringBuilder sb = new StringBuilder("@ColumnTransformer(");
+		boolean needComma = false;
+		if (ct.forColumn() != null && !ct.forColumn().isEmpty()) {
+			sb.append("forColumn = \"").append(ct.forColumn()).append("\"");
+			needComma = true;
+		}
+		if (hasRead) {
+			if (needComma) sb.append(", ");
+			sb.append("read = \"").append(ct.read()).append("\"");
+			needComma = true;
+		}
+		if (hasWrite) {
+			if (needComma) sb.append(", ");
+			sb.append("write = \"").append(ct.write()).append("\"");
 		}
 		sb.append(")");
 		return sb.toString();

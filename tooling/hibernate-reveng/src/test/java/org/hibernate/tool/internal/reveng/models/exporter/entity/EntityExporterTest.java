@@ -1027,4 +1027,32 @@ public class EntityExporterTest {
 		assertTrue(source.contains("import jakarta.persistence.UniqueConstraint;"), source);
 		assertTrue(source.contains("@UniqueConstraint(name = \"UK_EMAIL\", columnNames = { \"EMAIL\" })"), source);
 	}
+
+	// --- @ColumnTransformer ---
+
+	@Test
+	public void testColumnTransformerRendered() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("SALARY", "salary", java.math.BigDecimal.class));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		for (var field : entity.getFields()) {
+			if ("salary".equals(field.getName())) {
+				var ct = org.hibernate.boot.models.HibernateAnnotations.COLUMN_TRANSFORMER
+						.createUsage(builder.getModelsContext());
+				ct.read("DECRYPT(SALARY)");
+				ct.write("ENCRYPT(?)");
+				((org.hibernate.models.internal.dynamic.DynamicFieldDetails) field)
+						.addAnnotationUsage(ct);
+			}
+		}
+		EntityExporter exporter = EntityExporter.create(
+				List.of(entity), builder.getModelsContext(), true);
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String source = writer.toString();
+		assertTrue(source.contains("import org.hibernate.annotations.ColumnTransformer;"), source);
+		assertTrue(source.contains("@ColumnTransformer(read = \"DECRYPT(SALARY)\", write = \"ENCRYPT(?)\")"), source);
+	}
 }

@@ -3430,4 +3430,67 @@ public class TemplateHelperTest {
 		assertFalse(result.contains("CheckConstraint"), result);
 		assertFalse(result.contains("check ="), result);
 	}
+
+	// --- @ColumnTransformer ---
+
+	@Test
+	public void testColumnTransformerReadAndWrite() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("SALARY", "salary", java.math.BigDecimal.class));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getBasicFields().stream()
+				.filter(f -> "salary".equals(f.getName())).findFirst().orElseThrow();
+		var ct = HibernateAnnotations.COLUMN_TRANSFORMER.createUsage(ctx.modelsContext());
+		ct.read("DECRYPT(SALARY)");
+		ct.write("ENCRYPT(?)");
+		((DynamicFieldDetails) field).addAnnotationUsage(ct);
+		String result = ctx.helper().generateColumnTransformerAnnotation(field);
+		assertTrue(result.contains("@ColumnTransformer("), result);
+		assertTrue(result.contains("read = \"DECRYPT(SALARY)\""), result);
+		assertTrue(result.contains("write = \"ENCRYPT(?)\""), result);
+	}
+
+	@Test
+	public void testColumnTransformerReadOnly() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("SALARY", "salary", java.math.BigDecimal.class));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getBasicFields().stream()
+				.filter(f -> "salary".equals(f.getName())).findFirst().orElseThrow();
+		var ct = HibernateAnnotations.COLUMN_TRANSFORMER.createUsage(ctx.modelsContext());
+		ct.read("UPPER(NAME)");
+		((DynamicFieldDetails) field).addAnnotationUsage(ct);
+		String result = ctx.helper().generateColumnTransformerAnnotation(field);
+		assertEquals("@ColumnTransformer(read = \"UPPER(NAME)\")", result);
+	}
+
+	@Test
+	public void testColumnTransformerWithForColumn() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("SALARY", "salary", java.math.BigDecimal.class));
+		TestContext ctx = createWithContext(table);
+		FieldDetails field = ctx.helper().getBasicFields().stream()
+				.filter(f -> "salary".equals(f.getName())).findFirst().orElseThrow();
+		var ct = HibernateAnnotations.COLUMN_TRANSFORMER.createUsage(ctx.modelsContext());
+		ct.forColumn("SALARY");
+		ct.read("DECRYPT(SALARY)");
+		((DynamicFieldDetails) field).addAnnotationUsage(ct);
+		String result = ctx.helper().generateColumnTransformerAnnotation(field);
+		assertTrue(result.contains("forColumn = \"SALARY\""), result);
+		assertTrue(result.contains("read = \"DECRYPT(SALARY)\""), result);
+	}
+
+	@Test
+	public void testColumnTransformerNotPresent() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TemplateHelper helper = create(table);
+		FieldDetails field = helper.getBasicFields().stream()
+				.filter(f -> "name".equals(f.getName())).findFirst().orElseThrow();
+		assertEquals("", helper.generateColumnTransformerAnnotation(field));
+	}
 }

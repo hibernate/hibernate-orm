@@ -62,6 +62,10 @@
     ${colAnn}
     </#if>
     </#if>
+    <#assign ctAnn = templateHelper.generateColumnTransformerAnnotation(field)>
+    <#if ctAnn?has_content>
+    ${ctAnn}
+    </#if>
     ${templateHelper.getPropertyGetModifiers(field)} ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
         return this.${field.getName()};
     }

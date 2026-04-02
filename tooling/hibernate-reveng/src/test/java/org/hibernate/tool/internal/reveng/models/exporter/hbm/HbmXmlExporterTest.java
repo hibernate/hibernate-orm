@@ -1105,4 +1105,31 @@ public class HbmXmlExporterTest {
 		assertTrue(xml.contains("<param name=\"currency\">USD</param>"), xml);
 		assertFalse(xml.contains("type=\"org.hibernate.usertype.UserType\""), xml);
 	}
+
+	// --- composite-id mapped="true" (@IdClass) ---
+
+	@Test
+	public void testCompositeIdMapped() {
+		TableMetadata table = new TableMetadata("ORDER_LINE", "OrderLine", "com.example");
+		table.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("QUANTITY", "quantity", Integer.class));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		// Add @IdClass
+		var idClassAnn = org.hibernate.boot.models.JpaAnnotations.ID_CLASS.createUsage(ctx);
+		idClassAnn.value(java.io.Serializable.class);
+		((DynamicClassDetails) entity).addAnnotationUsage(idClassAnn);
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("mapped=\"true\""), xml);
+		assertTrue(xml.contains("class=\"java.io.Serializable\""), xml);
+		assertTrue(xml.contains("<key-property"), xml);
+		assertTrue(xml.contains("name=\"orderId\""), xml);
+		assertTrue(xml.contains("name=\"lineNumber\""), xml);
+		assertFalse(xml.contains("<id"), xml);
+	}
 }

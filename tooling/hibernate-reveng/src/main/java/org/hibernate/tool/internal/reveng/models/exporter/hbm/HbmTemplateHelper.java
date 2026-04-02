@@ -35,6 +35,7 @@ import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
@@ -360,6 +361,15 @@ public class HbmTemplateHelper {
 	public String getCompositeIdClassName() {
 		FieldDetails cid = getCompositeIdField();
 		return cid != null ? cid.getType().determineRawClass().getClassName() : null;
+	}
+
+	public boolean hasIdClass() {
+		return classDetails.hasDirectAnnotationUsage(IdClass.class);
+	}
+
+	public String getIdClassName() {
+		IdClass idClass = classDetails.getDirectAnnotationUsage(IdClass.class);
+		return idClass != null ? idClass.value().getName() : null;
 	}
 
 	public List<FieldDetails> getCompositeIdKeyProperties() {

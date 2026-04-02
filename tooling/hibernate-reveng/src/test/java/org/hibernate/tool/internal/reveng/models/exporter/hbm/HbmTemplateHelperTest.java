@@ -2730,4 +2730,57 @@ public class HbmTemplateHelperTest {
 		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
 		assertEquals("org.hibernate.usertype.UserType", helper.getHibernateTypeName(field));
 	}
+
+	// --- composite-id mapped="true" (@IdClass) ---
+
+	@Test
+	public void testHasIdClassTrue() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		var idClassAnn = JpaAnnotations.ID_CLASS.createUsage(ctx);
+		idClassAnn.value(Object.class);
+		entity.addAnnotationUsage(idClassAnn);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertTrue(helper.hasIdClass());
+	}
+
+	@Test
+	public void testHasIdClassFalse() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertFalse(helper.hasIdClass());
+	}
+
+	@Test
+	public void testGetIdClassName() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		var idClassAnn = JpaAnnotations.ID_CLASS.createUsage(ctx);
+		idClassAnn.value(java.io.Serializable.class);
+		entity.addAnnotationUsage(idClassAnn);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertEquals("java.io.Serializable", helper.getIdClassName());
+	}
+
+	@Test
+	public void testIdFieldsWithIdClass() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails orderId = addBasicField(entity, "orderId", Long.class, ctx);
+		orderId.addAnnotationUsage(JpaAnnotations.ID.createUsage(ctx));
+		var col1 = JpaAnnotations.COLUMN.createUsage(ctx);
+		col1.name("ORDER_ID");
+		orderId.addAnnotationUsage(col1);
+		DynamicFieldDetails lineNumber = addBasicField(entity, "lineNumber", Integer.class, ctx);
+		lineNumber.addAnnotationUsage(JpaAnnotations.ID.createUsage(ctx));
+		var col2 = JpaAnnotations.COLUMN.createUsage(ctx);
+		col2.name("LINE_NUMBER");
+		lineNumber.addAnnotationUsage(col2);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		List<FieldDetails> idFields = helper.getIdFields();
+		assertEquals(2, idFields.size());
+		assertEquals("orderId", idFields.get(0).getName());
+		assertEquals("lineNumber", idFields.get(1).getName());
+	}
 }

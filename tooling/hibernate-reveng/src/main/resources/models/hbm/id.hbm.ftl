@@ -14,6 +14,18 @@
         </key-many-to-one>
 </#list>
     </composite-id>
+<#elseif helper.hasIdClass()>
+    <composite-id
+        class="${helper.getIdClassName()}"
+        mapped="true">
+<#list helper.getIdFields() as field>
+        <key-property
+            name="${field.getName()}"
+            type="${helper.getHibernateTypeName(field)}">
+            <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
+        </key-property>
+</#list>
+    </composite-id>
 <#else>
 <#list helper.getIdFields() as field>
     <id

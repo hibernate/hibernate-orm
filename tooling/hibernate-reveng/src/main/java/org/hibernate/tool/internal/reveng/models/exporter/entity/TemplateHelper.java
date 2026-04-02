@@ -1466,9 +1466,11 @@ public class TemplateHelper {
 	}
 
 	public boolean needsMinimalConstructor() {
-		List<FullConstructorProperty> minProps = getMinimalConstructorProperties();
-		List<FullConstructorProperty> fullProps = getFullConstructorProperties();
-		return !minProps.isEmpty() && minProps.size() < fullProps.size();
+		int minTotal = getMinimalConstructorProperties().size()
+				+ getSuperclassMinimalConstructorProperties().size();
+		int fullTotal = getFullConstructorProperties().size()
+				+ getSuperclassFullConstructorProperties().size();
+		return minTotal > 0 && minTotal < fullTotal;
 	}
 
 	public List<FullConstructorProperty> getMinimalConstructorProperties() {
@@ -1504,6 +1506,10 @@ public class TemplateHelper {
 
 	public String getMinimalConstructorParameterList() {
 		StringBuilder sb = new StringBuilder();
+		for (FullConstructorProperty prop : getSuperclassMinimalConstructorProperties()) {
+			if (!sb.isEmpty()) sb.append(", ");
+			sb.append(prop.typeName()).append(" ").append(prop.fieldName());
+		}
 		for (FullConstructorProperty prop : getMinimalConstructorProperties()) {
 			if (!sb.isEmpty()) sb.append(", ");
 			sb.append(prop.typeName()).append(" ").append(prop.fieldName());
@@ -1513,11 +1519,52 @@ public class TemplateHelper {
 
 	public String getFullConstructorParameterList() {
 		StringBuilder sb = new StringBuilder();
+		for (FullConstructorProperty prop : getSuperclassFullConstructorProperties()) {
+			if (!sb.isEmpty()) sb.append(", ");
+			sb.append(prop.typeName()).append(" ").append(prop.fieldName());
+		}
 		for (FullConstructorProperty prop : getFullConstructorProperties()) {
 			if (!sb.isEmpty()) sb.append(", ");
 			sb.append(prop.typeName()).append(" ").append(prop.fieldName());
 		}
 		return sb.toString();
+	}
+
+	public List<FullConstructorProperty> getSuperclassFullConstructorProperties() {
+		if (!isSubclass()) {
+			return Collections.emptyList();
+		}
+		return createSuperclassHelper().getFullConstructorProperties();
+	}
+
+	public String getSuperclassFullConstructorArgumentList() {
+		StringBuilder sb = new StringBuilder();
+		for (FullConstructorProperty prop : getSuperclassFullConstructorProperties()) {
+			if (!sb.isEmpty()) sb.append(", ");
+			sb.append(prop.fieldName());
+		}
+		return sb.toString();
+	}
+
+	public List<FullConstructorProperty> getSuperclassMinimalConstructorProperties() {
+		if (!isSubclass()) {
+			return Collections.emptyList();
+		}
+		return createSuperclassHelper().getMinimalConstructorProperties();
+	}
+
+	public String getSuperclassMinimalConstructorArgumentList() {
+		StringBuilder sb = new StringBuilder();
+		for (FullConstructorProperty prop : getSuperclassMinimalConstructorProperties()) {
+			if (!sb.isEmpty()) sb.append(", ");
+			sb.append(prop.fieldName());
+		}
+		return sb.toString();
+	}
+
+	private TemplateHelper createSuperclassHelper() {
+		ClassDetails superClass = classDetails.getSuperClass();
+		return new TemplateHelper(superClass, modelsContext, importContext, annotated);
 	}
 
 	// --- toString support ---

@@ -3092,4 +3092,115 @@ public class TemplateHelperTest {
 		String result = ctx.helper().generateAccessAnnotation(nameField);
 		assertEquals("", result);
 	}
+
+	// --- Superclass constructor support ---
+
+	@Test
+	public void testSuperclassFullConstructorProperties() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		TableMetadata parentTable = new TableMetadata("VEHICLE", "Vehicle", "com.example");
+		parentTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		parentTable.addColumn(new ColumnMetadata("MAKE", "make", String.class));
+		builder.createEntityFromTable(parentTable);
+		TableMetadata childTable = new TableMetadata("CAR", "Car", "com.example");
+		childTable.parent("Vehicle", "com.example");
+		childTable.addColumn(new ColumnMetadata("CAR_ID", "carId", Long.class).primaryKey(true));
+		childTable.addColumn(new ColumnMetadata("DOORS", "doors", Integer.class));
+		ClassDetails childEntity = builder.createEntityFromTable(childTable);
+		TemplateHelper helper = new TemplateHelper(childEntity, builder.getModelsContext(),
+				new ImportContextImpl("com.example"), true);
+		List<TemplateHelper.FullConstructorProperty> superProps = helper.getSuperclassFullConstructorProperties();
+		assertEquals(2, superProps.size());
+		assertEquals("id", superProps.get(0).fieldName());
+		assertEquals("make", superProps.get(1).fieldName());
+	}
+
+	@Test
+	public void testSuperclassFullConstructorArgumentList() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		TableMetadata parentTable = new TableMetadata("VEHICLE", "Vehicle", "com.example");
+		parentTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		parentTable.addColumn(new ColumnMetadata("MAKE", "make", String.class));
+		builder.createEntityFromTable(parentTable);
+		TableMetadata childTable = new TableMetadata("CAR", "Car", "com.example");
+		childTable.parent("Vehicle", "com.example");
+		childTable.addColumn(new ColumnMetadata("CAR_ID", "carId", Long.class).primaryKey(true));
+		childTable.addColumn(new ColumnMetadata("DOORS", "doors", Integer.class));
+		ClassDetails childEntity = builder.createEntityFromTable(childTable);
+		TemplateHelper helper = new TemplateHelper(childEntity, builder.getModelsContext(),
+				new ImportContextImpl("com.example"), true);
+		assertEquals("id, make", helper.getSuperclassFullConstructorArgumentList());
+	}
+
+	@Test
+	public void testFullConstructorParameterListIncludesSuperclass() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		TableMetadata parentTable = new TableMetadata("VEHICLE", "Vehicle", "com.example");
+		parentTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		parentTable.addColumn(new ColumnMetadata("MAKE", "make", String.class));
+		builder.createEntityFromTable(parentTable);
+		TableMetadata childTable = new TableMetadata("CAR", "Car", "com.example");
+		childTable.parent("Vehicle", "com.example");
+		childTable.addColumn(new ColumnMetadata("CAR_ID", "carId", Long.class).primaryKey(true));
+		childTable.addColumn(new ColumnMetadata("DOORS", "doors", Integer.class));
+		ClassDetails childEntity = builder.createEntityFromTable(childTable);
+		TemplateHelper helper = new TemplateHelper(childEntity, builder.getModelsContext(),
+				new ImportContextImpl("com.example"), true);
+		assertEquals("Long id, String make, Long carId, Integer doors",
+				helper.getFullConstructorParameterList());
+	}
+
+	@Test
+	public void testSuperclassMinimalConstructorProperties() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		TableMetadata parentTable = new TableMetadata("VEHICLE", "Vehicle", "com.example");
+		parentTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		parentTable.addColumn(new ColumnMetadata("MAKE", "make", String.class).nullable(false));
+		parentTable.addColumn(new ColumnMetadata("COLOR", "color", String.class));
+		builder.createEntityFromTable(parentTable);
+		TableMetadata childTable = new TableMetadata("CAR", "Car", "com.example");
+		childTable.parent("Vehicle", "com.example");
+		childTable.addColumn(new ColumnMetadata("CAR_ID", "carId", Long.class).primaryKey(true));
+		childTable.addColumn(new ColumnMetadata("DOORS", "doors", Integer.class));
+		ClassDetails childEntity = builder.createEntityFromTable(childTable);
+		TemplateHelper helper = new TemplateHelper(childEntity, builder.getModelsContext(),
+				new ImportContextImpl("com.example"), true);
+		List<TemplateHelper.FullConstructorProperty> superMinProps = helper.getSuperclassMinimalConstructorProperties();
+		assertEquals(2, superMinProps.size());
+		assertEquals("id", superMinProps.get(0).fieldName());
+		assertEquals("make", superMinProps.get(1).fieldName());
+	}
+
+	@Test
+	public void testNoSuperclassConstructorPropertiesWhenNotSubclass() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TemplateHelper helper = create(table);
+		assertTrue(helper.getSuperclassFullConstructorProperties().isEmpty());
+		assertTrue(helper.getSuperclassMinimalConstructorProperties().isEmpty());
+		assertEquals("", helper.getSuperclassFullConstructorArgumentList());
+		assertEquals("", helper.getSuperclassMinimalConstructorArgumentList());
+	}
+
+	@Test
+	public void testNeedsMinimalConstructorWithSuperclassDifference() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		TableMetadata parentTable = new TableMetadata("VEHICLE", "Vehicle", "com.example");
+		parentTable.addColumn(new ColumnMetadata("ID", "id", Long.class)
+				.primaryKey(true).generationType(GenerationType.IDENTITY));
+		parentTable.addColumn(new ColumnMetadata("MAKE", "make", String.class).nullable(false));
+		parentTable.addColumn(new ColumnMetadata("COLOR", "color", String.class));
+		builder.createEntityFromTable(parentTable);
+		TableMetadata childTable = new TableMetadata("CAR", "Car", "com.example");
+		childTable.parent("Vehicle", "com.example");
+		childTable.addColumn(new ColumnMetadata("CAR_ID", "carId", Long.class)
+				.primaryKey(true).generationType(GenerationType.IDENTITY));
+		ClassDetails childEntity = builder.createEntityFromTable(childTable);
+		TemplateHelper helper = new TemplateHelper(childEntity, builder.getModelsContext(),
+				new ImportContextImpl("com.example"), true);
+		// Super full=[id,make,color], super minimal=[make]
+		// Own full=[] (carId has generator), own minimal=[]
+		// Total full=3, total minimal=1 → needs minimal
+		assertTrue(helper.needsMinimalConstructor());
+	}
 }

@@ -939,4 +939,67 @@ public class EntityExporterTest {
 		assertTrue(source.contains("package com.generated;"), source);
 		assertTrue(source.contains("class EmployeeBase"), source);
 	}
+
+	// --- Superclass constructor super() calls ---
+
+	@Test
+	public void testSubclassFullConstructorCallsSuper() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		TableMetadata parentTable = new TableMetadata("VEHICLE", "Vehicle", "com.example");
+		parentTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		parentTable.addColumn(new ColumnMetadata("MAKE", "make", String.class));
+		builder.createEntityFromTable(parentTable);
+		TableMetadata childTable = new TableMetadata("CAR", "Car", "com.example");
+		childTable.parent("Vehicle", "com.example");
+		childTable.addColumn(new ColumnMetadata("CAR_ID", "carId", Long.class).primaryKey(true));
+		childTable.addColumn(new ColumnMetadata("DOORS", "doors", Integer.class));
+		ClassDetails childEntity = builder.createEntityFromTable(childTable);
+		EntityExporter exporter = EntityExporter.create(
+				List.of(childEntity), builder.getModelsContext(), true);
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, childEntity);
+		String source = writer.toString();
+		assertTrue(source.contains("extends Vehicle"), source);
+		assertTrue(source.contains("Long id, String make, Long carId, Integer doors"), source);
+		assertTrue(source.contains("super(id, make)"), source);
+		assertTrue(source.contains("this.carId = carId"), source);
+		assertTrue(source.contains("this.doors = doors"), source);
+	}
+
+	@Test
+	public void testSubclassMinimalConstructorCallsSuper() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		TableMetadata parentTable = new TableMetadata("VEHICLE", "Vehicle", "com.example");
+		parentTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		parentTable.addColumn(new ColumnMetadata("MAKE", "make", String.class).nullable(false));
+		parentTable.addColumn(new ColumnMetadata("COLOR", "color", String.class));
+		builder.createEntityFromTable(parentTable);
+		TableMetadata childTable = new TableMetadata("CAR", "Car", "com.example");
+		childTable.parent("Vehicle", "com.example");
+		childTable.addColumn(new ColumnMetadata("CAR_ID", "carId", Long.class).primaryKey(true));
+		childTable.addColumn(new ColumnMetadata("DOORS", "doors", Integer.class));
+		ClassDetails childEntity = builder.createEntityFromTable(childTable);
+		EntityExporter exporter = EntityExporter.create(
+				List.of(childEntity), builder.getModelsContext(), true);
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, childEntity);
+		String source = writer.toString();
+		// Minimal constructor should include super's minimal props (id, make) + own minimal (carId)
+		assertTrue(source.contains("super(id, make)"), source);
+	}
+
+	@Test
+	public void testNonSubclassNoSuperCall() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		EntityExporter exporter = EntityExporter.create(
+				List.of(entity), builder.getModelsContext(), true);
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String source = writer.toString();
+		assertFalse(source.contains("super("), source);
+	}
 }

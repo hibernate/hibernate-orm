@@ -377,6 +377,36 @@ public class DaoExporterTest {
 		assertTrue(source.contains("session.remove("), source);
 	}
 
+	// --- Pagination (EJB3) ---
+
+	@Test
+	public void testEjb3FindAllPaginated() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		String source = export(table);
+		assertTrue(source.contains("public List<Employee> findAll(int firstResult, int maxResults)"), source);
+		assertTrue(source.contains("entityManager.getCriteriaBuilder()"), source);
+		assertTrue(source.contains("criteriaBuilder.createQuery(Employee.class)"), source);
+		assertTrue(source.contains(".setFirstResult(firstResult)"), source);
+		assertTrue(source.contains(".setMaxResults(maxResults)"), source);
+		assertTrue(source.contains(".getResultList()"), source);
+	}
+
+	// --- Pagination (Classic) ---
+
+	@Test
+	public void testClassicFindAllPaginated() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		String source = export(table, false);
+		assertTrue(source.contains("public List<Employee> findAll(int firstResult, int maxResults)"), source);
+		assertTrue(source.contains("sessionFactory.getCriteriaBuilder()"), source);
+		assertTrue(source.contains("criteriaBuilder.createQuery(Employee.class)"), source);
+		assertTrue(source.contains(".setFirstResult(firstResult)"), source);
+		assertTrue(source.contains(".setMaxResults(maxResults)"), source);
+		assertTrue(source.contains(".getResultList()"), source);
+	}
+
 	// --- Import tests ---
 
 	@Test

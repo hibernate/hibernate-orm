@@ -115,6 +115,23 @@ public class ${declarationName}Home {
             }
         }
     }
+
+    public ${helper.importType("java.util.List")}<${declarationName}> findAll(int firstResult, int maxResults) {
+        logger.log(${helper.importType("java.util.logging.Level")}.INFO, "finding ${declarationName} instances with pagination");
+        try {
+            ${helper.importType("jakarta.persistence.criteria.CriteriaBuilder")} criteriaBuilder = entityManager.getCriteriaBuilder();
+            ${helper.importType("jakarta.persistence.criteria.CriteriaQuery")}<${declarationName}> criteriaQuery = criteriaBuilder.createQuery(${declarationName}.class);
+            criteriaQuery.from(${declarationName}.class);
+            return entityManager.createQuery(criteriaQuery)
+                    .setFirstResult(firstResult)
+                    .setMaxResults(maxResults)
+                    .getResultList();
+        }
+        catch (RuntimeException re) {
+            logger.log(${helper.importType("java.util.logging.Level")}.SEVERE, "find all failed", re);
+            throw re;
+        }
+    }
 <#else>
     private final ${helper.importType("org.hibernate.SessionFactory")} sessionFactory = getSessionFactory();
 
@@ -279,6 +296,24 @@ public class ${declarationName}Home {
                 session.flush();
                 session.clear();
             }
+        }
+    }
+
+    public ${helper.importType("java.util.List")}<${declarationName}> findAll(int firstResult, int maxResults) {
+        logger.log(${helper.importType("java.util.logging.Level")}.INFO, "finding ${declarationName} instances with pagination");
+        try {
+            ${helper.importType("jakarta.persistence.criteria.CriteriaBuilder")} criteriaBuilder = sessionFactory.getCriteriaBuilder();
+            ${helper.importType("jakarta.persistence.criteria.CriteriaQuery")}<${declarationName}> criteriaQuery = criteriaBuilder.createQuery(${declarationName}.class);
+            criteriaQuery.from(${declarationName}.class);
+            return sessionFactory.getCurrentSession()
+                    .createQuery(criteriaQuery)
+                    .setFirstResult(firstResult)
+                    .setMaxResults(maxResults)
+                    .getResultList();
+        }
+        catch (RuntimeException re) {
+            logger.log(${helper.importType("java.util.logging.Level")}.SEVERE, "find all failed", re);
+            throw re;
         }
     }
 

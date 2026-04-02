@@ -315,6 +315,68 @@ public class DaoExporterTest {
 		assertTrue(source.contains("query.setParameter(\"name\", name)"), source);
 	}
 
+	// --- Batch operations (EJB3) ---
+
+	@Test
+	public void testEjb3PersistAll() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		String source = export(table);
+		assertTrue(source.contains("public void persistAll(List<Employee> entities, int batchSize)"), source);
+		assertTrue(source.contains("entityManager.persist(entities.get(i))"), source);
+		assertTrue(source.contains("entityManager.flush()"), source);
+		assertTrue(source.contains("entityManager.clear()"), source);
+	}
+
+	@Test
+	public void testEjb3MergeAll() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		String source = export(table);
+		assertTrue(source.contains("public List<Employee> mergeAll(List<Employee> entities, int batchSize)"), source);
+		assertTrue(source.contains("entityManager.merge(entities.get(i))"), source);
+	}
+
+	@Test
+	public void testEjb3RemoveAll() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		String source = export(table);
+		assertTrue(source.contains("public void removeAll(List<Employee> entities, int batchSize)"), source);
+		assertTrue(source.contains("entityManager.remove("), source);
+	}
+
+	// --- Batch operations (Classic) ---
+
+	@Test
+	public void testClassicPersistAll() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		String source = export(table, false);
+		assertTrue(source.contains("public void persistAll(List<Employee> entities, int batchSize)"), source);
+		assertTrue(source.contains("session.persist(entities.get(i))"), source);
+		assertTrue(source.contains("session.flush()"), source);
+		assertTrue(source.contains("session.clear()"), source);
+	}
+
+	@Test
+	public void testClassicMergeAll() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		String source = export(table, false);
+		assertTrue(source.contains("public List<Employee> mergeAll(List<Employee> entities, int batchSize)"), source);
+		assertTrue(source.contains("session.merge(entities.get(i))"), source);
+	}
+
+	@Test
+	public void testClassicRemoveAll() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		String source = export(table, false);
+		assertTrue(source.contains("public void removeAll(List<Employee> entities, int batchSize)"), source);
+		assertTrue(source.contains("session.remove("), source);
+	}
+
 	// --- Import tests ---
 
 	@Test

@@ -80,6 +80,41 @@ public class ${declarationName}Home {
         }
     }
 </#if>
+
+    public void persistAll(${helper.importType("java.util.List")}<${declarationName}> entities, int batchSize) {
+        logger.log(${helper.importType("java.util.logging.Level")}.INFO, "batch persisting " + entities.size() + " ${declarationName} instances");
+        for (int i = 0; i < entities.size(); i++) {
+            entityManager.persist(entities.get(i));
+            if (i > 0 && i % batchSize == 0) {
+                entityManager.flush();
+                entityManager.clear();
+            }
+        }
+    }
+
+    public ${helper.importType("java.util.List")}<${declarationName}> mergeAll(${helper.importType("java.util.List")}<${declarationName}> entities, int batchSize) {
+        logger.log(${helper.importType("java.util.logging.Level")}.INFO, "batch merging " + entities.size() + " ${declarationName} instances");
+        ${helper.importType("java.util.List")}<${declarationName}> result = new ${helper.importType("java.util.ArrayList")}<>();
+        for (int i = 0; i < entities.size(); i++) {
+            result.add(entityManager.merge(entities.get(i)));
+            if (i > 0 && i % batchSize == 0) {
+                entityManager.flush();
+                entityManager.clear();
+            }
+        }
+        return result;
+    }
+
+    public void removeAll(${helper.importType("java.util.List")}<${declarationName}> entities, int batchSize) {
+        logger.log(${helper.importType("java.util.logging.Level")}.INFO, "batch removing " + entities.size() + " ${declarationName} instances");
+        for (int i = 0; i < entities.size(); i++) {
+            entityManager.remove(entityManager.contains(entities.get(i)) ? entities.get(i) : entityManager.merge(entities.get(i)));
+            if (i > 0 && i % batchSize == 0) {
+                entityManager.flush();
+                entityManager.clear();
+            }
+        }
+    }
 <#else>
     private final ${helper.importType("org.hibernate.SessionFactory")} sessionFactory = getSessionFactory();
 
@@ -208,6 +243,44 @@ public class ${declarationName}Home {
         }
     }
 </#if>
+
+    public void persistAll(${helper.importType("java.util.List")}<${declarationName}> entities, int batchSize) {
+        logger.log(${helper.importType("java.util.logging.Level")}.INFO, "batch persisting " + entities.size() + " ${declarationName} instances");
+        ${helper.importType("org.hibernate.Session")} session = sessionFactory.getCurrentSession();
+        for (int i = 0; i < entities.size(); i++) {
+            session.persist(entities.get(i));
+            if (i > 0 && i % batchSize == 0) {
+                session.flush();
+                session.clear();
+            }
+        }
+    }
+
+    public ${helper.importType("java.util.List")}<${declarationName}> mergeAll(${helper.importType("java.util.List")}<${declarationName}> entities, int batchSize) {
+        logger.log(${helper.importType("java.util.logging.Level")}.INFO, "batch merging " + entities.size() + " ${declarationName} instances");
+        ${helper.importType("org.hibernate.Session")} session = sessionFactory.getCurrentSession();
+        ${helper.importType("java.util.List")}<${declarationName}> result = new ${helper.importType("java.util.ArrayList")}<>();
+        for (int i = 0; i < entities.size(); i++) {
+            result.add((${declarationName}) session.merge(entities.get(i)));
+            if (i > 0 && i % batchSize == 0) {
+                session.flush();
+                session.clear();
+            }
+        }
+        return result;
+    }
+
+    public void removeAll(${helper.importType("java.util.List")}<${declarationName}> entities, int batchSize) {
+        logger.log(${helper.importType("java.util.logging.Level")}.INFO, "batch removing " + entities.size() + " ${declarationName} instances");
+        ${helper.importType("org.hibernate.Session")} session = sessionFactory.getCurrentSession();
+        for (int i = 0; i < entities.size(); i++) {
+            session.remove(session.contains(entities.get(i)) ? entities.get(i) : session.merge(entities.get(i)));
+            if (i > 0 && i % batchSize == 0) {
+                session.flush();
+                session.clear();
+            }
+        }
+    }
 
 <#list helper.getEntityNamedQueries() as query>
 <#assign methname = helper.unqualify(query.name())>

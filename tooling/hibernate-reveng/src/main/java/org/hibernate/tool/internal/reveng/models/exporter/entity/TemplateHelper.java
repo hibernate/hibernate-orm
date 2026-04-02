@@ -307,6 +307,9 @@ public class TemplateHelper {
 	// --- Type name resolution ---
 
 	public String getJavaTypeName(FieldDetails field) {
+		if (hasFieldMetaAttribute(field, "property-type")) {
+			return importType(getFieldMetaAttribute(field, "property-type"));
+		}
 		return importType(field.getType().determineRawClass().getClassName());
 	}
 
@@ -1472,7 +1475,7 @@ public class TemplateHelper {
 		List<FullConstructorProperty> props = new ArrayList<>();
 		// Basic fields: non-nullable, non-version, non-generated-id, respects gen-property
 		for (FieldDetails field : getBasicFields()) {
-			if (isVersion(field) || !isGenProperty(field)) {
+			if (isVersion(field) || !isGenProperty(field) || hasFieldDefaultValue(field)) {
 				continue;
 			}
 			if (isPrimaryKey(field)) {
@@ -1935,6 +1938,14 @@ public class TemplateHelper {
 
 	public String getFieldDescription(FieldDetails field) {
 		return getFieldMetaAttribute(field, "field-description");
+	}
+
+	public boolean hasFieldDefaultValue(FieldDetails field) {
+		return hasFieldMetaAttribute(field, "default-value");
+	}
+
+	public String getFieldDefaultValue(FieldDetails field) {
+		return getFieldMetaAttribute(field, "default-value");
 	}
 
 	public boolean hasExtraClassCode() {

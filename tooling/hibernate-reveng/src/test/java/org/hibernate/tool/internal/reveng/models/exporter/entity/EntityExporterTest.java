@@ -477,6 +477,28 @@ public class EntityExporterTest {
 	}
 
 	@Test
+	public void testFieldDefaultValue() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("STATUS", "status", String.class));
+		Map<String, Map<String, List<String>>> fieldMeta = new java.util.HashMap<>();
+		fieldMeta.put("status", Map.of("default-value", List.of("\"active\"")));
+		String source = exportWithMeta(table, Collections.emptyMap(), fieldMeta);
+		assertTrue(source.contains("String status = \"active\";"), source);
+	}
+
+	@Test
+	public void testPropertyTypeOverride() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("STATUS", "status", String.class));
+		Map<String, Map<String, List<String>>> fieldMeta = new java.util.HashMap<>();
+		fieldMeta.put("status", Map.of("property-type", List.of("com.example.StatusEnum")));
+		String source = exportWithMeta(table, Collections.emptyMap(), fieldMeta);
+		assertTrue(source.contains("StatusEnum status"), source);
+	}
+
+	@Test
 	public void testExtraClassCode() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));

@@ -12,7 +12,11 @@
      * ${templateHelper.getFieldDescription(field)}
      */
 </#if>
+<#if templateHelper.hasFieldDefaultValue(field)>
+    ${templateHelper.getFieldModifiers(field)} ${templateHelper.getJavaTypeName(field)} ${field.getName()} = ${templateHelper.getFieldDefaultValue(field)};
+<#else>
     ${templateHelper.getFieldModifiers(field)} ${templateHelper.getJavaTypeName(field)} ${field.getName()};
+</#if>
 
 </#if>
 </#list>

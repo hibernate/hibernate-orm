@@ -1093,6 +1093,68 @@ public class TemplateHelperTest {
 	}
 
 	@Test
+	public void testHasFieldDefaultValue() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("STATUS", "status", String.class));
+		TemplateHelper helper = create(table, true,
+				Collections.emptyMap(),
+				fieldMeta("status", "default-value", "\"active\""));
+		FieldDetails field = helper.getBasicFields().get(0);
+		assertTrue(helper.hasFieldDefaultValue(field));
+	}
+
+	@Test
+	public void testHasFieldDefaultValueFalse() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		assertFalse(create(table).hasFieldDefaultValue(
+				create(table).getBasicFields().get(0)));
+	}
+
+	@Test
+	public void testGetFieldDefaultValue() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("STATUS", "status", String.class));
+		TemplateHelper helper = create(table, true,
+				Collections.emptyMap(),
+				fieldMeta("status", "default-value", "\"active\""));
+		FieldDetails field = helper.getBasicFields().get(0);
+		assertEquals("\"active\"", helper.getFieldDefaultValue(field));
+	}
+
+	@Test
+	public void testDefaultValueExcludesFromMinimalConstructor() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true).generationType(GenerationType.IDENTITY));
+		table.addColumn(new ColumnMetadata("STATUS", "status", String.class).nullable(false));
+		TemplateHelper withDefault = create(table, true,
+				Collections.emptyMap(),
+				fieldMeta("status", "default-value", "\"active\""));
+		assertTrue(withDefault.getMinimalConstructorProperties().isEmpty());
+		TemplateHelper withoutDefault = create(table);
+		assertFalse(withoutDefault.getMinimalConstructorProperties().isEmpty());
+	}
+
+	@Test
+	public void testPropertyTypeOverride() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("STATUS", "status", String.class));
+		TemplateHelper helper = create(table, true,
+				Collections.emptyMap(),
+				fieldMeta("status", "property-type", "com.example.StatusEnum"));
+		FieldDetails field = helper.getBasicFields().get(0);
+		assertEquals("StatusEnum", helper.getJavaTypeName(field));
+	}
+
+	@Test
+	public void testPropertyTypeOverrideNotSet() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		FieldDetails field = create(table).getBasicFields().get(0);
+		assertEquals("String", create(table).getJavaTypeName(field));
+	}
+
+	@Test
 	public void testHasExtraClassCode() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		assertFalse(create(table).hasExtraClassCode());

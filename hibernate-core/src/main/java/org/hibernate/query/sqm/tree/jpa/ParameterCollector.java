@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -314,6 +315,13 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 		super.visitIsTruePredicate( predicate );
 		this.inferenceBasis = original;
 		return predicate;
+	}
+
+	@Override
+	public Object visitBinaryArithmeticExpression(SqmBinaryArithmetic<?> expression) {
+		withTypeInference( expression.getRightHandOperand(), expression.getLeftHandOperand() );
+		withTypeInference( expression.getLeftHandOperand(), expression.getRightHandOperand() );
+		return expression;
 	}
 
 	@Override

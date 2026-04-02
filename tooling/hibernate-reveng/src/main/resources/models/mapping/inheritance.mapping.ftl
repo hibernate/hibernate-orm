@@ -7,6 +7,6 @@
 <#if helper.getDiscriminatorValue()??>
         <discriminator-value>${helper.getDiscriminatorValue()}</discriminator-value>
 </#if>
-<#if helper.getPrimaryKeyJoinColumnName()??>
-        <primary-key-join-column name="${helper.getPrimaryKeyJoinColumnName()}"/>
-</#if>
+<#list helper.getPrimaryKeyJoinColumnNames() as pkjcName>
+        <primary-key-join-column name="${pkjcName}"/>
+</#list>

@@ -728,4 +728,167 @@ public class MappingXmlExporterTest {
 		String xml = writer.toString();
 		assertTrue(xml.contains("<sql-delete-all>DELETE FROM EMPLOYEE WHERE dept_id = ?</sql-delete-all>"), xml);
 	}
+
+	// --- Multiple @JoinColumns ---
+
+	@Test
+	public void testManyToOneMultipleJoinColumns() {
+		TableMetadata table = new TableMetadata("ORDER_ITEM", "OrderItem", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addForeignKey(new ForeignKeyMetadata(
+				"order", "ORDER_ID", "Order", "com.example"));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		for (var field : entity.getFields()) {
+			if ("order".equals(field.getName())) {
+				var df = (org.hibernate.models.internal.dynamic.DynamicFieldDetails) field;
+				var jc1 = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+				jc1.name("ORDER_ID");
+				var jc2 = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+				jc2.name("ORDER_SEQ");
+				var jcs = JpaAnnotations.JOIN_COLUMNS.createUsage(ctx);
+				jcs.value(new jakarta.persistence.JoinColumn[]{jc1, jc2});
+				df.addAnnotationUsage(jcs);
+				break;
+			}
+		}
+		MappingXmlExporter exporter = MappingXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<join-column name=\"ORDER_ID\"/>"), xml);
+		assertTrue(xml.contains("<join-column name=\"ORDER_SEQ\"/>"), xml);
+	}
+
+	@Test
+	public void testManyToOneMultipleJoinColumnsWithReferencedColumn() {
+		TableMetadata table = new TableMetadata("ORDER_ITEM", "OrderItem", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addForeignKey(new ForeignKeyMetadata(
+				"order", "ORDER_ID", "Order", "com.example"));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		for (var field : entity.getFields()) {
+			if ("order".equals(field.getName())) {
+				var df = (org.hibernate.models.internal.dynamic.DynamicFieldDetails) field;
+				var jc1 = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+				jc1.name("ORDER_ID");
+				jc1.referencedColumnName("ID");
+				var jc2 = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+				jc2.name("ORDER_SEQ");
+				jc2.referencedColumnName("SEQ_NUM");
+				var jcs = JpaAnnotations.JOIN_COLUMNS.createUsage(ctx);
+				jcs.value(new jakarta.persistence.JoinColumn[]{jc1, jc2});
+				df.addAnnotationUsage(jcs);
+				break;
+			}
+		}
+		MappingXmlExporter exporter = MappingXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<join-column name=\"ORDER_ID\" referenced-column-name=\"ID\"/>"), xml);
+		assertTrue(xml.contains("<join-column name=\"ORDER_SEQ\" referenced-column-name=\"SEQ_NUM\"/>"), xml);
+	}
+
+	@Test
+	public void testOneToOneMultipleJoinColumns() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneMetadata("address", "Address", "com.example")
+				.foreignKeyColumnName("ADDR_ID"));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		for (var field : entity.getFields()) {
+			if ("address".equals(field.getName())) {
+				var df = (org.hibernate.models.internal.dynamic.DynamicFieldDetails) field;
+				var jc1 = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+				jc1.name("ADDR_ID");
+				var jc2 = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+				jc2.name("ADDR_VERSION");
+				var jcs = JpaAnnotations.JOIN_COLUMNS.createUsage(ctx);
+				jcs.value(new jakarta.persistence.JoinColumn[]{jc1, jc2});
+				df.addAnnotationUsage(jcs);
+				break;
+			}
+		}
+		MappingXmlExporter exporter = MappingXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<join-column name=\"ADDR_ID\"/>"), xml);
+		assertTrue(xml.contains("<join-column name=\"ADDR_VERSION\"/>"), xml);
+		assertTrue(xml.contains("</one-to-one>"), xml);
+	}
+
+	// --- Multiple @PrimaryKeyJoinColumns ---
+
+	@Test
+	public void testMultiplePrimaryKeyJoinColumns() {
+		TableMetadata table = new TableMetadata("CAR", "Car", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.parent("Vehicle", "com.example");
+		table.primaryKeyJoinColumn("VEHICLE_ID");
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		// Replace single @PrimaryKeyJoinColumn with @PrimaryKeyJoinColumns
+		var pkjc1 = JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN.createUsage(ctx);
+		pkjc1.name("VEHICLE_ID");
+		var pkjc2 = JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN.createUsage(ctx);
+		pkjc2.name("VEHICLE_SITE");
+		var pkjcs = new org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnsJpaAnnotation(
+			java.util.Map.of("value", new jakarta.persistence.PrimaryKeyJoinColumn[]{pkjc1, pkjc2}), ctx);
+		((DynamicClassDetails) entity).addAnnotationUsage(pkjcs);
+		MappingXmlExporter exporter = MappingXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<primary-key-join-column name=\"VEHICLE_ID\"/>"), xml);
+		assertTrue(xml.contains("<primary-key-join-column name=\"VEHICLE_SITE\"/>"), xml);
+	}
+
+	// --- Multiple join columns in join table ---
+
+	@Test
+	public void testManyToManyMultipleJoinTableColumns() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID"));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		for (var field : entity.getFields()) {
+			if ("projects".equals(field.getName())) {
+				var df = (org.hibernate.models.internal.dynamic.DynamicFieldDetails) field;
+				// Replace join table with multi-column version
+				var jt = JpaAnnotations.JOIN_TABLE.createUsage(ctx);
+				jt.name("EMPLOYEE_PROJECT");
+				var jc1 = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+				jc1.name("EMP_ID");
+				var jc2 = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+				jc2.name("EMP_DEPT");
+				jt.joinColumns(new jakarta.persistence.JoinColumn[]{jc1, jc2});
+				var ijc1 = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+				ijc1.name("PROJ_ID");
+				var ijc2 = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+				ijc2.name("PROJ_VERSION");
+				jt.inverseJoinColumns(new jakarta.persistence.JoinColumn[]{ijc1, ijc2});
+				df.addAnnotationUsage(jt);
+				break;
+			}
+		}
+		MappingXmlExporter exporter = MappingXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<join-column name=\"EMP_ID\"/>"), xml);
+		assertTrue(xml.contains("<join-column name=\"EMP_DEPT\"/>"), xml);
+		assertTrue(xml.contains("<inverse-join-column name=\"PROJ_ID\"/>"), xml);
+		assertTrue(xml.contains("<inverse-join-column name=\"PROJ_VERSION\"/>"), xml);
+	}
 }

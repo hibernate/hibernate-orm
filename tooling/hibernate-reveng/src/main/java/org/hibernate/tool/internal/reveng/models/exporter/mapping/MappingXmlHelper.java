@@ -40,7 +40,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
 import jakarta.persistence.JoinTable;
+import jakarta.persistence.PrimaryKeyJoinColumns;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
@@ -278,6 +280,21 @@ public class MappingXmlHelper {
 		return pkjc != null ? pkjc.name() : null;
 	}
 
+	public List<String> getPrimaryKeyJoinColumnNames() {
+		List<String> result = new ArrayList<>();
+		PrimaryKeyJoinColumn single = classDetails.getDirectAnnotationUsage(PrimaryKeyJoinColumn.class);
+		if (single != null) {
+			result.add(single.name());
+		}
+		PrimaryKeyJoinColumns container = classDetails.getDirectAnnotationUsage(PrimaryKeyJoinColumns.class);
+		if (container != null) {
+			for (PrimaryKeyJoinColumn pkjc : container.value()) {
+				result.add(pkjc.name());
+			}
+		}
+		return result;
+	}
+
 	// --- Field categorization ---
 
 	public FieldDetails getCompositeIdField() {
@@ -499,6 +516,30 @@ public class MappingXmlHelper {
 				? jc.referencedColumnName() : null;
 	}
 
+	public record JoinColumnInfo(String name, String referencedColumnName) {}
+
+	public List<JoinColumnInfo> getJoinColumns(FieldDetails field) {
+		List<JoinColumnInfo> result = new ArrayList<>();
+		JoinColumn single = field.getDirectAnnotationUsage(JoinColumn.class);
+		if (single != null) {
+			result.add(toJoinColumnInfo(single));
+		}
+		JoinColumns container = field.getDirectAnnotationUsage(JoinColumns.class);
+		if (container != null) {
+			for (JoinColumn jc : container.value()) {
+				result.add(toJoinColumnInfo(jc));
+			}
+		}
+		return result;
+	}
+
+	private JoinColumnInfo toJoinColumnInfo(JoinColumn jc) {
+		String refCol = jc.referencedColumnName() != null
+				&& !jc.referencedColumnName().isEmpty()
+				? jc.referencedColumnName() : null;
+		return new JoinColumnInfo(jc.name(), refCol);
+	}
+
 	// --- OneToMany ---
 
 	public String getOneToManyTargetEntity(FieldDetails field) {
@@ -673,6 +714,28 @@ public class MappingXmlHelper {
 		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
 		return jt != null && jt.inverseJoinColumns().length > 0
 				? jt.inverseJoinColumns()[0].name() : null;
+	}
+
+	public List<String> getJoinTableJoinColumnNames(FieldDetails field) {
+		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
+		List<String> result = new ArrayList<>();
+		if (jt != null) {
+			for (JoinColumn jc : jt.joinColumns()) {
+				result.add(jc.name());
+			}
+		}
+		return result;
+	}
+
+	public List<String> getJoinTableInverseJoinColumnNames(FieldDetails field) {
+		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
+		List<String> result = new ArrayList<>();
+		if (jt != null) {
+			for (JoinColumn jc : jt.inverseJoinColumns()) {
+				result.add(jc.name());
+			}
+		}
+		return result;
 	}
 
 	// --- Embedded / EmbeddedId attribute overrides ---

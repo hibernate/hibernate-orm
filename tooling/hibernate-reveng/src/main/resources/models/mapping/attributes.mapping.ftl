@@ -67,7 +67,9 @@
 <#-- Many-to-one -->
 <#list helper.getManyToOneFields() as field>
             <many-to-one name="${field.getName()}" target-entity="${helper.getTargetEntityName(field)}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if><#if helper.getManyToOneFetchType(field)??> fetch="${helper.getManyToOneFetchType(field)}"</#if><#if helper.getFetchMode(field)??> fetch-mode="${helper.getFetchMode(field)}"</#if><#if !helper.isManyToOneOptional(field)> optional="false"</#if><#if helper.getNotFoundAction(field)??> not-found="${helper.getNotFoundAction(field)}"</#if>>
-                <join-column name="${helper.getJoinColumnName(field)}"<#if helper.getReferencedColumnName(field)??> referenced-column-name="${helper.getReferencedColumnName(field)}"</#if>/>
+<#list helper.getJoinColumns(field) as jc>
+                <join-column name="${jc.name()}"<#if jc.referencedColumnName()??> referenced-column-name="${jc.referencedColumnName()}"</#if>/>
+</#list>
             </many-to-one>
 </#list>
 <#-- One-to-many -->
@@ -112,15 +114,16 @@
 <#-- One-to-one -->
 <#list helper.getOneToOneFields() as field>
 <#assign o2oHasCascade = (helper.getOneToOneCascadeTypes(field)?size > 0)>
-<#assign o2oHasChildren = helper.getJoinColumnName(field)?? || o2oHasCascade>
+<#assign o2oJoinCols = helper.getJoinColumns(field)>
+<#assign o2oHasChildren = (o2oJoinCols?size > 0) || o2oHasCascade>
             <one-to-one name="${field.getName()}" target-entity="${helper.getTargetEntityName(field)}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if><#if helper.getOneToOneMappedBy(field)??> mapped-by="${helper.getOneToOneMappedBy(field)}"</#if><#if helper.getOneToOneFetchType(field)??> fetch="${helper.getOneToOneFetchType(field)}"</#if><#if helper.getFetchMode(field)??> fetch-mode="${helper.getFetchMode(field)}"</#if><#if !helper.isOneToOneOptional(field)> optional="false"</#if><#if helper.isOneToOneOrphanRemoval(field)> orphan-removal="true"</#if><#if helper.getNotFoundAction(field)??> not-found="${helper.getNotFoundAction(field)}"</#if><#if o2oHasChildren>>
 <#if o2oHasCascade>
 <#assign cascadeTypes = helper.getOneToOneCascadeTypes(field)>
 <#include "cascade.mapping.ftl"/>
 </#if>
-<#if helper.getJoinColumnName(field)??>
-                <join-column name="${helper.getJoinColumnName(field)}"<#if helper.getReferencedColumnName(field)??> referenced-column-name="${helper.getReferencedColumnName(field)}"</#if>/>
-</#if>
+<#list o2oJoinCols as jc>
+                <join-column name="${jc.name()}"<#if jc.referencedColumnName()??> referenced-column-name="${jc.referencedColumnName()}"</#if>/>
+</#list>
             </one-to-one>
 <#else/>/>
 </#if>
@@ -153,12 +156,12 @@
 </#if>
 <#if helper.getJoinTableName(field)??>
                 <join-table name="${helper.getJoinTableName(field)}">
-<#if helper.getJoinTableJoinColumnName(field)??>
-                    <join-column name="${helper.getJoinTableJoinColumnName(field)}"/>
-</#if>
-<#if helper.getJoinTableInverseJoinColumnName(field)??>
-                    <inverse-join-column name="${helper.getJoinTableInverseJoinColumnName(field)}"/>
-</#if>
+<#list helper.getJoinTableJoinColumnNames(field) as colName>
+                    <join-column name="${colName}"/>
+</#list>
+<#list helper.getJoinTableInverseJoinColumnNames(field) as colName>
+                    <inverse-join-column name="${colName}"/>
+</#list>
                 </join-table>
 </#if>
 <#list helper.getCollectionFilters(field) as fi>

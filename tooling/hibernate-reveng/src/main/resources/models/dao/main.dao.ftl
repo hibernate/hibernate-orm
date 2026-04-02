@@ -211,15 +211,20 @@ public class ${declarationName}Home {
 
 <#list helper.getEntityNamedQueries() as query>
 <#assign methname = helper.unqualify(query.name())>
+<#assign paramList = helper.getQueryParameterList(query)>
+<#assign paramNames = helper.getQueryParameterNames(query)>
 <#if methname?starts_with("find")>
-    public ${helper.importType("java.util.List")}<${declarationName}> ${methname}() {
+    public ${helper.importType("java.util.List")}<${declarationName}> ${methname}(${paramList}) {
 <#elseif methname?starts_with("count")>
-    public int ${methname}() {
+    public int ${methname}(${paramList}) {
 <#else>
-    public ${helper.importType("java.util.List")} ${methname}() {
+    public ${helper.importType("java.util.List")} ${methname}(${paramList}) {
 </#if>
         ${helper.importType("org.hibernate.query.Query")} query = sessionFactory.getCurrentSession()
                 .createNamedQuery("${query.name()}");
+<#list paramNames as param>
+        query.setParameter("${param}", ${param});
+</#list>
 <#if methname?starts_with("find")>
         return (List<${declarationName}>) query.list();
 <#elseif methname?starts_with("count")>

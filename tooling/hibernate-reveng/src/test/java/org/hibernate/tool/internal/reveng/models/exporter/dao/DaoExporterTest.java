@@ -248,8 +248,9 @@ public class DaoExporterTest {
 		StringWriter writer = new StringWriter();
 		exporter.export(writer, entity);
 		String source = writer.toString();
-		assertTrue(source.contains("public List<Employee> findByDepartment()"), source);
+		assertTrue(source.contains("public List<Employee> findByDepartment(Object dept)"), source);
 		assertTrue(source.contains("createNamedQuery(\"com.example.Employee.findByDepartment\")"), source);
+		assertTrue(source.contains("query.setParameter(\"dept\", dept)"), source);
 	}
 
 	@Test
@@ -268,8 +269,50 @@ public class DaoExporterTest {
 		StringWriter writer = new StringWriter();
 		exporter.export(writer, entity);
 		String source = writer.toString();
-		assertTrue(source.contains("public int countByDepartment()"), source);
+		assertTrue(source.contains("public int countByDepartment(Object dept)"), source);
 		assertTrue(source.contains("query.uniqueResult()"), source);
+		assertTrue(source.contains("query.setParameter(\"dept\", dept)"), source);
+	}
+
+	@Test
+	public void testClassicNamedQueryNoParams() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		DynamicClassDetails dc = (DynamicClassDetails) entity;
+		NamedQueryJpaAnnotation nq = new NamedQueryJpaAnnotation(builder.getModelsContext());
+		nq.name("com.example.Employee.findAll");
+		nq.query("SELECT e FROM Employee e");
+		dc.addAnnotationUsage(nq);
+		DaoExporter exporter = DaoExporter.create(
+				List.of(entity), builder.getModelsContext(), false);
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String source = writer.toString();
+		assertTrue(source.contains("public List<Employee> findAll()"), source);
+		assertFalse(source.contains("setParameter"), source);
+	}
+
+	@Test
+	public void testClassicNamedQueryMultipleParams() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		DynamicClassDetails dc = (DynamicClassDetails) entity;
+		NamedQueryJpaAnnotation nq = new NamedQueryJpaAnnotation(builder.getModelsContext());
+		nq.name("com.example.Employee.findByDeptAndName");
+		nq.query("SELECT e FROM Employee e WHERE e.department = :dept AND e.name = :name");
+		dc.addAnnotationUsage(nq);
+		DaoExporter exporter = DaoExporter.create(
+				List.of(entity), builder.getModelsContext(), false);
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String source = writer.toString();
+		assertTrue(source.contains("findByDeptAndName(Object dept, Object name)"), source);
+		assertTrue(source.contains("query.setParameter(\"dept\", dept)"), source);
+		assertTrue(source.contains("query.setParameter(\"name\", name)"), source);
 	}
 
 	// --- Import tests ---

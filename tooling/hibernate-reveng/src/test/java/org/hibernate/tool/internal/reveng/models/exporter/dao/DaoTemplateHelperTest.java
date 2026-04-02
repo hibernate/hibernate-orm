@@ -275,6 +275,88 @@ public class DaoTemplateHelperTest {
 		assertTrue(queries.isEmpty());
 	}
 
+	// --- Query parameters ---
+
+	@Test
+	public void testGetQueryParameterNamesEmpty() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DaoTemplateHelper helper = create(table);
+		DaoTemplateHelper.NamedQueryInfo query =
+				new DaoTemplateHelper.NamedQueryInfo("findAll", "SELECT e FROM Employee e");
+		assertTrue(helper.getQueryParameterNames(query).isEmpty());
+	}
+
+	@Test
+	public void testGetQueryParameterNamesSingle() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DaoTemplateHelper helper = create(table);
+		DaoTemplateHelper.NamedQueryInfo query = new DaoTemplateHelper.NamedQueryInfo(
+				"findByDept", "SELECT e FROM Employee e WHERE e.department = :dept");
+		List<String> params = helper.getQueryParameterNames(query);
+		assertEquals(1, params.size());
+		assertEquals("dept", params.get(0));
+	}
+
+	@Test
+	public void testGetQueryParameterNamesMultiple() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DaoTemplateHelper helper = create(table);
+		DaoTemplateHelper.NamedQueryInfo query = new DaoTemplateHelper.NamedQueryInfo(
+				"findByDeptAndName",
+				"SELECT e FROM Employee e WHERE e.department = :dept AND e.name = :name");
+		List<String> params = helper.getQueryParameterNames(query);
+		assertEquals(2, params.size());
+		assertEquals("dept", params.get(0));
+		assertEquals("name", params.get(1));
+	}
+
+	@Test
+	public void testGetQueryParameterNamesDeduplicated() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DaoTemplateHelper helper = create(table);
+		DaoTemplateHelper.NamedQueryInfo query = new DaoTemplateHelper.NamedQueryInfo(
+				"findByRange",
+				"SELECT e FROM Employee e WHERE e.salary >= :minSalary AND e.salary <= :minSalary");
+		List<String> params = helper.getQueryParameterNames(query);
+		assertEquals(1, params.size());
+		assertEquals("minSalary", params.get(0));
+	}
+
+	@Test
+	public void testGetQueryParameterListEmpty() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DaoTemplateHelper helper = create(table);
+		DaoTemplateHelper.NamedQueryInfo query =
+				new DaoTemplateHelper.NamedQueryInfo("findAll", "SELECT e FROM Employee e");
+		assertEquals("", helper.getQueryParameterList(query));
+	}
+
+	@Test
+	public void testGetQueryParameterListSingle() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DaoTemplateHelper helper = create(table);
+		DaoTemplateHelper.NamedQueryInfo query = new DaoTemplateHelper.NamedQueryInfo(
+				"findByDept", "SELECT e FROM Employee e WHERE e.department = :dept");
+		assertEquals("Object dept", helper.getQueryParameterList(query));
+	}
+
+	@Test
+	public void testGetQueryParameterListMultiple() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DaoTemplateHelper helper = create(table);
+		DaoTemplateHelper.NamedQueryInfo query = new DaoTemplateHelper.NamedQueryInfo(
+				"findByDeptAndName",
+				"SELECT e FROM Employee e WHERE e.department = :dept AND e.name = :name");
+		assertEquals("Object dept, Object name", helper.getQueryParameterList(query));
+	}
+
 	// --- unqualify ---
 
 	@Test

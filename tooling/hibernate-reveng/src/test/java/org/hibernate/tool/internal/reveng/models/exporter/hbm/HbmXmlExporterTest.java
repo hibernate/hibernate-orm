@@ -263,6 +263,29 @@ public class HbmXmlExporterTest {
 	}
 
 	@Test
+	public void testManyToOnePropertyRef() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("DEPT_CODE", "deptCode", String.class));
+		table.addForeignKey(new ForeignKeyMetadata(
+				"department", "DEPT_CODE", "Department", "com.example")
+				.referencedColumnName("CODE"));
+		String xml = export(table);
+		assertTrue(xml.contains("property-ref=\"CODE\""), xml);
+	}
+
+	@Test
+	public void testManyToOneNoPropertyRef() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyMetadata(
+				"department", "DEPT_ID", "Department", "com.example"));
+		String xml = export(table);
+		assertFalse(xml.contains("property-ref"), xml);
+	}
+
+	@Test
 	public void testOneToOneOwning() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));

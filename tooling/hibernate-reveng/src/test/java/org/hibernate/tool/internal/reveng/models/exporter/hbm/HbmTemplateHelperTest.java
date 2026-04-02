@@ -2628,6 +2628,39 @@ public class HbmTemplateHelperTest {
 				helper.getCompositeIdKeyManyToOnes().get(0)));
 	}
 
+	// --- Property ref ---
+
+	@Test
+	public void testGetPropertyRefPresent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "department", String.class, ctx);
+		JoinColumnJpaAnnotation jc = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+		jc.name("DEPT_CODE");
+		jc.referencedColumnName("CODE");
+		field.addAnnotationUsage(jc);
+		assertEquals("CODE", new HbmTemplateHelper(entity).getPropertyRef(field));
+	}
+
+	@Test
+	public void testGetPropertyRefAbsent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "department", String.class, ctx);
+		JoinColumnJpaAnnotation jc = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+		jc.name("DEPT_ID");
+		field.addAnnotationUsage(jc);
+		assertNull(new HbmTemplateHelper(entity).getPropertyRef(field));
+	}
+
+	@Test
+	public void testGetPropertyRefNoJoinColumn() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		assertNull(new HbmTemplateHelper(entity).getPropertyRef(field));
+	}
+
 	@Test
 	public void testGetCompositeIdKeyManyToOnesNoCompositeId() {
 		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);

@@ -719,6 +719,13 @@ public class HbmTemplateHelper {
 
 	// --- JoinColumn (shared by ManyToOne, OneToOne) ---
 
+	public String getPropertyRef(FieldDetails field) {
+		JoinColumn jc = field.getDirectAnnotationUsage(JoinColumn.class);
+		return jc != null && jc.referencedColumnName() != null
+				&& !jc.referencedColumnName().isEmpty()
+				? jc.referencedColumnName() : null;
+	}
+
 	public String getJoinColumnName(FieldDetails field) {
 		JoinColumn jc = field.getDirectAnnotationUsage(JoinColumn.class);
 		return jc != null ? jc.name() : null;

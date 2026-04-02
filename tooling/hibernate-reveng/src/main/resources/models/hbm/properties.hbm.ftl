@@ -23,7 +23,8 @@
 <#list helper.getManyToOneFields() as field>
     <many-to-one
         name="${field.getName()}"
-        class="${helper.getTargetEntityName(field)}"<#if helper.isManyToOneLazy(field)>
+        class="${helper.getTargetEntityName(field)}"<#if helper.getPropertyRef(field)??>
+        property-ref="${helper.getPropertyRef(field)}"</#if><#if helper.isManyToOneLazy(field)>
         fetch="select"
         lazy="proxy"</#if><#if helper.getFetchMode(field)??>
         fetch="${helper.getFetchMode(field)}"</#if><#if !helper.isManyToOneOptional(field)>
@@ -83,7 +84,7 @@
 <#if helper.getCollectionCacheUsage(field)??>
         <cache usage="${helper.getCollectionCacheUsage(field)}"<#if helper.getCollectionCacheRegion(field)??> region="${helper.getCollectionCacheRegion(field)}"</#if>/>
 </#if>
-        <key>
+        <key<#if helper.getPropertyRef(field)??> property-ref="${helper.getPropertyRef(field)}"</#if>>
             <column name="${helper.getOneToManyMappedBy(field)}"/>
         </key>
 <#if collTag == "list">

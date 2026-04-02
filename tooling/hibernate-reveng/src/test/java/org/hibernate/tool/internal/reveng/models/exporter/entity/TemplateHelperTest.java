@@ -3203,4 +3203,81 @@ public class TemplateHelperTest {
 		// Total full=3, total minimal=1 → needs minimal
 		assertTrue(helper.needsMinimalConstructor());
 	}
+
+	// --- @Table(uniqueConstraints) ---
+
+	@Test
+	public void testTableUniqueConstraintSingle() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TestContext ctx = createWithContext(table);
+		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
+				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
+		var uc = JpaAnnotations.UNIQUE_CONSTRAINT.createUsage(ctx.modelsContext());
+		uc.columnNames(new String[]{"EMAIL"});
+		tableAnn.uniqueConstraints(new jakarta.persistence.UniqueConstraint[]{uc});
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@UniqueConstraint(columnNames = { \"EMAIL\" })"), result);
+	}
+
+	@Test
+	public void testTableUniqueConstraintWithName() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TestContext ctx = createWithContext(table);
+		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
+				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
+		var uc = JpaAnnotations.UNIQUE_CONSTRAINT.createUsage(ctx.modelsContext());
+		uc.name("UK_EMP_EMAIL");
+		uc.columnNames(new String[]{"EMAIL"});
+		tableAnn.uniqueConstraints(new jakarta.persistence.UniqueConstraint[]{uc});
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("name = \"UK_EMP_EMAIL\""), result);
+		assertTrue(result.contains("columnNames = { \"EMAIL\" }"), result);
+	}
+
+	@Test
+	public void testTableUniqueConstraintMultipleColumns() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("FIRST_NAME", "firstName", String.class));
+		table.addColumn(new ColumnMetadata("LAST_NAME", "lastName", String.class));
+		TestContext ctx = createWithContext(table);
+		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
+				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
+		var uc = JpaAnnotations.UNIQUE_CONSTRAINT.createUsage(ctx.modelsContext());
+		uc.columnNames(new String[]{"FIRST_NAME", "LAST_NAME"});
+		tableAnn.uniqueConstraints(new jakarta.persistence.UniqueConstraint[]{uc});
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("columnNames = { \"FIRST_NAME\", \"LAST_NAME\" }"), result);
+	}
+
+	@Test
+	public void testTableMultipleUniqueConstraints() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		table.addColumn(new ColumnMetadata("SSN", "ssn", String.class));
+		TestContext ctx = createWithContext(table);
+		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
+				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
+		var uc1 = JpaAnnotations.UNIQUE_CONSTRAINT.createUsage(ctx.modelsContext());
+		uc1.columnNames(new String[]{"EMAIL"});
+		var uc2 = JpaAnnotations.UNIQUE_CONSTRAINT.createUsage(ctx.modelsContext());
+		uc2.columnNames(new String[]{"SSN"});
+		tableAnn.uniqueConstraints(new jakarta.persistence.UniqueConstraint[]{uc1, uc2});
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("uniqueConstraints = { @UniqueConstraint(columnNames = { \"EMAIL\" }), @UniqueConstraint(columnNames = { \"SSN\" }) }"), result);
+	}
+
+	@Test
+	public void testTableNoUniqueConstraints() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		String result = create(table).generateClassAnnotations();
+		assertFalse(result.contains("uniqueConstraint"), result);
+		assertFalse(result.contains("UniqueConstraint"), result);
+	}
 }

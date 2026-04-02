@@ -1002,4 +1002,29 @@ public class EntityExporterTest {
 		String source = writer.toString();
 		assertFalse(source.contains("super("), source);
 	}
+
+	// --- @Table(uniqueConstraints) ---
+
+	@Test
+	public void testTableUniqueConstraintRendered() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
+				entity.getDirectAnnotationUsage(jakarta.persistence.Table.class);
+		var uc = org.hibernate.boot.models.JpaAnnotations.UNIQUE_CONSTRAINT
+				.createUsage(builder.getModelsContext());
+		uc.name("UK_EMAIL");
+		uc.columnNames(new String[]{"EMAIL"});
+		tableAnn.uniqueConstraints(new jakarta.persistence.UniqueConstraint[]{uc});
+		EntityExporter exporter = EntityExporter.create(
+				List.of(entity), builder.getModelsContext(), true);
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String source = writer.toString();
+		assertTrue(source.contains("import jakarta.persistence.UniqueConstraint;"), source);
+		assertTrue(source.contains("@UniqueConstraint(name = \"UK_EMAIL\", columnNames = { \"EMAIL\" })"), source);
+	}
 }

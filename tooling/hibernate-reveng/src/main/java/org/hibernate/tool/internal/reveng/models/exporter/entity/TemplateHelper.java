@@ -79,6 +79,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
 
 import org.hibernate.annotations.Any;
@@ -654,7 +655,38 @@ public class TemplateHelper {
 		if (table.catalog() != null && !table.catalog().isEmpty()) {
 			sb.append(", catalog = \"").append(table.catalog()).append("\"");
 		}
+		UniqueConstraint[] ucs = table.uniqueConstraints();
+		if (ucs != null && ucs.length > 0) {
+			importType("jakarta.persistence.UniqueConstraint");
+			sb.append(", uniqueConstraints = ");
+			if (ucs.length == 1) {
+				sb.append(formatUniqueConstraint(ucs[0]));
+			} else {
+				sb.append("{ ");
+				for (int i = 0; i < ucs.length; i++) {
+					if (i > 0) sb.append(", ");
+					sb.append(formatUniqueConstraint(ucs[i]));
+				}
+				sb.append(" }");
+			}
+		}
 		sb.append(")\n");
+		return sb.toString();
+	}
+
+	private String formatUniqueConstraint(UniqueConstraint uc) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("@UniqueConstraint(");
+		if (uc.name() != null && !uc.name().isEmpty()) {
+			sb.append("name = \"").append(uc.name()).append("\", ");
+		}
+		sb.append("columnNames = { ");
+		String[] cols = uc.columnNames();
+		for (int i = 0; i < cols.length; i++) {
+			if (i > 0) sb.append(", ");
+			sb.append("\"").append(cols[i]).append("\"");
+		}
+		sb.append(" })");
 		return sb.toString();
 	}
 

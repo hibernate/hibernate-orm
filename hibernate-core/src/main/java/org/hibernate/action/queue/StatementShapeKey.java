@@ -5,6 +5,7 @@
 package org.hibernate.action.queue;
 
 import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.support.OperationGroupKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.sql.model.PreparableMutationOperation;
 
@@ -15,7 +16,7 @@ import org.hibernate.sql.model.PreparableMutationOperation;
 /// Useful as a key for batching.
 ///
 /// @author Steve Ebersole
-public record StatementShapeKey(String tableExpression, MutationKind kind, int shapeHash) implements BatchKey {
+public record StatementShapeKey(String tableExpression, MutationKind kind, int shapeHash) implements BatchKey, OperationGroupKey {
 
 	public static StatementShapeKey forInsert(String tableName, PlannedOperation plannedOperation) {
 		final int h = hashMutationShape(tableName, MutationKind.INSERT, plannedOperation);

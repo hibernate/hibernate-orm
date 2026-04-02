@@ -10,7 +10,6 @@ import org.hibernate.action.internal.ActionLogging;
 import org.hibernate.action.queue.constraint.ConstraintModel;
 import org.hibernate.action.queue.exec.PlanStepExecutor;
 import org.hibernate.action.queue.exec.PlanStepExecutorFactory;
-import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.action.queue.graph.Decomposer;
 import org.hibernate.action.queue.graph.GraphBuilder;
 import org.hibernate.action.queue.graph.StandardGraphBuilder;
@@ -21,6 +20,7 @@ import org.hibernate.action.queue.plan.PlanStep;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.action.queue.plan.StandardFlushPlanner;
 import org.hibernate.action.queue.support.GraphBasedActionQueueFactory;
+import org.hibernate.action.queue.support.OperationGroupKey;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.spi.SessionImplementor;
 
@@ -32,6 +32,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.hibernate.action.queue.CollectionOrdinalSupport.extractCollectionOrdinal;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /// Orchestrates the steps needed to flush a Session, using a graph-based approach to
@@ -355,33 +356,22 @@ public class FlushCoordinator {
 		// Group operations by their shape, optionally including ordinalBase for self-referential tables
 		final Map<OperationGroupKey, OperationGroupBuilder> builders = new LinkedHashMap<>();
 
-		// Cache: avoid repeated lookups of selfReferentialTables for same table
-		// In batch workloads, many operations target the same table(s)
-		final Map<String, Boolean> isSelfReferential = new java.util.HashMap<>();
-
 		for (PlannedOperation operation : operations) {
 			final StatementShapeKey shapeKey = operation.getShapeKey();
-			final String normalizedTable = (operation.getTableExpression());
 
 			// For self-referential tables, include ordinalBase to avoid false cycles
 			// For other tables, merge across entities for better batching
-			// Cache the lookup result to avoid redundant set.contains() calls
-			final boolean selfRef = isSelfReferential.computeIfAbsent(
-					normalizedTable,
-					constraintModel.selfReferentialTables()::contains
-			);
+			final OperationGroupKey key = operation.getMutatingTableDescriptor().isSelfReferential()
+					? new CompositeOperationGroupKey( shapeKey, extractCollectionOrdinal( operation.getOrdinal() ) )
+					: shapeKey;
 
-			final int ordinalBase = selfRef
-					? CollectionOrdinalSupport.extractCollectionOrdinal( operation.getOrdinal() )
-					: -1; // -1 means "merge all ordinalBases together"
-
-			final OperationGroupKey key = new OperationGroupKey(shapeKey, ordinalBase);
 			var builder = builders.get(key);
 			if (builder == null) {
 				// First operation for this key - create new builder (which adds the operation in constructor)
 				builder = new OperationGroupBuilder(operation, shapeKey);
 				builders.put(key, builder);
-			} else {
+			}
+			else {
 				// Subsequent operation for this key - add to existing builder
 				builder.addOperation(operation);
 			}
@@ -462,23 +452,6 @@ public class FlushCoordinator {
 		);
 	}
 
-	/// Post-execution phase: finalize actions after all their PlannedOperations have executed.
-	/// All finalization work is handled by the post-execution callbacks.
-	///
-	/// @param actions The original list of Executable actions (unused - kept for potential future use)
-	/// @param callbacks The callbacks to be triggered
-	private void afterAllOperationsExecuted(List<Executable> actions, List<PostExecutionCallback> callbacks) {
-		// Execute all post-execution callbacks - these handle ALL finalization:
-		// - PostInsertHandling: handles all insert finalization (values, cache, events, stats)
-		// - PostUpdateHandling: handles all update finalization (values, version, cache, events, stats)
-		callbacks.forEach(callback -> {
-			callback.handle( session );
-		} );
-
-		// Note: All entity action finalization is now handled by callbacks.
-		// This method remains for potential future use with action types that don't use callbacks.
-	}
-
 	/// After executing a flush, check if any unresolved inserts can now be resolved.
 	/// This handles the case where an entity is persisted after another entity that references it.
 	private void resolveUnresolvedInserts() {
@@ -510,26 +483,19 @@ public class FlushCoordinator {
 	}
 
 	/// Composite key for grouping operations by shape and ordinalBase.
-	private static class OperationGroupKey {
-		private final StatementShapeKey shapeKey;
-		private final int ordinalBase;
-
-		OperationGroupKey(StatementShapeKey shapeKey, int ordinalBase) {
-			this.shapeKey = shapeKey;
-			this.ordinalBase = ordinalBase;
-		}
+		private record CompositeOperationGroupKey(
+				StatementShapeKey shapeKey,
+				int ordinalBase) implements OperationGroupKey {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (!(o instanceof OperationGroupKey)) return false;
-			OperationGroupKey that = (OperationGroupKey) o;
-			return ordinalBase == that.ordinalBase && shapeKey.equals(that.shapeKey);
-		}
-
-		@Override
-		public int hashCode() {
-			return 31 * shapeKey.hashCode() + ordinalBase;
+			if ( this == o ) {
+				return true;
+			}
+			if ( o instanceof CompositeOperationGroupKey that ) {
+				return ordinalBase == that.ordinalBase && shapeKey.equals( that.shapeKey );
+			}
+			return false;
 		}
 	}
 

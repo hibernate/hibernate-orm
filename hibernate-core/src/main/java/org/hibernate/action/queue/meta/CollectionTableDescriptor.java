@@ -9,14 +9,15 @@ import org.hibernate.sql.model.TableMapping.MutationDetails;
 
 import java.io.Serializable;
 
-/**
- * @author Steve Ebersole
- */
+/// TableDescriptor for collection tables.
+///
+/// @author Steve Ebersole
 public record CollectionTableDescriptor(
 		String name,
 		NavigableRole navigableRole,
 		boolean isJoinTable,
 		boolean isInverse,
+		boolean isSelfReferential,
 		boolean cascadeDeleteEnabled,
 		MutationDetails insertDetails,
 		MutationDetails updateDetails,

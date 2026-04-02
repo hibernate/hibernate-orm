@@ -32,6 +32,7 @@ public record EntityTableDescriptor(
 		boolean isIdentifierTable,
 		boolean isOptional,
 		boolean isInverse,
+		boolean isSelfReferential,
 		boolean cascadeDeleteEnabled,
 		TableMapping.MutationDetails insertDetails,
 		TableMapping.MutationDetails updateDetails,

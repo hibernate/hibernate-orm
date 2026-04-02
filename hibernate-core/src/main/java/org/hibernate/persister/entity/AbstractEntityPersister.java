@@ -22,6 +22,7 @@ import org.hibernate.Timeouts;
 import org.hibernate.action.queue.meta.ColumnDescriptor;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableKeyDescriptor;
+import org.hibernate.action.queue.support.GraphBasedActionQueueFactory;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -3400,6 +3401,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected EntityTableDescriptor[] buildTableDescriptors() {
+
 		var tableBuilderMap = new LinkedHashMap<String, TableDescriptorBuilder>();
 		visitMutabilityOrderedTables( (name, relativePosition, tableKeyColumnVisitationSupplier) -> {
 			final var tableMappingBuilder = getTableDescriptorBuilder(
@@ -3464,6 +3466,9 @@ public abstract class AbstractEntityPersister
 			String tableName,
 			int relativePosition,
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier) {
+		// NOTE : if ActionQueue is not the graph-based one, isSelfReferential will have no impact
+		boolean isSelfReferential = factory.getActionQueueFactory() instanceof GraphBasedActionQueueFactory gbaqf
+				&& gbaqf.getConstraintModel().selfReferentialTables().contains( tableName );
 		var keyColumns = new ArrayList<ColumnDescriptor>();
 		tableKeyColumnVisitationSupplier.get().accept( (index, selectableMapping) -> {
 			keyColumns.add( ColumnDescriptor.from( selectableMapping ) );
@@ -3489,6 +3494,7 @@ public abstract class AbstractEntityPersister
 				deleteCallable[relativePosition],
 				isDynamicUpdate(),
 				isDynamicInsert(),
+				isSelfReferential,
 				new TableKeyDescriptor( keyColumns )
 		);
 	}
@@ -3516,6 +3522,7 @@ public abstract class AbstractEntityPersister
 
 		private final boolean dynamicInsert;
 		private final boolean dynamicUpdate;
+		private final boolean isSelfReferential;
 
 		private final TableKeyDescriptor keyDescriptor;
 		private final List<ColumnDescriptor> columnDescriptors = new ArrayList<>();
@@ -3540,6 +3547,7 @@ public abstract class AbstractEntityPersister
 				boolean deleteCallable,
 				boolean dynamicInsert,
 				boolean dynamicUpdate,
+				boolean isSelfReferential,
 				TableKeyDescriptor keyDescriptor) {
 			this.tableName = tableName;
 			this.relativePosition = relativePosition;
@@ -3558,6 +3566,7 @@ public abstract class AbstractEntityPersister
 			this.deleteCallable = deleteCallable;
 			this.dynamicInsert = dynamicInsert;
 			this.dynamicUpdate = dynamicUpdate;
+			this.isSelfReferential = isSelfReferential;
 			this.keyDescriptor = keyDescriptor;
 		}
 
@@ -3568,6 +3577,7 @@ public abstract class AbstractEntityPersister
 					isIdentifierTable,
 					isOptional,
 					isInverse,
+					isSelfReferential,
 					cascadeDeleteEnabled,
 					new TableMapping.MutationDetails(
 							MutationType.INSERT,

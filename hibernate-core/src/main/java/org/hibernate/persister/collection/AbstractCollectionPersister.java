@@ -17,6 +17,7 @@ import org.hibernate.action.internal.CollectionAction;
 import org.hibernate.action.queue.meta.CollectionTableDescriptor;
 import org.hibernate.action.queue.meta.ColumnDescriptor;
 import org.hibernate.action.queue.meta.TableKeyDescriptor;
+import org.hibernate.action.queue.support.GraphBasedActionQueueFactory;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -816,7 +817,8 @@ public abstract class AbstractCollectionPersister
 		collectionTableDescriptor = buildCollectionTableDescriptor(
 				collectionBootDescriptor,
 				getTableName(),
-				attributeMapping
+				attributeMapping,
+				factory
 		);
 
 		// free up the reference
@@ -1796,12 +1798,15 @@ public abstract class AbstractCollectionPersister
 	private static CollectionTableDescriptor buildCollectionTableDescriptor(
 			Collection collectionBootDescriptor,
 			String qualifiedTableName,
-			PluralAttributeMapping attributeMapping) {
+			PluralAttributeMapping attributeMapping,
+			SessionFactoryImplementor factory) {
 		return new CollectionTableDescriptor(
 				qualifiedTableName,
 				attributeMapping.getNavigableRole(),
 				!collectionBootDescriptor.isOneToMany(),
 				collectionBootDescriptor.isInverse(),
+				factory.getActionQueueFactory() instanceof GraphBasedActionQueueFactory gbaqf
+						&& gbaqf.getConstraintModel().selfReferentialTables().contains( qualifiedTableName ),
 				collectionBootDescriptor.getKey().isCascadeDeleteEnabled(),
 				buildInsertMutationDetails( collectionBootDescriptor ),
 				buildUpdateMutationDetails( collectionBootDescriptor ),

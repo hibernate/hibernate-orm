@@ -4,7 +4,6 @@
  */
 package org.hibernate.action.queue.constraint;
 
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.hibernate.action.queue.PlanningOptions;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;

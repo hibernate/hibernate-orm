@@ -28,6 +28,7 @@ import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.DiscriminatorColumn;
@@ -686,7 +687,33 @@ public class TemplateHelper {
 				sb.append(" }");
 			}
 		}
+		CheckConstraint[] checks = table.check();
+		if (checks != null && checks.length > 0) {
+			importType("jakarta.persistence.CheckConstraint");
+			sb.append(", check = ");
+			if (checks.length == 1) {
+				sb.append(formatCheckConstraint(checks[0]));
+			} else {
+				sb.append("{ ");
+				for (int i = 0; i < checks.length; i++) {
+					if (i > 0) sb.append(", ");
+					sb.append(formatCheckConstraint(checks[i]));
+				}
+				sb.append(" }");
+			}
+		}
 		sb.append(")\n");
+		return sb.toString();
+	}
+
+	private String formatCheckConstraint(CheckConstraint cc) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("@CheckConstraint(");
+		if (cc.name() != null && !cc.name().isEmpty()) {
+			sb.append("name = \"").append(cc.name()).append("\", ");
+		}
+		sb.append("constraint = \"").append(cc.constraint()).append("\"");
+		sb.append(")");
 		return sb.toString();
 	}
 

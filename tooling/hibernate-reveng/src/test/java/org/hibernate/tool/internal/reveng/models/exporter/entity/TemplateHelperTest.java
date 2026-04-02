@@ -3371,4 +3371,63 @@ public class TemplateHelperTest {
 		String result = ctx.helper().generateClassAnnotations();
 		assertTrue(result.contains("columnList = \"LAST_NAME, FIRST_NAME\""), result);
 	}
+
+	// --- @Table(check) ---
+
+	@Test
+	public void testTableCheckConstraintSingle() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("AGE", "age", Integer.class));
+		TestContext ctx = createWithContext(table);
+		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
+				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
+		var cc = JpaAnnotations.CHECK_CONSTRAINT.createUsage(ctx.modelsContext());
+		cc.constraint("AGE >= 0");
+		tableAnn.check(new jakarta.persistence.CheckConstraint[]{cc});
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@CheckConstraint(constraint = \"AGE >= 0\")"), result);
+	}
+
+	@Test
+	public void testTableCheckConstraintWithName() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("AGE", "age", Integer.class));
+		TestContext ctx = createWithContext(table);
+		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
+				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
+		var cc = JpaAnnotations.CHECK_CONSTRAINT.createUsage(ctx.modelsContext());
+		cc.name("CK_EMP_AGE");
+		cc.constraint("AGE >= 0");
+		tableAnn.check(new jakarta.persistence.CheckConstraint[]{cc});
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("name = \"CK_EMP_AGE\""), result);
+		assertTrue(result.contains("constraint = \"AGE >= 0\""), result);
+	}
+
+	@Test
+	public void testTableMultipleCheckConstraints() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TestContext ctx = createWithContext(table);
+		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
+				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
+		var cc1 = JpaAnnotations.CHECK_CONSTRAINT.createUsage(ctx.modelsContext());
+		cc1.constraint("AGE >= 0");
+		var cc2 = JpaAnnotations.CHECK_CONSTRAINT.createUsage(ctx.modelsContext());
+		cc2.constraint("SALARY > 0");
+		tableAnn.check(new jakarta.persistence.CheckConstraint[]{cc1, cc2});
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("check = { @CheckConstraint(constraint = \"AGE >= 0\"), @CheckConstraint(constraint = \"SALARY > 0\") }"), result);
+	}
+
+	@Test
+	public void testTableNoCheckConstraints() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		String result = create(table).generateClassAnnotations();
+		assertFalse(result.contains("CheckConstraint"), result);
+		assertFalse(result.contains("check ="), result);
+	}
 }

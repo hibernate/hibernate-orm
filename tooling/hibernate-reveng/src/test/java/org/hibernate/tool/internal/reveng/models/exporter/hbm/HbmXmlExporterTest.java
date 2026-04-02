@@ -1074,4 +1074,35 @@ public class HbmXmlExporterTest {
 		assertTrue(xml.contains("default-lazy=\"false\""), xml);
 		assertTrue(xml.contains("auto-import=\"false\""), xml);
 	}
+
+	// --- Custom type <param> elements ---
+
+	@Test
+	public void testCustomTypeWithParams() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("SALARY", "salary", java.math.BigDecimal.class));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		for (var field : entity.getFields()) {
+			if ("salary".equals(field.getName())) {
+				var typeAnn = org.hibernate.boot.models.HibernateAnnotations.TYPE.createUsage(ctx);
+				typeAnn.value((Class) org.hibernate.usertype.UserType.class);
+				var param = org.hibernate.boot.models.HibernateAnnotations.PARAMETER.createUsage(ctx);
+				param.name("currency");
+				param.value("USD");
+				typeAnn.parameters(new org.hibernate.annotations.Parameter[]{param});
+				((org.hibernate.models.internal.dynamic.DynamicFieldDetails) field)
+						.addAnnotationUsage(typeAnn);
+			}
+		}
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<type name=\"org.hibernate.usertype.UserType\">"), xml);
+		assertTrue(xml.contains("<param name=\"currency\">USD</param>"), xml);
+		assertFalse(xml.contains("type=\"org.hibernate.usertype.UserType\""), xml);
+	}
 }

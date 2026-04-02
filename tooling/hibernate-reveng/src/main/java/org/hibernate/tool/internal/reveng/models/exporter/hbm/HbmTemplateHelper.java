@@ -110,6 +110,8 @@ import org.hibernate.annotations.SQLUpdates;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Subselect;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.FlushModeType;
 
 import org.hibernate.models.spi.ClassDetails;
@@ -671,8 +673,29 @@ public class HbmTemplateHelper {
 	}
 
 	public String getHibernateTypeName(FieldDetails field) {
+		Type typeAnn = field.getDirectAnnotationUsage(Type.class);
+		if (typeAnn != null) {
+			return typeAnn.value().getName();
+		}
 		String className = field.getType().determineRawClass().getClassName();
 		return JavaClassToHibernateType.toHibernateType(className);
+	}
+
+	public boolean hasTypeParameters(FieldDetails field) {
+		Type typeAnn = field.getDirectAnnotationUsage(Type.class);
+		return typeAnn != null && typeAnn.parameters() != null && typeAnn.parameters().length > 0;
+	}
+
+	public Map<String, String> getTypeParameters(FieldDetails field) {
+		Type typeAnn = field.getDirectAnnotationUsage(Type.class);
+		if (typeAnn == null || typeAnn.parameters() == null) {
+			return Collections.emptyMap();
+		}
+		Map<String, String> params = new java.util.LinkedHashMap<>();
+		for (Parameter param : typeAnn.parameters()) {
+			params.put(param.name(), param.value());
+		}
+		return params;
 	}
 
 	public String getColumnAttributes(FieldDetails field) {

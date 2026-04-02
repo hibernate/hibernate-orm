@@ -2669,4 +2669,65 @@ public class HbmTemplateHelperTest {
 		assertTrue(helper.getCompositeIdKeyProperties().isEmpty());
 		assertTrue(helper.getCompositeIdKeyManyToOnes().isEmpty());
 	}
+
+	// --- Custom type parameters ---
+
+	@Test
+	public void testHasTypeParametersTrue() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "salary", java.math.BigDecimal.class, ctx);
+		var typeAnn = HibernateAnnotations.TYPE.createUsage(ctx);
+		typeAnn.value((Class) org.hibernate.usertype.UserType.class);
+		var param = HibernateAnnotations.PARAMETER.createUsage(ctx);
+		param.name("currency");
+		param.value("USD");
+		typeAnn.parameters(new org.hibernate.annotations.Parameter[]{param});
+		field.addAnnotationUsage(typeAnn);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertTrue(helper.hasTypeParameters(field));
+	}
+
+	@Test
+	public void testHasTypeParametersFalse() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertFalse(helper.hasTypeParameters(field));
+	}
+
+	@Test
+	public void testGetTypeParameters() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "salary", java.math.BigDecimal.class, ctx);
+		var typeAnn = HibernateAnnotations.TYPE.createUsage(ctx);
+		typeAnn.value((Class) org.hibernate.usertype.UserType.class);
+		var param1 = HibernateAnnotations.PARAMETER.createUsage(ctx);
+		param1.name("currency");
+		param1.value("USD");
+		var param2 = HibernateAnnotations.PARAMETER.createUsage(ctx);
+		param2.name("precision");
+		param2.value("2");
+		typeAnn.parameters(new org.hibernate.annotations.Parameter[]{param1, param2});
+		field.addAnnotationUsage(typeAnn);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		Map<String, String> params = helper.getTypeParameters(field);
+		assertEquals(2, params.size());
+		assertEquals("USD", params.get("currency"));
+		assertEquals("2", params.get("precision"));
+	}
+
+	@Test
+	public void testGetHibernateTypeNameWithTypeAnnotation() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "salary", java.math.BigDecimal.class, ctx);
+		var typeAnn = HibernateAnnotations.TYPE.createUsage(ctx);
+		typeAnn.value((Class) org.hibernate.usertype.UserType.class);
+		field.addAnnotationUsage(typeAnn);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertEquals("org.hibernate.usertype.UserType", helper.getHibernateTypeName(field));
+	}
 }

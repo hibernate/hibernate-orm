@@ -1,8 +1,8 @@
 <#-- Basic properties (skip PK, version, FK columns) -->
 <#list helper.getBasicFields() as field>
     <property
-        name="${field.getName()}"
-        type="${helper.getHibernateTypeName(field)}"<#if helper.getAccessType(field)??>
+        name="${field.getName()}"<#if !helper.hasTypeParameters(field)>
+        type="${helper.getHibernateTypeName(field)}"</#if><#if helper.getAccessType(field)??>
         access="${helper.getAccessType(field)}"</#if><#if !helper.isPropertyUpdatable(field)>
         update="false"</#if><#if !helper.isPropertyInsertable(field)>
         insert="false"</#if><#if helper.isPropertyLazy(field)>
@@ -14,6 +14,13 @@
         <meta attribute="${metaName}">${metaValue}</meta>
 </#list>
 </#list>
+<#if helper.hasTypeParameters(field)>
+        <type name="${helper.getHibernateTypeName(field)}">
+<#list helper.getTypeParameters(field)?keys as paramName>
+            <param name="${paramName}">${helper.getTypeParameters(field)[paramName]}</param>
+</#list>
+        </type>
+</#if>
 <#if !helper.getFormula(field)??>
         <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
 </#if>

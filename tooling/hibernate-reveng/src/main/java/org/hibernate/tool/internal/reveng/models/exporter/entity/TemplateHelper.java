@@ -43,6 +43,7 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -670,7 +671,37 @@ public class TemplateHelper {
 				sb.append(" }");
 			}
 		}
+		Index[] indexes = table.indexes();
+		if (indexes != null && indexes.length > 0) {
+			importType("jakarta.persistence.Index");
+			sb.append(", indexes = ");
+			if (indexes.length == 1) {
+				sb.append(formatIndex(indexes[0]));
+			} else {
+				sb.append("{ ");
+				for (int i = 0; i < indexes.length; i++) {
+					if (i > 0) sb.append(", ");
+					sb.append(formatIndex(indexes[i]));
+				}
+				sb.append(" }");
+			}
+		}
 		sb.append(")\n");
+		return sb.toString();
+	}
+
+	private String formatIndex(Index idx) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("@Index(");
+		boolean hasName = idx.name() != null && !idx.name().isEmpty();
+		if (hasName) {
+			sb.append("name = \"").append(idx.name()).append("\", ");
+		}
+		sb.append("columnList = \"").append(idx.columnList()).append("\"");
+		if (idx.unique()) {
+			sb.append(", unique = true");
+		}
+		sb.append(")");
 		return sb.toString();
 	}
 

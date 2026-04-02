@@ -3280,4 +3280,95 @@ public class TemplateHelperTest {
 		assertFalse(result.contains("uniqueConstraint"), result);
 		assertFalse(result.contains("UniqueConstraint"), result);
 	}
+
+	// --- @Table(indexes) ---
+
+	@Test
+	public void testTableIndexSingle() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TestContext ctx = createWithContext(table);
+		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
+				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
+		var idx = JpaAnnotations.INDEX.createUsage(ctx.modelsContext());
+		idx.columnList("NAME");
+		tableAnn.indexes(new jakarta.persistence.Index[]{idx});
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@Index(columnList = \"NAME\")"), result);
+	}
+
+	@Test
+	public void testTableIndexWithName() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TestContext ctx = createWithContext(table);
+		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
+				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
+		var idx = JpaAnnotations.INDEX.createUsage(ctx.modelsContext());
+		idx.name("IDX_EMP_NAME");
+		idx.columnList("NAME");
+		tableAnn.indexes(new jakarta.persistence.Index[]{idx});
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("@Index(name = \"IDX_EMP_NAME\", columnList = \"NAME\")"), result);
+	}
+
+	@Test
+	public void testTableIndexUnique() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TestContext ctx = createWithContext(table);
+		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
+				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
+		var idx = JpaAnnotations.INDEX.createUsage(ctx.modelsContext());
+		idx.columnList("EMAIL");
+		idx.unique(true);
+		tableAnn.indexes(new jakarta.persistence.Index[]{idx});
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("columnList = \"EMAIL\", unique = true"), result);
+	}
+
+	@Test
+	public void testTableMultipleIndexes() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TestContext ctx = createWithContext(table);
+		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
+				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
+		var idx1 = JpaAnnotations.INDEX.createUsage(ctx.modelsContext());
+		idx1.columnList("NAME");
+		var idx2 = JpaAnnotations.INDEX.createUsage(ctx.modelsContext());
+		idx2.columnList("EMAIL");
+		tableAnn.indexes(new jakarta.persistence.Index[]{idx1, idx2});
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("indexes = { @Index(columnList = \"NAME\"), @Index(columnList = \"EMAIL\") }"), result);
+	}
+
+	@Test
+	public void testTableNoIndexes() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		String result = create(table).generateClassAnnotations();
+		assertFalse(result.contains("indexes"), result);
+		assertFalse(result.contains("@Index"), result);
+	}
+
+	@Test
+	public void testTableIndexMultiColumnList() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TestContext ctx = createWithContext(table);
+		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
+				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
+		var idx = JpaAnnotations.INDEX.createUsage(ctx.modelsContext());
+		idx.name("IDX_COMPOSITE");
+		idx.columnList("LAST_NAME, FIRST_NAME");
+		tableAnn.indexes(new jakarta.persistence.Index[]{idx});
+		String result = ctx.helper().generateClassAnnotations();
+		assertTrue(result.contains("columnList = \"LAST_NAME, FIRST_NAME\""), result);
+	}
 }

@@ -89,6 +89,14 @@ public class HbmXmlExporterTest {
 	}
 
 	@Test
+	public void testGeneratedHeader() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		String xml = export(table);
+		assertTrue(xml.matches("(?s).*<!-- Generated .+ by Hibernate Tools .+ -->.*"), xml);
+	}
+
+	@Test
 	public void testClassElement() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));

@@ -54,6 +54,14 @@ public class DaoExporterTest {
 	// --- EJB3 mode tests ---
 
 	@Test
+	public void testGeneratedHeader() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		String source = export(table);
+		assertTrue(source.matches("(?s).*// Generated .+ by Hibernate Tools .+\n.*"), source);
+	}
+
+	@Test
 	public void testEjb3PackageDeclaration() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));

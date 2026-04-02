@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.api.version.Version;
 
 /**
  * Generates a JPA {@code mapping.xml} file per entity from {@link ClassDetails}
@@ -67,6 +69,8 @@ public class MappingXmlExporter {
 		MappingXmlHelper helper = new MappingXmlHelper(entity);
 		Map<String, Object> model = new HashMap<>();
 		model.put("helper", helper);
+		model.put("date", new Date());
+		model.put("version", Version.versionString());
 		try {
 			Template template = freemarkerConfig.getTemplate(TEMPLATE_NAME);
 			template.process(model, output);

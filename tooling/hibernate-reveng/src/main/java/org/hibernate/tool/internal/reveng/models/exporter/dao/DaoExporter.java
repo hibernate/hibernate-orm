@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,7 @@ import freemarker.template.TemplateExceptionHandler;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.tool.api.version.Version;
 import org.hibernate.tool.internal.export.java.ImportContextImpl;
 
 /**
@@ -93,6 +95,8 @@ public class DaoExporter {
 				entity, importContext, ejb3, sessionFactoryName);
 		Map<String, Object> model = new HashMap<>();
 		model.put("helper", helper);
+		model.put("date", new Date());
+		model.put("version", Version.versionString());
 		try {
 			Template template = freemarkerConfig.getTemplate(TEMPLATE_NAME);
 			template.process(model, output);

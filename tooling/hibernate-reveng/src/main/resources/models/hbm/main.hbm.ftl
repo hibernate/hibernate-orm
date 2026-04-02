@@ -2,6 +2,7 @@
 <!DOCTYPE hibernate-mapping PUBLIC
 	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Generated ${date?datetime} by Hibernate Tools ${version} -->
 
 <hibernate-mapping<#if helper.getPackageName()??> package="${helper.getPackageName()}"</#if>>
 <#list helper.getImports() as imp>

@@ -92,6 +92,14 @@ public class EntityExporterTest {
 	}
 
 	@Test
+	public void testGeneratedHeader() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		String source = export(table);
+		assertTrue(source.matches("(?s).*// Generated .+ by Hibernate Tools .+\n.*"), source);
+	}
+
+	@Test
 	public void testPackageDeclaration() {
 		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));

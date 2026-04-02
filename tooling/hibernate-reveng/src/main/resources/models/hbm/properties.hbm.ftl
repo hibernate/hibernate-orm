@@ -43,7 +43,10 @@
         fetch="${helper.getFetchMode(field)}"</#if><#if !helper.isManyToOneOptional(field)>
         not-null="true"</#if><#if helper.getAccessType(field)??>
         access="${helper.getAccessType(field)}"</#if><#if helper.getNotFoundAction(field)??>
-        not-found="${helper.getNotFoundAction(field)}"</#if>>
+        not-found="${helper.getNotFoundAction(field)}"</#if><#if helper.isOptimisticLockExcluded(field)>
+        optimistic-lock="false"</#if><#if !helper.isManyToOneUpdatable(field)>
+        update="false"</#if><#if !helper.isManyToOneInsertable(field)>
+        insert="false"</#if>>
 <#list helper.getFieldMetaAttributes(field)?keys as metaName>
 <#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
         <meta attribute="${metaName}">${metaValue}</meta>
@@ -88,7 +91,8 @@
         fetch="${helper.getCollectionFetchMode(field)}"</#if><#if (helper.getCollectionBatchSize(field) gt 1)>
         batch-size="${helper.getCollectionBatchSize(field)?c}"</#if><#if helper.getCollectionOrderBy(field)??>
         order-by="${helper.getCollectionOrderBy(field)}"</#if><#if helper.getSort(field)??>
-        sort="${helper.getSort(field)}"</#if>>
+        sort="${helper.getSort(field)}"</#if><#if helper.getAccessType(field)??>
+        access="${helper.getAccessType(field)}"</#if>>
 <#list helper.getFieldMetaAttributes(field)?keys as metaName>
 <#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
         <meta attribute="${metaName}">${metaValue}</meta>
@@ -141,7 +145,8 @@
         fetch="${helper.getCollectionFetchMode(field)}"</#if><#if (helper.getCollectionBatchSize(field) gt 1)>
         batch-size="${helper.getCollectionBatchSize(field)?c}"</#if><#if helper.getCollectionOrderBy(field)??>
         order-by="${helper.getCollectionOrderBy(field)}"</#if><#if helper.getSort(field)??>
-        sort="${helper.getSort(field)}"</#if>>
+        sort="${helper.getSort(field)}"</#if><#if helper.getAccessType(field)??>
+        access="${helper.getAccessType(field)}"</#if>>
 <#list helper.getFieldMetaAttributes(field)?keys as metaName>
 <#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
         <meta attribute="${metaName}">${metaValue}</meta>
@@ -196,7 +201,8 @@
         inverse="true"<#if helper.getCollectionCascadeString(field)??>
         cascade="${helper.getCollectionCascadeString(field)}"</#if><#if helper.getCollectionLazy(field)??>
         lazy="${helper.getCollectionLazy(field)}"</#if><#if helper.getCollectionFetchMode(field)??>
-        fetch="${helper.getCollectionFetchMode(field)}"</#if>>
+        fetch="${helper.getCollectionFetchMode(field)}"</#if><#if helper.getAccessType(field)??>
+        access="${helper.getAccessType(field)}"</#if>>
 <#list helper.getFieldMetaAttributes(field)?keys as metaName>
 <#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
         <meta attribute="${metaName}">${metaValue}</meta>
@@ -214,7 +220,7 @@
 </#list>
 <#-- Components (embedded) -->
 <#list helper.getEmbeddedFields() as field>
-    <component name="${field.getName()}" class="${helper.getEmbeddableClassName(field)}">
+    <component name="${field.getName()}" class="${helper.getEmbeddableClassName(field)}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if>>
 <#list helper.getFieldMetaAttributes(field)?keys as metaName>
 <#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
         <meta attribute="${metaName}">${metaValue}</meta>
@@ -232,7 +238,8 @@
     <any name="${field.getName()}"
         id-type="${helper.getAnyIdType(field)}"
         meta-type="${helper.getAnyMetaType(field)}"<#if helper.getAccessType(field)??>
-        access="${helper.getAccessType(field)}"</#if>>
+        access="${helper.getAccessType(field)}"</#if><#if helper.getAnyCascadeString(field)??>
+        cascade="${helper.getAnyCascadeString(field)}"</#if>>
 <#list helper.getFieldMetaAttributes(field)?keys as metaName>
 <#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
         <meta attribute="${metaName}">${metaValue}</meta>

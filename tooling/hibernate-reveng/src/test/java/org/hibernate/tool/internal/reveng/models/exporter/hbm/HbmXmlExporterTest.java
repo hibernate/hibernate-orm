@@ -1200,4 +1200,180 @@ public class HbmXmlExporterTest {
 		// The column with comment should not be self-closing
 		assertTrue(xml.contains("<column name=\"DESCRIPTION\""), xml);
 	}
+
+	// --- optimistic-lock on many-to-one ---
+
+	@Test
+	public void testManyToOneOptimisticLockExcluded() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyMetadata(
+				"department", "DEPT_ID", "Department", "com.example"));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		for (var field : entity.getFields()) {
+			if ("department".equals(field.getName())) {
+				var olAnn = HibernateAnnotations.OPTIMISTIC_LOCK.createUsage(ctx);
+				olAnn.excluded(true);
+				((org.hibernate.models.internal.dynamic.DynamicFieldDetails) field)
+						.addAnnotationUsage(olAnn);
+			}
+		}
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("optimistic-lock=\"false\""), xml);
+	}
+
+	// --- update/insert on many-to-one ---
+
+	@Test
+	public void testManyToOneUpdateInsertFalse() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyMetadata(
+				"department", "DEPT_ID", "Department", "com.example"));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		for (var field : entity.getFields()) {
+			if ("department".equals(field.getName())) {
+				// Replace the default @JoinColumn with one that has insertable=false, updatable=false
+				var jc = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+				jc.name("DEPT_ID");
+				jc.updatable(false);
+				jc.insertable(false);
+				((org.hibernate.models.internal.dynamic.DynamicFieldDetails) field)
+						.addAnnotationUsage(jc);
+			}
+		}
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("update=\"false\""), xml);
+		assertTrue(xml.contains("insert=\"false\""), xml);
+	}
+
+	// --- access on collections ---
+
+	@Test
+	public void testOneToManyAccessProperty() {
+		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata(
+				"employees", "Employee", "com.example", "department"));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		for (var field : entity.getFields()) {
+			if ("employees".equals(field.getName())) {
+				var accessAnn = JpaAnnotations.ACCESS.createUsage(ctx);
+				accessAnn.value(jakarta.persistence.AccessType.PROPERTY);
+				((org.hibernate.models.internal.dynamic.DynamicFieldDetails) field)
+						.addAnnotationUsage(accessAnn);
+			}
+		}
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("access=\"property\""), xml);
+	}
+
+	// --- access on component ---
+
+	@Test
+	public void testComponentAccessProperty() {
+		TableMetadata table = new TableMetadata("PERSON", "Person", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addEmbeddedField(new EmbeddedFieldMetadata("address", "Address", "com.example"));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		for (var field : entity.getFields()) {
+			if ("address".equals(field.getName())) {
+				var accessAnn = JpaAnnotations.ACCESS.createUsage(ctx);
+				accessAnn.value(jakarta.persistence.AccessType.PROPERTY);
+				((org.hibernate.models.internal.dynamic.DynamicFieldDetails) field)
+						.addAnnotationUsage(accessAnn);
+			}
+		}
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<component name=\"address\""), xml);
+		assertTrue(xml.contains("access=\"property\""), xml);
+	}
+
+	// --- cascade on any ---
+
+	@Test
+	public void testAnyCascade() {
+		TableMetadata table = new TableMetadata("PAYMENT", "Payment", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("PAYMENT_TYPE", "paymentType", String.class));
+		table.addColumn(new ColumnMetadata("PAYMENT_ID", "paymentId", Long.class));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		DynamicClassDetails dc = (DynamicClassDetails) entity;
+		// Remove the basic fields and add an @Any field instead
+		ClassDetails objectClass = ctx.getClassDetailsRegistry()
+				.resolveClassDetails(Object.class.getName());
+		var fieldType = new org.hibernate.models.internal.ClassTypeDetailsImpl(
+				objectClass, org.hibernate.models.spi.TypeDetails.Kind.CLASS);
+		var anyField = dc.applyAttribute("payment", fieldType, false, false, ctx);
+		var anyAnn = HibernateAnnotations.ANY.createUsage(ctx);
+		anyField.addAnnotationUsage(anyAnn);
+		var cascadeAnn = HibernateAnnotations.CASCADE.createUsage(ctx);
+		cascadeAnn.value(new org.hibernate.annotations.CascadeType[]{
+				org.hibernate.annotations.CascadeType.PERSIST,
+				org.hibernate.annotations.CascadeType.MERGE});
+		anyField.addAnnotationUsage(cascadeAnn);
+		var columnAnn = JpaAnnotations.COLUMN.createUsage(ctx);
+		columnAnn.name("PAYMENT_TYPE");
+		anyField.addAnnotationUsage(columnAnn);
+		var jcAnn = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+		jcAnn.name("PAYMENT_ID");
+		anyField.addAnnotationUsage(jcAnn);
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<any name=\"payment\""), xml);
+		assertTrue(xml.contains("cascade=\"persist, merge\""), xml);
+	}
+
+	// --- access on timestamp ---
+
+	@Test
+	public void testTimestampAccessProperty() {
+		TableMetadata table = new TableMetadata("ENTITY", "TestEntity", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("LAST_UPDATED", "lastUpdated", java.util.Date.class)
+				.version(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		for (var field : entity.getFields()) {
+			if ("lastUpdated".equals(field.getName())) {
+				var accessAnn = JpaAnnotations.ACCESS.createUsage(ctx);
+				accessAnn.value(jakarta.persistence.AccessType.PROPERTY);
+				((org.hibernate.models.internal.dynamic.DynamicFieldDetails) field)
+						.addAnnotationUsage(accessAnn);
+			}
+		}
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<timestamp"), xml);
+		assertTrue(xml.contains("access=\"property\""), xml);
+	}
 }

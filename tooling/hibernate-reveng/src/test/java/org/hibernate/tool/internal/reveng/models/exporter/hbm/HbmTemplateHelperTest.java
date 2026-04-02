@@ -43,6 +43,7 @@ import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorAnnotation
 import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValueAnnotation;
 import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValuesAnnotation;
 import org.hibernate.boot.models.annotations.internal.AnyKeyJavaClassAnnotation;
+import org.hibernate.boot.models.annotations.internal.CascadeAnnotation;
 import org.hibernate.boot.models.annotations.internal.ManyToAnyAnnotation;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
@@ -2891,5 +2892,119 @@ public class HbmTemplateHelperTest {
 		field.addAnnotationUsage(commentAnn);
 		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
 		assertNull(helper.getColumnComment(field));
+	}
+
+	// --- getAnyCascadeString ---
+
+	@Test
+	void testGetAnyCascadeString_noCascade() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "payment", Object.class, ctx);
+		AnyAnnotation anyAnn = HibernateAnnotations.ANY.createUsage(ctx);
+		field.addAnnotationUsage(anyAnn);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertNull(helper.getAnyCascadeString(field));
+	}
+
+	@Test
+	void testGetAnyCascadeString_singleCascade() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "payment", Object.class, ctx);
+		AnyAnnotation anyAnn = HibernateAnnotations.ANY.createUsage(ctx);
+		field.addAnnotationUsage(anyAnn);
+		CascadeAnnotation cascade = HibernateAnnotations.CASCADE.createUsage(ctx);
+		cascade.value(new org.hibernate.annotations.CascadeType[]{
+				org.hibernate.annotations.CascadeType.PERSIST});
+		field.addAnnotationUsage(cascade);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertEquals("persist", helper.getAnyCascadeString(field));
+	}
+
+	@Test
+	void testGetAnyCascadeString_multipleCascade() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "payment", Object.class, ctx);
+		AnyAnnotation anyAnn = HibernateAnnotations.ANY.createUsage(ctx);
+		field.addAnnotationUsage(anyAnn);
+		CascadeAnnotation cascade = HibernateAnnotations.CASCADE.createUsage(ctx);
+		cascade.value(new org.hibernate.annotations.CascadeType[]{
+				org.hibernate.annotations.CascadeType.PERSIST,
+				org.hibernate.annotations.CascadeType.MERGE,
+				org.hibernate.annotations.CascadeType.REMOVE});
+		field.addAnnotationUsage(cascade);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertEquals("persist, merge, delete", helper.getAnyCascadeString(field));
+	}
+
+	@Test
+	void testGetAnyCascadeString_all() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "payment", Object.class, ctx);
+		AnyAnnotation anyAnn = HibernateAnnotations.ANY.createUsage(ctx);
+		field.addAnnotationUsage(anyAnn);
+		CascadeAnnotation cascade = HibernateAnnotations.CASCADE.createUsage(ctx);
+		cascade.value(new org.hibernate.annotations.CascadeType[]{
+				org.hibernate.annotations.CascadeType.ALL});
+		field.addAnnotationUsage(cascade);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertEquals("all", helper.getAnyCascadeString(field));
+	}
+
+	// --- isManyToOneUpdatable / isManyToOneInsertable ---
+
+	@Test
+	void testIsManyToOneUpdatable_default() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "parent", Object.class, ctx);
+		var m2o = JpaAnnotations.MANY_TO_ONE.createUsage(ctx);
+		field.addAnnotationUsage(m2o);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertTrue(helper.isManyToOneUpdatable(field));
+	}
+
+	@Test
+	void testIsManyToOneUpdatable_false() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "parent", Object.class, ctx);
+		var m2o = JpaAnnotations.MANY_TO_ONE.createUsage(ctx);
+		field.addAnnotationUsage(m2o);
+		JoinColumnJpaAnnotation jc = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+		jc.name("PARENT_ID");
+		jc.updatable(false);
+		field.addAnnotationUsage(jc);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertFalse(helper.isManyToOneUpdatable(field));
+	}
+
+	@Test
+	void testIsManyToOneInsertable_default() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "parent", Object.class, ctx);
+		var m2o = JpaAnnotations.MANY_TO_ONE.createUsage(ctx);
+		field.addAnnotationUsage(m2o);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertTrue(helper.isManyToOneInsertable(field));
+	}
+
+	@Test
+	void testIsManyToOneInsertable_false() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "parent", Object.class, ctx);
+		var m2o = JpaAnnotations.MANY_TO_ONE.createUsage(ctx);
+		field.addAnnotationUsage(m2o);
+		JoinColumnJpaAnnotation jc = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+		jc.name("PARENT_ID");
+		jc.insertable(false);
+		field.addAnnotationUsage(jc);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertFalse(helper.isManyToOneInsertable(field));
 	}
 }

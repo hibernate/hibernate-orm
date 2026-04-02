@@ -74,6 +74,7 @@ import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.AnyKeyJavaClass;
+import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.BatchSize;
@@ -578,6 +579,33 @@ public class HbmTemplateHelper {
 
 	public record AnyMetaValue(String value, String entityClass) {}
 
+	public String getAnyCascadeString(FieldDetails field) {
+		Cascade cascade = field.getDirectAnnotationUsage(Cascade.class);
+		if (cascade == null || cascade.value().length == 0) {
+			return null;
+		}
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < cascade.value().length; i++) {
+			if (i > 0) sb.append(", ");
+			sb.append(toHbmHibernateCascade(cascade.value()[i]));
+		}
+		return sb.toString();
+	}
+
+	private String toHbmHibernateCascade(org.hibernate.annotations.CascadeType cascadeType) {
+		return switch (cascadeType) {
+			case ALL -> "all";
+			case PERSIST -> "persist";
+			case MERGE -> "merge";
+			case REMOVE -> "delete";
+			case REFRESH -> "refresh";
+			case DETACH -> "evict";
+			case LOCK -> "lock";
+			case REPLICATE -> "replicate";
+			case DELETE_ORPHAN -> "delete-orphan";
+		};
+	}
+
 	// --- Property-level attributes ---
 
 	public String getFormula(FieldDetails field) {
@@ -750,6 +778,16 @@ public class HbmTemplateHelper {
 	public boolean isManyToOneLazy(FieldDetails field) {
 		ManyToOne m2o = field.getDirectAnnotationUsage(ManyToOne.class);
 		return m2o != null && m2o.fetch() == jakarta.persistence.FetchType.LAZY;
+	}
+
+	public boolean isManyToOneUpdatable(FieldDetails field) {
+		JoinColumn jc = field.getDirectAnnotationUsage(JoinColumn.class);
+		return jc == null || jc.updatable();
+	}
+
+	public boolean isManyToOneInsertable(FieldDetails field) {
+		JoinColumn jc = field.getDirectAnnotationUsage(JoinColumn.class);
+		return jc == null || jc.insertable();
 	}
 
 	public boolean isManyToOneOptional(FieldDetails field) {

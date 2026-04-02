@@ -96,7 +96,8 @@
 <#if helper.isTimestamp(field)>
     <timestamp
         name="${field.getName()}"
-        column="${helper.getColumnName(field)}"/>
+        column="${helper.getColumnName(field)}"<#if helper.getAccessType(field)??>
+        access="${helper.getAccessType(field)}"</#if>/>
 <#else>
     <version
         name="${field.getName()}"

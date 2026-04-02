@@ -22,7 +22,13 @@
         </type>
 </#if>
 <#if !helper.getFormula(field)??>
+<#if helper.getColumnComment(field)??>
+        <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}>
+            <comment>${helper.getColumnComment(field)}</comment>
+        </column>
+<#else>
         <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
+</#if>
 </#if>
     </property>
 </#list>

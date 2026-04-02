@@ -2857,4 +2857,39 @@ public class HbmTemplateHelperTest {
 		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
 		assertEquals("com.example.Product", helper.getMapKeyEntityClass(field));
 	}
+
+	// ── Column comment ──
+
+	@Test
+	void testGetColumnComment_withComment() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "description", String.class, ctx);
+		var commentAnn = HibernateAnnotations.COMMENT.createUsage(ctx);
+		commentAnn.value("The item description");
+		field.addAnnotationUsage(commentAnn);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertEquals("The item description", helper.getColumnComment(field));
+	}
+
+	@Test
+	void testGetColumnComment_withoutComment() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertNull(helper.getColumnComment(field));
+	}
+
+	@Test
+	void testGetColumnComment_withEmptyComment() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "code", String.class, ctx);
+		var commentAnn = HibernateAnnotations.COMMENT.createUsage(ctx);
+		commentAnn.value("");
+		field.addAnnotationUsage(commentAnn);
+		HbmTemplateHelper helper = new HbmTemplateHelper(entity);
+		assertNull(helper.getColumnComment(field));
+	}
 }

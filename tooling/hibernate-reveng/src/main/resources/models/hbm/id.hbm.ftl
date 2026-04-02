@@ -22,7 +22,13 @@
         <key-property
             name="${field.getName()}"
             type="${helper.getHibernateTypeName(field)}">
+<#if helper.getColumnComment(field)??>
+            <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}>
+                <comment>${helper.getColumnComment(field)}</comment>
+            </column>
+<#else>
             <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
+</#if>
         </key-property>
 </#list>
     </composite-id>
@@ -32,7 +38,13 @@
         name="${field.getName()}"
         type="${helper.getHibernateTypeName(field)}"<#if helper.getAccessType(field)??>
         access="${helper.getAccessType(field)}"</#if>>
+<#if helper.getColumnComment(field)??>
+        <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}>
+            <comment>${helper.getColumnComment(field)}</comment>
+        </column>
+<#else>
         <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
+</#if>
 <#assign genParams = helper.getGeneratorParameters(field)>
 <#if genParams?has_content>
         <generator class="${helper.getGeneratorClass(field)}">

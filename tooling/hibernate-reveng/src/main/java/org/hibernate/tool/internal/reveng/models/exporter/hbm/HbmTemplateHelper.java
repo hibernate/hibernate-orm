@@ -80,6 +80,7 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -728,6 +729,11 @@ public class HbmTemplateHelper {
 			sb.append("scale=\"").append(col.scale()).append("\" ");
 		}
 		return sb.toString().stripTrailing();
+	}
+
+	public String getColumnComment(FieldDetails field) {
+		Comment comment = field.getDirectAnnotationUsage(Comment.class);
+		return comment != null && !comment.value().isEmpty() ? comment.value() : null;
 	}
 
 	public String getGeneratorClass(FieldDetails field) {

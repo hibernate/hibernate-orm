@@ -1173,4 +1173,31 @@ public class HbmXmlExporterTest {
 		assertTrue(xml.contains("<map-key-many-to-many class=\"com.example.Product\" column=\"PRODUCT_ID\"/>"), xml);
 		assertFalse(xml.contains("<map-key column="), xml);
 	}
+
+	@Test
+	public void testColumnComment() {
+		TableMetadata table = new TableMetadata("PRODUCT", "Product", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("DESCRIPTION", "description", String.class));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		// Add @Comment to the "description" field
+		var descField = (DynamicClassDetails) entity;
+		for (var field : entity.getFields()) {
+			if ("description".equals(field.getName())) {
+				var commentAnn = HibernateAnnotations.COMMENT.createUsage(ctx);
+				commentAnn.value("Product description text");
+				((org.hibernate.models.internal.dynamic.DynamicFieldDetails) field)
+						.addAnnotationUsage(commentAnn);
+			}
+		}
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<comment>Product description text</comment>"), xml);
+		// The column with comment should not be self-closing
+		assertTrue(xml.contains("<column name=\"DESCRIPTION\""), xml);
+	}
 }

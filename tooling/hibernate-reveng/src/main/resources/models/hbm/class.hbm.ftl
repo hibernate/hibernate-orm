@@ -73,7 +73,13 @@
         <property
             name="${field.getName()}"
             type="${helper.getHibernateTypeName(field)}">
+<#if helper.getColumnComment(field)??>
+            <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}>
+                <comment>${helper.getColumnComment(field)}</comment>
+            </column>
+<#else>
             <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
+</#if>
         </property>
 </#list>
     </natural-id>
@@ -96,7 +102,13 @@
         name="${field.getName()}"
         type="${helper.getHibernateTypeName(field)}"<#if helper.getAccessType(field)??>
         access="${helper.getAccessType(field)}"</#if>>
+<#if helper.getColumnComment(field)??>
+        <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}>
+            <comment>${helper.getColumnComment(field)}</comment>
+        </column>
+<#else>
         <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
+</#if>
     </version>
 </#if>
 </#list>
@@ -115,7 +127,13 @@
             name="${field.getName()}"
             type="${helper.getHibernateTypeName(field)}"<#if helper.getAccessType(field)??>
             access="${helper.getAccessType(field)}"</#if>>
+<#if helper.getColumnComment(field)??>
+            <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}>
+                <comment>${helper.getColumnComment(field)}</comment>
+            </column>
+<#else>
             <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
+</#if>
         </property>
 </#list>
     </join>

@@ -67,9 +67,13 @@
 <#-- Many-to-one -->
 <#list helper.getManyToOneFields() as field>
             <many-to-one name="${field.getName()}" target-entity="${helper.getTargetEntityName(field)}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if><#if helper.getManyToOneFetchType(field)??> fetch="${helper.getManyToOneFetchType(field)}"</#if><#if helper.getFetchMode(field)??> fetch-mode="${helper.getFetchMode(field)}"</#if><#if !helper.isManyToOneOptional(field)> optional="false"</#if><#if helper.getNotFoundAction(field)??> not-found="${helper.getNotFoundAction(field)}"</#if>>
+<#if helper.getFormula(field)??>
+                <formula>${helper.getFormula(field)}</formula>
+<#else>
 <#list helper.getJoinColumns(field) as jc>
                 <join-column name="${jc.name()}"<#if jc.referencedColumnName()??> referenced-column-name="${jc.referencedColumnName()}"</#if>/>
 </#list>
+</#if>
             </many-to-one>
 </#list>
 <#-- One-to-many -->
@@ -118,15 +122,20 @@
 <#list helper.getOneToOneFields() as field>
 <#assign o2oHasCascade = (helper.getOneToOneCascadeTypes(field)?size > 0)>
 <#assign o2oJoinCols = helper.getJoinColumns(field)>
-<#assign o2oHasChildren = (o2oJoinCols?size > 0) || o2oHasCascade>
+<#assign o2oHasFormula = helper.getFormula(field)??>
+<#assign o2oHasChildren = (o2oJoinCols?size > 0) || o2oHasCascade || o2oHasFormula>
             <one-to-one name="${field.getName()}" target-entity="${helper.getTargetEntityName(field)}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if><#if helper.getOneToOneMappedBy(field)??> mapped-by="${helper.getOneToOneMappedBy(field)}"</#if><#if helper.getOneToOneFetchType(field)??> fetch="${helper.getOneToOneFetchType(field)}"</#if><#if helper.getFetchMode(field)??> fetch-mode="${helper.getFetchMode(field)}"</#if><#if !helper.isOneToOneOptional(field)> optional="false"</#if><#if helper.isOneToOneOrphanRemoval(field)> orphan-removal="true"</#if><#if helper.getNotFoundAction(field)??> not-found="${helper.getNotFoundAction(field)}"</#if><#if o2oHasChildren>>
 <#if o2oHasCascade>
 <#assign cascadeTypes = helper.getOneToOneCascadeTypes(field)>
 <#include "cascade.mapping.ftl"/>
 </#if>
+<#if o2oHasFormula>
+                <formula>${helper.getFormula(field)}</formula>
+<#else>
 <#list o2oJoinCols as jc>
                 <join-column name="${jc.name()}"<#if jc.referencedColumnName()??> referenced-column-name="${jc.referencedColumnName()}"</#if>/>
 </#list>
+</#if>
             </one-to-one>
 <#else/>/>
 </#if>

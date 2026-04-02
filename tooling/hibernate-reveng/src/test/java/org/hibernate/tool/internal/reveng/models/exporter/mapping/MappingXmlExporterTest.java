@@ -952,4 +952,57 @@ public class MappingXmlExporterTest {
 		String xml = writer.toString();
 		assertTrue(xml.contains("<map-key-join-column name=\"PRODUCT_ID\"/>"), xml);
 	}
+
+	@Test
+	public void testFormulaOnManyToOne() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyMetadata(
+				"department", "DEPT_ID", "Department", "com.example"));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		for (var field : entity.getFields()) {
+			if ("department".equals(field.getName())) {
+				var df = (org.hibernate.models.internal.dynamic.DynamicFieldDetails) field;
+				var formula = HibernateAnnotations.FORMULA.createUsage(ctx);
+				formula.value("(SELECT d.ID FROM DEPARTMENT d WHERE d.CODE = DEPT_CODE)");
+				df.addAnnotationUsage(formula);
+				break;
+			}
+		}
+		MappingXmlExporter exporter = MappingXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<formula>(SELECT d.ID FROM DEPARTMENT d WHERE d.CODE = DEPT_CODE)</formula>"), xml);
+		assertFalse(xml.contains("<join-column name=\"DEPT_ID\""), xml);
+	}
+
+	@Test
+	public void testFormulaOnOneToOne() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneMetadata("badge", "Badge", "com.example")
+				.foreignKeyColumnName("BADGE_ID"));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		for (var field : entity.getFields()) {
+			if ("badge".equals(field.getName())) {
+				var df = (org.hibernate.models.internal.dynamic.DynamicFieldDetails) field;
+				var formula = HibernateAnnotations.FORMULA.createUsage(ctx);
+				formula.value("(SELECT b.ID FROM BADGE b WHERE b.EMP_ID = ID)");
+				df.addAnnotationUsage(formula);
+				break;
+			}
+		}
+		MappingXmlExporter exporter = MappingXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<formula>(SELECT b.ID FROM BADGE b WHERE b.EMP_ID = ID)</formula>"), xml);
+		assertFalse(xml.contains("<join-column name=\"BADGE_ID\""), xml);
+	}
 }

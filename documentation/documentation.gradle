@@ -39,6 +39,13 @@ def jpaVersion = ormBuildDetails.jpaVersion
 defaultTasks 'buildDocs'
 
 configurations {
+	// hibernate-ant -> hibernate-reveng -> google-java-format -> guava
+	// guava publishes JRE/Android variants that Gradle's reportAggregation
+	// configuration cannot resolve; guava is not needed for report aggregation
+	reportAggregation {
+		exclude group: 'com.google.guava', module: 'guava'
+	}
+
 	core
 
 	testing

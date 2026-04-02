@@ -927,4 +927,29 @@ public class MappingXmlExporterTest {
 		assertTrue(xml.contains("catalog=\"CORP\""), xml);
 		assertTrue(xml.contains("<join-table name=\"EMPLOYEE_PROJECT\""), xml);
 	}
+
+	@Test
+	public void testMapKeyJoinColumn() {
+		TableMetadata table = new TableMetadata("ORDERS", "Order", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyMetadata("items", "OrderItem", "com.example", "order"));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		// Replace the field type with Map<Product, OrderItem> and add @MapKeyJoinColumn
+		for (var field : entity.getFields()) {
+			if ("items".equals(field.getName())) {
+				var df = (org.hibernate.models.internal.dynamic.DynamicFieldDetails) field;
+				var mkjc = JpaAnnotations.MAP_KEY_JOIN_COLUMN.createUsage(ctx);
+				mkjc.name("PRODUCT_ID");
+				df.addAnnotationUsage(mkjc);
+				break;
+			}
+		}
+		MappingXmlExporter exporter = MappingXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("<map-key-join-column name=\"PRODUCT_ID\"/>"), xml);
+	}
 }

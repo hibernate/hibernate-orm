@@ -794,6 +794,37 @@ public class MappingXmlHelperTest {
 		assertNull(new MappingXmlHelper(entity).getConverterClassName(field));
 	}
 
+	// --- MapKeyJoinColumn ---
+
+	@Test
+	public void testGetMapKeyJoinColumnName() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicClassDetails targetClass = new DynamicClassDetails(
+				"Item", "com.example.Item", false, null, null, ctx);
+		DynamicClassDetails keyClass = new DynamicClassDetails(
+				"Category", "com.example.Category", false, null, null, ctx);
+		ClassDetails mapClass = ctx.getClassDetailsRegistry().resolveClassDetails(Map.class.getName());
+		TypeDetails keyType = new ClassTypeDetailsImpl(keyClass, TypeDetails.Kind.CLASS);
+		TypeDetails valueType = new ClassTypeDetailsImpl(targetClass, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				mapClass, java.util.List.of(keyType, valueType), null);
+		DynamicFieldDetails field = entity.applyAttribute("items", fieldType, false, true, ctx);
+		field.addAnnotationUsage(JpaAnnotations.ONE_TO_MANY.createUsage(ctx));
+		var mkjc = JpaAnnotations.MAP_KEY_JOIN_COLUMN.createUsage(ctx);
+		mkjc.name("CATEGORY_ID");
+		field.addAnnotationUsage(mkjc);
+		assertEquals("CATEGORY_ID", new MappingXmlHelper(entity).getMapKeyJoinColumnName(field));
+	}
+
+	@Test
+	public void testGetMapKeyJoinColumnNameNull() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
+		assertNull(new MappingXmlHelper(entity).getMapKeyJoinColumnName(field));
+	}
+
 	// --- Fetch mode ---
 
 	@Test

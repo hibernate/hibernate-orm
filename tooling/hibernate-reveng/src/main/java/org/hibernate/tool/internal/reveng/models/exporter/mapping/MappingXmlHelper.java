@@ -705,6 +705,16 @@ public class MappingXmlHelper {
 		return jt != null ? jt.name() : null;
 	}
 
+	public String getJoinTableSchema(FieldDetails field) {
+		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
+		return jt != null && jt.schema() != null && !jt.schema().isEmpty() ? jt.schema() : null;
+	}
+
+	public String getJoinTableCatalog(FieldDetails field) {
+		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
+		return jt != null && jt.catalog() != null && !jt.catalog().isEmpty() ? jt.catalog() : null;
+	}
+
 	public String getJoinTableJoinColumnName(FieldDetails field) {
 		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
 		return jt != null && jt.joinColumns().length > 0 ? jt.joinColumns()[0].name() : null;

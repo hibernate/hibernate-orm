@@ -1175,6 +1175,56 @@ public class MappingXmlHelperTest {
 	}
 
 	@Test
+	public void testGetJoinTableSchema() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID"));
+		MappingXmlHelper helper = create(table);
+		FieldDetails field = helper.getManyToManyFields().get(0);
+		// Default has no schema
+		assertNull(helper.getJoinTableSchema(field));
+	}
+
+	@Test
+	public void testGetJoinTableSchemaPresent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicClassDetails targetClass = new DynamicClassDetails(
+				"Project", "com.example.Project", false, null, null, ctx);
+		ClassDetails setClass = ctx.getClassDetailsRegistry().resolveClassDetails(Set.class.getName());
+		TypeDetails elementType = new ClassTypeDetailsImpl(targetClass, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				setClass, Collections.singletonList(elementType), null);
+		DynamicFieldDetails field = entity.applyAttribute("projects", fieldType, false, true, ctx);
+		field.addAnnotationUsage(JpaAnnotations.MANY_TO_MANY.createUsage(ctx));
+		var jt = JpaAnnotations.JOIN_TABLE.createUsage(ctx);
+		jt.name("EMPLOYEE_PROJECT");
+		jt.schema("HR");
+		field.addAnnotationUsage(jt);
+		assertEquals("HR", new MappingXmlHelper(entity).getJoinTableSchema(field));
+	}
+
+	@Test
+	public void testGetJoinTableCatalogPresent() {
+		ModelsContext ctx = new BasicModelsContextImpl(SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
+		DynamicClassDetails entity = createMinimalEntity(ctx);
+		DynamicClassDetails targetClass = new DynamicClassDetails(
+				"Project", "com.example.Project", false, null, null, ctx);
+		ClassDetails setClass = ctx.getClassDetailsRegistry().resolveClassDetails(Set.class.getName());
+		TypeDetails elementType = new ClassTypeDetailsImpl(targetClass, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				setClass, Collections.singletonList(elementType), null);
+		DynamicFieldDetails field = entity.applyAttribute("projects", fieldType, false, true, ctx);
+		field.addAnnotationUsage(JpaAnnotations.MANY_TO_MANY.createUsage(ctx));
+		var jt = JpaAnnotations.JOIN_TABLE.createUsage(ctx);
+		jt.name("EMPLOYEE_PROJECT");
+		jt.catalog("MY_CATALOG");
+		field.addAnnotationUsage(jt);
+		assertEquals("MY_CATALOG", new MappingXmlHelper(entity).getJoinTableCatalog(field));
+	}
+
+	@Test
 	public void testGetJoinTableNameNullForInverse() {
 		TableMetadata table = new TableMetadata("PROJECT", "Project", "com.example");
 		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));

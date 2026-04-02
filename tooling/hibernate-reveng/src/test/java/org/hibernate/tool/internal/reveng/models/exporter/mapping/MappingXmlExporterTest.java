@@ -891,4 +891,40 @@ public class MappingXmlExporterTest {
 		assertTrue(xml.contains("<inverse-join-column name=\"PROJ_ID\"/>"), xml);
 		assertTrue(xml.contains("<inverse-join-column name=\"PROJ_VERSION\"/>"), xml);
 	}
+
+	@Test
+	public void testJoinTableSchemaCatalog() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID"));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		ModelsContext ctx = builder.getModelsContext();
+		for (var field : entity.getFields()) {
+			if ("projects".equals(field.getName())) {
+				var df = (org.hibernate.models.internal.dynamic.DynamicFieldDetails) field;
+				// Replace the JoinTable annotation with one that has schema/catalog
+				var jt = JpaAnnotations.JOIN_TABLE.createUsage(ctx);
+				jt.name("EMPLOYEE_PROJECT");
+				jt.schema("HR");
+				jt.catalog("CORP");
+				var jc = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+				jc.name("EMPLOYEE_ID");
+				jt.joinColumns(new jakarta.persistence.JoinColumn[]{jc});
+				var ijc = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
+				ijc.name("PROJECT_ID");
+				jt.inverseJoinColumns(new jakarta.persistence.JoinColumn[]{ijc});
+				df.addAnnotationUsage(jt);
+				break;
+			}
+		}
+		MappingXmlExporter exporter = MappingXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("schema=\"HR\""), xml);
+		assertTrue(xml.contains("catalog=\"CORP\""), xml);
+		assertTrue(xml.contains("<join-table name=\"EMPLOYEE_PROJECT\""), xml);
+	}
 }

@@ -155,7 +155,7 @@
 <#include "cascade.mapping.ftl"/>
 </#if>
 <#if helper.getJoinTableName(field)??>
-                <join-table name="${helper.getJoinTableName(field)}">
+                <join-table name="${helper.getJoinTableName(field)}"<#if helper.getJoinTableSchema(field)??> schema="${helper.getJoinTableSchema(field)}"</#if><#if helper.getJoinTableCatalog(field)??> catalog="${helper.getJoinTableCatalog(field)}"</#if>>
 <#list helper.getJoinTableJoinColumnNames(field) as colName>
                     <join-column name="${colName}"/>
 </#list>
@@ -236,7 +236,7 @@
                     <java-class>${helper.getAnyKeyType(field)}</java-class>
                 </key>
 <#if helper.getJoinTableName(field)??>
-                <join-table name="${helper.getJoinTableName(field)}">
+                <join-table name="${helper.getJoinTableName(field)}"<#if helper.getJoinTableSchema(field)??> schema="${helper.getJoinTableSchema(field)}"</#if><#if helper.getJoinTableCatalog(field)??> catalog="${helper.getJoinTableCatalog(field)}"</#if>>
 <#if helper.getJoinTableJoinColumnName(field)??>
                     <join-column name="${helper.getJoinTableJoinColumnName(field)}"/>
 </#if>

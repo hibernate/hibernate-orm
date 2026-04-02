@@ -4,7 +4,7 @@
 	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <!-- Generated ${date?datetime} by Hibernate Tools ${version} -->
 
-<hibernate-mapping<#if helper.getPackageName()??> package="${helper.getPackageName()}"</#if>>
+<hibernate-mapping<#if helper.getPackageName()??> package="${helper.getPackageName()}"</#if><#if settings.hasNonDefaultAccess()> default-access="${settings.defaultAccess()}"</#if><#if settings.hasNonDefaultCascade()> default-cascade="${settings.defaultCascade()}"</#if><#if !settings.defaultLazy()> default-lazy="false"</#if><#if !settings.autoImport()> auto-import="false"</#if>>
 <#list helper.getImports() as imp>
     <import class="${imp.className()}" rename="${imp.rename()}"/>
 </#list>

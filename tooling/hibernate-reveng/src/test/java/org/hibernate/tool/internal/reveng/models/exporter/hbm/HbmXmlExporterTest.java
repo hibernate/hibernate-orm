@@ -872,4 +872,151 @@ public class HbmXmlExporterTest {
 		assertTrue(xml.contains("<column name=\"ORDER_ID\"/>"), xml);
 		assertTrue(xml.contains("<column name=\"ORDER_SEQ\"/>"), xml);
 	}
+
+	// --- HibernateMappingSettings tests ---
+
+	@Test
+	public void testDefaultSettings() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		HbmXmlExporter exporter = HbmXmlExporter.create();
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertFalse(xml.contains("default-access"), xml);
+		assertFalse(xml.contains("default-cascade"), xml);
+		assertFalse(xml.contains("default-lazy"), xml);
+		assertFalse(xml.contains("auto-import"), xml);
+	}
+
+	@Test
+	public void testDefaultAccessField() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		HbmXmlExporter exporter = HbmXmlExporter.create(
+				new HibernateMappingSettings("field", "none", true, true));
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("default-access=\"field\""), xml);
+	}
+
+	@Test
+	public void testDefaultAccessPropertyNotRendered() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		HbmXmlExporter exporter = HbmXmlExporter.create(
+				new HibernateMappingSettings("property", "none", true, true));
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertFalse(xml.contains("default-access"), xml);
+	}
+
+	@Test
+	public void testDefaultCascadeAll() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		HbmXmlExporter exporter = HbmXmlExporter.create(
+				new HibernateMappingSettings("property", "all", true, true));
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("default-cascade=\"all\""), xml);
+	}
+
+	@Test
+	public void testDefaultCascadeNoneNotRendered() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		HbmXmlExporter exporter = HbmXmlExporter.create(
+				new HibernateMappingSettings("property", "none", true, true));
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertFalse(xml.contains("default-cascade"), xml);
+	}
+
+	@Test
+	public void testDefaultLazyFalse() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		HbmXmlExporter exporter = HbmXmlExporter.create(
+				new HibernateMappingSettings("property", "none", false, true));
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("default-lazy=\"false\""), xml);
+	}
+
+	@Test
+	public void testDefaultLazyTrueNotRendered() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		HbmXmlExporter exporter = HbmXmlExporter.create(
+				new HibernateMappingSettings("property", "none", true, true));
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertFalse(xml.contains("default-lazy"), xml);
+	}
+
+	@Test
+	public void testAutoImportFalse() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		HbmXmlExporter exporter = HbmXmlExporter.create(
+				new HibernateMappingSettings("property", "none", true, false));
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("auto-import=\"false\""), xml);
+	}
+
+	@Test
+	public void testAutoImportTrueNotRendered() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		HbmXmlExporter exporter = HbmXmlExporter.create(
+				new HibernateMappingSettings("property", "none", true, true));
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertFalse(xml.contains("auto-import"), xml);
+	}
+
+	@Test
+	public void testAllNonDefaultSettings() {
+		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = builder.createEntityFromTable(table);
+		HbmXmlExporter exporter = HbmXmlExporter.create(
+				new HibernateMappingSettings("field", "save-update", false, false));
+		StringWriter writer = new StringWriter();
+		exporter.export(writer, entity);
+		String xml = writer.toString();
+		assertTrue(xml.contains("default-access=\"field\""), xml);
+		assertTrue(xml.contains("default-cascade=\"save-update\""), xml);
+		assertTrue(xml.contains("default-lazy=\"false\""), xml);
+		assertTrue(xml.contains("auto-import=\"false\""), xml);
+	}
 }

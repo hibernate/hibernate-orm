@@ -49,21 +49,31 @@ public class HbmXmlExporter {
 	private static final String TEMPLATE_NAME = "main.hbm.ftl";
 
 	private final Configuration freemarkerConfig;
+	private final HibernateMappingSettings mappingSettings;
 
-	private HbmXmlExporter(String[] templatePath) {
+	private HbmXmlExporter(String[] templatePath, HibernateMappingSettings mappingSettings) {
 		this.freemarkerConfig = new Configuration(Configuration.VERSION_2_3_33);
 		this.freemarkerConfig.setTemplateLoader(createTemplateLoader(templatePath));
 		this.freemarkerConfig.setDefaultEncoding("UTF-8");
 		this.freemarkerConfig.setTemplateExceptionHandler(
 				TemplateExceptionHandler.RETHROW_HANDLER);
+		this.mappingSettings = mappingSettings;
 	}
 
 	public static HbmXmlExporter create() {
-		return new HbmXmlExporter(new String[0]);
+		return new HbmXmlExporter(new String[0], HibernateMappingSettings.defaults());
+	}
+
+	public static HbmXmlExporter create(HibernateMappingSettings mappingSettings) {
+		return new HbmXmlExporter(new String[0], mappingSettings);
 	}
 
 	public static HbmXmlExporter create(String[] templatePath) {
-		return new HbmXmlExporter(templatePath);
+		return new HbmXmlExporter(templatePath, HibernateMappingSettings.defaults());
+	}
+
+	public static HbmXmlExporter create(String[] templatePath, HibernateMappingSettings mappingSettings) {
+		return new HbmXmlExporter(templatePath, mappingSettings);
 	}
 
 	public void export(Writer output, ClassDetails entity) {
@@ -89,6 +99,7 @@ public class HbmXmlExporter {
 				entity, comment, metaAttributes, imports, fieldMetaAttributes);
 		Map<String, Object> model = new HashMap<>();
 		model.put("helper", helper);
+		model.put("settings", mappingSettings);
 		model.put("date", new Date());
 		model.put("version", Version.versionString());
 		try {

@@ -260,7 +260,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 	///
 	/// @param action The action representing the (re)creation of a collection
 	public void addAction(CollectionRecreateAction action) {
-		ACTION_LOGGER.debugf( "GraphBasedActionQueue.addAction(CollectionRecreateAction) - role=%s, key=%s", action.getPersister().getRole(), action.getKey() );
+		ACTION_LOGGER.tracef( "GraphBasedActionQueue.addAction(CollectionRecreateAction) - role=%s, key=%s", action.getPersister().getRole(), action.getKey() );
 		collectionCreationCount++;
 		addCollectionAction(action);
 	}
@@ -357,20 +357,20 @@ public class GraphBasedActionQueue implements ActionQueue {
 	///
 	/// @throws HibernateException error executing queued actions
 	public void executeActions() throws HibernateException {
-		if ( ACTION_LOGGER.isDebugEnabled() ) {
-			ACTION_LOGGER.debugf( "GraphBasedActionQueue.executeActions() - %d entityActions", entityActions.size() );
-			for (EntityAction action : entityActions) {
-				ACTION_LOGGER.debugf( "  - pending action: %s", action.getLoggableDetails() );
+		if ( ACTION_LOGGER.isTraceEnabled() ) {
+			if ( entityActions.isEmpty() && collectionActions.isEmpty() ) {
+				ACTION_LOGGER.tracef("executeActions: no pending actions to execute" );
+				// EARLY EXIT!!
 			}
-			ACTION_LOGGER.debugf( "GraphBasedActionQueue.executeActions() - %d collectionActions", collectionActions.size() );
-			for (CollectionAction action : collectionActions) {
-				ACTION_LOGGER.debugf( "  - pending action: %s", action.getLoggableDetails() );
-			}
-		}
 
-		if ( entityActions.isEmpty() && collectionActions.isEmpty() ) {
-			ACTION_LOGGER.debugf("executeActions: no pending actions to execute" );
-			// EARLY EXIT!!
+			ACTION_LOGGER.tracef( "GraphBasedActionQueue.executeActions() - %d entityActions", entityActions.size() );
+			for (EntityAction action : entityActions) {
+				ACTION_LOGGER.tracef( "  - pending action: %s", action.getLoggableDetails() );
+			}
+			ACTION_LOGGER.tracef( "GraphBasedActionQueue.executeActions() - %d collectionActions", collectionActions.size() );
+			for (CollectionAction action : collectionActions) {
+				ACTION_LOGGER.tracef( "  - pending action: %s", action.getLoggableDetails() );
+			}
 		}
 
 		List<Executable> combinedActions = new ArrayList<>();

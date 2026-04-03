@@ -134,6 +134,11 @@ jmh {
     if (project.hasProperty('jmh.include')) {
         includes = [project.property('jmh.include')]
     }
+
+    // JFR profiler support - can be enabled via -Pjmh.profiler=true
+    if (project.hasProperty('jmh.profiler')) {
+        profilers = ['jfr']
+    }
 }
 
 xjc {

@@ -9,6 +9,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import org.hibernate.action.queue.PlanningOptions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -140,6 +141,11 @@ public class LocalTemporaryTableMutationStrategyNoDropTest {
 		@Override
 		public TypeConfiguration getTypeConfiguration() {
 			return sessionFactory.getTypeConfiguration();
+		}
+
+		@Override
+		public PlanningOptions getGraphPlanningOptions() {
+			return sessionFactory.getGraphPlanningOptions();
 		}
 
 		@Override

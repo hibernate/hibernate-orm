@@ -83,7 +83,7 @@ public class UniqueSlotExtractor {
 		for (UniqueConstraint constraint : constraints) {
 			Object[] values = extractValues(persister, entityInstance, constraint);
 			if (values != null) {
-				slots.add(new UniqueSlot(tableName, constraint.constraintName(), values));
+				slots.add(new UniqueSlot(tableName, values, constraint));
 			}
 		}
 
@@ -128,7 +128,7 @@ public class UniqueSlotExtractor {
 			if (!Objects.deepEquals(oldValues, newValues)) {
 				// Return the NEW value - this is what the UPDATE will set
 				if (newValues != null) {
-					slots.add(new UniqueSlot(tableName, constraint.constraintName(), newValues));
+					slots.add(new UniqueSlot(tableName, newValues, constraint));
 				}
 			}
 		}

@@ -79,18 +79,20 @@ public class CycleBreaker {
 					continue;
 				}
 
-				// For non-DELETE cycles, check if ANY edges are breakable
-				if (!hasAnyBreakableEdge(cycle)) {
-					// All edges are marked as unbreakable - cannot proceed
-					throw new IllegalStateException("Unbreakable cycle detected for SCC: " + describeScc(scc));
-				}
-
 				// Strategy 2: Try to break an UPDATE edge (UPDATEs can be deferred)
+				// This must be checked BEFORE hasAnyBreakableEdge() because UPDATE edges
+				// may not be marked as "breakable" (based on nullable FK) but can still be broken
 				final GraphEdge updateEdge = findUpdateEdge(cycle);
 				if (updateEdge != null) {
 					updateEdge.setBroken(true);
 					// UPDATE operations don't need patches - they reference existing rows
 					continue;
+				}
+
+				// For non-DELETE cycles, check if ANY edges are breakable
+				if (!hasAnyBreakableEdge(cycle)) {
+					// All edges are marked as unbreakable - cannot proceed
+					throw new IllegalStateException("Unbreakable cycle detected for SCC: " + describeScc(scc));
 				}
 
 				// Strategy 3: Try to break a deferrable edge

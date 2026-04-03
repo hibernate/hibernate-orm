@@ -10,25 +10,29 @@ package org.hibernate.cfg;
 public interface FlushSettings {
 
 	/// Specifies the [org.hibernate.action.queue.ActionQueue] implementation to use.
+	/// Valid values are defined by [org.hibernate.action.queue.QueueType]:
 	///
-	/// Valid values:
+	///   - ["legacy"][org.hibernate.action.queue.QueueType#LEGACY] (default) - Uses the
+	/// 	[traditional][org.hibernate.engine.spi.ActionQueueLegacy] ActionQueue implementation,
+	/// 	which requires hard-coded ordering and manual sorting of actions
+	///   - ["graph"][org.hibernate.action.queue.QueueType#GRAPH] - Uses the
+	/// 	[graph-based][org.hibernate.action.queue.GraphBasedActionQueue] ActionQueue implementation,
+	/// 	which handles planning automatically based on defined constraints (foreign key dependencies,
+	/// 	unique keys, ...).
 	///
-	///   - `"legacy"` - Uses the traditional ActionQueue implementation
-	///     ([org.hibernate.engine.spi.ActionQueueLegacy]), which requires manual
-	///     ordering of actions (default)
-	///   - `"graph"` - Uses the graph-based ActionQueue implementation
-	///     ([org.hibernate.action.queue.GraphBasedActionQueue]), which handles
-	///     foreign key dependencies automatically through graph analysis
 	///
-	///
-	/// The default is `"legacy"`. The graph-based implementation is experimental and
+	/// @apiNote The graph-based implementation is experimental and
 	/// provides improved handling of complex foreign key relationships and automatic
 	/// dependency resolution.
+	///
+	/// @see org.hibernate.action.queue.QueueType
+	/// @see org.hibernate.action.queue.ActionQueueFactory
+	/// @see org.hibernate.action.queue.support.ActionQueueFactoryService
 	///
 	/// @settingDefault `"legacy"`
 	///
 	/// @since 8.0
-	String FLUSH_QUEUE_TYPE = "hibernate.flush.queue.impl";
+	String FLUSH_QUEUE_TYPE = "hibernate.flush.queue.type";
 
 	/// Whether to order operations by foreign-key as part of graph-based flush planning.
 	///

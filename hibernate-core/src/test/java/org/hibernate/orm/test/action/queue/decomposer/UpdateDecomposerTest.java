@@ -710,6 +710,7 @@ public class UpdateDecomposerTest {
 					shapeKey,
 					operations,
 					needsIdPrePhase,
+					false,
 					ordinal,
 					origin
 			);

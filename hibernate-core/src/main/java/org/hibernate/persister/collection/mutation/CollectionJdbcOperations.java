@@ -10,37 +10,22 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.MutationOperation;
 
 /// Manages standard MutationOperation, as well as parameter binding details, for collection mutations.
-///
 /// Built by collection persisters for use in decomposers.
+///
+/// @param insertRowPlan Plan for inserting a single collection element row
+/// @param updateRowPlan Plan for updating a single collection element row
+/// @param updateIndexPlan Plan for updating the order/index column for a single collection element row
+/// @param deleteRowPlan Plan for deleting a single collection element row
+/// @param removeOperation Plan for removing all collection rows
 ///
 /// @author Steve Ebersole
 public record CollectionJdbcOperations(
 		CollectionMutationTarget target,
 		InsertRowPlan insertRowPlan,
 		UpdateRowPlan updateRowPlan,
-		UpdateRowPlan orderUpdatePlan,
+		UpdateRowPlan updateIndexPlan,
 		DeleteRowPlan deleteRowPlan,
 		MutationOperation removeOperation) {
-	public CollectionJdbcOperations(
-			CollectionMutationTarget target,
-			MutationOperation insertRowOperation,
-			Values insertRowValues,
-			MutationOperation updateRowOperation,
-			Values updateRowValues,
-			Restrictions updateRowRestrictions,
-			MutationOperation deleteRowOperation,
-			Restrictions deleteRowRestrictions,
-			MutationOperation removeOperation) {
-		this(
-				target,
-				new InsertRowPlan( insertRowOperation, insertRowValues ),
-				new UpdateRowPlan( updateRowOperation, updateRowValues, updateRowRestrictions ),
-				null, // orderUpdatePlan
-				new DeleteRowPlan( deleteRowOperation, deleteRowRestrictions ),
-				removeOperation
-		);
-	}
-
 
 	@Override
 	public String toString() {

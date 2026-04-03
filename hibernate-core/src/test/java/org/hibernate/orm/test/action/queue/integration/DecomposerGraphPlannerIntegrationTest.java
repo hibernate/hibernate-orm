@@ -658,6 +658,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 					shapeKey,
 					operations,
 					needsIdPrePhase,
+					false,
 					ordinal,
 					origin
 			);

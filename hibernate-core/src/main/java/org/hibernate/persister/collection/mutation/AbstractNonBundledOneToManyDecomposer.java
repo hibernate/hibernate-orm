@@ -101,21 +101,21 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 				operations.add( plannedOp );
 			}
 
-			if ( jdbcOperations.updateRowPlan() != null ) {
+			if ( jdbcOperations.updateIndexPlan() != null ) {
 				var writeIndexBindPlan = new SingleRowUpdateBindPlan(
 						collection,
 						key,
 						entry,
 						entryCount,
-						jdbcOperations.updateRowPlan().values(),
-						jdbcOperations.updateRowPlan().restrictions()
+						jdbcOperations.updateIndexPlan().values(),
+						jdbcOperations.updateIndexPlan().restrictions()
 				);
 
 
 				var  writeIndexPlannedOp = new PlannedOperation(
 						persister.getCollectionTableDescriptor(),
 						MutationKind.UPDATE,
-						jdbcOperations.updateRowPlan().jdbcOperation(),
+						jdbcOperations.updateIndexPlan().jdbcOperation(),
 						writeIndexBindPlan,
 						writeIndexOrdinal,
 						"WriteIndex[" + entryCount + "](" + persister.getRolePath() + ")"

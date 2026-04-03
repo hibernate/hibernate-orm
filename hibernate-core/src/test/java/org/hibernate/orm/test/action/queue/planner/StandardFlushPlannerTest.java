@@ -260,6 +260,7 @@ public class StandardFlushPlannerTest {
 				shapeKey1,
 				List.of(op1, op2, op3),
 				false,
+				false, // hasUniqueConstraints
 				1,
 				"test"
 		);
@@ -288,13 +289,13 @@ public class StandardFlushPlannerTest {
 		final PlannedOperation op3 = createOperation("table2", MutationKind.INSERT, shapeKey3, 3);
 
 		final PlannedOperationGroup group1 = new PlannedOperationGroup(
-				"table1", MutationKind.INSERT, shapeKey1, List.of(op1), false, 1, "test"
+				"table1", MutationKind.INSERT, shapeKey1, List.of(op1), false, false, 1, "test"
 		);
 		final PlannedOperationGroup group2 = new PlannedOperationGroup(
-				"table1", MutationKind.INSERT, shapeKey2, List.of(op2), false, 2, "test"
+				"table1", MutationKind.INSERT, shapeKey2, List.of(op2), false, false, 2, "test"
 		);
 		final PlannedOperationGroup group3 = new PlannedOperationGroup(
-				"table2", MutationKind.INSERT, shapeKey3, List.of(op3), false, 3, "test"
+				"table2", MutationKind.INSERT, shapeKey3, List.of(op3), false, false, 3, "test"
 		);
 
 		final GroupNode node1 = new GroupNode(group1, 1L);
@@ -501,6 +502,7 @@ public class StandardFlushPlannerTest {
 				false,
 				false,
 				false,
+				false,
 				null,
 				null,
 				null,
@@ -521,6 +523,7 @@ public class StandardFlushPlannerTest {
 				shapeKey,
 				List.of(op),
 				false,
+				false, // hasUniqueConstraints
 				ordinal,
 				"test-origin"
 		);

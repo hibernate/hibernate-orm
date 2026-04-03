@@ -381,6 +381,7 @@ public class InsertDecomposerTest {
 					shapeKey,
 					operations,
 					needsIdPrePhase,
+					false,
 					ordinal,
 					origin
 			);

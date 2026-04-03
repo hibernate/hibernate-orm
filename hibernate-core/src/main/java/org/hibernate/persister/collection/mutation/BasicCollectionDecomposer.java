@@ -550,7 +550,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		if ( isIndexedEntityCollection ) {
 			// For indexed entity collections (join tables with @OrderColumn),
 			// identify entities that exist in both snapshot and current but at different positions
-			var orderUpdatePlan = jdbcOperations.orderUpdatePlan();
+			var orderUpdatePlan = jdbcOperations.updateIndexPlan();
 			planOrderOnlyUpdateOperations( collection, key, ordinalBase, session, orderUpdatePlan, operationConsumer );
 		}
 		else {
@@ -574,7 +574,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 
 		final var deleteRowPlan = jdbcOperations.deleteRowPlan();
 		final var insertRowPlan = jdbcOperations.insertRowPlan();
-		final var orderUpdatePlan = jdbcOperations.orderUpdatePlan();
+		final var orderUpdatePlan = jdbcOperations.updateIndexPlan();
 
 		// Phase 1: DELETE removed elements
 		if ( deleteRowPlan != null && !changeSet.removals().isEmpty() ) {

@@ -14,15 +14,19 @@ import java.util.Objects;
  * to avoid unique constraint violations.
  *
  * @param tableName The table containing the constraint
- * @param constraintName The constraint name
  * @param keyValues The actual values forming the unique key (null means not yet extracted)
+ * @param constraint The UniqueConstraint metadata (for accessing columns during cycle breaking)
  *
  * @author Steve Ebersole
  */
 public record UniqueSlot(
 		String tableName,
-		String constraintName,
-		Object[] keyValues) implements Serializable {
+		Object[] keyValues,
+		UniqueConstraint constraint) implements Serializable {
+
+	public String constraintName() {
+		return constraint.constraintName();
+	}
 
 	/**
 	 * Check if this slot conflicts with another (same table, constraint, and values)
@@ -31,7 +35,7 @@ public record UniqueSlot(
 		if (!tableName.equals(other.tableName)) {
 			return false;
 		}
-		if (!constraintName.equals(other.constraintName)) {
+		if (!constraintName().equals(other.constraintName())) {
 			return false;
 		}
 		// Both must have values to conflict
@@ -47,20 +51,20 @@ public record UniqueSlot(
 		if (o == null || getClass() != o.getClass()) return false;
 		UniqueSlot that = (UniqueSlot) o;
 		return Objects.equals(tableName, that.tableName) &&
-				Objects.equals(constraintName, that.constraintName) &&
+				Objects.equals(constraintName(), that.constraintName()) &&
 				Arrays.equals(keyValues, that.keyValues);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(tableName, constraintName, Arrays.hashCode(keyValues));
+		return Objects.hash(tableName, constraintName(), Arrays.hashCode(keyValues));
 	}
 
 	@Override
 	public String toString() {
 		return "UniqueSlot{" +
 				"table='" + tableName + '\'' +
-				", constraint='" + constraintName + '\'' +
+				", constraint='" + constraintName() + '\'' +
 				", values=" + Arrays.toString(keyValues) +
 				'}';
 	}

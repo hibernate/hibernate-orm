@@ -29,7 +29,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -160,7 +159,7 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 	}
 
 	private Map<String, TableInsert> generateStaticOperations() {
-		final Map<String, TableInsertBuilder> staticOperationBuilders = new HashMap<>();
+		final Map<String, TableInsertBuilder> staticOperationBuilders = CollectionHelper.linkedMapOfSize( entityPersister.getTableDescriptors().length );
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
 			staticOperationBuilders.put(
 					tableDescriptor.name(),
@@ -176,7 +175,7 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 				false
 		);
 
-		final Map<String, TableInsert> staticOperations = new HashMap<>();
+		final Map<String, TableInsert> staticOperations = CollectionHelper.linkedMapOfSize( staticOperationBuilders.size() );
 		staticOperationBuilders.forEach(  (name, operationBuilder) -> {
 			staticOperations.put( name, operationBuilder.buildMutation() );
 		} );
@@ -280,7 +279,7 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 			Object object,
 			SharedSessionContractImplementor session,
 			boolean forceIdentifierBinding) {
-		final Map<String, TableInsertBuilder> operationBuilders = new HashMap<>();
+		final Map<String, TableInsertBuilder> operationBuilders = CollectionHelper.linkedMapOfSize( entityPersister.getTableDescriptors().length );
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
 			operationBuilders.put(
 					tableDescriptor.name(),
@@ -296,7 +295,7 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 				forceIdentifierBinding
 		);
 
-		final Map<String, TableInsert> operations = new HashMap<>();
+		final Map<String, TableInsert> operations = CollectionHelper.linkedMapOfSize( operationBuilders.size() );
 		operationBuilders.forEach(  (name, operationBuilder) -> {
 			operations.put( name, operationBuilder.buildMutation() );
 		} );

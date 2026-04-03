@@ -136,14 +136,14 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			TableDescriptor tableDescriptor,
 			SessionFactoryImplementor factory) {
 		final CollectionJdbcOperations.InsertRowPlan insertRowPlan = buildInsertRowPlan( tableDescriptor );
-		final CollectionJdbcOperations.UpdateRowPlan updateRowPlan = buildUpdateRowPlan( tableDescriptor );
+		final CollectionJdbcOperations.UpdateRowPlan updateIndexPlan = buildUpdateIndexPlan( tableDescriptor );
 		final CollectionJdbcOperations.DeleteRowPlan deleteRowPlan = buildDeleteRowPlan( tableDescriptor );
 
 		return new CollectionJdbcOperations(
 				persister,
 				insertRowPlan,
-				updateRowPlan,
-				null, // orderUpdatePlan - not needed for one-to-many FK associations
+				null, // one-to-many doesn't update element values, only FK/ORDER
+				updateIndexPlan,  // ORDER column updates for inverse @OrderColumn collections
 				deleteRowPlan,
 				buildRemoveOperation( tableDescriptor )
 		);
@@ -231,13 +231,13 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 		);
 	}
 
-	private CollectionJdbcOperations.UpdateRowPlan buildUpdateRowPlan(TableDescriptor collectionTableDescriptor) {
+	private CollectionJdbcOperations.UpdateRowPlan buildUpdateIndexPlan(TableDescriptor tableDescriptor) {
 		if ( !persister.isDoWriteEvenWhenInverse() ) {
 			return null;
 		}
 
 		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
-				collectionTableDescriptor,
+				tableDescriptor,
 				0, // relativePosition
 				false, // isIdentifierTable
 				false // isInverse

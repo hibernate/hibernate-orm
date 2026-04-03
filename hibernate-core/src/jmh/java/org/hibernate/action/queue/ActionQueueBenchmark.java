@@ -170,7 +170,7 @@ public class ActionQueueBenchmark {
 				.applySetting(AvailableSettings.FORMAT_SQL, "false")
 				.applySetting(AvailableSettings.USE_SQL_COMMENTS, "false")
 				.applySetting(AvailableSettings.STATEMENT_BATCH_SIZE, "50")
-				.applySetting("hibernate.flush.queue.impl", queueImpl)
+				.applySetting( "hibernate.flush.queue.type", queueImpl)
 				.build();
 
 		return new MetadataSources(registry)

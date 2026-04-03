@@ -522,6 +522,12 @@ public class StandardGraphBuilder implements GraphBuilder {
 			// UPDATEs both release and occupy - but we handle release first
 
 			if ( !allReleasers.isEmpty() && !allOccupiers.isEmpty() ) {
+				// Get unique constraint columns from the slot (needed for patch installation if cycles occur)
+				UniqueSlot slot = entry.getKey();
+				UniqueConstraint constraint = slot.constraint();
+				SelectableMappings columnsToNull = (constraint != null) ?
+						constraint.columns() : EMPTY_SELECTABLES;
+
 				for ( GroupNode releaser : allReleasers ) {
 					for ( GroupNode occupier : allOccupiers ) {
 						// Don't create self-edges
@@ -532,7 +538,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 						final GraphEdge edge = new GraphEdge(
 								// No specific FK (this is a unique-slot-level dependency)
 								null,
-								null,
+								occupier,  // Key node if this edge needs breaking
 								// FROM releaser (graphing)
 								releaser,
 								// TO occupier (graphing)
@@ -541,8 +547,8 @@ public class StandardGraphBuilder implements GraphBuilder {
 								false,
 								// No break cost
 								0,
-								// No columns
-								EMPTY_SELECTABLES,
+								// Columns to NULL if edge needs breaking
+								columnsToNull,
 								null,  // No FK - this is a unique constraint edge
 								edgeId++
 						);
@@ -555,27 +561,42 @@ public class StandardGraphBuilder implements GraphBuilder {
 			// Phase 3: UPDATEs can also conflict with each other (one-to-one swaps)
 			if ( updateNodes.size() > 1 ) {
 				// Create edges between UPDATEs targeting the same slot
-				// This creates cycles that will be detected and ignored as false positives
+				// These edges may form cycles that need patch installation
+
+				// Get unique constraint columns from the slot (needed for patch installation)
+				UniqueSlot slot = entry.getKey();
+				UniqueConstraint constraint = slot.constraint();
+				SelectableMappings columnsToNull = (constraint != null) ?
+						constraint.columns() : EMPTY_SELECTABLES;
+
 				for ( int i = 0; i < updateNodes.size(); i++ ) {
 					for ( int j = i + 1; j < updateNodes.size(); j++ ) {
 						GroupNode update1 = updateNodes.get( i );
 						GroupNode update2 = updateNodes.get( j );
 
+						// UPDATE-to-UPDATE edges are breakable if we have nullable columns
+						// This allows NULL-then-patch strategy for unique constraint swaps
+						boolean edgeBreakable = constraint != null && constraint.nullable();
+
 						// Create bidirectional edges (this will create a cycle)
 						final GraphEdge edge1 = new GraphEdge(
-								null, null,
+								null,
+								update1,  // Key node (will receive patch if edge is broken)
 								update1, update2,
-								false, 0,
-								EMPTY_SELECTABLES,
+								edgeBreakable,
+								edgeBreakable ? 100 : 0,
+								columnsToNull,  // Columns to NULL for cycle breaking
 								null,
 								edgeId++
 						);
 
 						final GraphEdge edge2 = new GraphEdge(
-								null, null,
+								null,
+								update2,  // Key node (will receive patch if edge is broken)
 								update2, update1,
-								false, 0,
-								EMPTY_SELECTABLES,
+								edgeBreakable,
+								edgeBreakable ? 100 : 0,
+								columnsToNull,  // Columns to NULL for cycle breaking
 								null,
 								edgeId++
 						);
@@ -599,18 +620,21 @@ public class StandardGraphBuilder implements GraphBuilder {
 				// If change1 wants the value that change2 currently has (is releasing),
 				// then change2 must execute before change1
 				if ( change1.newSlot().equals( change2.oldSlot() ) ) {
-					// Try to find the FK that corresponds to this unique constraint
-					// so we can install patches if needed
-					ForeignKey correspondingFk = findForeignKeyForUniqueSlot( change1.newSlot() );
-					SelectableMappings columnsToNull = (correspondingFk != null) ?
-							correspondingFk.keyColumns() : EMPTY_SELECTABLES;
+					// Get unique constraint columns from the slot
+					UniqueConstraint constraint = change1.newSlot().constraint();
+					SelectableMappings columnsToNull = (constraint != null) ?
+							constraint.columns() : EMPTY_SELECTABLES;
+
+					// UPDATE swap edges are breakable if we have nullable columns
+					boolean edgeBreakable = constraint != null && constraint.nullable();
 
 					final GraphEdge edge = new GraphEdge(
 							null,  // No target node for unique constraint edges
 							change1.node(),  // Key node (will receive patch if edge is broken)
 							change2.node(),  // FROM: node releasing the value
 							change1.node(),  // TO: node wanting the value
-							false, 0,
+							edgeBreakable,
+							edgeBreakable ? 100 : 0,
 							columnsToNull,  // Columns to NULL if this edge is broken
 							null,  // Keep FK null to mark this as a unique constraint edge
 							edgeId++
@@ -713,6 +737,8 @@ public class StandardGraphBuilder implements GraphBuilder {
 	private List<PlannedOperationGroup> expandSwapConflicts(List<PlannedOperationGroup> groups) {
 		List<PlannedOperationGroup> result = new ArrayList<>();
 
+		UniqueSlotExtractor extractor = new UniqueSlotExtractor( constraintModel, session, entityPersistersByTable );
+
 		for ( PlannedOperationGroup group : groups ) {
 			if ( group.kind() != MutationKind.UPDATE || group.operations().size() <= 1 ) {
 				// Not an UPDATE or only one operation - no need to split
@@ -731,9 +757,6 @@ public class StandardGraphBuilder implements GraphBuilder {
 			}
 
 			// Extract slots for each operation
-			UniqueSlotExtractor extractor = new UniqueSlotExtractor( constraintModel, session,
-					entityPersistersByTable );
-
 			Map<PlannedOperation, UniqueSlot> newSlots = new HashMap<>();
 			Map<PlannedOperation, UniqueSlot> oldSlots = new HashMap<>();
 
@@ -782,6 +805,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 							group.shapeKey(),
 							List.of( operation ),
 							group.needsIdPrePhase(),
+							operation.getMutatingTableDescriptor().hasUniqueConstraints(),
 							group.ordinal() * 1000 + ordinalOffset++,  // Ensure unique ordinals
 							group.origin()
 					);
@@ -826,7 +850,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 		for ( UniqueConstraint constraint : constraints ) {
 			Object[] oldValues = extractValuesFromState( persister, updateBindPlan.getPreviousState(), constraint );
 			if ( oldValues != null ) {
-				slots.add( new UniqueSlot( tableName, constraint.constraintName(), oldValues ) );
+				slots.add( new UniqueSlot( tableName, oldValues, constraint ) );
 			}
 		}
 

@@ -27,7 +27,8 @@ public record UniqueConstraint(
 		ConstraintType type,
 		SelectableMappings columns,
 		boolean deferrable,
-		String[] propertyNames) implements Serializable {
+		boolean nullable,
+		String[] propertyNames) implements Constraint, Serializable {
 
 	public enum ConstraintType {
 		/**
@@ -56,5 +57,25 @@ public record UniqueConstraint(
 
 	public boolean isUniqueForeignKey() {
 		return type == ConstraintType.UNIQUE_FOREIGN_KEY;
+	}
+
+	@Override
+	public String getConstrainedTableName() {
+		return tableName;
+	}
+
+	@Override
+	public SelectableMappings getConstrainedColumnMappings() {
+		return columns;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return nullable;
+	}
+
+	@Override
+	public boolean isDeferrable() {
+		return deferrable;
 	}
 }

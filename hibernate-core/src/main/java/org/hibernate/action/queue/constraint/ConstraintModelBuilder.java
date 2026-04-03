@@ -160,6 +160,7 @@ public final class ConstraintModelBuilder {
 					UniqueConstraint.ConstraintType.PRIMARY_KEY,
 					identifierMapping,
 					false,  // Primary keys are never deferrable
+					false, // Primary keys are never nullable
 					null    // PK doesn't need property names (uses special extraction)
 			));
 		}
@@ -205,6 +206,7 @@ public final class ConstraintModelBuilder {
 				UniqueConstraint.ConstraintType.UNIQUE_KEY,
 				columns,
 				false,  // Natural IDs are typically not deferrable
+				areColumnsNullable( columns ),
 				propertyNames
 		));
 	}
@@ -301,7 +303,7 @@ public final class ConstraintModelBuilder {
 	}
 
 	private boolean areColumnsNullable(SelectableMappings columns) {
-		// FK is nullable if ALL its columns are nullable
+		// nullable if ALL columns are nullable
 		for ( int i = 0; i < columns.getJdbcTypeCount(); i++ ) {
 			if ( !columns.getSelectable( i ).isNullable() ) {
 				return false;
@@ -379,6 +381,7 @@ public final class ConstraintModelBuilder {
 					UniqueConstraint.ConstraintType.UNIQUE_FOREIGN_KEY,
 					fk.getKeyPart(),
 					false,  // FK unique constraints are typically not deferrable
+					areColumnsNullable( fk.getKeyPart() ),
 					new String[] { toOne.getAttributeName() }  // Property name for value extraction
 			));
 		}

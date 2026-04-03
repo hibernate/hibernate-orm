@@ -585,6 +585,7 @@ public class DeleteDecomposerTest {
 					shapeKey,
 					operations,
 					needsIdPrePhase,
+					false,
 					ordinal,
 					origin
 			);

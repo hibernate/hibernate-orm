@@ -260,12 +260,20 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 		}
 
 		final boolean[] versionability = entityPersister.getPropertyVersionability();
+		final boolean isDirtyOptLock = effectiveOptLockStyle.isDirty();
 
 		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
 			var attribute = tableDescriptor.attributes().get( i );
 			assert !attribute.isPluralAttributeMapping();
 			if ( !versionability[attribute.getStateArrayPosition()] ) {
 				continue;
+			}
+
+			// For DIRTY optimistic locking, only include dirty fields in WHERE clause
+			if ( isDirtyOptLock && valuesAnalysis != null && valuesAnalysis.hasDirtyAttributes() ) {
+				if ( !valuesAnalysis.getDirtiness()[attribute.getStateArrayPosition()] ) {
+					continue;
+				}
 			}
 
 			attribute.decompose(

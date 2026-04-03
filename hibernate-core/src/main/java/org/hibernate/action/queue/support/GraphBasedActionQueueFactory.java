@@ -33,9 +33,8 @@ public class GraphBasedActionQueueFactory implements ActionQueueFactory, Seriali
 	private final ConstraintModel constraintModel;
 
 	public GraphBasedActionQueueFactory(SessionFactoryImplementor factory) {
-		var configurationService = factory.getServiceRegistry().requireService( ConfigurationService.class );
-		planningOptions = buildPlanningOptions( configurationService );
-		constraintModel = buildConstraintModel( factory, planningOptions );
+		planningOptions = factory.getGraphPlanningOptions();
+		constraintModel = factory.getMappingMetamodel().getConstraintModel();
 	}
 
 	public PlanningOptions getPlanningOptions() {
@@ -63,7 +62,7 @@ public class GraphBasedActionQueueFactory implements ActionQueueFactory, Seriali
 		return GraphBasedActionQueue.deserialize( ois, this, session );
 	}
 
-	private static PlanningOptions buildPlanningOptions(ConfigurationService configurationService) {
+	public static PlanningOptions buildPlanningOptions(ConfigurationService configurationService) {
 		var orderByFk = configurationService.getSetting( ORDER_BY_FOREIGN_KEY, BOOLEAN, true );
 		var orderByUnique = configurationService.getSetting( ORDER_BY_UNIQUE_KEY, BOOLEAN, false );
 

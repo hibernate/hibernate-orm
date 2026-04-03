@@ -28,7 +28,7 @@ public record ForeignKey(
 		TargetType targetType,
 		boolean isAssociation,
 		boolean nullable,
-		boolean deferrable) implements Serializable {
+		boolean deferrable) implements Constraint, Serializable {
 
 	public enum TargetType {
 		/**
@@ -52,5 +52,25 @@ public record ForeignKey(
 	 */
 	public boolean targetsUniqueConstraint() {
 		return targetType == TargetType.PRIMARY_KEY || targetType == TargetType.UNIQUE_KEY;
+	}
+
+	@Override
+	public String getConstrainedTableName() {
+		return keyTable;
+	}
+
+	@Override
+	public SelectableMappings getConstrainedColumnMappings() {
+		return keyColumns;
+	}
+
+	@Override
+	public boolean isNullable() {
+		return nullable;
+	}
+
+	@Override
+	public boolean isDeferrable() {
+		return deferrable;
 	}
 }

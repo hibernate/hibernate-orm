@@ -55,7 +55,8 @@ public class CycleBreakPatcher {
 			// 4) Record intended value for later fixup UPDATE
 			if (isUniqueSwap) {
 				plannedOperation.getIntendedUniqueValues().put(col, intended);
-			} else {
+			}
+			else {
 				plannedOperation.getIntendedFkValues().put(col, intended);
 			}
 		}
@@ -99,7 +100,8 @@ public class CycleBreakPatcher {
 			// 4) Record intended value for later fixup UPDATE
 			if (isUniqueSwap) {
 				plannedOperation.getIntendedUniqueValues().put(col, intended);
-			} else {
+			}
+			else {
 				plannedOperation.getIntendedFkValues().put(col, intended);
 			}
 		}

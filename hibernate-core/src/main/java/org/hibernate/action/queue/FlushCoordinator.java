@@ -527,20 +527,9 @@ public class FlushCoordinator {
 	}
 
 	/// Composite key for grouping operations by shape and ordinalBase.
-		private record CompositeOperationGroupKey(
-				StatementShapeKey shapeKey,
-				int ordinalBase) implements OperationGroupKey {
-
-		@Override
-		public boolean equals(Object o) {
-			if ( this == o ) {
-				return true;
-			}
-			if ( o instanceof CompositeOperationGroupKey that ) {
-				return ordinalBase == that.ordinalBase && shapeKey.equals( that.shapeKey );
-			}
-			return false;
-		}
+	private record CompositeOperationGroupKey(
+			StatementShapeKey shapeKey,
+			int ordinalBase) implements OperationGroupKey {
 	}
 
 

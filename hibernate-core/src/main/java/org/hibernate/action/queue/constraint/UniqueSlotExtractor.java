@@ -309,7 +309,8 @@ public class UniqueSlotExtractor {
 				}
 
 				values[i] = value;
-			} else {
+			}
+			else {
 				return null;  // Property not found in state
 			}
 		}

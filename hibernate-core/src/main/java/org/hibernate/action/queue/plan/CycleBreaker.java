@@ -161,7 +161,8 @@ public class CycleBreaker {
 						// Break this edge and install a patch
 						edgeWithColumns.setBroken(true);
 						installPatchForEdge(edgeWithColumns);
-					} else {
+					}
+					else {
 						// Fallback: break all unique edges (no patches available)
 						for (GraphEdge e : cycle) {
 							if (isUniqueConstraintEdge(e)) {

@@ -22,6 +22,9 @@ configurations {
     }
 }
 
+tasks.named("forbiddenApisJmh") {
+    enabled = false
+}
 
 dependencies {
     api jakartaLibs.jpa

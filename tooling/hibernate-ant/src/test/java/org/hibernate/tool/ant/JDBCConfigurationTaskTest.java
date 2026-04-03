@@ -42,8 +42,8 @@ public class JDBCConfigurationTaskTest {
 	@Test
 	public void testSetReverseStrategy() {
 		JDBCConfigurationTask task = new JDBCConfigurationTask();
-		task.setReverseStrategy("com.example.MyStrategy");
-		assertEquals("com.example.MyStrategy", task.reverseEngineeringStrategyClass);
+		task.setReverseStrategy("org.example.MyStrategy");
+		assertEquals("org.example.MyStrategy", task.reverseEngineeringStrategyClass);
 	}
 
 	@Test
@@ -78,16 +78,15 @@ public class JDBCConfigurationTaskTest {
 	public void testClone() throws CloneNotSupportedException {
 		JDBCConfigurationTask task = new JDBCConfigurationTask();
 		task.setPackageName("com.example");
-		task.setReverseStrategy("com.example.Strategy");
+		task.setReverseStrategy("org.example.MyStrategy");
 		task.setPreferBasicCompositeIds(false);
 		task.setDetectOneToOne(false);
 		task.setDetectManyToMany(false);
 		task.setDetectOptimisticLock(false);
-
 		JDBCConfigurationTask clone = (JDBCConfigurationTask) task.clone();
 		assertNotNull(clone);
 		assertEquals("com.example", clone.packageName);
-		assertEquals("com.example.Strategy", clone.reverseEngineeringStrategyClass);
+		assertEquals("org.example.MyStrategy", clone.reverseEngineeringStrategyClass);
 		assertFalse(clone.preferBasicCompositeIds);
 		assertFalse(clone.detectOneToOne);
 		assertFalse(clone.detectManyToMany);

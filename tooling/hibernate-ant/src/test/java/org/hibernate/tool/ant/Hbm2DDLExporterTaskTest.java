@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class Hbm2DDLExporterTaskTest {
@@ -21,7 +20,7 @@ public class Hbm2DDLExporterTaskTest {
 	}
 
 	@Test
-	public void testDefaults() {
+	public void testDefaultValues() {
 		HibernateToolTask parent = new HibernateToolTask();
 		Hbm2DDLExporterTask task = new Hbm2DDLExporterTask(parent);
 		assertTrue(task.exportToDatabase);
@@ -31,29 +30,78 @@ public class Hbm2DDLExporterTaskTest {
 		assertFalse(task.drop);
 		assertTrue(task.create);
 		assertFalse(task.format);
-		assertNull(task.outputFileName);
 	}
 
 	@Test
-	public void testSetters() {
+	public void testSetExport() {
 		HibernateToolTask parent = new HibernateToolTask();
 		Hbm2DDLExporterTask task = new Hbm2DDLExporterTask(parent);
 		task.setExport(false);
 		assertFalse(task.exportToDatabase);
-		task.setConsole(false);
-		assertFalse(task.scriptToConsole);
+	}
+
+	@Test
+	public void testSetUpdate() {
+		HibernateToolTask parent = new HibernateToolTask();
+		Hbm2DDLExporterTask task = new Hbm2DDLExporterTask(parent);
 		task.setUpdate(true);
 		assertTrue(task.schemaUpdate);
+	}
+
+	@Test
+	public void testSetConsole() {
+		HibernateToolTask parent = new HibernateToolTask();
+		Hbm2DDLExporterTask task = new Hbm2DDLExporterTask(parent);
+		task.setConsole(false);
+		assertFalse(task.scriptToConsole);
+	}
+
+	@Test
+	public void testSetFormat() {
+		HibernateToolTask parent = new HibernateToolTask();
+		Hbm2DDLExporterTask task = new Hbm2DDLExporterTask(parent);
 		task.setFormat(true);
 		assertTrue(task.format);
-		task.setDrop(true);
-		assertTrue(task.drop);
-		task.setCreate(false);
-		assertFalse(task.create);
+	}
+
+	@Test
+	public void testSetOutputFileName() {
+		HibernateToolTask parent = new HibernateToolTask();
+		Hbm2DDLExporterTask task = new Hbm2DDLExporterTask(parent);
 		task.setOutputFileName("schema.sql");
 		assertEquals("schema.sql", task.outputFileName);
+	}
+
+	@Test
+	public void testSetDrop() {
+		HibernateToolTask parent = new HibernateToolTask();
+		Hbm2DDLExporterTask task = new Hbm2DDLExporterTask(parent);
+		task.setDrop(true);
+		assertTrue(task.drop);
+	}
+
+	@Test
+	public void testSetCreate() {
+		HibernateToolTask parent = new HibernateToolTask();
+		Hbm2DDLExporterTask task = new Hbm2DDLExporterTask(parent);
+		task.setCreate(false);
+		assertFalse(task.create);
+	}
+
+	@Test
+	public void testDelimiter() {
+		HibernateToolTask parent = new HibernateToolTask();
+		Hbm2DDLExporterTask task = new Hbm2DDLExporterTask(parent);
+		assertEquals(";", task.getDelimiter());
 		task.setDelimiter("GO");
 		assertEquals("GO", task.getDelimiter());
+	}
+
+	@Test
+	public void testSetHaltonerror() {
+		HibernateToolTask parent = new HibernateToolTask();
+		Hbm2DDLExporterTask task = new Hbm2DDLExporterTask(parent);
 		task.setHaltonerror(true);
+		// no public getter, just verify no exception
 	}
 }

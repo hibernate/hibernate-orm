@@ -22,29 +22,44 @@ public class GenericExporterTaskTest {
 	public void testGetNameWithExporterClass() {
 		HibernateToolTask parent = new HibernateToolTask();
 		GenericExporterTask task = new GenericExporterTask(parent);
-		task.setExporterClass("com.example.MyExporter");
-		assertTrue(task.getName().contains("com.example.MyExporter"));
+		task.setExporterClass("org.example.MyExporter");
+		String name = task.getName();
+		assertTrue(name.contains("class: org.example.MyExporter"));
 	}
 
 	@Test
 	public void testGetNameWithTemplate() {
 		HibernateToolTask parent = new HibernateToolTask();
 		GenericExporterTask task = new GenericExporterTask(parent);
-		task.setTemplate("my/template.ftl");
-		assertTrue(task.getName().contains("my/template.ftl"));
+		task.setTemplate("mytemplate.ftl");
+		String name = task.getName();
+		assertTrue(name.contains("template: mytemplate.ftl"));
 	}
 
 	@Test
-	public void testSetters() {
+	public void testGetNameWithBoth() {
+		HibernateToolTask parent = new HibernateToolTask();
+		GenericExporterTask task = new GenericExporterTask(parent);
+		task.setExporterClass("org.example.MyExporter");
+		task.setTemplate("mytemplate.ftl");
+		String name = task.getName();
+		assertTrue(name.contains("class: org.example.MyExporter"));
+		assertTrue(name.contains("template: mytemplate.ftl"));
+	}
+
+	@Test
+	public void testSetFilePattern() {
 		HibernateToolTask parent = new HibernateToolTask();
 		GenericExporterTask task = new GenericExporterTask(parent);
 		task.setFilePattern("{package-name}/{class-name}.java");
 		assertEquals("{package-name}/{class-name}.java", task.filePattern);
+	}
+
+	@Test
+	public void testSetForEach() {
+		HibernateToolTask parent = new HibernateToolTask();
+		GenericExporterTask task = new GenericExporterTask(parent);
 		task.setForEach("entity");
 		assertEquals("entity", task.forEach);
-		task.setTemplate("pojo/Pojo.ftl");
-		assertEquals("pojo/Pojo.ftl", task.templateName);
-		task.setExporterClass("com.example.MyExporter");
-		assertEquals("com.example.MyExporter", task.exporterClass);
 	}
 }

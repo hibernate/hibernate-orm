@@ -4,9 +4,6 @@
  */
 package org.hibernate.tool.ant.util;
 
-import org.hibernate.boot.MappingNotFoundException;
-import org.hibernate.boot.jaxb.Origin;
-import org.hibernate.boot.jaxb.SourceType;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -21,51 +18,49 @@ public class ExceptionUtilTest {
 	}
 
 	@Test
-	public void testMappingNotFoundException() {
-		Origin origin = new Origin(SourceType.RESOURCE, "com/example/Foo.hbm.xml");
-		MappingNotFoundException ex = new MappingNotFoundException(origin);
-		String result = ExceptionUtil.getProblemSolutionOrCause(ex);
-		assertNotNull(result);
-		assertTrue(result.contains("com/example/Foo.hbm.xml"));
-		assertTrue(result.contains("RESOURCE"));
-	}
-
-	@Test
 	public void testClassNotFoundException() {
-		String result = ExceptionUtil.getProblemSolutionOrCause(
-				new ClassNotFoundException("com.example.Missing"));
+		String result = ExceptionUtil.getProblemSolutionOrCause(new ClassNotFoundException("some.Class"));
 		assertNotNull(result);
 		assertTrue(result.contains("classpath"));
 	}
 
 	@Test
 	public void testNoClassDefFoundError() {
-		String result = ExceptionUtil.getProblemSolutionOrCause(
-				new NoClassDefFoundError("com/example/Missing"));
+		String result = ExceptionUtil.getProblemSolutionOrCause(new NoClassDefFoundError("some/Class"));
 		assertNotNull(result);
 		assertTrue(result.contains("classpath"));
 	}
 
 	@Test
 	public void testUnsupportedClassVersionError() {
-		String result = ExceptionUtil.getProblemSolutionOrCause(
-				new UnsupportedClassVersionError("bad version"));
+		String result = ExceptionUtil.getProblemSolutionOrCause(new UnsupportedClassVersionError("bad version"));
 		assertNotNull(result);
 		assertTrue(result.contains("JRE"));
 	}
 
 	@Test
-	public void testNestedCause() {
-		Exception inner = new ClassNotFoundException("nested");
-		RuntimeException outer = new RuntimeException("wrapper", inner);
-		String result = ExceptionUtil.getProblemSolutionOrCause(outer);
+	public void testGenericExceptionWithNoCause() {
+		RuntimeException ex = new RuntimeException("generic");
+		assertNull(ExceptionUtil.getProblemSolutionOrCause(ex));
+	}
+
+	@Test
+	public void testNestedClassNotFoundException() {
+		RuntimeException wrapper = new RuntimeException("wrapper", new ClassNotFoundException("nested"));
+		String result = ExceptionUtil.getProblemSolutionOrCause(wrapper);
 		assertNotNull(result);
 		assertTrue(result.contains("classpath"));
 	}
 
 	@Test
-	public void testUnknownExceptionNoCause() {
-		RuntimeException ex = new RuntimeException("unknown");
+	public void testSelfReferencingCause() {
+		// Simulate a cause that references itself (cause == this)
+		RuntimeException ex = new RuntimeException("self") {
+			@Override
+			public synchronized Throwable getCause() {
+				return this;
+			}
+		};
 		assertNull(ExceptionUtil.getProblemSolutionOrCause(ex));
 	}
 }

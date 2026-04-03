@@ -4,18 +4,25 @@
  */
 package org.hibernate.boot.jaxb.hbm.transform;
 
+import java.io.Serializable;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import org.hibernate.boot.jaxb.hbm.spi.EntityInfo;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeAttributeType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmDiscriminatorSubclassEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmJoinedSubclassEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmUnionSubclassEntityType;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
+
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
@@ -51,39 +58,42 @@ public class XmlPreprocessor {
 		) );
 		mappingBindings.add( new Binding<>( mappingRoot, origin ) );
 
+		final Set<String> seenEmbeddableClasses = new HashSet<>();
+
 		hbmRoot.getTypedef().forEach( hbmTypeDef ->
 				transformationState.getTypeDefMap().put( hbmTypeDef.getName(), hbmTypeDef ) );
 
 		hbmRoot.getClazz().forEach( hbmRootEntity ->
-				preProcessRooEntity( hbmRootEntity, hbmRoot, mappingRoot, transformationState ) );
+				preProcessRooEntity( hbmRootEntity, hbmRoot, mappingRoot, transformationState, seenEmbeddableClasses ) );
 
 		hbmRoot.getSubclass().forEach( hbmSubclass ->
-				preProcessSubclass( hbmSubclass, hbmRoot, mappingRoot, transformationState ) );
+				preProcessSubclass( hbmSubclass, hbmRoot, mappingRoot, transformationState, seenEmbeddableClasses ) );
 
 		hbmRoot.getJoinedSubclass().forEach( hbmSubclass ->
-				preProcessJoinedSubclass( hbmSubclass, hbmRoot, mappingRoot, transformationState ) );
+				preProcessJoinedSubclass( hbmSubclass, hbmRoot, mappingRoot, transformationState, seenEmbeddableClasses ) );
 
 		hbmRoot.getUnionSubclass().forEach( hbmSubclass ->
-				preProcessUnionSubclass( hbmSubclass, hbmRoot, mappingRoot, transformationState ) );
+				preProcessUnionSubclass( hbmSubclass, hbmRoot, mappingRoot, transformationState, seenEmbeddableClasses ) );
 	}
 
 	private static void preProcessRooEntity(
 			JaxbHbmRootEntityType hbmRootEntity,
 			JaxbHbmHibernateMapping hbmRoot,
 			JaxbEntityMappingsImpl mappingRoot,
-			TransformationState transformationState) {
+			TransformationState transformationState,
+			Set<String> seenEmbeddableClasses) {
 		final var mappingEntity = new JaxbEntityImpl();
 		mappingRoot.getEntities().add( mappingEntity );
-		commonEntityPreprocessing( hbmRootEntity, hbmRoot, mappingRoot, transformationState, mappingEntity );
+		commonEntityPreprocessing( hbmRootEntity, hbmRoot, mappingRoot, transformationState, mappingEntity, seenEmbeddableClasses );
 
 		hbmRootEntity.getSubclass().forEach( hbmSubclass ->
-				preProcessSubclass( hbmSubclass, hbmRoot, mappingRoot, transformationState ) );
+				preProcessSubclass( hbmSubclass, hbmRoot, mappingRoot, transformationState, seenEmbeddableClasses ) );
 
 		hbmRootEntity.getJoinedSubclass().forEach( hbmSubclass ->
-				preProcessJoinedSubclass( hbmSubclass, hbmRoot, mappingRoot, transformationState ) );
+				preProcessJoinedSubclass( hbmSubclass, hbmRoot, mappingRoot, transformationState, seenEmbeddableClasses ) );
 
 		hbmRootEntity.getUnionSubclass().forEach( hbmSubclass ->
-				preProcessUnionSubclass( hbmSubclass, hbmRoot, mappingRoot, transformationState ) );
+				preProcessUnionSubclass( hbmSubclass, hbmRoot, mappingRoot, transformationState, seenEmbeddableClasses ) );
 	}
 
 	private static void commonEntityPreprocessing(
@@ -91,7 +101,8 @@ public class XmlPreprocessor {
 			JaxbHbmHibernateMapping hbmRoot,
 			JaxbEntityMappingsImpl mappingRoot,
 			TransformationState transformationState,
-			JaxbEntityImpl mappingEntity) {
+			JaxbEntityImpl mappingEntity,
+			Set<String> seenEmbeddableClasses) {
 		// apply some basic info to the mapping.xsd entity
 		TransformationHelper.transfer( hbmEntity::getEntityName, mappingEntity::setName );
 		TransformationHelper.transfer( hbmEntity::getName, mappingEntity::setClazz );
@@ -102,42 +113,61 @@ public class XmlPreprocessor {
 		transformationState.getHbmEntityByName().put( entityName, hbmEntity );
 		transformationState.getMappingEntityByName().put( entityName, mappingEntity );
 
-		// todo (7.0) : walk attributes looking for components
+		//noinspection unchecked
+		collectComponentTypes( hbmEntity.getAttributes(), mappingRoot, seenEmbeddableClasses );
+	}
+
+	private static void collectComponentTypes(List<Serializable> attributes, JaxbEntityMappingsImpl mappingRoot,
+			Set<String> seenEmbeddableClasses) {
+		for ( Object attribute : attributes ) {
+			if ( attribute instanceof JaxbHbmCompositeAttributeType compositeAttribute ) {
+				final String className = compositeAttribute.getClazz();
+				if ( isNotEmpty( className ) && seenEmbeddableClasses.add( className ) ) {
+					final var embeddable = new JaxbEmbeddableImpl();
+					embeddable.setClazz( className );
+					mappingRoot.getEmbeddables().add( embeddable );
+				}
+				collectComponentTypes( compositeAttribute.getAttributes(), mappingRoot, seenEmbeddableClasses );
+			}
+		}
 	}
 
 	private static void preProcessSubclass(
 			JaxbHbmDiscriminatorSubclassEntityType hbmSubclass,
 			JaxbHbmHibernateMapping hbmRoot,
 			JaxbEntityMappingsImpl mappingRoot,
-			TransformationState transformationState) {
+			TransformationState transformationState,
+			Set<String> seenEmbeddableClasses) {
 		final var mappingEntity = new JaxbEntityImpl();
 		mappingRoot.getEntities().add( mappingEntity );
-		commonEntityPreprocessing( hbmSubclass, hbmRoot, mappingRoot, transformationState, mappingEntity );
+		commonEntityPreprocessing( hbmSubclass, hbmRoot, mappingRoot, transformationState, mappingEntity, seenEmbeddableClasses );
 		hbmSubclass.getSubclass().forEach( hbmSubclassSubclass ->
-				preProcessSubclass( hbmSubclassSubclass, hbmRoot, mappingRoot, transformationState ) );
+				preProcessSubclass( hbmSubclassSubclass, hbmRoot, mappingRoot, transformationState, seenEmbeddableClasses ) );
 	}
 
 	private static void preProcessJoinedSubclass(
 			JaxbHbmJoinedSubclassEntityType hbmSubclass,
 			JaxbHbmHibernateMapping hbmRoot,
 			JaxbEntityMappingsImpl mappingRoot,
-			TransformationState transformationState) {
+			TransformationState transformationState,
+			Set<String> seenEmbeddableClasses) {
 		final var mappingEntity = new JaxbEntityImpl();
 		mappingRoot.getEntities().add( mappingEntity );
-		commonEntityPreprocessing( hbmSubclass, hbmRoot, mappingRoot, transformationState, mappingEntity );
+		commonEntityPreprocessing( hbmSubclass, hbmRoot, mappingRoot, transformationState, mappingEntity, seenEmbeddableClasses );
 		hbmSubclass.getJoinedSubclass().forEach( hbmSubclassSubclass ->
-				preProcessJoinedSubclass( hbmSubclassSubclass, hbmRoot, mappingRoot, transformationState ) );
+				preProcessJoinedSubclass( hbmSubclassSubclass, hbmRoot, mappingRoot, transformationState, seenEmbeddableClasses ) );
 	}
 
 	private static void preProcessUnionSubclass(
 			JaxbHbmUnionSubclassEntityType hbmSubclass,
 			JaxbHbmHibernateMapping hbmRoot,
 			JaxbEntityMappingsImpl mappingRoot,
-			TransformationState transformationState) {
+			TransformationState transformationState,
+			Set<String> seenEmbeddableClasses) {
 		final var mappingEntity = new JaxbEntityImpl();
 		mappingRoot.getEntities().add( mappingEntity );
-		commonEntityPreprocessing( hbmSubclass, hbmRoot, mappingRoot, transformationState, mappingEntity );
+		commonEntityPreprocessing( hbmSubclass, hbmRoot, mappingRoot, transformationState, mappingEntity, seenEmbeddableClasses );
 		hbmSubclass.getUnionSubclass().forEach( hbmSubclassSubclass ->
-				preProcessUnionSubclass( hbmSubclassSubclass, hbmRoot, mappingRoot, transformationState ) );
+				preProcessUnionSubclass( hbmSubclassSubclass, hbmRoot, mappingRoot, transformationState, seenEmbeddableClasses ) );
 	}
 }

@@ -4,6 +4,9 @@
  */
 package org.hibernate.tool.ant.util;
 
+import org.hibernate.boot.MappingNotFoundException;
+import org.hibernate.boot.jaxb.Origin;
+import org.hibernate.boot.jaxb.SourceType;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -15,6 +18,16 @@ public class ExceptionUtilTest {
 	@Test
 	public void testNull() {
 		assertNull(ExceptionUtil.getProblemSolutionOrCause(null));
+	}
+
+	@Test
+	public void testMappingNotFoundException() {
+		Origin origin = new Origin(SourceType.RESOURCE, "com/example/Foo.hbm.xml");
+		MappingNotFoundException ex = new MappingNotFoundException(origin);
+		String result = ExceptionUtil.getProblemSolutionOrCause(ex);
+		assertNotNull(result);
+		assertTrue(result.contains("com/example/Foo.hbm.xml"));
+		assertTrue(result.contains("classpath"));
 	}
 
 	@Test

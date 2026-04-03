@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.util.EnumSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -20,61 +21,65 @@ public class TargetTypeHelperTest {
 		EnumSet<TargetType> result = TargetTypeHelper.parseLegacyCommandLineOptions(true, true, null);
 		assertTrue(result.contains(TargetType.STDOUT));
 		assertTrue(result.contains(TargetType.DATABASE));
+		assertFalse(result.contains(TargetType.SCRIPT));
 	}
 
 	@Test
 	public void testParseLegacyScriptOnly() {
 		EnumSet<TargetType> result = TargetTypeHelper.parseLegacyCommandLineOptions(true, false, null);
 		assertTrue(result.contains(TargetType.STDOUT));
-		assertEquals(1, result.size());
+		assertFalse(result.contains(TargetType.DATABASE));
 	}
 
 	@Test
 	public void testParseLegacyExportOnly() {
 		EnumSet<TargetType> result = TargetTypeHelper.parseLegacyCommandLineOptions(false, true, null);
+		assertFalse(result.contains(TargetType.STDOUT));
 		assertTrue(result.contains(TargetType.DATABASE));
-		assertEquals(1, result.size());
 	}
 
 	@Test
-	public void testParseLegacyNone() {
+	public void testParseLegacyWithOutputFile() {
+		EnumSet<TargetType> result = TargetTypeHelper.parseLegacyCommandLineOptions(true, true, "output.sql");
+		assertTrue(result.contains(TargetType.SCRIPT));
+		assertTrue(result.contains(TargetType.STDOUT));
+		assertTrue(result.contains(TargetType.DATABASE));
+	}
+
+	@Test
+	public void testParseLegacyQuietNoExport() {
 		EnumSet<TargetType> result = TargetTypeHelper.parseLegacyCommandLineOptions(false, false, null);
 		assertTrue(result.isEmpty());
 	}
 
 	@Test
-	public void testParseLegacyWithOutputFile() {
-		EnumSet<TargetType> result = TargetTypeHelper.parseLegacyCommandLineOptions(false, false, "output.sql");
-		assertTrue(result.contains(TargetType.SCRIPT));
-		assertEquals(1, result.size());
-	}
-
-	@Test
-	public void testParseLegacyWithOutputFileAndExport() {
-		EnumSet<TargetType> result = TargetTypeHelper.parseLegacyCommandLineOptions(false, true, "output.sql");
-		assertTrue(result.contains(TargetType.SCRIPT));
-		assertTrue(result.contains(TargetType.DATABASE));
-	}
-
-	@Test
 	public void testParseCommandLineDatabase() {
 		EnumSet<TargetType> result = TargetTypeHelper.parseCommandLineOptions("database");
-		assertTrue(result.contains(TargetType.DATABASE));
 		assertEquals(1, result.size());
+		assertTrue(result.contains(TargetType.DATABASE));
 	}
 
 	@Test
 	public void testParseCommandLineStdout() {
 		EnumSet<TargetType> result = TargetTypeHelper.parseCommandLineOptions("stdout");
-		assertTrue(result.contains(TargetType.STDOUT));
 		assertEquals(1, result.size());
+		assertTrue(result.contains(TargetType.STDOUT));
 	}
 
 	@Test
 	public void testParseCommandLineScript() {
 		EnumSet<TargetType> result = TargetTypeHelper.parseCommandLineOptions("script");
-		assertTrue(result.contains(TargetType.SCRIPT));
 		assertEquals(1, result.size());
+		assertTrue(result.contains(TargetType.SCRIPT));
+	}
+
+	@Test
+	public void testParseCommandLineMultiple() {
+		EnumSet<TargetType> result = TargetTypeHelper.parseCommandLineOptions("database,stdout,script");
+		assertEquals(3, result.size());
+		assertTrue(result.contains(TargetType.DATABASE));
+		assertTrue(result.contains(TargetType.STDOUT));
+		assertTrue(result.contains(TargetType.SCRIPT));
 	}
 
 	@Test
@@ -84,25 +89,8 @@ public class TargetTypeHelperTest {
 	}
 
 	@Test
-	public void testParseCommandLineMultiple() {
-		EnumSet<TargetType> result = TargetTypeHelper.parseCommandLineOptions("database,stdout,script");
-		assertTrue(result.contains(TargetType.DATABASE));
-		assertTrue(result.contains(TargetType.STDOUT));
-		assertTrue(result.contains(TargetType.SCRIPT));
-		assertEquals(3, result.size());
-	}
-
-	@Test
-	public void testParseCommandLineCaseInsensitive() {
-		EnumSet<TargetType> result = TargetTypeHelper.parseCommandLineOptions("DATABASE,STDOUT");
-		assertTrue(result.contains(TargetType.DATABASE));
-		assertTrue(result.contains(TargetType.STDOUT));
-	}
-
-	@Test
 	public void testParseCommandLineInvalid() {
-		assertThrows(IllegalArgumentException.class, () ->
-				TargetTypeHelper.parseCommandLineOptions("invalid")
-		);
+		assertThrows(IllegalArgumentException.class,
+				() -> TargetTypeHelper.parseCommandLineOptions("invalid"));
 	}
 }

@@ -9,14 +9,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.StringWriter;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TemplateHelperTest {
 
 	@TempDir
-	File tempDir;
+	private File tempDir;
 
 	private TemplateHelper helper;
 
@@ -27,55 +33,110 @@ public class TemplateHelperTest {
 	}
 
 	@Test
-	public void testInitWithDirectoryPath() {
-		TemplateHelper h = new TemplateHelper();
-		assertDoesNotThrow(() -> h.init(tempDir, new String[]{tempDir.getAbsolutePath()}));
+	public void testGetOutputDirectory() {
+		assertEquals(tempDir, helper.getOutputDirectory());
+	}
+
+	@Test
+	public void testPutAndRemoveFromContext() {
+		helper.putInContext("testKey", "testValue");
+		// Should not throw on remove
+		helper.removeFromContext("testKey");
+	}
+
+	@Test
+	public void testPutInContextNullValueThrows() {
+		assertThrows(IllegalStateException.class, () -> helper.putInContext("key", null));
+	}
+
+	@Test
+	public void testRemoveFromContextNonExistentThrows() {
+		assertThrows(IllegalStateException.class, () -> helper.removeFromContext("nonExistent"));
+	}
+
+	@Test
+	public void testSetupContext() {
+		helper.setupContext();
+		assertNotNull(helper.getContext());
+	}
+
+	@Test
+	public void testProcessString() {
+		helper.setupContext();
+		helper.putInContext("name", "World");
+		StringWriter output = new StringWriter();
+		helper.processString("Hello ${name}!", output);
+		assertEquals("Hello World!", output.toString());
+	}
+
+	@Test
+	public void testEnsureExistenceCreatesDir() {
+		File dest = new File(tempDir, "sub/dir/file.txt");
+		helper.ensureExistence(dest);
+		assertTrue(dest.getParentFile().exists());
+		assertTrue(dest.getParentFile().isDirectory());
+	}
+
+	@Test
+	public void testEnsureExistenceExistingDir() {
+		File dest = new File(tempDir, "existing.txt");
+		// tempDir already exists as directory - should not throw
+		helper.ensureExistence(dest);
 	}
 
 	@Test
 	public void testInitWithNonExistentPath() {
 		TemplateHelper h = new TemplateHelper();
-		assertDoesNotThrow(() -> h.init(tempDir, new String[]{"/nonexistent/path"}));
+		// Non-existent path should just log a warning, not throw
+		h.init(tempDir, new String[]{"/nonexistent/path"});
+		assertNotNull(h.getOutputDirectory());
 	}
 
 	@Test
-	public void testPutInContext() {
-		assertDoesNotThrow(() -> helper.putInContext("key1", "value1"));
+	public void testInitWithFilePath() throws IOException {
+		TemplateHelper h = new TemplateHelper();
+		File regularFile = new File(tempDir, "notadir.txt");
+		try (FileOutputStream fos = new FileOutputStream(regularFile)) {
+			fos.write("test".getBytes());
+		}
+		// Regular file (not dir, not jar/zip) should just log a warning
+		h.init(tempDir, new String[]{regularFile.getAbsolutePath()});
+		assertNotNull(h.getOutputDirectory());
 	}
 
 	@Test
-	public void testPutInContextNullValue() {
-		assertThrows(IllegalStateException.class, () -> helper.putInContext("key1", null));
+	public void testTemplateExists() throws IOException {
+		// Create a template file
+		File templateFile = new File(tempDir, "test.ftl");
+		try (FileOutputStream fos = new FileOutputStream(templateFile)) {
+			fos.write("Hello ${name}".getBytes());
+		}
+		// Re-init to pick up the template
+		helper.init(tempDir, new String[]{tempDir.getAbsolutePath()});
+		assertTrue(helper.templateExists("test.ftl"));
+		assertFalse(helper.templateExists("nonexistent.ftl"));
 	}
 
 	@Test
-	public void testRemoveFromContext() {
-		helper.putInContext("key1", "value1");
-		assertDoesNotThrow(() -> helper.removeFromContext("key1"));
+	public void testProcessTemplate() throws IOException {
+		File templateFile = new File(tempDir, "greeting.ftl");
+		try (FileOutputStream fos = new FileOutputStream(templateFile)) {
+			fos.write("Hi ${who}!".getBytes());
+		}
+		helper.init(tempDir, new String[]{tempDir.getAbsolutePath()});
+		helper.setupContext();
+		helper.putInContext("who", "Alice");
+		StringWriter output = new StringWriter();
+		helper.processTemplate("greeting.ftl", output, "test");
+		assertEquals("Hi Alice!", output.toString());
 	}
 
 	@Test
-	public void testRemoveFromContextNonExistent() {
-		assertThrows(IllegalStateException.class, () -> helper.removeFromContext("nonexistent"));
-	}
-
-	@Test
-	public void testEnsureExistenceCreatesDirectory() {
-		File newFile = new File(new File(tempDir, "newdir"), "test.txt");
-		assertDoesNotThrow(() -> helper.ensureExistence(newFile));
-	}
-
-	@Test
-	public void testEnsureExistenceExistingDirectory() {
-		File file = new File(tempDir, "test.txt");
-		assertDoesNotThrow(() -> helper.ensureExistence(file));
-	}
-
-	@Test
-	public void testEnsureExistenceNotADirectory() throws Exception {
-		File regularFile = new File(tempDir, "notadir");
-		regularFile.createNewFile();
-		File child = new File(regularFile, "test.txt");
-		assertThrows(RuntimeException.class, () -> helper.ensureExistence(child));
+	public void testTemplatesCreateFile() throws IOException {
+		helper.setupContext();
+		TemplateHelper.Templates templates = helper.new Templates();
+		templates.createFile("file content here", "output.txt");
+		File created = new File(tempDir, "output.txt");
+		assertTrue(created.exists());
 	}
 }

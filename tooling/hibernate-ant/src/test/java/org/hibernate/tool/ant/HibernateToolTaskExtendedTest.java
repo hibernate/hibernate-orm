@@ -6,6 +6,7 @@ package org.hibernate.tool.ant;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
+import org.apache.tools.ant.types.PropertySet;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -84,5 +85,76 @@ public class HibernateToolTaskExtendedTest {
 		task.createHbm2Java();
 		task.createHbm2Doc();
 		assertEquals(3, task.generators.size());
+	}
+
+	@Test
+	public void testExecuteWithExceptionInGenerator() {
+		HibernateToolTask task = new HibernateToolTask();
+		Project project = new Project();
+		project.init();
+		task.setProject(project);
+		task.setDestDir(new File("/tmp"));
+		task.createConfiguration();
+
+		// Add a generator that throws a RuntimeException
+		task.generators.add(new ExporterTask(task) {
+			@Override
+			protected org.hibernate.tool.reveng.api.export.Exporter createExporter() {
+				throw new RuntimeException("Test failure", new IllegalStateException("nested cause"));
+			}
+
+			@Override
+			String getName() {
+				return "failing-exporter";
+			}
+
+			@Override
+			public void execute() {
+				createExporter();
+			}
+		});
+
+		BuildException ex = assertThrows(BuildException.class, task::execute);
+		assertNotNull(ex.getCause());
+	}
+
+	@Test
+	public void testExecuteWithBuildExceptionInGenerator() {
+		HibernateToolTask task = new HibernateToolTask();
+		Project project = new Project();
+		project.init();
+		task.setProject(project);
+		task.setDestDir(new File("/tmp"));
+		task.createConfiguration();
+
+		task.generators.add(new ExporterTask(task) {
+			@Override
+			protected org.hibernate.tool.reveng.api.export.Exporter createExporter() {
+				return null;
+			}
+
+			@Override
+			String getName() {
+				return "build-exception-exporter";
+			}
+
+			@Override
+			public void execute() {
+				throw new BuildException("Build failed");
+			}
+		});
+
+		BuildException ex = assertThrows(BuildException.class, task::execute);
+		assertEquals("Build failed", ex.getMessage());
+	}
+
+	@Test
+	public void testAddConfiguredPropertySet() {
+		HibernateToolTask task = new HibernateToolTask();
+		PropertySet ps = new PropertySet();
+		ps.setProject(new Project());
+		// PropertySet with no properties added
+		task.addConfiguredPropertySet(ps);
+		// Just verify no exception
 	}
 }

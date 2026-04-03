@@ -23,8 +23,10 @@ import org.hibernate.persister.entity.EntityPersister;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static java.util.Comparator.comparingInt;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
@@ -148,191 +150,12 @@ public class StandardGraphBuilder implements GraphBuilder {
 				continue;
 			}
 
-			// Create INSERT edges: parent -> child (insert parent before child)
-			// When a table has multiple groups (self-referential FK), create edges for all combinations
-
-			if ( parentInserts != null && childInserts != null ) {
-				for ( GroupNode parentInsert : parentInserts ) {
-					for ( GroupNode childInsert : childInserts ) {
-						// Edge direction for ordering: parent -> child
-						// Self-referencing FKs must be breakable (otherwise first INSERT is impossible)
-						final boolean breakable;
-						if ( childTable.equals( parentTable ) ) {
-							// Self-referential FK - always breakable
-							breakable = true;
-						}
-						else {
-							breakable = foreignKey.nullable()
-										&& (!avoidBreakingDeferrable() || !foreignKey.deferrable());
-						}
-						final int breakCost = computeBreakCost( foreignKey );
-
-						final GraphEdge edge = new GraphEdge(
-								// FK target
-								parentInsert,
-								// FK key
-								childInsert,
-								// FROM parent (graphing)
-								parentInsert,
-								// TO child (graphing)
-								childInsert,
-								breakable,
-								breakCost,
-								foreignKey.keyColumns(),
-								foreignKey,
-								edgeId++
-						);
-
-						outgoing.get( parentInsert ).add( edge );
-					}
-				}
-			}
-
-			// Create DELETE edges: child -> parent (delete child before parent)
-			// When a table has multiple groups (self-referential FK), create edges for all combinations
-			if ( parentDeletes != null && childDeletes != null ) {
-				for ( GroupNode parentDelete : parentDeletes ) {
-					for ( GroupNode childDelete : childDeletes ) {
-						// DELETE edges can be breakable if FK is nullable
-						// This allows handling circular FK dependencies by nullifying one FK first
-						final boolean breakable = foreignKey.nullable();
-						final int breakCost = breakable ? computeBreakCost( foreignKey ) : 0;
-						final SelectableMappings columnsToNull = breakable ? foreignKey.keyColumns() : EMPTY_SELECTABLES;
-
-						// Edge direction for DELETE: child -> parent (reversed!)
-						final GraphEdge edge = new GraphEdge(
-								// FK target
-								parentDelete,
-								// FK key
-								childDelete,
-								// FROM child (graphing)
-								childDelete,
-								// TO parent (graphing)
-								parentDelete,
-								// Breakable if FK is nullable - allows UPDATE to null FK before DELETE
-								breakable,
-								// Break cost
-								breakCost,
-								// Columns to null if edge is broken
-								columnsToNull,
-								foreignKey,
-								edgeId++
-						);
-
-						outgoing.get( childDelete ).add( edge );
-					}
-				}
-			}
-
-			// Create INSERT -> UPDATE edges: insert parent before updating child FK
-			// Case 1 - Parent INSERT -> Child UPDATE (parent inserted, then child FK set to point to parent)
-			// This is critical for one-to-many collections where collection operations UPDATE child FK
-			// SKIP UPDATE_ORDER groups as they only update order columns, not FKs
-			if ( parentInserts != null && childUpdates != null ) {
-				for ( GroupNode parentInsert : parentInserts ) {
-					for ( GroupNode childUpdate : childUpdates ) {
-						// Skip order-only updates - they don't set FK values
-						if ( childUpdate.group().kind() == MutationKind.UPDATE_ORDER ) {
-							continue;
-						}
-
-						// INSERT parent must happen before UPDATE child
-						// Example: INSERT Product, then UPDATE Category SET product_id=1
-						final GraphEdge edge = new GraphEdge(
-								// FK target (parent)
-								parentInsert,
-								// FK key (child)
-								childUpdate,
-								// FROM parent INSERT (graphing)
-								parentInsert,
-								// TO child UPDATE (graphing)
-								childUpdate,
-								// NOT breakable
-								false,
-								// No break cost
-								0,
-								// No columns
-								EMPTY_SELECTABLES,
-								foreignKey,
-								edgeId++
-						);
-
-						outgoing.get( parentInsert ).add( edge );
-					}
-				}
-			}
-
-			// Create UPDATE -> DELETE edges: update child/parent FK before deleting parent
-			// Case 1 - Child UPDATE -> Parent DELETE (child FK changes, then orphan parent deleted)
-			// SKIP UPDATE_ORDER groups as they only update order columns, not FKs
-			if ( childUpdates != null && parentDeletes != null ) {
-				for ( GroupNode childUpdate : childUpdates ) {
-					// Skip order-only updates - they don't change FK values
-					if ( childUpdate.group().kind() == MutationKind.UPDATE_ORDER ) {
-						continue;
-					}
-
-					for ( GroupNode parentDelete : parentDeletes ) {
-						// UPDATE child must happen before DELETE parent
-						// Example: UPDATE Car SET engine_id=2, then DELETE Engine WHERE id=1
-						final GraphEdge edge = new GraphEdge(
-								// FK target (parent)
-								parentDelete,
-								// FK key (child)
-								childUpdate,
-								// FROM child UPDATE (graphing)
-								childUpdate,
-								// TO parent DELETE (graphing)
-								parentDelete,
-								// NOT breakable
-								false,
-								// No break cost
-								0,
-								// No columns
-								EMPTY_SELECTABLES,
-								foreignKey,
-								edgeId++
-						);
-
-						outgoing.get( childUpdate ).add( edge );
-					}
-				}
-			}
-
-			// Parent UPDATE -> Child DELETE (parent FK changes, then orphan child deleted)
-			// SKIP UPDATE_ORDER groups as they only update order columns, not FKs
-			if ( parentUpdates != null && childDeletes != null ) {
-				for ( GroupNode parentUpdate : parentUpdates ) {
-					// Skip order-only updates - they don't change FK values
-					if ( parentUpdate.group().kind() == MutationKind.UPDATE_ORDER ) {
-						continue;
-					}
-
-					for ( GroupNode childDelete : childDeletes ) {
-						// UPDATE parent must happen before DELETE child
-						final GraphEdge edge = new GraphEdge(
-								// FK target (parent)
-								parentUpdate,
-								// FK key (child)
-								childDelete,
-								// FROM parent UPDATE (graphing)
-								parentUpdate,
-								// TO child DELETE (graphing)
-								childDelete,
-								// NOT breakable
-								false,
-								// No break cost
-								0,
-								// No columns
-								EMPTY_SELECTABLES,
-								foreignKey,
-								edgeId++
-						);
-
-						outgoing.get( parentUpdate ).add( edge );
-					}
-				}
-			}
+			// Create all FK-based edges using helper methods
+			edgeId = createInsertToInsertEdges( foreignKey, childTable, parentTable, parentInserts, childInserts, outgoing, edgeId );
+			edgeId = createDeleteToDeleteEdges( foreignKey, parentDeletes, childDeletes, outgoing, edgeId );
+			edgeId = createInsertToUpdateEdges( foreignKey, parentInserts, childUpdates, outgoing, edgeId );
+			edgeId = createUpdateToDeleteEdges( foreignKey, childUpdates, parentDeletes, outgoing, edgeId );
+			edgeId = createUpdateToDeleteEdges( foreignKey, parentUpdates, childDeletes, outgoing, edgeId );
 		}
 
 		// Create table-level DELETE -> INSERT edges to prevent unique constraint violations
@@ -344,8 +167,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 		// Phase 2: Runtime value tracking - creates edges only when DELETE and INSERT
 		// target the same unique constraint value (not just same table)
 		if ( planningOptions.orderByUniqueKeySlots() ) {
-			edgeId = addUniqueSlotEdges( nodes, expandedGroups, deleteNodeByTable, insertNodeByTable, outgoing,
-					edgeId );
+			edgeId = addUniqueSlotEdges( nodes, expandedGroups, deleteNodeByTable, insertNodeByTable, outgoing,	edgeId );
 		}
 
 		for ( List<GraphEdge> es : outgoing.values() ) {
@@ -353,6 +175,209 @@ public class StandardGraphBuilder implements GraphBuilder {
 		}
 
 		return new Graph( nodes, outgoing );
+	}
+
+	/**
+	 * Create INSERT -> INSERT edges: parent -> child (insert parent before child).
+	 * When a table has multiple groups (self-referential FK), create edges for all combinations.
+	 */
+	private long createInsertToInsertEdges(
+			ForeignKey foreignKey,
+			String childTable,
+			String parentTable,
+			List<GroupNode> parentInserts,
+			List<GroupNode> childInserts,
+			Map<GroupNode, List<GraphEdge>> outgoing,
+			long edgeId) {
+		if ( parentInserts == null || childInserts == null ) {
+			return edgeId;
+		}
+
+		for ( GroupNode parentInsert : parentInserts ) {
+			for ( GroupNode childInsert : childInserts ) {
+				// Edge direction for ordering: parent -> child
+				// Self-referencing FKs must be breakable (otherwise first INSERT is impossible)
+				final boolean breakable;
+				if ( childTable.equals( parentTable ) ) {
+					// Self-referential FK - always breakable
+					breakable = true;
+				}
+				else {
+					breakable = foreignKey.nullable()
+								&& (!avoidBreakingDeferrable() || !foreignKey.deferrable());
+				}
+				final int breakCost = computeBreakCost( foreignKey );
+
+				final GraphEdge edge = new GraphEdge(
+						// FK target
+						parentInsert,
+						// FK key
+						childInsert,
+						// FROM parent (graphing)
+						parentInsert,
+						// TO child (graphing)
+						childInsert,
+						breakable,
+						breakCost,
+						foreignKey.keyColumns(),
+						foreignKey,
+						edgeId++
+				);
+
+				outgoing.get( parentInsert ).add( edge );
+			}
+		}
+
+		return edgeId;
+	}
+
+	/**
+	 * Create DELETE -> DELETE edges: child -> parent (delete child before parent).
+	 * When a table has multiple groups (self-referential FK), create edges for all combinations.
+	 */
+	private long createDeleteToDeleteEdges(
+			ForeignKey foreignKey,
+			List<GroupNode> parentDeletes,
+			List<GroupNode> childDeletes,
+			Map<GroupNode, List<GraphEdge>> outgoing,
+			long edgeId) {
+		if ( parentDeletes == null || childDeletes == null ) {
+			return edgeId;
+		}
+
+		for ( GroupNode parentDelete : parentDeletes ) {
+			for ( GroupNode childDelete : childDeletes ) {
+				// DELETE edges can be breakable if FK is nullable
+				// This allows handling circular FK dependencies by nullifying one FK first
+				final boolean breakable = foreignKey.nullable();
+				final int breakCost = breakable ? computeBreakCost( foreignKey ) : 0;
+				final SelectableMappings columnsToNull = breakable ? foreignKey.keyColumns() : EMPTY_SELECTABLES;
+
+				// Edge direction for DELETE: child -> parent (reversed!)
+				final GraphEdge edge = new GraphEdge(
+						// FK target
+						parentDelete,
+						// FK key
+						childDelete,
+						// FROM child (graphing)
+						childDelete,
+						// TO parent (graphing)
+						parentDelete,
+						// Breakable if FK is nullable - allows UPDATE to null FK before DELETE
+						breakable,
+						// Break cost
+						breakCost,
+						// Columns to null if edge is broken
+						columnsToNull,
+						foreignKey,
+						edgeId++
+				);
+
+				outgoing.get( childDelete ).add( edge );
+			}
+		}
+
+		return edgeId;
+	}
+
+	/**
+	 * Create INSERT -> UPDATE edges: insert parent before updating child FK.
+	 * This is critical for one-to-many collections where collection operations UPDATE child FK.
+	 * SKIP UPDATE_ORDER groups as they only update order columns, not FKs.
+	 */
+	private long createInsertToUpdateEdges(
+			ForeignKey foreignKey,
+			List<GroupNode> parentInserts,
+			List<GroupNode> childUpdates,
+			Map<GroupNode, List<GraphEdge>> outgoing,
+			long edgeId) {
+		if ( parentInserts == null || childUpdates == null ) {
+			return edgeId;
+		}
+
+		for ( GroupNode parentInsert : parentInserts ) {
+			for ( GroupNode childUpdate : childUpdates ) {
+				// Skip order-only updates - they don't set FK values
+				if ( childUpdate.group().kind() == MutationKind.UPDATE_ORDER ) {
+					continue;
+				}
+
+				// INSERT parent must happen before UPDATE child
+				// Example: INSERT Product, then UPDATE Category SET product_id=1
+				final GraphEdge edge = new GraphEdge(
+						// FK target (parent)
+						parentInsert,
+						// FK key (child)
+						childUpdate,
+						// FROM parent INSERT (graphing)
+						parentInsert,
+						// TO child UPDATE (graphing)
+						childUpdate,
+						// NOT breakable
+						false,
+						// No break cost
+						0,
+						// No columns
+						EMPTY_SELECTABLES,
+						foreignKey,
+						edgeId++
+				);
+
+				outgoing.get( parentInsert ).add( edge );
+			}
+		}
+
+		return edgeId;
+	}
+
+	/**
+	 * Create UPDATE -> DELETE edges: update child/parent FK before deleting parent.
+	 * Handles both Child UPDATE -> Parent DELETE and Parent UPDATE -> Child DELETE cases.
+	 * SKIP UPDATE_ORDER groups as they only update order columns, not FKs.
+	 */
+	private long createUpdateToDeleteEdges(
+			ForeignKey foreignKey,
+			List<GroupNode> updates,
+			List<GroupNode> deletes,
+			Map<GroupNode, List<GraphEdge>> outgoing,
+			long edgeId) {
+		if ( updates == null || deletes == null ) {
+			return edgeId;
+		}
+
+		for ( GroupNode update : updates ) {
+			// Skip order-only updates - they don't change FK values
+			if ( update.group().kind() == MutationKind.UPDATE_ORDER ) {
+				continue;
+			}
+
+			for ( GroupNode delete : deletes ) {
+				// UPDATE must happen before DELETE
+				// Example: UPDATE Car SET engine_id=2, then DELETE Engine WHERE id=1
+				final GraphEdge edge = new GraphEdge(
+						// FK target (deleted node)
+						delete,
+						// FK key (updated node)
+						update,
+						// FROM update (graphing)
+						update,
+						// TO delete (graphing)
+						delete,
+						// NOT breakable
+						false,
+						// No break cost
+						0,
+						// No columns
+						EMPTY_SELECTABLES,
+						foreignKey,
+						edgeId++
+				);
+
+				outgoing.get( update ).add( edge );
+			}
+		}
+
+		return edgeId;
 	}
 
 	private static int computeBreakCost(ForeignKey e) {
@@ -611,16 +636,23 @@ public class StandardGraphBuilder implements GraphBuilder {
 		// Phase 3: Handle UPDATE swap cycles
 		// For each UPDATE that changes from oldValue to newValue,
 		// create an edge from any UPDATE that currently holds newValue (and is changing it)
-		for ( UpdateSlotChange change1 : allUpdateSlotChanges ) {
-			for ( UpdateSlotChange change2 : allUpdateSlotChanges ) {
-				if ( change1 == change2 ) {
-					continue;
-				}
+		// Use HashMap to avoid O(n²) comparison - index by oldSlot for O(1) lookup
+		Map<UniqueSlot, List<UpdateSlotChange>> changesByOldSlot = new HashMap<>();
+		for ( UpdateSlotChange change : allUpdateSlotChanges ) {
+			changesByOldSlot.computeIfAbsent( change.oldSlot(), k -> new ArrayList<>() ).add( change );
+		}
 
-				// If change1 wants the value that change2 currently has (is releasing),
-				// then change2 must execute before change1
-				if ( change1.newSlot().equals( change2.oldSlot() ) ) {
-					// Get unique constraint columns from the slot
+		for ( UpdateSlotChange change1 : allUpdateSlotChanges ) {
+			// Find all changes that are releasing the value that change1 wants
+			List<UpdateSlotChange> conflictingChanges = changesByOldSlot.get( change1.newSlot() );
+			if ( conflictingChanges != null ) {
+				for ( UpdateSlotChange change2 : conflictingChanges ) {
+					if ( change1 == change2 ) {
+						continue;
+					}
+
+					// change2 currently holds the value that change1 wants,
+					// so change2 must execute before change1
 					UniqueConstraint constraint = change1.newSlot().constraint();
 					SelectableMappings columnsToNull = (constraint != null) ?
 							constraint.columns() : EMPTY_SELECTABLES;
@@ -771,22 +803,13 @@ public class StandardGraphBuilder implements GraphBuilder {
 			}
 
 			// Check for swap conflicts
+			// Use Set for O(n) lookup instead of O(n²) nested loop
+			// A swap exists if any operation's newSlot matches another operation's oldSlot
+			Set<UniqueSlot> oldSlotSet = new HashSet<>( oldSlots.values() );
 			boolean hasSwap = false;
-			for ( PlannedOperation op1 : group.operations() ) {
-				for ( PlannedOperation op2 : group.operations() ) {
-					if ( op1 == op2 ) {
-						continue;
-					}
-
-					UniqueSlot new1 = newSlots.get( op1 );
-					UniqueSlot old2 = oldSlots.get( op2 );
-
-					if ( new1 != null && old2 != null && new1.equals( old2 ) ) {
-						hasSwap = true;
-						break;
-					}
-				}
-				if ( hasSwap ) {
+			for ( UniqueSlot newSlot : newSlots.values() ) {
+				if ( oldSlotSet.contains( newSlot ) ) {
+					hasSwap = true;
 					break;
 				}
 			}

@@ -14,54 +14,43 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class SchemaExportTaskExportTypeTest {
 
 	@Test
-	public void testCreate() {
-		SchemaExportTask.ExportType type = SchemaExportTask.ExportType.CREATE;
-		assertTrue(type.doCreate());
-		assertFalse(type.doDrop());
-		assertEquals(Action.CREATE_ONLY, type.getAction());
-	}
-
-	@Test
-	public void testDrop() {
-		SchemaExportTask.ExportType type = SchemaExportTask.ExportType.DROP;
-		assertFalse(type.doCreate());
+	public void testInterpretDropOnly() {
+		SchemaExportTask.ExportType type = SchemaExportTask.ExportType.interpret(true, false);
+		assertEquals(SchemaExportTask.ExportType.DROP, type);
 		assertTrue(type.doDrop());
+		assertFalse(type.doCreate());
 		assertEquals(Action.DROP, type.getAction());
 	}
 
 	@Test
-	public void testNone() {
-		SchemaExportTask.ExportType type = SchemaExportTask.ExportType.NONE;
-		assertFalse(type.doCreate());
+	public void testInterpretCreateOnly() {
+		SchemaExportTask.ExportType type = SchemaExportTask.ExportType.interpret(false, true);
+		assertEquals(SchemaExportTask.ExportType.CREATE, type);
 		assertFalse(type.doDrop());
-		assertEquals(Action.NONE, type.getAction());
-	}
-
-	@Test
-	public void testBoth() {
-		SchemaExportTask.ExportType type = SchemaExportTask.ExportType.BOTH;
 		assertTrue(type.doCreate());
-		assertTrue(type.doDrop());
-		assertEquals(Action.CREATE, type.getAction());
-	}
-
-	@Test
-	public void testInterpretJustDrop() {
-		assertEquals(SchemaExportTask.ExportType.DROP, SchemaExportTask.ExportType.interpret(true, false));
-	}
-
-	@Test
-	public void testInterpretJustCreate() {
-		assertEquals(SchemaExportTask.ExportType.CREATE, SchemaExportTask.ExportType.interpret(false, true));
+		assertEquals(Action.CREATE_ONLY, type.getAction());
 	}
 
 	@Test
 	public void testInterpretBoth() {
-		assertEquals(SchemaExportTask.ExportType.BOTH, SchemaExportTask.ExportType.interpret(false, false));
+		SchemaExportTask.ExportType type = SchemaExportTask.ExportType.interpret(false, false);
+		assertEquals(SchemaExportTask.ExportType.BOTH, type);
+		assertTrue(type.doDrop());
+		assertTrue(type.doCreate());
+		assertEquals(Action.CREATE, type.getAction());
+	}
+
+	@Test
+	public void testNoneAction() {
+		assertEquals(Action.NONE, SchemaExportTask.ExportType.NONE.getAction());
+		assertFalse(SchemaExportTask.ExportType.NONE.doCreate());
+		assertFalse(SchemaExportTask.ExportType.NONE.doDrop());
 	}
 
 	@Test
 	public void testInterpretDropTakesPrecedence() {
-		assertEquals(SchemaExportTask.ExportType.DROP, SchemaExportTask.ExportType.interpret(true, true));
+		// When both drop and create are true, drop takes precedence
+		SchemaExportTask.ExportType type = SchemaExportTask.ExportType.interpret(true, true);
+		assertEquals(SchemaExportTask.ExportType.DROP, type);
 	}
 }

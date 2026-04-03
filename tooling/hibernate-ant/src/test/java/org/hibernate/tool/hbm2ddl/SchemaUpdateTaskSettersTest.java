@@ -6,9 +6,14 @@ package org.hibernate.tool.hbm2ddl;
 
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
+import org.apache.tools.ant.types.FileSet;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -18,11 +23,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SchemaUpdateTaskSettersTest {
 
+	@TempDir
+	private File tempDir;
+
 	@Test
 	public void testSetText() {
 		SchemaUpdateTask task = new SchemaUpdateTask();
 		task.setText(false);
-		// default is true, changing to false
 	}
 
 	@Test
@@ -44,6 +51,25 @@ public class SchemaUpdateTaskSettersTest {
 		task.setProject(new Project());
 		assertThrows(BuildException.class,
 				() -> task.setProperties(new File("/nonexistent/hibernate.properties")));
+	}
+
+	@Test
+	public void testSetPropertiesValid() throws IOException {
+		SchemaUpdateTask task = new SchemaUpdateTask();
+		task.setProject(new Project());
+		File propsFile = new File(tempDir, "hibernate.properties");
+		Properties props = new Properties();
+		props.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
+		try (FileOutputStream fos = new FileOutputStream(propsFile)) {
+			props.store(fos, null);
+		}
+		task.setProperties(propsFile);
+	}
+
+	@Test
+	public void testAddFileset() {
+		SchemaUpdateTask task = new SchemaUpdateTask();
+		task.addFileset(new FileSet());
 	}
 
 	@Test

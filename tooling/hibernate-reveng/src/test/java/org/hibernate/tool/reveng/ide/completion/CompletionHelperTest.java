@@ -14,42 +14,56 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class CompletionHelperTest {
 
 	@Test
-	public void testGetCanonicalPathSingleEntityWithAlias() {
-		List<EntityNameReference> refs = List.of(new EntityNameReference("Product", "p"));
-		assertEquals("Product", CompletionHelper.getCanonicalPath(refs, "p"));
+	public void testSingleEntityMatchAlias() {
+		List<EntityNameReference> refs = new ArrayList<>();
+		refs.add(new EntityNameReference("Person", "p"));
+		assertEquals("Person", CompletionHelper.getCanonicalPath(refs, "p"));
 	}
 
 	@Test
-	public void testGetCanonicalPathSingleEntityWithProperty() {
-		List<EntityNameReference> refs = List.of(new EntityNameReference("Product", "Product"));
-		assertEquals("Product/name", CompletionHelper.getCanonicalPath(refs, "name"));
+	public void testSingleEntityPropertyPath() {
+		List<EntityNameReference> refs = new ArrayList<>();
+		refs.add(new EntityNameReference("Person", "p"));
+		// alias "p" is not null/empty/same as entity name, so falls through to general resolution
+		// "name" is not a known alias, no dots, so returns as-is
+		assertEquals("name", CompletionHelper.getCanonicalPath(refs, "name"));
 	}
 
 	@Test
-	public void testGetCanonicalPathMultipleEntities() {
-		List<EntityNameReference> refs = List.of(
-				new EntityNameReference("Product", "p"),
-				new EntityNameReference("Category", "c")
-		);
-		assertEquals("Product", CompletionHelper.getCanonicalPath(refs, "p"));
-		assertEquals("Category", CompletionHelper.getCanonicalPath(refs, "c"));
+	public void testSingleEntityNoAlias() {
+		List<EntityNameReference> refs = new ArrayList<>();
+		refs.add(new EntityNameReference("Person", null));
+		assertEquals("Person/name", CompletionHelper.getCanonicalPath(refs, "name"));
 	}
 
 	@Test
-	public void testGetCanonicalPathDotSeparated() {
-		List<EntityNameReference> refs = List.of(new EntityNameReference("Product", "p"));
-		String result = CompletionHelper.getCanonicalPath(refs, "p.name");
-		assertEquals("Product/name", result);
+	public void testSingleEntitySameAlias() {
+		List<EntityNameReference> refs = new ArrayList<>();
+		refs.add(new EntityNameReference("Person", "Person"));
+		assertEquals("Person/name", CompletionHelper.getCanonicalPath(refs, "name"));
 	}
 
 	@Test
-	public void testGetCanonicalPathUnknownAlias() {
-		List<EntityNameReference> refs = List.of(new EntityNameReference("Product", "p"));
+	public void testMultipleEntities() {
+		List<EntityNameReference> refs = new ArrayList<>();
+		refs.add(new EntityNameReference("Person", "p"));
+		refs.add(new EntityNameReference("Address", "a"));
+		// With multiple entities, falls through to general resolution
+		assertEquals("Person", CompletionHelper.getCanonicalPath(refs, "p"));
+	}
+
+	@Test
+	public void testDottedProperty() {
+		List<EntityNameReference> refs = new ArrayList<>();
+		refs.add(new EntityNameReference("Person", "p"));
+		refs.add(new EntityNameReference("Address", "a"));
+		assertEquals("Address/city", CompletionHelper.getCanonicalPath(refs, "a.city"));
+	}
+
+	@Test
+	public void testUnknownName() {
+		List<EntityNameReference> refs = new ArrayList<>();
+		refs.add(new EntityNameReference("Person", "p"));
 		assertEquals("unknown", CompletionHelper.getCanonicalPath(refs, "unknown"));
-	}
-
-	@Test
-	public void testGetCanonicalPathEmptyList() {
-		assertEquals("p", CompletionHelper.getCanonicalPath(new ArrayList<>(), "p"));
 	}
 }

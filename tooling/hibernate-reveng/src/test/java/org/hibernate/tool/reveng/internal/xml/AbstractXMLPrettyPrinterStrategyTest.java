@@ -11,6 +11,7 @@ import org.w3c.dom.NodeList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AbstractXMLPrettyPrinterStrategyTest {
 
@@ -59,8 +60,8 @@ public class AbstractXMLPrettyPrinterStrategyTest {
 		String xml = "<root>  \n  <child>text</child>  \n  </root>";
 		Document doc = strategy.newDocument(xml, "UTF-8");
 
-		// Before removal, whitespace text nodes exist
-		int beforeCount = doc.getDocumentElement().getChildNodes().getLength();
+		// Before removal, whitespace text nodes exist alongside the child element
+		assertTrue(doc.getDocumentElement().getChildNodes().getLength() > 1);
 
 		strategy.removeWhitespace(doc);
 

@@ -5,6 +5,7 @@
 package org.hibernate.action.queue.graph;
 
 
+import org.hibernate.action.queue.constraint.Constraint;
 import org.hibernate.action.queue.constraint.ForeignKey;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
@@ -47,9 +48,9 @@ public class GraphTestUtils {
 			boolean breakable,
 			int breakCost,
 			SelectableMappings childColumnsToNull,
-			ForeignKey foreignKey,
+			Constraint constraint,
 			long stableId) {
-		return new GraphEdge(targetNode, keyNode, from, to, breakable, breakCost, childColumnsToNull, foreignKey, stableId);
+		return new GraphEdge(targetNode, keyNode, from, to, breakable, breakCost, childColumnsToNull, constraint, stableId);
 	}
 
 	/**

@@ -574,7 +574,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 								0,
 								// Columns to NULL if edge needs breaking
 								columnsToNull,
-								null,  // No FK - this is a unique constraint edge
+								constraint,  // Unique constraint
 								edgeId++
 						);
 
@@ -611,7 +611,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 								edgeBreakable,
 								edgeBreakable ? 100 : 0,
 								columnsToNull,  // Columns to NULL for cycle breaking
-								null,
+								constraint,
 								edgeId++
 						);
 
@@ -622,7 +622,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 								edgeBreakable,
 								edgeBreakable ? 100 : 0,
 								columnsToNull,  // Columns to NULL for cycle breaking
-								null,
+								constraint,
 								edgeId++
 						);
 
@@ -668,7 +668,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 							edgeBreakable,
 							edgeBreakable ? 100 : 0,
 							columnsToNull,  // Columns to NULL if this edge is broken
-							null,  // Keep FK null to mark this as a unique constraint edge
+							constraint,  // Unique constraint
 							edgeId++
 					);
 					outgoing.get( change2.node() ).add( edge );

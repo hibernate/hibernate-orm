@@ -272,7 +272,8 @@ public class CycleBreaker {
 			if ( keyGroup.kind() != MutationKind.UPDATE)  {
 				return;
 			}
-		} else {
+		}
+		else {
 			// Phase 2: NULL-in-INSERT strategy for FK cycles
 			if ( keyGroup.kind() != MutationKind.INSERT)  {
 				return;
@@ -319,15 +320,14 @@ public class CycleBreaker {
 		return true;
 	}
 
+	/// For DELETE cycles, we can't use NULL strategy
+	/// Break an arbitrary edge to allow topological sort to proceed
+	/// The database must handle the cycle via deferrable constraints or cascade
+	///
+	/// NOTE: DELETE edges are always marked as non-breakable (can't use NULL-INSERT)
+	/// But for DELETE-only cycles, we MUST break an edge to allow any progress.
+	/// This is especially true for self-referencing FKs where you need to delete rows.
 	private void breakArbitraryDeleteEdge(List<GraphEdge> cycle) {
-		// For DELETE cycles, we can't use NULL strategy
-		// Break an arbitrary edge to allow topological sort to proceed
-		// The database must handle the cycle via deferrable constraints or cascade
-		//
-		// NOTE: DELETE edges are always marked as non-breakable (can't use NULL-INSERT)
-		// But for DELETE-only cycles, we MUST break an edge to allow any progress.
-		// This is especially true for self-referencing FKs where you need to delete rows.
-
 		GraphEdge toBreak = null;
 
 		// Prefer deferrable edges if available (database can defer FK checks)
@@ -354,10 +354,8 @@ public class CycleBreaker {
 		}
 	}
 
-	/**
-	 * Find an UPDATE edge in the cycle. UPDATE operations can be safely broken
-	 * because they reference existing rows and don't create new dependencies.
-	 */
+	/// Find an UPDATE edge in the cycle. UPDATE operations can be safely broken
+	/// because they reference existing rows and don't create new dependencies.
 	private GraphEdge findUpdateEdge(List<GraphEdge> cycle) {
 		for (GraphEdge e : cycle) {
 			if (e.isBroken()) {
@@ -372,10 +370,8 @@ public class CycleBreaker {
 		return null;
 	}
 
-	/**
-	 * Find a deferrable edge in the cycle. Deferrable constraints are checked
-	 * at transaction commit, so breaking these edges is safe.
-	 */
+	/// Find a deferrable edge in the cycle. Deferrable constraints are checked
+	/// at transaction commit, so breaking these edges is safe.
 	private GraphEdge findDeferrableEdge(List<GraphEdge> cycle) {
 		for (GraphEdge e : cycle) {
 			if (e.isBroken()) {
@@ -388,10 +384,8 @@ public class CycleBreaker {
 		return null;
 	}
 
-	/**
-	 * Find a non-DELETE edge in the cycle. As a last resort, we can break
-	 * INSERT edges even with non-nullable FKs, though this may cause runtime errors.
-	 */
+	/// Find a non-DELETE edge in the cycle. As a last resort, we can break
+	/// INSERT edges even with non-nullable FKs, though this may cause runtime errors.
 	private GraphEdge findNonDeleteEdge(List<GraphEdge> cycle) {
 		// First try to find INSERT edges (more likely to work with patches)
 		for (GraphEdge e : cycle) {
@@ -419,23 +413,17 @@ public class CycleBreaker {
 	}
 
 
-	/**
-	 * Check if an edge represents a unique constraint dependency (not a foreign key).
-	 * Phase 3: Unique constraint edges have null foreignKey.
-	 */
+	/// Check if an edge represents a unique constraint dependency (not a foreign key).
 	private boolean isUniqueConstraintEdge(GraphEdge edge) {
-		return edge.getForeignKey() == null;
+		return !edge.isForeignKeyEdge();
 	}
 
-	/**
-	 * Check if a cycle consists only of unique constraint edges involving UPDATEs.
-	 * Phase 3: Such cycles occur when swapping unique constraint values.
-	 *
-	 * Example: Swapping one-to-one relationships
-	 * - UPDATE emp1 SET dept_id = 2
-	 * - UPDATE emp2 SET dept_id = 1
-	 * This creates a cycle in the graph but can be handled with NULL-then-patch strategy.
-	 */
+	/// Check if a cycle consists only of unique constraint edges involving UPDATEs.
+	/// Such cycles occur when swapping unique constraint values.
+	/// Example: Swapping one-to-one relationships
+	/// - UPDATE emp1 SET dept_id = 2
+	/// - UPDATE emp2 SET dept_id = 1
+	/// This creates a cycle in the graph but can be handled with NULL-then-patch strategy.
 	private boolean isIgnorableUniqueUpdateCycle(List<GraphEdge> cycle, org.hibernate.action.queue.PlanningOptions planningOptions) {
 		// Check if all edges are unique constraint edges (no foreign keys)
 		boolean allUniqueEdges = true;

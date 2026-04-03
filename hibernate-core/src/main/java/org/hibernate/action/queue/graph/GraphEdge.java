@@ -4,6 +4,7 @@
  */
 package org.hibernate.action.queue.graph;
 
+import org.hibernate.action.queue.constraint.Constraint;
 import org.hibernate.action.queue.constraint.ForeignKey;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 
@@ -62,7 +63,7 @@ public class GraphEdge {
 	final int breakCost;
 	final SelectableMappings childColumnsToNull;
 
-	final ForeignKey foreignKey;
+	final Constraint constraint;
 	final long stableId;
 
 	boolean broken;
@@ -75,7 +76,7 @@ public class GraphEdge {
 			boolean breakable,
 			int breakCost,
 			SelectableMappings childColumnsToNull,
-			ForeignKey foreignKey,
+			Constraint constraint,
 		long stableId) {
 		this.targetNode = targetTableOpGroup;
 		this.keyNode = keyTableOpGroup;
@@ -84,13 +85,23 @@ public class GraphEdge {
 		this.breakable = breakable;
 		this.breakCost = breakCost;
 		this.childColumnsToNull = childColumnsToNull;
-		this.foreignKey = foreignKey;
+		this.constraint = constraint;
 		this.stableId = stableId;
 	}
 
-	///  The foreign key that this edge describes
+	/// The constraint that this edge describes (might be a foreign key or unique constraint)
+	public Constraint getConstraint() {
+		return constraint;
+	}
+
+	/// The foreign key that this edge describes, or null if this is a unique constraint edge
 	public ForeignKey getForeignKey() {
-		return foreignKey;
+		return constraint instanceof ForeignKey fk ? fk : null;
+	}
+
+	/// Whether this edge represents a foreign key dependency (as opposed to a unique constraint dependency)
+	public boolean isForeignKeyEdge() {
+		return constraint instanceof ForeignKey;
 	}
 
 	/// The node/operation on the table that is the target of the foreign-key.
@@ -136,14 +147,14 @@ public class GraphEdge {
 		return childColumnsToNull;
 	}
 
-	/// Whether the underlying foreign-key is defined as deferrable in the database.
+	/// Whether the underlying constraint is defined as deferrable in the database.
 	/// This basically means that we do not need to worry about trying to break cycles;
 	/// the database will simply allow the 2 operations and check consistency at the end
 	/// of the transaction.
 	///
 	/// @implNote This is currently not used, but is definitely something we want to use.
 	public boolean isDeferrable() {
-		return foreignKey.deferrable();
+		return constraint != null && constraint.isDeferrable();
 	}
 
 	public long getStableId() {

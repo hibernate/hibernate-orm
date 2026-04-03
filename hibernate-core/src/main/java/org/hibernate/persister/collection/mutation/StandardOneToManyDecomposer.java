@@ -17,7 +17,7 @@ import java.util.List;
  * Standard one-to-many decomposer for single-table and simple joined inheritance
  * @author Steve Ebersole
  */
-public class StandardOneToManyDecomposer extends AbstractNonBundledOneToManyDecomposer {
+public class StandardOneToManyDecomposer extends AbstractOneToManyDecomposer {
 	private final CollectionJdbcOperations jdbcOperations;
 
 	public StandardOneToManyDecomposer(OneToManyPersister persister, SessionFactoryImplementor factory) {

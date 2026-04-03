@@ -30,13 +30,10 @@ import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
-import org.hibernate.engine.spi.CascadeStyle;
-import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -115,12 +112,10 @@ import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.AnyType;
-import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
-import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 
 import java.sql.SQLException;
@@ -138,8 +133,6 @@ import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
 import static java.util.Collections.emptyList;
-import static org.hibernate.cfg.FlushSettings.BUNDLE_COLLECTION_OPERATIONS;
-import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -258,8 +251,6 @@ public abstract class AbstractCollectionPersister
 
 	private Collection collectionBootDescriptor;
 
-	protected boolean shouldBundleOperations;
-	private final boolean containsNoCascadedAssociations;
 	private CollectionTableDescriptor collectionTableDescriptor;
 
 	public AbstractCollectionPersister(
@@ -526,16 +517,6 @@ public abstract class AbstractCollectionPersister
 		cascadeDeleteEnabled =
 				key.isCascadeDeleteEnabled()
 				&& creationContext.getDialect().supportsCascadeDelete();
-
-		// Check if element type has cascaded associations
-		containsNoCascadedAssociations = !detectCascadedAssociations();
-
-		var configurationService = factory.getServiceRegistry().requireService( ConfigurationService.class );
-		shouldBundleOperations = configurationService.getSetting(
-				BUNDLE_COLLECTION_OPERATIONS,
-				BOOLEAN,
-				true
-		);
 	}
 
 	private FilterHelper manyToManyFilterHelper(Collection collection, RuntimeModelCreationContext context) {
@@ -560,69 +541,6 @@ public abstract class AbstractCollectionPersister
 						context.getBootModel().getEntityBinding( elementPersister.getEntityName() ),
 						context.getSessionFactory().getSqlStringGenerationContext()
 				);
-	}
-
-	/**
-	 * Detects if the collection element type has any cascaded associations during initialization.
-	 * <p>
-	 * For composite element collections, this checks all properties for associations
-	 * with cascade operations (particularly PERSIST). For entity associations, it checks
-	 * if the foreign key direction is TO_PARENT and cascade includes PERSIST.
-	 * <p>
-	 * This is used to determine if collection operation bundling should be disabled
-	 * to preserve correct operation ordering with cascaded entities.
-	 *
-	 * @return {@code true} if the collection elements contain cascaded associations
-	 */
-	private boolean detectCascadedAssociations() {
-		// Check for orphan-delete on the collection itself (e.g., many-to-many with cascade="all-delete-orphan")
-		if ( collectionBootDescriptor.hasOrphanDelete() ) {
-			return true;
-		}
-
-		// Check for cascaded associations within composite elements
-		if ( elementType.isComponentType() ) {
-			return checkComponentForCascades( (CompositeType) elementType );
-		}
-
-		// For element collections with direct association elements
-		if ( elementType.isAssociationType() ) {
-			AssociationType assocType = (AssociationType) elementType;
-			if ( assocType.getForeignKeyDirection() == ForeignKeyDirection.TO_PARENT ) {
-				// This would be unusual, but check cascade style if available
-				// For element collections, cascade is typically defined in the mapping
-				return true; // Conservative: assume cascades might exist
-			}
-		}
-		return false;
-	}
-
-	private boolean checkComponentForCascades(CompositeType compositeType) {
-		for ( int i = 0; i < compositeType.getSubtypes().length; i++ ) {
-			Type subtype = compositeType.getSubtypes()[i];
-			if ( subtype.isAssociationType() ) {
-				AssociationType assocType = (AssociationType) subtype;
-				// For composite elements, associations with FK from the collection table are FROM_PARENT
-				if ( assocType.getForeignKeyDirection() == ForeignKeyDirection.FROM_PARENT ) {
-					CascadeStyle cascadeStyle = compositeType.getCascadeStyle( i );
-					if ( cascadeStyle.doCascade( CascadingActions.PERSIST ) ) {
-						return true;
-					}
-				}
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Returns whether this collection has cascaded associations in its elements.
-	 * <p>
-	 * The value is computed once during persister initialization and cached.
-	 *
-	 * @return {@code true} if the collection elements contain cascaded associations
-	 */
-	public boolean containsNoCascadedAssociations() {
-		return containsNoCascadedAssociations;
 	}
 
 	public String getSqlWhereString() {

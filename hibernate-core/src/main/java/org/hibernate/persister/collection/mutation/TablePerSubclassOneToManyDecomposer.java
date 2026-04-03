@@ -22,7 +22,7 @@ import java.util.List;
  * has its own table, requiring different JDBC operations per subclass.
  * @author Steve Ebersole
  */
-public class TablePerSubclassOneToManyDecomposer extends AbstractNonBundledOneToManyDecomposer {
+public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomposer {
 	private final IdentityMap<EntityPersister,CollectionJdbcOperations> operationsBySubclass;
 
 	public TablePerSubclassOneToManyDecomposer(OneToManyPersister persister, SessionFactoryImplementor factory) {

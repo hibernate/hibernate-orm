@@ -24,7 +24,6 @@ import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.collection.mutation.BundledOneToManyDecomposer;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinator;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinatorNoOp;
@@ -138,11 +137,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			decomposer = new TablePerSubclassOneToManyDecomposer( this, getFactory() );
 		}
 		else {
-			// Disable bundling if collection has cascaded associations to preserve operation ordering
-			final boolean enableBundling = shouldBundleOperations && containsNoCascadedAssociations();
-			decomposer = enableBundling
-					? new BundledOneToManyDecomposer( this, getFactory() )
-					: new StandardOneToManyDecomposer( this, getFactory() );
+			decomposer = new StandardOneToManyDecomposer( this, getFactory() );
 		}
 	}
 

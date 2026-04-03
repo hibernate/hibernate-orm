@@ -22,7 +22,6 @@ import org.hibernate.collection.spi.SnapshotPositioned;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.internal.ManyToManyCollectionPart;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -49,17 +48,14 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
 public class BasicCollectionDecomposer implements CollectionDecomposer {
 	private final BasicCollectionPersister persister;
 	private final CollectionTableDescriptor tableDescriptor;
-	private final boolean shouldBundleOperations;
 	private final CollectionJdbcOperations jdbcOperations;
 
 	public BasicCollectionDecomposer(
 			BasicCollectionPersister persister,
-			boolean shouldBundleOperations,
 			SessionFactoryImplementor factory) {
 		assert persister != null;
 
 		this.persister = persister;
-		this.shouldBundleOperations = shouldBundleOperations;
 		this.tableDescriptor = persister.getCollectionTableDescriptor();
 		this.jdbcOperations = buildJdbcOperations( factory );
 	}
@@ -155,74 +151,35 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 
 		final List<PlannedOperation> operations = new ArrayList<>();
 
-		if ( shouldBundleOperations ) {
-			// Bundled: all rows in a single PlannedOperation with a bundled BindPlan
-			final List<Object> entryList = new ArrayList<>();
-			final List<Integer> entryIndices = new ArrayList<>();
-			int entryCount = 0;
+		// One operation per row
+		int entryCount = 0;
+		while ( entries.hasNext() ) {
+			final Object entry = entries.next();
+			boolean include = collection.includeInRecreate( entry, entryCount, collection, persister.getAttributeMapping() );
 
-			while ( entries.hasNext() ) {
-				final Object entry = entries.next();
-				boolean include = collection.includeInRecreate( entry, entryCount, collection, persister.getAttributeMapping() );
-
-				if ( include ) {
-					entryList.add( entry );
-					entryIndices.add( entryCount );
-				}
-
-				entryCount++;
-			}
-
-			if ( !entryList.isEmpty() ) {
-				final BindPlan bundledBindPlan = new BundledCollectionInsertBindPlan(
-						insertRowPlan.values(),
+			if ( include ) {
+				final BindPlan bindPlan = new SingleRowInsertBindPlan(
+						persister,
+						jdbcOperations.insertRowPlan().values(),
 						collection,
 						key,
-						entryList,
-						entryIndices
+						entry,
+						entryCount
 				);
 
-				operations.add( new PlannedOperation(
+				final PlannedOperation plannedOp = new PlannedOperation(
 						tableDescriptor,
 						MutationKind.INSERT,
-						insertRowPlan.jdbcOperation(),
-						bundledBindPlan,
+						jdbcOperations.insertRowPlan().jdbcOperation(),
+						bindPlan,
 						insertOrdinal,
-						"InsertRows(" + persister.getRolePath() + ")"
-				) );
+						"InsertRow[" + entryCount + "](" + persister.getRolePath() + ")"
+				);
+
+				operations.add( plannedOp );
 			}
-		}
-		else {
-			// Non-bundled: one operation per row
-			int entryCount = 0;
-			while ( entries.hasNext() ) {
-				final Object entry = entries.next();
-				boolean include = collection.includeInRecreate( entry, entryCount, collection, persister.getAttributeMapping() );
 
-				if ( include ) {
-					final BindPlan bindPlan = new SingleRowInsertBindPlan(
-							persister,
-							jdbcOperations.insertRowPlan().values(),
-							collection,
-							key,
-							entry,
-							entryCount
-					);
-
-					final PlannedOperation plannedOp = new PlannedOperation(
-							tableDescriptor,
-							MutationKind.INSERT,
-							jdbcOperations.insertRowPlan().jdbcOperation(),
-							bindPlan,
-							insertOrdinal,
-							"InsertRow[" + entryCount + "](" + persister.getRolePath() + ")"
-					);
-
-					operations.add( plannedOp );
-				}
-
-				entryCount++;
-			}
+			entryCount++;
 		}
 
 		return operations;
@@ -287,14 +244,8 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 					else {
 						// Fallback to original approach for non-indexed collections or empty changes
 						planDeleteRowOperations( collection, key, ordinalBase, session, operations::add );
-
-						if ( shouldBundleOperations ) {
-							planBundledChangeAndAdditionOperations( collection, key, ordinalBase, session, operations::add );
-						}
-						else {
-							planUpdateRowOperations( collection, key, ordinalBase, session, operations::add );
-							planInsertRowOperations( collection, key, ordinalBase, session, operations::add );
-						}
+						planUpdateRowOperations( collection, key, ordinalBase, session, operations::add );
+						planInsertRowOperations( collection, key, ordinalBase, session, operations::add );
 					}
 				}
 				success = true;
@@ -359,177 +310,30 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 
 		var deleteOrdinal = calculateOrdinal( ordinalBase, Slot.DELETE );
 
-		if ( shouldBundleOperations ) {
-			// Bundle all rows into a single PlannedOperation with a bundled BindPlan
-			final List<Object> deletionList = new ArrayList<>();
+		// One operation per row
+		int deletionCount = 0;
 
-			while ( deletes.hasNext() ) {
-				deletionList.add( deletes.next() );
-			}
+		while ( deletes.hasNext() ) {
+			final Object removal = deletes.next();
 
-			if ( !deletionList.isEmpty() ) {
-				final BindPlan bundledBindPlan = new BundledCollectionDeleteBindPlan(
-						collection,
-						key,
-						deleteRowPlan.restrictions(),
-						deletionList
-				);
+			final BindPlan bindPlan = new SingleRowDeleteBindPlan(
+					collection,
+					key,
+					removal,
+					deleteRowPlan.restrictions()
+			);
 
-				operationConsumer.accept( new PlannedOperation(
-						tableDescriptor,
-						MutationKind.DELETE,
-						deleteRowPlan.jdbcOperation(),
-						bundledBindPlan,
-						deleteOrdinal,
-						"DeleteRows(" + persister.getRolePath() + ")"
-				) );
-			}
+			operationConsumer.accept( new PlannedOperation(
+					tableDescriptor,
+					MutationKind.DELETE,
+					deleteRowPlan.jdbcOperation(),
+					bindPlan,
+					deleteOrdinal,
+					"DeleteRow[" + deletionCount + "](" + persister.getRolePath() + ")"
+			) );
+
+			deletionCount++;
 		}
-		else {
-			// Original behavior: one operation per row
-			int deletionCount = 0;
-
-
-			while ( deletes.hasNext() ) {
-				final Object removal = deletes.next();
-
-				final BindPlan bindPlan = new SingleRowDeleteBindPlan(
-						collection,
-						key,
-						removal,
-						deleteRowPlan.restrictions()
-				);
-
-				operationConsumer.accept( new PlannedOperation(
-						tableDescriptor,
-						MutationKind.DELETE,
-						deleteRowPlan.jdbcOperation(),
-						bindPlan,
-						deleteOrdinal,
-						"DeleteRow[" + deletionCount + "](" + persister.getRolePath() + ")"
-				) );
-
-				deletionCount++;
-			}
-		}
-	}
-
-	private void planBundledChangeAndAdditionOperations(
-			PersistentCollection<?> collection,
-			Object key,
-			int ordinalBase,
-			SharedSessionContractImplementor session,
-			Consumer<PlannedOperation> operationConsumer) {
-		assert shouldBundleOperations;
-
-		var updateRowPlan = jdbcOperations.updateRowPlan();
-		var insertRowPlan = jdbcOperations.insertRowPlan();
-		var entries = collection.entries( persister );
-
-		if ( (updateRowPlan != null || insertRowPlan != null) && entries.hasNext() ) {
-			var changeEntries = updateRowPlan == null ? null : new ArrayList<BundledBindPlanEntry>();
-			var additionEntries = insertRowPlan == null ? null : new ArrayList<BundledBindPlanEntry>();
-			int entryCount = 0;
-
-			while ( entries.hasNext() ) {
-				final Object entry = entries.next();
-
-				var isAddition = collection.needsInserting( entry, entryCount, persister.getElementType() );
-				var isChange = collection.needsUpdating( entry, entryCount, persister.getAttributeMapping() );
-
-				if ( isAddition && isChange ) {
-					// Log a warning?  This typically means bad equals/hashCode, though can happen I guess
-					// with UserCollectionType too...
-				}
-				if ( updateRowPlan != null && isChange ) {
-					changeEntries.add( new BundledBindPlanEntry( entry, entryCount ) );
-				}
-				if ( insertRowPlan != null && isAddition ) {
-					additionEntries.add( new BundledBindPlanEntry( entry, entryCount ) );
-				}
-
-				entryCount++;
-			}
-
-			// UPDATE modified entries
-			applyBundledUpdateChanges( collection, key, ordinalBase, changeEntries, updateRowPlan, operationConsumer );
-
-			// INSERT entries
-			applyBundledUpdateAdditions( collection, key, ordinalBase, additionEntries, insertRowPlan, operationConsumer );
-		}
-	}
-
-	protected void applyBundledUpdateChanges(
-			PersistentCollection<?> collection,
-			Object key,
-			int ordinalBase,
-			List<BundledBindPlanEntry> changeEntries,
-			CollectionJdbcOperations.UpdateRowPlan updateRowPlan,
-			Consumer<PlannedOperation> operationConsumer) {
-		if ( CollectionHelper.isEmpty( changeEntries ) ) {
-			return;
-		}
-
-		// For indexed collections where elements have been removed, process UPDATEs in reverse order
-		// to avoid unique constraint violations. When elements shift positions, processing from
-		// highest index to lowest ensures elements move "out of the way" before lower indices
-		// need their positions.
-		final List<BundledBindPlanEntry> orderedEntries;
-		if ( collection.isElementRemoved() ) {
-			orderedEntries = new ArrayList<>( changeEntries );
-			java.util.Collections.reverse( orderedEntries );
-		}
-		else {
-			orderedEntries = changeEntries;
-		}
-
-		final BindPlan bundledBindPlan = new BundledCollectionUpdateBindPlan(
-				collection,
-				key,
-				updateRowPlan.values(),
-				updateRowPlan.restrictions(),
-				orderedEntries
-		);
-
-		operationConsumer.accept( new PlannedOperation(
-				persister.getCollectionTableDescriptor(),
-				MutationKind.UPDATE,
-				updateRowPlan.jdbcOperation(),
-				bundledBindPlan,
-				calculateOrdinal( ordinalBase, Slot.UPDATE ),
-				"BundledUpdateRows(" + persister.getRolePath() + ")"
-		) );
-	}
-
-	protected void applyBundledUpdateAdditions(
-			PersistentCollection<?> collection,
-			Object key,
-			int ordinalBase,
-			List<BundledBindPlanEntry> additionEntries,
-			CollectionJdbcOperations.InsertRowPlan insertRowPlan,
-			Consumer<PlannedOperation> operationConsumer) {
-		if ( CollectionHelper.isEmpty( additionEntries ) ) {
-			return;
-		}
-
-		// Pre-insert callback once for the whole collection
-		collection.preInsert( persister );
-
-		final BindPlan bundledBindPlan = new BundledCollectionInsertBindPlan(
-				insertRowPlan.values(),
-				collection,
-				key,
-				additionEntries
-		);
-
-		operationConsumer.accept( new PlannedOperation(
-				persister.getCollectionTableDescriptor(),
-				MutationKind.INSERT,
-				insertRowPlan.jdbcOperation(),
-				bundledBindPlan,
-				calculateOrdinal( ordinalBase, Slot.INSERT ),
-				"BundledInsertRows(" + persister.getRolePath() + ")"
-		) );
 	}
 
 	private void planUpdateRowOperations(

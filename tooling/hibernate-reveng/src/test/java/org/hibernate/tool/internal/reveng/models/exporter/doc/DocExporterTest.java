@@ -497,6 +497,157 @@ public class DocExporterTest {
 				"Should contain table name from @Table annotation");
 	}
 
+	// ---- DOT graph tests ----
+
+	@Test
+	public void testDotEntityGraphGenerated() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails employee = buildEntity(
+				builder, "EMPLOYEE", "Employee", "com.example");
+		ClassDetails department = buildEntity(
+				builder, "DEPARTMENT", "Department", "com.example");
+
+		// Use a non-existent dot executable — DOT files should still
+		// be generated even though dot conversion will fail
+		DocExporter exporter = DocExporter.create(
+				List.of(employee, department),
+				builder.getTableMetadataMap(),
+				"/nonexistent/dot",
+				new String[0]);
+		exporter.export(outputDir);
+
+		File entityDot = new File(outputDir,
+				"entities/entitygraph.dot");
+		assertTrue(entityDot.exists(),
+				"Entity graph DOT file should be generated");
+		String content = readFile(entityDot);
+		assertTrue(content.contains("digraph EntityGraph"),
+				"Should be a valid DOT digraph");
+		assertTrue(content.contains("Employee"),
+				"Should contain Employee entity");
+		assertTrue(content.contains("Department"),
+				"Should contain Department entity");
+	}
+
+	@Test
+	public void testDotTableGraphGenerated() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails employee = buildEntity(
+				builder, "EMPLOYEE", "Employee", "com.example");
+		ClassDetails department = buildEntity(
+				builder, "DEPARTMENT", "Department", "com.example");
+
+		DocExporter exporter = DocExporter.create(
+				List.of(employee, department),
+				builder.getTableMetadataMap(),
+				"/nonexistent/dot",
+				new String[0]);
+		exporter.export(outputDir);
+
+		File tableDot = new File(outputDir,
+				"tables/tablegraph.dot");
+		assertTrue(tableDot.exists(),
+				"Table graph DOT file should be generated");
+		String content = readFile(tableDot);
+		assertTrue(content.contains("digraph TableGraph"),
+				"Should be a valid DOT digraph");
+		assertTrue(content.contains("EMPLOYEE"),
+				"Should contain EMPLOYEE table");
+		assertTrue(content.contains("DEPARTMENT"),
+				"Should contain DEPARTMENT table");
+	}
+
+	@Test
+	public void testDotEntityGraphContainsSubclassEdge() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		TableMetadata parentTable = new TableMetadata(
+				"PERSON", "Person", "com.example");
+		parentTable.addColumn(
+				new ColumnMetadata("ID", "id", Long.class)
+						.primaryKey(true));
+		parentTable.addColumn(
+				new ColumnMetadata("NAME", "name", String.class));
+		ClassDetails parent = builder.createEntityFromTable(parentTable);
+
+		TableMetadata childTable = new TableMetadata(
+				"EMPLOYEE", "Employee", "com.example");
+		childTable.addColumn(
+				new ColumnMetadata("ID", "id", Long.class)
+						.primaryKey(true));
+		childTable.addColumn(
+				new ColumnMetadata("SALARY", "salary", Double.class));
+		childTable.parent("Person", "com.example");
+		ClassDetails child = builder.createEntityFromTable(childTable);
+
+		DocExporter exporter = DocExporter.create(
+				List.of(parent, child),
+				builder.getTableMetadataMap(),
+				"/nonexistent/dot",
+				new String[0]);
+		exporter.export(outputDir);
+
+		File entityDot = new File(outputDir,
+				"entities/entitygraph.dot");
+		String content = readFile(entityDot);
+		assertTrue(content.contains("arrowhead=\"onormal\""),
+				"Should contain subclass edge");
+	}
+
+	@Test
+	public void testDotTableGraphContainsForeignKeyEdge() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		TableMetadata deptTable = new TableMetadata(
+				"DEPARTMENT", "Department", "com.example");
+		deptTable.addColumn(
+				new ColumnMetadata("DEPT_ID", "id", Long.class)
+						.primaryKey(true));
+		builder.createEntityFromTable(deptTable);
+
+		TableMetadata empTable = new TableMetadata(
+				"EMPLOYEE", "Employee", "com.example");
+		empTable.addColumn(
+				new ColumnMetadata("EMP_ID", "id", Long.class)
+						.primaryKey(true));
+		empTable.addForeignKey(new org.hibernate.tool.internal.reveng.models
+				.metadata.ForeignKeyMetadata(
+				"department", "DEPT_ID",
+				"Department", "com.example"));
+		ClassDetails dept = builder.getModelsContext()
+				.getClassDetailsRegistry()
+				.getClassDetails("com.example.Department");
+		ClassDetails emp = builder.createEntityFromTable(empTable);
+
+		DocExporter exporter = DocExporter.create(
+				List.of(dept, emp),
+				builder.getTableMetadataMap(),
+				"/nonexistent/dot",
+				new String[0]);
+		exporter.export(outputDir);
+
+		File tableDot = new File(outputDir,
+				"tables/tablegraph.dot");
+		String content = readFile(tableDot);
+		assertTrue(content.contains("DEPARTMENT"),
+				"Should contain FK edge to DEPARTMENT");
+		assertTrue(content.contains("FK_"),
+				"Should contain FK label");
+	}
+
+	@Test
+	public void testNoDotGenerationWithoutExecutable() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = buildEntity(
+				builder, "EMPLOYEE", "Employee", "com.example");
+		DocExporter exporter = DocExporter.create(
+				List.of(entity), builder.getTableMetadataMap());
+		exporter.export(outputDir);
+
+		File entityDot = new File(outputDir,
+				"entities/entitygraph.dot");
+		assertFalse(entityDot.exists(),
+				"DOT file should not be generated without executable");
+	}
+
 	private String readFile(File file) {
 		try {
 			return Files.readString(file.toPath());

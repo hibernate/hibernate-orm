@@ -19,7 +19,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 
 import org.hibernate.annotations.Formula;
 import org.hibernate.models.spi.FieldDetails;
@@ -52,6 +58,53 @@ public class PropertyDocInfo {
 
 	public String getPropertyAccessorName() {
 		return "field";
+	}
+
+	/**
+	 * Returns the Java type name for this property.
+	 */
+	public String getTypeName() {
+		return fieldDetails.getType().determineRawClass().getName();
+	}
+
+	/**
+	 * Returns {@code true} if this is a simple (non-relationship,
+	 * non-embedded) property.
+	 */
+	public boolean isSimpleValue() {
+		return !isRelationship() && !isComponent();
+	}
+
+	/**
+	 * Returns {@code true} if this property represents a relationship
+	 * ({@code @ManyToOne}, {@code @OneToOne}, {@code @OneToMany},
+	 * {@code @ManyToMany}).
+	 */
+	public boolean isRelationship() {
+		return fieldDetails.hasDirectAnnotationUsage(ManyToOne.class)
+				|| fieldDetails.hasDirectAnnotationUsage(OneToOne.class)
+				|| fieldDetails.hasDirectAnnotationUsage(OneToMany.class)
+				|| fieldDetails.hasDirectAnnotationUsage(ManyToMany.class);
+	}
+
+	/**
+	 * Returns {@code true} if this property is an embedded component
+	 * ({@code @Embedded} or {@code @EmbeddedId}).
+	 */
+	public boolean isComponent() {
+		return fieldDetails.hasDirectAnnotationUsage(Embedded.class)
+				|| fieldDetails.hasDirectAnnotationUsage(EmbeddedId.class);
+	}
+
+	/**
+	 * Returns the target entity/type name for relationship and component
+	 * properties, or {@code null} for simple properties.
+	 */
+	public String getRelationshipTargetName() {
+		if (isRelationship() || isComponent()) {
+			return fieldDetails.getType().determineRawClass().getClassName();
+		}
+		return null;
 	}
 
 	FieldDetails getFieldDetails() {

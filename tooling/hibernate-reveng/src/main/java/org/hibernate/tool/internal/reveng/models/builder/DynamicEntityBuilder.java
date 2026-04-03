@@ -80,6 +80,7 @@ public class DynamicEntityBuilder {
 		DynamicClassDetails entityClass = new DynamicClassDetails(
 			tableMetadata.getEntityClassName(),
 			className,
+			Object.class,
 			false,
 			superClass,
 			null,
@@ -239,7 +240,7 @@ public class DynamicEntityBuilder {
 			(MutableClassDetailsRegistry) modelsContext.getClassDetailsRegistry();
 		return registry.resolveClassDetails(
 			className,
-			name -> new DynamicClassDetails(simpleName, name, false, null, null, modelsContext)
+			name -> new DynamicClassDetails(simpleName, name, Object.class, false, null, null, modelsContext)
 		);
 	}
 

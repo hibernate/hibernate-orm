@@ -17,7 +17,13 @@ package org.hibernate.tool.internal.reveng.models.exporter.ddl;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.File;
 import java.io.StringWriter;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 import java.util.Properties;
 
@@ -26,6 +32,10 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.schema.spi.SchemaManagementException;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -35,9 +45,21 @@ import org.junit.jupiter.api.Test;
  */
 public class DdlExporterTest {
 
+	private static final String DB_PATH = "./target/test-ddl-exporter";
+	private static final String H2_FILE_URL = "jdbc:h2:" + DB_PATH;
+
 	private Properties defaultProperties() {
 		Properties props = new Properties();
 		props.put(AvailableSettings.DIALECT, "org.hibernate.dialect.H2Dialect");
+		return props;
+	}
+
+	private Properties h2FileProperties() {
+		Properties props = new Properties();
+		props.put(AvailableSettings.URL, H2_FILE_URL);
+		props.put(AvailableSettings.DRIVER, "org.h2.Driver");
+		props.put(AvailableSettings.USER, "sa");
+		props.put(AvailableSettings.PASS, "");
 		return props;
 	}
 
@@ -48,6 +70,27 @@ public class DdlExporterTest {
 		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
 		return builder.createEntityFromTable(table);
 	}
+
+	@BeforeEach
+	public void setUp() {
+		deleteDbFiles();
+	}
+
+	@AfterEach
+	public void tearDown() {
+		deleteDbFiles();
+	}
+
+	private void deleteDbFiles() {
+		new File(DB_PATH + ".mv.db").delete();
+		new File(DB_PATH + ".trace.db").delete();
+	}
+
+	private Connection openFileConnection() throws SQLException {
+		return DriverManager.getConnection(H2_FILE_URL, "sa", "");
+	}
+
+	// ---- Script export tests ----
 
 	@Test
 	public void testExportCreateDdl() {
@@ -143,5 +186,139 @@ public class DdlExporterTest {
 		assertTrue(ddl.contains("product"), ddl);
 		assertTrue(ddl.contains("price"), ddl);
 		assertTrue(ddl.contains("active"), ddl);
+	}
+
+	// ---- Database execution tests ----
+
+	@Test
+	public void testExecuteCreateDdl() throws SQLException {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = buildEntity(builder, "EMP_CREATE", "EmpCreate", "com.example");
+		Properties props = h2FileProperties();
+		DdlExporter exporter = DdlExporter.create(List.of(entity), props);
+		exporter.executeCreateDdl();
+		try (Connection conn = openFileConnection();
+			 Statement stmt = conn.createStatement()) {
+			ResultSet rs = stmt.executeQuery(
+					"SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES "
+					+ "WHERE TABLE_NAME = 'EMP_CREATE'");
+			assertTrue(rs.next());
+			assertEquals(1, rs.getInt(1), "Table EMP_CREATE should exist");
+		}
+	}
+
+	@Test
+	public void testExecuteDropDdl() throws SQLException {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = buildEntity(builder, "EMP_DROP", "EmpDrop", "com.example");
+		Properties props = h2FileProperties();
+		DdlExporter exporter = DdlExporter.create(List.of(entity), props);
+		exporter.executeCreateDdl();
+		exporter.executeDropDdl();
+		try (Connection conn = openFileConnection();
+			 Statement stmt = conn.createStatement()) {
+			ResultSet rs = stmt.executeQuery(
+					"SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES "
+					+ "WHERE TABLE_NAME = 'EMP_DROP'");
+			assertTrue(rs.next());
+			assertEquals(0, rs.getInt(1), "Table EMP_DROP should not exist");
+		}
+	}
+
+	@Test
+	public void testExecuteBothDdl() throws SQLException {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = buildEntity(builder, "EMP_BOTH", "EmpBoth", "com.example");
+		Properties props = h2FileProperties();
+		DdlExporter exporter = DdlExporter.create(List.of(entity), props);
+		exporter.executeCreateDdl();
+		exporter.executeBothDdl();
+		try (Connection conn = openFileConnection();
+			 Statement stmt = conn.createStatement()) {
+			ResultSet rs = stmt.executeQuery(
+					"SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES "
+					+ "WHERE TABLE_NAME = 'EMP_BOTH'");
+			assertTrue(rs.next());
+			assertEquals(1, rs.getInt(1),
+					"Table EMP_BOTH should exist after executeBothDdl");
+		}
+	}
+
+	// ---- Schema update/migration tests ----
+
+	@Test
+	public void testExportUpdateDdl() throws SQLException {
+		Properties props = h2FileProperties();
+		// Create a table with only ID column
+		try (Connection conn = openFileConnection();
+			 Statement stmt = conn.createStatement()) {
+			stmt.execute("CREATE TABLE EMP_UPDATE (ID BIGINT PRIMARY KEY)");
+		}
+		// Build entity with ID + NAME — migration should add NAME
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = buildEntity(
+				builder, "EMP_UPDATE", "EmpUpdate", "com.example");
+		DdlExporter exporter = DdlExporter.create(List.of(entity), props);
+		StringWriter writer = new StringWriter();
+		exporter.exportUpdateDdl(writer);
+		String ddl = writer.toString().toLowerCase();
+		assertTrue(ddl.contains("alter"), "Should contain ALTER: " + ddl);
+		assertTrue(ddl.contains("name"), "Should contain NAME column: " + ddl);
+	}
+
+	@Test
+	public void testExecuteUpdateDdl() throws SQLException {
+		Properties props = h2FileProperties();
+		// Create a table with only ID column
+		try (Connection conn = openFileConnection();
+			 Statement stmt = conn.createStatement()) {
+			stmt.execute("CREATE TABLE EMP_MIGRATE (ID BIGINT PRIMARY KEY)");
+		}
+		// Build entity with ID + NAME
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = buildEntity(
+				builder, "EMP_MIGRATE", "EmpMigrate", "com.example");
+		DdlExporter exporter = DdlExporter.create(List.of(entity), props);
+		exporter.executeUpdateDdl();
+		// Verify the NAME column was added
+		try (Connection conn = openFileConnection();
+			 Statement stmt = conn.createStatement()) {
+			ResultSet rs = stmt.executeQuery(
+					"SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS "
+					+ "WHERE TABLE_NAME = 'EMP_MIGRATE' AND COLUMN_NAME = 'NAME'");
+			assertTrue(rs.next());
+			assertEquals(1, rs.getInt(1),
+					"NAME column should exist after migration");
+		}
+	}
+
+	// ---- Halt on error tests ----
+
+	@Test
+	public void testHaltOnErrorThrowsOnDuplicateCreate() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = buildEntity(
+				builder, "EMP_HALT", "EmpHalt", "com.example");
+		Properties props = h2FileProperties();
+		DdlExporter exporter = DdlExporter.create(List.of(entity), props)
+				.haltOnError(true);
+		// First create succeeds
+		exporter.executeCreateDdl();
+		// Second create fails because table already exists
+		assertThrows(SchemaManagementException.class, exporter::executeCreateDdl);
+	}
+
+	@Test
+	public void testNoHaltOnErrorSuppressesDuplicateCreate() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = buildEntity(
+				builder, "EMP_NO_HALT", "EmpNoHalt", "com.example");
+		Properties props = h2FileProperties();
+		DdlExporter exporter = DdlExporter.create(List.of(entity), props)
+				.haltOnError(false);
+		// First create succeeds
+		exporter.executeCreateDdl();
+		// Second create should not throw even though table exists
+		assertDoesNotThrow(exporter::executeCreateDdl);
 	}
 }

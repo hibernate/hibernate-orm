@@ -4,6 +4,7 @@
  */
 package org.hibernate.tool.reveng.internal.util;
 
+import org.hibernate.MappingException;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Types;
@@ -12,150 +13,220 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class JdbcToHibernateTypeHelperTest {
 
+	// --- getPreferredHibernateType ---
+
 	@Test
-	public void testGetPreferredTypeVarchar() {
-		assertEquals("string", JdbcToHibernateTypeHelper.getPreferredHibernateType(
-				Types.VARCHAR, 255, 0, 0, false, false));
+	public void testGetPreferredHibernateTypeVarchar() {
+		assertEquals("string",
+				JdbcToHibernateTypeHelper.getPreferredHibernateType(Types.VARCHAR, 255, 0, 0, false, false));
 	}
 
 	@Test
-	public void testGetPreferredTypeVarcharNullable() {
-		assertEquals("string", JdbcToHibernateTypeHelper.getPreferredHibernateType(
-				Types.VARCHAR, 255, 0, 0, true, false));
+	public void testGetPreferredHibernateTypeVarcharNullable() {
+		assertEquals("string",
+				JdbcToHibernateTypeHelper.getPreferredHibernateType(Types.VARCHAR, 255, 0, 0, true, false));
 	}
 
 	@Test
-	public void testGetPreferredTypeInteger() {
-		assertEquals("int", JdbcToHibernateTypeHelper.getPreferredHibernateType(
-				Types.INTEGER, 0, 0, 0, false, false));
+	public void testGetPreferredHibernateTypeIntegerNotNullable() {
+		assertEquals("int",
+				JdbcToHibernateTypeHelper.getPreferredHibernateType(Types.INTEGER, 0, 0, 0, false, false));
 	}
 
 	@Test
-	public void testGetPreferredTypeIntegerNullable() {
-		assertEquals(Integer.class.getName(), JdbcToHibernateTypeHelper.getPreferredHibernateType(
-				Types.INTEGER, 0, 0, 0, true, false));
+	public void testGetPreferredHibernateTypeIntegerNullable() {
+		assertEquals(Integer.class.getName(),
+				JdbcToHibernateTypeHelper.getPreferredHibernateType(Types.INTEGER, 0, 0, 0, true, false));
 	}
 
 	@Test
-	public void testGetPreferredTypeNumericPrecision1() {
-		assertEquals("boolean", JdbcToHibernateTypeHelper.getPreferredHibernateType(
-				Types.NUMERIC, 0, 1, 0, false, false));
+	public void testGetPreferredHibernateTypeBooleanNotNullable() {
+		assertEquals("boolean",
+				JdbcToHibernateTypeHelper.getPreferredHibernateType(Types.BOOLEAN, 0, 0, 0, false, false));
 	}
 
 	@Test
-	public void testGetPreferredTypeNumericPrecision2() {
-		assertEquals("byte", JdbcToHibernateTypeHelper.getPreferredHibernateType(
-				Types.NUMERIC, 0, 2, 0, false, false));
+	public void testGetPreferredHibernateTypeNumericPrecision1() {
+		assertEquals("boolean",
+				JdbcToHibernateTypeHelper.getPreferredHibernateType(Types.NUMERIC, 0, 1, 0, false, false));
 	}
 
 	@Test
-	public void testGetPreferredTypeNumericPrecision4() {
-		assertEquals("short", JdbcToHibernateTypeHelper.getPreferredHibernateType(
-				Types.NUMERIC, 0, 4, 0, false, false));
+	public void testGetPreferredHibernateTypeNumericPrecision1Nullable() {
+		assertEquals(Boolean.class.getName(),
+				JdbcToHibernateTypeHelper.getPreferredHibernateType(Types.NUMERIC, 0, 1, 0, true, false));
 	}
 
 	@Test
-	public void testGetPreferredTypeNumericPrecision9() {
-		assertEquals("int", JdbcToHibernateTypeHelper.getPreferredHibernateType(
-				Types.NUMERIC, 0, 9, 0, false, false));
+	public void testGetPreferredHibernateTypeNumericPrecision2() {
+		assertEquals("byte",
+				JdbcToHibernateTypeHelper.getPreferredHibernateType(Types.NUMERIC, 0, 2, 0, false, false));
 	}
 
 	@Test
-	public void testGetPreferredTypeNumericPrecision18() {
-		assertEquals("long", JdbcToHibernateTypeHelper.getPreferredHibernateType(
-				Types.NUMERIC, 0, 18, 0, false, false));
+	public void testGetPreferredHibernateTypeNumericPrecision4() {
+		assertEquals("short",
+				JdbcToHibernateTypeHelper.getPreferredHibernateType(Types.NUMERIC, 0, 4, 0, false, false));
 	}
 
 	@Test
-	public void testGetPreferredTypeNumericPrecision20() {
-		assertEquals("big_integer", JdbcToHibernateTypeHelper.getPreferredHibernateType(
-				Types.NUMERIC, 0, 20, 0, false, false));
+	public void testGetPreferredHibernateTypeNumericPrecision9() {
+		assertEquals("int",
+				JdbcToHibernateTypeHelper.getPreferredHibernateType(Types.NUMERIC, 0, 9, 0, false, false));
 	}
 
 	@Test
-	public void testGetPreferredTypeNumericWithScale() {
-		assertEquals("big_decimal", JdbcToHibernateTypeHelper.getPreferredHibernateType(
-				Types.NUMERIC, 0, 10, 2, false, false));
+	public void testGetPreferredHibernateTypeNumericPrecision18() {
+		assertEquals("long",
+				JdbcToHibernateTypeHelper.getPreferredHibernateType(Types.NUMERIC, 0, 18, 0, false, false));
 	}
 
 	@Test
-	public void testGetPreferredTypeCharSizeGreaterThan1() {
-		assertEquals("string", JdbcToHibernateTypeHelper.getPreferredHibernateType(
-				Types.CHAR, 10, 0, 0, false, false));
+	public void testGetPreferredHibernateTypeNumericPrecision19() {
+		assertEquals("big_integer",
+				JdbcToHibernateTypeHelper.getPreferredHibernateType(Types.NUMERIC, 0, 19, 0, false, false));
 	}
 
 	@Test
-	public void testGetPreferredTypeCharSize1() {
-		assertEquals("char", JdbcToHibernateTypeHelper.getPreferredHibernateType(
-				Types.CHAR, 1, 0, 0, false, false));
+	public void testGetPreferredHibernateTypeNumericWithScale() {
+		assertEquals("big_decimal",
+				JdbcToHibernateTypeHelper.getPreferredHibernateType(Types.DECIMAL, 0, 10, 2, false, false));
 	}
 
 	@Test
-	public void testGetPreferredTypeGeneratedIdentifier() {
-		// generatedIdentifier forces nullable type
-		assertEquals(Integer.class.getName(), JdbcToHibernateTypeHelper.getPreferredHibernateType(
-				Types.INTEGER, 0, 0, 0, false, true));
+	public void testGetPreferredHibernateTypeCharSize1() {
+		assertEquals("char",
+				JdbcToHibernateTypeHelper.getPreferredHibernateType(Types.CHAR, 1, 0, 0, false, false));
 	}
 
 	@Test
-	public void testGetPreferredTypeUnknown() {
-		assertNull(JdbcToHibernateTypeHelper.getPreferredHibernateType(
-				Types.OTHER, 0, 0, 0, false, false));
+	public void testGetPreferredHibernateTypeCharSizeGreaterThan1() {
+		assertEquals("string",
+				JdbcToHibernateTypeHelper.getPreferredHibernateType(Types.CHAR, 50, 0, 0, false, false));
 	}
 
 	@Test
-	public void testGetJDBCTypes() {
+	public void testGetPreferredHibernateTypeBlob() {
+		assertEquals("blob",
+				JdbcToHibernateTypeHelper.getPreferredHibernateType(Types.BLOB, 0, 0, 0, false, false));
+	}
+
+	@Test
+	public void testGetPreferredHibernateTypeClob() {
+		assertEquals("clob",
+				JdbcToHibernateTypeHelper.getPreferredHibernateType(Types.CLOB, 0, 0, 0, false, false));
+	}
+
+	@Test
+	public void testGetPreferredHibernateTypeTimestamp() {
+		assertEquals("timestamp",
+				JdbcToHibernateTypeHelper.getPreferredHibernateType(Types.TIMESTAMP, 0, 0, 0, false, false));
+	}
+
+	@Test
+	public void testGetPreferredHibernateTypeUnknown() {
+		assertNull(JdbcToHibernateTypeHelper.getPreferredHibernateType(Types.ARRAY, 0, 0, 0, false, false));
+	}
+
+	@Test
+	public void testGetPreferredHibernateTypeGeneratedIdentifier() {
+		assertEquals(Integer.class.getName(),
+				JdbcToHibernateTypeHelper.getPreferredHibernateType(Types.INTEGER, 0, 0, 0, false, true));
+	}
+
+	// --- getJDBCTypes ---
+
+	@Test
+	public void testGetJDBCTypesNotEmpty() {
 		String[] types = JdbcToHibernateTypeHelper.getJDBCTypes();
 		assertNotNull(types);
 		assertTrue(types.length > 0);
 	}
 
 	@Test
-	public void testGetJDBCType() {
+	public void testGetJDBCTypesContainsVarchar() {
+		String[] types = JdbcToHibernateTypeHelper.getJDBCTypes();
+		boolean found = false;
+		for (String type : types) {
+			if ("VARCHAR".equals(type)) {
+				found = true;
+				break;
+			}
+		}
+		assertTrue(found);
+	}
+
+	// --- getJDBCType ---
+
+	@Test
+	public void testGetJDBCTypeByName() {
 		assertEquals(Types.VARCHAR, JdbcToHibernateTypeHelper.getJDBCType("VARCHAR"));
-		assertEquals(Types.INTEGER, JdbcToHibernateTypeHelper.getJDBCType("INTEGER"));
 	}
 
 	@Test
-	public void testGetJDBCTypeName() {
+	public void testGetJDBCTypeByNumber() {
+		assertEquals(12, JdbcToHibernateTypeHelper.getJDBCType("12"));
+	}
+
+	@Test
+	public void testGetJDBCTypeInvalidThrows() {
+		assertThrows(MappingException.class,
+				() -> JdbcToHibernateTypeHelper.getJDBCType("NOT_A_TYPE"));
+	}
+
+	// --- getJDBCTypeName ---
+
+	@Test
+	public void testGetJDBCTypeNameKnown() {
 		assertEquals("VARCHAR", JdbcToHibernateTypeHelper.getJDBCTypeName(Types.VARCHAR));
-		assertEquals("INTEGER", JdbcToHibernateTypeHelper.getJDBCTypeName(Types.INTEGER));
 	}
 
 	@Test
 	public void testGetJDBCTypeNameUnknown() {
-		String name = JdbcToHibernateTypeHelper.getJDBCTypeName(99999);
-		assertEquals("99999", name);
+		assertEquals("99999", JdbcToHibernateTypeHelper.getJDBCTypeName(99999));
 	}
+
+	// --- typeHasScale / typeHasPrecision / typeHasLength ---
 
 	@Test
 	public void testTypeHasScale() {
 		assertTrue(JdbcToHibernateTypeHelper.typeHasScale(Types.DECIMAL));
 		assertTrue(JdbcToHibernateTypeHelper.typeHasScale(Types.NUMERIC));
 		assertFalse(JdbcToHibernateTypeHelper.typeHasScale(Types.VARCHAR));
+		assertFalse(JdbcToHibernateTypeHelper.typeHasScale(Types.INTEGER));
 	}
 
 	@Test
 	public void testTypeHasPrecision() {
 		assertTrue(JdbcToHibernateTypeHelper.typeHasPrecision(Types.DECIMAL));
+		assertTrue(JdbcToHibernateTypeHelper.typeHasPrecision(Types.NUMERIC));
+		assertTrue(JdbcToHibernateTypeHelper.typeHasPrecision(Types.REAL));
 		assertTrue(JdbcToHibernateTypeHelper.typeHasPrecision(Types.FLOAT));
+		assertTrue(JdbcToHibernateTypeHelper.typeHasPrecision(Types.DOUBLE));
 		assertFalse(JdbcToHibernateTypeHelper.typeHasPrecision(Types.VARCHAR));
 	}
 
 	@Test
 	public void testTypeHasScaleAndPrecision() {
 		assertTrue(JdbcToHibernateTypeHelper.typeHasScaleAndPrecision(Types.DECIMAL));
-		assertFalse(JdbcToHibernateTypeHelper.typeHasScaleAndPrecision(Types.FLOAT));
+		assertFalse(JdbcToHibernateTypeHelper.typeHasScaleAndPrecision(Types.REAL));
+		assertFalse(JdbcToHibernateTypeHelper.typeHasScaleAndPrecision(Types.VARCHAR));
 	}
 
 	@Test
 	public void testTypeHasLength() {
 		assertTrue(JdbcToHibernateTypeHelper.typeHasLength(Types.VARCHAR));
 		assertTrue(JdbcToHibernateTypeHelper.typeHasLength(Types.CHAR));
+		assertTrue(JdbcToHibernateTypeHelper.typeHasLength(Types.LONGVARCHAR));
+		assertTrue(JdbcToHibernateTypeHelper.typeHasLength(Types.DATE));
+		assertTrue(JdbcToHibernateTypeHelper.typeHasLength(Types.TIME));
+		assertTrue(JdbcToHibernateTypeHelper.typeHasLength(Types.TIMESTAMP));
 		assertFalse(JdbcToHibernateTypeHelper.typeHasLength(Types.INTEGER));
+		assertFalse(JdbcToHibernateTypeHelper.typeHasLength(Types.BLOB));
 	}
 }

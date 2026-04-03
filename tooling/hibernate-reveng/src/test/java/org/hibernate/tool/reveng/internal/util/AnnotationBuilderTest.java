@@ -6,7 +6,8 @@ package org.hibernate.tool.reveng.internal.util;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
+import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -14,115 +15,129 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class AnnotationBuilderTest {
 
 	@Test
-	public void testSimpleAnnotation() {
-		String result = AnnotationBuilder.createAnnotation("Entity").getResult();
-		assertEquals("@Entity", result);
+	public void testCreateAnnotationNoAttributes() {
+		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("Entity");
+		assertEquals("@Entity", builder.getResult());
 	}
 
 	@Test
-	public void testAnnotationWithSingleAttribute() {
-		String result = AnnotationBuilder.createAnnotation("Table")
-				.addAttribute("name", "\"employees\"")
-				.getResult();
-		assertEquals("@Table(name=\"employees\")", result);
+	public void testCreateAnnotationSingleAttribute() {
+		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("Table");
+		builder.addAttribute("name", "\"employees\"");
+		assertEquals("@Table(name=\"employees\")", builder.getResult());
 	}
 
 	@Test
-	public void testAnnotationWithMultipleAttributes() {
-		String result = AnnotationBuilder.createAnnotation("Column")
-				.addAttribute("name", "\"emp_name\"")
-				.addAttribute("nullable", "false")
-				.getResult();
-		assertEquals("@Column(name=\"emp_name\", nullable=false)", result);
+	public void testCreateAnnotationMultipleAttributes() {
+		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("Column");
+		builder.addAttribute("name", "\"first_name\"");
+		builder.addAttribute("nullable", "false");
+		assertEquals("@Column(name=\"first_name\", nullable=false)", builder.getResult());
 	}
 
 	@Test
-	public void testAnnotationWithArrayAttribute() {
-		String result = AnnotationBuilder.createAnnotation("NamedQueries")
-				.addAttribute("value", new String[]{"@NamedQuery(name=\"q1\")", "@NamedQuery(name=\"q2\")"})
-				.getResult();
-		assertEquals("@NamedQueries(value={@NamedQuery(name=\"q1\"), @NamedQuery(name=\"q2\")})", result);
+	public void testCreateAnnotationArrayAttribute() {
+		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("NamedQueries");
+		builder.addAttribute("value", new String[] {"@NamedQuery(name=\"q1\")", "@NamedQuery(name=\"q2\")"});
+		assertEquals("@NamedQueries(value={@NamedQuery(name=\"q1\"), @NamedQuery(name=\"q2\")})", builder.getResult());
 	}
 
 	@Test
 	public void testAddQuotedAttribute() {
-		String result = AnnotationBuilder.createAnnotation("Table")
-				.addQuotedAttribute("name", "employees")
-				.getResult();
-		assertEquals("@Table(name=\"employees\")", result);
+		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("Table");
+		builder.addQuotedAttribute("name", "employees");
+		assertEquals("@Table(name=\"employees\")", builder.getResult());
 	}
 
 	@Test
-	public void testAddQuotedAttributeNull() {
-		String result = AnnotationBuilder.createAnnotation("Table")
-				.addQuotedAttribute("name", null)
-				.getResult();
-		assertEquals("@Table", result);
+	public void testAddAttributeNullValueIgnored() {
+		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("Entity");
+		builder.addAttribute("name", (String) null);
+		assertEquals("@Entity", builder.getResult());
 	}
 
 	@Test
-	public void testAddAttributeNullValue() {
-		String result = AnnotationBuilder.createAnnotation("Table")
-				.addAttribute("name", (String) null)
-				.getResult();
-		assertEquals("@Table", result);
+	public void testAddAttributeNullArrayIgnored() {
+		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("Entity");
+		builder.addAttribute("value", (String[]) null);
+		assertEquals("@Entity", builder.getResult());
 	}
 
 	@Test
-	public void testAddAttributeEmptyArray() {
-		String result = AnnotationBuilder.createAnnotation("Table")
-				.addAttribute("name", new String[]{})
-				.getResult();
-		assertEquals("@Table", result);
+	public void testAddAttributeEmptyArrayIgnored() {
+		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("Entity");
+		builder.addAttribute("value", new String[] {});
+		assertEquals("@Entity", builder.getResult());
+	}
+
+	@Test
+	public void testAddQuotedAttributeNullIgnored() {
+		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("Entity");
+		builder.addQuotedAttribute("name", null);
+		assertEquals("@Entity", builder.getResult());
 	}
 
 	@Test
 	public void testResetAnnotation() {
-		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("Entity")
-				.addAttribute("name", "\"Foo\"");
-		builder.resetAnnotation("Table");
-		assertEquals("@Table", builder.getResult());
-	}
-
-	@Test
-	public void testToString() {
-		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("Entity");
-		assertEquals("@Entity", builder.toString());
+		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("OldName");
+		builder.addAttribute("key", "value");
+		builder.resetAnnotation("NewName");
+		assertEquals("@NewName", builder.getResult());
 	}
 
 	@Test
 	public void testGetAttributeAsString() {
-		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("Column")
-				.addAttribute("name", "\"id\"");
-		assertEquals("\"id\"", builder.getAttributeAsString("name"));
-	}
-
-	@Test
-	public void testGetAttributeAsStringNull() {
-		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("Column");
-		assertNull(builder.getAttributeAsString("name"));
+		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("Test");
+		builder.addAttribute("name", "\"hello\"");
+		assertEquals("\"hello\"", builder.getAttributeAsString("name"));
 	}
 
 	@Test
 	public void testGetAttributeAsStringArray() {
-		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("Test")
-				.addAttribute("value", new String[]{"a", "b"});
-		assertEquals("{a, b}", builder.getAttributeAsString("value"));
+		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("Test");
+		builder.addAttribute("values", new String[] {"a", "b", "c"});
+		assertEquals("{a, b, c}", builder.getAttributeAsString("values"));
+	}
+
+	@Test
+	public void testGetAttributeAsStringNotFound() {
+		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("Test");
+		assertNull(builder.getAttributeAsString("nonexistent"));
+	}
+
+	@Test
+	public void testToStringEqualsGetResult() {
+		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("Entity");
+		assertEquals(builder.getResult(), builder.toString());
 	}
 
 	@Test
 	public void testAddQuotedAttributes() {
-		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("UniqueConstraint");
-		builder.addQuotedAttributes("columnNames", List.of("col1", "col2").iterator());
-		String result = builder.getResult();
-		assertEquals("@UniqueConstraint(columnNames={\"col1\", \"col2\"})", result);
+		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("Test");
+		builder.addQuotedAttributes("names", Arrays.asList("a", "b").iterator());
+		assertEquals("@Test(names={\"a\", \"b\"})", builder.getResult());
 	}
 
 	@Test
 	public void testAddAttributes() {
 		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("Test");
-		builder.addAttributes("value", List.of("a", "b").iterator());
-		String result = builder.getResult();
-		assertEquals("@Test(value={a, b})", result);
+		builder.addAttributes("values", Arrays.asList("X.class", "Y.class").iterator());
+		assertEquals("@Test(values={X.class, Y.class})", builder.getResult());
+	}
+
+	@Test
+	public void testAddQuotedAttributesEmpty() {
+		AnnotationBuilder builder = AnnotationBuilder.createAnnotation("Test");
+		builder.addQuotedAttributes("names", Collections.emptyIterator());
+		assertEquals("@Test", builder.getResult());
+	}
+
+	@Test
+	public void testFluentApi() {
+		String result = AnnotationBuilder.createAnnotation("Column")
+				.addQuotedAttribute("name", "id")
+				.addAttribute("nullable", "false")
+				.getResult();
+		assertEquals("@Column(name=\"id\", nullable=false)", result);
 	}
 }

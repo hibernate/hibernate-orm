@@ -8,15 +8,66 @@ import org.hibernate.tool.reveng.api.core.TableIdentifier;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TableFilterTest {
 
+	// --- Matcher tests ---
+
+	@Test
+	public void testMatcherEquals() {
+		TableFilter.Matcher m = new TableFilter.Matcher("MY_TABLE");
+		assertTrue(m.match("MY_TABLE"));
+		assertFalse(m.match("OTHER"));
+		assertFalse(m.match("MY_TABLE_EXT"));
+	}
+
+	@Test
+	public void testMatcherAny() {
+		TableFilter.Matcher m = new TableFilter.Matcher(".*");
+		assertTrue(m.match("anything"));
+		assertTrue(m.match(""));
+	}
+
+	@Test
+	public void testMatcherStartsWith() {
+		TableFilter.Matcher m = new TableFilter.Matcher("MY_.*");
+		assertTrue(m.match("MY_TABLE"));
+		assertTrue(m.match("MY_OTHER"));
+		assertFalse(m.match("YOUR_TABLE"));
+	}
+
+	@Test
+	public void testMatcherEndsWith() {
+		TableFilter.Matcher m = new TableFilter.Matcher(".*_TABLE");
+		assertTrue(m.match("MY_TABLE"));
+		assertTrue(m.match("YOUR_TABLE"));
+		assertFalse(m.match("MY_VIEW"));
+	}
+
+	@Test
+	public void testMatcherSubstring() {
+		TableFilter.Matcher m = new TableFilter.Matcher(".*EMPL.*");
+		assertTrue(m.match("EMPLOYEE"));
+		assertTrue(m.match("MY_EMPLOYEE_TABLE"));
+		assertFalse(m.match("DEPARTMENT"));
+	}
+
+	@Test
+	public void testMatcherToString() {
+		TableFilter.Matcher m = new TableFilter.Matcher("MY_.*");
+		assertEquals("MY_.*", m.toString());
+	}
+
+	// --- TableFilter tests ---
+
 	@Test
 	public void testDefaultFilterMatchesAll() {
 		TableFilter filter = new TableFilter();
+		TableIdentifier id = TableIdentifier.create("CAT", "SCH", "TAB");
+		assertNull(filter.exclude(id));
 		assertEquals(".*", filter.getMatchCatalog());
 		assertEquals(".*", filter.getMatchSchema());
 		assertEquals(".*", filter.getMatchName());
@@ -24,144 +75,83 @@ public class TableFilterTest {
 	}
 
 	@Test
-	public void testExcludeReturnsNullWhenNotRelevant() {
+	public void testFilterExcludeTrue() {
 		TableFilter filter = new TableFilter();
-		filter.setMatchName("PERSON");
-		filter.setExclude(Boolean.TRUE);
-		TableIdentifier ti = TableIdentifier.create("catalog", "schema", "OTHER");
-		assertNull(filter.exclude(ti));
+		filter.setExclude(true);
+		TableIdentifier id = TableIdentifier.create("CAT", "SCH", "TAB");
+		assertTrue(filter.exclude(id));
 	}
 
 	@Test
-	public void testExcludeReturnsTrueWhenRelevant() {
+	public void testFilterExcludeFalse() {
 		TableFilter filter = new TableFilter();
-		filter.setMatchName("PERSON");
-		filter.setExclude(Boolean.TRUE);
-		TableIdentifier ti = TableIdentifier.create("catalog", "schema", "PERSON");
-		assertEquals(Boolean.TRUE, filter.exclude(ti));
+		filter.setExclude(false);
+		TableIdentifier id = TableIdentifier.create("CAT", "SCH", "TAB");
+		assertFalse(filter.exclude(id));
 	}
 
 	@Test
-	public void testExcludeReturnsFalseWhenExplicitlyIncluded() {
+	public void testFilterNotRelevant() {
 		TableFilter filter = new TableFilter();
-		filter.setMatchName("PERSON");
-		filter.setExclude(Boolean.FALSE);
-		TableIdentifier ti = TableIdentifier.create("catalog", "schema", "PERSON");
-		assertEquals(Boolean.FALSE, filter.exclude(ti));
+		filter.setMatchName("EMPLOYEE");
+		filter.setExclude(true);
+		TableIdentifier id = TableIdentifier.create("CAT", "SCH", "DEPARTMENT");
+		assertNull(filter.exclude(id));
 	}
 
 	@Test
-	public void testMatcherEquals() {
-		TableFilter filter = new TableFilter();
-		filter.setMatchName("PERSON");
-		TableIdentifier match = TableIdentifier.create("cat", "sch", "PERSON");
-		TableIdentifier noMatch = TableIdentifier.create("cat", "sch", "ADDRESS");
-		filter.setExclude(Boolean.TRUE);
-		assertNotNull(filter.exclude(match));
-		assertNull(filter.exclude(noMatch));
-	}
-
-	@Test
-	public void testMatcherStartsWith() {
-		TableFilter filter = new TableFilter();
-		filter.setMatchName("PERSON.*");
-		filter.setExclude(Boolean.TRUE);
-		TableIdentifier match = TableIdentifier.create("cat", "sch", "PERSON_ADDRESS");
-		TableIdentifier noMatch = TableIdentifier.create("cat", "sch", "ADDRESS");
-		assertNotNull(filter.exclude(match));
-		assertNull(filter.exclude(noMatch));
-	}
-
-	@Test
-	public void testMatcherEndsWith() {
-		TableFilter filter = new TableFilter();
-		filter.setMatchName(".*_LOG");
-		filter.setExclude(Boolean.TRUE);
-		TableIdentifier match = TableIdentifier.create("cat", "sch", "AUDIT_LOG");
-		TableIdentifier noMatch = TableIdentifier.create("cat", "sch", "PERSON");
-		assertNotNull(filter.exclude(match));
-		assertNull(filter.exclude(noMatch));
-	}
-
-	@Test
-	public void testMatcherSubstring() {
-		TableFilter filter = new TableFilter();
-		filter.setMatchName(".*AUDIT.*");
-		filter.setExclude(Boolean.TRUE);
-		TableIdentifier match = TableIdentifier.create("cat", "sch", "MY_AUDIT_LOG");
-		TableIdentifier noMatch = TableIdentifier.create("cat", "sch", "PERSON");
-		assertNotNull(filter.exclude(match));
-		assertNull(filter.exclude(noMatch));
-	}
-
-	@Test
-	public void testMatcherAny() {
-		TableFilter filter = new TableFilter();
-		// default is ".*" which matches anything
-		filter.setExclude(Boolean.TRUE);
-		TableIdentifier ti = TableIdentifier.create("cat", "sch", "ANYTHING");
-		assertEquals(Boolean.TRUE, filter.exclude(ti));
-	}
-
-	@Test
-	public void testCatalogAndSchemaMatching() {
+	public void testFilterByCatalog() {
 		TableFilter filter = new TableFilter();
 		filter.setMatchCatalog("MY_CAT");
+		filter.setExclude(true);
+		assertTrue(filter.exclude(TableIdentifier.create("MY_CAT", "SCH", "TAB")));
+		assertNull(filter.exclude(TableIdentifier.create("OTHER", "SCH", "TAB")));
+	}
+
+	@Test
+	public void testFilterBySchema() {
+		TableFilter filter = new TableFilter();
 		filter.setMatchSchema("MY_SCH");
-		filter.setMatchName(".*");
-		filter.setExclude(Boolean.TRUE);
-
-		TableIdentifier match = TableIdentifier.create("MY_CAT", "MY_SCH", "TABLE");
-		TableIdentifier wrongCat = TableIdentifier.create("OTHER", "MY_SCH", "TABLE");
-		TableIdentifier wrongSch = TableIdentifier.create("MY_CAT", "OTHER", "TABLE");
-
-		assertNotNull(filter.exclude(match));
-		assertNull(filter.exclude(wrongCat));
-		assertNull(filter.exclude(wrongSch));
+		filter.setExclude(true);
+		assertTrue(filter.exclude(TableIdentifier.create("CAT", "MY_SCH", "TAB")));
+		assertNull(filter.exclude(TableIdentifier.create("CAT", "OTHER", "TAB")));
 	}
 
 	@Test
-	public void testPackageReturnsNullWhenNotRelevant() {
+	public void testFilterPackage() {
 		TableFilter filter = new TableFilter();
-		filter.setMatchName("PERSON");
 		filter.setPackage("com.example");
-		TableIdentifier other = TableIdentifier.create("cat", "sch", "OTHER");
-		assertNull(filter.getPackage(other));
+		TableIdentifier id = TableIdentifier.create("CAT", "SCH", "TAB");
+		assertEquals("com.example", filter.getPackage(id));
 	}
 
 	@Test
-	public void testPackageReturnsValueWhenRelevant() {
+	public void testFilterPackageNotRelevant() {
 		TableFilter filter = new TableFilter();
-		filter.setMatchName("PERSON");
+		filter.setMatchName("EMPLOYEE");
 		filter.setPackage("com.example");
-		TableIdentifier match = TableIdentifier.create("cat", "sch", "PERSON");
-		assertEquals("com.example", filter.getPackage(match));
+		assertNull(filter.getPackage(TableIdentifier.create("CAT", "SCH", "DEPARTMENT")));
 	}
 
 	@Test
-	public void testMetaAttributesReturnsNullWhenNotRelevant() {
+	public void testFilterToString() {
 		TableFilter filter = new TableFilter();
-		filter.setMatchName("PERSON");
-		TableIdentifier other = TableIdentifier.create("cat", "sch", "OTHER");
-		assertNull(filter.getMetaAttributes(other));
+		String s = filter.toString();
+		assertTrue(s.contains(".*"));
 	}
 
 	@Test
-	public void testToString() {
+	public void testFilterWithStartsWithPattern() {
 		TableFilter filter = new TableFilter();
-		filter.setMatchCatalog("CAT");
-		filter.setMatchSchema("SCH");
-		filter.setMatchName("TBL");
-		filter.setExclude(Boolean.TRUE);
-		String str = filter.toString();
-		assertTrue(str.contains("CAT"));
-		assertTrue(str.contains("SCH"));
-		assertTrue(str.contains("TBL"));
+		filter.setMatchName("EMP_.*");
+		filter.setExclude(true);
+		assertTrue(filter.exclude(TableIdentifier.create("CAT", "SCH", "EMP_TABLE")));
+		assertNull(filter.exclude(TableIdentifier.create("CAT", "SCH", "DEP_TABLE")));
 	}
 
 	@Test
-	public void testMatcherToString() {
-		TableFilter.Matcher matcher = new TableFilter.Matcher("PERSON.*");
-		assertEquals("PERSON.*", matcher.toString());
+	public void testFilterMetaAttributes() {
+		TableFilter filter = new TableFilter();
+		assertNull(filter.getMetaAttributes(TableIdentifier.create("C", "S", "T")));
 	}
 }

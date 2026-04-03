@@ -16,114 +16,115 @@ public class HibernateMappingGlobalSettingsTest {
 	@Test
 	public void testDefaults() {
 		HibernateMappingGlobalSettings settings = new HibernateMappingGlobalSettings();
-		assertTrue(settings.isDefaultLazy());
-		assertTrue(settings.isAutoImport());
 		assertNull(settings.getSchemaName());
 		assertNull(settings.getCatalogName());
 		assertNull(settings.getDefaultCascade());
-		assertNull(settings.getDefaultAccess());
 		assertNull(settings.getDefaultPackage());
+		assertNull(settings.getDefaultAccess());
+		assertTrue(settings.isAutoImport());
+		assertTrue(settings.isDefaultLazy());
 	}
 
 	@Test
-	public void testHasNonDefaultSettingsWithDefaults() {
+	public void testHasNonDefaultSettingsAllDefaults() {
 		HibernateMappingGlobalSettings settings = new HibernateMappingGlobalSettings();
 		assertFalse(settings.hasNonDefaultSettings());
 	}
 
 	@Test
-	public void testSetSchemaName() {
+	public void testHasDefaultPackage() {
 		HibernateMappingGlobalSettings settings = new HibernateMappingGlobalSettings();
-		settings.setSchemaName("mySchema");
-		assertEquals("mySchema", settings.getSchemaName());
-		assertTrue(settings.hasSchemaName());
-		assertTrue(settings.hasNonDefaultSettings());
-	}
-
-	@Test
-	public void testSetCatalogName() {
-		HibernateMappingGlobalSettings settings = new HibernateMappingGlobalSettings();
-		settings.setCatalogName("myCatalog");
-		assertEquals("myCatalog", settings.getCatalogName());
-		assertTrue(settings.hasCatalogName());
-		assertTrue(settings.hasNonDefaultSettings());
-	}
-
-	@Test
-	public void testSetDefaultPackage() {
-		HibernateMappingGlobalSettings settings = new HibernateMappingGlobalSettings();
+		assertFalse(settings.hasDefaultPackage());
 		settings.setDefaultPackage("com.example");
-		assertEquals("com.example", settings.getDefaultPackage());
 		assertTrue(settings.hasDefaultPackage());
-		assertTrue(settings.hasNonDefaultSettings());
+		assertEquals("com.example", settings.getDefaultPackage());
 	}
 
 	@Test
-	public void testSetDefaultCascadeNone() {
+	public void testHasSchemaName() {
 		HibernateMappingGlobalSettings settings = new HibernateMappingGlobalSettings();
-		settings.setDefaultCascade("none");
-		assertEquals("none", settings.getDefaultCascade());
+		assertFalse(settings.hasSchemaName());
+		settings.setSchemaName("MY_SCHEMA");
+		assertTrue(settings.hasSchemaName());
+		assertEquals("MY_SCHEMA", settings.getSchemaName());
+	}
+
+	@Test
+	public void testHasCatalogName() {
+		HibernateMappingGlobalSettings settings = new HibernateMappingGlobalSettings();
+		assertFalse(settings.hasCatalogName());
+		settings.setCatalogName("MY_CATALOG");
+		assertTrue(settings.hasCatalogName());
+		assertEquals("MY_CATALOG", settings.getCatalogName());
+	}
+
+	@Test
+	public void testHasNonDefaultCascade() {
+		HibernateMappingGlobalSettings settings = new HibernateMappingGlobalSettings();
 		assertFalse(settings.hasNonDefaultCascade());
-	}
 
-	@Test
-	public void testSetDefaultCascadeAll() {
-		HibernateMappingGlobalSettings settings = new HibernateMappingGlobalSettings();
+		settings.setDefaultCascade("none");
+		assertFalse(settings.hasNonDefaultCascade());
+
 		settings.setDefaultCascade("all");
 		assertTrue(settings.hasNonDefaultCascade());
-		assertTrue(settings.hasNonDefaultSettings());
+		assertEquals("all", settings.getDefaultCascade());
 	}
 
 	@Test
-	public void testSetDefaultAccessProperty() {
+	public void testHasNonDefaultAccess() {
 		HibernateMappingGlobalSettings settings = new HibernateMappingGlobalSettings();
-		settings.setDefaultAccess("property");
-		assertEquals("property", settings.getDefaultAccess());
 		assertFalse(settings.hasNonDefaultAccess());
-	}
 
-	@Test
-	public void testSetDefaultAccessField() {
-		HibernateMappingGlobalSettings settings = new HibernateMappingGlobalSettings();
+		settings.setDefaultAccess("property");
+		assertFalse(settings.hasNonDefaultAccess());
+
 		settings.setDefaultAccess("field");
 		assertTrue(settings.hasNonDefaultAccess());
-		assertTrue(settings.hasNonDefaultSettings());
+		assertEquals("field", settings.getDefaultAccess());
 	}
 
 	@Test
-	public void testSetAutoImportFalse() {
+	public void testAutoImport() {
 		HibernateMappingGlobalSettings settings = new HibernateMappingGlobalSettings();
+		assertTrue(settings.isAutoImport());
 		settings.setAutoImport(false);
 		assertFalse(settings.isAutoImport());
-		assertTrue(settings.hasNonDefaultSettings());
 	}
 
 	@Test
-	public void testSetDefaultLazyFalse() {
+	public void testDefaultLazy() {
 		HibernateMappingGlobalSettings settings = new HibernateMappingGlobalSettings();
+		assertTrue(settings.isDefaultLazy());
 		settings.setDefaultLazy(false);
 		assertFalse(settings.isDefaultLazy());
+	}
+
+	@Test
+	public void testHasNonDefaultSettingsWithPackage() {
+		HibernateMappingGlobalSettings settings = new HibernateMappingGlobalSettings();
+		settings.setDefaultPackage("com.example");
 		assertTrue(settings.hasNonDefaultSettings());
 	}
 
 	@Test
-	public void testHasSchemaNameEmpty() {
+	public void testHasNonDefaultSettingsWithSchema() {
 		HibernateMappingGlobalSettings settings = new HibernateMappingGlobalSettings();
-		settings.setSchemaName("");
-		assertFalse(settings.hasSchemaName());
+		settings.setSchemaName("SCH");
+		assertTrue(settings.hasNonDefaultSettings());
 	}
 
 	@Test
-	public void testHasCatalogNameEmpty() {
+	public void testHasNonDefaultSettingsNotLazy() {
 		HibernateMappingGlobalSettings settings = new HibernateMappingGlobalSettings();
-		settings.setCatalogName("");
-		assertFalse(settings.hasCatalogName());
+		settings.setDefaultLazy(false);
+		assertTrue(settings.hasNonDefaultSettings());
 	}
 
 	@Test
-	public void testHasDefaultPackageEmpty() {
+	public void testHasNonDefaultSettingsNotAutoImport() {
 		HibernateMappingGlobalSettings settings = new HibernateMappingGlobalSettings();
-		settings.setDefaultPackage("");
-		assertFalse(settings.hasDefaultPackage());
+		settings.setAutoImport(false);
+		assertTrue(settings.hasNonDefaultSettings());
 	}
 }

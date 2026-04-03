@@ -12,6 +12,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class NameConverterTest {
 
+	// --- toUpperCamelCase ---
+
 	@Test
 	public void testToUpperCamelCaseSimple() {
 		assertEquals("EmployeeName", NameConverter.toUpperCamelCase("employee_name"));
@@ -38,8 +40,13 @@ public class NameConverterTest {
 	}
 
 	@Test
-	public void testToUpperCamelCaseWithDashes() {
+	public void testToUpperCamelCaseWithHyphens() {
 		assertEquals("EmployeeName", NameConverter.toUpperCamelCase("employee-name"));
+	}
+
+	@Test
+	public void testToUpperCamelCaseMultipleUnderscores() {
+		assertEquals("AbcDef", NameConverter.toUpperCamelCase("abc__def"));
 	}
 
 	@Test
@@ -48,13 +55,25 @@ public class NameConverterTest {
 	}
 
 	@Test
-	public void testSimplePluralizeSuffix() {
-		assertEquals("dogs", NameConverter.simplePluralize("dog"));
+	public void testToUpperCamelCaseSingleChar() {
+		assertEquals("A", NameConverter.toUpperCamelCase("a"));
+	}
+
+	@Test
+	public void testToUpperCamelCaseAlreadyCamelCase() {
+		assertEquals("EmployeeName", NameConverter.toUpperCamelCase("EmployeeName"));
+	}
+
+	// --- simplePluralize ---
+
+	@Test
+	public void testSimplePluralizeRegular() {
+		assertEquals("employees", NameConverter.simplePluralize("employee"));
 	}
 
 	@Test
 	public void testSimplePluralizeEndingInS() {
-		assertEquals("busses", NameConverter.simplePluralize("buss"));
+		assertEquals("addresses", NameConverter.simplePluralize("address"));
 	}
 
 	@Test
@@ -64,7 +83,7 @@ public class NameConverterTest {
 
 	@Test
 	public void testSimplePluralizeEndingInConsonantY() {
-		assertEquals("cities", NameConverter.simplePluralize("city"));
+		assertEquals("companies", NameConverter.simplePluralize("company"));
 	}
 
 	@Test
@@ -74,26 +93,35 @@ public class NameConverterTest {
 
 	@Test
 	public void testSimplePluralizeEndingInCh() {
-		assertEquals("churches", NameConverter.simplePluralize("church"));
+		assertEquals("watches", NameConverter.simplePluralize("watch"));
 	}
 
 	@Test
 	public void testSimplePluralizeEndingInSh() {
-		assertEquals("bushes", NameConverter.simplePluralize("bush"));
+		assertEquals("dishes", NameConverter.simplePluralize("dish"));
 	}
 
 	@Test
-	public void testSimplePluralizeEndingInH() {
+	public void testSimplePluralizeEndingInTh() {
 		assertEquals("moths", NameConverter.simplePluralize("moth"));
 	}
 
+	// --- isReservedJavaKeyword ---
+
 	@Test
-	public void testIsReservedJavaKeyword() {
+	public void testIsReservedJavaKeywordTrue() {
 		assertTrue(NameConverter.isReservedJavaKeyword("class"));
 		assertTrue(NameConverter.isReservedJavaKeyword("int"));
-		assertTrue(NameConverter.isReservedJavaKeyword("for"));
-		assertTrue(NameConverter.isReservedJavaKeyword("while"));
-		assertFalse(NameConverter.isReservedJavaKeyword("foo"));
-		assertFalse(NameConverter.isReservedJavaKeyword("String"));
+		assertTrue(NameConverter.isReservedJavaKeyword("abstract"));
+		assertTrue(NameConverter.isReservedJavaKeyword("synchronized"));
+		assertTrue(NameConverter.isReservedJavaKeyword("volatile"));
+	}
+
+	@Test
+	public void testIsReservedJavaKeywordFalse() {
+		assertFalse(NameConverter.isReservedJavaKeyword("employee"));
+		assertFalse(NameConverter.isReservedJavaKeyword("Class"));
+		assertFalse(NameConverter.isReservedJavaKeyword("INT"));
+		assertFalse(NameConverter.isReservedJavaKeyword(""));
 	}
 }

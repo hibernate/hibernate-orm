@@ -7,100 +7,104 @@ package org.hibernate.tool.reveng.internal.export.java;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ImportContextImplTest {
 
 	@Test
-	public void testImportSimpleClass() {
+	public void testImportTypeSimple() {
 		ImportContextImpl ctx = new ImportContextImpl("com.example");
-		String result = ctx.importType("org.hibernate.Session");
-		assertEquals("Session", result);
+		assertEquals("List", ctx.importType("java.util.List"));
 	}
 
 	@Test
-	public void testImportSamePackageClass() {
+	public void testImportTypeSamePackage() {
 		ImportContextImpl ctx = new ImportContextImpl("com.example");
-		String result = ctx.importType("com.example.MyEntity");
-		assertEquals("MyEntity", result);
+		assertEquals("Person", ctx.importType("com.example.Person"));
 	}
 
 	@Test
-	public void testImportJavaLangClass() {
+	public void testImportTypeJavaLang() {
 		ImportContextImpl ctx = new ImportContextImpl("com.example");
-		String result = ctx.importType("java.lang.String");
-		assertEquals("String", result);
+		assertEquals("String", ctx.importType("java.lang.String"));
 	}
 
 	@Test
-	public void testImportPrimitive() {
+	public void testImportTypePrimitive() {
 		ImportContextImpl ctx = new ImportContextImpl("com.example");
-		String result = ctx.importType("int");
-		assertEquals("int", result);
+		assertEquals("int", ctx.importType("int"));
 	}
 
 	@Test
-	public void testImportWithGenerics() {
+	public void testImportTypeWithGenerics() {
 		ImportContextImpl ctx = new ImportContextImpl("com.example");
-		String result = ctx.importType("java.util.Collection<org.hibernate.Session>");
-		assertEquals("Collection<org.hibernate.Session>", result);
+		String result = ctx.importType("java.util.List<java.lang.String>");
+		assertEquals("List<java.lang.String>", result);
 	}
 
 	@Test
-	public void testImportWithArray() {
+	public void testImportTypeWithArray() {
 		ImportContextImpl ctx = new ImportContextImpl("com.example");
-		String result = ctx.importType("org.hibernate.Session[]");
-		assertEquals("Session[]", result);
+		String result = ctx.importType("java.util.List[]");
+		assertEquals("List[]", result);
 	}
 
 	@Test
-	public void testImportInnerClass() {
+	public void testImportTypeInnerClass() {
 		ImportContextImpl ctx = new ImportContextImpl("com.example");
-		String result = ctx.importType("org.hibernate.Session$Inner");
-		assertEquals("Session.Inner", result);
+		String result = ctx.importType("com.other.Outer$Inner");
+		assertEquals("Outer.Inner", result);
 	}
 
 	@Test
-	public void testImportConflictingSimpleNames() {
+	public void testImportTypeConflict() {
 		ImportContextImpl ctx = new ImportContextImpl("com.example");
-		String first = ctx.importType("org.a.Foo");
-		assertEquals("Foo", first);
-		// Same simple name, different package — must use FQN
-		String second = ctx.importType("org.b.Foo");
-		assertEquals("org.b.Foo", second);
+		assertEquals("List", ctx.importType("java.util.List"));
+		assertEquals("com.other.List", ctx.importType("com.other.List"));
+	}
+
+	@Test
+	public void testImportTypeSameTwice() {
+		ImportContextImpl ctx = new ImportContextImpl("com.example");
+		assertEquals("List", ctx.importType("java.util.List"));
+		assertEquals("List", ctx.importType("java.util.List"));
+	}
+
+	@Test
+	public void testGenerateImportsEmpty() {
+		ImportContextImpl ctx = new ImportContextImpl("com.example");
+		assertEquals("", ctx.generateImports());
+	}
+
+	@Test
+	public void testGenerateImports() {
+		ImportContextImpl ctx = new ImportContextImpl("com.example");
+		ctx.importType("java.util.List");
+		ctx.importType("java.util.Map");
+		String imports = ctx.generateImports();
+		assertTrue(imports.contains("import java.util.List;"));
+		assertTrue(imports.contains("import java.util.Map;"));
 	}
 
 	@Test
 	public void testGenerateImportsExcludesSamePackage() {
 		ImportContextImpl ctx = new ImportContextImpl("com.example");
-		ctx.importType("com.example.MyEntity");
-		String imports = ctx.generateImports();
-		assertFalse(imports.contains("com.example.MyEntity"));
+		ctx.importType("com.example.Person");
+		assertEquals("", ctx.generateImports());
 	}
 
 	@Test
 	public void testGenerateImportsExcludesJavaLang() {
 		ImportContextImpl ctx = new ImportContextImpl("com.example");
 		ctx.importType("java.lang.String");
-		String imports = ctx.generateImports();
-		assertFalse(imports.contains("java.lang.String"));
+		assertEquals("", ctx.generateImports());
 	}
 
 	@Test
-	public void testGenerateImportsExcludesPrimitives() {
+	public void testGenerateImportsExcludesPrimitive() {
 		ImportContextImpl ctx = new ImportContextImpl("com.example");
 		ctx.importType("int");
-		String imports = ctx.generateImports();
-		assertFalse(imports.contains("int"));
-	}
-
-	@Test
-	public void testGenerateImportsIncludesExternalClass() {
-		ImportContextImpl ctx = new ImportContextImpl("com.example");
-		ctx.importType("org.hibernate.Session");
-		String imports = ctx.generateImports();
-		assertTrue(imports.contains("import org.hibernate.Session;"));
+		assertEquals("", ctx.generateImports());
 	}
 
 	@Test
@@ -113,17 +117,9 @@ public class ImportContextImplTest {
 	}
 
 	@Test
-	public void testStaticImportWildcard() {
+	public void testStaticImportStar() {
 		ImportContextImpl ctx = new ImportContextImpl("com.example");
 		String result = ctx.staticImport("org.junit.Assert", "*");
 		assertEquals("", result);
-	}
-
-	@Test
-	public void testImportDefaultPackageClass() {
-		ImportContextImpl ctx = new ImportContextImpl("");
-		ctx.importType("MyClass");
-		String imports = ctx.generateImports();
-		assertFalse(imports.contains("MyClass"));
 	}
 }

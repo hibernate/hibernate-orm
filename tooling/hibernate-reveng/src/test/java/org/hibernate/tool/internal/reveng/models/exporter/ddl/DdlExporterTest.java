@@ -188,6 +188,52 @@ public class DdlExporterTest {
 		assertTrue(ddl.contains("active"), ddl);
 	}
 
+	// ---- File export tests ----
+
+	@Test
+	public void testExportCreateDdlToFile() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = buildEntity(builder, "EMPLOYEE", "Employee", "com.example");
+		DdlExporter exporter = DdlExporter.create(List.of(entity), defaultProperties());
+		File outputFile = new File("./target/test-create.ddl");
+		try {
+			exporter.exportCreateDdl(outputFile);
+			assertTrue(outputFile.exists(), "DDL file should exist");
+			String ddl = new String(java.nio.file.Files.readAllBytes(outputFile.toPath()))
+					.toLowerCase();
+			assertTrue(ddl.contains("create table"), ddl);
+			assertTrue(ddl.contains("employee"), ddl);
+		}
+		catch (java.io.IOException e) {
+			fail("Unexpected IOException: " + e.getMessage());
+		}
+		finally {
+			outputFile.delete();
+		}
+	}
+
+	@Test
+	public void testExportDropDdlToFile() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = buildEntity(builder, "EMPLOYEE", "Employee", "com.example");
+		DdlExporter exporter = DdlExporter.create(List.of(entity), defaultProperties());
+		File outputFile = new File("./target/test-drop.ddl");
+		try {
+			exporter.exportDropDdl(outputFile);
+			assertTrue(outputFile.exists(), "DDL file should exist");
+			String ddl = new String(java.nio.file.Files.readAllBytes(outputFile.toPath()))
+					.toLowerCase();
+			assertTrue(ddl.contains("drop"), ddl);
+			assertTrue(ddl.contains("employee"), ddl);
+		}
+		catch (java.io.IOException e) {
+			fail("Unexpected IOException: " + e.getMessage());
+		}
+		finally {
+			outputFile.delete();
+		}
+	}
+
 	// ---- Database execution tests ----
 
 	@Test

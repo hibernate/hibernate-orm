@@ -15,6 +15,10 @@
  */
 package org.hibernate.tool.internal.reveng.models.exporter.ddl;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -106,7 +110,69 @@ public class DdlExporter {
 		return this;
 	}
 
-	// ---- Script export methods (write DDL to a Writer) ----
+	// ---- Console export methods ----
+
+	/**
+	 * Generates CREATE DDL statements and writes them to {@code System.out}.
+	 */
+	public void exportCreateDdlToConsole() {
+		exportCreateDdl(new OutputStreamWriter(System.out));
+	}
+
+	/**
+	 * Generates DROP DDL statements and writes them to {@code System.out}.
+	 */
+	public void exportDropDdlToConsole() {
+		exportDropDdl(new OutputStreamWriter(System.out));
+	}
+
+	/**
+	 * Generates both DROP and CREATE DDL statements and writes them
+	 * to {@code System.out} (drop first, then create).
+	 */
+	public void exportBothDdlToConsole() {
+		exportBothDdl(new OutputStreamWriter(System.out));
+	}
+
+	/**
+	 * Generates schema migration (ALTER) DDL and writes it to {@code System.out}.
+	 */
+	public void exportUpdateDdlToConsole() {
+		exportUpdateDdl(new OutputStreamWriter(System.out));
+	}
+
+	// ---- File export methods ----
+
+	/**
+	 * Generates CREATE DDL statements and writes them to the given file.
+	 */
+	public void exportCreateDdl(File outputFile) {
+		writeToFile(outputFile, this::exportCreateDdl);
+	}
+
+	/**
+	 * Generates DROP DDL statements and writes them to the given file.
+	 */
+	public void exportDropDdl(File outputFile) {
+		writeToFile(outputFile, this::exportDropDdl);
+	}
+
+	/**
+	 * Generates both DROP and CREATE DDL statements and writes them
+	 * to the given file (drop first, then create).
+	 */
+	public void exportBothDdl(File outputFile) {
+		writeToFile(outputFile, this::exportBothDdl);
+	}
+
+	/**
+	 * Generates schema migration (ALTER) DDL and writes it to the given file.
+	 */
+	public void exportUpdateDdl(File outputFile) {
+		writeToFile(outputFile, this::exportUpdateDdl);
+	}
+
+	// ---- Writer export methods ----
 
 	/**
 	 * Generates CREATE DDL statements and writes them to the given writer.
@@ -237,6 +303,15 @@ public class DdlExporter {
 	}
 
 	// ---- Internal helpers ----
+
+	private void writeToFile(File file, java.util.function.Consumer<Writer> exporter) {
+		try (Writer writer = new FileWriter(file)) {
+			exporter.accept(writer);
+		}
+		catch (IOException e) {
+			throw new RuntimeException("Failed to write DDL to " + file, e);
+		}
+	}
 
 	private Map<String, Object> configurationValues() {
 		Map<String, Object> values = new HashMap<>();

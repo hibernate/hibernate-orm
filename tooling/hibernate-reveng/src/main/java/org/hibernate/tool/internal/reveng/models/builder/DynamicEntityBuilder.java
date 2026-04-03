@@ -25,6 +25,10 @@ import org.hibernate.tool.internal.reveng.models.metadata.ManyToManyMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.OneToManyMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.OneToOneMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.hibernate.boot.models.annotations.internal.EntityJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.DiscriminatorColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.DiscriminatorValueJpaAnnotation;
@@ -50,6 +54,7 @@ import org.hibernate.models.spi.ModelsContext;
 public class DynamicEntityBuilder {
 
 	private final ModelsContext modelsContext;
+	private final Map<String, TableMetadata> tableMetadataByClassName = new LinkedHashMap<>();
 
 	public DynamicEntityBuilder() {
 		// Initialize the models context
@@ -166,6 +171,9 @@ public class DynamicEntityBuilder {
 		// Register in the context
 		registerClassDetails(entityClass);
 
+		// Store the original table metadata for later use (e.g., documentation)
+		tableMetadataByClassName.put(className, tableMetadata);
+
 		return entityClass;
 	}
 
@@ -252,5 +260,22 @@ public class DynamicEntityBuilder {
 
 	public ModelsContext getModelsContext() {
 		return modelsContext;
+	}
+
+	/**
+	 * Returns the original {@link TableMetadata} that was used to create
+	 * the entity with the given fully qualified class name, or {@code null}
+	 * if no such entity was created by this builder.
+	 */
+	public TableMetadata getTableMetadata(String className) {
+		return tableMetadataByClassName.get(className);
+	}
+
+	/**
+	 * Returns an unmodifiable map of all stored table metadata, keyed
+	 * by fully qualified entity class name.
+	 */
+	public Map<String, TableMetadata> getTableMetadataMap() {
+		return Collections.unmodifiableMap(tableMetadataByClassName);
 	}
 }

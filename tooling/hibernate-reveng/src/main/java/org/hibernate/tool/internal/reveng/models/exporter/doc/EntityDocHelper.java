@@ -20,14 +20,18 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Table;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
+import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
 
 /**
  * Provides entity navigation and property helpers for the
@@ -42,6 +46,7 @@ import org.hibernate.models.spi.FieldDetails;
 public class EntityDocHelper {
 
 	public static final String DEFAULT_NO_PACKAGE = "All Entities";
+	public static final String DEFAULT_NO_SCHEMA = "default";
 
 	private final Map<String, List<EntityDocInfo>> classesByPackage =
 			new HashMap<>();
@@ -49,13 +54,24 @@ public class EntityDocHelper {
 	private final Map<String, EntityDocInfo> entityByQualifiedName =
 			new HashMap<>();
 
+	private final Map<String, List<TableDocInfo>> tablesBySchema =
+			new LinkedHashMap<>();
+	private final List<TableDocInfo> allTables = new ArrayList<>();
+	private final Map<String, TableDocInfo> tablesByName = new HashMap<>();
+
 	public EntityDocHelper(List<ClassDetails> entities) {
+		this(entities, null);
+	}
+
+	public EntityDocHelper(List<ClassDetails> entities,
+						   Map<String, TableMetadata> tableMetadataMap) {
 		for (ClassDetails entity : entities) {
 			EntityDocInfo info = new EntityDocInfo(entity);
 			processClass(info);
 			entityByQualifiedName.put(
 					info.getQualifiedDeclarationName(), info);
 		}
+		buildTableInfo(entities, tableMetadataMap);
 	}
 
 	private void processClass(EntityDocInfo info) {
@@ -142,5 +158,148 @@ public class EntityDocHelper {
 		List<PropertyDocInfo> result = getSimpleProperties(entity);
 		result.sort(Comparator.comparing(PropertyDocInfo::getName));
 		return result;
+	}
+
+	// ---- Table-side methods ----
+
+	private void buildTableInfo(List<ClassDetails> entities,
+								Map<String, TableMetadata> tableMetadataMap) {
+		// First pass: build TableDocInfo for each entity
+		for (ClassDetails entity : entities) {
+			String className = entity.getClassName();
+			TableDocInfo tableInfo;
+			if (tableMetadataMap != null
+					&& tableMetadataMap.containsKey(className)) {
+				tableInfo = TableDocInfo.buildFromTableMetadata(
+						tableMetadataMap.get(className));
+			}
+			else {
+				tableInfo = TableDocInfo.buildFromClassDetails(entity);
+			}
+			allTables.add(tableInfo);
+			tablesByName.put(tableInfo.getName(), tableInfo);
+
+			String schema = tableInfo.getSchema();
+			if (schema == null || schema.isEmpty()) {
+				schema = DEFAULT_NO_SCHEMA;
+			}
+			tablesBySchema
+					.computeIfAbsent(schema, k -> new ArrayList<>())
+					.add(tableInfo);
+		}
+
+		// Build entity-class-name → table-name map for FK resolution
+		Map<String, String> entityClassToTableName = new HashMap<>();
+		if (tableMetadataMap != null) {
+			for (TableMetadata tm : tableMetadataMap.values()) {
+				String fqn = tm.getEntityPackage() + "."
+						+ tm.getEntityClassName();
+				entityClassToTableName.put(fqn, tm.getTableName());
+			}
+		}
+
+		// Second pass: resolve foreign key cross-references
+		if (tableMetadataMap != null) {
+			for (TableMetadata tableMeta : tableMetadataMap.values()) {
+				TableDocInfo tableInfo =
+						tablesByName.get(tableMeta.getTableName());
+				if (tableInfo == null) {
+					continue;
+				}
+				for (ForeignKeyMetadata fk : tableMeta.getForeignKeys()) {
+					String targetFqn = fk.getTargetEntityPackage() + "."
+							+ fk.getTargetEntityClassName();
+					String targetTableName =
+							entityClassToTableName.get(targetFqn);
+					if (targetTableName == null) {
+						continue;
+					}
+					TableDocInfo referencedTable =
+							tablesByName.get(targetTableName);
+					if (referencedTable != null) {
+						String fkName = "FK_" + tableInfo.getName() + "_"
+								+ fk.getForeignKeyColumnName();
+						List<TableColumnDocInfo> fkCols = new ArrayList<>();
+						for (TableColumnDocInfo col :
+								tableInfo.getColumns()) {
+							if (col.getName().equals(
+									fk.getForeignKeyColumnName())) {
+								fkCols.add(col);
+								break;
+							}
+						}
+						tableInfo.addForeignKey(fkName,
+								new ForeignKeyDocInfo(fkName,
+										referencedTable, fkCols));
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Returns tables grouped by schema. Used by table summary and
+	 * schema-summary templates as {@code dochelper.tablesBySchema}.
+	 */
+	public Map<String, List<TableDocInfo>> getTablesBySchema() {
+		return tablesBySchema;
+	}
+
+	public List<String> getSchemas() {
+		List<String> schemas = new ArrayList<>(tablesBySchema.keySet());
+		Collections.sort(schemas);
+		return schemas;
+	}
+
+	public List<TableDocInfo> getTables() {
+		List<TableDocInfo> sorted = new ArrayList<>(allTables);
+		sorted.sort(Comparator.comparing(TableDocInfo::getName));
+		return sorted;
+	}
+
+	public List<TableDocInfo> getTables(String schema) {
+		List<TableDocInfo> list = tablesBySchema.get(schema);
+		if (list == null) {
+			return Collections.emptyList();
+		}
+		List<TableDocInfo> sorted = new ArrayList<>(list);
+		sorted.sort(Comparator.comparing(TableDocInfo::getName));
+		return sorted;
+	}
+
+	public String getQualifiedSchemaName(TableDocInfo table) {
+		String schema = table.getSchema();
+		String catalog = table.getCatalog();
+		if (catalog != null && !catalog.isEmpty()) {
+			if (schema != null && !schema.isEmpty()) {
+				return catalog + "." + schema;
+			}
+			return catalog;
+		}
+		if (schema != null && !schema.isEmpty()) {
+			return schema;
+		}
+		return DEFAULT_NO_SCHEMA;
+	}
+
+	public String getSQLTypeName(TableColumnDocInfo column) {
+		return column.getJavaTypeName();
+	}
+
+	public int getLength(TableColumnDocInfo column) {
+		return column.getLength();
+	}
+
+	public int getPrecision(TableColumnDocInfo column) {
+		return column.getPrecision();
+	}
+
+	public int getScale(TableColumnDocInfo column) {
+		return column.getScale();
+	}
+
+	public Iterator<TableColumnDocInfo> getPrimaryKeyColumnIterator(
+			TableDocInfo table) {
+		return table.getPrimaryKeyColumnIterator();
 	}
 }

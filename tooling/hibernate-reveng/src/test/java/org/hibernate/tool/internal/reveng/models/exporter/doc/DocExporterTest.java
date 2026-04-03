@@ -298,6 +298,205 @@ public class DocExporterTest {
 				"Should list Employee");
 	}
 
+	// ---- Table documentation tests ----
+
+	@Test
+	public void testExportCreatesTableIndex() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = buildEntity(
+				builder, "EMPLOYEE", "Employee", "com.example");
+		DocExporter exporter = DocExporter.create(
+				List.of(entity), builder.getTableMetadataMap());
+		exporter.export(outputDir);
+
+		File indexFile = new File(outputDir, "tables/index.html");
+		assertTrue(indexFile.exists());
+		String content = readFile(indexFile);
+		assertTrue(content.contains("frameset"),
+				"Table index should use framesets");
+	}
+
+	@Test
+	public void testExportCreatesTableSummary() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = buildEntity(
+				builder, "EMPLOYEE", "Employee", "com.example");
+		DocExporter exporter = DocExporter.create(
+				List.of(entity), builder.getTableMetadataMap());
+		exporter.export(outputDir);
+
+		File summaryFile = new File(outputDir, "tables/summary.html");
+		assertTrue(summaryFile.exists());
+		String content = readFile(summaryFile);
+		assertTrue(content.contains("default"),
+				"Summary should contain default schema");
+	}
+
+	@Test
+	public void testExportCreatesTableDetailFile() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = buildEntity(
+				builder, "EMPLOYEE", "Employee", "com.example");
+		DocExporter exporter = DocExporter.create(
+				List.of(entity), builder.getTableMetadataMap());
+		exporter.export(outputDir);
+
+		File tableFile = new File(outputDir, "tables/EMPLOYEE.html");
+		assertTrue(tableFile.exists(),
+				"Table detail file should exist");
+		String content = readFile(tableFile);
+		assertTrue(content.contains("EMPLOYEE"),
+				"Table page should contain table name");
+	}
+
+	@Test
+	public void testTableDetailContainsColumns() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = buildEntity(
+				builder, "EMPLOYEE", "Employee", "com.example");
+		DocExporter exporter = DocExporter.create(
+				List.of(entity), builder.getTableMetadataMap());
+		exporter.export(outputDir);
+
+		File tableFile = new File(outputDir, "tables/EMPLOYEE.html");
+		String content = readFile(tableFile);
+		assertTrue(content.contains("ID"),
+				"Should contain column ID");
+		assertTrue(content.contains("NAME"),
+				"Should contain column NAME");
+	}
+
+	@Test
+	public void testTableDetailContainsPrimaryKey() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = buildEntity(
+				builder, "EMPLOYEE", "Employee", "com.example");
+		DocExporter exporter = DocExporter.create(
+				List.of(entity), builder.getTableMetadataMap());
+		exporter.export(outputDir);
+
+		File tableFile = new File(outputDir, "tables/EMPLOYEE.html");
+		String content = readFile(tableFile);
+		assertTrue(content.contains("Primary Key"),
+				"Should have Primary Key section");
+		assertTrue(content.contains("PK_EMPLOYEE"),
+				"Should contain primary key name");
+	}
+
+	@Test
+	public void testMultipleTablesGenerated() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails employee = buildEntity(
+				builder, "EMPLOYEE", "Employee", "com.example");
+		ClassDetails department = buildEntity(
+				builder, "DEPARTMENT", "Department", "com.example");
+		DocExporter exporter = DocExporter.create(
+				List.of(employee, department),
+				builder.getTableMetadataMap());
+		exporter.export(outputDir);
+
+		assertTrue(new File(outputDir, "tables/EMPLOYEE.html").exists());
+		assertTrue(new File(outputDir, "tables/DEPARTMENT.html").exists());
+
+		// All tables list should contain both
+		File allTables = new File(outputDir, "tables/alltables.html");
+		String content = readFile(allTables);
+		assertTrue(content.contains("EMPLOYEE"));
+		assertTrue(content.contains("DEPARTMENT"));
+	}
+
+	@Test
+	public void testTableWithForeignKey() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		// Create department first (target)
+		TableMetadata deptTable = new TableMetadata(
+				"DEPARTMENT", "Department", "com.example");
+		deptTable.addColumn(
+				new ColumnMetadata("DEPT_ID", "id", Long.class)
+						.primaryKey(true));
+		deptTable.addColumn(
+				new ColumnMetadata("DEPT_NAME", "name", String.class));
+		builder.createEntityFromTable(deptTable);
+
+		// Create employee with FK to department
+		TableMetadata empTable = new TableMetadata(
+				"EMPLOYEE", "Employee", "com.example");
+		empTable.addColumn(
+				new ColumnMetadata("EMP_ID", "id", Long.class)
+						.primaryKey(true));
+		empTable.addColumn(
+				new ColumnMetadata("EMP_NAME", "name", String.class));
+		empTable.addForeignKey(new org.hibernate.tool.internal.reveng.models
+				.metadata.ForeignKeyMetadata(
+				"department", "DEPT_ID",
+				"Department", "com.example"));
+		ClassDetails dept = builder.getModelsContext()
+				.getClassDetailsRegistry()
+				.getClassDetails("com.example.Department");
+		ClassDetails emp = builder.createEntityFromTable(empTable);
+
+		DocExporter exporter = DocExporter.create(
+				List.of(dept, emp), builder.getTableMetadataMap());
+		exporter.export(outputDir);
+
+		File tableFile = new File(outputDir, "tables/EMPLOYEE.html");
+		String content = readFile(tableFile);
+		assertTrue(content.contains("Foreign Key"),
+				"Should have Foreign Keys section");
+		assertTrue(content.contains("DEPARTMENT"),
+				"Should reference DEPARTMENT table");
+	}
+
+	@Test
+	public void testTableWithSchema() {
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		TableMetadata table = new TableMetadata(
+				"EMPLOYEE", "Employee", "com.example");
+		table.setSchema("HR");
+		table.addColumn(
+				new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(
+				new ColumnMetadata("NAME", "name", String.class));
+		ClassDetails entity = builder.createEntityFromTable(table);
+
+		DocExporter exporter = DocExporter.create(
+				List.of(entity), builder.getTableMetadataMap());
+		exporter.export(outputDir);
+
+		File tableFile = new File(outputDir, "tables/HR/EMPLOYEE.html");
+		assertTrue(tableFile.exists(),
+				"Table file should be in schema folder");
+		String content = readFile(tableFile);
+		assertTrue(content.contains("HR"),
+				"Should contain schema name");
+
+		// Schema summary should exist
+		File schemaSummary = new File(outputDir,
+				"tables/HR/summary.html");
+		assertTrue(schemaSummary.exists(),
+				"Schema summary should exist");
+	}
+
+	@Test
+	public void testTableFallbackFromClassDetails() {
+		// Create entity without using DynamicEntityBuilder (no TableMetadata)
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		ClassDetails entity = buildEntity(
+				builder, "EMPLOYEE", "Employee", "com.example");
+
+		// Pass null for tableMetadataMap to force ClassDetails fallback
+		DocExporter exporter = DocExporter.create(List.of(entity));
+		exporter.export(outputDir);
+
+		// Table should still be generated from ClassDetails annotations
+		File tableFile = new File(outputDir, "tables/EMPLOYEE.html");
+		assertTrue(tableFile.exists(),
+				"Table file should exist from ClassDetails fallback");
+		String content = readFile(tableFile);
+		assertTrue(content.contains("EMPLOYEE"),
+				"Should contain table name from @Table annotation");
+	}
+
 	private String readFile(File file) {
 		try {
 			return Files.readString(file.toPath());

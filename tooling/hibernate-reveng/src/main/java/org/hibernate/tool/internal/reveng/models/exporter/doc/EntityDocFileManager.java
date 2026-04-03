@@ -45,9 +45,16 @@ public class EntityDocFileManager {
 	private final DocFile allEntitiesDocFile;
 	private final DocFile tableIndexDocFile;
 
+	private final DocFile tableSummaryDocFile;
+	private final DocFile allSchemasDocFile;
+	private final DocFile allTablesDocFile;
+
 	private final Map<String, DocFile> entityDocFiles = new HashMap<>();
 	private final Map<String, DocFile> packageSummaryDocFiles = new HashMap<>();
 	private final Map<String, DocFile> packageEntityListDocFiles = new HashMap<>();
+	private final Map<String, DocFile> tableDocFiles = new HashMap<>();
+	private final Map<String, DocFile> schemaSummaryDocFiles = new HashMap<>();
+	private final Map<String, DocFile> schemaTableListDocFiles = new HashMap<>();
 
 	public EntityDocFileManager(EntityDocHelper docHelper, File rootFolder) {
 		rootDocFolder = new DocFolder(rootFolder);
@@ -65,9 +72,12 @@ public class EntityDocFileManager {
 		allPackagesDocFile = new DocFile("allpackages.html", entitiesFolder);
 		allEntitiesDocFile = new DocFile("allentities.html", entitiesFolder);
 
-		// Tables folder (placeholder for header navigation)
+		// Tables documentation folder
 		DocFolder tablesFolder = new DocFolder("tables", rootDocFolder);
 		tableIndexDocFile = new DocFile("index.html", tablesFolder);
+		tableSummaryDocFile = new DocFile("summary.html", tablesFolder);
+		allSchemasDocFile = new DocFile("allschemas.html", tablesFolder);
+		allTablesDocFile = new DocFile("alltables.html", tablesFolder);
 
 		// Create per-package folders and per-entity files
 		for (String packageName : docHelper.getPackages()) {
@@ -98,6 +108,31 @@ public class EntityDocFileManager {
 				DocFile entityFile = new DocFile(fileName, currentRoot);
 				entityDocFiles.put(
 						entity.getQualifiedDeclarationName(), entityFile);
+			}
+		}
+
+		// Create per-schema folders and per-table files
+		for (String schema : docHelper.getSchemas()) {
+			DocFolder schemaFolder;
+			if (!schema.equals(EntityDocHelper.DEFAULT_NO_SCHEMA)) {
+				schemaFolder = new DocFolder(schema, tablesFolder);
+			}
+			else {
+				schemaFolder = tablesFolder;
+			}
+
+			DocFile schemaSummary =
+					new DocFile("summary.html", schemaFolder);
+			schemaSummaryDocFiles.put(schema, schemaSummary);
+
+			DocFile schemaTableList =
+					new DocFile("tables.html", schemaFolder);
+			schemaTableListDocFiles.put(schema, schemaTableList);
+
+			for (TableDocInfo table : docHelper.getTables(schema)) {
+				String fileName = table.getName() + ".html";
+				DocFile tableFile = new DocFile(fileName, schemaFolder);
+				tableDocFiles.put(table.getName(), tableFile);
 			}
 		}
 	}
@@ -166,6 +201,32 @@ public class EntityDocFileManager {
 
 	public DocFile getPackageEntityListDocFile(String packageName) {
 		return packageEntityListDocFiles.get(packageName);
+	}
+
+	// ---- Table file accessors ----
+
+	public DocFile getTableSummaryDocFile() {
+		return tableSummaryDocFile;
+	}
+
+	public DocFile getAllSchemasDocFile() {
+		return allSchemasDocFile;
+	}
+
+	public DocFile getAllTablesDocFile() {
+		return allTablesDocFile;
+	}
+
+	public DocFile getTableDocFile(TableDocInfo table) {
+		return tableDocFiles.get(table.getName());
+	}
+
+	public DocFile getSchemaSummaryDocFile(String schema) {
+		return schemaSummaryDocFiles.get(schema);
+	}
+
+	public DocFile getSchemaTableListDocFile(String schema) {
+		return schemaTableListDocFiles.get(schema);
 	}
 
 	public String getRef(DocFile from, DocFile to) {

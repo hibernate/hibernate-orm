@@ -40,6 +40,7 @@ import freemarker.template.TemplateExceptionHandler;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.internal.export.doc.DocFile;
+import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
 
 /**
  * Generates HTML documentation for entities from a list of
@@ -71,6 +72,21 @@ public class DocExporter {
 	private static final String FTL_ENTITIES_PACKAGE_SUMMARY =
 			"doc/entities/package-summary.ftl";
 
+	private static final String FTL_TABLES_INDEX =
+			"doc/tables/index.ftl";
+	private static final String FTL_TABLES_SUMMARY =
+			"doc/tables/summary.ftl";
+	private static final String FTL_TABLES_TABLE =
+			"doc/tables/table.ftl";
+	private static final String FTL_TABLES_SCHEMA_LIST =
+			"doc/tables/schema-list.ftl";
+	private static final String FTL_TABLES_TABLE_LIST =
+			"doc/tables/table-list.ftl";
+	private static final String FTL_TABLES_SCHEMA_TABLE_LIST =
+			"doc/tables/schema-table-list.ftl";
+	private static final String FTL_TABLES_SCHEMA_SUMMARY =
+			"doc/tables/schema-summary.ftl";
+
 	private static final String RES_CSS = "doc/doc-style.css";
 	private static final String RES_HIBERNATE_IMAGE =
 			"doc/hibernate_logo.gif";
@@ -78,11 +94,15 @@ public class DocExporter {
 	private static final String RES_MAIN_INDEX = "doc/index.html";
 
 	private final List<ClassDetails> entities;
+	private final Map<String, TableMetadata> tableMetadataMap;
 	private final Configuration freemarkerConfig;
 	private final BeansWrapper beansWrapper;
 
-	private DocExporter(List<ClassDetails> entities, String[] templatePath) {
+	private DocExporter(List<ClassDetails> entities,
+						Map<String, TableMetadata> tableMetadataMap,
+						String[] templatePath) {
 		this.entities = entities;
+		this.tableMetadataMap = tableMetadataMap;
 		this.beansWrapper = new BeansWrapperBuilder(
 				Configuration.VERSION_2_3_33).build();
 		this.freemarkerConfig = new Configuration(Configuration.VERSION_2_3_33);
@@ -97,12 +117,23 @@ public class DocExporter {
 	}
 
 	public static DocExporter create(List<ClassDetails> entities) {
-		return new DocExporter(entities, new String[0]);
+		return new DocExporter(entities, null, new String[0]);
 	}
 
 	public static DocExporter create(List<ClassDetails> entities,
 									  String[] templatePath) {
-		return new DocExporter(entities, templatePath);
+		return new DocExporter(entities, null, templatePath);
+	}
+
+	public static DocExporter create(List<ClassDetails> entities,
+									  Map<String, TableMetadata> tableMetadataMap) {
+		return new DocExporter(entities, tableMetadataMap, new String[0]);
+	}
+
+	public static DocExporter create(List<ClassDetails> entities,
+									  Map<String, TableMetadata> tableMetadataMap,
+									  String[] templatePath) {
+		return new DocExporter(entities, tableMetadataMap, templatePath);
 	}
 
 	/**
@@ -111,7 +142,8 @@ public class DocExporter {
 	 * package summaries, index pages, and supporting assets.
 	 */
 	public void export(File outputDirectory) {
-		EntityDocHelper docHelper = new EntityDocHelper(entities);
+		EntityDocHelper docHelper =
+				new EntityDocHelper(entities, tableMetadataMap);
 		EntityDocFileManager docFileManager =
 				new EntityDocFileManager(docHelper, outputDirectory);
 
@@ -124,6 +156,15 @@ public class DocExporter {
 		generateAllEntitiesList(docHelper, docFileManager);
 		generatePerPackageEntityList(docHelper, docFileManager);
 		generatePackageDetailedInfo(docHelper, docFileManager);
+
+		// Table documentation
+		generateTablesIndex(docHelper, docFileManager);
+		generateTablesSummary(docHelper, docFileManager);
+		generateTableDetails(docHelper, docFileManager);
+		generateAllSchemasList(docHelper, docFileManager);
+		generateAllTablesList(docHelper, docFileManager);
+		generatePerSchemaTableList(docHelper, docFileManager);
+		generateSchemaDetailedInfo(docHelper, docFileManager);
 	}
 
 	private void copyAssets(EntityDocFileManager docFileManager) {
@@ -237,6 +278,86 @@ public class DocExporter {
 			params.put("package", packageName);
 			params.put("classList", docHelper.getClasses(packageName));
 			processTemplate(params, FTL_ENTITIES_PACKAGE_SUMMARY,
+					docFile.getFile(), docHelper, docFileManager);
+		}
+	}
+
+	// ---- Table generation methods ----
+
+	private void generateTablesIndex(EntityDocHelper docHelper,
+									  EntityDocFileManager docFileManager) {
+		DocFile docFile = docFileManager.getTableIndexDocFile();
+		Map<String, Object> params = new HashMap<>();
+		params.put("docFile", docFile);
+		processTemplate(params, FTL_TABLES_INDEX, docFile.getFile(),
+				docHelper, docFileManager);
+	}
+
+	private void generateTablesSummary(EntityDocHelper docHelper,
+										 EntityDocFileManager docFileManager) {
+		DocFile docFile = docFileManager.getTableSummaryDocFile();
+		Map<String, Object> params = new HashMap<>();
+		params.put("docFile", docFile);
+		params.put("graphsGenerated", false);
+		processTemplate(params, FTL_TABLES_SUMMARY, docFile.getFile(),
+				docHelper, docFileManager);
+	}
+
+	private void generateTableDetails(EntityDocHelper docHelper,
+										EntityDocFileManager docFileManager) {
+		for (TableDocInfo table : docHelper.getTables()) {
+			DocFile docFile = docFileManager.getTableDocFile(table);
+			Map<String, Object> params = new HashMap<>();
+			params.put("docFile", docFile);
+			params.put("table", table);
+			processTemplate(params, FTL_TABLES_TABLE, docFile.getFile(),
+					docHelper, docFileManager);
+		}
+	}
+
+	private void generateAllSchemasList(EntityDocHelper docHelper,
+										  EntityDocFileManager docFileManager) {
+		DocFile docFile = docFileManager.getAllSchemasDocFile();
+		Map<String, Object> params = new HashMap<>();
+		params.put("docFile", docFile);
+		params.put("schemaList", docHelper.getSchemas());
+		processTemplate(params, FTL_TABLES_SCHEMA_LIST, docFile.getFile(),
+				docHelper, docFileManager);
+	}
+
+	private void generateAllTablesList(EntityDocHelper docHelper,
+										 EntityDocFileManager docFileManager) {
+		DocFile docFile = docFileManager.getAllTablesDocFile();
+		Map<String, Object> params = new HashMap<>();
+		params.put("docFile", docFile);
+		params.put("tableList", docHelper.getTables());
+		processTemplate(params, FTL_TABLES_TABLE_LIST, docFile.getFile(),
+				docHelper, docFileManager);
+	}
+
+	private void generatePerSchemaTableList(EntityDocHelper docHelper,
+											  EntityDocFileManager docFileManager) {
+		for (String schema : docHelper.getSchemas()) {
+			DocFile docFile =
+					docFileManager.getSchemaTableListDocFile(schema);
+			Map<String, Object> params = new HashMap<>();
+			params.put("docFile", docFile);
+			params.put("title", schema);
+			params.put("tableList", docHelper.getTables(schema));
+			processTemplate(params, FTL_TABLES_SCHEMA_TABLE_LIST,
+					docFile.getFile(), docHelper, docFileManager);
+		}
+	}
+
+	private void generateSchemaDetailedInfo(EntityDocHelper docHelper,
+											  EntityDocFileManager docFileManager) {
+		for (String schema : docHelper.getSchemas()) {
+			DocFile docFile =
+					docFileManager.getSchemaSummaryDocFile(schema);
+			Map<String, Object> params = new HashMap<>();
+			params.put("docFile", docFile);
+			params.put("schema", schema);
+			processTemplate(params, FTL_TABLES_SCHEMA_SUMMARY,
 					docFile.getFile(), docHelper, docFileManager);
 		}
 	}

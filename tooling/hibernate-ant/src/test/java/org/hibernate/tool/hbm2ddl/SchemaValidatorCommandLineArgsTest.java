@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import java.lang.reflect.Method;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -96,14 +95,7 @@ public class SchemaValidatorCommandLineArgsTest {
 	}
 
 	private Object parseArgs(String[] args) throws Exception {
-		Class<?> cmdLineArgsClass = null;
-		for (Class<?> inner : SchemaValidator.class.getDeclaredClasses()) {
-			if (inner.getSimpleName().equals("CommandLineArgs")) {
-				cmdLineArgsClass = inner;
-				break;
-			}
-		}
-		assertNotNull(cmdLineArgsClass, "CommandLineArgs inner class not found");
+		Class<?> cmdLineArgsClass = Class.forName(SchemaValidator.class.getName() + "$CommandLineArgs");
 		Method parseMethod = cmdLineArgsClass.getDeclaredMethod("parseCommandLineArgs", String[].class);
 		parseMethod.setAccessible(true);
 		return parseMethod.invoke(null, (Object) args);

@@ -114,7 +114,7 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 
 				var  writeIndexPlannedOp = new PlannedOperation(
 						persister.getCollectionTableDescriptor(),
-						MutationKind.UPDATE,
+						MutationKind.UPDATE_ORDER,
 						jdbcOperations.updateIndexPlan().jdbcOperation(),
 						writeIndexBindPlan,
 						writeIndexOrdinal,
@@ -265,23 +265,23 @@ public abstract class AbstractNonBundledOneToManyDecomposer extends AbstractOneT
 
 			var jdbcOperations = selectJdbcOperations( entry, session );
 			assert jdbcOperations != null;
-			var updateRowPlan = jdbcOperations.updateRowPlan();
+			var updateIndexPlan = jdbcOperations.updateIndexPlan();
 
-			// For inverse collections, updateRowPlan will be null
-			if ( updateRowPlan != null && collection.needsUpdating( entry, entryCount, persister.getAttributeMapping() ) ) {
+			// For inverse collections, updateIndexPlan will be null
+			if ( updateIndexPlan != null && collection.needsUpdating( entry, entryCount, persister.getAttributeMapping() ) ) {
 				final BindPlan bindPlan = new SingleRowUpdateBindPlan(
 						collection,
 						key,
 						entry,
 						entryCount,
-						updateRowPlan.values(),
-						updateRowPlan.restrictions()
+						updateIndexPlan.values(),
+						updateIndexPlan.restrictions()
 				);
 
 				final PlannedOperation plannedOp = new PlannedOperation(
 						persister.getCollectionTableDescriptor(),
-						MutationKind.UPDATE,
-						updateRowPlan.jdbcOperation(),
+						MutationKind.UPDATE_ORDER,
+						updateIndexPlan.jdbcOperation(),
 						bindPlan,
 						updateOrdinal,
 						"UpdateRow[" + entryCount + "](" + persister.getRolePath() + ")"

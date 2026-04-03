@@ -791,19 +791,25 @@ public class BasicValue extends SimpleValue
 			// and implement toString/fromString as well as copying based on FormatMapper operations
 			switch ( jdbcTypeCode ) {
 				case SqlTypes.JSON:
-					final var jsonJavaType =
-							new JsonJavaType<>( impliedJavaType,
+					return javaTypeRegistry.resolveDescriptor(
+							SqlTypes.JSON,
+							impliedJavaType,
+							() -> new JsonJavaType<>(
+									impliedJavaType,
 									mutabilityPlan( typeConfiguration, impliedJavaType ),
-									typeConfiguration );
-					javaTypeRegistry.addDescriptor( jsonJavaType );
-					return jsonJavaType;
+									typeConfiguration
+							)
+					);
 				case SqlTypes.SQLXML:
-					final var xmlJavaType =
-							new XmlJavaType<>( impliedJavaType,
+					return javaTypeRegistry.resolveDescriptor(
+							SqlTypes.SQLXML,
+							impliedJavaType,
+							() -> new XmlJavaType<>(
+									impliedJavaType,
 									mutabilityPlan( typeConfiguration, impliedJavaType ),
-									typeConfiguration );
-					javaTypeRegistry.addDescriptor( xmlJavaType );
-					return xmlJavaType;
+									typeConfiguration
+							)
+					);
 			}
 		}
 		return javaTypeRegistry.resolveDescriptor( impliedJavaType );

@@ -42,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class UniqueConstraintOrderingTest {
 	static boolean notUsingGraphQueue() {
 		// Check system property to determine which queue implementation is configured
-		String queueImpl = System.getProperty("hibernate.flush.queue.impl", "graph");
+		String queueImpl = System.getProperty( "hibernate.flush.queue.type", "graph");
 		return "legacy".equalsIgnoreCase(queueImpl);
 	}
 

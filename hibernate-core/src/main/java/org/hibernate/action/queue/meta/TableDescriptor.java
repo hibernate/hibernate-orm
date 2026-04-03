@@ -34,6 +34,8 @@ public interface TableDescriptor {
 	/// @implNote E.g., an `employee` table which has a `manager_fk` key that targets back at `employee`.`
 	boolean isSelfReferential();
 
+	boolean hasUniqueConstraints();
+
 	/// Whether cascade deletion is defined on the underlying database table.
 	boolean cascadeDeleteEnabled();
 

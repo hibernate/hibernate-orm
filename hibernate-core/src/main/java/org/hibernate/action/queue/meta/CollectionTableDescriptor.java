@@ -18,6 +18,7 @@ public record CollectionTableDescriptor(
 		boolean isJoinTable,
 		boolean isInverse,
 		boolean isSelfReferential,
+		boolean hasUniqueConstraints,
 		boolean cascadeDeleteEnabled,
 		MutationDetails insertDetails,
 		MutationDetails updateDetails,

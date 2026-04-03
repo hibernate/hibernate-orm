@@ -1800,13 +1800,24 @@ public abstract class AbstractCollectionPersister
 			String qualifiedTableName,
 			PluralAttributeMapping attributeMapping,
 			SessionFactoryImplementor factory) {
+		// NOTE : if ActionQueue is not the graph-based one, isSelfReferential will have no impact
+		final boolean isSelfReferential;
+		final boolean hasUniqueKeys;
+		if ( factory.getActionQueueFactory() instanceof GraphBasedActionQueueFactory gbaqf ) {
+			isSelfReferential = gbaqf.getConstraintModel().selfReferentialTables().contains( qualifiedTableName );
+			hasUniqueKeys = gbaqf.getConstraintModel().getUniqueConstraintsForTable( qualifiedTableName ) != null;
+		}
+		else {
+			isSelfReferential = false;
+			hasUniqueKeys = false;
+		}
 		return new CollectionTableDescriptor(
 				qualifiedTableName,
 				attributeMapping.getNavigableRole(),
 				!collectionBootDescriptor.isOneToMany(),
 				collectionBootDescriptor.isInverse(),
-				factory.getActionQueueFactory() instanceof GraphBasedActionQueueFactory gbaqf
-						&& gbaqf.getConstraintModel().selfReferentialTables().contains( qualifiedTableName ),
+				isSelfReferential,
+				hasUniqueKeys,
 				collectionBootDescriptor.getKey().isCascadeDeleteEnabled(),
 				buildInsertMutationDetails( collectionBootDescriptor ),
 				buildUpdateMutationDetails( collectionBootDescriptor ),

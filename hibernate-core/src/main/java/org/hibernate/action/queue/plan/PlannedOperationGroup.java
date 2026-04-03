@@ -31,6 +31,7 @@ public record PlannedOperationGroup(
 		StatementShapeKey shapeKey,
 		List<PlannedOperation> operations,
 		boolean needsIdPrePhase,
+		boolean hasUniqueConstraints,
 		int ordinal,
 		String origin) {
 }

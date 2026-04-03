@@ -13,6 +13,7 @@ import org.hibernate.Internal;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.action.queue.ActionQueueFactory;
+import org.hibernate.action.queue.PlanningOptions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -267,6 +268,11 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 * Efficient access to the {@link TransactionIdentifierService}.
 	 */
 	TransactionIdentifierService getTransactionIdentifierService();
+
+	/**
+	 * Configuration for graph planning as part of the ActionQueue.
+	 */
+	PlanningOptions getGraphPlanningOptions();
 
 	/**
 	 * Return an instance of {@link WrapperOptions} which is not backed by a session,

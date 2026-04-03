@@ -4,6 +4,7 @@
  */
 package org.hibernate.metamodel.spi;
 
+import org.hibernate.action.queue.PlanningOptions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -35,6 +36,8 @@ public interface RuntimeModelCreationContext {
 	MappingMetamodelImplementor getDomainModel();
 
 	TypeConfiguration getTypeConfiguration();
+
+	PlanningOptions getGraphPlanningOptions();
 
 	default JavaTypeRegistry getJavaTypeRegistry() {
 		return getTypeConfiguration().getJavaTypeRegistry();

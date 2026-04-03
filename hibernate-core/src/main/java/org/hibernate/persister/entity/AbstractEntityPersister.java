@@ -22,7 +22,6 @@ import org.hibernate.Timeouts;
 import org.hibernate.action.queue.meta.ColumnDescriptor;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableKeyDescriptor;
-import org.hibernate.action.queue.support.GraphBasedActionQueueFactory;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -308,6 +307,9 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildNonEncapsulatedCompositeIdentifierMapping;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.resolveAggregateColumnBasicType;
 import static org.hibernate.metamodel.mapping.internal.MappingModelHelper.isCompatibleModelPart;
+import static org.hibernate.models.internal.util.CollectionHelper.isNotEmpty;
+import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRIMINATOR;
+import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
@@ -3337,6 +3339,8 @@ public abstract class AbstractEntityPersister
 		lazyLoadPlanByFetchGroup = getLazyLoadPlanByFetchGroup();
 
 		// delay these until very late... we need `tableDescriptors` across the entire hierarchy...
+		// this is like doLateLateLateInit ;)
+		tableDescriptors = buildTableDescriptors();
 		insertDecomposer = new InsertDecomposer( this, factory );
 		updateDecomposer = new UpdateDecomposer( this, factory );
 		deleteDecomposer = new DeleteDecomposer( this, factory );
@@ -3374,8 +3378,6 @@ public abstract class AbstractEntityPersister
 			updateGeneratedValuesProcessor =
 					createGeneratedValuesProcessor( UPDATE, updateGeneratedAttributes );
 		}
-
-		tableDescriptors = buildTableDescriptors();
 
 		insertCoordinator = stateManagement.createInsertCoordinator( this );
 		updateCoordinator = stateManagement.createUpdateCoordinator( this );
@@ -3466,9 +3468,10 @@ public abstract class AbstractEntityPersister
 			String tableName,
 			int relativePosition,
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier) {
+		var constraintModel = factory.getMappingMetamodel().getConstraintModel();
 		// NOTE : if ActionQueue is not the graph-based one, isSelfReferential will have no impact
-		boolean isSelfReferential = factory.getActionQueueFactory() instanceof GraphBasedActionQueueFactory gbaqf
-				&& gbaqf.getConstraintModel().selfReferentialTables().contains( tableName );
+		final boolean isSelfReferential = constraintModel.selfReferentialTables().contains( tableName );
+		final boolean hasUniqueKeys = isNotEmpty( constraintModel.getUniqueConstraintsForTable( tableName ) );
 		var keyColumns = new ArrayList<ColumnDescriptor>();
 		tableKeyColumnVisitationSupplier.get().accept( (index, selectableMapping) -> {
 			keyColumns.add( ColumnDescriptor.from( selectableMapping ) );
@@ -3495,6 +3498,7 @@ public abstract class AbstractEntityPersister
 				isDynamicUpdate(),
 				isDynamicInsert(),
 				isSelfReferential,
+				hasUniqueKeys,
 				new TableKeyDescriptor( keyColumns )
 		);
 	}
@@ -3523,6 +3527,7 @@ public abstract class AbstractEntityPersister
 		private final boolean dynamicInsert;
 		private final boolean dynamicUpdate;
 		private final boolean isSelfReferential;
+		private final boolean hasUniqueKeys;
 
 		private final TableKeyDescriptor keyDescriptor;
 		private final List<ColumnDescriptor> columnDescriptors = new ArrayList<>();
@@ -3548,6 +3553,7 @@ public abstract class AbstractEntityPersister
 				boolean dynamicInsert,
 				boolean dynamicUpdate,
 				boolean isSelfReferential,
+				boolean hasUniqueKeys,
 				TableKeyDescriptor keyDescriptor) {
 			this.tableName = tableName;
 			this.relativePosition = relativePosition;
@@ -3567,6 +3573,7 @@ public abstract class AbstractEntityPersister
 			this.dynamicInsert = dynamicInsert;
 			this.dynamicUpdate = dynamicUpdate;
 			this.isSelfReferential = isSelfReferential;
+			this.hasUniqueKeys = hasUniqueKeys;
 			this.keyDescriptor = keyDescriptor;
 		}
 
@@ -3578,6 +3585,7 @@ public abstract class AbstractEntityPersister
 					isOptional,
 					isInverse,
 					isSelfReferential,
+					hasUniqueKeys,
 					cascadeDeleteEnabled,
 					new TableMapping.MutationDetails(
 							MutationType.INSERT,
@@ -3846,11 +3854,6 @@ public abstract class AbstractEntityPersister
 
 	protected String substituteBrackets(String sql) {
 		return sql == null ? null : new SQLQueryParser( sql, null, getFactory() ).process();
-	}
-
-	@Override
-	public final void postInstantiate() throws MappingException {
-		doLateInit();
 	}
 
 	/**
@@ -5016,6 +5019,14 @@ public abstract class AbstractEntityPersister
 		attributeMappings.indexedForEach( consumer );
 	}
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Execution flow for "mapping model initialization -
+	//		1. prepareMappingModel
+	//		2. postInstantiate
+	//			2.a. doLateInit
+	//		3. prepareLoaders
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 	@Override
 	public void prepareMappingModel(MappingModelCreationProcess creationProcess) {
 		if ( identifierMapping == null ) {
@@ -5024,6 +5035,11 @@ public abstract class AbstractEntityPersister
 			prepareMultiTableMutationStrategy( creationProcess );
 			prepareMultiTableInsertStrategy( creationProcess );
 		}
+	}
+
+	@Override
+	public final void postInstantiate() throws MappingException {
+		doLateInit();
 	}
 
 	private void handleSubtypeMappings(MappingModelCreationProcess creationProcess) {

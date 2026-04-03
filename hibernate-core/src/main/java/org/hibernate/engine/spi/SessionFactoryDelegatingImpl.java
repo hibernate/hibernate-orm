@@ -25,6 +25,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
+import org.hibernate.action.queue.PlanningOptions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -468,6 +469,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public EventListenerRegistry getEventListenerRegistry() {
 		return delegate.getEventListenerRegistry();
+	}
+
+	@Override
+	public PlanningOptions getGraphPlanningOptions() {
+		return delegate.getGraphPlanningOptions();
 	}
 
 	@Override

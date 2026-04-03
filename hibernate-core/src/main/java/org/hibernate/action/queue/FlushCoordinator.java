@@ -75,6 +75,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 ///
 /// @author Steve Ebersole
 public class FlushCoordinator {
+	private final transient PlanningOptions planningOptions;
 	private final transient SessionImplementor session;
 	private final transient GraphBuilder graphBuilder;
 
@@ -90,6 +91,7 @@ public class FlushCoordinator {
 
 	public FlushCoordinator(ConstraintModel constraintModel, PlanningOptions planningOptions, SessionImplementor session) {
 		this.constraintModel = constraintModel;
+		this.planningOptions = planningOptions;
 		this.session = session;
 
 		decomposer = new Decomposer( session );
@@ -105,6 +107,7 @@ public class FlushCoordinator {
 			GraphBasedActionQueueFactory actionQueueFactory,
 			SessionImplementor session) {
 		this.constraintModel = actionQueueFactory.getConstraintModel();
+		planningOptions = actionQueueFactory.getPlanningOptions();
 		this.decomposer = decomposer;
 		this.session = session;
 
@@ -221,8 +224,23 @@ public class FlushCoordinator {
 	/// @param groups the operation groups to check
 	/// @return true if we can skip graph building
 	private boolean canSkipGraphBuilding(List<PlannedOperationGroup> groups) {
-		// Single group - no inter-group dependencies possible
+		// Single group - check for intra-group dependencies
 		if (groups.size() == 1) {
+			PlannedOperationGroup singleGroup = groups.get(0);
+
+			// Single operation - definitely no dependencies
+			if (singleGroup.operations().size() <= 1) {
+				return true;
+			}
+
+			// Multiple UPDATEs on table with unique constraints might have cycles (swaps)
+			if (singleGroup.kind() == MutationKind.UPDATE
+					&& planningOptions.orderByUniqueKeySlots()
+					&& singleGroup.hasUniqueConstraints()) {
+				return false;  // Need graph to detect swaps within the group
+			}
+
+			// Otherwise, single group has no inter-group dependencies
 			return true;
 		}
 
@@ -240,6 +258,11 @@ public class FlushCoordinator {
 		// For DELETEs: Check if any operation group is referenced by another group's table
 		if (firstKind == MutationKind.INSERT || firstKind == MutationKind.DELETE) {
 			return !hasInterGroupDependencies(groups, firstKind);
+		}
+
+		// For UPDATEs: If unique constraint ordering is enabled, need graph for swap detection
+		if (firstKind == MutationKind.UPDATE && planningOptions.orderByUniqueKeySlots()) {
+			return !hasUniqueConstraintConflicts(groups);
 		}
 
 		// UPDATEs and NO_OPs can be executed in any order
@@ -285,6 +308,23 @@ public class FlushCoordinator {
 			}
 		}
 
+		return false;
+	}
+
+	/// Check if UPDATE operation groups have potential unique constraint conflicts.
+	/// If any UPDATEs are on tables with unique constraints, we need graph building
+	/// to detect and handle swaps.
+	///
+	/// @param groups the UPDATE operation groups
+	/// @return true if there are potential unique constraint conflicts
+	private boolean hasUniqueConstraintConflicts(List<PlannedOperationGroup> groups) {
+		// Check if any group operates on a table with unique constraints
+		for (PlannedOperationGroup group : groups) {
+			if ( group.hasUniqueConstraints() ) {
+				// This table has unique constraints - need graph to detect swaps
+				return true;
+			}
+		}
 		return false;
 	}
 
@@ -394,6 +434,7 @@ public class FlushCoordinator {
 		private final StatementShapeKey shapeKey;
 		private int ordinal;
 		private final String origin;
+		private final boolean hasUniqueConstraints;
 		private final List<PlannedOperation> operations = new ArrayList<>();
 
 		OperationGroupBuilder(PlannedOperation firstOperation, StatementShapeKey shapeKey) {
@@ -403,6 +444,8 @@ public class FlushCoordinator {
 			this.ordinal = firstOperation.getOrdinal();
 			this.origin = firstOperation.getOrigin();
 			this.operations.add(firstOperation);
+
+			hasUniqueConstraints = firstOperation.getMutatingTableDescriptor().hasUniqueConstraints();
 		}
 
 		void addOperation(PlannedOperation op) {
@@ -423,6 +466,7 @@ public class FlushCoordinator {
 					shapeKey,
 					operations,
 					needsIdPrePhase,
+					hasUniqueConstraints,
 					ordinal,
 					origin
 			);

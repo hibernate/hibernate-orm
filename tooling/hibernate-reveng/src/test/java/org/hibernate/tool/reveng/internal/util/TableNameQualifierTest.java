@@ -11,22 +11,26 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class TableNameQualifierTest {
 
 	@Test
-	public void testQualifyAll() {
-		assertEquals("cat.sch.tbl", TableNameQualifier.qualify("cat", "sch", "tbl"));
+	public void testQualifyAllParts() {
+		assertEquals("MY_CAT.MY_SCH.MY_TABLE",
+				TableNameQualifier.qualify("MY_CAT", "MY_SCH", "MY_TABLE"));
 	}
 
 	@Test
 	public void testQualifyNoCatalog() {
-		assertEquals("sch.tbl", TableNameQualifier.qualify(null, "sch", "tbl"));
+		assertEquals("MY_SCH.MY_TABLE",
+				TableNameQualifier.qualify(null, "MY_SCH", "MY_TABLE"));
 	}
 
 	@Test
 	public void testQualifyNoSchema() {
-		assertEquals("cat.tbl", TableNameQualifier.qualify("cat", null, "tbl"));
+		assertEquals("MY_CAT.MY_TABLE",
+				TableNameQualifier.qualify("MY_CAT", null, "MY_TABLE"));
 	}
 
 	@Test
 	public void testQualifyTableOnly() {
-		assertEquals("tbl", TableNameQualifier.qualify(null, null, "tbl"));
+		assertEquals("MY_TABLE",
+				TableNameQualifier.qualify(null, null, "MY_TABLE"));
 	}
 }

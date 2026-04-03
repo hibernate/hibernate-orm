@@ -14,56 +14,87 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class StringUtilTest {
 
 	@Test
-	public void testIsEmptyOrNull() {
-		assertTrue(StringUtil.isEmptyOrNull(null));
-		assertTrue(StringUtil.isEmptyOrNull(""));
-		assertFalse(StringUtil.isEmptyOrNull("foo"));
-	}
-
-	@Test
 	public void testSplitWithSeparator() {
-		String[] result = StringUtil.split("a,b,c", ",");
-		assertArrayEquals(new String[]{"a", "b", "c"}, result);
+		String[] result = StringUtil.split("a.b.c", ".");
+		assertArrayEquals(new String[] {"a", "b", "c"}, result);
 	}
 
 	@Test
 	public void testSplitWithNullSeparator() {
-		String[] result = StringUtil.split("a b c", null);
-		assertArrayEquals(new String[]{"a", "b", "c"}, result);
+		String[] result = StringUtil.split("hello world foo", null);
+		assertArrayEquals(new String[] {"hello", "world", "foo"}, result);
 	}
 
 	@Test
-	public void testSplitSingleElement() {
-		String[] result = StringUtil.split("abc", ",");
-		assertArrayEquals(new String[]{"abc"}, result);
+	public void testSplitSingleToken() {
+		String[] result = StringUtil.split("hello", ".");
+		assertArrayEquals(new String[] {"hello"}, result);
 	}
 
 	@Test
-	public void testLeftPad() {
-		assertEquals("  abc", StringUtil.leftPad("abc", 5));
+	public void testSplitWithMultiCharSeparator() {
+		String[] result = StringUtil.split("a,b;c", ",;");
+		assertArrayEquals(new String[] {"a", "b", "c"}, result);
 	}
 
 	@Test
-	public void testLeftPadNoChange() {
-		assertEquals("abc", StringUtil.leftPad("abc", 3));
+	public void testLeftPadShorterString() {
+		assertEquals("   hi", StringUtil.leftPad("hi", 5));
 	}
 
 	@Test
-	public void testLeftPadShorter() {
-		assertEquals("abc", StringUtil.leftPad("abc", 2));
+	public void testLeftPadExactLength() {
+		assertEquals("hello", StringUtil.leftPad("hello", 5));
 	}
 
 	@Test
-	public void testIsEqual() {
-		assertTrue(StringUtil.isEqual("abc", "abc"));
-		assertFalse(StringUtil.isEqual("abc", "def"));
-		assertFalse(StringUtil.isEqual("abc", null));
-		assertFalse(StringUtil.isEqual(null, "abc"));
+	public void testLeftPadLongerString() {
+		assertEquals("hello", StringUtil.leftPad("hello", 3));
+	}
+
+	@Test
+	public void testLeftPadSingleChar() {
+		assertEquals("    x", StringUtil.leftPad("x", 5));
+	}
+
+	@Test
+	public void testIsEqualBothNull() {
 		assertTrue(StringUtil.isEqual(null, null));
 	}
 
 	@Test
-	public void testIsEmptyOrNullWithSpace() {
+	public void testIsEqualSameString() {
+		assertTrue(StringUtil.isEqual("abc", "abc"));
+	}
+
+	@Test
+	public void testIsEqualDifferentStrings() {
+		assertFalse(StringUtil.isEqual("abc", "def"));
+	}
+
+	@Test
+	public void testIsEqualOneNull() {
+		assertFalse(StringUtil.isEqual("abc", null));
+		assertFalse(StringUtil.isEqual(null, "abc"));
+	}
+
+	@Test
+	public void testIsEmptyOrNullWithNull() {
+		assertTrue(StringUtil.isEmptyOrNull(null));
+	}
+
+	@Test
+	public void testIsEmptyOrNullWithEmpty() {
+		assertTrue(StringUtil.isEmptyOrNull(""));
+	}
+
+	@Test
+	public void testIsEmptyOrNullWithContent() {
+		assertFalse(StringUtil.isEmptyOrNull("hello"));
+	}
+
+	@Test
+	public void testIsEmptyOrNullWithWhitespace() {
 		assertFalse(StringUtil.isEmptyOrNull(" "));
 	}
 }

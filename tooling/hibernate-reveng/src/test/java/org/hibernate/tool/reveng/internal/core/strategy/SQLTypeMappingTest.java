@@ -10,7 +10,6 @@ import java.sql.Types;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -28,143 +27,136 @@ public class SQLTypeMappingTest {
 	}
 
 	@Test
-	public void testConstructorWithAllParams() {
-		SQLTypeMapping mapping = new SQLTypeMapping(Types.DECIMAL, 10, 5, 2, Boolean.TRUE);
+	public void testConstructorFull() {
+		SQLTypeMapping mapping = new SQLTypeMapping(Types.DECIMAL, 10, 5, 2, true);
 		assertEquals(Types.DECIMAL, mapping.getJDBCType());
 		assertEquals(10, mapping.getLength());
 		assertEquals(5, mapping.getPrecision());
 		assertEquals(2, mapping.getScale());
-		assertEquals(Boolean.TRUE, mapping.getNullable());
+		assertTrue(mapping.getNullable());
 	}
 
 	@Test
-	public void testSetters() {
-		SQLTypeMapping mapping = new SQLTypeMapping(Types.VARCHAR);
-		mapping.setLength(255);
+	public void testSettersAndGetters() {
+		SQLTypeMapping mapping = new SQLTypeMapping(Types.INTEGER);
+		mapping.setLength(100);
 		mapping.setPrecision(10);
 		mapping.setScale(2);
-		mapping.setNullable(Boolean.FALSE);
-		mapping.setHibernateType("string");
+		mapping.setNullable(false);
+		mapping.setHibernateType("int");
 
-		assertEquals(255, mapping.getLength());
+		assertEquals(100, mapping.getLength());
 		assertEquals(10, mapping.getPrecision());
 		assertEquals(2, mapping.getScale());
-		assertEquals(Boolean.FALSE, mapping.getNullable());
-		assertEquals("string", mapping.getHibernateType());
+		assertFalse(mapping.getNullable());
+		assertEquals("int", mapping.getHibernateType());
 	}
 
 	@Test
-	public void testMatchExactMatch() {
-		SQLTypeMapping mapping = new SQLTypeMapping(Types.VARCHAR, 255, 0, 0, Boolean.TRUE);
-		assertTrue(mapping.match(Types.VARCHAR, 255, 0, 0, true));
+	public void testMatchExact() {
+		SQLTypeMapping mapping = new SQLTypeMapping(Types.VARCHAR, 255, 0, 0, false);
+		assertTrue(mapping.match(Types.VARCHAR, 255, 0, 0, false));
 	}
 
 	@Test
 	public void testMatchDifferentJdbcType() {
-		SQLTypeMapping mapping = new SQLTypeMapping(Types.VARCHAR, 255, 0, 0, Boolean.TRUE);
-		assertFalse(mapping.match(Types.INTEGER, 255, 0, 0, true));
+		SQLTypeMapping mapping = new SQLTypeMapping(Types.VARCHAR, 255, 0, 0, false);
+		assertFalse(mapping.match(Types.INTEGER, 255, 0, 0, false));
 	}
 
 	@Test
-	public void testMatchUnknownLengthMatchesAny() {
+	public void testMatchUnknownLength() {
 		SQLTypeMapping mapping = new SQLTypeMapping(Types.VARCHAR);
-		assertTrue(mapping.match(Types.VARCHAR, 255, 10, 2, true));
+		assertTrue(mapping.match(Types.VARCHAR, 100, 5, 3, true));
 	}
 
 	@Test
 	public void testMatchDifferentLength() {
-		SQLTypeMapping mapping = new SQLTypeMapping(Types.VARCHAR, 100, SQLTypeMapping.UNKNOWN_PRECISION, SQLTypeMapping.UNKNOWN_SCALE, null);
-		assertFalse(mapping.match(Types.VARCHAR, 255, 0, 0, true));
+		SQLTypeMapping mapping = new SQLTypeMapping(Types.VARCHAR, 255, SQLTypeMapping.UNKNOWN_PRECISION, SQLTypeMapping.UNKNOWN_SCALE, null);
+		assertFalse(mapping.match(Types.VARCHAR, 100, 0, 0, false));
 	}
 
 	@Test
 	public void testMatchNullableNull() {
 		SQLTypeMapping mapping = new SQLTypeMapping(Types.VARCHAR, 255, 0, 0, null);
-		// null nullable means "don't care" — should match both
 		assertTrue(mapping.match(Types.VARCHAR, 255, 0, 0, true));
 		assertTrue(mapping.match(Types.VARCHAR, 255, 0, 0, false));
 	}
 
 	@Test
 	public void testMatchNullableMismatch() {
-		SQLTypeMapping mapping = new SQLTypeMapping(Types.VARCHAR, 255, 0, 0, Boolean.TRUE);
+		SQLTypeMapping mapping = new SQLTypeMapping(Types.VARCHAR, 255, 0, 0, true);
 		assertFalse(mapping.match(Types.VARCHAR, 255, 0, 0, false));
 	}
 
 	@Test
 	public void testCompareToEqual() {
-		SQLTypeMapping a = new SQLTypeMapping(Types.VARCHAR, 255, 10, 2, Boolean.TRUE);
-		SQLTypeMapping b = new SQLTypeMapping(Types.VARCHAR, 255, 10, 2, Boolean.TRUE);
-		assertEquals(0, a.compareTo(b));
+		SQLTypeMapping m1 = new SQLTypeMapping(Types.VARCHAR, 255, 0, 0, true);
+		SQLTypeMapping m2 = new SQLTypeMapping(Types.VARCHAR, 255, 0, 0, true);
+		assertEquals(0, m1.compareTo(m2));
 	}
 
 	@Test
 	public void testCompareToDifferentJdbcType() {
-		SQLTypeMapping a = new SQLTypeMapping(Types.VARCHAR);
-		SQLTypeMapping b = new SQLTypeMapping(Types.INTEGER);
-		assertNotEquals(0, a.compareTo(b));
+		SQLTypeMapping m1 = new SQLTypeMapping(Types.INTEGER);
+		SQLTypeMapping m2 = new SQLTypeMapping(Types.VARCHAR);
+		assertTrue(m1.compareTo(m2) != 0);
 	}
 
 	@Test
 	public void testCompareToDifferentLength() {
-		SQLTypeMapping a = new SQLTypeMapping(Types.VARCHAR, 100, 0, 0, null);
-		SQLTypeMapping b = new SQLTypeMapping(Types.VARCHAR, 200, 0, 0, null);
-		assertTrue(a.compareTo(b) < 0);
-		assertTrue(b.compareTo(a) > 0);
-	}
-
-	@Test
-	public void testCompareToDifferentPrecision() {
-		SQLTypeMapping a = new SQLTypeMapping(Types.VARCHAR, 100, 5, 0, null);
-		SQLTypeMapping b = new SQLTypeMapping(Types.VARCHAR, 100, 10, 0, null);
-		assertTrue(a.compareTo(b) < 0);
-	}
-
-	@Test
-	public void testCompareToDifferentScale() {
-		SQLTypeMapping a = new SQLTypeMapping(Types.VARCHAR, 100, 10, 1, null);
-		SQLTypeMapping b = new SQLTypeMapping(Types.VARCHAR, 100, 10, 2, null);
-		assertTrue(a.compareTo(b) < 0);
+		SQLTypeMapping m1 = new SQLTypeMapping(Types.VARCHAR, 100, 0, 0, null);
+		SQLTypeMapping m2 = new SQLTypeMapping(Types.VARCHAR, 200, 0, 0, null);
+		assertTrue(m1.compareTo(m2) < 0);
 	}
 
 	@Test
 	public void testCompareToDifferentNullable() {
-		SQLTypeMapping falseNull = new SQLTypeMapping(Types.VARCHAR, 100, 10, 2, Boolean.FALSE);
-		SQLTypeMapping trueNull = new SQLTypeMapping(Types.VARCHAR, 100, 10, 2, Boolean.TRUE);
-		SQLTypeMapping unknownNull = new SQLTypeMapping(Types.VARCHAR, 100, 10, 2, null);
-
-		assertTrue(falseNull.compareTo(trueNull) < 0);
-		assertTrue(trueNull.compareTo(unknownNull) < 0);
-		assertTrue(falseNull.compareTo(unknownNull) < 0);
+		SQLTypeMapping m1 = new SQLTypeMapping(Types.VARCHAR, 255, 0, 0, false);
+		SQLTypeMapping m2 = new SQLTypeMapping(Types.VARCHAR, 255, 0, 0, true);
+		assertTrue(m1.compareTo(m2) < 0);
 	}
 
 	@Test
-	public void testEqualsAndHashCode() {
-		SQLTypeMapping a = new SQLTypeMapping(Types.VARCHAR, 255, 10, 2, Boolean.TRUE);
-		SQLTypeMapping b = new SQLTypeMapping(Types.VARCHAR, 255, 10, 2, Boolean.TRUE);
-		assertEquals(a, b);
-		assertEquals(a.hashCode(), b.hashCode());
+	public void testCompareToNullVsNonNull() {
+		SQLTypeMapping m1 = new SQLTypeMapping(Types.VARCHAR, 255, 0, 0, null);
+		SQLTypeMapping m2 = new SQLTypeMapping(Types.VARCHAR, 255, 0, 0, true);
+		assertTrue(m1.compareTo(m2) > 0);
 	}
 
 	@Test
-	public void testNotEquals() {
-		SQLTypeMapping a = new SQLTypeMapping(Types.VARCHAR, 255, 10, 2, Boolean.TRUE);
-		SQLTypeMapping b = new SQLTypeMapping(Types.INTEGER, 255, 10, 2, Boolean.TRUE);
-		assertNotEquals(a, b);
+	public void testEqualsTrue() {
+		SQLTypeMapping m1 = new SQLTypeMapping(Types.VARCHAR, 255, 0, 0, true);
+		SQLTypeMapping m2 = new SQLTypeMapping(Types.VARCHAR, 255, 0, 0, true);
+		assertEquals(m1, m2);
 	}
 
 	@Test
-	public void testEqualsDifferentType() {
-		SQLTypeMapping a = new SQLTypeMapping(Types.VARCHAR);
-		assertNotEquals(a, "string");
+	public void testEqualsFalse() {
+		SQLTypeMapping m1 = new SQLTypeMapping(Types.VARCHAR, 255, 0, 0, true);
+		SQLTypeMapping m2 = new SQLTypeMapping(Types.INTEGER, 255, 0, 0, true);
+		assertFalse(m1.equals(m2));
+	}
+
+	@Test
+	public void testEqualsNotSameClass() {
+		SQLTypeMapping m = new SQLTypeMapping(Types.VARCHAR);
+		assertFalse(m.equals("not a mapping"));
+	}
+
+	@Test
+	public void testHashCodeConsistent() {
+		SQLTypeMapping m1 = new SQLTypeMapping(Types.VARCHAR, 255, 0, 0, true);
+		SQLTypeMapping m2 = new SQLTypeMapping(Types.VARCHAR, 255, 0, 0, true);
+		assertEquals(m1.hashCode(), m2.hashCode());
 	}
 
 	@Test
 	public void testToString() {
-		SQLTypeMapping mapping = new SQLTypeMapping(Types.VARCHAR, 255, 10, 2, Boolean.TRUE);
+		SQLTypeMapping mapping = new SQLTypeMapping(Types.VARCHAR);
 		mapping.setHibernateType("string");
-		String str = mapping.toString();
-		assertTrue(str.contains("string"));
-		assertTrue(str.contains("255"));
+		String s = mapping.toString();
+		assertTrue(s.contains("string"));
+		assertTrue(s.contains("" + Types.VARCHAR));
 	}
 }

@@ -175,18 +175,28 @@ public class MappingMetamodelImpl
 		// triggers
 		//		- collecting insert and update generated attributes
 		//		- building insert and update generation delegates
+		//		- building tableMappings (in doLateInit)
 		for ( var persister : entityPersisterMap.values() ) {
 			persister.postInstantiate();
 			registerEntityNameResolvers( persister, entityNameResolvers );
 		}
 
-		// all the above things are needed to properly build the constraint model, so let's do that here
-		// NOTE: technically the postInstantiate process is needed, but it does not hurt and allows for some flexibility
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Build the constraint model AFTER tableMappings exist (from postInstantiate)
+		// but BEFORE tableDescriptors are built (which need the constraint model)
 		constraintModel = ConstraintModelBuilder.buildConstraintModel(
 				this,
 				context.getGraphPlanningOptions()
 		);
 
+		// Build tableDescriptors for all persisters BEFORE prepareLoaders()
+		// This is necessary because subclass persisters may reference their root persister's
+		// tableDescriptors (e.g., JoinedSubclassEntityPersister.getIdentifierTableDescriptor)
+		for ( var persister : entityPersisterMap.values() ) {
+			persister.buildTableDescriptorsEarly();
+		}
+
+		// Now that all tableDescriptors exist, we can safely build loaders and decomposers
 		for ( var persister : entityPersisterMap.values() ) {
 			persister.prepareLoaders();
 		}

@@ -147,6 +147,16 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	}
 
 	/**
+	 * Build {@link org.hibernate.action.queue.meta.TableDescriptor}s early, before loaders.
+	 * <p/>
+	 * This is separated from {@link #prepareLoaders()} to ensure all table descriptors
+	 * are available across the entire model hierarchy before any persister tries to
+	 * access them (e.g., subclass persisters accessing root persister's table descriptors).
+	 */
+	default void buildTableDescriptorsEarly() {
+	}
+
+	/**
 	 * Return the {@link org.hibernate.SessionFactory} to which this persister
 	 * belongs.
 	 *

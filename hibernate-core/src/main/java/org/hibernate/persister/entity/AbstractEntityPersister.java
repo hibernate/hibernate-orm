@@ -3331,6 +3331,14 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public void buildTableDescriptorsEarly() {
+		// Build tableDescriptors early so they're available to all persisters
+		// before prepareLoaders() is called. This is necessary because subclass
+		// persisters may reference their root persister's tableDescriptors.
+		tableDescriptors = buildTableDescriptors();
+	}
+
+	@Override
 	public void prepareLoaders() {
 		// Hibernate Reactive needs to override the loaders
 		singleIdLoader = buildSingleIdEntityLoader();
@@ -3338,9 +3346,8 @@ public abstract class AbstractEntityPersister
 
 		lazyLoadPlanByFetchGroup = getLazyLoadPlanByFetchGroup();
 
-		// delay these until very late... we need `tableDescriptors` across the entire hierarchy...
-		// this is like doLateLateLateInit ;)
-		tableDescriptors = buildTableDescriptors();
+		// tableDescriptors were built in buildTableDescriptorsEarly()
+		// Now we can safely create decomposers which may access tableDescriptors
 		insertDecomposer = new InsertDecomposer( this, factory );
 		updateDecomposer = new UpdateDecomposer( this, factory );
 		deleteDecomposer = new DeleteDecomposer( this, factory );

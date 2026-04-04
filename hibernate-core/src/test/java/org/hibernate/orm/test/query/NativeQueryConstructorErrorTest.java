@@ -37,7 +37,7 @@ public class NativeQueryConstructorErrorTest {
 			String msg = ex.getMessage();
 
 			assertTrue( msg.contains(
-					"Cannot instantiate query result type, expected: MiniInfo(Integer, int) but found (String, String) 'org.hibernate.orm.test.query.NativeQueryConstructorErrorTest$MiniInfo' due to: argument type mismatch" ) );
+					"Could not instantiate query result type - expected 'MiniInfo(Integer, int)' but found 'MiniInfo(String, String)' in 'org.hibernate.orm.test.query.NativeQueryConstructorErrorTest$MiniInfo' due to: argument type mismatch" ) );
 		} );
 	}
 
@@ -51,7 +51,7 @@ public class NativeQueryConstructorErrorTest {
 
 			String msg = ex.getMessage();
 
-			assertTrue( msg.contains( "Result class must have exactly one constructor with 2 parameters, found: " ) );
+			assertTrue( msg.contains( "Result class must have exactly one constructor with 2 parameters - found " ) );
 			assertTrue( msg.contains( "Ambiguous(Object, Object)" ) );
 			assertTrue( msg.contains( "Ambiguous(Number, CharSequence)" ) );
 

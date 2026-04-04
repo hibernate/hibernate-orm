@@ -31,17 +31,17 @@ public class NativeQueryConstructorTransformer<T> implements TupleTransformer<T>
 	}
 
 	private static String constructorSignature(Constructor<?> ctor) {
-		StringBuilder sb = new StringBuilder();
-		sb.append( ctor.getDeclaringClass().getSimpleName() ).append( "(" );
-		Class<?>[] params = ctor.getParameterTypes();
+		final var signature = new StringBuilder();
+		signature.append( ctor.getDeclaringClass().getSimpleName() ).append( "(" );
+		final var params = ctor.getParameterTypes();
 		for ( int i = 0; i < params.length; i++ ) {
 			if ( i > 0 ) {
-				sb.append( ", " );
+				signature.append( ", " );
 			}
-			sb.append( params[i].getSimpleName() );
+			signature.append( params[i].getSimpleName() );
 		}
-		sb.append( ")" );
-		return sb.toString();
+		signature.append( ")" );
+		return signature.toString();
 	}
 
 	private Constructor<T> constructor(Object[] elements) {
@@ -51,8 +51,8 @@ public class NativeQueryConstructorTransformer<T> implements TupleTransformer<T>
 				// of the constructor we're looking for, so we need
 				// to do something a bit weird here: match on just
 				// the number of parameters
-				for ( final Constructor<?> candidate : resultClass.getDeclaredConstructors() ) {
-					final Class<?>[] parameterTypes = candidate.getParameterTypes();
+				for ( final var candidate : resultClass.getDeclaredConstructors() ) {
+					final var parameterTypes = candidate.getParameterTypes();
 					if ( parameterTypes.length == elements.length ) {
 						// found a candidate with the right number
 						// of parameters
@@ -73,25 +73,25 @@ public class NativeQueryConstructorTransformer<T> implements TupleTransformer<T>
 				throw new InstantiationException( "Cannot instantiate query result type", resultClass, e );
 			}
 			if ( constructor == null ) {
-				StringBuilder sb = new StringBuilder();
-				sb.append( "Result class" )
+				final var message = new StringBuilder();
+				message.append( "Result class" )
 						.append( " must have exactly one constructor with " )
 						.append( elements.length )
-						.append( " parameters, found: [" );
+						.append( " parameters - found ['" );
 				boolean first = true;
-				for ( Constructor<?> c : resultClass.getDeclaredConstructors() ) {
+				for ( var c : resultClass.getDeclaredConstructors() ) {
 					if ( c.getParameterCount() == elements.length ) {
 						if ( !first ) {
-							sb.append( ", " );
+							message.append( "', '" );
 						}
-						sb.append( constructorSignature( c ) );
+						message.append( constructorSignature( c ) );
 						first = false;
 					}
 				}
 
-				sb.append( "]" );
+				message.append( "'] in" );
 
-				throw new InstantiationException( sb.toString(), resultClass );
+				throw new InstantiationException( message.toString(), resultClass );
 			}
 		}
 		return constructor;
@@ -99,24 +99,27 @@ public class NativeQueryConstructorTransformer<T> implements TupleTransformer<T>
 
 	@Override
 	public T transformTuple(Object[] tuple, String[] aliases) {
-		Constructor<T> ctor = constructor( tuple );
+		final var ctor = constructor( tuple );
 		try {
 			return ctor.newInstance( tuple );
 		}
 		catch (Exception e) {
-			final StringBuilder sb = new StringBuilder();
-			sb.append( "Cannot instantiate query result type, expected: " ).append( constructorSignature( ctor ) )
-					.append( " but found (" );
+			final var message = new StringBuilder();
+			message.append( "Could not instantiate query result type - expected '" )
+					.append( constructorSignature( ctor ) )
+					.append( "' but found '" )
+					.append( ctor.getDeclaringClass().getSimpleName() )
+					.append( '(' );
 
 			for ( int i = 0; i < tuple.length; i++ ) {
 				final Object value = tuple[i];
 				if ( i > 0 ) {
-					sb.append( ", " );
+					message.append( ", " );
 				}
-				sb.append( value == null ? "null" : value.getClass().getSimpleName() );
+				message.append( value == null ? "null" : value.getClass().getSimpleName() );
 			}
-			sb.append( ")" );
-			throw new InstantiationException( sb.toString(), resultClass, e );
+			message.append( ")' in" );
+			throw new InstantiationException( message.toString(), resultClass, e );
 		}
 	}
 

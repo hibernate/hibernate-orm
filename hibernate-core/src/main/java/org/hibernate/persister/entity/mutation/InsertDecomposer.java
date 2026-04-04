@@ -226,14 +226,14 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
 				var attribute = tableDescriptor.attributes().get(i);
 				if ( attributeInclusions[attribute.getStateArrayPosition()] ) {
-					tableDescriptor.forEachAttributeColumn( attribute, builder::addValueColumn );
+					attribute.forEachInsertable( builder );
 				}
 				else {
 					final var generator = attribute.getGenerator();
 					if ( isValueGenerated( generator ) ) {
 						if ( session != null && generator.generatedBeforeExecution( object, session ) ) {
 							attributeInclusions[attribute.getStateArrayPosition()] = true;
-							tableDescriptor.forEachAttributeColumn( attribute, builder::addValueColumn );
+							attribute.forEachInsertable( builder );
 						}
 						else if ( isValueGenerationInSql( generator, dialect ) ) {
 							handleValueGeneration( attribute, builder, (OnExecutionGenerator) generator );
@@ -262,13 +262,13 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 					if ( columnValues != null ) {
 						assert columnValues.length == 1;
 						assert tableDescriptor.keyDescriptor().columns().size() == 1;
-						builder.addValueColumn( columnValues[0], tableDescriptor.keyDescriptor().columns().get( 0 ) );
+						builder.addColumnAssignment( tableDescriptor.keyDescriptor().columns().get( 0 ), columnValues[0] );
 					}
 				}
 			}
 			else {
 				for (var keyColumn : tableDescriptor.keyDescriptor().columns()) {
-					builder.addValueColumn( keyColumn );
+					builder.addColumnAssignment( keyColumn );
 				}
 			}
 		} );

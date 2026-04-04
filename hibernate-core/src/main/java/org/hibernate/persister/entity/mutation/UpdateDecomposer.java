@@ -387,7 +387,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
 				var attribute = tableDescriptor.attributes().get( i );
 				if ( propertyUpdateability[attribute.getStateArrayPosition()] ) {
-					tableDescriptor.forEachAttributeColumn( attribute, builder::addValueColumn );
+					attribute.forEachUpdatable( builder );
 				}
 			}
 
@@ -432,7 +432,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 						continue;
 					}
 
-					tableDescriptor.forEachAttributeColumn( attribute, builder::addColumnAssignment );
+					attribute.forEachUpdatable( builder );
 				}
 			}
 

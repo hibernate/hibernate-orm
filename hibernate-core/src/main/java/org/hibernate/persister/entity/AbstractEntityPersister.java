@@ -3627,9 +3627,28 @@ public abstract class AbstractEntityPersister
 		}
 
 		public void addColumn(AttributeMapping attribute, ColumnDescriptor from) {
-			columnDescriptors.add(from);
-			attributeColumnIndexes.computeIfAbsent( attribute, (a) -> new ArrayList<>() )
-					.add( columnDescriptors.size() - 1 );
+			// Check if this column already exists (e.g., multiple attributes mapping to same column)
+			int existingIndex = findColumnIndex( from.name() );
+			if ( existingIndex >= 0 ) {
+				// Column already exists, just map this attribute to the existing column
+				attributeColumnIndexes.computeIfAbsent( attribute, (a) -> new ArrayList<>() )
+						.add( existingIndex );
+			}
+			else {
+				// New column, add it
+				columnDescriptors.add( from );
+				attributeColumnIndexes.computeIfAbsent( attribute, (a) -> new ArrayList<>() )
+						.add( columnDescriptors.size() - 1 );
+			}
+		}
+
+		private int findColumnIndex(String columnName) {
+			for ( int i = 0; i < columnDescriptors.size(); i++ ) {
+				if ( columnDescriptors.get( i ).name().equals( columnName ) ) {
+					return i;
+				}
+			}
+			return -1;
 		}
 	}
 

@@ -58,7 +58,6 @@ public abstract class OrmBuildDetails {
 		return getHibernateVersion().getOsgiVersion();
 	}
 
-
 	public JpaVersion getJpaVersion() {
 		return jpaVersion;
 	}

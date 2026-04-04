@@ -6,6 +6,7 @@ package org.hibernate.temporal.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.cfg.StateManagementSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.service.Service;
 
 
@@ -62,4 +63,14 @@ public interface TransactionIdentifierService extends Service {
 	 * Whether the transaction identifiers are actually timestamps.
 	 */
 	boolean isIdentifierTypeInstant();
+
+	/**
+	 * Whether the timestamps or identifiers are assigned by the database server.
+	 *
+	 * @see StateManagementSettings#USE_SERVER_TRANSACTION_TIMESTAMPS
+	 */
+	default boolean useServerTimestamp(Dialect dialect) {
+		return isDisabled()
+			&& dialect.isCurrentTimestampStable();
+	}
 }

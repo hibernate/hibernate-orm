@@ -259,7 +259,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	private static TransactionIdentifierSupplier<?> initializeTransactionIdSupplier(SessionFactoryImplementor factory) {
 		final var transactionIdentifierService = factory.getTransactionIdentifierService();
-		return transactionIdentifierService.isDisabled() && factory.getJdbcServices().getDialect().isCurrentTimestampStable()
+		return transactionIdentifierService.useServerTimestamp( factory.getJdbcServices().getDialect() )
 				? null
 				: transactionIdentifierService.getIdentifierSupplier();
 	}

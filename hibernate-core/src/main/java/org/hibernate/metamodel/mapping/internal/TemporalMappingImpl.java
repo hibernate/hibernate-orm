@@ -124,8 +124,7 @@ public class TemporalMappingImpl implements TemporalMapping {
 				creationContext
 		);
 
-		if ( sessionFactory.getTransactionIdentifierService().isDisabled()
-			&& sessionFactory.getJdbcServices().getDialect().isCurrentTimestampStable() ) {
+		if ( sessionFactory.getTransactionIdentifierService().useServerTimestamp( dialect ) ) {
 			currentTimestampFunctionName = dialect.currentTimestamp();
 			currentTimestampExpression =
 					new SelfRenderingSqlFragmentExpression( currentTimestampFunctionName, jdbcMapping );

@@ -12,7 +12,6 @@ import org.hibernate.MappingException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.StateManagementSettings;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.ServiceRegistry;
@@ -56,7 +55,7 @@ public class TransactionIdentifierServiceImpl implements TransactionIdentifierSe
 						+ TRANSACTION_ID_SUPPLIER + "' are mutually exclusive"
 				);
 			}
-			final Dialect dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
+			final var dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
 			identifierValueSupplier = dialect.isCurrentTimestampStable()
 					? null
 					: new CurrentTimestampTransactionIdentifierSupplier();

@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Function;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
@@ -55,23 +54,23 @@ public class NamedTableReference extends AbstractTableReference {
 	public void applyAuxiliaryTable(AuxiliaryMapping mapping, LoadQueryInfluencers influencers) {
 		if ( useAsOfOperator( influencers, mapping )
 				&& mapping.getTableName().equals( getTableExpression() ) ) {
+			final var dialect = influencers.getSessionFactory().getJdbcServices().getDialect();
 			if ( influencers.getTemporalIdentifier() == null
-				&& influencers.getSessionFactory().getTransactionIdentifierService().isDisabled()
-				&& influencers.getSessionFactory().getJdbcServices().getDialect().isCurrentTimestampStable() ) {
+					&& influencers.getSessionFactory().getTransactionIdentifierService()
+							.useServerTimestamp( dialect ) ) {
 				// we are querying current data,
 				// so we can use the server timestamp
-				final Dialect dialect = influencers.getSessionFactory().getJdbcServices().getDialect();
-				this.asOfTransactionIdentifier =
+				asOfTransactionIdentifier =
 						new SelfRenderingSqlFragmentExpression( dialect.currentTimestamp(), mapping.getJdbcMapping() );
 			}
 			else if ( mapping instanceof TemporalMapping temporalMapping ) {
-				this.asOfTransactionIdentifier = new TemporalJdbcParameter( temporalMapping.getEndingColumnMapping() );
+				asOfTransactionIdentifier = new TemporalJdbcParameter( temporalMapping.getEndingColumnMapping() );
 			}
 			else if ( mapping instanceof AuditMapping auditMapping ) {
-				this.asOfTransactionIdentifier = new TemporalJdbcParameter( auditMapping.getTransactionIdMapping() );
+				asOfTransactionIdentifier = new TemporalJdbcParameter( auditMapping.getTransactionIdMapping() );
 			}
 			else {
-				this.asOfTransactionIdentifier = null;
+				asOfTransactionIdentifier = null;
 			}
 		}
 	}

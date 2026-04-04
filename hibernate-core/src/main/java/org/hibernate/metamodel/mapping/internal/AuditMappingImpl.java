@@ -122,9 +122,9 @@ public class AuditMappingImpl implements AuditMapping {
 				creationContext
 		);
 
-		currentTimestampFunctionName = sessionFactory.getTransactionIdentifierService().isDisabled()
-				&& sessionFactory.getJdbcServices().getDialect().isCurrentTimestampStable()
-						? sessionFactory.getJdbcServices().getDialect().currentTimestamp()
+		currentTimestampFunctionName =
+				sessionFactory.getTransactionIdentifierService().useServerTimestamp( dialect )
+						? dialect.currentTimestamp()
 						: null;
 
 		maxFunctionDescriptor = resolveMaxFunction( sessionFactory );

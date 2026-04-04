@@ -12,7 +12,6 @@ public class TemporalMutationHelper {
 	public static boolean isUsingParameters(SharedSessionContractImplementor session) {
 		final var factory = session.getFactory();
 		return factory.getSessionFactoryOptions().getTemporalTableStrategy() != NATIVE
-			&& (!factory.getTransactionIdentifierService().isDisabled()
-				|| !factory.getJdbcServices().getDialect().isCurrentTimestampStable());
+			&& !factory.getTransactionIdentifierService().useServerTimestamp( session.getDialect() );
 	}
 }

@@ -50,10 +50,13 @@ final class AuditCollectionHelper {
 						auditMapping.getTableName() );
 		this.transactionIdMapping = auditMapping.getTransactionIdMapping();
 		this.modificationTypeMapping = auditMapping.getModificationTypeMapping();
-		this.useServerTransactionTimestamps = sessionFactory.getTransactionIdentifierService().isDisabled()
-				&& sessionFactory.getJdbcServices().getDialect().isCurrentTimestampStable();
+
+		final var dialect = sessionFactory.getJdbcServices().getDialect();
+		this.useServerTransactionTimestamps =
+				sessionFactory.getTransactionIdentifierService()
+						.useServerTimestamp( dialect );
 		this.currentTimestampFunctionName = useServerTransactionTimestamps
-				? sessionFactory.getJdbcServices().getDialect().currentTimestamp()
+				? dialect.currentTimestamp()
 				: null;
 	}
 

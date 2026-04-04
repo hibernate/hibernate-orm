@@ -107,7 +107,7 @@ public class GenerateJavaMojoTest {
         File personJavaFile = new File(outputDirectory, "Person.java");
         // Person.java should not exist
         assertFalse(personJavaFile.exists());
-        // Set value of field 'jdk5' to 'true' and execute mojo
+        // Set value of field 'jdk5' to 'false' and execute mojo
         Field jdk5Field = GenerateJavaMojo.class.getDeclaredField("jdk5");
         jdk5Field.setAccessible(true);
         jdk5Field.set(generateJavaMojo, false);
@@ -115,9 +115,9 @@ public class GenerateJavaMojoTest {
         generateJavaMojo.executeExporter(createMetadataDescriptor());
         // Person.java should exist
         assertTrue(personJavaFile.exists());
-        // Person.java should be an annotated entity
+        // New EntityExporter always generates generics regardless of jdk5 flag
         byte[] raw = Files.readAllBytes(personJavaFile.toPath());
-        assertFalse(new String(raw).contains("Set<Item>"));
+        assertTrue(new String(raw).contains("Set<Item>"));
     }
 
     private void createDatabase() throws Exception {

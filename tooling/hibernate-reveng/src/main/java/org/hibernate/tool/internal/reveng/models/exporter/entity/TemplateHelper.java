@@ -368,11 +368,9 @@ public class TemplateHelper {
 			sb.append("@Embeddable\n");
 			return sb.toString().stripTrailing();
 		}
-		// @Entity
-		if (classDetails.hasDirectAnnotationUsage(Entity.class)) {
-			importType("jakarta.persistence.Entity");
-			sb.append("@Entity\n");
-		}
+		// @Entity — always generated for non-embeddable entities in annotated mode
+		importType("jakarta.persistence.Entity");
+		sb.append("@Entity\n");
 		// @Table
 		Table table = classDetails.getDirectAnnotationUsage(Table.class);
 		if (table != null) {
@@ -2010,11 +2008,11 @@ public class TemplateHelper {
 		String getter = getGetterName(field) + "()";
 		String typeName = field.getType().determineRawClass().getClassName();
 		if (isPrimitiveType(typeName)) {
-			return "this." + getter + " == other." + getter;
+			return "this." + getter + " == castOther." + getter;
 		}
-		return "((this." + getter + " == other." + getter + ") || "
-				+ "(this." + getter + " != null && other." + getter + " != null && "
-				+ "this." + getter + ".equals(other." + getter + ")))";
+		return "((this." + getter + " == castOther." + getter + ") || "
+				+ "(this." + getter + " != null && castOther." + getter + " != null && "
+				+ "this." + getter + ".equals(castOther." + getter + ")))";
 	}
 
 	public String generateHashCodeExpression(FieldDetails field) {

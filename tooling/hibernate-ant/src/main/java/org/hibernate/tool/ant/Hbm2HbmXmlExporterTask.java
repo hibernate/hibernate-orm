@@ -18,8 +18,8 @@
 package org.hibernate.tool.ant;
 
 import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.api.export.ExporterFactory;
-import org.hibernate.tool.api.export.ExporterType;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.reveng.models.exporter.hbm.HbmXmlExporter;
 
 public class Hbm2HbmXmlExporterTask extends ExporterTask {
 
@@ -27,10 +27,18 @@ public class Hbm2HbmXmlExporterTask extends ExporterTask {
 		super(parent);
 	}
 
+	@Override
+	public void execute() {
+		MetadataDescriptor md = parent.getMetadataDescriptor();
+		String[] tPath = getTemplatePath().list();
+		HbmXmlExporter.create(md, tPath)
+				.exportAll(getDestdir());
+	}
+
 	protected Exporter createExporter() {
-		return ExporterFactory.createExporter(ExporterType.HBM);
-	}	
-	
+		return null;
+	}
+
 	public String getName() {
 		return "hbm2hbmxml (Generates a set of hbm.xml files)";
 	}

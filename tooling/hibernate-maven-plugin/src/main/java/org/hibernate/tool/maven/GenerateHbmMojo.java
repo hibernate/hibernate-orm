@@ -20,11 +20,8 @@ package org.hibernate.tool.maven;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.api.export.ExporterConstants;
-import org.hibernate.tool.api.export.ExporterFactory;
-import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.reveng.models.exporter.hbm.HbmXmlExporter;
 
 import java.io.File;
 
@@ -36,7 +33,7 @@ import static org.apache.maven.plugins.annotations.LifecyclePhase.GENERATE_SOURC
  * See: https://docs.jboss.org/tools/latest/en/hibernatetools/html_single/#d0e4821
  */
 @Mojo(
-	name = "generateHbm", 
+	name = "generateHbm",
 	defaultPhase = GENERATE_SOURCES,
 	requiresDependencyResolution = ResolutionScope.RUNTIME)
 public class GenerateHbmMojo extends AbstractGenerationMojo {
@@ -49,20 +46,12 @@ public class GenerateHbmMojo extends AbstractGenerationMojo {
     private String templatePath;
 
     protected void executeExporter(MetadataDescriptor metadataDescriptor) {
-    	try {
-	        Exporter hbmExporter = ExporterFactory.createExporter(ExporterType.HBM);
-	        hbmExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
-	        hbmExporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDirectory);
-	        if (templatePath != null) {
-	            getLog().info("Setting template path to: " + templatePath);
-	            hbmExporter.getProperties().put(ExporterConstants.TEMPLATE_PATH, new String[] {templatePath});
-	        }
-	        getLog().info("Starting HBM export to directory: " + outputDirectory + "...");
-	        hbmExporter.start();
-    	} catch (Exception e) {
-    		e.printStackTrace();
-    	}
+        String[] tPath = templatePath != null
+                ? new String[] { templatePath } : new String[0];
+        getLog().info("Starting HBM export to directory: "
+                + outputDirectory + "...");
+        HbmXmlExporter.create(metadataDescriptor, tPath)
+                .exportAll(outputDirectory);
     }
-
 
 }

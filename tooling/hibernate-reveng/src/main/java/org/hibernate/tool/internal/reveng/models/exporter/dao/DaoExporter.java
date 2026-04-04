@@ -35,8 +35,10 @@ import freemarker.template.TemplateExceptionHandler;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.version.Version;
 import org.hibernate.tool.internal.export.java.ImportContextImpl;
+import org.hibernate.tool.internal.reveng.models.exporter.EntityFileWriter;
 
 /**
  * Generates DAO Home Java source files from {@link ClassDetails}
@@ -86,6 +88,16 @@ public class DaoExporter {
 									 boolean ejb3, String sessionFactoryName,
 									 String[] templatePath) {
 		return new DaoExporter(entities, modelsContext, ejb3, sessionFactoryName, templatePath);
+	}
+
+	public static DaoExporter create(MetadataDescriptor md, boolean ejb3,
+									 String sessionFactoryName, String[] templatePath) {
+		return new DaoExporter(md.getEntityClassDetails(), md.getModelsContext(),
+				ejb3, sessionFactoryName, templatePath);
+	}
+
+	public void exportAll(File outputDir) {
+		EntityFileWriter.writePerEntity(entities, outputDir, "Home.java", this::export);
 	}
 
 	public void export(Writer output, ClassDetails entity) {

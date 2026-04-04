@@ -35,8 +35,10 @@ import freemarker.template.TemplateExceptionHandler;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.version.Version;
 import org.hibernate.tool.internal.export.java.ImportContextImpl;
+import org.hibernate.tool.internal.reveng.models.exporter.EntityFileWriter;
 
 /**
  * Generates JPA-annotated Java entity source files from {@link ClassDetails}
@@ -48,11 +50,14 @@ public class EntityExporter {
 
 	private static final String DEFAULT_TEMPLATE_PATH = "/models/entity";
 	private static final String TEMPLATE_NAME = "main.entity.ftl";
+	private static final String LEGACY_TEMPLATE_NAME = "pojo/Pojo.ftl";
 
 	private final List<ClassDetails> entities;
 	private final ModelsContext modelsContext;
 	private final boolean annotated;
 	private final Configuration freemarkerConfig;
+
+	private final String templateName;
 
 	private EntityExporter(List<ClassDetails> entities, ModelsContext modelsContext,
 						   boolean annotated, String[] templatePath) {
@@ -64,6 +69,7 @@ public class EntityExporter {
 		this.freemarkerConfig.setDefaultEncoding("UTF-8");
 		this.freemarkerConfig.setTemplateExceptionHandler(
 				TemplateExceptionHandler.RETHROW_HANDLER);
+		this.templateName = resolveTemplateName();
 	}
 
 	public static EntityExporter create(List<ClassDetails> entities, ModelsContext modelsContext) {
@@ -80,6 +86,24 @@ public class EntityExporter {
 		return new EntityExporter(entities, modelsContext, annotated, templatePath);
 	}
 
+	public static EntityExporter create(MetadataDescriptor md) {
+		return create(md, true, new String[0]);
+	}
+
+	public static EntityExporter create(MetadataDescriptor md, boolean annotated) {
+		return create(md, annotated, new String[0]);
+	}
+
+	public static EntityExporter create(MetadataDescriptor md, boolean annotated,
+										String[] templatePath) {
+		return new EntityExporter(md.getEntityClassDetails(), md.getModelsContext(),
+				annotated, templatePath);
+	}
+
+	public void exportAll(File outputDir) {
+		EntityFileWriter.writePerEntity(entities, outputDir, ".java", this::export);
+	}
+
 	public void export(Writer output, ClassDetails entity) {
 		String packageName = getPackageName(entity);
 		ImportContextImpl importContext = new ImportContextImpl(packageName);
@@ -90,7 +114,7 @@ public class EntityExporter {
 		model.put("date", new Date());
 		model.put("version", Version.versionString());
 		try {
-			Template template = freemarkerConfig.getTemplate(TEMPLATE_NAME);
+			Template template = freemarkerConfig.getTemplate(templateName);
 			template.process(model, output);
 			output.flush();
 		} catch (IOException | TemplateException e) {
@@ -112,7 +136,7 @@ public class EntityExporter {
 		model.put("date", new Date());
 		model.put("version", Version.versionString());
 		try {
-			Template template = freemarkerConfig.getTemplate(TEMPLATE_NAME);
+			Template template = freemarkerConfig.getTemplate(templateName);
 			template.process(model, output);
 			output.flush();
 		} catch (IOException | TemplateException e) {
@@ -130,6 +154,16 @@ public class EntityExporter {
 		if (className == null) return "";
 		int lastDot = className.lastIndexOf('.');
 		return lastDot > 0 ? className.substring(0, lastDot) : "";
+	}
+
+	private String resolveTemplateName() {
+		try {
+			if (freemarkerConfig.getTemplateLoader().findTemplateSource(LEGACY_TEMPLATE_NAME) != null) {
+				return LEGACY_TEMPLATE_NAME;
+			}
+		} catch (IOException ignored) {
+		}
+		return TEMPLATE_NAME;
 	}
 
 	private TemplateLoader createTemplateLoader(String[] templatePath) {

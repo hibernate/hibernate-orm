@@ -18,25 +18,40 @@
 package org.hibernate.tool.ant;
 
 import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.api.export.ExporterConstants;
-import org.hibernate.tool.api.export.ExporterFactory;
-import org.hibernate.tool.api.export.ExporterType;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.reveng.models.exporter.dao.DaoExporter;
 
 /**
  * @author Dennis Byrne
  */
-public class Hbm2DAOExporterTask extends Hbm2JavaExporterTask {
+public class Hbm2DAOExporterTask extends ExporterTask {
+
+	boolean ejb3 = true;
+
+	boolean jdk5 = true;
 
 	public Hbm2DAOExporterTask(HibernateToolTask parent) {
 		super(parent);
 	}
-	
+
+	public void setEjb3(boolean b) {
+		ejb3 = b;
+	}
+
+	public void setJdk5(boolean b) {
+		jdk5 = b;
+	}
+
+	@Override
+	public void execute() {
+		MetadataDescriptor md = parent.getMetadataDescriptor();
+		String[] tPath = getTemplatePath().list();
+		DaoExporter.create(md, ejb3, "SessionFactory", tPath)
+				.exportAll(getDestdir());
+	}
+
 	protected Exporter createExporter() {
-		Exporter result = ExporterFactory.createExporter(ExporterType.DAO);
-		result.getProperties().putAll(parent.getProperties());
-		result.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, parent.getMetadataDescriptor());
-		result.getProperties().put(ExporterConstants.DESTINATION_FOLDER, getDestdir());
-		return result;
+		return null;
 	}
 
 	public String getName() {

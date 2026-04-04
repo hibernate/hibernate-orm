@@ -82,6 +82,11 @@ public class HibernateTypeToJavaClass {
 		TYPE_MAP.put("timestamp", Date.class);
 		TYPE_MAP.put("java.util.Date", Date.class);
 
+		// Boolean shorthand types
+		TYPE_MAP.put("yes_no", Boolean.class);
+		TYPE_MAP.put("true_false", Boolean.class);
+		TYPE_MAP.put("numeric_boolean", Boolean.class);
+
 		// Binary types
 		TYPE_MAP.put("binary", byte[].class);
 		TYPE_MAP.put("blob", byte[].class);
@@ -101,7 +106,18 @@ public class HibernateTypeToJavaClass {
 			return Object.class;
 		}
 		Class<?> result = TYPE_MAP.get(hibernateTypeName);
-		return result != null ? result : Object.class;
+		if (result != null) {
+			return result;
+		}
+		// For fully-qualified class names (e.g. custom UserTypes),
+		// try to load the class directly
+		if (hibernateTypeName.contains(".")) {
+			try {
+				return Class.forName(hibernateTypeName);
+			} catch (ClassNotFoundException ignored) {
+			}
+		}
+		return Object.class;
 	}
 
 	/**

@@ -17,13 +17,16 @@
  */
 package org.hibernate.tool.ant;
 
+import java.io.File;
+
 import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.api.export.ExporterFactory;
-import org.hibernate.tool.api.export.ExporterType;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.export.java.JavaExporter;
+import org.hibernate.tool.internal.reveng.models.exporter.entity.EntityExporter;
 
 /**
  * @author max
- * 
+ *
  */
 public class Hbm2JavaExporterTask extends ExporterTask {
 
@@ -43,15 +46,37 @@ public class Hbm2JavaExporterTask extends ExporterTask {
 		jdk5 = b;
 	}
 
-	protected Exporter configureExporter(Exporter exp) {
-		super.configureExporter( exp );
-        exp.getProperties().setProperty("ejb3", ""+ejb3);
-        exp.getProperties().setProperty("jdk5", ""+jdk5);
-		return exp;
+	@Override
+	public void execute() {
+		MetadataDescriptor md = parent.getMetadataDescriptor();
+		if (hasLegacyTemplate() || md.getEntityClassDetails().isEmpty()) {
+			// Fall back to old exporter for custom pojo/Pojo.ftl templates
+			// or hbm.xml entities where class is not on the classpath
+			Exporter exporter = configureExporter(new JavaExporter());
+			exporter.getProperties().setProperty("ejb3", "" + ejb3);
+			exporter.getProperties().setProperty("jdk5", "" + jdk5);
+			exporter.start();
+			return;
+		}
+		String[] tPath = getTemplatePath().list();
+		EntityExporter.create(md, ejb3, tPath)
+				.exportAll(getDestdir());
+	}
+
+	private boolean hasLegacyTemplate() {
+		String[] paths = getTemplatePath().list();
+		if (paths == null) return false;
+		for (String path : paths) {
+			File legacyTemplate = new File(path, "pojo/Pojo.ftl");
+			if (legacyTemplate.isFile()) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	protected Exporter createExporter() {
-		return ExporterFactory.createExporter(ExporterType.JAVA);
+		return null;
 	}
 
 	public String getName() {

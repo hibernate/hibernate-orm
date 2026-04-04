@@ -38,6 +38,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
@@ -93,6 +94,10 @@ public class DdlExporter {
 
 	public static DdlExporter create(List<ClassDetails> entities, Properties properties) {
 		return new DdlExporter(entities, properties);
+	}
+
+	public static DdlExporter create(MetadataDescriptor md) {
+		return new DdlExporter(md.getEntityClassDetails(), md.getProperties());
 	}
 
 	public DdlExporter delimiter(String delimiter) {

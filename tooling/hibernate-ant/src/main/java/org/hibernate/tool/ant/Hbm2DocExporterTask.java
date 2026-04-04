@@ -18,8 +18,8 @@
 package org.hibernate.tool.ant;
 
 import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.api.export.ExporterFactory;
-import org.hibernate.tool.api.export.ExporterType;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.reveng.models.exporter.doc.DocExporter;
 
 public class Hbm2DocExporterTask extends ExporterTask {
 
@@ -31,7 +31,15 @@ public class Hbm2DocExporterTask extends ExporterTask {
 		return "hbm2doc (Generates html schema documentation)";
 	}
 
+	@Override
+	public void execute() {
+		MetadataDescriptor md = parent.getMetadataDescriptor();
+		String[] tPath = getTemplatePath().list();
+		DocExporter.create(md, tPath)
+				.export(getDestdir());
+	}
+
 	protected Exporter createExporter() {
-		return ExporterFactory.createExporter(ExporterType.DOC);
+		return null;
 	}
 }

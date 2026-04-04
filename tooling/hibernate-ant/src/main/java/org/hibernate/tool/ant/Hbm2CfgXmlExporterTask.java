@@ -17,9 +17,14 @@
  */
 package org.hibernate.tool.ant;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.Writer;
+import java.util.Properties;
+
 import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.api.export.ExporterFactory;
-import org.hibernate.tool.api.export.ExporterType;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.reveng.models.exporter.cfg.CfgXmlExporter;
 
 public class Hbm2CfgXmlExporterTask extends ExporterTask {
 
@@ -29,22 +34,35 @@ public class Hbm2CfgXmlExporterTask extends ExporterTask {
 		super(parent);
 	}
 
-	public Exporter createExporter() {
-		return ExporterFactory.createExporter(ExporterType.CFG);
-	}
-
 	public void setEjb3(boolean ejb3) {
 		this.ejb3 = ejb3;
 	}
-	
+
+	@Override
+	public void execute() {
+		MetadataDescriptor md = parent.getMetadataDescriptor();
+		CfgXmlExporter exporter = CfgXmlExporter.create(md);
+		Properties props = new Properties();
+		props.putAll(parent.getProperties());
+		props.putAll(properties);
+		props.setProperty("ejb3", "" + ejb3);
+		File outputFile = new File(getDestdir(), "hibernate.cfg.xml");
+		outputFile.getParentFile().mkdirs();
+		try (Writer writer = new FileWriter(outputFile)) {
+			exporter.export(writer, props);
+		} catch (Exception e) {
+			throw new RuntimeException(
+					"Failed to export hibernate.cfg.xml to "
+					+ outputFile, e);
+		}
+	}
+
+	public Exporter createExporter() {
+		return null;
+	}
+
 	public String getName() {
 		return "hbm2cfgxml (Generates hibernate.cfg.xml)";
-	}
-	
-	protected Exporter configureExporter(Exporter exporter) {
-		super.configureExporter( exporter );
-        exporter.getProperties().setProperty("ejb3", ""+ejb3);
-		return exporter;
 	}
 
 }

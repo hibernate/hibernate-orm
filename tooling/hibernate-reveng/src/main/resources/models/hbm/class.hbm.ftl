@@ -1,5 +1,4 @@
-<${helper.getClassTag()}
-    name="${helper.getClassName()}"
+<${helper.getClassTag()} name="${helper.getClassName()}"
 <#if helper.isSubclass()>
     extends="${helper.getParentClassName()}"
 </#if>

@@ -20,13 +20,12 @@ package org.hibernate.tool.maven;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.hibernate.boot.Metadata;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.internal.reveng.models.exporter.ddl.DdlExporter;
 import org.hibernate.tool.schema.TargetType;
 
 import java.io.File;
-import java.util.EnumSet;
 import java.util.Set;
 
 import static org.apache.maven.plugins.annotations.LifecyclePhase.GENERATE_RESOURCES;
@@ -86,13 +85,29 @@ public class GenerateDdlMojo extends AbstractGenerationMojo {
 
     @Override
     protected void executeExporter(MetadataDescriptor metadataDescriptor) {
-        Metadata metadata = metadataDescriptor.createMetadata();
-
-        SchemaExport export = new SchemaExport();
-        export.setOutputFile(new File(outputDirectory, outputFileName).toString());
-        export.setDelimiter(delimiter);
-        export.setHaltOnError(haltOnError);
-        export.setFormat(format);
-        export.execute(EnumSet.copyOf(this.targetTypes), schemaExportAction, metadata);
+        DdlExporter ddl = DdlExporter.create(metadataDescriptor)
+                .delimiter(delimiter)
+                .format(format)
+                .haltOnError(haltOnError);
+        File outputFile = new File(outputDirectory, outputFileName);
+        outputFile.getParentFile().mkdirs();
+        boolean toScript = targetTypes.contains(TargetType.SCRIPT);
+        boolean toDatabase = targetTypes.contains(TargetType.DATABASE);
+        switch (schemaExportAction) {
+            case CREATE:
+                if (toScript) ddl.exportCreateDdl(outputFile);
+                if (toDatabase) ddl.executeCreateDdl();
+                break;
+            case DROP:
+                if (toScript) ddl.exportDropDdl(outputFile);
+                if (toDatabase) ddl.executeDropDdl();
+                break;
+            case BOTH:
+                if (toScript) ddl.exportBothDdl(outputFile);
+                if (toDatabase) ddl.executeBothDdl();
+                break;
+            case NONE:
+                break;
+        }
     }
 }

@@ -1,7 +1,6 @@
 <#-- Basic properties (skip PK, version, FK columns) -->
 <#list helper.getBasicFields() as field>
-    <property
-        name="${field.getName()}"<#if !helper.hasTypeParameters(field)>
+    <property name="${field.getName()}"<#if !helper.hasTypeParameters(field)>
         type="${helper.getHibernateTypeName(field)}"</#if><#if helper.getAccessType(field)??>
         access="${helper.getAccessType(field)}"</#if><#if !helper.isPropertyUpdatable(field)>
         update="false"</#if><#if !helper.isPropertyInsertable(field)>

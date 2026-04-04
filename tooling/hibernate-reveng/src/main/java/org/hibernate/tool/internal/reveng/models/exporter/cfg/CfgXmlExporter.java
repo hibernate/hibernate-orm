@@ -26,6 +26,7 @@ import java.util.TreeMap;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
 
 /**
  * Generates {@code hibernate.cfg.xml} from a {@code List<ClassDetails>}.
@@ -42,6 +43,10 @@ public class CfgXmlExporter {
 
 	public static CfgXmlExporter create(List<ClassDetails> entities) {
 		return new CfgXmlExporter(entities);
+	}
+
+	public static CfgXmlExporter create(MetadataDescriptor md) {
+		return new CfgXmlExporter(md.getEntityClassDetails());
 	}
 
 	public void export(Writer output, Properties properties) {

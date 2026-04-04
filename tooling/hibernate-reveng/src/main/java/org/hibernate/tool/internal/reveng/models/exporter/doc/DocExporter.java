@@ -43,6 +43,7 @@ import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.internal.export.doc.DocFile;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
 
@@ -159,6 +160,14 @@ public class DocExporter {
 									  String[] templatePath) {
 		return new DocExporter(entities, tableMetadataMap, dotExecutable,
 				templatePath);
+	}
+
+	public static DocExporter create(MetadataDescriptor md) {
+		return new DocExporter(md.getEntityClassDetails(), null, null, new String[0]);
+	}
+
+	public static DocExporter create(MetadataDescriptor md, String[] templatePath) {
+		return new DocExporter(md.getEntityClassDetails(), null, null, templatePath);
 	}
 
 	/**

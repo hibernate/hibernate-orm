@@ -35,7 +35,9 @@ import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.version.Version;
+import org.hibernate.tool.internal.reveng.models.exporter.EntityFileWriter;
 
 /**
  * Generates Hibernate {@code hbm.xml} mapping files per entity from
@@ -50,6 +52,7 @@ public class HbmXmlExporter {
 
 	private final Configuration freemarkerConfig;
 	private final HibernateMappingSettings mappingSettings;
+	private List<ClassDetails> entities;
 
 	private HbmXmlExporter(String[] templatePath, HibernateMappingSettings mappingSettings) {
 		this.freemarkerConfig = new Configuration(Configuration.VERSION_2_3_33);
@@ -74,6 +77,24 @@ public class HbmXmlExporter {
 
 	public static HbmXmlExporter create(String[] templatePath, HibernateMappingSettings mappingSettings) {
 		return new HbmXmlExporter(templatePath, mappingSettings);
+	}
+
+	public static HbmXmlExporter create(MetadataDescriptor md) {
+		return create(md, new String[0]);
+	}
+
+	public static HbmXmlExporter create(MetadataDescriptor md, String[] templatePath) {
+		HbmXmlExporter exporter = new HbmXmlExporter(templatePath, HibernateMappingSettings.defaults());
+		exporter.entities = md.getEntityClassDetails();
+		return exporter;
+	}
+
+	public void exportAll(File outputDir) {
+		if (entities == null) {
+			throw new IllegalStateException(
+					"exportAll() requires creation via create(MetadataDescriptor, ...)");
+		}
+		EntityFileWriter.writePerEntity(entities, outputDir, ".hbm.xml", this::export);
 	}
 
 	public void export(Writer output, ClassDetails entity) {

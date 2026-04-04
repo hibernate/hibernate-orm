@@ -17,46 +17,70 @@
  */
 package org.hibernate.tool.internal.metadata;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
+import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 
 public class JpaMetadataDescriptor implements MetadataDescriptor {
 
 	private Properties properties = new Properties();
 	private Metadata metadata = null;
-	
+
 	public JpaMetadataDescriptor(
-			final String persistenceUnit, 
+			final String persistenceUnit,
 			final Properties properties) {
-		EntityManagerFactoryBuilderImpl entityManagerFactoryBuilder = 
+		EntityManagerFactoryBuilderImpl entityManagerFactoryBuilder =
 				createEntityManagerFactoryBuilder(persistenceUnit, properties);
-		EntityManagerFactory entityManagerFactory = 
+		EntityManagerFactory entityManagerFactory =
 				entityManagerFactoryBuilder.build();
 		metadata = entityManagerFactoryBuilder.getMetadata();
 		properties.putAll(entityManagerFactory.getProperties());
 	}
-	
+
 	public Metadata createMetadata() {
 		return metadata;
 	}
-	
+
 	public Properties getProperties() {
 		return properties;
 	}
-	
+
+	@Override
+	public List<ClassDetails> getEntityClassDetails() {
+		ModelsContext mc = getModelsContext();
+		List<ClassDetails> entities = new ArrayList<>();
+		mc.getClassDetailsRegistry().forEachClassDetails(cd -> {
+			if (cd.hasAnnotationUsage(Entity.class, mc)) {
+				entities.add(cd);
+			}
+		});
+		return entities;
+	}
+
+	@Override
+	public ModelsContext getModelsContext() {
+		return ((MetadataImpl) metadata).getBootstrapContext()
+				.getModelsContext();
+	}
+
 	private static class PersistenceProvider extends HibernatePersistenceProvider {
 		public EntityManagerFactoryBuilderImpl getEntityManagerFactoryBuilder(
-				String persistenceUnit, 
+				String persistenceUnit,
 				Properties properties) {
 			EntityManagerFactoryBuilderImpl result = (EntityManagerFactoryBuilderImpl)getEntityManagerFactoryBuilderOrNull(
-					persistenceUnit, 
+					persistenceUnit,
 					properties);
 			if (result == null) {
 				throw new HibernateException(
@@ -68,11 +92,11 @@ public class JpaMetadataDescriptor implements MetadataDescriptor {
 	}
 
 	private static EntityManagerFactoryBuilderImpl createEntityManagerFactoryBuilder(
-			final String persistenceUnit, 
+			final String persistenceUnit,
 			final Properties properties) {
 		return new PersistenceProvider().getEntityManagerFactoryBuilder(
-				persistenceUnit, 
+				persistenceUnit,
 				properties);
 	}
-	
+
 }

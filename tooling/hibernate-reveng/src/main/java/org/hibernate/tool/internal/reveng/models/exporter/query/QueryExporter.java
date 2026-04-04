@@ -21,54 +21,43 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.List;
-import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
 
 /**
  * Executes HQL/JPQL queries against a database and writes the
- * results to a file or writer. Replaces the old
- * {@code QueryExporter} by working with {@link ClassDetails}
- * instead of {@code Metadata}.
- * <p>
- * Builds a {@link SessionFactory} from the given entities and
- * connection properties, executes each query, and writes the
- * {@code toString()} of each result row.
+ * results to a file or writer. Uses {@link Metadata} directly
+ * to build a {@link SessionFactory}.
  *
  * @author Koen Aers
  */
 public class QueryExporter {
 
-	private final List<ClassDetails> entities;
-	private final Properties properties;
+	private final Metadata metadata;
 	private final List<String> queries;
 
-	private QueryExporter(List<ClassDetails> entities,
-						   Properties properties,
-						   List<String> queries) {
-		this.entities = entities;
-		this.properties = properties;
+	private QueryExporter(Metadata metadata, List<String> queries) {
+		this.metadata = metadata;
 		this.queries = queries;
 	}
 
-	public static QueryExporter create(List<ClassDetails> entities,
-										Properties properties,
+	public static QueryExporter create(Metadata metadata,
 										List<String> queries) {
-		return new QueryExporter(entities, properties, queries);
+		return new QueryExporter(metadata, queries);
+	}
+
+	public static QueryExporter create(MetadataDescriptor md,
+										List<String> queries) {
+		return new QueryExporter(md.createMetadata(), queries);
 	}
 
 	/**
 	 * Executes all queries and writes the results to the given file.
-	 * Results are appended per query; each result row is written
-	 * on its own line.
 	 */
 	public void export(File outputFile) {
 		outputFile.getParentFile().mkdirs();
@@ -91,7 +80,6 @@ public class QueryExporter {
 		Session session = null;
 		Transaction transaction = null;
 		try {
-			Metadata metadata = buildMetadata();
 			sessionFactory = metadata.buildSessionFactory();
 			session = sessionFactory.openSession();
 			transaction = session.beginTransaction();
@@ -122,17 +110,5 @@ public class QueryExporter {
 				sessionFactory.close();
 			}
 		}
-	}
-
-	private Metadata buildMetadata() {
-		StandardServiceRegistry serviceRegistry =
-				new StandardServiceRegistryBuilder()
-						.applySettings(properties)
-						.build();
-		MetadataSources sources = new MetadataSources(serviceRegistry);
-		for (ClassDetails entity : entities) {
-			sources.addAnnotatedClassName(entity.getClassName());
-		}
-		return sources.buildMetadata();
 	}
 }

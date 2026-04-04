@@ -17,21 +17,39 @@
  */
 package org.hibernate.tool.internal.metadata;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataConstants;
+import org.hibernate.tool.api.reveng.RevengDialect;
+import org.hibernate.tool.api.reveng.RevengDialectFactory;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.RevengStrategyFactory;
 import org.hibernate.tool.internal.reveng.RevengMetadataBuilder;
+import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
+import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.reveng.models.reader.ModelsDatabaseSchemaReader;
 
 public class RevengMetadataDescriptor implements MetadataDescriptor {
 
     private final RevengStrategy reverseEngineeringStrategy;
     private final Properties properties = new Properties();
+
+    private List<ClassDetails> entityClassDetails;
+    private ModelsContext modelsContext;
 
     public RevengMetadataDescriptor(
             RevengStrategy reverseEngineeringStrategy,
@@ -40,9 +58,11 @@ public class RevengMetadataDescriptor implements MetadataDescriptor {
         if (properties != null) {
             this.properties.putAll(properties);
         }
-        this.reverseEngineeringStrategy = Objects.requireNonNullElseGet( reverseEngineeringStrategy,
-                RevengStrategyFactory::createReverseEngineeringStrategy );
-        this.properties.putIfAbsent( MetadataConstants.PREFER_BASIC_COMPOSITE_IDS, true );
+        this.reverseEngineeringStrategy = Objects.requireNonNullElseGet(
+                reverseEngineeringStrategy,
+                RevengStrategyFactory::createReverseEngineeringStrategy);
+        this.properties.putIfAbsent(
+                MetadataConstants.PREFER_BASIC_COMPOSITE_IDS, true);
     }
 
     public Properties getProperties() {
@@ -55,6 +75,67 @@ public class RevengMetadataDescriptor implements MetadataDescriptor {
         return RevengMetadataBuilder
                 .create(properties, reverseEngineeringStrategy)
                 .build();
+    }
+
+    @Override
+    public List<ClassDetails> getEntityClassDetails() {
+        if (entityClassDetails == null) {
+            buildEntityClassDetails();
+        }
+        return entityClassDetails;
+    }
+
+    @Override
+    public ModelsContext getModelsContext() {
+        if (modelsContext == null) {
+            buildEntityClassDetails();
+        }
+        return modelsContext;
+    }
+
+    private void buildEntityClassDetails() {
+        StandardServiceRegistry serviceRegistry =
+                new StandardServiceRegistryBuilder()
+                        .applySettings(properties)
+                        .build();
+        try {
+            Dialect dialect = serviceRegistry
+                    .getService(JdbcServices.class).getDialect();
+            ConnectionProvider connectionProvider = serviceRegistry
+                    .getService(ConnectionProvider.class);
+            RevengDialect revengDialect =
+                    RevengDialectFactory.createMetaDataDialect(
+                            dialect, properties);
+            try {
+                revengDialect.configure(connectionProvider);
+                String defaultCatalog = (String) properties.get(
+                        AvailableSettings.DEFAULT_CATALOG);
+                String defaultSchema = (String) properties.get(
+                        AvailableSettings.DEFAULT_SCHEMA);
+                List<TableMetadata> tables =
+                        ModelsDatabaseSchemaReader.create(
+                                revengDialect,
+                                reverseEngineeringStrategy,
+                                defaultCatalog,
+                                defaultSchema)
+                        .readSchema();
+                DynamicEntityBuilder builder =
+                        new DynamicEntityBuilder();
+                List<ClassDetails> entities = new ArrayList<>();
+                for (TableMetadata table : tables) {
+                    entities.add(
+                            builder.createEntityFromTable(table));
+                }
+                this.entityClassDetails = entities;
+                this.modelsContext = builder.getModelsContext();
+            }
+            finally {
+                revengDialect.close();
+            }
+        }
+        finally {
+            StandardServiceRegistryBuilder.destroy(serviceRegistry);
+        }
     }
 
 }

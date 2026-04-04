@@ -975,7 +975,7 @@ public class TemplateHelperTest {
 		FieldDetails field = helper.getBasicFields().get(0);
 		String result = helper.generateEqualsExpression(field);
 		assertTrue(result.contains("this.getName()"), result);
-		assertTrue(result.contains("other.getName()"), result);
+		assertTrue(result.contains("castOther.getName()"), result);
 		assertTrue(result.contains(".equals("), result);
 	}
 

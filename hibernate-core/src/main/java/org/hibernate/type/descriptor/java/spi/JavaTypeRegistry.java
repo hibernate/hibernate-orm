@@ -50,10 +50,11 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 
 	@Override
 	public void addBaselineDescriptor(JavaType<?> descriptor) {
-		if ( descriptor.getJavaType() == null ) {
+		final var javaType = descriptor.getJavaType();
+		if ( javaType == null ) {
 			throw new IllegalStateException( "Illegal to add BasicJavaType with null Java type" );
 		}
-		addBaselineDescriptor( descriptor.getJavaType(), descriptor );
+		addBaselineDescriptor( javaType, descriptor );
 	}
 
 	@Override
@@ -78,11 +79,12 @@ public class JavaTypeRegistry implements JavaTypeBaseline.BaselineTarget, Serial
 	}
 
 	public void addDescriptor(JavaType<?> descriptor) {
-		final var old = descriptorsByTypeName.put( descriptor.getJavaType().getTypeName(), descriptor );
+		final var javaType = descriptor.getJavaType();
+		final var old = descriptorsByTypeName.put( javaType.getTypeName(), descriptor );
 		if ( old != null ) {
 			LOG.debugf(
 					"JavaTypeRegistry entry replaced : %s -> %s (was %s)",
-					descriptor.getJavaType(),
+					javaType,
 					descriptor,
 					old
 			);

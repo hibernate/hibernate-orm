@@ -16,7 +16,10 @@ public class RevengStrategyFactoryTest {
 
 	// A strategy with a no-arg constructor
 	public static class NoArgStrategy extends DefaultStrategy {
-		public NoArgStrategy() {}
+		// Explicit no-arg constructor for reflective instantiation by RevengStrategyFactory
+		public NoArgStrategy() {
+			super();
+		}
 	}
 
 	// A strategy with a delegate constructor

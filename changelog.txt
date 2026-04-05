@@ -1,6 +1,15 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.2.10.Final (April 05, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/38553
+
+
+** Bug
+    * HHH-20287 DataException ( Parameter is not set) when updating only the version of an Entity with a PartitionKey
+
 Changes in 7.2.9.Final (March 30, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

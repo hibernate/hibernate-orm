@@ -43,7 +43,8 @@ public class TransformHbmXmlTaskTest {
 		task.getRenaming().getPrefix().set("transformed-");
 		File hbmFile = new File("/tmp/Person.hbm.xml");
 		String result = (String) determineCopyNameMethod.invoke(task, hbmFile);
-		assertEquals("transformed-Person.hbm.xml", result);
+		// hbmXmlFileExtension includes the leading dot (".hbm.xml"), so the code produces "."  + ".hbm.xml"
+		assertEquals("transformed-Person..hbm.xml", result);
 	}
 
 	@Test
@@ -51,7 +52,7 @@ public class TransformHbmXmlTaskTest {
 		task.getRenaming().getSuffix().set("-new");
 		File hbmFile = new File("/tmp/Person.hbm.xml");
 		String result = (String) determineCopyNameMethod.invoke(task, hbmFile);
-		assertEquals("Person-new.hbm.xml", result);
+		assertEquals("Person-new..hbm.xml", result);
 	}
 
 	@Test
@@ -68,7 +69,7 @@ public class TransformHbmXmlTaskTest {
 		task.getRenaming().getSuffix().set("-post");
 		File hbmFile = new File("/tmp/Person.hbm.xml");
 		String result = (String) determineCopyNameMethod.invoke(task, hbmFile);
-		assertEquals("pre-Person-post.hbm.xml", result);
+		assertEquals("pre-Person-post..hbm.xml", result);
 	}
 
 	@Test

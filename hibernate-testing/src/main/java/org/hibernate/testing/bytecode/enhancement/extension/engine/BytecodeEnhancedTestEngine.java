@@ -292,7 +292,7 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 				);
 			}
 			catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
-			       InvocationTargetException e) {
+				InvocationTargetException e) {
 				// Ignore errors as they are probably due to version mismatches and try the 5.13 way
 			}
 		}

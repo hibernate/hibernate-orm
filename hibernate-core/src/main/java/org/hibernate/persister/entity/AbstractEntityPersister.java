@@ -3424,10 +3424,16 @@ public abstract class AbstractEntityPersister
 
 		applyAttributes( tableBuilderMap );
 
+		// Check if ANY table in this entity is self-referential
+		// If so, ALL tables should be grouped by ordinalBase to keep operations
+		// for the same entity instance together (e.g., primary + secondary tables)
+		final boolean entityHasSelfReferentialTable = tableBuilderMap.values().stream()
+				.anyMatch( builder -> builder.isSelfReferential );
+
 		final EntityTableDescriptor[] tableDescriptors = new EntityTableDescriptor[tableBuilderMap.size()];
 		int i = 0;
 		for ( var entry : tableBuilderMap.entrySet() ) {
-			tableDescriptors[i++] = entry.getValue().build();
+			tableDescriptors[i++] = entry.getValue().build( entityHasSelfReferentialTable );
 		}
 		return tableDescriptors;
 	}
@@ -3533,7 +3539,7 @@ public abstract class AbstractEntityPersister
 
 		private final boolean dynamicInsert;
 		private final boolean dynamicUpdate;
-		private final boolean isSelfReferential;
+		final boolean isSelfReferential;  // package-private for entity-wide self-referential check
 		private final boolean hasUniqueKeys;
 
 		private final TableKeyDescriptor keyDescriptor;
@@ -3584,14 +3590,14 @@ public abstract class AbstractEntityPersister
 			this.keyDescriptor = keyDescriptor;
 		}
 
-		protected EntityTableDescriptor build() {
+		protected EntityTableDescriptor build(boolean entityHasSelfReferentialTable) {
 			return new EntityTableDescriptor(
 					tableName,
 					relativePosition,
 					isIdentifierTable,
 					isOptional,
 					isInverse,
-					isSelfReferential,
+					entityHasSelfReferentialTable,
 					hasUniqueKeys,
 					cascadeDeleteEnabled,
 					new TableMapping.MutationDetails(

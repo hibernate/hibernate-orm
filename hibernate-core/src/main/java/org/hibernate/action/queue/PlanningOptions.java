@@ -4,6 +4,8 @@
  */
 package org.hibernate.action.queue;
 
+import java.io.Serializable;
+
 /// Options for controlling operation planning and scheduling.
 ///
 /// @author Steve Ebersole
@@ -12,7 +14,7 @@ public record PlanningOptions(
 	boolean orderByUniqueKeySlots,
 	boolean avoidBreakingDeferrable,
 	boolean ignoreDeferrableForOrdering,
-	UniqueCycleStrategy uniqueCycleStrategy) {
+	UniqueCycleStrategy uniqueCycleStrategy) implements Serializable {
 
 	public enum UniqueCycleStrategy {
 		FAIL,

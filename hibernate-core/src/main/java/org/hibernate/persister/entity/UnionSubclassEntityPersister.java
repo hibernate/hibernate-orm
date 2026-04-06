@@ -216,7 +216,8 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			} );
 		} );
 
-		return new EntityTableDescriptor[] { builder.build() };
+		// Union subclass has only one table, so entity-wide flag equals table flag
+		return new EntityTableDescriptor[] { builder.build( builder.isSelfReferential ) };
 	}
 
 	protected void validateGenerator() {

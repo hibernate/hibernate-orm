@@ -3,6 +3,10 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.query;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+
 
 import java.util.List;
 
@@ -28,6 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		StrIntTestEntity.class,
 		CustomRevEntity.class
 })
+// TableGenerator uses a separate transaction to allocate identifiers, requiring concurrent transactions.
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 @EnversTest
 public class CustomRevEntityQuery {
 	private Integer id1;

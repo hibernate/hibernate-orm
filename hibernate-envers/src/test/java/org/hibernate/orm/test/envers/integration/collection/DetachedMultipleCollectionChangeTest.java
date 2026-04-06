@@ -4,9 +4,9 @@
  */
 package org.hibernate.orm.test.envers.integration.collection;
 
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
-import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.envers.AuditReaderFactory;
@@ -21,6 +21,8 @@ import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -39,8 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @JiraKey(value = "HHH-6349")
 @SkipForDialect(dialectClass = OracleDialect.class,
 		reason = "Oracle does not support identity key generation")
-@SkipForDialect(dialectClass = AltibaseDialect.class,
-		reason = "Altibase does not support identity key generation")
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @EnversTest
 @Jpa(annotatedClasses = {
 		MultipleCollectionEntity.class,

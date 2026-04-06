@@ -115,6 +115,10 @@ public class SpannerPostgreSQLSqlAstTranslator<T extends JdbcOperation> extends 
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		if ( operator == ComparisonOperator.DISTINCT_FROM || operator == ComparisonOperator.NOT_DISTINCT_FROM ) {
+			renderComparisonEmulateCase( lhs, operator, rhs );
+			return;
+		}
 		if ( rhs instanceof Every every ) {
 			SelectStatement subquery = every.getSubquery();
 			if ( subquery.getQueryPart() instanceof QuerySpec querySpec ) {

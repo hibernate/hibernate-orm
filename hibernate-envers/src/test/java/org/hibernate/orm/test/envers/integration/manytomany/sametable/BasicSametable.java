@@ -3,6 +3,10 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.manytomany.sametable;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+
 
 import java.sql.Types;
 import java.util.Arrays;
@@ -29,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * @author Adam Warski (adam at warski dot org)
  */
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTableWithoutPrimaryKey.class)
 @EnversTest
 @Jpa(annotatedClasses = {ParentEntity.class, Child1Entity.class, Child2Entity.class})
 public class BasicSametable {

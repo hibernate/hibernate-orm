@@ -3,6 +3,10 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.test.envers.integration.reventity;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -43,6 +47,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Chris Cranford
  */
 @JiraKey(value = "HHH-6615")
+// TableGenerator uses a separate transaction to allocate identifiers, requiring concurrent transactions.
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsConcurrentTransactions.class)
 @EnversTest
 @Jpa(annotatedClasses = {StrTestEntity.class, RevisionNumberOverflowTest.CustomCappedRevEntity.class})
 public class RevisionNumberOverflowTest {

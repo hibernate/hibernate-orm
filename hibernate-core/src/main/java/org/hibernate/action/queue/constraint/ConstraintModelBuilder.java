@@ -128,12 +128,27 @@ public final class ConstraintModelBuilder {
 					.toList();
 			if ( ordered.size() > 1 ) {
 				final EntityTableMapping identifierTableMapping = ordered.get( 0 );
+
+				// Determine the correct target for each non-identifier table:
+				// - Secondary tables (@SecondaryTable) -> always reference identifier table
+				// - Joined inheritance tables -> reference previous table in chain
 				for ( int x = 1; x < ordered.size(); x++ ) {
 					final EntityTableMapping nonIdentifierTableMapping = ordered.get( x );
+					final EntityTableMapping targetMapping;
+
+					if ( nonIdentifierTableMapping.isSecondaryTable() ) {
+						// Secondary table: always reference the identifier table
+						targetMapping = identifierTableMapping;
+					}
+					else {
+						// Joined inheritance: reference the previous table in the chain
+						targetMapping = ordered.get( x - 1 );
+					}
+
 					addEntityTableGroupConstraint(
 							descriptor,
 							nonIdentifierTableMapping,
-							identifierTableMapping,
+							targetMapping,
 							foreignKeys,
 							seen,
 							entityPersisters

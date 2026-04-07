@@ -41,7 +41,8 @@ public class EntityTableMapping implements TableMapping {
 		OPTIONAL,
 		INVERSE,
 		ID_TABLE,
-		CASCADE_DELETE
+		CASCADE_DELETE,
+		SECONDARY_TABLE
 	}
 
 	private final String tableName;
@@ -63,6 +64,7 @@ public class EntityTableMapping implements TableMapping {
 			boolean isOptional,
 			boolean isInverse,
 			boolean isIdentifierTable,
+			boolean isSecondaryTable,
 			int[] attributeIndexes,
 			Expectation insertExpectation,
 			String insertCustomSql,
@@ -116,6 +118,10 @@ public class EntityTableMapping implements TableMapping {
 		if ( cascadeDeleteEnabled ) {
 			flags.set( Flag.CASCADE_DELETE.ordinal() );
 		}
+
+		if ( isSecondaryTable ) {
+			flags.set( Flag.SECONDARY_TABLE.ordinal() );
+		}
 	}
 
 	@Override public String getTableName() {
@@ -141,6 +147,10 @@ public class EntityTableMapping implements TableMapping {
 
 	@Override public boolean isIdentifierTable() {
 		return flags.get( Flag.ID_TABLE.ordinal() );
+	}
+
+	public boolean isSecondaryTable() {
+		return flags.get( Flag.SECONDARY_TABLE.ordinal() );
 	}
 
 	public KeyMapping getKeyMapping() {

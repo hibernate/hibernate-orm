@@ -251,7 +251,8 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 	}
 
 	private Map<String, TableDelete> generateStaticOperations() {
-		final Map<String, TableDeleteBuilder> staticOperationBuilders = new HashMap<>();
+		final Map<String, TableDeleteBuilder> staticOperationBuilders =
+				CollectionHelper.linkedMapOfSize( entityPersister.getTableDescriptors().length );
 
 		// Process tables in reverse order (child tables before parent)
 		entityPersister.forEachMutableTableDescriptorReverse( (tableDescriptor) -> {
@@ -265,7 +266,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 
 		applyStaticDeleteDetails( staticOperationBuilders );
 
-		final Map<String, TableDelete> staticOperations = new HashMap<>();
+		final Map<String, TableDelete> staticOperations = CollectionHelper.linkedMapOfSize( staticOperationBuilders.size() );
 		staticOperationBuilders.forEach( (name, operationBuilder) -> {
 			staticOperations.put( name, operationBuilder.buildMutation() );
 		} );
@@ -278,7 +279,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 				&& etd.isIdentifierTable();
 		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
 				tableDescriptor,
-				0, // relativePosition - will be set correctly by persister
+				tableDescriptor.getRelativePosition(),
 				isIdentifierTable,
 				false // isInverse
 		);

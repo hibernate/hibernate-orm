@@ -550,6 +550,13 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
+	protected boolean isSecondaryTable(String tableExpression, int relativePosition) {
+		// In SingleTableEntityPersister, position 0 is the main table
+		// Positions >= 1 are from getSubclassJoinClosure() (secondary tables)
+		return relativePosition >= 1;
+	}
+
+	@Override
 	protected boolean isNullableSubclassTable(int j) {
 		return isNullableSubclassTable[j];
 	}

@@ -3665,6 +3665,7 @@ public abstract class AbstractEntityPersister
 		private final boolean isOptional;
 		private final boolean isInverse;
 		private final boolean isIdentifierTable;
+		private final boolean isSecondaryTable;
 
 		private final Expectation insertExpectation;
 		private final String customInsertSql;
@@ -3690,6 +3691,7 @@ public abstract class AbstractEntityPersister
 				boolean isOptional,
 				boolean isInverse,
 				boolean isIdentifierTable,
+				boolean isSecondaryTable,
 				Expectation insertExpectation,
 				String customInsertSql,
 				boolean insertCallable,
@@ -3708,6 +3710,7 @@ public abstract class AbstractEntityPersister
 			this.isOptional = isOptional;
 			this.isInverse = isInverse;
 			this.isIdentifierTable = isIdentifierTable;
+			this.isSecondaryTable = isSecondaryTable;
 			this.insertExpectation = insertExpectation;
 			this.customInsertSql = customInsertSql;
 			this.insertCallable = insertCallable;
@@ -3730,6 +3733,7 @@ public abstract class AbstractEntityPersister
 					isOptional,
 					isInverse,
 					isIdentifierTable,
+					isSecondaryTable,
 					toIntArray( attributeIndexes ),
 					insertExpectation,
 					customInsertSql,
@@ -3787,7 +3791,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	private TableMappingBuilder createTableMappingBuilder(
+	protected TableMappingBuilder createTableMappingBuilder(
 			String tableExpression,
 			int relativePosition,
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier) {
@@ -3801,6 +3805,7 @@ public abstract class AbstractEntityPersister
 				} );
 
 		final boolean isIdentifierTable = isIdentifierTable( tableExpression );
+		final boolean isSecondaryTable = isSecondaryTable( tableExpression, relativePosition );
 
 		return new TableMappingBuilder(
 				tableExpression,
@@ -3809,6 +3814,7 @@ public abstract class AbstractEntityPersister
 				!isIdentifierTable && isNullableTable( relativePosition ),
 				isInverseTable( relativePosition ),
 				isIdentifierTable,
+				isSecondaryTable,
 				insertExpectations[relativePosition],
 				substituteBrackets( customSQLInsert[relativePosition] ),
 				insertCallable[relativePosition],
@@ -3822,6 +3828,14 @@ public abstract class AbstractEntityPersister
 				isDynamicUpdate(),
 				isDynamicInsert()
 		);
+	}
+
+	/**
+	 * Determine if the specified table is a secondary table (@SecondaryTable).
+	 * By default, returns false. Subclasses should override to provide accurate information.
+	 */
+	protected boolean isSecondaryTable(String tableExpression, int relativePosition) {
+		return false;
 	}
 
 	/**

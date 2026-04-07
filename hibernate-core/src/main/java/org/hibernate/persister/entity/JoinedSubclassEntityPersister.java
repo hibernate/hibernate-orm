@@ -699,6 +699,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
+	protected boolean isSecondaryTable(String tableExpression, int relativePosition) {
+		// In JoinedSubclassEntityPersister, secondary tables come after inheritance tables.
+		// Tables at positions >= subclassCoreTableSpan are from getSubclassJoinClosure() (secondary tables)
+		// Tables at positions < subclassCoreTableSpan are from getSubclassTableClosure() (inheritance tables)
+		return relativePosition >= subclassCoreTableSpan;
+	}
+
+	@Override
 	public boolean isInverseTable(int j) {
 		return isInverseTable[j];
 	}

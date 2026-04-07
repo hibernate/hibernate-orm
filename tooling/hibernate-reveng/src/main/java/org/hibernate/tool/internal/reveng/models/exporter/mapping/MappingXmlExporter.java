@@ -34,7 +34,9 @@ import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.version.Version;
+import org.hibernate.tool.internal.reveng.models.exporter.EntityFileWriter;
 
 /**
  * Generates a JPA {@code mapping.xml} file per entity from {@link ClassDetails}
@@ -48,6 +50,7 @@ public class MappingXmlExporter {
 	private static final String TEMPLATE_NAME = "main.mapping.ftl";
 
 	private final Configuration freemarkerConfig;
+	private List<ClassDetails> entities;
 
 	private MappingXmlExporter(String[] templatePath) {
 		this.freemarkerConfig = new Configuration(Configuration.VERSION_2_3_33);
@@ -63,6 +66,24 @@ public class MappingXmlExporter {
 
 	public static MappingXmlExporter create(String[] templatePath) {
 		return new MappingXmlExporter(templatePath);
+	}
+
+	public static MappingXmlExporter create(MetadataDescriptor md) {
+		return create(md, new String[0]);
+	}
+
+	public static MappingXmlExporter create(MetadataDescriptor md, String[] templatePath) {
+		MappingXmlExporter exporter = new MappingXmlExporter(templatePath);
+		exporter.entities = md.getEntityClassDetails();
+		return exporter;
+	}
+
+	public void exportAll(File outputDir) {
+		if (entities == null) {
+			throw new IllegalStateException(
+					"exportAll() requires creation via create(MetadataDescriptor, ...)");
+		}
+		EntityFileWriter.writePerEntity(entities, outputDir, ".mapping.xml", this::export);
 	}
 
 	public void export(Writer output, ClassDetails entity) {

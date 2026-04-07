@@ -59,7 +59,7 @@ public class Hbm2JavaExporterTask extends ExporterTask {
 			return;
 		}
 		String[] tPath = getTemplatePath().list();
-		EntityExporter.create(md, ejb3, tPath)
+		EntityExporter.create(md, ejb3, jdk5, tPath)
 				.exportAll(getDestdir());
 	}
 

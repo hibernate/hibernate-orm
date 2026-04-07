@@ -21,10 +21,8 @@ import java.io.File;
 
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.work.DisableCachingByDefault;
-import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.api.export.ExporterConstants;
-import org.hibernate.tool.api.export.ExporterFactory;
-import org.hibernate.tool.api.export.ExporterType;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.reveng.models.exporter.dao.DaoExporter;
 
 @DisableCachingByDefault(because = "Generates output from a live database connection")
 public class GenerateDaoTask extends AbstractTask {
@@ -36,17 +34,15 @@ public class GenerateDaoTask extends AbstractTask {
 
 	void doWork() {
 		getLogger().lifecycle("Creating DAO exporter");
-		Exporter hbmExporter = ExporterFactory.createExporter(ExporterType.DAO);
+		MetadataDescriptor md = createJdbcDescriptor();
+		boolean ejb3 = getExtension().generateAnnotations;
+		String templatePath = getExtension().templatePath;
+		String[] tPath = templatePath != null
+				? new String[] { templatePath } : new String[0];
 		File outputFolder = getOutputFolder();
-		hbmExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, createJdbcDescriptor());
-		hbmExporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);
-        String templatePath = getExtension().templatePath;
-        if (templatePath != null) {
-            getLogger().lifecycle("Setting template path to: " + templatePath);
-            hbmExporter.getProperties().put(ExporterConstants.TEMPLATE_PATH, new String[] { templatePath });
-        }
 		getLogger().lifecycle("Starting DAO export to directory: " + outputFolder + "...");
-		hbmExporter.start();
+		DaoExporter.create(md, ejb3, "SessionFactory", tPath)
+				.exportAll(outputFolder);
 		getLogger().lifecycle("DAO export finished");
 	}
 

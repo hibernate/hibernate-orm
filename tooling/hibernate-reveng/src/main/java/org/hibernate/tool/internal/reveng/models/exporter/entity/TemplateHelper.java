@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -129,8 +130,10 @@ import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Subselect;
 
+import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
@@ -148,12 +151,23 @@ public class TemplateHelper {
 	private final ModelsContext modelsContext;
 	private final ImportContext importContext;
 	private final boolean annotated;
+	private final boolean useGenerics;
 	private final Map<String, List<String>> classMetaAttributes;
 	private final Map<String, Map<String, List<String>>> fieldMetaAttributes;
+	// Maps field name → getter MethodDetails (for property-access entities where
+	// annotations live on methods rather than fields)
+	private final Map<String, MethodDetails> getterByFieldName;
 
 	TemplateHelper(ClassDetails classDetails, ModelsContext modelsContext,
 				   ImportContext importContext, boolean annotated) {
-		this(classDetails, modelsContext, importContext, annotated,
+		this(classDetails, modelsContext, importContext, annotated, true,
+				Collections.emptyMap(), Collections.emptyMap());
+	}
+
+	TemplateHelper(ClassDetails classDetails, ModelsContext modelsContext,
+				   ImportContext importContext, boolean annotated,
+				   boolean useGenerics) {
+		this(classDetails, modelsContext, importContext, annotated, useGenerics,
 				Collections.emptyMap(), Collections.emptyMap());
 	}
 
@@ -161,10 +175,20 @@ public class TemplateHelper {
 				   ImportContext importContext, boolean annotated,
 				   Map<String, List<String>> classMetaAttributes,
 				   Map<String, Map<String, List<String>>> fieldMetaAttributes) {
+		this(classDetails, modelsContext, importContext, annotated, true,
+				classMetaAttributes, fieldMetaAttributes);
+	}
+
+	TemplateHelper(ClassDetails classDetails, ModelsContext modelsContext,
+				   ImportContext importContext, boolean annotated,
+				   boolean useGenerics,
+				   Map<String, List<String>> classMetaAttributes,
+				   Map<String, Map<String, List<String>>> fieldMetaAttributes) {
 		this.classDetails = classDetails;
 		this.modelsContext = modelsContext;
 		this.importContext = importContext;
 		this.annotated = annotated;
+		this.useGenerics = useGenerics;
 		this.classMetaAttributes = classMetaAttributes != null ? classMetaAttributes : Collections.emptyMap();
 		this.fieldMetaAttributes = fieldMetaAttributes != null ? fieldMetaAttributes : Collections.emptyMap();
 		// Process extra-import meta-attribute
@@ -172,6 +196,41 @@ public class TemplateHelper {
 		for (String fqcn : extraImports) {
 			importType(fqcn);
 		}
+		// Build getter method map for property-access entities
+		this.getterByFieldName = buildGetterMap(classDetails);
+	}
+
+	private static Map<String, MethodDetails> buildGetterMap(ClassDetails classDetails) {
+		Map<String, MethodDetails> map = new HashMap<>();
+		for (MethodDetails method : classDetails.getMethods()) {
+			if (method.getMethodKind() == MethodDetails.MethodKind.GETTER) {
+				map.put(method.resolveAttributeName(), method);
+			}
+		}
+		return map;
+	}
+
+	/**
+	 * Returns the annotation source for a field — the field itself if it
+	 * carries annotations directly, or the corresponding getter method
+	 * for property-access entities.
+	 */
+	private AnnotationTarget getAnnotationSource(FieldDetails field) {
+		MethodDetails getter = getterByFieldName.get(field.getName());
+		if (getter != null && !getter.getDirectAnnotationUsages().isEmpty()) {
+			return getter;
+		}
+		return field;
+	}
+
+	private <A extends Annotation> boolean fieldHasAnnotation(
+			FieldDetails field, Class<A> annotationType) {
+		return getAnnotationSource(field).hasDirectAnnotationUsage(annotationType);
+	}
+
+	private <A extends Annotation> A fieldGetAnnotation(
+			FieldDetails field, Class<A> annotationType) {
+		return getAnnotationSource(field).getDirectAnnotationUsage(annotationType);
 	}
 
 	// --- Package / class ---
@@ -190,14 +249,18 @@ public class TemplateHelper {
 			int lastDot = generatedClass.lastIndexOf('.');
 			return lastDot > 0 ? generatedClass.substring(lastDot + 1) : generatedClass;
 		}
-		return classDetails.getName();
+		String className = classDetails.getClassName();
+		int lastDot = className.lastIndexOf('.');
+		return lastDot > 0 ? className.substring(lastDot + 1) : className;
 	}
 
 	public String getExtendsDeclaration() {
 		ClassDetails superClass = classDetails.getSuperClass();
 		if (superClass != null && !"java.lang.Object".equals(superClass.getClassName())) {
 			importType(superClass.getClassName());
-			return "extends " + superClass.getName() + " ";
+			String superName = superClass.getClassName();
+			int dot = superName.lastIndexOf('.');
+			return "extends " + (dot > 0 ? superName.substring(dot + 1) : superName) + " ";
 		}
 		if (hasClassMetaAttribute("extends")) {
 			String extendsFqcn = getClassMetaAttribute("extends");
@@ -244,7 +307,7 @@ public class TemplateHelper {
 
 	public FieldDetails getCompositeIdField() {
 		for (FieldDetails field : classDetails.getFields()) {
-			if (field.hasDirectAnnotationUsage(EmbeddedId.class)) {
+			if (fieldHasAnnotation(field, EmbeddedId.class)) {
 				return field;
 			}
 		}
@@ -255,7 +318,7 @@ public class TemplateHelper {
 		List<FieldDetails> result = new ArrayList<>();
 		for (FieldDetails field : classDetails.getFields()) {
 			if (!isRelationshipField(field) && !isEmbeddedField(field) && !isEmbeddedIdField(field)
-					&& !field.hasDirectAnnotationUsage(ElementCollection.class)) {
+					&& !fieldHasAnnotation(field, ElementCollection.class)) {
 				result.add(field);
 			}
 		}
@@ -297,15 +360,15 @@ public class TemplateHelper {
 	// --- Field info methods ---
 
 	public boolean isPrimaryKey(FieldDetails field) {
-		return field.hasDirectAnnotationUsage(Id.class);
+		return fieldHasAnnotation(field, Id.class);
 	}
 
 	public boolean isVersion(FieldDetails field) {
-		return field.hasDirectAnnotationUsage(Version.class);
+		return fieldHasAnnotation(field, Version.class);
 	}
 
 	public boolean isLob(FieldDetails field) {
-		return field.hasDirectAnnotationUsage(Lob.class);
+		return fieldHasAnnotation(field, Lob.class);
 	}
 
 	// --- Type name resolution ---
@@ -320,11 +383,14 @@ public class TemplateHelper {
 	public String getCollectionTypeName(FieldDetails field) {
 		String rawClassName = field.getType().determineRawClass().getClassName();
 		String simpleName = importType(rawClassName);
+		if (!useGenerics) {
+			return simpleName;
+		}
 		TypeDetails elementType = field.getElementType();
 		if (elementType != null) {
 			String elementClassName = elementType.determineRawClass().getClassName();
-			importType(elementClassName);
-			return simpleName + "<" + elementType.determineRawClass().getName() + ">";
+			String elementSimpleName = importType(elementClassName);
+			return simpleName + "<" + elementSimpleName + ">";
 		}
 		return simpleName + "<?>";
 	}
@@ -773,10 +839,10 @@ public class TemplateHelper {
 			return "";
 		}
 		StringBuilder sb = new StringBuilder();
-		if (field.hasDirectAnnotationUsage(Id.class)) {
+		if (fieldHasAnnotation(field, Id.class)) {
 			importType("jakarta.persistence.Id");
 			sb.append("@Id\n");
-			GeneratedValue gv = field.getDirectAnnotationUsage(GeneratedValue.class);
+			GeneratedValue gv = fieldGetAnnotation(field,GeneratedValue.class);
 			if (gv != null) {
 				importType("jakarta.persistence.GeneratedValue");
 				importType("jakarta.persistence.GenerationType");
@@ -787,7 +853,7 @@ public class TemplateHelper {
 				}
 				sb.append(")\n");
 				// @SequenceGenerator
-				SequenceGenerator sg = field.getDirectAnnotationUsage(SequenceGenerator.class);
+				SequenceGenerator sg = fieldGetAnnotation(field,SequenceGenerator.class);
 				if (sg != null) {
 					importType("jakarta.persistence.SequenceGenerator");
 					sb.append("    @SequenceGenerator(name = \"").append(sg.name()).append("\"");
@@ -803,7 +869,7 @@ public class TemplateHelper {
 					sb.append(")\n");
 				}
 				// @TableGenerator
-				TableGenerator tg = field.getDirectAnnotationUsage(TableGenerator.class);
+				TableGenerator tg = fieldGetAnnotation(field,TableGenerator.class);
 				if (tg != null) {
 					importType("jakarta.persistence.TableGenerator");
 					sb.append("    @TableGenerator(name = \"").append(tg.name()).append("\"");
@@ -838,7 +904,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		Basic basic = field.getDirectAnnotationUsage(Basic.class);
+		Basic basic = fieldGetAnnotation(field,Basic.class);
 		if (basic == null) {
 			return "";
 		}
@@ -867,7 +933,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		OptimisticLock ol = field.getDirectAnnotationUsage(OptimisticLock.class);
+		OptimisticLock ol = fieldGetAnnotation(field,OptimisticLock.class);
 		if (ol == null || !ol.excluded()) {
 			return "";
 		}
@@ -879,7 +945,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		Access access = field.getDirectAnnotationUsage(Access.class);
+		Access access = fieldGetAnnotation(field,Access.class);
 		if (access == null || access.value() == AccessType.FIELD) {
 			return "";
 		}
@@ -892,7 +958,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		Temporal temporal = field.getDirectAnnotationUsage(Temporal.class);
+		Temporal temporal = fieldGetAnnotation(field,Temporal.class);
 		if (temporal == null) {
 			return "";
 		}
@@ -913,7 +979,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		Formula formula = field.getDirectAnnotationUsage(Formula.class);
+		Formula formula = fieldGetAnnotation(field,Formula.class);
 		if (formula == null) {
 			return "";
 		}
@@ -922,14 +988,14 @@ public class TemplateHelper {
 	}
 
 	public boolean hasFormula(FieldDetails field) {
-		return field.hasDirectAnnotationUsage(Formula.class);
+		return fieldHasAnnotation(field, Formula.class);
 	}
 
 	public String generateElementCollectionAnnotation(FieldDetails field) {
 		if (!annotated) {
 			return "";
 		}
-		ElementCollection ec = field.getDirectAnnotationUsage(ElementCollection.class);
+		ElementCollection ec = fieldGetAnnotation(field,ElementCollection.class);
 		if (ec == null) {
 			return "";
 		}
@@ -942,7 +1008,7 @@ public class TemplateHelper {
 			sb.append("FetchType.").append(ec.fetch().name()).append(")");
 		}
 		// @CollectionTable
-		CollectionTable ct = field.getDirectAnnotationUsage(CollectionTable.class);
+		CollectionTable ct = fieldGetAnnotation(field,CollectionTable.class);
 		if (ct != null) {
 			sb.append("\n    ");
 			importType("jakarta.persistence.CollectionTable");
@@ -955,7 +1021,7 @@ public class TemplateHelper {
 			sb.append(")");
 		}
 		// @Column for element
-		Column col = field.getDirectAnnotationUsage(Column.class);
+		Column col = fieldGetAnnotation(field,Column.class);
 		if (col != null) {
 			sb.append("\n    ");
 			importType("jakarta.persistence.Column");
@@ -968,7 +1034,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		NaturalId nid = field.getDirectAnnotationUsage(NaturalId.class);
+		NaturalId nid = fieldGetAnnotation(field,NaturalId.class);
 		if (nid == null) {
 			return "";
 		}
@@ -983,7 +1049,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		OrderBy ob = field.getDirectAnnotationUsage(OrderBy.class);
+		OrderBy ob = fieldGetAnnotation(field,OrderBy.class);
 		if (ob == null) {
 			return "";
 		}
@@ -998,7 +1064,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		OrderColumn oc = field.getDirectAnnotationUsage(OrderColumn.class);
+		OrderColumn oc = fieldGetAnnotation(field,OrderColumn.class);
 		if (oc == null) {
 			return "";
 		}
@@ -1031,11 +1097,11 @@ public class TemplateHelper {
 
 	public List<FilterInfo> getFieldFilters(FieldDetails field) {
 		List<FilterInfo> result = new ArrayList<>();
-		Filter single = field.getDirectAnnotationUsage(Filter.class);
+		Filter single = fieldGetAnnotation(field,Filter.class);
 		if (single != null) {
 			result.add(new FilterInfo(single.name(), single.condition()));
 		}
-		Filters container = field.getDirectAnnotationUsage(Filters.class);
+		Filters container = fieldGetAnnotation(field,Filters.class);
 		if (container != null) {
 			for (Filter f : container.value()) {
 				result.add(new FilterInfo(f.name(), f.condition()));
@@ -1048,7 +1114,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		if (!field.hasDirectAnnotationUsage(Bag.class)) {
+		if (!fieldHasAnnotation(field, Bag.class)) {
 			return "";
 		}
 		importType("org.hibernate.annotations.Bag");
@@ -1059,7 +1125,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		CollectionId cid = field.getDirectAnnotationUsage(CollectionId.class);
+		CollectionId cid = fieldGetAnnotation(field,CollectionId.class);
 		if (cid == null) {
 			return "";
 		}
@@ -1083,11 +1149,11 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		if (field.hasDirectAnnotationUsage(SortNatural.class)) {
+		if (fieldHasAnnotation(field, SortNatural.class)) {
 			importType("org.hibernate.annotations.SortNatural");
 			return "@SortNatural";
 		}
-		SortComparator sc = field.getDirectAnnotationUsage(SortComparator.class);
+		SortComparator sc = fieldGetAnnotation(field,SortComparator.class);
 		if (sc != null) {
 			importType("org.hibernate.annotations.SortComparator");
 			String simpleType = importType(sc.value().getName());
@@ -1100,7 +1166,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		MapKey mk = field.getDirectAnnotationUsage(MapKey.class);
+		MapKey mk = fieldGetAnnotation(field,MapKey.class);
 		if (mk == null) {
 			return "";
 		}
@@ -1115,7 +1181,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		MapKeyColumn mkc = field.getDirectAnnotationUsage(MapKeyColumn.class);
+		MapKeyColumn mkc = fieldGetAnnotation(field,MapKeyColumn.class);
 		if (mkc == null) {
 			return "";
 		}
@@ -1130,7 +1196,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		Fetch fetch = field.getDirectAnnotationUsage(Fetch.class);
+		Fetch fetch = fieldGetAnnotation(field,Fetch.class);
 		if (fetch == null) {
 			return "";
 		}
@@ -1143,7 +1209,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		NotFound nf = field.getDirectAnnotationUsage(NotFound.class);
+		NotFound nf = fieldGetAnnotation(field,NotFound.class);
 		if (nf == null || nf.action() == NotFoundAction.EXCEPTION) {
 			return "";
 		}
@@ -1156,7 +1222,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		if (!field.hasDirectAnnotationUsage(Any.class)) {
+		if (!fieldHasAnnotation(field, Any.class)) {
 			return "";
 		}
 		StringBuilder sb = new StringBuilder();
@@ -1170,7 +1236,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		if (!field.hasDirectAnnotationUsage(ManyToAny.class)) {
+		if (!fieldHasAnnotation(field, ManyToAny.class)) {
 			return "";
 		}
 		StringBuilder sb = new StringBuilder();
@@ -1183,7 +1249,7 @@ public class TemplateHelper {
 	private String generateAnyDiscriminatorAnnotations(FieldDetails field) {
 		StringBuilder sb = new StringBuilder();
 		// @AnyDiscriminator
-		AnyDiscriminator ad = field.getDirectAnnotationUsage(AnyDiscriminator.class);
+		AnyDiscriminator ad = fieldGetAnnotation(field,AnyDiscriminator.class);
 		if (ad != null) {
 			importType("org.hibernate.annotations.AnyDiscriminator");
 			importType("jakarta.persistence.DiscriminatorType");
@@ -1191,11 +1257,11 @@ public class TemplateHelper {
 		}
 		// @AnyDiscriminatorValue(s)
 		List<AnyDiscriminatorValue> values = new ArrayList<>();
-		AnyDiscriminatorValue single = field.getDirectAnnotationUsage(AnyDiscriminatorValue.class);
+		AnyDiscriminatorValue single = fieldGetAnnotation(field,AnyDiscriminatorValue.class);
 		if (single != null) {
 			values.add(single);
 		}
-		AnyDiscriminatorValues container = field.getDirectAnnotationUsage(AnyDiscriminatorValues.class);
+		AnyDiscriminatorValues container = fieldGetAnnotation(field,AnyDiscriminatorValues.class);
 		if (container != null) {
 			for (AnyDiscriminatorValue adv : container.value()) {
 				values.add(adv);
@@ -1208,7 +1274,7 @@ public class TemplateHelper {
 					.append("\", entity = ").append(simpleEntity).append(".class)\n");
 		}
 		// @AnyKeyJavaClass
-		AnyKeyJavaClass akjc = field.getDirectAnnotationUsage(AnyKeyJavaClass.class);
+		AnyKeyJavaClass akjc = fieldGetAnnotation(field,AnyKeyJavaClass.class);
 		if (akjc != null) {
 			importType("org.hibernate.annotations.AnyKeyJavaClass");
 			String simpleType = importType(akjc.value().getName());
@@ -1221,7 +1287,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		Convert convert = field.getDirectAnnotationUsage(Convert.class);
+		Convert convert = fieldGetAnnotation(field,Convert.class);
 		if (convert == null || convert.disableConversion()) {
 			return "";
 		}
@@ -1238,7 +1304,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		Column col = field.getDirectAnnotationUsage(Column.class);
+		Column col = fieldGetAnnotation(field,Column.class);
 		if (col == null) {
 			return "";
 		}
@@ -1274,7 +1340,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		ColumnTransformer ct = field.getDirectAnnotationUsage(ColumnTransformer.class);
+		ColumnTransformer ct = fieldGetAnnotation(field,ColumnTransformer.class);
 		if (ct == null) {
 			return "";
 		}
@@ -1307,7 +1373,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		ManyToOne m2o = field.getDirectAnnotationUsage(ManyToOne.class);
+		ManyToOne m2o = fieldGetAnnotation(field,ManyToOne.class);
 		if (m2o == null) {
 			return "";
 		}
@@ -1330,7 +1396,7 @@ public class TemplateHelper {
 			sb.append(")");
 		}
 		// @JoinColumn
-		JoinColumn jc = field.getDirectAnnotationUsage(JoinColumn.class);
+		JoinColumn jc = fieldGetAnnotation(field,JoinColumn.class);
 		if (jc != null) {
 			sb.append("\n    ");
 			importType("jakarta.persistence.JoinColumn");
@@ -1348,7 +1414,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		OneToMany o2m = field.getDirectAnnotationUsage(OneToMany.class);
+		OneToMany o2m = fieldGetAnnotation(field,OneToMany.class);
 		if (o2m == null) {
 			return "";
 		}
@@ -1385,7 +1451,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		OneToOne o2o = field.getDirectAnnotationUsage(OneToOne.class);
+		OneToOne o2o = fieldGetAnnotation(field,OneToOne.class);
 		if (o2o == null) {
 			return "";
 		}
@@ -1431,7 +1497,7 @@ public class TemplateHelper {
 			sb.append(")");
 		}
 		// @JoinColumn for owning side
-		JoinColumn jc = field.getDirectAnnotationUsage(JoinColumn.class);
+		JoinColumn jc = fieldGetAnnotation(field,JoinColumn.class);
 		if (jc != null) {
 			sb.append("\n    ");
 			importType("jakarta.persistence.JoinColumn");
@@ -1449,7 +1515,7 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		ManyToMany m2m = field.getDirectAnnotationUsage(ManyToMany.class);
+		ManyToMany m2m = fieldGetAnnotation(field,ManyToMany.class);
 		if (m2m == null) {
 			return "";
 		}
@@ -1483,7 +1549,7 @@ public class TemplateHelper {
 			sb.append(")");
 		}
 		// @JoinTable for owning side
-		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
+		JoinTable jt = fieldGetAnnotation(field,JoinTable.class);
 		if (jt != null) {
 			sb.append("\n    ");
 			importType("jakarta.persistence.JoinTable");
@@ -1506,13 +1572,13 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		if (!field.hasDirectAnnotationUsage(EmbeddedId.class)) {
+		if (!fieldHasAnnotation(field, EmbeddedId.class)) {
 			return "";
 		}
 		StringBuilder sb = new StringBuilder();
 		importType("jakarta.persistence.EmbeddedId");
 		sb.append("@EmbeddedId");
-		AttributeOverrides overrides = field.getDirectAnnotationUsage(AttributeOverrides.class);
+		AttributeOverrides overrides = fieldGetAnnotation(field,AttributeOverrides.class);
 		if (overrides != null && overrides.value().length > 0) {
 			sb.append("\n    ");
 			appendAttributeOverrides(sb, overrides.value());
@@ -1524,13 +1590,13 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		if (!field.hasDirectAnnotationUsage(Embedded.class)) {
+		if (!fieldHasAnnotation(field, Embedded.class)) {
 			return "";
 		}
 		StringBuilder sb = new StringBuilder();
 		importType("jakarta.persistence.Embedded");
 		sb.append("@Embedded");
-		AttributeOverrides overrides = field.getDirectAnnotationUsage(AttributeOverrides.class);
+		AttributeOverrides overrides = fieldGetAnnotation(field,AttributeOverrides.class);
 		if (overrides != null && overrides.value().length > 0) {
 			sb.append("\n    ");
 			appendAttributeOverrides(sb, overrides.value());
@@ -1604,13 +1670,13 @@ public class TemplateHelper {
 			}
 			if (isPrimaryKey(field)) {
 				// Include ID only if no generator (assigned)
-				GeneratedValue gv = field.getDirectAnnotationUsage(GeneratedValue.class);
+				GeneratedValue gv = fieldGetAnnotation(field,GeneratedValue.class);
 				if (gv != null) {
 					continue;
 				}
 				props.add(new FullConstructorProperty(getJavaTypeName(field), field.getName()));
 			} else {
-				Column col = field.getDirectAnnotationUsage(Column.class);
+				Column col = fieldGetAnnotation(field,Column.class);
 				if (col != null && !col.nullable()) {
 					props.add(new FullConstructorProperty(getJavaTypeName(field), field.getName()));
 				}
@@ -1618,7 +1684,7 @@ public class TemplateHelper {
 		}
 		// ManyToOne: non-optional
 		for (FieldDetails field : getManyToOneFields()) {
-			ManyToOne m2o = field.getDirectAnnotationUsage(ManyToOne.class);
+			ManyToOne m2o = fieldGetAnnotation(field,ManyToOne.class);
 			if (m2o != null && !m2o.optional()) {
 				props.add(new FullConstructorProperty(getJavaTypeName(field), field.getName()));
 			}
@@ -1733,13 +1799,13 @@ public class TemplateHelper {
 
 	public boolean hasNaturalId() {
 		return getBasicFields().stream()
-				.anyMatch(f -> f.hasDirectAnnotationUsage(NaturalId.class));
+				.anyMatch(f -> fieldHasAnnotation(f, NaturalId.class));
 	}
 
 	public List<FieldDetails> getNaturalIdFields() {
 		List<FieldDetails> result = new ArrayList<>();
 		for (FieldDetails field : getBasicFields()) {
-			if (field.hasDirectAnnotationUsage(NaturalId.class)) {
+			if (fieldHasAnnotation(field, NaturalId.class)) {
 				result.add(field);
 			}
 		}
@@ -2192,24 +2258,24 @@ public class TemplateHelper {
 	}
 
 	private boolean isRelationshipField(FieldDetails field) {
-		return field.hasDirectAnnotationUsage(ManyToOne.class)
-				|| field.hasDirectAnnotationUsage(OneToMany.class)
-				|| field.hasDirectAnnotationUsage(OneToOne.class)
-				|| field.hasDirectAnnotationUsage(ManyToMany.class);
+		return fieldHasAnnotation(field, ManyToOne.class)
+				|| fieldHasAnnotation(field, OneToMany.class)
+				|| fieldHasAnnotation(field, OneToOne.class)
+				|| fieldHasAnnotation(field, ManyToMany.class);
 	}
 
 	private boolean isEmbeddedField(FieldDetails field) {
-		return field.hasDirectAnnotationUsage(Embedded.class);
+		return fieldHasAnnotation(field, Embedded.class);
 	}
 
 	private boolean isEmbeddedIdField(FieldDetails field) {
-		return field.hasDirectAnnotationUsage(EmbeddedId.class);
+		return fieldHasAnnotation(field, EmbeddedId.class);
 	}
 
 	private <A extends Annotation> List<FieldDetails> getFieldsWithAnnotation(Class<A> annotationType) {
 		List<FieldDetails> result = new ArrayList<>();
 		for (FieldDetails field : classDetails.getFields()) {
-			if (field.hasDirectAnnotationUsage(annotationType)) {
+			if (fieldHasAnnotation(field, annotationType)) {
 				result.add(field);
 			}
 		}

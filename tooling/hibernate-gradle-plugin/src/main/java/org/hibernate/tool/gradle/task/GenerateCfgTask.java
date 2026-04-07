@@ -18,13 +18,14 @@
 package org.hibernate.tool.gradle.task;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.Writer;
+import java.util.Properties;
 
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.work.DisableCachingByDefault;
-import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.api.export.ExporterConstants;
-import org.hibernate.tool.api.export.ExporterFactory;
-import org.hibernate.tool.api.export.ExporterType;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.reveng.models.exporter.cfg.CfgXmlExporter;
 
 @DisableCachingByDefault(because = "Generates output from a live database connection")
 public class GenerateCfgTask extends AbstractTask {
@@ -36,12 +37,21 @@ public class GenerateCfgTask extends AbstractTask {
 
 	void doWork() {
 		getLogger().lifecycle("Creating CFG exporter");
-		Exporter cfgExporter = ExporterFactory.createExporter(ExporterType.CFG);
+		MetadataDescriptor md = createJdbcDescriptor();
 		File outputFolder = getOutputFolder();
-		cfgExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, createJdbcDescriptor());
-		cfgExporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);
+		File outputFile = new File(outputFolder, "hibernate.cfg.xml");
+		outputFile.getParentFile().mkdirs();
+		Properties props = new Properties();
+		props.putAll(getHibernateProperties());
 		getLogger().lifecycle("Starting CFG export to directory: " + outputFolder + "...");
-		cfgExporter.start();
+		try (Writer writer = new FileWriter(outputFile)) {
+			CfgXmlExporter.create(md)
+					.export(writer, props);
+		} catch (Exception e) {
+			throw new RuntimeException(
+					"Failed to export hibernate.cfg.xml to "
+					+ outputFile, e);
+		}
 		getLogger().lifecycle("CFG export finished");
 	}
 

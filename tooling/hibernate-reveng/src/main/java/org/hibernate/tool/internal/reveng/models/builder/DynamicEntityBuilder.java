@@ -69,12 +69,12 @@ public class DynamicEntityBuilder {
 	 * @return ClassDetails with JPA annotations attached
 	 */
 	public ClassDetails createEntityFromTable(TableMetadata tableMetadata) {
-		String className = tableMetadata.getEntityPackage() + "." + tableMetadata.getEntityClassName();
+		String className = qualifiedName(tableMetadata.getEntityPackage(), tableMetadata.getEntityClassName());
 
 		// Resolve parent class if this is a subclass
 		ClassDetails superClass = null;
 		if (tableMetadata.getParentEntityClassName() != null) {
-			String parentClassName = tableMetadata.getParentEntityPackage() + "." + tableMetadata.getParentEntityClassName();
+			String parentClassName = qualifiedName(tableMetadata.getParentEntityPackage(), tableMetadata.getParentEntityClassName());
 			superClass = resolveOrCreateClassDetails(
 				tableMetadata.getParentEntityClassName(),
 				parentClassName
@@ -110,8 +110,8 @@ public class DynamicEntityBuilder {
 
 		// Add ManyToOne relationship fields
 		for (ForeignKeyMetadata fkMetadata : tableMetadata.getForeignKeys()) {
-			String targetClassName = fkMetadata.getTargetEntityPackage()
-				+ "." + fkMetadata.getTargetEntityClassName();
+			String targetClassName = qualifiedName(fkMetadata.getTargetEntityPackage(),
+				fkMetadata.getTargetEntityClassName());
 			ClassDetails targetClassDetails = resolveOrCreateClassDetails(
 				fkMetadata.getTargetEntityClassName(), targetClassName);
 			ManyToOneFieldBuilder.buildManyToOneField(
@@ -120,8 +120,8 @@ public class DynamicEntityBuilder {
 
 		// Add OneToMany relationship fields
 		for (OneToManyMetadata o2mMetadata : tableMetadata.getOneToManys()) {
-			String elementClassName = o2mMetadata.getElementEntityPackage()
-				+ "." + o2mMetadata.getElementEntityClassName();
+			String elementClassName = qualifiedName(o2mMetadata.getElementEntityPackage(),
+				o2mMetadata.getElementEntityClassName());
 			ClassDetails elementClassDetails = resolveOrCreateClassDetails(
 				o2mMetadata.getElementEntityClassName(), elementClassName);
 			OneToManyFieldBuilder.buildOneToManyField(
@@ -130,8 +130,8 @@ public class DynamicEntityBuilder {
 
 		// Add OneToOne relationship fields
 		for (OneToOneMetadata o2oMetadata : tableMetadata.getOneToOnes()) {
-			String targetClassName = o2oMetadata.getTargetEntityPackage()
-				+ "." + o2oMetadata.getTargetEntityClassName();
+			String targetClassName = qualifiedName(o2oMetadata.getTargetEntityPackage(),
+				o2oMetadata.getTargetEntityClassName());
 			ClassDetails targetClassDetails = resolveOrCreateClassDetails(
 				o2oMetadata.getTargetEntityClassName(), targetClassName);
 			OneToOneFieldBuilder.buildOneToOneField(
@@ -140,8 +140,8 @@ public class DynamicEntityBuilder {
 
 		// Add ManyToMany relationship fields
 		for (ManyToManyMetadata m2mMetadata : tableMetadata.getManyToManys()) {
-			String targetClassName = m2mMetadata.getTargetEntityPackage()
-				+ "." + m2mMetadata.getTargetEntityClassName();
+			String targetClassName = qualifiedName(m2mMetadata.getTargetEntityPackage(),
+				m2mMetadata.getTargetEntityClassName());
 			ClassDetails targetClassDetails = resolveOrCreateClassDetails(
 				m2mMetadata.getTargetEntityClassName(), targetClassName);
 			ManyToManyFieldBuilder.buildManyToManyField(
@@ -150,8 +150,8 @@ public class DynamicEntityBuilder {
 
 		// Add Embedded fields
 		for (EmbeddedFieldMetadata embeddedMetadata : tableMetadata.getEmbeddedFields()) {
-			String embeddableClassName = embeddedMetadata.getEmbeddablePackage()
-				+ "." + embeddedMetadata.getEmbeddableClassName();
+			String embeddableClassName = qualifiedName(embeddedMetadata.getEmbeddablePackage(),
+				embeddedMetadata.getEmbeddableClassName());
 			ClassDetails embeddableClassDetails = resolveOrCreateClassDetails(
 				embeddedMetadata.getEmbeddableClassName(), embeddableClassName);
 			EmbeddedFieldBuilder.buildEmbeddedField(
@@ -161,7 +161,7 @@ public class DynamicEntityBuilder {
 		// Add @EmbeddedId composite key field
 		if (tableMetadata.getCompositeId() != null) {
 			CompositeIdMetadata compositeId = tableMetadata.getCompositeId();
-			String idClassName = compositeId.getIdClassPackage() + "." + compositeId.getIdClassName();
+			String idClassName = qualifiedName(compositeId.getIdClassPackage(), compositeId.getIdClassName());
 			ClassDetails idClassDetails = resolveOrCreateClassDetails(
 				compositeId.getIdClassName(), idClassName);
 			CompositeIdFieldBuilder.buildCompositeIdField(
@@ -236,6 +236,13 @@ public class DynamicEntityBuilder {
 			pkJoinColAnnotation.name(tableMetadata.getPrimaryKeyJoinColumnName());
 			entityClass.addAnnotationUsage(pkJoinColAnnotation);
 		}
+	}
+
+	private static String qualifiedName(String packageName, String simpleName) {
+		if (packageName == null || packageName.isEmpty()) {
+			return simpleName;
+		}
+		return packageName + "." + simpleName;
 	}
 
 	/**

@@ -60,7 +60,7 @@ public class GenerateJavaMojo extends AbstractGenerationMojo {
                 ? new String[] { templatePath } : new String[0];
         getLog().info("Starting POJO export to directory: "
                 + outputDirectory + "...");
-        EntityExporter.create(metadataDescriptor, ejb3, tPath)
+        EntityExporter.create(metadataDescriptor, ejb3, jdk5, tPath)
                 .exportAll(outputDirectory);
     }
 

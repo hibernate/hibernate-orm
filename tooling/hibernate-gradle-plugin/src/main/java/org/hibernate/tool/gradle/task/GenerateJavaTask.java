@@ -21,10 +21,8 @@ import java.io.File;
 
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.work.DisableCachingByDefault;
-import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.api.export.ExporterConstants;
-import org.hibernate.tool.api.export.ExporterFactory;
-import org.hibernate.tool.api.export.ExporterType;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.reveng.models.exporter.entity.EntityExporter;
 
 @DisableCachingByDefault(because = "Generates output from a live database connection")
 public class GenerateJavaTask extends AbstractTask {
@@ -36,20 +34,17 @@ public class GenerateJavaTask extends AbstractTask {
 
 	void doWork() {
 		getLogger().lifecycle("Creating Java exporter");
-		Exporter pojoExporter = ExporterFactory.createExporter(ExporterType.JAVA);
-        pojoExporter.getProperties().setProperty("ejb3", String.valueOf(getExtension().generateAnnotations));
-		pojoExporter.getProperties().setProperty("jdk5", String.valueOf(getExtension().useGenerics));
+		MetadataDescriptor md = createJdbcDescriptor();
+		boolean ejb3 = getExtension().generateAnnotations;
+		boolean generics = getExtension().useGenerics;
+		String templatePath = getExtension().templatePath;
+		String[] tPath = templatePath != null
+				? new String[] { templatePath } : new String[0];
 		File outputFolder = getOutputFolder();
-		pojoExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, createJdbcDescriptor());
-		pojoExporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);
-        String templatePath = getExtension().templatePath;
-        if (templatePath != null) {
-            getLogger().lifecycle("Setting template path to: " + templatePath);
-            pojoExporter.getProperties().put(ExporterConstants.TEMPLATE_PATH, new String[] { templatePath });
-        }
 		getLogger().lifecycle("Starting Java export to directory: " + outputFolder + "...");
-		pojoExporter.start();
+		EntityExporter.create(md, ejb3, generics, tPath)
+				.exportAll(outputFolder);
 		getLogger().lifecycle("Java export finished");
 	}
-	
+
 }

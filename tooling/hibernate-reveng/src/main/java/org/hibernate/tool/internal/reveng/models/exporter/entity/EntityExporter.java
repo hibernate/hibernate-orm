@@ -55,49 +55,56 @@ public class EntityExporter {
 	private final List<ClassDetails> entities;
 	private final ModelsContext modelsContext;
 	private final boolean annotated;
+	private final boolean useGenerics;
 	private final Configuration freemarkerConfig;
 
 	private final String templateName;
 
 	private EntityExporter(List<ClassDetails> entities, ModelsContext modelsContext,
-						   boolean annotated, String[] templatePath) {
+						   boolean annotated, boolean useGenerics, String[] templatePath) {
 		this.entities = entities;
 		this.modelsContext = modelsContext;
 		this.annotated = annotated;
+		this.useGenerics = useGenerics;
 		this.freemarkerConfig = new Configuration(Configuration.VERSION_2_3_33);
 		this.freemarkerConfig.setTemplateLoader(createTemplateLoader(templatePath));
 		this.freemarkerConfig.setDefaultEncoding("UTF-8");
 		this.freemarkerConfig.setTemplateExceptionHandler(
 				TemplateExceptionHandler.RETHROW_HANDLER);
-		this.templateName = resolveTemplateName();
+		this.templateName = resolveTemplateName(templatePath);
 	}
 
 	public static EntityExporter create(List<ClassDetails> entities, ModelsContext modelsContext) {
-		return new EntityExporter(entities, modelsContext, true, new String[0]);
+		return new EntityExporter(entities, modelsContext, true, true, new String[0]);
 	}
 
 	public static EntityExporter create(List<ClassDetails> entities, ModelsContext modelsContext,
 										boolean annotated) {
-		return new EntityExporter(entities, modelsContext, annotated, new String[0]);
+		return new EntityExporter(entities, modelsContext, annotated, true, new String[0]);
 	}
 
 	public static EntityExporter create(List<ClassDetails> entities, ModelsContext modelsContext,
 										boolean annotated, String[] templatePath) {
-		return new EntityExporter(entities, modelsContext, annotated, templatePath);
+		return new EntityExporter(entities, modelsContext, annotated, true, templatePath);
 	}
 
 	public static EntityExporter create(MetadataDescriptor md) {
-		return create(md, true, new String[0]);
+		return create(md, true, true, new String[0]);
 	}
 
 	public static EntityExporter create(MetadataDescriptor md, boolean annotated) {
-		return create(md, annotated, new String[0]);
+		return create(md, annotated, true, new String[0]);
 	}
 
 	public static EntityExporter create(MetadataDescriptor md, boolean annotated,
 										String[] templatePath) {
+		return create(md, annotated, true, templatePath);
+	}
+
+	public static EntityExporter create(MetadataDescriptor md, boolean annotated,
+										boolean useGenerics, String[] templatePath) {
 		return new EntityExporter(md.getEntityClassDetails(), md.getModelsContext(),
-				annotated, templatePath);
+				annotated, useGenerics, templatePath);
 	}
 
 	public void exportAll(File outputDir) {
@@ -108,7 +115,7 @@ public class EntityExporter {
 		String packageName = getPackageName(entity);
 		ImportContextImpl importContext = new ImportContextImpl(packageName);
 		TemplateHelper templateHelper = new TemplateHelper(
-				entity, modelsContext, importContext, annotated);
+				entity, modelsContext, importContext, annotated, useGenerics);
 		Map<String, Object> model = new HashMap<>();
 		model.put("templateHelper", templateHelper);
 		model.put("date", new Date());
@@ -156,12 +163,14 @@ public class EntityExporter {
 		return lastDot > 0 ? className.substring(0, lastDot) : "";
 	}
 
-	private String resolveTemplateName() {
-		try {
-			if (freemarkerConfig.getTemplateLoader().findTemplateSource(LEGACY_TEMPLATE_NAME) != null) {
-				return LEGACY_TEMPLATE_NAME;
+	private String resolveTemplateName(String[] templatePath) {
+		if (templatePath != null) {
+			for (String path : templatePath) {
+				File legacyTemplate = new File(path, LEGACY_TEMPLATE_NAME);
+				if (legacyTemplate.isFile()) {
+					return LEGACY_TEMPLATE_NAME;
+				}
 			}
-		} catch (IOException ignored) {
 		}
 		return TEMPLATE_NAME;
 	}

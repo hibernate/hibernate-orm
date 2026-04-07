@@ -115,9 +115,8 @@ public class GenerateJavaMojoTest {
         generateJavaMojo.executeExporter(createMetadataDescriptor());
         // Person.java should exist
         assertTrue(personJavaFile.exists());
-        // New EntityExporter always generates generics regardless of jdk5 flag
         byte[] raw = Files.readAllBytes(personJavaFile.toPath());
-        assertTrue(new String(raw).contains("Set<Item>"));
+        assertFalse(new String(raw).contains("Set<Item>"));
     }
 
     private void createDatabase() throws Exception {

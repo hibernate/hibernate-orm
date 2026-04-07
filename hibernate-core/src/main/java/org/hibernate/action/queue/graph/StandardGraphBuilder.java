@@ -471,9 +471,10 @@ public class StandardGraphBuilder implements GraphBuilder {
 		// Extract slots from DELETE operations
 		for ( Map.Entry<String, List<GroupNode>> entry : deleteNodeByTable.entrySet() ) {
 			String tableName = entry.getKey();
+			var constraints = constraintModel.getUniqueConstraintsForTable( (tableName) );
 
 			// Skip if table has no unique constraints
-			if ( constraintModel.getUniqueConstraintsForTable( (tableName) ).isEmpty() ) {
+			if ( constraints.isEmpty() ) {
 				continue;
 			}
 
@@ -485,9 +486,10 @@ public class StandardGraphBuilder implements GraphBuilder {
 		// Extract slots from INSERT operations
 		for ( Map.Entry<String, List<GroupNode>> entry : insertNodeByTable.entrySet() ) {
 			String tableName = entry.getKey();
+			var constraints = constraintModel.getUniqueConstraintsForTable( (tableName) );
 
 			// Skip if table has no unique constraints
-			if ( constraintModel.getUniqueConstraintsForTable( (tableName) ).isEmpty() ) {
+			if ( constraints.isEmpty() ) {
 				continue;
 			}
 

@@ -24,6 +24,7 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 	private final EntityPersister entityPersister;
 	private final Object identifier;
 	private final Object version;
+	private final Object[] state;
 	private final Object[] loadedState;
 	private final OptimisticLockStyle effectiveOptLockStyle;
 
@@ -39,6 +40,7 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 		this.entityPersister = entityPersister;
 		this.identifier = identifier;
 		this.version = version;
+		this.state = state;
 		this.loadedState = loadedState;
 		this.effectiveOptLockStyle = effectiveOptLockStyle;
 	}
@@ -46,6 +48,13 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 	@Override
 	public Object getEntityId() {
 		return identifier;
+	}
+
+	@Override
+	public Object[] getLoadedState() {
+		// Prefer loadedState if available (used for optimistic locking scenarios)
+		// Otherwise use state (which is always available from EntityDeleteAction)
+		return loadedState != null ? loadedState : state;
 	}
 
 	@Override

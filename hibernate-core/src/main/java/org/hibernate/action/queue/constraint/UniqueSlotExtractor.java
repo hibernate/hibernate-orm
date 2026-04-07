@@ -69,7 +69,9 @@ public class UniqueSlotExtractor {
 		}
 
 		Object entityInstance = bindPlan.getEntityInstance();
-		if (entityInstance == null) {
+		Object[] loadedState = bindPlan.getLoadedState();
+
+		if (entityInstance == null && loadedState == null) {
 			return slots;
 		}
 
@@ -81,7 +83,9 @@ public class UniqueSlotExtractor {
 
 		// Extract values for each unique constraint
 		for (UniqueConstraint constraint : constraints) {
-			Object[] values = extractValues(persister, entityInstance, constraint);
+			Object[] values = entityInstance != null
+					? extractValues(persister, entityInstance, constraint)
+					: extractValuesFromState(persister, loadedState, constraint);
 			if (values != null) {
 				slots.add(new UniqueSlot(tableName, values, constraint));
 			}

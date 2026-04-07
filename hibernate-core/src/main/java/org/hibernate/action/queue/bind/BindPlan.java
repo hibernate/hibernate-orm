@@ -33,6 +33,17 @@ public interface BindPlan {
 	}
 
 	/**
+	 * Get the loaded state for this operation.
+	 * Used for extracting unique constraint values from DELETE operations.
+	 *
+	 * @return the entity's loaded state, or null if not available
+	 */
+	@Nullable
+	default Object[] getLoadedState() {
+		return null;
+	}
+
+	/**
 	 * Execute this bind plan using the provided execution context.
 	 * <p>
 	 * For standard (non-bundled) operations, this executes a single row.

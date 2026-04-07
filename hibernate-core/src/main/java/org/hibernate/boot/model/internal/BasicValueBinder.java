@@ -24,6 +24,7 @@ import jakarta.persistence.Version;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
+import org.hibernate.mapping.Property;
 import org.hibernate.type.TimeZoneStorageStrategy;
 import org.hibernate.annotations.*;
 import org.hibernate.boot.internal.AnyKeyType;
@@ -835,7 +836,19 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	private void prepareAnyKey(MemberDetails member) {
-		implicitJavaTypeAccess = typeConfiguration -> null;
+		implicitJavaTypeAccess = typeConfiguration -> {
+			Property declaredIdentifierProperty = this.columns
+					.getPropertyHolder()
+					.getPersistentClass()
+					.getRootClass()
+					.getDeclaredIdentifierProperty();
+			if ( declaredIdentifierProperty.isComposite() ) {
+				throw new MappingException("Could not infer key-type for `@Any` mapping; must specify `@AnyKeyJavaType` or `@AnyKeyJavaClass`" );
+			}
+			return buildingContext.getBootstrapContext()
+					.getClassLoaderService()
+					.classForName( declaredIdentifierProperty.getReturnedClassName() );
+		};
 
 		final boolean useDeferredBeanContainerAccess = useDeferredBeanContainerAccess();
 
@@ -873,8 +886,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 					return (BasicJavaType<?>) registeredType.getJavaTypeDescriptor();
 				}
 			}
-
-			throw new MappingException("Could not determine key type for '@Any' mapping (specify '@AnyKeyJavaType' or '@AnyKeyJavaClass')");
+			return null;
 		};
 
 		explicitJdbcTypeAccess = typeConfiguration -> {

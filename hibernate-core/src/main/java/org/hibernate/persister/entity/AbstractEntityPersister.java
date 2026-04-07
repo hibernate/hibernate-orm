@@ -3863,10 +3863,6 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void addDiscriminatorToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder) {
-	}
-
-	@Override
 	public void addAuxiliaryToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
 		if ( auxiliaryMapping != null ) {
 			auxiliaryMapping.addToInsertGroup( insertGroupBuilder, this );

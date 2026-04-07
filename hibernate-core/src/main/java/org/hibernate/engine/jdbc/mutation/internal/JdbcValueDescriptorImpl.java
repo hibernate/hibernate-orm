@@ -10,6 +10,8 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 
+import static java.util.Locale.ROOT;
+
 /**
  * Standard {@link JdbcValueDescriptor} implementation
  *
@@ -50,5 +52,10 @@ public class JdbcValueDescriptorImpl implements JdbcValueDescriptor {
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return jdbcMapping;
+	}
+
+	@Override
+	public String toString() {
+		return String.format( ROOT, "JdbcValueDescriptor(%s, %s, %d)", columnName, usage, jdbcPosition );
 	}
 }

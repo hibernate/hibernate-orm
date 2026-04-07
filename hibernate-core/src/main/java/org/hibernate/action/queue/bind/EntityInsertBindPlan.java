@@ -110,6 +110,11 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 			}
 		} );
 
+		if ( tableDescriptor.isIdentifierTable() ) {
+			// Bind discriminator, if needed
+			entityPersister.bindDiscriminatorForInsert( valueBindings );
+		}
+
 		// Bind the key columns (identifier for root table, FK for joined subclass tables)
 		// unless using identity generation (identifier == null)
 		if ( identifier != null ) {

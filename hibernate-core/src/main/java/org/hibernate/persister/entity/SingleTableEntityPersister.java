@@ -14,6 +14,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
+import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.persister.filter.FilterAliasGenerator;
@@ -482,11 +483,24 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	@Override
 	public void addDiscriminatorToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder) {
 		if ( discriminatorInsertable ) {
+			// find the root table insert builder
 			final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.apply( getRootTableName() );
-			tableInsertBuilder.addValueColumn(
-					discriminatorValue == NULL_DISCRIMINATOR ? NULL : discriminatorSQLValue,
-					getDiscriminatorMapping()
-			);
+			if ( discriminatorValue == NULL_DISCRIMINATOR ) {
+				tableInsertBuilder.addColumnAssignment( getDiscriminatorMapping(), NULL );
+			}
+			else {
+				// and apply the parameter
+				tableInsertBuilder.addColumnAssignment( getDiscriminatorMapping() );
+			}
+		}
+	}
+
+	@Override
+	public void bindDiscriminatorForInsert(JdbcValueBindings jdbcValueBindings) {
+		if ( discriminatorInsertable ) {
+			if ( discriminatorValue != NULL_DISCRIMINATOR ) {
+				jdbcValueBindings.bindAssignment( -1, discriminatorValue,  getDiscriminatorMapping() );
+			}
 		}
 	}
 

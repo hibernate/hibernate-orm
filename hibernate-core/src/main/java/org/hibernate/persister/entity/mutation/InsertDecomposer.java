@@ -85,7 +85,6 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 
 		final List<PlannedOperation> operations = CollectionHelper.arrayList( effectiveGroup.size() );
 		int localOrd = 0;
-		int i = 0;
 		for ( Map.Entry<String, TableInsert> entry : effectiveGroup.entrySet() ) {
 			var operation = entry.getValue().createMutationOperation(valuesAnalysis, sessionFactory);
 			var tableMapping = (TableDescriptorAsTableMapping) operation.getTableDetails();
@@ -243,7 +242,10 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 			}
 		} );
 
+		// NOTE : unlike the legacy handling, here we use parameters for discriminator to properly plan
+		// and batch these insert statements.
 		entityPersister.addDiscriminatorToInsertGroup( builders::get );
+
 		entityPersister.addSoftDeleteToInsertGroup( builders::get );
 
 		// add the keys

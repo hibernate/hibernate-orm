@@ -17,6 +17,10 @@ public interface TableMutationBuilder<M extends TableMutation<?>> {
 	 * Constant for `null`
 	 */
 	String NULL = "null";
+	/**
+	 * Constant for `not null`
+	 */
+	String NOT_NULL = "not null";
 
 	/**
 	 * Reference (in the SQL AST sense) to the mutating table

@@ -9,6 +9,7 @@ import org.hibernate.Internal;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityUpdateAction;
+import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.action.queue.graph.MutationDecomposer;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
@@ -55,11 +56,22 @@ public interface EntityMutationTarget extends MutationTarget<EntityTableMapping,
 
 	String physicalTableNameForMutation(SelectableMapping selectableMapping);
 
+	/**
+	 * @deprecated Used by legacy action queue processes.
+	 * Use {@linkplain #addDiscriminatorToInsertGroup(Function)} and
+	 * {@linkplain #bindDiscriminatorForInsert(JdbcValueBindings)} instead.
+	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	void addDiscriminatorToInsertGroup(MutationGroupBuilder insertGroupBuilder);
 
 	void addAuxiliaryToInsertGroup(MutationGroupBuilder insertGroupBuilder);
 
-	void addDiscriminatorToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder);
+	default void addDiscriminatorToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder) {
+	}
+
+	default void bindDiscriminatorForInsert(JdbcValueBindings jdbcValueBindings) {
+	}
+
 	void addSoftDeleteToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder);
 
 	/**

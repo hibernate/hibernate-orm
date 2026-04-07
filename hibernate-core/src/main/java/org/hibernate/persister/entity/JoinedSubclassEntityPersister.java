@@ -4,26 +4,17 @@
  */
 package org.hibernate.persister.entity;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
@@ -38,6 +29,7 @@ import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappin
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.filter.internal.DynamicFilterAliasGenerator;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -47,11 +39,20 @@ import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.UnknownTableReferenceException;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
+import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.StandardBasicTypes;
-
 import org.jboss.logging.Logger;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static java.util.Collections.emptyMap;
 import static org.hibernate.internal.util.collections.ArrayHelper.contains;
@@ -773,10 +774,24 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	public void addDiscriminatorToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder) {
 		if ( explicitDiscriminatorColumnName != null ) {
 			final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.apply( getRootTableName() );
-			tableInsertBuilder.addColumnAssignment(
-					getDiscriminatorMapping(),
-					getDiscriminatorValueString()
-			);
+			if ( discriminatorValue == NULL_DISCRIMINATOR ) {
+				tableInsertBuilder.addColumnAssignment(	getDiscriminatorMapping(), TableMutationBuilder.NULL );
+			}
+			else if ( discriminatorValue == NOT_NULL_DISCRIMINATOR ) {
+				tableInsertBuilder.addColumnAssignment(	getDiscriminatorMapping(), TableMutationBuilder.NOT_NULL );
+			}
+			else {
+				tableInsertBuilder.addColumnAssignment(	getDiscriminatorMapping() );
+			}
+		}
+	}
+
+	@Override
+	public void bindDiscriminatorForInsert(JdbcValueBindings jdbcValueBindings) {
+		if ( explicitDiscriminatorColumnName != null
+				&& discriminatorValue != NULL_DISCRIMINATOR
+				&& discriminatorValue != NOT_NULL_DISCRIMINATOR ) {
+			jdbcValueBindings.bindAssignment( -1, discriminatorValue, getDiscriminatorMapping() );
 		}
 	}
 

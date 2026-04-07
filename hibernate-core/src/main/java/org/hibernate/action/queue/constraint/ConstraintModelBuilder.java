@@ -114,7 +114,14 @@ public final class ConstraintModelBuilder {
 			Map<String, EntityPersister> entityPersisters) {
 
 		// Collect unique constraint for primary key
-		collectPrimaryKeyConstraint(descriptor, uniqueConstraints);
+		//		NOTE: may produce foreign-keys for composite primary-keys
+		collectPrimaryKeyConstraint(descriptor, foreignKeys, uniqueConstraints, seen, entityPersisters);
+
+		// Collect @NaturalId constraint if present
+		collectNaturalIdConstraint(descriptor, uniqueConstraints);
+
+		// Collect @Column(unique=true) constraints
+		collectUniqueColumnConstraints(descriptor, uniqueConstraints);
 
 		// these are the tables for the entity including
 		// 	- secondary tables
@@ -163,7 +170,10 @@ public final class ConstraintModelBuilder {
 
 	private void collectPrimaryKeyConstraint(
 			EntityPersister descriptor,
-			List<UniqueConstraint> uniqueConstraints) {
+			List<ForeignKey> foreignKeys,
+			List<UniqueConstraint> uniqueConstraints,
+			IdentityHashMap<ForeignKeyDescriptor, Boolean> seen,
+			Map<String, EntityPersister> entityPersisters) {
 		// Add primary key as a unique constraint
 		String tableName = descriptor.getTableName();
 		EntityIdentifierMapping identifierMapping = descriptor.getIdentifierMapping();
@@ -180,11 +190,10 @@ public final class ConstraintModelBuilder {
 			));
 		}
 
-		// Phase 4: Collect @NaturalId constraint if present
-		collectNaturalIdConstraint(descriptor, uniqueConstraints);
-
-		// Phase 4: Collect @Column(unique=true) constraints
-		collectUniqueColumnConstraints(descriptor, uniqueConstraints);
+		// Check if identifier is an embeddable with @ManyToOne attributes (composite key scenario)
+		if (identifierMapping instanceof EmbeddableValuedModelPart embeddableId) {
+			handleToOneAttributes( embeddableId.getEmbeddableTypeDescriptor(), foreignKeys, uniqueConstraints, seen, entityPersisters );
+		}
 	}
 
 	/**

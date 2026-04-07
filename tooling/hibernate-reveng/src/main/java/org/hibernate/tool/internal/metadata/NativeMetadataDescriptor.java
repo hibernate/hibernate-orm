@@ -27,11 +27,12 @@ import jakarta.persistence.Entity;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
+import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.cfg.MappingSettings;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
@@ -108,35 +109,27 @@ public class NativeMetadataDescriptor implements MetadataDescriptor {
             ssrb.configure(cfgXmlFile);
         }
         ssrb.applySettings(getProperties());
+        // Enable hbm.xml → mapping.xml transformation so that
+        // hbm.xml entities get properly annotated ClassDetails
+        ssrb.applySetting(
+                MappingSettings.TRANSFORM_HBM_XML, true);
         MetadataSources sources = new MetadataSources(bsr);
         addMappingFiles(sources);
         MetadataBuilderImpl builder =
                 (MetadataBuilderImpl) sources.getMetadataBuilder(
                         ssrb.build());
-        Metadata metadata = builder.build();
-        BootstrapContext bootstrapContext = builder.getBootstrapContext();
+        // When TRANSFORM_HBM_XML is enabled, build() returns a new
+        // MetadataImpl with its own BootstrapContext containing the
+        // properly annotated ClassDetails from the transformed mappings
+        MetadataImpl metadata = (MetadataImpl) builder.build();
+        BootstrapContext bootstrapContext = metadata.getBootstrapContext();
         this.modelsContext = bootstrapContext.getModelsContext();
         List<ClassDetails> entities = new ArrayList<>();
-        // First try annotation-based discovery (works for annotated Java entities)
         modelsContext.getClassDetailsRegistry().forEachClassDetails(cd -> {
             if (cd.hasAnnotationUsage(Entity.class, modelsContext)) {
                 entities.add(cd);
             }
         });
-        // If no annotated entities found, fall back to Metadata entity bindings
-        // (handles hbm.xml entities where ClassDetails lack @Entity annotation)
-        if (entities.isEmpty()) {
-            for (PersistentClass pc : metadata.getEntityBindings()) {
-                String className = pc.getClassName();
-                if (className != null) {
-                    ClassDetails cd = modelsContext.getClassDetailsRegistry()
-                            .findClassDetails(className);
-                    if (cd != null) {
-                        entities.add(cd);
-                    }
-                }
-            }
-        }
         this.entityClassDetails = entities;
     }
 

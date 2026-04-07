@@ -61,13 +61,13 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<AnyKeyJavaClass, AnyKeyJavaClassAnnotation> ANY_KEY_JAVA_CLASS = new OrmAnnotationDescriptor<>(
 			AnyKeyJavaClass.class,
 			AnyKeyJavaClassAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
+			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 	OrmAnnotationDescriptor<AnyKeyJavaType, AnyKeyJavaTypeAnnotation> ANY_KEY_JAVA_TYPE = new OrmAnnotationDescriptor<>(
 			AnyKeyJavaType.class,
 			AnyKeyJavaTypeAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
+			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION, Kind.PACKAGE, Kind.MODULE ),
 			false
 	);
 	OrmAnnotationDescriptor<AnyKeyJdbcType, AnyKeyJdbcTypeAnnotation> ANY_KEY_JDBC_TYPE = new OrmAnnotationDescriptor<>(

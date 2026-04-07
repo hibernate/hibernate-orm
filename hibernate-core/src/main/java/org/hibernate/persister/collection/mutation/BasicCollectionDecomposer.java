@@ -22,6 +22,7 @@ import org.hibernate.collection.spi.SnapshotPositioned;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.internal.ManyToManyCollectionPart;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -35,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.hibernate.action.queue.CollectionOrdinalSupport.Slot;
@@ -496,6 +498,12 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 
 		if ( orderUpdatePlan == null ) {
 			// No order update plan available (shouldn't happen for indexed collections)
+			return;
+		}
+
+		// @OrderColumn is only valid for Lists, not Maps
+		// Maps use key-based ordering, not ordinal positions
+		if ( persister.getCollectionSemantics().getCollectionClassification() != CollectionClassification.LIST ) {
 			return;
 		}
 
@@ -1231,35 +1239,73 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 	 * Returns EntityPosition records where entity is the removed entity and position is its old index.
 	 */
 	private Iterator<?> buildIndexedEntityDeletions(PersistentCollection<?> collection) {
-		final var snapshot = (List<?>) collection.getStoredSnapshot();
-		if ( snapshot == null || snapshot.isEmpty() ) {
-			return java.util.Collections.emptyIterator();
-		}
+		// we have either a Map or a List, which need to be handled differently...
+		if ( persister.getCollectionSemantics().getCollectionClassification() == CollectionClassification.MAP ) {
+			final var snapshot = (Map<?, ?>) collection.getStoredSnapshot();
+			if ( snapshot == null || snapshot.isEmpty() ) {
+				return java.util.Collections.emptyIterator();
+			}
 
-		final var entries = collection.entries( persister );
-		final List<Object> currentEntities = new ArrayList<>();
-		while ( entries.hasNext() ) {
-			currentEntities.add( entries.next() );
-		}
+			final var entries = collection.entries( persister );
+			final List<Object> currentEntities = new ArrayList<>();
+			while ( entries.hasNext() ) {
+				currentEntities.add( entries.next() );
+			}
 
-		// Find entities in snapshot that are no longer in current list (by identity)
-		final List<EntityPosition> removedEntities = new ArrayList<>();
-		for ( int snapshotIndex = 0; snapshotIndex < snapshot.size(); snapshotIndex++ ) {
-			final Object snapshotEntity = snapshot.get( snapshotIndex );
-			if ( snapshotEntity != null ) {
-				boolean found = false;
-				for ( Object currentEntity : currentEntities ) {
-					if ( currentEntity == snapshotEntity ) {
-						found = true;
-						break;
+			// Find entities in snapshot that are no longer in current map (by identity)
+			final List<EntityPosition> removedEntities = new ArrayList<>();
+			int snapshotIndex = 0;
+			for ( Map.Entry<?, ?> snapshotEntry : snapshot.entrySet() ) {
+				final Object snapshotEntity = snapshotEntry.getValue();
+				if ( snapshotEntity != null ) {
+					boolean found = false;
+					for ( Object currentEntity : currentEntities ) {
+						if ( currentEntity == snapshotEntity ) {
+							found = true;
+							break;
+						}
+					}
+					if ( !found ) {
+						removedEntities.add( new EntityPosition( snapshotEntity, snapshotIndex ) );
 					}
 				}
-				if ( !found ) {
-					removedEntities.add( new EntityPosition( snapshotEntity, snapshotIndex ) );
+				snapshotIndex++;
+			}
+			return removedEntities.iterator();
+		}
+		else {
+			assert persister.getCollectionSemantics().getCollectionClassification() == CollectionClassification.LIST;
+
+			final var snapshot = (List<?>) collection.getStoredSnapshot();
+			if ( snapshot == null || snapshot.isEmpty() ) {
+				return java.util.Collections.emptyIterator();
+			}
+
+			final var entries = collection.entries( persister );
+			final List<Object> currentEntities = new ArrayList<>();
+			while ( entries.hasNext() ) {
+				currentEntities.add( entries.next() );
+			}
+
+			// Find entities in snapshot that are no longer in current list (by identity)
+			final List<EntityPosition> removedEntities = new ArrayList<>();
+			for ( int snapshotIndex = 0; snapshotIndex < snapshot.size(); snapshotIndex++ ) {
+				final Object snapshotEntity = snapshot.get( snapshotIndex );
+				if ( snapshotEntity != null ) {
+					boolean found = false;
+					for ( Object currentEntity : currentEntities ) {
+						if ( currentEntity == snapshotEntity ) {
+							found = true;
+							break;
+						}
+					}
+					if ( !found ) {
+						removedEntities.add( new EntityPosition( snapshotEntity, snapshotIndex ) );
+					}
 				}
 			}
+			return removedEntities.iterator();
 		}
-		return removedEntities.iterator();
 	}
 
 	/** Helper record to track entity and its snapshot position for indexed deletions */

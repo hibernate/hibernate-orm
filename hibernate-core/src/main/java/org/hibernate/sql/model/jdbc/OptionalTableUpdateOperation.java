@@ -444,8 +444,20 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 					}
 				} );
 			}
-			jdbcCoordinator.getResultSetReturn()
-					.executeUpdate( insertStatement, sql );
+			final int rowCount = jdbcCoordinator.getResultSetReturn().executeUpdate( insertStatement, sql );
+			expectation.verifyOutcome(
+					rowCount,
+					insertStatement,
+					-1,
+					sql
+			);
+		}
+		catch (SQLException e) {
+			throw jdbcServices.getSqlExceptionHelper().convert(
+					e,
+					"Unable to execute mutation PreparedStatement against table '" + tableMapping.getTableName() + "'",
+					sql
+			);
 		}
 		finally {
 			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( insertStatement );

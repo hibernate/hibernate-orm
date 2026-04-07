@@ -54,7 +54,23 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 		}
 	}
 
-	private void doExecution(Connection physicalConnection, List<PlannedOperation> plannedOperations, Consumer<Object> newlyManagedEntityConsumer, Consumer<PlannedOperation> fixupOperationConsumer) {
+	/// There are 4 forms of PlannedOperation handled here -
+	/// 	1. Operations with generated value handling.  At the moment these are handled separately to
+	/// 		integrate the older delegate contract to allow new and legacy queue impls to continue
+	/// 		working side-by-side.  I'd like to adjust this after we remove the legacy queue as we can
+	/// 		very easily handle that here.
+	/// 	2. Self-executing operations which are basically specialized handling for optional tables with
+	/// 		databases which do not support proper SQL MERGE semantics.  This allows potential execution of
+	/// 		multiple SQL statements.
+	/// 	3. Standard preparable operations.  These are operations which can be handled via the normal
+	/// 		"prepare, bind, execute" pattern.  These can also be potentially batched if batching is enabled.
+	/// 	4. "No op" operations are a specialized to simply carry "post execution" callbacks;
+	/// 		used from collection decomposers.
+	private void doExecution(
+			Connection physicalConnection,
+			List<PlannedOperation> plannedOperations,
+			Consumer<Object> newlyManagedEntityConsumer,
+			Consumer<PlannedOperation> fixupOperationConsumer) {
 		for ( int i = 0; i < plannedOperations.size(); i++ ) {
 			var plannedOperation = plannedOperations.get( i );
 
@@ -71,8 +87,7 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 						executePreparable( preparable, plannedOperation );
 					}
 					else if ( jdbcOperation instanceof SelfExecutingUpdateOperation selfExecuting ) {
-						// todo : need to figure out how to get these (currently null) values here
-						selfExecuting.performMutation( null, null, session );
+						executeSelfExecuting( selfExecuting );
 					}
 					else {
 						throw new IllegalStateException(
@@ -127,7 +142,9 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 		}
 	}
 
-	private void executeWithGeneratedValues(PlannedOperation plannedOperation) {
+	protected abstract void executePreparable(PreparableMutationOperation preparable, PlannedOperation plannedOperation);
+
+	protected void executeWithGeneratedValues(PlannedOperation plannedOperation) {
 		var bindPlan = plannedOperation.getBindPlan();
 		var generatedValuesCollector = bindPlan.getGeneratedValuesCollector();
 
@@ -151,7 +168,10 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 		generatedValuesCollector.apply( generatedValues );
 	}
 
-	protected abstract void executePreparable(PreparableMutationOperation preparable, PlannedOperation plannedOperation);
+	protected void executeSelfExecuting(SelfExecutingUpdateOperation selfExecuting) {
+		// todo : need to figure out how to get these (currently null) values here
+		selfExecuting.performMutation( null, null, session );
+	}
 
 	@Override
 	public void finishUp() {

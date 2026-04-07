@@ -293,11 +293,11 @@ public class FlushCoordinator {
 			// Check if this FK creates a dependency between two groups in this flush
 			if (kind == MutationKind.INSERT) {
 				// For INSERT: keyTable depends on targetTable (must insert target first)
+				// Even nullable FKs create dependencies because we don't know at this point
+				// whether the FK value will be null or not. The graph builder will handle
+				// breaking nullable FK edges if there's a cycle.
 				if (involvedTables.contains(keyTable) && involvedTables.contains(targetTable)) {
-					// Only matters if FK is non-nullable (nullable FKs can be set later via fixup)
-					if (!fk.nullable()) {
-						return true;
-					}
+					return true;
 				}
 			}
 			else if (kind == MutationKind.DELETE) {

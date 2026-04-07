@@ -10,6 +10,7 @@ import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.PreparableMutationOperation;
+import org.hibernate.sql.model.SelfExecutingUpdateOperation;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -119,6 +120,22 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ex
 					.getSqlExceptionHelper()
 					.convert( e, "Error executing batch statement" );
 		}
+	}
+
+	@Override
+	protected void executeWithGeneratedValues(PlannedOperation plannedOperation) {
+		if ( batchKey != null ) {
+			executeBatch();
+		}
+		super.executeWithGeneratedValues( plannedOperation );
+	}
+
+	@Override
+	protected void executeSelfExecuting(SelfExecutingUpdateOperation selfExecuting) {
+		if ( batchKey != null ) {
+			executeBatch();
+		}
+		super.executeSelfExecuting( selfExecuting );
 	}
 
 	@Override

@@ -273,6 +273,11 @@ public class CockroachLegacyDialect extends Dialect {
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
 		switch ( jdbcTypeCode ) {
+			case VARCHAR:
+				if ( "text".equals( columnTypeName ) && precision == Integer.MAX_VALUE ) {
+					jdbcTypeCode = LONG32VARCHAR;
+				}
+				break;
 			case OTHER:
 				switch ( columnTypeName ) {
 					case "uuid":
@@ -321,6 +326,20 @@ public class CockroachLegacyDialect extends Dialect {
 				break;
 		}
 		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+	}
+
+	@Override
+	public boolean equivalentTypes(int typeCode1, int typeCode2) {
+		switch ( typeCode1 ) {
+			// On CockroachDB, we use the same DDL type, so treat the types as equivalent
+			case LONG32VARCHAR, LONG32NVARCHAR, CLOB, NCLOB:
+				switch ( typeCode2 ) {
+					case LONG32VARCHAR, LONG32NVARCHAR, CLOB, NCLOB:
+						return true;
+				}
+			default:
+				return super.equivalentTypes( typeCode1, typeCode2 );
+		}
 	}
 
 	@Override

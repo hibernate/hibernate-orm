@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import jakarta.persistence.EntityManager;
 
+import jakarta.persistence.PessimisticLockException;
 import jakarta.persistence.QueryTimeoutException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -24,6 +25,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.testing.orm.AsyncExecutor;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.jboss.logging.Logger;
@@ -194,6 +196,12 @@ public abstract class TransactionUtil {
 					fail( "Expecting update to " + tableName + " to succeed, but failed due to async timeout (presumably due to locks)", re.getCause() );
 				}
 			}
+			else if ( re.getCause() instanceof PessimisticLockException ple
+					&& ple.getCause() instanceof LockTimeoutException ) {
+				if ( !expectingToBlock ) {
+					fail( "Expecting update to " + tableName + " to succeed, but failed due to async timeout (presumably due to locks)", re.getCause() );
+				}
+			}
 			else if ( re.getCause() instanceof ConstraintViolationException cve ) {
 				throw cve;
 			}
@@ -246,6 +254,12 @@ public abstract class TransactionUtil {
 				if ( re.getCause() instanceof jakarta.persistence.LockTimeoutException
 					|| re.getCause() instanceof org.hibernate.exception.LockTimeoutException
 					|| re.getCause() instanceof QueryTimeoutException ) {
+					if ( !expectingToBlock ) {
+						fail( "Expecting update to " + tableName + " to succeed, but failed due to async timeout (presumably due to locks)", re.getCause() );
+					}
+				}
+				else if ( re.getCause() instanceof PessimisticLockException ple
+						&& ple.getCause() instanceof LockTimeoutException ) {
 					if ( !expectingToBlock ) {
 						fail( "Expecting update to " + tableName + " to succeed, but failed due to async timeout (presumably due to locks)", re.getCause() );
 					}

@@ -158,16 +158,19 @@ public class StandardGraphBuilder implements GraphBuilder {
 			edgeId = createUpdateToDeleteEdges( foreignKey, parentUpdates, childDeletes, outgoing, edgeId );
 		}
 
-		// Create table-level DELETE -> INSERT edges to prevent unique constraint violations
-		// For tables with both DELETE and INSERT operations, ensure DELETEs execute first
-		// to avoid conflicts (e.g., moving an element between collections on a join table with unique constraints)
-		edgeId = addTableLevelDeleteInsertEdges( deleteNodeByTable, insertNodeByTable, outgoing, edgeId );
-
-		// Create DELETE -> INSERT edges based on unique constraint slot conflicts
-		// Phase 2: Runtime value tracking - creates edges only when DELETE and INSERT
-		// target the same unique constraint value (not just same table)
+		// Create DELETE -> INSERT edges based on unique constraint conflicts
 		if ( planningOptions.orderByUniqueKeySlots() ) {
+			// Phase 2: Runtime value tracking - creates edges only when DELETE and INSERT
+			// target the same unique constraint value (not just same table)
 			edgeId = addUniqueSlotEdges( nodes, expandedGroups, deleteNodeByTable, insertNodeByTable, outgoing,	edgeId );
+		}
+		else {
+			// Fallback: Create table-level DELETE -> INSERT edges to prevent unique constraint violations
+			// For tables with both DELETE and INSERT operations, ensure DELETEs execute first
+			// to avoid conflicts (e.g., moving an element between collections on a join table with unique constraints)
+			// NOTE: This is less precise than addUniqueSlotEdges() and can create unnecessary edges
+			// These edges are breakable to allow cycles to be resolved (e.g., orphan removal scenarios)
+			edgeId = addTableLevelDeleteInsertEdges( deleteNodeByTable, insertNodeByTable, outgoing, edgeId );
 		}
 
 		for ( List<GraphEdge> es : outgoing.values() ) {
@@ -426,11 +429,13 @@ public class StandardGraphBuilder implements GraphBuilder {
 								deleteNode,
 								// TO insert (graphing)
 								insertNode,
-								// NOT breakable - must maintain this order to avoid unique violations
-								false,
-								// No break cost (not breakable)
-								0,
-								// No columns to null (not breakable)
+								// BREAKABLE - this is a conservative edge that may be broken if it creates cycles
+								// When ORDER_BY_UNIQUE_KEY is enabled, addUniqueSlotEdges() creates more precise
+								// non-breakable edges for actual conflicts
+								true,
+								// High break cost - prefer to keep this edge unless it creates a cycle
+								1000,
+								// No columns to null (just removes the edge)
 								EMPTY_SELECTABLES,
 								// No FK (this is table-level ordering)
 								null,

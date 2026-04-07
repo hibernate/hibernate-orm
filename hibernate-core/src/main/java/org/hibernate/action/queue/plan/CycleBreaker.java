@@ -257,6 +257,12 @@ public class CycleBreaker {
 	}
 
 	private void installPatchForEdge(GraphEdge chosen) {
+		// Table-level edges (e.g., DELETE->INSERT for same table) don't have FK nodes
+		// They can only be broken, not patched
+		if (chosen.getKeyNode() == null) {
+			return;  // Edge is already marked as broken, no patch needed
+		}
+
 		// we need to patch the key side of the foreign key
 		final PlannedOperationGroup keyGroup = chosen.getKeyNode().group();
 

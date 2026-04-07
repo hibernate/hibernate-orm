@@ -3791,7 +3791,7 @@ public abstract class AbstractEntityPersister
 		}
 	}
 
-	protected TableMappingBuilder createTableMappingBuilder(
+	private TableMappingBuilder createTableMappingBuilder(
 			String tableExpression,
 			int relativePosition,
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier) {

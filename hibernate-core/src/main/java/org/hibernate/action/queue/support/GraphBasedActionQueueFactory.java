@@ -64,7 +64,7 @@ public class GraphBasedActionQueueFactory implements ActionQueueFactory, Seriali
 
 	public static PlanningOptions buildPlanningOptions(ConfigurationService configurationService) {
 		var orderByFk = configurationService.getSetting( ORDER_BY_FOREIGN_KEY, BOOLEAN, true );
-		var orderByUnique = configurationService.getSetting( ORDER_BY_UNIQUE_KEY, BOOLEAN, false );
+		var orderByUnique = configurationService.getSetting( ORDER_BY_UNIQUE_KEY, BOOLEAN, true );
 
 		var avoidBreakingDeferrable = configurationService.getSetting( DEFERRABLE_AVOID_BREAK, BOOLEAN, true );
 		var ignoreDeferrableEdges = configurationService.getSetting( DEFERRABLE_EDGES_IGNORE, BOOLEAN, true );

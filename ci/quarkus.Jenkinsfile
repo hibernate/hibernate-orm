@@ -9,7 +9,7 @@ import groovy.transform.Field
 @Field final String QUARKUS_BRANCH_TO_TEST = 'main'
 
 // When enabling Quarkus builds make sure to check the version/branch to test. See `QUARKUS_BRANCH_TO_TEST`.
-def ENABLE_QUARKUS_BUILDS = false
+def ENABLE_QUARKUS_BUILDS = true
 
 // Avoid running the pipeline on branch indexing
 if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {

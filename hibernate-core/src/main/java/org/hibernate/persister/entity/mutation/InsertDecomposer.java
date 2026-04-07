@@ -12,6 +12,7 @@ import org.hibernate.action.queue.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
+import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.sql.model.ast.TableInsert;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
@@ -31,6 +32,8 @@ import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import static org.hibernate.generator.EventType.INSERT;
 
 
 /// [Decomposer][org.hibernate.action.queue.graph.MutationDecomposer] for entity insert operations.
@@ -73,9 +76,12 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		final Object identifier = action.getId();
 		final Object[] state = action.getState();
 
+		// apply any pre-insert in-memory value generation
+		final boolean hasStateDependentGenerator = preInsertInMemoryValueGeneration( state, entity, session );
+
 		var insertable = entityPersister.getPropertyInsertability();
 		var valuesAnalysis = new SimpleInsertValuesAnalysis( entityPersister, state );
-		var effectiveGroup = chooseEffectiveInsertGroup( insertable, entity, identifier, session );
+		var effectiveGroup = chooseEffectiveInsertGroup( insertable, entity, identifier, hasStateDependentGenerator, session );
 
 		final var generatedValuesCollector = GeneratedValuesCollector.forInsert( entityPersister );
 		final PostInsertHandling postInsertHandling = new PostInsertHandling( action, generatedValuesCollector );
@@ -146,13 +152,32 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		}
 	}
 
+	protected boolean preInsertInMemoryValueGeneration(Object[] values, Object entity, SharedSessionContractImplementor session) {
+		boolean foundStateDependentGenerator = false;
+		if ( entityPersister.hasPreInsertGeneratedProperties() ) {
+			final var generators = entityPersister.getGenerators();
+			for ( int i = 0; i < generators.length; i++ ) {
+				final var generator = generators[i];
+				if ( generator != null
+						&& generator.generatesOnInsert()
+						&& generator.generatedBeforeExecution( entity, session ) ) {
+					values[i] = ( (BeforeExecutionGenerator) generator ).generate( session, entity, values[i], INSERT );
+					entityPersister.setValue( entity, i, values[i] );
+					foundStateDependentGenerator = foundStateDependentGenerator || generator.generatedOnExecution();
+				}
+			}
+		}
+		return foundStateDependentGenerator;
+	}
+
 	private Map<String, TableInsert> chooseEffectiveInsertGroup(
 			boolean[] insertable,
 			Object entity,
 			Object id,
+			boolean hasStateDependentGenerator,
 			SharedSessionContractImplementor session) {
 		final boolean forceIdentifierBinding = entityPersister.getGenerator().generatedOnExecution() && id != null;
-		return entityPersister.isDynamicInsert() || forceIdentifierBinding
+		return entityPersister.isDynamicInsert() || forceIdentifierBinding || hasStateDependentGenerator
 				? generateDynamicInsertOperations( insertable, entity, session, forceIdentifierBinding )
 				: staticInsertOperations;
 	}

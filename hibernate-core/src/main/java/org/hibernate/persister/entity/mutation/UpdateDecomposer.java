@@ -18,6 +18,8 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.PreUpdateEvent;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.Generator;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -33,6 +35,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.hibernate.generator.EventType.UPDATE;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
+import static org.hibernate.internal.util.collections.ArrayHelper.join;
+import static org.hibernate.internal.util.collections.ArrayHelper.trim;
 
 
 /// Decomposer for entity update operations.
@@ -79,7 +86,6 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		final Object[] state = action.getState();
 		final Object[] previousState = action.getPreviousState();
 		final Object previousVersion = action.getPreviousVersion();
-		final int[] dirtyFields = action.getDirtyFields();
 
 		action.handleNaturalIdLocalResolutions( identifier, entityPersister, session.getPersistenceContext() );
 		final Object cacheKey = action.lockCacheItem( previousVersion );
@@ -94,7 +100,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 					identifier,
 					state,
 					previousVersion,
-					dirtyFields,
+					action.getDirtyFields(),
 					versionMapping,
 					session
 			);
@@ -102,6 +108,10 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				return List.of( forceIncrementOperation );
 			}
 		}
+
+		// apply any pre-update in-memory value generation
+		final int[] preUpdateGeneratedAttributeIndexes = preUpdateInMemoryValueGeneration( entity, state, session );
+		final int[] dirtyAttributeIndexes = combine( action.getDirtyFields(), preUpdateGeneratedAttributeIndexes );
 
 		// Determine if we need to apply optimistic locking
 		final var effectiveOptLockStyle = effectiveOptLockStyle( previousVersion, previousState );
@@ -114,7 +124,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				entityPersister,
 				state,
 				previousState,
-				dirtyFields
+				dirtyAttributeIndexes
 		);
 
 
@@ -275,6 +285,48 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				veto |= listener.onPreUpdate( event );
 			}
 			return veto;
+		}
+	}
+
+	private int[] preUpdateInMemoryValueGeneration(
+			Object object,
+			Object[] newValues,
+			SharedSessionContractImplementor session) {
+		if ( !entityPersister.hasPreUpdateGeneratedProperties() ) {
+			return EMPTY_INT_ARRAY;
+		}
+
+		final var generators = entityPersister.getGenerators();
+		if ( generators.length != 0 ) {
+			final int[] fieldsPreUpdateNeeded = new int[generators.length];
+			int count = 0;
+			for ( int i = 0; i < generators.length; i++ ) {
+				final Generator generator = generators[i];
+				if ( generator != null
+						&& generator.generatesOnUpdate()
+						&& generator.generatedBeforeExecution( object, session ) ) {
+					newValues[i] = ( (BeforeExecutionGenerator) generator ).generate( session, object, newValues[i], UPDATE );
+					entityPersister.setValue( object, i, newValues[i] );
+					fieldsPreUpdateNeeded[count++] = i;
+				}
+			}
+
+			if ( count > 0 ) {
+				return trim( fieldsPreUpdateNeeded, count );
+			}
+		}
+
+		return EMPTY_INT_ARRAY;
+	}
+
+	private int[] combine(int[] dirtyFields, int[] preUpdateGeneratedIndexes) {
+		if ( preUpdateGeneratedIndexes.length == 0 ) {
+			return dirtyFields;
+		}
+		else {
+			return dirtyFields == null
+					? preUpdateGeneratedIndexes
+					: join( dirtyFields, preUpdateGeneratedIndexes );
 		}
 	}
 

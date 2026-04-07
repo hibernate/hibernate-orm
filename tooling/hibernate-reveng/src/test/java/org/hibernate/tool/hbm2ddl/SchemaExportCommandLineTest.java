@@ -21,24 +21,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class SchemaExportCommandLineTest {
 
-	@SuppressWarnings("unchecked")
 	private Object parseArgs(String[] args) throws Exception {
-		// Access private inner class via reflection
-		Class<?> cmdLineArgsClass = null;
-		for (Class<?> inner : SchemaExport.class.getDeclaredClasses()) {
-			if (inner.getSimpleName().equals("CommandLineArgs")) {
-				cmdLineArgsClass = inner;
-				break;
-			}
-		}
-		assertNotNull(cmdLineArgsClass, "CommandLineArgs inner class not found");
+		Class<?> cmdLineArgsClass = Class.forName(SchemaExport.class.getName() + "$CommandLineArgs");
 		Method parseMethod = cmdLineArgsClass.getDeclaredMethod("parseCommandLineArgs", String[].class);
 		parseMethod.setAccessible(true);
 		return parseMethod.invoke(null, (Object) args);
 	}
 
 	private Object getField(Object obj, String fieldName) throws Exception {
-		var field = obj.getClass().getDeclaredField(fieldName);
+		java.lang.reflect.Field field = obj.getClass().getDeclaredField(fieldName);
 		field.setAccessible(true);
 		return field.get(obj);
 	}

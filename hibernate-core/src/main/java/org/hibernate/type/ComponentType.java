@@ -28,6 +28,7 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddableDomainType;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -529,24 +530,46 @@ public class ComponentType extends AbstractType
 			return null;
 		}
 		else {
+			final var mappingType = embeddableTypeDescriptor();
+			boolean polymorphic = mappingType.isPolymorphic();
+
 			final Object[] originalValues = getPropertyValues( original );
 			final Object[] resultValues = getPropertyValues( target );
-			final Object[] replacedValues = TypeHelper.replace(
-					originalValues,
-					resultValues,
-					propertyTypes,
-					session,
-					owner,
-					copyCache
-			);
+			final Object[] replacedValues = new Object[propertySpan];
 
-			if ( target == null || !isMutable() ) {
+
+			for ( int i = 0; i < propertySpan; i++ ) {
+				if ( originalValues[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
+						|| originalValues[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+					replacedValues[i] = resultValues[i];
+				}
+				else if ( resultValues[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+					replacedValues[i] = propertyTypes[i].replace( originalValues[i], null, session, owner, copyCache );
+				}
+				else {
+					replacedValues[i] = propertyTypes[i].replace(
+							originalValues[i],
+							resultValues[i],
+							session,
+							owner,
+							copyCache
+					);
+				}
+			}
+
+			if ( polymorphic ) {
+				EmbeddableInstantiator instantiator = mappingType.getRepresentationStrategy()
+						.getInstantiatorForClass( original.getClass().getName() );
+				return instantiator.instantiate( () -> replacedValues );
+			}
+			else if ( target == null || !isMutable() ) {
 				return instantiator( original ).instantiate( () -> replacedValues );
 			}
 			else {
 				setPropertyValues( target, replacedValues );
 				return target;
 			}
+
 		}
 	}
 
@@ -562,19 +585,46 @@ public class ComponentType extends AbstractType
 			return null;
 		}
 		else {
+			final var mappingType = embeddableTypeDescriptor();
+			final boolean polymorphic = mappingType.isPolymorphic();
+
 			final Object[] originalValues = getPropertyValues( original );
 			final Object[] resultValues = getPropertyValues( target );
-			final Object[] replacedValues = TypeHelper.replace(
-					originalValues,
-					resultValues,
-					propertyTypes,
-					session,
-					owner,
-					copyCache,
-					foreignKeyDirection
-			);
+			final Object[] replacedValues = new Object[propertySpan];
 
-			if ( target == null || !isMutable() ) {
+			for ( int i = 0; i < propertySpan; i++ ) {
+				if ( originalValues[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
+						|| originalValues[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
+					replacedValues[i] = resultValues[i];
+				}
+				else if ( resultValues[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
+					replacedValues[i] = propertyTypes[i].replace(
+							originalValues[i],
+							null,
+							session,
+							owner,
+							copyCache,
+							foreignKeyDirection
+					);
+				}
+				else {
+					replacedValues[i] = propertyTypes[i].replace(
+							originalValues[i],
+							resultValues[i],
+							session,
+							owner,
+							copyCache,
+							foreignKeyDirection
+					);
+				}
+			}
+
+			if ( polymorphic ) {
+				final EmbeddableInstantiator instantiator = mappingType.getRepresentationStrategy()
+						.getInstantiatorForClass( original.getClass().getName() );
+				return instantiator.instantiate( () -> replacedValues );
+			}
+			else if ( target == null || !isMutable() ) {
 				return instantiator( original ).instantiate( () -> replacedValues );
 			}
 			else {

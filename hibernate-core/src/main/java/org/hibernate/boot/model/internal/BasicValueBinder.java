@@ -850,7 +850,15 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	private void prepareAnyKey(MemberDetails member) {
-		implicitJavaTypeAccess = typeConfiguration -> null;
+		implicitJavaTypeAccess = typeConfiguration -> {
+			final var keyJavaType =
+					BinderHelper.implicitAnyKeyJavaType( member, columns.getPropertyHolder(), buildingContext );
+			if ( keyJavaType == null ) {
+				throw new MappingException( "Could not determine key type for '@Any' mapping"
+						+ " (specify '@AnyKeyJavaType' or '@AnyKeyJavaClass')" );
+			}
+			return keyJavaType;
+		};
 
 		final boolean useDeferredBeanContainerAccess = useDeferredBeanContainerAccess();
 
@@ -888,8 +896,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 					return (BasicJavaType<?>) registeredType.getJavaTypeDescriptor();
 				}
 			}
-
-			throw new MappingException("Could not determine key type for '@Any' mapping (specify '@AnyKeyJavaType' or '@AnyKeyJavaClass')");
+			return null;
 		};
 
 		explicitJdbcTypeAccess = typeConfiguration -> {

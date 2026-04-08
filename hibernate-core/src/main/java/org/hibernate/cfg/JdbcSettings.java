@@ -368,6 +368,19 @@ public interface JdbcSettings extends C3p0Settings, AgroalSettings, HikariCPSett
 	String STATEMENT_INSPECTOR = "hibernate.session_factory.statement_inspector";
 
 	/**
+	 * Specifies an {@linkplain org.hibernate.StatementObserver observer} for JDBC statements.
+	 * Applied at the {@linkplain org.hibernate.SessionFactory} level.
+	 * May be defined as:<ol>
+	 *     <li>instance of {@linkplain org.hibernate.StatementObserver}
+	 *     <li>{@linkplain Class} reference for a {@linkplain org.hibernate.StatementObserver} implementation
+	 *     <li>name of a class implementing {@linkplain org.hibernate.StatementObserver}
+	 * </ol>
+	 *
+	 * @since 8.0
+	 */
+	String STATEMENT_OBSERVER = "hibernate.statement_observer";
+
+	/**
 	 * Enables logging of generated SQL to the console.
 	 *
 	 * @settingDefault {@code false}

@@ -15,7 +15,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -64,12 +64,24 @@ public @interface SessionFactory {
 
 	Class<? extends Interceptor> interceptorClass() default Interceptor.class;
 
+	/**
+	 * @deprecated Use {@linkplain #useCollectingStatementObserver()} instead.
+	 */
+	@Deprecated(forRemoval = true, since = "8.0")
 	Class<? extends StatementInspector> statementInspectorClass() default StatementInspector.class;
 
-	/// Shorthand for `statementInspectorClass = org.hibernate.testing.jdbc.SQLStatementInspector.class`
-	///
-	/// @see SQLStatementInspector
+	/**
+	 * @deprecated Use {@linkplain #useCollectingStatementObserver()} instead.
+	 */
+	@Deprecated(forRemoval = true, since = "8.0")
 	boolean useCollectingStatementInspector() default false;
+
+	/**
+	 * Triggers the use of {@linkplain CollectingStatementObserver} as the SessionFactory's
+	 * {@linkplain org.hibernate.cfg.JdbcSettings#STATEMENT_OBSERVER statement observer}.
+	 * Can be accessed using {@linkplain SessionFactoryScope#getCollectingStatementObserver()}
+	 */
+	boolean useCollectingStatementObserver() default false;
 
 	boolean applyCollectionsInDefaultFetchGroup() default true;
 

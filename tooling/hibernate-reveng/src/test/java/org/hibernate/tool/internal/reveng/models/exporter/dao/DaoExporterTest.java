@@ -25,7 +25,7 @@ import org.hibernate.boot.models.annotations.internal.NaturalIdAnnotation;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
+import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
 import org.junit.jupiter.api.Test;

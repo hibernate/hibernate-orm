@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.cache.FileTemplateLoader;
@@ -57,6 +58,7 @@ public class EntityExporter {
 	private boolean annotated;
 	private boolean useGenerics;
 	private Configuration freemarkerConfig;
+	private Properties customProperties;
 
 	private String templateName;
 
@@ -119,6 +121,11 @@ public class EntityExporter {
 		TemplateHelper templateHelper = new TemplateHelper(
 				entity, modelsContext, importContext, annotated, useGenerics);
 		Map<String, Object> model = new HashMap<>();
+		if (customProperties != null) {
+			for (String name : customProperties.stringPropertyNames()) {
+				model.put(name, customProperties.getProperty(name));
+			}
+		}
 		model.put("templateHelper", templateHelper);
 		model.put("date", new Date());
 		model.put("version", Version.versionString());
@@ -154,6 +161,10 @@ public class EntityExporter {
 		}
 	}
 
+	public void setProperties(Properties props) {
+		this.customProperties = props;
+	}
+
 	public List<ClassDetails> getEntities() {
 		return entities;
 	}
@@ -167,6 +178,12 @@ public class EntityExporter {
 
 	private String resolveTemplateName(String[] templatePath) {
 		if (templatePath != null) {
+			for (String path : templatePath) {
+				File newTemplate = new File(path, TEMPLATE_NAME);
+				if (newTemplate.isFile()) {
+					return TEMPLATE_NAME;
+				}
+			}
 			for (String path : templatePath) {
 				File legacyTemplate = new File(path, LEGACY_TEMPLATE_NAME);
 				if (legacyTemplate.isFile()) {

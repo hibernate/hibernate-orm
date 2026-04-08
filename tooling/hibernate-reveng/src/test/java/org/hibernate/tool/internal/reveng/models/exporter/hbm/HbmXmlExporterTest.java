@@ -43,7 +43,7 @@ import org.hibernate.boot.models.annotations.internal.SqlResultSetMappingJpaAnno
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
-import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
+import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.EmbeddedFieldMetadata;

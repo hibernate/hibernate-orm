@@ -18,24 +18,18 @@
 package org.hibernate.tool.internal.metadata;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import jakarta.persistence.Entity;
-
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.internal.MetadataBuilderImpl;
-import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.cfg.MappingSettings;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.reveng.models.builder.hbm.HbmClassDetailsBuilder;
 
 public class NativeMetadataDescriptor implements MetadataDescriptor {
 
@@ -46,9 +40,12 @@ public class NativeMetadataDescriptor implements MetadataDescriptor {
     private List<ClassDetails> entityClassDetails;
     private ModelsContext modelsContext;
 
+    private final BootstrapServiceRegistry bootstrapServiceRegistry;
+    private final StandardServiceRegistryBuilder ssrb;
+
     // Exposed for legacy tests that add annotated classes via reflection
     @SuppressWarnings("unused")
-    private final MetadataSources metadataSources = new MetadataSources();
+    private final MetadataSources metadataSources;
 
     public NativeMetadataDescriptor(
             File cfgXmlFile,
@@ -59,6 +56,17 @@ public class NativeMetadataDescriptor implements MetadataDescriptor {
         if (properties != null) {
             this.properties.putAll(properties);
         }
+        bootstrapServiceRegistry =
+                new BootstrapServiceRegistryBuilder()
+                        .disableAutoClose()
+                        .build();
+        ssrb = new StandardServiceRegistryBuilder(bootstrapServiceRegistry);
+        if (cfgXmlFile != null) {
+            ssrb.configure(cfgXmlFile);
+        }
+        ssrb.applySettings(getProperties());
+        metadataSources = new MetadataSources(bootstrapServiceRegistry);
+        addMappingFiles(metadataSources);
     }
 
     public Properties getProperties() {
@@ -68,20 +76,7 @@ public class NativeMetadataDescriptor implements MetadataDescriptor {
     }
 
     public Metadata createMetadata() {
-        BootstrapServiceRegistry bsr =
-                new BootstrapServiceRegistryBuilder().build();
-        StandardServiceRegistryBuilder ssrb =
-                new StandardServiceRegistryBuilder(bsr);
-        if (cfgXmlFile != null) {
-            ssrb.configure(cfgXmlFile);
-        }
-        ssrb.applySettings(getProperties());
-        MetadataSources sources = new MetadataSources(bsr);
-        addMappingFiles(sources);
-        for (Class<?> c : metadataSources.getAnnotatedClasses()) {
-            sources.addAnnotatedClass(c);
-        }
-        return sources.buildMetadata(ssrb.build());
+        return metadataSources.buildMetadata(ssrb.build());
     }
 
     @Override
@@ -101,36 +96,9 @@ public class NativeMetadataDescriptor implements MetadataDescriptor {
     }
 
     private void buildEntityClassDetails() {
-        BootstrapServiceRegistry bsr =
-                new BootstrapServiceRegistryBuilder().build();
-        StandardServiceRegistryBuilder ssrb =
-                new StandardServiceRegistryBuilder(bsr);
-        if (cfgXmlFile != null) {
-            ssrb.configure(cfgXmlFile);
-        }
-        ssrb.applySettings(getProperties());
-        // Enable hbm.xml → mapping.xml transformation so that
-        // hbm.xml entities get properly annotated ClassDetails
-        ssrb.applySetting(
-                MappingSettings.TRANSFORM_HBM_XML, true);
-        MetadataSources sources = new MetadataSources(bsr);
-        addMappingFiles(sources);
-        MetadataBuilderImpl builder =
-                (MetadataBuilderImpl) sources.getMetadataBuilder(
-                        ssrb.build());
-        // When TRANSFORM_HBM_XML is enabled, build() returns a new
-        // MetadataImpl with its own BootstrapContext containing the
-        // properly annotated ClassDetails from the transformed mappings
-        MetadataImpl metadata = (MetadataImpl) builder.build();
-        BootstrapContext bootstrapContext = metadata.getBootstrapContext();
-        this.modelsContext = bootstrapContext.getModelsContext();
-        List<ClassDetails> entities = new ArrayList<>();
-        modelsContext.getClassDetailsRegistry().forEachClassDetails(cd -> {
-            if (cd.hasAnnotationUsage(Entity.class, modelsContext)) {
-                entities.add(cd);
-            }
-        });
-        this.entityClassDetails = entities;
+        HbmClassDetailsBuilder builder = new HbmClassDetailsBuilder();
+        this.entityClassDetails = builder.buildFromFiles(mappingFiles);
+        this.modelsContext = builder.getModelsContext();
     }
 
     private void addMappingFiles(MetadataSources sources) {

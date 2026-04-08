@@ -39,7 +39,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassLoading;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
-import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
+import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
 

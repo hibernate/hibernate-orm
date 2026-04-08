@@ -91,7 +91,7 @@ import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
-import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
+import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.EmbeddedFieldMetadata;

@@ -29,7 +29,7 @@ import java.util.Properties;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.tool.internal.reveng.models.builder.DynamicEntityBuilder;
+import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
 import org.hibernate.tool.schema.spi.SchemaManagementException;

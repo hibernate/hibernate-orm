@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.builder;
+package org.hibernate.tool.internal.reveng.models.builder.db;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;

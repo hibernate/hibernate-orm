@@ -9,6 +9,7 @@ import java.util.LinkedHashSet;
 
 import org.hibernate.HibernateException;
 import org.hibernate.StaleStateException;
+import org.hibernate.StatementObserver;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
@@ -17,7 +18,6 @@ import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 
@@ -38,8 +38,8 @@ public class BatchImpl implements Batch {
 
 	private final JdbcCoordinator jdbcCoordinator;
 	private final SqlStatementLogger sqlStatementLogger;
+	private final StatementObserver statementObserver;
 	private final SqlExceptionHelper sqlExceptionHelper;
-	private final JdbcServices jdbcServices;
 
 	private final LinkedHashSet<BatchObserver> observers = new LinkedHashSet<>();
 
@@ -60,9 +60,9 @@ public class BatchImpl implements Batch {
 		this.jdbcCoordinator = jdbcCoordinator;
 		this.statementGroup = statementGroup;
 
-		this.jdbcServices =
-				jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getJdbcServices();
+		var jdbcServices = jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getJdbcServices();
 		sqlStatementLogger = jdbcServices.getSqlStatementLogger();
+		statementObserver = jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getStatementObserver();
 		sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
 
 		if ( BATCH_MESSAGE_LOGGER.isTraceEnabled() ) {
@@ -132,6 +132,7 @@ public class BatchImpl implements Batch {
 					final var statement = statementDetails.resolveStatement();
 					final String sqlString = statementDetails.getSqlString();
 					sqlStatementLogger.logStatement( sqlString );
+					statementObserver.performingSql( statementDetails.getSqlString(), -1 );
 					jdbcValueBindings.beforeStatement( statementDetails );
 					try {
 						statement.addBatch();

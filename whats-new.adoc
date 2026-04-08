@@ -85,3 +85,8 @@ a new overload -
 var isbn = ...;
 var book = session.getReference(Book.class, isbn, NATURAL);
 ----
+
+[[StatementObserver]]
+== StatementObserver
+
+8.0 introduces the new `StatementObserver` contract, allowing observation of all JDBC statements Hibernate performs.

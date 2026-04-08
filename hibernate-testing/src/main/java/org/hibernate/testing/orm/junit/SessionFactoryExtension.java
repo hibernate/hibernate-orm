@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.transaction.TransactionUtil;
 import org.hibernate.tool.schema.Action;
@@ -137,13 +138,8 @@ public class SessionFactoryExtension
 							sessionFactoryBuilder.applyInterceptor( sessionFactoryConfig.interceptorClass().getDeclaredConstructor().newInstance() );
 						}
 
-						final Class<? extends StatementInspector> explicitInspectorClass = sessionFactoryConfig.statementInspectorClass();
-						if ( sessionFactoryConfig.useCollectingStatementInspector() ) {
-							sessionFactoryBuilder.applyStatementInspector( new SQLStatementInspector() );
-						}
-						else if ( ! explicitInspectorClass.equals( StatementInspector.class ) ) {
-							sessionFactoryBuilder.applyStatementInspector( explicitInspectorClass.getConstructor().newInstance() );
-						}
+						applyJdbcStatementObservation( sessionFactoryConfig, sessionFactoryBuilder );
+
 						sessionFactoryBuilder.applyCollectionsInDefaultFetchGroup( sessionFactoryConfig.applyCollectionsInDefaultFetchGroup() );
 
 						sessionFactoryConfig.sessionFactoryConfigurer().getDeclaredConstructor().newInstance()
@@ -174,6 +170,26 @@ public class SessionFactoryExtension
 		}
 
 		return sfScope;
+	}
+
+	private static void applyJdbcStatementObservation(SessionFactory sessionFactoryConfig, SessionFactoryBuilder sessionFactoryBuilder) {
+		if ( sessionFactoryConfig.useCollectingStatementObserver() ) {
+			sessionFactoryBuilder.applyStatementObserver( new CollectingStatementObserver() );
+		}
+		else if ( sessionFactoryConfig.useCollectingStatementInspector() ) {
+			sessionFactoryBuilder.applyStatementInspector( new SQLStatementInspector() );
+		}
+		else {
+			final Class<? extends StatementInspector> explicitInspectorClass = sessionFactoryConfig.statementInspectorClass();
+			if ( !explicitInspectorClass.equals( StatementInspector.class ) ) {
+				try {
+					sessionFactoryBuilder.applyStatementInspector( explicitInspectorClass.getConstructor().newInstance() );
+				}
+				catch (Exception e) {
+					throw new RuntimeException( "Could not instantiate specified StatementInspector: " + explicitInspectorClass, e );
+				}
+			}
+		}
 	}
 
 	private static void prepareSchemaExport(
@@ -259,6 +275,11 @@ public class SessionFactoryExtension
 		@Override
 		public MetadataImplementor getMetadataImplementor() {
 			return modelScope.getDomainModel();
+		}
+
+		@Override
+		public CollectingStatementObserver getCollectingStatementObserver() {
+			return (CollectingStatementObserver) getSessionFactory().getSessionFactoryOptions().getStatementObserver();
 		}
 
 		@Override

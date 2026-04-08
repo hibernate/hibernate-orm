@@ -172,6 +172,7 @@ class StatementPreparerImpl implements StatementPreparer {
 		public PreparedStatement prepareStatement() {
 			try {
 				jdbcServices.getSqlStatementLogger().logStatement( sql );
+				jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getStatementObserver().performingSql( sql, -1 );
 
 				final var jdbcSessionOwner = jdbcCoordinator.getJdbcSessionOwner();
 				final var observer = jdbcSessionOwner.getJdbcSessionContext().getEventHandler();

@@ -53,24 +53,19 @@ public interface TransactionIdentifierService extends Service {
 	TransactionIdentifierSupplier<?> getIdentifierSupplier();
 
 	/**
-	 * Whether the timestamps or identifiers are assigned by the database server.
+	 * Whether the stable timestamps assigned by the database server
+	 * so that multiple calls to {@code current_timestamp} in the
+	 * same transaction return the same value. When this is true,
+	 * we don't need to pass the transaction timestamp via a JDBC
+	 * parameter, and we don't need to cache its value in the session.
 	 *
 	 * @see StateManagementSettings#USE_SERVER_TRANSACTION_TIMESTAMPS
+	 * @see Dialect#isCurrentTimestampStable()
 	 */
-	boolean isDisabled();
+	boolean useServerTimestamp(Dialect dialect);
 
 	/**
 	 * Whether the transaction identifiers are actually timestamps.
 	 */
 	boolean isIdentifierTypeInstant();
-
-	/**
-	 * Whether the timestamps or identifiers are assigned by the database server.
-	 *
-	 * @see StateManagementSettings#USE_SERVER_TRANSACTION_TIMESTAMPS
-	 */
-	default boolean useServerTimestamp(Dialect dialect) {
-		return isDisabled()
-			&& dialect.isCurrentTimestampStable();
-	}
 }

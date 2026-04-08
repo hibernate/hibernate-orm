@@ -12,6 +12,7 @@ import org.hibernate.MappingException;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.StateManagementSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.ServiceRegistry;
@@ -92,8 +93,13 @@ public class TransactionIdentifierServiceImpl implements TransactionIdentifierSe
 	}
 
 	@Override
-	public boolean isDisabled() {
-		return useServerTransactionTimestamps;
+	public boolean useServerTimestamp(Dialect dialect) {
+		return useServerTransactionTimestamps
+			// when the current_timestamp function is
+			// "unstable" across calls in a given
+			// transaction, we need to cache it in the
+			// session across calls to the database
+			&& dialect.isCurrentTimestampStable();
 	}
 
 	private static Class<?> resolveSuppliedType(Class<? extends TransactionIdentifierSupplier<?>> supplierClass) {

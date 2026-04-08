@@ -107,6 +107,17 @@ to be marked for rollback by the database platform, a `PersistenceException`
 should be thrown instead. As of Hibernate 7.3, Hibernate now adheres to the
 spec and throws the appropriate exception type.
 
+=== Schema actions now executed even without mapped entities
+
+Previously, if a persistence unit had no `@Entity` classes, all schema management
+actions (including `import.sql` execution) were silently skipped, even when explicitly
+configured via `hbm2ddl.auto` or `jakarta.persistence.schema-generation.database.action`.
+
+As of Hibernate 7.3, schema actions are now processed regardless of whether any entities
+are mapped. This is the correct behavior, but it means that applications which have an
+`import.sql` file on the classpath by accident may now see it executed when it was
+previously ignored.
+
 === Envers association not-audited target mode
 
 Previously, if an association of an Envers `@Audited` entity pointing to another

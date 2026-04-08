@@ -4,6 +4,7 @@
  */
 package org.hibernate.resource.jdbc.spi;
 
+import org.hibernate.StatementObserver;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.jpa.spi.JpaCompliance;
@@ -48,6 +49,7 @@ public interface JdbcSessionContext {
 	PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode();
 
 	StatementInspector getStatementInspector();
+	StatementObserver getStatementObserver();
 
 	JpaCompliance getJpaCompliance();
 

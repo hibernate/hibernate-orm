@@ -19,6 +19,7 @@ import jakarta.persistence.SynchronizationType;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.sql.ResultSetMapping;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
@@ -29,6 +30,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
+import org.hibernate.StatementObserver;
 import org.hibernate.UnknownFilterException;
 import org.hibernate.binder.internal.TenantIdBinder;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -173,6 +175,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private transient volatile Status status = Status.OPEN;
 
 	private final transient SessionFactoryObserverChain observerChain = new SessionFactoryObserverChain();
+	private final transient StatementObserver statementObserver;
 
 	private final transient SessionFactoryOptions sessionFactoryOptions;
 	private final transient Map<String,Object> settings;
@@ -225,6 +228,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		typeConfiguration = bootstrapContext.getTypeConfiguration();
 
 		sessionFactoryOptions = options;
+
+		statementObserver = options.getStatementObserver() == null
+				? StatementObserver::swallowSql
+				: options.getStatementObserver();
 
 		serviceRegistry = getServiceRegistry( options, this );
 		eventEngine = new EventEngine( bootMetamodel, this );
@@ -794,6 +801,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public SessionFactoryOptions getSessionFactoryOptions() {
 		return sessionFactoryOptions;
+	}
+
+	@Override
+	public @NonNull StatementObserver getStatementObserver() {
+		return statementObserver;
 	}
 
 	public Interceptor getInterceptor() {

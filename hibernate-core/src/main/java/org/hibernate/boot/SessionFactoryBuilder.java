@@ -12,6 +12,7 @@ import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.StatementObserver;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.audit.AuditStrategy;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
@@ -167,6 +168,14 @@ public interface SessionFactoryBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#SESSION_SCOPED_INTERCEPTOR
 	 */
 	SessionFactoryBuilder applyStatelessInterceptor(Supplier<? extends Interceptor> statelessInterceptorSupplier);
+
+	/**
+	 * Specifies a {@linkplain StatementObserver} to be associated with the SessionFactory and used
+	 * by all Sessions opened from it.
+	 *
+	 * @see org.hibernate.cfg.JdbcSettings#STATEMENT_OBSERVER
+	 */
+	SessionFactoryBuilder applyStatementObserver(StatementObserver statementObserver);
 
 	/**
 	 * Specifies a {@link StatementInspector} associated with the

@@ -72,6 +72,7 @@ public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesM
 		final var jdbcCoordinator = session.getJdbcCoordinator();
 		final String sql = statementDetails.getSqlString();
 		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
+		session.getJdbcSessionContext().getStatementObserver().performingSql( sql, -1 );
 		try {
 			jdbcValueBindings.beforeStatement( statementDetails );
 			jdbcCoordinator.getResultSetReturn()

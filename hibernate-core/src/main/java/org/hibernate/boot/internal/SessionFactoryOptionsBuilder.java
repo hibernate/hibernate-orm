@@ -31,7 +31,9 @@ import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.audit.AuditStrategy;
+import org.hibernate.StatementObserver;
 import org.hibernate.boot.model.internal.TemporalHelper;
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.MultiTenancy;
 import org.hibernate.cfg.GraphParserSettings;
@@ -156,6 +158,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	// Statistics/Interceptor/observers
 	private boolean statisticsEnabled;
 	private Interceptor interceptor;
+	private StatementObserver statementObserver;
 	private Supplier<? extends Interceptor> statelessInterceptorSupplier;
 	private StatementInspector statementInspector;
 	private final List<SessionFactoryObserver> sessionFactoryObserverList = new ArrayList<>();
@@ -350,6 +353,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		interceptor = determineInterceptor( settings, strategySelector );
 		statelessInterceptorSupplier = determineStatelessInterceptor( settings, strategySelector );
+
+		statementObserver = interpretStatementObserver( settings );
 
 		statementInspector =
 				strategySelector.resolveStrategy(
@@ -576,6 +581,34 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		}
 
 		graphParserMode = GraphParserMode.interpret( graphParserModeSetting );
+	}
+
+	private StatementObserver interpretStatementObserver(Map<String, Object> settings) {
+		var setting = settings.get( JdbcSettings.STATEMENT_OBSERVER );
+		if ( setting == null ) {
+			return null;
+		}
+
+		if ( setting instanceof StatementObserver observer ) {
+			return observer;
+		}
+
+		if ( setting instanceof Class<?> impl ) {
+			try {
+				return (StatementObserver) impl.getConstructor().newInstance();
+			}
+			catch (Exception e) {
+				throw new RuntimeException( "Unable to instantiate StatementObserver - " + impl.getName(), e );
+			}
+		}
+
+		try {
+			var namedImpl = Class.forName( setting.toString() );
+			return (StatementObserver) namedImpl.getConstructor().newInstance();
+		}
+		catch (Exception e) {
+			throw new RuntimeException( "Unable to instantiate StatementObserver - " + setting, e );
+		}
 	}
 
 	@Deprecated(forRemoval = true)
@@ -1052,6 +1085,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public Interceptor getInterceptor() {
 		return interceptor == null ? EmptyInterceptor.INSTANCE : interceptor;
+	}
+
+	@Override
+	public StatementObserver getStatementObserver() {
+		return statementObserver;
 	}
 
 	@Override
@@ -1612,6 +1650,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.sqmFunctionRegistry = sqmFunctionRegistry;
 	}
 
+	public void applyStatementObserver(StatementObserver statementObserver) {
+		this.statementObserver = statementObserver;
+	}
+
 	public void applyStatementInspector(StatementInspector statementInspector) {
 		this.statementInspector = statementInspector;
 	}
@@ -1939,5 +1981,4 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		}
 		return unmodifiableMap( settings );
 	}
-
 }

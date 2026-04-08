@@ -18,6 +18,7 @@ import jakarta.persistence.SynchronizationType;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.TypedQueryReference;
 import jakarta.persistence.sql.ResultSetMapping;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -25,6 +26,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
+import org.hibernate.StatementObserver;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -89,6 +91,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public SessionFactoryOptions getSessionFactoryOptions() {
 		return delegate.getSessionFactoryOptions();
+	}
+
+	@Override
+	public @NonNull StatementObserver getStatementObserver() {
+		return delegate.getStatementObserver();
 	}
 
 	@Override

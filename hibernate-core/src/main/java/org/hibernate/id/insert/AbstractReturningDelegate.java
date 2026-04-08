@@ -44,6 +44,7 @@ public abstract class AbstractReturningDelegate extends AbstractGeneratedValuesM
 			SharedSessionContractImplementor session) {
 		final String sql = statementDetails.getSqlString();
 		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
+		session.getJdbcSessionContext().getStatementObserver().performingSql( sql, -1 );
 		try {
 			valueBindings.beforeStatement( statementDetails );
 			return executeAndExtractReturning( sql, statementDetails.getStatement(), session );
@@ -60,6 +61,7 @@ public abstract class AbstractReturningDelegate extends AbstractGeneratedValuesM
 	@Override
 	public final GeneratedValues performInsertReturning(String sql, SharedSessionContractImplementor session, Binder binder) {
 		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
+		session.getJdbcSessionContext().getStatementObserver().performingSql( sql, -1 );
 		// prepare and execute the insert
 		final var insert = prepareStatement( sql, session );
 		try {

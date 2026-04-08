@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
@@ -22,6 +23,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.audit.AuditStrategy;
+import org.hibernate.StatementObserver;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.TenantCredentialsMapper;
@@ -161,6 +163,13 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see org.hibernate.SessionBuilder#interceptor(Interceptor)
 	 */
 	Interceptor getInterceptor();
+
+	/**
+	 * The StatementObserver, if one, applied to this SessionFactory.
+	 *
+	 * @see org.hibernate.cfg.JdbcSettings#STATEMENT_OBSERVER
+	 */
+	@Nullable StatementObserver getStatementObserver();
 
 	/**
 	 * A stateless {@link Supplier} for {@linkplain Interceptor interceptor} instances
@@ -830,5 +839,4 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @since 7.0
 	 */
 	GraphParserMode getGraphParserMode();
-
 }

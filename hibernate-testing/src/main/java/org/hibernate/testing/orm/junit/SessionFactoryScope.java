@@ -13,6 +13,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 
 /**
@@ -21,9 +22,35 @@ import org.hibernate.testing.jdbc.SQLStatementInspector;
 public interface SessionFactoryScope {
 	SessionFactoryImplementor getSessionFactory();
 	MetadataImplementor getMetadataImplementor();
+
+	/**
+	 * Access to the CollectingStatementObserver for this test, if one.
+	 *
+	 * @see SessionFactory#useCollectingStatementObserver()
+	 */
+	CollectingStatementObserver getCollectingStatementObserver();
+
+	/**
+	 * @deprecated Along with {@linkplain SessionFactory#useCollectingStatementInspector()};
+	 * use {@linkplain #getCollectingStatementObserver()} instead.
+	 */
+	@Deprecated(forRemoval = true, since = "8.0")
 	StatementInspector getStatementInspector();
+
+	/**
+	 * @deprecated Along with {@linkplain SessionFactory#useCollectingStatementInspector()};
+	 * use {@linkplain #getCollectingStatementObserver()} instead.
+	 */
+	@Deprecated(forRemoval = true, since = "8.0")
 	<T extends StatementInspector> T getStatementInspector(Class<T> type);
+
+	/**
+	 * @deprecated Along with {@linkplain SessionFactory#useCollectingStatementInspector()};
+	 * use {@linkplain #getCollectingStatementObserver()} instead.
+	 */
+	@Deprecated(forRemoval = true, since = "8.0")
 	SQLStatementInspector getCollectingStatementInspector();
+
 	void releaseSessionFactory();
 
 	default void withSessionFactory(Consumer<SessionFactoryImplementor> action) {

@@ -7,11 +7,13 @@ package org.hibernate.engine.spi;
 import java.util.Collection;
 import java.util.Map;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.StatementObserver;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -280,6 +282,11 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	 */
 	@Override
 	SessionFactoryOptions getSessionFactoryOptions();
+
+	/**
+	 * Access to the StatementObserver associated with this factory.
+	 */
+	@NonNull StatementObserver getStatementObserver();
 
 	/**
 	 * Obtain the {@linkplain FilterDefinition definition of a filter} by name.

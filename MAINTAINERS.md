@@ -167,16 +167,24 @@ In any case:
 
 ### Setting up the maintenance branch
 
-Once the release series (e.g. 7.2) is branched out and goes into maintenance mode make sure to:
+Once the release series (e.g. 7.3) is branched out and goes into maintenance mode make sure to:
 * Enable automated releases (for that branch)
   - Update [Jenkinsfile](ci/release/Jenkinsfile) and switch `RELEASE_ON_SCHEDULE` to `true`
 * Remove the nightly Jenkins job from that branch ([nightly.Jenkinsfile](nightly.Jenkinsfile))
 * Update GitHub workflows:
-  - For [ci.yml](.github/workflows/ci.yml) / [codeql.yml](.github/workflows/codeql.yml) 
+  - For [ci.yml](.github/workflows/ci.yml)
     + remove the branch push triggers (`on.pushbranches`)
     + update branch in the pull request triggers
-* Enable Quarkus testing job (in necessary)
+* Enable Quarkus testing job (if the update to this version was already merged(test against main Quarkus branch)/released(test the corresponding version branch))
   - In [quarkus.Jenkinsfile](ci/quarkus.Jenkinsfile) switch `ENABLE_QUARKUS_BUILDS` to true and update `QUARKUS_BRANCH_TO_TEST` as necessary.
+* Enable Hibernate Search dependency update job
+  - In [Jenkinsfile](Jenkinsfile) add an execution just before the `parallel(executions)`:
+  ```groovy
+    executions.put('Hibernate Search Update Dependency', {
+        build job: '/hibernate-search-dependency-update/{HIBERNATE_SEARCH_VERSION}', propagate: true, parameters: [string(name: 'UPDATE_JOB', value: 'orm{HIBERNATE_ORM_VERSION}'), string(name: 'ORM_REPOSITORY', value: helper.scmSource.remoteUrl), string(name: 'ORM_PULL_REQUEST_ID', value: helper.scmSource.pullRequest.id)]
+    })
+  ```
+  - In this example above, replace `{HIBERNATE_SEARCH_VERSION}` and `{HIBERNATE_ORM_VERSION}` with actual release series, e.g. `8.3`/`7.3` 
 * Update main build [Jenkinsfile](Jenkinsfile) (for the branch)
   - Enable JDK testing in the build by removing the conditions under `Don't build environments for newer JDKs`
   - Stop running this build for pushes to the branch

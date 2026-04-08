@@ -35,7 +35,6 @@ import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.mutation.RowMutationOperations;
-import org.hibernate.action.queue.graph.MutationDecomposer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;

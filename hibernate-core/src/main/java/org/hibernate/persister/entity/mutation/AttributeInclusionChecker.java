@@ -10,6 +10,6 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
  * @author Steve Ebersole
  */
 @FunctionalInterface
-interface AttributeInclusionChecker {
+public interface AttributeInclusionChecker {
 	boolean include(int position, SingularAttributeMapping attribute);
 }

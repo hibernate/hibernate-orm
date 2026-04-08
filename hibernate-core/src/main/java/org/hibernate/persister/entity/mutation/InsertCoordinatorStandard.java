@@ -583,7 +583,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 									columnValues == null
 											? keyMapping.getKeyColumn( i ).getWriteExpression()
 											: columnValues[i];
-							tableInsertBuilder.addKeyColumn( valueExpression, keyMapping.getKeyColumn( i ) );
+							tableInsertBuilder.addColumnAssignment( keyMapping.getKeyColumn( i ), valueExpression );
 						}
 					}
 				}

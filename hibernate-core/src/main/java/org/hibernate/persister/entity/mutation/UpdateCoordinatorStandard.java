@@ -767,7 +767,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		return selectable.isUpdateable();
 	}
 
-	protected InclusionChecker createInclusionChecker(boolean[] attributeUpdateability) {
+	protected AttributeInclusionChecker createInclusionChecker(boolean[] attributeUpdateability) {
 		return (position, attribute) -> attributeUpdateability[position];
 	}
 

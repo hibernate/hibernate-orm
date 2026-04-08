@@ -782,10 +782,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	public void addDiscriminatorToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder) {
 		if ( explicitDiscriminatorColumnName != null ) {
 			final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.apply( getRootTableName() );
-			if ( discriminatorValue == NULL_DISCRIMINATOR ) {
+			if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
 				tableInsertBuilder.addColumnAssignment(	getDiscriminatorMapping(), TableMutationBuilder.NULL );
 			}
-			else if ( discriminatorValue == NOT_NULL_DISCRIMINATOR ) {
+			else if ( discriminatorValue == DiscriminatorValue.Special.NOT_NULL ) {
 				tableInsertBuilder.addColumnAssignment(	getDiscriminatorMapping(), TableMutationBuilder.NOT_NULL );
 			}
 			else {
@@ -797,9 +797,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	public void bindDiscriminatorForInsert(JdbcValueBindings jdbcValueBindings) {
 		if ( explicitDiscriminatorColumnName != null
-				&& discriminatorValue != NULL_DISCRIMINATOR
-				&& discriminatorValue != NOT_NULL_DISCRIMINATOR ) {
-			jdbcValueBindings.bindAssignment( -1, discriminatorValue, getDiscriminatorMapping() );
+				&& discriminatorValue != DiscriminatorValue.Special.NULL
+				&& discriminatorValue != DiscriminatorValue.Special.NOT_NULL ) {
+			jdbcValueBindings.bindAssignment( -1, discriminatorValue.value(), getDiscriminatorMapping() );
 		}
 	}
 

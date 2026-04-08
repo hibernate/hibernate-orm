@@ -5,6 +5,7 @@
 package org.hibernate.action.queue.bind;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.internal.GeneratedValuesHelper;
@@ -18,6 +19,8 @@ import org.hibernate.persister.entity.mutation.PostUpdateHandling;
 import java.util.List;
 import java.util.Locale;
 
+import static org.hibernate.generator.values.internal.GeneratedValuesHelper.noCustomSql;
+
 /// Used from [EntityInsertBindPlan] and [EntityUpdateBindPlan] to aggregate generated value collection
 /// across all tables.
 ///
@@ -25,20 +28,31 @@ import java.util.Locale;
 /// @see PostInsertHandling
 /// @see PostUpdateHandling
 public final class GeneratedValuesCollector {
-	public static @Nullable GeneratedValuesCollector forInsert(EntityPersister entityPersister) {
-		return forTiming( entityPersister, EventType.INSERT );
+	public static @Nullable GeneratedValuesCollector forInsert(
+			EntityPersister entityPersister,
+			SessionFactoryImplementor sessionFactory) {
+		var dialect = sessionFactory.getJdbcServices().getDialect();
+		var supportsRowId = dialect.supportsInsertReturning()
+				&& dialect.supportsInsertReturningRowId()
+				&& noCustomSql( entityPersister, EventType.INSERT );
+		return forTiming( entityPersister, EventType.INSERT, supportsRowId );
 	}
 
-	public static @Nullable GeneratedValuesCollector forUpdate(EntityPersister entityPersister) {
-		return forTiming( entityPersister, EventType.UPDATE );
+	public static @Nullable GeneratedValuesCollector forUpdate(
+			EntityPersister entityPersister,
+			SessionFactoryImplementor sessionFactory) {
+		return forTiming( entityPersister, EventType.UPDATE, false );
 	}
 
-	public static @Nullable GeneratedValuesCollector forTiming(EntityPersister entityPersister, EventType timing) {
+	public static @Nullable GeneratedValuesCollector forTiming(
+			EntityPersister entityPersister,
+			EventType timing,
+			boolean supportsRowId) {
 		final List<? extends ModelPart> generatedModelParts = GeneratedValuesHelper.getActualGeneratedModelParts(
 				entityPersister,
 				timing,
 				true,
-				entityPersister.hasRowId()
+				supportsRowId
 		);
 
 		return CollectionHelper.isEmpty( generatedModelParts )

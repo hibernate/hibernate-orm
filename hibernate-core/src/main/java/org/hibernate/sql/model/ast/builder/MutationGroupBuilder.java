@@ -73,8 +73,8 @@ public class MutationGroupBuilder implements SelectableConsumer {
 	public void accept(int selectionIndex, SelectableMapping selectableMapping) {
 		final EntityPersister entityPersister = mutationTarget.getTargetPart().getEntityPersister();
 		final String tableNameForMutation = entityPersister.physicalTableNameForMutation( selectableMapping );
-		final ColumnValuesTableMutationBuilder<?> mutationBuilder = findTableDetailsBuilder( tableNameForMutation );
-		mutationBuilder.addValueColumn( selectableMapping );
+		final AssigningTableMutationBuilder<?> mutationBuilder = findTableDetailsBuilder( tableNameForMutation );
+		mutationBuilder.addColumnAssignment( selectableMapping );
 	}
 
 	public MutationGroup buildMutationGroup() {

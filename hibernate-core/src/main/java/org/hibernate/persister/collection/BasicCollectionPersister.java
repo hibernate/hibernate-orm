@@ -28,8 +28,6 @@ import org.hibernate.persister.collection.mutation.OperationProducer;
 import org.hibernate.persister.collection.mutation.RemoveCoordinator;
 import org.hibernate.persister.collection.mutation.RowMutationOperations;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
-import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorNoOp;
-import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorStandard;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.filter.internal.StaticFilterAliasGenerator;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;

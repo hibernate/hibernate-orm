@@ -74,14 +74,6 @@ import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
-import org.hibernate.metamodel.mapping.AuditMapping;
-import org.hibernate.metamodel.mapping.AuxiliaryMapping;
-import org.hibernate.metamodel.mapping.TemporalMapping;
-import org.hibernate.persister.entity.mutation.DeleteDecomposer;
-import org.hibernate.persister.entity.mutation.EntityGraphMutationTarget;
-import org.hibernate.persister.entity.mutation.InsertDecomposer;
-import org.hibernate.persister.entity.mutation.UpdateDecomposer;
-import org.hibernate.persister.filter.internal.FilterHelper;
 import org.hibernate.internal.util.ImmutableBitSet;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.collections.LockModeEnumMap;
@@ -116,8 +108,10 @@ import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.AttributeMappingsMap;
-import org.hibernate.metamodel.mapping.DiscriminatorValue;
+import org.hibernate.metamodel.mapping.AuditMapping;
+import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
+import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -137,6 +131,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
@@ -164,12 +159,8 @@ import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.DeleteDecomposer;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
-import org.hibernate.persister.entity.mutation.InsertCoordinatorStandard;
 import org.hibernate.persister.entity.mutation.InsertDecomposer;
-import org.hibernate.persister.entity.mutation.MergeCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
-import org.hibernate.persister.entity.mutation.UpdateCoordinatorNoOp;
-import org.hibernate.persister.entity.mutation.UpdateCoordinatorStandard;
 import org.hibernate.persister.entity.mutation.UpdateDecomposer;
 import org.hibernate.persister.filter.internal.FilterHelper;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
@@ -307,9 +298,6 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.buildNonEncapsulatedCompositeIdentifierMapping;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.resolveAggregateColumnBasicType;
 import static org.hibernate.metamodel.mapping.internal.MappingModelHelper.isCompatibleModelPart;
-import static org.hibernate.models.internal.util.CollectionHelper.isNotEmpty;
-import static org.hibernate.persister.entity.DiscriminatorHelper.NOT_NULL_DISCRIMINATOR;
-import static org.hibernate.persister.entity.DiscriminatorHelper.NULL_DISCRIMINATOR;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
@@ -3885,11 +3873,11 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void addSoftDeleteToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder) {
-		if ( softDeleteMapping != null ) {
+		if ( getSoftDeleteMapping() != null ) {
 			final TableInsertBuilder insertBuilder = insertGroupBuilder.apply( getIdentifierTableName() );
 			final var mutatingTable = insertBuilder.getMutatingTable();
-			final var columnReference = new ColumnReference( mutatingTable, softDeleteMapping );
-			final var nonDeletedValueBinding = softDeleteMapping.createNonDeletedValueBinding( columnReference );
+			final var columnReference = new ColumnReference( mutatingTable, getSoftDeleteMapping() );
+			final var nonDeletedValueBinding = getSoftDeleteMapping().createNonDeletedValueBinding( columnReference );
 			insertBuilder.addValueColumn( nonDeletedValueBinding );
 		}
 	}

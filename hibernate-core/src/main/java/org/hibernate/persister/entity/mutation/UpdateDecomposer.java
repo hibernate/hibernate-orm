@@ -140,7 +140,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				? generateDynamicUpdateOperations( identifier, rowId, state, previousState, previousState, updateable, valuesAnalysis, session )
 				: staticUpdateOperations;
 
-		var generatedValuesCollector = GeneratedValuesCollector.forUpdate( entityPersister );
+		var generatedValuesCollector = GeneratedValuesCollector.forUpdate( entityPersister, sessionFactory );
 		final PostUpdateHandling postUpdateHandling = new PostUpdateHandling( action, cacheKey, previousVersion, generatedValuesCollector );
 
 		final List<PlannedOperation> operations = CollectionHelper.arrayList( effectiveGroup.size() );

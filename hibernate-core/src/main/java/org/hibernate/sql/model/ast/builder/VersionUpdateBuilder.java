@@ -86,7 +86,7 @@ public class VersionUpdateBuilder implements TableMutationBuilder<TableUpdateSta
 	public TableUpdateStandard buildMutation() {
 		var sqlBuffer = new StringBuilder( "update " );
 		sqlBuffer.append( tableReference.getTableName() );
-		sqlBuffer.append( " set " ).append( newVersionBinding.columnReference().getColumnExpression() ).append( " = ? " );
+		sqlBuffer.append( " set " ).append( newVersionBinding.getColumnReference().getColumnExpression() ).append( " = ? " );
 		sqlBuffer.append( " where " );
 		boolean first = true;
 		for ( int i = 0; i < restrictionBindings.size(); i++ ) {
@@ -96,7 +96,7 @@ public class VersionUpdateBuilder implements TableMutationBuilder<TableUpdateSta
 			first = false;
 
 			var restrictionBinding = restrictionBindings.get( i );
-			sqlBuffer.append( restrictionBinding.columnReference().getColumnExpression() ).append( " = ? " );
+			sqlBuffer.append( restrictionBinding.getColumnReference().getColumnExpression() ).append( " = ? " );
 		}
 
 		var sql = sqlBuffer.toString();

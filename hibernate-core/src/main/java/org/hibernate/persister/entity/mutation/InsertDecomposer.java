@@ -83,7 +83,7 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		var valuesAnalysis = new SimpleInsertValuesAnalysis( entityPersister, state );
 		var effectiveGroup = chooseEffectiveInsertGroup( insertable, entity, identifier, hasStateDependentGenerator, session );
 
-		final var generatedValuesCollector = GeneratedValuesCollector.forInsert( entityPersister );
+		final var generatedValuesCollector = GeneratedValuesCollector.forInsert( entityPersister, sessionFactory );
 		final PostInsertHandling postInsertHandling = new PostInsertHandling( action, generatedValuesCollector );
 
 		// Compute whether this entity insert needs identity pre-phase

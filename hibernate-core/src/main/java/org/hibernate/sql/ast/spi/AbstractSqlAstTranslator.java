@@ -5904,7 +5904,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Deprecated(forRemoval = true, since = "7.4")
 	protected Predicate createRowMatchingPredicate(TableGroup dmlTargetTableGroup, String lhsAlias, String rhsAlias) {
 		return createRowMatchingPredicate(
-				(MutationTarget<?>) dmlTargetTableGroup.getModelPart().asEntityMappingType(),
+				(MutationTarget<?,?>) dmlTargetTableGroup.getModelPart().asEntityMappingType(),
 				dmlTargetTableGroup,
 				lhsAlias,
 				rhsAlias
@@ -5912,7 +5912,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected Predicate createRowMatchingPredicate(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			TableGroup dmlTargetTableGroup,
 			String lhsAlias,
 			String rhsAlias) {

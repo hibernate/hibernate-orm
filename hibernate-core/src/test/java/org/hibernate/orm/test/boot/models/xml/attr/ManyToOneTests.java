@@ -8,8 +8,6 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.JoinColumnOrFormula;
-import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDelete;
@@ -50,20 +48,15 @@ public class ManyToOneTests {
 				.addXmlMappings( "mappings/models/attr/many-to-one/simple.xml" )
 				.build();
 
-		final ModelsContext ModelsContext = createBuildingContext( managedResources, serviceRegistry );
-		final ClassDetailsRegistry classDetailsRegistry = ModelsContext.getClassDetailsRegistry();
+		final ModelsContext modelsContext = createBuildingContext( managedResources, serviceRegistry );
+		final ClassDetailsRegistry classDetailsRegistry = modelsContext.getClassDetailsRegistry();
 
 		final ClassDetails classDetails = classDetailsRegistry.getClassDetails( SimpleEntity.class.getName() );
 
 		final FieldDetails parentField = classDetails.findFieldByName( "parent" );
 		final ManyToOne manyToOneAnn = parentField.getDirectAnnotationUsage( ManyToOne.class );
 		assertThat( manyToOneAnn ).isNotNull();
-		final JoinColumnsOrFormulas joinColumnsOrFormulas = parentField.getDirectAnnotationUsage( JoinColumnsOrFormulas.class );
-		assertThat( joinColumnsOrFormulas.value() ).hasSize( 1 );
-		final JoinColumnOrFormula joinColumnOrFormula = joinColumnsOrFormulas.value()[0];
-		assertThat( joinColumnOrFormula.formula() ).isNotNull();
-		assertThat( joinColumnOrFormula.formula().value() ).isNull();
-		final JoinColumn joinColumnAnn = joinColumnOrFormula.column();
+		final JoinColumn joinColumnAnn = parentField.getAnnotationUsage( JoinColumn.class, modelsContext );
 		assertThat( joinColumnAnn ).isNotNull();
 		assertThat( joinColumnAnn.name() ).isEqualTo( "parent_fk" );
 

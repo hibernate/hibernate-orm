@@ -52,13 +52,15 @@ public class EntityExporter {
 	private static final String TEMPLATE_NAME = "main.entity.ftl";
 	private static final String LEGACY_TEMPLATE_NAME = "pojo/Pojo.ftl";
 
-	private final List<ClassDetails> entities;
-	private final ModelsContext modelsContext;
-	private final boolean annotated;
-	private final boolean useGenerics;
-	private final Configuration freemarkerConfig;
+	private List<ClassDetails> entities;
+	private ModelsContext modelsContext;
+	private boolean annotated;
+	private boolean useGenerics;
+	private Configuration freemarkerConfig;
 
-	private final String templateName;
+	private String templateName;
+
+	protected EntityExporter() {}
 
 	private EntityExporter(List<ClassDetails> entities, ModelsContext modelsContext,
 						   boolean annotated, boolean useGenerics, String[] templatePath) {

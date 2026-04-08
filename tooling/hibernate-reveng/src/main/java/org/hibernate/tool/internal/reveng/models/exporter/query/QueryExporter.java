@@ -38,8 +38,10 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
  */
 public class QueryExporter {
 
-	private final Metadata metadata;
-	private final List<String> queries;
+	private Metadata metadata;
+	private List<String> queries;
+
+	protected QueryExporter() {}
 
 	private QueryExporter(Metadata metadata, List<String> queries) {
 		this.metadata = metadata;

@@ -35,7 +35,9 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
  */
 public class CfgXmlExporter {
 
-	private final List<ClassDetails> entities;
+	private List<ClassDetails> entities;
+
+	protected CfgXmlExporter() {}
 
 	private CfgXmlExporter(List<ClassDetails> entities) {
 		this.entities = entities;

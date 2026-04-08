@@ -50,9 +50,11 @@ public class HbmXmlExporter {
 	private static final String DEFAULT_TEMPLATE_PATH = "/models/hbm";
 	private static final String TEMPLATE_NAME = "main.hbm.ftl";
 
-	private final Configuration freemarkerConfig;
-	private final HibernateMappingSettings mappingSettings;
+	private Configuration freemarkerConfig;
+	private HibernateMappingSettings mappingSettings;
 	private List<ClassDetails> entities;
+
+	protected HbmXmlExporter() {}
 
 	private HbmXmlExporter(String[] templatePath, HibernateMappingSettings mappingSettings) {
 		this.freemarkerConfig = new Configuration(Configuration.VERSION_2_3_33);

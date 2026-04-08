@@ -51,11 +51,13 @@ public class DaoExporter {
 	private static final String DEFAULT_TEMPLATE_PATH = "/models/dao";
 	private static final String TEMPLATE_NAME = "main.dao.ftl";
 
-	private final List<ClassDetails> entities;
-	private final ModelsContext modelsContext;
-	private final boolean ejb3;
-	private final String sessionFactoryName;
-	private final Configuration freemarkerConfig;
+	private List<ClassDetails> entities;
+	private ModelsContext modelsContext;
+	private boolean ejb3;
+	private String sessionFactoryName;
+	private Configuration freemarkerConfig;
+
+	protected DaoExporter() {}
 
 	private DaoExporter(List<ClassDetails> entities, ModelsContext modelsContext,
 						boolean ejb3, String sessionFactoryName, String[] templatePath) {

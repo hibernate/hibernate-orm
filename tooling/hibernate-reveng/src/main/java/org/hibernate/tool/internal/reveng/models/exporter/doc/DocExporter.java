@@ -106,11 +106,13 @@ public class DocExporter {
 	private static final Logger log =
 			Logger.getLogger(DocExporter.class.getName());
 
-	private final List<ClassDetails> entities;
-	private final Map<String, TableMetadata> tableMetadataMap;
-	private final String dotExecutable;
-	private final Configuration freemarkerConfig;
-	private final BeansWrapper beansWrapper;
+	private List<ClassDetails> entities;
+	private Map<String, TableMetadata> tableMetadataMap;
+	private String dotExecutable;
+	private Configuration freemarkerConfig;
+	private BeansWrapper beansWrapper;
+
+	protected DocExporter() {}
 
 	private DocExporter(List<ClassDetails> entities,
 						Map<String, TableMetadata> tableMetadataMap,

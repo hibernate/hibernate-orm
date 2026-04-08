@@ -81,11 +81,13 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
  */
 public class DdlExporter {
 
-	private final List<ClassDetails> entities;
-	private final Properties properties;
+	private List<ClassDetails> entities;
+	private Properties properties;
 	private String delimiter = ";";
 	private boolean format = false;
 	private boolean haltOnError = false;
+
+	protected DdlExporter() {}
 
 	private DdlExporter(List<ClassDetails> entities, Properties properties) {
 		this.entities = entities;

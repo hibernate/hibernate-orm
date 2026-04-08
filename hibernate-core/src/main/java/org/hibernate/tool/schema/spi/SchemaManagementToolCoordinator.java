@@ -777,7 +777,13 @@ public class SchemaManagementToolCoordinator {
 		}
 
 		public static Set<ActionGrouping> interpret(Metadata metadata, Map<?, ?> configuration) {
-			return interpret( metadata.getContributors(), configuration );
+			Set<String> contributors = metadata.getContributors();
+			if ( contributors.isEmpty() ) {
+				// even with no contributors (e.g. no entities), schema actions
+				// such as import.sql execution should still be processed
+				contributors = Set.of( "orm" );
+			}
+			return interpret( contributors, configuration );
 		}
 
 		@Deprecated(since = "7.2", forRemoval = true)

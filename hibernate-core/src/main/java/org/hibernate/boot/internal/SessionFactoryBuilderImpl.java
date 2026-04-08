@@ -11,6 +11,7 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.StatementObserver;
 import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -150,6 +151,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyStatelessInterceptor(Supplier<? extends Interceptor> statelessInterceptorSupplier) {
 		optionsBuilder.applyStatelessInterceptorSupplier( statelessInterceptorSupplier );
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyStatementObserver(StatementObserver statementObserver) {
+		optionsBuilder.applyStatementObserver( statementObserver );
 		return this;
 	}
 

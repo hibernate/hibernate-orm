@@ -90,6 +90,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 			SharedSessionContractImplementor session) {
 		final String sql = statementDetails.getSqlString();
 		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
+		session.getJdbcSessionContext().getStatementObserver().performingSql( sql, -1 );
 		try {
 			final var preparedStatement = statementDetails.resolveStatement();
 			jdbcValueBindings.beforeStatement( statementDetails );

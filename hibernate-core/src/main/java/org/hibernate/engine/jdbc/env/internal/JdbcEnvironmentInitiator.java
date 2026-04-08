@@ -5,6 +5,7 @@
 package org.hibernate.engine.jdbc.env.internal;
 
 import org.hibernate.HibernateException;
+import org.hibernate.StatementObserver;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.DatabaseVersion;
@@ -774,6 +775,11 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		@Override
 		public StatementInspector getStatementInspector() {
 			return null;
+		}
+
+		@Override
+		public StatementObserver getStatementObserver() {
+			return StatementObserver::swallowSql;
 		}
 
 		@Override

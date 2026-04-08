@@ -11,6 +11,7 @@ import jakarta.persistence.PersistenceUnitTransactionType;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import org.hibernate.SessionFactory;
+import org.hibernate.StatementObserver;
 import org.hibernate.boot.scan.spi.ScanningProvider;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
@@ -641,6 +642,26 @@ public class HibernatePersistenceConfiguration extends PersistenceConfiguration 
 	 */
 	public HibernatePersistenceConfiguration schemaToolingAction(Action action) {
 		property( SchemaToolingSettings.HBM2DDL_AUTO, action );
+		return this;
+	}
+
+	/**
+	 * Applies a {@linkplain StatementObserver} to the {@linkplain EntityManagerFactory} being built.
+	 *
+	 * @see JdbcSettings#STATEMENT_OBSERVER
+	 */
+	public HibernatePersistenceConfiguration statementObserver(StatementObserver statementObserver) {
+		property( JdbcSettings.STATEMENT_OBSERVER, statementObserver );
+		return this;
+	}
+
+	/**
+	 * Applies a {@linkplain StatementObserver} to the {@linkplain EntityManagerFactory} being built.
+	 *
+	 * @see JdbcSettings#STATEMENT_OBSERVER
+	 */
+	public HibernatePersistenceConfiguration statementObserver(Class<? extends StatementObserver> statementObserverImpl) {
+		property( JdbcSettings.STATEMENT_OBSERVER, statementObserverImpl );
 		return this;
 	}
 

@@ -4,9 +4,8 @@
  */
 package org.hibernate.orm.test.annotations.cid.keymanytoone;
 
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -24,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		annotatedClasses = {
 				Card.class, CardField.class, Key.class
 		})
-@SessionFactory(useCollectingStatementInspector = true)
+@SessionFactory(useCollectingStatementObserver = true)
 public class EagerKeyManyToOneTest {
 	public static final String CARD_ID = "cardId";
 	public static final String CARD_MODEL = "Gran Torino";
@@ -57,8 +56,8 @@ public class EagerKeyManyToOneTest {
 		// meant to test against regression relating to http://opensource.atlassian.com/projects/hibernate/browse/HHH-2277
 		// and http://opensource.atlassian.com/projects/hibernate/browse/HHH-4147
 
-		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
-		statementInspector.clear();
+		var sqlCollector = scope.getCollectingStatementObserver();
+		sqlCollector.clear();
 		scope.inTransaction(
 				session -> {
 					try {
@@ -72,8 +71,8 @@ public class EagerKeyManyToOneTest {
 						assertEquals( KEY_ID, primaryKey.getKey().getId() );
 						assertEquals( KEY_SERIAL, primaryKey.getKey().getSerial() );
 
-						statementInspector.assertExecutedCount( 1 );
-						statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 2 );
+						sqlCollector.assertStatements().hasSize( 1 );
+						sqlCollector.assertQuery( 0 ).containsToken( " join ", 2 );
 					}
 					catch (StackOverflowError soe) {
 						fail( "eager + key-many-to-one caused stack-overflow in annotations" );

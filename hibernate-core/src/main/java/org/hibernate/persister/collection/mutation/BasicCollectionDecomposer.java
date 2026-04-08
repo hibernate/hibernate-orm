@@ -18,7 +18,7 @@ import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.collection.spi.CollectionChangeSet;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.collection.spi.SnapshotPositioned;
+import org.hibernate.collection.spi.SnapshotIndexed;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -400,12 +400,14 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						deleteRowPlan.jdbcOperation(),
 						bindPlan,
 						deleteOrdinal,
-						"DeleteRow[" + removal.snapshotPosition() + "](" + persister.getRolePath() + ")"
+						"DeleteRow[" + removal.snapshotIndex() + "](" + persister.getRolePath() + ")"
 				) );
 			}
 		}
 
 		// Phase 2: UPDATE_ORDER shifted elements (using two-phase unique constraint break)
+		// Note: for reasons discussed on PersistentMap#computeEntityCollectionChangeSet and
+		// 		#computeElementCollectionChangeSet, shifts are not supported for Maps only Lists
 		if ( orderUpdatePlan != null && !changeSet.shifts().isEmpty() ) {
 			final List<PlannedOperation> tempPhaseOps = new ArrayList<>();
 			final List<PlannedOperation> finalPhaseOps = new ArrayList<>();
@@ -416,7 +418,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			final int tempOffset = Integer.MAX_VALUE / 2;
 
 			for ( CollectionChangeSet.Shift shift : changeSet.shifts() ) {
-				final int tempPosition = tempOffset + shift.currentPosition();
+				final int tempPosition = tempOffset + (int) shift.currentIndex();
 
 				// TEMP PHASE: Move from old position to temporary position
 				tempPhaseOps.add( new PlannedOperation(
@@ -427,13 +429,13 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 								collection,
 								key,
 								shift.element(),
-								shift.snapshotPosition(),  // WHERE: old position
+								(int) shift.snapshotIndex(),  // WHERE: old position
 								tempPosition,              // SET: temporary position
 								orderUpdatePlan.values(),
 								orderUpdatePlan.restrictions()
 						),
 						tempPhaseOrdinal,
-						"UpdateRowTemp[" + shift.snapshotPosition() + "→" + tempPosition + "](" + persister.getRolePath() + ")"
+						"UpdateRowTemp[" + shift.snapshotIndex() + "→" + tempPosition + "](" + persister.getRolePath() + ")"
 				) );
 
 				// FINAL PHASE: Move from temporary position to final position
@@ -446,12 +448,12 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 								key,
 								shift.element(),
 								tempPosition,              // WHERE: temporary position
-								shift.currentPosition(),   // SET: final position
+								(int) shift.currentIndex(),   // SET: final position
 								orderUpdatePlan.values(),
 								orderUpdatePlan.restrictions()
 						),
 						finalPhaseOrdinal,
-						"UpdateRowFinal[" + tempPosition + "→" + shift.currentPosition() + "](" + persister.getRolePath() + ")"
+						"UpdateRowFinal[" + tempPosition + "→" + shift.currentIndex() + "](" + persister.getRolePath() + ")"
 				) );
 			}
 
@@ -463,13 +465,30 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		if ( insertRowPlan != null && !changeSet.additions().isEmpty() ) {
 			final int insertOrdinal = calculateOrdinal( ordinalBase, Slot.INSERT );
 			for ( CollectionChangeSet.Addition addition : changeSet.additions() ) {
+				// For Maps, create a Map.Entry from (key=addition.index(), value=addition.element())
+				// For Lists, use the element directly and pass the numeric index
+				final boolean isMap = persister.getCollectionSemantics().getCollectionClassification().isMap();
+				final Object rowValue;
+				final int entryIndex;
+
+				if ( isMap ) {
+					// For Maps: bindInsertRowValues expects a Map.Entry to extract both key and value
+					rowValue = Map.entry( addition.index(), addition.element() );
+					entryIndex = -1;  // Not used for Maps
+				}
+				else {
+					// For Lists: rowValue is the element, and entryIndex is the position
+					rowValue = addition.element();
+					entryIndex = (Integer) addition.index();
+				}
+
 				final BindPlan bindPlan = new SingleRowInsertBindPlan(
 						persister,
 						insertRowPlan.values(),
 						collection,
 						key,
-						addition.element(),
-						addition.currentPosition()
+						rowValue,
+						entryIndex
 				);
 
 				operationConsumer.accept( new PlannedOperation(
@@ -478,14 +497,52 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						insertRowPlan.jdbcOperation(),
 						bindPlan,
 						insertOrdinal,
-						"InsertRow[" + addition.currentPosition() + "](" + persister.getRolePath() + ")"
+						"InsertRow[" + addition.index() + "](" + persister.getRolePath() + ")"
 				) );
 			}
 		}
 
-		// Phase 4: VALUE CHANGE for element collections (future enhancement)
-		// Currently not handling valueChanges - would need UPDATE operations for element columns
-		// This is a potential future optimization for element collections
+		// Phase 4: VALUE CHANGE for element collections
+		// Update rows where the value changed at the same position/key
+		final var updateRowPlan = jdbcOperations.updateRowPlan();
+		if ( updateRowPlan != null && !changeSet.valueChanges().isEmpty() ) {
+			final int updateOrdinal = calculateOrdinal( ordinalBase, Slot.UPDATE );
+			for ( CollectionChangeSet.ValueChange valueChange : changeSet.valueChanges() ) {
+				// For Maps, need to create a Map.Entry with (key, newValue)
+				// For Lists, the index is the position and entry is just the element
+				final Object entry;
+				final int entryIndex;
+
+				if ( persister.getCollectionSemantics().getCollectionClassification().isMap() ) {
+					// For Maps: create Map.Entry(mapKey, newValue)
+					entry = Map.entry( valueChange.index(), valueChange.newValue() );
+					entryIndex = -1;  // Maps don't use numeric index
+				}
+				else {
+					// For Lists: entry is the element, index is the position
+					entry = valueChange.newValue();
+					entryIndex = (Integer) valueChange.index();
+				}
+
+				final BindPlan bindPlan = new SingleRowUpdateBindPlan(
+						collection,
+						key,
+						entry,
+						entryIndex,
+						updateRowPlan.values(),
+						updateRowPlan.restrictions()
+				);
+
+				operationConsumer.accept( new PlannedOperation(
+						tableDescriptor,
+						MutationKind.UPDATE,
+						updateRowPlan.jdbcOperation(),
+						bindPlan,
+						updateOrdinal,
+						"UpdateValue[" + valueChange.index() + "](" + persister.getRolePath() + ")"
+				) );
+			}
+		}
 	}
 
 	private void planOrderOnlyUpdateOperations(
@@ -1072,8 +1129,10 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		var attribute = persister.getAttributeMapping();
 		var elementDescriptor = attribute.getElementDescriptor();
 
+		// For Maps, rowValue is a Map.Entry - extract the element (value) first
+		final Object element = collection.getElement( rowValue );
 		elementDescriptor.decompose(
-				rowValue,
+				element,
 				jdbcValueBindings::bindAssignment,
 				session
 		);
@@ -1253,8 +1312,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			}
 
 			// Find entities in snapshot that are no longer in current map (by identity)
-			final List<EntityPosition> removedEntities = new ArrayList<>();
-			int snapshotIndex = 0;
+			final List<EntityPosition<?>> removedEntities = new ArrayList<>();
 			for ( Map.Entry<?, ?> snapshotEntry : snapshot.entrySet() ) {
 				final Object snapshotEntity = snapshotEntry.getValue();
 				if ( snapshotEntity != null ) {
@@ -1266,10 +1324,10 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						}
 					}
 					if ( !found ) {
-						removedEntities.add( new EntityPosition( snapshotEntity, snapshotIndex ) );
+						// For maps, use the actual map key (not iteration index)
+						removedEntities.add( new EntityPosition<>( snapshotEntity, snapshotEntry.getKey() ) );
 					}
 				}
-				snapshotIndex++;
 			}
 			return removedEntities.iterator();
 		}
@@ -1288,7 +1346,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			}
 
 			// Find entities in snapshot that are no longer in current list (by identity)
-			final List<EntityPosition> removedEntities = new ArrayList<>();
+			final List<EntityPosition<Integer>> removedEntities = new ArrayList<>();
 			for ( int snapshotIndex = 0; snapshotIndex < snapshot.size(); snapshotIndex++ ) {
 				final Object snapshotEntity = snapshot.get( snapshotIndex );
 				if ( snapshotEntity != null ) {
@@ -1300,7 +1358,8 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						}
 					}
 					if ( !found ) {
-						removedEntities.add( new EntityPosition( snapshotEntity, snapshotIndex ) );
+						// For lists, use the numeric position
+						removedEntities.add( new EntityPosition<>( snapshotEntity, snapshotIndex ) );
 					}
 				}
 			}
@@ -1308,8 +1367,8 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		}
 	}
 
-	/** Helper record to track entity and its snapshot position for indexed deletions */
-	private record EntityPosition(Object element, int snapshotPosition) implements SnapshotPositioned {}
+	/** Helper record to track entity and its snapshot position/key for indexed deletions */
+	private record EntityPosition<K>(Object element, K snapshotIndex) implements SnapshotIndexed<K> {}
 
 	private void bindDeleteRestrictions(
 			PersistentCollection<?> collection,
@@ -1328,24 +1387,25 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 
 		// Handle SnapshotPositioned objects (Removal, EntityPosition, etc.)
 		final Object actualElement;
-		final int actualPosition;
-		if ( rowValue instanceof SnapshotPositioned positioned ) {
+		final Object actualKey;
+		if ( rowValue instanceof SnapshotIndexed<?> positioned ) {
 			actualElement = positioned.element();
-			actualPosition = positioned.snapshotPosition();
+			actualKey = positioned.snapshotIndex();
 		}
 		else {
 			actualElement = rowValue;
-			actualPosition = rowPosition;
+			actualKey = rowPosition;
 		}
 
 		// For row-based deletion, also restrict by element/index
 		// This differentiates deleteRows (specific rows) from remove (entire collection)
 		final var indexDescriptor = attribute.getIndexDescriptor();
 		if ( indexDescriptor != null ) {
-			// For indexed collections (lists, maps), restrict by index
-			// Use actualPosition from SnapshotPositioned if available, otherwise rowValue as index
-			final Object indexValue = (rowValue instanceof SnapshotPositioned)
-					? actualPosition
+			// For indexed collections (lists, maps), restrict by index/key
+			// - For Lists: actualKey is the numeric position (Integer)
+			// - For Maps: actualKey is the actual map key (any type)
+			final Object indexValue = (rowValue instanceof SnapshotIndexed<?>)
+					? actualKey
 					: rowValue;
 			indexDescriptor.decompose(
 					persister.incrementIndexByBase( indexValue ),

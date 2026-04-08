@@ -24,27 +24,27 @@ public record CollectionChangeSet(
 	/// Represents an element that was removed from the collection.
 	///
 	/// @param element The removed element
-	/// @param snapshotPosition The position where the element existed in the snapshot
-	public record Removal(Object element, int snapshotPosition) implements SnapshotPositioned {}
+	/// @param snapshotIndex The position/key where the element existed in the snapshot
+	public record Removal(Object element, Object snapshotIndex) implements SnapshotIndexed<Object> {}
 
 	/// Represents an element that was added to the collection.
 	///
 	/// @param element The added element
-	/// @param currentPosition The position where the element exists in the current collection
-	public record Addition(Object element, int currentPosition) {}
+	/// @param index The index where the element exists in the current collection
+	public record Addition(Object element, Object index) {}
 
 	/// Represents an element that changed position within the collection.
 	///
 	/// @param element The shifted element
-	/// @param snapshotPosition The position where the element existed in the snapshot
-	/// @param currentPosition The position where the element exists in the current collection
-	public record Shift(Object element, int snapshotPosition, int currentPosition) {}
+	/// @param snapshotIndex The index where the element existed in the snapshot
+	/// @param currentIndex The index where the element exists in the current collection
+	public record Shift(Object element, Object snapshotIndex, Object currentIndex) implements SnapshotIndexed<Object> {}
 
 	/// Represents an element whose value changed at the same position.
 	/// Applicable to element collections where the element itself (not the FK) is stored.
 	///
 	/// @param oldValue The value in the snapshot
 	/// @param newValue The value in the current collection
-	/// @param position The position where the value changed
-	public record ValueChange(Object oldValue, Object newValue, int position) {}
+	/// @param index The index where the value changed
+	public record ValueChange(Object oldValue, Object newValue, Object index) {}
 }

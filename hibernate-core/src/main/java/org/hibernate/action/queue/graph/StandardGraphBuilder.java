@@ -107,6 +107,9 @@ public class StandardGraphBuilder implements GraphBuilder {
 			final GroupNode n = new GroupNode( g, nodeId++ );
 			nodes.add( n );
 
+			// Pre-initialize edge lists for all nodes to avoid computeIfAbsent overhead
+			outgoing.put( n, new ArrayList<>() );
+
 			if ( g.kind() == MutationKind.INSERT ) {
 				insertNodeByTable.computeIfAbsent( (g.tableExpression()), k -> new ArrayList<>() ).add( n );
 			}
@@ -116,11 +119,6 @@ public class StandardGraphBuilder implements GraphBuilder {
 			else if ( g.kind() == MutationKind.DELETE ) {
 				deleteNodeByTable.computeIfAbsent( (g.tableExpression()), k -> new ArrayList<>() ).add( n );
 			}
-		}
-
-		// Pre-initialize edge lists for all nodes to avoid computeIfAbsent overhead
-		for ( GroupNode n : nodes ) {
-			outgoing.put( n, new ArrayList<>() );
 		}
 
 		long edgeId = 1;

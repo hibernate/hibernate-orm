@@ -100,22 +100,6 @@ public class FlushCoordinator {
 		executor = PlanStepExecutorFactory.create( session );
 	}
 
-	/// Deserialization constructor.
-	/// @see GraphBasedActionQueue#deserialize(ObjectInputStream, org.hibernate.action.queue.support.GraphBasedActionQueueFactory, SessionImplementor)
-	public FlushCoordinator(
-			Decomposer decomposer,
-			GraphBasedActionQueueFactory actionQueueFactory,
-			SessionImplementor session) {
-		this.constraintModel = actionQueueFactory.getConstraintModel();
-		planningOptions = actionQueueFactory.getPlanningOptions();
-		this.decomposer = decomposer;
-		this.session = session;
-
-		graphBuilder = new StandardGraphBuilder( actionQueueFactory.getConstraintModel(), actionQueueFactory.getPlanningOptions(), session );
-		flushPlanner = new StandardFlushPlanner( actionQueueFactory.getPlanningOptions() );
-		executor = PlanStepExecutorFactory.create( session );
-	}
-
 	/// Get the Decomposer (for accessing unresolved insert tracking).
 	///
 	/// @return the decomposer
@@ -543,5 +527,21 @@ public class FlushCoordinator {
 			SessionImplementor session) throws IOException, ClassNotFoundException {
 		var decomposer = Decomposer.deserialize(  ois, actionQueueFactory, session );
 		return new FlushCoordinator( decomposer, actionQueueFactory, session );
+	}
+
+	/// Deserialization constructor.
+	/// @see GraphBasedActionQueue#deserialize(ObjectInputStream, org.hibernate.action.queue.support.GraphBasedActionQueueFactory, SessionImplementor)
+	public FlushCoordinator(
+			Decomposer decomposer,
+			GraphBasedActionQueueFactory actionQueueFactory,
+			SessionImplementor session) {
+		this.constraintModel = actionQueueFactory.getConstraintModel();
+		planningOptions = actionQueueFactory.getPlanningOptions();
+		this.decomposer = decomposer;
+		this.session = session;
+
+		graphBuilder = new StandardGraphBuilder( actionQueueFactory.getConstraintModel(), actionQueueFactory.getPlanningOptions(), session );
+		flushPlanner = new StandardFlushPlanner( actionQueueFactory.getPlanningOptions() );
+		executor = PlanStepExecutorFactory.create( session );
 	}
 }

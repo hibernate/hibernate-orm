@@ -53,20 +53,20 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 		switch ( aggregateColumnTypeCode ) {
 			case JSON_ARRAY:
 			case JSON:
+				final String readExpression = aggregateParentReadExpression.isEmpty() ?
+						columnExpression
+						: "(" + aggregateParentReadExpression + ").\"" + columnExpression + "\"";
 				switch ( column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ) {
 					case JSON:
 					case JSON_ARRAY:
-						return template.replace(
-								placeholder,
-								"(" + aggregateParentReadExpression + ").\"" + columnExpression + "\""
-						);
+						return template.replace( placeholder, readExpression );
 					case BINARY:
 					case VARBINARY:
 					case LONG32VARBINARY:
 						// We encode binary data as hex, so we have to decode here
 						return template.replace(
 								placeholder,
-								hexDecodeExpression( queryExpression( "(" + aggregateParentReadExpression + ").\"" + columnExpression + "\"" ), column.getColumnDefinition() )
+								hexDecodeExpression( queryExpression( readExpression ), column.getColumnDefinition() )
 						);
 					case ARRAY:
 						final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) column.getJdbcMapping();
@@ -78,18 +78,18 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 								// We encode binary data as hex, so we have to decode here
 								return template.replace(
 										placeholder,
-										"(select array_agg(" + hexDecodeExpression( queryExpression( "(" + aggregateParentReadExpression + ").\"" + columnExpression + "\"[i.x]" ), elementTypeName ) + ") from system_range(1,10000) i where i.x<=coalesce(array_length((" + aggregateParentReadExpression + ").\"" + columnExpression + "\"),0))"
+										"(select array_agg(" + hexDecodeExpression( queryExpression( readExpression + "[i.x]" ), elementTypeName ) + ") from system_range(1,10000) i where i.x<=coalesce(array_length(" + readExpression + "),0))"
 								);
 							default:
 								return template.replace(
 										placeholder,
-										"(select array_agg(" + valueExpression( "(" + aggregateParentReadExpression + ").\"" + columnExpression + "\"[i.x]", elementTypeName ) + ") from system_range(1,10000) i where i.x<=coalesce(array_length((" + aggregateParentReadExpression + ").\"" + columnExpression + "\"),0))"
+										"(select array_agg(" + valueExpression( readExpression + "[i.x]", elementTypeName ) + ") from system_range(1,10000) i where i.x<=coalesce(array_length(" + readExpression + "),0))"
 								);
 						}
 					default:
 						return template.replace(
 								placeholder,
-								columnExpression( aggregateParentReadExpression, columnExpression, column.getColumnDefinition() )
+								valueExpression( readExpression, column.getColumnDefinition() )
 						);
 				}
 		}
@@ -100,10 +100,6 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 		final String elementTypeName = arrayTypeName.substring( 0, arrayTypeName.lastIndexOf( " array" ) );
 		// Doing array_agg on clob produces funky results
 		return elementTypeName.equals( "clob" ) ? "varchar" : elementTypeName;
-	}
-
-	private static String columnExpression(String aggregateParentReadExpression, String columnExpression, String columnType) {
-		return valueExpression( "(" + aggregateParentReadExpression + ").\"" + columnExpression + "\"", columnType );
 	}
 
 	private static String hexDecodeExpression(String valueExpression, String columnType) {

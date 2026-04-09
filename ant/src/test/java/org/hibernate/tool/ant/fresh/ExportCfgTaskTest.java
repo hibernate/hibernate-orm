@@ -30,9 +30,9 @@ import java.util.Properties;
 
 import org.apache.tools.ant.types.Environment.Variable;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.tool.api.export.ExporterConstants;
-import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
+import org.hibernate.tool.reveng.api.export.ExporterConstants;
+import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tools.test.util.HibernateUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

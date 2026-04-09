@@ -31,7 +31,7 @@ import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.FileSet;
-import org.hibernate.tool.api.java.DefaultJavaPrettyPrinterStrategy;
+import org.hibernate.tool.reveng.api.java.DefaultJavaPrettyPrinterStrategy;
 
 public class JavaFormatterTask extends Task {
 	

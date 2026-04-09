@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.lang.reflect.Field;
 
-import org.hibernate.tool.ide.completion.HQLCodeAssist;
+import org.hibernate.tool.reveng.ide.completion.HQLCodeAssist;
 import org.hibernate.tool.orm.jbt.internal.factory.ConfigurationWrapperFactory;
 import org.hibernate.tool.orm.jbt.internal.factory.HqlCodeAssistWrapperFactory;
 import org.junit.jupiter.api.BeforeEach;

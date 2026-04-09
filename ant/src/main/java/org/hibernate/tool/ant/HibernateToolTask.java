@@ -31,7 +31,7 @@ import org.apache.tools.ant.types.Environment;
 import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.PropertySet;
 import org.hibernate.tool.ant.util.ExceptionUtil;
-import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.util.StringUtil;
 
 /**

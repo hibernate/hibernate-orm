@@ -17,7 +17,7 @@
  */
 package org.hibernate.tool.ant.fresh;
 
-import org.hibernate.tool.api.export.ExporterConstants;
+import org.hibernate.tool.reveng.api.export.ExporterConstants;
 
 public class HibernateToolTask {
 	

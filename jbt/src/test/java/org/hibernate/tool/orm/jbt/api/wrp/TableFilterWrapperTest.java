@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.hibernate.tool.internal.reveng.strategy.TableFilter;
+import org.hibernate.tool.reveng.internal.reveng.strategy.TableFilter;
 import org.hibernate.tool.orm.jbt.internal.factory.TableFilterWrapperFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

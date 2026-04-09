@@ -23,9 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 import java.lang.reflect.Field;
 
-import org.hibernate.tool.api.reveng.RevengSettings;
-import org.hibernate.tool.api.reveng.RevengStrategy;
-import org.hibernate.tool.internal.reveng.strategy.AbstractStrategy;
+import org.hibernate.tool.reveng.api.reveng.RevengSettings;
+import org.hibernate.tool.reveng.api.reveng.RevengStrategy;
+import org.hibernate.tool.reveng.internal.reveng.strategy.AbstractStrategy;
 import org.hibernate.tool.orm.jbt.internal.factory.RevengSettingsWrapperFactory;
 import org.hibernate.tool.orm.jbt.internal.factory.RevengStrategyWrapperFactory;
 import org.junit.jupiter.api.BeforeEach;

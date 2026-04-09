@@ -19,6 +19,7 @@ package org.hibernate.tool.api.export;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.hibernate.tool.reveng.api.export.ExporterType;
 import org.junit.jupiter.api.Test;
 
 public class ExporterTypeTest {

@@ -22,12 +22,12 @@ import java.io.StringWriter;
 import java.util.Properties;
 
 import org.hibernate.cfg.Configuration;
-import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.api.export.ExporterConstants;
-import org.hibernate.tool.internal.export.cfg.CfgExporter;
-import org.hibernate.tool.internal.export.common.GenericExporter;
-import org.hibernate.tool.internal.export.ddl.DdlExporter;
-import org.hibernate.tool.internal.export.query.QueryExporter;
+import org.hibernate.tool.reveng.api.export.Exporter;
+import org.hibernate.tool.reveng.api.export.ExporterConstants;
+import org.hibernate.tool.reveng.internal.export.cfg.CfgExporter;
+import org.hibernate.tool.reveng.internal.export.common.GenericExporter;
+import org.hibernate.tool.reveng.internal.export.ddl.DdlExporter;
+import org.hibernate.tool.reveng.internal.export.query.QueryExporter;
 import org.hibernate.tool.orm.jbt.api.wrp.ArtifactCollectorWrapper;
 import org.hibernate.tool.orm.jbt.api.wrp.ConfigurationWrapper;
 import org.hibernate.tool.orm.jbt.api.wrp.DdlExporterWrapper;

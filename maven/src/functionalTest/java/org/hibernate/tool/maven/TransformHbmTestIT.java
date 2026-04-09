@@ -12,7 +12,7 @@ import java.nio.file.Paths;
 import java.util.Objects;
 
 import org.apache.maven.cli.MavenCli;
-import org.hibernate.tool.api.version.Version;
+import org.hibernate.tool.reveng.api.version.Version;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;

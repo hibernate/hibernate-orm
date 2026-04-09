@@ -22,8 +22,8 @@ import java.util.Properties;
 
 import org.apache.tools.ant.BuildException;
 import org.hibernate.HibernateException;
-import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
+import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
 
 public class JPAConfigurationTask extends ConfigurationTask {
 	

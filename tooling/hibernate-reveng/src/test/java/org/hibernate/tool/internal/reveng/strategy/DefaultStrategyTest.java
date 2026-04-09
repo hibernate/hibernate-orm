@@ -19,9 +19,11 @@
 package org.hibernate.tool.internal.reveng.strategy;
 
 import org.hibernate.mapping.Column;
-import org.hibernate.tool.api.reveng.RevengSettings;
-import org.hibernate.tool.api.reveng.RevengStrategy;
-import org.hibernate.tool.api.reveng.TableIdentifier;
+import org.hibernate.tool.reveng.api.reveng.RevengSettings;
+import org.hibernate.tool.reveng.api.reveng.RevengStrategy;
+import org.hibernate.tool.reveng.api.reveng.TableIdentifier;
+import org.hibernate.tool.reveng.internal.reveng.strategy.DefaultStrategy;
+import org.hibernate.tool.reveng.internal.reveng.strategy.DelegatingStrategy;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Types;

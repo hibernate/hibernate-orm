@@ -20,7 +20,9 @@ package org.hibernate.tool.api.reveng;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
+import org.hibernate.tool.reveng.api.reveng.RevengStrategy;
+import org.hibernate.tool.reveng.api.reveng.RevengStrategyFactory;
+import org.hibernate.tool.reveng.internal.reveng.strategy.DefaultStrategy;
 import org.junit.jupiter.api.Test;
 
 
@@ -28,7 +30,7 @@ public class ReverseEngineeringStrategyFactoryTest {
 	
 	@Test
 	public void testCreateReverseEngineeringStrategy() {
-		RevengStrategy reverseEngineeringStrategy = 
+		RevengStrategy reverseEngineeringStrategy =
 				RevengStrategyFactory.createReverseEngineeringStrategy();
 		assertNotNull(reverseEngineeringStrategy);
 		assertEquals(

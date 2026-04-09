@@ -26,7 +26,7 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.reveng.RevengStrategy;
+import org.hibernate.tool.reveng.api.reveng.RevengStrategy;
 import org.hibernate.tool.orm.jbt.api.wrp.ConfigurationWrapper;
 import org.hibernate.tool.orm.jbt.api.wrp.NamingStrategyWrapper;
 import org.hibernate.tool.orm.jbt.api.wrp.PersistentClassWrapper;

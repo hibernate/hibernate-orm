@@ -46,7 +46,7 @@
 				filepattern="{package-name}/{class-name}.quote" />
 			
 			<hbmtemplate 
-				exporterclass="org.hibernate.tool.internal.export.java.JavaExporter" 
+				exporterclass="org.hibernate.tool.reveng.internal.export.java.JavaExporter"
 				filepattern="{package-name}/{class-name}.pojo" /> 
 			
 		</hibernatetool>

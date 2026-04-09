@@ -34,7 +34,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
-import org.hibernate.tool.internal.export.mapping.MappingExporter;
+import org.hibernate.tool.reveng.internal.export.mapping.MappingExporter;
 
 @Mojo(
 	name = "hbm2orm", 

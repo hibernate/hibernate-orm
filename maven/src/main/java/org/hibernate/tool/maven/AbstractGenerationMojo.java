@@ -32,12 +32,12 @@ import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
-import org.hibernate.tool.api.metadata.MetadataConstants;
-import org.hibernate.tool.api.reveng.RevengSettings;
-import org.hibernate.tool.api.reveng.RevengStrategy;
-import org.hibernate.tool.api.reveng.RevengStrategyFactory;
+import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
+import org.hibernate.tool.reveng.api.metadata.MetadataConstants;
+import org.hibernate.tool.reveng.api.reveng.RevengSettings;
+import org.hibernate.tool.reveng.api.reveng.RevengStrategy;
+import org.hibernate.tool.reveng.api.reveng.RevengStrategyFactory;
 
 public abstract class AbstractGenerationMojo extends AbstractMojo {
 

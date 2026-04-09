@@ -19,7 +19,7 @@ package org.hibernate.tool.orm.jbt.internal.factory;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.tool.ide.completion.HQLCodeAssist;
+import org.hibernate.tool.reveng.ide.completion.HQLCodeAssist;
 import org.hibernate.tool.orm.jbt.api.wrp.ConfigurationWrapper;
 import org.hibernate.tool.orm.jbt.api.wrp.HqlCodeAssistWrapper;
 import org.hibernate.tool.orm.jbt.internal.util.HqlCompletionRequestor;

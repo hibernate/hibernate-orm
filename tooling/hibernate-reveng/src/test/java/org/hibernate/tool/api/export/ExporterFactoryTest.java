@@ -22,7 +22,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import org.hibernate.tool.internal.export.common.AbstractExporter;
+import org.hibernate.tool.reveng.api.export.Exporter;
+import org.hibernate.tool.reveng.api.export.ExporterFactory;
+import org.hibernate.tool.reveng.api.export.ExporterType;
+import org.hibernate.tool.reveng.internal.export.common.AbstractExporter;
 import org.junit.jupiter.api.Test;
 
 public class ExporterFactoryTest {

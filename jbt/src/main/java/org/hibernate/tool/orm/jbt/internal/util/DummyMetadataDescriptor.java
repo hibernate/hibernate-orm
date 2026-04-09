@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.Properties;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 
 public class DummyMetadataDescriptor implements MetadataDescriptor {
 

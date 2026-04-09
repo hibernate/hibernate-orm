@@ -27,9 +27,9 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.metadata.MetadataConstants;
-import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
-import org.hibernate.tool.api.reveng.RevengStrategy;
+import org.hibernate.tool.reveng.api.metadata.MetadataConstants;
+import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
+import org.hibernate.tool.reveng.api.reveng.RevengStrategy;
 import org.w3c.dom.Document;
 import org.xml.sax.EntityResolver;
 

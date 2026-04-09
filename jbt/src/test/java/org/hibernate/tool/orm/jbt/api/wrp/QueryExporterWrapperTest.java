@@ -26,8 +26,8 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.tool.api.export.ExporterConstants;
-import org.hibernate.tool.internal.export.query.QueryExporter;
+import org.hibernate.tool.reveng.api.export.ExporterConstants;
+import org.hibernate.tool.reveng.internal.export.query.QueryExporter;
 import org.hibernate.tool.orm.jbt.internal.factory.QueryExporterWrapperFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

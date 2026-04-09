@@ -24,8 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import java.util.Properties;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.tool.api.export.ExporterConstants;
-import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.reveng.api.export.ExporterConstants;
+import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 import org.junit.jupiter.api.Test;
 
 public class HibernateToolTaskTest {	

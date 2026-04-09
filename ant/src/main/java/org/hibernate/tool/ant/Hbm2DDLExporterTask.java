@@ -17,10 +17,10 @@
  */
 package org.hibernate.tool.ant;
 
-import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.api.export.ExporterConstants;
-import org.hibernate.tool.api.export.ExporterFactory;
-import org.hibernate.tool.api.export.ExporterType;
+import org.hibernate.tool.reveng.api.export.Exporter;
+import org.hibernate.tool.reveng.api.export.ExporterConstants;
+import org.hibernate.tool.reveng.api.export.ExporterFactory;
+import org.hibernate.tool.reveng.api.export.ExporterType;
 
 /**
  * @author max

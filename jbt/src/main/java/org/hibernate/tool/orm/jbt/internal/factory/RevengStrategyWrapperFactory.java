@@ -19,9 +19,9 @@ package org.hibernate.tool.orm.jbt.internal.factory;
 
 import java.lang.reflect.Constructor;
 
-import org.hibernate.tool.api.reveng.RevengSettings;
-import org.hibernate.tool.api.reveng.RevengStrategy;
-import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
+import org.hibernate.tool.reveng.api.reveng.RevengSettings;
+import org.hibernate.tool.reveng.api.reveng.RevengStrategy;
+import org.hibernate.tool.reveng.internal.reveng.strategy.DefaultStrategy;
 import org.hibernate.tool.orm.jbt.api.wrp.RevengSettingsWrapper;
 import org.hibernate.tool.orm.jbt.api.wrp.RevengStrategyWrapper;
 import org.hibernate.tool.orm.jbt.api.wrp.Wrapper;

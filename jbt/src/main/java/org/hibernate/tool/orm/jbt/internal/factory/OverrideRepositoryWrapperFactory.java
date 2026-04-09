@@ -19,9 +19,9 @@ package org.hibernate.tool.orm.jbt.internal.factory;
 
 import java.io.File;
 
-import org.hibernate.tool.api.reveng.RevengStrategy;
-import org.hibernate.tool.internal.reveng.strategy.OverrideRepository;
-import org.hibernate.tool.internal.reveng.strategy.TableFilter;
+import org.hibernate.tool.reveng.api.reveng.RevengStrategy;
+import org.hibernate.tool.reveng.internal.reveng.strategy.OverrideRepository;
+import org.hibernate.tool.reveng.internal.reveng.strategy.TableFilter;
 import org.hibernate.tool.orm.jbt.api.wrp.OverrideRepositoryWrapper;
 import org.hibernate.tool.orm.jbt.api.wrp.RevengStrategyWrapper;
 import org.hibernate.tool.orm.jbt.api.wrp.TableFilterWrapper;

@@ -48,7 +48,7 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.tool.api.reveng.RevengStrategy;
+import org.hibernate.tool.reveng.api.reveng.RevengStrategy;
 import org.hibernate.tool.orm.jbt.internal.factory.ConfigurationWrapperFactory;
 import org.hibernate.tool.orm.jbt.internal.factory.NamingStrategyWrapperFactory;
 import org.hibernate.tool.orm.jbt.internal.factory.RevengStrategyWrapperFactory;

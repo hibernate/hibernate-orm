@@ -19,8 +19,8 @@ package org.hibernate.tool.orm.jbt.internal.util;
 
 import java.lang.reflect.Method;
 
-import org.hibernate.tool.ide.completion.HQLCompletionProposal;
-import org.hibernate.tool.ide.completion.IHQLCompletionRequestor;
+import org.hibernate.tool.reveng.ide.completion.HQLCompletionProposal;
+import org.hibernate.tool.reveng.ide.completion.IHQLCompletionRequestor;
 
 public class HqlCompletionRequestor implements IHQLCompletionRequestor {
 	

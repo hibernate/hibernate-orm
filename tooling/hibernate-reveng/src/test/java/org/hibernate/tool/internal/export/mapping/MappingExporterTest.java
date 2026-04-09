@@ -14,8 +14,9 @@ import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.tool.reveng.internal.export.mapping.MappingExporter;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tool.internal.util.DummyDialect;
+import org.hibernate.tool.reveng.internal.util.DummyDialect;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -29,7 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static org.hibernate.tool.internal.export.mapping.MappingExporter.HbmXmlOrigin;
+import static org.hibernate.tool.reveng.internal.export.mapping.MappingExporter.HbmXmlOrigin;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class MappingExporterTest {

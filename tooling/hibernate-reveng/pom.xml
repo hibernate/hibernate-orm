@@ -108,7 +108,7 @@
                             <expression>${project.version}</expression>
                             <targetMembers>
                                 <methodBodyReturn>
-                                    <className>org.hibernate.tool.api.version.Version</className>
+                                    <className>org.hibernate.tool.reveng.api.version.Version</className>
                                     <methodName>versionString</methodName>
                                 </methodBodyReturn>
                             </targetMembers>

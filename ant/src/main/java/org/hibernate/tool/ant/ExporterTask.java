@@ -24,8 +24,8 @@ import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.types.Environment;
 import org.apache.tools.ant.types.Path;
 import org.apache.tools.ant.types.PropertySet;
-import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.api.export.ExporterConstants;
+import org.hibernate.tool.reveng.api.export.Exporter;
+import org.hibernate.tool.reveng.api.export.ExporterConstants;
 
 /**
  * @author max

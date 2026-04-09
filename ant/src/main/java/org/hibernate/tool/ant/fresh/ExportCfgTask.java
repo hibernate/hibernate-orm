@@ -22,11 +22,11 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 import org.apache.tools.ant.types.Environment.Variable;
-import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.api.export.ExporterConstants;
-import org.hibernate.tool.api.export.ExporterFactory;
-import org.hibernate.tool.api.export.ExporterType;
-import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.reveng.api.export.Exporter;
+import org.hibernate.tool.reveng.api.export.ExporterConstants;
+import org.hibernate.tool.reveng.api.export.ExporterFactory;
+import org.hibernate.tool.reveng.api.export.ExporterType;
+import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 
 public class ExportCfgTask {
 	

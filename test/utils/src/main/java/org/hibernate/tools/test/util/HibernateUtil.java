@@ -28,8 +28,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
-import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
+import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
 
 public class HibernateUtil {
 	

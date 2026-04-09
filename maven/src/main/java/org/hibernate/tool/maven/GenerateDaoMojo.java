@@ -20,11 +20,11 @@ package org.hibernate.tool.maven;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.api.export.ExporterConstants;
-import org.hibernate.tool.api.export.ExporterFactory;
-import org.hibernate.tool.api.export.ExporterType;
-import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.reveng.api.export.Exporter;
+import org.hibernate.tool.reveng.api.export.ExporterConstants;
+import org.hibernate.tool.reveng.api.export.ExporterFactory;
+import org.hibernate.tool.reveng.api.export.ExporterType;
+import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 
 import java.io.File;
 

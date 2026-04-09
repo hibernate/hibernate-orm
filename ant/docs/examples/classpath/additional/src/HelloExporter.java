@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.reveng.api.export.Exporter;
 
 import java.util.Properties;
 

@@ -24,12 +24,12 @@ import java.util.Properties;
 import org.apache.tools.ant.types.Path;
 import org.hibernate.boot.cfgxml.internal.ConfigLoader;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
-import org.hibernate.tool.api.metadata.MetadataConstants;
-import org.hibernate.tool.api.reveng.RevengSettings;
-import org.hibernate.tool.api.reveng.RevengStrategy;
-import org.hibernate.tool.api.reveng.RevengStrategyFactory;
+import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
+import org.hibernate.tool.reveng.api.metadata.MetadataConstants;
+import org.hibernate.tool.reveng.api.reveng.RevengSettings;
+import org.hibernate.tool.reveng.api.reveng.RevengStrategy;
+import org.hibernate.tool.reveng.api.reveng.RevengStrategyFactory;
 
 
 /**

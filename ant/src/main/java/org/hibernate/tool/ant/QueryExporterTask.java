@@ -22,10 +22,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.tools.ant.BuildException;
-import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.api.export.ExporterConstants;
-import org.hibernate.tool.api.export.ExporterFactory;
-import org.hibernate.tool.api.export.ExporterType;
+import org.hibernate.tool.reveng.api.export.Exporter;
+import org.hibernate.tool.reveng.api.export.ExporterConstants;
+import org.hibernate.tool.reveng.api.export.ExporterFactory;
+import org.hibernate.tool.reveng.api.export.ExporterType;
 import org.hibernate.tool.util.StringUtil;
 
 public class QueryExporterTask extends ExporterTask {

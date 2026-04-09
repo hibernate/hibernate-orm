@@ -23,9 +23,9 @@ import java.lang.reflect.Method;
 import java.util.Map;
 
 import org.hibernate.cfg.Configuration;
-import org.hibernate.tool.api.export.ExporterConstants;
-import org.hibernate.tool.internal.export.hbm.HbmExporter;
-import org.hibernate.tool.internal.export.java.POJOClass;
+import org.hibernate.tool.reveng.api.export.ExporterConstants;
+import org.hibernate.tool.reveng.internal.export.hbm.HbmExporter;
+import org.hibernate.tool.reveng.internal.export.java.POJOClass;
 import org.hibernate.tool.orm.jbt.api.wrp.ConfigurationWrapper;
 import org.hibernate.tool.orm.jbt.api.wrp.HbmExporterWrapper;
 import org.hibernate.tool.orm.jbt.internal.util.ConfigurationMetadataDescriptor;

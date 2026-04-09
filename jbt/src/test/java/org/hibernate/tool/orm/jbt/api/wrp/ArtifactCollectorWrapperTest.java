@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.tool.api.export.ArtifactCollector;
+import org.hibernate.tool.reveng.api.export.ArtifactCollector;
 import org.hibernate.tool.orm.jbt.internal.factory.ArtifactCollectorWrapperFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

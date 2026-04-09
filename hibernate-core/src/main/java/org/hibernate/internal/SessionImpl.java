@@ -35,8 +35,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroups;
 import org.hibernate.event.spi.*;
 import org.hibernate.event.spi.LoadEventListener.LoadType;
-import org.hibernate.exception.GenericJDBCException;
-import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.find.FindByKeyOperation;

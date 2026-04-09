@@ -293,7 +293,7 @@ public abstract class AbstractFindByKeyOperation<T> implements FindByKeyOperatio
 		catch ( JDBCException e ) {
 			if ( accessTransaction().isActive() ) {
 				if ( accessTransaction().isActive() && accessTransaction().getRollbackOnly()
-					 && (e instanceof GenericJDBCException || e instanceof JDBCConnectionException) ) {
+					&& (e instanceof GenericJDBCException || e instanceof JDBCConnectionException) ) {
 					// Assume situation HHH-12472 running on WildFly,
 					// but only if the exception is generic to avoid swallowing locking exceptions (HHH-20260)
 					// Just log the exception and return null

@@ -795,7 +795,7 @@ public interface JpaAnnotations {
 	OrmAnnotationDescriptor<SqlResultSetMapping,SqlResultSetMappingJpaAnnotation> SQL_RESULT_SET_MAPPING = new OrmAnnotationDescriptor<>(
 			SqlResultSetMapping.class,
 			SqlResultSetMappingJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
+			EnumSet.of( Kind.CLASS, Kind.METHOD ),
 			false,
 			SQL_RESULT_SET_MAPPINGS
 	);

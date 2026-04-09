@@ -39,8 +39,14 @@ import org.hibernate.dialect.function.array.SpannerPostgreSQLArrayRemoveIndexFun
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.function.SpannerPostgreSQLRegexpLikeFunction;
 import org.hibernate.dialect.function.SpannerPostgreSQLTruncFunction;
+import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.dialect.lock.PessimisticLockStyle;
 import org.hibernate.dialect.lock.internal.NoLockingSupport;
+import org.hibernate.dialect.lock.internal.LockingSupportSimple;
+import org.hibernate.dialect.lock.spi.ConnectionLockTimeoutStrategy;
+import org.hibernate.dialect.lock.spi.LockTimeoutType;
 import org.hibernate.dialect.lock.spi.LockingSupport;
+import org.hibernate.dialect.lock.spi.OuterJoinLockingType;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -144,11 +150,18 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 	// This workaround that is only intended for testing, and should not be used for primary key
 	// values in production.
 	private static final String USE_INTEGER_FOR_PRIMARY_KEY = "hibernate.dialect.spanner.use_integer_for_primary_key";
+	private static final String USE_EMULATOR = "hibernate.dialect.spanner.use_emulator";
 
 	private boolean useIntegerForPrimaryKey;
+	private boolean useEmulator;
 
-	// TODO(spanner): Spanner supports pessimistic lock with FOR UPDATE. Investigate this bug
-	private final LockingSupport SPANNER_LOCKING_SUPPORT = NoLockingSupport.NO_LOCKING_SUPPORT;
+	private final LockingSupport SPANNER_LOCKING_SUPPORT = new LockingSupportSimple(
+			PessimisticLockStyle.CLAUSE,
+			RowLockStrategy.NONE,
+			LockTimeoutType.NONE,
+			OuterJoinLockingType.FULL,
+			ConnectionLockTimeoutStrategy.NONE
+	);
 
 	protected final static DatabaseVersion MINIMUM_POSTGRES_VERSION = DatabaseVersion.make( 15 );
 
@@ -415,7 +428,7 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		return SPANNER_LOCKING_SUPPORT;
+		return useEmulator ? NoLockingSupport.NO_LOCKING_SUPPORT : SPANNER_LOCKING_SUPPORT;
 	}
 
 	@Override
@@ -538,6 +551,12 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 
 		this.useIntegerForPrimaryKey = configurationService.getSetting(
 				USE_INTEGER_FOR_PRIMARY_KEY,
+				StandardConverters.BOOLEAN,
+				false
+		);
+
+		this.useEmulator = configurationService.getSetting(
+				USE_EMULATOR,
 				StandardConverters.BOOLEAN,
 				false
 		);

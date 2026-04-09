@@ -95,7 +95,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			);
 
 			// Decompose
-			final List<PlannedOperation> operations = decomposer.decompose(action, 0, sessionImpl);
+			final List<PlannedOperation> operations = decomposer.decompose(action, 0, sessionImpl, null);
 			final List<PlannedOperationGroup> groups = groupOperations(operations);
 
 			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel(),
@@ -174,8 +174,8 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Decompose both actions
 			final List<PlannedOperationGroup> allGroups = new ArrayList<>();
-			allGroups.addAll(groupOperations(personDecomposer.decompose(personAction, 0, sessionImpl)));
-			allGroups.addAll(groupOperations(addressDecomposer.decompose(addressAction, 1, sessionImpl)));
+			allGroups.addAll(groupOperations(personDecomposer.decompose(personAction, 0, sessionImpl, null)));
+			allGroups.addAll(groupOperations(addressDecomposer.decompose(addressAction, 1, sessionImpl, null)));
 
 			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel(),
 					planningOptions );
@@ -266,7 +266,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			final UpdateDecomposer decomposer = new UpdateDecomposer(persister, factory);
 
 			// Decompose
-			final List<PlannedOperation> operations = decomposer.decompose(action, 0, sessionImpl);
+			final List<PlannedOperation> operations = decomposer.decompose(action, 0, sessionImpl, null);
 			final List<PlannedOperationGroup> groups = groupOperations(operations);
 
 			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel(),
@@ -330,7 +330,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			final DeleteDecomposer decomposer = new DeleteDecomposer(persister, factory);
 
 			// Decompose
-			final List<PlannedOperation> operations = decomposer.decompose(action, 0, sessionImpl);
+			final List<PlannedOperation> operations = decomposer.decompose(action, 0, sessionImpl, null);
 			final List<PlannedOperationGroup> groups = groupOperations(operations);
 
 			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel(),
@@ -433,9 +433,9 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Decompose all actions
 			final List<PlannedOperationGroup> allGroups = new ArrayList<>();
-			allGroups.addAll(groupOperations(personInsertDecomposer.decompose(person1InsertAction, 0, sessionImpl)));
-			allGroups.addAll(groupOperations(addressInsertDecomposer.decompose(addressInsertAction, 1, sessionImpl)));
-			allGroups.addAll(groupOperations(personUpdateDecomposer.decompose(person2UpdateAction, 2, sessionImpl)));
+			allGroups.addAll(groupOperations(personInsertDecomposer.decompose(person1InsertAction, 0, sessionImpl, null)));
+			allGroups.addAll(groupOperations(addressInsertDecomposer.decompose(addressInsertAction, 1, sessionImpl, null)));
+			allGroups.addAll(groupOperations(personUpdateDecomposer.decompose(person2UpdateAction, 2, sessionImpl, null)));
 
 			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel(),
 					planningOptions );
@@ -524,8 +524,8 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			// Decompose
 			final List<PlannedOperationGroup> allGroups = new ArrayList<>();
-			allGroups.addAll(groupOperations(deptDecomposer.decompose(deptAction, 0, sessionImpl)));
-			allGroups.addAll(groupOperations(empDecomposer.decompose(empAction, 1, sessionImpl)));
+			allGroups.addAll(groupOperations(deptDecomposer.decompose(deptAction, 0, sessionImpl, null)));
+			allGroups.addAll(groupOperations(empDecomposer.decompose(empAction, 1, sessionImpl, null)));
 
 			final ConstraintModel constraintModel = ConstraintModelBuilder.buildConstraintModel(factory.getMappingMetamodel(),
 					planningOptions );

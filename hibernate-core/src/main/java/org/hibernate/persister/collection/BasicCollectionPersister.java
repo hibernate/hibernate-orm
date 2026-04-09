@@ -10,6 +10,7 @@ import org.hibernate.MappingException;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
+import org.hibernate.action.queue.graph.DecompositionContext;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
@@ -780,24 +781,27 @@ final var stateManagement = collectionBinding.getStateManagement();
 	public List<PlannedOperation> decompose(
 			CollectionRecreateAction action,
 			int ordinalBase,
-			SharedSessionContractImplementor session) {
-		return decomposer.decomposeRecreate( action, ordinalBase, session );
+			SharedSessionContractImplementor session,
+			DecompositionContext decompositionContext) {
+		return decomposer.decomposeRecreate( action, ordinalBase, session, decompositionContext );
 	}
 
 	@Override
 	public List<PlannedOperation> decompose(
 			CollectionUpdateAction action,
 			int ordinalBase,
-			SharedSessionContractImplementor session) {
-		return decomposer.decomposeUpdate( action, ordinalBase, session );
+			SharedSessionContractImplementor session,
+			DecompositionContext decompositionContext) {
+		return decomposer.decomposeUpdate( action, ordinalBase, session, decompositionContext );
 	}
 
 	@Override
 	public List<PlannedOperation> decompose(
 			CollectionRemoveAction action,
 			int ordinalBase,
-			SharedSessionContractImplementor session) {
-		return decomposer.decomposeRemove( action, ordinalBase, session );
+			SharedSessionContractImplementor session,
+			DecompositionContext decompositionContext) {
+		return decomposer.decomposeRemove( action, ordinalBase, session, decompositionContext );
 	}
 
 }

@@ -74,7 +74,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 	public List<PlannedOperation> decompose(
 			EntityUpdateAction action,
 			int ordinalBase,
-			SharedSessionContractImplementor session) {
+			SharedSessionContractImplementor session,
+			org.hibernate.action.queue.graph.DecompositionContext decompositionContext) {
 		final boolean vetoed = preUpdate( action, session );
 		if ( vetoed ) {
 			return List.of();

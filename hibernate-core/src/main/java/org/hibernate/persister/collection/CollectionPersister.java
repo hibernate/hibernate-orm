@@ -19,6 +19,7 @@ import org.hibernate.MappingException;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
+import org.hibernate.action.queue.graph.DecompositionContext;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -111,26 +112,12 @@ public interface CollectionPersister extends Restrictable {
 
 	/**
 	 * Decomposes a collection recreate action into planned operations.
-	 * <p>
-	 * Manages pre-execution phase and registering [PostCollectionRecreateHandling] callback
-	 * for post-execution phase.  Delegates to [InsertRowsCoordinator] to create the needed
-	 * PlannedOperations.
-	 *
-	 * @param action
-	 * @param ordinalBase
-	 * @param postExecCallbackRegistry
-	 * @param session
-	 * @return
 	 */
-///
-///
-/// Manages pre-execution phase and post-execution callbacks.
-/// Delegates to decomposer to create the needed PlannedOperations with callbacks attached.
-
 	List<PlannedOperation> decompose(
 			CollectionRecreateAction action,
 			int ordinalBase,
-			SharedSessionContractImplementor session);
+			SharedSessionContractImplementor session,
+			DecompositionContext decompositionContext);
 
 	/**
 	 * Removes the collection:<ul>
@@ -147,19 +134,17 @@ public interface CollectionPersister extends Restrictable {
 	List<PlannedOperation> decompose(
 			CollectionRemoveAction action,
 			int ordinalBase,
-			SharedSessionContractImplementor session);
+			SharedSessionContractImplementor session,
+			DecompositionContext decompositionContext);
 
-	/// Decomposes a collection update action into planned operations -
-	///
-	/// - "deletes" removed entries.  See [CollectionJdbcOperations#getDeleteRowOperation()]
-	/// - updates modified entries.  See [CollectionJdbcOperations#getUpdateRowOperation()]
-	/// - "inserts" new entries.  See [CollectionJdbcOperations#getInsertRowOperation()]
-	///
-	/// Manages pre-execution phase and post-execution callbacks.
+	/**
+	 * Decomposes a collection update action into planned operations
+	*/
 	List<PlannedOperation> decompose(
 			CollectionUpdateAction action,
 			int ordinalBase,
-			SharedSessionContractImplementor session);
+			SharedSessionContractImplementor session,
+			DecompositionContext decompositionContext);
 
 	/**
 	 * Get the persister of the entity that "owns" this collection

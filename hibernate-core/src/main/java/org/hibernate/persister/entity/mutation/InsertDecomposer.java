@@ -12,6 +12,8 @@ import org.hibernate.action.queue.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
+import org.hibernate.engine.internal.ForeignKeys;
+import org.hibernate.engine.internal.Nullability;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.sql.model.ast.TableInsert;
 import org.hibernate.sql.model.ast.MutatingTableReference;
@@ -62,7 +64,8 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 	public List<PlannedOperation> decompose(
 			AbstractEntityInsertAction action,
 			int ordinalBase,
-			SharedSessionContractImplementor session) {
+			SharedSessionContractImplementor session,
+			org.hibernate.action.queue.graph.DecompositionContext decompositionContext) {
 		final boolean vetoed = preInsert( action, session );
 		if ( vetoed ) {
 			return List.of();
@@ -70,7 +73,7 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 
 		// Nullify transient references before decomposing - this ensures bidirectional
 		// associations are handled correctly and nullability checks are performed
-		action.nullifyTransientReferencesIfNotAlready();
+		nullifyTransientReferencesIfNotAlready( action, session, decompositionContext );
 
 		final Object entity = action.getInstance();
 		final Object identifier = action.getId();
@@ -129,6 +132,21 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		}
 
 		return operations;
+	}
+
+	private void nullifyTransientReferencesIfNotAlready(
+			AbstractEntityInsertAction action,
+			SharedSessionContractImplementor session,
+			org.hibernate.action.queue.graph.DecompositionContext decompositionContext) {
+		new ForeignKeys.Nullifier(
+				action.getInstance(),
+				false,
+				action.isEarlyInsert(),
+				session,
+				entityPersister,
+				decompositionContext ).nullifyTransientReferences( action.getState() );
+		new Nullability( session, Nullability.NullabilityCheckType.CREATE )
+				.checkNullability( action.getState(), entityPersister );
 	}
 
 	protected boolean preInsert(AbstractEntityInsertAction action, SharedSessionContractImplementor session) {

@@ -41,22 +41,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 /// @implNote Ordering and scheduling are external concerns handled later.
 ///
 /// @author Steve Ebersole
-public class Decomposer {
-	// ThreadLocal to expose the current flush context to ForeignKeys.Nullifier
-	// This allows the Nullifier to avoid nullifying references to entities being inserted in the same flush
-	private static final ThreadLocal<Set<Object>> CURRENT_FLUSH_INSERTS = new ThreadLocal<>();
-
-	/// Check if an entity is being inserted in the current thread's flush
-	/// This is exposed via ThreadLocal for ForeignKeys.Nullifier to check
-	public static boolean isEntityBeingInsertedInCurrentFlush(Object entity) {
-		// todo : Consider a better approach than ThreadLocal and static method call,
-		//  	passing something (like a `FlushContext`) to the Nullifier.
-		//		Or maybe even better yet, drop Nullifier and just handle that logic
-		//		locally to the flush coordination.
-		final Set<Object> currentFlushInserts = CURRENT_FLUSH_INSERTS.get();
-		return currentFlushInserts != null && currentFlushInserts.contains(entity);
-	}
-
+public class Decomposer implements DecompositionContext {
 	private final SessionImplementor session;
 
 	// Tracks inserts that have unresolved dependencies on transient entities
@@ -81,18 +66,15 @@ public class Decomposer {
 				entitiesBeingInserted.add(insert.getInstance());
 			}
 		}
-		// Set ThreadLocal so ForeignKeys.Nullifier can check it
-		CURRENT_FLUSH_INSERTS.set(entitiesBeingInserted);
 		ACTION_LOGGER.tracef("Beginning flush with %d INSERT actions", entitiesBeingInserted.size());
 	}
 
 	/// End a flush operation - clear the tracking set
 	public void endFlush() {
 		entitiesBeingInserted = null;
-		CURRENT_FLUSH_INSERTS.remove();
 	}
 
-	/// Check if an entity is being inserted in the current flush
+	@Override
 	public boolean isBeingInsertedInCurrentFlush(Object entity) {
 		return entitiesBeingInserted != null && entitiesBeingInserted.contains(entity);
 	}
@@ -149,7 +131,8 @@ public class Decomposer {
 			return insert.getPersister().getInsertDecomposer().decompose(
 					insert,
 					ordinalBase,
-					session
+					session,
+					this
 			);
 		}
 
@@ -157,14 +140,16 @@ public class Decomposer {
 			return eua.getPersister().getUpdateDecomposer().decompose(
 					eua,
 					ordinalBase,
-					session
+					session,
+					this
 			);
 		}
 		if (executable instanceof EntityDeleteAction eda) {
 			return eda.getPersister().getDeleteDecomposer().decompose(
 					eda,
 					ordinalBase,
-					session
+					session,
+					this
 			);
 		}
 
@@ -173,7 +158,8 @@ public class Decomposer {
 			return cra.getPersister().decompose(
 					cra,
 					ordinalBase,
-					session
+					session,
+					this
 			);
 		}
 		if (executable instanceof CollectionRemoveAction cra) {
@@ -181,14 +167,16 @@ public class Decomposer {
 			return cra.getPersister().decompose(
 					cra,
 					ordinalBase,
-					session
+					session,
+					this
 			);
 		}
 		if (executable instanceof CollectionUpdateAction cua) {
 			return cua.getPersister().decompose(
 					cua,
 					ordinalBase,
-					session
+					session,
+					this
 			);
 		}
 		if (executable instanceof QueuedOperationCollectionAction qoca) {
@@ -303,7 +291,8 @@ public class Decomposer {
 						entityInsert.getPersister().getInsertDecomposer().decompose(
 								entityInsert,
 								0,
-								session
+								session,
+								this
 						)
 				);
 				fullyResolved.add(entityInsert);

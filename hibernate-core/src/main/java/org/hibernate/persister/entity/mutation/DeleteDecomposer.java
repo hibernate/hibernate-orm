@@ -70,7 +70,8 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 	public List<PlannedOperation> decompose(
 			EntityDeleteAction action,
 			int ordinalBase,
-			SharedSessionContractImplementor session) {
+			SharedSessionContractImplementor session,
+			org.hibernate.action.queue.graph.DecompositionContext decompositionContext) {
 		final Object identifier = action.getId();
 		final Object version = action.getVersion();
 		final Object[] state = action.getState();

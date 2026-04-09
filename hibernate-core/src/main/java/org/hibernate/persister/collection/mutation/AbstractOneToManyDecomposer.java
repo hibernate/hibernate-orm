@@ -10,6 +10,7 @@ import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.bind.JdbcValueBindings;
+import org.hibernate.action.queue.graph.DecompositionContext;
 import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
 import org.hibernate.action.queue.plan.PlannedOperation;
@@ -53,7 +54,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 	public List<PlannedOperation> decomposeRecreate(
 			CollectionRecreateAction action,
 			int ordinalBase,
-			SharedSessionContractImplementor session) {
+			SharedSessionContractImplementor session, DecompositionContext decompositionContext) {
 		var collection = action.getCollection();
 		var key = action.getKey();
 
@@ -165,7 +166,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 	public final List<PlannedOperation> decomposeUpdate(
 			CollectionUpdateAction action,
 			int ordinalBase,
-			SharedSessionContractImplementor session) {
+			SharedSessionContractImplementor session, DecompositionContext decompositionContext) {
 		final var collection = action.getCollection();
 		final var key = action.getKey();
 

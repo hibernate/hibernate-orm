@@ -6,6 +6,7 @@ package org.hibernate.persister.collection.mutation;
 
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.queue.MutationKind;
+import org.hibernate.action.queue.graph.DecompositionContext;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -53,7 +54,7 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomp
 	public List<PlannedOperation> decomposeRemove(
 			CollectionRemoveAction action,
 			int ordinalBase,
-			SharedSessionContractImplementor session) {
+			SharedSessionContractImplementor session, DecompositionContext decompositionContext) {
 		// Always fire PRE event, even if no SQL operations will be needed
 		DecompositionSupport.firePreRemove( persister, action.getCollection(), action.getAffectedOwner(), session );
 

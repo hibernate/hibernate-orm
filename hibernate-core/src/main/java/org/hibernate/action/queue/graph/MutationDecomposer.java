@@ -29,9 +29,11 @@ public interface MutationDecomposer<A extends Executable> {
 	/// @param ordinalBase Defines a "slot range" which is used to help order operations later.
 	/// 		Use small offsets from this base for each operation.
 	/// @param session The session from which this request originates.
+	/// @param decompositionContext The decomposition context tracking entities being inserted (may be null)
 	/// @return List of individual table operations (not yet grouped or batched)
 	List<PlannedOperation> decompose(
 			A action,
 			int ordinalBase,
-			SharedSessionContractImplementor session);
+			SharedSessionContractImplementor session,
+			DecompositionContext decompositionContext);
 }

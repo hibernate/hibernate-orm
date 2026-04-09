@@ -7,6 +7,7 @@ package org.hibernate.persister.collection.mutation;
 import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
+import org.hibernate.action.queue.graph.DecompositionContext;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -27,15 +28,18 @@ public interface CollectionDecomposer {
 	List<PlannedOperation> decomposeRecreate(
 			CollectionRecreateAction action,
 			int ordinalBase,
-			SharedSessionContractImplementor session);
+			SharedSessionContractImplementor session,
+			DecompositionContext decompositionContext);
 
 	List<PlannedOperation> decomposeUpdate(
 			CollectionUpdateAction action,
 			int ordinalBase,
-			SharedSessionContractImplementor session);
+			SharedSessionContractImplementor session,
+			DecompositionContext decompositionContext);
 
 	List<PlannedOperation> decomposeRemove(
 			CollectionRemoveAction action,
 			int ordinalBase,
-			SharedSessionContractImplementor session);
+			SharedSessionContractImplementor session,
+			DecompositionContext decompositionContext);
 }

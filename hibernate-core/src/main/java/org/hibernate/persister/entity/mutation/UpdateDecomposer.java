@@ -152,6 +152,13 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			var tableMapping = (TableDescriptorAsTableMapping) operation.getTableDetails();
 			var tableDescriptor = (EntityTableDescriptor) tableMapping.getDescriptor();
 
+			// For static updates, filter out optional tables that don't need updates
+			// (e.g., join tables for null @ManyToOne associations)
+			if ( !needsDynamicUpdate && tableDescriptor.isOptional() && !valuesAnalysis.needsUpdate( tableDescriptor ) ) {
+				// Skip this table - it's optional and has no updates
+				continue;
+			}
+
 			final EntityUpdateBindPlan bindPlan = createUpdateBindPlan(
 					tableDescriptor,
 					entity,

@@ -13,6 +13,7 @@ import org.hibernate.query.criteria.JpaFunctionJoin;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.type.SqlTypes;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -51,14 +52,15 @@ public class JsonArrayUnnestTest {
 	@BeforeEach
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
-			em.persist( new Book( 1L, "book1", new Publisher[0], List.of() ) );
+			em.persist( new Book( 1L, "book1", null, new Publisher[0], List.of() ) );
 			em.persist( new Book(
 					2L,
 					"book2",
-					new Publisher[] { new Publisher( "abc" ), null, new Publisher( "def" ) },
+					new Publisher( "abc", List.of( "a", "b" ) ),
+					new Publisher[] { new Publisher( "abc", List.of( "a", "b" ) ), null, new Publisher( "def", List.of( "c", "d" ) ) },
 					Arrays.asList( new Label( "k1", "v1" ), null, new Label( "k2", "v2" ) )
 			) );
-			em.persist( new Book( 3L, "book3", null, null ) );
+			em.persist( new Book( 3L, "book3", null, null, null ) );
 		} );
 	}
 
@@ -187,6 +189,33 @@ public class JsonArrayUnnestTest {
 		} );
 	}
 
+	@Test
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20326")
+	public void testJoinNested(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<Tuple> results = em.createQuery(
+							"select e.id, p.name, g " +
+							"from Book e " +
+							"join e.mainPublisher p " +
+							"join p.genres g " +
+							"order by e.id",
+							Tuple.class
+					)
+					.getResultList();
+
+			// 1 row with 2 genres
+			assertEquals( 2, results.size() );
+
+			assertEquals( 2L, results.get( 0 ).get( 0 ) );
+			assertEquals( "abc", results.get( 0 ).get( 1 ) );
+			assertEquals( "a", results.get( 0 ).get( 2 ) );
+
+			assertEquals( 2L, results.get( 1 ).get( 0 ) );
+			assertEquals( "abc", results.get( 1 ).get( 1 ) );
+			assertEquals( "b", results.get( 1 ).get( 2 ) );
+		} );
+	}
+
 	private void assertTupleEquals(Tuple tuple, long id, String publisherName, String labelName, String labelValue) {
 		assertEquals( id, tuple.get( 0 ) );
 		assertEquals( publisherName, tuple.get( 1 ) );
@@ -208,6 +237,8 @@ public class JsonArrayUnnestTest {
 
 		private String title;
 
+		@JdbcTypeCode(SqlTypes.JSON)
+		private Publisher mainPublisher;
 		@JdbcTypeCode(SqlTypes.JSON_ARRAY)
 		private Publisher[] publishers;
 		@JdbcTypeCode(SqlTypes.JSON_ARRAY)
@@ -216,9 +247,10 @@ public class JsonArrayUnnestTest {
 		public Book() {
 		}
 
-		public Book(Long id, String title, Publisher[] publishers, List<Label> labels) {
+		public Book(Long id, String title, Publisher mainPublisher, Publisher[] publishers, List<Label> labels) {
 			this.id = id;
 			this.title = title;
+			this.mainPublisher = mainPublisher;
 			this.publishers = publishers;
 			this.labels = labels;
 		}
@@ -228,12 +260,15 @@ public class JsonArrayUnnestTest {
 	public static class Publisher {
 
 		private String name;
+		@JdbcTypeCode(SqlTypes.JSON_ARRAY)
+		private List<String> genres;
 
 		public Publisher() {
 		}
 
-		public Publisher(String name) {
+		public Publisher(String name, List<String> genres) {
 			this.name = name;
+			this.genres = genres;
 		}
 
 		public String getName() {
@@ -242,6 +277,14 @@ public class JsonArrayUnnestTest {
 
 		public void setName(String name) {
 			this.name = name;
+		}
+
+		public List<String> getGenres() {
+			return genres;
+		}
+
+		public void setGenres(List<String> genres) {
+			this.genres = genres;
 		}
 	}
 

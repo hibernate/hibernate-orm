@@ -20,8 +20,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class OracleUnnestFunction extends UnnestFunction {
 
+	@Deprecated(forRemoval = true)
 	public OracleUnnestFunction() {
-		super( "column_value", "i" );
+		this( false );
+	}
+
+	public OracleUnnestFunction(boolean supportsJsonType) {
+		super( "column_value", "i", !supportsJsonType );
 	}
 
 	@Override

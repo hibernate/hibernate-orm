@@ -4502,7 +4502,7 @@ public class CommonFunctionFactory {
 	 * Standard unnest() function
 	 */
 	public void unnest(@Nullable String defaultBasicArrayElementColumnName, String defaultIndexSelectionExpression) {
-		functionRegistry.register( "unnest", new UnnestFunction( defaultBasicArrayElementColumnName, defaultIndexSelectionExpression ) );
+		functionRegistry.register( "unnest", new UnnestFunction( defaultBasicArrayElementColumnName, defaultIndexSelectionExpression, false ) );
 	}
 
 	/**
@@ -4523,8 +4523,16 @@ public class CommonFunctionFactory {
 	/**
 	 * Oracle unnest() function
 	 */
+	@Deprecated(forRemoval = true)
 	public void unnest_oracle() {
 		functionRegistry.register( "unnest", new OracleUnnestFunction() );
+	}
+
+	/**
+	 * Oracle unnest() function
+	 */
+	public void unnest_oracle(boolean supportsJsonType) {
+		functionRegistry.register( "unnest", new OracleUnnestFunction( supportsJsonType ) );
 	}
 
 	/**

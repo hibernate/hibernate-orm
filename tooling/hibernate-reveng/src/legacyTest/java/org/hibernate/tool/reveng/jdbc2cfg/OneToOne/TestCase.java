@@ -35,7 +35,7 @@ import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.reveng.internal.export.hbm.HbmExporter;
 import org.hibernate.tool.reveng.internal.metadata.NativeMetadataDescriptor;
-import org.hibernate.tool.reveng.internal.reveng.util.EnhancedValue;
+import org.hibernate.tool.reveng.internal.core.util.EnhancedValue;
 import org.hibernate.tool.reveng.test.utils.HibernateUtil;
 import org.hibernate.tool.reveng.test.utils.JavaUtil;
 import org.hibernate.tool.reveng.test.utils.JdbcUtil;

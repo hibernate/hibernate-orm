@@ -19,12 +19,12 @@
 package org.hibernate.tool.reveng.cfg.MetaDataDialectFactoryTest;
 
 import org.hibernate.dialect.*;
-import org.hibernate.tool.reveng.api.reveng.RevengDialectFactory;
-import org.hibernate.tool.reveng.internal.reveng.dialect.H2MetaDataDialect;
-import org.hibernate.tool.reveng.internal.reveng.dialect.HSQLMetaDataDialect;
-import org.hibernate.tool.reveng.internal.reveng.dialect.JDBCMetaDataDialect;
-import org.hibernate.tool.reveng.internal.reveng.dialect.MySQLMetaDataDialect;
-import org.hibernate.tool.reveng.internal.reveng.dialect.OracleMetaDataDialect;
+import org.hibernate.tool.reveng.api.core.RevengDialectFactory;
+import org.hibernate.tool.reveng.internal.core.dialect.H2MetaDataDialect;
+import org.hibernate.tool.reveng.internal.core.dialect.HSQLMetaDataDialect;
+import org.hibernate.tool.reveng.internal.core.dialect.JDBCMetaDataDialect;
+import org.hibernate.tool.reveng.internal.core.dialect.MySQLMetaDataDialect;
+import org.hibernate.tool.reveng.internal.core.dialect.OracleMetaDataDialect;
 import org.junit.jupiter.api.Test;
 
 import java.util.Properties;

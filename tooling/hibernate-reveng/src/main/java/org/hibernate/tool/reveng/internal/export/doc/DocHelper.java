@@ -40,7 +40,7 @@ import org.hibernate.tool.reveng.internal.export.common.ConfigurationNavigator;
 import org.hibernate.tool.reveng.internal.export.java.Cfg2JavaTool;
 import org.hibernate.tool.reveng.internal.export.java.ComponentPOJOClass;
 import org.hibernate.tool.reveng.internal.export.java.POJOClass;
-import org.hibernate.tool.reveng.internal.reveng.binder.TypeUtils;
+import org.hibernate.tool.reveng.internal.core.binder.TypeUtils;
 import org.hibernate.type.Type;
 
 /**

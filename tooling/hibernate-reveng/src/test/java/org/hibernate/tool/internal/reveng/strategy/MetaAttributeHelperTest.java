@@ -28,8 +28,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.commons.collections4.MultiValuedMap;
-import org.hibernate.tool.reveng.internal.reveng.strategy.MetaAttributeHelper;
-import org.hibernate.tool.reveng.internal.reveng.strategy.MetaAttributeHelper.SimpleMetaAttribute;
+import org.hibernate.tool.reveng.internal.core.strategy.MetaAttributeHelper;
+import org.hibernate.tool.reveng.internal.core.strategy.MetaAttributeHelper.SimpleMetaAttribute;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 

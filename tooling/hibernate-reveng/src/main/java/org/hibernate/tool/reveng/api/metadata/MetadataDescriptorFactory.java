@@ -20,7 +20,7 @@ package org.hibernate.tool.reveng.api.metadata;
 import java.io.File;
 import java.util.Properties;
 
-import org.hibernate.tool.reveng.api.reveng.RevengStrategy;
+import org.hibernate.tool.reveng.api.core.RevengStrategy;
 import org.hibernate.tool.reveng.internal.metadata.RevengMetadataDescriptor;
 import org.hibernate.tool.reveng.internal.metadata.JpaMetadataDescriptor;
 import org.hibernate.tool.reveng.internal.metadata.NativeMetadataDescriptor;

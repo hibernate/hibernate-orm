@@ -17,8 +17,8 @@
  */
 package org.hibernate.tool.reveng.hbm2x.EntityNaming;
 
-import org.hibernate.tool.reveng.api.reveng.RevengStrategy;
-import org.hibernate.tool.reveng.internal.reveng.strategy.DelegatingStrategy;
+import org.hibernate.tool.reveng.api.core.RevengStrategy;
+import org.hibernate.tool.reveng.internal.core.strategy.DelegatingStrategy;
 
 import java.util.ArrayList;
 import java.util.List;

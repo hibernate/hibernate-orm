@@ -20,7 +20,7 @@ package org.hibernate.tool.reveng.jdbc2cfg.Identity;
 import org.hibernate.boot.Metadata;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
-import org.hibernate.tool.reveng.internal.reveng.util.EnhancedValue;
+import org.hibernate.tool.reveng.internal.core.util.EnhancedValue;
 import org.hibernate.tool.reveng.test.utils.JdbcUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

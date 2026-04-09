@@ -52,7 +52,7 @@ import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.reveng.internal.export.common.EntityNameFromValueVisitor;
-import org.hibernate.tool.reveng.internal.reveng.util.EnhancedValue;
+import org.hibernate.tool.reveng.internal.core.util.EnhancedValue;
 import org.hibernate.tool.reveng.internal.util.SkipBackRefPropertyIterator;
 import org.hibernate.tool.reveng.internal.util.ValueUtil;
 

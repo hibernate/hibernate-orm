@@ -20,9 +20,9 @@ package org.hibernate.tool.api.reveng;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import org.hibernate.tool.reveng.api.reveng.RevengStrategy;
-import org.hibernate.tool.reveng.api.reveng.RevengStrategyFactory;
-import org.hibernate.tool.reveng.internal.reveng.strategy.DefaultStrategy;
+import org.hibernate.tool.reveng.api.core.RevengStrategy;
+import org.hibernate.tool.reveng.api.core.RevengStrategyFactory;
+import org.hibernate.tool.reveng.internal.core.strategy.DefaultStrategy;
 import org.junit.jupiter.api.Test;
 
 

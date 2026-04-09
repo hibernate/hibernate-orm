@@ -39,7 +39,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.tool.reveng.internal.export.hbm.Cfg2HbmTool;
-import org.hibernate.tool.reveng.internal.reveng.util.EnhancedValue;
+import org.hibernate.tool.reveng.internal.core.util.EnhancedValue;
 import org.hibernate.tool.reveng.internal.util.NameConverter;
 import org.hibernate.tool.reveng.internal.util.StringUtil;
 import org.hibernate.type.Type;

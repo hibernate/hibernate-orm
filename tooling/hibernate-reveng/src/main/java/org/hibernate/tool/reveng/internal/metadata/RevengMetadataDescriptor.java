@@ -24,9 +24,9 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.cfg.Environment;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.reveng.api.metadata.MetadataConstants;
-import org.hibernate.tool.reveng.api.reveng.RevengStrategy;
-import org.hibernate.tool.reveng.api.reveng.RevengStrategyFactory;
-import org.hibernate.tool.reveng.internal.reveng.RevengMetadataBuilder;
+import org.hibernate.tool.reveng.api.core.RevengStrategy;
+import org.hibernate.tool.reveng.api.core.RevengStrategyFactory;
+import org.hibernate.tool.reveng.internal.core.RevengMetadataBuilder;
 
 public class RevengMetadataDescriptor implements MetadataDescriptor {
 

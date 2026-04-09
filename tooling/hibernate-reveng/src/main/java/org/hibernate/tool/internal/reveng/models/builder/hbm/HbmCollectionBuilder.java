@@ -17,29 +17,64 @@
  */
 package org.hibernate.tool.internal.reveng.models.builder.hbm;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmArrayType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBagCollectionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBasicCollectionElementType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCacheType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCustomSqlDmlType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFetchStyleWithSubselectEnum;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIdBagCollectionType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmLazyWithExtraEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmListType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToManyCollectionElementType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmMapType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOneToManyCollectionElementType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPrimitiveArrayType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSetType;
+import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
+import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
+import org.hibernate.boot.models.annotations.internal.CascadeAnnotation;
+import org.hibernate.boot.models.annotations.internal.CheckAnnotation;
 import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
+import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
+import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
+import org.hibernate.boot.models.annotations.internal.JoinTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ManyToManyJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OneToManyJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.OptimisticLockAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLDeleteAllAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLDeleteAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLInsertAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLRestrictionAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLUpdateAnnotation;
+import org.hibernate.boot.models.annotations.internal.SortComparatorAnnotation;
+import org.hibernate.boot.models.annotations.internal.SortNaturalAnnotation;
+import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ModelsContext;
 
 /**
  * Builds collection fields from hbm.xml {@code <set>}, {@code <list>},
  * {@code <bag>}, {@code <map>}, {@code <array>}, {@code <primitive-array>},
  * and {@code <idbag>} elements with {@code @OneToMany},
- * {@code @ManyToMany}, or {@code @ElementCollection} annotations.
+ * {@code @ManyToMany}, or {@code @ElementCollection} annotations,
+ * plus collection-level metadata: {@code cascade}, {@code fetch},
+ * {@code batch-size}, {@code where}, {@code cache}, {@code filter},
+ * {@code sql-insert}/{@code sql-update}/{@code sql-delete}/{@code sql-delete-all},
+ * {@code sort}, {@code order-by}, {@code check}, {@code mutable},
+ * {@code optimistic-lock}, and {@code table}/{@code schema}/{@code catalog}.
  *
  * @author Koen Aers
  */
@@ -49,45 +84,105 @@ public class HbmCollectionBuilder {
 								   JaxbHbmSetType set,
 								   String defaultPackage,
 								   HbmBuildContext ctx) {
-		processCollectionElement(entityClass, set.getName(),
+		DynamicFieldDetails field = createCollectionField(entityClass, set.getName(),
 				set.getOneToMany(), set.getManyToMany(), set.getElement(),
 				defaultPackage, ctx);
+		if (field == null) {
+			return;
+		}
+		applyCommonMetadata(field, set.getCascade(), set.getFetch(),
+				set.getLazy(), set.getWhere(), set.getBatchSize(),
+				set.getCache(), set.getFilter(),
+				set.getSqlInsert(), set.getSqlUpdate(),
+				set.getSqlDelete(), set.getSqlDeleteAll(),
+				set.isMutable(), set.isOptimisticLock(),
+				set.getCheck(), set.getTable(), set.getSchema(),
+				set.getCatalog(), ctx);
+		applySortAnnotation(field, set.getSort(), ctx);
+		applyOrderBy(field, set.getOrderBy(), ctx);
 	}
 
 	public static void processList(DynamicClassDetails entityClass,
 									JaxbHbmListType list,
 									String defaultPackage,
 									HbmBuildContext ctx) {
-		processCollectionElement(entityClass, list.getName(),
+		DynamicFieldDetails field = createCollectionField(entityClass, list.getName(),
 				list.getOneToMany(), list.getManyToMany(), list.getElement(),
 				defaultPackage, ctx);
+		if (field == null) {
+			return;
+		}
+		applyCommonMetadata(field, list.getCascade(), list.getFetch(),
+				list.getLazy(), list.getWhere(), list.getBatchSize(),
+				list.getCache(), list.getFilter(),
+				list.getSqlInsert(), list.getSqlUpdate(),
+				list.getSqlDelete(), list.getSqlDeleteAll(),
+				list.isMutable(), list.isOptimisticLock(),
+				list.getCheck(), list.getTable(), list.getSchema(),
+				list.getCatalog(), ctx);
 	}
 
 	public static void processBag(DynamicClassDetails entityClass,
 								   JaxbHbmBagCollectionType bag,
 								   String defaultPackage,
 								   HbmBuildContext ctx) {
-		processCollectionElement(entityClass, bag.getName(),
+		DynamicFieldDetails field = createCollectionField(entityClass, bag.getName(),
 				bag.getOneToMany(), bag.getManyToMany(), bag.getElement(),
 				defaultPackage, ctx);
+		if (field == null) {
+			return;
+		}
+		applyCommonMetadata(field, bag.getCascade(), bag.getFetch(),
+				bag.getLazy(), bag.getWhere(), bag.getBatchSize(),
+				bag.getCache(), bag.getFilter(),
+				bag.getSqlInsert(), bag.getSqlUpdate(),
+				bag.getSqlDelete(), bag.getSqlDeleteAll(),
+				bag.isMutable(), bag.isOptimisticLock(),
+				bag.getCheck(), bag.getTable(), bag.getSchema(),
+				bag.getCatalog(), ctx);
+		applyOrderBy(field, bag.getOrderBy(), ctx);
 	}
 
 	public static void processMap(DynamicClassDetails entityClass,
 								   JaxbHbmMapType map,
 								   String defaultPackage,
 								   HbmBuildContext ctx) {
-		processCollectionElement(entityClass, map.getName(),
+		DynamicFieldDetails field = createCollectionField(entityClass, map.getName(),
 				map.getOneToMany(), map.getManyToMany(), map.getElement(),
 				defaultPackage, ctx);
+		if (field == null) {
+			return;
+		}
+		applyCommonMetadata(field, map.getCascade(), map.getFetch(),
+				map.getLazy(), map.getWhere(), map.getBatchSize(),
+				map.getCache(), map.getFilter(),
+				map.getSqlInsert(), map.getSqlUpdate(),
+				map.getSqlDelete(), map.getSqlDeleteAll(),
+				map.isMutable(), map.isOptimisticLock(),
+				map.getCheck(), map.getTable(), map.getSchema(),
+				map.getCatalog(), ctx);
+		applySortAnnotation(field, map.getSort(), ctx);
+		applyOrderBy(field, map.getOrderBy(), ctx);
 	}
 
 	public static void processArray(DynamicClassDetails entityClass,
 									  JaxbHbmArrayType array,
 									  String defaultPackage,
 									  HbmBuildContext ctx) {
-		processCollectionElement(entityClass, array.getName(),
+		DynamicFieldDetails field = createCollectionField(entityClass, array.getName(),
 				array.getOneToMany(), array.getManyToMany(), array.getElement(),
 				defaultPackage, ctx);
+		if (field == null) {
+			return;
+		}
+		applyCommonMetadata(field, array.getCascade(), array.getFetch(),
+				array.getLazy(), array.getWhere(), array.getBatchSize(),
+				array.getCache(), array.getFilter(),
+				array.getSqlInsert(), array.getSqlUpdate(),
+				array.getSqlDelete(), array.getSqlDeleteAll(),
+				array.isMutable(), array.isOptimisticLock(),
+				array.getCheck(), array.getTable(), array.getSchema(),
+				array.getCatalog(), ctx);
 	}
 
 	public static void processPrimitiveArray(DynamicClassDetails entityClass,
@@ -95,44 +190,70 @@ public class HbmCollectionBuilder {
 											  String defaultPackage,
 											  HbmBuildContext ctx) {
 		JaxbHbmBasicCollectionElementType element = array.getElement();
-		if (element != null) {
-			processElementCollection(entityClass, array.getName(), element, ctx);
+		if (element == null) {
+			return;
 		}
+		DynamicFieldDetails field = buildElementCollectionField(
+				entityClass, array.getName(), element, ctx);
+		applyCommonMetadata(field, array.getCascade(), array.getFetch(),
+				array.getLazy(), array.getWhere(), array.getBatchSize(),
+				array.getCache(), array.getFilter(),
+				array.getSqlInsert(), array.getSqlUpdate(),
+				array.getSqlDelete(), array.getSqlDeleteAll(),
+				array.isMutable(), array.isOptimisticLock(),
+				array.getCheck(), array.getTable(), array.getSchema(),
+				array.getCatalog(), ctx);
 	}
 
 	public static void processIdBag(DynamicClassDetails entityClass,
 									 JaxbHbmIdBagCollectionType idBag,
 									 String defaultPackage,
 									 HbmBuildContext ctx) {
-		processCollectionElement(entityClass, idBag.getName(),
+		DynamicFieldDetails field = createCollectionField(entityClass, idBag.getName(),
 				null, idBag.getManyToMany(), idBag.getElement(),
 				defaultPackage, ctx);
-	}
-
-	private static void processCollectionElement(DynamicClassDetails entityClass,
-												  String name,
-												  JaxbHbmOneToManyCollectionElementType oneToMany,
-												  JaxbHbmManyToManyCollectionElementType manyToMany,
-												  JaxbHbmBasicCollectionElementType element,
-												  String defaultPackage,
-												  HbmBuildContext ctx) {
-		if (oneToMany != null) {
-			processOneToManyCollection(entityClass, name, oneToMany, defaultPackage, ctx);
-		} else if (manyToMany != null) {
-			processManyToManyCollection(entityClass, name, manyToMany, defaultPackage, ctx);
-		} else if (element != null) {
-			processElementCollection(entityClass, name, element, ctx);
+		if (field == null) {
+			return;
 		}
+		applyCommonMetadata(field, idBag.getCascade(), idBag.getFetch(),
+				idBag.getLazy(), idBag.getWhere(), idBag.getBatchSize(),
+				idBag.getCache(), idBag.getFilter(),
+				idBag.getSqlInsert(), idBag.getSqlUpdate(),
+				idBag.getSqlDelete(), idBag.getSqlDeleteAll(),
+				idBag.isMutable(), idBag.isOptimisticLock(),
+				idBag.getCheck(), idBag.getTable(), idBag.getSchema(),
+				idBag.getCatalog(), ctx);
 	}
 
-	private static void processOneToManyCollection(DynamicClassDetails entityClass,
-													String name,
-													JaxbHbmOneToManyCollectionElementType oneToMany,
-													String defaultPackage,
-													HbmBuildContext ctx) {
+	// --- Field creation ---
+
+	private static DynamicFieldDetails createCollectionField(
+			DynamicClassDetails entityClass,
+			String name,
+			JaxbHbmOneToManyCollectionElementType oneToMany,
+			JaxbHbmManyToManyCollectionElementType manyToMany,
+			JaxbHbmBasicCollectionElementType element,
+			String defaultPackage,
+			HbmBuildContext ctx) {
+		if (oneToMany != null) {
+			return buildOneToManyField(entityClass, name, oneToMany, defaultPackage, ctx);
+		} else if (manyToMany != null) {
+			return buildManyToManyField(entityClass, name, manyToMany, defaultPackage, ctx);
+		} else if (element != null) {
+			return buildElementCollectionField(entityClass, name, element, ctx);
+		}
+		return null;
+	}
+
+	private static DynamicFieldDetails buildOneToManyField(
+			DynamicClassDetails entityClass,
+			String name,
+			JaxbHbmOneToManyCollectionElementType oneToMany,
+			String defaultPackage,
+			HbmBuildContext ctx) {
 		String targetClassName = oneToMany.getClazz();
 		if (targetClassName == null) {
-			return;
+			return null;
 		}
 		String fullTargetName = HbmBuildContext.resolveClassName(targetClassName, defaultPackage);
 		ClassDetails targetClass = ctx.resolveOrCreateClassDetails(
@@ -143,16 +264,18 @@ public class HbmCollectionBuilder {
 		OneToManyJpaAnnotation o2mAnnotation =
 				JpaAnnotations.ONE_TO_MANY.createUsage(ctx.getModelsContext());
 		field.addAnnotationUsage(o2mAnnotation);
+		return field;
 	}
 
-	private static void processManyToManyCollection(DynamicClassDetails entityClass,
-													 String name,
-													 JaxbHbmManyToManyCollectionElementType manyToMany,
-													 String defaultPackage,
-													 HbmBuildContext ctx) {
+	private static DynamicFieldDetails buildManyToManyField(
+			DynamicClassDetails entityClass,
+			String name,
+			JaxbHbmManyToManyCollectionElementType manyToMany,
+			String defaultPackage,
+			HbmBuildContext ctx) {
 		String targetClassName = manyToMany.getClazz();
 		if (targetClassName == null) {
-			return;
+			return null;
 		}
 		String fullTargetName = HbmBuildContext.resolveClassName(targetClassName, defaultPackage);
 		ClassDetails targetClass = ctx.resolveOrCreateClassDetails(
@@ -163,12 +286,14 @@ public class HbmCollectionBuilder {
 		ManyToManyJpaAnnotation m2mAnnotation =
 				JpaAnnotations.MANY_TO_MANY.createUsage(ctx.getModelsContext());
 		field.addAnnotationUsage(m2mAnnotation);
+		return field;
 	}
 
-	private static void processElementCollection(DynamicClassDetails entityClass,
-												   String name,
-												   JaxbHbmBasicCollectionElementType element,
-												   HbmBuildContext ctx) {
+	private static DynamicFieldDetails buildElementCollectionField(
+			DynamicClassDetails entityClass,
+			String name,
+			JaxbHbmBasicCollectionElementType element,
+			HbmBuildContext ctx) {
 		String typeName = element.getTypeAttribute();
 		String javaType = ctx.resolveJavaType(typeName != null ? typeName : "string");
 		ClassDetails elementClass = ctx.getModelsContext().getClassDetailsRegistry()
@@ -179,5 +304,264 @@ public class HbmCollectionBuilder {
 		ElementCollectionJpaAnnotation ecAnnotation =
 				JpaAnnotations.ELEMENT_COLLECTION.createUsage(ctx.getModelsContext());
 		field.addAnnotationUsage(ecAnnotation);
+		return field;
+	}
+
+	// --- Collection metadata ---
+
+	private static void applyCommonMetadata(DynamicFieldDetails field,
+											 String cascade,
+											 JaxbHbmFetchStyleWithSubselectEnum fetch,
+											 JaxbHbmLazyWithExtraEnum lazy,
+											 String where,
+											 int batchSize,
+											 JaxbHbmCacheType cache,
+											 List<JaxbHbmFilterType> filters,
+											 JaxbHbmCustomSqlDmlType sqlInsert,
+											 JaxbHbmCustomSqlDmlType sqlUpdate,
+											 JaxbHbmCustomSqlDmlType sqlDelete,
+											 JaxbHbmCustomSqlDmlType sqlDeleteAll,
+											 boolean mutable,
+											 boolean optimisticLock,
+											 String check,
+											 String table,
+											 String schema,
+											 String catalog,
+											 HbmBuildContext ctx) {
+		ModelsContext mc = ctx.getModelsContext();
+
+		// @Cascade
+		if (cascade != null && !cascade.isEmpty() && !"none".equals(cascade)) {
+			CascadeType[] cascadeTypes = parseCascade(cascade);
+			if (cascadeTypes.length > 0) {
+				CascadeAnnotation cascadeAnnotation =
+						HibernateAnnotations.CASCADE.createUsage(mc);
+				cascadeAnnotation.value(cascadeTypes);
+				field.addAnnotationUsage(cascadeAnnotation);
+			}
+		}
+
+		// @Fetch
+		if (fetch != null) {
+			FetchAnnotation fetchAnnotation =
+					HibernateAnnotations.FETCH.createUsage(mc);
+			fetchAnnotation.value(mapFetchMode(fetch));
+			field.addAnnotationUsage(fetchAnnotation);
+		}
+
+		// @SQLRestriction (where)
+		if (where != null && !where.isEmpty()) {
+			SQLRestrictionAnnotation srAnnotation =
+					HibernateAnnotations.SQL_RESTRICTION.createUsage(mc);
+			srAnnotation.value(where);
+			field.addAnnotationUsage(srAnnotation);
+		}
+
+		// @BatchSize
+		if (batchSize > 0) {
+			BatchSizeAnnotation bsAnnotation =
+					HibernateAnnotations.BATCH_SIZE.createUsage(mc);
+			bsAnnotation.size(batchSize);
+			field.addAnnotationUsage(bsAnnotation);
+		}
+
+		// @Cache
+		if (cache != null) {
+			CacheAnnotation cacheAnnotation =
+					HibernateAnnotations.CACHE.createUsage(mc);
+			cacheAnnotation.usage(mapCacheConcurrency(cache.getUsage()));
+			String region = cache.getRegion();
+			if (region != null && !region.isEmpty()) {
+				cacheAnnotation.region(region);
+			}
+			field.addAnnotationUsage(cacheAnnotation);
+		}
+
+		// @Filter / @Filters
+		if (filters != null && !filters.isEmpty()) {
+			if (filters.size() == 1) {
+				FilterAnnotation fa = HibernateAnnotations.FILTER.createUsage(mc);
+				applyFilter(fa, filters.get(0));
+				field.addAnnotationUsage(fa);
+			} else {
+				FilterAnnotation[] filterAnnotations = new FilterAnnotation[filters.size()];
+				for (int i = 0; i < filters.size(); i++) {
+					FilterAnnotation fa = HibernateAnnotations.FILTER.createUsage(mc);
+					applyFilter(fa, filters.get(i));
+					filterAnnotations[i] = fa;
+				}
+				FiltersAnnotation container = HibernateAnnotations.FILTERS.createUsage(mc);
+				container.value(filterAnnotations);
+				field.addAnnotationUsage(container);
+			}
+		}
+
+		// @SQLInsert
+		if (sqlInsert != null) {
+			SQLInsertAnnotation annotation = HibernateAnnotations.SQL_INSERT.createUsage(mc);
+			annotation.sql(sqlInsert.getValue());
+			annotation.callable(sqlInsert.isCallable());
+			field.addAnnotationUsage(annotation);
+		}
+
+		// @SQLUpdate
+		if (sqlUpdate != null) {
+			SQLUpdateAnnotation annotation = HibernateAnnotations.SQL_UPDATE.createUsage(mc);
+			annotation.sql(sqlUpdate.getValue());
+			annotation.callable(sqlUpdate.isCallable());
+			field.addAnnotationUsage(annotation);
+		}
+
+		// @SQLDelete
+		if (sqlDelete != null) {
+			SQLDeleteAnnotation annotation = HibernateAnnotations.SQL_DELETE.createUsage(mc);
+			annotation.sql(sqlDelete.getValue());
+			annotation.callable(sqlDelete.isCallable());
+			field.addAnnotationUsage(annotation);
+		}
+
+		// @SQLDeleteAll
+		if (sqlDeleteAll != null) {
+			SQLDeleteAllAnnotation annotation =
+					HibernateAnnotations.SQL_DELETE_ALL.createUsage(mc);
+			annotation.sql(sqlDeleteAll.getValue());
+			annotation.callable(sqlDeleteAll.isCallable());
+			field.addAnnotationUsage(annotation);
+		}
+
+		// @Immutable (mutable=false)
+		if (!mutable) {
+			field.addAnnotationUsage(
+					HibernateAnnotations.IMMUTABLE.createUsage(mc));
+		}
+
+		// @OptimisticLock(excluded=true) (optimistic-lock=false)
+		if (!optimisticLock) {
+			OptimisticLockAnnotation olAnnotation =
+					HibernateAnnotations.OPTIMISTIC_LOCK.createUsage(mc);
+			olAnnotation.excluded(true);
+			field.addAnnotationUsage(olAnnotation);
+		}
+
+		// @Check
+		if (check != null && !check.isEmpty()) {
+			CheckAnnotation checkAnnotation =
+					HibernateAnnotations.CHECK.createUsage(mc);
+			checkAnnotation.constraints(check);
+			field.addAnnotationUsage(checkAnnotation);
+		}
+
+		// @JoinTable (collection table)
+		if (table != null && !table.isEmpty()) {
+			JoinTableJpaAnnotation jtAnnotation =
+					JpaAnnotations.JOIN_TABLE.createUsage(mc);
+			jtAnnotation.name(table);
+			if (schema != null && !schema.isEmpty()) {
+				jtAnnotation.schema(schema);
+			}
+			if (catalog != null && !catalog.isEmpty()) {
+				jtAnnotation.catalog(catalog);
+			}
+			field.addAnnotationUsage(jtAnnotation);
+		}
+	}
+
+	private static void applyFilter(FilterAnnotation annotation,
+									  JaxbHbmFilterType filter) {
+		annotation.name(filter.getName());
+		String condition = filter.getCondition();
+		if (condition != null && !condition.isEmpty()) {
+			annotation.condition(condition);
+		}
+	}
+
+	private static void applySortAnnotation(DynamicFieldDetails field,
+											 String sort,
+											 HbmBuildContext ctx) {
+		if (sort == null || sort.isEmpty() || "unsorted".equals(sort)) {
+			return;
+		}
+		ModelsContext mc = ctx.getModelsContext();
+		if ("natural".equals(sort)) {
+			SortNaturalAnnotation sortAnnotation =
+					HibernateAnnotations.SORT_NATURAL.createUsage(mc);
+			field.addAnnotationUsage(sortAnnotation);
+		} else {
+			// sort value is a Comparator class name
+			SortComparatorAnnotation sortAnnotation =
+					HibernateAnnotations.SORT_COMPARATOR.createUsage(mc);
+			try {
+				sortAnnotation.value(
+						(Class<? extends java.util.Comparator<?>>) Class.forName(sort));
+			} catch (ClassNotFoundException e) {
+				// Comparator class not on classpath — skip
+				return;
+			}
+			field.addAnnotationUsage(sortAnnotation);
+		}
+	}
+
+	private static void applyOrderBy(DynamicFieldDetails field,
+									   String orderBy,
+									   HbmBuildContext ctx) {
+		if (orderBy == null || orderBy.isEmpty()) {
+			return;
+		}
+		// Use Hibernate's @SQLOrder for SQL-level ordering
+		var sqlOrderAnnotation =
+				HibernateAnnotations.SQL_ORDER.createUsage(ctx.getModelsContext());
+		sqlOrderAnnotation.value(orderBy);
+		field.addAnnotationUsage(sqlOrderAnnotation);
+	}
+
+	// --- Mapping helpers ---
+
+	private static CascadeType[] parseCascade(String cascade) {
+		List<CascadeType> types = new ArrayList<>();
+		for (String part : cascade.split(",")) {
+			String trimmed = part.trim().toLowerCase();
+			CascadeType ct = mapCascadeType(trimmed);
+			if (ct != null) {
+				types.add(ct);
+				// "all-delete-orphan" means ALL + DELETE_ORPHAN
+				if ("all-delete-orphan".equals(trimmed)) {
+					types.add(CascadeType.DELETE_ORPHAN);
+				}
+			}
+		}
+		return types.toArray(new CascadeType[0]);
+	}
+
+	private static CascadeType mapCascadeType(String value) {
+		return switch (value) {
+			case "all", "all-delete-orphan" -> CascadeType.ALL;
+			case "save-update" -> CascadeType.PERSIST; // closest equivalent in Hibernate 8
+			case "delete", "remove" -> CascadeType.REMOVE;
+			case "persist" -> CascadeType.PERSIST;
+			case "merge" -> CascadeType.MERGE;
+			case "refresh" -> CascadeType.REFRESH;
+			case "lock" -> CascadeType.LOCK;
+			case "replicate" -> CascadeType.REPLICATE;
+			case "evict", "detach" -> CascadeType.DETACH;
+			case "delete-orphan" -> CascadeType.DELETE_ORPHAN;
+			default -> null;
+		};
+	}
+
+	private static FetchMode mapFetchMode(JaxbHbmFetchStyleWithSubselectEnum fetch) {
+		return switch (fetch) {
+			case JOIN -> FetchMode.JOIN;
+			case SELECT -> FetchMode.SELECT;
+			case SUBSELECT -> FetchMode.SUBSELECT;
+		};
+	}
+
+	private static CacheConcurrencyStrategy mapCacheConcurrency(AccessType usage) {
+		return switch (usage) {
+			case READ_ONLY -> CacheConcurrencyStrategy.READ_ONLY;
+			case READ_WRITE -> CacheConcurrencyStrategy.READ_WRITE;
+			case NONSTRICT_READ_WRITE -> CacheConcurrencyStrategy.NONSTRICT_READ_WRITE;
+			case TRANSACTIONAL -> CacheConcurrencyStrategy.TRANSACTIONAL;
+		};
 	}
 }

@@ -17,17 +17,23 @@
  */
 package org.hibernate.tool.internal.reveng.models.builder.hbm;
 
+import java.util.List;
+
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBasicAttributeType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTimestampAttributeType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmVersionAttributeType;
+import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.internal.NaturalIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.VersionJpaAnnotation;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
+import org.hibernate.models.spi.FieldDetails;
 
 /**
  * Builds fields from hbm.xml {@code <property>}, {@code <version>},
- * and {@code <timestamp>} elements with appropriate JPA annotations.
+ * {@code <timestamp>}, and {@code <natural-id>} elements with
+ * appropriate JPA/Hibernate annotations.
  *
  * @author Koen Aers
  */
@@ -84,5 +90,23 @@ public class HbmPropertyBuilder {
 				JpaAnnotations.VERSION.createUsage(ctx.getModelsContext());
 		field.addAnnotationUsage(versionAnnotation);
 		ctx.addColumnAnnotation(field, null, timestamp.getColumnAttribute(), name);
+	}
+
+	/**
+	 * Marks fields added since {@code fieldCountBefore} with
+	 * {@code @NaturalId}. Called after processing {@code <natural-id>}
+	 * attributes.
+	 */
+	public static void markNaturalIdFields(DynamicClassDetails entityClass,
+											int fieldCountBefore,
+											boolean mutable,
+											HbmBuildContext ctx) {
+		List<FieldDetails> fields = entityClass.getFields();
+		for (int i = fieldCountBefore; i < fields.size(); i++) {
+			NaturalIdAnnotation natIdAnnotation =
+					HibernateAnnotations.NATURAL_ID.createUsage(ctx.getModelsContext());
+			natIdAnnotation.mutable(mutable);
+			((DynamicFieldDetails) fields.get(i)).addAnnotationUsage(natIdAnnotation);
+		}
 	}
 }

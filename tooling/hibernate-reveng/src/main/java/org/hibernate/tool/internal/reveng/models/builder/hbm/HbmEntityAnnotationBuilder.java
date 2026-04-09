@@ -18,9 +18,16 @@
 package org.hibernate.tool.internal.reveng.models.builder.hbm;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCacheType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmColumnType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmLoaderType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCustomSqlDmlType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFetchProfileType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterDefinitionType;
@@ -28,33 +35,66 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterParameterType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmKeyType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryPropertyReturnType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryReturnType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmResultSetMappingType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSecondaryTableType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
+import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
+import org.hibernate.boot.models.annotations.internal.CheckAnnotation;
+import org.hibernate.boot.models.annotations.internal.ColumnResultJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.CommentAnnotation;
+import org.hibernate.boot.models.annotations.internal.EntityResultJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.FieldResultJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.HQLSelectAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedNativeQueryJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedNativeQueriesJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedQueryJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.NamedQueriesJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.FetchProfileAnnotation;
 import org.hibernate.boot.models.annotations.internal.FetchProfilesAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterDefAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterDefsAnnotation;
 import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
+import org.hibernate.boot.models.annotations.internal.OptimisticLockingAnnotation;
 import org.hibernate.boot.models.annotations.internal.ParamDefAnnotation;
 import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.RowIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLDeleteAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLInsertAnnotation;
+import org.hibernate.boot.models.annotations.internal.SQLRestrictionAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLUpdateAnnotation;
 import org.hibernate.boot.models.annotations.internal.SecondaryTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.SecondaryTablesJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.SqlResultSetMappingJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.SqlResultSetMappingsJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.SubselectAnnotation;
+import org.hibernate.boot.models.annotations.internal.SynchronizeAnnotation;
+import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 
+import jakarta.persistence.ColumnResult;
+import jakarta.persistence.EntityResult;
+import jakarta.persistence.FieldResult;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 
 /**
- * Adds entity-level annotations from hbm.xml elements:
+ * Adds entity-level annotations from hbm.xml elements and attributes:
  * {@code <filter>}, {@code <filter-def>}, {@code <fetch-profile>},
  * {@code <sql-insert>}/{@code <sql-update>}/{@code <sql-delete>},
- * and {@code <join>} (secondary tables).
+ * {@code <join>} (secondary tables), {@code <cache>}, {@code <comment>},
+ * {@code <synchronize>}, and behavioral attributes like
+ * {@code mutable}, {@code dynamic-insert}, {@code dynamic-update},
+ * {@code batch-size}, {@code optimistic-lock}, {@code where},
+ * {@code check}, {@code rowid}, {@code subselect}.
  *
  * @author Koen Aers
  */
@@ -309,17 +349,401 @@ public class HbmEntityAnnotationBuilder {
 		}
 	}
 
-	// --- Mapping-level filter-defs and fetch-profiles ---
+	// --- Entity behavioral attributes ---
 
 	/**
-	 * Processes mapping-level {@code <filter-def>} and {@code <fetch-profile>}
-	 * elements from the {@code <hibernate-mapping>} root. These are placed on
-	 * the first entity in the mapping file.
+	 * Processes entity-level behavioral attributes and elements:
+	 * {@code mutable}, {@code dynamic-insert}, {@code dynamic-update},
+	 * {@code batch-size}, {@code optimistic-lock}, {@code where},
+	 * {@code check}, {@code rowid}, {@code subselect}, {@code <cache>},
+	 * {@code <comment>}, and {@code <synchronize>}.
+	 */
+	public static void processEntityBehavior(DynamicClassDetails entityClass,
+											  JaxbHbmRootEntityType entityType,
+											  HbmBuildContext ctx) {
+		ModelsContext mc = ctx.getModelsContext();
+
+		// @Immutable (mutable="false")
+		if (!entityType.isMutable()) {
+			entityClass.addAnnotationUsage(
+					HibernateAnnotations.IMMUTABLE.createUsage(mc));
+		}
+
+		// @DynamicInsert
+		if (entityType.isDynamicInsert()) {
+			entityClass.addAnnotationUsage(
+					HibernateAnnotations.DYNAMIC_INSERT.createUsage(mc));
+		}
+
+		// @DynamicUpdate
+		if (entityType.isDynamicUpdate()) {
+			entityClass.addAnnotationUsage(
+					HibernateAnnotations.DYNAMIC_UPDATE.createUsage(mc));
+		}
+
+		// @BatchSize
+		int batchSize = entityType.getBatchSize();
+		if (batchSize > 0) {
+			BatchSizeAnnotation bsAnnotation =
+					HibernateAnnotations.BATCH_SIZE.createUsage(mc);
+			bsAnnotation.size(batchSize);
+			entityClass.addAnnotationUsage(bsAnnotation);
+		}
+
+		// @OptimisticLocking
+		OptimisticLockStyle lockStyle = entityType.getOptimisticLock();
+		if (lockStyle != null && lockStyle != OptimisticLockStyle.VERSION) {
+			OptimisticLockingAnnotation olAnnotation =
+					HibernateAnnotations.OPTIMISTIC_LOCKING.createUsage(mc);
+			olAnnotation.type(mapOptimisticLockType(lockStyle));
+			entityClass.addAnnotationUsage(olAnnotation);
+		}
+
+		// @SQLRestriction (where="...")
+		String where = entityType.getWhere();
+		if (where != null && !where.isEmpty()) {
+			SQLRestrictionAnnotation srAnnotation =
+					HibernateAnnotations.SQL_RESTRICTION.createUsage(mc);
+			srAnnotation.value(where);
+			entityClass.addAnnotationUsage(srAnnotation);
+		}
+
+		// @Check (check="...")
+		String check = entityType.getCheck();
+		if (check != null && !check.isEmpty()) {
+			CheckAnnotation checkAnnotation =
+					HibernateAnnotations.CHECK.createUsage(mc);
+			checkAnnotation.constraints(check);
+			entityClass.addAnnotationUsage(checkAnnotation);
+		}
+
+		// @RowId (rowid="...")
+		String rowid = entityType.getRowid();
+		if (rowid != null && !rowid.isEmpty()) {
+			RowIdAnnotation rowIdAnnotation =
+					HibernateAnnotations.ROW_ID.createUsage(mc);
+			rowIdAnnotation.value(rowid);
+			entityClass.addAnnotationUsage(rowIdAnnotation);
+		}
+
+		// @Subselect (from element or attribute)
+		String subselect = entityType.getSubselect();
+		if (subselect == null || subselect.isEmpty()) {
+			subselect = entityType.getSubselectAttribute();
+		}
+		if (subselect != null && !subselect.isEmpty()) {
+			SubselectAnnotation ssAnnotation =
+					HibernateAnnotations.SUBSELECT.createUsage(mc);
+			ssAnnotation.value(subselect);
+			entityClass.addAnnotationUsage(ssAnnotation);
+		}
+
+		// @Cache
+		JaxbHbmCacheType cache = entityType.getCache();
+		if (cache != null) {
+			CacheAnnotation cacheAnnotation =
+					HibernateAnnotations.CACHE.createUsage(mc);
+			cacheAnnotation.usage(mapCacheConcurrency(cache.getUsage()));
+			String region = cache.getRegion();
+			if (region != null && !region.isEmpty()) {
+				cacheAnnotation.region(region);
+			}
+			entityClass.addAnnotationUsage(cacheAnnotation);
+		}
+
+		// @Comment
+		String comment = entityType.getComment();
+		if (comment != null && !comment.isEmpty()) {
+			CommentAnnotation commentAnnotation =
+					HibernateAnnotations.COMMENT.createUsage(mc);
+			commentAnnotation.value(comment);
+			entityClass.addAnnotationUsage(commentAnnotation);
+		}
+
+		// @Synchronize
+		List<JaxbHbmSynchronizeType> synchronize = entityType.getSynchronize();
+		if (synchronize != null && !synchronize.isEmpty()) {
+			String[] tables = synchronize.stream()
+					.map(JaxbHbmSynchronizeType::getTable)
+					.toArray(String[]::new);
+			SynchronizeAnnotation syncAnnotation =
+					HibernateAnnotations.SYNCHRONIZE.createUsage(mc);
+			syncAnnotation.value(tables);
+			entityClass.addAnnotationUsage(syncAnnotation);
+		}
+	}
+
+	private static OptimisticLockType mapOptimisticLockType(OptimisticLockStyle style) {
+		return switch (style) {
+			case NONE -> OptimisticLockType.NONE;
+			case DIRTY -> OptimisticLockType.DIRTY;
+			case ALL -> OptimisticLockType.ALL;
+			default -> OptimisticLockType.VERSION;
+		};
+	}
+
+	private static CacheConcurrencyStrategy mapCacheConcurrency(AccessType usage) {
+		return switch (usage) {
+			case READ_ONLY -> CacheConcurrencyStrategy.READ_ONLY;
+			case READ_WRITE -> CacheConcurrencyStrategy.READ_WRITE;
+			case NONSTRICT_READ_WRITE -> CacheConcurrencyStrategy.NONSTRICT_READ_WRITE;
+			case TRANSACTIONAL -> CacheConcurrencyStrategy.TRANSACTIONAL;
+		};
+	}
+
+	// --- Named Queries ---
+
+	public static void processNamedQueries(DynamicClassDetails entityClass,
+											List<JaxbHbmNamedQueryType> queries,
+											HbmBuildContext ctx) {
+		if (queries == null || queries.isEmpty()) {
+			return;
+		}
+		ModelsContext mc = ctx.getModelsContext();
+		if (queries.size() == 1) {
+			NamedQueryJpaAnnotation nqAnnotation =
+					JpaAnnotations.NAMED_QUERY.createUsage(mc);
+			applyNamedQuery(nqAnnotation, queries.get(0));
+			entityClass.addAnnotationUsage(nqAnnotation);
+		} else {
+			NamedQueryJpaAnnotation[] nqAnnotations =
+					new NamedQueryJpaAnnotation[queries.size()];
+			for (int i = 0; i < queries.size(); i++) {
+				NamedQueryJpaAnnotation nqa =
+						JpaAnnotations.NAMED_QUERY.createUsage(mc);
+				applyNamedQuery(nqa, queries.get(i));
+				nqAnnotations[i] = nqa;
+			}
+			NamedQueriesJpaAnnotation container =
+					JpaAnnotations.NAMED_QUERIES.createUsage(mc);
+			container.value(nqAnnotations);
+			entityClass.addAnnotationUsage(container);
+		}
+	}
+
+	private static void applyNamedQuery(NamedQueryJpaAnnotation annotation,
+										  JaxbHbmNamedQueryType query) {
+		annotation.name(query.getName());
+		annotation.query(extractQueryString(query.getContent()));
+	}
+
+	public static void processNamedNativeQueries(DynamicClassDetails entityClass,
+												  List<JaxbHbmNamedNativeQueryType> queries,
+												  HbmBuildContext ctx) {
+		if (queries == null || queries.isEmpty()) {
+			return;
+		}
+		ModelsContext mc = ctx.getModelsContext();
+		if (queries.size() == 1) {
+			NamedNativeQueryJpaAnnotation nqAnnotation =
+					JpaAnnotations.NAMED_NATIVE_QUERY.createUsage(mc);
+			applyNamedNativeQuery(nqAnnotation, queries.get(0));
+			entityClass.addAnnotationUsage(nqAnnotation);
+		} else {
+			NamedNativeQueryJpaAnnotation[] nqAnnotations =
+					new NamedNativeQueryJpaAnnotation[queries.size()];
+			for (int i = 0; i < queries.size(); i++) {
+				NamedNativeQueryJpaAnnotation nqa =
+						JpaAnnotations.NAMED_NATIVE_QUERY.createUsage(mc);
+				applyNamedNativeQuery(nqa, queries.get(i));
+				nqAnnotations[i] = nqa;
+			}
+			NamedNativeQueriesJpaAnnotation container =
+					JpaAnnotations.NAMED_NATIVE_QUERIES.createUsage(mc);
+			container.value(nqAnnotations);
+			entityClass.addAnnotationUsage(container);
+		}
+	}
+
+	private static void applyNamedNativeQuery(NamedNativeQueryJpaAnnotation annotation,
+											   JaxbHbmNamedNativeQueryType query) {
+		annotation.name(query.getName());
+		annotation.query(extractQueryString(query.getContent()));
+		String resultsetRef = query.getResultsetRef();
+		if (resultsetRef != null && !resultsetRef.isEmpty()) {
+			annotation.resultSetMapping(resultsetRef);
+		}
+	}
+
+	/**
+	 * Extracts the query string from hbm.xml mixed content.
+	 * The content list contains strings (the query text) interspersed
+	 * with possible {@code <query-param>} elements.
+	 */
+	private static String extractQueryString(List<Serializable> content) {
+		if (content == null || content.isEmpty()) {
+			return "";
+		}
+		StringBuilder sb = new StringBuilder();
+		for (Serializable item : content) {
+			if (item instanceof String s) {
+				sb.append(s);
+			}
+		}
+		return sb.toString().trim();
+	}
+
+	// --- Concrete Proxy (proxy/lazy) ---
+
+	/**
+	 * Adds {@code @ConcreteProxy} when the entity specifies a proxy class
+	 * or sets lazy="true".
+	 */
+	public static void processProxy(DynamicClassDetails entityClass,
+									 JaxbHbmRootEntityType entityType,
+									 HbmBuildContext ctx) {
+		String proxy = entityType.getProxy();
+		Boolean lazy = entityType.isLazy();
+		if (proxy != null && !proxy.isEmpty()) {
+			entityClass.addAnnotationUsage(
+					HibernateAnnotations.CONCRETE_PROXY.createUsage(
+							ctx.getModelsContext()));
+		} else if (lazy != null && lazy) {
+			entityClass.addAnnotationUsage(
+					HibernateAnnotations.CONCRETE_PROXY.createUsage(
+							ctx.getModelsContext()));
+		}
+	}
+
+	// --- Loader ---
+
+	/**
+	 * Processes the {@code <loader>} element which references a named query
+	 * for custom entity loading. Mapped to {@code @HQLSelect(query=queryRef)}.
+	 */
+	public static void processLoader(DynamicClassDetails entityClass,
+									   JaxbHbmLoaderType loader,
+									   HbmBuildContext ctx) {
+		if (loader == null) {
+			return;
+		}
+		String queryRef = loader.getQueryRef();
+		if (queryRef != null && !queryRef.isEmpty()) {
+			HQLSelectAnnotation hqlAnnotation =
+					HibernateAnnotations.HQL_SELECT.createUsage(ctx.getModelsContext());
+			hqlAnnotation.query(queryRef);
+			entityClass.addAnnotationUsage(hqlAnnotation);
+		}
+	}
+
+	// --- Result Set Mappings ---
+
+	/**
+	 * Processes {@code <resultset>} elements into {@code @SqlResultSetMapping}
+	 * annotations with {@code @EntityResult} and {@code @ColumnResult}.
+	 */
+	public static void processResultSetMappings(DynamicClassDetails entityClass,
+												 List<JaxbHbmResultSetMappingType> resultsets,
+												 HbmBuildContext ctx) {
+		if (resultsets == null || resultsets.isEmpty()) {
+			return;
+		}
+		ModelsContext mc = ctx.getModelsContext();
+		if (resultsets.size() == 1) {
+			SqlResultSetMappingJpaAnnotation annotation =
+					JpaAnnotations.SQL_RESULT_SET_MAPPING.createUsage(mc);
+			applyResultSetMapping(annotation, resultsets.get(0), ctx);
+			entityClass.addAnnotationUsage(annotation);
+		} else {
+			SqlResultSetMappingJpaAnnotation[] annotations =
+					new SqlResultSetMappingJpaAnnotation[resultsets.size()];
+			for (int i = 0; i < resultsets.size(); i++) {
+				SqlResultSetMappingJpaAnnotation a =
+						JpaAnnotations.SQL_RESULT_SET_MAPPING.createUsage(mc);
+				applyResultSetMapping(a, resultsets.get(i), ctx);
+				annotations[i] = a;
+			}
+			SqlResultSetMappingsJpaAnnotation container =
+					JpaAnnotations.SQL_RESULT_SET_MAPPINGS.createUsage(mc);
+			container.value(annotations);
+			entityClass.addAnnotationUsage(container);
+		}
+	}
+
+	private static void applyResultSetMapping(SqlResultSetMappingJpaAnnotation annotation,
+											   JaxbHbmResultSetMappingType resultset,
+											   HbmBuildContext ctx) {
+		ModelsContext mc = ctx.getModelsContext();
+		annotation.name(resultset.getName());
+
+		List<Serializable> sources = resultset.getValueMappingSources();
+		if (sources == null || sources.isEmpty()) {
+			return;
+		}
+
+		List<EntityResult> entityResults = new ArrayList<>();
+		List<ColumnResult> columnResults = new ArrayList<>();
+
+		for (Serializable source : sources) {
+			if (source instanceof JaxbHbmNativeQueryReturnType returnType) {
+				EntityResultJpaAnnotation er =
+						JpaAnnotations.ENTITY_RESULT.createUsage(mc);
+				String className = returnType.getClazz();
+				if (className != null) {
+					try {
+						er.entityClass(Class.forName(className));
+					} catch (ClassNotFoundException e) {
+						er.entityClass(Object.class);
+					}
+				}
+				// Field results from return-property elements
+				List<JaxbHbmNativeQueryPropertyReturnType> props =
+						returnType.getReturnProperty();
+				if (props != null && !props.isEmpty()) {
+					FieldResult[] fieldResults = new FieldResult[props.size()];
+					for (int j = 0; j < props.size(); j++) {
+						FieldResultJpaAnnotation fr =
+								JpaAnnotations.FIELD_RESULT.createUsage(mc);
+						fr.name(props.get(j).getName());
+						String col = props.get(j).getColumn();
+						if (col != null) {
+							fr.column(col);
+						}
+						fieldResults[j] = fr;
+					}
+					er.fields(fieldResults);
+				}
+				entityResults.add(er);
+			} else if (source instanceof JaxbHbmNativeQueryScalarReturnType scalarReturn) {
+				ColumnResultJpaAnnotation cr =
+						JpaAnnotations.COLUMN_RESULT.createUsage(mc);
+				cr.name(scalarReturn.getColumn());
+				String type = scalarReturn.getType();
+				if (type != null) {
+					try {
+						cr.type(Class.forName(
+								ctx.resolveJavaType(type)));
+					} catch (ClassNotFoundException e) {
+						cr.type(Object.class);
+					}
+				}
+				columnResults.add(cr);
+			}
+		}
+
+		if (!entityResults.isEmpty()) {
+			annotation.entities(entityResults.toArray(new EntityResult[0]));
+		}
+		if (!columnResults.isEmpty()) {
+			annotation.columns(columnResults.toArray(new ColumnResult[0]));
+		}
+	}
+
+	// --- Mapping-level filter-defs, fetch-profiles, and named queries ---
+
+	/**
+	 * Processes mapping-level elements from the {@code <hibernate-mapping>}
+	 * root: {@code <filter-def>}, {@code <fetch-profile>}, {@code <query>},
+	 * {@code <sql-query>}, and {@code <resultset>}. These are placed on the
+	 * first entity in the mapping file.
 	 */
 	public static void processMappingLevelAnnotations(DynamicClassDetails entityClass,
 													   JaxbHbmHibernateMapping mapping,
 													   HbmBuildContext ctx) {
 		processFilterDefs(entityClass, mapping.getFilterDef(), ctx);
 		processFetchProfiles(entityClass, mapping.getFetchProfile(), ctx);
+		processNamedQueries(entityClass, mapping.getQuery(), ctx);
+		processNamedNativeQueries(entityClass, mapping.getSqlQuery(), ctx);
+		processResultSetMappings(entityClass, mapping.getResultset(), ctx);
 	}
 }

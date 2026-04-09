@@ -21,9 +21,28 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.OptimisticLock;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLOrder;
+import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.SortNatural;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmArrayType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBagCollectionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBasicCollectionElementType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCacheType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCustomSqlDmlType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFetchStyleWithSubselectEnum;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIdBagCollectionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmKeyType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmListType;
@@ -32,6 +51,9 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmMapType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOneToManyCollectionElementType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPrimitiveArrayType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSetType;
+import org.hibernate.cache.spi.access.AccessType;
+
+import jakarta.persistence.JoinTable;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.junit.jupiter.api.BeforeEach;
@@ -281,5 +303,256 @@ public class HbmCollectionBuilderTest {
 
 		FieldDetails field = entityClass.getFields().get(0);
 		assertNotNull(field.getAnnotationUsage(ElementCollection.class, ctx.getModelsContext()));
+	}
+
+	// --- Collection metadata tests ---
+
+	private JaxbHbmSetType createSetWithOneToMany() {
+		JaxbHbmSetType set = new JaxbHbmSetType();
+		set.setName("employees");
+		JaxbHbmKeyType key = new JaxbHbmKeyType();
+		key.setColumnAttribute("DEPT_ID");
+		set.setKey(key);
+		JaxbHbmOneToManyCollectionElementType o2m = new JaxbHbmOneToManyCollectionElementType();
+		o2m.setClazz("Employee");
+		set.setOneToMany(o2m);
+		return set;
+	}
+
+	@Test
+	public void testCascadeAll() {
+		JaxbHbmSetType set = createSetWithOneToMany();
+		set.setCascade("all");
+
+		HbmCollectionBuilder.processSet(entityClass, set, "com.example", ctx);
+
+		FieldDetails field = entityClass.getFields().get(0);
+		Cascade cascadeAnn = field.getAnnotationUsage(Cascade.class, ctx.getModelsContext());
+		assertNotNull(cascadeAnn);
+		assertEquals(1, cascadeAnn.value().length);
+		assertEquals(CascadeType.ALL, cascadeAnn.value()[0]);
+	}
+
+	@Test
+	public void testCascadeMultiple() {
+		JaxbHbmSetType set = createSetWithOneToMany();
+		set.setCascade("persist, merge, refresh");
+
+		HbmCollectionBuilder.processSet(entityClass, set, "com.example", ctx);
+
+		FieldDetails field = entityClass.getFields().get(0);
+		Cascade cascadeAnn = field.getAnnotationUsage(Cascade.class, ctx.getModelsContext());
+		assertNotNull(cascadeAnn);
+		assertEquals(3, cascadeAnn.value().length);
+	}
+
+	@Test
+	public void testCascadeNone() {
+		JaxbHbmSetType set = createSetWithOneToMany();
+		set.setCascade("none");
+
+		HbmCollectionBuilder.processSet(entityClass, set, "com.example", ctx);
+
+		FieldDetails field = entityClass.getFields().get(0);
+		assertNull(field.getAnnotationUsage(Cascade.class, ctx.getModelsContext()));
+	}
+
+	@Test
+	public void testFetchJoin() {
+		JaxbHbmSetType set = createSetWithOneToMany();
+		set.setFetch(JaxbHbmFetchStyleWithSubselectEnum.JOIN);
+
+		HbmCollectionBuilder.processSet(entityClass, set, "com.example", ctx);
+
+		FieldDetails field = entityClass.getFields().get(0);
+		Fetch fetchAnn = field.getAnnotationUsage(Fetch.class, ctx.getModelsContext());
+		assertNotNull(fetchAnn);
+		assertEquals(FetchMode.JOIN, fetchAnn.value());
+	}
+
+	@Test
+	public void testFetchSubselect() {
+		JaxbHbmSetType set = createSetWithOneToMany();
+		set.setFetch(JaxbHbmFetchStyleWithSubselectEnum.SUBSELECT);
+
+		HbmCollectionBuilder.processSet(entityClass, set, "com.example", ctx);
+
+		FieldDetails field = entityClass.getFields().get(0);
+		Fetch fetchAnn = field.getAnnotationUsage(Fetch.class, ctx.getModelsContext());
+		assertNotNull(fetchAnn);
+		assertEquals(FetchMode.SUBSELECT, fetchAnn.value());
+	}
+
+	@Test
+	public void testWhere() {
+		JaxbHbmSetType set = createSetWithOneToMany();
+		set.setWhere("active = true");
+
+		HbmCollectionBuilder.processSet(entityClass, set, "com.example", ctx);
+
+		FieldDetails field = entityClass.getFields().get(0);
+		SQLRestriction srAnn = field.getAnnotationUsage(
+				SQLRestriction.class, ctx.getModelsContext());
+		assertNotNull(srAnn);
+		assertEquals("active = true", srAnn.value());
+	}
+
+	@Test
+	public void testBatchSize() {
+		JaxbHbmSetType set = createSetWithOneToMany();
+		set.setBatchSize(10);
+
+		HbmCollectionBuilder.processSet(entityClass, set, "com.example", ctx);
+
+		FieldDetails field = entityClass.getFields().get(0);
+		BatchSize bsAnn = field.getAnnotationUsage(
+				BatchSize.class, ctx.getModelsContext());
+		assertNotNull(bsAnn);
+		assertEquals(10, bsAnn.size());
+	}
+
+	@Test
+	public void testCache() {
+		JaxbHbmSetType set = createSetWithOneToMany();
+		JaxbHbmCacheType cache = new JaxbHbmCacheType();
+		cache.setUsage(AccessType.READ_ONLY);
+		cache.setRegion("dept_employees");
+		set.setCache(cache);
+
+		HbmCollectionBuilder.processSet(entityClass, set, "com.example", ctx);
+
+		FieldDetails field = entityClass.getFields().get(0);
+		Cache cacheAnn = field.getAnnotationUsage(Cache.class, ctx.getModelsContext());
+		assertNotNull(cacheAnn);
+		assertEquals(CacheConcurrencyStrategy.READ_ONLY, cacheAnn.usage());
+		assertEquals("dept_employees", cacheAnn.region());
+	}
+
+	@Test
+	public void testFilter() {
+		JaxbHbmSetType set = createSetWithOneToMany();
+		JaxbHbmFilterType filter = new JaxbHbmFilterType();
+		filter.setName("activeFilter");
+		filter.setCondition("active = true");
+		set.getFilter().add(filter);
+
+		HbmCollectionBuilder.processSet(entityClass, set, "com.example", ctx);
+
+		FieldDetails field = entityClass.getFields().get(0);
+		Filter filterAnn = field.getAnnotationUsage(Filter.class, ctx.getModelsContext());
+		assertNotNull(filterAnn);
+		assertEquals("activeFilter", filterAnn.name());
+		assertEquals("active = true", filterAnn.condition());
+	}
+
+	@Test
+	public void testSqlInsertDelete() {
+		JaxbHbmSetType set = createSetWithOneToMany();
+		JaxbHbmCustomSqlDmlType sqlInsert = new JaxbHbmCustomSqlDmlType();
+		sqlInsert.setValue("INSERT INTO dept_emp VALUES(?, ?)");
+		sqlInsert.setCallable(false);
+		set.setSqlInsert(sqlInsert);
+		JaxbHbmCustomSqlDmlType sqlDelete = new JaxbHbmCustomSqlDmlType();
+		sqlDelete.setValue("{call removeDeptEmp(?)}");
+		sqlDelete.setCallable(true);
+		set.setSqlDelete(sqlDelete);
+
+		HbmCollectionBuilder.processSet(entityClass, set, "com.example", ctx);
+
+		FieldDetails field = entityClass.getFields().get(0);
+		SQLInsert insertAnn = field.getAnnotationUsage(
+				SQLInsert.class, ctx.getModelsContext());
+		assertNotNull(insertAnn);
+		assertEquals("INSERT INTO dept_emp VALUES(?, ?)", insertAnn.sql());
+
+		SQLDelete deleteAnn = field.getAnnotationUsage(
+				SQLDelete.class, ctx.getModelsContext());
+		assertNotNull(deleteAnn);
+		assertTrue(deleteAnn.callable());
+	}
+
+	@Test
+	public void testImmutableCollection() {
+		JaxbHbmSetType set = createSetWithOneToMany();
+		set.setMutable(false);
+
+		HbmCollectionBuilder.processSet(entityClass, set, "com.example", ctx);
+
+		FieldDetails field = entityClass.getFields().get(0);
+		assertNotNull(field.getAnnotationUsage(Immutable.class, ctx.getModelsContext()));
+	}
+
+	@Test
+	public void testOptimisticLockExcluded() {
+		JaxbHbmSetType set = createSetWithOneToMany();
+		set.setOptimisticLock(false);
+
+		HbmCollectionBuilder.processSet(entityClass, set, "com.example", ctx);
+
+		FieldDetails field = entityClass.getFields().get(0);
+		OptimisticLock olAnn = field.getAnnotationUsage(
+				OptimisticLock.class, ctx.getModelsContext());
+		assertNotNull(olAnn);
+		assertTrue(olAnn.excluded());
+	}
+
+	@Test
+	public void testJoinTable() {
+		JaxbHbmSetType set = createSetWithOneToMany();
+		set.setTable("DEPT_EMP");
+		set.setSchema("HR");
+		set.setCatalog("COMPANY_DB");
+
+		HbmCollectionBuilder.processSet(entityClass, set, "com.example", ctx);
+
+		FieldDetails field = entityClass.getFields().get(0);
+		JoinTable jtAnn = field.getAnnotationUsage(
+				JoinTable.class, ctx.getModelsContext());
+		assertNotNull(jtAnn);
+		assertEquals("DEPT_EMP", jtAnn.name());
+		assertEquals("HR", jtAnn.schema());
+		assertEquals("COMPANY_DB", jtAnn.catalog());
+	}
+
+	@Test
+	public void testSortNatural() {
+		JaxbHbmSetType set = createSetWithOneToMany();
+		set.setSort("natural");
+
+		HbmCollectionBuilder.processSet(entityClass, set, "com.example", ctx);
+
+		FieldDetails field = entityClass.getFields().get(0);
+		assertNotNull(field.getAnnotationUsage(SortNatural.class, ctx.getModelsContext()));
+	}
+
+	@Test
+	public void testOrderBy() {
+		JaxbHbmSetType set = createSetWithOneToMany();
+		set.setOrderBy("name ASC");
+
+		HbmCollectionBuilder.processSet(entityClass, set, "com.example", ctx);
+
+		FieldDetails field = entityClass.getFields().get(0);
+		SQLOrder orderAnn = field.getAnnotationUsage(
+				SQLOrder.class, ctx.getModelsContext());
+		assertNotNull(orderAnn);
+		assertEquals("name ASC", orderAnn.value());
+	}
+
+	@Test
+	public void testDefaultMetadataAddsNothing() {
+		JaxbHbmSetType set = createSetWithOneToMany();
+		// All defaults
+
+		HbmCollectionBuilder.processSet(entityClass, set, "com.example", ctx);
+
+		FieldDetails field = entityClass.getFields().get(0);
+		assertNull(field.getAnnotationUsage(Cascade.class, ctx.getModelsContext()));
+		assertNull(field.getAnnotationUsage(Fetch.class, ctx.getModelsContext()));
+		assertNull(field.getAnnotationUsage(SQLRestriction.class, ctx.getModelsContext()));
+		assertNull(field.getAnnotationUsage(BatchSize.class, ctx.getModelsContext()));
+		assertNull(field.getAnnotationUsage(Cache.class, ctx.getModelsContext()));
+		assertNull(field.getAnnotationUsage(Immutable.class, ctx.getModelsContext()));
+		assertNull(field.getAnnotationUsage(JoinTable.class, ctx.getModelsContext()));
 	}
 }

@@ -149,10 +149,14 @@ public class HbmClassDetailsBuilder {
 		HbmPropertyBuilder.processVersion(entityClass, entityType.getVersion(), ctx);
 		HbmPropertyBuilder.processTimestamp(entityClass, entityType.getTimestamp(), ctx);
 
-		// Natural-id (treated as regular properties)
+		// Natural-id — process attributes, then mark them with @NaturalId
 		if (entityType.getNaturalId() != null) {
+			int fieldCountBefore = entityClass.getFields().size();
 			HbmSubclassBuilder.processAttributes(entityClass,
 					entityType.getNaturalId().getAttributes(), defaultPackage, ctx);
+			boolean mutable = entityType.getNaturalId().isMutable();
+			HbmPropertyBuilder.markNaturalIdFields(entityClass,
+					fieldCountBefore, mutable, ctx);
 		}
 
 		// Attributes (properties, associations, collections, components)
@@ -169,6 +173,25 @@ public class HbmClassDetailsBuilder {
 		HbmEntityAnnotationBuilder.processSqlStatements(entityClass, entityType, ctx);
 		HbmEntityAnnotationBuilder.processSecondaryTables(entityClass,
 				entityType.getJoin(), ctx);
+
+		// Entity behavioral attributes: cache, immutable, dynamic-insert/update, etc.
+		HbmEntityAnnotationBuilder.processEntityBehavior(entityClass, entityType, ctx);
+
+		// Proxy / lazy loading
+		HbmEntityAnnotationBuilder.processProxy(entityClass, entityType, ctx);
+
+		// Custom loader
+		HbmEntityAnnotationBuilder.processLoader(entityClass, entityType.getLoader(), ctx);
+
+		// Result set mappings (entity-level)
+		HbmEntityAnnotationBuilder.processResultSetMappings(entityClass,
+				entityType.getResultset(), ctx);
+
+		// Named queries (entity-level)
+		HbmEntityAnnotationBuilder.processNamedQueries(entityClass,
+				entityType.getQuery(), ctx);
+		HbmEntityAnnotationBuilder.processNamedNativeQueries(entityClass,
+				entityType.getSqlQuery(), ctx);
 
 		ctx.registerClassDetails(entityClass);
 		return entityClass;

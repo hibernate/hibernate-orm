@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
+import org.hibernate.annotations.NaturalId;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBasicAttributeType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTimestampAttributeType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmVersionAttributeType;
@@ -248,5 +249,52 @@ public class HbmPropertyBuilderTest {
 	public void testTimestampNull() {
 		HbmPropertyBuilder.processTimestamp(entityClass, null, ctx);
 		assertTrue(entityClass.getFields().isEmpty());
+	}
+
+	// --- NaturalId tests ---
+
+	@Test
+	public void testMarkNaturalIdFields() {
+		// Add two regular properties first
+		JaxbHbmBasicAttributeType attr1 = new JaxbHbmBasicAttributeType();
+		attr1.setName("id");
+		attr1.setTypeAttribute("long");
+		HbmPropertyBuilder.processProperty(entityClass, attr1, ctx);
+
+		int fieldCountBefore = entityClass.getFields().size();
+
+		// Add natural-id properties
+		JaxbHbmBasicAttributeType attr2 = new JaxbHbmBasicAttributeType();
+		attr2.setName("ssn");
+		attr2.setTypeAttribute("string");
+		HbmPropertyBuilder.processProperty(entityClass, attr2, ctx);
+
+		HbmPropertyBuilder.markNaturalIdFields(entityClass,
+				fieldCountBefore, false, ctx);
+
+		// "id" should NOT have @NaturalId
+		assertNull(entityClass.getFields().get(0).getAnnotationUsage(
+				NaturalId.class, ctx.getModelsContext()));
+
+		// "ssn" should have @NaturalId(mutable=false)
+		NaturalId natIdAnn = entityClass.getFields().get(1).getAnnotationUsage(
+				NaturalId.class, ctx.getModelsContext());
+		assertNotNull(natIdAnn);
+		assertFalse(natIdAnn.mutable());
+	}
+
+	@Test
+	public void testMarkNaturalIdFieldsMutable() {
+		JaxbHbmBasicAttributeType attr = new JaxbHbmBasicAttributeType();
+		attr.setName("email");
+		attr.setTypeAttribute("string");
+		HbmPropertyBuilder.processProperty(entityClass, attr, ctx);
+
+		HbmPropertyBuilder.markNaturalIdFields(entityClass, 0, true, ctx);
+
+		NaturalId natIdAnn = entityClass.getFields().get(0).getAnnotationUsage(
+				NaturalId.class, ctx.getModelsContext());
+		assertNotNull(natIdAnn);
+		assertTrue(natIdAnn.mutable());
 	}
 }

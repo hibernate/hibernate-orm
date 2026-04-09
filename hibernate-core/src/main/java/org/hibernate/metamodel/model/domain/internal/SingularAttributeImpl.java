@@ -10,11 +10,9 @@ import java.lang.reflect.Member;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.AttributeClassification;
-import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -29,7 +27,6 @@ import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFunctionJoin;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.BasicPluralType;
@@ -37,6 +34,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRIBUTE;
 import static org.hibernate.query.sqm.internal.SqmMappingModelHelper.resolveSqmPathSource;
+import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildParentNavigablePath;
 import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildSubNavigablePath;
 import static org.hibernate.query.sqm.spi.SqmCreationHelper.determineAlias;
 
@@ -170,7 +168,7 @@ public class SingularAttributeImpl<D,J>
 					setReturningFunction.getType(),
 					alias,
 					joinType,
-					(SqmRoot<Object>) lhs
+					(SqmFrom<?, Object>) lhs
 			);
 			return (SqmJoin<D, J>) join;
 		}
@@ -230,11 +228,7 @@ public class SingularAttributeImpl<D,J>
 						"LHS cannot be null for a sub-navigable reference - " + getName()
 				);
 			}
-			final var navigablePath = parent.getNavigablePath();
-			final var parentNavigablePath =
-					parent.getResolvedModel() instanceof PluralPersistentAttribute<?, ?, ?>
-							? navigablePath.append( CollectionPart.Nature.ELEMENT.getName() )
-							: navigablePath;
+			final var parentNavigablePath = buildParentNavigablePath( parent, "" );
 			if ( getDeclaringType() instanceof IdentifiableDomainType<?> declaringType
 					&& !declaringType.hasSingleIdAttribute() ) {
 				return new EntityIdentifierNavigablePath( parentNavigablePath, null )

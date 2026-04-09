@@ -384,7 +384,7 @@ public class OracleDialect extends Dialect {
 		registerJsonFunctions( functionFactory );
 		registerXmlFunctions( functionFactory );
 
-		functionFactory.unnest_oracle();
+		functionFactory.unnest_oracle( getVersion().isSameOrAfter( 21 ) );
 		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
 
 		functionFactory.hex( "rawtohex(?1)" );

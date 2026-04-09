@@ -418,7 +418,7 @@ public class OracleLegacyDialect extends Dialect {
 		functionFactory.xmlagg();
 		functionFactory.xmltable_oracle();
 
-		functionFactory.unnest_oracle();
+		functionFactory.unnest_oracle( getVersion().isSameOrAfter( 21 ) );
 		functionFactory.generateSeries_recursive( getMaximumSeriesSize(), true, false );
 		functionFactory.regexpLike_predicateFunction();
 	}

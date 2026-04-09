@@ -185,8 +185,8 @@ public interface NativeQuery<T> extends SelectionQuery<T>, MutationQuery, Synchr
 	LockModeType getLockMode();
 
 	/**
-	 * @inheritDoc
-	 *
+	 * {@inheritDoc}
+	 * <p>
 	 * This operation is supported even for native queries.
 	 * Note that specifying an explicit lock mode might
 	 * result in changes to the native SQL query that is
@@ -209,8 +209,8 @@ public interface NativeQuery<T> extends SelectionQuery<T>, MutationQuery, Synchr
 	SelectionQuery<T> setLockMode(LockModeType lockMode);
 
 	/**
-	 * @inheritDoc
-	 *
+	 * {@inheritDoc}
+	 * <p>
 	 * This operation is supported even for native queries.
 	 * Note that specifying an explicit lock mode might
 	 * result in changes to the native SQL query that is

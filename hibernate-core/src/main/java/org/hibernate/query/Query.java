@@ -44,12 +44,12 @@ import java.util.stream.Stream;
  * Within the context of an active {@linkplain org.hibernate.Session session},
  * an instance of this type represents an executable query, either:
  * <ul>
- * <li>a Query<T> written in HQL or native SQL,
- * <li>a named Query<T> written in HQL or native SQL, or
+ * <li>a {@code Query<T>} written in HQL or native SQL,
+ * <li>a named {@code Query<T>} written in HQL or native SQL, or
  * <li>a {@linkplain jakarta.persistence.criteria.CriteriaBuilder criteria query}.
  * </ul>
  * <p>
- * The subtype {@link NativeQuery} represents a Query<T> written in native SQL.
+ * The subtype {@link NativeQuery} represents a {@code Query<T>} written in native SQL.
  * <p>
  * This type simply mixes the {@link TypedQuery} interface defined by JPA with
  * {@link SelectionQuery} and {@link MutationQuery}. Unfortunately, JPA does
@@ -66,11 +66,11 @@ import java.util.stream.Stream;
  *     passing a {@linkplain jakarta.persistence.criteria.CriteriaQuery<T> criteria
  *     object}, or
  * <li>{@link org.hibernate.SharedSessionContract#createNamedQuery(String, Class)} passing the name
- *     of a Query<T> defined using {@link jakarta.persistence.NamedQuery} or
+ *     of a {@code Query<T>} defined using {@link jakarta.persistence.NamedQuery} or
  *     {@link jakarta.persistence.NamedNativeQuery}.
  * </ul>
  * <p>
- * A {@code Query} controls how a Query<T> is executed, and allows arguments to be
+ * A {@code Query} controls how a {@code Query<T>} is executed, and allows arguments to be
  * bound to its parameters.
  * <ul>
  * <li>Selection queries are usually executed using {@link #getResultList()} or
@@ -100,7 +100,7 @@ import java.util.stream.Stream;
 public interface Query<T> extends CommonQueryContract {
 
 	/**
-	 * The Query<T> as a string, or {@code null} in the case of a criteria query.
+	 * The {@code Query<T>} as a string, or {@code null} in the case of a criteria query.
 	 */
 	String getQueryString();
 
@@ -189,12 +189,12 @@ public interface Query<T> extends CommonQueryContract {
 	Query<T> setTimeout(Timeout timeout);
 
 	/**
-	 * Whether the execution plan for this Query<T> is cached.
+	 * Whether the execution plan for this {@code Query<T>} is cached.
 	 */
 	boolean isQueryPlanCacheable();
 
 	/**
-	 * Enable/disable Query<T> plan caching for this query, if available.
+	 * Enable/disable {@code Query<T>} plan caching for this query, if available.
 	 *
 	 * @see #isQueryPlanCacheable
 	 */
@@ -720,8 +720,8 @@ public interface Query<T> extends CommonQueryContract {
 	Query<T> setResultListTransformer(ResultListTransformer<T> transformer);
 
 	/**
-	 * Execute the Query<T> and return the Query<T> results as a {@link List}.
-	 * If the Query<T> contains multiple items in the selection list, then
+	 * Execute the {@code Query<T>} and return the {@code Query<T>} results as a {@link List}.
+	 * If the {@code Query<T>} contains multiple items in the selection list, then
 	 * by default each result in the list is packaged in an array of type
 	 * {@code Object[]}.
 	 *
@@ -733,8 +733,8 @@ public interface Query<T> extends CommonQueryContract {
 	List<T> list();
 
 	/**
-	 * Execute the Query<T> and return the Query<T> results as a {@link List}.
-	 * If the Query<T> contains multiple items in the selection list, then
+	 * Execute the {@code Query<T>} and return the {@code Query<T>} results as a {@link List}.
+	 * If the {@code Query<T>} contains multiple items in the selection list, then
 	 * by default each result in the list is packaged in an array of type
 	 * {@code Object[]}.
 	 *
@@ -751,7 +751,7 @@ public interface Query<T> extends CommonQueryContract {
 	}
 
 	/**
-	 * Execute the Query<T> and return the results in a
+	 * Execute the {@code Query<T>} and return the results in a
 	 * {@linkplain ScrollableResults scrollable form}.
 	 * <p>
 	 * This overload simply calls {@link #scroll(ScrollMode)} using the
@@ -768,7 +768,7 @@ public interface Query<T> extends CommonQueryContract {
 	ScrollableResults<T> scroll();
 
 	/**
-	 * Execute the Query<T> and return the results in a
+	 * Execute the {@code Query<T>} and return the results in a
 	 * {@linkplain ScrollableResults scrollable form}. The capabilities
 	 * of the returned {@link ScrollableResults} depend on the specified
 	 * {@link ScrollMode}.
@@ -784,8 +784,8 @@ public interface Query<T> extends CommonQueryContract {
 	ScrollableResults<T> scroll(ScrollMode scrollMode);
 
 	/**
-	 * Execute the Query<T> and return the Query<T> results as a {@link Stream}.
-	 * If the Query<T> contains multiple items in the selection list, then
+	 * Execute the {@code Query<T>} and return the {@code Query<T>} results as a {@link Stream}.
+	 * If the {@code Query<T>} contains multiple items in the selection list, then
 	 * by default each result in the stream is packaged in an array of
 	 * type {@code Object[]}.
 	 * <p>
@@ -807,8 +807,8 @@ public interface Query<T> extends CommonQueryContract {
 	}
 
 	/**
-	 * Execute the Query<T> and return the Query<T> results as a {@link Stream}.
-	 * If the Query<T> contains multiple items in the selection list, then
+	 * Execute the {@code Query<T>} and return the {@code Query<T>} results as a {@link Stream}.
+	 * If the {@code Query<T>} contains multiple items in the selection list, then
 	 * by default each result in the stream is packaged in an array of type
 	 * {@code Object[]}.
 	 * <p>
@@ -827,8 +827,8 @@ public interface Query<T> extends CommonQueryContract {
 	}
 
 	/**
-	 * Execute the Query<T> and return the single result of the query, or
-	 * {@code null} if the Query<T> returns no results.
+	 * Execute the {@code Query<T>} and return the single result of the query, or
+	 * {@code null} if the {@code Query<T>} returns no results.
 	 *
 	 * @return the single result or {@code null} if there is no result to return
 	 *
@@ -840,8 +840,8 @@ public interface Query<T> extends CommonQueryContract {
 	T uniqueResult();
 
 	/**
-	 * Execute the Query<T> and return the single result of the query,
-	 * throwing an exception if the Query<T> returns no results.
+	 * Execute the {@code Query<T>} and return the single result of the query,
+	 * throwing an exception if the {@code Query<T>} returns no results.
 	 *
 	 * @return the single result, only if there is exactly one
 	 *
@@ -855,7 +855,7 @@ public interface Query<T> extends CommonQueryContract {
 	T getSingleResult();
 
 	/**
-	 * Execute the Query<T> and return the single result of the Query<T> as
+	 * Execute the {@code Query<T>} and return the single result of the {@code Query<T>} as
 	 * an instance of {@link Optional}.
 	 *
 	 * @return the single result as an {@code Optional}
@@ -899,11 +899,11 @@ public interface Query<T> extends CommonQueryContract {
 	// deprecated methods
 
 	/**
-	 * The JPA {@link FlushModeType} in effect for this query.  By default, the
-	 * Query<T> inherits the {@link FlushMode} of the {@link Session} from which
+	 * The JPA {@link FlushModeType} in effect for this query. By default, the
+	 * {@code Query<T>} inherits the {@link FlushMode} of the {@link Session} from which
 	 * it originates.
 	 *
-	 * @apiNote Inherited from Jakarta Persistence.  Prefer {@linkplain #getQueryFlushMode()}
+	 * @apiNote Inherited from Jakarta Persistence. Prefer {@linkplain #getQueryFlushMode()}
 	 * @see #getQueryFlushMode()
 	 */
 	@Override @Deprecated(since = "7")
@@ -946,7 +946,7 @@ public interface Query<T> extends CommonQueryContract {
 	 *
 	 * @return Return the encapsulation of this query's options.
 	 *
-	 * @deprecated The various Query<T> subtypes already expose all relevant options;
+	 * @deprecated The various {@code Query<T>} subtypes already expose all relevant options;
 	 * plus exposing QueryOptions is layer-breaking as it is an SPI contract
 	 * exposed on an API.
 	 */
@@ -966,7 +966,7 @@ public interface Query<T> extends CommonQueryContract {
 	Query<T> setParameter(Parameter<Date> parameter, Date argument, TemporalType temporalType);
 
 	/**
-	 * Bind an {@link Instant} value to the named Query<T> parameter using
+	 * Bind an {@link Instant} value to the named {@code Query<T>} parameter using
 	 * just the portion indicated by the given {@link TemporalType}.
 	 */
 	@Deprecated(since = "7")
@@ -985,7 +985,7 @@ public interface Query<T> extends CommonQueryContract {
 	Query<T> setParameter(String parameter, Date argument, TemporalType temporalType);
 
 	/**
-	 * Bind an {@link Instant} value to the ordinal Query<T> parameter using
+	 * Bind an {@link Instant} value to the ordinal {@code Query<T>} parameter using
 	 * just the portion indicated by the given {@link TemporalType}.
 	 */
 	@Deprecated(since = "7")

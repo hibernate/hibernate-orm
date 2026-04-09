@@ -989,7 +989,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			if ( indexDescriptor != null ) {
 				indexDescriptor.decompose(
 						persister.incrementIndexByBase( collection.getIndex( rowValue, rowPosition, persister ) ),
-						jdbcValueBindings::bindAssignment,
+						jdbcValueBindings::bindInsertAssignment,
 						session
 				);
 			}
@@ -1165,7 +1165,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			final Object indexValue = collection.getIndex( rowValue, rowPosition, persister );
 			indexDescriptor.decompose(
 					persister.incrementIndexByBase( indexValue ),
-					jdbcValueBindings::bindRestriction,
+					jdbcValueBindings::bindUpdateRestriction,
 					session
 			);
 		}
@@ -1194,7 +1194,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			// Use it directly rather than calling getIndex which may give incorrect results
 			indexDescriptor.decompose(
 					persister.incrementIndexByBase( rowPosition ),
-					jdbcValueBindings::bindAssignment,
+					jdbcValueBindings::bindUpdateAssignment,
 					session
 			);
 		}
@@ -1221,7 +1221,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			// Use it directly rather than calling getIndex which looks at current collection state
 			indexDescriptor.decompose(
 					persister.incrementIndexByBase( rowPosition ),
-					jdbcValueBindings::bindRestriction,
+					jdbcValueBindings::bindUpdateRestriction,
 					session
 			);
 		}
@@ -1409,7 +1409,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 					: rowValue;
 			indexDescriptor.decompose(
 					persister.incrementIndexByBase( indexValue ),
-					jdbcValueBindings::bindRestriction,
+					jdbcValueBindings::bindUpdateRestriction,
 					session
 			);
 		}

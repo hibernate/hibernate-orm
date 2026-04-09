@@ -96,6 +96,30 @@ public class JdbcValueBindings {
 	}
 
 	/**
+	 * Form of {@linkplain #bindAssignment(int, Object, SelectableMapping)} which performs the binding
+	 * only if the passed {@code jdbcValueMapping} is {@linkplain SelectableMapping#isInsertable() insertable}.
+	 *
+	 * @apiNote We define this as a separate method to avoid lambda creation.
+	 */
+	public void bindInsertAssignment(@SuppressWarnings("unused") int valueIndex, Object value, SelectableMapping jdbcValueMapping) {
+		if ( jdbcValueMapping.isInsertable() ) {
+			bindValue( value, jdbcValueMapping.getSelectionExpression(), ParameterUsage.SET );
+		}
+	}
+
+	/**
+	 * Form of {@linkplain #bindAssignment(int, Object, SelectableMapping)} which performs the binding
+	 * only if the passed {@code jdbcValueMapping} is {@linkplain SelectableMapping#isUpdateable() updateable}.
+	 *
+	 * @apiNote We define this as a separate method to avoid lambda creation.
+	 */
+	public void bindUpdateAssignment(@SuppressWarnings("unused") int valueIndex, Object value, SelectableMapping jdbcValueMapping) {
+		if ( jdbcValueMapping.isUpdateable() ) {
+			bindValue( value, jdbcValueMapping.getSelectionExpression(), ParameterUsage.SET );
+		}
+	}
+
+	/**
 	 * Form of {@linkplain #bindValue(Object, String, ParameterUsage)} which is intended for use
 	 * as a {@linkplain ModelPart.JdbcValueConsumer} with {@linkplain ParameterUsage#RESTRICT} semantics.
 	 *
@@ -103,5 +127,17 @@ public class JdbcValueBindings {
 	 */
 	public void bindRestriction(@SuppressWarnings("unused") int valueIndex, Object value, SelectableMapping jdbcValueMapping) {
 		bindValue( value, jdbcValueMapping.getSelectionExpression(), ParameterUsage.RESTRICT );
+	}
+
+	/**
+	 * Form of {@linkplain #bindRestriction(int, Object, SelectableMapping)} which performs the binding
+	 * only if the passed {@code jdbcValueMapping} is {@linkplain SelectableMapping#isUpdateable() updateable}.
+	 *
+	 * @apiNote We define this as a separate method to avoid lambda creation.
+	 */
+	public void bindUpdateRestriction(@SuppressWarnings("unused") int valueIndex, Object value, SelectableMapping jdbcValueMapping) {
+		if ( jdbcValueMapping.isUpdateable() ) {
+			bindValue( value, jdbcValueMapping.getSelectionExpression(), ParameterUsage.RESTRICT );
+		}
 	}
 }

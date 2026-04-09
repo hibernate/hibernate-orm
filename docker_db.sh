@@ -834,7 +834,7 @@ oracle_setup() {
       create_cmd+="
 create user ${users[i]} identified by hibernate_orm_test quota unlimited on users;
 grant create session to ${users[i]};
-grant all privileges on schema ${users[i]} to ${users[i]};"
+grant all privileges to ${users[i]};"
     done
     
     # We increase file sizes to avoid online resizes as that requires lots of CPU which is restricted in XE
@@ -898,7 +898,7 @@ alter tablespace SYSAUX nologging;
 
 create user hibernate_orm_test identified by hibernate_orm_test quota unlimited on users;
 grant create session to hibernate_orm_test;
-grant all privileges on schema hibernate_orm_test to hibernate_orm_test;
+grant all privileges to hibernate_orm_test;
 ${create_cmd}
 EOF\""
 }

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -28,6 +29,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
+import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -158,15 +160,27 @@ public class UnnestSetReturningFunctionTypeResolver implements SetReturningFunct
 			final String elementSelectionExpression = defaultBasicArrayColumnName == null
 					? tableIdentifierVariable
 					: defaultBasicArrayColumnName;
+			final TypeConfiguration typeConfiguration = converter.getCreationContext().getTypeConfiguration();
+			final DdlType ddlType = typeConfiguration.getDdlTypeRegistry()
+					.getDescriptor( elementType.getJdbcType().getDefaultSqlTypeCode() );
 			final SelectableMapping elementMapping;
 			if ( expressionType instanceof SqlTypedMapping typedMapping ) {
+				final String columnTypeName = ddlType.getTypeName(
+						new Size(
+								typedMapping.getPrecision(),
+								typedMapping.getScale(),
+								typedMapping.getLength()
+						),
+						elementType,
+						typeConfiguration.getDdlTypeRegistry()
+				);
 				elementMapping = new SelectableMappingImpl(
 						"",
 						elementSelectionExpression,
 						new SelectablePath( CollectionPart.Nature.ELEMENT.getName() ),
 						null,
 						null,
-						typedMapping.getColumnDefinition(),
+						columnTypeName,
 						typedMapping.getLength(),
 						typedMapping.getArrayLength(),
 						typedMapping.getPrecision(),
@@ -182,13 +196,18 @@ public class UnnestSetReturningFunctionTypeResolver implements SetReturningFunct
 				);
 			}
 			else {
+				final String columnTypeName = ddlType.getTypeName(
+						Size.nil(),
+						elementType,
+						typeConfiguration.getDdlTypeRegistry()
+				);
 				elementMapping = new SelectableMappingImpl(
 						"",
 						elementSelectionExpression,
 						new SelectablePath( CollectionPart.Nature.ELEMENT.getName() ),
 						null,
 						null,
-						null,
+						columnTypeName,
 						null,
 						null,
 						null,

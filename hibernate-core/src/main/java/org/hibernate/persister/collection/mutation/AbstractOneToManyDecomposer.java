@@ -602,7 +602,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings) {
 		persister.getAttributeMapping().getIndexDescriptor().decompose(
-				collection.getIndex( entry, entryPosition, persister ),
+				persister.incrementIndexByBase( collection.getIndex( entry, entryPosition, persister ) ),
 				(valueIndex, jdbcValue, jdbcValueMapping) -> {
 					if ( jdbcValueMapping.isUpdateable() ) {
 						jdbcValueBindings.bindValue(

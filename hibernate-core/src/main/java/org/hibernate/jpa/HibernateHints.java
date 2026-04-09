@@ -30,8 +30,9 @@ public interface HibernateHints {
 	 * Hint for applying a Hibernate-specific flush mode to either a
 	 * {@linkplain jakarta.persistence.Query} or
 	 * {@linkplain jakarta.persistence.EntityManager}.
-	 * <p/>
-	 * The allowed values depend on the context -<ul>
+	 * <p>
+	 * The allowed values depend on the context -
+	 * <ul>
 	 *     <li>
 	 *         For a query, the value will ultimately get resolved to a
 	 *         {@linkplain QueryFlushMode} via .  The hint value may be any of the following:<ul>

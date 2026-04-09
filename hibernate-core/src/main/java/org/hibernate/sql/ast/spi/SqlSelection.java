@@ -14,7 +14,7 @@ import org.hibernate.type.descriptor.ValueExtractor;
 
 /// Represents a selection at the SQL/JDBC level.  Essentially made up of:
 /// * [#getJdbcValueExtractor] - How to read a value from JDBC (conceptually similar to a method reference)
-/// * [#getValuesArrayPosition] - The position for this selection in relation to the "JDBC values array" (see [RowProcessingState#getJdbcValue])
+/// * [#getValuesArrayPosition] - The position for this selection in relation to the "JDBC values array" (see [org.hibernate.sql.results.jdbc.spi.RowProcessingState#getJdbcValue])
 /// * [#getJdbcResultSetIndex()] - The position for this selection in relation to the JDBC object (ResultSet, etc)
 ///
 /// @author Steve Ebersole

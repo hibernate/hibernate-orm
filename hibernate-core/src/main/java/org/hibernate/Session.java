@@ -99,8 +99,7 @@ import java.util.List;
 /// behavior is appropriate for programs which use optimistic locking.
 ///
 ///   - A different lock level may be obtained by explicitly specifying the mode using
-///     [#find(Class,Object,LockModeType)], [#find(Class,Object,FindOption...)],
-///     [#refresh(Object,LockModeType)], [#refresh(Object,RefreshOption...)],
+///     [#find(Class,Object,FindOption...)], [#refresh(Object,RefreshOption...)],
 ///     or [org.hibernate.query.SelectionQuery#setLockMode(LockModeType)].
 ///   - The lock level of a managed instance already held by the session may be upgraded
 ///     to a more restrictive lock level by calling [#lock(Object,LockMode)] or
@@ -789,7 +788,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/// with the session, return that instance. This method never returns an uninitialized
 	/// instance. Obtain the specified lock mode if the instance exists.
 	///
-	/// @apiNote This operation is very similar to [#find(Class,Object,LockModeType)].
+	/// @apiNote This operation is very similar to [#find(Class,Object,FindOption...)].
 	///
 	/// @param entityType the entity type
 	/// @param id an identifier

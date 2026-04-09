@@ -23,7 +23,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class SybaseASEUnnestFunction extends UnnestFunction {
 
 	public SybaseASEUnnestFunction() {
-		super( "v", "i" );
+		super( "v", "i", false );
 	}
 
 	@Override

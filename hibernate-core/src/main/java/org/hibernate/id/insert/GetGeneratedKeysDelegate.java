@@ -125,7 +125,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 				? preparer.prepareStatement( sql, RETURN_GENERATED_KEYS )
 				: preparer.prepareStatement( sql, columnNames ) ) {
 
-			var valueBindings = new org.hibernate.action.queue.bind.JdbcValueBindings(
+			var valueBindings = new org.hibernate.action.queue.exec.JdbcValueBindings(
 					operation.getMutatingTableDescriptor(),
 					jdbcOperation
 			);

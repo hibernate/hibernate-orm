@@ -4,66 +4,34 @@
  */
 package org.hibernate.sql.model;
 
-import java.util.function.Consumer;
-
+import org.hibernate.Incubating;
 import org.hibernate.action.queue.meta.TableDescriptor;
-import org.hibernate.metamodel.mapping.ModelPartContainer;
-import org.hibernate.metamodel.model.domain.NavigableRole;
 
 /**
- * Target of mutations from persistence context events
+ * Bridge interface combining legacy and graph-based mutation target contracts.
+ * <p>
+ * This interface exists to maintain compatibility during the transition from the
+ * legacy sequential action queue to the graph-based action queue. Implementations
+ * (like {@code AbstractEntityPersister}) provide both sets of methods, allowing
+ * them to work with both queue implementations.
+ * <p>
+ * New code should prefer using the more specific {@link LegacyMutationTarget} or
+ * {@link GraphMutationTarget} interfaces directly.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Transitional interface - use {@link LegacyMutationTarget} for legacy
+ * coordinators or {@link GraphMutationTarget} for graph-based decomposers
  */
-public interface MutationTarget<T extends TableMapping, TD extends TableDescriptor> {
-	/**
-	 * The model role of this target
-	 */
-	NavigableRole getNavigableRole();
+@Deprecated(since = "8.0", forRemoval = true)
+@Incubating
+public interface MutationTarget<T extends TableMapping, TD extends TableDescriptor>
+		extends LegacyMutationTarget<T>, GraphMutationTarget<TD> {
 
+	// Bridge interface - all methods inherited from LegacyMutationTarget and GraphMutationTarget
+
+	@Override
 	default String getRolePath() {
 		return getNavigableRole().getFullPath();
 	}
-
-	/**
-	 * The ModelPart describing the mutation target
-	 */
-	ModelPartContainer getTargetPart();
-
-	/**
-	 * Visit each table.
-	 *
-	 * @apiNote Inverse tables are excluded here - they are not mutable
-	 * 		relative to this mapping
-	 */
-	void forEachMutableTable(Consumer<T> consumer);
-
-	/**
-	 * Same as {@link #forEachMutableTable} except that here the tables
-	 * are visited in reverse order
-	 *
-	 * @apiNote Inverse tables are excluded here - they are not mutable
-	 * 		relative to this mapping
-	 */
-	void forEachMutableTableReverse(Consumer<T> consumer);
-
-	/**
-	 * Visit each mutable (non-inverse) table.
-	 */
-	void forEachMutableTableDescriptor(Consumer<TD> consumer);
-
-	/**
-	 * Visit each mutable (non-inverse) table, but in reverse (delete) order.
-	 */
-	void forEachMutableTableDescriptorReverse(Consumer<TD> consumer);
-
-	/**
-	 * The name of the table defining the identifier for this target
-	 */
-	String getIdentifierTableName();
-
-	/**
-	 * The descriptor for the table containing the identifier for the target
-	 */
-	TableMapping getIdentifierTableMapping();
 }

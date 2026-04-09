@@ -7,7 +7,7 @@ package org.hibernate.orm.test.action.queue.bundling;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import org.hibernate.action.queue.bind.JdbcValueBindings;
+import org.hibernate.action.queue.exec.JdbcValueBindings;
 import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.plan.PlannedOperation;

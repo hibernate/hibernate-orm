@@ -6,6 +6,7 @@ package org.hibernate.persister.collection.mutation;
 
 import java.util.function.UnaryOperator;
 
+import org.hibernate.action.queue.decompose.collection.CollectionMutationTarget;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.AuditMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;

@@ -10,7 +10,7 @@ import org.hibernate.action.internal.ActionLogging;
 import org.hibernate.action.queue.constraint.ConstraintModel;
 import org.hibernate.action.queue.exec.PlanStepExecutor;
 import org.hibernate.action.queue.exec.PlanStepExecutorFactory;
-import org.hibernate.action.queue.graph.Decomposer;
+import org.hibernate.action.queue.decompose.Decomposer;
 import org.hibernate.action.queue.graph.GraphBuilder;
 import org.hibernate.action.queue.graph.StandardGraphBuilder;
 import org.hibernate.action.queue.plan.PlannedOperation;

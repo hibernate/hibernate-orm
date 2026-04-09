@@ -7,7 +7,7 @@ package org.hibernate.orm.test.action.queue.planner;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.PlanningOptions;
 import org.hibernate.action.queue.StatementShapeKey;
-import org.hibernate.action.queue.bind.BindPlan;
+import org.hibernate.action.queue.exec.BindPlan;
 import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.graph.Graph;
 import org.hibernate.action.queue.graph.GraphEdge;

@@ -9,7 +9,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
-import org.hibernate.action.queue.bind.JdbcValueBindings;
+import org.hibernate.action.queue.exec.JdbcValueBindings;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.jdbc.Expectation;

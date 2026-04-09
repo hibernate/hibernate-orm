@@ -6,7 +6,7 @@ package org.hibernate.sql.model.ast.builder;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jdbc.Expectation;
-import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
+import org.hibernate.action.queue.decompose.collection.CollectionMutationTarget;
 import org.hibernate.persister.collection.mutation.CollectionTableMapping;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.ColumnValueBinding;

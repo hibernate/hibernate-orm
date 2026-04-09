@@ -6,7 +6,7 @@ package org.hibernate.action.queue.plan;
 
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.StatementShapeKey;
-import org.hibernate.action.queue.bind.BindPlan;
+import org.hibernate.action.queue.exec.BindPlan;
 import org.hibernate.action.queue.cyclebreak.BindingPatch;
 import org.hibernate.action.queue.exec.ChainedPostExecutionCallback;
 import org.hibernate.action.queue.exec.PostExecutionCallback;

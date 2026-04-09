@@ -53,7 +53,7 @@ public abstract class AbstractReturningDelegate
 				.getStatementPreparer()
 				.prepareStatement( sql ) ) {
 
-			var valueBindings = new org.hibernate.action.queue.bind.JdbcValueBindings(
+			var valueBindings = new org.hibernate.action.queue.exec.JdbcValueBindings(
 					operation.getMutatingTableDescriptor(),
 					jdbcOperation
 			);

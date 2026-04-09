@@ -6,7 +6,6 @@ package org.hibernate.action.queue.exec;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.action.queue.StatementShapeKey;
-import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.PreparableMutationOperation;

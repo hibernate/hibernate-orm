@@ -4,8 +4,9 @@
  */
 package org.hibernate.persister.collection.mutation;
 
-import org.hibernate.action.queue.bind.BindPlan;
-import org.hibernate.action.queue.bind.JdbcValueBindings;
+import org.hibernate.action.queue.exec.BindPlan;
+import org.hibernate.action.queue.exec.JdbcValueBindings;
+import org.hibernate.action.queue.decompose.collection.CollectionJdbcOperations;
 import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.plan.PlannedOperation;

@@ -6,7 +6,7 @@ package org.hibernate.action.queue.graph;
 
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.PlanningOptions;
-import org.hibernate.action.queue.bind.EntityUpdateBindPlan;
+import org.hibernate.action.queue.decompose.entity.EntityUpdateBindPlan;
 import org.hibernate.action.queue.constraint.ForeignKey;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;

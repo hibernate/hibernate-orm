@@ -5,7 +5,7 @@
 package org.hibernate.action.queue.constraint;
 
 import org.hibernate.action.queue.MutationKind;
-import org.hibernate.action.queue.bind.EntityUpdateBindPlan;
+import org.hibernate.action.queue.decompose.entity.EntityUpdateBindPlan;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;

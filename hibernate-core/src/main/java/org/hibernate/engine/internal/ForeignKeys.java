@@ -7,7 +7,7 @@ package org.hibernate.engine.internal;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.TransientObjectException;
-import org.hibernate.action.queue.graph.DecompositionContext;
+import org.hibernate.action.queue.decompose.DecompositionContext;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;

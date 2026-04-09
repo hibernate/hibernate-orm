@@ -110,14 +110,32 @@ public interface EntityIdentifierMapping extends ValuedModelPart, Fetchable {
 			// getContextEntityIdentifier() returned null, indicating that
 			// the entity is not associated with the persistence context,
 			// so look deeper for its id
+			final Object entityId = getIdentifier( entity );
+
+			// For query parameter binding, if the entity clearly has a valid
+			// (non-null, non-unsaved) identifier, return it directly without
+			// checking if the entity is transient. This avoids issues with
+			// detached entities that have null versions.
 			final String entityName = findContainingEntityMapping().getEntityName();
+			final var persister = session.getFactory().getMappingMetamodel().getEntityDescriptor( entityName );
+			if ( persister != null && persister.getIdentifierMapping() != null ) {
+				final Boolean idUnsaved = persister.getIdentifierMapping().getUnsavedStrategy().isUnsaved( entityId );
+				// For IDENTITY-generated IDs, isUnsaved often returns null (unknown)
+				// In that case, if the ID is non-null, we assume it's saved for query purposes
+				if ( entityId != null && (idUnsaved == null || !idUnsaved) ) {
+					// The identifier is clearly saved (or unknown but non-null), so return it directly
+					return entityId;
+				}
+			}
+
+			// Otherwise, check if the entity is transient
 			if ( ForeignKeys.isTransient( entityName, entity, Boolean.FALSE, session ) ) {
 				// TODO should be a TransientPropertyValueException
 				throw new TransientObjectException( "object references an unsaved transient instance of '"
 						+ (entityName == null ? session.guessEntityName( entity ) : entityName)
 						+ "' (persist the transient instance before flushing)" );
 			}
-			return getIdentifier( entity );
+			return entityId;
 		}
 		else {
 			return id;

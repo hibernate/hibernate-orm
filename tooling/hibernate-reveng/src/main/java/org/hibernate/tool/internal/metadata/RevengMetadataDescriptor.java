@@ -72,6 +72,10 @@ public class RevengMetadataDescriptor implements MetadataDescriptor {
     }
 
     public Metadata createMetadata() {
+        // TODO: Replace with MetadataBootstrapper.bootstrap() once
+        // DynamicEntityBuilder handles tables without primary keys,
+        // many-to-many join tables, and other edge cases that the
+        // old binder chain (RootClassBinder) currently manages.
         return RevengMetadataBuilder
                 .create(properties, reverseEngineeringStrategy)
                 .build();

@@ -20,7 +20,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
@@ -28,17 +27,11 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.boot.internal.BootstrapContextImpl;
-import org.hibernate.boot.internal.MetadataBuilderImpl.MetadataBuildingOptionsImpl;
-import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
-import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.metadata.MetadataBootstrapper;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
 import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
@@ -185,9 +178,9 @@ public class DdlExporter {
 	 * Generates CREATE DDL statements and writes them to the given writer.
 	 */
 	public void exportCreateDdl(Writer output) {
-		try (MetadataContext ctx = buildMetadata()) {
-			SchemaCreatorImpl creator = new SchemaCreatorImpl(ctx.serviceRegistry);
-			List<String> commands = creator.generateCreationCommands(ctx.metadata, format);
+		try (MetadataBootstrapper.MetadataContext ctx = buildMetadata()) {
+			SchemaCreatorImpl creator = new SchemaCreatorImpl(ctx.serviceRegistry());
+			List<String> commands = creator.generateCreationCommands(ctx.metadata(), format);
 			writeCommands(output, commands);
 		}
 	}
@@ -196,12 +189,12 @@ public class DdlExporter {
 	 * Generates DROP DDL statements and writes them to the given writer.
 	 */
 	public void exportDropDdl(Writer output) {
-		try (MetadataContext ctx = buildMetadata()) {
-			SchemaDropperImpl dropper = new SchemaDropperImpl(ctx.serviceRegistry);
+		try (MetadataBootstrapper.MetadataContext ctx = buildMetadata()) {
+			SchemaDropperImpl dropper = new SchemaDropperImpl(ctx.serviceRegistry());
 			ScriptTargetOutput scriptTarget = new ScriptTargetOutputToWriter(output);
 			GenerationTarget target = new GenerationTargetToScript(scriptTarget, delimiter);
 			target.prepare();
-			dropper.doDrop(ctx.metadata, false, target);
+			dropper.doDrop(ctx.metadata(), false, target);
 			target.release();
 		}
 	}
@@ -211,16 +204,16 @@ public class DdlExporter {
 	 * to the given writer (drop first, then create).
 	 */
 	public void exportBothDdl(Writer output) {
-		try (MetadataContext ctx = buildMetadata()) {
-			SchemaDropperImpl dropper = new SchemaDropperImpl(ctx.serviceRegistry);
+		try (MetadataBootstrapper.MetadataContext ctx = buildMetadata()) {
+			SchemaDropperImpl dropper = new SchemaDropperImpl(ctx.serviceRegistry());
 			ScriptTargetOutput scriptTarget = new ScriptTargetOutputToWriter(output);
 			GenerationTarget target = new GenerationTargetToScript(scriptTarget, delimiter);
 			target.prepare();
-			dropper.doDrop(ctx.metadata, false, target);
+			dropper.doDrop(ctx.metadata(), false, target);
 			target.release();
 
-			SchemaCreatorImpl creator = new SchemaCreatorImpl(ctx.serviceRegistry);
-			List<String> commands = creator.generateCreationCommands(ctx.metadata, format);
+			SchemaCreatorImpl creator = new SchemaCreatorImpl(ctx.serviceRegistry());
+			List<String> commands = creator.generateCreationCommands(ctx.metadata(), format);
 			writeCommands(output, commands);
 		}
 	}
@@ -233,12 +226,12 @@ public class DdlExporter {
 	 * because the migrator must inspect the live database schema.
 	 */
 	public void exportUpdateDdl(Writer output) {
-		try (MetadataContext ctx = buildMetadata()) {
-			SchemaMigrator migrator = ctx.serviceRegistry
+		try (MetadataBootstrapper.MetadataContext ctx = buildMetadata()) {
+			SchemaMigrator migrator = ctx.serviceRegistry()
 					.requireService(SchemaManagementTool.class)
 					.getSchemaMigrator(configurationValues());
 			migrator.doMigration(
-					ctx.metadata,
+					ctx.metadata(),
 					executionOptions(),
 					ContributableMatcher.ALL,
 					scriptTargetDescriptor(output));
@@ -251,10 +244,10 @@ public class DdlExporter {
 	 * Executes CREATE DDL statements against the configured database.
 	 */
 	public void executeCreateDdl() {
-		try (MetadataContext ctx = buildMetadata()) {
+		try (MetadataBootstrapper.MetadataContext ctx = buildMetadata()) {
 			GenerationTarget dbTarget = buildDatabaseTarget(ctx);
-			SchemaCreatorImpl creator = new SchemaCreatorImpl(ctx.serviceRegistry);
-			creator.doCreation(ctx.metadata, ctx.dialect(), executionOptions(),
+			SchemaCreatorImpl creator = new SchemaCreatorImpl(ctx.serviceRegistry());
+			creator.doCreation(ctx.metadata(), ctx.serviceRegistry().requireService(JdbcEnvironment.class).getDialect(), executionOptions(),
 					ContributableMatcher.ALL, metadataSourceDescriptor(), dbTarget);
 		}
 	}
@@ -263,11 +256,11 @@ public class DdlExporter {
 	 * Executes DROP DDL statements against the configured database.
 	 */
 	public void executeDropDdl() {
-		try (MetadataContext ctx = buildMetadata()) {
+		try (MetadataBootstrapper.MetadataContext ctx = buildMetadata()) {
 			GenerationTarget dbTarget = buildDatabaseTarget(ctx);
-			SchemaDropperImpl dropper = new SchemaDropperImpl(ctx.serviceRegistry);
-			dropper.doDrop(ctx.metadata, executionOptions(), ContributableMatcher.ALL,
-					ctx.dialect(), metadataSourceDescriptor(), dbTarget);
+			SchemaDropperImpl dropper = new SchemaDropperImpl(ctx.serviceRegistry());
+			dropper.doDrop(ctx.metadata(), executionOptions(), ContributableMatcher.ALL,
+					ctx.serviceRegistry().requireService(JdbcEnvironment.class).getDialect(), metadataSourceDescriptor(), dbTarget);
 		}
 	}
 
@@ -276,18 +269,18 @@ public class DdlExporter {
 	 * configured database (drop first, then create).
 	 */
 	public void executeBothDdl() {
-		try (MetadataContext ctx = buildMetadata()) {
+		try (MetadataBootstrapper.MetadataContext ctx = buildMetadata()) {
 			ExecutionOptions options = executionOptions();
 			SourceDescriptor source = metadataSourceDescriptor();
 
 			GenerationTarget dropTarget = buildDatabaseTarget(ctx);
-			SchemaDropperImpl dropper = new SchemaDropperImpl(ctx.serviceRegistry);
-			dropper.doDrop(ctx.metadata, options, ContributableMatcher.ALL,
-					ctx.dialect(), source, dropTarget);
+			SchemaDropperImpl dropper = new SchemaDropperImpl(ctx.serviceRegistry());
+			dropper.doDrop(ctx.metadata(), options, ContributableMatcher.ALL,
+					ctx.serviceRegistry().requireService(JdbcEnvironment.class).getDialect(), source, dropTarget);
 
 			GenerationTarget createTarget = buildDatabaseTarget(ctx);
-			SchemaCreatorImpl creator = new SchemaCreatorImpl(ctx.serviceRegistry);
-			creator.doCreation(ctx.metadata, ctx.dialect(), options,
+			SchemaCreatorImpl creator = new SchemaCreatorImpl(ctx.serviceRegistry());
+			creator.doCreation(ctx.metadata(), ctx.serviceRegistry().requireService(JdbcEnvironment.class).getDialect(), options,
 					ContributableMatcher.ALL, source, createTarget);
 		}
 	}
@@ -297,12 +290,12 @@ public class DdlExporter {
 	 * by comparing the metadata model to the current database schema.
 	 */
 	public void executeUpdateDdl() {
-		try (MetadataContext ctx = buildMetadata()) {
-			SchemaMigrator migrator = ctx.serviceRegistry
+		try (MetadataBootstrapper.MetadataContext ctx = buildMetadata()) {
+			SchemaMigrator migrator = ctx.serviceRegistry()
 					.requireService(SchemaManagementTool.class)
 					.getSchemaMigrator(configurationValues());
 			migrator.doMigration(
-					ctx.metadata,
+					ctx.metadata(),
 					executionOptions(),
 					ContributableMatcher.ALL,
 					databaseTargetDescriptor());
@@ -394,40 +387,16 @@ public class DdlExporter {
 		};
 	}
 
-	private GenerationTarget buildDatabaseTarget(MetadataContext ctx) {
+	private GenerationTarget buildDatabaseTarget(MetadataBootstrapper.MetadataContext ctx) {
 		HibernateSchemaManagementTool tool = (HibernateSchemaManagementTool)
-				ctx.serviceRegistry.requireService(SchemaManagementTool.class);
+				ctx.serviceRegistry().requireService(SchemaManagementTool.class);
 		JdbcContext jdbcContext = tool.resolveJdbcContext(configurationValues());
 		return new GenerationTargetToDatabase(
 				tool.getDdlTransactionIsolator(jdbcContext), true, true);
 	}
 
-	private MetadataContext buildMetadata() {
-		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-				.applySettings(properties)
-				.build();
-		MetadataBuildingOptionsImpl options = new MetadataBuildingOptionsImpl(serviceRegistry);
-		BootstrapContextImpl bootstrapContext = new BootstrapContextImpl(serviceRegistry, options);
-		options.setBootstrapContext(bootstrapContext);
-
-		// Register ClassDetails in the bootstrap's ClassDetailsRegistry
-		MutableClassDetailsRegistry classDetailsRegistry = (MutableClassDetailsRegistry)
-				bootstrapContext.getModelsContext().getClassDetailsRegistry();
-		List<String> classNames = new ArrayList<>();
-		for (ClassDetails entity : entities) {
-			classDetailsRegistry.addClassDetails(entity.getClassName(), entity);
-			classNames.add(entity.getClassName());
-		}
-
-		// Build ManagedResources with the entity class names
-		ManagedResourcesImpl managedResources = new ManagedResourcesImpl();
-		for (String className : classNames) {
-			managedResources.addAnnotatedClassName(className);
-		}
-
-		Metadata metadata = MetadataBuildingProcess.complete(
-				managedResources, bootstrapContext, options);
-		return new MetadataContext(metadata, serviceRegistry);
+	private MetadataBootstrapper.MetadataContext buildMetadata() {
+		return MetadataBootstrapper.bootstrap(entities, properties);
 	}
 
 	private void writeCommands(Writer output, List<String> commands) {
@@ -440,16 +409,4 @@ public class DdlExporter {
 		target.release();
 	}
 
-	private record MetadataContext(Metadata metadata,
-								   StandardServiceRegistry serviceRegistry)
-			implements AutoCloseable {
-		Dialect dialect() {
-			return serviceRegistry.requireService(JdbcEnvironment.class).getDialect();
-		}
-
-		@Override
-		public void close() {
-			StandardServiceRegistryBuilder.destroy(serviceRegistry);
-		}
-	}
 }

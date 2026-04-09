@@ -49,10 +49,11 @@ public class EmbeddableAggregateJavaType<T> extends AbstractClassJavaType<T> {
 			}
 		}
 		// When the column is mapped as XML array, the component type must be SQLXML
-		if ( context.getExplicitJdbcTypeCode() != null && context.getExplicitJdbcTypeCode() == SqlTypes.XML_ARRAY
-			// Also prefer XML is the Dialect prefers XML arrays
-			|| context.getDialect().getPreferredSqlTypeCodeForArray() == SqlTypes.XML_ARRAY ) {
-			final JdbcType descriptor = context.getJdbcType( SqlTypes.SQLXML );
+		final Integer explicitJdbcTypeCode = context.getExplicitJdbcTypeCode();
+		if ( explicitJdbcTypeCode != null && explicitJdbcTypeCode == SqlTypes.XML_ARRAY
+				// Also prefer XML if the Dialect prefers XML arrays
+				|| explicitJdbcTypeCode == null && context.getDialect().getPreferredSqlTypeCodeForArray() == SqlTypes.XML_ARRAY ) {
+			final var descriptor = context.getJdbcType( SqlTypes.SQLXML );
 			if ( descriptor != null ) {
 				return descriptor;
 			}

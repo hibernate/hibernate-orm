@@ -4,7 +4,10 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.type.BindableType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -31,8 +34,13 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 	@Override
 	public void applyInferableType(@Nullable SqmBindableType<?> type) {
 		if ( type != null ) {
+			final SqmPathSource<?> pathSource;
 			if ( type instanceof PluralPersistentAttribute<?, ?, ?> pluralPersistentAttribute ) {
 				internalApplyInferableType( (SqmBindableType<?>) pluralPersistentAttribute.getElementType() );
+			}
+			else if ( type instanceof AnonymousTupleType<?> tupleType
+				&& (pathSource = tupleType.findSubPathSource( CollectionPart.Nature.ELEMENT.getName() ) ) != null ) {
+				internalApplyInferableType( pathSource.getExpressible() );
 			}
 			else {
 				internalApplyInferableType( type );

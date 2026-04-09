@@ -6,7 +6,9 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
+import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.function.UnnestSetReturningFunctionTypeResolver;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -16,6 +18,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.internal.SelectableMappingImpl;
+import org.hibernate.metamodel.mapping.internal.SqlTypedMappingImpl;
 import org.hibernate.query.sqm.tuple.internal.AnonymousTupleTableGroupProducer;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -37,9 +40,12 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.type.descriptor.sql.DdlType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * H2 unnest function.
@@ -55,7 +61,7 @@ public class H2UnnestFunction extends UnnestFunction {
 	private final int maximumArraySize;
 
 	public H2UnnestFunction(int maximumArraySize) {
-		super( new H2UnnestSetReturningFunctionTypeResolver() );
+		super( new H2UnnestSetReturningFunctionTypeResolver(), false );
 		this.maximumArraySize = maximumArraySize;
 	}
 
@@ -278,15 +284,52 @@ public class H2UnnestFunction extends UnnestFunction {
 					elementSelectionExpression = defaultBasicArrayColumnName;
 					elementReadExpression = null;
 				}
+				final TypeConfiguration typeConfiguration = converter.getCreationContext().getTypeConfiguration();
+				final DdlType ddlType = typeConfiguration.getDdlTypeRegistry()
+						.getDescriptor( elementType.getJdbcType().getDefaultSqlTypeCode() );
+				final AggregateSupport aggregateSupport =
+						converter.getCreationContext().getDialect().getAggregateSupport();
 				final SelectableMapping elementMapping;
+				final int pluralSqlTypeCode = pluralType.getJdbcType().getDefaultSqlTypeCode();
 				if ( expressionType instanceof SqlTypedMapping typedMapping ) {
+					final String columnTypeName = ddlType.getTypeName(
+							new Size(
+									typedMapping.getPrecision(),
+									typedMapping.getScale(),
+									typedMapping.getLength()
+							),
+							elementType,
+							typeConfiguration.getDdlTypeRegistry()
+					);
+					final String readExpression;
+					if ( pluralSqlTypeCode == SqlTypes.JSON_ARRAY || pluralSqlTypeCode == SqlTypes.XML_ARRAY ) {
+						readExpression = aggregateSupport.aggregateComponentCustomReadExpression(
+								"",
+								"",
+								"",
+								elementReadExpression,
+								pluralSqlTypeCode,
+								new SqlTypedMappingImpl(
+										columnTypeName,
+										typedMapping.getLength(),
+										typedMapping.getPrecision(),
+										typedMapping.getScale(),
+										typedMapping.getTemporalPrecision(),
+										elementType
+								),
+								typeConfiguration
+						);
+					}
+					else {
+						readExpression = elementReadExpression;
+					}
 					elementMapping = new SelectableMappingImpl(
 							"",
 							elementSelectionExpression,
 							new SelectablePath( CollectionPart.Nature.ELEMENT.getName() ),
-							elementReadExpression,
+							readExpression,
 							null,
-							typedMapping.getColumnDefinition(),
+							columnTypeName,
 							typedMapping.getLength(),
 							typedMapping.getPrecision(),
 							typedMapping.getScale(),
@@ -301,11 +344,38 @@ public class H2UnnestFunction extends UnnestFunction {
 					);
 				}
 				else {
+					final String columnTypeName = ddlType.getTypeName(
+							Size.nil(),
+							elementType,
+							typeConfiguration.getDdlTypeRegistry()
+					);
+					final String readExpression;
+					if ( pluralSqlTypeCode == SqlTypes.JSON_ARRAY || pluralSqlTypeCode == SqlTypes.XML_ARRAY ) {
+						readExpression = aggregateSupport.aggregateComponentCustomReadExpression(
+								"",
+								"",
+								"",
+								elementReadExpression,
+								pluralSqlTypeCode,
+								new SqlTypedMappingImpl(
+										columnTypeName,
+										null,
+										null,
+										null,
+										null,
+										elementType
+								),
+								typeConfiguration
+						);
+					}
+					else {
+						readExpression = elementReadExpression;
+					}
 					elementMapping = new SelectableMappingImpl(
 							"",
 							elementSelectionExpression,
 							new SelectablePath( CollectionPart.Nature.ELEMENT.getName() ),
-							elementReadExpression,
+							readExpression,
 							null,
 							null,
 							null,

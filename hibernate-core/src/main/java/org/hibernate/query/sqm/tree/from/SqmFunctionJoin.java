@@ -4,6 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -29,6 +32,8 @@ import jakarta.persistence.criteria.Predicate;
 
 import java.util.Objects;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * @author Christian Beikov
  */
@@ -42,7 +47,7 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 			String alias,
 			SqmJoinType joinType,
 			boolean lateral,
-			SqmRoot<Object> sqmRoot) {
+			SqmFrom<?, Object> sqmFrom) {
 		this(
 				SqmCreationHelper.buildRootNavigablePath( "<<derived>>", alias ),
 				function,
@@ -50,7 +55,7 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 				function.getType(),
 				alias,
 				validateJoinType( joinType, lateral ),
-				sqmRoot
+				sqmFrom
 		);
 	}
 
@@ -61,14 +66,14 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 			SqmPathSource<E> pathSource,
 			String alias,
 			SqmJoinType joinType,
-			SqmRoot<Object> sqmRoot) {
+			SqmFrom<?, Object> sqmFrom) {
 		super(
 				navigablePath,
 				pathSource,
-				sqmRoot,
+				sqmFrom,
 				alias,
 				joinType,
-				sqmRoot.nodeBuilder()
+				sqmFrom.nodeBuilder()
 		);
 		this.function = function;
 		this.lateral = lateral;
@@ -98,7 +103,6 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 		if ( existing != null ) {
 			return existing;
 		}
-		//noinspection unchecked
 		final SqmFunctionJoin<E> path = context.registerCopy(
 				this,
 				new SqmFunctionJoin<>(
@@ -108,20 +112,11 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 						getReferencedPathSource(),
 						getExplicitAlias(),
 						getSqmJoinType(),
-						(SqmRoot<Object>) findRoot().copy( context )
+						getParent().copy( context )
 				)
 		);
 		copyTo( path, context );
 		return path;
-	}
-
-	public SqmRoot<?> getRoot() {
-		return (SqmRoot<?>) (SqmFrom<?, ?>) super.getLhs();
-	}
-
-	@Override
-	public SqmRoot<?> findRoot() {
-		return getRoot();
 	}
 
 	@Override
@@ -220,8 +215,8 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 	}
 
 	@Override
-	public SqmFrom<?, Object> getParent() {
-		return super.getLhs();
+	public @NonNull SqmFrom<?, Object> getParent() {
+		return castNonNull( super.getParent() );
 	}
 
 	@Override

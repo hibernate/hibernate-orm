@@ -8,11 +8,9 @@ import java.io.Serializable;
 import java.lang.reflect.Member;
 
 import org.hibernate.metamodel.AttributeClassification;
-import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -29,13 +27,13 @@ import org.hibernate.query.sqm.tree.domain.SqmDomainType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFunctionJoin;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRIBUTE;
+import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildParentNavigablePath;
 import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildSubNavigablePath;
 import static org.hibernate.query.sqm.spi.SqmCreationHelper.determineAlias;
 
@@ -170,7 +168,7 @@ public class SingularAttributeImpl<D,J>
 					setReturningFunction.getType(),
 					alias,
 					joinType,
-					(SqmRoot<Object>) lhs
+					(SqmFrom<?, Object>) lhs
 			);
 			return (SqmJoin<D, J>) join;
 		}
@@ -230,11 +228,7 @@ public class SingularAttributeImpl<D,J>
 						"LHS cannot be null for a sub-navigable reference - " + getName()
 				);
 			}
-			final SqmPathSource<?> parentPathSource = parent.getResolvedModel();
-			final NavigablePath parentNavigablePath =
-					parentPathSource instanceof PluralPersistentAttribute<?, ?, ?>
-							? parent.getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName() )
-							: parent.getNavigablePath();
+			final var parentNavigablePath = buildParentNavigablePath( parent, "", null );
 			if ( getDeclaringType() instanceof IdentifiableDomainType<?> declaringType
 					&& !declaringType.hasSingleIdAttribute() ) {
 				return new EntityIdentifierNavigablePath( parentNavigablePath, null )

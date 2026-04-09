@@ -90,7 +90,7 @@
         <module>jbt</module>
         <module>maven</module>
         <module>gradle</module>
-        <module>ant</module>
+        <module>tooling/hibernate-ant</module>
         <module>test</module>
         <module>utils</module>
 <!--        <module>language</module> -->

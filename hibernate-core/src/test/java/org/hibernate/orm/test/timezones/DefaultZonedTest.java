@@ -7,8 +7,10 @@ import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.descriptor.DateTimeUtils;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -22,6 +24,7 @@ import jakarta.persistence.Id;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "HHH-20327")
 @DomainModel(annotatedClasses = DefaultZonedTest.Zoned.class)
 @SessionFactory
 public class DefaultZonedTest {

@@ -99,6 +99,7 @@ public class JavaTimeFractionalSecondsTests {
 	@Test
 	@DomainModel(annotatedClasses = TestEntity.class)
 	@SessionFactory
+    @SkipForDialect(dialectClass = SQLServerDialect.class, reason = "HHH-20327")
 	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
 	void testUsage(SessionFactoryScope scope) {
 		final Instant start = Instant.now();

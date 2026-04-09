@@ -9,7 +9,7 @@ import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import java.util.Map;
 
 /// Access to information useful while performing discovery.  Acts as a
-/// "parameter object" for [Scanner#discoverClassNames]
+/// "parameter object" for [ScanningProvider#builderScanner(ScanningContext)]
 ///
 /// @author Steve Ebersole
 public interface ScanningContext {

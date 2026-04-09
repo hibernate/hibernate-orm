@@ -67,7 +67,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class HANAUnnestFunction extends UnnestFunction {
 
 	public HANAUnnestFunction() {
-		super( "v", "i" );
+		super( "v", "i", true );
 	}
 
 	@Override

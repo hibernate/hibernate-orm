@@ -13,6 +13,7 @@ import java.util.List;
 /// @author Steve Ebersole
 public class FlushPlan {
 	private final List<PlanStep> steps;
+
 	private final ArrayDeque<PlannedOperation> fixups = new ArrayDeque<>();
 
 	public FlushPlan(List<PlanStep> steps) {
@@ -26,8 +27,10 @@ public class FlushPlan {
 	}
 
 	public List<PlannedOperation> drainFixupsInOrder() {
-		ArrayList<PlannedOperation> out = new ArrayList<>(fixups.size());
-		while (!fixups.isEmpty()) out.add(fixups.removeFirst());
+		final ArrayList<PlannedOperation> out = new ArrayList<>(fixups.size());
+		while (!fixups.isEmpty()) {
+			out.add(fixups.removeFirst());
+		}
 		return out;
 	}
 

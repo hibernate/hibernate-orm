@@ -41,7 +41,10 @@ public class StandardFlushPlanner implements FlushPlanner {
 		// Topologically sort it, ignoring any broken edges.
 		final List<GroupNode> topoOrder = new TopographicalSorter().sort(graph);
 
-		// build steps and return the overall plan
+		// Cycle-broken operations will have fixups synthesized lazily during execution
+		// The fixup synthesis happens in AbstractStepExecutor when intendedFkValues is populated
+		// The fixups are queued in FlushPlan and executed after their dependencies
+		// No need to synthesize here - just build steps from sorted nodes
 		return new FlushPlan(buildSteps(topoOrder));
 	}
 
@@ -83,4 +86,5 @@ public class StandardFlushPlanner implements FlushPlanner {
 			&& a.kind() == b.kind()
 			&& a.shapeHash() == b.shapeHash();
 	}
+
 }

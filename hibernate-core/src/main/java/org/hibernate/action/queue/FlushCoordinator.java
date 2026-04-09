@@ -157,6 +157,7 @@ public class FlushCoordinator {
 		}
 
 		var operationGroups = decomposeExecutables( actions );
+
 		if ( operationGroups.isEmpty() ) {
 			// No SQL operations needed - post-execution callbacks (if any) were already
 			// attached to PlannedOperations and would have run during decomposition.
@@ -345,12 +346,20 @@ public class FlushCoordinator {
 
 	private List<PlannedOperationGroup> decomposeExecutables(
 			List<? extends Executable> executables) {
+		// Build a set of all entities being inserted in this flush
+		// This allows the decomposer to recognize that these entities are not unresolved dependencies
+		decomposer.beginFlush(executables);
+
 		final ArrayList<PlannedOperation> operations = arrayList( executables.size() * 2);
 		int ordinalBase = 0;
 		for (Executable e : executables) {
 			var ops = decomposer.decompose( e, ordinalBase++ );
 			operations.addAll( ops );
 		}
+
+		// Clear the flush context
+		decomposer.endFlush();
+
 		// Group operations by shape
 		return groupOperations(operations);
 	}
@@ -458,18 +467,16 @@ public class FlushCoordinator {
 	}
 
 	/// Executes planned operations in order. Handles fixups emitted from cycle breaks.
-	/// Policy here:
-	///  - run all base steps first
-	///  - enqueue fixups as we go
-	///  - run fixups after base plan finishes (simple + safe)
 	private void executePlan(FlushPlan plan) {
 		for ( PlanStep step : plan.steps() ) {
 			executeStep(step, plan);
 		}
 
-		// Execute deferred FK fixups
-		// todo: worth it to group these by shape?
-		executor.execute( plan.drainFixupsInOrder(), null, null );
+		// Execute all fixups after all regular operations
+		final List<PlannedOperation> fixups = plan.drainFixupsInOrder();
+		if (!fixups.isEmpty()) {
+			executor.execute( fixups, null, null );
+		}
 	}
 
 	private void executeStep(PlanStep step, FlushPlan plan) {

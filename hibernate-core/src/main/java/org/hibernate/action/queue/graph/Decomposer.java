@@ -42,6 +42,21 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
 ///
 /// @author Steve Ebersole
 public class Decomposer {
+	// ThreadLocal to expose the current flush context to ForeignKeys.Nullifier
+	// This allows the Nullifier to avoid nullifying references to entities being inserted in the same flush
+	private static final ThreadLocal<Set<Object>> CURRENT_FLUSH_INSERTS = new ThreadLocal<>();
+
+	/// Check if an entity is being inserted in the current thread's flush
+	/// This is exposed via ThreadLocal for ForeignKeys.Nullifier to check
+	public static boolean isEntityBeingInsertedInCurrentFlush(Object entity) {
+		// todo : Consider a better approach than ThreadLocal and static method call,
+		//  	passing something (like a `FlushContext`) to the Nullifier.
+		//		Or maybe even better yet, drop Nullifier and just handle that logic
+		//		locally to the flush coordination.
+		final Set<Object> currentFlushInserts = CURRENT_FLUSH_INSERTS.get();
+		return currentFlushInserts != null && currentFlushInserts.contains(entity);
+	}
+
 	private final SessionImplementor session;
 
 	// Tracks inserts that have unresolved dependencies on transient entities
@@ -49,18 +64,67 @@ public class Decomposer {
 	// Reverse mapping: transient entity -> inserts waiting for it
 	private final Map<Object, Set<AbstractEntityInsertAction>> insertsByTransientEntity = new IdentityHashMap<>();
 
+	// Tracks entities being inserted in the current flush
+	// Used to recognize that entities with INSERT actions in this flush are not unresolved dependencies
+	private Set<Object> entitiesBeingInserted = null;
+
 	public Decomposer(SessionImplementor session) {
 		this.session = session;
 	}
 
-	/// Deserialization constructor.
-	/// @see #deserialize(ObjectInputStream, GraphBasedActionQueueFactory, SessionImplementor)
-	private Decomposer(
-			ArrayList<AbstractEntityInsertAction> actions,
-			GraphBasedActionQueueFactory actionQueueFactory,
-			SessionImplementor session) {
-		this.session = session;
-		actions.forEach( (action) -> trackUnresolvedInsert( action, action.findNonNullableTransientEntities() ) );
+	/// Begin a flush operation - track all entities being inserted in this flush
+	/// so we can recognize they're not unresolved dependencies
+	public void beginFlush(List<? extends Executable> actions) {
+		entitiesBeingInserted = Collections.newSetFromMap(new IdentityHashMap<>());
+		for (Executable action : actions) {
+			if (action instanceof AbstractEntityInsertAction insert) {
+				entitiesBeingInserted.add(insert.getInstance());
+			}
+		}
+		// Set ThreadLocal so ForeignKeys.Nullifier can check it
+		CURRENT_FLUSH_INSERTS.set(entitiesBeingInserted);
+		ACTION_LOGGER.tracef("Beginning flush with %d INSERT actions", entitiesBeingInserted.size());
+	}
+
+	/// End a flush operation - clear the tracking set
+	public void endFlush() {
+		entitiesBeingInserted = null;
+		CURRENT_FLUSH_INSERTS.remove();
+	}
+
+	/// Check if an entity is being inserted in the current flush
+	public boolean isBeingInsertedInCurrentFlush(Object entity) {
+		return entitiesBeingInserted != null && entitiesBeingInserted.contains(entity);
+	}
+
+	/// Filter out dependencies on entities being inserted in the current flush
+	/// These are not unresolved - they will be inserted in the same flush
+	private NonNullableTransientDependencies filterResolvedDependencies(NonNullableTransientDependencies dependencies) {
+		if (dependencies == null || dependencies.isEmpty()) {
+			return dependencies;
+		}
+
+		if (entitiesBeingInserted == null) {
+			// Not in a flush context - return as-is
+			return dependencies;
+		}
+
+		// Filter out entities being inserted in this flush
+		final NonNullableTransientDependencies filtered = new NonNullableTransientDependencies();
+		for (Object transientEntity : dependencies.getNonNullableTransientEntities()) {
+			if (!isBeingInsertedInCurrentFlush(transientEntity)) {
+				// This entity is truly unresolved - not being inserted in this flush
+				for (String propertyPath : dependencies.getNonNullableTransientPropertyPaths(transientEntity)) {
+					filtered.add(propertyPath, transientEntity);
+				}
+			}
+			else {
+				ACTION_LOGGER.tracef("  -> Filtering out dependency on %s (being inserted in this flush)",
+					transientEntity.getClass().getSimpleName());
+			}
+		}
+
+		return filtered;
 	}
 
 	public List<PlannedOperation> decompose(
@@ -68,14 +132,20 @@ public class Decomposer {
 			int ordinalBase) {
 		// Special handling for entity inserts - check for unresolved transient dependencies
 		if (executable instanceof AbstractEntityInsertAction insert) {
+			ACTION_LOGGER.tracef("Decomposing INSERT for %s", insert.getEntityName());
 			final NonNullableTransientDependencies transientDeps = insert.findNonNullableTransientEntities();
 
-			if (transientDeps != null && !transientDeps.isEmpty()) {
+			// Filter out dependencies on entities being inserted in this same flush
+			final NonNullableTransientDependencies unresolvedDeps = filterResolvedDependencies(transientDeps);
+
+			if (unresolvedDeps != null && !unresolvedDeps.isEmpty()) {
 				// This insert has unresolved dependencies - defer decomposition
-				trackUnresolvedInsert(insert, transientDeps);
+				ACTION_LOGGER.tracef("  -> Has unresolved dependencies, deferring");
+				trackUnresolvedInsert(insert, unresolvedDeps);
 				return Collections.emptyList();
 			}
 
+			ACTION_LOGGER.tracef("  -> No unresolved dependencies, decomposing");
 			return insert.getPersister().getInsertDecomposer().decompose(
 					insert,
 					ordinalBase,
@@ -151,6 +221,13 @@ public class Decomposer {
 	 * @param dependencies the non-nullable transient dependencies
 	 */
 	public void trackUnresolvedInsert(AbstractEntityInsertAction insert, NonNullableTransientDependencies dependencies) {
+		ACTION_LOGGER.tracef("Tracking unresolved insert for %s", insert.getEntityName());
+		for (Object transientEntity : dependencies.getNonNullableTransientEntities()) {
+			ACTION_LOGGER.tracef("  - depends on: %s@%s",
+				transientEntity.getClass().getSimpleName(),
+				System.identityHashCode(transientEntity));
+		}
+
 		unresolvedInserts.put(insert, dependencies);
 
 		// Build reverse mapping for fast resolution lookup
@@ -322,5 +399,15 @@ public class Decomposer {
 		}
 
 		return new Decomposer( actions, actionQueueFactory, session );
+	}
+
+	/// Deserialization constructor.
+	/// @see #deserialize(ObjectInputStream, GraphBasedActionQueueFactory, SessionImplementor)
+	private Decomposer(
+			ArrayList<AbstractEntityInsertAction> actions,
+			GraphBasedActionQueueFactory actionQueueFactory,
+			SessionImplementor session) {
+		this.session = session;
+		actions.forEach( (action) -> trackUnresolvedInsert( action, action.findNonNullableTransientEntities() ) );
 	}
 }

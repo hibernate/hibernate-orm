@@ -244,6 +244,14 @@ public final class ForeignKeys {
 					|| isDelete && hasSelfReferentialForeignKeyBug();
 			}
 
+			// Check if this entity is being inserted in the current flush
+			// If so, don't nullify - it will be inserted in the same flush
+			// todo : after dropping legacy ActionQueue, consider an alternative approach
+			//  	not needing the ThreadLocal and static call.
+			if ( org.hibernate.action.queue.graph.Decomposer.isEntityBeingInsertedInCurrentFlush( object ) ) {
+				return false;
+			}
+
 			// See if the entity is already bound to this session;
 			// if it's not, look at the entity identifier and assume
 			// that the entity is persistent if the id is not "unsaved"

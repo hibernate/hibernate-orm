@@ -1,9 +1,56 @@
-target
+# Typically *NIX text editors, by default, append '~' to files on saving to make backups
+*~
+
+# Gradle work directory and caches
+.gradle
+.gradletasknamecache
+
+# Build output directies
+/target
+*/target
+*/**/target
+/build
+*/build
+testdb
+lib
+
+# IntelliJ specific files/directories
 out
+# See .idea/.gitignore for more precise rules in that directory
+*.ipr
+*.iws
+*.iml
+atlassian-ide-plugin.xml
+
+# Eclipse specific files/directories
 .classpath
 .project
 .settings
+.metadata
+bin
+
+# NetBeans specific files/directories
+.nbattrs
+
+# Miscellaneous
+*.log
+.clover
 .DS_Store
-.idea
-*.iml
-.java-version
+
+# JBoss Transactions
+ObjectStore
+
+# Profiler and heap dumps
+*.jps
+*.hprof
+/.nb-gradle/
+
+# Vim
+*.swp
+*.swo
+
+# SDKman, used by some module maintainers
+.sdkmanrc
+
+# Sonar CLI local scan files:
+.scannerwork

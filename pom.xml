@@ -86,7 +86,7 @@
     </developers>
 
     <modules>
-        <module>orm</module>
+        <module>tooling/hibernate-reveng</module>
         <module>jbt</module>
         <module>maven</module>
         <module>gradle</module>

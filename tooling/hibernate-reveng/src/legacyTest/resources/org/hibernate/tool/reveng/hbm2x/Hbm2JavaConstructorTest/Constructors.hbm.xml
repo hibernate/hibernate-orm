@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- 
+
+  This mapping is a test mapping for hbm2java
+     
+-->
+
+<hibernate-mapping>
+
+    <class name="Person">
+    	<id name="id" type="string">
+    		<generator class="native"/>
+    	</id>
+
+    	<property name="name" type="string" not-null="true"/>
+    	
+    	<component name="address" class="EntityAddress">
+    		<property name="street" type="string" not-null="true"/>
+    		<property name="city" type="string"/>
+    	</component>
+    	
+    	<subclass name="Employee">
+			<property name="salary" type="double"/>
+		</subclass>
+	</class>
+
+    <class name="Company">
+    	<composite-id name="id" class="CompanyId">
+    	  <key-property name="code" type="long"/>
+    	  <key-property name="subcode" type="char"/>
+    	</composite-id>
+
+    	<property name="brand" type="string" not-null="true"/>
+    	
+    	<!-- HBX-607, formula not in full constructor -->
+    	<property name="value" type="string" formula="42"/>
+    	
+    	<set name="employees">
+    	  <key>
+    	    <column name="ceo_id"/>
+    	    <column name="ceo_subid"/>
+    	  </key>
+    	  <one-to-many class="Employee"/>
+    	</set>
+    	
+    	<subclass name="BigCompany">
+		   <many-to-one name="ceo" class="Employee"/>
+    	</subclass>
+    </class>
+    
+    <class name="BrandProduct">
+		<id name="id" type="string">
+    		<generator class="assigned"/>
+    	</id>
+		<version name="aVersion" type="long"/>
+    	<property name="name" type="string"/>      
+    </class>
+  
+    <!-- HBX-584 -->  
+    <class name="SingleFieldClass"> 
+     <id name="id" type="string"> 
+      <generator class="native"/> 
+     </id> 
+    </class> 
+  
+    
+</hibernate-mapping>

@@ -1,0 +1,213 @@
+/*
+ * Hibernate Tools, Tooling for your Hibernate Projects
+ *
+ * Copyright 2010-2025 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
+ * Hibernate Mapping Documentation Style Sheet
+ */
+
+body
+{
+	margin: 0.5em;
+	background: white;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10pt;
+}
+
+a
+{
+    color: #003399;
+}
+
+a:active
+{
+    color: #003399;
+}
+
+a:visited
+{
+    color: #888888;
+}
+
+p, ul, hr
+{
+	margin: 0.5em 0;
+}
+* html hr /* ie6 */
+{
+	margin: 0;
+}
+
+h1
+{
+	text-align: center;
+}
+
+table
+{
+	margin: 0.5em 0;
+	width: 100%;
+	border-collapse: collapse;
+}
+* html table /* ie6 only */
+{
+	margin: 1em 0;
+}
+
+th, td
+{
+	border: solid 1px #CCCCCC;
+	padding: 3px;
+}
+
+th
+{
+	background: #F4F4F4;
+	text-align: left;
+}
+
+td a
+{
+	font-weight: bold;
+}
+
+hr
+{
+	border: none;
+	border-top: 1px solid #CCCCCC;
+}
+* html hr /* ie6 only */
+{
+	height: 1px;
+}
+
+.MainTableHeading
+{
+	font-size: 20px;
+	font-weight: bold;
+}
+
+p.MainTableHeading
+{
+	background: #F4F4F4;
+	border: solid 1px #CCCCCC;
+	padding: 3px;
+}
+
+.List p
+{
+	margin: 0 0 10px 0;
+}
+
+.ListTitleFont
+{
+	font-size: large;
+	font-weight: bold;
+	white-space: nowrap;
+}
+
+/* header */
+
+#logo
+{
+	float: right;
+	margin-bottom: 0.5em;
+}
+* html #logo /* ie6 */
+{
+	margin-bottom: 0;
+}
+
+#logo img
+{
+	display: block;
+	border: none;
+}
+
+#header ul
+{
+	list-style: none;
+	background: #F4F4F4;
+	padding: 4px;
+	margin: 0;
+}
+
+#header li
+{
+	display: inline;
+	margin-right: 3px;
+	padding: 0 3px;
+}
+
+#header li.selected
+{
+	background: silver;
+	color: white;
+	font-weight: bold;
+}
+
+#header a
+{
+	color: black;
+	font-weight: bold;
+}
+
+#header hr
+{
+	clear: right;
+}
+
+/* entity hierarchy */
+
+ul.EntityHierarchy
+{
+	border: solid 1px #CCCCCC;
+	background: #F4F4F4;
+	list-style: none;
+	padding: 5px;
+	font: bold 90% monospace;
+}
+* html ul.EntityHierarchy /* ie6 only */
+{
+	margin-left: 0;
+}
+
+.EntityHierarchy a
+{
+	font-weight: normal;
+}
+
+.EntityHierarchy ul
+{
+	margin: 0;
+	list-style: none;
+	padding-left: 0;
+}
+* html .EntityHierarchy ul /* ie6 only */
+{
+	margin-left: 0;
+}
+
+.EntityHierarchy ul.first
+{
+	padding-left: 15px;
+}
+
+.EntityHierarchy ul ul
+{
+	padding-left: 30px;
+}

@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<!-- 
+
+  This mapping demonstrates how to map a collection
+  <key> to one of the primary key columns of an
+  associated child class with a composite key. This
+  is very useful for legacy data!
+     
+-->
+
+<hibernate-mapping package="org.hibernate.tool.hbm2x.Hbm2JavaEjb3Test">
+
+    <class name="Author">
+    
+    	<id name="authorId"
+    		length="20" type="string">
+    		<generator class="assigned"/>
+    	</id>
+		
+		<natural-id>
+    		<property name="name" type="string" not-null="true" length="100" unique="true"/>
+    		<property name="address" type="string" not-null="true" length="200" unique="true"/>
+		</natural-id>
+		
+    	<set name="articles"
+    		inverse="true"
+    		cascade="save-update">
+    		
+    		<key column="authorId"/>
+    		
+    		<one-to-many class="Article"/>
+    	</set>
+    	
+    	<query name="findByName">
+    		<query-param name="name" type="string"/>
+    		<query-param name="maxResults" type="int"/>
+    		<query-param name="value" type="int"/>
+    		from Author where name like :name or length(name) > :value
+    	</query>
+    	
+    	<query name="findByNameAndAddress">
+    		<query-param name="name" type="string"/>
+    		<query-param name="address" type="string"/>
+    		from Author where name like :name and address like :address
+    	</query>
+
+    	<query name="countAll">
+    		select count(*) from Author
+    	</query>
+	</class>
+
+</hibernate-mapping>

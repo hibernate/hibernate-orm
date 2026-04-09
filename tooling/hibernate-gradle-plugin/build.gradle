@@ -1,0 +1,244 @@
+/*
+ * Hibernate Tools, Tooling for your Hibernate Projects
+ *
+ * Copyright 2024-2025 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
+plugins {
+    id 'java-gradle-plugin'
+    id 'maven-publish'
+    id 'com.gradle.plugin-publish' version '1.2.1'
+}
+
+group = 'org.hibernate.tool'
+project.description = 'Gradle plugin to provide hibernate-tools reverse engineering and code/schema generation abilities.'
+project.version = "$projectVersion"
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+
+    implementation "org.hibernate.tool:hibernate-tools-orm:$projectVersion"
+
+    testImplementation libs.junit.jupiter
+
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly "com.h2database:h2:$h2Version"
+}
+
+rootProject.ext.set("gradle.publish.key", System.env.PLUGIN_PORTAL_USERNAME)
+rootProject.ext.set("gradle.publish.secret", System.env.PLUGIN_PORTAL_PASSWORD)
+
+gradlePlugin {
+    website = 'https://github.com/hibernate/hibernate-tools/tree/main/gradle/plugin'
+    vcsUrl = 'https://github.com/hibernate/hibernate-tools/tree/main/gradle/plugin'
+    plugins {
+        hibernate {
+            id = 'org.hibernate.tool.hibernate-tools-gradle'
+            implementationClass = 'org.hibernate.tool.gradle.Plugin'
+            displayName = 'Hibernate Tools Gradle Plugin'
+            description = project.description
+            tags = ['hibernate','tools','reverse engineering','reveng','generation']
+        }
+    }
+}
+
+sourceSets {
+    functionalTest {
+    }
+}
+
+configurations.functionalTestImplementation.extendsFrom(configurations.testImplementation)
+configurations.functionalTestRuntimeOnly.extendsFrom(configurations.testRuntimeOnly)
+
+tasks.register('functionalTest', Test) {
+    testClassesDirs = sourceSets.functionalTest.output.classesDirs
+    classpath = sourceSets.functionalTest.runtimeClasspath
+    useJUnitPlatform()
+    environment("HIBERNATE_TOOLS_VERSION", projectVersion);
+    environment("H2_VERSION", h2Version);
+}
+
+gradlePlugin.testSourceSets.add(sourceSets.functionalTest)
+
+def gradleTestVersionsList = findProperty('gradleTestVersions')?.split(',')?.collect { it.trim() } ?: []
+
+def javaToolchains = project.extensions.getByType(JavaToolchainService)
+def jdkLauncher = javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(Integer.parseInt(gradleTestJavaVersion))
+}
+
+gradleTestVersionsList.each { gradleVersion ->
+    def taskName = 'functionalTest_' + gradleVersion.replace('.', '_')
+    tasks.register(taskName, Test) {
+        testClassesDirs = sourceSets.functionalTest.output.classesDirs
+        classpath = sourceSets.functionalTest.runtimeClasspath
+        useJUnitPlatform()
+        environment("HIBERNATE_TOOLS_VERSION", projectVersion)
+        environment("H2_VERSION", h2Version)
+        systemProperty 'gradle.test.version', gradleVersion
+        doFirst {
+            systemProperty 'gradle.test.java.home', jdkLauncher.get().metadata.installationPath.asFile.absolutePath
+        }
+    }
+}
+
+tasks.register('functionalTestAll') {
+    dependsOn tasks.named('functionalTest')
+    gradleTestVersionsList.each { gradleVersion ->
+        def taskName = 'functionalTest_' + gradleVersion.replace('.', '_')
+        dependsOn tasks.named(taskName)
+    }
+}
+
+tasks.named('check') {
+    dependsOn(tasks.functionalTestAll)
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+tasks.named('publishPlugins') {
+    onlyIf {
+        def isDryRun = System.getenv('JRELEASER_DRY_RUN')
+        !Boolean.parseBoolean(isDryRun)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 17
+}
+
+tasks.withType(Test) {
+    testLogging {
+        // set options for log level LIFECYCLE
+        events TestLogEvent.FAILED,
+                TestLogEvent.PASSED,
+                TestLogEvent.SKIPPED,
+                TestLogEvent.STANDARD_OUT
+        exceptionFormat TestExceptionFormat.FULL
+        showExceptions true
+        showCauses true
+        showStackTraces true
+
+        // set options for log level DEBUG and INFO
+        debug {
+            events TestLogEvent.STARTED,
+                    TestLogEvent.FAILED,
+                    TestLogEvent.PASSED,
+                    TestLogEvent.SKIPPED,
+                    TestLogEvent.STANDARD_ERROR,
+                    TestLogEvent.STANDARD_OUT
+            exceptionFormat TestExceptionFormat.FULL
+        }
+        info.events = debug.events
+        info.exceptionFormat = debug.exceptionFormat
+
+        afterSuite { desc, result ->
+            if (!desc.parent) { // will match the outermost suite
+                def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} passed, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped)"
+                def startItem = '|  ', endItem = '  |'
+                def repeatLength = startItem.length() + output.length() + endItem.length()
+                println('\n' + ('-' * repeatLength) + '\n' + startItem + output + endItem + '\n' + ('-' * repeatLength))
+            }
+        }
+    }
+}
+
+var rootPath = findProperty("mavenRootDirectory")
+jar {
+    metaInf {
+        from(rootPath, {
+            include "LICENSE.txt"
+        })
+    }
+}
+
+publishing {
+    publications {
+        pluginMaven(MavenPublication) {
+            pom {
+                name = project.name
+                groupId = 'org.hibernate.tool'
+                artifactId = project.name
+                version = project.version
+
+                description = project.description
+                url = 'https://hibernate.org/tools'
+
+                organization {
+                    name = 'Hibernate.org'
+                    url = 'https://hibernate.org'
+                }
+
+                licenses {
+                    license {
+                        name = 'Apache License, version 2.0'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0'
+                    }
+                }
+
+                scm {
+                    url = 'https://github.com/hibernate/hibernate-tools'
+                    connection = 'scm:git:https://github.com/hibernate/hibernate-tools.git'
+                    developerConnection = 'scm:git:git@github.com:hibernate/hibernate-tools.git'
+                }
+
+                developers {
+                    developer {
+                        id = 'maxandersen'
+                        name = 'Max Andersen'
+                        email = 'max@hibernate.org'
+                        url = 'https://in.relation.to/Bloggers/Max'
+                    }
+                    developer {
+                        id = 'koentsje'
+                        name = 'Koen Aers'
+                        email = 'koen@hibernate.org'
+                        url = 'https://koentsje.blogspot.be'
+                    }
+                }
+
+                issueManagement {
+                    system = 'jira'
+                    url = 'https://hibernate.atlassian.net/browse/HBX'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "staging"
+            var mavenPath = findProperty("mavenStagingDirectory")
+            if (mavenPath == null) {
+                url = rootProject.layout.buildDirectory.dir("staging-deploy${File.separator}maven")
+            } else {
+                url = URI.create(mavenPath).toURL()
+            }
+        }
+    }
+}

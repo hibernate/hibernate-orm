@@ -53,30 +53,49 @@ public class Decomposer implements DecompositionContext {
 	// Used to recognize that entities with INSERT actions in this flush are not unresolved dependencies
 	private Set<Object> entitiesBeingInserted = null;
 
+	// Tracks entities being deleted in the current flush
+	// Used to skip unnecessary UPDATE operations for entities about to be deleted
+	private Set<Object> entitiesBeingDeleted = null;
+
 	public Decomposer(SessionImplementor session) {
 		this.session = session;
 	}
 
-	/// Begin a flush operation - track all entities being inserted in this flush
-	/// so we can recognize they're not unresolved dependencies
+	/// Begin a flush operation - track all entities being inserted/deleted in this flush
 	public void beginFlush(List<? extends Executable> actions) {
+		// if this ever shows up as a hot spot (unlikely), we could move collecting these
+		// into the action queue proper as the actions are added and then pass into the
+		// Decomposer as arguments.
 		entitiesBeingInserted = Collections.newSetFromMap(new IdentityHashMap<>());
+		entitiesBeingDeleted = Collections.newSetFromMap(new IdentityHashMap<>());
+		int deleteCount = 0;
 		for (Executable action : actions) {
 			if (action instanceof AbstractEntityInsertAction insert) {
 				entitiesBeingInserted.add(insert.getInstance());
 			}
+			else if (action instanceof EntityDeleteAction delete) {
+				entitiesBeingDeleted.add(delete.getInstance());
+				deleteCount++;
+			}
 		}
-		ACTION_LOGGER.tracef("Beginning flush with %d INSERT actions", entitiesBeingInserted.size());
+		ACTION_LOGGER.tracef("Beginning flush with %d INSERT actions, %d DELETE actions",
+			entitiesBeingInserted.size(), deleteCount);
 	}
 
-	/// End a flush operation - clear the tracking set
+	/// End a flush operation - clear the tracking sets
 	public void endFlush() {
 		entitiesBeingInserted = null;
+		entitiesBeingDeleted = null;
 	}
 
 	@Override
 	public boolean isBeingInsertedInCurrentFlush(Object entity) {
 		return entitiesBeingInserted != null && entitiesBeingInserted.contains(entity);
+	}
+
+	@Override
+	public boolean isBeingDeletedInCurrentFlush(Object entity) {
+		return entitiesBeingDeleted != null && entitiesBeingDeleted.contains(entity);
 	}
 
 	/// Filter out dependencies on entities being inserted in the current flush

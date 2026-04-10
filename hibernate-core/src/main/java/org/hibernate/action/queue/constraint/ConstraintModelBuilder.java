@@ -123,46 +123,7 @@ public final class ConstraintModelBuilder {
 		// Collect @Column(unique=true) constraints
 		collectUniqueColumnConstraints(descriptor, uniqueConstraints);
 
-		// these are the tables for the entity including
-		// 	- secondary tables
-		//  - joined inheritance tables
-		for ( int i = 0; i < descriptor.getTableMappings().length; i++ ) {
-			// order them for processing
-			//	- primarily identifier-table first (only one per group)
-			//	- secondarily by relative position
-			List<EntityTableMapping> ordered = Stream.of(descriptor.getTableMappings())
-					.sorted( ENTITY_TABLE_MAPPING_COMPARATOR )
-					.toList();
-			if ( ordered.size() > 1 ) {
-				final EntityTableMapping identifierTableMapping = ordered.get( 0 );
-
-				// Determine the correct target for each non-identifier table:
-				// - Secondary tables (@SecondaryTable) -> always reference identifier table
-				// - Joined inheritance tables -> reference previous table in chain
-				for ( int x = 1; x < ordered.size(); x++ ) {
-					final EntityTableMapping nonIdentifierTableMapping = ordered.get( x );
-					final EntityTableMapping targetMapping;
-
-					if ( nonIdentifierTableMapping.isSecondaryTable() ) {
-						// Secondary table: always reference the identifier table
-						targetMapping = identifierTableMapping;
-					}
-					else {
-						// Joined inheritance: reference the previous table in the chain
-						targetMapping = ordered.get( x - 1 );
-					}
-
-					addEntityTableGroupConstraint(
-							descriptor,
-							nonIdentifierTableMapping,
-							targetMapping,
-							foreignKeys,
-							seen,
-							entityPersisters
-					);
-				}
-			}
-		}
+		collectEntityTableGroupConstraints(descriptor, foreignKeys, seen, entityPersisters);
 
 		// next look through attributes for to-associations with join tables
 		handleToOneAttributes( descriptor, foreignKeys, uniqueConstraints, seen, entityPersisters );
@@ -336,6 +297,53 @@ public final class ConstraintModelBuilder {
 		return true;
 	}
 
+	/// Collect foreign-keys between tables "within" the entity mapping.
+	/// These include
+	///  - secondary tables
+	///  - joined inheritance tables
+	private void collectEntityTableGroupConstraints(
+			EntityPersister descriptor,
+			List<ForeignKey> foreignKeys,
+			IdentityHashMap<ForeignKeyDescriptor,Boolean> seen,
+			Map<String, EntityPersister> entityPersisters) {
+
+		// order the entity tables for processing
+		//	- primarily identifier-table first (only one per group)
+		//	- secondarily by relative position
+		List<EntityTableMapping> ordered = Stream.of(descriptor.getTableMappings())
+				.sorted( ENTITY_TABLE_MAPPING_COMPARATOR )
+				.toList();
+		if ( ordered.size() > 1 ) {
+			final EntityTableMapping identifierTableMapping = ordered.get( 0 );
+
+			// Determine the correct target for each non-identifier table:
+			// - Secondary tables (@SecondaryTable) -> always reference identifier table
+			// - Joined inheritance tables -> reference previous table in the chain
+			for ( int x = 1; x < ordered.size(); x++ ) {
+				final EntityTableMapping keyTable = ordered.get( x );
+				final EntityTableMapping targetTable;
+
+				if ( keyTable.isSecondaryTable() ) {
+					// Secondary table: always reference the identifier table
+					targetTable = identifierTableMapping;
+				}
+				else {
+					// Joined inheritance: reference the previous table in the chain
+					targetTable = ordered.get( x - 1 );
+				}
+
+				addEntityTableGroupConstraint(
+						descriptor,
+						keyTable,
+						targetTable,
+						foreignKeys,
+						seen,
+						entityPersisters
+				);
+			}
+		}
+	}
+
 	/// Create foreignKeys for tables within an entity mapping.
 	/// These always refer to the "identifier table" - here `target`.
 	///
@@ -352,15 +360,16 @@ public final class ConstraintModelBuilder {
 		// Determine target type - these always target the primary key
 		ForeignKey.TargetType targetType = ForeignKey.TargetType.PRIMARY_KEY;
 
+		// Always add the FK - intra-entity table constraints are critical for correct DELETE ordering
 		foreignKeys.add(new ForeignKey(
 				source.getTableName(),
 				target.getTableName(),
 				source.getKeyDetails(),
 				target.getKeyDetails(),
 				targetType,
-				false,
-				false,
-				false
+				false,  // isAssociation
+				false,  // nullable
+				false   // deferrable
 		));
 	}
 

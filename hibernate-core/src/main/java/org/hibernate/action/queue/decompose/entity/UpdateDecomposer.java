@@ -118,7 +118,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		final var effectiveOptLockStyle = effectiveOptLockStyle( previousVersion, previousState );
 
 		// Determine which fields are updateable
-		final boolean[] updateable = entityPersister.getPropertyUpdateability();
+		final boolean[] updateability = entityPersister.getPropertyUpdateability();
 
 		// Create values analysis to track which tables need updating
 		final var valuesAnalysis = new UpdateValuesAnalysis(
@@ -138,7 +138,8 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				|| entityPersister.hasUninitializedLazyProperties( entity );
 
 		final Map<String, LogicalTableUpdate<?>> effectiveGroup = needsDynamicUpdate
-				? generateDynamicUpdateOperations( identifier, rowId, state, previousState, previousState, updateable, valuesAnalysis, session )
+				? generateDynamicUpdateOperations( identifier, rowId, state, previousState, previousState,
+				updateability, valuesAnalysis, session )
 				: staticUpdateOperations;
 
 		var generatedValuesCollector = GeneratedValuesCollector.forUpdate( entityPersister, sessionFactory );
@@ -146,6 +147,10 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 
 		final List<PlannedOperation> operations = CollectionHelper.arrayList( effectiveGroup.size() );
 		int localOrd = 0;
+
+		// determine whether the entity we are about to update is being deleted in the same flush
+		final boolean isBeingDeleted = decompositionContext != null
+				&& decompositionContext.isBeingDeletedInCurrentFlush( entity );
 
 		for ( Map.Entry<String, LogicalTableUpdate<?>> entry : effectiveGroup.entrySet() ) {
 			var operation = entry.getValue().createMutationOperation(null, sessionFactory);
@@ -159,6 +164,16 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				continue;
 			}
 
+			// If this entity is being deleted in the same flush, skip UPDATEs to optional tables.
+			// These UPDATEs can re-insert rows that were just deleted, causing constraint violations.
+			// DELETE → DELETE edges ensure proper FK ordering, so UPDATEs are unnecessary.
+			//
+ 			// Technically we could alo skip updates to the primary table if no foreign keys are being nullified.
+			// This should be a rare enough occurrence that it is probably not worth even checking for.
+			if ( isBeingDeleted && tableDescriptor.isOptional() ) {
+				continue;
+			}
+
 			final EntityUpdateBindPlan bindPlan = createUpdateBindPlan(
 					tableDescriptor,
 					entity,
@@ -167,7 +182,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 					state,
 					previousState,
 					previousVersion,
-					updateable,
+					updateability,
 					effectiveOptLockStyle,
 					valuesAnalysis,
 					needsDynamicUpdate,

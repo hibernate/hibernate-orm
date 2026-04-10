@@ -30,7 +30,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -169,7 +168,6 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 
 			final List<PlannedOperation> operations = CollectionHelper.arrayList( effectiveGroup.size() );
 			int localOrd = 0;
-
 			for ( Map.Entry<String, TableDelete> entry : effectiveGroup.entrySet() ) {
 				var mutation = entry.getValue().createMutationOperation(null, sessionFactory);
 				var tableMapping = (TableDescriptorAsTableMapping) mutation.getTableDetails();
@@ -297,7 +295,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			Object[] state,
 			Object rowId,
 			SharedSessionContractImplementor session) {
-		final Map<String, TableDeleteBuilder> operationBuilders = new HashMap<>();
+		final Map<String, TableDeleteBuilder> operationBuilders = CollectionHelper.linkedMapOfSize( entityPersister.getTableDescriptors().length );
 
 		// Process tables in reverse order
 		entityPersister.forEachMutableTableDescriptorReverse( (tableDescriptor) -> {
@@ -311,7 +309,7 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 
 		applyDynamicDeleteDetails( operationBuilders, version, state, session );
 
-		final Map<String, TableDelete> operations = new HashMap<>();
+		final Map<String, TableDelete> operations = CollectionHelper.linkedMapOfSize( operationBuilders.size() );
 		operationBuilders.forEach( (name, operationBuilder) -> {
 			operations.put( name, operationBuilder.buildMutation() );
 		} );
@@ -436,29 +434,6 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 						builder.addKeyRestriction( selectableMapping );
 					}
 				}
-			}
-		}
-	}
-
-	private void breakDownJdbcValues(
-			Map<String, TableDeleteBuilder> builders,
-			SharedSessionContractImplementor session,
-			AttributeMapping attribute,
-			Object loadedValue) {
-		final String tableName = attribute.getContainingTableExpression();
-		final TableDeleteBuilder builder = builders.get( tableName );
-		if ( builder != null ) {
-			final var optimisticLockBindings = builder.getOptimisticLockBindings();
-			if ( optimisticLockBindings != null ) {
-				attribute.breakDownJdbcValues(
-						loadedValue,
-						(valueIndex, value, jdbcValueMapping) -> {
-							if ( !containsColumn( builder.getKeyRestrictionBindings(), jdbcValueMapping ) ) {
-								optimisticLockBindings.consume( valueIndex, value, jdbcValueMapping );
-							}
-						},
-						session
-				);
 			}
 		}
 	}

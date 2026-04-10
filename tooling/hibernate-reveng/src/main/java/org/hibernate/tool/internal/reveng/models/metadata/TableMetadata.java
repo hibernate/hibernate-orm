@@ -88,8 +88,7 @@ public class TableMetadata {
 		return foreignKeys.stream()
 			.anyMatch(fk -> fk.getForeignKeyColumnName().equals(columnName))
 			|| oneToOnes.stream()
-			.filter(o2o -> o2o.getForeignKeyColumnName() != null)
-			.anyMatch(o2o -> o2o.getForeignKeyColumnName().equals(columnName));
+			.anyMatch(o2o -> o2o.getForeignKeyColumnNames().contains(columnName));
 	}
 
 	// Getters and setters

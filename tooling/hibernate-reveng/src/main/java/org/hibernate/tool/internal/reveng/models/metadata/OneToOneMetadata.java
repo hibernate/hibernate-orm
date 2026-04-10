@@ -18,9 +18,13 @@ package org.hibernate.tool.internal.reveng.models.metadata;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Represents metadata for a OneToOne relationship.
- * Supports both the owning side (with foreignKeyColumnName) and
+ * Supports both the owning side (with join columns) and
  * the inverse side (with mappedBy).
  *
  * @author Koen Aers
@@ -29,13 +33,15 @@ public class OneToOneMetadata {
 	private final String fieldName;
 	private final String targetEntityClassName;
 	private final String targetEntityPackage;
-	private String foreignKeyColumnName;
-	private String referencedColumnName;
+	private final List<JoinColumnPair> joinColumns = new ArrayList<>();
 	private String mappedBy;
 	private FetchType fetchType;
 	private CascadeType[] cascadeTypes;
 	private boolean optional;
 	private boolean orphanRemoval;
+	private boolean constrained;
+
+	public record JoinColumnPair(String fkColumnName, String referencedColumnName) {}
 
 	public OneToOneMetadata(
 			String fieldName,
@@ -48,12 +54,20 @@ public class OneToOneMetadata {
 	}
 
 	public OneToOneMetadata foreignKeyColumnName(String foreignKeyColumnName) {
-		this.foreignKeyColumnName = foreignKeyColumnName;
+		this.joinColumns.add(new JoinColumnPair(foreignKeyColumnName, null));
+		return this;
+	}
+
+	public OneToOneMetadata addJoinColumn(String fkColumnName, String referencedColumnName) {
+		this.joinColumns.add(new JoinColumnPair(fkColumnName, referencedColumnName));
 		return this;
 	}
 
 	public OneToOneMetadata referencedColumnName(String referencedColumnName) {
-		this.referencedColumnName = referencedColumnName;
+		if (!joinColumns.isEmpty()) {
+			JoinColumnPair first = joinColumns.get(0);
+			joinColumns.set(0, new JoinColumnPair(first.fkColumnName(), referencedColumnName));
+		}
 		return this;
 	}
 
@@ -82,15 +96,34 @@ public class OneToOneMetadata {
 		return this;
 	}
 
+	public OneToOneMetadata constrained(boolean constrained) {
+		this.constrained = constrained;
+		return this;
+	}
+
 	// Getters
 	public String getFieldName() { return fieldName; }
 	public String getTargetEntityClassName() { return targetEntityClassName; }
 	public String getTargetEntityPackage() { return targetEntityPackage; }
-	public String getForeignKeyColumnName() { return foreignKeyColumnName; }
-	public String getReferencedColumnName() { return referencedColumnName; }
+	/** Returns the first FK column name, or null if no join columns. */
+	public String getForeignKeyColumnName() {
+		return joinColumns.isEmpty() ? null : joinColumns.get(0).fkColumnName();
+	}
+	/** Returns the first referenced column name, or null. */
+	public String getReferencedColumnName() {
+		return joinColumns.isEmpty() ? null : joinColumns.get(0).referencedColumnName();
+	}
+	public List<JoinColumnPair> getJoinColumns() {
+		return Collections.unmodifiableList(joinColumns);
+	}
 	public String getMappedBy() { return mappedBy; }
 	public FetchType getFetchType() { return fetchType; }
 	public CascadeType[] getCascadeTypes() { return cascadeTypes; }
 	public boolean isOptional() { return optional; }
 	public boolean isOrphanRemoval() { return orphanRemoval; }
+	public boolean isConstrained() { return constrained; }
+	/** Returns all FK column names in this OneToOne relationship. */
+	public List<String> getForeignKeyColumnNames() {
+		return joinColumns.stream().map(JoinColumnPair::fkColumnName).toList();
+	}
 }

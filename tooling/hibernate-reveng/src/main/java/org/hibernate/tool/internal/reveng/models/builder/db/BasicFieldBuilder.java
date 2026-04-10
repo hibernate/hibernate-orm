@@ -56,8 +56,18 @@ public class BasicFieldBuilder {
 			DynamicClassDetails entityClass,
 			ColumnMetadata columnMetadata,
 			ModelsContext modelsContext) {
+		addBasicField(entityClass, columnMetadata, modelsContext, false);
+	}
+
+	public static void addBasicField(
+			DynamicClassDetails entityClass,
+			ColumnMetadata columnMetadata,
+			ModelsContext modelsContext,
+			boolean skipIdAnnotation) {
 		DynamicFieldDetails field = createField(entityClass, columnMetadata, modelsContext);
-		addIdAnnotation(field, columnMetadata, modelsContext);
+		if (!skipIdAnnotation) {
+			addIdAnnotation(field, columnMetadata, modelsContext);
+		}
 		addVersionAnnotation(field, columnMetadata, modelsContext);
 		addBasicAnnotation(field, columnMetadata, modelsContext);
 		addTemporalAnnotation(field, columnMetadata, modelsContext);

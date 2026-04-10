@@ -62,6 +62,11 @@ public class DynamicEntityBuilder {
 	private final ModelsContext modelsContext;
 	private final Map<String, TableMetadata> tableMetadataByClassName = new LinkedHashMap<>();
 	private final List<ClassDetails> embeddableClassDetails = new ArrayList<>();
+	private boolean preferBasicCompositeIds = true;
+
+	public void setPreferBasicCompositeIds(boolean preferBasicCompositeIds) {
+		this.preferBasicCompositeIds = preferBasicCompositeIds;
+	}
 
 	public DynamicEntityBuilder() {
 		// Initialize the models context
@@ -108,10 +113,52 @@ public class DynamicEntityBuilder {
 		// Add inheritance annotations
 		addInheritanceAnnotations(entityClass, tableMetadata);
 
-		// Add fields for each column (skip columns that are part of a foreign key)
+		// Add fields for each column:
+		// - skip FK columns (handled by ManyToOne/OneToOne)
+		// - PK columns in composite ID: add WITHOUT @Id (used by non-annotated mode)
+		// - Constrained OneToOne PK/FK columns: add WITH @Id (needs @Id + @MapsId)
+		boolean hasCompositeId = tableMetadata.getCompositeId() != null;
+		Set<String> constrainedOneToOneFkColumns = new HashSet<>();
+		for (OneToOneMetadata o2o : tableMetadata.getOneToOnes()) {
+			if (o2o.isConstrained()) {
+				constrainedOneToOneFkColumns.addAll(o2o.getForeignKeyColumnNames());
+			}
+		}
 		for (ColumnMetadata columnMetadata : tableMetadata.getColumns()) {
-			if (!tableMetadata.isForeignKeyColumn(columnMetadata.getColumnName())) {
-				BasicFieldBuilder.addBasicField(entityClass, columnMetadata, modelsContext);
+			boolean isFk = tableMetadata.isForeignKeyColumn(columnMetadata.getColumnName());
+			boolean isPk = columnMetadata.isPrimaryKey();
+			boolean isConstrainedO2O = constrainedOneToOneFkColumns.contains(columnMetadata.getColumnName());
+			// Skip FK columns, unless it's a constrained one-to-one PK (needs @Id)
+			if (isFk && !(isPk && isConstrainedO2O)) continue;
+			// PK columns in composite ID: add without @Id annotation
+			boolean skipId = hasCompositeId && isPk;
+			BasicFieldBuilder.addBasicField(entityClass, columnMetadata, modelsContext, skipId);
+		}
+
+		// Detect FK columns that are part of the composite PK (key-many-to-one)
+		// Only when preferBasicCompositeIds is false — otherwise keep basic attribute overrides
+		Set<String> keyManyToOneFkColumns = new HashSet<>();
+		if (tableMetadata.getCompositeId() != null && !preferBasicCompositeIds) {
+			Set<String> pkColumnNames = new HashSet<>();
+			for (ColumnMetadata col : tableMetadata.getColumns()) {
+				if (col.isPrimaryKey()) {
+					pkColumnNames.add(col.getColumnName());
+				}
+			}
+			CompositeIdMetadata compositeId = tableMetadata.getCompositeId();
+			for (ForeignKeyMetadata fkMetadata : tableMetadata.getForeignKeys()) {
+				if (pkColumnNames.contains(fkMetadata.getForeignKeyColumnName())) {
+					// This FK column is part of the composite PK — convert to key-many-to-one
+					compositeId.addKeyManyToOne(
+						fkMetadata.getFieldName(),
+						fkMetadata.getForeignKeyColumnName(),
+						fkMetadata.getTargetEntityClassName(),
+						fkMetadata.getTargetEntityPackage());
+					// Remove the basic attribute override for this column
+					compositeId.getAttributeOverrides().removeIf(
+						ao -> ao.getColumnName().equals(fkMetadata.getForeignKeyColumnName()));
+					keyManyToOneFkColumns.add(fkMetadata.getForeignKeyColumnName());
+				}
 			}
 		}
 

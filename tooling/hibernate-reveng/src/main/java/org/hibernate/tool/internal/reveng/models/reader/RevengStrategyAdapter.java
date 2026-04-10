@@ -72,6 +72,21 @@ public class RevengStrategyAdapter {
 	}
 
 	/**
+	 * Checks whether the given composite foreign key represents a one-to-one
+	 * relationship.  All FK columns are included so that the column-count
+	 * comparison against the PK succeeds for composite keys.
+	 */
+	public boolean isOneToOne(java.util.List<RawForeignKeyInfo> fkColumns,
+			TableMetadata fkTableMetadata) {
+		if (fkColumns.size() == 1) {
+			return isOneToOne(fkColumns.get(0), fkTableMetadata);
+		}
+		Table fkTable = buildMappingTable(fkTableMetadata, null);
+		ForeignKey foreignKey = buildMappingCompositeForeignKey(fkColumns, fkTable);
+		return delegate.isOneToOne(foreignKey);
+	}
+
+	/**
 	 * Checks whether the given FK should be excluded as a collection (OneToMany).
 	 */
 	public boolean excludeForeignKeyAsCollection(RawForeignKeyInfo fkInfo) {
@@ -282,6 +297,27 @@ public class RevengStrategyAdapter {
 			null,
 			refColumns);
 		fk.setReferencedTable(createReferencedTable(fkInfo));
+		return fk;
+	}
+
+	private ForeignKey buildMappingCompositeForeignKey(
+			java.util.List<RawForeignKeyInfo> fkInfos, Table table) {
+		RawForeignKeyInfo first = fkInfos.get(0);
+		List<Column> fkColumns = new ArrayList<>();
+		List<Column> refColumns = new ArrayList<>();
+		for (RawForeignKeyInfo fkInfo : fkInfos) {
+			Column fkColumn = table.getColumn(new Column(fkInfo.fkColumnName()));
+			fkColumns.add(fkColumn != null ? fkColumn : new Column(fkInfo.fkColumnName()));
+			refColumns.add(new Column(fkInfo.pkColumnName()));
+		}
+		ForeignKey fk = table.createForeignKey(
+			first.fkName(),
+			fkColumns,
+			first.referencedTableName(),
+			null,
+			null,
+			refColumns);
+		fk.setReferencedTable(createReferencedTable(first));
 		return fk;
 	}
 

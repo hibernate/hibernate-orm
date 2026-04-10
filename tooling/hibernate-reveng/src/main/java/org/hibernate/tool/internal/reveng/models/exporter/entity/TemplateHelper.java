@@ -49,10 +49,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
 import jakarta.persistence.MapKey;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.ColumnResult;
@@ -1544,17 +1546,41 @@ public class TemplateHelper {
 			}
 			sb.append(")");
 		}
-		// @JoinColumn for owning side
-		JoinColumn jc = fieldGetAnnotation(field,JoinColumn.class);
-		if (jc != null) {
+		// @JoinColumn(s) for owning side
+		JoinColumns jcs = fieldGetAnnotation(field, JoinColumns.class);
+		if (jcs != null && jcs.value().length > 0) {
 			sb.append("\n    ");
 			importType("jakarta.persistence.JoinColumn");
-			sb.append("@JoinColumn(name = \"").append(jc.name()).append("\"");
-			if (jc.referencedColumnName() != null && !jc.referencedColumnName().isEmpty()) {
-				sb.append(", referencedColumnName = \"")
-						.append(jc.referencedColumnName()).append("\"");
+			importType("jakarta.persistence.JoinColumns");
+			sb.append("@JoinColumns({");
+			for (int i = 0; i < jcs.value().length; i++) {
+				if (i > 0) sb.append(", ");
+				sb.append("\n        @JoinColumn(name = \"").append(jcs.value()[i].name()).append("\"");
+				if (jcs.value()[i].referencedColumnName() != null && !jcs.value()[i].referencedColumnName().isEmpty()) {
+					sb.append(", referencedColumnName = \"")
+							.append(jcs.value()[i].referencedColumnName()).append("\"");
+				}
+				sb.append(")");
 			}
-			sb.append(")");
+			sb.append("\n    })");
+		} else {
+			JoinColumn jc = fieldGetAnnotation(field,JoinColumn.class);
+			if (jc != null) {
+				sb.append("\n    ");
+				importType("jakarta.persistence.JoinColumn");
+				sb.append("@JoinColumn(name = \"").append(jc.name()).append("\"");
+				if (jc.referencedColumnName() != null && !jc.referencedColumnName().isEmpty()) {
+					sb.append(", referencedColumnName = \"")
+							.append(jc.referencedColumnName()).append("\"");
+				}
+				sb.append(")");
+			}
+		}
+		// @MapsId for constrained one-to-one (shared PK)
+		if (fieldHasAnnotation(field, MapsId.class)) {
+			sb.append("\n    ");
+			importType("jakarta.persistence.MapsId");
+			sb.append("@MapsId");
 		}
 		return sb.toString();
 	}

@@ -17,6 +17,7 @@ package org.hibernate.tool.internal.reveng.models.builder.db;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.JoinColumnsJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OneToOneJpaAnnotation;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
@@ -26,6 +27,8 @@ import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.tool.internal.reveng.models.metadata.OneToOneMetadata;
+
+import java.util.List;
 
 /**
  * Builds a {@code @OneToOne} field on a dynamic class and attaches
@@ -54,6 +57,7 @@ public class OneToOneFieldBuilder {
 			entityClass, o2oMetadata, targetClassDetails, modelsContext);
 		addOneToOneAnnotation(field, o2oMetadata, modelsContext);
 		addJoinColumnAnnotation(field, o2oMetadata, modelsContext);
+		addMapsIdAnnotation(field, o2oMetadata, modelsContext);
 	}
 
 	private static DynamicFieldDetails createField(
@@ -98,16 +102,47 @@ public class OneToOneFieldBuilder {
 			MutableAnnotationTarget field,
 			OneToOneMetadata o2oMetadata,
 			ModelsContext modelsContext) {
-		if (o2oMetadata.getMappedBy() == null && o2oMetadata.getForeignKeyColumnName() != null) {
+		List<OneToOneMetadata.JoinColumnPair> joinColumns = o2oMetadata.getJoinColumns();
+		if (o2oMetadata.getMappedBy() != null || joinColumns.isEmpty()) {
+			return;
+		}
+		if (joinColumns.size() == 1) {
+			OneToOneMetadata.JoinColumnPair jc = joinColumns.get(0);
 			JoinColumnJpaAnnotation joinColumnAnnotation =
 				JpaAnnotations.JOIN_COLUMN.createUsage(modelsContext);
-			joinColumnAnnotation.name(o2oMetadata.getForeignKeyColumnName());
-			if (o2oMetadata.getReferencedColumnName() != null) {
-				joinColumnAnnotation.referencedColumnName(o2oMetadata.getReferencedColumnName());
+			joinColumnAnnotation.name(jc.fkColumnName());
+			if (jc.referencedColumnName() != null) {
+				joinColumnAnnotation.referencedColumnName(jc.referencedColumnName());
 			}
 			joinColumnAnnotation.unique(true);
 			joinColumnAnnotation.nullable(o2oMetadata.isOptional());
 			field.addAnnotationUsage(joinColumnAnnotation);
+		} else {
+			jakarta.persistence.JoinColumn[] jcArray =
+				new jakarta.persistence.JoinColumn[joinColumns.size()];
+			for (int i = 0; i < joinColumns.size(); i++) {
+				OneToOneMetadata.JoinColumnPair jc = joinColumns.get(i);
+				JoinColumnJpaAnnotation joinColumnAnnotation =
+					JpaAnnotations.JOIN_COLUMN.createUsage(modelsContext);
+				joinColumnAnnotation.name(jc.fkColumnName());
+				if (jc.referencedColumnName() != null) {
+					joinColumnAnnotation.referencedColumnName(jc.referencedColumnName());
+				}
+				jcArray[i] = joinColumnAnnotation;
+			}
+			JoinColumnsJpaAnnotation joinColumnsAnnotation =
+				JpaAnnotations.JOIN_COLUMNS.createUsage(modelsContext);
+			joinColumnsAnnotation.value(jcArray);
+			field.addAnnotationUsage(joinColumnsAnnotation);
+		}
+	}
+
+	private static void addMapsIdAnnotation(
+			MutableAnnotationTarget field,
+			OneToOneMetadata o2oMetadata,
+			ModelsContext modelsContext) {
+		if (o2oMetadata.isConstrained()) {
+			field.addAnnotationUsage(JpaAnnotations.MAPS_ID.createUsage(modelsContext));
 		}
 	}
 }

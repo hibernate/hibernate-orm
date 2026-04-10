@@ -15,6 +15,9 @@
  */
 package org.hibernate.tool.internal.reveng.models.reader;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -64,35 +67,73 @@ class OutgoingForeignKeyResolver {
 			}
 			TableMetadata fkTable = entry.getValue();
 			List<RawForeignKeyInfo> outgoingFks = outgoingFksByTable.getOrDefault(
-				tableName, java.util.Collections.emptyList());
+				tableName, Collections.emptyList());
 
-			for (RawForeignKeyInfo fkInfo : outgoingFks) {
-				handleOutgoingFK(fkInfo, fkTable, outgoingFks);
+			// Group FK entries by FK name to handle composite FKs
+			Map<String, List<RawForeignKeyInfo>> fksByName = groupByFkName(outgoingFks);
+
+			for (Map.Entry<String, List<RawForeignKeyInfo>> fkEntry : fksByName.entrySet()) {
+				List<RawForeignKeyInfo> fkColumns = fkEntry.getValue();
+				// Find the primary column (keySeq=1); skip if missing
+				RawForeignKeyInfo primaryColumn = null;
+				for (RawForeignKeyInfo col : fkColumns) {
+					if (col.keySeq() <= 1) {
+						primaryColumn = col;
+						break;
+					}
+				}
+				if (primaryColumn == null) continue;
+				handleOutgoingFK(primaryColumn, fkColumns, fkTable, outgoingFks);
 			}
 		}
 	}
 
-	private void handleOutgoingFK(RawForeignKeyInfo fkInfo, TableMetadata fkTable,
-			List<RawForeignKeyInfo> outgoingFks) {
-		if (handlingIsNeeded(fkInfo)) {
-			TableMetadata referencedTable = tablesByName.get(fkInfo.referencedTableName());
-			boolean uniqueReference = isUniqueReference(fkInfo, outgoingFks);
+	/**
+	 * Groups FK entries by FK name, preserving order within each group by keySeq.
+	 */
+	private static Map<String, List<RawForeignKeyInfo>> groupByFkName(
+			List<RawForeignKeyInfo> fks) {
+		Map<String, List<RawForeignKeyInfo>> result = new LinkedHashMap<>();
+		for (RawForeignKeyInfo fk : fks) {
+			result.computeIfAbsent(fk.fkName(), k -> new ArrayList<>()).add(fk);
+		}
+		return result;
+	}
 
-			if (adapter.isOneToOne(fkInfo, fkTable)) {
-				handleOneToOne(fkInfo, fkTable, referencedTable, uniqueReference);
-			} else {
-				handleManyToOne(fkInfo, fkTable, referencedTable, uniqueReference);
-			}
+	private void handleOutgoingFK(RawForeignKeyInfo primaryColumn,
+			List<RawForeignKeyInfo> allColumns,
+			TableMetadata fkTable, List<RawForeignKeyInfo> outgoingFks) {
+		if (adapter.excludeForeignKeyAsManytoOne(primaryColumn)) {
+			return;
+		}
+		if (tablesByName.get(primaryColumn.referencedTableName()) == null) {
+			return;
+		}
+		TableMetadata referencedTable = tablesByName.get(primaryColumn.referencedTableName());
+		boolean uniqueReference = isUniqueReference(primaryColumn, outgoingFks);
+
+		if (adapter.isOneToOne(allColumns, fkTable)) {
+			handleOneToOne(primaryColumn, allColumns, fkTable, referencedTable, uniqueReference);
+		} else {
+			handleManyToOne(primaryColumn, fkTable, referencedTable, uniqueReference);
 		}
 	}
 
-	private void handleOneToOne(RawForeignKeyInfo fkInfo, TableMetadata fkTable,
+	private void handleOneToOne(RawForeignKeyInfo primaryColumn,
+			List<RawForeignKeyInfo> allColumns,
+			TableMetadata fkTable,
 			TableMetadata referencedTable, boolean uniqueReference) {
+		boolean isConstrained = fkTable.getColumns().stream()
+			.anyMatch(col -> col.getColumnName().equals(primaryColumn.fkColumnName()) && col.isPrimaryKey());
 		OneToOneMetadata o2o = new OneToOneMetadata(
-			adapter.foreignKeyToEntityName(fkInfo, uniqueReference),
+			adapter.foreignKeyToEntityName(primaryColumn, uniqueReference),
 			referencedTable.getEntityClassName(),
 			referencedTable.getEntityPackage())
-			.foreignKeyColumnName(fkInfo.fkColumnName());
+			.constrained(isConstrained);
+		// Add all join columns (supports composite FKs)
+		for (RawForeignKeyInfo col : allColumns) {
+			o2o.addJoinColumn(col.fkColumnName(), col.pkColumnName());
+		}
 		fkTable.addOneToOne(o2o);
 	}
 
@@ -104,19 +145,6 @@ class OutgoingForeignKeyResolver {
 			referencedTable.getEntityClassName(),
 			referencedTable.getEntityPackage());
 		fkTable.addForeignKey(fkMetadata);
-	}
-
-	private boolean handlingIsNeeded(RawForeignKeyInfo fkInfo) {
-		if (fkInfo.keySeq() > 1) {
-			return false;
-		}
-		if (adapter.excludeForeignKeyAsManytoOne(fkInfo)) {
-			return false;
-		}
-		if (tablesByName.get(fkInfo.referencedTableName()) == null) {
-			return false;
-		}
-		return true;
 	}
 
 	static boolean isUniqueReference(

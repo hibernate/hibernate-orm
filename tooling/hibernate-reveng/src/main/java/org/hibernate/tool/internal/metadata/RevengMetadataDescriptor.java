@@ -127,6 +127,11 @@ public class RevengMetadataDescriptor implements MetadataDescriptor {
                         .readSchema();
                 DynamicEntityBuilder builder =
                         new DynamicEntityBuilder();
+                Object preferBasic = properties.get(
+                        MetadataConstants.PREFER_BASIC_COMPOSITE_IDS);
+                if (preferBasic instanceof Boolean) {
+                    builder.setPreferBasicCompositeIds((Boolean) preferBasic);
+                }
                 List<ClassDetails> entities = new ArrayList<>();
                 for (TableMetadata table : tables) {
                     entities.add(

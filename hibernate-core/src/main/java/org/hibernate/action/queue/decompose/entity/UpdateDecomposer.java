@@ -168,7 +168,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			// These UPDATEs can re-insert rows that were just deleted, causing constraint violations.
 			// DELETE → DELETE edges ensure proper FK ordering, so UPDATEs are unnecessary.
 			//
- 			// Technically we could alo skip updates to the primary table if no foreign keys are being nullified.
+			// Technically we could alo skip updates to the primary table if no foreign keys are being nullified.
 			// This should be a rare enough occurrence that it is probably not worth even checking for.
 			if ( isBeingDeleted && tableDescriptor.isOptional() ) {
 				continue;

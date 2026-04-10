@@ -1046,8 +1046,15 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		// For indexed collections, also restrict by the OLD index value to identify the specific row
 		// This is critical to avoid updating all rows when index values change
 		final var indexDescriptor = attribute.getIndexDescriptor();
+		final var identifierDescriptor = attribute.getIdentifierDescriptor();
 		if ( indexDescriptor != null ) {
 			indexDescriptor.forEachSelectable( (index, jdbcMapping) -> {
+				builder.addKeyRestriction( jdbcMapping );
+			} );
+		}
+		else if ( identifierDescriptor != null ) {
+			// For IdBag collections, restrict by the synthetic identifier column
+			identifierDescriptor.forEachSelectable( (index, jdbcMapping) -> {
 				builder.addKeyRestriction( jdbcMapping );
 			} );
 		}
@@ -1159,8 +1166,9 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				session
 		);
 
-		// Bind index/element to identify the specific row to update
+		// Bind index/element/identifier to identify the specific row to update
 		final var indexDescriptor = attribute.getIndexDescriptor();
+		final var identifierDescriptor = attribute.getIdentifierDescriptor();
 		if ( indexDescriptor != null ) {
 			// For indexed collections (lists, maps), restrict by the index position
 			// This identifies which row in the collection table to update
@@ -1168,6 +1176,15 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			indexDescriptor.decompose(
 					persister.incrementIndexByBase( indexValue ),
 					jdbcValueBindings::bindUpdateRestriction,
+					session
+			);
+		}
+		else if ( identifierDescriptor != null ) {
+			// For IdBag collections, restrict by the synthetic identifier
+			// rowValue for IdBag updates should contain the identifier
+			identifierDescriptor.decompose(
+					rowValue,  // For IdBag, rowValue is the identifier value
+					jdbcValueBindings::bindRestriction,
 					session
 			);
 		}
@@ -1260,12 +1277,19 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			builder.addKeyRestrictionLeniently( jdbcMapping );
 		} );
 
-		// For row-based deletion, also restrict by element/index
+		// For row-based deletion, also restrict by element/index/identifier
 		// This differentiates deleteRows (specific rows) from remove (entire collection)
 		final var indexDescriptor = attribute.getIndexDescriptor();
+		final var identifierDescriptor = attribute.getIdentifierDescriptor();
 		if ( indexDescriptor != null ) {
 			// For indexed collections (lists, maps), restrict by index
 			indexDescriptor.forEachSelectable( (index, jdbcMapping) -> {
+				builder.addKeyRestriction( jdbcMapping );
+			} );
+		}
+		else if ( identifierDescriptor != null ) {
+			// For IdBag collections, restrict by the synthetic identifier column
+			identifierDescriptor.forEachSelectable( (index, jdbcMapping) -> {
 				builder.addKeyRestriction( jdbcMapping );
 			} );
 		}
@@ -1399,9 +1423,10 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			actualKey = rowPosition;
 		}
 
-		// For row-based deletion, also restrict by element/index
+		// For row-based deletion, also restrict by element/index/identifier
 		// This differentiates deleteRows (specific rows) from remove (entire collection)
 		final var indexDescriptor = attribute.getIndexDescriptor();
+		final var identifierDescriptor = attribute.getIdentifierDescriptor();
 		if ( indexDescriptor != null ) {
 			// For indexed collections (lists, maps), restrict by index/key
 			// - For Lists: actualKey is the numeric position (Integer)
@@ -1412,6 +1437,15 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			indexDescriptor.decompose(
 					persister.incrementIndexByBase( indexValue ),
 					jdbcValueBindings::bindUpdateRestriction,
+					session
+			);
+		}
+		else if ( identifierDescriptor != null ) {
+			// For IdBag collections, restrict by the synthetic identifier
+			// The identifier value is stored in the collection's snapshot
+			identifierDescriptor.decompose(
+					actualElement,  // For IdBag, actualElement is the identifier value
+					jdbcValueBindings::bindRestriction,
 					session
 			);
 		}

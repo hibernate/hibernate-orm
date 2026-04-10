@@ -697,8 +697,11 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings) {
 		final var entityPart = (EntityCollectionPart) persister.getAttributeMapping().getElementDescriptor();
-		entityPart.getAssociatedEntityMappingType().getIdentifierMapping().decompose(
-				keyValue,
+		final var identifierMapping = entityPart.getAssociatedEntityMappingType().getIdentifierMapping();
+		// Extract the ID from the actual element entity (rowValue), not the owner's FK (keyValue)
+		final Object elementId = identifierMapping.getIdentifier( rowValue );
+		identifierMapping.decompose(
+				elementId,
 				(index, val, jdbcMapping) -> jdbcValueBindings.bindValue(
 						val,
 						( jdbcMapping.getSelectionExpression() ),

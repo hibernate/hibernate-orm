@@ -733,61 +733,63 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			return;
 		}
 
-		// For entity collections (join tables), use entity-based tracking
+		// For entity collections (join tables), use entity-based tracking if available
 		final boolean useEntityTracking = persister.getElementType().isEntityType();
 		final var insertOrdinal = calculateOrdinal( ordinalBase, Slot.INSERT );
 
 		if ( useEntityTracking ) {
-			// Get entities that were added to the collection
+			// Try entity-based tracking first (for indexed collections that override getAddedEntities)
 			final var addedEntities = collection.getAddedEntities( persister );
-			if ( !addedEntities.hasNext() ) {
-				return;
-			}
+			if ( addedEntities.hasNext() ) {
+				// For each added entity, find its current position and create an INSERT operation
+				final var entries = collection.entries( persister );
+				final List<Object> entryList = new ArrayList<>();
+				while ( entries.hasNext() ) {
+					entryList.add( entries.next() );
+				}
 
-			// For each added entity, find its current position and create an INSERT operation
-			final var entries = collection.entries( persister );
-			final List<Object> entryList = new ArrayList<>();
-			while ( entries.hasNext() ) {
-				entryList.add( entries.next() );
-			}
+				int insertCount = 0;
+				while ( addedEntities.hasNext() ) {
+					final Object addedEntity = addedEntities.next();
 
-			int insertCount = 0;
-			while ( addedEntities.hasNext() ) {
-				final Object addedEntity = addedEntities.next();
+					// Find this entity's current position in the collection
+					int position = -1;
+					for ( int i = 0; i < entryList.size(); i++ ) {
+						if ( entryList.get( i ) == addedEntity ) {
+							position = i;
+							break;
+						}
+					}
 
-				// Find this entity's current position in the collection
-				int position = -1;
-				for ( int i = 0; i < entryList.size(); i++ ) {
-					if ( entryList.get( i ) == addedEntity ) {
-						position = i;
-						break;
+					if ( position >= 0 ) {
+						final BindPlan bindPlan = new SingleRowInsertBindPlan(
+								persister,
+								insertRowPlan.values(),
+								collection,
+								key,
+								addedEntity,
+								position
+						);
+
+						operationConsumer.accept( new PlannedOperation(
+								tableDescriptor,
+								MutationKind.INSERT,
+								insertRowPlan.jdbcOperation(),
+								bindPlan,
+								insertOrdinal,
+								"InsertRow[" + insertCount + "](" + persister.getRolePath() + ")"
+						) );
+						insertCount++;
 					}
 				}
-
-				if ( position >= 0 ) {
-					final BindPlan bindPlan = new SingleRowInsertBindPlan(
-							persister,
-							insertRowPlan.values(),
-							collection,
-							key,
-							addedEntity,
-							position
-					);
-
-					operationConsumer.accept( new PlannedOperation(
-							tableDescriptor,
-							MutationKind.INSERT,
-							insertRowPlan.jdbcOperation(),
-							bindPlan,
-							insertOrdinal,
-							"InsertRow[" + insertCount + "](" + persister.getRolePath() + ")"
-					) );
-					insertCount++;
-				}
+				return;
 			}
+			// Fall through to entries-based approach if getAddedEntities returned empty
 		}
-		else {
-			// Original position-based logic for element collections
+
+		// Entries-based logic for element collections or entity collections without getAddedEntities support
+		{
+			// Original position-based logic
 			final var entries = collection.entries( persister );
 			if ( !entries.hasNext() ) {
 				return;

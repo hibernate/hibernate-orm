@@ -34,12 +34,10 @@ public class NativeMetadataDescriptor implements MetadataDescriptor {
     private final File[] mappingFiles;
 
     private final BootstrapServiceRegistry bootstrapServiceRegistry;
-    private final StandardServiceRegistryBuilder ssrb;
 
     // Exposed for legacy tests that add annotated classes via reflection
     @SuppressWarnings("unused")
     private final MetadataSources metadataSources;
-    private Metadata metadata;
 
     public NativeMetadataDescriptor(
             File cfgXmlFile,
@@ -54,11 +52,6 @@ public class NativeMetadataDescriptor implements MetadataDescriptor {
                 new BootstrapServiceRegistryBuilder()
                         .disableAutoClose()
                         .build();
-        ssrb = new StandardServiceRegistryBuilder(bootstrapServiceRegistry);
-        if (cfgXmlFile != null) {
-            ssrb.configure(cfgXmlFile);
-        }
-        ssrb.applySettings(getProperties());
         metadataSources = new MetadataSources(bootstrapServiceRegistry);
         addMappingFiles(metadataSources);
     }
@@ -70,10 +63,13 @@ public class NativeMetadataDescriptor implements MetadataDescriptor {
     }
 
     public Metadata createMetadata() {
-        if (metadata == null) {
-            metadata = metadataSources.buildMetadata(ssrb.build());
+        StandardServiceRegistryBuilder ssrb =
+                new StandardServiceRegistryBuilder(bootstrapServiceRegistry);
+        if (cfgXmlFile != null) {
+            ssrb.configure(cfgXmlFile);
         }
-        return metadata;
+        ssrb.applySettings(getProperties());
+        return metadataSources.buildMetadata(ssrb.build());
     }
 
     public File[] getMappingFiles() {

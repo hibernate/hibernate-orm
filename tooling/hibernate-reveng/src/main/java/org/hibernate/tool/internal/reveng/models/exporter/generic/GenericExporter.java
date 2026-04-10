@@ -40,6 +40,7 @@ import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
@@ -199,12 +200,20 @@ public class GenericExporter implements Exporter {
 		String packageName = outputClassName.contains(".")
 				? outputClassName.substring(0, outputClassName.lastIndexOf('.'))
 				: getPackageName(entity);
-		POJOAdapter pojo = new POJOAdapter(entity, simpleName, packageName);
+		ModelsContext mc = metadataHelper != null ? metadataHelper.getModelsContext() : null;
+		Map<String, List<String>> classMeta = metadataHelper != null
+				? metadataHelper.getClassMetaAttributes(entity.getClassName())
+				: Collections.emptyMap();
+		Map<String, Map<String, List<String>>> fieldMeta = metadataHelper != null
+				? metadataHelper.getFieldMetaAttributes(entity.getClassName())
+				: Collections.emptyMap();
+		POJOAdapter pojo = new POJOAdapter(entity, mc, classMeta, fieldMeta);
 		model.put("pojo", pojo);
 		model.put("clazz", entity);
 		model.put("entity", entity);
 		model.put("className", simpleName);
 		model.put("packageName", packageName);
+		model.put("c2j", new Cfg2JavaToolAdapter());
 		processTemplate(model, output);
 	}
 
@@ -225,27 +234,6 @@ public class GenericExporter implements Exporter {
 	}
 
 	// ---- Template model support ----
-
-	/**
-	 * Adapter that wraps {@link ClassDetails} to provide the same API
-	 * as the old {@code POJOClass} for FreeMarker templates.
-	 */
-	public static class POJOAdapter {
-		private final ClassDetails classDetails;
-		private final String simpleName;
-		private final String packageName;
-
-		public POJOAdapter(ClassDetails classDetails, String simpleName, String packageName) {
-			this.classDetails = classDetails;
-			this.simpleName = simpleName;
-			this.packageName = packageName;
-		}
-
-		public String getDeclarationName() { return simpleName; }
-		public String getShortName() { return simpleName; }
-		public String getName() { return classDetails.getClassName(); }
-		public String getPackageName() { return packageName; }
-	}
 
 	/**
 	 * Template helper that allows FreeMarker templates to create output files.

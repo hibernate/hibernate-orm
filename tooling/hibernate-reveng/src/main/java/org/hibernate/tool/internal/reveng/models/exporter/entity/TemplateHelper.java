@@ -161,7 +161,7 @@ public class TemplateHelper {
 	// annotations live on methods rather than fields)
 	private final Map<String, MethodDetails> getterByFieldName;
 
-	TemplateHelper(ClassDetails classDetails, ModelsContext modelsContext,
+	public TemplateHelper(ClassDetails classDetails, ModelsContext modelsContext,
 				   ImportContext importContext, boolean annotated) {
 		this(classDetails, modelsContext, importContext, annotated, true,
 				Collections.emptyMap(), Collections.emptyMap());
@@ -174,7 +174,7 @@ public class TemplateHelper {
 				Collections.emptyMap(), Collections.emptyMap());
 	}
 
-	TemplateHelper(ClassDetails classDetails, ModelsContext modelsContext,
+	public TemplateHelper(ClassDetails classDetails, ModelsContext modelsContext,
 				   ImportContext importContext, boolean annotated,
 				   Map<String, List<String>> classMetaAttributes,
 				   Map<String, Map<String, List<String>>> fieldMetaAttributes) {

@@ -254,7 +254,7 @@ public class GenericExporter implements Exporter {
 
 	private Map<String, Object> buildModel() {
 		Map<String, Object> model = new HashMap<>();
-		model.put("date", new Date());
+		model.put("date", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
 		model.put("version", Version.versionString());
 		model.put("templates", new Templates());
 		// Add ArtifactCollector as "artifacts" (matches old AbstractExporter context)

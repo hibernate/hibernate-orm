@@ -324,6 +324,7 @@ public class ActionQueueThroughputBenchmark {
 				.addAnnotatedClass(SeqChild.class)
 				.addAnnotatedClass(SeqOrderHeader.class)
 				.addAnnotatedClass(SeqOrderedItem.class)
+				.addAnnotatedClass(SecondaryTableEntity.class)
 				.buildMetadata()
 				.buildSessionFactory();
 	}
@@ -903,6 +904,85 @@ public class ActionQueueThroughputBenchmark {
 			session.createMutationQuery("delete from SeqChild").executeUpdate();
 			session.createMutationQuery("delete from SeqParent").executeUpdate();
 			session.getTransaction().commit();
+		}
+	}
+
+	// ========== Secondary Table UPDATE+DELETE Scenario ==========
+
+	@Entity(name = "SecondaryTableEntity")
+	@Table(name = "secondary_main")
+	@SecondaryTable(name = "secondary_extra")
+	public static class SecondaryTableEntity {
+		@Id
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		private Long id;
+
+		private String name;
+
+		@Column(table = "secondary_extra")
+		private String extraData;
+
+		@ManyToOne
+		@JoinColumn(name = "ref_id", table = "secondary_extra")
+		private ThroughputEntity reference;
+
+		public SecondaryTableEntity() {}
+
+		public SecondaryTableEntity(String name, String extraData) {
+			this.name = name;
+			this.extraData = extraData;
+		}
+	}
+
+	/**
+	 * Benchmark: UPDATE and DELETE entity with secondary table in same flush.
+	 *
+	 * This tests the optimization where UPDATEs are skipped for entities
+	 * being deleted in the same flush, preventing unnecessary UPDATE operations
+	 * (especially on optional secondary tables that might re-insert rows).
+	 */
+	@Benchmark
+	public void updateAndDelete_SecondaryTable_Legacy(LegacyQueueState state, Blackhole bh) {
+		updateAndDeleteSecondaryTable(state.sessionFactory, bh);
+	}
+
+	@Benchmark
+	public void updateAndDelete_SecondaryTable_Graph(GraphQueueState state, Blackhole bh) {
+		updateAndDeleteSecondaryTable(state.sessionFactory, bh);
+	}
+
+	private void updateAndDeleteSecondaryTable(SessionFactory sf, Blackhole bh) {
+		// Create entities with secondary table data
+		List<Long> ids = new ArrayList<>();
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			for (int i = 0; i < 20; i++) {
+				SecondaryTableEntity entity = new SecondaryTableEntity("Entity-" + i, "Extra-" + i);
+				session.persist(entity);
+			}
+			session.flush();
+			// Collect IDs after flush
+			ids.addAll(session.createQuery(
+				"select e.id from SecondaryTableEntity e", Long.class
+			).getResultList());
+			session.getTransaction().commit();
+		}
+
+		// Update and delete in same flush (tests UPDATE skipping for deleted entities)
+		try (Session session = sf.openSession()) {
+			session.beginTransaction();
+			for (Long id : ids) {
+				SecondaryTableEntity entity = session.find(SecondaryTableEntity.class, id);
+				if (entity != null) {
+					// Nullify reference - would normally trigger UPDATE
+					entity.reference = null;
+					entity.name = "Updated";
+					// Delete - UPDATE should be skipped since entity is being deleted
+					session.remove(entity);
+				}
+			}
+			session.getTransaction().commit();
+			bh.consume(session);
 		}
 	}
 }

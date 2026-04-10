@@ -75,7 +75,7 @@ public class MappingXmlExporter {
 
 	public static MappingXmlExporter create(MetadataDescriptor md, String[] templatePath) {
 		MappingXmlExporter exporter = new MappingXmlExporter(templatePath);
-		exporter.entities = MetadataHelper.from(md.createMetadata()).getEntityClassDetails();
+		exporter.entities = MetadataHelper.from(md).getEntityClassDetails();
 		return exporter;
 	}
 

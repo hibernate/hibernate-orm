@@ -156,7 +156,7 @@ public class DdlExporter implements Exporter {
 
 	public static DdlExporter create(MetadataDescriptor md) {
 		return new DdlExporter(
-				MetadataHelper.from(md.createMetadata()).getEntityClassDetails(),
+				MetadataHelper.from(md).getEntityClassDetails(),
 				md.getProperties());
 	}
 

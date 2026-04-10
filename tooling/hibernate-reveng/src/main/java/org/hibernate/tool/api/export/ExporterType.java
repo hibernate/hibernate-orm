@@ -19,15 +19,15 @@ package org.hibernate.tool.api.export;
 
 public enum ExporterType {
 	
-	CFG ("org.hibernate.tool.internal.export.cfg.CfgExporter"),
-	DAO ("org.hibernate.tool.internal.export.dao.DaoExporter"),
-	DDL ("org.hibernate.tool.internal.export.ddl.DdlExporter"),
-	DOC ("org.hibernate.tool.internal.export.doc.DocExporter"),
-	GENERIC ("org.hibernate.tool.internal.export.common.GenericExporter"),
-	HBM ("org.hibernate.tool.internal.export.hbm.HbmExporter"),
-	HBM_LINT ("org.hibernate.tool.internal.export.lint.HbmLintExporter"),
-	JAVA ("org.hibernate.tool.internal.export.java.JavaExporter"),
-	QUERY ("org.hibernate.tool.internal.export.query.QueryExporter");
+	CFG ("org.hibernate.tool.internal.reveng.models.exporter.cfg.CfgXmlExporter"),
+	DAO ("org.hibernate.tool.internal.reveng.models.exporter.dao.DaoExporter"),
+	DDL ("org.hibernate.tool.internal.reveng.models.exporter.ddl.DdlExporter"),
+	DOC ("org.hibernate.tool.internal.reveng.models.exporter.doc.DocExporter"),
+	GENERIC ("org.hibernate.tool.internal.reveng.models.exporter.generic.GenericExporter"),
+	HBM ("org.hibernate.tool.internal.reveng.models.exporter.hbm.HbmXmlExporter"),
+	HBM_LINT ("org.hibernate.tool.internal.reveng.models.exporter.lint.HbmLintExporter"),
+	JAVA ("org.hibernate.tool.internal.reveng.models.exporter.entity.EntityExporter"),
+	QUERY ("org.hibernate.tool.internal.reveng.models.exporter.query.QueryExporter");
 	
 	private String className;
 	

@@ -113,7 +113,7 @@ public class HbmXmlExporter implements Exporter {
 
 	public static HbmXmlExporter create(MetadataDescriptor md, String[] templatePath) {
 		HbmXmlExporter exporter = new HbmXmlExporter(templatePath, HibernateMappingSettings.defaults());
-		exporter.entities = MetadataHelper.from(md.createMetadata()).getEntityClassDetails();
+		exporter.entities = MetadataHelper.from(md).getEntityClassDetails();
 		return exporter;
 	}
 

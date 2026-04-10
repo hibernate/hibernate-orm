@@ -39,6 +39,7 @@ public class NativeMetadataDescriptor implements MetadataDescriptor {
     // Exposed for legacy tests that add annotated classes via reflection
     @SuppressWarnings("unused")
     private final MetadataSources metadataSources;
+    private Metadata metadata;
 
     public NativeMetadataDescriptor(
             File cfgXmlFile,
@@ -69,7 +70,14 @@ public class NativeMetadataDescriptor implements MetadataDescriptor {
     }
 
     public Metadata createMetadata() {
-        return metadataSources.buildMetadata(ssrb.build());
+        if (metadata == null) {
+            metadata = metadataSources.buildMetadata(ssrb.build());
+        }
+        return metadata;
+    }
+
+    public File[] getMappingFiles() {
+        return mappingFiles;
     }
 
     private void addMappingFiles(MetadataSources sources) {

@@ -15,15 +15,18 @@
  */
 package org.hibernate.tool.internal.reveng.models.exporter.generic;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.StringTokenizer;
 
 import freemarker.cache.ClassTemplateLoader;
@@ -41,8 +44,6 @@ import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.internal.reveng.models.exporter.MetadataHelper;
 import org.hibernate.tool.api.version.Version;
-
-import java.util.Properties;
 
 /**
  * A generic template-based exporter that applies a user-specified FreeMarker
@@ -62,12 +63,15 @@ import java.util.Properties;
  */
 public class GenericExporter implements Exporter {
 
+	private static final String HIBERNATETOOL_PREFIX = "hibernatetool.";
+
 	private List<ClassDetails> entities;
 	private String templateName;
 	private String filePattern;
 	private String forEach;
 	private Configuration freemarkerConfig;
 	private Properties exporterProperties = new Properties();
+	private File outputDir;
 
 	public GenericExporter() {}
 
@@ -89,6 +93,7 @@ public class GenericExporter implements Exporter {
 		String filePat = (String) exporterProperties.get(ExporterConstants.FILE_PATTERN);
 		String fe = (String) exporterProperties.get(ExporterConstants.FOR_EACH);
 		GenericExporter configured = create(md, tmplName, filePat, fe, templatePath);
+		configured.exporterProperties = this.exporterProperties;
 		configured.exportAll(destDir);
 	}
 
@@ -131,7 +136,7 @@ public class GenericExporter implements Exporter {
 										  String templateName,
 										  String filePattern) {
 		return new GenericExporter(
-				MetadataHelper.from(md.createMetadata()).getEntityClassDetails(),
+				MetadataHelper.from(md).getEntityClassDetails(),
 				templateName, filePattern, null, new String[0]);
 	}
 
@@ -141,11 +146,12 @@ public class GenericExporter implements Exporter {
 										  String forEach,
 										  String[] templatePath) {
 		return new GenericExporter(
-				MetadataHelper.from(md.createMetadata()).getEntityClassDetails(),
+				MetadataHelper.from(md).getEntityClassDetails(),
 				templateName, filePattern, forEach, templatePath);
 	}
 
 	public void exportAll(File outputDir) {
+		this.outputDir = outputDir;
 		if (templateName == null) {
 			throw new RuntimeException("Template name not set on " + getClass());
 		}
@@ -159,12 +165,12 @@ public class GenericExporter implements Exporter {
 				case "entity":
 					exportPerClass(outputDir, entities.stream()
 							.filter(e -> !isEmbeddable(e))
-							.toList());
+							.toList(), "Entity");
 					break;
 				case "component":
 					exportPerClass(outputDir, entities.stream()
 							.filter(this::isEmbeddable)
-							.toList());
+							.toList(), "Component");
 					break;
 				case "configuration":
 					exportConfiguration(outputDir);
@@ -177,12 +183,13 @@ public class GenericExporter implements Exporter {
 	}
 
 	public void export(Writer output, ClassDetails entity) {
-		Map<String, Object> model = new HashMap<>();
+		Map<String, Object> model = buildModel();
+		POJOAdapter pojo = new POJOAdapter(entity);
+		model.put("pojo", pojo);
+		model.put("clazz", entity);
 		model.put("entity", entity);
 		model.put("className", getSimpleName(entity));
 		model.put("packageName", getPackageName(entity));
-		model.put("date", new Date());
-		model.put("version", Version.versionString());
 		processTemplate(model, output);
 	}
 
@@ -200,6 +207,100 @@ public class GenericExporter implements Exporter {
 
 	public String getForEach() {
 		return forEach;
+	}
+
+	// ---- Template model support ----
+
+	/**
+	 * Adapter that wraps {@link ClassDetails} to provide the same API
+	 * as the old {@code POJOClass} for FreeMarker templates.
+	 */
+	public static class POJOAdapter {
+		private final ClassDetails classDetails;
+		private final String simpleName;
+		private final String packageName;
+
+		public POJOAdapter(ClassDetails classDetails) {
+			this.classDetails = classDetails;
+			String cn = classDetails.getClassName();
+			if (cn != null) {
+				int lastDot = cn.lastIndexOf('.');
+				this.simpleName = lastDot > 0 ? cn.substring(lastDot + 1) : cn;
+				this.packageName = lastDot > 0 ? cn.substring(0, lastDot) : "";
+			} else {
+				this.simpleName = "";
+				this.packageName = "";
+			}
+		}
+
+		public String getDeclarationName() { return simpleName; }
+		public String getShortName() { return simpleName; }
+		public String getName() { return classDetails.getClassName(); }
+		public String getPackageName() { return packageName; }
+	}
+
+	/**
+	 * Template helper that allows FreeMarker templates to create output files.
+	 */
+	public class Templates {
+		public void createFile(String content, String fileName) {
+			File target = new File(outputDir, fileName);
+			target.getParentFile().mkdirs();
+			try (Writer fw = new BufferedWriter(new FileWriter(target))) {
+				fw.write(content);
+			} catch (IOException e) {
+				throw new RuntimeException("Problem when writing to " + fileName, e);
+			}
+		}
+	}
+
+	// ---- Private implementation ----
+
+	private Map<String, Object> buildModel() {
+		Map<String, Object> model = new HashMap<>();
+		model.put("date", new Date());
+		model.put("version", Version.versionString());
+		model.put("templates", new Templates());
+		// Add ArtifactCollector as "artifacts" (matches old AbstractExporter context)
+		if (exporterProperties != null) {
+			Object ac = exporterProperties.get(ExporterConstants.ARTIFACT_COLLECTOR);
+			model.put("artifacts", ac != null ? ac
+					: new org.hibernate.tool.internal.export.common.DefaultArtifactCollector());
+		}
+		// Add exporter properties to the model (with hibernatetool. prefix handling)
+		if (exporterProperties != null) {
+			for (Map.Entry<Object, Object> entry : exporterProperties.entrySet()) {
+				String key = entry.getKey().toString();
+				Object value = transformValue(entry.getValue());
+				model.put(key, value);
+				if (key.startsWith(HIBERNATETOOL_PREFIX)) {
+					String shortKey = key.substring(HIBERNATETOOL_PREFIX.length());
+					model.put(shortKey, value);
+					if (key.endsWith(".toolclass")) {
+						String toolKey = shortKey.substring(
+								0, shortKey.length() - ".toolclass".length());
+						try {
+							Class<?> toolClass = Class.forName(value.toString());
+							Constructor<?> ctor = toolClass.getConstructor();
+							model.put(toolKey, ctor.newInstance());
+						} catch (Exception e) {
+							throw new RuntimeException(
+									"Exception when instantiating tool "
+									+ key + " with " + value, e);
+						}
+					}
+				}
+			}
+		}
+		// Add ctx as the model itself, for templates that iterate over context keys
+		model.put("ctx", model);
+		return model;
+	}
+
+	private Object transformValue(Object value) {
+		if ("true".equals(value)) return Boolean.TRUE;
+		if ("false".equals(value)) return Boolean.FALSE;
+		return value;
 	}
 
 	private List<String> resolveModes() {
@@ -220,17 +321,21 @@ public class GenericExporter implements Exporter {
 		return modes;
 	}
 
-	private void exportPerClass(File outputDir, List<ClassDetails> classes) {
+	private void exportPerClass(File outputDir, List<ClassDetails> classes, String entityType) {
 		for (ClassDetails entity : classes) {
 			String filename = resolveFilename(entity);
 			File outputFile = new File(outputDir, filename);
 			outputFile.getParentFile().mkdirs();
 			try (Writer writer = new FileWriter(outputFile)) {
 				export(writer, entity);
+			} catch (RuntimeException e) {
+				throw new RuntimeException(
+						"Error while processing " + entityType + ": "
+						+ getSimpleName(entity), e);
 			} catch (IOException e) {
 				throw new RuntimeException(
-						"Failed to export " + entity.getClassName()
-						+ " to " + outputFile, e);
+						"Error while processing " + entityType + ": "
+						+ getSimpleName(entity), e);
 			}
 		}
 	}
@@ -238,15 +343,16 @@ public class GenericExporter implements Exporter {
 	private void exportConfiguration(File outputDir) {
 		File outputFile = new File(outputDir, filePattern);
 		outputFile.getParentFile().mkdirs();
-		Map<String, Object> model = new HashMap<>();
+		Map<String, Object> model = buildModel();
 		model.put("entities", entities);
-		model.put("date", new Date());
-		model.put("version", Version.versionString());
 		try (Writer writer = new FileWriter(outputFile)) {
 			processTemplate(model, writer);
+		} catch (RuntimeException e) {
+			throw new RuntimeException(
+					"Error while processing Configuration", e);
 		} catch (IOException e) {
 			throw new RuntimeException(
-					"Failed to export configuration to " + outputFile, e);
+					"Error while processing Configuration", e);
 		}
 	}
 

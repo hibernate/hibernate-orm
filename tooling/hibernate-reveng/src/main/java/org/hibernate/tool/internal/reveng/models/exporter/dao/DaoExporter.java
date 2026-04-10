@@ -122,7 +122,7 @@ public class DaoExporter implements Exporter {
 
 	public static DaoExporter create(MetadataDescriptor md, boolean ejb3,
 									 String sessionFactoryName, String[] templatePath) {
-		MetadataHelper helper = MetadataHelper.from(md.createMetadata());
+		MetadataHelper helper = MetadataHelper.from(md);
 		return new DaoExporter(helper.getEntityClassDetails(), helper.getModelsContext(),
 				ejb3, sessionFactoryName, templatePath);
 	}

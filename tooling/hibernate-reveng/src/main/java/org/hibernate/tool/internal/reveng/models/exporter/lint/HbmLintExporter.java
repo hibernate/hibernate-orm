@@ -81,7 +81,7 @@ public class HbmLintExporter implements Exporter {
 				exporterProperties.get(ExporterConstants.TEMPLATE_PATH);
 		if (templatePath == null) templatePath = new String[0];
 		HbmLintExporter configured = create(
-				MetadataHelper.from(md.createMetadata()).getEntityClassDetails(),
+				MetadataHelper.from(md).getEntityClassDetails(),
 				templatePath);
 		configured.export(destDir);
 	}

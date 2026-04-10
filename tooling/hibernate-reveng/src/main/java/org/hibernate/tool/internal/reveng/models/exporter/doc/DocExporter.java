@@ -136,7 +136,7 @@ public class DocExporter implements Exporter {
 		if (templatePath == null) templatePath = new String[0];
 		String dotExec = exporterProperties.getProperty("dot.executable");
 		DocExporter configured = create(
-				MetadataHelper.from(md.createMetadata()).getEntityClassDetails(),
+				MetadataHelper.from(md).getEntityClassDetails(),
 				null, dotExec, templatePath);
 		configured.export(destDir);
 	}
@@ -193,13 +193,13 @@ public class DocExporter implements Exporter {
 
 	public static DocExporter create(MetadataDescriptor md) {
 		return new DocExporter(
-				MetadataHelper.from(md.createMetadata()).getEntityClassDetails(),
+				MetadataHelper.from(md).getEntityClassDetails(),
 				null, null, new String[0]);
 	}
 
 	public static DocExporter create(MetadataDescriptor md, String[] templatePath) {
 		return new DocExporter(
-				MetadataHelper.from(md.createMetadata()).getEntityClassDetails(),
+				MetadataHelper.from(md).getEntityClassDetails(),
 				null, null, templatePath);
 	}
 

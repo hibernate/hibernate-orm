@@ -74,7 +74,7 @@ public class CfgXmlExporter implements Exporter {
 
 	public static CfgXmlExporter create(MetadataDescriptor md) {
 		return new CfgXmlExporter(
-				MetadataHelper.from(md.createMetadata()).getEntityClassDetails());
+				MetadataHelper.from(md).getEntityClassDetails());
 	}
 
 	public void export(Writer output, Properties properties) {

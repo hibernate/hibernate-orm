@@ -133,7 +133,7 @@ public class EntityExporter implements Exporter {
 
 	public static EntityExporter create(MetadataDescriptor md, boolean annotated,
 										boolean useGenerics, String[] templatePath) {
-		MetadataHelper helper = MetadataHelper.from(md.createMetadata());
+		MetadataHelper helper = MetadataHelper.from(md);
 		return new EntityExporter(helper.getEntityClassDetails(), helper.getModelsContext(),
 				annotated, useGenerics, templatePath);
 	}

@@ -1136,6 +1136,19 @@ public class OracleDialect extends Dialect {
 		return getVersion().isSameOrAfter( 23 );
 	}
 
+	/**
+	 * Available since 23c, 23ai, 26ai, VALUE LOBs are documented <a href="https://docs.oracle.com/en/database/oracle/oracle-database/26/adlob/value-based-LOBs.html">here</a>.
+	 *
+	 * @return {@code true} if LOBs access can be VALUE based.
+	 */
+	@Override
+	public boolean supportsValueLOBAccess() { return getVersion().isSameOrAfter( 23 ); }
+
+	@Override
+	public String getValueLOBFragmentForExtraCreateTableInfo(String columnName) {
+		return " lob(" + columnName + ") query as value";
+	}
+
 	// features which remain constant across 8i, 9i, and 10g ~~~~~~~~~~~~~~~~~~
 
 	@Override

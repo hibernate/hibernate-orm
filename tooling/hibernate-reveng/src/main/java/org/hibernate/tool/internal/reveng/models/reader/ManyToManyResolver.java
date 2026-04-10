@@ -126,7 +126,7 @@ class ManyToManyResolver {
 
 		handleOwningSide(joinTableName, joinTable, outgoingFks,
 			owningFk, inverseFk, owningTable, inverseTable);
-		handleInverseSide(joinTable, outgoingFks,
+		handleInverseSide(joinTableName, joinTable, outgoingFks,
 			owningFk, inverseFk, owningTable, inverseTable);
 	}
 
@@ -135,30 +135,44 @@ class ManyToManyResolver {
 			RawForeignKeyInfo owningFk, RawForeignKeyInfo inverseFk,
 			TableMetadata owningTable, TableMetadata inverseTable) {
 		String owningFieldName = adapter.foreignKeyToManyToManyName(
-			inverseFk, joinTable, outgoingFks, owningFk, true);
+			owningFk, joinTable, outgoingFks, inverseFk, true);
+		List<String> owningColumns = collectFkColumns(owningFk.fkName(), outgoingFks);
+		List<String> inverseColumns = collectFkColumns(inverseFk.fkName(), outgoingFks);
 		ManyToManyMetadata owningM2m = new ManyToManyMetadata(
 			owningFieldName,
 			inverseTable.getEntityClassName(),
 			inverseTable.getEntityPackage())
-			.joinTable(joinTableName,
-				owningFk.fkColumnName(),
-				inverseFk.fkColumnName());
+			.joinTable(joinTableName, owningColumns, inverseColumns)
+			.joinTableSchema(joinTable.getSchema())
+			.joinTableCatalog(joinTable.getCatalog());
 		owningTable.addManyToMany(owningM2m);
 	}
 
-	private void handleInverseSide(TableMetadata joinTable,
+	private List<String> collectFkColumns(String fkName, List<RawForeignKeyInfo> outgoingFks) {
+		List<String> columns = new ArrayList<>();
+		for (RawForeignKeyInfo fk : outgoingFks) {
+			if (fk.fkName().equals(fkName)) {
+				columns.add(fk.fkColumnName());
+			}
+		}
+		return columns;
+	}
+
+	private void handleInverseSide(String joinTableName, TableMetadata joinTable,
 			List<RawForeignKeyInfo> outgoingFks,
 			RawForeignKeyInfo owningFk, RawForeignKeyInfo inverseFk,
 			TableMetadata owningTable, TableMetadata inverseTable) {
-		String owningFieldName = adapter.foreignKeyToManyToManyName(
-			inverseFk, joinTable, outgoingFks, owningFk, true);
 		String inverseFieldName = adapter.foreignKeyToManyToManyName(
-			owningFk, joinTable, outgoingFks, inverseFk, true);
+			inverseFk, joinTable, outgoingFks, owningFk, true);
+		List<String> inverseColumns = collectFkColumns(inverseFk.fkName(), outgoingFks);
+		List<String> owningColumns = collectFkColumns(owningFk.fkName(), outgoingFks);
 		ManyToManyMetadata inverseM2m = new ManyToManyMetadata(
 			inverseFieldName,
 			owningTable.getEntityClassName(),
 			owningTable.getEntityPackage())
-			.mappedBy(owningFieldName);
+			.joinTable(joinTableName, inverseColumns, owningColumns)
+			.joinTableSchema(joinTable.getSchema())
+			.joinTableCatalog(joinTable.getCatalog());
 		inverseTable.addManyToMany(inverseM2m);
 	}
 

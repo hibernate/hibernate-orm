@@ -29,7 +29,7 @@ import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
-import org.hibernate.tool.internal.export.java.ImportContextImpl;
+import org.hibernate.tool.internal.reveng.models.exporter.entity.ImportContextImpl;
 import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;

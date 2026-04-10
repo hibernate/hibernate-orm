@@ -29,8 +29,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.hibernate.tool.internal.export.java.Cfg2JavaTool;
-import org.hibernate.tool.internal.export.java.EntityPOJOClass;
 
 /**
  * @author Max Rydahl Andersen
@@ -185,23 +183,41 @@ public class ConfigurationCompletion {
 
         // Add superclass's properties too
         while (cmd != null){
-            EntityPOJOClass pc = new EntityPOJOClass(cmd, new Cfg2JavaTool()); // TODO: we should extract the needed functionality from this hbm2java class.
-
-            Iterator<Property> allPropertiesIterator = pc.getAllPropertiesIterator();
-            while ( allPropertiesIterator.hasNext() ) {
-                Property property = allPropertiesIterator.next();
-                String candidate = property.getName();
-                if ( prefix.isEmpty() || candidate.toLowerCase().startsWith(prefix.toLowerCase())) {
-                    HQLCompletionProposal proposal = createStartWithCompletionProposal( prefix, cursorPosition, HQLCompletionProposal.PROPERTY, candidate );
-                    proposal.setEntityName( cmd.getEntityName() );
-                    proposal.setProperty( property );
-                    proposal.setPropertyName( candidate );
-                    hcc.accept( proposal);
+            // Include identifier property for root class
+            if (cmd.getSuperclass() == null && cmd.hasIdentifierProperty()) {
+                addPropertyProposal(cmd.getIdentifierProperty(), cmd.getEntityName(),
+                        prefix, cursorPosition, hcc);
+            }
+            // Include all declared properties
+            for (Property property : cmd.getProperties()) {
+                if (property.getValue() instanceof Component component
+                        && "embedded".equals(property.getPropertyAccessorName())) {
+                    for (Property embeddedProp : component.getProperties()) {
+                        addPropertyProposal(embeddedProp, cmd.getEntityName(),
+                                prefix, cursorPosition, hcc);
+                    }
+                } else {
+                    addPropertyProposal(property, cmd.getEntityName(),
+                            prefix, cursorPosition, hcc);
                 }
             }
             cmd = cmd.getSuperclass();
         }
 
+    }
+
+    private void addPropertyProposal(Property property, String entityName,
+                                      String prefix, int cursorPosition,
+                                      IHQLCompletionRequestor hcc) {
+        String candidate = property.getName();
+        if (prefix.isEmpty() || candidate.toLowerCase().startsWith(prefix.toLowerCase())) {
+            HQLCompletionProposal proposal = createStartWithCompletionProposal(
+                    prefix, cursorPosition, HQLCompletionProposal.PROPERTY, candidate);
+            proposal.setEntityName(entityName);
+            proposal.setProperty(property);
+            proposal.setPropertyName(candidate);
+            hcc.accept(proposal);
+        }
     }
 
     private HQLCompletionProposal createStartWithCompletionProposal(String prefix, int cursorPosition, int kind, String candidate) {

@@ -26,6 +26,8 @@ import java.util.TreeMap;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 
 /**
@@ -33,11 +35,33 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
  *
  * @author Koen Aers
  */
-public class CfgXmlExporter {
+public class CfgXmlExporter implements Exporter {
 
 	private List<ClassDetails> entities;
+	private Properties exporterProperties = new Properties();
 
-	protected CfgXmlExporter() {}
+	public CfgXmlExporter() {}
+
+	@Override
+	public Properties getProperties() {
+		return exporterProperties;
+	}
+
+	@Override
+	public void start() {
+		MetadataDescriptor md = (MetadataDescriptor)
+				exporterProperties.get(ExporterConstants.METADATA_DESCRIPTOR);
+		java.io.File destDir = (java.io.File)
+				exporterProperties.get(ExporterConstants.DESTINATION_FOLDER);
+		CfgXmlExporter configured = create(md);
+		java.io.File outputFile = new java.io.File(destDir, "hibernate.cfg.xml");
+		outputFile.getParentFile().mkdirs();
+		try (java.io.FileWriter writer = new java.io.FileWriter(outputFile)) {
+			configured.export(writer, md.getProperties());
+		} catch (java.io.IOException e) {
+			throw new RuntimeException("Failed to write hibernate.cfg.xml", e);
+		}
+	}
 
 	private CfgXmlExporter(List<ClassDetails> entities) {
 		this.entities = entities;

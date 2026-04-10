@@ -101,7 +101,9 @@
         <cache usage="${helper.getCollectionCacheUsage(field)}"<#if helper.getCollectionCacheRegion(field)??> region="${helper.getCollectionCacheRegion(field)}"</#if>/>
 </#if>
         <key<#if helper.getPropertyRef(field)??> property-ref="${helper.getPropertyRef(field)}"</#if>>
-            <column name="${helper.getOneToManyMappedBy(field)}"/>
+<#list helper.getKeyColumnNames(field) as keyCol>
+            <column name="${keyCol}"/>
+</#list>
         </key>
 <#if collTag == "list">
         <list-index column="${helper.getListIndexColumnName(field)}"/>

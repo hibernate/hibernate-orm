@@ -3,9 +3,18 @@
     <composite-id
         name="${cid.getName()}"
         class="${helper.getCompositeIdClassName()}">
-<#list helper.getAttributeOverrides(cid) as ao>
-        <key-property name="${ao.fieldName()}">
-            <column name="${ao.columnName()}"/>
+<#list helper.getCompositeIdKeyProperties() as field>
+<#assign hbType = helper.getHibernateTypeName(field)>
+<#assign colAttrs = helper.getColumnAttributes(field)>
+        <key-property name="${field.getName()}"<#if hbType != "java.lang.Object">
+            type="${hbType}"</#if>>
+<#if helper.getColumnComment(field)??>
+            <column name="${helper.getColumnName(field)}"<#if colAttrs?has_content> ${colAttrs}</#if>>
+                <comment>${helper.getColumnComment(field)}</comment>
+            </column>
+<#else>
+            <column name="${helper.getColumnName(field)}"<#if colAttrs?has_content> ${colAttrs}</#if>/>
+</#if>
         </key-property>
 </#list>
 <#list helper.getCompositeIdKeyManyToOnes() as km2o>

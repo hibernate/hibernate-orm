@@ -36,8 +36,12 @@ import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.version.Version;
+
+import java.util.Properties;
 
 /**
  * A generic template-based exporter that applies a user-specified FreeMarker
@@ -55,15 +59,37 @@ import org.hibernate.tool.api.version.Version;
  *
  * @author Koen Aers
  */
-public class GenericExporter {
+public class GenericExporter implements Exporter {
 
 	private List<ClassDetails> entities;
 	private String templateName;
 	private String filePattern;
 	private String forEach;
 	private Configuration freemarkerConfig;
+	private Properties exporterProperties = new Properties();
 
-	protected GenericExporter() {}
+	public GenericExporter() {}
+
+	@Override
+	public Properties getProperties() {
+		return exporterProperties;
+	}
+
+	@Override
+	public void start() {
+		MetadataDescriptor md = (MetadataDescriptor)
+				exporterProperties.get(ExporterConstants.METADATA_DESCRIPTOR);
+		File destDir = (File)
+				exporterProperties.get(ExporterConstants.DESTINATION_FOLDER);
+		String[] templatePath = (String[])
+				exporterProperties.get(ExporterConstants.TEMPLATE_PATH);
+		if (templatePath == null) templatePath = new String[0];
+		String tmplName = (String) exporterProperties.get(ExporterConstants.TEMPLATE_NAME);
+		String filePat = (String) exporterProperties.get(ExporterConstants.FILE_PATTERN);
+		String fe = (String) exporterProperties.get(ExporterConstants.FOR_EACH);
+		GenericExporter configured = create(md, tmplName, filePat, fe, templatePath);
+		configured.exportAll(destDir);
+	}
 
 	private GenericExporter(List<ClassDetails> entities, String templateName,
 							String filePattern, String forEach,

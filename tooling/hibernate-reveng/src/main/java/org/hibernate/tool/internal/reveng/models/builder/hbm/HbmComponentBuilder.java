@@ -47,6 +47,12 @@ public class HbmComponentBuilder {
 										 HbmBuildContext ctx) {
 		String fieldName = component.getName();
 		String componentClassName = component.getClazz();
+		if (componentClassName == null || componentClassName.isEmpty()) {
+			// No class specified — synthesize from entity + field name
+			String entitySimple = HbmBuildContext.simpleName(entityClass.getClassName());
+			componentClassName = entitySimple + fieldName.substring(0, 1).toUpperCase()
+					+ fieldName.substring(1);
+		}
 		String fullClassName = HbmBuildContext.resolveClassName(componentClassName, defaultPackage);
 		String simpleName = HbmBuildContext.simpleName(fullClassName);
 
@@ -65,10 +71,13 @@ public class HbmComponentBuilder {
 				HbmPropertyBuilder.processProperty(embeddableClass, basicAttr, ctx);
 			} else if (attribute instanceof JaxbHbmManyToOneType m2o) {
 				HbmAssociationBuilder.processManyToOne(embeddableClass, m2o, defaultPackage, ctx);
+			} else if (attribute instanceof JaxbHbmCompositeAttributeType nestedComponent) {
+				processComponent(embeddableClass, nestedComponent, defaultPackage, ctx);
 			}
 		}
 
 		ctx.registerClassDetails(embeddableClass);
+		ctx.addEmbeddableClassDetails(embeddableClass);
 
 		// Add @Embedded field on the owning entity
 		TypeDetails fieldType = new ClassTypeDetailsImpl(

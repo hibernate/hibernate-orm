@@ -19,8 +19,6 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.tool.internal.export.doc.DocFile;
-import org.hibernate.tool.internal.export.doc.DocFolder;
 
 /**
  * Manages the documentation file structure for entity documentation.

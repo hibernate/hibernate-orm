@@ -34,10 +34,16 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 
+import jakarta.persistence.Embeddable;
+
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.version.Version;
 import org.hibernate.tool.internal.reveng.models.exporter.EntityFileWriter;
+
+import java.util.Properties;
 
 /**
  * Generates Hibernate {@code hbm.xml} mapping files per entity from
@@ -45,7 +51,7 @@ import org.hibernate.tool.internal.reveng.models.exporter.EntityFileWriter;
  *
  * @author Koen Aers
  */
-public class HbmXmlExporter {
+public class HbmXmlExporter implements Exporter {
 
 	private static final String DEFAULT_TEMPLATE_PATH = "/models/hbm";
 	private static final String TEMPLATE_NAME = "main.hbm.ftl";
@@ -53,8 +59,27 @@ public class HbmXmlExporter {
 	private Configuration freemarkerConfig;
 	private HibernateMappingSettings mappingSettings;
 	private List<ClassDetails> entities;
+	private Properties exporterProperties = new Properties();
 
-	protected HbmXmlExporter() {}
+	public HbmXmlExporter() {}
+
+	@Override
+	public Properties getProperties() {
+		return exporterProperties;
+	}
+
+	@Override
+	public void start() {
+		MetadataDescriptor md = (MetadataDescriptor)
+				exporterProperties.get(ExporterConstants.METADATA_DESCRIPTOR);
+		File destDir = (File)
+				exporterProperties.get(ExporterConstants.DESTINATION_FOLDER);
+		String[] templatePath = (String[])
+				exporterProperties.get(ExporterConstants.TEMPLATE_PATH);
+		if (templatePath == null) templatePath = new String[0];
+		HbmXmlExporter configured = create(md, templatePath);
+		configured.exportAll(destDir);
+	}
 
 	private HbmXmlExporter(String[] templatePath, HibernateMappingSettings mappingSettings) {
 		this.freemarkerConfig = new Configuration(Configuration.VERSION_2_3_33);
@@ -96,7 +121,13 @@ public class HbmXmlExporter {
 			throw new IllegalStateException(
 					"exportAll() requires creation via create(MetadataDescriptor, ...)");
 		}
-		EntityFileWriter.writePerEntity(entities, outputDir, ".hbm.xml", this::export);
+		List<ClassDetails> entitiesToExport = new ArrayList<>();
+		for (ClassDetails cd : entities) {
+			if (!cd.hasDirectAnnotationUsage(Embeddable.class)) {
+				entitiesToExport.add(cd);
+			}
+		}
+		EntityFileWriter.writePerEntity(entitiesToExport, outputDir, ".hbm.xml", this::export);
 	}
 
 	public void export(Writer output, ClassDetails entity) {

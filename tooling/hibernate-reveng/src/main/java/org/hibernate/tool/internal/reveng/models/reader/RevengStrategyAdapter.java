@@ -194,10 +194,37 @@ public class RevengStrategyAdapter {
 	}
 
 	private void addMappingForeignKeys(Table table, List<RawForeignKeyInfo> outgoingFks) {
-		if (outgoingFks != null) {
-			for (RawForeignKeyInfo fkInfo : outgoingFks) {
-				buildMappingForeignKey(fkInfo, table);
+		if (outgoingFks == null) {
+			return;
+		}
+		// Group FK entries by FK name to handle composite FKs correctly.
+		// Multiple RawForeignKeyInfo entries with the same FK name represent
+		// multiple columns of a single logical foreign key.
+		java.util.Map<String, List<RawForeignKeyInfo>> fksByName = new java.util.LinkedHashMap<>();
+		for (RawForeignKeyInfo fkInfo : outgoingFks) {
+			fksByName.computeIfAbsent(fkInfo.fkName(), k -> new ArrayList<>()).add(fkInfo);
+		}
+		for (java.util.Map.Entry<String, List<RawForeignKeyInfo>> entry : fksByName.entrySet()) {
+			String fkName = entry.getKey();
+			List<RawForeignKeyInfo> fkEntries = entry.getValue();
+			RawForeignKeyInfo first = fkEntries.get(0);
+
+			List<Column> fkColumns = new ArrayList<>();
+			List<Column> refColumns = new ArrayList<>();
+			for (RawForeignKeyInfo fkInfo : fkEntries) {
+				Column fkColumn = table.getColumn(new Column(fkInfo.fkColumnName()));
+				fkColumns.add(fkColumn != null ? fkColumn : new Column(fkInfo.fkColumnName()));
+				refColumns.add(new Column(fkInfo.pkColumnName()));
 			}
+
+			ForeignKey fk = table.createForeignKey(
+				fkName,
+				fkColumns,
+				first.referencedTableName(),
+				null,
+				null,
+				refColumns);
+			fk.setReferencedTable(createReferencedTable(first));
 		}
 	}
 

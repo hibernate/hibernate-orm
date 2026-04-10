@@ -36,9 +36,10 @@ import freemarker.template.TemplateExceptionHandler;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.version.Version;
-import org.hibernate.tool.internal.export.java.ImportContextImpl;
 import org.hibernate.tool.internal.reveng.models.exporter.EntityFileWriter;
 
 /**
@@ -47,7 +48,7 @@ import org.hibernate.tool.internal.reveng.models.exporter.EntityFileWriter;
  *
  * @author Koen Aers
  */
-public class EntityExporter {
+public class EntityExporter implements Exporter {
 
 	private static final String DEFAULT_TEMPLATE_PATH = "/models/entity";
 	private static final String TEMPLATE_NAME = "main.entity.ftl";
@@ -61,8 +62,32 @@ public class EntityExporter {
 	private Properties customProperties;
 
 	private String templateName;
+	private Properties exporterProperties = new Properties();
 
-	protected EntityExporter() {}
+	public EntityExporter() {}
+
+	@Override
+	public Properties getProperties() {
+		return exporterProperties;
+	}
+
+	@Override
+	public void start() {
+		MetadataDescriptor md = (MetadataDescriptor)
+				exporterProperties.get(ExporterConstants.METADATA_DESCRIPTOR);
+		File destDir = (File)
+				exporterProperties.get(ExporterConstants.DESTINATION_FOLDER);
+		String[] templatePath = (String[])
+				exporterProperties.get(ExporterConstants.TEMPLATE_PATH);
+		if (templatePath == null) templatePath = new String[0];
+		boolean ejb3 = Boolean.parseBoolean(
+				exporterProperties.getProperty("ejb3", "false"));
+		boolean jdk5 = Boolean.parseBoolean(
+				exporterProperties.getProperty("jdk5", "false"));
+		EntityExporter configured = create(md, ejb3, jdk5, templatePath);
+		configured.setProperties(exporterProperties);
+		configured.exportAll(destDir);
+	}
 
 	private EntityExporter(List<ClassDetails> entities, ModelsContext modelsContext,
 						   boolean annotated, boolean useGenerics, String[] templatePath) {

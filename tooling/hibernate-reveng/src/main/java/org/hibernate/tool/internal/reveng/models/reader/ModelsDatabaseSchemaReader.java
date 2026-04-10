@@ -76,11 +76,20 @@ public class ModelsDatabaseSchemaReader {
 				.create(dialect, defaultCatalog, defaultSchema)
 				.readForeignKeys(tablesByName);
 
-		// Merge user-defined foreign keys
+		// Merge user-defined foreign keys, replacing JDBC FKs that cover the same columns
 		List<RawForeignKeyInfo> userFks = UserDefinedForeignKeyReader
 				.create(strategy, defaultCatalog, defaultSchema)
 				.readUserForeignKeys(tablesByName);
-		allFks.addAll(userFks);
+		if (!userFks.isEmpty()) {
+			// Build a set of (table, column) pairs covered by user-defined FKs
+			Set<String> userFkKeys = new java.util.HashSet<>();
+			for (RawForeignKeyInfo userFk : userFks) {
+				userFkKeys.add(userFk.fkTableName() + ":" + userFk.fkColumnName());
+			}
+			// Remove JDBC FKs that overlap with user-defined ones
+			allFks.removeIf(fk -> userFkKeys.contains(fk.fkTableName() + ":" + fk.fkColumnName()));
+			allFks.addAll(userFks);
+		}
 
 		// Build FK indexes
 		Map<String, List<RawForeignKeyInfo>> outgoingFksByTable = groupByFkTable(allFks);

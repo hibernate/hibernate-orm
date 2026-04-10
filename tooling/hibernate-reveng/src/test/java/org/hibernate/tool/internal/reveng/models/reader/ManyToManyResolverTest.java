@@ -137,22 +137,14 @@ public class ManyToManyResolverTest {
 		assertEquals(1, users.getManyToManys().size());
 		assertEquals(1, roles.getManyToManys().size());
 
-		// Find owning and inverse sides
-		ManyToManyMetadata owning = null;
-		ManyToManyMetadata inverse = null;
-		for (ManyToManyMetadata m2m : users.getManyToManys()) {
-			if (m2m.getJoinTableName() != null) owning = m2m;
-			else inverse = m2m;
-		}
-		for (ManyToManyMetadata m2m : roles.getManyToManys()) {
-			if (m2m.getJoinTableName() != null && owning == null) owning = m2m;
-			else if (m2m.getMappedBy() != null && inverse == null) inverse = m2m;
-		}
+		// Both sides should have @JoinTable with swapped columns
+		ManyToManyMetadata usersM2m = users.getManyToManys().get(0);
+		ManyToManyMetadata rolesM2m = roles.getManyToManys().get(0);
 
-		assertNotNull(owning);
-		assertNotNull(inverse);
-		assertEquals("USER_ROLE", owning.getJoinTableName());
-		assertNotNull(inverse.getMappedBy());
+		assertNotNull(usersM2m.getJoinTableName(), "Users side should have joinTable");
+		assertNotNull(rolesM2m.getJoinTableName(), "Roles side should have joinTable");
+		assertEquals("USER_ROLE", usersM2m.getJoinTableName());
+		assertEquals("USER_ROLE", rolesM2m.getJoinTableName());
 	}
 
 	@Test
@@ -259,7 +251,7 @@ public class ManyToManyResolverTest {
 	}
 
 	@Test
-	public void testOwningSideHasJoinTableInverseSideHasMappedBy() {
+	public void testBothSidesHaveJoinTableWithSwappedColumns() {
 		TableMetadata users = createTable("USERS", "Users", new String[]{"ID"}, new String[]{});
 		TableMetadata roles = createTable("ROLES", "Roles", new String[]{"ID"}, new String[]{});
 		TableMetadata joinTable = createTable("USER_ROLE", "UserRole",
@@ -284,24 +276,27 @@ public class ManyToManyResolverTest {
 		Set<String> m2mTables = Set.of("USER_ROLE");
 		resolver.resolveManyToManyRelationships(m2mTables);
 
-		// Collect all M2M metadata
-		List<ManyToManyMetadata> allM2m = new ArrayList<>();
-		allM2m.addAll(users.getManyToManys());
-		allM2m.addAll(roles.getManyToManys());
+		// Both sides should have @JoinTable
+		assertEquals(1, users.getManyToManys().size());
+		assertEquals(1, roles.getManyToManys().size());
 
-		ManyToManyMetadata owning = null;
-		ManyToManyMetadata inverse = null;
-		for (ManyToManyMetadata m2m : allM2m) {
-			if (m2m.getJoinTableName() != null) owning = m2m;
-			if (m2m.getMappedBy() != null) inverse = m2m;
-		}
+		ManyToManyMetadata usersM2m = users.getManyToManys().get(0);
+		ManyToManyMetadata rolesM2m = roles.getManyToManys().get(0);
 
-		assertNotNull(owning, "One side should have @JoinTable");
-		assertNotNull(inverse, "Other side should have @MappedBy");
-		assertEquals("USER_ROLE", owning.getJoinTableName());
-		assertNotNull(owning.getJoinColumnName());
-		assertNotNull(owning.getInverseJoinColumnName());
-		assertEquals(owning.getFieldName(), inverse.getMappedBy());
+		assertNotNull(usersM2m.getJoinTableName(), "Users side should have @JoinTable");
+		assertNotNull(rolesM2m.getJoinTableName(), "Roles side should have @JoinTable");
+		assertEquals("USER_ROLE", usersM2m.getJoinTableName());
+		assertEquals("USER_ROLE", rolesM2m.getJoinTableName());
+
+		// Each side should have joinColumns and inverseJoinColumns
+		assertNotNull(usersM2m.getJoinColumnName());
+		assertNotNull(usersM2m.getInverseJoinColumnName());
+		assertNotNull(rolesM2m.getJoinColumnName());
+		assertNotNull(rolesM2m.getInverseJoinColumnName());
+
+		// The columns should be swapped between the two sides
+		assertEquals(usersM2m.getJoinColumnName(), rolesM2m.getInverseJoinColumnName());
+		assertEquals(usersM2m.getInverseJoinColumnName(), rolesM2m.getJoinColumnName());
 	}
 
 	private TableMetadata createTable(String tableName, String entityClassName,

@@ -30,6 +30,8 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
+import org.hibernate.annotations.Comment;
+
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
@@ -317,7 +319,10 @@ public class TableDocInfo {
 			}
 		}
 
-		return new TableDocInfo(tableName, schema, catalog, "",
+		Comment commentAnn = classDetails.getDirectAnnotationUsage(Comment.class);
+		String comment = commentAnn != null ? commentAnn.value() : "";
+
+		return new TableDocInfo(tableName, schema, catalog, comment,
 				allColumns, pk, new LinkedHashMap<>(),
 				uniqueKeyMap, indexMap);
 	}

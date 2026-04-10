@@ -66,7 +66,12 @@ class UserDefinedForeignKeyReader {
 			String schema = tableMetadata.getSchema() != null
 				? tableMetadata.getSchema() : defaultSchema;
 
-			TableIdentifier tableId = TableIdentifier.create(catalog, schema, tableMetadata.getTableName());
+			// Normalize: strip default catalog/schema to null so lookups match
+			// how OverrideRepository stores user-defined FKs
+			String normalizedCatalog = (catalog != null && catalog.equals(defaultCatalog)) ? null : catalog;
+			String normalizedSchema = (schema != null && schema.equals(defaultSchema)) ? null : schema;
+
+			TableIdentifier tableId = TableIdentifier.create(normalizedCatalog, normalizedSchema, tableMetadata.getTableName());
 			List<ForeignKey> userFks = strategy.getForeignKeys(tableId);
 			if (userFks != null) {
 				for (ForeignKey fk : userFks) {

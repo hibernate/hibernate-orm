@@ -301,32 +301,17 @@ public class ModelsDatabaseSchemaReaderTest {
 		assertNotNull(users);
 		assertNotNull(roles);
 
-		// One side should be the owning side (with joinTable), the other the inverse (with mappedBy)
+		// Both sides should have @JoinTable with swapped columns
 		int totalM2M = users.getManyToManys().size() + roles.getManyToManys().size();
 		assertEquals(2, totalM2M);
 
-		// Find owning and inverse sides
-		ManyToManyMetadata owning = null;
-		ManyToManyMetadata inverse = null;
-		for (ManyToManyMetadata m2m : users.getManyToManys()) {
-			if (m2m.getJoinTableName() != null) {
-				owning = m2m;
-			} else {
-				inverse = m2m;
-			}
-		}
-		for (ManyToManyMetadata m2m : roles.getManyToManys()) {
-			if (m2m.getJoinTableName() != null) {
-				if (owning == null) owning = m2m;
-			} else {
-				if (inverse == null) inverse = m2m;
-			}
-		}
+		ManyToManyMetadata usersM2m = users.getManyToManys().get(0);
+		ManyToManyMetadata rolesM2m = roles.getManyToManys().get(0);
 
-		assertNotNull(owning, "Should have an owning side with joinTable");
-		assertNotNull(inverse, "Should have an inverse side with mappedBy");
-		assertEquals("USER_ROLE", owning.getJoinTableName());
-		assertNotNull(inverse.getMappedBy());
+		assertNotNull(usersM2m.getJoinTableName(), "Users side should have @JoinTable");
+		assertNotNull(rolesM2m.getJoinTableName(), "Roles side should have @JoinTable");
+		assertEquals("USER_ROLE", usersM2m.getJoinTableName());
+		assertEquals("USER_ROLE", rolesM2m.getJoinTableName());
 	}
 
 	@Test

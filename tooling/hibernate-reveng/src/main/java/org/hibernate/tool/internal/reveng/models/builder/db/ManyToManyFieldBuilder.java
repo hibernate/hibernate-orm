@@ -16,6 +16,7 @@
 package org.hibernate.tool.internal.reveng.models.builder.db;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.boot.models.JpaAnnotations;
@@ -55,15 +56,25 @@ public class ManyToManyFieldBuilder {
 			ManyToManyMetadata m2mMetadata,
 			ClassDetails targetClassDetails,
 			ModelsContext modelsContext) {
+		buildManyToManyField(entityClass, m2mMetadata.getFieldName(),
+			m2mMetadata, targetClassDetails, modelsContext);
+	}
+
+	public static void buildManyToManyField(
+			DynamicClassDetails entityClass,
+			String fieldName,
+			ManyToManyMetadata m2mMetadata,
+			ClassDetails targetClassDetails,
+			ModelsContext modelsContext) {
 		DynamicFieldDetails field = createField(
-			entityClass, m2mMetadata, targetClassDetails, modelsContext);
+			entityClass, fieldName, targetClassDetails, modelsContext);
 		addManyToManyAnnotation(field, m2mMetadata, modelsContext);
 		addJoinTableAnnotation(field, m2mMetadata, modelsContext);
 	}
 
 	private static DynamicFieldDetails createField(
 			DynamicClassDetails entityClass,
-			ManyToManyMetadata m2mMetadata,
+			String fieldName,
 			ClassDetails targetClassDetails,
 			ModelsContext modelsContext) {
 		ClassDetails setClassDetails = modelsContext.getClassDetailsRegistry()
@@ -81,7 +92,7 @@ public class ManyToManyFieldBuilder {
 		);
 
 		return entityClass.applyAttribute(
-			m2mMetadata.getFieldName(),
+			fieldName,
 			fieldType,
 			false,
 			true,
@@ -111,25 +122,41 @@ public class ManyToManyFieldBuilder {
 			MutableAnnotationTarget field,
 			ManyToManyMetadata m2mMetadata,
 			ModelsContext modelsContext) {
-		if (m2mMetadata.getMappedBy() == null && m2mMetadata.getJoinTableName() != null) {
+		if (m2mMetadata.getJoinTableName() != null) {
 			JoinTableJpaAnnotation joinTableAnnotation =
 				JpaAnnotations.JOIN_TABLE.createUsage(modelsContext);
 			joinTableAnnotation.name(m2mMetadata.getJoinTableName());
-
-			if (m2mMetadata.getJoinColumnName() != null) {
-				JoinColumnJpaAnnotation joinColumn =
-					JpaAnnotations.JOIN_COLUMN.createUsage(modelsContext);
-				joinColumn.name(m2mMetadata.getJoinColumnName());
-				joinTableAnnotation.joinColumns(
-					new jakarta.persistence.JoinColumn[]{ joinColumn });
+			if (m2mMetadata.getJoinTableSchema() != null) {
+				joinTableAnnotation.schema(m2mMetadata.getJoinTableSchema());
+			}
+			if (m2mMetadata.getJoinTableCatalog() != null) {
+				joinTableAnnotation.catalog(m2mMetadata.getJoinTableCatalog());
 			}
 
-			if (m2mMetadata.getInverseJoinColumnName() != null) {
-				JoinColumnJpaAnnotation inverseJoinColumn =
-					JpaAnnotations.JOIN_COLUMN.createUsage(modelsContext);
-				inverseJoinColumn.name(m2mMetadata.getInverseJoinColumnName());
-				joinTableAnnotation.inverseJoinColumns(
-					new jakarta.persistence.JoinColumn[]{ inverseJoinColumn });
+			List<String> joinColumnNames = m2mMetadata.getJoinColumnNames();
+			if (!joinColumnNames.isEmpty()) {
+				jakarta.persistence.JoinColumn[] joinColumns =
+					new jakarta.persistence.JoinColumn[joinColumnNames.size()];
+				for (int i = 0; i < joinColumnNames.size(); i++) {
+					JoinColumnJpaAnnotation joinColumn =
+						JpaAnnotations.JOIN_COLUMN.createUsage(modelsContext);
+					joinColumn.name(joinColumnNames.get(i));
+					joinColumns[i] = joinColumn;
+				}
+				joinTableAnnotation.joinColumns(joinColumns);
+			}
+
+			List<String> inverseJoinColumnNames = m2mMetadata.getInverseJoinColumnNames();
+			if (!inverseJoinColumnNames.isEmpty()) {
+				jakarta.persistence.JoinColumn[] inverseJoinColumns =
+					new jakarta.persistence.JoinColumn[inverseJoinColumnNames.size()];
+				for (int i = 0; i < inverseJoinColumnNames.size(); i++) {
+					JoinColumnJpaAnnotation inverseJoinColumn =
+						JpaAnnotations.JOIN_COLUMN.createUsage(modelsContext);
+					inverseJoinColumn.name(inverseJoinColumnNames.get(i));
+					inverseJoinColumns[i] = inverseJoinColumn;
+				}
+				joinTableAnnotation.inverseJoinColumns(inverseJoinColumns);
 			}
 
 			field.addAnnotationUsage(joinTableAnnotation);

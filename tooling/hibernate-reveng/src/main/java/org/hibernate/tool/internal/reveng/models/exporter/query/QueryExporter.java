@@ -27,7 +27,11 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
+import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
+
+import java.util.Properties;
 
 /**
  * Executes HQL/JPQL queries against a database and writes the
@@ -36,12 +40,34 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
  *
  * @author Koen Aers
  */
-public class QueryExporter {
+public class QueryExporter implements Exporter {
 
 	private Metadata metadata;
 	private List<String> queries;
+	private Properties exporterProperties = new Properties();
 
-	protected QueryExporter() {}
+	public QueryExporter() {}
+
+	@Override
+	public Properties getProperties() {
+		return exporterProperties;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public void start() {
+		MetadataDescriptor md = (MetadataDescriptor)
+				exporterProperties.get(ExporterConstants.METADATA_DESCRIPTOR);
+		File destDir = (File)
+				exporterProperties.get(ExporterConstants.DESTINATION_FOLDER);
+		List<String> queryList = (List<String>)
+				exporterProperties.get(ExporterConstants.QUERY_LIST);
+		String outputFileName = (String)
+				exporterProperties.get(ExporterConstants.OUTPUT_FILE_NAME);
+		QueryExporter configured = create(md, queryList);
+		File outputFile = new File(destDir, outputFileName != null ? outputFileName : "query-output.txt");
+		configured.export(outputFile);
+	}
 
 	private QueryExporter(Metadata metadata, List<String> queries) {
 		this.metadata = metadata;

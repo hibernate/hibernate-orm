@@ -94,6 +94,11 @@ public class HbmClassDetailsBuilder {
 						firstEntity, mapping, ctx);
 			}
 		}
+		// Include subclass entities so they get exported as separate files.
+		entities.addAll(ctx.getSubclassEntityDetails());
+		// Include embeddable classes (from <component> elements) so they
+		// get exported as separate .java files by the entity exporter.
+		entities.addAll(ctx.getEmbeddableClassDetails());
 		return entities;
 	}
 
@@ -123,22 +128,23 @@ public class HbmClassDetailsBuilder {
 		entityAnnotation.name(simpleName);
 		entityClass.addAnnotationUsage(entityAnnotation);
 
-		// @Table
+		// @Table — default to unqualified class name when not specified
 		String tableName = entityType.getTable();
-		if (tableName != null && !tableName.isEmpty()) {
-			TableJpaAnnotation tableAnnotation =
-					JpaAnnotations.TABLE.createUsage(ctx.getModelsContext());
-			tableAnnotation.name(tableName);
-			String schema = entityType.getSchema();
-			if (schema != null && !schema.isEmpty()) {
-				tableAnnotation.schema(schema);
-			}
-			String catalog = entityType.getCatalog();
-			if (catalog != null && !catalog.isEmpty()) {
-				tableAnnotation.catalog(catalog);
-			}
-			entityClass.addAnnotationUsage(tableAnnotation);
+		if (tableName == null || tableName.isEmpty()) {
+			tableName = simpleName;
 		}
+		TableJpaAnnotation tableAnnotation =
+				JpaAnnotations.TABLE.createUsage(ctx.getModelsContext());
+		tableAnnotation.name(tableName);
+		String schema = entityType.getSchema();
+		if (schema != null && !schema.isEmpty()) {
+			tableAnnotation.schema(schema);
+		}
+		String catalog = entityType.getCatalog();
+		if (catalog != null && !catalog.isEmpty()) {
+			tableAnnotation.catalog(catalog);
+		}
+		entityClass.addAnnotationUsage(tableAnnotation);
 
 		// Id / Composite Id
 		HbmIdBuilder.processId(entityClass, entityType.getId(), ctx);

@@ -37,6 +37,11 @@ import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.api.export.ExporterConstants;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
+
+import java.util.Properties;
 
 /**
  * Analyzes entities for common mapping issues and generates a
@@ -48,14 +53,35 @@ import org.hibernate.models.spi.ClassDetails;
  *
  * @author Koen Aers
  */
-public class HbmLintExporter {
+public class HbmLintExporter implements Exporter {
 
 	private static final String FTL_TEXT_REPORT = "lint/text-report.ftl";
 
-	private final List<ClassDetails> entities;
-	private final LintDetector[] detectors;
-	private final Configuration freemarkerConfig;
-	private final BeansWrapper beansWrapper;
+	private List<ClassDetails> entities;
+	private LintDetector[] detectors;
+	private Configuration freemarkerConfig;
+	private BeansWrapper beansWrapper;
+	private Properties exporterProperties = new Properties();
+
+	public HbmLintExporter() {}
+
+	@Override
+	public Properties getProperties() {
+		return exporterProperties;
+	}
+
+	@Override
+	public void start() {
+		MetadataDescriptor md = (MetadataDescriptor)
+				exporterProperties.get(ExporterConstants.METADATA_DESCRIPTOR);
+		File destDir = (File)
+				exporterProperties.get(ExporterConstants.DESTINATION_FOLDER);
+		String[] templatePath = (String[])
+				exporterProperties.get(ExporterConstants.TEMPLATE_PATH);
+		if (templatePath == null) templatePath = new String[0];
+		HbmLintExporter configured = create(md.getEntityClassDetails(), templatePath);
+		configured.export(destDir);
+	}
 
 	private HbmLintExporter(List<ClassDetails> entities,
 							LintDetector[] detectors,

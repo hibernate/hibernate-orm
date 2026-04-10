@@ -167,6 +167,7 @@ public class HbmSubclassBuilder {
 		processAttributes(subclassEntity, subclass.getAttributes(), defaultPackage, ctx);
 
 		ctx.registerClassDetails(subclassEntity);
+		ctx.addSubclassEntityDetails(subclassEntity);
 
 		// Process nested subclasses
 		for (JaxbHbmDiscriminatorSubclassEntityType nested : subclass.getSubclass()) {
@@ -217,6 +218,7 @@ public class HbmSubclassBuilder {
 		processAttributes(subclassEntity, subclass.getAttributes(), defaultPackage, ctx);
 
 		ctx.registerClassDetails(subclassEntity);
+		ctx.addSubclassEntityDetails(subclassEntity);
 
 		// Process nested joined subclasses
 		for (JaxbHbmJoinedSubclassEntityType nested : subclass.getJoinedSubclass()) {
@@ -256,6 +258,7 @@ public class HbmSubclassBuilder {
 		processAttributes(subclassEntity, subclass.getAttributes(), defaultPackage, ctx);
 
 		ctx.registerClassDetails(subclassEntity);
+		ctx.addSubclassEntityDetails(subclassEntity);
 
 		// Process nested union subclasses
 		for (JaxbHbmUnionSubclassEntityType nested : subclass.getUnionSubclass()) {

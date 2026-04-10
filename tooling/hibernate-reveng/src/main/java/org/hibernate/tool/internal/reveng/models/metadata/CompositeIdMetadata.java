@@ -45,6 +45,11 @@ public class CompositeIdMetadata {
 		return this;
 	}
 
+	public CompositeIdMetadata addAttributeOverride(String fieldName, String columnName, Class<?> javaType) {
+		this.attributeOverrides.add(new AttributeOverrideMetadata(fieldName, columnName, javaType));
+		return this;
+	}
+
 	public CompositeIdMetadata addKeyManyToOne(
 			String fieldName, String columnName,
 			String targetEntityClassName, String targetEntityPackage) {

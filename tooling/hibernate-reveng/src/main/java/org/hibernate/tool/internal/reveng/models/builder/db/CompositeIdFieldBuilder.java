@@ -66,6 +66,8 @@ public class CompositeIdFieldBuilder {
 			entityClass, compositeId, idClassDetails, modelsContext);
 		addEmbeddedIdAnnotation(field, modelsContext);
 		addAttributeOverrides(field, compositeId, modelsContext);
+		addEmbeddableAnnotation((DynamicClassDetails) idClassDetails, modelsContext);
+		addEmbeddableFields((DynamicClassDetails) idClassDetails, compositeId, modelsContext);
 		addKeyManyToOneFields(
 			(DynamicClassDetails) idClassDetails, compositeId, modelsContext);
 	}
@@ -122,6 +124,34 @@ public class CompositeIdFieldBuilder {
 				JpaAnnotations.ATTRIBUTE_OVERRIDES.createUsage(modelsContext);
 			overridesContainer.value(overrideArray);
 			field.addAnnotationUsage(overridesContainer);
+		}
+	}
+
+	private static void addEmbeddableAnnotation(
+			DynamicClassDetails idClassDetails,
+			ModelsContext modelsContext) {
+		if (idClassDetails.getAnnotationUsage(jakarta.persistence.Embeddable.class, modelsContext) == null) {
+			idClassDetails.addAnnotationUsage(
+				JpaAnnotations.EMBEDDABLE.createUsage(modelsContext));
+		}
+	}
+
+	private static void addEmbeddableFields(
+			DynamicClassDetails idClassDetails,
+			CompositeIdMetadata compositeId,
+			ModelsContext modelsContext) {
+		for (AttributeOverrideMetadata attr : compositeId.getAttributeOverrides()) {
+			Class<?> javaType = attr.getJavaType() != null ? attr.getJavaType() : Object.class;
+			ClassDetails fieldTypeDetails = modelsContext.getClassDetailsRegistry()
+				.resolveClassDetails(javaType.getName());
+			TypeDetails fieldType = new ClassTypeDetailsImpl(
+				fieldTypeDetails, TypeDetails.Kind.CLASS);
+			DynamicFieldDetails field = idClassDetails.applyAttribute(
+				attr.getFieldName(), fieldType, false, false, modelsContext);
+			ColumnJpaAnnotation columnAnnotation =
+				JpaAnnotations.COLUMN.createUsage(modelsContext);
+			columnAnnotation.name(attr.getColumnName());
+			field.addAnnotationUsage(columnAnnotation);
 		}
 	}
 

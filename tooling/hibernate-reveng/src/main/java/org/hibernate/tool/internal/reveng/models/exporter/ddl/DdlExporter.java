@@ -30,6 +30,8 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.internal.metadata.MetadataBootstrapper;
 import org.hibernate.tool.schema.TargetType;
@@ -72,15 +74,75 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
  *
  * @author Koen Aers
  */
-public class DdlExporter {
+public class DdlExporter implements Exporter {
 
 	private List<ClassDetails> entities;
 	private Properties properties;
 	private String delimiter = ";";
 	private boolean format = false;
 	private boolean haltOnError = false;
+	private Properties exporterProperties = new Properties();
 
-	protected DdlExporter() {}
+	public DdlExporter() {}
+
+	@Override
+	public Properties getProperties() {
+		return exporterProperties;
+	}
+
+	@Override
+	public void start() {
+		MetadataDescriptor md = (MetadataDescriptor)
+				exporterProperties.get(ExporterConstants.METADATA_DESCRIPTOR);
+		File destDir = (File)
+				exporterProperties.get(ExporterConstants.DESTINATION_FOLDER);
+		DdlExporter configured = create(md);
+		String delim = (String) exporterProperties.get(ExporterConstants.DELIMITER);
+		if (delim != null) configured.delimiter(delim);
+		Object fmt = exporterProperties.get(ExporterConstants.FORMAT);
+		if (fmt != null) configured.format(Boolean.parseBoolean(fmt.toString()));
+		Object halt = exporterProperties.get(ExporterConstants.HALT_ON_ERROR);
+		if (halt != null) configured.haltOnError(Boolean.parseBoolean(halt.toString()));
+
+		boolean create = Boolean.parseBoolean(
+				String.valueOf(exporterProperties.get(ExporterConstants.CREATE_DATABASE)));
+		boolean drop = Boolean.parseBoolean(
+				String.valueOf(exporterProperties.get(ExporterConstants.DROP_DATABASE)));
+		boolean schemaUpdate = Boolean.parseBoolean(
+				String.valueOf(exporterProperties.get(ExporterConstants.SCHEMA_UPDATE)));
+		boolean exportToDatabase = Boolean.parseBoolean(
+				String.valueOf(exporterProperties.get(ExporterConstants.EXPORT_TO_DATABASE)));
+		boolean exportToConsole = Boolean.parseBoolean(
+				String.valueOf(exporterProperties.get(ExporterConstants.EXPORT_TO_CONSOLE)));
+		String outputFileName = (String) exporterProperties.get(ExporterConstants.OUTPUT_FILE_NAME);
+
+		if (schemaUpdate) {
+			if (outputFileName != null) {
+				configured.exportUpdateDdl(new File(destDir, outputFileName));
+			}
+			if (exportToDatabase) {
+				configured.executeUpdateDdl();
+			}
+			if (exportToConsole) {
+				configured.exportUpdateDdlToConsole();
+			}
+		} else {
+			File outputFile = outputFileName != null ? new File(destDir, outputFileName) : null;
+			if (drop && create) {
+				if (outputFile != null) configured.exportBothDdl(outputFile);
+				if (exportToDatabase) configured.executeBothDdl();
+				if (exportToConsole) configured.exportBothDdlToConsole();
+			} else if (drop) {
+				if (outputFile != null) configured.exportDropDdl(outputFile);
+				if (exportToDatabase) configured.executeDropDdl();
+				if (exportToConsole) configured.exportDropDdlToConsole();
+			} else if (create) {
+				if (outputFile != null) configured.exportCreateDdl(outputFile);
+				if (exportToDatabase) configured.executeCreateDdl();
+				if (exportToConsole) configured.exportCreateDdlToConsole();
+			}
+		}
+	}
 
 	private DdlExporter(List<ClassDetails> entities, Properties properties) {
 		this.entities = entities;

@@ -30,7 +30,7 @@ import jakarta.persistence.NamedQuery;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
-import org.hibernate.tool.internal.export.java.ImportContext;
+import org.hibernate.tool.internal.reveng.models.exporter.entity.ImportContext;
 
 /**
  * Template-friendly helper for generating DAO Home classes from

@@ -32,6 +32,7 @@ import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValueAnnot
 import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValuesAnnotation;
 import org.hibernate.boot.models.annotations.internal.AnyKeyJavaClassAnnotation;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.JoinColumnsJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ManyToOneJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OneToOneJpaAnnotation;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
@@ -56,6 +57,13 @@ public class HbmAssociationBuilder {
 										 HbmBuildContext ctx) {
 		String name = m2o.getName();
 		String targetClassName = m2o.getClazz();
+		if (targetClassName == null || targetClassName.isEmpty()) {
+			targetClassName = m2o.getEntityName();
+		}
+		if (targetClassName == null || targetClassName.isEmpty()) {
+			// No class or entity-name specified — use the field name capitalized
+			targetClassName = name.substring(0, 1).toUpperCase() + name.substring(1);
+		}
 		String fullTargetName = HbmBuildContext.resolveClassName(targetClassName, defaultPackage);
 		ClassDetails targetClass = ctx.resolveOrCreateClassDetails(
 				HbmBuildContext.simpleName(fullTargetName), fullTargetName);
@@ -67,14 +75,59 @@ public class HbmAssociationBuilder {
 
 		ManyToOneJpaAnnotation m2oAnnotation =
 				JpaAnnotations.MANY_TO_ONE.createUsage(ctx.getModelsContext());
+		boolean notNull = m2o.isNotNull() != null && m2o.isNotNull();
+		if (notNull) {
+			m2oAnnotation.optional(false);
+		}
 		field.addAnnotationUsage(m2oAnnotation);
+
+		boolean insertable = m2o.isInsert();
+		boolean updatable = m2o.isUpdate();
 
 		String columnName = m2o.getColumnAttribute();
 		if (columnName != null && !columnName.isEmpty()) {
-			JoinColumnJpaAnnotation joinColAnnotation =
+			JoinColumnJpaAnnotation jc =
 					JpaAnnotations.JOIN_COLUMN.createUsage(ctx.getModelsContext());
-			joinColAnnotation.name(columnName);
-			field.addAnnotationUsage(joinColAnnotation);
+			jc.name(columnName);
+			if (!insertable) jc.insertable(false);
+			if (!updatable) jc.updatable(false);
+			if (notNull) jc.nullable(false);
+			field.addAnnotationUsage(jc);
+		} else {
+			// Check nested <column> elements from columnOrFormula
+			List<JaxbHbmColumnType> columns = new java.util.ArrayList<>();
+			for (Object item : m2o.getColumnOrFormula()) {
+				if (item instanceof JaxbHbmColumnType col) {
+					columns.add(col);
+				}
+			}
+			if (!columns.isEmpty()) {
+				if (columns.size() == 1) {
+					JoinColumnJpaAnnotation jc =
+							JpaAnnotations.JOIN_COLUMN.createUsage(ctx.getModelsContext());
+					jc.name(columns.get(0).getName());
+					if (!insertable) jc.insertable(false);
+					if (!updatable) jc.updatable(false);
+					if (notNull) jc.nullable(false);
+					field.addAnnotationUsage(jc);
+				} else {
+					jakarta.persistence.JoinColumn[] jcArray =
+							new jakarta.persistence.JoinColumn[columns.size()];
+					for (int i = 0; i < columns.size(); i++) {
+						JoinColumnJpaAnnotation jc =
+								JpaAnnotations.JOIN_COLUMN.createUsage(ctx.getModelsContext());
+						jc.name(columns.get(i).getName());
+						if (!insertable) jc.insertable(false);
+						if (!updatable) jc.updatable(false);
+						if (notNull) jc.nullable(false);
+						jcArray[i] = jc;
+					}
+					JoinColumnsJpaAnnotation jcs =
+							JpaAnnotations.JOIN_COLUMNS.createUsage(ctx.getModelsContext());
+					jcs.value(jcArray);
+					field.addAnnotationUsage(jcs);
+				}
+			}
 		}
 	}
 

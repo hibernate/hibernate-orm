@@ -52,14 +52,24 @@ public class OneToManyFieldBuilder {
 			OneToManyMetadata o2mMetadata,
 			ClassDetails elementClassDetails,
 			ModelsContext modelsContext) {
+		buildOneToManyField(entityClass, o2mMetadata.getFieldName(),
+			o2mMetadata, elementClassDetails, modelsContext);
+	}
+
+	public static void buildOneToManyField(
+			DynamicClassDetails entityClass,
+			String fieldName,
+			OneToManyMetadata o2mMetadata,
+			ClassDetails elementClassDetails,
+			ModelsContext modelsContext) {
 		DynamicFieldDetails field = createField(
-			entityClass, o2mMetadata, elementClassDetails, modelsContext);
+			entityClass, fieldName, elementClassDetails, modelsContext);
 		addOneToManyAnnotation(field, o2mMetadata, modelsContext);
 	}
 
 	private static DynamicFieldDetails createField(
 			DynamicClassDetails entityClass,
-			OneToManyMetadata o2mMetadata,
+			String fieldName,
 			ClassDetails elementClassDetails,
 			ModelsContext modelsContext) {
 		ClassDetails setClassDetails = modelsContext.getClassDetailsRegistry()
@@ -77,7 +87,7 @@ public class OneToManyFieldBuilder {
 		);
 
 		return entityClass.applyAttribute(
-			o2mMetadata.getFieldName(),
+			fieldName,
 			fieldType,
 			false,
 			true,

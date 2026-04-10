@@ -72,10 +72,10 @@ public class RevengMetadataDescriptor implements MetadataDescriptor {
     }
 
     public Metadata createMetadata() {
-        // TODO: Replace with MetadataBootstrapper.bootstrap() once
-        // DynamicEntityBuilder handles tables without primary keys,
-        // many-to-many join tables, and other edge cases that the
-        // old binder chain (RootClassBinder) currently manages.
+        // TODO: HBX-3333 Replace with MetadataBootstrapper.bootstrap()
+        // once the ClassDetails→Metadata round-trip handles all edge
+        // cases exercised by the jdbc2cfg test suite (embeddables,
+        // composite keys, many-to-many, etc.).
         return RevengMetadataBuilder
                 .create(properties, reverseEngineeringStrategy)
                 .build();
@@ -130,6 +130,7 @@ public class RevengMetadataDescriptor implements MetadataDescriptor {
                     entities.add(
                             builder.createEntityFromTable(table));
                 }
+                entities.addAll(builder.getEmbeddableClassDetails());
                 this.entityClassDetails = entities;
                 this.modelsContext = builder.getModelsContext();
             }

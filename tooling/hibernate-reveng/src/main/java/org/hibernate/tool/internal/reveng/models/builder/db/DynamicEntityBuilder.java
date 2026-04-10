@@ -20,21 +20,27 @@ import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.EmbeddedFieldMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
+import org.hibernate.tool.internal.reveng.models.metadata.IndexMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.InheritanceMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.ManyToManyMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.OneToManyMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.OneToOneMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.hibernate.boot.models.annotations.internal.EntityJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.DiscriminatorColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.DiscriminatorValueJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.InheritanceJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.TableJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.UniqueConstraintJpaAnnotation;
 import org.hibernate.models.internal.BasicModelsContextImpl;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.internal.SimpleClassLoading;
@@ -55,6 +61,7 @@ public class DynamicEntityBuilder {
 
 	private final ModelsContext modelsContext;
 	private final Map<String, TableMetadata> tableMetadataByClassName = new LinkedHashMap<>();
+	private final List<ClassDetails> embeddableClassDetails = new ArrayList<>();
 
 	public DynamicEntityBuilder() {
 		// Initialize the models context
@@ -118,14 +125,15 @@ public class DynamicEntityBuilder {
 				entityClass, fkMetadata, targetClassDetails, modelsContext);
 		}
 
-		// Add OneToMany relationship fields
+		// Add OneToMany relationship fields (deduplicate names to avoid collisions)
 		for (OneToManyMetadata o2mMetadata : tableMetadata.getOneToManys()) {
 			String elementClassName = qualifiedName(o2mMetadata.getElementEntityPackage(),
 				o2mMetadata.getElementEntityClassName());
 			ClassDetails elementClassDetails = resolveOrCreateClassDetails(
 				o2mMetadata.getElementEntityClassName(), elementClassName);
+			String uniqueName = makeUniqueFieldName(entityClass, o2mMetadata.getFieldName());
 			OneToManyFieldBuilder.buildOneToManyField(
-				entityClass, o2mMetadata, elementClassDetails, modelsContext);
+				entityClass, uniqueName, o2mMetadata, elementClassDetails, modelsContext);
 		}
 
 		// Add OneToOne relationship fields
@@ -138,14 +146,15 @@ public class DynamicEntityBuilder {
 				entityClass, o2oMetadata, targetClassDetails, modelsContext);
 		}
 
-		// Add ManyToMany relationship fields
+		// Add ManyToMany relationship fields (deduplicate names to avoid collisions)
 		for (ManyToManyMetadata m2mMetadata : tableMetadata.getManyToManys()) {
 			String targetClassName = qualifiedName(m2mMetadata.getTargetEntityPackage(),
 				m2mMetadata.getTargetEntityClassName());
 			ClassDetails targetClassDetails = resolveOrCreateClassDetails(
 				m2mMetadata.getTargetEntityClassName(), targetClassName);
+			String uniqueName = makeUniqueFieldName(entityClass, m2mMetadata.getFieldName());
 			ManyToManyFieldBuilder.buildManyToManyField(
-				entityClass, m2mMetadata, targetClassDetails, modelsContext);
+				entityClass, uniqueName, m2mMetadata, targetClassDetails, modelsContext);
 		}
 
 		// Add Embedded fields
@@ -166,6 +175,7 @@ public class DynamicEntityBuilder {
 				compositeId.getIdClassName(), idClassName);
 			CompositeIdFieldBuilder.buildCompositeIdField(
 				entityClass, compositeId, idClassDetails, modelsContext);
+			embeddableClassDetails.add(idClassDetails);
 		}
 
 		// Register in the context
@@ -192,6 +202,33 @@ public class DynamicEntityBuilder {
 		}
 		if (tableMetadata.getCatalog() != null) {
 			tableAnnotation.catalog(tableMetadata.getCatalog());
+		}
+
+		// Add unique constraints from unique indexes, excluding PK-only indexes
+		Set<String> pkColumnNames = new HashSet<>();
+		for (ColumnMetadata col : tableMetadata.getColumns()) {
+			if (col.isPrimaryKey()) {
+				pkColumnNames.add(col.getColumnName());
+			}
+		}
+		List<IndexMetadata> uniqueIndexes = new ArrayList<>();
+		for (IndexMetadata index : tableMetadata.getIndexes()) {
+			if (index.isUnique() && !pkColumnNames.containsAll(index.getColumnNames())) {
+				uniqueIndexes.add(index);
+			}
+		}
+		if (!uniqueIndexes.isEmpty()) {
+			jakarta.persistence.UniqueConstraint[] uniqueConstraints =
+				new jakarta.persistence.UniqueConstraint[uniqueIndexes.size()];
+			for (int i = 0; i < uniqueIndexes.size(); i++) {
+				IndexMetadata idx = uniqueIndexes.get(i);
+				UniqueConstraintJpaAnnotation uc =
+					JpaAnnotations.UNIQUE_CONSTRAINT.createUsage(modelsContext);
+				uc.name(idx.getIndexName());
+				uc.columnNames(idx.getColumnNames().toArray(new String[0]));
+				uniqueConstraints[i] = uc;
+			}
+			tableAnnotation.uniqueConstraints(uniqueConstraints);
 		}
 
 		entityClass.addAnnotationUsage(tableAnnotation);
@@ -246,6 +283,25 @@ public class DynamicEntityBuilder {
 	}
 
 	/**
+	 * Makes a field name unique within the given class by appending a
+	 * numeric suffix (_1, _2, ...) when a field with the same name
+	 * already exists.
+	 */
+	private static String makeUniqueFieldName(DynamicClassDetails entityClass, String fieldName) {
+		Set<String> existingNames = new HashSet<>();
+		for (var field : entityClass.getFields()) {
+			existingNames.add(field.getName());
+		}
+		String candidate = fieldName;
+		int cnt = 0;
+		while (existingNames.contains(candidate)) {
+			cnt++;
+			candidate = fieldName + "_" + cnt;
+		}
+		return candidate;
+	}
+
+	/**
 	 * Resolves a ClassDetails from the registry, or creates a dynamic placeholder
 	 * if the class hasn't been built yet. This handles forward references where
 	 * a relationship references an entity that will be built later.
@@ -267,6 +323,14 @@ public class DynamicEntityBuilder {
 
 	public ModelsContext getModelsContext() {
 		return modelsContext;
+	}
+
+	/**
+	 * Returns the list of embeddable ID classes created during entity building.
+	 * These need to be included in the entity list for exporters to render them.
+	 */
+	public List<ClassDetails> getEmbeddableClassDetails() {
+		return embeddableClassDetails;
 	}
 
 	/**

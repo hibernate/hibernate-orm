@@ -782,12 +782,18 @@ public class HbmTemplateHelper {
 
 	public boolean isManyToOneUpdatable(FieldDetails field) {
 		JoinColumn jc = field.getDirectAnnotationUsage(JoinColumn.class);
-		return jc == null || jc.updatable();
+		if (jc != null) return jc.updatable();
+		JoinColumns jcs = field.getDirectAnnotationUsage(JoinColumns.class);
+		if (jcs != null && jcs.value().length > 0) return jcs.value()[0].updatable();
+		return true;
 	}
 
 	public boolean isManyToOneInsertable(FieldDetails field) {
 		JoinColumn jc = field.getDirectAnnotationUsage(JoinColumn.class);
-		return jc == null || jc.insertable();
+		if (jc != null) return jc.insertable();
+		JoinColumns jcs = field.getDirectAnnotationUsage(JoinColumns.class);
+		if (jcs != null && jcs.value().length > 0) return jcs.value()[0].insertable();
+		return true;
 	}
 
 	public boolean isManyToOneOptional(FieldDetails field) {
@@ -851,10 +857,29 @@ public class HbmTemplateHelper {
 		return elementType != null ? elementType.determineRawClass().getClassName() : null;
 	}
 
-	public String getOneToManyMappedBy(FieldDetails field) {
+	public List<String> getKeyColumnNames(FieldDetails field) {
+		// Check @JoinColumns (multiple columns)
+		jakarta.persistence.JoinColumns jcs =
+				field.getDirectAnnotationUsage(jakarta.persistence.JoinColumns.class);
+		if (jcs != null && jcs.value().length > 0) {
+			List<String> names = new java.util.ArrayList<>();
+			for (jakarta.persistence.JoinColumn jc : jcs.value()) {
+				names.add(jc.name());
+			}
+			return names;
+		}
+		// Check single @JoinColumn
+		jakarta.persistence.JoinColumn jc =
+				field.getDirectAnnotationUsage(jakarta.persistence.JoinColumn.class);
+		if (jc != null) {
+			return java.util.Collections.singletonList(jc.name());
+		}
+		// Fall back to @OneToMany.mappedBy
 		OneToMany o2m = field.getDirectAnnotationUsage(OneToMany.class);
-		return o2m != null && o2m.mappedBy() != null && !o2m.mappedBy().isEmpty()
-				? o2m.mappedBy() : null;
+		if (o2m != null && o2m.mappedBy() != null && !o2m.mappedBy().isEmpty()) {
+			return java.util.Collections.singletonList(o2m.mappedBy());
+		}
+		return java.util.Collections.emptyList();
 	}
 
 	public String getOneToManyCascadeString(FieldDetails field) {

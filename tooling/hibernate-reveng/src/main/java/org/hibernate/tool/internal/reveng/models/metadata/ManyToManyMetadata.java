@@ -15,6 +15,9 @@
  */
 package org.hibernate.tool.internal.reveng.models.metadata;
 
+import java.util.Collections;
+import java.util.List;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 
@@ -31,8 +34,12 @@ public class ManyToManyMetadata {
 	private final String targetEntityPackage;
 	private String mappedBy;
 	private String joinTableName;
+	private String joinTableSchema;
+	private String joinTableCatalog;
 	private String joinColumnName;
 	private String inverseJoinColumnName;
+	private List<String> joinColumnNames;
+	private List<String> inverseJoinColumnNames;
 	private FetchType fetchType;
 	private CascadeType[] cascadeTypes;
 
@@ -50,10 +57,33 @@ public class ManyToManyMetadata {
 		return this;
 	}
 
+	public ManyToManyMetadata joinTableSchema(String schema) {
+		this.joinTableSchema = schema;
+		return this;
+	}
+
+	public ManyToManyMetadata joinTableCatalog(String catalog) {
+		this.joinTableCatalog = catalog;
+		return this;
+	}
+
 	public ManyToManyMetadata joinTable(String joinTableName, String joinColumnName, String inverseJoinColumnName) {
 		this.joinTableName = joinTableName;
 		this.joinColumnName = joinColumnName;
 		this.inverseJoinColumnName = inverseJoinColumnName;
+		return this;
+	}
+
+	public ManyToManyMetadata joinTable(String joinTableName, List<String> joinColumnNames, List<String> inverseJoinColumnNames) {
+		this.joinTableName = joinTableName;
+		this.joinColumnNames = joinColumnNames;
+		this.inverseJoinColumnNames = inverseJoinColumnNames;
+		if (!joinColumnNames.isEmpty()) {
+			this.joinColumnName = joinColumnNames.get(0);
+		}
+		if (!inverseJoinColumnNames.isEmpty()) {
+			this.inverseJoinColumnName = inverseJoinColumnNames.get(0);
+		}
 		return this;
 	}
 
@@ -73,8 +103,20 @@ public class ManyToManyMetadata {
 	public String getTargetEntityPackage() { return targetEntityPackage; }
 	public String getMappedBy() { return mappedBy; }
 	public String getJoinTableName() { return joinTableName; }
+	public String getJoinTableSchema() { return joinTableSchema; }
+	public String getJoinTableCatalog() { return joinTableCatalog; }
 	public String getJoinColumnName() { return joinColumnName; }
 	public String getInverseJoinColumnName() { return inverseJoinColumnName; }
+	public List<String> getJoinColumnNames() {
+		if (joinColumnNames != null) { return joinColumnNames; }
+		if (joinColumnName != null) { return Collections.singletonList(joinColumnName); }
+		return Collections.emptyList();
+	}
+	public List<String> getInverseJoinColumnNames() {
+		if (inverseJoinColumnNames != null) { return inverseJoinColumnNames; }
+		if (inverseJoinColumnName != null) { return Collections.singletonList(inverseJoinColumnName); }
+		return Collections.emptyList();
+	}
 	public FetchType getFetchType() { return fetchType; }
 	public CascadeType[] getCascadeTypes() { return cascadeTypes; }
 }

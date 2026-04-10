@@ -23,13 +23,20 @@ package org.hibernate.tool.internal.reveng.models.metadata;
 public class AttributeOverrideMetadata {
 	private final String fieldName;
 	private final String columnName;
+	private final Class<?> javaType;
 
 	public AttributeOverrideMetadata(String fieldName, String columnName) {
+		this(fieldName, columnName, null);
+	}
+
+	public AttributeOverrideMetadata(String fieldName, String columnName, Class<?> javaType) {
 		this.fieldName = fieldName;
 		this.columnName = columnName;
+		this.javaType = javaType;
 	}
 
 	// Getters
 	public String getFieldName() { return fieldName; }
 	public String getColumnName() { return columnName; }
+	public Class<?> getJavaType() { return javaType; }
 }

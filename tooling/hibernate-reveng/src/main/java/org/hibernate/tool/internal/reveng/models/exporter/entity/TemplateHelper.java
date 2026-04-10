@@ -18,6 +18,7 @@ package org.hibernate.tool.internal.reveng.models.exporter.entity;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import org.hibernate.tool.internal.util.NameConverter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -136,8 +137,8 @@ import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.spi.ParameterizedTypeDetails;
 import org.hibernate.models.spi.TypeDetails;
-import org.hibernate.tool.internal.export.java.ImportContext;
 
 /**
  * Wraps a {@link ClassDetails} and provides template-friendly methods
@@ -386,6 +387,20 @@ public class TemplateHelper {
 		if (!useGenerics) {
 			return simpleName;
 		}
+		TypeDetails type = field.getType();
+		if (type.getTypeKind() == TypeDetails.Kind.PARAMETERIZED_TYPE) {
+			ParameterizedTypeDetails paramType = type.asParameterizedType();
+			java.util.List<TypeDetails> args = paramType.getArguments();
+			if ("java.util.Map".equals(rawClassName) && args.size() == 2) {
+				String keySimple = importType(args.get(0).determineRawClass().getClassName());
+				String valueSimple = importType(args.get(1).determineRawClass().getClassName());
+				return simpleName + "<" + keySimple + ", " + valueSimple + ">";
+			} else if (!args.isEmpty()) {
+				String elementSimple = importType(
+						args.get(args.size() - 1).determineRawClass().getClassName());
+				return simpleName + "<" + elementSimple + ">";
+			}
+		}
 		TypeDetails elementType = field.getElementType();
 		if (elementType != null) {
 			String elementClassName = elementType.determineRawClass().getClassName();
@@ -405,7 +420,22 @@ public class TemplateHelper {
 		};
 	}
 
-	// --- Getter/setter names ---
+	// --- Field/getter/setter names ---
+
+	public String getFieldName(FieldDetails field) {
+		String name = field.getName();
+		if (NameConverter.isReservedJavaKeyword(name)) {
+			return name + "_";
+		}
+		return name;
+	}
+
+	public String getFieldName(String name) {
+		if (NameConverter.isReservedJavaKeyword(name)) {
+			return name + "_";
+		}
+		return name;
+	}
 
 	public String getGetterName(String fieldName) {
 		return "get" + capitalize(fieldName);
@@ -1556,12 +1586,10 @@ public class TemplateHelper {
 			importType("jakarta.persistence.JoinColumn");
 			sb.append("@JoinTable(name = \"").append(jt.name()).append("\"");
 			if (jt.joinColumns().length > 0) {
-				sb.append(",\n            joinColumns = @JoinColumn(name = \"")
-						.append(jt.joinColumns()[0].name()).append("\")");
+				appendJoinColumns(sb, "joinColumns", jt.joinColumns());
 			}
 			if (jt.inverseJoinColumns().length > 0) {
-				sb.append(",\n            inverseJoinColumns = @JoinColumn(name = \"")
-						.append(jt.inverseJoinColumns()[0].name()).append("\")");
+				appendJoinColumns(sb, "inverseJoinColumns", jt.inverseJoinColumns());
 			}
 			sb.append(")");
 		}
@@ -1622,33 +1650,33 @@ public class TemplateHelper {
 		// Composite ID
 		FieldDetails cid = getCompositeIdField();
 		if (cid != null) {
-			props.add(new FullConstructorProperty(getJavaTypeName(cid), cid.getName()));
+			props.add(new FullConstructorProperty(getJavaTypeName(cid), getFieldName(cid)));
 		}
 		// Basic fields (skip version, respect gen-property)
 		for (FieldDetails field : getBasicFields()) {
 			if (!isVersion(field) && isGenProperty(field)) {
-				props.add(new FullConstructorProperty(getJavaTypeName(field), field.getName()));
+				props.add(new FullConstructorProperty(getJavaTypeName(field), getFieldName(field)));
 			}
 		}
 		// ManyToOne
 		for (FieldDetails field : getManyToOneFields()) {
-			props.add(new FullConstructorProperty(getJavaTypeName(field), field.getName()));
+			props.add(new FullConstructorProperty(getJavaTypeName(field), getFieldName(field)));
 		}
 		// OneToOne
 		for (FieldDetails field : getOneToOneFields()) {
-			props.add(new FullConstructorProperty(getJavaTypeName(field), field.getName()));
+			props.add(new FullConstructorProperty(getJavaTypeName(field), getFieldName(field)));
 		}
 		// OneToMany
 		for (FieldDetails field : getOneToManyFields()) {
-			props.add(new FullConstructorProperty(getCollectionTypeName(field), field.getName()));
+			props.add(new FullConstructorProperty(getCollectionTypeName(field), getFieldName(field)));
 		}
 		// ManyToMany
 		for (FieldDetails field : getManyToManyFields()) {
-			props.add(new FullConstructorProperty(getCollectionTypeName(field), field.getName()));
+			props.add(new FullConstructorProperty(getCollectionTypeName(field), getFieldName(field)));
 		}
 		// Embedded
 		for (FieldDetails field : getEmbeddedFields()) {
-			props.add(new FullConstructorProperty(getJavaTypeName(field), field.getName()));
+			props.add(new FullConstructorProperty(getJavaTypeName(field), getFieldName(field)));
 		}
 		return props;
 	}
@@ -1674,11 +1702,11 @@ public class TemplateHelper {
 				if (gv != null) {
 					continue;
 				}
-				props.add(new FullConstructorProperty(getJavaTypeName(field), field.getName()));
+				props.add(new FullConstructorProperty(getJavaTypeName(field), getFieldName(field)));
 			} else {
 				Column col = fieldGetAnnotation(field,Column.class);
 				if (col != null && !col.nullable()) {
-					props.add(new FullConstructorProperty(getJavaTypeName(field), field.getName()));
+					props.add(new FullConstructorProperty(getJavaTypeName(field), getFieldName(field)));
 				}
 			}
 		}
@@ -1686,7 +1714,7 @@ public class TemplateHelper {
 		for (FieldDetails field : getManyToOneFields()) {
 			ManyToOne m2o = fieldGetAnnotation(field,ManyToOne.class);
 			if (m2o != null && !m2o.optional()) {
-				props.add(new FullConstructorProperty(getJavaTypeName(field), field.getName()));
+				props.add(new FullConstructorProperty(getJavaTypeName(field), getFieldName(field)));
 			}
 		}
 		return props;
@@ -2287,6 +2315,20 @@ public class TemplateHelper {
 			case "int", "long", "short", "byte", "char", "boolean", "float", "double" -> true;
 			default -> false;
 		};
+	}
+
+	private void appendJoinColumns(StringBuilder sb, String attributeName, JoinColumn[] columns) {
+		if (columns.length == 1) {
+			sb.append(",\n            ").append(attributeName).append(" = @JoinColumn(name = \"")
+					.append(columns[0].name()).append("\")");
+		} else {
+			sb.append(",\n            ").append(attributeName).append(" = {\n");
+			for (int i = 0; i < columns.length; i++) {
+				if (i > 0) sb.append(",\n");
+				sb.append("                @JoinColumn(name = \"").append(columns[i].name()).append("\")");
+			}
+			sb.append("\n            }");
+		}
 	}
 
 	private void appendCascade(StringBuilder sb, CascadeType[] types) {

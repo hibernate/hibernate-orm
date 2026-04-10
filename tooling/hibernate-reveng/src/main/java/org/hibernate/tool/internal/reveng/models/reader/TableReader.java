@@ -198,7 +198,7 @@ class TableReader {
 		CompositeIdMetadata compositeId = new CompositeIdMetadata(
 			"id", idClassName, tableMetadata.getEntityPackage());
 		for (ColumnMetadata pkCol : pkColumns) {
-			compositeId.addAttributeOverride(pkCol.getFieldName(), pkCol.getColumnName());
+			compositeId.addAttributeOverride(pkCol.getFieldName(), pkCol.getColumnName(), pkCol.getJavaType());
 		}
 		tableMetadata.compositeId(compositeId);
 	}

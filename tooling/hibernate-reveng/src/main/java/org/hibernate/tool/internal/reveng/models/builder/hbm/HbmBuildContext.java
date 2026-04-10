@@ -18,6 +18,7 @@
 package org.hibernate.tool.internal.reveng.models.builder.hbm;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,7 @@ import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.models.internal.BasicModelsContextImpl;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
+import org.hibernate.models.internal.ParameterizedTypeDetailsImpl;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.internal.SimpleClassLoading;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
@@ -72,6 +74,7 @@ public class HbmBuildContext {
 		HIBERNATE_TYPE_MAP.put("calendar", "java.util.Calendar");
 		HIBERNATE_TYPE_MAP.put("calendar_date", "java.util.Calendar");
 		HIBERNATE_TYPE_MAP.put("binary", "byte[]");
+		HIBERNATE_TYPE_MAP.put("byte[]", "byte[]");
 		HIBERNATE_TYPE_MAP.put("text", "java.lang.String");
 		HIBERNATE_TYPE_MAP.put("clob", "java.sql.Clob");
 		HIBERNATE_TYPE_MAP.put("blob", "java.sql.Blob");
@@ -79,6 +82,8 @@ public class HbmBuildContext {
 	}
 
 	private final ModelsContext modelsContext;
+	private final List<ClassDetails> embeddableClassDetails = new ArrayList<>();
+	private final List<ClassDetails> subclassEntityDetails = new ArrayList<>();
 	private String defaultPackage;
 
 	public HbmBuildContext() {
@@ -159,6 +164,22 @@ public class HbmBuildContext {
 
 	public DynamicFieldDetails createField(DynamicClassDetails entityClass,
 										   String fieldName, String javaType) {
+		// For array types like "byte[]", resolve the component type and
+		// use an ArrayTypeDetailsImpl to represent the array.
+		if (javaType.endsWith("[]")) {
+			String componentType = javaType.substring(0, javaType.length() - 2);
+			ClassDetails componentClass = modelsContext.getClassDetailsRegistry()
+					.resolveClassDetails(componentType);
+			TypeDetails componentTypeDetails = new ClassTypeDetailsImpl(
+					componentClass, TypeDetails.Kind.CLASS);
+			// Create/resolve a DynamicClassDetails for the array type name
+			ClassDetails arrayClassDetails = resolveOrCreateClassDetails(
+					javaType, javaType);
+			TypeDetails arrayType = new org.hibernate.models.internal.ArrayTypeDetailsImpl(
+					arrayClassDetails, componentTypeDetails);
+			return entityClass.applyAttribute(
+					fieldName, arrayType, false, false, modelsContext);
+		}
 		ClassDetails fieldTypeClass = modelsContext.getClassDetailsRegistry()
 				.resolveClassDetails(javaType);
 		TypeDetails fieldType = new ClassTypeDetailsImpl(
@@ -170,8 +191,33 @@ public class HbmBuildContext {
 	public DynamicFieldDetails createCollectionField(DynamicClassDetails entityClass,
 													 String fieldName,
 													 ClassDetails elementClass) {
-		TypeDetails fieldType = new ClassTypeDetailsImpl(
+		return createCollectionField(entityClass, fieldName, elementClass, "java.util.Set");
+	}
+
+	public DynamicFieldDetails createCollectionField(DynamicClassDetails entityClass,
+													 String fieldName,
+													 ClassDetails elementClass,
+													 String collectionInterfaceName) {
+		ClassDetails collectionClass = modelsContext.getClassDetailsRegistry()
+				.resolveClassDetails(collectionInterfaceName);
+		TypeDetails elementType = new ClassTypeDetailsImpl(
 				elementClass, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				collectionClass, List.of(elementType), null);
+		return entityClass.applyAttribute(
+				fieldName, fieldType, false, true, modelsContext);
+	}
+
+	public DynamicFieldDetails createMapField(DynamicClassDetails entityClass,
+												String fieldName,
+												ClassDetails keyClass,
+												ClassDetails valueClass) {
+		ClassDetails mapClass = modelsContext.getClassDetailsRegistry()
+				.resolveClassDetails("java.util.Map");
+		TypeDetails keyType = new ClassTypeDetailsImpl(keyClass, TypeDetails.Kind.CLASS);
+		TypeDetails valueType = new ClassTypeDetailsImpl(valueClass, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType = new ParameterizedTypeDetailsImpl(
+				mapClass, List.of(keyType, valueType), null);
 		return entityClass.applyAttribute(
 				fieldName, fieldType, false, true, modelsContext);
 	}
@@ -190,6 +236,22 @@ public class HbmBuildContext {
 		MutableClassDetailsRegistry registry =
 				(MutableClassDetailsRegistry) modelsContext.getClassDetailsRegistry();
 		registry.addClassDetails(classDetails);
+	}
+
+	public void addEmbeddableClassDetails(ClassDetails classDetails) {
+		embeddableClassDetails.add(classDetails);
+	}
+
+	public List<ClassDetails> getEmbeddableClassDetails() {
+		return embeddableClassDetails;
+	}
+
+	public void addSubclassEntityDetails(ClassDetails classDetails) {
+		subclassEntityDetails.add(classDetails);
+	}
+
+	public List<ClassDetails> getSubclassEntityDetails() {
+		return subclassEntityDetails;
 	}
 
 	// --- Column annotation helpers ---

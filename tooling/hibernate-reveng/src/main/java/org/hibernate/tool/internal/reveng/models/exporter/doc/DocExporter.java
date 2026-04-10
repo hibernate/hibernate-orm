@@ -43,9 +43,12 @@ import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.export.doc.DocFile;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+
+import java.util.Properties;
 
 /**
  * Generates HTML documentation for entities from a list of
@@ -60,7 +63,7 @@ import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
  *
  * @author Koen Aers
  */
-public class DocExporter {
+public class DocExporter implements Exporter {
 
 	private static final String FTL_ENTITIES_INDEX =
 			"doc/entities/index.ftl";
@@ -112,7 +115,29 @@ public class DocExporter {
 	private Configuration freemarkerConfig;
 	private BeansWrapper beansWrapper;
 
-	protected DocExporter() {}
+	private Properties exporterProperties = new Properties();
+
+	public DocExporter() {}
+
+	@Override
+	public Properties getProperties() {
+		return exporterProperties;
+	}
+
+	@Override
+	public void start() {
+		MetadataDescriptor md = (MetadataDescriptor)
+				exporterProperties.get(ExporterConstants.METADATA_DESCRIPTOR);
+		File destDir = (File)
+				exporterProperties.get(ExporterConstants.DESTINATION_FOLDER);
+		String[] templatePath = (String[])
+				exporterProperties.get(ExporterConstants.TEMPLATE_PATH);
+		if (templatePath == null) templatePath = new String[0];
+		String dotExec = exporterProperties.getProperty("dot.executable");
+		DocExporter configured = create(
+				md.getEntityClassDetails(), null, dotExec, templatePath);
+		configured.export(destDir);
+	}
 
 	private DocExporter(List<ClassDetails> entities,
 						Map<String, TableMetadata> tableMetadataMap,

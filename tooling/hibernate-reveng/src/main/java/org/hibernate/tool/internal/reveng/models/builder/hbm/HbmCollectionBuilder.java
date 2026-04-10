@@ -30,7 +30,9 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCacheType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCustomSqlDmlType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFetchStyleWithSubselectEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmColumnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIdBagCollectionType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmKeyType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmLazyWithExtraEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmListType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToManyCollectionElementType;
@@ -48,6 +50,8 @@ import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnota
 import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
 import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
+import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.JoinColumnsJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.JoinTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ManyToManyJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OneToManyJpaAnnotation;
@@ -86,7 +90,7 @@ public class HbmCollectionBuilder {
 								   HbmBuildContext ctx) {
 		DynamicFieldDetails field = createCollectionField(entityClass, set.getName(),
 				set.getOneToMany(), set.getManyToMany(), set.getElement(),
-				defaultPackage, ctx);
+				set.getKey(), "java.util.Set", defaultPackage, ctx);
 		if (field == null) {
 			return;
 		}
@@ -108,7 +112,7 @@ public class HbmCollectionBuilder {
 									HbmBuildContext ctx) {
 		DynamicFieldDetails field = createCollectionField(entityClass, list.getName(),
 				list.getOneToMany(), list.getManyToMany(), list.getElement(),
-				defaultPackage, ctx);
+				list.getKey(), "java.util.List", defaultPackage, ctx);
 		if (field == null) {
 			return;
 		}
@@ -128,7 +132,7 @@ public class HbmCollectionBuilder {
 								   HbmBuildContext ctx) {
 		DynamicFieldDetails field = createCollectionField(entityClass, bag.getName(),
 				bag.getOneToMany(), bag.getManyToMany(), bag.getElement(),
-				defaultPackage, ctx);
+				bag.getKey(), "java.util.Collection", defaultPackage, ctx);
 		if (field == null) {
 			return;
 		}
@@ -147,9 +151,9 @@ public class HbmCollectionBuilder {
 								   JaxbHbmMapType map,
 								   String defaultPackage,
 								   HbmBuildContext ctx) {
-		DynamicFieldDetails field = createCollectionField(entityClass, map.getName(),
+		DynamicFieldDetails field = createMapCollectionField(entityClass, map.getName(),
 				map.getOneToMany(), map.getManyToMany(), map.getElement(),
-				defaultPackage, ctx);
+				map.getKey(), map, defaultPackage, ctx);
 		if (field == null) {
 			return;
 		}
@@ -171,7 +175,7 @@ public class HbmCollectionBuilder {
 									  HbmBuildContext ctx) {
 		DynamicFieldDetails field = createCollectionField(entityClass, array.getName(),
 				array.getOneToMany(), array.getManyToMany(), array.getElement(),
-				defaultPackage, ctx);
+				array.getKey(), "java.util.List", defaultPackage, ctx);
 		if (field == null) {
 			return;
 		}
@@ -194,7 +198,7 @@ public class HbmCollectionBuilder {
 			return;
 		}
 		DynamicFieldDetails field = buildElementCollectionField(
-				entityClass, array.getName(), element, ctx);
+				entityClass, array.getName(), element, "java.util.List", ctx);
 		applyCommonMetadata(field, array.getCascade(), array.getFetch(),
 				array.getLazy(), array.getWhere(), array.getBatchSize(),
 				array.getCache(), array.getFilter(),
@@ -211,7 +215,7 @@ public class HbmCollectionBuilder {
 									 HbmBuildContext ctx) {
 		DynamicFieldDetails field = createCollectionField(entityClass, idBag.getName(),
 				null, idBag.getManyToMany(), idBag.getElement(),
-				defaultPackage, ctx);
+				idBag.getKey(), "java.util.List", defaultPackage, ctx);
 		if (field == null) {
 			return;
 		}
@@ -233,22 +237,123 @@ public class HbmCollectionBuilder {
 			JaxbHbmOneToManyCollectionElementType oneToMany,
 			JaxbHbmManyToManyCollectionElementType manyToMany,
 			JaxbHbmBasicCollectionElementType element,
+			JaxbHbmKeyType key,
+			String collectionInterfaceName,
 			String defaultPackage,
 			HbmBuildContext ctx) {
 		if (oneToMany != null) {
-			return buildOneToManyField(entityClass, name, oneToMany, defaultPackage, ctx);
+			return buildOneToManyField(entityClass, name, oneToMany,
+					key, collectionInterfaceName, defaultPackage, ctx);
 		} else if (manyToMany != null) {
-			return buildManyToManyField(entityClass, name, manyToMany, defaultPackage, ctx);
+			return buildManyToManyField(entityClass, name, manyToMany,
+					collectionInterfaceName, defaultPackage, ctx);
 		} else if (element != null) {
-			return buildElementCollectionField(entityClass, name, element, ctx);
+			return buildElementCollectionField(entityClass, name, element,
+					collectionInterfaceName, ctx);
 		}
 		return null;
+	}
+
+	private static DynamicFieldDetails createMapCollectionField(
+			DynamicClassDetails entityClass,
+			String name,
+			JaxbHbmOneToManyCollectionElementType oneToMany,
+			JaxbHbmManyToManyCollectionElementType manyToMany,
+			JaxbHbmBasicCollectionElementType element,
+			JaxbHbmKeyType key,
+			JaxbHbmMapType map,
+			String defaultPackage,
+			HbmBuildContext ctx) {
+		// Determine the map key type
+		String keyTypeName = "java.lang.String";
+		if (map.getMapKey() != null && map.getMapKey().getTypeAttribute() != null) {
+			keyTypeName = ctx.resolveJavaType(map.getMapKey().getTypeAttribute());
+		} else if (map.getIndex() != null && map.getIndex().getType() != null) {
+			keyTypeName = ctx.resolveJavaType(map.getIndex().getType());
+		}
+		ClassDetails keyClass = ctx.getModelsContext().getClassDetailsRegistry()
+				.resolveClassDetails(keyTypeName);
+
+		if (oneToMany != null) {
+			return buildMapOneToManyField(entityClass, name, oneToMany,
+					key, keyClass, defaultPackage, ctx);
+		} else if (manyToMany != null) {
+			return buildMapManyToManyField(entityClass, name, manyToMany,
+					keyClass, defaultPackage, ctx);
+		} else if (element != null) {
+			return buildMapElementCollectionField(entityClass, name, element,
+					keyClass, ctx);
+		}
+		return null;
+	}
+
+	private static DynamicFieldDetails buildMapOneToManyField(
+			DynamicClassDetails entityClass,
+			String name,
+			JaxbHbmOneToManyCollectionElementType oneToMany,
+			JaxbHbmKeyType key,
+			ClassDetails keyClass,
+			String defaultPackage,
+			HbmBuildContext ctx) {
+		String targetClassName = oneToMany.getClazz();
+		if (targetClassName == null) {
+			return null;
+		}
+		String fullTargetName = HbmBuildContext.resolveClassName(targetClassName, defaultPackage);
+		ClassDetails targetClass = ctx.resolveOrCreateClassDetails(
+				HbmBuildContext.simpleName(fullTargetName), fullTargetName);
+		DynamicFieldDetails field = ctx.createMapField(entityClass, name, keyClass, targetClass);
+		addKeyJoinColumns(field, key, ctx);
+		OneToManyJpaAnnotation o2mAnnotation =
+				JpaAnnotations.ONE_TO_MANY.createUsage(ctx.getModelsContext());
+		field.addAnnotationUsage(o2mAnnotation);
+		return field;
+	}
+
+	private static DynamicFieldDetails buildMapManyToManyField(
+			DynamicClassDetails entityClass,
+			String name,
+			JaxbHbmManyToManyCollectionElementType manyToMany,
+			ClassDetails keyClass,
+			String defaultPackage,
+			HbmBuildContext ctx) {
+		String targetClassName = manyToMany.getClazz();
+		if (targetClassName == null) {
+			return null;
+		}
+		String fullTargetName = HbmBuildContext.resolveClassName(targetClassName, defaultPackage);
+		ClassDetails targetClass = ctx.resolveOrCreateClassDetails(
+				HbmBuildContext.simpleName(fullTargetName), fullTargetName);
+		DynamicFieldDetails field = ctx.createMapField(entityClass, name, keyClass, targetClass);
+		ManyToManyJpaAnnotation m2mAnnotation =
+				JpaAnnotations.MANY_TO_MANY.createUsage(ctx.getModelsContext());
+		field.addAnnotationUsage(m2mAnnotation);
+		return field;
+	}
+
+	private static DynamicFieldDetails buildMapElementCollectionField(
+			DynamicClassDetails entityClass,
+			String name,
+			JaxbHbmBasicCollectionElementType element,
+			ClassDetails keyClass,
+			HbmBuildContext ctx) {
+		String typeName = element.getTypeAttribute();
+		String javaType = ctx.resolveJavaType(typeName != null ? typeName : "string");
+		ClassDetails elementClass = ctx.getModelsContext().getClassDetailsRegistry()
+				.resolveClassDetails(javaType);
+		DynamicFieldDetails field = ctx.createMapField(entityClass, name, keyClass, elementClass);
+		ElementCollectionJpaAnnotation ecAnnotation =
+				JpaAnnotations.ELEMENT_COLLECTION.createUsage(ctx.getModelsContext());
+		field.addAnnotationUsage(ecAnnotation);
+		return field;
 	}
 
 	private static DynamicFieldDetails buildOneToManyField(
 			DynamicClassDetails entityClass,
 			String name,
 			JaxbHbmOneToManyCollectionElementType oneToMany,
+			JaxbHbmKeyType key,
+			String collectionInterfaceName,
 			String defaultPackage,
 			HbmBuildContext ctx) {
 		String targetClassName = oneToMany.getClazz();
@@ -259,7 +364,10 @@ public class HbmCollectionBuilder {
 		ClassDetails targetClass = ctx.resolveOrCreateClassDetails(
 				HbmBuildContext.simpleName(fullTargetName), fullTargetName);
 
-		DynamicFieldDetails field = ctx.createCollectionField(entityClass, name, targetClass);
+		DynamicFieldDetails field = ctx.createCollectionField(
+				entityClass, name, targetClass, collectionInterfaceName);
+
+		addKeyJoinColumns(field, key, ctx);
 
 		OneToManyJpaAnnotation o2mAnnotation =
 				JpaAnnotations.ONE_TO_MANY.createUsage(ctx.getModelsContext());
@@ -271,6 +379,7 @@ public class HbmCollectionBuilder {
 			DynamicClassDetails entityClass,
 			String name,
 			JaxbHbmManyToManyCollectionElementType manyToMany,
+			String collectionInterfaceName,
 			String defaultPackage,
 			HbmBuildContext ctx) {
 		String targetClassName = manyToMany.getClazz();
@@ -281,7 +390,8 @@ public class HbmCollectionBuilder {
 		ClassDetails targetClass = ctx.resolveOrCreateClassDetails(
 				HbmBuildContext.simpleName(fullTargetName), fullTargetName);
 
-		DynamicFieldDetails field = ctx.createCollectionField(entityClass, name, targetClass);
+		DynamicFieldDetails field = ctx.createCollectionField(
+				entityClass, name, targetClass, collectionInterfaceName);
 
 		ManyToManyJpaAnnotation m2mAnnotation =
 				JpaAnnotations.MANY_TO_MANY.createUsage(ctx.getModelsContext());
@@ -289,17 +399,58 @@ public class HbmCollectionBuilder {
 		return field;
 	}
 
+	private static void addKeyJoinColumns(DynamicFieldDetails field,
+										  JaxbHbmKeyType key,
+										  HbmBuildContext ctx) {
+		if (key == null) {
+			return;
+		}
+		// Single column via attribute
+		if (key.getColumnAttribute() != null) {
+			JoinColumnJpaAnnotation jc =
+					JpaAnnotations.JOIN_COLUMN.createUsage(ctx.getModelsContext());
+			jc.name(key.getColumnAttribute());
+			field.addAnnotationUsage(jc);
+			return;
+		}
+		// Multiple columns via nested <column> elements
+		List<JaxbHbmColumnType> columns = key.getColumn();
+		if (columns != null && !columns.isEmpty()) {
+			if (columns.size() == 1) {
+				JoinColumnJpaAnnotation jc =
+						JpaAnnotations.JOIN_COLUMN.createUsage(ctx.getModelsContext());
+				jc.name(columns.get(0).getName());
+				field.addAnnotationUsage(jc);
+			} else {
+				jakarta.persistence.JoinColumn[] jcArray =
+						new jakarta.persistence.JoinColumn[columns.size()];
+				for (int i = 0; i < columns.size(); i++) {
+					JoinColumnJpaAnnotation jc =
+							JpaAnnotations.JOIN_COLUMN.createUsage(ctx.getModelsContext());
+					jc.name(columns.get(i).getName());
+					jcArray[i] = jc;
+				}
+				JoinColumnsJpaAnnotation jcs =
+						JpaAnnotations.JOIN_COLUMNS.createUsage(ctx.getModelsContext());
+				jcs.value(jcArray);
+				field.addAnnotationUsage(jcs);
+			}
+		}
+	}
+
 	private static DynamicFieldDetails buildElementCollectionField(
 			DynamicClassDetails entityClass,
 			String name,
 			JaxbHbmBasicCollectionElementType element,
+			String collectionInterfaceName,
 			HbmBuildContext ctx) {
 		String typeName = element.getTypeAttribute();
 		String javaType = ctx.resolveJavaType(typeName != null ? typeName : "string");
 		ClassDetails elementClass = ctx.getModelsContext().getClassDetailsRegistry()
 				.resolveClassDetails(javaType);
 
-		DynamicFieldDetails field = ctx.createCollectionField(entityClass, name, elementClass);
+		DynamicFieldDetails field = ctx.createCollectionField(
+				entityClass, name, elementClass, collectionInterfaceName);
 
 		ElementCollectionJpaAnnotation ecAnnotation =
 				JpaAnnotations.ELEMENT_COLLECTION.createUsage(ctx.getModelsContext());

@@ -6,7 +6,9 @@ package org.hibernate.orm.test.jpa.boot.discovery;
 
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceConfiguration;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.HibernatePersistenceConfiguration;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
@@ -23,6 +25,8 @@ import static jakarta.persistence.Persistence.ConnectionProperties.JDBC_USER;
 /**
  * @author Steve Ebersole
  */
+@RequiresDialect(value = H2Dialect.class,
+		comment = "Tests explicitly target H2 database by specifying the H2 JDBC URL.")
 public class SimpleTests {
 	@Test
 	void testBaseline() {

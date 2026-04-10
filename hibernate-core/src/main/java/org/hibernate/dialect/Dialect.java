@@ -4495,6 +4495,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *     {@link Clob#setString(long, String)},
 	 *     {@link Clob#setString(long, String, int, int)},
 	 *     or {@link Clob#truncate(long)}.
+	 * <li>For NCLOBs, the internal value might be changed by:
+	 *     {@link NClob#setAsciiStream(long)},
+	 *     {@link NClob#setCharacterStream(long)},
+	 *     {@link NClob#setString(long, String)},
+	 *     {@link NClob#setString(long, String, int, int)},
+	 *     or {@link NClob#truncate(long)}.
 	 *</ul>
 	 *
 	 * @implNote I do not know the correct answer currently for databases
@@ -5268,6 +5274,29 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public boolean supportsMaterializedLobAccess() {
 		// Most drivers support this
 		return true;
+	}
+
+	/**
+	 * Tells whether the database supports VALUE LOB access
+	 * compared to usual REFERENCE LOB access.
+	 *
+	 * @return {@code true} if LOBs access can be VALUE based.
+	 *
+	 * @since 7.5
+	 */
+	public boolean supportsValueLOBAccess() {
+		return false;
+	}
+
+	/**
+	 * Returns the SQL fragment to define VALUE LOB
+	 *
+	 * @param columnName the column name
+	 *
+	 * @return the SQL fragment to add as extra table information
+	 */
+	public String getValueLOBFragmentForExtraCreateTableInfo(String columnName) {
+		return "";
 	}
 
 	/**

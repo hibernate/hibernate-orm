@@ -176,7 +176,7 @@ public class DocExporter extends AbstractExporter {
 
         if(StringHelper.isNotEmpty( cmd )) {
             try {
-                Exporter exporter = ExporterFactory.createExporter(ExporterType.GENERIC);
+                Exporter exporter = new org.hibernate.tool.internal.export.common.GenericExporter();
                 exporter.getProperties().putAll( getProperties() );
                 exporter.getProperties().put(ARTIFACT_COLLECTOR, getArtifactCollector());
                 exporter.getProperties().put(METADATA_DESCRIPTOR, getMetadataDescriptor());

@@ -26,9 +26,11 @@ import java.util.TreeMap;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.api.export.ArtifactCollector;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.export.common.DefaultArtifactCollector;
 import org.hibernate.tool.internal.reveng.models.exporter.MetadataHelper;
 
 /**
@@ -54,11 +56,20 @@ public class CfgXmlExporter implements Exporter {
 				exporterProperties.get(ExporterConstants.METADATA_DESCRIPTOR);
 		java.io.File destDir = (java.io.File)
 				exporterProperties.get(ExporterConstants.DESTINATION_FOLDER);
+		ArtifactCollector ac = (ArtifactCollector)
+				exporterProperties.get(ExporterConstants.ARTIFACT_COLLECTOR);
+		if (ac == null) {
+			ac = new DefaultArtifactCollector();
+			exporterProperties.put(ExporterConstants.ARTIFACT_COLLECTOR, ac);
+		}
 		CfgXmlExporter configured = create(md);
 		java.io.File outputFile = new java.io.File(destDir, "hibernate.cfg.xml");
 		outputFile.getParentFile().mkdirs();
+		Properties mergedProps = md.getProperties();
+		mergedProps.putAll(exporterProperties);
 		try (java.io.FileWriter writer = new java.io.FileWriter(outputFile)) {
-			configured.export(writer, md.getProperties());
+			configured.export(writer, mergedProps);
+			ac.addFile(outputFile, "cfg.xml");
 		} catch (java.io.IOException e) {
 			throw new RuntimeException("Failed to write hibernate.cfg.xml", e);
 		}

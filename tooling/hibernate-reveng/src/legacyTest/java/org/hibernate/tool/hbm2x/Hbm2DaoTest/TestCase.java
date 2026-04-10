@@ -111,12 +111,12 @@ public class TestCase {
 	}
 
 	@Test
-	public void testNamedQueries() {		
+	public void testNamedQueries() {
 		assertTrue(FileUtil
 				.findFirstString(
 						"findByNameAndAddress",
 						new File(
-								srcDir, 
+								srcDir,
 								"org/hibernate/tool/hbm2x/AuthorHome.java") )
 				.trim().startsWith("public List" ));
 	}

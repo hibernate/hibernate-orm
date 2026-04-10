@@ -593,7 +593,7 @@ public class HbmEntityAnnotationBuilderTest {
 		NamedQuery nqAnn = entityClass.getAnnotationUsage(
 				NamedQuery.class, ctx.getModelsContext());
 		assertNotNull(nqAnn);
-		assertEquals("findActiveEmployees", nqAnn.name());
+		assertEquals("com.example.Employee.findActiveEmployees", nqAnn.name());
 		assertEquals("from Employee where active = true", nqAnn.query());
 	}
 
@@ -613,8 +613,8 @@ public class HbmEntityAnnotationBuilderTest {
 				NamedQueries.class, ctx.getModelsContext());
 		assertNotNull(nqsAnn);
 		assertEquals(2, nqsAnn.value().length);
-		assertEquals("query1", nqsAnn.value()[0].name());
-		assertEquals("query2", nqsAnn.value()[1].name());
+		assertEquals("com.example.Employee.query1", nqsAnn.value()[0].name());
+		assertEquals("com.example.Employee.query2", nqsAnn.value()[1].name());
 	}
 
 	@Test
@@ -629,7 +629,7 @@ public class HbmEntityAnnotationBuilderTest {
 		NamedNativeQuery nnqAnn = entityClass.getAnnotationUsage(
 				NamedNativeQuery.class, ctx.getModelsContext());
 		assertNotNull(nnqAnn);
-		assertEquals("findAllEmployees", nnqAnn.name());
+		assertEquals("com.example.Employee.findAllEmployees", nnqAnn.name());
 		assertEquals("SELECT * FROM employee", nnqAnn.query());
 	}
 

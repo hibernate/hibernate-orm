@@ -500,10 +500,11 @@ public class HbmEntityAnnotationBuilder {
 			return;
 		}
 		ModelsContext mc = ctx.getModelsContext();
+		String entityName = entityClass.getClassName();
 		if (queries.size() == 1) {
 			NamedQueryJpaAnnotation nqAnnotation =
 					JpaAnnotations.NAMED_QUERY.createUsage(mc);
-			applyNamedQuery(nqAnnotation, queries.get(0));
+			applyNamedQuery(nqAnnotation, queries.get(0), entityName);
 			entityClass.addAnnotationUsage(nqAnnotation);
 		} else {
 			NamedQueryJpaAnnotation[] nqAnnotations =
@@ -511,7 +512,7 @@ public class HbmEntityAnnotationBuilder {
 			for (int i = 0; i < queries.size(); i++) {
 				NamedQueryJpaAnnotation nqa =
 						JpaAnnotations.NAMED_QUERY.createUsage(mc);
-				applyNamedQuery(nqa, queries.get(i));
+				applyNamedQuery(nqa, queries.get(i), entityName);
 				nqAnnotations[i] = nqa;
 			}
 			NamedQueriesJpaAnnotation container =
@@ -522,8 +523,13 @@ public class HbmEntityAnnotationBuilder {
 	}
 
 	private static void applyNamedQuery(NamedQueryJpaAnnotation annotation,
-										  JaxbHbmNamedQueryType query) {
-		annotation.name(query.getName());
+										  JaxbHbmNamedQueryType query,
+										  String entityName) {
+		String name = query.getName();
+		if (entityName != null && !name.contains(".")) {
+			name = entityName + "." + name;
+		}
+		annotation.name(name);
 		annotation.query(extractQueryString(query.getContent()));
 	}
 
@@ -534,10 +540,11 @@ public class HbmEntityAnnotationBuilder {
 			return;
 		}
 		ModelsContext mc = ctx.getModelsContext();
+		String entityName = entityClass.getClassName();
 		if (queries.size() == 1) {
 			NamedNativeQueryJpaAnnotation nqAnnotation =
 					JpaAnnotations.NAMED_NATIVE_QUERY.createUsage(mc);
-			applyNamedNativeQuery(nqAnnotation, queries.get(0));
+			applyNamedNativeQuery(nqAnnotation, queries.get(0), entityName);
 			entityClass.addAnnotationUsage(nqAnnotation);
 		} else {
 			NamedNativeQueryJpaAnnotation[] nqAnnotations =
@@ -545,7 +552,7 @@ public class HbmEntityAnnotationBuilder {
 			for (int i = 0; i < queries.size(); i++) {
 				NamedNativeQueryJpaAnnotation nqa =
 						JpaAnnotations.NAMED_NATIVE_QUERY.createUsage(mc);
-				applyNamedNativeQuery(nqa, queries.get(i));
+				applyNamedNativeQuery(nqa, queries.get(i), entityName);
 				nqAnnotations[i] = nqa;
 			}
 			NamedNativeQueriesJpaAnnotation container =
@@ -556,8 +563,13 @@ public class HbmEntityAnnotationBuilder {
 	}
 
 	private static void applyNamedNativeQuery(NamedNativeQueryJpaAnnotation annotation,
-											   JaxbHbmNamedNativeQueryType query) {
-		annotation.name(query.getName());
+											   JaxbHbmNamedNativeQueryType query,
+											   String entityName) {
+		String name = query.getName();
+		if (entityName != null && !name.contains(".")) {
+			name = entityName + "." + name;
+		}
+		annotation.name(name);
 		annotation.query(extractQueryString(query.getContent()));
 		String resultsetRef = query.getResultsetRef();
 		if (resultsetRef != null && !resultsetRef.isEmpty()) {

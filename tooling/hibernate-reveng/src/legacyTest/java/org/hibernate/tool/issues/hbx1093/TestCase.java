@@ -72,10 +72,10 @@ public class TestCase {
 		exporter.start();
 		File etManyToManyComp1 = new File(outputDir, "EtManyToManyComp1.java");
 		String str = new String(Files.readAllBytes(etManyToManyComp1.toPath()));
-		assertTrue(str.contains("@JoinColumn(name=\"FK_ET_MANY_TO_MANY_COMP22_ID\""));
+		assertTrue(str.contains("@JoinColumn(name = \"FK_ET_MANY_TO_MANY_COMP22_ID\""));
 		File etManyToManyComp2 = new File(outputDir, "EtManyToManyComp2.java");
 		str = new String(Files.readAllBytes(etManyToManyComp2.toPath()));
-		assertTrue(str.contains("@JoinColumn(name=\"FK_ET_MANY_TO_MANY_COMP11_ID\""));
+		assertTrue(str.contains("@JoinColumn(name = \"FK_ET_MANY_TO_MANY_COMP11_ID\""));
 	}
 	
 }

@@ -5,7 +5,6 @@
 package org.hibernate.query.sqm.tree.from;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.mapping.CollectionPart;

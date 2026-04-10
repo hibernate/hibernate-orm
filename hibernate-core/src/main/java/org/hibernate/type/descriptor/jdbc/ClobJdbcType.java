@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.boot.model.relational.Database;
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -22,6 +23,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  * @author Gail Badner
+ * @author Loïc Lefèvre
  */
 public abstract class ClobJdbcType implements AdjustableJdbcType {
 	@Override
@@ -76,6 +78,15 @@ public abstract class ClobJdbcType implements AdjustableJdbcType {
 		return getClobBinder( javaType );
 	}
 
+	@Override
+	public String getExtraCreateTableInfo(JavaType<?> javaType, String columnName, String tableName, Database database) {
+		if( database.getDialect().supportsValueLOBAccess() ) {
+			return database.getDialect().getValueLOBFragmentForExtraCreateTableInfo(columnName);
+		}
+		else {
+			return AdjustableJdbcType.super.getExtraCreateTableInfo( javaType, columnName, tableName, database );
+		}
+	}
 
 	public static final ClobJdbcType DEFAULT = new ClobJdbcType() {
 		@Override

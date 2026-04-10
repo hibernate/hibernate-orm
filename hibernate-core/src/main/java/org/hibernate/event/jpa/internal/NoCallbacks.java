@@ -24,12 +24,27 @@ public class NoCallbacks implements EntityCallbacks {
 	}
 
 	@Override
-	public boolean preCreate(Object entity) {
+	public boolean preMerge(Object entity) {
 		return false;
 	}
 
 	@Override
-	public boolean postCreate(Object entity) {
+	public boolean prePersist(Object entity) {
+		return false;
+	}
+
+	@Override
+	public boolean postPersist(Object entity) {
+		return false;
+	}
+
+	@Override
+	public boolean preInsert(Object entity) {
+		return false;
+	}
+
+	@Override
+	public boolean postInsert(Object entity) {
 		return false;
 	}
 
@@ -44,12 +59,32 @@ public class NoCallbacks implements EntityCallbacks {
 	}
 
 	@Override
+	public boolean postUpsert(Object entity) {
+		return false;
+	}
+
+	@Override
+	public boolean preUpsert(Object entity) {
+		return false;
+	}
+
+	@Override
 	public boolean preRemove(Object entity) {
 		return false;
 	}
 
 	@Override
 	public boolean postRemove(Object entity) {
+		return false;
+	}
+
+	@Override
+	public boolean postDelete(Object entity) {
+		return false;
+	}
+
+	@Override
+	public boolean preDelete(Object entity) {
 		return false;
 	}
 

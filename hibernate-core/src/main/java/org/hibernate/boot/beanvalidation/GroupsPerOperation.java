@@ -5,6 +5,7 @@
 package org.hibernate.boot.beanvalidation;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +16,6 @@ import org.hibernate.boot.spi.ClassLoaderAccess;
 import jakarta.validation.groups.Default;
 
 import static org.hibernate.internal.util.StringHelper.split;
-import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
 /**
  * @author Emmanuel Bernard
@@ -28,17 +28,20 @@ public class GroupsPerOperation {
 	private static final Class<?>[] DEFAULT_GROUPS = new Class<?>[] { Default.class };
 	private static final Class<?>[] EMPTY_GROUPS = new Class<?>[] { };
 
-	private final Map<Operation, Class<?>[]> groupsPerOperation = mapOfSize( 4 );
+	private final Map<Operation, Class<?>[]> groupsPerOperation = new EnumMap<>( Operation.class );
 
 	private GroupsPerOperation() {
 	}
 
 	public static GroupsPerOperation from(Map<String,Object> settings, ClassLoaderAccess classLoaderAccess) {
 		final GroupsPerOperation groupsPerOperation = new GroupsPerOperation();
+		applyOperationGrouping( groupsPerOperation, Operation.PERSIST, settings, classLoaderAccess );
+		applyOperationGrouping( groupsPerOperation, Operation.MERGE, settings, classLoaderAccess );
+		applyOperationGrouping( groupsPerOperation, Operation.REMOVE, settings, classLoaderAccess );
 		applyOperationGrouping( groupsPerOperation, Operation.INSERT, settings, classLoaderAccess );
 		applyOperationGrouping( groupsPerOperation, Operation.UPDATE, settings, classLoaderAccess );
-		applyOperationGrouping( groupsPerOperation, Operation.DELETE, settings, classLoaderAccess );
 		applyOperationGrouping( groupsPerOperation, Operation.UPSERT, settings, classLoaderAccess );
+		applyOperationGrouping( groupsPerOperation, Operation.DELETE, settings, classLoaderAccess );
 		applyOperationGrouping( groupsPerOperation, Operation.DDL, settings, classLoaderAccess );
 		return groupsPerOperation;
 	}
@@ -62,7 +65,7 @@ public class GroupsPerOperation {
 		}
 
 		if ( property == null ) {
-			return operation == Operation.DELETE ? EMPTY_GROUPS : DEFAULT_GROUPS;
+			return operation.validateByDefault ? DEFAULT_GROUPS : EMPTY_GROUPS;
 		}
 
 		if ( property instanceof Class<?>[] classes ) {
@@ -101,21 +104,30 @@ public class GroupsPerOperation {
 	}
 
 	public enum Operation {
-		INSERT( "persist", JPA_GROUP_PREFIX + "pre-persist", JAKARTA_JPA_GROUP_PREFIX + "pre-persist" ),
-		UPDATE( "update", JPA_GROUP_PREFIX + "pre-update", JAKARTA_JPA_GROUP_PREFIX + "pre-update" ),
-		DELETE( "remove", JPA_GROUP_PREFIX + "pre-remove", JAKARTA_JPA_GROUP_PREFIX + "pre-remove" ),
-		UPSERT( "upsert", JPA_GROUP_PREFIX + "pre-upsert", JAKARTA_JPA_GROUP_PREFIX + "pre-upsert" ),
-		DDL( "ddl", HIBERNATE_GROUP_PREFIX + "ddl", HIBERNATE_GROUP_PREFIX + "ddl" );
+		PERSIST( "persist", JPA_GROUP_PREFIX + "pre-persist", JAKARTA_JPA_GROUP_PREFIX + "pre-persist" ),
+		MERGE( "merge", JAKARTA_JPA_GROUP_PREFIX + "pre-merge", JAKARTA_JPA_GROUP_PREFIX + "pre-merge" ),
+		REMOVE( "remove", JPA_GROUP_PREFIX + "pre-remove", JAKARTA_JPA_GROUP_PREFIX + "pre-remove" ),
+		INSERT( "insert", JAKARTA_JPA_GROUP_PREFIX + "pre-insert", JAKARTA_JPA_GROUP_PREFIX + "pre-insert", true ),
+		UPDATE( "update", JPA_GROUP_PREFIX + "pre-update", JAKARTA_JPA_GROUP_PREFIX + "pre-update", true ),
+		UPSERT( "upsert", JAKARTA_JPA_GROUP_PREFIX + "pre-upsert", JAKARTA_JPA_GROUP_PREFIX + "pre-upsert", true ),
+		DELETE( "delete", JAKARTA_JPA_GROUP_PREFIX + "pre-delete", JAKARTA_JPA_GROUP_PREFIX + "pre-delete" ),
+		DDL( "ddl", HIBERNATE_GROUP_PREFIX + "ddl", HIBERNATE_GROUP_PREFIX + "ddl", true );
 
 
 		private final String exposedName;
 		private final String groupPropertyName;
 		private final String jakartaGroupPropertyName;
+		private final boolean validateByDefault;
 
 		Operation(String exposedName, String groupProperty, String jakartaGroupPropertyName) {
+			this(exposedName, groupProperty, jakartaGroupPropertyName, false);
+		}
+
+		Operation(String exposedName, String groupProperty, String jakartaGroupPropertyName, boolean validateByDefault) {
 			this.exposedName = exposedName;
 			this.groupPropertyName = groupProperty;
 			this.jakartaGroupPropertyName = jakartaGroupPropertyName;
+			this.validateByDefault = validateByDefault;
 		}
 
 		public String getName() {

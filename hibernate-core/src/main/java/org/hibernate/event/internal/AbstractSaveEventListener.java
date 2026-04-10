@@ -194,7 +194,7 @@ public abstract class AbstractSaveEventListener<C> {
 
 		// call this after generation of an id,
 		// but before we retrieve an assigned id
-		persister.getEntityCallbacks().preCreate( entity );
+		persister.getEntityCallbacks().preInsert( entity );
 
 		processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
 		processIfManagedEntity( entity, managedEntity -> managedEntity.$$_hibernate_setUseTracker( true ) );

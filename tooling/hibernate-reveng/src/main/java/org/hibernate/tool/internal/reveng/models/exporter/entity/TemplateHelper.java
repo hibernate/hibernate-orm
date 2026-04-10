@@ -284,6 +284,24 @@ public class TemplateHelper {
 		return "implements " + String.join(", ", interfaces);
 	}
 
+	/**
+	 * Returns the type name to use in the {@code instanceof} check of
+	 * {@code equals()}. When the entity has a proxy interface, returns the
+	 * proxy interface name so that equals works with proxy instances.
+	 */
+	public String getEqualsInstanceOfType() {
+		if (hasClassMetaAttribute("implements")) {
+			List<String> impls = classMetaAttributes.get("implements");
+			// Use the first non-Serializable interface as the proxy type
+			for (String fqcn : impls) {
+				if (!"java.io.Serializable".equals(fqcn)) {
+					return importType(fqcn);
+				}
+			}
+		}
+		return getDeclarationName();
+	}
+
 	public String generateImports() {
 		return importContext.generateImports();
 	}

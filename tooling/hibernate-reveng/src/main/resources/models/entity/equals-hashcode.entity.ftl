@@ -5,8 +5,8 @@
     public boolean equals(Object other) {
         if (this == other) return true;
         if (other == null) return false;
-        if (!(other instanceof ${templateHelper.getDeclarationName()})) return false;
-        ${templateHelper.getDeclarationName()} castOther = (${templateHelper.getDeclarationName()}) other;
+        if (!(other instanceof ${templateHelper.getEqualsInstanceOfType()})) return false;
+        ${templateHelper.getEqualsInstanceOfType()} castOther = (${templateHelper.getEqualsInstanceOfType()}) other;
         return <#list eqFields as field>${templateHelper.generateEqualsExpression(field)}<#if field_has_next>
                 && </#if></#list>;
     }
@@ -26,8 +26,8 @@
     public boolean equals(Object other) {
         if (this == other) return true;
         if (other == null) return false;
-        if (!(other instanceof ${templateHelper.getDeclarationName()})) return false;
-        ${templateHelper.getDeclarationName()} castOther = (${templateHelper.getDeclarationName()}) other;
+        if (!(other instanceof ${templateHelper.getEqualsInstanceOfType()})) return false;
+        ${templateHelper.getEqualsInstanceOfType()} castOther = (${templateHelper.getEqualsInstanceOfType()}) other;
         return ((${idGetter}() == castOther.${idGetter}()) || (${idGetter}() != null && castOther.${idGetter}() != null && ${idGetter}().equals(castOther.${idGetter}())));
     }
 
@@ -42,8 +42,8 @@
     public boolean equals(Object other) {
         if (this == other) return true;
         if (other == null) return false;
-        if (!(other instanceof ${templateHelper.getDeclarationName()})) return false;
-        ${templateHelper.getDeclarationName()} castOther = (${templateHelper.getDeclarationName()}) other;
+        if (!(other instanceof ${templateHelper.getEqualsInstanceOfType()})) return false;
+        ${templateHelper.getEqualsInstanceOfType()} castOther = (${templateHelper.getEqualsInstanceOfType()}) other;
         return <#list templateHelper.getIdentifierFields() as field>${templateHelper.generateEqualsExpression(field)}<#if field_has_next>
                 && </#if></#list>;
     }

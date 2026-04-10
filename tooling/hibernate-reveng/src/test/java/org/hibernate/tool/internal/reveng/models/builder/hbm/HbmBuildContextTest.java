@@ -46,7 +46,7 @@ public class HbmBuildContextTest {
 
 	@Test
 	public void testResolveJavaTypeLong() {
-		assertEquals("java.lang.Long", ctx.resolveJavaType("long"));
+		assertEquals("long", ctx.resolveJavaType("long"));
 	}
 
 	@Test
@@ -56,12 +56,12 @@ public class HbmBuildContextTest {
 
 	@Test
 	public void testResolveJavaTypeInt() {
-		assertEquals("java.lang.Integer", ctx.resolveJavaType("int"));
+		assertEquals("int", ctx.resolveJavaType("int"));
 	}
 
 	@Test
 	public void testResolveJavaTypeBoolean() {
-		assertEquals("java.lang.Boolean", ctx.resolveJavaType("boolean"));
+		assertEquals("boolean", ctx.resolveJavaType("boolean"));
 	}
 
 	@Test
@@ -112,7 +112,7 @@ public class HbmBuildContextTest {
 	@Test
 	public void testResolveJavaTypeCaseInsensitive() {
 		assertEquals("java.lang.String", ctx.resolveJavaType("STRING"));
-		assertEquals("java.lang.Long", ctx.resolveJavaType("LONG"));
+		assertEquals("long", ctx.resolveJavaType("LONG"));
 	}
 
 	// --- Generator class mapping ---

@@ -133,12 +133,12 @@ public class HbmIdBuilderTest {
 	public void testSimpleIdDefaultType() {
 		JaxbHbmSimpleIdType id = new JaxbHbmSimpleIdType();
 		id.setName("id");
-		// No type set — should default to "long" → java.lang.Long
+		// No type set — should default to "long" (primitive)
 
 		HbmIdBuilder.processId(entityClass, id, ctx);
 
 		FieldDetails field = entityClass.getFields().get(0);
-		assertEquals("java.lang.Long", field.getType().getName());
+		assertEquals("long", field.getType().getName());
 	}
 
 	@Test

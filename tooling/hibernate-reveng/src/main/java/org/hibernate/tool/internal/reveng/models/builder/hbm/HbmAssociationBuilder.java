@@ -209,14 +209,12 @@ public class HbmAssociationBuilder {
 		String idType = any.getIdType();
 		if (idType != null && !idType.isEmpty()) {
 			String javaType = ctx.resolveJavaType(idType);
-			try {
-				Class<?> keyClass = Class.forName(javaType);
+			Class<?> keyClass = resolvePrimitiveOrClass(javaType);
+			if (keyClass != null) {
 				AnyKeyJavaClassAnnotation keyAnnotation =
 						HibernateAnnotations.ANY_KEY_JAVA_CLASS.createUsage(ctx.getModelsContext());
 				keyAnnotation.value(keyClass);
 				field.addAnnotationUsage(keyAnnotation);
-			} catch (ClassNotFoundException e) {
-				// Key type not on classpath — skip annotation
 			}
 		}
 
@@ -228,6 +226,26 @@ public class HbmAssociationBuilder {
 			joinColAnnotation.name(columns.get(1).getName());
 			field.addAnnotationUsage(joinColAnnotation);
 		}
+	}
+
+	private static Class<?> resolvePrimitiveOrClass(String javaType) {
+		return switch (javaType) {
+			case "boolean" -> boolean.class;
+			case "byte" -> byte.class;
+			case "char" -> char.class;
+			case "short" -> short.class;
+			case "int" -> int.class;
+			case "long" -> long.class;
+			case "float" -> float.class;
+			case "double" -> double.class;
+			default -> {
+				try {
+					yield Class.forName(javaType);
+				} catch (ClassNotFoundException e) {
+					yield null;
+				}
+			}
+		};
 	}
 
 	private static DiscriminatorType mapAnyDiscriminatorType(String metaType) {

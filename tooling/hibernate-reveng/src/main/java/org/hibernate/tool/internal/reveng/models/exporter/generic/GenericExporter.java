@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -66,6 +67,7 @@ public class GenericExporter implements Exporter {
 	private static final String HIBERNATETOOL_PREFIX = "hibernatetool.";
 
 	private List<ClassDetails> entities;
+	private MetadataHelper metadataHelper;
 	private String templateName;
 	private String filePattern;
 	private String forEach;
@@ -135,9 +137,12 @@ public class GenericExporter implements Exporter {
 	public static GenericExporter create(MetadataDescriptor md,
 										  String templateName,
 										  String filePattern) {
-		return new GenericExporter(
-				MetadataHelper.from(md).getEntityClassDetails(),
+		MetadataHelper helper = MetadataHelper.from(md);
+		GenericExporter exporter = new GenericExporter(
+				helper.getEntityClassDetails(),
 				templateName, filePattern, null, new String[0]);
+		exporter.metadataHelper = helper;
+		return exporter;
 	}
 
 	public static GenericExporter create(MetadataDescriptor md,
@@ -145,9 +150,12 @@ public class GenericExporter implements Exporter {
 										  String filePattern,
 										  String forEach,
 										  String[] templatePath) {
-		return new GenericExporter(
-				MetadataHelper.from(md).getEntityClassDetails(),
+		MetadataHelper helper = MetadataHelper.from(md);
+		GenericExporter exporter = new GenericExporter(
+				helper.getEntityClassDetails(),
 				templateName, filePattern, forEach, templatePath);
+		exporter.metadataHelper = helper;
+		return exporter;
 	}
 
 	public void exportAll(File outputDir) {
@@ -184,12 +192,19 @@ public class GenericExporter implements Exporter {
 
 	public void export(Writer output, ClassDetails entity) {
 		Map<String, Object> model = buildModel();
-		POJOAdapter pojo = new POJOAdapter(entity);
+		String outputClassName = resolveOutputClassName(entity);
+		String simpleName = outputClassName.contains(".")
+				? outputClassName.substring(outputClassName.lastIndexOf('.') + 1)
+				: outputClassName;
+		String packageName = outputClassName.contains(".")
+				? outputClassName.substring(0, outputClassName.lastIndexOf('.'))
+				: getPackageName(entity);
+		POJOAdapter pojo = new POJOAdapter(entity, simpleName, packageName);
 		model.put("pojo", pojo);
 		model.put("clazz", entity);
 		model.put("entity", entity);
-		model.put("className", getSimpleName(entity));
-		model.put("packageName", getPackageName(entity));
+		model.put("className", simpleName);
+		model.put("packageName", packageName);
 		processTemplate(model, output);
 	}
 
@@ -220,17 +235,10 @@ public class GenericExporter implements Exporter {
 		private final String simpleName;
 		private final String packageName;
 
-		public POJOAdapter(ClassDetails classDetails) {
+		public POJOAdapter(ClassDetails classDetails, String simpleName, String packageName) {
 			this.classDetails = classDetails;
-			String cn = classDetails.getClassName();
-			if (cn != null) {
-				int lastDot = cn.lastIndexOf('.');
-				this.simpleName = lastDot > 0 ? cn.substring(lastDot + 1) : cn;
-				this.packageName = lastDot > 0 ? cn.substring(0, lastDot) : "";
-			} else {
-				this.simpleName = "";
-				this.packageName = "";
-			}
+			this.simpleName = simpleName;
+			this.packageName = packageName;
 		}
 
 		public String getDeclarationName() { return simpleName; }
@@ -357,14 +365,33 @@ public class GenericExporter implements Exporter {
 	}
 
 	private String resolveFilename(ClassDetails entity) {
-		String filename = filePattern.replace(
-				"{class-name}", getSimpleName(entity));
-		String packagePath = getPackageName(entity).replace('.', '/');
+		String outputClassName = resolveOutputClassName(entity);
+		String simpleName = outputClassName.contains(".")
+				? outputClassName.substring(outputClassName.lastIndexOf('.') + 1)
+				: outputClassName;
+		String filename = filePattern.replace("{class-name}", simpleName);
+		String packageName = outputClassName.contains(".")
+				? outputClassName.substring(0, outputClassName.lastIndexOf('.'))
+				: getPackageName(entity);
+		String packagePath = packageName.replace('.', '/');
 		if (packagePath.isEmpty()) {
 			packagePath = ".";
 		}
 		filename = filename.replace("{package-name}", packagePath);
 		return filename;
+	}
+
+	private String resolveOutputClassName(ClassDetails entity) {
+		if (metadataHelper != null) {
+			Map<String, List<String>> classMeta =
+					metadataHelper.getClassMetaAttributes(entity.getClassName());
+			List<String> generatedClass = classMeta.getOrDefault(
+					"generated-class", Collections.emptyList());
+			if (!generatedClass.isEmpty()) {
+				return generatedClass.get(0).trim();
+			}
+		}
+		return entity.getClassName();
 	}
 
 	private boolean isEmbeddable(ClassDetails entity) {

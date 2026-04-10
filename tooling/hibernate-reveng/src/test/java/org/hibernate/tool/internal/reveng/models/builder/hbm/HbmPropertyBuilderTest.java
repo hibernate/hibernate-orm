@@ -199,7 +199,7 @@ public class HbmPropertyBuilderTest {
 		HbmPropertyBuilder.processVersion(entityClass, version, ctx);
 
 		FieldDetails field = entityClass.getFields().get(0);
-		assertEquals("java.lang.Long", field.getType().getName());
+		assertEquals("long", field.getType().getName());
 	}
 
 	@Test

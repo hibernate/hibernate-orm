@@ -167,7 +167,7 @@ public class HbmAssociationBuilderTest {
 		AnyKeyJavaClass keyAnn = field.getAnnotationUsage(
 				AnyKeyJavaClass.class, ctx.getModelsContext());
 		assertNotNull(keyAnn);
-		assertEquals(Long.class, keyAnn.value());
+		assertEquals(long.class, keyAnn.value());
 
 		JoinColumn joinCol = field.getAnnotationUsage(
 				JoinColumn.class, ctx.getModelsContext());

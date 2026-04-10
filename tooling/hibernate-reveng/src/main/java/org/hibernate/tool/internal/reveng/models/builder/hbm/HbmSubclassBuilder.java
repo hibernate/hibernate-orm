@@ -20,6 +20,7 @@ package org.hibernate.tool.internal.reveng.models.builder.hbm;
 import java.io.Serializable;
 import java.util.List;
 
+import org.hibernate.boot.jaxb.hbm.spi.AttributeMapping;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmAnyAssociationType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmArrayType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBasicAttributeType;
@@ -39,6 +40,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPropertiesType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSetType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmUnionSubclassEntityType;
+import org.hibernate.boot.jaxb.hbm.spi.ToolingHintContainer;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.DiscriminatorColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.DiscriminatorValueJpaAnnotation;
@@ -164,6 +166,9 @@ public class HbmSubclassBuilder {
 		addEntityAnnotation(subclassEntity, simpleName, ctx);
 		addDiscriminatorValue(subclassEntity, subclass.getDiscriminatorValue(), ctx);
 
+		// Subclass-level meta attributes
+		ctx.extractClassMetaAttributes(fullName, subclass);
+
 		processAttributes(subclassEntity, subclass.getAttributes(), defaultPackage, ctx);
 
 		ctx.registerClassDetails(subclassEntity);
@@ -204,6 +209,9 @@ public class HbmSubclassBuilder {
 			subclassEntity.addAnnotationUsage(tableAnnotation);
 		}
 
+		// Subclass-level meta attributes
+		ctx.extractClassMetaAttributes(fullName, subclass);
+
 		// @PrimaryKeyJoinColumn from <key>
 		if (subclass.getKey() != null) {
 			String keyColumn = subclass.getKey().getColumnAttribute();
@@ -239,6 +247,9 @@ public class HbmSubclassBuilder {
 				false, parentEntity, null, ctx.getModelsContext());
 
 		addEntityAnnotation(subclassEntity, simpleName, ctx);
+
+		// Subclass-level meta attributes
+		ctx.extractClassMetaAttributes(fullName, subclass);
 
 		// @Table for union subclass
 		String tableName = subclass.getTable();
@@ -312,6 +323,12 @@ public class HbmSubclassBuilder {
 			} else if (attribute instanceof JaxbHbmPropertiesType properties) {
 				// <properties> is a grouping element — recurse into its children
 				processAttributes(entityClass, properties.getAttributes(), defaultPackage, ctx);
+			}
+			// Extract field-level <meta> attributes
+			if (attribute instanceof AttributeMapping am
+					&& attribute instanceof ToolingHintContainer thc) {
+				ctx.extractFieldMetaAttributes(
+						entityClass.getClassName(), am.getName(), thc);
 			}
 		}
 	}

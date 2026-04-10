@@ -17,7 +17,9 @@ package org.hibernate.tool.internal.reveng.models.exporter;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import jakarta.persistence.Entity;
@@ -48,6 +50,8 @@ public class MetadataHelper {
 	private final List<ClassDetails> entityClassDetails;
 	private final ModelsContext modelsContext;
 	private final Metadata metadata;
+	private final Map<String, Map<String, List<String>>> allClassMetaAttributes;
+	private final Map<String, Map<String, Map<String, List<String>>>> allFieldMetaAttributes;
 
 	private MetadataHelper(MetadataDescriptor md) {
 		this.metadata = md.createMetadata();
@@ -63,9 +67,13 @@ public class MetadataHelper {
 		if (!registryEntities.isEmpty()) {
 			this.entityClassDetails = registryEntities;
 			this.modelsContext = registryContext;
+			this.allClassMetaAttributes = Collections.emptyMap();
+			this.allFieldMetaAttributes = Collections.emptyMap();
 		} else if (md instanceof RevengMetadataDescriptor rmd) {
 			this.entityClassDetails = rmd.getEntityClassDetails();
 			this.modelsContext = rmd.getModelsContext();
+			this.allClassMetaAttributes = Collections.emptyMap();
+			this.allFieldMetaAttributes = Collections.emptyMap();
 		} else if (md instanceof NativeMetadataDescriptor nmd
 				&& nmd.getMappingFiles() != null) {
 			File[] hbmFiles = Stream.of(nmd.getMappingFiles())
@@ -75,13 +83,19 @@ public class MetadataHelper {
 				HbmClassDetailsBuilder builder = new HbmClassDetailsBuilder();
 				this.entityClassDetails = builder.buildFromFiles(hbmFiles);
 				this.modelsContext = builder.getModelsContext();
+				this.allClassMetaAttributes = builder.getAllClassMetaAttributes();
+				this.allFieldMetaAttributes = builder.getAllFieldMetaAttributes();
 			} else {
 				this.entityClassDetails = registryEntities;
 				this.modelsContext = registryContext;
+				this.allClassMetaAttributes = Collections.emptyMap();
+				this.allFieldMetaAttributes = Collections.emptyMap();
 			}
 		} else {
 			this.entityClassDetails = registryEntities;
 			this.modelsContext = registryContext;
+			this.allClassMetaAttributes = Collections.emptyMap();
+			this.allFieldMetaAttributes = Collections.emptyMap();
 		}
 	}
 
@@ -99,5 +113,13 @@ public class MetadataHelper {
 
 	public Metadata getMetadata() {
 		return metadata;
+	}
+
+	public Map<String, List<String>> getClassMetaAttributes(String className) {
+		return allClassMetaAttributes.getOrDefault(className, Collections.emptyMap());
+	}
+
+	public Map<String, Map<String, List<String>>> getFieldMetaAttributes(String className) {
+		return allFieldMetaAttributes.getOrDefault(className, Collections.emptyMap());
 	}
 }

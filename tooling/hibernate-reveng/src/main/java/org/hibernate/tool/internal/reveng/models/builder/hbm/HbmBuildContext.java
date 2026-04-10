@@ -19,15 +19,19 @@ package org.hibernate.tool.internal.reveng.models.builder.hbm;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmColumnType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmToolingHintType;
+import org.hibernate.boot.jaxb.hbm.spi.ToolingHintContainer;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.models.internal.BasicModelsContextImpl;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
+import org.hibernate.models.internal.PrimitiveTypeDetailsImpl;
 import org.hibernate.models.internal.ParameterizedTypeDetailsImpl;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.internal.SimpleClassLoading;
@@ -54,20 +58,20 @@ public class HbmBuildContext {
 
 	static {
 		HIBERNATE_TYPE_MAP.put("string", "java.lang.String");
-		HIBERNATE_TYPE_MAP.put("long", "java.lang.Long");
-		HIBERNATE_TYPE_MAP.put("int", "java.lang.Integer");
+		HIBERNATE_TYPE_MAP.put("long", "long");
+		HIBERNATE_TYPE_MAP.put("int", "int");
 		HIBERNATE_TYPE_MAP.put("integer", "java.lang.Integer");
-		HIBERNATE_TYPE_MAP.put("short", "java.lang.Short");
-		HIBERNATE_TYPE_MAP.put("byte", "java.lang.Byte");
-		HIBERNATE_TYPE_MAP.put("float", "java.lang.Float");
-		HIBERNATE_TYPE_MAP.put("double", "java.lang.Double");
-		HIBERNATE_TYPE_MAP.put("boolean", "java.lang.Boolean");
+		HIBERNATE_TYPE_MAP.put("short", "short");
+		HIBERNATE_TYPE_MAP.put("byte", "byte");
+		HIBERNATE_TYPE_MAP.put("float", "float");
+		HIBERNATE_TYPE_MAP.put("double", "double");
+		HIBERNATE_TYPE_MAP.put("boolean", "boolean");
 		HIBERNATE_TYPE_MAP.put("yes_no", "java.lang.Boolean");
 		HIBERNATE_TYPE_MAP.put("true_false", "java.lang.Boolean");
 		HIBERNATE_TYPE_MAP.put("big_decimal", "java.math.BigDecimal");
 		HIBERNATE_TYPE_MAP.put("big_integer", "java.math.BigInteger");
 		HIBERNATE_TYPE_MAP.put("character", "java.lang.Character");
-		HIBERNATE_TYPE_MAP.put("char", "java.lang.Character");
+		HIBERNATE_TYPE_MAP.put("char", "char");
 		HIBERNATE_TYPE_MAP.put("date", "java.util.Date");
 		HIBERNATE_TYPE_MAP.put("time", "java.util.Date");
 		HIBERNATE_TYPE_MAP.put("timestamp", "java.util.Date");
@@ -85,6 +89,10 @@ public class HbmBuildContext {
 	private final List<ClassDetails> embeddableClassDetails = new ArrayList<>();
 	private final List<ClassDetails> subclassEntityDetails = new ArrayList<>();
 	private String defaultPackage;
+
+	// Meta attributes from hbm.xml <meta> elements, keyed by fully qualified class name
+	private final Map<String, Map<String, List<String>>> classMetaAttributes = new HashMap<>();
+	private final Map<String, Map<String, Map<String, List<String>>>> fieldMetaAttributes = new HashMap<>();
 
 	public HbmBuildContext() {
 		ClassLoading classLoading = SimpleClassLoading.SIMPLE_CLASS_LOADING;
@@ -117,6 +125,13 @@ public class HbmBuildContext {
 			return hibernateType;
 		}
 		return "java.lang.String";
+	}
+
+	private static final java.util.Set<String> PRIMITIVE_TYPES = java.util.Set.of(
+			"boolean", "byte", "char", "short", "int", "long", "float", "double");
+
+	private static boolean isPrimitiveType(String javaType) {
+		return PRIMITIVE_TYPES.contains(javaType);
 	}
 
 	public GenerationType mapGeneratorClass(String generatorClass) {
@@ -182,8 +197,13 @@ public class HbmBuildContext {
 		}
 		ClassDetails fieldTypeClass = modelsContext.getClassDetailsRegistry()
 				.resolveClassDetails(javaType);
-		TypeDetails fieldType = new ClassTypeDetailsImpl(
-				fieldTypeClass, TypeDetails.Kind.CLASS);
+		TypeDetails fieldType;
+		if (isPrimitiveType(javaType)) {
+			fieldType = new PrimitiveTypeDetailsImpl(fieldTypeClass);
+		} else {
+			fieldType = new ClassTypeDetailsImpl(
+					fieldTypeClass, TypeDetails.Kind.CLASS);
+		}
 		return entityClass.applyAttribute(
 				fieldName, fieldType, false, false, modelsContext);
 	}
@@ -252,6 +272,67 @@ public class HbmBuildContext {
 
 	public List<ClassDetails> getSubclassEntityDetails() {
 		return subclassEntityDetails;
+	}
+
+	// --- Meta attribute storage ---
+
+	public void addClassMetaAttribute(String className, String name, String value) {
+		classMetaAttributes
+				.computeIfAbsent(className, k -> new HashMap<>())
+				.computeIfAbsent(name, k -> new ArrayList<>())
+				.add(value);
+	}
+
+	public Map<String, List<String>> getClassMetaAttributes(String className) {
+		return classMetaAttributes.getOrDefault(className, Collections.emptyMap());
+	}
+
+	public void addFieldMetaAttribute(String className, String fieldName,
+									  String name, String value) {
+		fieldMetaAttributes
+				.computeIfAbsent(className, k -> new HashMap<>())
+				.computeIfAbsent(fieldName, k -> new HashMap<>())
+				.computeIfAbsent(name, k -> new ArrayList<>())
+				.add(value);
+	}
+
+	public Map<String, Map<String, List<String>>> getFieldMetaAttributes(String className) {
+		return fieldMetaAttributes.getOrDefault(className, Collections.emptyMap());
+	}
+
+	public Map<String, Map<String, List<String>>> getAllClassMetaAttributes() {
+		return classMetaAttributes;
+	}
+
+	public Map<String, Map<String, Map<String, List<String>>>> getAllFieldMetaAttributes() {
+		return fieldMetaAttributes;
+	}
+
+	/**
+	 * Extracts tooling hints from a {@link ToolingHintContainer} and stores
+	 * them as class-level meta attributes.
+	 */
+	public void extractClassMetaAttributes(String className, ToolingHintContainer container) {
+		if (container == null) return;
+		List<JaxbHbmToolingHintType> hints = container.getToolingHints();
+		if (hints == null) return;
+		for (JaxbHbmToolingHintType hint : hints) {
+			addClassMetaAttribute(className, hint.getName(), hint.getValue());
+		}
+	}
+
+	/**
+	 * Extracts tooling hints from a {@link ToolingHintContainer} and stores
+	 * them as field-level meta attributes.
+	 */
+	public void extractFieldMetaAttributes(String className, String fieldName,
+										   ToolingHintContainer container) {
+		if (container == null) return;
+		List<JaxbHbmToolingHintType> hints = container.getToolingHints();
+		if (hints == null) return;
+		for (JaxbHbmToolingHintType hint : hints) {
+			addFieldMetaAttribute(className, fieldName, hint.getName(), hint.getValue());
+		}
 	}
 
 	// --- Column annotation helpers ---

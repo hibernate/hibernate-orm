@@ -16,9 +16,11 @@
 package org.hibernate.tool.internal.reveng.models.exporter.entity;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +38,7 @@ import freemarker.template.TemplateExceptionHandler;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.tool.api.export.ArtifactCollector;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
@@ -57,6 +60,7 @@ public class EntityExporter implements Exporter {
 
 	private List<ClassDetails> entities;
 	private ModelsContext modelsContext;
+	private MetadataHelper metadataHelper;
 	private boolean annotated;
 	private boolean useGenerics;
 	private Configuration freemarkerConfig;
@@ -134,19 +138,60 @@ public class EntityExporter implements Exporter {
 	public static EntityExporter create(MetadataDescriptor md, boolean annotated,
 										boolean useGenerics, String[] templatePath) {
 		MetadataHelper helper = MetadataHelper.from(md);
-		return new EntityExporter(helper.getEntityClassDetails(), helper.getModelsContext(),
+		EntityExporter exporter = new EntityExporter(
+				helper.getEntityClassDetails(), helper.getModelsContext(),
 				annotated, useGenerics, templatePath);
+		exporter.metadataHelper = helper;
+		return exporter;
 	}
 
 	public void exportAll(File outputDir) {
-		EntityFileWriter.writePerEntity(entities, outputDir, ".java", this::export);
+		ArtifactCollector ac = null;
+		if (customProperties != null) {
+			ac = (ArtifactCollector) customProperties.get(
+					ExporterConstants.ARTIFACT_COLLECTOR);
+		}
+		for (ClassDetails entity : entities) {
+			Map<String, List<String>> classMeta = getClassMeta(entity);
+			Map<String, Map<String, List<String>>> fieldMeta = getFieldMeta(entity);
+			String outputClassName = resolveOutputClassName(entity, classMeta);
+			File outputFile = resolveOutputFile(outputDir, outputClassName);
+			outputFile.getParentFile().mkdirs();
+			try (Writer writer = new FileWriter(outputFile)) {
+				export(writer, entity, classMeta, fieldMeta);
+			} catch (Exception e) {
+				throw new RuntimeException(
+						"Failed to export " + entity.getClassName()
+						+ " to " + outputFile, e);
+			}
+			if (ac != null) {
+				ac.addFile(outputFile, "java");
+			}
+		}
 	}
 
 	public void export(Writer output, ClassDetails entity) {
+		export(output, entity, getClassMeta(entity), getFieldMeta(entity));
+	}
+
+	public void export(Writer output, ClassDetails entity,
+					   Map<String, List<String>> classMetaAttributes,
+					   Map<String, Map<String, List<String>>> fieldMetaAttributes) {
 		String packageName = getPackageName(entity);
+		// For generated-class, the package may differ
+		List<String> generatedClass = classMetaAttributes.getOrDefault(
+				"generated-class", Collections.emptyList());
+		if (!generatedClass.isEmpty()) {
+			String gc = generatedClass.get(0).trim();
+			int lastDot = gc.lastIndexOf('.');
+			if (lastDot > 0) {
+				packageName = gc.substring(0, lastDot);
+			}
+		}
 		ImportContextImpl importContext = new ImportContextImpl(packageName);
 		TemplateHelper templateHelper = new TemplateHelper(
-				entity, modelsContext, importContext, annotated, useGenerics);
+				entity, modelsContext, importContext, annotated, useGenerics,
+				classMetaAttributes, fieldMetaAttributes);
 		Map<String, Object> model = new HashMap<>();
 		if (customProperties != null) {
 			for (String name : customProperties.stringPropertyNames()) {
@@ -166,26 +211,50 @@ public class EntityExporter implements Exporter {
 		}
 	}
 
-	public void export(Writer output, ClassDetails entity,
-					   Map<String, List<String>> classMetaAttributes,
-					   Map<String, Map<String, List<String>>> fieldMetaAttributes) {
-		String packageName = getPackageName(entity);
-		ImportContextImpl importContext = new ImportContextImpl(packageName);
-		TemplateHelper templateHelper = new TemplateHelper(
-				entity, modelsContext, importContext, annotated,
-				classMetaAttributes, fieldMetaAttributes);
-		Map<String, Object> model = new HashMap<>();
-		model.put("templateHelper", templateHelper);
-		model.put("date", new Date());
-		model.put("version", Version.versionString());
-		try {
-			Template template = freemarkerConfig.getTemplate(templateName);
-			template.process(model, output);
-			output.flush();
-		} catch (IOException | TemplateException e) {
-			throw new RuntimeException(
-					"Failed to export entity: " + entity.getClassName(), e);
+	private Map<String, List<String>> getClassMeta(ClassDetails entity) {
+		if (metadataHelper != null) {
+			return metadataHelper.getClassMetaAttributes(entity.getClassName());
 		}
+		return Collections.emptyMap();
+	}
+
+	private Map<String, Map<String, List<String>>> getFieldMeta(ClassDetails entity) {
+		if (metadataHelper != null) {
+			return metadataHelper.getFieldMetaAttributes(entity.getClassName());
+		}
+		return Collections.emptyMap();
+	}
+
+	/**
+	 * Resolves the output class name, considering the generated-class
+	 * meta attribute which redirects output to a different file.
+	 */
+	private String resolveOutputClassName(ClassDetails entity,
+										  Map<String, List<String>> classMeta) {
+		List<String> generatedClass = classMeta.getOrDefault(
+				"generated-class", Collections.emptyList());
+		if (!generatedClass.isEmpty()) {
+			return generatedClass.get(0).trim();
+		}
+		return entity.getClassName();
+	}
+
+	private File resolveOutputFile(File outputDir, String className) {
+		int lastDot = className.lastIndexOf('.');
+		String simpleName;
+		String packagePath;
+		if (lastDot >= 0) {
+			simpleName = className.substring(lastDot + 1);
+			packagePath = className.substring(0, lastDot)
+					.replace('.', File.separatorChar);
+		} else {
+			simpleName = className;
+			packagePath = null;
+		}
+		File dir = (packagePath != null && !packagePath.isEmpty())
+				? new File(outputDir, packagePath)
+				: outputDir;
+		return new File(dir, simpleName + ".java");
 	}
 
 	public void setProperties(Properties props) {

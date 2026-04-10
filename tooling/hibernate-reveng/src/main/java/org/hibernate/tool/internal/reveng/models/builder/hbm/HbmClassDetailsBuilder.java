@@ -22,6 +22,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
@@ -70,6 +71,22 @@ public class HbmClassDetailsBuilder {
 
 	public ModelsContext getModelsContext() {
 		return ctx.getModelsContext();
+	}
+
+	public Map<String, List<String>> getClassMetaAttributes(String className) {
+		return ctx.getClassMetaAttributes(className);
+	}
+
+	public Map<String, Map<String, List<String>>> getFieldMetaAttributes(String className) {
+		return ctx.getFieldMetaAttributes(className);
+	}
+
+	public Map<String, Map<String, List<String>>> getAllClassMetaAttributes() {
+		return ctx.getAllClassMetaAttributes();
+	}
+
+	public Map<String, Map<String, Map<String, List<String>>>> getAllFieldMetaAttributes() {
+		return ctx.getAllFieldMetaAttributes();
 	}
 
 	/**
@@ -146,14 +163,30 @@ public class HbmClassDetailsBuilder {
 		}
 		entityClass.addAnnotationUsage(tableAnnotation);
 
+		// Entity-level meta attributes
+		ctx.extractClassMetaAttributes(fullName, entityType);
+
 		// Id / Composite Id
 		HbmIdBuilder.processId(entityClass, entityType.getId(), ctx);
 		HbmIdBuilder.processCompositeId(entityClass, entityType.getCompositeId(),
 				defaultPackage, ctx);
+		// Id meta attributes
+		if (entityType.getId() != null) {
+			ctx.extractFieldMetaAttributes(fullName,
+					entityType.getId().getName(), entityType.getId());
+		}
 
 		// Version / Timestamp
 		HbmPropertyBuilder.processVersion(entityClass, entityType.getVersion(), ctx);
 		HbmPropertyBuilder.processTimestamp(entityClass, entityType.getTimestamp(), ctx);
+		if (entityType.getVersion() != null) {
+			ctx.extractFieldMetaAttributes(fullName,
+					entityType.getVersion().getName(), entityType.getVersion());
+		}
+		if (entityType.getTimestamp() != null) {
+			ctx.extractFieldMetaAttributes(fullName,
+					entityType.getTimestamp().getName(), entityType.getTimestamp());
+		}
 
 		// Natural-id — process attributes, then mark them with @NaturalId
 		if (entityType.getNaturalId() != null) {

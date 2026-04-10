@@ -610,6 +610,11 @@ public class HbmEntityAnnotationBuilder {
 			entityClass.addAnnotationUsage(
 					HibernateAnnotations.CONCRETE_PROXY.createUsage(
 							ctx.getModelsContext()));
+			// Add proxy interface to implements list if it differs from the entity class
+			String proxyFqn = HbmBuildContext.resolveClassName(proxy, ctx.getDefaultPackage());
+			if (!proxyFqn.equals(entityClass.getClassName())) {
+				ctx.addClassMetaAttribute(entityClass.getClassName(), "implements", proxyFqn);
+			}
 		} else if (lazy != null && lazy) {
 			entityClass.addAnnotationUsage(
 					HibernateAnnotations.CONCRETE_PROXY.createUsage(

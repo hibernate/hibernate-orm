@@ -33,6 +33,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.reveng.models.exporter.MetadataHelper;
 import org.hibernate.tool.internal.metadata.MetadataBootstrapper;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
@@ -154,7 +155,9 @@ public class DdlExporter implements Exporter {
 	}
 
 	public static DdlExporter create(MetadataDescriptor md) {
-		return new DdlExporter(md.getEntityClassDetails(), md.getProperties());
+		return new DdlExporter(
+				MetadataHelper.from(md.createMetadata()).getEntityClassDetails(),
+				md.getProperties());
 	}
 
 	public DdlExporter delimiter(String delimiter) {

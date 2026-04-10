@@ -35,6 +35,7 @@ import freemarker.template.TemplateExceptionHandler;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.reveng.models.exporter.MetadataHelper;
 import org.hibernate.tool.api.version.Version;
 import org.hibernate.tool.internal.reveng.models.exporter.EntityFileWriter;
 
@@ -74,7 +75,7 @@ public class MappingXmlExporter {
 
 	public static MappingXmlExporter create(MetadataDescriptor md, String[] templatePath) {
 		MappingXmlExporter exporter = new MappingXmlExporter(templatePath);
-		exporter.entities = md.getEntityClassDetails();
+		exporter.entities = MetadataHelper.from(md.createMetadata()).getEntityClassDetails();
 		return exporter;
 	}
 

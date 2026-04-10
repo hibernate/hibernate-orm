@@ -39,6 +39,7 @@ import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.reveng.models.exporter.MetadataHelper;
 import org.hibernate.tool.api.version.Version;
 import org.hibernate.tool.internal.reveng.models.exporter.EntityFileWriter;
 
@@ -132,7 +133,8 @@ public class EntityExporter implements Exporter {
 
 	public static EntityExporter create(MetadataDescriptor md, boolean annotated,
 										boolean useGenerics, String[] templatePath) {
-		return new EntityExporter(md.getEntityClassDetails(), md.getModelsContext(),
+		MetadataHelper helper = MetadataHelper.from(md.createMetadata());
+		return new EntityExporter(helper.getEntityClassDetails(), helper.getModelsContext(),
 				annotated, useGenerics, templatePath);
 	}
 

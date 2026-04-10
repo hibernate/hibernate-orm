@@ -40,6 +40,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.reveng.models.exporter.MetadataHelper;
 
 import java.util.Properties;
 
@@ -79,7 +80,9 @@ public class HbmLintExporter implements Exporter {
 		String[] templatePath = (String[])
 				exporterProperties.get(ExporterConstants.TEMPLATE_PATH);
 		if (templatePath == null) templatePath = new String[0];
-		HbmLintExporter configured = create(md.getEntityClassDetails(), templatePath);
+		HbmLintExporter configured = create(
+				MetadataHelper.from(md.createMetadata()).getEntityClassDetails(),
+				templatePath);
 		configured.export(destDir);
 	}
 

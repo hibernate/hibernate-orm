@@ -17,27 +17,14 @@
  */
 package org.hibernate.tool.api.metadata;
 
-import java.util.List;
 import java.util.Properties;
 
 import org.hibernate.boot.Metadata;
-import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.ModelsContext;
 
 public interface MetadataDescriptor {
 
 	Metadata createMetadata();
 
 	Properties getProperties();
-
-	default List<ClassDetails> getEntityClassDetails() {
-		throw new UnsupportedOperationException(
-				"getEntityClassDetails() not implemented");
-	}
-
-	default ModelsContext getModelsContext() {
-		throw new UnsupportedOperationException(
-				"getModelsContext() not implemented");
-	}
 
 }

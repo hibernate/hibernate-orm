@@ -39,6 +39,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.reveng.models.exporter.MetadataHelper;
 import org.hibernate.tool.api.version.Version;
 
 import java.util.Properties;
@@ -129,7 +130,9 @@ public class GenericExporter implements Exporter {
 	public static GenericExporter create(MetadataDescriptor md,
 										  String templateName,
 										  String filePattern) {
-		return new GenericExporter(md.getEntityClassDetails(), templateName, filePattern, null, new String[0]);
+		return new GenericExporter(
+				MetadataHelper.from(md.createMetadata()).getEntityClassDetails(),
+				templateName, filePattern, null, new String[0]);
 	}
 
 	public static GenericExporter create(MetadataDescriptor md,
@@ -137,8 +140,9 @@ public class GenericExporter implements Exporter {
 										  String filePattern,
 										  String forEach,
 										  String[] templatePath) {
-		return new GenericExporter(md.getEntityClassDetails(), templateName, filePattern,
-				forEach, templatePath);
+		return new GenericExporter(
+				MetadataHelper.from(md.createMetadata()).getEntityClassDetails(),
+				templateName, filePattern, forEach, templatePath);
 	}
 
 	public void exportAll(File outputDir) {

@@ -29,6 +29,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.reveng.models.exporter.MetadataHelper;
 
 /**
  * Generates {@code hibernate.cfg.xml} from a {@code List<ClassDetails>}.
@@ -72,7 +73,8 @@ public class CfgXmlExporter implements Exporter {
 	}
 
 	public static CfgXmlExporter create(MetadataDescriptor md) {
-		return new CfgXmlExporter(md.getEntityClassDetails());
+		return new CfgXmlExporter(
+				MetadataHelper.from(md.createMetadata()).getEntityClassDetails());
 	}
 
 	public void export(Writer output, Properties properties) {

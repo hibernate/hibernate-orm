@@ -38,6 +38,7 @@ import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.reveng.models.exporter.MetadataHelper;
 import org.hibernate.tool.api.version.Version;
 import org.hibernate.tool.internal.reveng.models.exporter.entity.ImportContextImpl;
 import org.hibernate.tool.internal.reveng.models.exporter.EntityFileWriter;
@@ -121,7 +122,8 @@ public class DaoExporter implements Exporter {
 
 	public static DaoExporter create(MetadataDescriptor md, boolean ejb3,
 									 String sessionFactoryName, String[] templatePath) {
-		return new DaoExporter(md.getEntityClassDetails(), md.getModelsContext(),
+		MetadataHelper helper = MetadataHelper.from(md.createMetadata());
+		return new DaoExporter(helper.getEntityClassDetails(), helper.getModelsContext(),
 				ejb3, sessionFactoryName, templatePath);
 	}
 

@@ -18,7 +18,6 @@
 package org.hibernate.tool.internal.metadata;
 
 import java.io.File;
-import java.util.List;
 import java.util.Properties;
 
 import org.hibernate.boot.Metadata;
@@ -26,19 +25,13 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.reveng.models.builder.hbm.HbmClassDetailsBuilder;
 
 public class NativeMetadataDescriptor implements MetadataDescriptor {
 
     private final Properties properties = new Properties();
     private final File cfgXmlFile;
     private final File[] mappingFiles;
-
-    private List<ClassDetails> entityClassDetails;
-    private ModelsContext modelsContext;
 
     private final BootstrapServiceRegistry bootstrapServiceRegistry;
     private final StandardServiceRegistryBuilder ssrb;
@@ -77,28 +70,6 @@ public class NativeMetadataDescriptor implements MetadataDescriptor {
 
     public Metadata createMetadata() {
         return metadataSources.buildMetadata(ssrb.build());
-    }
-
-    @Override
-    public List<ClassDetails> getEntityClassDetails() {
-        if (entityClassDetails == null) {
-            buildEntityClassDetails();
-        }
-        return entityClassDetails;
-    }
-
-    @Override
-    public ModelsContext getModelsContext() {
-        if (modelsContext == null) {
-            buildEntityClassDetails();
-        }
-        return modelsContext;
-    }
-
-    private void buildEntityClassDetails() {
-        HbmClassDetailsBuilder builder = new HbmClassDetailsBuilder();
-        this.entityClassDetails = builder.buildFromFiles(mappingFiles);
-        this.modelsContext = builder.getModelsContext();
     }
 
     private void addMappingFiles(MetadataSources sources) {

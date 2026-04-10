@@ -46,6 +46,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.reveng.models.exporter.MetadataHelper;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
 
 import java.util.Properties;
@@ -135,7 +136,8 @@ public class DocExporter implements Exporter {
 		if (templatePath == null) templatePath = new String[0];
 		String dotExec = exporterProperties.getProperty("dot.executable");
 		DocExporter configured = create(
-				md.getEntityClassDetails(), null, dotExec, templatePath);
+				MetadataHelper.from(md.createMetadata()).getEntityClassDetails(),
+				null, dotExec, templatePath);
 		configured.export(destDir);
 	}
 
@@ -190,11 +192,15 @@ public class DocExporter implements Exporter {
 	}
 
 	public static DocExporter create(MetadataDescriptor md) {
-		return new DocExporter(md.getEntityClassDetails(), null, null, new String[0]);
+		return new DocExporter(
+				MetadataHelper.from(md.createMetadata()).getEntityClassDetails(),
+				null, null, new String[0]);
 	}
 
 	public static DocExporter create(MetadataDescriptor md, String[] templatePath) {
-		return new DocExporter(md.getEntityClassDetails(), null, null, templatePath);
+		return new DocExporter(
+				MetadataHelper.from(md.createMetadata()).getEntityClassDetails(),
+				null, null, templatePath);
 	}
 
 	/**

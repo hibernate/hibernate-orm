@@ -16,7 +16,6 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Locking;
 import org.hibernate.MappingException;
-import org.hibernate.PropertyValueException;
 import org.hibernate.QueryException;
 import org.hibernate.Timeouts;
 import org.hibernate.annotations.CacheLayout;
@@ -4009,12 +4008,10 @@ public abstract class AbstractEntityPersister
 					if ( getGenerator() != null ) {
 						final Boolean unsaved = identifierMapping.getUnsavedStrategy().isUnsaved( id );
 						if ( unsaved != null && !unsaved ) {
-							throw new PropertyValueException(
-									"Detached entity with generated id '" + id
-											+ "' has an uninitialized version value '" + version + "'",
-									getEntityName(),
-									getVersionColumnName()
-							);
+							// The entity has a valid/saved identifier but null version.
+							// This happens with bytecode-enhanced lazy entities or detached
+							// entities. Consider it non-transient.
+							return false;
 						}
 					}
 				}

@@ -13,6 +13,7 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.Incubating;
 import org.hibernate.QueryParameterException;
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -29,7 +30,9 @@ import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.engine.internal.CacheHelper.addBasicValueToCacheKey;
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isHibernateProxy;
+import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
 import static org.hibernate.internal.util.collections.CollectionHelper.linkedMapOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.mapOfSize;
 
@@ -205,10 +208,18 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	private static boolean isTransientEntityBinding(
 			SharedSessionContractImplementor session, QueryParameterBinding<?> binding, Object value) {
 		return value != null && !isHibernateProxy( value )
+			&& !isUninitializedEnhancedEntity( value )
 			&& binding.getBindType() instanceof EntityDomainType<?> entityDomainType
 			&& session.getFactory().getMappingMetamodel()
 					.getEntityDescriptor( entityDomainType.getHibernateEntityName() )
 					.isTransient( value, session ) == Boolean.TRUE;
+	}
+
+	private static boolean isUninitializedEnhancedEntity(Object value) {
+		return isPersistentAttributeInterceptable( value )
+			&& asPersistentAttributeInterceptable( value ).$$_hibernate_getInterceptor()
+					instanceof EnhancementAsProxyLazinessInterceptor enhancementInterceptor
+			&& !enhancementInterceptor.isInitialized();
 	}
 
 	@Override

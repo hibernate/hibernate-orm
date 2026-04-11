@@ -158,6 +158,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.action.queue.decompose.entity.DeleteDecomposer;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
+import org.hibernate.persister.entity.mutation.EntityTableMappingImpl;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
 import org.hibernate.action.queue.decompose.entity.InsertDecomposer;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
@@ -3649,7 +3650,7 @@ public abstract class AbstractEntityPersister
 	private static class TableMappingBuilder {
 		private final String tableName;
 		private final int relativePosition;
-		private final EntityTableMapping.KeyMapping keyMapping;
+		private final EntityTableMappingImpl.KeyMapping keyMapping;
 		private final boolean isOptional;
 		private final boolean isInverse;
 		private final boolean isIdentifierTable;
@@ -3675,7 +3676,7 @@ public abstract class AbstractEntityPersister
 		public TableMappingBuilder(
 				String tableName,
 				int relativePosition,
-				EntityTableMapping.KeyMapping keyMapping,
+				EntityTableMappingImpl.KeyMapping keyMapping,
 				boolean isOptional,
 				boolean isInverse,
 				boolean isIdentifierTable,
@@ -3714,7 +3715,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		private EntityTableMapping build() {
-			return new EntityTableMapping(
+			return new EntityTableMappingImpl(
 					tableName,
 					relativePosition,
 					keyMapping,
@@ -3740,7 +3741,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	/**
-	 * Builds the {@link EntityTableMapping} descriptors for the tables mapped by this entity.
+	 * Builds the {@link EntityTableMappingImpl} descriptors for the tables mapped by this entity.
 	 *
 	 * @see #visitMutabilityOrderedTables
 	 */
@@ -3783,10 +3784,10 @@ public abstract class AbstractEntityPersister
 			String tableExpression,
 			int relativePosition,
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnVisitationSupplier) {
-		final List<EntityTableMapping.KeyColumn> keyColumns = new ArrayList<>();
+		final List<EntityTableMappingImpl.KeyColumn> keyColumns = new ArrayList<>();
 		tableKeyColumnVisitationSupplier.get()
 				.accept( (selectionIndex, selectableMapping) -> {
-					keyColumns.add( new EntityTableMapping.KeyColumn(
+					keyColumns.add( new EntityTableMappingImpl.KeyColumn(
 							tableExpression,
 							selectableMapping
 					) );
@@ -3832,7 +3833,7 @@ public abstract class AbstractEntityPersister
 	 * problems among the entity's group of tables.
 	 * <p>
 	 * Used while {@linkplain #buildTableMappings building} the
-	 * {@linkplain EntityTableMapping table mapping} descriptors for each table.
+	 * {@linkplain EntityTableMappingImpl table mapping} descriptors for each table.
 	 *
 	 * @see #forEachMutableTable
 	 * @see #forEachMutableTableReverse
@@ -3841,7 +3842,7 @@ public abstract class AbstractEntityPersister
 
 	/**
 	 * Consumer for processing table details.  Used while {@linkplain #buildTableMappings() building}
-	 * the {@link EntityTableMapping} descriptors.
+	 * the {@link EntityTableMappingImpl} descriptors.
 	 */
 	protected interface MutabilityOrderedTableConsumer {
 		void consume(

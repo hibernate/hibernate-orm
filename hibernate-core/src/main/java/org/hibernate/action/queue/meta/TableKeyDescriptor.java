@@ -8,7 +8,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
-import org.hibernate.persister.entity.mutation.EntityTableMapping;
+import org.hibernate.persister.entity.mutation.EntityTableMappingImpl;
 
 import java.io.Serializable;
 import java.util.List;
@@ -30,7 +30,7 @@ public record TableKeyDescriptor(List<ColumnDescriptor> columns) implements Sele
 		return new TableKeyDescriptor( columns );
 	}
 
-	public static TableKeyDescriptor from(EntityTableMapping.KeyMapping keyMapping) {
+	public static TableKeyDescriptor from(EntityTableMappingImpl.KeyMapping keyMapping) {
 		var columns = CollectionHelper.<ColumnDescriptor>arrayList( keyMapping.getColumnCount() );
 
 		keyMapping.forEachKeyColumn((index, selectable) -> {

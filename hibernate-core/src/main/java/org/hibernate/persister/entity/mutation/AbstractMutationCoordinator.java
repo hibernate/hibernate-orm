@@ -337,7 +337,7 @@ public abstract class AbstractMutationCoordinator {
 			EntityTableMapping identifierTableMapping,
 			EntityPersister persister,
 			String tableName) {
-		return new EntityTableMapping(
+		return new EntityTableMappingImpl(
 				tableName,
 				identifierTableMapping.getRelativePosition(),
 				identifierTableMapping.getKeyMapping(),

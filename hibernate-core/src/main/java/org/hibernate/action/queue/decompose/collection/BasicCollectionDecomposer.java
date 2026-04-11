@@ -407,60 +407,98 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			}
 		}
 
-		// Phase 2: UPDATE_ORDER shifted elements (using two-phase unique constraint break)
+		// Phase 2: Handle position shifts
+		// Strategy depends on whether custom @SQLUpdate is present:
+		// - WITH custom SQL: Use VALUE updates (update element at each position), this matches legacy behavior
+		// - WITHOUT custom SQL: Use ORDER updates with two-phase temp values
 		// Note: for reasons discussed on PersistentMap#computeEntityCollectionChangeSet and
 		// 		#computeElementCollectionChangeSet, shifts are not supported for Maps only Lists
-		if ( orderUpdatePlan != null && !changeSet.shifts().isEmpty() ) {
-			final List<PlannedOperation> tempPhaseOps = new ArrayList<>();
-			final List<PlannedOperation> finalPhaseOps = new ArrayList<>();
+		if ( !changeSet.shifts().isEmpty() ) {
+			final var updateRowPlan = jdbcOperations.updateRowPlan();
+			final boolean hasCustomSql = tableDescriptor.updateDetails().getCustomSql() != null;
 
-			final int updateOrdinalBase = calculateOrdinal( ordinalBase, Slot.UPDATE );
-			final int tempPhaseOrdinal = updateOrdinalBase;
-			final int finalPhaseOrdinal = updateOrdinalBase + 1;
-			final int tempOffset = Integer.MAX_VALUE / 2;
+			if ( hasCustomSql && updateRowPlan != null ) {
+				// WITH custom @SQLUpdate: Use VALUE updates
+				// This allows custom SQL to work (gets element values, not temp offsets)
+				// Requirement: No unique constraints on elements (or they must allow duplicates during update)
+				final int updateOrdinal = calculateOrdinal( ordinalBase, Slot.UPDATE );
 
-			for ( CollectionChangeSet.Shift shift : changeSet.shifts() ) {
-				final int tempPosition = tempOffset + (int) shift.currentIndex();
+				for ( CollectionChangeSet.Shift shift : changeSet.shifts() ) {
+					// Update the element VALUE at the new position
+					// This is "UPDATE SET element = X WHERE position = Y"
+					final BindPlan bindPlan = new SingleRowUpdateBindPlan(
+							collection,
+							key,
+							shift.element(),
+							(int) shift.currentIndex(),  // Use current position for both binding and restrictions
+							updateRowPlan.values(),
+							updateRowPlan.restrictions()
+					);
 
-				// TEMP PHASE: Move from old position to temporary position
-				tempPhaseOps.add( new PlannedOperation(
-						tableDescriptor,
-						MutationKind.UPDATE_ORDER,
-						orderUpdatePlan.jdbcOperation(),
-						new OrderOnlyUpdateBindPlan(
-								collection,
-								key,
-								shift.element(),
-								(int) shift.snapshotIndex(),  // WHERE: old position
-								tempPosition,              // SET: temporary position
-								orderUpdatePlan.values(),
-								orderUpdatePlan.restrictions()
-						),
-						tempPhaseOrdinal,
-						"UpdateRowTemp[" + shift.snapshotIndex() + "→" + tempPosition + "](" + persister.getRolePath() + ")"
-				) );
-
-				// FINAL PHASE: Move from temporary position to final position
-				finalPhaseOps.add( new PlannedOperation(
-						tableDescriptor,
-						MutationKind.UPDATE_ORDER,
-						orderUpdatePlan.jdbcOperation(),
-						new OrderOnlyUpdateBindPlan(
-								collection,
-								key,
-								shift.element(),
-								tempPosition,              // WHERE: temporary position
-								(int) shift.currentIndex(),   // SET: final position
-								orderUpdatePlan.values(),
-								orderUpdatePlan.restrictions()
-						),
-						finalPhaseOrdinal,
-						"UpdateRowFinal[" + tempPosition + "→" + shift.currentIndex() + "](" + persister.getRolePath() + ")"
-				) );
+					operationConsumer.accept( new PlannedOperation(
+							tableDescriptor,
+							MutationKind.UPDATE,
+							updateRowPlan.jdbcOperation(),
+							bindPlan,
+							updateOrdinal,
+							"UpdateRow[" + shift.snapshotIndex() + "→" + shift.currentIndex() + "](" + persister.getRolePath() + ")"
+					) );
+				}
 			}
+			else if ( orderUpdatePlan != null ) {
+				// WITHOUT custom SQL: Use ORDER updates with two-phase temp values
+				// This handles unique constraints by temporarily moving to safe values
+				final List<PlannedOperation> tempPhaseOps = new ArrayList<>();
+				final List<PlannedOperation> finalPhaseOps = new ArrayList<>();
 
-			tempPhaseOps.forEach( operationConsumer );
-			finalPhaseOps.forEach( operationConsumer );
+				final int updateOrdinalBase = calculateOrdinal( ordinalBase, Slot.UPDATE );
+				final int tempPhaseOrdinal = updateOrdinalBase;
+				final int finalPhaseOrdinal = updateOrdinalBase + 1;
+				final int tempOffset = Integer.MAX_VALUE / 2;
+
+				for ( CollectionChangeSet.Shift shift : changeSet.shifts() ) {
+					final int tempPosition = tempOffset + (int) shift.currentIndex();
+
+					// TEMP PHASE: Move from old position to temporary position
+					tempPhaseOps.add( new PlannedOperation(
+							tableDescriptor,
+							MutationKind.UPDATE_ORDER,
+							orderUpdatePlan.jdbcOperation(),
+							new OrderOnlyUpdateBindPlan(
+									collection,
+									key,
+									shift.element(),
+									(int) shift.snapshotIndex(),  // WHERE: old position
+									tempPosition,              // SET: temporary position
+									orderUpdatePlan.values(),
+									orderUpdatePlan.restrictions()
+							),
+							tempPhaseOrdinal,
+							"UpdateRowTemp[" + shift.snapshotIndex() + "→" + tempPosition + "](" + persister.getRolePath() + ")"
+					) );
+
+					// FINAL PHASE: Move from temporary position to final position
+					finalPhaseOps.add( new PlannedOperation(
+							tableDescriptor,
+							MutationKind.UPDATE_ORDER,
+							orderUpdatePlan.jdbcOperation(),
+							new OrderOnlyUpdateBindPlan(
+									collection,
+									key,
+									shift.element(),
+									tempPosition,              // WHERE: temporary position
+									(int) shift.currentIndex(),   // SET: final position
+									orderUpdatePlan.values(),
+									orderUpdatePlan.restrictions()
+							),
+							finalPhaseOrdinal,
+							"UpdateRowFinal[" + tempPosition + "→" + shift.currentIndex() + "](" + persister.getRolePath() + ")"
+					) );
+				}
+
+				tempPhaseOps.forEach( operationConsumer );
+				finalPhaseOps.forEach( operationConsumer );
+			}
 		}
 
 		// Phase 3: INSERT added elements

@@ -4,11 +4,7 @@
  */
 package org.hibernate.persister.entity.mutation;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.IdentityHashMap;
-import java.util.List;
-
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -39,7 +35,10 @@ import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.IdentityHashMap;
+import java.util.List;
 
 import static org.hibernate.generator.EventType.INSERT;
 
@@ -259,7 +258,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 								idToBind,
 								session,
 								jdbcValueBindings,
-								(EntityTableMapping)
+								(EntityTableMappingImpl)
 										mutationGroup.getOperation( position )
 												.getTableDetails(),
 								columnInclusions,
@@ -308,7 +307,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object id,
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings,
-			EntityTableMapping tableDetails,
+			EntityTableMappingImpl tableDetails,
 			boolean[] columnInclusions,
 			String[] columnValues,
 			boolean bindAllIncluded) {
@@ -507,7 +506,9 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 		return createOperationGroup( null, insertGroupBuilder.buildMutationGroup() );
 	}
 
-	private TableMutationBuilder<?> createTableInsertBuilder(EntityTableMapping tableMapping, boolean forceIdentifierBinding) {
+	private TableMutationBuilder<?> createTableInsertBuilder(
+			EntityTableMapping tableMapping,
+			boolean forceIdentifierBinding) {
 		final var persister = entityPersister();
 		final var delegate = persister.getInsertDelegate();
 		return tableMapping.isIdentifierTable()

@@ -52,7 +52,7 @@ public class DeleteCoordinatorStandard extends AbstractDeleteCoordinator {
 		// first, the table key column(s)
 		deleteGroupBuilder.forEachTableMutationBuilder( builder ->
 				applyKeyRestriction( rowId, entityPersister(), (TableDeleteBuilder) builder,
-						(EntityTableMapping) builder.getMutatingTable().getTableMapping() ) );
+						(EntityTableMappingImpl) builder.getMutatingTable().getTableMapping() ) );
 
 		if ( applyVersion ) {
 			// apply any optimistic locking

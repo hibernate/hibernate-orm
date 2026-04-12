@@ -1,6 +1,15 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.1.23.Final (April 12, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/38657
+
+
+** Bug
+    * HHH-20326 ClassCastException when joining array within embeddable
+
 Changes in 7.1.22.Final (April 05, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

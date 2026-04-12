@@ -1,6 +1,15 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.6.48.Final (April 12, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/38656
+
+
+** Bug
+    * HHH-19824 DB2zDialect does not use correct querySequenceString on a DB2 on zOs
+
 Changes in 6.6.47.Final (April 05, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

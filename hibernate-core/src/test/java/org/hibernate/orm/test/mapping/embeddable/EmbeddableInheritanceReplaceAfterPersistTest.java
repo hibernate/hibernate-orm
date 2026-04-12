@@ -38,6 +38,7 @@ public class EmbeddableInheritanceReplaceAfterPersistTest {
 			var merged = session.merge( history );
 
 			assertThat( merged.getBase() )
+					.isExactlyInstanceOf( Base.class )
 					.isInstanceOfSatisfying(
 							Base.class, next -> {
 								assertThat( next.getNum() ).isEqualTo( 43 );

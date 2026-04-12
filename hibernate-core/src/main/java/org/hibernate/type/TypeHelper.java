@@ -72,8 +72,32 @@ public class TypeHelper {
 			final SharedSessionContractImplementor session,
 			final Object owner,
 			final Map<Object, Object> copyCache) {
-		final Object[] copied = new Object[original.length];
-		for ( int i = 0; i < types.length; i++ ) {
+		return replace( original, target, types, original.length, session, owner, copyCache );
+	}
+
+	/**
+	 * Apply the {@link Type#replace} operation across a series of values.
+	 *
+	 * @param original The source of the state
+	 * @param target The target into which to replace the source values.
+	 * @param types The value types
+	 * @param length The specific length to replace
+	 * @param session The originating session
+	 * @param owner The entity "owning" the values
+	 * @param copyCache A map representing a cache of already replaced state
+	 *
+	 * @return The replaced state
+	 */
+	public static Object[] replace(
+			final Object[] original,
+			final Object[] target,
+			final Type[] types,
+			final int length,
+			final SharedSessionContractImplementor session,
+			final Object owner,
+			final Map<Object, Object> copyCache) {
+		final Object[] copied = new Object[length];
+		for ( int i = 0; i < length; i++ ) {
 			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
 					|| original[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				copied[i] = target[i];
@@ -139,8 +163,34 @@ public class TypeHelper {
 			final Object owner,
 			final Map<Object, Object> copyCache,
 			final ForeignKeyDirection foreignKeyDirection) {
-		final Object[] copied = new Object[original.length];
-		for ( int i = 0; i < types.length; i++ ) {
+		return replace( original, target, types, original.length, session, owner, copyCache, foreignKeyDirection );
+	}
+
+	/**
+	 * Apply the {@link Type#replace} operation across a series of values.
+	 *
+	 * @param original The source of the state
+	 * @param target The target into which to replace the source values.
+	 * @param types The value types
+	 * @param length The specific length to replace
+	 * @param session The originating session
+	 * @param owner The entity "owning" the values
+	 * @param copyCache A map representing a cache of already replaced state
+	 * @param foreignKeyDirection FK directionality to be applied to the replacement
+	 *
+	 * @return The replaced state
+	 */
+	public static Object[] replace(
+			final Object[] original,
+			final Object[] target,
+			final Type[] types,
+			final int length,
+			final SharedSessionContractImplementor session,
+			final Object owner,
+			final Map<Object, Object> copyCache,
+			final ForeignKeyDirection foreignKeyDirection) {
+		final Object[] copied = new Object[length];
+		for ( int i = 0; i < length; i++ ) {
 			if ( original[i] == LazyPropertyInitializer.UNFETCHED_PROPERTY
 					|| original[i] == PropertyAccessStrategyBackRefImpl.UNKNOWN ) {
 				copied[i] = target[i];

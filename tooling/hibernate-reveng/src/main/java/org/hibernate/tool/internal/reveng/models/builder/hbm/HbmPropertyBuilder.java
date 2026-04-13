@@ -20,6 +20,8 @@ package org.hibernate.tool.internal.reveng.models.builder.hbm;
 import java.util.List;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBasicAttributeType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmConfigParameterType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTypeSpecificationType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTimestampAttributeType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmVersionAttributeType;
 import org.hibernate.boot.models.HibernateAnnotations;
@@ -44,6 +46,15 @@ public class HbmPropertyBuilder {
 										HbmBuildContext ctx) {
 		String name = basicAttr.getName();
 		String typeName = basicAttr.getTypeAttribute();
+		JaxbHbmTypeSpecificationType typeElement = basicAttr.getType();
+
+		// When type is specified via nested <type> element (e.g. EnumType with
+		// params), use the type attribute if available, otherwise fall back to
+		// "string" — the <type> name is a Hibernate type class, not a Java type.
+		if (typeName == null && typeElement != null) {
+			// Don't use the Hibernate type name as Java type
+			typeName = null;
+		}
 		String javaType = ctx.resolveJavaType(typeName != null ? typeName : "string");
 
 		DynamicFieldDetails field = ctx.createField(entityClass, name, javaType);
@@ -57,6 +68,20 @@ public class HbmPropertyBuilder {
 				basicAttr.isUnique(),
 				basicAttr.getColumnOrFormula(),
 				name);
+
+		// Store type parameters from <type><param> elements as field meta attributes
+		if (typeElement != null) {
+			String className = entityClass.getClassName();
+			ctx.addFieldMetaAttribute(className, name,
+					"hibernate.type.name", typeElement.getName());
+			if (typeElement.getConfigParameters() != null) {
+				for (JaxbHbmConfigParameterType param : typeElement.getConfigParameters()) {
+					ctx.addFieldMetaAttribute(className, name,
+							"hibernate.type.param:" + param.getName(),
+							param.getValue() != null ? param.getValue() : "");
+				}
+			}
+		}
 	}
 
 	public static void processVersion(DynamicClassDetails entityClass,

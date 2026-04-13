@@ -60,6 +60,7 @@ public class HbmXmlExporter implements Exporter {
 	private Configuration freemarkerConfig;
 	private HibernateMappingSettings mappingSettings;
 	private List<ClassDetails> entities;
+	private MetadataHelper metadataHelper;
 	private Properties exporterProperties = new Properties();
 
 	public HbmXmlExporter() {}
@@ -113,7 +114,9 @@ public class HbmXmlExporter implements Exporter {
 
 	public static HbmXmlExporter create(MetadataDescriptor md, String[] templatePath) {
 		HbmXmlExporter exporter = new HbmXmlExporter(templatePath, HibernateMappingSettings.defaults());
-		exporter.entities = MetadataHelper.from(md).getEntityClassDetails();
+		MetadataHelper helper = MetadataHelper.from(md);
+		exporter.entities = helper.getEntityClassDetails();
+		exporter.metadataHelper = helper;
 		return exporter;
 	}
 
@@ -128,7 +131,16 @@ public class HbmXmlExporter implements Exporter {
 				entitiesToExport.add(cd);
 			}
 		}
-		EntityFileWriter.writePerEntity(entitiesToExport, outputDir, ".hbm.xml", this::export);
+		EntityFileWriter.writePerEntity(entitiesToExport, outputDir, ".hbm.xml",
+				(writer, entity) -> {
+					Map<String, List<String>> classMeta = metadataHelper != null
+							? metadataHelper.getClassMetaAttributes(entity.getClassName())
+							: Collections.emptyMap();
+					Map<String, Map<String, List<String>>> fieldMeta = metadataHelper != null
+							? metadataHelper.getFieldMetaAttributes(entity.getClassName())
+							: Collections.emptyMap();
+					export(writer, entity, null, classMeta, Collections.emptyMap(), fieldMeta);
+				});
 	}
 
 	public void export(Writer output, ClassDetails entity) {

@@ -23,7 +23,8 @@ import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
-import org.hibernate.tool.internal.export.hbm.HbmExporter;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.test.utils.ConnectionProvider;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
@@ -52,8 +53,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Dmitry Geraskov
  * @author koen
  */
-//TODO Reenable this test and make it pass (See HBX-2884)
-@Disabled
 public class TestCase {
 	
 	private static final String[] HBM_XML_FILES = new String[] {
@@ -73,7 +72,7 @@ public class TestCase {
 		assertTrue(resourcesDir.mkdir());
 		MetadataDescriptor metadataDescriptor = HibernateUtil
 				.initializeMetadataDescriptor(this, HBM_XML_FILES, resourcesDir);
-		Exporter hbmexporter = new HbmExporter();
+		Exporter hbmexporter = ExporterFactory.createExporter(ExporterType.HBM);
 		hbmexporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		hbmexporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, srcDir);
 		hbmexporter.start();
@@ -87,6 +86,8 @@ public class TestCase {
 						"org/hibernate/tool/hbm2x/hbm2hbmxml/TypeParamsTest/Order.hbm.xml"));
 	}
 
+	// org.hibernate.type.EnumType was removed in Hibernate 8.0
+	@Disabled
 	@Test
 	public void testReadable() {
 		File orderHbmXml =

@@ -54,22 +54,11 @@ public class MetadataHelper {
 	private final Map<String, Map<String, Map<String, List<String>>>> allFieldMetaAttributes;
 
 	private MetadataHelper(MetadataDescriptor md) {
-		this.metadata = md.createMetadata();
-		MetadataImpl metadataImpl = (MetadataImpl) metadata;
-		ModelsContext registryContext = metadataImpl.getBootstrapContext()
-				.getModelsContext();
-		List<ClassDetails> registryEntities = new ArrayList<>();
-		registryContext.getClassDetailsRegistry().forEachClassDetails(cd -> {
-			if (cd.hasAnnotationUsage(Entity.class, registryContext)) {
-				registryEntities.add(cd);
-			}
-		});
-		if (!registryEntities.isEmpty()) {
-			this.entityClassDetails = registryEntities;
-			this.modelsContext = registryContext;
-			this.allClassMetaAttributes = Collections.emptyMap();
-			this.allFieldMetaAttributes = Collections.emptyMap();
-		} else if (md instanceof RevengMetadataDescriptor rmd) {
+		// Try descriptor-specific paths first to avoid calling
+		// createMetadata() when not needed (hbm.xml files may use
+		// types that are no longer resolvable in newer Hibernate versions).
+		if (md instanceof RevengMetadataDescriptor rmd) {
+			this.metadata = md.createMetadata();
 			this.entityClassDetails = rmd.getEntityClassDetails();
 			this.modelsContext = rmd.getModelsContext();
 			this.allClassMetaAttributes = Collections.emptyMap();
@@ -80,23 +69,42 @@ public class MetadataHelper {
 					.filter(f -> f.getName().endsWith(".xml"))
 					.toArray(File[]::new);
 			if (hbmFiles.length > 0) {
+				this.metadata = null;
 				HbmClassDetailsBuilder builder = new HbmClassDetailsBuilder();
 				this.entityClassDetails = builder.buildFromFiles(hbmFiles);
 				this.modelsContext = builder.getModelsContext();
 				this.allClassMetaAttributes = builder.getAllClassMetaAttributes();
 				this.allFieldMetaAttributes = builder.getAllFieldMetaAttributes();
 			} else {
-				this.entityClassDetails = registryEntities;
+				this.metadata = md.createMetadata();
+				MetadataImpl metadataImpl = (MetadataImpl) metadata;
+				ModelsContext registryContext = metadataImpl.getBootstrapContext()
+						.getModelsContext();
+				this.entityClassDetails = extractEntities(registryContext);
 				this.modelsContext = registryContext;
 				this.allClassMetaAttributes = Collections.emptyMap();
 				this.allFieldMetaAttributes = Collections.emptyMap();
 			}
 		} else {
-			this.entityClassDetails = registryEntities;
+			this.metadata = md.createMetadata();
+			MetadataImpl metadataImpl = (MetadataImpl) metadata;
+			ModelsContext registryContext = metadataImpl.getBootstrapContext()
+					.getModelsContext();
+			this.entityClassDetails = extractEntities(registryContext);
 			this.modelsContext = registryContext;
 			this.allClassMetaAttributes = Collections.emptyMap();
 			this.allFieldMetaAttributes = Collections.emptyMap();
 		}
+	}
+
+	private static List<ClassDetails> extractEntities(ModelsContext registryContext) {
+		List<ClassDetails> entities = new ArrayList<>();
+		registryContext.getClassDetailsRegistry().forEachClassDetails(cd -> {
+			if (cd.hasAnnotationUsage(Entity.class, registryContext)) {
+				entities.add(cd);
+			}
+		});
+		return entities;
 	}
 
 	public static MetadataHelper from(MetadataDescriptor md) {

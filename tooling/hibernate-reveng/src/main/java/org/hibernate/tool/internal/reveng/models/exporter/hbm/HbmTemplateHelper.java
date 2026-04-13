@@ -717,25 +717,53 @@ public class HbmTemplateHelper {
 		if (typeAnn != null) {
 			return typeAnn.value().getName();
 		}
+		// Check for type name stored as field meta attribute (from hbm.xml <type> element)
+		Map<String, List<String>> fieldMeta = getFieldMetaAttributeMap(field);
+		List<String> typeName = fieldMeta.get("hibernate.type.name");
+		if (typeName != null && !typeName.isEmpty()) {
+			return typeName.get(0);
+		}
 		String className = field.getType().determineRawClass().getClassName();
 		return JavaClassToHibernateType.toHibernateType(className);
 	}
 
 	public boolean hasTypeParameters(FieldDetails field) {
 		Type typeAnn = field.getDirectAnnotationUsage(Type.class);
-		return typeAnn != null && typeAnn.parameters() != null && typeAnn.parameters().length > 0;
+		if (typeAnn != null && typeAnn.parameters() != null && typeAnn.parameters().length > 0) {
+			return true;
+		}
+		// Check for type params stored as field meta attributes
+		return !getTypeParametersFromMeta(field).isEmpty();
 	}
 
 	public Map<String, String> getTypeParameters(FieldDetails field) {
 		Type typeAnn = field.getDirectAnnotationUsage(Type.class);
-		if (typeAnn == null || typeAnn.parameters() == null) {
-			return Collections.emptyMap();
+		if (typeAnn != null && typeAnn.parameters() != null && typeAnn.parameters().length > 0) {
+			Map<String, String> params = new java.util.LinkedHashMap<>();
+			for (Parameter param : typeAnn.parameters()) {
+				params.put(param.name(), param.value());
+			}
+			return params;
 		}
+		return getTypeParametersFromMeta(field);
+	}
+
+	private Map<String, String> getTypeParametersFromMeta(FieldDetails field) {
+		Map<String, List<String>> fieldMeta = getFieldMetaAttributeMap(field);
 		Map<String, String> params = new java.util.LinkedHashMap<>();
-		for (Parameter param : typeAnn.parameters()) {
-			params.put(param.name(), param.value());
+		String prefix = "hibernate.type.param:";
+		for (Map.Entry<String, List<String>> entry : fieldMeta.entrySet()) {
+			if (entry.getKey().startsWith(prefix)) {
+				String paramName = entry.getKey().substring(prefix.length());
+				String paramValue = entry.getValue().isEmpty() ? "" : entry.getValue().get(0);
+				params.put(paramName, paramValue);
+			}
 		}
 		return params;
+	}
+
+	private Map<String, List<String>> getFieldMetaAttributeMap(FieldDetails field) {
+		return fieldMetaAttributes.getOrDefault(field.getName(), Collections.emptyMap());
 	}
 
 	public String getColumnAttributes(FieldDetails field) {
@@ -1169,7 +1197,16 @@ public class HbmTemplateHelper {
 	}
 
 	public Map<String, List<String>> getFieldMetaAttributes(FieldDetails field) {
-		return fieldMetaAttributes.getOrDefault(field.getName(), Collections.emptyMap());
+		Map<String, List<String>> all = fieldMetaAttributes.getOrDefault(
+				field.getName(), Collections.emptyMap());
+		// Filter out internal type parameter keys
+		Map<String, List<String>> result = new java.util.LinkedHashMap<>();
+		for (Map.Entry<String, List<String>> entry : all.entrySet()) {
+			if (!entry.getKey().startsWith("hibernate.type.")) {
+				result.put(entry.getKey(), entry.getValue());
+			}
+		}
+		return result;
 	}
 
 	public List<String> getFieldMetaAttribute(FieldDetails field, String name) {

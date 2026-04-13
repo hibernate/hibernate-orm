@@ -30,6 +30,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCacheType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCustomSqlDmlType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFetchStyleWithSubselectEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCollectionIdType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmColumnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIdBagCollectionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmKeyType;
@@ -47,6 +48,7 @@ import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
 import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
 import org.hibernate.boot.models.annotations.internal.CascadeAnnotation;
 import org.hibernate.boot.models.annotations.internal.CheckAnnotation;
+import org.hibernate.boot.models.annotations.internal.CollectionIdAnnotation;
 import org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
@@ -229,6 +231,23 @@ public class HbmCollectionBuilder {
 			return;
 		}
 		applyAccessAnnotation(field, idBag.getAccess(), ctx);
+		// @CollectionId from <collection-id>
+		JaxbHbmCollectionIdType collId = idBag.getCollectionId();
+		if (collId != null) {
+			CollectionIdAnnotation cidAnnotation =
+					HibernateAnnotations.COLLECTION_ID.createUsage(ctx.getModelsContext());
+			ColumnJpaAnnotation colAnnotation =
+					JpaAnnotations.COLUMN.createUsage(ctx.getModelsContext());
+			String colName = collId.getColumnAttribute();
+			if (colName != null) {
+				colAnnotation.name(colName);
+			}
+			cidAnnotation.column(colAnnotation);
+			if (collId.getGenerator() != null && collId.getGenerator().getClazz() != null) {
+				cidAnnotation.generator(collId.getGenerator().getClazz());
+			}
+			field.addAnnotationUsage(cidAnnotation);
+		}
 		applyCommonMetadata(field, idBag.getCascade(), idBag.getFetch(),
 				idBag.getLazy(), idBag.getWhere(), idBag.getBatchSize(),
 				idBag.getCache(), idBag.getFilter(),
@@ -527,6 +546,20 @@ public class HbmCollectionBuilder {
 						HibernateAnnotations.CASCADE.createUsage(mc);
 				cascadeAnnotation.value(cascadeTypes);
 				field.addAnnotationUsage(cascadeAnnotation);
+			}
+		}
+
+		// lazy → FetchType on @OneToMany / @ManyToMany / @ElementCollection
+		if (lazy != null && lazy == JaxbHbmLazyWithExtraEnum.FALSE) {
+			ManyToManyJpaAnnotation m2m = (ManyToManyJpaAnnotation)
+					field.getDirectAnnotationUsage(jakarta.persistence.ManyToMany.class);
+			if (m2m != null) {
+				m2m.fetch(jakarta.persistence.FetchType.EAGER);
+			}
+			OneToManyJpaAnnotation o2m = (OneToManyJpaAnnotation)
+					field.getDirectAnnotationUsage(jakarta.persistence.OneToMany.class);
+			if (o2m != null) {
+				o2m.fetch(jakarta.persistence.FetchType.EAGER);
 			}
 		}
 

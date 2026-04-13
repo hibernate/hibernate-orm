@@ -51,13 +51,19 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 
 		// Generate static operations based on whether soft delete is enabled
 		// Soft delete uses UPDATE instead of DELETE
-		// For joined-subclass hierarchies, only the root entity generates soft-delete operations
-		final boolean shouldGenerateSoftDelete = entityPersister.getSoftDeleteMapping() != null
-				&& entityPersister.getSuperMappingType() == null;  // Only root entities
-
-		this.staticDeleteOperations = shouldGenerateSoftDelete
-				? generateSoftDeleteOperation()
-				: generateStaticOperations();
+		if ( entityPersister.getSoftDeleteMapping() != null ) {
+			// the entity is configured for soft-delete
+			if ( entityPersister.getSuperMappingType() == null ) {
+				// we'll need to use the root entity's decomposer
+				this.staticDeleteOperations = null;
+			}
+			else {
+				this.staticDeleteOperations = generateSoftDeleteOperation();
+			}
+		}
+		else {
+			this.staticDeleteOperations = generateStaticOperations();
+		}
 	}
 
 	public Map<String, ? extends TableMutation<?>> getStaticDeleteOperations() {
@@ -70,6 +76,18 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext) {
+		// Check if this is a soft delete
+		final SoftDeleteMapping softDeleteMapping = entityPersister.getSoftDeleteMapping();
+		final boolean isSoftDelete = softDeleteMapping != null;
+		if ( isSoftDelete && staticDeleteOperations == null ) {
+			assert entityPersister.getSuperMappingType() != null;
+			return entityPersister
+					.getRootEntityDescriptor()
+					.getEntityPersister()
+					.getDeleteDecomposer()
+					.decompose( action, ordinalBase, session, decompositionContext );
+		}
+
 		final Object identifier = action.getId();
 		final Object version = action.getVersion();
 		final Object[] state = action.getState();
@@ -93,9 +111,6 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			return List.of();
 		}
 
-		// Check if this is a soft delete
-		final SoftDeleteMapping softDeleteMapping = entityPersister.getSoftDeleteMapping();
-		final boolean isSoftDelete = softDeleteMapping != null;
 
 		// Determine if we need to apply optimistic locking
 		final var definedOptimisticLockStyle = definedOptimisticLockStyle();

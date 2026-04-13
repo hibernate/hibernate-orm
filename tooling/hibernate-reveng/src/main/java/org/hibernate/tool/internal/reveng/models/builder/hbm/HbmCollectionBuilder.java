@@ -42,10 +42,13 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPrimitiveArrayType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSetType;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
 import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
 import org.hibernate.boot.models.annotations.internal.CascadeAnnotation;
 import org.hibernate.boot.models.annotations.internal.CheckAnnotation;
+import org.hibernate.boot.models.annotations.internal.CollectionTableJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.FetchAnnotation;
 import org.hibernate.boot.models.annotations.internal.FilterAnnotation;
@@ -94,6 +97,7 @@ public class HbmCollectionBuilder {
 		if (field == null) {
 			return;
 		}
+		applyAccessAnnotation(field, set.getAccess(), ctx);
 		applyCommonMetadata(field, set.getCascade(), set.getFetch(),
 				set.getLazy(), set.getWhere(), set.getBatchSize(),
 				set.getCache(), set.getFilter(),
@@ -116,6 +120,7 @@ public class HbmCollectionBuilder {
 		if (field == null) {
 			return;
 		}
+		applyAccessAnnotation(field, list.getAccess(), ctx);
 		applyCommonMetadata(field, list.getCascade(), list.getFetch(),
 				list.getLazy(), list.getWhere(), list.getBatchSize(),
 				list.getCache(), list.getFilter(),
@@ -136,6 +141,7 @@ public class HbmCollectionBuilder {
 		if (field == null) {
 			return;
 		}
+		applyAccessAnnotation(field, bag.getAccess(), ctx);
 		applyCommonMetadata(field, bag.getCascade(), bag.getFetch(),
 				bag.getLazy(), bag.getWhere(), bag.getBatchSize(),
 				bag.getCache(), bag.getFilter(),
@@ -157,6 +163,7 @@ public class HbmCollectionBuilder {
 		if (field == null) {
 			return;
 		}
+		applyAccessAnnotation(field, map.getAccess(), ctx);
 		applyCommonMetadata(field, map.getCascade(), map.getFetch(),
 				map.getLazy(), map.getWhere(), map.getBatchSize(),
 				map.getCache(), map.getFilter(),
@@ -179,6 +186,7 @@ public class HbmCollectionBuilder {
 		if (field == null) {
 			return;
 		}
+		applyAccessAnnotation(field, array.getAccess(), ctx);
 		applyCommonMetadata(field, array.getCascade(), array.getFetch(),
 				array.getLazy(), array.getWhere(), array.getBatchSize(),
 				array.getCache(), array.getFilter(),
@@ -198,7 +206,8 @@ public class HbmCollectionBuilder {
 			return;
 		}
 		DynamicFieldDetails field = buildElementCollectionField(
-				entityClass, array.getName(), element, "java.util.List", ctx);
+				entityClass, array.getName(), element, array.getKey(), "java.util.List", ctx);
+		applyAccessAnnotation(field, array.getAccess(), ctx);
 		applyCommonMetadata(field, array.getCascade(), array.getFetch(),
 				array.getLazy(), array.getWhere(), array.getBatchSize(),
 				array.getCache(), array.getFilter(),
@@ -219,6 +228,7 @@ public class HbmCollectionBuilder {
 		if (field == null) {
 			return;
 		}
+		applyAccessAnnotation(field, idBag.getAccess(), ctx);
 		applyCommonMetadata(field, idBag.getCascade(), idBag.getFetch(),
 				idBag.getLazy(), idBag.getWhere(), idBag.getBatchSize(),
 				idBag.getCache(), idBag.getFilter(),
@@ -249,7 +259,7 @@ public class HbmCollectionBuilder {
 					collectionInterfaceName, defaultPackage, ctx);
 		} else if (element != null) {
 			return buildElementCollectionField(entityClass, name, element,
-					collectionInterfaceName, ctx);
+					key, collectionInterfaceName, ctx);
 		}
 		return null;
 	}
@@ -282,7 +292,7 @@ public class HbmCollectionBuilder {
 					keyClass, defaultPackage, ctx);
 		} else if (element != null) {
 			return buildMapElementCollectionField(entityClass, name, element,
-					keyClass, ctx);
+					key, keyClass, ctx);
 		}
 		return null;
 	}
@@ -335,6 +345,7 @@ public class HbmCollectionBuilder {
 			DynamicClassDetails entityClass,
 			String name,
 			JaxbHbmBasicCollectionElementType element,
+			JaxbHbmKeyType key,
 			ClassDetails keyClass,
 			HbmBuildContext ctx) {
 		String typeName = element.getTypeAttribute();
@@ -345,6 +356,19 @@ public class HbmCollectionBuilder {
 		ElementCollectionJpaAnnotation ecAnnotation =
 				JpaAnnotations.ELEMENT_COLLECTION.createUsage(ctx.getModelsContext());
 		field.addAnnotationUsage(ecAnnotation);
+
+		// @CollectionTable with join columns from <key>
+		addCollectionTableFromKey(field, key, ctx);
+
+		// @Column from <element column="...">
+		String elementColumn = element.getColumnAttribute();
+		if (elementColumn != null && !elementColumn.isEmpty()) {
+			ColumnJpaAnnotation colAnnotation =
+					JpaAnnotations.COLUMN.createUsage(ctx.getModelsContext());
+			colAnnotation.name(elementColumn);
+			field.addAnnotationUsage(colAnnotation);
+		}
+
 		return field;
 	}
 
@@ -442,6 +466,7 @@ public class HbmCollectionBuilder {
 			DynamicClassDetails entityClass,
 			String name,
 			JaxbHbmBasicCollectionElementType element,
+			JaxbHbmKeyType key,
 			String collectionInterfaceName,
 			HbmBuildContext ctx) {
 		String typeName = element.getTypeAttribute();
@@ -455,6 +480,19 @@ public class HbmCollectionBuilder {
 		ElementCollectionJpaAnnotation ecAnnotation =
 				JpaAnnotations.ELEMENT_COLLECTION.createUsage(ctx.getModelsContext());
 		field.addAnnotationUsage(ecAnnotation);
+
+		// @CollectionTable with join columns from <key>
+		addCollectionTableFromKey(field, key, ctx);
+
+		// @Column from <element column="...">
+		String elementColumn = element.getColumnAttribute();
+		if (elementColumn != null && !elementColumn.isEmpty()) {
+			ColumnJpaAnnotation colAnnotation =
+					JpaAnnotations.COLUMN.createUsage(ctx.getModelsContext());
+			colAnnotation.name(elementColumn);
+			field.addAnnotationUsage(colAnnotation);
+		}
+
 		return field;
 	}
 
@@ -663,6 +701,50 @@ public class HbmCollectionBuilder {
 				HibernateAnnotations.SQL_ORDER.createUsage(ctx.getModelsContext());
 		sqlOrderAnnotation.value(orderBy);
 		field.addAnnotationUsage(sqlOrderAnnotation);
+	}
+
+	private static void addCollectionTableFromKey(DynamicFieldDetails field,
+												JaxbHbmKeyType key,
+												HbmBuildContext ctx) {
+		if (key == null) {
+			return;
+		}
+		ModelsContext mc = ctx.getModelsContext();
+		String columnName = key.getColumnAttribute();
+		if (columnName == null || columnName.isEmpty()) {
+			List<JaxbHbmColumnType> columns = key.getColumn();
+			if (columns != null && !columns.isEmpty()) {
+				columnName = columns.get(0).getName();
+			}
+		}
+		if (columnName != null && !columnName.isEmpty()) {
+			CollectionTableJpaAnnotation ctAnnotation =
+					JpaAnnotations.COLLECTION_TABLE.createUsage(mc);
+			JoinColumnJpaAnnotation jc =
+					JpaAnnotations.JOIN_COLUMN.createUsage(mc);
+			jc.name(columnName);
+			ctAnnotation.joinColumns(new jakarta.persistence.JoinColumn[] { jc });
+			field.addAnnotationUsage(ctAnnotation);
+		}
+	}
+
+	private static void applyAccessAnnotation(DynamicFieldDetails field,
+											   String access,
+											   HbmBuildContext ctx) {
+		if (access == null || access.isEmpty()) {
+			return;
+		}
+		AccessJpaAnnotation accessAnnotation =
+				JpaAnnotations.ACCESS.createUsage(ctx.getModelsContext());
+		if ("field".equals(access)) {
+			accessAnnotation.value(jakarta.persistence.AccessType.FIELD);
+		} else if ("property".equals(access)) {
+			accessAnnotation.value(jakarta.persistence.AccessType.PROPERTY);
+		} else {
+			// Custom access strategy — store as FIELD with the actual class name available via the annotation
+			accessAnnotation.value(jakarta.persistence.AccessType.FIELD);
+		}
+		field.addAnnotationUsage(accessAnnotation);
 	}
 
 	// --- Mapping helpers ---

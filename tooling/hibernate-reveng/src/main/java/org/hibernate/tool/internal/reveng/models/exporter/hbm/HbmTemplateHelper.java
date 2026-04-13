@@ -615,7 +615,7 @@ public class HbmTemplateHelper {
 
 	public String getAccessType(FieldDetails field) {
 		Access access = field.getDirectAnnotationUsage(Access.class);
-		if (access == null || access.value() == AccessType.FIELD) {
+		if (access == null) {
 			return null;
 		}
 		return access.value().name().toLowerCase();

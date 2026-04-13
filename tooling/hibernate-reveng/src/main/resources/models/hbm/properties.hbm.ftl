@@ -264,7 +264,9 @@
         catalog="${helper.getElementCollectionTableCatalog(field)}"</#if><#if helper.getCollectionLazy(field)??>
         lazy="${helper.getCollectionLazy(field)}"</#if><#if helper.getCollectionFetchMode(field)??>
         fetch="${helper.getCollectionFetchMode(field)}"</#if><#if helper.getCollectionOrderBy(field)??>
-        order-by="${helper.getCollectionOrderBy(field)}"</#if>>
+        order-by="${helper.getCollectionOrderBy(field)}"</#if><#if helper.getSort(field)??>
+        sort="${helper.getSort(field)}"</#if><#if helper.getAccessType(field)??>
+        access="${helper.getAccessType(field)}"</#if>>
 <#list helper.getFieldMetaAttributes(field)?keys as metaName>
 <#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
         <meta attribute="${metaName}">${metaValue}</meta>

@@ -1134,7 +1134,7 @@ public class HbmTemplateHelperTest {
 		AccessJpaAnnotation access = JpaAnnotations.ACCESS.createUsage(ctx);
 		access.value(AccessType.FIELD);
 		field.addAnnotationUsage(access);
-		assertNull(new HbmTemplateHelper(entity).getAccessType(field));
+		assertEquals("field", new HbmTemplateHelper(entity).getAccessType(field));
 	}
 
 	@Test

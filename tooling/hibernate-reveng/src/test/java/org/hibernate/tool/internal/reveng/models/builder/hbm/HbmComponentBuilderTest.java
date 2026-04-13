@@ -188,9 +188,16 @@ public class HbmComponentBuilderTest {
 
 		HbmComponentBuilder.processDynamicComponent(entityClass, dynComponent, "com.example", ctx);
 
-		// Should have Map field + the nested property field on the entity
-		assertEquals(2, entityClass.getFields().size());
-		assertTrue(entityClass.getFields().stream()
-				.anyMatch(f -> f.getName().equals("color")));
+		// Should have only the Map field (nested properties stored as meta attributes)
+		assertEquals(1, entityClass.getFields().size());
+		assertEquals("extras", entityClass.getFields().get(0).getName());
+
+		// Nested properties are stored as meta attributes on the Map field
+		var fieldMeta = ctx.getFieldMetaAttributes("com.example.Employee");
+		assertNotNull(fieldMeta);
+		var extrasMeta = fieldMeta.get("extras");
+		assertNotNull(extrasMeta, "Field meta attributes should exist for 'extras'");
+		assertTrue(extrasMeta.containsKey("hibernate.dynamic-component.property:color"));
+		assertEquals("string", extrasMeta.get("hibernate.dynamic-component.property:color").get(0));
 	}
 }

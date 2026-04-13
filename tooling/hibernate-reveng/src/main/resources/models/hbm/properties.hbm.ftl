@@ -237,6 +237,14 @@
 </#list>
     </component>
 </#list>
+<#-- Dynamic components -->
+<#list helper.getDynamicComponentFields() as field>
+    <dynamic-component name="${field.getName()}">
+<#list helper.getDynamicComponentProperties(field) as prop>
+        <property name="${prop.name()}" type="${prop.type()}"/>
+</#list>
+    </dynamic-component>
+</#list>
 <#-- Any -->
 <#list helper.getAnyFields() as field>
     <any name="${field.getName()}"

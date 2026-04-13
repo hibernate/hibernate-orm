@@ -614,6 +614,7 @@ public class HbmEntityAnnotationBuilder {
 			String proxyFqn = HbmBuildContext.resolveClassName(proxy, ctx.getDefaultPackage());
 			if (!proxyFqn.equals(entityClass.getClassName())) {
 				ctx.addClassMetaAttribute(entityClass.getClassName(), "implements", proxyFqn);
+				ctx.addClassMetaAttribute(entityClass.getClassName(), "hibernate.proxy", proxyFqn);
 			}
 		} else if (lazy != null && lazy) {
 			entityClass.addAnnotationUsage(

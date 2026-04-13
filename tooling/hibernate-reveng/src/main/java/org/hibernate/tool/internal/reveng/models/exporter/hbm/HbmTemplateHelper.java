@@ -265,7 +265,13 @@ public class HbmTemplateHelper {
 	}
 
 	public boolean isConcreteProxy() {
-		return classDetails.hasDirectAnnotationUsage(ConcreteProxy.class);
+		return classDetails.hasDirectAnnotationUsage(ConcreteProxy.class)
+				&& getProxy() == null;
+	}
+
+	public String getProxy() {
+		List<String> proxyValues = metaAttributes.get("hibernate.proxy");
+		return proxyValues != null && !proxyValues.isEmpty() ? proxyValues.get(0) : null;
 	}
 
 	public String getEntityName() {
@@ -489,6 +495,36 @@ public class HbmTemplateHelper {
 	public List<FieldDetails> getManyToAnyFields() {
 		return getFieldsWithAnnotation(ManyToAny.class);
 	}
+
+	// --- Dynamic component ---
+
+	public List<FieldDetails> getDynamicComponentFields() {
+		List<FieldDetails> result = new ArrayList<>();
+		for (FieldDetails field : classDetails.getFields()) {
+			Map<String, List<String>> fieldMeta = getFieldMetaAttributeMap(field);
+			List<String> dynComp = fieldMeta.get("hibernate.dynamic-component");
+			if (dynComp != null && !dynComp.isEmpty() && "true".equals(dynComp.get(0))) {
+				result.add(field);
+			}
+		}
+		return result;
+	}
+
+	public List<DynamicComponentProperty> getDynamicComponentProperties(FieldDetails field) {
+		List<DynamicComponentProperty> result = new ArrayList<>();
+		Map<String, List<String>> fieldMeta = getFieldMetaAttributeMap(field);
+		String prefix = "hibernate.dynamic-component.property:";
+		for (Map.Entry<String, List<String>> entry : fieldMeta.entrySet()) {
+			if (entry.getKey().startsWith(prefix)) {
+				String propName = entry.getKey().substring(prefix.length());
+				String typeName = entry.getValue().get(0);
+				result.add(new DynamicComponentProperty(propName, typeName));
+			}
+		}
+		return result;
+	}
+
+	public record DynamicComponentProperty(String name, String type) {}
 
 	// --- ElementCollection ---
 
@@ -1351,7 +1387,13 @@ public class HbmTemplateHelper {
 	// --- Meta attributes ---
 
 	public Map<String, List<String>> getMetaAttributes() {
-		return metaAttributes;
+		Map<String, List<String>> result = new java.util.LinkedHashMap<>();
+		for (Map.Entry<String, List<String>> entry : metaAttributes.entrySet()) {
+			if (!entry.getKey().startsWith("hibernate.proxy")) {
+				result.put(entry.getKey(), entry.getValue());
+			}
+		}
+		return result;
 	}
 
 	public List<String> getMetaAttribute(String name) {
@@ -1368,7 +1410,8 @@ public class HbmTemplateHelper {
 					&& !entry.getKey().startsWith("hibernate.generator.")
 					&& !entry.getKey().startsWith("hibernate.any.")
 					&& !entry.getKey().startsWith("hibernate.collection.")
-					&& !entry.getKey().startsWith("hibernate.array.")) {
+					&& !entry.getKey().startsWith("hibernate.array.")
+					&& !entry.getKey().startsWith("hibernate.dynamic-component")) {
 				result.put(entry.getKey(), entry.getValue());
 			}
 		}

@@ -26,7 +26,9 @@
 <#if helper.isAbstract()>
     abstract="true"
 </#if>
-<#if helper.isConcreteProxy()>
+<#if helper.getProxy()??>
+    proxy="${helper.getProxy()}"
+<#elseif helper.isConcreteProxy()>
     lazy="false"
 </#if>
 <#if (helper.getBatchSize() gt 1)>

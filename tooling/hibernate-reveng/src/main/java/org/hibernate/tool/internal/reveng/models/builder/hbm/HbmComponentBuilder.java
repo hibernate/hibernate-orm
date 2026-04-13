@@ -185,12 +185,24 @@ public class HbmComponentBuilder {
 				.resolveClassDetails(Map.class.getName());
 		TypeDetails fieldType = new ClassTypeDetailsImpl(
 				mapClass, TypeDetails.Kind.CLASS);
-		entityClass.applyAttribute(
+		DynamicFieldDetails field = entityClass.applyAttribute(
 				fieldName, fieldType, false, false, ctx.getModelsContext());
 
-		// Process nested attributes directly on the owning entity
-		// (dynamic components don't have a separate embeddable class)
-		HbmSubclassBuilder.processAttributes(entityClass,
-				dynComponent.getAttributes(), defaultPackage, ctx);
+		// Mark as dynamic component
+		ctx.addFieldMetaAttribute(entityClass.getClassName(), fieldName,
+				"hibernate.dynamic-component", "true");
+
+		// Store nested properties as meta attributes on the Map field
+		for (Serializable attribute : dynComponent.getAttributes()) {
+			if (attribute instanceof JaxbHbmBasicAttributeType basicAttr) {
+				String propName = basicAttr.getName();
+				String typeName = basicAttr.getTypeAttribute();
+				if (typeName == null || typeName.isEmpty()) {
+					typeName = "string";
+				}
+				ctx.addFieldMetaAttribute(entityClass.getClassName(), fieldName,
+						"hibernate.dynamic-component.property:" + propName, typeName);
+			}
+		}
 	}
 }

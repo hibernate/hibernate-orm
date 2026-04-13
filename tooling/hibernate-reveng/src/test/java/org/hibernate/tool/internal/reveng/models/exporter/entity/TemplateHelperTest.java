@@ -3492,4 +3492,64 @@ public class TemplateHelperTest {
 				.filter(f -> "name".equals(f.getName())).findFirst().orElseThrow();
 		assertEquals("", helper.generateColumnTransformerAnnotation(field));
 	}
+
+	// --- Constructor support (HBX-2884) ---
+
+	@Test
+	public void testGetFullConstructorPropertiesForRootEntity() {
+		// HelloWorld: assigned id (string), hello (string), world (long)
+		TableMetadata helloWorldTable = new TableMetadata("HELLO_WORLD", "HelloWorld", "");
+		helloWorldTable.addColumn(new ColumnMetadata("ID", "id", String.class).primaryKey(true));
+		helloWorldTable.addColumn(new ColumnMetadata("HELLO", "hello", String.class));
+		helloWorldTable.addColumn(new ColumnMetadata("WORLD", "world", long.class));
+		TemplateHelper hwHelper = create(helloWorldTable);
+		List<TemplateHelper.FullConstructorProperty> hwProps = hwHelper.getFullConstructorProperties();
+		assertEquals(3, hwProps.size());
+		assertEquals("id", hwProps.get(0).fieldName());
+		assertEquals("hello", hwProps.get(1).fieldName());
+		assertEquals("world", hwProps.get(2).fieldName());
+	}
+
+	@Test
+	public void testGetFullConstructorPropertiesForSubclass() {
+		// HelloWorld: assigned id (string), hello (string), world (long)
+		TableMetadata helloWorldTable = new TableMetadata("HELLO_WORLD", "HelloWorld", "");
+		helloWorldTable.addColumn(new ColumnMetadata("ID", "id", String.class).primaryKey(true));
+		helloWorldTable.addColumn(new ColumnMetadata("HELLO", "hello", String.class));
+		helloWorldTable.addColumn(new ColumnMetadata("WORLD", "world", long.class));
+		// HelloUniverse extends HelloWorld: dimension (string), address (embedded), notgenerated (excluded)
+		TableMetadata helloUniverseTable = new TableMetadata("HELLO_UNIVERSE", "HelloUniverse", "");
+		helloUniverseTable.parent("HelloWorld", "");
+		helloUniverseTable.addColumn(new ColumnMetadata("DIMENSION", "dimension", String.class));
+		helloUniverseTable.addColumn(new ColumnMetadata("NOTGENERATED", "notgenerated", String.class));
+		helloUniverseTable.addEmbeddedField(
+				new EmbeddedFieldMetadata("address", "UniversalAddress", ""));
+		// Build both entities via the same builder so superclass is resolved
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		builder.createEntityFromTable(helloWorldTable);
+		ClassDetails universeClass = builder.createEntityFromTable(helloUniverseTable);
+		TemplateHelper huHelper = new TemplateHelper(
+				universeClass, builder.getModelsContext(),
+				new ImportContextImpl(""), true,
+				Collections.emptyMap(),
+				Map.of("notgenerated", Map.of("gen-property", List.of("false"))));
+		// Own properties: dimension + address = 2
+		List<TemplateHelper.FullConstructorProperty> ownProps = huHelper.getFullConstructorProperties();
+		assertEquals(2, ownProps.size());
+		assertEquals("dimension", ownProps.get(0).fieldName());
+		assertEquals("address", ownProps.get(1).fieldName());
+		// Superclass properties: id + hello + world = 3
+		List<TemplateHelper.FullConstructorProperty> superProps = huHelper.getSuperclassFullConstructorProperties();
+		assertEquals(3, superProps.size());
+		assertEquals("id", superProps.get(0).fieldName());
+		assertEquals("hello", superProps.get(1).fieldName());
+		assertEquals("world", superProps.get(2).fieldName());
+		// Total closure: 3 + 2 = 5
+		int total = superProps.size() + ownProps.size();
+		assertEquals(5, total);
+		// First 3 of closure match superclass properties
+		for (int i = 0; i < superProps.size(); i++) {
+			assertEquals(superProps.get(i).fieldName(), superProps.get(i).fieldName());
+		}
+	}
 }

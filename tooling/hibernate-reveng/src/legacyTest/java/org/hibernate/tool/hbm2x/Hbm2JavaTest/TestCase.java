@@ -343,7 +343,7 @@ public class TestCase {
 				c2j.asArgumentList( pc.getProperties().iterator() ) );
 	}
 
-	@Disabled("Uses old Cfg2JavaTool/POJOClass APIs (HBX-2884)")
+	@Disabled("Replaced by TemplateHelperTest.testGetFullConstructorPropertiesForRootEntity/ForSubclass")
 	@Test
 	public void testPropertiesForFullConstructor() {
 		Cfg2JavaTool c2j = new Cfg2JavaTool();

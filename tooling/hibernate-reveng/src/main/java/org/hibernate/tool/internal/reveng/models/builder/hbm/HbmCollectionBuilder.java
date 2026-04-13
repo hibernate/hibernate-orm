@@ -23,6 +23,7 @@ import java.util.List;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.FetchMode;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmAnyValueMappingType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmArrayType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBagCollectionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBasicCollectionElementType;
@@ -36,6 +37,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIdBagCollectionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmKeyType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmLazyWithExtraEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmListType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToAnyCollectionElementType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToManyCollectionElementType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmMapType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOneToManyCollectionElementType;
@@ -44,6 +46,10 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSetType;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorAnnotation;
+import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValueAnnotation;
+import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValuesAnnotation;
+import org.hibernate.boot.models.annotations.internal.AnyKeyJavaClassAnnotation;
 import org.hibernate.boot.models.annotations.internal.BatchSizeAnnotation;
 import org.hibernate.boot.models.annotations.internal.CacheAnnotation;
 import org.hibernate.boot.models.annotations.internal.CascadeAnnotation;
@@ -58,6 +64,8 @@ import org.hibernate.boot.models.annotations.internal.FiltersAnnotation;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.JoinColumnsJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.JoinTableJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.ManyToAnyAnnotation;
+import org.hibernate.boot.models.annotations.internal.MapKeyColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ManyToManyJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OneToManyJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OptimisticLockAnnotation;
@@ -160,8 +168,8 @@ public class HbmCollectionBuilder {
 								   String defaultPackage,
 								   HbmBuildContext ctx) {
 		DynamicFieldDetails field = createMapCollectionField(entityClass, map.getName(),
-				map.getOneToMany(), map.getManyToMany(), map.getElement(),
-				map.getKey(), map, defaultPackage, ctx);
+				map.getOneToMany(), map.getManyToMany(), map.getManyToAny(),
+				map.getElement(), map.getKey(), map, defaultPackage, ctx);
 		if (field == null) {
 			return;
 		}
@@ -288,32 +296,49 @@ public class HbmCollectionBuilder {
 			String name,
 			JaxbHbmOneToManyCollectionElementType oneToMany,
 			JaxbHbmManyToManyCollectionElementType manyToMany,
+			JaxbHbmManyToAnyCollectionElementType manyToAny,
 			JaxbHbmBasicCollectionElementType element,
 			JaxbHbmKeyType key,
 			JaxbHbmMapType map,
 			String defaultPackage,
 			HbmBuildContext ctx) {
-		// Determine the map key type
+		// Determine the map key type and column
 		String keyTypeName = "java.lang.String";
-		if (map.getMapKey() != null && map.getMapKey().getTypeAttribute() != null) {
-			keyTypeName = ctx.resolveJavaType(map.getMapKey().getTypeAttribute());
+		String mapKeyColumnName = null;
+		if (map.getMapKey() != null) {
+			if (map.getMapKey().getTypeAttribute() != null) {
+				keyTypeName = ctx.resolveJavaType(map.getMapKey().getTypeAttribute());
+			}
+			mapKeyColumnName = map.getMapKey().getColumnAttribute();
 		} else if (map.getIndex() != null && map.getIndex().getType() != null) {
 			keyTypeName = ctx.resolveJavaType(map.getIndex().getType());
 		}
 		ClassDetails keyClass = ctx.getModelsContext().getClassDetailsRegistry()
 				.resolveClassDetails(keyTypeName);
 
+		DynamicFieldDetails field = null;
 		if (oneToMany != null) {
-			return buildMapOneToManyField(entityClass, name, oneToMany,
+			field = buildMapOneToManyField(entityClass, name, oneToMany,
 					key, keyClass, defaultPackage, ctx);
 		} else if (manyToMany != null) {
-			return buildMapManyToManyField(entityClass, name, manyToMany,
+			field = buildMapManyToManyField(entityClass, name, manyToMany,
 					keyClass, defaultPackage, ctx);
+		} else if (manyToAny != null) {
+			field = buildMapManyToAnyField(entityClass, name, manyToAny,
+					key, keyClass, defaultPackage, ctx);
 		} else if (element != null) {
-			return buildMapElementCollectionField(entityClass, name, element,
+			field = buildMapElementCollectionField(entityClass, name, element,
 					key, keyClass, ctx);
 		}
-		return null;
+
+		// @MapKeyColumn from <map-key column="...">
+		if (field != null && mapKeyColumnName != null && !mapKeyColumnName.isEmpty()) {
+			MapKeyColumnJpaAnnotation mkcAnnotation =
+					JpaAnnotations.MAP_KEY_COLUMN.createUsage(ctx.getModelsContext());
+			mkcAnnotation.name(mapKeyColumnName);
+			field.addAnnotationUsage(mkcAnnotation);
+		}
+		return field;
 	}
 
 	private static DynamicFieldDetails buildMapOneToManyField(
@@ -357,6 +382,72 @@ public class HbmCollectionBuilder {
 		ManyToManyJpaAnnotation m2mAnnotation =
 				JpaAnnotations.MANY_TO_MANY.createUsage(ctx.getModelsContext());
 		field.addAnnotationUsage(m2mAnnotation);
+		return field;
+	}
+
+	private static DynamicFieldDetails buildMapManyToAnyField(
+			DynamicClassDetails entityClass,
+			String name,
+			JaxbHbmManyToAnyCollectionElementType manyToAny,
+			JaxbHbmKeyType key,
+			ClassDetails keyClass,
+			String defaultPackage,
+			HbmBuildContext ctx) {
+		// ManyToAny targets Object (polymorphic)
+		ClassDetails objectClass = ctx.getModelsContext().getClassDetailsRegistry()
+				.resolveClassDetails("java.lang.Object");
+		DynamicFieldDetails field = ctx.createMapField(entityClass, name, keyClass, objectClass);
+
+		// @ManyToAny
+		ManyToAnyAnnotation m2aAnnotation =
+				HibernateAnnotations.MANY_TO_ANY.createUsage(ctx.getModelsContext());
+		field.addAnnotationUsage(m2aAnnotation);
+
+		// @AnyDiscriminator from meta-type
+		String metaType = manyToAny.getMetaType();
+		if (metaType != null && !metaType.isEmpty()) {
+			AnyDiscriminatorAnnotation discAnnotation =
+					HibernateAnnotations.ANY_DISCRIMINATOR.createUsage(ctx.getModelsContext());
+			discAnnotation.value(HbmAssociationBuilder.mapAnyDiscriminatorType(metaType));
+			field.addAnnotationUsage(discAnnotation);
+		}
+
+		// @AnyDiscriminatorValues from <meta-value>
+		List<JaxbHbmAnyValueMappingType> metaValues = manyToAny.getMetaValue();
+		if (metaValues != null && !metaValues.isEmpty()) {
+			HbmAssociationBuilder.applyAnyDiscriminatorValues(metaValues, field,
+					entityClass.getClassName(), defaultPackage, ctx);
+		}
+
+		// @AnyKeyJavaClass from id-type
+		String idType = manyToAny.getIdType();
+		if (idType != null && !idType.isEmpty()) {
+			String javaType = ctx.resolveJavaType(idType);
+			Class<?> keyJavaClass = HbmAssociationBuilder.resolvePrimitiveOrClass(javaType);
+			if (keyJavaClass != null) {
+				AnyKeyJavaClassAnnotation keyAnnotation =
+						HibernateAnnotations.ANY_KEY_JAVA_CLASS.createUsage(ctx.getModelsContext());
+				keyAnnotation.value(keyJavaClass);
+				field.addAnnotationUsage(keyAnnotation);
+			}
+		}
+
+		// Columns: first is discriminator (@Column), second is FK (meta attribute)
+		List<JaxbHbmColumnType> columns = manyToAny.getColumn();
+		if (columns != null && !columns.isEmpty()) {
+			ColumnJpaAnnotation colAnnotation =
+					JpaAnnotations.COLUMN.createUsage(ctx.getModelsContext());
+			colAnnotation.name(columns.get(0).getName());
+			field.addAnnotationUsage(colAnnotation);
+			if (columns.size() >= 2) {
+				ctx.addFieldMetaAttribute(entityClass.getClassName(), name,
+						"hibernate.any.fk.column", columns.get(1).getName());
+			}
+		}
+
+		// Key column from <key> → @JoinColumn (for getKeyColumnNames)
+		addKeyJoinColumns(field, key, ctx);
+
 		return field;
 	}
 
@@ -539,15 +630,7 @@ public class HbmCollectionBuilder {
 		ModelsContext mc = ctx.getModelsContext();
 
 		// @Cascade
-		if (cascade != null && !cascade.isEmpty() && !"none".equals(cascade)) {
-			CascadeType[] cascadeTypes = parseCascade(cascade);
-			if (cascadeTypes.length > 0) {
-				CascadeAnnotation cascadeAnnotation =
-						HibernateAnnotations.CASCADE.createUsage(mc);
-				cascadeAnnotation.value(cascadeTypes);
-				field.addAnnotationUsage(cascadeAnnotation);
-			}
-		}
+		applyCascade(field, cascade, ctx);
 
 		// lazy → FetchType on @OneToMany / @ManyToMany / @ElementCollection
 		if (lazy != null && lazy == JaxbHbmLazyWithExtraEnum.FALSE) {
@@ -778,6 +861,19 @@ public class HbmCollectionBuilder {
 			accessAnnotation.value(jakarta.persistence.AccessType.FIELD);
 		}
 		field.addAnnotationUsage(accessAnnotation);
+	}
+
+	static void applyCascade(DynamicFieldDetails field, String cascade,
+							  HbmBuildContext ctx) {
+		if (cascade != null && !cascade.isEmpty() && !"none".equals(cascade)) {
+			CascadeType[] cascadeTypes = parseCascade(cascade);
+			if (cascadeTypes.length > 0) {
+				CascadeAnnotation cascadeAnnotation =
+						HibernateAnnotations.CASCADE.createUsage(ctx.getModelsContext());
+				cascadeAnnotation.value(cascadeTypes);
+				field.addAnnotationUsage(cascadeAnnotation);
+			}
+		}
 	}
 
 	// --- Mapping helpers ---

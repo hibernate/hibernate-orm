@@ -564,17 +564,30 @@ public class HbmTemplateHelper {
 
 	public List<AnyMetaValue> getAnyMetaValues(FieldDetails field) {
 		List<AnyMetaValue> result = new ArrayList<>();
+		Map<String, List<String>> fieldMeta = getFieldMetaAttributeMap(field);
 		AnyDiscriminatorValue single = field.getDirectAnnotationUsage(AnyDiscriminatorValue.class);
 		if (single != null) {
-			result.add(new AnyMetaValue(single.discriminator(), single.entity().getName()));
+			String entityName = resolveAnyEntityClass(single, fieldMeta);
+			result.add(new AnyMetaValue(single.discriminator(), entityName));
 		}
 		AnyDiscriminatorValues container = field.getDirectAnnotationUsage(AnyDiscriminatorValues.class);
 		if (container != null) {
 			for (AnyDiscriminatorValue adv : container.value()) {
-				result.add(new AnyMetaValue(adv.discriminator(), adv.entity().getName()));
+				String entityName = resolveAnyEntityClass(adv, fieldMeta);
+				result.add(new AnyMetaValue(adv.discriminator(), entityName));
 			}
 		}
 		return result;
+	}
+
+	private String resolveAnyEntityClass(AnyDiscriminatorValue adv,
+										  Map<String, List<String>> fieldMeta) {
+		// Check meta attribute first (stores original class name when class not on classpath)
+		List<String> metaClassName = fieldMeta.get("hibernate.any.meta-value:" + adv.discriminator());
+		if (metaClassName != null && !metaClassName.isEmpty()) {
+			return metaClassName.get(0);
+		}
+		return adv.entity().getName();
 	}
 
 	public record AnyMetaValue(String value, String entityClass) {}
@@ -604,6 +617,12 @@ public class HbmTemplateHelper {
 			case REPLICATE -> "replicate";
 			case DELETE_ORPHAN -> "delete-orphan";
 		};
+	}
+
+	public String getManyToAnyFkColumnName(FieldDetails field) {
+		Map<String, List<String>> fieldMeta = getFieldMetaAttributeMap(field);
+		List<String> fkCol = fieldMeta.get("hibernate.any.fk.column");
+		return (fkCol != null && !fkCol.isEmpty()) ? fkCol.get(0) : null;
 	}
 
 	// --- Property-level attributes ---
@@ -1094,7 +1113,21 @@ public class HbmTemplateHelper {
 		if (m2m != null && m2m.cascade().length > 0) {
 			return getCascadeString(m2m.cascade());
 		}
+		// Fall back to Hibernate @Cascade (used by @ManyToAny and @Any)
+		Cascade cascade = field.getDirectAnnotationUsage(Cascade.class);
+		if (cascade != null && cascade.value().length > 0) {
+			return getAnyCascadeString(cascade);
+		}
 		return null;
+	}
+
+	private String getAnyCascadeString(Cascade cascade) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < cascade.value().length; i++) {
+			if (i > 0) sb.append(", ");
+			sb.append(toHbmHibernateCascade(cascade.value()[i]));
+		}
+		return sb.toString();
 	}
 
 	public String getCollectionOrderBy(FieldDetails field) {
@@ -1149,7 +1182,8 @@ public class HbmTemplateHelper {
 	public String getMapKeyType(FieldDetails field) {
 		TypeDetails mapKeyType = field.getMapKeyType();
 		if (mapKeyType != null) {
-			return mapKeyType.determineRawClass().getClassName();
+			return JavaClassToHibernateType.toHibernateType(
+					mapKeyType.determineRawClass().getClassName());
 		}
 		return null;
 	}
@@ -1227,7 +1261,8 @@ public class HbmTemplateHelper {
 		Map<String, List<String>> result = new java.util.LinkedHashMap<>();
 		for (Map.Entry<String, List<String>> entry : all.entrySet()) {
 			if (!entry.getKey().startsWith("hibernate.type.")
-					&& !entry.getKey().startsWith("hibernate.generator.")) {
+					&& !entry.getKey().startsWith("hibernate.generator.")
+					&& !entry.getKey().startsWith("hibernate.any.")) {
 				result.put(entry.getKey(), entry.getValue());
 			}
 		}

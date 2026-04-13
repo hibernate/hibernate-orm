@@ -31,6 +31,7 @@ import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorAnnotation
 import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValueAnnotation;
 import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValuesAnnotation;
 import org.hibernate.boot.models.annotations.internal.AnyKeyJavaClassAnnotation;
+import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.JoinColumnsJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ManyToOneJpaAnnotation;
@@ -196,27 +197,8 @@ public class HbmAssociationBuilder {
 		// @AnyDiscriminatorValues from <meta-value> entries
 		List<JaxbHbmAnyValueMappingType> metaValues = any.getMetaValue();
 		if (metaValues != null && !metaValues.isEmpty()) {
-			AnyDiscriminatorValueAnnotation[] values =
-					new AnyDiscriminatorValueAnnotation[metaValues.size()];
-			for (int i = 0; i < metaValues.size(); i++) {
-				JaxbHbmAnyValueMappingType mv = metaValues.get(i);
-				AnyDiscriminatorValueAnnotation dvAnnotation =
-						HibernateAnnotations.ANY_DISCRIMINATOR_VALUE.createUsage(ctx.getModelsContext());
-				dvAnnotation.discriminator(mv.getValue());
-				String entityClassName = HbmBuildContext.resolveClassName(mv.getClazz(), defaultPackage);
-				try {
-					dvAnnotation.entity(Class.forName(entityClassName));
-				} catch (ClassNotFoundException e) {
-					// Entity class may not be on classpath during reverse engineering;
-					// store as Object.class — the discriminator string is the key info
-					dvAnnotation.entity(Object.class);
-				}
-				values[i] = dvAnnotation;
-			}
-			AnyDiscriminatorValuesAnnotation containerAnnotation =
-					HibernateAnnotations.ANY_DISCRIMINATOR_VALUES.createUsage(ctx.getModelsContext());
-			containerAnnotation.value(values);
-			field.addAnnotationUsage(containerAnnotation);
+			applyAnyDiscriminatorValues(metaValues, field,
+					entityClass.getClassName(), defaultPackage, ctx);
 		}
 
 		// @AnyKeyJavaClass from id-type
@@ -232,17 +214,62 @@ public class HbmAssociationBuilder {
 			}
 		}
 
-		// @JoinColumn from columns (usually the second column is the FK, first is discriminator)
+		// Columns: first is discriminator (@Column), second is FK (@JoinColumn)
 		List<JaxbHbmColumnType> columns = any.getColumn();
-		if (columns != null && columns.size() >= 2) {
-			JoinColumnJpaAnnotation joinColAnnotation =
-					JpaAnnotations.JOIN_COLUMN.createUsage(ctx.getModelsContext());
-			joinColAnnotation.name(columns.get(1).getName());
-			field.addAnnotationUsage(joinColAnnotation);
+		if (columns != null && !columns.isEmpty()) {
+			ColumnJpaAnnotation colAnnotation =
+					JpaAnnotations.COLUMN.createUsage(ctx.getModelsContext());
+			colAnnotation.name(columns.get(0).getName());
+			field.addAnnotationUsage(colAnnotation);
+			if (columns.size() >= 2) {
+				JoinColumnJpaAnnotation joinColAnnotation =
+						JpaAnnotations.JOIN_COLUMN.createUsage(ctx.getModelsContext());
+				joinColAnnotation.name(columns.get(1).getName());
+				field.addAnnotationUsage(joinColAnnotation);
+			}
 		}
+
+		// @Cascade
+		HbmCollectionBuilder.applyCascade(field, any.getCascade(), ctx);
+
+		// @Access
+		HbmCollectionBuilder.applyAccessAnnotation(field, any.getAccess(), ctx);
 	}
 
-	private static Class<?> resolvePrimitiveOrClass(String javaType) {
+	/**
+	 * Adds {@code @AnyDiscriminatorValues} annotations and stores entity class names
+	 * as field meta attributes for template rendering.
+	 */
+	static void applyAnyDiscriminatorValues(List<JaxbHbmAnyValueMappingType> metaValues,
+											 DynamicFieldDetails field,
+											 String ownerClassName,
+											 String defaultPackage,
+											 HbmBuildContext ctx) {
+		AnyDiscriminatorValueAnnotation[] values =
+				new AnyDiscriminatorValueAnnotation[metaValues.size()];
+		for (int i = 0; i < metaValues.size(); i++) {
+			JaxbHbmAnyValueMappingType mv = metaValues.get(i);
+			AnyDiscriminatorValueAnnotation dvAnnotation =
+					HibernateAnnotations.ANY_DISCRIMINATOR_VALUE.createUsage(ctx.getModelsContext());
+			dvAnnotation.discriminator(mv.getValue());
+			String entityClassName = HbmBuildContext.resolveClassName(mv.getClazz(), defaultPackage);
+			try {
+				dvAnnotation.entity(Class.forName(entityClassName));
+			} catch (ClassNotFoundException e) {
+				dvAnnotation.entity(Object.class);
+			}
+			values[i] = dvAnnotation;
+			// Store entity class name as meta attribute for template rendering
+			ctx.addFieldMetaAttribute(ownerClassName, field.getName(),
+					"hibernate.any.meta-value:" + mv.getValue(), entityClassName);
+		}
+		AnyDiscriminatorValuesAnnotation containerAnnotation =
+				HibernateAnnotations.ANY_DISCRIMINATOR_VALUES.createUsage(ctx.getModelsContext());
+		containerAnnotation.value(values);
+		field.addAnnotationUsage(containerAnnotation);
+	}
+
+	static Class<?> resolvePrimitiveOrClass(String javaType) {
 		return switch (javaType) {
 			case "boolean" -> boolean.class;
 			case "byte" -> byte.class;
@@ -262,7 +289,7 @@ public class HbmAssociationBuilder {
 		};
 	}
 
-	private static DiscriminatorType mapAnyDiscriminatorType(String metaType) {
+	static DiscriminatorType mapAnyDiscriminatorType(String metaType) {
 		if (metaType == null) {
 			return DiscriminatorType.STRING;
 		}

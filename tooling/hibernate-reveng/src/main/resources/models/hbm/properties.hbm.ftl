@@ -282,6 +282,13 @@
 <#if collTag == "list">
         <list-index column="${helper.getListIndexColumnName(field)!'POSITION'}"/>
 </#if>
+<#if collTag == "map">
+<#if helper.hasMapKeyJoinColumn(field)>
+        <map-key-many-to-many class="${helper.getMapKeyEntityClass(field)}" column="${helper.getMapKeyJoinColumnName(field)}"/>
+<#else>
+        <map-key column="${helper.getMapKeyColumnName(field)!field.getName() + '_KEY'}" type="${helper.getMapKeyType(field)!'string'}"/>
+</#if>
+</#if>
 <#if helper.isElementCollectionOfEmbeddable(field)>
         <composite-element class="${helper.getCollectionElementType(field)}">
 <#list helper.getAttributeOverrides(field) as ao>
@@ -302,17 +309,28 @@
 <#-- ManyToAny -->
 <#list helper.getManyToAnyFields() as field>
 <#assign collTag = helper.getCollectionTag(field)>
-    <${collTag} name="${field.getName()}"<#if helper.getJoinTableName(field)??> table="${helper.getJoinTableName(field)}"</#if>>
+    <${collTag} name="${field.getName()}"<#if helper.getJoinTableName(field)??> table="${helper.getJoinTableName(field)}"</#if><#if helper.getCollectionCascadeString(field)??>
+        cascade="${helper.getCollectionCascadeString(field)}"</#if><#if helper.getCollectionLazy(field)??>
+        lazy="${helper.getCollectionLazy(field)}"</#if><#if helper.getCollectionFetchMode(field)??>
+        fetch="${helper.getCollectionFetchMode(field)}"</#if><#if helper.getAccessType(field)??>
+        access="${helper.getAccessType(field)}"</#if>>
 <#list helper.getFieldMetaAttributes(field)?keys as metaName>
 <#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
         <meta attribute="${metaName}">${metaValue}</meta>
 </#list>
 </#list>
         <key>
-<#list helper.getJoinTableJoinColumnNames(field) as colName>
-            <column name="${colName}"/>
+<#list helper.getKeyColumnNames(field) as keyCol>
+            <column name="${keyCol}"/>
 </#list>
         </key>
+<#if collTag == "map">
+<#if helper.hasMapKeyJoinColumn(field)>
+        <map-key-many-to-many class="${helper.getMapKeyEntityClass(field)}" column="${helper.getMapKeyJoinColumnName(field)}"/>
+<#else>
+        <map-key column="${helper.getMapKeyColumnName(field)!field.getName() + '_KEY'}" type="${helper.getMapKeyType(field)!'string'}"/>
+</#if>
+</#if>
         <many-to-any id-type="${helper.getAnyIdType(field)}" meta-type="${helper.getAnyMetaType(field)}">
 <#list helper.getAnyMetaValues(field) as mv>
             <meta-value value="${mv.value()}" class="${mv.entityClass()}"/>
@@ -320,8 +338,8 @@
 <#if helper.getColumnName(field)??>
             <column name="${helper.getColumnName(field)}"/>
 </#if>
-<#if helper.getJoinColumnName(field)??>
-            <column name="${helper.getJoinColumnName(field)}"/>
+<#if helper.getManyToAnyFkColumnName(field)??>
+            <column name="${helper.getManyToAnyFkColumnName(field)}"/>
 </#if>
         </many-to-any>
     </${collTag}>

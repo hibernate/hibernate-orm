@@ -24,6 +24,7 @@ import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
 import org.hibernate.dialect.function.array.ArrayIncludesOperatorFunction;
 import org.hibernate.dialect.function.json.SpannerPostgreSQLJsonArrayFunction;
 import org.hibernate.dialect.function.json.SpannerPostgreSQLJsonObjectFunction;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
 import org.hibernate.dialect.FunctionalDependencyAnalysisSupportImpl;
@@ -58,6 +59,13 @@ import org.hibernate.dialect.type.PostgreSQLCastingJsonJdbcType;
 import org.hibernate.dialect.type.PostgreSQLUUIDJdbcType;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
+import org.hibernate.sql.model.jdbc.OptionalTableUpdateWithOptionalRowCount;
+import org.hibernate.sql.model.jdbc.OptionalTableUpdateWithUpsertOperation;
+
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -1077,5 +1085,32 @@ public class SpannerPostgreSQLDialect extends PostgreSQLDialect {
 
 	public boolean useIntegerForPrimaryKey() {
 		return useIntegerForPrimaryKey;
+	}
+
+	@Override
+	public MutationOperation createOptionalTableUpdateOperation(
+			EntityMutationTarget mutationTarget,
+			OptionalTableUpdate optionalTableUpdate,
+			SessionFactoryImplementor factory) {
+		// Spanner returns 0 affected rows for ON CONFLICT DO NOTHING upsert operations
+		// when the row already exists, while Hibernate's default expectation expects 1
+		// affected row.
+		// However, we only want to apply this for truly optional tables.
+		// For non-optional tables, we want to keep the default expectation
+		// (expecting 1 row) so it correctly throws StaleStateException on conflict
+		// after a failed update (e.g. due to version mismatch).
+		// However, for unversioned entities, a no-op on conflict is fine even for
+		// non-optional tables, so we allow 0 rows affected for them as well.
+		boolean isOptional = optionalTableUpdate.getMutatingTable().getTableMapping().isOptional();
+		boolean isVersioned = mutationTarget.getTargetPart().getVersionMapping() != null;
+		if (isOptional || !isVersioned) {
+			return new OptionalTableUpdateWithUpsertOperation(
+					mutationTarget,
+					new OptionalTableUpdateWithOptionalRowCount(optionalTableUpdate),
+					factory);
+		}
+		else {
+			return super.createOptionalTableUpdateOperation( mutationTarget, optionalTableUpdate, factory );
+		}
 	}
 }

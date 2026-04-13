@@ -19,11 +19,13 @@ import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -116,6 +118,7 @@ public class JsonEmbeddableArrayTest {
 	// Full support requires, HHH-18717 array functions to work with JSON_ARRAY
 	@RequiresDialect(value = H2Dialect.class)
 	@RequiresDialect(value = PostgreSQLDialect.class)
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support decode function")
 	public void testSelectionItems(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {

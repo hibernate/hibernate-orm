@@ -933,6 +933,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsJsonArrayGet implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return definesFunction(dialect, "array_get");
+		}
+	}
+
 	public static class SupportsJsonObject implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return definesFunction( dialect, "json_object" );

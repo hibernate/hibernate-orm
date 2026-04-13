@@ -6,20 +6,15 @@ package org.hibernate.dialect.sql.ast;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.TableDetails;
-import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
@@ -34,7 +29,6 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.insert.ConflictClause;
-import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.InArrayPredicate;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -44,17 +38,18 @@ import org.hibernate.sql.ast.tree.expression.Any;
 import org.hibernate.sql.ast.tree.expression.Every;
 import org.hibernate.sql.ast.tree.expression.ModifiedSubQueryExpression;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.ast.tree.update.Assignable;
-import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
-import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
+import org.hibernate.sql.model.jdbc.UpsertOperation;
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.sql.model.jdbc.DeleteOrUpsertOperation;
+import org.hibernate.persister.entity.mutation.EntityTableMapping;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
 
 /**
  * A SQL AST translator for Spanner.
@@ -435,143 +430,6 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
-	protected void renderInsertCommand(InsertSelectStatement statement) {
-		final ConflictClause conflictClause = statement.getConflictClause();
-		if ( conflictClause == null ) {
-			appendSql( "insert into " );
-			return;
-		}
-		if ( conflictClause.getConstraintName() != null ) {
-			throw new IllegalQueryOperationException(
-					"Spanner does not support named constraints in conflict clauses" );
-		}
-		if ( conflictClause.getPredicate() != null ) {
-			throw new IllegalQueryOperationException(
-					"Spanner does not support predicates (WHERE clause) in conflict clauses" );
-		}
-		Set<String> pkColumns = resolvePrimaryKeyColumns( statement );
-		if ( conflictClause.getConstraintColumnNames() != null && !conflictClause.getConstraintColumnNames()
-				.isEmpty() ) {
-			if ( pkColumns.isEmpty() ) {
-				throw new IllegalQueryOperationException(
-						"Spanner implicitly targets the Primary Key in conflict clauses. " +
-						"Explicit conflict columns are not supported here because the table metadata could not be resolved."
-				);
-			}
-			Set<String> conflictTargetCols = new HashSet<>( conflictClause.getConstraintColumnNames() );
-			if ( pkColumns.size() != conflictTargetCols.size() || !pkColumns.containsAll( conflictTargetCols ) ) {
-				throw new IllegalQueryOperationException(
-						String.format(
-								"Spanner only supports conflict resolution on the Primary Key. " +
-								"Your query targets columns %s, but the Primary Key is %s. " +
-								"Please remove the explicit conflict target or ensure it matches the Primary Key.",
-								conflictTargetCols, pkColumns
-						)
-				);
-			}
-		}
-		if ( conflictClause.isDoUpdate() ) {
-			validateConflictAssignments( conflictClause, statement.getTargetColumns(), pkColumns );
-			appendSql( "insert or update into " );
-		}
-		else {
-			appendSql( "insert or ignore into " );
-		}
-	}
-
-	@Override
-	protected void visitConflictClause(ConflictClause conflictClause) {
-		// No-op: Spanner handles conflict logic via the insert prefix ('INSERT OR IGNORE').
-		// We suppress the standard 'ON CONFLICT' suffix generation here.
-	}
-
-	private Set<String> resolvePrimaryKeyColumns(InsertSelectStatement statement) {
-		MutationTarget<?> target = statement.getMutationTarget();
-		assert target != null;
-		TableMapping tableMapping = target.getIdentifierTableMapping();
-		if ( tableMapping != null ) {
-			TableDetails.KeyDetails keyDetails = tableMapping.getKeyDetails();
-			if ( keyDetails != null ) {
-				Set<String> pkCols = new HashSet<>();
-				for ( TableDetails.KeyColumn keyColumn : keyDetails.getKeyColumns() ) {
-					pkCols.add( keyColumn.getColumnName() );
-				}
-				return pkCols;
-			}
-		}
-		return Collections.emptySet();
-	}
-
-	private void validateConflictAssignments(ConflictClause conflictClause, List<ColumnReference> insertCols, Set<String> pkColumns) {
-		// Collect all columns explicitly updated in the HQL "SET ..." clause
-		Set<String> assignedCols = getAssignedCols( conflictClause );
-		// Ensure every non-PK column being inserted is also "updated"
-		for ( ColumnReference col : insertCols ) {
-			String colName = col.getColumnExpression();
-			if ( pkColumns.contains( colName ) || assignedCols.contains( colName ) ) {
-				continue;
-			}
-			throw new IllegalQueryOperationException(
-					String.format(
-							"Spanner 'INSERT OR UPDATE' behavior strictly overwrites all columns with the INSERT values. " +
-							"Your query skips updating column '%s'. " +
-							"you must explicitly include 'SET %s = excluded.%s' in your ON CONFLICT clause.",
-							colName, colName, colName
-					)
-			);
-		}
-	}
-
-	private Set<String> getAssignedCols(ConflictClause conflictClause) {
-		// Validates assignments in the ON CONFLICT DO UPDATE clause and extracts the target column names.
-		//
-		// Cloud Spanner's INSERT OR UPDATE statement implies a strict "upsert" semantic where the
-		// existing row is overwritten with the exact values provided in the INSERT clause.
-		// Unlike standard SQL, it does not support arbitrary expressions (e.g., set count = count + 1)
-		// or cross-column mapping (e.g., set a = excluded.b).
-		//
-		// This method enforces three strict rules to ensure generated SQL complies with Spanner syntax:
-		// 1. The value must be a column reference (not a literal or expression).
-		// 2. The value must originate from the special 'excluded' table alias.
-		// 3. The target column must match the source column exactly (e.g., set col = excluded.col).
-		Set<String> assignedCols = new HashSet<>();
-		for ( Assignment assignment : conflictClause.getAssignments() ) {
-			Expression value = assignment.getAssignedValue();
-			Assignable target = assignment.getAssignable();
-			List<ColumnReference> targetRefs = target.getColumnReferences();
-			List<ColumnReference> valueRefs = new ArrayList<>();
-			if ( value instanceof Assignable ) {
-				valueRefs.addAll( ((Assignable) value).getColumnReferences() );
-			}
-			// Ensure we found columns and they match the target structure size
-			if ( valueRefs.size() != targetRefs.size() ) {
-				throw new IllegalQueryOperationException(
-						"Spanner 'INSERT OR UPDATE' SET clause supports only simple column references, not literals or expressions."
-				);
-			}
-			for ( int i = 0; i < targetRefs.size(); i++ ) {
-				ColumnReference tRef = targetRefs.get( i );
-				ColumnReference vRef = valueRefs.get( i );
-				// Check Alias ("excluded")
-				if ( !"excluded".equals( vRef.getQualifier() ) ) {
-					throw new IllegalQueryOperationException(
-							"Spanner 'INSERT OR UPDATE' SET clause must reference the 'excluded' table (e.g. 'SET col = excluded.col')."
-					);
-				}
-				// Check Name Match (a = excluded.a)
-				if ( !tRef.getColumnExpression().equals( vRef.getColumnExpression() ) ) {
-					throw new IllegalQueryOperationException(
-							"Spanner 'INSERT OR UPDATE' SET clause must match columns strictly "
-							+ "(e.g. 'SET " + tRef.getColumnExpression() + " = excluded." + tRef.getColumnExpression() + "')."
-					);
-				}
-				assignedCols.add( tRef.getColumnExpression() );
-			}
-		}
-		return assignedCols;
-	}
-
-	@Override
 	public <N extends Number> void visitUnparsedNumericLiteral(UnparsedNumericLiteral<N> literal) {
 		final Class<?> javaTypeClass = literal.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass();
 		if ( BigDecimal.class.isAssignableFrom( javaTypeClass )
@@ -583,5 +441,84 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		else {
 			super.visitUnparsedNumericLiteral( literal );
 		}
+	}
+
+	@Override
+	protected void visitConflictClause(ConflictClause conflictClause) {
+		visitStandardConflictClause( conflictClause );
+	}
+
+	@Override
+	protected String determineColumnReferenceQualifier(ColumnReference columnReference) {
+		// Cloud Spanner does not support target table aliases in INSERT statements,
+		// so we must qualify column references with the actual table name to avoid ambiguity.
+		if ( getClauseStack().findCurrentFirst( clause -> clause == Clause.CONFLICT ? Boolean.TRUE : null ) != null ) {
+			if ( !"excluded".equalsIgnoreCase( columnReference.getQualifier() ) ) {
+				final MutationStatement currentDmlStatement = getCurrentDmlStatement();
+				if ( currentDmlStatement != null && currentDmlStatement.getTargetTable() != null ) {
+					return currentDmlStatement.getTargetTable().getTableExpression();
+				}
+			}
+		}
+		return super.determineColumnReferenceQualifier( columnReference );
+	}
+
+	public MutationOperation createMergeOperation(OptionalTableUpdate optionalTableUpdate, boolean hasUpdatableBindings) {
+		renderInsertOrUpdate( optionalTableUpdate, hasUpdatableBindings );
+
+		final UpsertOperation upsertOperation = new UpsertOperation(
+				optionalTableUpdate.getMutatingTable().getTableMapping(),
+				optionalTableUpdate.getMutationTarget(),
+				getSql(),
+				hasUpdatableBindings ? new Expectation.RowCount() : new Expectation.OptionalRowCount(),
+				getParameterBinders()
+		);
+
+		return new DeleteOrUpsertOperation(
+				optionalTableUpdate.getMutationTarget(),
+				(EntityTableMapping) optionalTableUpdate.getMutatingTable().getTableMapping(),
+				upsertOperation,
+				optionalTableUpdate
+		);
+	}
+
+	protected void renderInsertOrUpdate(OptionalTableUpdate optionalTableUpdate, boolean hasUpdatableBindings) {
+		if ( hasUpdatableBindings ) {
+			appendSql( "insert or update into " );
+		}
+		else {
+			appendSql( "insert or ignore into " );
+		}
+
+		appendSql( optionalTableUpdate.getMutatingTable().getTableName() );
+		appendSql( " (" );
+
+		final List<ColumnValueBinding> keyBindings = optionalTableUpdate.getKeyBindings();
+		char separator = ' ';
+		for ( ColumnValueBinding keyBinding : keyBindings ) {
+			appendSql( separator );
+			appendSql( keyBinding.getColumnReference().getColumnExpression() );
+			separator = ',';
+		}
+
+		optionalTableUpdate.forEachValueBinding( (columnPosition, columnValueBinding) -> {
+			appendSql( ',' );
+			appendSql( columnValueBinding.getColumnReference().getColumnExpression() );
+		} );
+
+		appendSql( ") values (" );
+
+		separator = ' ';
+		for ( ColumnValueBinding keyBinding : keyBindings ) {
+			appendSql( separator );
+			keyBinding.getValueExpression().accept( this );
+			separator = ',';
+		}
+
+		optionalTableUpdate.forEachValueBinding( (columnPosition, columnValueBinding) -> {
+			appendSql( ',' );
+			columnValueBinding.getValueExpression().accept( this );
+		} );
+		appendSql( ") " );
 	}
 }

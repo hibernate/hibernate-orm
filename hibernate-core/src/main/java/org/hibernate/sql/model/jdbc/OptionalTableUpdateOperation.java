@@ -20,7 +20,6 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
-import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.persister.entity.mutation.UpdateValuesAnalysis;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.PreparableMutationOperation;
@@ -62,7 +61,7 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
  */
 public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperation {
 	private final EntityMutationTarget mutationTarget;
-	private final EntityTableMapping tableMapping;
+	private final TableMapping tableMapping;
 	private final Expectation expectation;
 
 	private final List<ColumnValueBinding> valueBindings;
@@ -77,7 +76,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			OptionalTableUpdate upsert,
 			@SuppressWarnings("unused") SessionFactoryImplementor factory) {
 		this.mutationTarget = mutationTarget;
-		this.tableMapping = (EntityTableMapping) upsert.getMutatingTable().getTableMapping();
+		this.tableMapping = upsert.getMutatingTable().getTableMapping();
 		this.expectation = upsert.getExpectation();
 		this.valueBindings = upsert.getValueBindings();
 		this.keyBindings = upsert.getKeyBindings();
@@ -270,7 +269,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 			JdbcValueDescriptor valueDescriptor,
 			PreparedStatement statement,
 			String sql,
-			EntityTableMapping tableMapping,
+			TableMapping tableMapping,
 			SharedSessionContractImplementor session) {
 		try {
 			binding.getValueBinder().bind( statement, binding.getValue(), jdbcPosition, session );

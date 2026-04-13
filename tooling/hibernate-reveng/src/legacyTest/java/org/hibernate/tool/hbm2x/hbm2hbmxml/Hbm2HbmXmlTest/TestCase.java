@@ -95,35 +95,28 @@ public class TestCase {
 		hbmexporter.start();
 	}
 	
-	// TODO HBX-2042: Reenable when implemented in ORM 6.0
-	@Disabled
 	@Test
 	public void testAllFilesExistence() {
 		JUnitUtil.assertIsNonEmptyFile(new File(
-				srcDir, 
-				"GeneralHbmSettings.hbm.xml") );
-		assertFalse(new File(
-				srcDir, 
-				"org/hibernate/tool/cfg2hbm/GeneralHbmSettings.hbm.xml").exists() );
-		JUnitUtil.assertIsNonEmptyFile(new File(
-				srcDir, 
+				srcDir,
 				"org/hibernate/tool/hbm2x/hbm2hbmxml/Hbm2HbmXmlTest/Basic.hbm.xml") );
 		JUnitUtil.assertIsNonEmptyFile(new File(
-				srcDir, 
+				srcDir,
 				"org/hibernate/tool/hbm2x/hbm2hbmxml/Hbm2HbmXmlTest/BasicGlobals.hbm.xml") );
 		JUnitUtil.assertIsNonEmptyFile(new File(
-				srcDir, 
+				srcDir,
 				"org/hibernate/tool/hbm2x/hbm2hbmxml/Hbm2HbmXmlTest/BasicCompositeId.hbm.xml") );
+		JUnitUtil.assertIsNonEmptyFile(new File(
+				srcDir,
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/Hbm2HbmXmlTest/ClassFullAttribute.hbm.xml") );
 	}
-	
-	// TODO HBX-2042: Reenable when implemented in ORM 6.0
-	@Disabled
+
 	@Test
 	public void testArtifactCollection() {
 		assertEquals(
-				5,
+				4,
 				artifactCollector.getFileCount("hbm.xml"),
-				"4 mappings + 1 global");
+				"4 entity mappings");
 	}
 	
 	@Disabled("Uses old HbmExporter with HibernateMappingGlobalSettings — needs migration to new API")
@@ -395,13 +388,12 @@ public class TestCase {
 		assertEquals("next_hi_value", columnElement.getTextContent(), "Unexpected param value for column" );
     }
 
-	// TODO HBX-2042: Reenable when implemented in ORM 6.0
-	@Disabled
+	@Disabled("HQL queries (test_query_1, test_query_2) are commented out in input BasicGlobals.hbm.xml")
 	@Test
 	public void testGeneralHbmSettingsQuery()  throws Exception {
 		File outputXml = new File(
 				srcDir,
-				"GeneralHbmSettings.hbm.xml");
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/Hbm2HbmXmlTest/BasicGlobals.hbm.xml");
 		JUnitUtil.assertIsNonEmptyFile(outputXml);
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder  db = dbf.newDocumentBuilder();
@@ -430,13 +422,11 @@ public class TestCase {
 		assertEquals("1000", genAtt.getTextContent(), "Unexpected timeout value" );
 	}
 
-	// TODO HBX-2042: Reenable when implemented in ORM 6.0
-	@Disabled
 	@Test
 	public void testGeneralHbmSettingsSQLQueryBasic()  throws Exception {
 		File outputXml = new File(
-				srcDir, 
-				"GeneralHbmSettings.hbm.xml");
+				srcDir,
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/Hbm2HbmXmlTest/BasicGlobals.hbm.xml");
 		JUnitUtil.assertIsNonEmptyFile(outputXml);
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder  db = dbf.newDocumentBuilder();
@@ -446,7 +436,7 @@ public class TestCase {
 		NodeList nodeList = (NodeList)xpath
 				.compile("//hibernate-mapping/sql-query")
 				.evaluate(document, XPathConstants.NODESET);
-		assertEquals(6, nodeList.getLength(), "Expected to get correct number of query elements" );
+		assertEquals(5, nodeList.getLength(), "Expected to get correct number of query elements" );
 		nodeList = (NodeList)xpath
 				.compile("//hibernate-mapping/sql-query[@name=\"test_sqlquery_1\"]")
 				.evaluate(document, XPathConstants.NODESET);
@@ -456,13 +446,11 @@ public class TestCase {
 		assertNull(genAtt, "Expected flush-mode value to be null");
 	}
 	    
-	// TODO HBX-2042: Reenable when implemented in ORM 6.0
-	@Disabled
 	@Test
 	public void testGeneralHbmSettingsSQLQueryAllAttributes()  throws Exception {
 		File outputXml = new File(
 				srcDir,
-				"GeneralHbmSettings.hbm.xml");
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/Hbm2HbmXmlTest/BasicGlobals.hbm.xml");
 		JUnitUtil.assertIsNonEmptyFile(outputXml);
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder  db = dbf.newDocumentBuilder();
@@ -490,13 +478,11 @@ public class TestCase {
 		assertNull(syncTable, "Expected synchronize element to be null");	
 	}
 
-	// TODO HBX-2042: Reenable when implemented in ORM 6.0
-	@Disabled
 	@Test
 	public void testGeneralHbmSettingsSQLQuerySynchronize()  throws Exception {
 		File outputXml = new File(
-				srcDir, 
-				"GeneralHbmSettings.hbm.xml");
+				srcDir,
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/Hbm2HbmXmlTest/BasicGlobals.hbm.xml");
 		JUnitUtil.assertIsNonEmptyFile(outputXml);
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder  db = dbf.newDocumentBuilder();
@@ -518,13 +504,12 @@ public class TestCase {
 		assertNull(returnEl, "Expected return element to be null");
 	}
 
-	// TODO HBX-2042: Reenable when implemented in ORM 6.0
-	@Disabled
+	@Disabled("sql-query test_sqlquery_4 with <return> is commented out in input BasicGlobals.hbm.xml")
 	@Test
 	public void testGeneralHbmSettingsSQLQueryWithReturnRoot()  throws Exception {
 		File outputXml = new File(
-				srcDir, 
-				"GeneralHbmSettings.hbm.xml");
+				srcDir,
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/Hbm2HbmXmlTest/BasicGlobals.hbm.xml");
 		JUnitUtil.assertIsNonEmptyFile(outputXml);
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder  db = dbf.newDocumentBuilder();
@@ -546,13 +531,11 @@ public class TestCase {
 		assertEquals("org.hibernate.tool.hbm2x.hbm2hbmxml.BasicGlobals", genAtt.getTextContent(), "Unexpected class value for return element");
 	}
 
-	// TODO HBX-2042: Reenable when implemented in ORM 6.0
-	@Disabled
 	@Test
 	public void testGeneralHbmSettingsSQLQueryWithReturnRole()  throws Exception {
 		File outputXml = new File(
-				srcDir, 
-				"GeneralHbmSettings.hbm.xml");
+				srcDir,
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/Hbm2HbmXmlTest/BasicGlobals.hbm.xml");
 		JUnitUtil.assertIsNonEmptyFile(outputXml);
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder  db = dbf.newDocumentBuilder();
@@ -574,13 +557,11 @@ public class TestCase {
 		assertEquals("e.age", genAtt.getTextContent(), "Unexpected property role value for return element");
 	}
 	    
-	// TODO HBX-2042: Reenable when implemented in ORM 6.0
-	@Disabled
 	@Test
 	public void testGeneralHbmSettingsSQLQueryWithReturnCollection()  throws Exception {
 		File outputXml = new File(
-				srcDir, 
-				"GeneralHbmSettings.hbm.xml");
+				srcDir,
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/Hbm2HbmXmlTest/BasicGlobals.hbm.xml");
 		JUnitUtil.assertIsNonEmptyFile(outputXml);
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder  db = dbf.newDocumentBuilder();

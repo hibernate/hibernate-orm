@@ -58,6 +58,12 @@
 <#list nq.scalarReturns() as sr>
         <return-scalar column="${sr.column()}"/>
 </#list>
+<#list nq.returnJoins() as rj>
+        <return-join alias="${rj.alias()}" property="${rj.property()}"/>
+</#list>
+<#list nq.loadCollections() as lc>
+        <load-collection alias="${lc.alias()}" role="${lc.role()}"<#if lc.lockMode()?has_content> lock-mode="${lc.lockMode()}"</#if>/>
+</#list>
         <![CDATA[${nq.query()}]]>
     </sql-query>
 </#list>

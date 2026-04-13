@@ -1397,7 +1397,8 @@ public class HbmTemplateHelper {
 		Map<String, List<String>> result = new java.util.LinkedHashMap<>();
 		for (Map.Entry<String, List<String>> entry : metaAttributes.entrySet()) {
 			if (!entry.getKey().startsWith("hibernate.proxy")
-					&& !entry.getKey().equals("hibernate.comment")) {
+					&& !entry.getKey().equals("hibernate.comment")
+					&& !entry.getKey().startsWith("hibernate.sql-query.")) {
 				result.put(entry.getKey(), entry.getValue());
 			}
 		}
@@ -1406,6 +1407,11 @@ public class HbmTemplateHelper {
 
 	public List<String> getMetaAttribute(String name) {
 		return metaAttributes.getOrDefault(name, Collections.emptyList());
+	}
+
+	private String getClassMetaValue(String key) {
+		List<String> values = metaAttributes.get(key);
+		return values != null && !values.isEmpty() ? values.get(0) : null;
 	}
 
 	public Map<String, List<String>> getFieldMetaAttributes(FieldDetails field) {
@@ -1611,9 +1617,23 @@ public class HbmTemplateHelper {
 				}
 			}
 		}
+		// Resolve return-join and load-collection from meta attributes
+		List<ReturnJoinInfo> returnJoins = new ArrayList<>();
+		List<LoadCollectionInfo> loadCollections = new ArrayList<>();
+		String rjAlias = getClassMetaValue("hibernate.sql-query." + name + ".return-join.alias");
+		String rjProperty = getClassMetaValue("hibernate.sql-query." + name + ".return-join.property");
+		if (rjAlias != null && rjProperty != null) {
+			returnJoins.add(new ReturnJoinInfo(rjAlias, rjProperty));
+		}
+		String lcAlias = getClassMetaValue("hibernate.sql-query." + name + ".load-collection.alias");
+		String lcRole = getClassMetaValue("hibernate.sql-query." + name + ".load-collection.role");
+		String lcLockMode = getClassMetaValue("hibernate.sql-query." + name + ".load-collection.lock-mode");
+		if (lcAlias != null && lcRole != null) {
+			loadCollections.add(new LoadCollectionInfo(lcAlias, lcRole, lcLockMode));
+		}
 		return new NamedNativeQueryInfo(name, query, flushMode, cacheable, cacheRegion,
 				fetchSize, timeout, comment, readOnly, querySpaces,
-				entityReturns, scalarReturns);
+				entityReturns, scalarReturns, returnJoins, loadCollections);
 	}
 
 	private SqlResultSetMapping findSqlResultSetMapping(String name) {
@@ -1641,7 +1661,9 @@ public class HbmTemplateHelper {
 									   int timeout, String comment, boolean readOnly,
 									   List<String> querySpaces,
 									   List<EntityReturnInfo> entityReturns,
-									   List<ScalarReturnInfo> scalarReturns) {}
+									   List<ScalarReturnInfo> scalarReturns,
+									   List<ReturnJoinInfo> returnJoins,
+									   List<LoadCollectionInfo> loadCollections) {}
 
 	public record EntityReturnInfo(String entityClass, String discriminatorColumn,
 								   List<FieldMappingInfo> fieldMappings) {}
@@ -1649,6 +1671,10 @@ public class HbmTemplateHelper {
 	public record FieldMappingInfo(String name, String column) {}
 
 	public record ScalarReturnInfo(String column) {}
+
+	public record ReturnJoinInfo(String alias, String property) {}
+
+	public record LoadCollectionInfo(String alias, String role, String lockMode) {}
 
 	// --- SecondaryTable / Joins ---
 

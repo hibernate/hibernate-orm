@@ -137,9 +137,10 @@ public class HbmClassDetailsBuilder {
 		String fullName = HbmBuildContext.resolveClassName(className, defaultPackage);
 		String simpleName = HbmBuildContext.simpleName(fullName);
 
+		boolean isAbstract = entityType.isAbstract() != null && entityType.isAbstract();
 		DynamicClassDetails entityClass = new DynamicClassDetails(
 				simpleName, fullName, Object.class,
-				false, null, null, ctx.getModelsContext());
+				isAbstract, null, null, ctx.getModelsContext());
 
 		// @Entity
 		EntityJpaAnnotation entityAnnotation =

@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Tuple;
 import org.hibernate.cfg.QuerySettings;
 import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.criteria.JpaCriteriaInsertValues;
@@ -36,6 +37,7 @@ import org.junit.jupiter.api.Test;
 @JiraKey("HHH-19314")
 @SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class,
 		reason = "ON CONFLICT clause with empty conflict target in INSERT statement is not supported")
+@SkipForDialect( dialectClass = SpannerDialect.class, reason = "UNIMPLEMENTED: ON CONFLICT clause with empty conflict target in INSERT statement is not supported in Emulator")
 public class InsertConflictWithCriteriaCopyTreeEnabledTests {
 
 	@Test

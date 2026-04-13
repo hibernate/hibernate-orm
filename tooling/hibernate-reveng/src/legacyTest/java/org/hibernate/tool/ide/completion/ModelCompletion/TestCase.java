@@ -305,8 +305,6 @@ public class TestCase {
         assertEquals(0, hcc.getCompletionProposals().length);
     }
 
-	// TODO HBX-2063: Investigate and reenable
-	@Disabled
     @Test
     public void testBasicFrom() {
     		Collector c = new Collector();
@@ -341,8 +339,6 @@ public class TestCase {
     	       	
     }
     
-	// TODO HBX-2063: Investigate and reenable
-	@Disabled
     @Test
     public void testFromNonWhitespace() {
     		Collector c = new Collector();
@@ -376,8 +372,6 @@ public class TestCase {
  	
     }
     
-	// TODO HBX-2063: Investigate and reenable
-	@Disabled
     @Test
     public void testFromWithTabs() {
     		Collector c = new Collector();
@@ -394,17 +388,15 @@ public class TestCase {
 		caretPosition = query.indexOf(codeCompletionPlaceMarker);
 		hqlEval.codeComplete(query, caretPosition, c);    
 		completionProposals = c.getCompletionProposals();
-        assertEquals(0, completionProposals.length);
+        assertTrue(completionProposals.length > 0, "Tabs should be handled like spaces");
 
 		c.clear();
 		query = query.replace('\t', ' ');
-		hqlEval.codeComplete(query, caretPosition, c);    
-		completionProposals = c.getCompletionProposals();    	
+		hqlEval.codeComplete(query, caretPosition, c);
+		completionProposals = c.getCompletionProposals();
 		assertTrue(completionProposals.length > 0);
     }
     
-	// TODO HBX-2063: Investigate and reenable
-	@Disabled
     @Test
     public void testBasicFromPartialEntityName() {
     		Collector c = new Collector();
@@ -430,8 +422,6 @@ public class TestCase {
         }
     }
     
-	// TODO HBX-2063: Investigate and reenable
-	@Disabled
     @Test
     public void testBasicFromPartialDifferentCaseEntityName() {
 		Collector c = new Collector();
@@ -457,8 +447,6 @@ public class TestCase {
         }
     }
     
-	// TODO HBX-2063: Investigate and reenable
-	@Disabled
     @Test
     public void testDottedFromPartialEntityName() {
     		Collector c = new Collector();
@@ -497,8 +485,6 @@ public class TestCase {
     	    	    	    	
     }
     
-	// TODO HBX-2063: Investigate and reenable
-	@Disabled
     @Test
     public void testBadInputAfterCursor() {
 		Collector c = new Collector();
@@ -607,8 +593,6 @@ public class TestCase {
     
     }
     
-	// TODO HBX-2063: Investigate and reenable
-	@Disabled
 	@Test
 	public void testInFromAfterEntityAlias() {
 		Collector c = new Collector();

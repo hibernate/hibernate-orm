@@ -112,13 +112,15 @@ public class HQLAnalyzer {
         int tokenId;
         boolean show = false;
         while ((tokenId = lexer.nextTokenId()) != HqlLexer.EOF) {
+            int tokenEnd = lexer.getTokenOffset() + lexer.getTokenLength();
             if ((tokenId == HqlLexer.FROM ||
                     tokenId == HqlLexer.DELETE ||
                     tokenId == HqlLexer.UPDATE) &&
-                    (lexer.getTokenOffset() + lexer.getTokenLength()) < cursorPosition) {
+                    tokenEnd < cursorPosition) {
                 show = true;
             }
-            else if (tokenId != HqlLexer.DOT && tokenId != HqlLexer.AS && tokenId != HqlLexer.COMMA && tokenId != HqlLexer.IDENTIFIER && tokenId != HqlLexer.WS) {
+            else if (lexer.getTokenOffset() < cursorPosition &&
+                    tokenId != HqlLexer.DOT && tokenId != HqlLexer.AS && tokenId != HqlLexer.COMMA && tokenId != HqlLexer.IDENTIFIER && tokenId != HqlLexer.WS) {
                 show = false;
             }
         }

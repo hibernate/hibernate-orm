@@ -953,7 +953,7 @@ public class HbmXmlExporterTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		HbmXmlExporter exporter = HbmXmlExporter.create(
-				new HibernateMappingSettings("field", "none", true, true));
+				new HibernateMappingSettings("field", "none", true, true, null, null));
 		StringWriter writer = new StringWriter();
 		exporter.export(writer, entity);
 		String xml = writer.toString();
@@ -967,7 +967,7 @@ public class HbmXmlExporterTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		HbmXmlExporter exporter = HbmXmlExporter.create(
-				new HibernateMappingSettings("property", "none", true, true));
+				new HibernateMappingSettings("property", "none", true, true, null, null));
 		StringWriter writer = new StringWriter();
 		exporter.export(writer, entity);
 		String xml = writer.toString();
@@ -981,7 +981,7 @@ public class HbmXmlExporterTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		HbmXmlExporter exporter = HbmXmlExporter.create(
-				new HibernateMappingSettings("property", "all", true, true));
+				new HibernateMappingSettings("property", "all", true, true, null, null));
 		StringWriter writer = new StringWriter();
 		exporter.export(writer, entity);
 		String xml = writer.toString();
@@ -995,7 +995,7 @@ public class HbmXmlExporterTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		HbmXmlExporter exporter = HbmXmlExporter.create(
-				new HibernateMappingSettings("property", "none", true, true));
+				new HibernateMappingSettings("property", "none", true, true, null, null));
 		StringWriter writer = new StringWriter();
 		exporter.export(writer, entity);
 		String xml = writer.toString();
@@ -1009,7 +1009,7 @@ public class HbmXmlExporterTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		HbmXmlExporter exporter = HbmXmlExporter.create(
-				new HibernateMappingSettings("property", "none", false, true));
+				new HibernateMappingSettings("property", "none", false, true, null, null));
 		StringWriter writer = new StringWriter();
 		exporter.export(writer, entity);
 		String xml = writer.toString();
@@ -1023,7 +1023,7 @@ public class HbmXmlExporterTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		HbmXmlExporter exporter = HbmXmlExporter.create(
-				new HibernateMappingSettings("property", "none", true, true));
+				new HibernateMappingSettings("property", "none", true, true, null, null));
 		StringWriter writer = new StringWriter();
 		exporter.export(writer, entity);
 		String xml = writer.toString();
@@ -1037,7 +1037,7 @@ public class HbmXmlExporterTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		HbmXmlExporter exporter = HbmXmlExporter.create(
-				new HibernateMappingSettings("property", "none", true, false));
+				new HibernateMappingSettings("property", "none", true, false, null, null));
 		StringWriter writer = new StringWriter();
 		exporter.export(writer, entity);
 		String xml = writer.toString();
@@ -1051,7 +1051,7 @@ public class HbmXmlExporterTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		HbmXmlExporter exporter = HbmXmlExporter.create(
-				new HibernateMappingSettings("property", "none", true, true));
+				new HibernateMappingSettings("property", "none", true, true, null, null));
 		StringWriter writer = new StringWriter();
 		exporter.export(writer, entity);
 		String xml = writer.toString();
@@ -1065,7 +1065,7 @@ public class HbmXmlExporterTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		HbmXmlExporter exporter = HbmXmlExporter.create(
-				new HibernateMappingSettings("field", "save-update", false, false));
+				new HibernateMappingSettings("field", "save-update", false, false, null, null));
 		StringWriter writer = new StringWriter();
 		exporter.export(writer, entity);
 		String xml = writer.toString();

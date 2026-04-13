@@ -123,8 +123,7 @@ public class TestCase {
 		assertEquals(15, artifactCollector.getFileCount("java"));
 	}
 	
-	// TODO Re-enable this test: HBX-1248
-	@Disabled
+	@Disabled("Generated Java code has compilation errors — entity exporter needs investigation")
 	@Test
 	public void testCompilable() throws Exception {
 		String helloWorldResourcePath = "/org/hibernate/tool/hbm2x/Hbm2JavaTest/HelloWorld.java_";
@@ -344,8 +343,7 @@ public class TestCase {
 				c2j.asArgumentList( pc.getProperties().iterator() ) );
 	}
 
-	//TODO Reenable this test and make it pass (See HBX-2884)
-	@Disabled
+	@Disabled("Uses old Cfg2JavaTool/POJOClass APIs (HBX-2884)")
 	@Test
 	public void testPropertiesForFullConstructor() {
 		Cfg2JavaTool c2j = new Cfg2JavaTool();
@@ -447,8 +445,7 @@ public class TestCase {
 		assertFalse( iter.hasNext() );
 	}
 	
-	// TODO Re-enable this test: HBX-1249
-	@Disabled
+	@Disabled("Generated Java code has compilation errors — entity exporter needs investigation")
 	@Test
 	public void testGenerics() throws Exception {
 		File genericsSource = new File(outputFolder, "genericssource");
@@ -469,7 +466,7 @@ public class TestCase {
 		assertTrue(new File(genericsTarget, "HelloWorld.class").exists());
 	}
 	
-	@Disabled
+	@Disabled("Uses old Cfg2JavaTool/PersistentClass APIs")
 	@Test
 	public void testDynamicComponent() {
 		PersistentClass classMapping = 

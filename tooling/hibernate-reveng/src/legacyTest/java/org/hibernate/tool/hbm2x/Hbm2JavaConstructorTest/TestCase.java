@@ -50,8 +50,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author max
  * @author koen
  */
-//TODO Reenable this test and make it pass (See HBX-2884)
-@Disabled
+@Disabled("Uses old Cfg2JavaTool/EntityPOJOClass APIs (HBX-2884)")
 public class TestCase {
 
 	private static final String[] HBM_XML_FILES = new String[] {

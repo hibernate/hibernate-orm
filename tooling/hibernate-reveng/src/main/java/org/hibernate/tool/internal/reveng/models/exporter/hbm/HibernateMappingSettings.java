@@ -24,11 +24,13 @@ public record HibernateMappingSettings(
 		String defaultAccess,
 		String defaultCascade,
 		boolean defaultLazy,
-		boolean autoImport
+		boolean autoImport,
+		String schema,
+		String catalog
 ) {
 
 	public static HibernateMappingSettings defaults() {
-		return new HibernateMappingSettings("property", "none", true, true);
+		return new HibernateMappingSettings("property", "none", true, true, null, null);
 	}
 
 	public boolean hasNonDefaultAccess() {
@@ -39,5 +41,13 @@ public record HibernateMappingSettings(
 	public boolean hasNonDefaultCascade() {
 		return defaultCascade != null && !defaultCascade.isEmpty()
 				&& !"none".equals(defaultCascade);
+	}
+
+	public boolean hasSchema() {
+		return schema != null && !schema.isEmpty();
+	}
+
+	public boolean hasCatalog() {
+		return catalog != null && !catalog.isEmpty();
 	}
 }

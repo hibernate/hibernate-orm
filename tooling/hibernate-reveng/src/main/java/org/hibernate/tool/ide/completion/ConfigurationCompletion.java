@@ -51,6 +51,18 @@ public class ConfigurationCompletion {
             String entityImport = entry.getKey();
             String entityName = entry.getValue();
 
+            // Skip auto-imported Java types that are not mapped entities.
+            // Keep explicit user-defined imports (where the alias differs from
+            // the simple class name) and all mapped entity bindings.
+            if ( metadata.getEntityBinding( entityName ) == null ) {
+                String simpleName = entityName.contains( "." )
+                        ? entityName.substring( entityName.lastIndexOf( '.' ) + 1 )
+                        : entityName;
+                if ( entityImport.equals( simpleName ) || entityImport.equals( entityName ) ) {
+                    continue;
+                }
+            }
+
             if ( entityImport.toLowerCase().startsWith( prefix.toLowerCase() ) ) {
                 HQLCompletionProposal proposal = createStartWithCompletionProposal( prefix, cursorPosition,
                         HQLCompletionProposal.ENTITY_NAME, entityImport );

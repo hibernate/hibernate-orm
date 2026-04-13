@@ -27,7 +27,7 @@
 	<class name="Group" table="GROUPS">
 <!-- 	    <cache usage="read-write"/> -->
 		<id name="name"/>
-		<set name="users" cascade="save-update">
+		<set name="users" cascade="persist,merge">
 <!-- 		    <cache usage="read-write"/> -->
 			<key column="groupName"/>			
 			<one-to-many class="User"/>
@@ -38,7 +38,7 @@
 <!-- 		<cache usage="read-write"/> -->
 		<id name="name"/>
 		<property name="password"/>
-		<set name="session" cascade="persist,save-update,delete,delete-orphan">
+		<set name="session" cascade="persist,merge,delete,delete-orphan">
 			<key column="userName" not-null="true"/>
 			<one-to-many class="SessionAttribute"/>
 		</set>

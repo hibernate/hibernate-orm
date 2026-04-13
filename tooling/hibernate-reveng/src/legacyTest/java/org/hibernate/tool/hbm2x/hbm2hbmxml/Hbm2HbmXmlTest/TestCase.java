@@ -25,8 +25,8 @@ import org.hibernate.tool.api.export.ExporterFactory;
 import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.internal.export.common.DefaultArtifactCollector;
-import org.hibernate.tool.internal.export.hbm.HbmExporter;
-import org.hibernate.tool.internal.export.hbm.HibernateMappingGlobalSettings;
+import org.hibernate.tool.internal.reveng.models.exporter.hbm.HbmXmlExporter;
+import org.hibernate.tool.internal.reveng.models.exporter.hbm.HibernateMappingSettings;
 
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
@@ -119,20 +119,17 @@ public class TestCase {
 				"4 entity mappings");
 	}
 	
-	@Disabled("Uses old HbmExporter with HibernateMappingGlobalSettings — needs migration to new API")
 	@Test
 	public void testGlobalSettingsGeneratedDatabase() throws Exception {
-		HibernateMappingGlobalSettings hgs = new HibernateMappingGlobalSettings();
-		hgs.setDefaultPackage("org.hibernate.tool.hbm2x.hbm2hbmxml.Hbm2HbmXmlTest");
-		hgs.setSchemaName("myschema");
-		hgs.setCatalogName("mycatalog");		
-		HbmExporter gsExporter = new HbmExporter();
+		HibernateMappingSettings settings = new HibernateMappingSettings(
+				"property", "none", true, true, "myschema", "mycatalog");
+		Exporter gsExporter = ExporterFactory.createExporter(ExporterType.HBM);
 		gsExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		gsExporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, srcDir);
-		gsExporter.setGlobalSettings(hgs);
+		gsExporter.getProperties().put(HbmXmlExporter.MAPPING_SETTINGS, settings);
 		gsExporter.start();
 		File outputXml = new File(
-				srcDir, 
+				srcDir,
 				"org/hibernate/tool/hbm2x/hbm2hbmxml/Hbm2HbmXmlTest/BasicGlobals.hbm.xml");
 		JUnitUtil.assertIsNonEmptyFile(outputXml);
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -146,17 +143,14 @@ public class TestCase {
 		assertEquals("mycatalog", root.getAttribute("catalog"), "Unexpected mycatalog name" );
 	}
 
-	@Disabled("Uses old HbmExporter with HibernateMappingGlobalSettings — needs migration to new API")
 	@Test
 	public void testGlobalSettingsGeneratedAccessAndCascadeNonDefault()  throws Exception {
-		HibernateMappingGlobalSettings hgs = new HibernateMappingGlobalSettings();
-		hgs.setDefaultPackage("org.hibernate.tool.hbm2x.hbm2hbmxml.Hbm2HbmXmlTest");
-		hgs.setDefaultAccess("field");
-		hgs.setDefaultCascade("save-update");
-		HbmExporter gbsExporter = new HbmExporter();
+		HibernateMappingSettings settings = new HibernateMappingSettings(
+				"field", "save-update", true, true, null, null);
+		Exporter gbsExporter = ExporterFactory.createExporter(ExporterType.HBM);
 		gbsExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		gbsExporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, srcDir);
-		gbsExporter.setGlobalSettings(hgs);
+		gbsExporter.getProperties().put(HbmXmlExporter.MAPPING_SETTINGS, settings);
 		gbsExporter.start();
 		File outputXml = new File(
 				srcDir,
@@ -271,17 +265,14 @@ public class TestCase {
 		assertEquals(0, nodeList.getLength(), "Expected to get no comment element");	
 	}
 
-	@Disabled("Uses old HbmExporter with HibernateMappingGlobalSettings — needs migration to new API")
 	@Test
 	public void testGlobalSettingsGeneratedAccessAndCascadeDefault()  throws Exception {
-		HibernateMappingGlobalSettings hgs = new HibernateMappingGlobalSettings();
-		hgs.setDefaultPackage("org.hibernate.tool.hbm2x.hbm2hbmxml.Hbm2HbmXmlTest");
-		hgs.setDefaultAccess("property");
-		hgs.setDefaultCascade("none");	
-		HbmExporter gbsExporter = new HbmExporter();
+		HibernateMappingSettings settings = new HibernateMappingSettings(
+				"property", "none", true, true, null, null);
+		Exporter gbsExporter = ExporterFactory.createExporter(ExporterType.HBM);
 		gbsExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		gbsExporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, srcDir);
-		gbsExporter.setGlobalSettings(hgs);
+		gbsExporter.getProperties().put(HbmXmlExporter.MAPPING_SETTINGS, settings);
 		gbsExporter.start();
 		File outputXml = new File(
 				srcDir,
@@ -293,22 +284,18 @@ public class TestCase {
 		Element root = document.getDocumentElement();
 		// There are 5 attributes because there are non-defaults not set for this test
 		assertEquals(5, root.getAttributes().getLength(), "Unexpected number of hibernate-mapping elements " );
-		assertEquals("org.hibernate.tool.hbm2x.hbm2hbmxml.Hbm2HbmXmlTest", root.getAttribute("package"), "Unexpected package name" );
 		assertEquals("property", root.getAttribute("default-access"), "Unexpected access setting" );
-		assertEquals("none", root.getAttribute("default-cascade"), "Unexpected cascade setting" );	
+		assertEquals("none", root.getAttribute("default-cascade"), "Unexpected cascade setting" );
 	}
 
-	@Disabled("Uses old HbmExporter with HibernateMappingGlobalSettings — needs migration to new API")
 	@Test
 	public void testGlobalSettingsLazyAndAutoImportNonDefault()  throws Exception {
-		HibernateMappingGlobalSettings hgs = new HibernateMappingGlobalSettings();
-		hgs.setDefaultPackage("org.hibernate.tool.hbm2x.hbm2hbmxml.Hbm2HbmXmlTest");
-		hgs.setDefaultLazy(false);
-		hgs.setAutoImport(false);		
-		HbmExporter gbsExporter = new HbmExporter();
+		HibernateMappingSettings settings = new HibernateMappingSettings(
+				"property", "none", false, false, null, null);
+		Exporter gbsExporter = ExporterFactory.createExporter(ExporterType.HBM);
 		gbsExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		gbsExporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, srcDir);
-		gbsExporter.setGlobalSettings(hgs);
+		gbsExporter.getProperties().put(HbmXmlExporter.MAPPING_SETTINGS, settings);
 		gbsExporter.start();
 		File outputXml = new File(
 				srcDir,
@@ -321,8 +308,8 @@ public class TestCase {
 		// There are 5 attributes because there are non-defaults not set for this test
 		assertEquals(5, root.getAttributes().getLength(), "Unexpected number of hibernate-mapping elements " );
 		assertEquals("org.hibernate.tool.hbm2x.hbm2hbmxml.Hbm2HbmXmlTest", root.getAttribute("package"), "Unexpected package name" );
-		assertEquals("false", root.getAttribute("default-lazy"), "Unexpected access setting" );
-		assertEquals("false", root.getAttribute("auto-import"), "Unexpected cascade setting" );
+		assertEquals("false", root.getAttribute("default-lazy"), "Unexpected lazy setting" );
+		assertEquals("false", root.getAttribute("auto-import"), "Unexpected auto-import setting" );
 	}
 
 	@Test

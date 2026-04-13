@@ -123,8 +123,7 @@ public class TestCase {
         assertNotNull(metadataDescriptor.createMetadata());
     }
 
-	// TODO Re-enable this test: HBX-1247
-	@Disabled
+	@Disabled("HBM exporter does not yet generate <comment> elements for joined-subclass joins")
 	@Test
 	public void testComment() throws Exception {
 		File outputXml = new File(

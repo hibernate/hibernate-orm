@@ -80,10 +80,23 @@ public class HbmXmlExporter implements Exporter {
 		String[] templatePath = (String[])
 				exporterProperties.get(ExporterConstants.TEMPLATE_PATH);
 		if (templatePath == null) templatePath = new String[0];
-		HbmXmlExporter configured = create(md, templatePath);
+		HibernateMappingSettings settings = (HibernateMappingSettings)
+				exporterProperties.get(MAPPING_SETTINGS);
+		if (settings == null) settings = HibernateMappingSettings.defaults();
+		HbmXmlExporter configured = new HbmXmlExporter(templatePath, settings);
+		MetadataHelper helper = MetadataHelper.from(md);
+		configured.entities = helper.getEntityClassDetails();
+		configured.metadataHelper = helper;
 		configured.exporterProperties = exporterProperties;
 		configured.exportAll(destDir);
 	}
+
+	/**
+	 * Property key for passing {@link HibernateMappingSettings} via the
+	 * {@link Exporter} properties map.
+	 */
+	public static final String MAPPING_SETTINGS =
+			"org.hibernate.tool.hbm.mapping_settings";
 
 	private HbmXmlExporter(String[] templatePath, HibernateMappingSettings mappingSettings) {
 		this.freemarkerConfig = new Configuration(Configuration.VERSION_2_3_33);

@@ -21,7 +21,6 @@ package org.hibernate.tool.ide.completion.HqlAnalyzer;
 import org.hibernate.tool.ide.completion.EntityNameReference;
 import org.hibernate.tool.ide.completion.HQLAnalyzer;
 import org.hibernate.tool.ide.completion.SubQuery;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -33,8 +32,6 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class TestCase {
 	
-	// TODO HBX-2064: Investigate and reenable
-	@Disabled
     @Test
     public void testShouldShowTables() {
         String query = "select | from";

@@ -38,9 +38,6 @@ public class TestCase {
 		JdbcUtil.dropDatabase(this);
 	}
 
-	// HBX-1554: Ignore the test for now
-	// TODO: re-enable the test
-	@Disabled
 	@Test
 	public void testBrowser() {
 		MetadataSources mds = new MetadataSources();

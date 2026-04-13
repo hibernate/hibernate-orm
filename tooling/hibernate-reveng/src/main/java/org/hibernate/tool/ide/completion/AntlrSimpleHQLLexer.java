@@ -45,7 +45,7 @@ public class AntlrSimpleHQLLexer implements SimpleHQLLexer {
 	}
 
 	public int getTokenOffset() {
-		return token.getCharPositionInLine();
+		return token.getStartIndex();
 	}
 
 	public int nextTokenId() {

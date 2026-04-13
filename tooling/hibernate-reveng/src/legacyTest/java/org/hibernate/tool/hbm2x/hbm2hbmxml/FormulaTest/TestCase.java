@@ -21,9 +21,10 @@ package org.hibernate.tool.hbm2x.hbm2hbmxml.FormulaTest;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
-import org.hibernate.tool.internal.export.hbm.HbmExporter;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -59,14 +60,13 @@ public class TestCase {
 		assertTrue(resourcesDir.mkdir());
 		MetadataDescriptor metadataDescriptor = HibernateUtil
 				.initializeMetadataDescriptor(this, HBM_XML_FILES, resourcesDir);
-        Exporter hbmexporter = new HbmExporter();
+        Exporter hbmexporter = ExporterFactory.createExporter(ExporterType.HBM);
 		hbmexporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		hbmexporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, srcDir);
 		hbmexporter.start();
 	}
 	
-	//TODO: Reenable this test: see HBX-2073
-	@Disabled
+	@Disabled("Entity-name based mappings (BillingAddress/ShippingAddress) not yet supported by new HBM exporter")
 	@Test
 	public void testReadable() {
         ArrayList<File> files = new ArrayList<>(4);

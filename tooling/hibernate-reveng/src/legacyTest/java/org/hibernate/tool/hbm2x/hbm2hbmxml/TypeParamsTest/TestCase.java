@@ -86,8 +86,7 @@ public class TestCase {
 						"org/hibernate/tool/hbm2x/hbm2hbmxml/TypeParamsTest/Order.hbm.xml"));
 	}
 
-	// org.hibernate.type.EnumType was removed in Hibernate 8.0
-	@Disabled
+	@Disabled("org.hibernate.type.EnumType was removed in Hibernate 8.0")
 	@Test
 	public void testReadable() {
 		File orderHbmXml =

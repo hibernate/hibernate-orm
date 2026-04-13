@@ -82,6 +82,9 @@ public class HbmAssociationBuilder {
 		}
 		field.addAnnotationUsage(m2oAnnotation);
 
+		// @Cascade
+		HbmCollectionBuilder.applyCascade(field, m2o.getCascade(), ctx);
+
 		boolean insertable = m2o.isInsert();
 		boolean updatable = m2o.isUpdate();
 

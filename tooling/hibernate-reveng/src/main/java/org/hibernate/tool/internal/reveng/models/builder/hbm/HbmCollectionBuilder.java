@@ -25,6 +25,7 @@ import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmAnyValueMappingType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmArrayType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeCollectionElementType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBagCollectionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBasicCollectionElementType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCacheType;
@@ -34,6 +35,8 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCollectionIdType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmColumnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIdBagCollectionType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIndexType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmListIndexType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmKeyType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmLazyWithExtraEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmListType;
@@ -68,6 +71,7 @@ import org.hibernate.boot.models.annotations.internal.ManyToAnyAnnotation;
 import org.hibernate.boot.models.annotations.internal.MapKeyColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ManyToManyJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OneToManyJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.OrderColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OptimisticLockAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLDeleteAllAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLDeleteAnnotation;
@@ -124,13 +128,21 @@ public class HbmCollectionBuilder {
 									JaxbHbmListType list,
 									String defaultPackage,
 									HbmBuildContext ctx) {
-		DynamicFieldDetails field = createCollectionField(entityClass, list.getName(),
-				list.getOneToMany(), list.getManyToMany(), list.getElement(),
-				list.getKey(), "java.util.List", defaultPackage, ctx);
+		DynamicFieldDetails field;
+		if (list.getCompositeElement() != null) {
+			field = buildCompositeElementCollectionField(entityClass, list.getName(),
+					list.getCompositeElement(), list.getKey(), "java.util.List",
+					defaultPackage, ctx);
+		} else {
+			field = createCollectionField(entityClass, list.getName(),
+					list.getOneToMany(), list.getManyToMany(), list.getElement(),
+					list.getKey(), "java.util.List", defaultPackage, ctx);
+		}
 		if (field == null) {
 			return;
 		}
 		applyAccessAnnotation(field, list.getAccess(), ctx);
+		applyListIndex(field, list.getIndex(), list.getListIndex(), ctx);
 		applyCommonMetadata(field, list.getCascade(), list.getFetch(),
 				list.getLazy(), list.getWhere(), list.getBatchSize(),
 				list.getCache(), list.getFilter(),
@@ -197,6 +209,17 @@ public class HbmCollectionBuilder {
 			return;
 		}
 		applyAccessAnnotation(field, array.getAccess(), ctx);
+		applyListIndex(field, array.getIndex(), array.getListIndex(), ctx);
+		// Mark as array (not list) for HBM template rendering
+		ctx.addFieldMetaAttribute(entityClass.getClassName(), array.getName(),
+				"hibernate.collection.tag", "array");
+		// Store element-class if specified
+		String elementClass = array.getElementClass();
+		if (elementClass != null && !elementClass.isEmpty()) {
+			String fullElementClass = HbmBuildContext.resolveClassName(elementClass, defaultPackage);
+			ctx.addFieldMetaAttribute(entityClass.getClassName(), array.getName(),
+					"hibernate.array.element-class", fullElementClass);
+		}
 		applyCommonMetadata(field, array.getCascade(), array.getFetch(),
 				array.getLazy(), array.getWhere(), array.getBatchSize(),
 				array.getCache(), array.getFilter(),
@@ -530,6 +553,65 @@ public class HbmCollectionBuilder {
 		ManyToManyJpaAnnotation m2mAnnotation =
 				JpaAnnotations.MANY_TO_MANY.createUsage(ctx.getModelsContext());
 		field.addAnnotationUsage(m2mAnnotation);
+		return field;
+	}
+
+	private static void applyListIndex(DynamicFieldDetails field,
+									JaxbHbmIndexType index,
+									JaxbHbmListIndexType listIndex,
+									HbmBuildContext ctx) {
+		String columnName = null;
+		if (listIndex != null) {
+			columnName = listIndex.getColumnAttribute();
+			if ((columnName == null || columnName.isEmpty())
+					&& listIndex.getColumn() != null) {
+				columnName = listIndex.getColumn().getName();
+			}
+		} else if (index != null) {
+			columnName = index.getColumnAttribute();
+		}
+		if (columnName != null && !columnName.isEmpty()) {
+			OrderColumnJpaAnnotation ocAnnotation =
+					JpaAnnotations.ORDER_COLUMN.createUsage(ctx.getModelsContext());
+			ocAnnotation.name(columnName);
+			field.addAnnotationUsage(ocAnnotation);
+		}
+	}
+
+	private static DynamicFieldDetails buildCompositeElementCollectionField(
+			DynamicClassDetails entityClass,
+			String name,
+			JaxbHbmCompositeCollectionElementType compositeElement,
+			JaxbHbmKeyType key,
+			String collectionInterfaceName,
+			String defaultPackage,
+			HbmBuildContext ctx) {
+		String componentClassName = compositeElement.getClazz();
+		if (componentClassName == null) {
+			return null;
+		}
+		String fullComponentName = HbmBuildContext.resolveClassName(componentClassName, defaultPackage);
+
+		// Create or resolve the embeddable class
+		ClassDetails componentClass = ctx.resolveOrCreateClassDetails(
+				HbmBuildContext.simpleName(fullComponentName), fullComponentName);
+
+		// Process the embeddable's attributes via HbmComponentBuilder
+		if (componentClass instanceof DynamicClassDetails dynamicComponent) {
+			HbmComponentBuilder.buildEmbeddableFromCompositeElement(
+					dynamicComponent, compositeElement, defaultPackage, ctx);
+		}
+
+		DynamicFieldDetails field = ctx.createCollectionField(
+				entityClass, name, componentClass, collectionInterfaceName);
+
+		ElementCollectionJpaAnnotation ecAnnotation =
+				JpaAnnotations.ELEMENT_COLLECTION.createUsage(ctx.getModelsContext());
+		field.addAnnotationUsage(ecAnnotation);
+
+		// @CollectionTable with join columns from <key>
+		addCollectionTableFromKey(field, key, ctx);
+
 		return field;
 	}
 

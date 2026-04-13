@@ -540,6 +540,94 @@ public class HbmTemplateHelper {
 		return col != null && col.name() != null && !col.name().isEmpty() ? col.name() : null;
 	}
 
+	// --- Composite element (embeddable inside ElementCollection) ---
+
+	/**
+	 * Returns the ClassDetails of the embeddable class for a composite element
+	 * (from @ElementCollection) or nested composite (from @Embedded).
+	 */
+	private ClassDetails resolveCompositeClass(FieldDetails field) {
+		if (field.hasDirectAnnotationUsage(ElementCollection.class)) {
+			TypeDetails elementType = field.getElementType();
+			return elementType != null ? elementType.determineRawClass() : null;
+		}
+		if (field.hasDirectAnnotationUsage(Embedded.class)) {
+			return field.getType().determineRawClass();
+		}
+		return null;
+	}
+
+	/**
+	 * Returns basic property fields of a composite element's embeddable class.
+	 */
+	public List<FieldDetails> getCompositeElementProperties(FieldDetails field) {
+		ClassDetails embeddable = resolveCompositeClass(field);
+		if (embeddable == null) {
+			return Collections.emptyList();
+		}
+		List<FieldDetails> result = new ArrayList<>();
+		for (FieldDetails f : embeddable.getFields()) {
+			if (!f.hasDirectAnnotationUsage(ManyToOne.class) &&
+					!f.hasDirectAnnotationUsage(Embedded.class) &&
+					!f.hasDirectAnnotationUsage(OneToMany.class) &&
+					!f.hasDirectAnnotationUsage(ManyToMany.class) &&
+					!f.hasDirectAnnotationUsage(ElementCollection.class)) {
+				result.add(f);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Returns many-to-one fields of a composite element's embeddable class.
+	 */
+	public List<FieldDetails> getCompositeElementManyToOnes(FieldDetails field) {
+		ClassDetails embeddable = resolveCompositeClass(field);
+		if (embeddable == null) {
+			return Collections.emptyList();
+		}
+		List<FieldDetails> result = new ArrayList<>();
+		for (FieldDetails f : embeddable.getFields()) {
+			if (f.hasDirectAnnotationUsage(ManyToOne.class)) {
+				result.add(f);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Returns embedded fields (nested composite elements) of a composite element's
+	 * embeddable class.
+	 */
+	public List<FieldDetails> getCompositeElementEmbeddeds(FieldDetails field) {
+		ClassDetails embeddable = resolveCompositeClass(field);
+		if (embeddable == null) {
+			return Collections.emptyList();
+		}
+		List<FieldDetails> result = new ArrayList<>();
+		for (FieldDetails f : embeddable.getFields()) {
+			if (f.hasDirectAnnotationUsage(Embedded.class)) {
+				result.add(f);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Returns the cascade string for a many-to-one field (used inside composite elements).
+	 */
+	public String getManyToOneCascadeString(FieldDetails field) {
+		ManyToOne m2o = field.getDirectAnnotationUsage(ManyToOne.class);
+		if (m2o != null && m2o.cascade().length > 0) {
+			return getCascadeString(m2o.cascade());
+		}
+		Cascade cascade = field.getDirectAnnotationUsage(Cascade.class);
+		if (cascade != null && cascade.value().length > 0) {
+			return getAnyCascadeString(cascade);
+		}
+		return null;
+	}
+
 	// --- Any ---
 
 	public String getAnyIdType(FieldDetails field) {
@@ -617,6 +705,12 @@ public class HbmTemplateHelper {
 			case REPLICATE -> "replicate";
 			case DELETE_ORPHAN -> "delete-orphan";
 		};
+	}
+
+	public String getArrayElementClass(FieldDetails field) {
+		Map<String, List<String>> fieldMeta = getFieldMetaAttributeMap(field);
+		List<String> ec = fieldMeta.get("hibernate.array.element-class");
+		return (ec != null && !ec.isEmpty()) ? ec.get(0) : null;
 	}
 
 	public String getManyToAnyFkColumnName(FieldDetails field) {
@@ -1039,6 +1133,12 @@ public class HbmTemplateHelper {
 	// --- Collection type ---
 
 	public String getCollectionTag(FieldDetails field) {
+		// Check for explicitly stored tag (e.g. "array" from hbm.xml <array>)
+		Map<String, List<String>> fieldMeta = getFieldMetaAttributeMap(field);
+		List<String> tagMeta = fieldMeta.get("hibernate.collection.tag");
+		if (tagMeta != null && !tagMeta.isEmpty()) {
+			return tagMeta.get(0);
+		}
 		if (field.hasDirectAnnotationUsage(Bag.class)) {
 			return "bag";
 		}
@@ -1082,6 +1182,10 @@ public class HbmTemplateHelper {
 		}
 		ManyToMany m2m = field.getDirectAnnotationUsage(ManyToMany.class);
 		if (m2m != null && m2m.fetch() == FetchType.EAGER) {
+			return "false";
+		}
+		ElementCollection ec = field.getDirectAnnotationUsage(ElementCollection.class);
+		if (ec != null && ec.fetch() == FetchType.EAGER) {
 			return "false";
 		}
 		return null;
@@ -1262,7 +1366,9 @@ public class HbmTemplateHelper {
 		for (Map.Entry<String, List<String>> entry : all.entrySet()) {
 			if (!entry.getKey().startsWith("hibernate.type.")
 					&& !entry.getKey().startsWith("hibernate.generator.")
-					&& !entry.getKey().startsWith("hibernate.any.")) {
+					&& !entry.getKey().startsWith("hibernate.any.")
+					&& !entry.getKey().startsWith("hibernate.collection.")
+					&& !entry.getKey().startsWith("hibernate.array.")) {
 				result.put(entry.getKey(), entry.getValue());
 			}
 		}

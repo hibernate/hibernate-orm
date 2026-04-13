@@ -22,8 +22,10 @@ import java.util.Map;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBasicAttributeType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeAttributeType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeCollectionElementType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmDynamicComponentType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToOneType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNestedCompositeElementType;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.EmbeddableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.EmbeddedJpaAnnotation;
@@ -85,6 +87,81 @@ public class HbmComponentBuilder {
 		DynamicFieldDetails field = entityClass.applyAttribute(
 				fieldName, fieldType, false, false, ctx.getModelsContext());
 
+		EmbeddedJpaAnnotation embeddedAnnotation =
+				JpaAnnotations.EMBEDDED.createUsage(ctx.getModelsContext());
+		field.addAnnotationUsage(embeddedAnnotation);
+	}
+
+	/**
+	 * Builds an {@code @Embeddable} class from a {@code <composite-element>} inside
+	 * a collection. Unlike {@code processComponent}, this does NOT create an
+	 * {@code @Embedded} field — the caller creates an {@code @ElementCollection} field.
+	 */
+	public static void buildEmbeddableFromCompositeElement(
+			DynamicClassDetails embeddableClass,
+			JaxbHbmCompositeCollectionElementType compositeElement,
+			String defaultPackage,
+			HbmBuildContext ctx) {
+		if (!embeddableClass.hasDirectAnnotationUsage(jakarta.persistence.Embeddable.class)) {
+			EmbeddableJpaAnnotation embeddableAnnotation =
+					JpaAnnotations.EMBEDDABLE.createUsage(ctx.getModelsContext());
+			embeddableClass.addAnnotationUsage(embeddableAnnotation);
+		}
+
+		// Process attributes
+		for (Serializable attribute : compositeElement.getAttributes()) {
+			if (attribute instanceof JaxbHbmBasicAttributeType basicAttr) {
+				HbmPropertyBuilder.processProperty(embeddableClass, basicAttr, ctx);
+			} else if (attribute instanceof JaxbHbmManyToOneType m2o) {
+				HbmAssociationBuilder.processManyToOne(embeddableClass, m2o, defaultPackage, ctx);
+			} else if (attribute instanceof JaxbHbmNestedCompositeElementType nested) {
+				processNestedCompositeElement(embeddableClass, nested, defaultPackage, ctx);
+			}
+		}
+
+		ctx.registerClassDetails(embeddableClass);
+		ctx.addEmbeddableClassDetails(embeddableClass);
+	}
+
+	private static void processNestedCompositeElement(
+			DynamicClassDetails parentClass,
+			JaxbHbmNestedCompositeElementType nested,
+			String defaultPackage,
+			HbmBuildContext ctx) {
+		String fieldName = nested.getName();
+		String className = nested.getClazz();
+		if (className == null) {
+			return;
+		}
+		String fullName = HbmBuildContext.resolveClassName(className, defaultPackage);
+		String simpleName = HbmBuildContext.simpleName(fullName);
+
+		DynamicClassDetails nestedClass = new DynamicClassDetails(
+				simpleName, fullName, Object.class,
+				false, null, null, ctx.getModelsContext());
+
+		EmbeddableJpaAnnotation embeddableAnnotation =
+				JpaAnnotations.EMBEDDABLE.createUsage(ctx.getModelsContext());
+		nestedClass.addAnnotationUsage(embeddableAnnotation);
+
+		for (Serializable attribute : nested.getAttributes()) {
+			if (attribute instanceof JaxbHbmBasicAttributeType basicAttr) {
+				HbmPropertyBuilder.processProperty(nestedClass, basicAttr, ctx);
+			} else if (attribute instanceof JaxbHbmManyToOneType m2o) {
+				HbmAssociationBuilder.processManyToOne(nestedClass, m2o, defaultPackage, ctx);
+			} else if (attribute instanceof JaxbHbmNestedCompositeElementType deepNested) {
+				processNestedCompositeElement(nestedClass, deepNested, defaultPackage, ctx);
+			}
+		}
+
+		ctx.registerClassDetails(nestedClass);
+		ctx.addEmbeddableClassDetails(nestedClass);
+
+		// Add @Embedded field on the parent
+		TypeDetails fieldType = new ClassTypeDetailsImpl(
+				nestedClass, TypeDetails.Kind.CLASS);
+		DynamicFieldDetails field = parentClass.applyAttribute(
+				fieldName, fieldType, false, false, ctx.getModelsContext());
 		EmbeddedJpaAnnotation embeddedAnnotation =
 				JpaAnnotations.EMBEDDED.createUsage(ctx.getModelsContext());
 		field.addAnnotationUsage(embeddedAnnotation);

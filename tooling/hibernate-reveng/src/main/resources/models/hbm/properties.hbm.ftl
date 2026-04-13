@@ -92,7 +92,8 @@
         fetch="${helper.getCollectionFetchMode(field)}"</#if><#if (helper.getCollectionBatchSize(field) gt 1)>
         batch-size="${helper.getCollectionBatchSize(field)?c}"</#if><#if helper.getCollectionOrderBy(field)??>
         order-by="${helper.getCollectionOrderBy(field)}"</#if><#if helper.getSort(field)??>
-        sort="${helper.getSort(field)}"</#if><#if helper.getAccessType(field)??>
+        sort="${helper.getSort(field)}"</#if><#if helper.getArrayElementClass(field)??>
+        element-class="${helper.getArrayElementClass(field)}"</#if><#if helper.getAccessType(field)??>
         access="${helper.getAccessType(field)}"</#if>>
 <#list helper.getFieldMetaAttributes(field)?keys as metaName>
 <#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
@@ -107,7 +108,7 @@
             <column name="${keyCol}"/>
 </#list>
         </key>
-<#if collTag == "list">
+<#if collTag == "list" || collTag == "array">
         <list-index column="${helper.getListIndexColumnName(field)}"/>
 </#if>
 <#if collTag == "map">
@@ -163,7 +164,7 @@
             <column name="${colName}"/>
 </#list>
         </key>
-<#if collTag == "list">
+<#if collTag == "list" || collTag == "array">
         <list-index column="${helper.getListIndexColumnName(field)}"/>
 </#if>
 <#if collTag == "map">
@@ -263,7 +264,8 @@
     <${collTag} name="${field.getName()}"<#if helper.getElementCollectionTableName(field)??>
         table="${helper.getElementCollectionTableName(field)}"</#if><#if helper.getElementCollectionTableSchema(field)??>
         schema="${helper.getElementCollectionTableSchema(field)}"</#if><#if helper.getElementCollectionTableCatalog(field)??>
-        catalog="${helper.getElementCollectionTableCatalog(field)}"</#if><#if helper.getCollectionLazy(field)??>
+        catalog="${helper.getElementCollectionTableCatalog(field)}"</#if><#if helper.getCollectionCascadeString(field)??>
+        cascade="${helper.getCollectionCascadeString(field)}"</#if><#if helper.getCollectionLazy(field)??>
         lazy="${helper.getCollectionLazy(field)}"</#if><#if helper.getCollectionFetchMode(field)??>
         fetch="${helper.getCollectionFetchMode(field)}"</#if><#if helper.getCollectionOrderBy(field)??>
         order-by="${helper.getCollectionOrderBy(field)}"</#if><#if helper.getSort(field)??>
@@ -291,10 +293,22 @@
 </#if>
 <#if helper.isElementCollectionOfEmbeddable(field)>
         <composite-element class="${helper.getCollectionElementType(field)}">
-<#list helper.getAttributeOverrides(field) as ao>
-            <property name="${ao.fieldName()}">
-                <column name="${ao.columnName()}"/>
+<#list helper.getCompositeElementProperties(field) as prop>
+            <property name="${prop.getName()}"<#if helper.getHibernateTypeName(prop)??> type="${helper.getHibernateTypeName(prop)}"</#if>>
+                <column name="${helper.getColumnName(prop)}"/>
             </property>
+</#list>
+<#list helper.getCompositeElementEmbeddeds(field) as embField>
+            <nested-composite-element name="${embField.getName()}" class="${helper.getEmbeddableClassName(embField)}">
+<#list helper.getCompositeElementProperties(embField) as nestedProp>
+                <property name="${nestedProp.getName()}"<#if helper.getHibernateTypeName(nestedProp)??> type="${helper.getHibernateTypeName(nestedProp)}"</#if>>
+                    <column name="${helper.getColumnName(nestedProp)}"/>
+                </property>
+</#list>
+            </nested-composite-element>
+</#list>
+<#list helper.getCompositeElementManyToOnes(field) as m2oField>
+            <many-to-one name="${m2oField.getName()}" class="${helper.getTargetEntityName(m2oField)}"<#if helper.getManyToOneCascadeString(m2oField)??> cascade="${helper.getManyToOneCascadeString(m2oField)}"</#if>/>
 </#list>
         </composite-element>
 <#else>

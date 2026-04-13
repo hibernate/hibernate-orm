@@ -18,30 +18,33 @@
 
 package org.hibernate.tool.hbm2x.hbm2hbmxml.BackrefTest;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.mapping.Backref;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
-import org.hibernate.tool.internal.export.hbm.HbmExporter;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.test.utils.ConnectionProvider;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Properties;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -49,8 +52,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Dmitry Geraskov
  * @author koen
  */
-//TODO Reenable this test and make it pass (See HBX-2884)
-@Disabled
 public class TestCase {
 
 	private static final String[] HBM_XML_FILES = new String[] {
@@ -60,7 +61,6 @@ public class TestCase {
 	@TempDir
 	public File outputFolder = new File("output");
 	
-	private Metadata metadata = null;
 	private File srcDir = null;
 
     @BeforeEach
@@ -71,8 +71,7 @@ public class TestCase {
 		assertTrue(resourcesDir.mkdir());
 		MetadataDescriptor metadataDescriptor = HibernateUtil
 				.initializeMetadataDescriptor(this, HBM_XML_FILES, resourcesDir);
-		metadata = metadataDescriptor.createMetadata();
-        Exporter hbmexporter = new HbmExporter();
+        Exporter hbmexporter = ExporterFactory.createExporter(ExporterType.HBM);
 		hbmexporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		hbmexporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, srcDir);
 		hbmexporter.start();
@@ -89,14 +88,22 @@ public class TestCase {
 	}
 	
 	@Test
-	public void testBackrefPresent() {
-		PersistentClass pc = metadata.getEntityBinding("org.hibernate.tool.hbm2x.hbm2hbmxml.BackrefTest.CarPart");
-		Iterator<Property> iterator = pc.getProperties().iterator();
-		boolean hasBackrefs = false;
-		while (iterator.hasNext() && !hasBackrefs) {
-			hasBackrefs = (iterator.next() instanceof Backref);			
-		}
-		assertTrue(hasBackrefs, "Class mapping should create Backref for this testcase");
+	public void testBackrefNotExported() throws Exception {
+		// Backrefs are synthetic properties created by the ORM engine
+		// and should NOT appear in the exported hbm.xml
+		File carPartXml = new File(
+				srcDir,
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/BackrefTest/CarPart.hbm.xml");
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		Document document = db.parse(carPartXml);
+		XPath xpath = XPathFactory.newInstance().newXPath();
+		NodeList properties = (NodeList) xpath
+				.compile("//hibernate-mapping/class/property")
+				.evaluate(document, XPathConstants.NODESET);
+		// CarPart should only have the explicitly declared 'partName' property
+		assertEquals(1, properties.getLength(),
+				"CarPart should have exactly one property (no backrefs)");
 	}
 	
 	@Test

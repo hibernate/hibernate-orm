@@ -5,12 +5,12 @@
 package org.hibernate.action.queue.decompose.entity;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.AssertionFailure;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.queue.exec.GeneratedValuesCollector;
 import org.hibernate.action.queue.exec.PostExecutionCallback;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.generator.values.GeneratedValues;
 
 /// Post-execution callback for entity update actions.
@@ -36,31 +36,28 @@ public class PostUpdateHandling implements PostExecutionCallback {
 	private final Object cacheKey;
 	private final Object previousVersion;
 	private final GeneratedValuesCollector generatedValuesCollector;
+	private final EntityEntry entityEntry;
 
 	public PostUpdateHandling(
 			EntityUpdateAction action,
 			Object cacheKey,
 			Object previousVersion,
-			@Nullable GeneratedValuesCollector generatedValuesCollector) {
+			@Nullable GeneratedValuesCollector generatedValuesCollector,
+			EntityEntry entityEntry) {
 		this.action = action;
 		this.cacheKey = cacheKey;
 		this.previousVersion = previousVersion;
 		this.generatedValuesCollector = generatedValuesCollector;
+		this.entityEntry = entityEntry;
 	}
 
 	@Override
 	public void handle(SessionImplementor session) {
-		final var persistenceContext = session.getPersistenceContextInternal();
-		final var entry = persistenceContext.getEntry( action.getInstance() );
-		if ( entry == null ) {
-			throw new AssertionFailure( "possible non-threadsafe access to session : could not locate entry after update" );
-		}
-
 		if ( action.getPersister().isMutable() ) {
-			handleMutableEntity( entry, session );
+			handleMutableEntity( entityEntry, session );
 		}
 		else {
-			handleImmutableEntity( entry, session );
+			handleImmutableEntity( entityEntry, session );
 		}
 	}
 
@@ -87,11 +84,19 @@ public class PostUpdateHandling implements PostExecutionCallback {
 		action.handleDeleted( entry );
 		action.updateCacheItem( previousVersion, cacheKey, entry );
 		action.handleNaturalIdSharedResolutions( action.getId(), action.getPersister(), session.getPersistenceContext() );
-		action.postUpdate();
 
-		final var statistics = session.getFactory().getStatistics();
-		if ( statistics.isStatisticsEnabled() ) {
-			statistics.updateEntity( action.getPersister().getEntityName() );
+		// For entities being deleted in the same flush, skip firing POST_UPDATE events
+		// because the DELETE operation may have already removed the entity from the
+		// persistence context, causing event listeners to fail when they try to look up
+		// the EntityEntry.
+		final Status status = entry.getStatus();
+		if ( status != Status.DELETED && status != Status.GONE ) {
+			action.postUpdate();
+
+			final var statistics = session.getFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.updateEntity( action.getPersister().getEntityName() );
+			}
 		}
 	}
 

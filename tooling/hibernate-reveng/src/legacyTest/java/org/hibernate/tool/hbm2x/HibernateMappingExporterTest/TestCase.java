@@ -19,13 +19,14 @@
 package org.hibernate.tool.hbm2x.HibernateMappingExporterTest;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
-import org.hibernate.tool.internal.export.hbm.HbmExporter;
 import org.hibernate.tool.test.utils.ConnectionProvider;
 import org.hibernate.tool.test.utils.HibernateUtil;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -36,8 +37,6 @@ import java.util.Properties;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-//TODO Reenable this test and make it pass (See HBX-2884)
-@Disabled
 public class TestCase {
 	
 	private static final String FOO_HBM_XML = 
@@ -67,7 +66,7 @@ public class TestCase {
 				.createNativeDescriptor(null, new File[] { fooHbmXmlOrigin }, properties); 		
 		final File srcDir = new File(outputFolder, "output");
 		assertTrue(srcDir.mkdir());
-		HbmExporter exporter = new HbmExporter();
+		Exporter exporter = ExporterFactory.createExporter(ExporterType.HBM);
 		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, srcDir);
 		final File fooHbmXml = new File(srcDir, "Foo.hbm.xml");

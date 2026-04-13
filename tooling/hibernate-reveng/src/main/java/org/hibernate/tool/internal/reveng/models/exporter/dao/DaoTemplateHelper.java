@@ -162,14 +162,30 @@ public class DaoTemplateHelper {
 
 	public List<NamedQueryInfo> getNamedQueries() {
 		List<NamedQueryInfo> result = new ArrayList<>();
-		NamedQuery single = classDetails.getDirectAnnotationUsage(NamedQuery.class);
-		if (single != null) {
-			result.add(new NamedQueryInfo(single.name(), single.query()));
+		// Check Hibernate @NamedQuery/@NamedQueries first (used by hbm.xml builder)
+		org.hibernate.annotations.NamedQuery hibSingle =
+				classDetails.getDirectAnnotationUsage(org.hibernate.annotations.NamedQuery.class);
+		if (hibSingle != null) {
+			result.add(new NamedQueryInfo(hibSingle.name(), hibSingle.query()));
 		}
-		NamedQueries container = classDetails.getDirectAnnotationUsage(NamedQueries.class);
-		if (container != null) {
-			for (NamedQuery nq : container.value()) {
+		org.hibernate.annotations.NamedQueries hibContainer =
+				classDetails.getDirectAnnotationUsage(org.hibernate.annotations.NamedQueries.class);
+		if (hibContainer != null) {
+			for (org.hibernate.annotations.NamedQuery nq : hibContainer.value()) {
 				result.add(new NamedQueryInfo(nq.name(), nq.query()));
+			}
+		}
+		// Fall back to JPA @NamedQuery/@NamedQueries
+		if (result.isEmpty()) {
+			NamedQuery single = classDetails.getDirectAnnotationUsage(NamedQuery.class);
+			if (single != null) {
+				result.add(new NamedQueryInfo(single.name(), single.query()));
+			}
+			NamedQueries container = classDetails.getDirectAnnotationUsage(NamedQueries.class);
+			if (container != null) {
+				for (NamedQuery nq : container.value()) {
+					result.add(new NamedQueryInfo(nq.name(), nq.query()));
+				}
 			}
 		}
 		return result;

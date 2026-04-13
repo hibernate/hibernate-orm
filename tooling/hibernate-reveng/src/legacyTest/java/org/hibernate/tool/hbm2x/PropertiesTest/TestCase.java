@@ -52,8 +52,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author Josh Moore josh.moore@gmx.de
  * @author koen
  */
-//TODO Reenable this test and make it pass (See HBX-2884)
-@Disabled
 public class TestCase {
 	
 	private static final String[] HBM_XML_FILES = new String[] {
@@ -79,7 +77,7 @@ public class TestCase {
 		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
 		exporter.getProperties().put(ExporterConstants.ARTIFACT_COLLECTOR, artifactCollector);
-		Exporter hbmexporter = new HbmExporter();
+		Exporter hbmexporter = ExporterFactory.createExporter(ExporterType.HBM);
 		hbmexporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		hbmexporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
 		hbmexporter.getProperties().put(ExporterConstants.ARTIFACT_COLLECTOR, artifactCollector);
@@ -94,6 +92,7 @@ public class TestCase {
 	}
 	
 	@Test
+	@Disabled("<properties> grouping element not yet supported by new HBM exporter")
 	public void testGenerationOfEmbeddedProperties() throws Exception {
 		File outputXml = new File(outputDir,  "properties/PPerson.hbm.xml");
 		JUnitUtil.assertIsNonEmptyFile(outputXml);

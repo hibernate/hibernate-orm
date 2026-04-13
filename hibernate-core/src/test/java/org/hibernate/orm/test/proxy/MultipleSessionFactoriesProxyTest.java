@@ -11,7 +11,9 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.orm.test.annotations.embeddables.Investor;
 import org.hibernate.orm.test.annotations.embeddables.InvestorTypeContributor;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
@@ -31,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Marcel Overdijk
  */
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsNumericPrimaryKey.class )
 public class MultipleSessionFactoriesProxyTest {
 
 	private SessionFactory produceSessionFactory() {

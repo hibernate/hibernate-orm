@@ -143,7 +143,9 @@ public class HbmXmlExporter implements Exporter {
 				Map<String, Map<String, List<String>>> fieldMeta = metadataHelper != null
 						? metadataHelper.getFieldMetaAttributes(cd.getClassName())
 						: Collections.emptyMap();
-				export(writer, cd, null, classMeta, Collections.emptyMap(), fieldMeta);
+				String comment = classMeta.containsKey("hibernate.comment")
+						? classMeta.get("hibernate.comment").get(0) : null;
+				export(writer, cd, comment, classMeta, Collections.emptyMap(), fieldMeta);
 			} catch (Exception e) {
 				throw new RuntimeException(
 						"Failed to export hbm.xml for: " + cd.getClassName(), e);

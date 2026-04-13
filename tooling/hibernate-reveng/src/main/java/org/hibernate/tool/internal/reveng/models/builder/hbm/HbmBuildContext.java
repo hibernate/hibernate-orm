@@ -27,8 +27,10 @@ import java.util.Map;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmColumnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmToolingHintType;
 import org.hibernate.boot.jaxb.hbm.spi.ToolingHintContainer;
+import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.CommentAnnotation;
 import org.hibernate.models.internal.BasicModelsContextImpl;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.internal.PrimitiveTypeDetailsImpl;
@@ -368,6 +370,9 @@ public class HbmBuildContext {
 			if (Boolean.TRUE.equals(col.isUnique())) {
 				unique = true;
 			}
+			if (col.getComment() != null && !col.getComment().isEmpty()) {
+				applyColumnComment(field, col.getComment());
+			}
 		}
 
 		if (columnName == null || columnName.isEmpty()) {
@@ -418,6 +423,9 @@ public class HbmBuildContext {
 					if (Boolean.TRUE.equals(col.isUnique())) {
 						unique = true;
 					}
+					if (col.getComment() != null && !col.getComment().isEmpty()) {
+						applyColumnComment(field, col.getComment());
+					}
 					break;
 				}
 			}
@@ -449,5 +457,12 @@ public class HbmBuildContext {
 			columnAnnotation.unique(true);
 		}
 		field.addAnnotationUsage(columnAnnotation);
+	}
+
+	private void applyColumnComment(DynamicFieldDetails field, String comment) {
+		CommentAnnotation commentAnnotation =
+				HibernateAnnotations.COMMENT.createUsage(modelsContext);
+		commentAnnotation.value(comment);
+		field.addAnnotationUsage(commentAnnotation);
 	}
 }

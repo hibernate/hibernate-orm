@@ -169,6 +169,11 @@ public class HbmClassDetailsBuilder {
 		// Entity-level meta attributes
 		ctx.extractClassMetaAttributes(fullName, entityType);
 
+		// Entity-level comment
+		if (entityType.getComment() != null && !entityType.getComment().isEmpty()) {
+			ctx.addClassMetaAttribute(fullName, "hibernate.comment", entityType.getComment());
+		}
+
 		// Id / Composite Id
 		HbmIdBuilder.processId(entityClass, entityType.getId(), ctx);
 		HbmIdBuilder.processCompositeId(entityClass, entityType.getCompositeId(),

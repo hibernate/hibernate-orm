@@ -1245,6 +1245,13 @@ public class HbmTemplateHelper {
 	}
 
 	public String getCollectionCascadeString(FieldDetails field) {
+		// Prefer the raw cascade string stored during parsing for round-trip fidelity
+		Map<String, List<String>> fieldMeta = fieldMetaAttributes.getOrDefault(
+				field.getName(), Collections.emptyMap());
+		List<String> rawCascade = fieldMeta.get("hibernate.cascade");
+		if (rawCascade != null && !rawCascade.isEmpty()) {
+			return rawCascade.get(0);
+		}
 		OneToMany o2m = field.getDirectAnnotationUsage(OneToMany.class);
 		if (o2m != null && o2m.cascade().length > 0) {
 			return getCascadeString(o2m.cascade());
@@ -1389,7 +1396,8 @@ public class HbmTemplateHelper {
 	public Map<String, List<String>> getMetaAttributes() {
 		Map<String, List<String>> result = new java.util.LinkedHashMap<>();
 		for (Map.Entry<String, List<String>> entry : metaAttributes.entrySet()) {
-			if (!entry.getKey().startsWith("hibernate.proxy")) {
+			if (!entry.getKey().startsWith("hibernate.proxy")
+					&& !entry.getKey().equals("hibernate.comment")) {
 				result.put(entry.getKey(), entry.getValue());
 			}
 		}
@@ -1411,7 +1419,8 @@ public class HbmTemplateHelper {
 					&& !entry.getKey().startsWith("hibernate.any.")
 					&& !entry.getKey().startsWith("hibernate.collection.")
 					&& !entry.getKey().startsWith("hibernate.array.")
-					&& !entry.getKey().startsWith("hibernate.dynamic-component")) {
+					&& !entry.getKey().startsWith("hibernate.dynamic-component")
+						&& !entry.getKey().equals("hibernate.cascade")) {
 				result.put(entry.getKey(), entry.getValue());
 			}
 		}

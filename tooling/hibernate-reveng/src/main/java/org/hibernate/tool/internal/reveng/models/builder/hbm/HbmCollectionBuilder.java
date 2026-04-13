@@ -955,6 +955,11 @@ public class HbmCollectionBuilder {
 				cascadeAnnotation.value(cascadeTypes);
 				field.addAnnotationUsage(cascadeAnnotation);
 			}
+			// Store the raw cascade string for round-trip fidelity
+			// (some values like "update" have no CascadeType equivalent)
+			ctx.addFieldMetaAttribute(
+					((DynamicClassDetails) field.getDeclaringType()).getClassName(),
+					field.getName(), "hibernate.cascade", cascade.trim());
 		}
 	}
 

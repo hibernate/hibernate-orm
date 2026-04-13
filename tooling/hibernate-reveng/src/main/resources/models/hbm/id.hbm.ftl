@@ -47,6 +47,11 @@
         name="${field.getName()}"
         type="${helper.getHibernateTypeName(field)}"<#if helper.getAccessType(field)??>
         access="${helper.getAccessType(field)}"</#if>>
+<#list helper.getFieldMetaAttributes(field)?keys as metaName>
+<#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
+        <meta attribute="${metaName}">${metaValue}</meta>
+</#list>
+</#list>
 <#if helper.getColumnComment(field)??>
         <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}>
             <comment>${helper.getColumnComment(field)}</comment>

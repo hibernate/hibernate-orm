@@ -98,7 +98,7 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 		tableDescriptor.attributes().forEach( attribute -> {
 			if ( !attribute.isPluralAttributeMapping() && insertable[attribute.getStateArrayPosition()] ) {
 				final Object attributeValue = state[attribute.getStateArrayPosition()];
-				attribute.breakDownJdbcValues(
+				attribute.decompose(
 						attributeValue,
 						(valueIndex, jdbcValue, jdbcValueMapping) -> {
 							if ( jdbcValueMapping.isInsertable() ) {

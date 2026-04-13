@@ -63,15 +63,17 @@
         name="${field.getName()}"
         class="${helper.getTargetEntityName(field)}"<#if helper.getOneToOneMappedBy(field)??>
         property-ref="${helper.getOneToOneMappedBy(field)}"</#if><#if helper.getOneToOneCascadeString(field)??>
-        cascade="${helper.getOneToOneCascadeString(field)}"</#if><#if helper.isOneToOneConstrained(field)>
-        constrained="true"</#if>/>
+        cascade="${helper.getOneToOneCascadeString(field)}"</#if>
+        constrained="${helper.isOneToOneConstrained(field)?string('true', 'false')}"<#if helper.getAccessType(field)??>
+        access="${helper.getAccessType(field)}"</#if>/>
 <#else>
     <one-to-one
         name="${field.getName()}"
         class="${helper.getTargetEntityName(field)}"<#if helper.getOneToOneMappedBy(field)??>
         property-ref="${helper.getOneToOneMappedBy(field)}"</#if><#if helper.getOneToOneCascadeString(field)??>
-        cascade="${helper.getOneToOneCascadeString(field)}"</#if><#if helper.isOneToOneConstrained(field)>
-        constrained="true"</#if>>
+        cascade="${helper.getOneToOneCascadeString(field)}"</#if>
+        constrained="${helper.isOneToOneConstrained(field)?string('true', 'false')}"<#if helper.getAccessType(field)??>
+        access="${helper.getAccessType(field)}"</#if>>
 <#list helper.getFieldMetaAttributes(field)?keys as metaName>
 <#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
         <meta attribute="${metaName}">${metaValue}</meta>

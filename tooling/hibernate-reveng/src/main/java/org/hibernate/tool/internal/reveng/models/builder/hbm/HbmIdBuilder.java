@@ -17,6 +17,7 @@
  */
 package org.hibernate.tool.internal.reveng.models.builder.hbm;
 
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmConfigParameterType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeIdType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeKeyBasicAttributeType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeKeyManyToOneType;
@@ -70,6 +71,19 @@ public class HbmIdBuilder {
 						JpaAnnotations.GENERATED_VALUE.createUsage(ctx.getModelsContext());
 				genAnnotation.strategy(genType);
 				field.addAnnotationUsage(genAnnotation);
+			}
+
+			// Store the original generator class name and params as meta attributes
+			// so the HBM exporter can faithfully reproduce them (e.g. "foreign")
+			String className = entityClass.getClassName();
+			ctx.addFieldMetaAttribute(className, name,
+					"hibernate.generator.class", genClass);
+			if (generator.getConfigParameters() != null) {
+				for (JaxbHbmConfigParameterType param : generator.getConfigParameters()) {
+					ctx.addFieldMetaAttribute(className, name,
+							"hibernate.generator.param:" + param.getName(),
+							param.getValue() != null ? param.getValue() : "");
+				}
 			}
 		}
 

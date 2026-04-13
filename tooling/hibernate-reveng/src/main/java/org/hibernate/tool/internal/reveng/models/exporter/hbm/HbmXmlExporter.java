@@ -37,6 +37,7 @@ import freemarker.template.TemplateExceptionHandler;
 import jakarta.persistence.Embeddable;
 
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.api.export.ArtifactCollector;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
@@ -80,6 +81,7 @@ public class HbmXmlExporter implements Exporter {
 				exporterProperties.get(ExporterConstants.TEMPLATE_PATH);
 		if (templatePath == null) templatePath = new String[0];
 		HbmXmlExporter configured = create(md, templatePath);
+		configured.exporterProperties = exporterProperties;
 		configured.exportAll(destDir);
 	}
 
@@ -125,22 +127,34 @@ public class HbmXmlExporter implements Exporter {
 			throw new IllegalStateException(
 					"exportAll() requires creation via create(MetadataDescriptor, ...)");
 		}
-		List<ClassDetails> entitiesToExport = new ArrayList<>();
+		ArtifactCollector ac = (ArtifactCollector)
+				exporterProperties.get(ExporterConstants.ARTIFACT_COLLECTOR);
 		for (ClassDetails cd : entities) {
-			if (!cd.hasDirectAnnotationUsage(Embeddable.class)) {
-				entitiesToExport.add(cd);
+			if (cd.hasDirectAnnotationUsage(Embeddable.class)) {
+				continue;
+			}
+			File outputFile = EntityFileWriter.resolveOutputFile(
+					outputDir, cd.getClassName(), ".hbm.xml");
+			outputFile.getParentFile().mkdirs();
+			try (Writer writer = new java.io.FileWriter(outputFile)) {
+				Map<String, List<String>> classMeta = metadataHelper != null
+						? metadataHelper.getClassMetaAttributes(cd.getClassName())
+						: Collections.emptyMap();
+				Map<String, Map<String, List<String>>> fieldMeta = metadataHelper != null
+						? metadataHelper.getFieldMetaAttributes(cd.getClassName())
+						: Collections.emptyMap();
+				export(writer, cd, null, classMeta, Collections.emptyMap(), fieldMeta);
+			} catch (Exception e) {
+				throw new RuntimeException(
+						"Failed to export hbm.xml for: " + cd.getClassName(), e);
+			}
+			if (ac != null) {
+				ac.addFile(outputFile, "hbm.xml");
 			}
 		}
-		EntityFileWriter.writePerEntity(entitiesToExport, outputDir, ".hbm.xml",
-				(writer, entity) -> {
-					Map<String, List<String>> classMeta = metadataHelper != null
-							? metadataHelper.getClassMetaAttributes(entity.getClassName())
-							: Collections.emptyMap();
-					Map<String, Map<String, List<String>>> fieldMeta = metadataHelper != null
-							? metadataHelper.getFieldMetaAttributes(entity.getClassName())
-							: Collections.emptyMap();
-					export(writer, entity, null, classMeta, Collections.emptyMap(), fieldMeta);
-				});
+		if (ac != null) {
+			ac.formatFiles();
+		}
 	}
 
 	public void export(Writer output, ClassDetails entity) {

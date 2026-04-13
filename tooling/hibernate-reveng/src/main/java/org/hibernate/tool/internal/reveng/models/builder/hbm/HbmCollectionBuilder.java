@@ -728,7 +728,7 @@ public class HbmCollectionBuilder {
 		}
 	}
 
-	private static void applyAccessAnnotation(DynamicFieldDetails field,
+	static void applyAccessAnnotation(DynamicFieldDetails field,
 											   String access,
 											   HbmBuildContext ctx) {
 		if (access == null || access.isEmpty()) {

@@ -306,7 +306,7 @@ public class HbmXmlExporterTest {
 				.mappedBy("address"));
 		String xml = export(table);
 		assertTrue(xml.contains("property-ref=\"address\""), xml);
-		assertFalse(xml.contains("constrained"), xml);
+		assertTrue(xml.contains("constrained=\"false\""), xml);
 	}
 
 	@Test

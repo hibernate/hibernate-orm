@@ -36,6 +36,27 @@ public class EntityFileWriter {
 	}
 
 	/**
+	 * Resolves the output file for a given class name and extension.
+	 */
+	public static File resolveOutputFile(File outputDir, String className, String extension) {
+		String simpleName;
+		String packagePath;
+		int lastDot = className.lastIndexOf('.');
+		if (lastDot >= 0) {
+			simpleName = className.substring(lastDot + 1);
+			packagePath = className.substring(0, lastDot)
+					.replace('.', File.separatorChar);
+		} else {
+			simpleName = className;
+			packagePath = null;
+		}
+		File dir = (packagePath != null && !packagePath.isEmpty())
+				? new File(outputDir, packagePath)
+				: outputDir;
+		return new File(dir, simpleName + extension);
+	}
+
+	/**
 	 * For each entity, creates the appropriate file in the output
 	 * directory (based on class name and extension) and invokes
 	 * the write action.

@@ -702,6 +702,10 @@ public class HbmTemplateHelper {
 				params.put("segment_value", tg.pkColumnValue());
 			}
 		}
+		if (params.isEmpty()) {
+			// Fallback to meta-based generator params (e.g. foreign generator)
+			params = getGeneratorParametersFromMeta(field);
+		}
 		return params;
 	}
 
@@ -762,6 +766,20 @@ public class HbmTemplateHelper {
 		return params;
 	}
 
+	private Map<String, String> getGeneratorParametersFromMeta(FieldDetails field) {
+		Map<String, List<String>> fieldMeta = getFieldMetaAttributeMap(field);
+		Map<String, String> params = new java.util.LinkedHashMap<>();
+		String prefix = "hibernate.generator.param:";
+		for (Map.Entry<String, List<String>> entry : fieldMeta.entrySet()) {
+			if (entry.getKey().startsWith(prefix)) {
+				String paramName = entry.getKey().substring(prefix.length());
+				String paramValue = entry.getValue().isEmpty() ? "" : entry.getValue().get(0);
+				params.put(paramName, paramValue);
+			}
+		}
+		return params;
+	}
+
 	private Map<String, List<String>> getFieldMetaAttributeMap(FieldDetails field) {
 		return fieldMetaAttributes.getOrDefault(field.getName(), Collections.emptyMap());
 	}
@@ -793,6 +811,12 @@ public class HbmTemplateHelper {
 	}
 
 	public String getGeneratorClass(FieldDetails field) {
+		// Check meta attribute first (preserves original hbm.xml generator class like "foreign")
+		Map<String, List<String>> fieldMeta = getFieldMetaAttributeMap(field);
+		List<String> genClassMeta = fieldMeta.get("hibernate.generator.class");
+		if (genClassMeta != null && !genClassMeta.isEmpty()) {
+			return genClassMeta.get(0);
+		}
 		GeneratedValue gv = field.getDirectAnnotationUsage(GeneratedValue.class);
 		return toGeneratorClass(gv != null ? gv.strategy() : null);
 	}
@@ -1202,7 +1226,8 @@ public class HbmTemplateHelper {
 		// Filter out internal type parameter keys
 		Map<String, List<String>> result = new java.util.LinkedHashMap<>();
 		for (Map.Entry<String, List<String>> entry : all.entrySet()) {
-			if (!entry.getKey().startsWith("hibernate.type.")) {
+			if (!entry.getKey().startsWith("hibernate.type.")
+					&& !entry.getKey().startsWith("hibernate.generator.")) {
 				result.put(entry.getKey(), entry.getValue());
 			}
 		}

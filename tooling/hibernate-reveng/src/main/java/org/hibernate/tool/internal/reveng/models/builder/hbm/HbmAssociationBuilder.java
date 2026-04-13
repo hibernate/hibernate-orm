@@ -137,6 +137,10 @@ public class HbmAssociationBuilder {
 										HbmBuildContext ctx) {
 		String name = o2o.getName();
 		String targetClassName = o2o.getClazz();
+		if (targetClassName == null || targetClassName.isEmpty()) {
+			// When no class specified, capitalize the property name (Hibernate convention)
+			targetClassName = name.substring(0, 1).toUpperCase() + name.substring(1);
+		}
 		String fullTargetName = HbmBuildContext.resolveClassName(targetClassName, defaultPackage);
 		ClassDetails targetClass = ctx.resolveOrCreateClassDetails(
 				HbmBuildContext.simpleName(fullTargetName), fullTargetName);
@@ -149,6 +153,16 @@ public class HbmAssociationBuilder {
 		OneToOneJpaAnnotation o2oAnnotation =
 				JpaAnnotations.ONE_TO_ONE.createUsage(ctx.getModelsContext());
 		field.addAnnotationUsage(o2oAnnotation);
+
+		// constrained="true" means the entity's PK is also an FK
+		if (o2o.isConstrained()) {
+			JoinColumnJpaAnnotation jcAnnotation =
+					JpaAnnotations.JOIN_COLUMN.createUsage(ctx.getModelsContext());
+			field.addAnnotationUsage(jcAnnotation);
+		}
+
+		// access attribute
+		HbmCollectionBuilder.applyAccessAnnotation(field, o2o.getAccess(), ctx);
 	}
 
 	public static void processAny(DynamicClassDetails entityClass,

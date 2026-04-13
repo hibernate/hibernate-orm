@@ -50,6 +50,7 @@ import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnn
 import org.hibernate.boot.models.annotations.internal.TableJpaAnnotation;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 
+import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.InheritanceType;
 
@@ -102,6 +103,62 @@ public class HbmSubclassBuilder {
 		}
 	}
 
+	/**
+	 * Processes top-level {@code <subclass>}, {@code <joined-subclass>}, and
+	 * {@code <union-subclass>} elements that appear directly in
+	 * {@code <hibernate-mapping>} (not nested inside {@code <class>}).
+	 * These reference their parent via the {@code extends} attribute.
+	 */
+	public static void processTopLevelSubclasses(
+			org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping mapping,
+			String defaultPackage,
+			HbmBuildContext ctx) {
+		// Top-level <subclass extends="...">
+		for (JaxbHbmDiscriminatorSubclassEntityType subclass : mapping.getSubclass()) {
+			DynamicClassDetails parent = resolveParentEntity(
+					subclass.getExtends(), defaultPackage, ctx);
+			if (parent != null) {
+				// Ensure parent has @Inheritance for single-table
+				if (!parent.hasDirectAnnotationUsage(jakarta.persistence.Inheritance.class)) {
+					addInheritanceAnnotation(parent, InheritanceType.SINGLE_TABLE, ctx);
+				}
+				buildDiscriminatorSubclass(subclass, parent, defaultPackage, ctx);
+			}
+		}
+		// Top-level <joined-subclass extends="...">
+		for (JaxbHbmJoinedSubclassEntityType subclass : mapping.getJoinedSubclass()) {
+			DynamicClassDetails parent = resolveParentEntity(
+					subclass.getExtends(), defaultPackage, ctx);
+			if (parent != null) {
+				if (!parent.hasDirectAnnotationUsage(jakarta.persistence.Inheritance.class)) {
+					addInheritanceAnnotation(parent, InheritanceType.JOINED, ctx);
+				}
+				buildJoinedSubclass(subclass, parent, defaultPackage, ctx);
+			}
+		}
+		// Top-level <union-subclass extends="...">
+		for (JaxbHbmUnionSubclassEntityType subclass : mapping.getUnionSubclass()) {
+			DynamicClassDetails parent = resolveParentEntity(
+					subclass.getExtends(), defaultPackage, ctx);
+			if (parent != null) {
+				if (!parent.hasDirectAnnotationUsage(jakarta.persistence.Inheritance.class)) {
+					addInheritanceAnnotation(parent, InheritanceType.TABLE_PER_CLASS, ctx);
+				}
+				buildUnionSubclass(subclass, parent, defaultPackage, ctx);
+			}
+		}
+	}
+
+	private static DynamicClassDetails resolveParentEntity(
+			String extendsName, String defaultPackage, HbmBuildContext ctx) {
+		if (extendsName == null || extendsName.isEmpty()) {
+			return null;
+		}
+		String fullName = HbmBuildContext.resolveClassName(extendsName, defaultPackage);
+		return (DynamicClassDetails) ctx.getModelsContext()
+				.getClassDetailsRegistry().findClassDetails(fullName);
+	}
+
 	private static void addInheritanceAnnotation(DynamicClassDetails entityClass,
 												   InheritanceType strategy,
 												   HbmBuildContext ctx) {
@@ -109,6 +166,19 @@ public class HbmSubclassBuilder {
 				JpaAnnotations.INHERITANCE.createUsage(ctx.getModelsContext());
 		inheritanceAnnotation.strategy(strategy);
 		entityClass.addAnnotationUsage(inheritanceAnnotation);
+	}
+
+	/**
+	 * Adds {@code @DiscriminatorColumn} to the entity if a {@code <discriminator>}
+	 * element is present and the annotation hasn't already been added.
+	 */
+	public static void addDiscriminatorColumnIfAbsent(DynamicClassDetails rootEntity,
+													   JaxbHbmRootEntityType entityType,
+													   HbmBuildContext ctx) {
+		if (!rootEntity.hasDirectAnnotationUsage(DiscriminatorColumn.class)) {
+			addDiscriminatorColumn(rootEntity, entityType, ctx);
+			addDiscriminatorValue(rootEntity, entityType.getDiscriminatorValue(), ctx);
+		}
 	}
 
 	private static void addDiscriminatorColumn(DynamicClassDetails rootEntity,
@@ -122,6 +192,11 @@ public class HbmSubclassBuilder {
 				JpaAnnotations.DISCRIMINATOR_COLUMN.createUsage(ctx.getModelsContext());
 
 		String columnName = discriminator.getColumnAttribute();
+		// Fall back to nested <column> element
+		if ((columnName == null || columnName.isEmpty())
+				&& discriminator.getColumn() != null) {
+			columnName = discriminator.getColumn().getName();
+		}
 		if (columnName != null && !columnName.isEmpty()) {
 			discColAnnotation.name(columnName);
 		}
@@ -132,6 +207,12 @@ public class HbmSubclassBuilder {
 		}
 
 		Integer length = discriminator.getLength();
+		// Fall back to nested <column> length
+		if ((length == null || length <= 0)
+				&& discriminator.getColumn() != null
+				&& discriminator.getColumn().getLength() != null) {
+			length = discriminator.getColumn().getLength();
+		}
 		if (length != null && length > 0) {
 			discColAnnotation.length(length);
 		}

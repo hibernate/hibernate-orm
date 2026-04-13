@@ -110,6 +110,8 @@ public class HbmClassDetailsBuilder {
 				HbmEntityAnnotationBuilder.processMappingLevelAnnotations(
 						firstEntity, mapping, ctx);
 			}
+			// Top-level <subclass>, <joined-subclass>, <union-subclass> elements
+			HbmSubclassBuilder.processTopLevelSubclasses(mapping, packageName, ctx);
 		}
 		// Include subclass entities so they get exported as separate files.
 		entities.addAll(ctx.getSubclassEntityDetails());
@@ -201,6 +203,11 @@ public class HbmClassDetailsBuilder {
 		// Attributes (properties, associations, collections, components)
 		HbmSubclassBuilder.processAttributes(entityClass,
 				entityType.getAttributes(), defaultPackage, ctx);
+
+		// Discriminator column (for single-table inheritance, even when subclasses are top-level)
+		if (entityType.getDiscriminator() != null) {
+			HbmSubclassBuilder.addDiscriminatorColumnIfAbsent(entityClass, entityType, ctx);
+		}
 
 		// Subclasses (inheritance)
 		HbmSubclassBuilder.processSubclasses(entityClass, entityType, defaultPackage, ctx);

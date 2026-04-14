@@ -575,6 +575,10 @@ public class MappingMetamodelImpl
 			return getTypeConfiguration().getBasicTypeForJavaType( sqmFieldLiteral.getJavaType() );
 		}
 
+		else if ( sqmExpressible instanceof CompositeSqmPathSource ) {
+			throw new UnsupportedOperationException( "Resolution of embedded-valued SqmExpressible nodes not yet implemented" );
+		}
+
 		else if ( sqmExpressible instanceof AnonymousTupleSqmPathSource<?> anonymousTupleSqmPathSource ) {
 			return resolveMappingExpressible(
 					resolveExpressible( anonymousTupleSqmPathSource.getPathType() ),

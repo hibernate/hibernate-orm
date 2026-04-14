@@ -98,12 +98,18 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			throw new org.hibernate.AssertionFailure( "possible non-threadsafe access to session : could not locate entry during update decomposition" );
 		}
 
-		// Skip UPDATE operations for entities with DELETED status. When an entity is marked
-		// for deletion in the same flush, the UPDATE is unnecessary since the DELETE will
-		// remove the row entirely. Attempting to UPDATE would fail with OptimisticLockException
-		// if the DELETE executes first in the dependency graph.
+		// Skip UPDATE operations for entities with DELETED status ONLY if there are no dirty fields.
+		// When an entity is marked for deletion in the same flush, UPDATEs with no dirty fields
+		// are unnecessary since the DELETE will remove the row entirely.
+		// HOWEVER: For self-referential FK cycles, Hibernate generates UPDATEs to NULL the FK
+		// before DELETE. These UPDATEs have dirty fields and MUST execute to avoid constraint violations.
 		if ( entityEntry.getStatus() == Status.DELETED ) {
-			return List.of();
+			final int[] dirtyFields = action.getDirtyFields();
+			if ( dirtyFields == null || dirtyFields.length == 0 ) {
+				// No dirty fields - skip the UPDATE
+				return List.of();
+			}
+			// Has dirty fields - must be a NULL-before-DELETE update, allow it to proceed
 		}
 
 		action.handleNaturalIdLocalResolutions( identifier, entityPersister, session.getPersistenceContext() );

@@ -9,6 +9,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -20,17 +21,17 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Steve Ebersole
  */
-@DomainModel(annotatedClasses = SelfReferentialJoinTest.Person2.class)
+@DomainModel(annotatedClasses = SelfReferentialJoinOnSecondaryTableTest.Person.class)
 @SessionFactory
-public class SelfReferentialJoinTest {
+public class SelfReferentialJoinOnSecondaryTableTest {
 	@BeforeEach
 	void prepareTestData(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			Person2 adam2 = new Person2(1, "Adam", null );
-			Person2 bob2 = new Person2(2, "Bob", adam2 );
-			adam2.backUp = bob2;
-			session.persist( adam2 );
-			session.persist( bob2 );
+			Person adam = new Person(1, "Adam", null );
+			Person bob = new Person(2, "Bob", adam );
+			adam.backUp = bob;
+			session.persist( adam );
+			session.persist( bob );
 		} );
 	}
 
@@ -41,37 +42,37 @@ public class SelfReferentialJoinTest {
 	}
 
 	@Test
-	void testDeletionHandling2(SessionFactoryScope factoryScope) {
+	void testDeletionHandling(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			var bob2 = session.get(Person2.class, 2);
-			session.remove( bob2.supervisor );
-			session.remove( bob2 );
+			var bob = session.get(Person.class, 2);
+			session.remove( bob.supervisor );
+			session.remove( bob );
 		} );
 	}
 
 	@Entity
-	@Table(name = "person2")
-	public static class Person2 {
+	@Table(name = "person")
+	@SecondaryTable(name = "org_chart")
+	public static class Person {
 		@Id
 		Integer id;
 		String name;
 
 		@ManyToOne(fetch = FetchType.EAGER)
-		@JoinColumn(name = "backup_fk")
-		Person2 backUp;
+		@JoinColumn(name = "backup_fk", table = "org_chart")
+		Person backUp;
 
 		@ManyToOne(fetch = FetchType.EAGER)
-		@JoinColumn(name = "supervisor_fk")
-		Person2 supervisor;  // Self-referential FK on secondary table!
+		@JoinColumn(name = "supervisor_fk", table = "org_chart")
+		Person supervisor;  // Self-referential FK on secondary table!
 
-		public Person2() {
+		public Person() {
 		}
 
-		public Person2(Integer id, String name, Person2 supervisor) {
+		public Person(Integer id, String name, Person supervisor) {
 			this.id = id;
 			this.name = name;
 			this.supervisor = supervisor;
 		}
 	}
-
 }

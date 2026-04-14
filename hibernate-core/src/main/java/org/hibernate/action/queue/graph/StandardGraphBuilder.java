@@ -122,11 +122,14 @@ public class StandardGraphBuilder implements GraphBuilder {
 		}
 
 		long edgeId = 1;
+		System.err.println("DEBUG StandardGraphBuilder: Processing " + constraintModel.foreignKeys().size() + " foreign keys");
 		for ( ForeignKey foreignKey : constraintModel.foreignKeys() ) {
+			System.err.println("  - FK: " + foreignKey.keyTable() + " -> " + foreignKey.targetTable() + " (deferrable=" + foreignKey.deferrable() + ")");
 			if ( ignoreDeferrableForOrdering() && foreignKey.deferrable() ) {
 				// if the foreign-key is known to be deferrable in the database,
 				// and we are allowed to take advantage of that, then there is no
 				// need to break.
+				System.err.println("    Skipping deferrable FK");
 				continue;
 			}
 
@@ -194,8 +197,15 @@ public class StandardGraphBuilder implements GraphBuilder {
 			return edgeId;
 		}
 
+		final boolean isSelfReferencing = childTable.equals(parentTable);
 		for ( GroupNode parentInsert : parentInserts ) {
 			for ( GroupNode childInsert : childInserts ) {
+				// For self-referencing FKs, only create edges where parent ordinal < child ordinal
+				// This represents parent entities (lower ordinal) must be inserted before child entities (higher ordinal)
+				// Skip edges where parent ordinal >= child ordinal as these are false dependencies
+				if (isSelfReferencing && parentInsert.group().ordinal() >= childInsert.group().ordinal()) {
+					continue;
+				}
 				// Edge direction for ordering: parent -> child
 				// Self-referencing FKs must be breakable (otherwise first INSERT is impossible)
 				final boolean breakable;
@@ -248,9 +258,10 @@ public class StandardGraphBuilder implements GraphBuilder {
 
 		for ( GroupNode parentDelete : parentDeletes ) {
 			for ( GroupNode childDelete : childDeletes ) {
-				// NOTE : DELETE edges are NOT breakable using NULL-in-INSERT strategy
-				// For DELETE cycles, CycleBreaker will use ordinal-based breaking (cascade order)
-				// and rely on deferrable constraints or database cascade rules
+				// DELETE edges with nullable FKs can be broken by NULLing the FK before DELETE
+				// Non-nullable DELETE edges rely on deferrable constraints or database cascades
+				final boolean breakable = foreignKey.nullable();
+				final int breakCost = breakable ? 500 : 0;
 
 				// Edge direction for DELETE: child -> parent (reversed!)
 				final GraphEdge edge = new GraphEdge(
@@ -262,12 +273,12 @@ public class StandardGraphBuilder implements GraphBuilder {
 						childDelete,
 						// TO parent (graphing)
 						parentDelete,
-						// Not breakable - forces ordinal-based cycle breaking
-						false,
-						// Break cost - again, not breakable
-						0,
-						// Columns to null if edge is broken - not breakable
-						EMPTY_SELECTABLES,
+						// Breakable if FK is nullable (allows NULL-then-DELETE strategy)
+						breakable,
+						// Break cost
+						breakCost,
+						// FK columns to NULL if edge is broken
+						foreignKey.keyColumns(),
 						foreignKey,
 						edgeId++
 				);
@@ -464,13 +475,20 @@ public class StandardGraphBuilder implements GraphBuilder {
 		// Build map of slots to operations (DELETE, INSERT, and UPDATE)
 		Map<UniqueSlot, List<OperationWithNode>> slotMap = new HashMap<>();
 
+		// Track tables without unique constraints that have both DELETE and INSERT
+		Set<String> tablesWithoutConstraints = new HashSet<>();
+
 		// Extract slots from DELETE operations
 		for ( Map.Entry<String, List<GroupNode>> entry : deleteNodeByTable.entrySet() ) {
 			String tableName = entry.getKey();
 			var constraints = constraintModel.getUniqueConstraintsForTable( (tableName) );
 
-			// Skip if table has no unique constraints
+			// If table has no unique constraints but also has INSERT operations,
+			// track it for table-level edge creation
 			if ( constraints.isEmpty() ) {
+				if ( insertNodeByTable.containsKey( tableName ) ) {
+					tablesWithoutConstraints.add( tableName );
+				}
 				continue;
 			}
 
@@ -675,6 +693,38 @@ public class StandardGraphBuilder implements GraphBuilder {
 							edgeId++
 					);
 					outgoing.get( change2.node() ).add( edge );
+				}
+			}
+		}
+
+		// For tables without unique constraints, create table-level DELETE -> INSERT edges
+		// This ensures DELETEs execute before INSERTs to avoid primary key violations
+		for ( String tableName : tablesWithoutConstraints ) {
+			List<GroupNode> deleteNodes = deleteNodeByTable.get( tableName );
+			List<GroupNode> insertNodes = insertNodeByTable.get( tableName );
+
+			for ( GroupNode deleteNode : deleteNodes ) {
+				for ( GroupNode insertNode : insertNodes ) {
+					final GraphEdge edge = new GraphEdge(
+							// No FK target/key (this is table-level ordering)
+							null,
+							null,
+							// FROM delete (graphing)
+							deleteNode,
+							// TO insert (graphing)
+							insertNode,
+							// BREAKABLE - this is a conservative edge that may be broken if it creates cycles
+							true,
+							// High break cost - prefer to keep this edge unless it creates a cycle
+							1000,
+							// No columns to null (just removes the edge)
+							EMPTY_SELECTABLES,
+							// No FK (this is table-level ordering)
+							null,
+							edgeId++
+					);
+
+					outgoing.get( deleteNode ).add( edge );
 				}
 			}
 		}

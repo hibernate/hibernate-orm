@@ -244,17 +244,22 @@ public class Cfg2JavaTool {
 
     public String getGenericCollectionDeclaration(Collection collection, ImportContext importContext) {
         Value element = collection.getElement();
-        String elementType = importContext.importType(getJavaTypeName(element));
+        String elementType = importContext.importType(boxPrimitive(getJavaTypeName(element)));
         String genericDecl = elementType;
         if(collection.isIndexed()) {
             IndexedCollection idxCol = (IndexedCollection) collection;
             if(!idxCol.isList()) {
                 Value idxElement = idxCol.getIndex();
-                String indexType = importContext.importType(getJavaTypeName(idxElement));
+                String indexType = importContext.importType(boxPrimitive(getJavaTypeName(idxElement)));
                 genericDecl = indexType + "," + elementType;
             }
         }
         return "<" + genericDecl + ">";
+    }
+
+    private static String boxPrimitive(String typeName) {
+        String boxed = PRIMITIVES.get(typeName);
+        return boxed != null ? "java.lang." + boxed : typeName;
     }
 
     public Properties getFilteredIdentifierGeneratorProperties(SimpleValue simpleValue) {

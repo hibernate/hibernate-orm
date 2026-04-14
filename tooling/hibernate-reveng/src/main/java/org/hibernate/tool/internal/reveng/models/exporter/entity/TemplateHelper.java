@@ -157,6 +157,9 @@ public class TemplateHelper {
 	private final boolean useGenerics;
 	private final Map<String, List<String>> classMetaAttributes;
 	private final Map<String, Map<String, List<String>>> fieldMetaAttributes;
+	// All class meta attributes keyed by fully-qualified class name — used
+	// to check meta attributes of the superclass (e.g. whether it is an interface)
+	private final Map<String, Map<String, List<String>>> allClassMetaAttributes;
 	// Maps field name → getter MethodDetails (for property-access entities where
 	// annotations live on methods rather than fields)
 	private final Map<String, MethodDetails> getterByFieldName;
@@ -187,6 +190,16 @@ public class TemplateHelper {
 				   boolean useGenerics,
 				   Map<String, List<String>> classMetaAttributes,
 				   Map<String, Map<String, List<String>>> fieldMetaAttributes) {
+		this(classDetails, modelsContext, importContext, annotated, useGenerics,
+				classMetaAttributes, fieldMetaAttributes, Collections.emptyMap());
+	}
+
+	TemplateHelper(ClassDetails classDetails, ModelsContext modelsContext,
+				   ImportContext importContext, boolean annotated,
+				   boolean useGenerics,
+				   Map<String, List<String>> classMetaAttributes,
+				   Map<String, Map<String, List<String>>> fieldMetaAttributes,
+				   Map<String, Map<String, List<String>>> allClassMetaAttributes) {
 		this.classDetails = classDetails;
 		this.modelsContext = modelsContext;
 		this.importContext = importContext;
@@ -194,6 +207,7 @@ public class TemplateHelper {
 		this.useGenerics = useGenerics;
 		this.classMetaAttributes = classMetaAttributes != null ? classMetaAttributes : Collections.emptyMap();
 		this.fieldMetaAttributes = fieldMetaAttributes != null ? fieldMetaAttributes : Collections.emptyMap();
+		this.allClassMetaAttributes = allClassMetaAttributes != null ? allClassMetaAttributes : Collections.emptyMap();
 		// Process extra-import meta-attribute
 		List<String> extraImports = this.classMetaAttributes.getOrDefault("extra-import", Collections.emptyList());
 		for (String fqcn : extraImports) {
@@ -246,6 +260,26 @@ public class TemplateHelper {
 		return "";
 	}
 
+	public boolean isInterface() {
+		return hasClassMetaAttribute("interface")
+				&& "true".equalsIgnoreCase(getClassMetaAttribute("interface"));
+	}
+
+	public String getDeclarationType() {
+		return isInterface() ? "interface" : "class";
+	}
+
+	private boolean isSuperclassInterface() {
+		ClassDetails superClass = classDetails.getSuperClass();
+		if (superClass == null || "java.lang.Object".equals(superClass.getClassName())) {
+			return false;
+		}
+		Map<String, List<String>> superMeta = allClassMetaAttributes.getOrDefault(
+				superClass.getClassName(), Collections.emptyMap());
+		List<String> ifaceValues = superMeta.getOrDefault("interface", Collections.emptyList());
+		return !ifaceValues.isEmpty() && "true".equalsIgnoreCase(ifaceValues.get(0));
+	}
+
 	public String getDeclarationName() {
 		if (hasClassMetaAttribute("generated-class")) {
 			String generatedClass = getClassMetaAttribute("generated-class");
@@ -258,12 +292,31 @@ public class TemplateHelper {
 	}
 
 	public String getExtendsDeclaration() {
+		if (isInterface()) {
+			// Interfaces use extends for both superclass and extends meta
+			List<String> extendsList = new ArrayList<>();
+			ClassDetails superClass = classDetails.getSuperClass();
+			if (superClass != null && !"java.lang.Object".equals(superClass.getClassName())) {
+				extendsList.add(importType(superClass.getClassName()));
+			}
+			if (hasClassMetaAttribute("extends")) {
+				String extendsFqcn = getClassMetaAttribute("extends");
+				extendsList.add(importType(extendsFqcn));
+			}
+			if (!extendsList.isEmpty()) {
+				return "extends " + String.join(", ", extendsList) + " ";
+			}
+			return "";
+		}
+		// For classes: extend superclass only if it's not an interface
 		ClassDetails superClass = classDetails.getSuperClass();
 		if (superClass != null && !"java.lang.Object".equals(superClass.getClassName())) {
-			importType(superClass.getClassName());
-			String superName = superClass.getClassName();
-			int dot = superName.lastIndexOf('.');
-			return "extends " + (dot > 0 ? superName.substring(dot + 1) : superName) + " ";
+			if (!isSuperclassInterface()) {
+				importType(superClass.getClassName());
+				String superName = superClass.getClassName();
+				int dot = superName.lastIndexOf('.');
+				return "extends " + (dot > 0 ? superName.substring(dot + 1) : superName) + " ";
+			}
 		}
 		if (hasClassMetaAttribute("extends")) {
 			String extendsFqcn = getClassMetaAttribute("extends");
@@ -274,15 +327,21 @@ public class TemplateHelper {
 	}
 
 	public String getImplementsDeclaration() {
-		importType(Serializable.class.getName());
+		if (isInterface()) {
+			return "";
+		}
 		List<String> interfaces = new ArrayList<>();
+		// If superclass is an interface, add it to implements
+		if (isSuperclassInterface()) {
+			ClassDetails superClass = classDetails.getSuperClass();
+			interfaces.add(importType(superClass.getClassName()));
+		}
 		if (hasClassMetaAttribute("implements")) {
 			for (String fqcn : classMetaAttributes.get("implements")) {
-				String simpleName = importType(fqcn);
-				interfaces.add(simpleName);
+				interfaces.add(importType(fqcn));
 			}
 		}
-		interfaces.add("Serializable");
+		interfaces.add(importType(Serializable.class.getName()));
 		return "implements " + String.join(", ", interfaces);
 	}
 
@@ -327,7 +386,7 @@ public class TemplateHelper {
 	// --- Field categorization ---
 
 	public FieldDetails getCompositeIdField() {
-		for (FieldDetails field : classDetails.getFields()) {
+		for (FieldDetails field : getEffectiveFields()) {
 			if (fieldHasAnnotation(field, EmbeddedId.class)) {
 				return field;
 			}
@@ -337,7 +396,7 @@ public class TemplateHelper {
 
 	public List<FieldDetails> getBasicFields() {
 		List<FieldDetails> result = new ArrayList<>();
-		for (FieldDetails field : classDetails.getFields()) {
+		for (FieldDetails field : getEffectiveFields()) {
 			if (!isRelationshipField(field) && !isEmbeddedField(field) && !isEmbeddedIdField(field)
 					&& !fieldHasAnnotation(field, ElementCollection.class)) {
 				result.add(field);
@@ -412,18 +471,19 @@ public class TemplateHelper {
 			ParameterizedTypeDetails paramType = type.asParameterizedType();
 			java.util.List<TypeDetails> args = paramType.getArguments();
 			if ("java.util.Map".equals(rawClassName) && args.size() == 2) {
-				String keySimple = importType(args.get(0).determineRawClass().getClassName());
-				String valueSimple = importType(args.get(1).determineRawClass().getClassName());
+				String keySimple = importType(boxPrimitive(args.get(0).determineRawClass().getClassName()));
+				String valueSimple = importType(boxPrimitive(args.get(1).determineRawClass().getClassName()));
 				return simpleName + "<" + keySimple + ", " + valueSimple + ">";
 			} else if (!args.isEmpty()) {
-				String elementSimple = importType(
-						args.get(args.size() - 1).determineRawClass().getClassName());
+				String elementSimple = importType(boxPrimitive(
+						args.get(args.size() - 1).determineRawClass().getClassName()));
 				return simpleName + "<" + elementSimple + ">";
 			}
 		}
 		TypeDetails elementType = field.getElementType();
 		if (elementType != null) {
 			String elementClassName = elementType.determineRawClass().getClassName();
+			elementClassName = boxPrimitive(elementClassName);
 			String elementSimpleName = importType(elementClassName);
 			return simpleName + "<" + elementSimpleName + ">";
 		}
@@ -1791,7 +1851,7 @@ public class TemplateHelper {
 	}
 
 	public List<FullConstructorProperty> getSuperclassFullConstructorProperties() {
-		if (!isSubclass()) {
+		if (!isSubclass() || isSuperclassInterface()) {
 			return Collections.emptyList();
 		}
 		return createSuperclassHelper().getFullConstructorProperties();
@@ -1807,7 +1867,7 @@ public class TemplateHelper {
 	}
 
 	public List<FullConstructorProperty> getSuperclassMinimalConstructorProperties() {
-		if (!isSubclass()) {
+		if (!isSubclass() || isSuperclassInterface()) {
 			return Collections.emptyList();
 		}
 		return createSuperclassHelper().getMinimalConstructorProperties();
@@ -2344,9 +2404,25 @@ public class TemplateHelper {
 		return fieldHasAnnotation(field, EmbeddedId.class);
 	}
 
+	/**
+	 * Returns the effective fields for this entity. For most entities, this
+	 * is just the entity's own fields. When the superclass is an interface,
+	 * the parent's fields are included (since the class must provide concrete
+	 * implementations of the interface methods).
+	 */
+	private List<FieldDetails> getEffectiveFields() {
+		List<FieldDetails> fields = new ArrayList<>(classDetails.getFields());
+		if (isSuperclassInterface()) {
+			ClassDetails superClass = classDetails.getSuperClass();
+			// Prepend parent fields so they appear before own fields
+			fields.addAll(0, superClass.getFields());
+		}
+		return fields;
+	}
+
 	private <A extends Annotation> List<FieldDetails> getFieldsWithAnnotation(Class<A> annotationType) {
 		List<FieldDetails> result = new ArrayList<>();
-		for (FieldDetails field : classDetails.getFields()) {
+		for (FieldDetails field : getEffectiveFields()) {
 			if (fieldHasAnnotation(field, annotationType)) {
 				result.add(field);
 			}
@@ -2358,6 +2434,20 @@ public class TemplateHelper {
 		return switch (className) {
 			case "int", "long", "short", "byte", "char", "boolean", "float", "double" -> true;
 			default -> false;
+		};
+	}
+
+	private String boxPrimitive(String className) {
+		return switch (className) {
+			case "int" -> "java.lang.Integer";
+			case "long" -> "java.lang.Long";
+			case "short" -> "java.lang.Short";
+			case "byte" -> "java.lang.Byte";
+			case "char" -> "java.lang.Character";
+			case "boolean" -> "java.lang.Boolean";
+			case "float" -> "java.lang.Float";
+			case "double" -> "java.lang.Double";
+			default -> className;
 		};
 	}
 

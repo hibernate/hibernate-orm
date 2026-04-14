@@ -123,6 +123,10 @@ public class MetadataHelper {
 		return metadata;
 	}
 
+	public Map<String, Map<String, List<String>>> getAllClassMetaAttributes() {
+		return allClassMetaAttributes;
+	}
+
 	public Map<String, List<String>> getClassMetaAttributes(String className) {
 		return allClassMetaAttributes.getOrDefault(className, Collections.emptyMap());
 	}

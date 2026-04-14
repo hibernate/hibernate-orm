@@ -189,9 +189,10 @@ public class EntityExporter implements Exporter {
 			}
 		}
 		ImportContextImpl importContext = new ImportContextImpl(packageName);
+		Map<String, Map<String, List<String>>> allClassMeta = getAllClassMeta();
 		TemplateHelper templateHelper = new TemplateHelper(
 				entity, modelsContext, importContext, annotated, useGenerics,
-				classMetaAttributes, fieldMetaAttributes);
+				classMetaAttributes, fieldMetaAttributes, allClassMeta);
 		Map<String, Object> model = new HashMap<>();
 		if (customProperties != null) {
 			for (String name : customProperties.stringPropertyNames()) {
@@ -209,6 +210,13 @@ public class EntityExporter implements Exporter {
 			throw new RuntimeException(
 					"Failed to export entity: " + entity.getClassName(), e);
 		}
+	}
+
+	private Map<String, Map<String, List<String>>> getAllClassMeta() {
+		if (metadataHelper != null) {
+			return metadataHelper.getAllClassMetaAttributes();
+		}
+		return Collections.emptyMap();
 	}
 
 	private Map<String, List<String>> getClassMeta(ClassDetails entity) {

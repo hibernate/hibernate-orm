@@ -50,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author max
  * @author koen
  */
-@Disabled("Uses old Cfg2JavaTool/EntityPOJOClass APIs (HBX-2884)")
+@Disabled("Constructor logic replaced by TemplateHelperTest (testFullConstructorIncludesCompositeId, testFullConstructorIncludesRelationships, testGetFullConstructorPropertiesForSubclass, testMinimalConstructorProperties, etc.)")
 public class TestCase {
 
 	private static final String[] HBM_XML_FILES = new String[] {

@@ -247,8 +247,9 @@ public class HbmSubclassBuilder {
 		addEntityAnnotation(subclassEntity, simpleName, ctx);
 		addDiscriminatorValue(subclassEntity, subclass.getDiscriminatorValue(), ctx);
 
-		// Subclass-level meta attributes
+		// Subclass-level meta attributes (own first, then inherit from parent)
 		ctx.extractClassMetaAttributes(fullName, subclass);
+		ctx.inheritClassMetaAttributes(fullName, parentEntity.getClassName());
 
 		processAttributes(subclassEntity, subclass.getAttributes(), defaultPackage, ctx);
 
@@ -290,8 +291,9 @@ public class HbmSubclassBuilder {
 			subclassEntity.addAnnotationUsage(tableAnnotation);
 		}
 
-		// Subclass-level meta attributes
+		// Subclass-level meta attributes (own first, then inherit from parent)
 		ctx.extractClassMetaAttributes(fullName, subclass);
+		ctx.inheritClassMetaAttributes(fullName, parentEntity.getClassName());
 
 		// @PrimaryKeyJoinColumn from <key>
 		if (subclass.getKey() != null) {
@@ -329,8 +331,9 @@ public class HbmSubclassBuilder {
 
 		addEntityAnnotation(subclassEntity, simpleName, ctx);
 
-		// Subclass-level meta attributes
+		// Subclass-level meta attributes (own first, then inherit from parent)
 		ctx.extractClassMetaAttributes(fullName, subclass);
+		ctx.inheritClassMetaAttributes(fullName, parentEntity.getClassName());
 
 		// @Table for union subclass
 		String tableName = subclass.getTable();

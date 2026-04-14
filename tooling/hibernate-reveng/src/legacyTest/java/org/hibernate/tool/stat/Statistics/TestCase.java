@@ -38,6 +38,7 @@ public class TestCase {
 		JdbcUtil.dropDatabase(this);
 	}
 
+	@Disabled("Cannot run headlessly — requires a display for StatisticsBrowser UI")
 	@Test
 	public void testBrowser() {
 		MetadataSources mds = new MetadataSources();

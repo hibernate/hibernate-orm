@@ -21,8 +21,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmColumnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmToolingHintType;
@@ -95,6 +97,8 @@ public class HbmBuildContext {
 	// Meta attributes from hbm.xml <meta> elements, keyed by fully qualified class name
 	private final Map<String, Map<String, List<String>>> classMetaAttributes = new HashMap<>();
 	private final Map<String, Map<String, Map<String, List<String>>>> fieldMetaAttributes = new HashMap<>();
+	// Tracks meta attributes marked inherit="false", keyed by class name + meta name
+	private final Set<String> nonInheritableClassMetas = new HashSet<>();
 
 	public HbmBuildContext() {
 		ClassLoading classLoading = SimpleClassLoading.SIMPLE_CLASS_LOADING;
@@ -320,6 +324,34 @@ public class HbmBuildContext {
 		if (hints == null) return;
 		for (JaxbHbmToolingHintType hint : hints) {
 			addClassMetaAttribute(className, hint.getName(), hint.getValue());
+			if (!hint.isInheritable()) {
+				nonInheritableClassMetas.add(className + "#" + hint.getName());
+			}
+		}
+	}
+
+	/**
+	 * Propagates inheritable meta attributes from a parent class to a
+	 * subclass.  Only meta attributes that were not marked
+	 * {@code inherit="false"} are propagated, and only when the subclass
+	 * does not already define the same meta attribute.
+	 */
+	public void inheritClassMetaAttributes(String childClassName, String parentClassName) {
+		Map<String, List<String>> parentMeta = classMetaAttributes.get(parentClassName);
+		if (parentMeta == null) return;
+		for (Map.Entry<String, List<String>> entry : parentMeta.entrySet()) {
+			String metaName = entry.getKey();
+			if (nonInheritableClassMetas.contains(parentClassName + "#" + metaName)) {
+				continue;
+			}
+			// Don't overwrite child's own values
+			Map<String, List<String>> childMeta = classMetaAttributes.get(childClassName);
+			if (childMeta != null && childMeta.containsKey(metaName)) {
+				continue;
+			}
+			for (String value : entry.getValue()) {
+				addClassMetaAttribute(childClassName, metaName, value);
+			}
 		}
 	}
 

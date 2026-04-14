@@ -7,4 +7,4 @@
 <#if classAnnotations?has_content>
 ${classAnnotations}
 </#if>
-public class ${templateHelper.getDeclarationName()} ${templateHelper.getExtendsDeclaration()}${templateHelper.getImplementsDeclaration()}
+public ${templateHelper.getDeclarationType()} ${templateHelper.getDeclarationName()} ${templateHelper.getExtendsDeclaration()}${templateHelper.getImplementsDeclaration()}

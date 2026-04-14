@@ -123,7 +123,6 @@ public class TestCase {
 		assertEquals(15, artifactCollector.getFileCount("java"));
 	}
 	
-	@Disabled("Generated Java code has compilation errors — entity exporter needs investigation")
 	@Test
 	public void testCompilable() throws Exception {
 		String helloWorldResourcePath = "/org/hibernate/tool/hbm2x/Hbm2JavaTest/HelloWorld.java_";
@@ -445,7 +444,6 @@ public class TestCase {
 		assertFalse( iter.hasNext() );
 	}
 	
-	@Disabled("Generated Java code has compilation errors — entity exporter needs investigation")
 	@Test
 	public void testGenerics() throws Exception {
 		File genericsSource = new File(outputFolder, "genericssource");
@@ -460,22 +458,28 @@ public class TestCase {
 		assertTrue(genericsTarget.mkdir());
 		String helloWorldResourcePath = "/org/hibernate/tool/hbm2x/Hbm2JavaTest/HelloWorld.java_";
 		File helloWorldOrigin = new File(Objects.requireNonNull(getClass().getResource(helloWorldResourcePath)).toURI());
-		File helloWorldDestination = new File(srcDir, "HelloWorld.java");
+		File helloWorldDestination = new File(genericsSource, "HelloWorld.java");
 		Files.copy(helloWorldOrigin.toPath(), helloWorldDestination.toPath());
 		JavaUtil.compile(genericsSource, genericsTarget);
 		assertTrue(new File(genericsTarget, "HelloWorld.class").exists());
 	}
-	
-	@Disabled("Uses old Cfg2JavaTool/PersistentClass APIs")
+
 	@Test
 	public void testDynamicComponent() {
-		PersistentClass classMapping = 
-				metadata.getEntityBinding(
-						"org.hibernate.tool.hbm2x.Hbm2JavaTest.Customer");
-		assertEquals(
-				"java.util.Map", 
-				new Cfg2JavaTool().getJavaTypeName(
-						classMapping.getProperty("dynaMap"), false));
+		// Build a ClassDetails from an HBM with a <dynamic-component> and verify
+		// that the field type is java.util.Map
+		var ctx = new org.hibernate.tool.internal.reveng.models.builder.hbm.HbmBuildContext();
+		var modelsContext = ctx.getModelsContext();
+		var entityClass = new org.hibernate.models.internal.dynamic.DynamicClassDetails(
+				"DynTest", "org.test.DynTest", Object.class,
+				false, null, null, modelsContext);
+		var dynComponent = new org.hibernate.boot.jaxb.hbm.spi.JaxbHbmDynamicComponentType();
+		dynComponent.setName("dynaMap");
+		org.hibernate.tool.internal.reveng.models.builder.hbm.HbmComponentBuilder
+				.processDynamicComponent(entityClass, dynComponent, "org.test", ctx);
+		var field = entityClass.findFieldByName("dynaMap");
+		assertNotNull(field);
+		assertEquals("java.util.Map", field.getType().determineRawClass().getClassName());
 	}
 	
 	@Test

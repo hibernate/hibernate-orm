@@ -1,0 +1,746 @@
+> Task :local-build-plugins:extractPluginRequests UP-TO-DATE
+> Task :local-build-plugins:generatePluginAdapters UP-TO-DATE
+> Task :local-build-plugins:spotlessInternalRegisterDependencies UP-TO-DATE
+> Task :local-build-plugins:spotlessJava UP-TO-DATE
+> Task :local-build-plugins:spotlessJavaApply UP-TO-DATE
+> Task :local-build-plugins:compileJava UP-TO-DATE
+> Task :local-build-plugins:compileGroovy UP-TO-DATE
+> Task :local-build-plugins:compileGroovyPlugins UP-TO-DATE
+> Task :local-build-plugins:pluginDescriptors UP-TO-DATE
+> Task :local-build-plugins:processResources UP-TO-DATE
+> Task :local-build-plugins:classes UP-TO-DATE
+> Task :local-build-plugins:jar UP-TO-DATE
+Java versions for main code: [compiler: 25, release:17, explicit: false]
+Java versions for test code: [compiler: 25, release:17, launcher: 25, explicit: false]
+
+> Configure project :hibernate-gradle-plugin
+Skipping hibernate-gradle-plugin tests for JDK version 25
+
+> Task :hibernate-testing:writeCheckerManifest UP-TO-DATE
+> Task :hibernate-scan-jandex:writeCheckerManifest UP-TO-DATE
+> Task :spotlessInternalRegisterDependencies UP-TO-DATE
+> Task :hibernate-ant:writeCheckerManifest UP-TO-DATE
+> Task :hibernate-community-dialects:writeCheckerManifest UP-TO-DATE
+> Task :hibernate-core:generateDeprecated-graphParser UP-TO-DATE
+> Task :hibernate-processor:writeCheckerManifest UP-TO-DATE
+> Task :hibernate-core:generateGraphParser UP-TO-DATE
+> Task :hibernate-core:generateHqlParser UP-TO-DATE
+> Task :hibernate-core:generateOrderingParser UP-TO-DATE
+> Task :hibernate-core:generateSqlScriptParser UP-TO-DATE
+> Task :hibernate-core:generateParsers UP-TO-DATE
+> Task :hibernate-core:xjcCfg UP-TO-DATE
+> Task :hibernate-core:xjcConfiguration UP-TO-DATE
+> Task :hibernate-core:xjcHbm UP-TO-DATE
+> Task :hibernate-core:xjcMapping UP-TO-DATE
+> Task :hibernate-scan-jandex:spotlessJava UP-TO-DATE
+> Task :hibernate-ant:spotlessJava UP-TO-DATE
+> Task :hibernate-scan-jandex:spotlessJavaApply UP-TO-DATE
+> Task :hibernate-scan-jandex:processResources UP-TO-DATE
+> Task :hibernate-ant:spotlessJavaApply UP-TO-DATE
+> Task :hibernate-ant:processResources NO-SOURCE
+> Task :hibernate-community-dialects:spotlessJava UP-TO-DATE
+> Task :hibernate-community-dialects:spotlessJavaApply UP-TO-DATE
+> Task :hibernate-community-dialects:processResources UP-TO-DATE
+> Task :hibernate-processor:spotlessJava UP-TO-DATE
+> Task :hibernate-processor:spotlessJavaApply UP-TO-DATE
+> Task :hibernate-processor:processResources UP-TO-DATE
+> Task :hibernate-testing:spotlessJava UP-TO-DATE
+> Task :hibernate-testing:spotlessJavaApply UP-TO-DATE
+> Task :hibernate-testing:processResources UP-TO-DATE
+> Task :hibernate-testing:processTestResources UP-TO-DATE
+> Task :hibernate-core:spotlessJava
+> Task :hibernate-core:spotlessJavaApply
+> Task :hibernate-core:writeCheckerManifest UP-TO-DATE
+
+> Task :hibernate-core:compileJava
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/main/java/org/hibernate/action/queue/graph/StandardGraphBuilder.java:922: warning: [removal] getEntityMetamodel() in EntityPersister has been deprecated and marked for removal
+					int propertyIndex = persister.getEntityMetamodel().getPropertyIndex( propertyName );
+					                             ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/main/java/org/hibernate/action/queue/graph/StandardGraphBuilder.java:927: warning: [removal] getEntityMetamodel() in EntityPersister has been deprecated and marked for removal
+						if ( value != null && persister.getEntityMetamodel()
+						                               ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/main/java/org/hibernate/action/queue/graph/StandardGraphBuilder.java:929: warning: [removal] getEntityMetamodel() in EntityPersister has been deprecated and marked for removal
+							var entityType = (org.hibernate.type.EntityType) persister.getEntityMetamodel()
+							                                                          ^
+3 warnings
+
+> Task :hibernate-core:processResources UP-TO-DATE
+> Task :hibernate-core:classes
+> Task :hibernate-community-dialects:compileJava UP-TO-DATE
+> Task :hibernate-ant:compileJava UP-TO-DATE
+> Task :hibernate-scan-jandex:compileJava UP-TO-DATE
+> Task :hibernate-processor:compileJava UP-TO-DATE
+> Task :hibernate-processor:classes UP-TO-DATE
+> Task :hibernate-scan-jandex:classes UP-TO-DATE
+> Task :hibernate-community-dialects:classes UP-TO-DATE
+> Task :hibernate-ant:classes UP-TO-DATE
+> Task :hibernate-core:jar
+> Task :hibernate-core:copyBundleResourcesNonXml UP-TO-DATE
+> Task :hibernate-core:copyBundleResourcesXml UP-TO-DATE
+> Task :hibernate-core:copyBundleResources NO-SOURCE
+> Task :hibernate-core:processTestResources UP-TO-DATE
+> Task :hibernate-scan-jandex:jar
+> Task :hibernate-ant:jar
+> Task :hibernate-processor:jar
+> Task :hibernate-community-dialects:jar
+
+> Task :hibernate-testing:compileJava
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/transaction/TransactionUtil.java:418: warning: [removal] tenantIdentifier(String) in SessionBuilder has been deprecated and marked for removal
+					.tenantIdentifier( tenant )
+					^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/transaction/TransactionUtil.java:456: warning: [removal] tenantIdentifier(String) in SessionBuilder has been deprecated and marked for removal
+					.tenantIdentifier( tenant )
+					^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/util/ast/LoadingAstHelper.java:58: warning: [removal] LockOptions in org.hibernate has been deprecated and marked for removal
+				LockOptions.NONE,
+				^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/util/ast/LoadingAstHelper.java:58: warning: [removal] NONE in LockOptions has been deprecated and marked for removal
+				LockOptions.NONE,
+				           ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/SkipForDialect.java:27: warning: [removal] SkipForDialects in org.hibernate.testing has been deprecated and marked for removal
+@Repeatable(SkipForDialects.class)
+            ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/SkipForDialect.java:27: warning: [removal] SkipForDialects in org.hibernate.testing has been deprecated and marked for removal
+@Repeatable(SkipForDialects.class)
+            ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/SkipForDialect.java:27: warning: [removal] SkipForDialects in org.hibernate.testing has been deprecated and marked for removal
+@Repeatable(SkipForDialects.class)
+            ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/SkipForDialect.java:27: warning: [removal] SkipForDialects in org.hibernate.testing has been deprecated and marked for removal
+@Repeatable(SkipForDialects.class)
+            ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/SkipForDialects.java:23: warning: [removal] SkipForDialect in org.hibernate.testing has been deprecated and marked for removal
+	SkipForDialect[] value();
+	^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/SkipForDialects.java:23: warning: [removal] SkipForDialect in org.hibernate.testing has been deprecated and marked for removal
+	SkipForDialect[] value();
+	^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/SkipForDialects.java:23: warning: [removal] SkipForDialect in org.hibernate.testing has been deprecated and marked for removal
+	SkipForDialect[] value();
+	^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/SkipForDialects.java:23: warning: [removal] SkipForDialect in org.hibernate.testing has been deprecated and marked for removal
+	SkipForDialect[] value();
+	^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/BaseUnitTestCase.java:56: warning: [removal] AfterClassOnce in org.hibernate.testing has been deprecated and marked for removal
+	@AfterClassOnce
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/BaseUnitTestCase.java:56: warning: [removal] AfterClassOnce in org.hibernate.testing has been deprecated and marked for removal
+	@AfterClassOnce
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/BaseUnitTestCase.java:56: warning: [removal] AfterClassOnce in org.hibernate.testing has been deprecated and marked for removal
+	@AfterClassOnce
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/BaseUnitTestCase.java:56: warning: [removal] AfterClassOnce in org.hibernate.testing has been deprecated and marked for removal
+	@AfterClassOnce
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/FailureExpectedHandler.java:37: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+		final FailureExpected failureExpected = extendedFrameworkMethod.getFailureExpectedAnnotation();
+		      ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/TestClassMetadata.java:144: warning: [removal] BeforeClassOnce in org.hibernate.testing has been deprecated and marked for removal
+		BEFORE_CLASS_ONCE( BeforeClassOnce.class ),
+		                   ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/TestClassMetadata.java:145: warning: [removal] AfterClassOnce in org.hibernate.testing has been deprecated and marked for removal
+		AFTER_CLASS_ONCE( AfterClassOnce.class ),
+		                  ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/TestClassMetadata.java:146: warning: [removal] OnFailure in org.hibernate.testing has been deprecated and marked for removal
+		ON_FAILURE( OnFailure.class ),
+		            ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/TestClassMetadata.java:147: warning: [removal] OnExpectedFailure in org.hibernate.testing has been deprecated and marked for removal
+		ON_EXPECTED_FAILURE( OnExpectedFailure.class );
+		                     ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/ExtendedFrameworkMethod.java:23: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	private final FailureExpected failureExpectedAnnotation;
+	              ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/ExtendedFrameworkMethod.java:23: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	private final FailureExpected failureExpectedAnnotation;
+	              ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/ExtendedFrameworkMethod.java:23: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	private final FailureExpected failureExpectedAnnotation;
+	              ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/ExtendedFrameworkMethod.java:23: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	private final FailureExpected failureExpectedAnnotation;
+	              ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/ExtendedFrameworkMethod.java:25: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	public ExtendedFrameworkMethod(FrameworkMethod delegatee, Ignore virtualIgnore, FailureExpected failureExpectedAnnotation) {
+	                                                                                ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/ExtendedFrameworkMethod.java:25: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	public ExtendedFrameworkMethod(FrameworkMethod delegatee, Ignore virtualIgnore, FailureExpected failureExpectedAnnotation) {
+	                                                                                ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/ExtendedFrameworkMethod.java:25: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	public ExtendedFrameworkMethod(FrameworkMethod delegatee, Ignore virtualIgnore, FailureExpected failureExpectedAnnotation) {
+	                                                                                ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/ExtendedFrameworkMethod.java:25: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	public ExtendedFrameworkMethod(FrameworkMethod delegatee, Ignore virtualIgnore, FailureExpected failureExpectedAnnotation) {
+	                                                                                ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/ExtendedFrameworkMethod.java:32: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	public FailureExpected getFailureExpectedAnnotation() {
+	       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/ExtendedFrameworkMethod.java:32: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	public FailureExpected getFailureExpectedAnnotation() {
+	       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/ExtendedFrameworkMethod.java:32: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	public FailureExpected getFailureExpectedAnnotation() {
+	       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/ExtendedFrameworkMethod.java:32: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	public FailureExpected getFailureExpectedAnnotation() {
+	       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/Helper.java:29: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	public static final String VALIDATE_FAILURE_EXPECTED = FailureExpected.VALIDATE_FAILURE_EXPECTED;
+	                                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/Helper.java:192: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	public static String extractMessage(FailureExpected failureExpected) {
+	                                    ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/Helper.java:192: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	public static String extractMessage(FailureExpected failureExpected) {
+	                                    ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/Helper.java:192: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	public static String extractMessage(FailureExpected failureExpected) {
+	                                    ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/Helper.java:192: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	public static String extractMessage(FailureExpected failureExpected) {
+	                                    ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/Helper.java:201: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	public static String extractIgnoreMessage(FailureExpected failureExpected, FrameworkMethod frameworkMethod) {
+	                                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/Helper.java:201: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	public static String extractIgnoreMessage(FailureExpected failureExpected, FrameworkMethod frameworkMethod) {
+	                                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/Helper.java:201: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	public static String extractIgnoreMessage(FailureExpected failureExpected, FrameworkMethod frameworkMethod) {
+	                                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/Helper.java:201: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+	public static String extractIgnoreMessage(FailureExpected failureExpected, FrameworkMethod frameworkMethod) {
+	                                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/BaseCoreFunctionalTestCase.java:110: warning: [removal] BeforeClassOnce in org.hibernate.testing has been deprecated and marked for removal
+	@BeforeClassOnce
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/BaseCoreFunctionalTestCase.java:110: warning: [removal] BeforeClassOnce in org.hibernate.testing has been deprecated and marked for removal
+	@BeforeClassOnce
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/BaseCoreFunctionalTestCase.java:110: warning: [removal] BeforeClassOnce in org.hibernate.testing has been deprecated and marked for removal
+	@BeforeClassOnce
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/BaseCoreFunctionalTestCase.java:110: warning: [removal] BeforeClassOnce in org.hibernate.testing has been deprecated and marked for removal
+	@BeforeClassOnce
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/BaseCoreFunctionalTestCase.java:336: warning: [removal] AfterClassOnce in org.hibernate.testing has been deprecated and marked for removal
+	@AfterClassOnce
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/BaseCoreFunctionalTestCase.java:336: warning: [removal] AfterClassOnce in org.hibernate.testing has been deprecated and marked for removal
+	@AfterClassOnce
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/BaseCoreFunctionalTestCase.java:336: warning: [removal] AfterClassOnce in org.hibernate.testing has been deprecated and marked for removal
+	@AfterClassOnce
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/BaseCoreFunctionalTestCase.java:336: warning: [removal] AfterClassOnce in org.hibernate.testing has been deprecated and marked for removal
+	@AfterClassOnce
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/BaseCoreFunctionalTestCase.java:358: warning: [removal] OnFailure in org.hibernate.testing has been deprecated and marked for removal
+	@OnFailure
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/BaseCoreFunctionalTestCase.java:359: warning: [removal] OnExpectedFailure in org.hibernate.testing has been deprecated and marked for removal
+	@OnExpectedFailure
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/BaseCoreFunctionalTestCase.java:358: warning: [removal] OnFailure in org.hibernate.testing has been deprecated and marked for removal
+	@OnFailure
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/BaseCoreFunctionalTestCase.java:359: warning: [removal] OnExpectedFailure in org.hibernate.testing has been deprecated and marked for removal
+	@OnExpectedFailure
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/BaseCoreFunctionalTestCase.java:358: warning: [removal] OnFailure in org.hibernate.testing has been deprecated and marked for removal
+	@OnFailure
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/BaseCoreFunctionalTestCase.java:359: warning: [removal] OnExpectedFailure in org.hibernate.testing has been deprecated and marked for removal
+	@OnExpectedFailure
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/BaseCoreFunctionalTestCase.java:358: warning: [removal] OnFailure in org.hibernate.testing has been deprecated and marked for removal
+	@OnFailure
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/BaseCoreFunctionalTestCase.java:359: warning: [removal] OnExpectedFailure in org.hibernate.testing has been deprecated and marked for removal
+	@OnExpectedFailure
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:187: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+			final FailureExpected failureExpected = Helper.locateAnnotation(
+			      ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:188: warning: [removal] FailureExpected in org.hibernate.testing has been deprecated and marked for removal
+					FailureExpected.class,
+					^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:238: warning: [removal] Skip in org.hibernate.testing has been deprecated and marked for removal
+		Skip skip = Helper.locateAnnotation( Skip.class, frameworkMethod, getTestClass() );
+		^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:238: warning: [removal] Skip in org.hibernate.testing has been deprecated and marked for removal
+		Skip skip = Helper.locateAnnotation( Skip.class, frameworkMethod, getTestClass() );
+		                                     ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:247: warning: [removal] SkipForDialect in org.hibernate.testing has been deprecated and marked for removal
+				SkipForDialect.class,
+				^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:248: warning: [removal] SkipForDialects in org.hibernate.testing has been deprecated and marked for removal
+				SkipForDialects.class,
+				^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:249: warning: [removal] SkipForDialect in org.hibernate.testing has been deprecated and marked for removal
+				(methodAnnotation, methodAnnotations, classAnnotation, classAnnotations) -> {
+				 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:249: warning: [removal] SkipForDialect in org.hibernate.testing has been deprecated and marked for removal
+				(methodAnnotation, methodAnnotations, classAnnotation, classAnnotations) -> {
+				                   ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:249: warning: [removal] SkipForDialect in org.hibernate.testing has been deprecated and marked for removal
+				(methodAnnotation, methodAnnotations, classAnnotation, classAnnotations) -> {
+				                                      ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:249: warning: [removal] SkipForDialect in org.hibernate.testing has been deprecated and marked for removal
+				(methodAnnotation, methodAnnotations, classAnnotation, classAnnotations) -> {
+				                                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:250: warning: [removal] SkipForDialect in org.hibernate.testing has been deprecated and marked for removal
+					final LinkedHashMap<Class<?>, SkipForDialect> map = new LinkedHashMap<>();
+					                              ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:255: warning: [removal] SkipForDialect in org.hibernate.testing has been deprecated and marked for removal
+						for ( SkipForDialect annotation : classAnnotations ) {
+						      ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:263: warning: [removal] SkipForDialect in org.hibernate.testing has been deprecated and marked for removal
+						for ( SkipForDialect annotation : methodAnnotations ) {
+						      ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:246: warning: [removal] SkipForDialect in org.hibernate.testing has been deprecated and marked for removal
+		for ( SkipForDialect skipForDialectAnn : Helper.collectAnnotations(
+		      ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:351: warning: [removal] RequiresDialect in org.hibernate.testing has been deprecated and marked for removal
+		final Collection<RequiresDialect> requiresDialects = Helper.collectAnnotations(
+		                 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:352: warning: [removal] RequiresDialect in org.hibernate.testing has been deprecated and marked for removal
+				RequiresDialect.class,
+				^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:353: warning: [removal] RequiresDialects in org.hibernate.testing has been deprecated and marked for removal
+				RequiresDialects.class,
+				^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:354: warning: [removal] RequiresDialect in org.hibernate.testing has been deprecated and marked for removal
+				(methodAnnotation, methodAnnotations, classAnnotation, classAnnotations) -> {
+				 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:354: warning: [removal] RequiresDialect in org.hibernate.testing has been deprecated and marked for removal
+				(methodAnnotation, methodAnnotations, classAnnotation, classAnnotations) -> {
+				                   ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:354: warning: [removal] RequiresDialect in org.hibernate.testing has been deprecated and marked for removal
+				(methodAnnotation, methodAnnotations, classAnnotation, classAnnotations) -> {
+				                                      ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:354: warning: [removal] RequiresDialect in org.hibernate.testing has been deprecated and marked for removal
+				(methodAnnotation, methodAnnotations, classAnnotation, classAnnotations) -> {
+				                                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:355: warning: [removal] RequiresDialect in org.hibernate.testing has been deprecated and marked for removal
+					final LinkedHashMap<Class<?>, RequiresDialect> map = new LinkedHashMap<>();
+					                              ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:360: warning: [removal] RequiresDialect in org.hibernate.testing has been deprecated and marked for removal
+						for ( RequiresDialect annotation : classAnnotations ) {
+						      ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:368: warning: [removal] RequiresDialect in org.hibernate.testing has been deprecated and marked for removal
+						for ( RequiresDialect annotation : methodAnnotations ) {
+						      ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:414: warning: [removal] RequiresDialectFeature in org.hibernate.testing has been deprecated and marked for removal
+		final List<RequiresDialectFeature> requiresDialectFeatures = Helper.locateAllAnnotations(
+		           ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:415: warning: [removal] RequiresDialectFeature in org.hibernate.testing has been deprecated and marked for removal
+				RequiresDialectFeature.class,
+				^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:421: warning: [removal] RequiresDialectFeature in org.hibernate.testing has been deprecated and marked for removal
+			for ( RequiresDialectFeature requiresDialectFeature : requiresDialectFeatures ) {
+			      ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:465: warning: [removal] RequiresDialect in org.hibernate.testing has been deprecated and marked for removal
+	private boolean isDialectMatchingRequired(Collection<RequiresDialect> requiresDialects) {
+	                                                     ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:465: warning: [removal] RequiresDialect in org.hibernate.testing has been deprecated and marked for removal
+	private boolean isDialectMatchingRequired(Collection<RequiresDialect> requiresDialects) {
+	                                                     ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:465: warning: [removal] RequiresDialect in org.hibernate.testing has been deprecated and marked for removal
+	private boolean isDialectMatchingRequired(Collection<RequiresDialect> requiresDialects) {
+	                                                     ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:465: warning: [removal] RequiresDialect in org.hibernate.testing has been deprecated and marked for removal
+	private boolean isDialectMatchingRequired(Collection<RequiresDialect> requiresDialects) {
+	                                                     ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:467: warning: [removal] RequiresDialect in org.hibernate.testing has been deprecated and marked for removal
+		for ( RequiresDialect requiresDialectAnn : requiresDialects ) {
+		      ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:515: warning: [removal] Skip in org.hibernate.testing has been deprecated and marked for removal
+	private Ignore buildIgnore(Skip skip) {
+	                           ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:515: warning: [removal] Skip in org.hibernate.testing has been deprecated and marked for removal
+	private Ignore buildIgnore(Skip skip) {
+	                           ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:515: warning: [removal] Skip in org.hibernate.testing has been deprecated and marked for removal
+	private Ignore buildIgnore(Skip skip) {
+	                           ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:515: warning: [removal] Skip in org.hibernate.testing has been deprecated and marked for removal
+	private Ignore buildIgnore(Skip skip) {
+	                           ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:519: warning: [removal] SkipForDialect in org.hibernate.testing has been deprecated and marked for removal
+	private Ignore buildIgnore(SkipForDialect skip) {
+	                           ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:519: warning: [removal] SkipForDialect in org.hibernate.testing has been deprecated and marked for removal
+	private Ignore buildIgnore(SkipForDialect skip) {
+	                           ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:519: warning: [removal] SkipForDialect in org.hibernate.testing has been deprecated and marked for removal
+	private Ignore buildIgnore(SkipForDialect skip) {
+	                           ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:519: warning: [removal] SkipForDialect in org.hibernate.testing has been deprecated and marked for removal
+	private Ignore buildIgnore(SkipForDialect skip) {
+	                           ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:544: warning: [removal] RequiresDialect in org.hibernate.testing has been deprecated and marked for removal
+	private Ignore buildIgnore(RequiresDialect requiresDialect) {
+	                           ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-testing/src/main/java/org/hibernate/testing/junit4/CustomRunner.java:544: warning: [removal] RequiresDialect in org.hibernate.testing has been deprecated and marked for removal
+	private Ignore buildIgnore(RequiresDialect requiresDialect) {
+	                           ^
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files additionally use or override a deprecated API that is marked for removal.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+100 warnings
+
+> Task :hibernate-testing:classes
+> Task :hibernate-testing:jar
+> Task :hibernate-testing:compileTestJava UP-TO-DATE
+> Task :hibernate-testing:testClasses UP-TO-DATE
+> Task :hibernate-testing:test
+> Task :hibernate-testing:buildDashboard UP-TO-DATE
+
+> Task :hibernate-core:compileTestJava
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/associations/any/PropertyRepository.java:23: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.ALL;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/associations/any/ManyToAnyMergeTest.java:29: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.ALL;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/associations/any/ManyToAnySubClassAccessPropertyTest.java:36: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.ALL;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/xml/XmlProcessingSmokeTests.java:36: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.LOCK;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/xml/XmlProcessingSmokeTests.java:37: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.PERSIST;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/xml/XmlProcessingSmokeTests.java:38: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.REMOVE;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/Customer.java:22: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.ALL;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/collectionelement/ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest.java:38: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.ALL;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/associations/any/PropertyRepository.java:23: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.ALL;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/associations/any/ManyToAnyMergeTest.java:29: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.ALL;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/associations/any/ManyToAnySubClassAccessPropertyTest.java:36: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.ALL;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/xml/XmlProcessingSmokeTests.java:36: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.LOCK;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/xml/XmlProcessingSmokeTests.java:37: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.PERSIST;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/xml/XmlProcessingSmokeTests.java:38: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.REMOVE;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/Customer.java:22: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.ALL;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/collectionelement/ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest.java:38: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.ALL;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/associations/any/PropertyRepository.java:23: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.ALL;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/associations/any/ManyToAnyMergeTest.java:29: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.ALL;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/associations/any/ManyToAnySubClassAccessPropertyTest.java:36: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.ALL;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/xml/XmlProcessingSmokeTests.java:36: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.LOCK;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/xml/XmlProcessingSmokeTests.java:37: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.PERSIST;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/xml/XmlProcessingSmokeTests.java:38: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.REMOVE;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/Customer.java:22: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.ALL;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/collectionelement/ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest.java:38: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.ALL;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/associations/any/PropertyRepository.java:23: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.ALL;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/associations/any/ManyToAnyMergeTest.java:29: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.ALL;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/associations/any/ManyToAnySubClassAccessPropertyTest.java:36: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.ALL;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/xml/XmlProcessingSmokeTests.java:36: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.LOCK;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/xml/XmlProcessingSmokeTests.java:37: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.PERSIST;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/boot/models/xml/XmlProcessingSmokeTests.java:38: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.REMOVE;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/Customer.java:22: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.ALL;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/collectionelement/ElementCollectionOfEmbeddableWithEntityWithEntityCollectionTest.java:38: warning: [removal] CascadeType in org.hibernate.annotations has been deprecated and marked for removal
+import static org.hibernate.annotations.CascadeType.ALL;
+                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/configuration/package-info.java:5: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+@GenericGenerator(name = "myGenerator", strategy = "sequence")
+ ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/configuration/package-info.java:5: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+@GenericGenerator(name = "myGenerator", strategy = "sequence")
+                                        ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/configuration/package-info.java:5: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+@GenericGenerator(name = "myGenerator", strategy = "sequence")
+ ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/configuration/package-info.java:5: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+@GenericGenerator(name = "myGenerator", strategy = "sequence")
+                                        ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/configuration/package-info.java:5: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+@GenericGenerator(name = "myGenerator", strategy = "sequence")
+ ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/configuration/package-info.java:5: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+@GenericGenerator(name = "myGenerator", strategy = "sequence")
+                                        ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/configuration/package-info.java:5: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+@GenericGenerator(name = "myGenerator", strategy = "sequence")
+ ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/configuration/package-info.java:5: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+@GenericGenerator(name = "myGenerator", strategy = "sequence")
+                                        ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/generationmappings/sub/package-info.java:5: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+@GenericGenerator(name = "SequencePerEntityGenerator",
+ ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/generationmappings/sub/package-info.java:6: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+		strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
+		^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/generationmappings/sub/package-info.java:5: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+@GenericGenerator(name = "SequencePerEntityGenerator",
+ ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/generationmappings/sub/package-info.java:6: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+		strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
+		^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/generationmappings/sub/package-info.java:5: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+@GenericGenerator(name = "SequencePerEntityGenerator",
+ ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/generationmappings/sub/package-info.java:6: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+		strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
+		^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/generationmappings/sub/package-info.java:5: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+@GenericGenerator(name = "SequencePerEntityGenerator",
+ ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/generationmappings/sub/package-info.java:6: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+		strategy = "org.hibernate.id.enhanced.SequenceStyleGenerator",
+		^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/sequences/package-info.java:11: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid")
+                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/sequences/package-info.java:11: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid")
+                                                                  ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/sequences/package-info.java:12: warning: [removal] GenericGenerators in org.hibernate.annotations has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerators(
+                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/sequences/package-info.java:13: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+		@org.hibernate.annotations.GenericGenerator(name = "system-uuid-2", strategy = "uuid")
+		                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/sequences/package-info.java:13: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+		@org.hibernate.annotations.GenericGenerator(name = "system-uuid-2", strategy = "uuid")
+		                                                                    ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/sequences/package-info.java:11: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid")
+                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/sequences/package-info.java:11: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid")
+                                                                  ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/sequences/package-info.java:12: warning: [removal] GenericGenerators in org.hibernate.annotations has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerators(
+                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/sequences/package-info.java:13: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+		@org.hibernate.annotations.GenericGenerator(name = "system-uuid-2", strategy = "uuid")
+		                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/sequences/package-info.java:13: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+		@org.hibernate.annotations.GenericGenerator(name = "system-uuid-2", strategy = "uuid")
+		                                                                    ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/sequences/package-info.java:11: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid")
+                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/sequences/package-info.java:11: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid")
+                                                                  ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/sequences/package-info.java:12: warning: [removal] GenericGenerators in org.hibernate.annotations has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerators(
+                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/sequences/package-info.java:13: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+		@org.hibernate.annotations.GenericGenerator(name = "system-uuid-2", strategy = "uuid")
+		                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/sequences/package-info.java:13: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+		@org.hibernate.annotations.GenericGenerator(name = "system-uuid-2", strategy = "uuid")
+		                                                                    ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/sequences/package-info.java:11: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid")
+                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/sequences/package-info.java:11: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid")
+                                                                  ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/sequences/package-info.java:12: warning: [removal] GenericGenerators in org.hibernate.annotations has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerators(
+                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/sequences/package-info.java:13: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+		@org.hibernate.annotations.GenericGenerator(name = "system-uuid-2", strategy = "uuid")
+		                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/sequences/package-info.java:13: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+		@org.hibernate.annotations.GenericGenerator(name = "system-uuid-2", strategy = "uuid")
+		                                                                    ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/package-info.java:11: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid")
+                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/package-info.java:11: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid")
+                                                                  ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/package-info.java:12: warning: [removal] GenericGenerators in org.hibernate.annotations has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerators(
+                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/package-info.java:13: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+		@org.hibernate.annotations.GenericGenerator(name = "system-uuid-2", strategy = "uuid")
+		                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/package-info.java:13: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+		@org.hibernate.annotations.GenericGenerator(name = "system-uuid-2", strategy = "uuid")
+		                                                                    ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/package-info.java:11: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid")
+                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/package-info.java:11: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid")
+                                                                  ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/package-info.java:12: warning: [removal] GenericGenerators in org.hibernate.annotations has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerators(
+                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/package-info.java:13: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+		@org.hibernate.annotations.GenericGenerator(name = "system-uuid-2", strategy = "uuid")
+		                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/package-info.java:13: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+		@org.hibernate.annotations.GenericGenerator(name = "system-uuid-2", strategy = "uuid")
+		                                                                    ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/package-info.java:11: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid")
+                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/package-info.java:11: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid")
+                                                                  ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/package-info.java:12: warning: [removal] GenericGenerators in org.hibernate.annotations has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerators(
+                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/package-info.java:13: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+		@org.hibernate.annotations.GenericGenerator(name = "system-uuid-2", strategy = "uuid")
+		                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/package-info.java:13: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+		@org.hibernate.annotations.GenericGenerator(name = "system-uuid-2", strategy = "uuid")
+		                                                                    ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/package-info.java:11: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid")
+                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/package-info.java:11: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerator(name = "system-uuid", strategy = "uuid")
+                                                                  ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/package-info.java:12: warning: [removal] GenericGenerators in org.hibernate.annotations has been deprecated and marked for removal
+@org.hibernate.annotations.GenericGenerators(
+                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/package-info.java:13: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+		@org.hibernate.annotations.GenericGenerator(name = "system-uuid-2", strategy = "uuid")
+		                          ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/annotations/id/package-info.java:13: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+		@org.hibernate.annotations.GenericGenerator(name = "system-uuid-2", strategy = "uuid")
+		                                                                    ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/IrrelevantEntity.java:25: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+	@GenericGenerator( name = "increment", strategy = "increment" )
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/IrrelevantEntity.java:25: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+	@GenericGenerator( name = "increment", strategy = "increment" )
+	                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/IrrelevantEntity.java:25: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+	@GenericGenerator( name = "increment", strategy = "increment" )
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/IrrelevantEntity.java:25: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+	@GenericGenerator( name = "increment", strategy = "increment" )
+	                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/IrrelevantEntity.java:25: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+	@GenericGenerator( name = "increment", strategy = "increment" )
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/IrrelevantEntity.java:25: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+	@GenericGenerator( name = "increment", strategy = "increment" )
+	                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/IrrelevantEntity.java:25: warning: [removal] GenericGenerator in org.hibernate.annotations has been deprecated and marked for removal
+	@GenericGenerator( name = "increment", strategy = "increment" )
+	 ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/IrrelevantEntity.java:25: warning: [removal] strategy() in GenericGenerator has been deprecated and marked for removal
+	@GenericGenerator( name = "increment", strategy = "increment" )
+	                                       ^
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/pc/MultiLoadIdTest.java:74: warning: [removal] <T>byMultipleIds(Class<T>) in Session has been deprecated and marked for removal
+							.byMultipleIds( Person.class )
+							^
+  where T is a type-variable:
+    T extends Object declared in method <T>byMultipleIds(Class<T>)
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/pc/MultiLoadIdTest.java:80: warning: [removal] <T>byMultipleIds(Class<T>) in Session has been deprecated and marked for removal
+							.byMultipleIds( Person.class )
+							^
+  where T is a type-variable:
+    T extends Object declared in method <T>byMultipleIds(Class<T>)
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/pc/MultiLoadIdTest.java:108: warning: [removal] <T>byMultipleIds(Class<T>) in Session has been deprecated and marked for removal
+							.byMultipleIds(Person.class)
+							^
+  where T is a type-variable:
+    T extends Object declared in method <T>byMultipleIds(Class<T>)
+/Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/src/test/java/org/hibernate/orm/test/pc/MultiLoadIdTest.java:124: warning: [removal] <T>byMultipleIds(Class<T>) in Session has been deprecated and marked for removal
+					List<Person> persons = session.byMultipleIds(Person.class)
+					                              ^
+  where T is a type-variable:
+    T extends Object declared in method <T>byMultipleIds(Class<T>)
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files additionally use or override a deprecated API that is marked for removal.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+100 warnings
+
+> Task :hibernate-core:testClasses
+
+> Task :hibernate-core:test FAILED
+
+SingleTableConstraintsTest > test(EntityManagerFactoryScope) FAILED
+    jakarta.persistence.RollbackException at SingleTableConstraintsTest.java:42
+        Caused by: org.hibernate.exception.ConstraintViolationException at SingleTableConstraintsTest.java:42
+            Caused by: org.h2.jdbc.JdbcBatchUpdateException at SingleTableConstraintsTest.java:42
+
+1 test completed, 1 failed
+
+> Task :hibernate-core:buildDashboard UP-TO-DATE
+
+[Incubating] Problems report is available at: file:///Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/target/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':hibernate-core:test'.
+> There were failing tests. See the report at: file:///Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/target/reports/tests/test/index.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.4.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 48s
+66 actionable tasks: 13 executed, 53 up-to-date

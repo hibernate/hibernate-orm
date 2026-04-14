@@ -1,0 +1,111 @@
+> Task :local-build-plugins:extractPluginRequests UP-TO-DATE
+> Task :local-build-plugins:generatePluginAdapters UP-TO-DATE
+> Task :local-build-plugins:spotlessInternalRegisterDependencies UP-TO-DATE
+> Task :local-build-plugins:spotlessJava UP-TO-DATE
+> Task :local-build-plugins:spotlessJavaApply UP-TO-DATE
+> Task :local-build-plugins:compileJava UP-TO-DATE
+> Task :local-build-plugins:compileGroovy UP-TO-DATE
+> Task :local-build-plugins:compileGroovyPlugins UP-TO-DATE
+> Task :local-build-plugins:pluginDescriptors UP-TO-DATE
+> Task :local-build-plugins:processResources UP-TO-DATE
+> Task :local-build-plugins:classes UP-TO-DATE
+> Task :local-build-plugins:jar UP-TO-DATE
+Java versions for main code: [compiler: 25, release:17, explicit: false]
+Java versions for test code: [compiler: 25, release:17, launcher: 25, explicit: false]
+
+> Configure project :hibernate-gradle-plugin
+Skipping hibernate-gradle-plugin tests for JDK version 25
+
+> Task :spotlessInternalRegisterDependencies UP-TO-DATE
+> Task :hibernate-processor:writeCheckerManifest UP-TO-DATE
+> Task :hibernate-ant:writeCheckerManifest UP-TO-DATE
+> Task :hibernate-scan-jandex:writeCheckerManifest UP-TO-DATE
+> Task :hibernate-testing:writeCheckerManifest UP-TO-DATE
+> Task :hibernate-community-dialects:writeCheckerManifest UP-TO-DATE
+> Task :hibernate-core:generateDeprecated-graphParser UP-TO-DATE
+> Task :hibernate-core:generateGraphParser UP-TO-DATE
+> Task :hibernate-core:generateHqlParser UP-TO-DATE
+> Task :hibernate-core:generateOrderingParser UP-TO-DATE
+> Task :hibernate-core:generateSqlScriptParser UP-TO-DATE
+> Task :hibernate-core:generateParsers UP-TO-DATE
+> Task :hibernate-core:xjcCfg UP-TO-DATE
+> Task :hibernate-core:xjcConfiguration UP-TO-DATE
+> Task :hibernate-core:xjcHbm UP-TO-DATE
+> Task :hibernate-core:xjcMapping UP-TO-DATE
+> Task :hibernate-scan-jandex:spotlessJava UP-TO-DATE
+> Task :hibernate-ant:spotlessJava UP-TO-DATE
+> Task :hibernate-scan-jandex:spotlessJavaApply UP-TO-DATE
+> Task :hibernate-ant:spotlessJavaApply UP-TO-DATE
+> Task :hibernate-ant:processResources NO-SOURCE
+> Task :hibernate-scan-jandex:processResources UP-TO-DATE
+> Task :hibernate-community-dialects:spotlessJava UP-TO-DATE
+> Task :hibernate-community-dialects:spotlessJavaApply UP-TO-DATE
+> Task :hibernate-community-dialects:processResources UP-TO-DATE
+> Task :hibernate-processor:spotlessJava UP-TO-DATE
+> Task :hibernate-processor:spotlessJavaApply UP-TO-DATE
+> Task :hibernate-processor:processResources UP-TO-DATE
+> Task :hibernate-testing:spotlessJava UP-TO-DATE
+> Task :hibernate-testing:spotlessJavaApply UP-TO-DATE
+> Task :hibernate-testing:processResources UP-TO-DATE
+> Task :hibernate-testing:processTestResources UP-TO-DATE
+> Task :hibernate-core:spotlessJava UP-TO-DATE
+> Task :hibernate-core:spotlessJavaApply UP-TO-DATE
+> Task :hibernate-core:writeCheckerManifest UP-TO-DATE
+> Task :hibernate-core:compileJava UP-TO-DATE
+> Task :hibernate-core:processResources UP-TO-DATE
+> Task :hibernate-core:classes UP-TO-DATE
+> Task :hibernate-core:jar UP-TO-DATE
+> Task :hibernate-core:copyBundleResourcesNonXml UP-TO-DATE
+> Task :hibernate-core:copyBundleResourcesXml UP-TO-DATE
+> Task :hibernate-core:copyBundleResources NO-SOURCE
+> Task :hibernate-processor:compileJava UP-TO-DATE
+> Task :hibernate-scan-jandex:compileJava UP-TO-DATE
+> Task :hibernate-ant:compileJava UP-TO-DATE
+> Task :hibernate-scan-jandex:classes UP-TO-DATE
+> Task :hibernate-processor:classes UP-TO-DATE
+> Task :hibernate-ant:classes UP-TO-DATE
+> Task :hibernate-community-dialects:compileJava UP-TO-DATE
+> Task :hibernate-community-dialects:classes UP-TO-DATE
+> Task :hibernate-processor:jar UP-TO-DATE
+> Task :hibernate-scan-jandex:jar UP-TO-DATE
+> Task :hibernate-ant:jar UP-TO-DATE
+> Task :hibernate-community-dialects:jar UP-TO-DATE
+> Task :hibernate-core:processTestResources UP-TO-DATE
+> Task :hibernate-testing:compileJava UP-TO-DATE
+> Task :hibernate-testing:classes UP-TO-DATE
+> Task :hibernate-testing:jar UP-TO-DATE
+> Task :hibernate-testing:compileTestJava UP-TO-DATE
+> Task :hibernate-testing:testClasses UP-TO-DATE
+> Task :hibernate-testing:test UP-TO-DATE
+> Task :hibernate-testing:buildDashboard UP-TO-DATE
+> Task :hibernate-core:compileTestJava UP-TO-DATE
+> Task :hibernate-core:testClasses UP-TO-DATE
+
+> Task :hibernate-core:test
+
+CollectionUpdateOrderingTest > test(EntityManagerFactoryScope) FAILED
+    jakarta.persistence.RollbackException at CollectionUpdateOrderingTest.java:42
+        Caused by: org.hibernate.exception.ConstraintViolationException at CollectionUpdateOrderingTest.java:42
+            Caused by: org.h2.jdbc.JdbcBatchUpdateException at CollectionUpdateOrderingTest.java:42
+
+1 test completed, 1 failed
+
+> Task :hibernate-core:test FAILED
+> Task :hibernate-core:buildDashboard UP-TO-DATE
+
+[Incubating] Problems report is available at: file:///Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/target/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':hibernate-core:test'.
+> There were failing tests. See the report at: file:///Users/steveebersole/projects/hibernate/orm/primary/hibernate-orm/hibernate-core/target/reports/tests/test/index.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.4.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 8s
+66 actionable tasks: 1 executed, 65 up-to-date

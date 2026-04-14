@@ -25,7 +25,7 @@
   </id>
   <property generated="never" lazy="false" name="status">
    <column name="STATUS"/>
-   <type name="org.hibernate.type.EnumType">
+   <type name="org.hibernate.tool.hbm2x.hbm2hbmxml.TypeParamsTest.ParameterizedStringType">
     <param name="catalog"/>
     <param name="column">STATUS</param>
     <param name="table">ORDERS</param>

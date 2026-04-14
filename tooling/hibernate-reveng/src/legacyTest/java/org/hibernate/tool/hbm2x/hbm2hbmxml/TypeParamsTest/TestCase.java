@@ -29,7 +29,6 @@ import org.hibernate.tool.test.utils.ConnectionProvider;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.w3c.dom.Document;
@@ -86,7 +85,6 @@ public class TestCase {
 						"org/hibernate/tool/hbm2x/hbm2hbmxml/TypeParamsTest/Order.hbm.xml"));
 	}
 
-	@Disabled("org.hibernate.type.EnumType was removed in Hibernate 8.0")
 	@Test
 	public void testReadable() {
 		File orderHbmXml =

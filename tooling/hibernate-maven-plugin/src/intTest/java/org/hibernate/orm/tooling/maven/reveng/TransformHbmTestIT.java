@@ -5,7 +5,10 @@
 package org.hibernate.orm.tooling.maven.reveng;
 
 import org.apache.maven.cli.MavenCli;
+import org.codehaus.plexus.classworlds.ClassWorld;
 import org.hibernate.tool.reveng.api.version.Version;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -14,8 +17,10 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Objects;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -24,8 +29,22 @@ public class TransformHbmTestIT {
 
 	public static final String MVN_HOME = "maven.multiModuleProjectDirectory";
 
+	private static ClassWorld classWorld;
+	private static MavenCli mavenCli;
+
 	@TempDir
 	private Path projectPath;
+
+	@BeforeAll
+	public static void beforeAll() throws Exception {
+		classWorld = new ClassWorld( "plexus.core", Thread.currentThread().getContextClassLoader() );
+		mavenCli = new MavenCli( classWorld );
+	}
+
+	@AfterAll
+	public static void afterAll() throws Exception {
+		classWorld.close();
+	}
 
 	@Test
 	public void testSimpleHbmTransformation() throws Exception {
@@ -59,18 +78,22 @@ public class TransformHbmTestIT {
 		File destinationDir = new File(projectPath.toFile(), "src/main/resources/");
 		File ormXmlFile = new File(destinationDir, "simple.mapping.xml");
 		assertFalse(ormXmlFile.exists());
-		new MavenCli().doMain(
-				new String[] {
-						"compile",
-						"org.hibernate.orm:hibernate-maven-plugin:" + Version.versionString() + ":transformHbm"
-				},
-				projectPath.toAbsolutePath().toString(),
-				null,
-				null);
+		runMaven(
+				"compile",
+				"org.hibernate.orm:hibernate-maven-plugin:" + Version.versionString() + ":transformHbm" );
 		// Check the existence of the transformed file
 		assertTrue(ormXmlFile.exists());
 		// Check if it's pretty printed
 		assertTrue(Files.readString(ormXmlFile.toPath()).contains("\n        <table name=\"Foo\"/>\n"));
+	}
+
+	private void runMaven(String... goals) {
+		int result = mavenCli.doMain(
+				goals,
+				projectPath.toAbsolutePath().toString(),
+				System.out,
+				System.err );
+		assertEquals( 0, result, "Maven invocation failed for goals: " + Arrays.asList( goals ) );
 	}
 
 	private static final String simplePomContents =

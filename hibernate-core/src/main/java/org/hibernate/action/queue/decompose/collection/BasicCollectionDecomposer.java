@@ -217,7 +217,10 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			try {
 				if ( !affectedByFilters && collection.empty() ) {
 					if ( !action.isEmptySnapshot() ) {
-						operations.addAll( planRemoveOperation( key, ordinalBase ) );
+						var removeOperation = planRemoveOperation( key, ordinalBase );
+						if ( removeOperation != null ) {
+							operations.add( removeOperation );
+						}
 					}
 				}
 				else if ( collection.needsRecreate( persister ) ) {
@@ -229,7 +232,10 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						) );
 					}
 					if ( !action.isEmptySnapshot() ) {
-						operations.addAll( planRemoveOperation( key, ordinalBase ) );
+						var removeOperation = planRemoveOperation( key, ordinalBase );
+						if ( removeOperation != null ) {
+							operations.add( removeOperation );
+						}
 					}
 					// Recreate INSERTs use INSERT_OFFSET which is higher than DELETE_OFFSET to avoid unique constraint violations
 					operations.addAll( planRecreateOperation(
@@ -881,31 +887,37 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				DecompositionSupport.generateCacheKey( action, session )
 		);
 
-		var operations = planRemoveOperation( action.getKey(), ordinalBase );
 
-		if ( !operations.isEmpty() ) {
-			// should be just one...
-			operations.get(0).setPostExecutionCallback( postRemoveHandling );
-			return operations;
+		final PlannedOperation removeOperation;
+		if ( action.isEmptySnapshot() ) {
+			removeOperation = null;
 		}
 		else {
+			removeOperation = planRemoveOperation( action.getKey(), ordinalBase );
+		}
+
+		if ( removeOperation == null ) {
 			return List.of( DecompositionSupport.createNoOpCallbackCarrier(
 					tableDescriptor,
 					calculateOrdinal( ordinalBase, Slot.DELETE ),
 					postRemoveHandling
 			) );
 		}
+		else {
+			removeOperation.setPostExecutionCallback( postRemoveHandling );
+			return List.of( removeOperation );
+		}
 	}
 
-	private List<PlannedOperation> planRemoveOperation(
+	private PlannedOperation planRemoveOperation(
 			Object key,
 			int ordinalBase) {
 		final var jdbcOperation = jdbcOperations.removeOperation();
 		if ( jdbcOperation == null ) {
-			return List.of();
+			return null;
 		}
 
-		final PlannedOperation plannedOp = new PlannedOperation(
+		return new PlannedOperation(
 				tableDescriptor,
 				MutationKind.DELETE,
 				jdbcOperation,
@@ -913,8 +925,6 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				calculateOrdinal( ordinalBase, Slot.DELETE ),
 				"RemoveAllRows(" + persister.getRolePath() + ")"
 		);
-
-		return List.of( plannedOp );
 	}
 
 

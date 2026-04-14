@@ -67,8 +67,8 @@ public class TablePerSubclassOneToManyDecomposer extends AbstractOneToManyDecomp
 				DecompositionSupport.generateCacheKey( action, session )
 		);
 
-		if ( !persister.needsRemove() ) {
-			// No remove needed - create no-op to defer POST callback
+		if ( !persister.needsRemove() || action.isEmptySnapshot() ) {
+			// No remove needed or collection is UNEQUIVOCALLY empty - create no-op to defer POST callback
 			return List.of( DecompositionSupport.createNoOpCallbackCarrier(
 					persister.getCollectionTableDescriptor(),
 					ordinalBase * 1_000,

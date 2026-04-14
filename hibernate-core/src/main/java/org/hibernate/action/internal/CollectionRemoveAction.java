@@ -103,6 +103,10 @@ public final class CollectionRemoveAction extends CollectionAction {
 		affectedOwnerId = null;
 	}
 
+	public boolean isEmptySnapshot() {
+		return emptySnapshot;
+	}
+
 	@Override
 	public void execute() throws HibernateException {
 		preRemove();

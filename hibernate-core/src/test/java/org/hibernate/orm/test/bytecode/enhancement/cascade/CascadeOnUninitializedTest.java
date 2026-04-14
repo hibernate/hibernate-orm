@@ -109,6 +109,8 @@ public class CascadeOnUninitializedTest {
 	@Test
 	public void testDeleteEnhancedEntityWithUninitializedManyToOne(SessionFactoryScope scope) {
 		Person person = persistPersonWithManyToOne(scope);
+		final var personId = person.getId();
+		final var addressId = person.getPrimaryAddress().getId();
 
 		// get a detached Person
 		Person detachedPerson = scope.fromTransaction(
@@ -116,7 +118,7 @@ public class CascadeOnUninitializedTest {
 					final SQLStatementInspector statementInspector = extractFromSession( session );
 					statementInspector.clear();
 
-					Person p = session.get( Person.class, person.getId() );
+					Person p = session.get( Person.class, personId );
 
 					// loading Person should lead to one SQL
 					statementInspector.assertExecutedCount( 1 );
@@ -125,7 +127,7 @@ public class CascadeOnUninitializedTest {
 				}
 		);
 
-		// primaryAddress should be initialized as an enhance-proxy
+		// primaryAddress should be initialized as an enhanced-proxy
 		assertTrue( Hibernate.isPropertyInitialized( detachedPerson, "primaryAddress" ) );
 		assertThat( detachedPerson ).isNotInstanceOf( HibernateProxy.class );
 		assertFalse( Hibernate.isInitialized( detachedPerson.getPrimaryAddress() ) );
@@ -142,7 +144,7 @@ public class CascadeOnUninitializedTest {
 					// 1) select Person#addresses
 					// 2) select Person#primaryAddress
 					// 3) delete Person
-					// 4) select primary Address
+					// 4) delete primary Address
 					session.flush();
 					statementInspector.assertExecutedCount( 4 );
 				}
@@ -151,8 +153,8 @@ public class CascadeOnUninitializedTest {
 		// both the Person and its Address should be deleted
 		scope.inTransaction(
 				session -> {
-					assertNull( session.find( Person.class, person.getId() ) );
-					assertNull( session.find( Person.class, person.getPrimaryAddress().getId() ) );
+					assertNull( session.find( Person.class, personId ) );
+					assertNull( session.find( Address.class, addressId ) );
 				}
 		);
 	}

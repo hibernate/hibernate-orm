@@ -35,7 +35,8 @@ public class StandardOneToManyDecomposer extends AbstractOneToManyDecomposer {
 	public List<PlannedOperation> decomposeRemove(
 			CollectionRemoveAction action,
 			int ordinalBase,
-			SharedSessionContractImplementor session, DecompositionContext decompositionContext) {
+			SharedSessionContractImplementor session,
+			DecompositionContext decompositionContext) {
 		// Always fire PRE event, even if no SQL operations will be needed
 		DecompositionSupport.firePreRemove( persister, action.getCollection(), action.getAffectedOwner(), session );
 
@@ -49,8 +50,8 @@ public class StandardOneToManyDecomposer extends AbstractOneToManyDecomposer {
 		);
 
 		final var jdbcOperation = jdbcOperations.removeOperation();
-		if ( jdbcOperation == null ) {
-			// No remove operation - create no-op to defer POST callback
+		if ( jdbcOperation == null || action.isEmptySnapshot() ) {
+			// No remove operation or collection is UNEQUIVOCALLY empty - create no-op to defer POST callback
 			return List.of( DecompositionSupport.createNoOpCallbackCarrier(
 					persister.getCollectionTableDescriptor(),
 					ordinalBase * 1_000,

@@ -248,11 +248,9 @@ public class StandardGraphBuilder implements GraphBuilder {
 
 		for ( GroupNode parentDelete : parentDeletes ) {
 			for ( GroupNode childDelete : childDeletes ) {
-				// DELETE edges can be breakable if FK is nullable
-				// This allows handling circular FK dependencies by nullifying one FK first
-				final boolean breakable = foreignKey.nullable();
-				final int breakCost = breakable ? computeBreakCost( foreignKey ) : 0;
-				final SelectableMappings columnsToNull = breakable ? foreignKey.keyColumns() : EMPTY_SELECTABLES;
+				// NOTE : DELETE edges are NOT breakable using NULL-in-INSERT strategy
+				// For DELETE cycles, CycleBreaker will use ordinal-based breaking (cascade order)
+				// and rely on deferrable constraints or database cascade rules
 
 				// Edge direction for DELETE: child -> parent (reversed!)
 				final GraphEdge edge = new GraphEdge(
@@ -264,12 +262,12 @@ public class StandardGraphBuilder implements GraphBuilder {
 						childDelete,
 						// TO parent (graphing)
 						parentDelete,
-						// Breakable if FK is nullable - allows UPDATE to null FK before DELETE
-						breakable,
-						// Break cost
-						breakCost,
-						// Columns to null if edge is broken
-						columnsToNull,
+						// Not breakable - forces ordinal-based cycle breaking
+						false,
+						// Break cost - again, not breakable
+						0,
+						// Columns to null if edge is broken - not breakable
+						EMPTY_SELECTABLES,
 						foreignKey,
 						edgeId++
 				);

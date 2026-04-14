@@ -334,6 +334,18 @@ public class CycleBreaker {
 	/// NOTE: DELETE edges are always marked as non-breakable (can't use NULL-INSERT)
 	/// But for DELETE-only cycles, we MUST break an edge to allow any progress.
 	/// This is especially true for self-referencing FKs where you need to delete rows.
+	///
+	/// Strategy: The graph builder creates edges for ALL FK relationships at the table level,
+	/// but for DELETE operations, only FK references that are actually populated should create
+	/// dependencies. When multiple FKs exist between the same tables (e.g., @ManyToOne and
+	/// @OneToMany on same entity type), this creates false cycles.
+	///
+	/// Ordinals reflect action queue order, which respects cascade relationships:
+	/// - Explicitly deleted entities have lower ordinals
+	/// - Cascade-deleted entities have higher ordinals
+	///
+	/// By breaking edges that flow backwards (higher ordinal -> lower ordinal), we preserve
+	/// the cascade ordering while breaking the false cycle created by unpopulated FKs.
 	private void breakArbitraryDeleteEdge(List<GraphEdge> cycle) {
 		GraphEdge toBreak = null;
 
@@ -343,6 +355,23 @@ public class CycleBreaker {
 			if (e.isDeferrable()) {
 				toBreak = e;
 				break;
+			}
+		}
+
+		// Prefer edges that flow backwards in ordinal order (likely unpopulated FKs)
+		// Example: Person (ordinal=0) cascades to Address (ordinal=1000)
+		//   - Person -> Address (0 -> 1000): natural flow, KEEP
+		//   - Address -> Person (1000 -> 0): backwards flow, BREAK
+		if (toBreak == null) {
+			for (GraphEdge e : cycle) {
+				if (e.isBroken()) continue;
+				int fromOrdinal = e.getFrom().group().ordinal();
+				int toOrdinal = e.getTo().group().ordinal();
+				// Break edges where 'to' has lower ordinal than 'from'
+				if (toOrdinal < fromOrdinal) {
+					toBreak = e;
+					break;
+				}
 			}
 		}
 

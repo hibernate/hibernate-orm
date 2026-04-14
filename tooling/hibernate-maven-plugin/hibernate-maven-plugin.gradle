@@ -52,6 +52,9 @@ tasks.register('integrationTest', Test) {
 
     useJUnitPlatform()
 
+    testLogging {
+        showStandardStreams = true
+    }
 }
 
 tasks.forbiddenApisIntTest {

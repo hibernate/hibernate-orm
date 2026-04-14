@@ -114,7 +114,6 @@ public class TransactionCommitFailureTest {
 
 	private Map<String, Object> basicSettings() {
 		return SettingsGenerator.generateSettings(
-				Environment.HBM2DDL_AUTO, "create-drop",
 				Environment.DIALECT, DialectContext.getDialect().getClass().getName(),
 				Environment.CONNECTION_PROVIDER, ProxyConnectionProvider.class.getName()
 		);

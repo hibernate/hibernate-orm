@@ -27,7 +27,10 @@ public interface AssigningTableMutationBuilder<M extends TableMutation<?>> exten
 	/// Adds a column assignment defined by `columnMapping = {columnMapping.getWriteExpression()}`
 	@Incubating
 	default void addColumnAssignment(SelectableMapping columnMapping) {
-		addColumnAssignment( columnMapping, columnMapping.getWriteExpression() );
+		// Formulas are read-only computed columns and cannot be included in UPDATE/INSERT statements
+		if ( !columnMapping.isFormula() ) {
+			addColumnAssignment( columnMapping, columnMapping.getWriteExpression() );
+		}
 	}
 
 	/// Adds a column assignment defined by `columnMapping = assignment`

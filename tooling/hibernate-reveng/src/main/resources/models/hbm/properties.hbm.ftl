@@ -35,7 +35,9 @@
 <#list helper.getManyToOneFields() as field>
     <many-to-one
         name="${field.getName()}"
-        class="${helper.getTargetEntityName(field)}"<#if helper.getPropertyRef(field)??>
+<#if helper.isManyToOneEntityNameRef(field)>
+        entity-name="${helper.getManyToOneEntityName(field)}"<#else>
+        class="${helper.getTargetEntityName(field)}"</#if><#if helper.getPropertyRef(field)??>
         property-ref="${helper.getPropertyRef(field)}"</#if><#if helper.isManyToOneLazy(field)>
         fetch="select"
         lazy="proxy"</#if><#if helper.getFetchMode(field)??>
@@ -53,6 +55,9 @@
 </#list>
 <#list helper.getJoinColumnNames(field) as colName>
         <column name="${colName}"/>
+</#list>
+<#list helper.getManyToOneFormulas(field) as formula>
+        <formula>${formula}</formula>
 </#list>
     </many-to-one>
 </#list>

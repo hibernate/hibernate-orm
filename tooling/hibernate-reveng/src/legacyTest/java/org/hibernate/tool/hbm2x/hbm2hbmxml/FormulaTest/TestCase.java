@@ -27,7 +27,6 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -66,7 +65,6 @@ public class TestCase {
 		hbmexporter.start();
 	}
 	
-	@Disabled("Entity-name based mappings (BillingAddress/ShippingAddress) not yet supported by new HBM exporter")
 	@Test
 	public void testReadable() {
         ArrayList<File> files = new ArrayList<>(4);

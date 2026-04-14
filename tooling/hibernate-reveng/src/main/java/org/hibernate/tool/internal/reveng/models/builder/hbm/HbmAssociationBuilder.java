@@ -103,11 +103,14 @@ public class HbmAssociationBuilder {
 			if (notNull) jc.nullable(false);
 			field.addAnnotationUsage(jc);
 		} else {
-			// Check nested <column> elements from columnOrFormula
+			// Check nested <column> and <formula> elements from columnOrFormula
 			List<JaxbHbmColumnType> columns = new java.util.ArrayList<>();
+			List<String> formulas = new java.util.ArrayList<>();
 			for (Object item : m2o.getColumnOrFormula()) {
 				if (item instanceof JaxbHbmColumnType col) {
 					columns.add(col);
+				} else if (item instanceof String formula) {
+					formulas.add(formula);
 				}
 			}
 			if (!columns.isEmpty()) {
@@ -136,6 +139,11 @@ public class HbmAssociationBuilder {
 					jcs.value(jcArray);
 					field.addAnnotationUsage(jcs);
 				}
+			}
+			// Store formulas as field meta attributes for HBM round-trip
+			for (String formula : formulas) {
+				ctx.addFieldMetaAttribute(entityClass.getClassName(), name,
+						"hibernate.formula", formula);
 			}
 		}
 	}

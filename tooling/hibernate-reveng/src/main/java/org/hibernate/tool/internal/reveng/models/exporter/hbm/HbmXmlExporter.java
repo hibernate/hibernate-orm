@@ -158,7 +158,11 @@ public class HbmXmlExporter implements Exporter {
 						: Collections.emptyMap();
 				String comment = classMeta.containsKey("hibernate.comment")
 						? classMeta.get("hibernate.comment").get(0) : null;
-				export(writer, cd, comment, classMeta, Collections.emptyMap(), fieldMeta);
+				Map<String, Map<String, List<String>>> allClassMeta = metadataHelper != null
+						? metadataHelper.getAllClassMetaAttributes()
+						: Collections.emptyMap();
+				export(writer, cd, comment, classMeta, Collections.emptyMap(),
+						fieldMeta, allClassMeta);
 			} catch (Exception e) {
 				throw new RuntimeException(
 						"Failed to export hbm.xml for: " + cd.getClassName(), e);
@@ -191,8 +195,18 @@ public class HbmXmlExporter implements Exporter {
 					   Map<String, List<String>> metaAttributes,
 					   Map<String, String> imports,
 					   Map<String, Map<String, List<String>>> fieldMetaAttributes) {
+		export(output, entity, comment, metaAttributes, imports,
+				fieldMetaAttributes, Collections.emptyMap());
+	}
+
+	public void export(Writer output, ClassDetails entity, String comment,
+					   Map<String, List<String>> metaAttributes,
+					   Map<String, String> imports,
+					   Map<String, Map<String, List<String>>> fieldMetaAttributes,
+					   Map<String, Map<String, List<String>>> allClassMetaAttributes) {
 		HbmTemplateHelper helper = new HbmTemplateHelper(
-				entity, comment, metaAttributes, imports, fieldMetaAttributes);
+				entity, comment, metaAttributes, imports,
+				fieldMetaAttributes, allClassMetaAttributes);
 		Map<String, Object> model = new HashMap<>();
 		model.put("helper", helper);
 		model.put("settings", mappingSettings);

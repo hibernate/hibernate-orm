@@ -135,37 +135,55 @@ public class HbmTemplateHelper {
 	private final Map<String, List<String>> metaAttributes;
 	private final Map<String, String> imports;
 	private final Map<String, Map<String, List<String>>> fieldMetaAttributes;
+	private final Map<String, Map<String, List<String>>> allClassMetaAttributes;
 
 	HbmTemplateHelper(ClassDetails classDetails) {
-		this(classDetails, null, Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap());
+		this(classDetails, null, Collections.emptyMap(), Collections.emptyMap(),
+				Collections.emptyMap(), Collections.emptyMap());
 	}
 
 	HbmTemplateHelper(ClassDetails classDetails, String comment,
 					   Map<String, List<String>> metaAttributes) {
-		this(classDetails, comment, metaAttributes, Collections.emptyMap(), Collections.emptyMap());
+		this(classDetails, comment, metaAttributes, Collections.emptyMap(),
+				Collections.emptyMap(), Collections.emptyMap());
 	}
 
 	HbmTemplateHelper(ClassDetails classDetails, String comment,
 					   Map<String, List<String>> metaAttributes,
 					   Map<String, String> imports) {
-		this(classDetails, comment, metaAttributes, imports, Collections.emptyMap());
+		this(classDetails, comment, metaAttributes, imports,
+				Collections.emptyMap(), Collections.emptyMap());
 	}
 
 	HbmTemplateHelper(ClassDetails classDetails, String comment,
 					   Map<String, List<String>> metaAttributes,
 					   Map<String, String> imports,
 					   Map<String, Map<String, List<String>>> fieldMetaAttributes) {
+		this(classDetails, comment, metaAttributes, imports,
+				fieldMetaAttributes, Collections.emptyMap());
+	}
+
+	HbmTemplateHelper(ClassDetails classDetails, String comment,
+					   Map<String, List<String>> metaAttributes,
+					   Map<String, String> imports,
+					   Map<String, Map<String, List<String>>> fieldMetaAttributes,
+					   Map<String, Map<String, List<String>>> allClassMetaAttributes) {
 		this.classDetails = classDetails;
 		this.comment = comment;
 		this.metaAttributes = metaAttributes != null ? metaAttributes : Collections.emptyMap();
 		this.imports = imports != null ? imports : Collections.emptyMap();
 		this.fieldMetaAttributes = fieldMetaAttributes != null ? fieldMetaAttributes : Collections.emptyMap();
+		this.allClassMetaAttributes = allClassMetaAttributes != null ? allClassMetaAttributes : Collections.emptyMap();
 	}
 
 	// --- Entity / class ---
 
 	public String getClassName() {
-		String name = classDetails.getClassName();
+		// When entity-name differs from class name, the real Java class name is
+		// stored as a meta attribute; ClassDetails.getClassName() holds the entity-name
+		List<String> realClass = getClassMetaAttribute("hibernate.class-name");
+		String name = (realClass != null && !realClass.isEmpty())
+				? realClass.get(0) : classDetails.getClassName();
 		return name.startsWith(".") ? name.substring(1) : name;
 	}
 
@@ -976,6 +994,43 @@ public class HbmTemplateHelper {
 		return field.getType().determineRawClass().getClassName();
 	}
 
+	/**
+	 * Returns true if the many-to-one target is referenced by entity-name
+	 * (i.e., the target ClassDetails uses an entity-name that differs from
+	 * its Java class name).
+	 */
+	public boolean isManyToOneEntityNameRef(FieldDetails field) {
+		String targetClassName = field.getType().determineRawClass().getClassName();
+		Map<String, List<String>> targetMeta = allClassMetaAttributes.get(targetClassName);
+		if (targetMeta != null) {
+			List<String> realClass = targetMeta.get("hibernate.class-name");
+			if (realClass != null && !realClass.isEmpty()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Returns the entity-name for a many-to-one target, or null if the target
+	 * is not entity-name based.
+	 */
+	public String getManyToOneEntityName(FieldDetails field) {
+		if (!isManyToOneEntityNameRef(field)) {
+			return null;
+		}
+		// The ClassDetails className holds the entity-name-based identity;
+		// extract the simple name as entity-name
+		String identityName = field.getType().determineRawClass().getClassName();
+		int dot = identityName.lastIndexOf('.');
+		return dot >= 0 ? identityName.substring(dot + 1) : identityName;
+	}
+
+	public List<String> getManyToOneFormulas(FieldDetails field) {
+		List<String> formulas = getFieldMetaAttribute(field, "hibernate.formula");
+		return formulas != null ? formulas : Collections.emptyList();
+	}
+
 	public boolean isManyToOneLazy(FieldDetails field) {
 		ManyToOne m2o = field.getDirectAnnotationUsage(ManyToOne.class);
 		return m2o != null && m2o.fetch() == jakarta.persistence.FetchType.LAZY;
@@ -1406,6 +1461,7 @@ public class HbmTemplateHelper {
 		for (Map.Entry<String, List<String>> entry : metaAttributes.entrySet()) {
 			if (!entry.getKey().startsWith("hibernate.proxy")
 					&& !entry.getKey().equals("hibernate.comment")
+					&& !entry.getKey().equals("hibernate.class-name")
 					&& !entry.getKey().startsWith("hibernate.sql-query.")) {
 				result.put(entry.getKey(), entry.getValue());
 			}
@@ -1415,6 +1471,11 @@ public class HbmTemplateHelper {
 
 	public List<String> getMetaAttribute(String name) {
 		return metaAttributes.getOrDefault(name, Collections.emptyList());
+	}
+
+	private List<String> getClassMetaAttribute(String name) {
+		List<String> values = metaAttributes.get(name);
+		return (values != null && !values.isEmpty()) ? values : null;
 	}
 
 	private String getClassMetaValue(String key) {
@@ -1434,7 +1495,8 @@ public class HbmTemplateHelper {
 					&& !entry.getKey().startsWith("hibernate.collection.")
 					&& !entry.getKey().startsWith("hibernate.array.")
 					&& !entry.getKey().startsWith("hibernate.dynamic-component")
-						&& !entry.getKey().equals("hibernate.cascade")) {
+					&& !entry.getKey().equals("hibernate.cascade")
+					&& !entry.getKey().equals("hibernate.formula")) {
 				result.put(entry.getKey(), entry.getValue());
 			}
 		}

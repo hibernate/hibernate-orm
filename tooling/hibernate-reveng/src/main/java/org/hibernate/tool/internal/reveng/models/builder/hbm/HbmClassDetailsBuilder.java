@@ -137,16 +137,30 @@ public class HbmClassDetailsBuilder {
 		String fullName = HbmBuildContext.resolveClassName(className, defaultPackage);
 		String simpleName = HbmBuildContext.simpleName(fullName);
 
+		// When entity-name differs from class name, use entity-name as ClassDetails identity
+		String entityName = entityType.getEntityName();
+		boolean hasEntityName = entityName != null && !entityName.isEmpty()
+				&& !entityName.equals(simpleName) && !entityName.equals(fullName);
+		String identityName = hasEntityName
+				? HbmBuildContext.resolveClassName(entityName, defaultPackage) : fullName;
+		String identitySimpleName = hasEntityName
+				? HbmBuildContext.simpleName(identityName) : simpleName;
+
 		boolean isAbstract = entityType.isAbstract() != null && entityType.isAbstract();
 		DynamicClassDetails entityClass = new DynamicClassDetails(
-				simpleName, fullName, Object.class,
+				identitySimpleName, identityName, Object.class,
 				isAbstract, null, null, ctx.getModelsContext());
 
 		// @Entity
 		EntityJpaAnnotation entityAnnotation =
 				JpaAnnotations.ENTITY.createUsage(ctx.getModelsContext());
-		entityAnnotation.name(simpleName);
+		entityAnnotation.name(hasEntityName ? entityName : simpleName);
 		entityClass.addAnnotationUsage(entityAnnotation);
+
+		// When entity-name differs, store real Java class name for HBM output
+		if (hasEntityName) {
+			ctx.addClassMetaAttribute(identityName, "hibernate.class-name", fullName);
+		}
 
 		// @Table — default to unqualified class name when not specified
 		String tableName = entityType.getTable();
@@ -167,11 +181,11 @@ public class HbmClassDetailsBuilder {
 		entityClass.addAnnotationUsage(tableAnnotation);
 
 		// Entity-level meta attributes
-		ctx.extractClassMetaAttributes(fullName, entityType);
+		ctx.extractClassMetaAttributes(identityName, entityType);
 
 		// Entity-level comment
 		if (entityType.getComment() != null && !entityType.getComment().isEmpty()) {
-			ctx.addClassMetaAttribute(fullName, "hibernate.comment", entityType.getComment());
+			ctx.addClassMetaAttribute(identityName, "hibernate.comment", entityType.getComment());
 		}
 
 		// Id / Composite Id
@@ -180,7 +194,7 @@ public class HbmClassDetailsBuilder {
 				defaultPackage, ctx);
 		// Id meta attributes
 		if (entityType.getId() != null) {
-			ctx.extractFieldMetaAttributes(fullName,
+			ctx.extractFieldMetaAttributes(identityName,
 					entityType.getId().getName(), entityType.getId());
 		}
 
@@ -188,11 +202,11 @@ public class HbmClassDetailsBuilder {
 		HbmPropertyBuilder.processVersion(entityClass, entityType.getVersion(), ctx);
 		HbmPropertyBuilder.processTimestamp(entityClass, entityType.getTimestamp(), ctx);
 		if (entityType.getVersion() != null) {
-			ctx.extractFieldMetaAttributes(fullName,
+			ctx.extractFieldMetaAttributes(identityName,
 					entityType.getVersion().getName(), entityType.getVersion());
 		}
 		if (entityType.getTimestamp() != null) {
-			ctx.extractFieldMetaAttributes(fullName,
+			ctx.extractFieldMetaAttributes(identityName,
 					entityType.getTimestamp().getName(), entityType.getTimestamp());
 		}
 

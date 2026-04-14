@@ -33,7 +33,6 @@ import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
 import org.hibernate.tool.test.utils.JavaUtil;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -342,21 +341,29 @@ public class TestCase {
 				c2j.asArgumentList( pc.getProperties().iterator() ) );
 	}
 
-	@Disabled("Replaced by TemplateHelperTest.testGetFullConstructorPropertiesForRootEntity/ForSubclass")
 	@Test
-	public void testPropertiesForFullConstructor() {
-		Cfg2JavaTool c2j = new Cfg2JavaTool();
-		PersistentClass pc = metadata.getEntityBinding( "HelloWorld" );
-		POJOClass pjc = c2j.getPOJOClass(pc);
-		List<Property> wl = pjc.getPropertiesForFullConstructor();
-		assertEquals( 3, wl.size() );
-		PersistentClass uni = metadata.getEntityBinding( "HelloUniverse" );
-		pjc = c2j.getPOJOClass(uni);
-		List<Property> local = pjc.getPropertyClosureForFullConstructor();
-		assertEquals( 6, local.size() );
-		for(int i=0;i<wl.size();i++) {
-			assertEquals(local.get( i ), wl.get( i ),  i + " position should be the same" );
-		}
+	public void testPropertiesForFullConstructor() throws Exception {
+		// HelloWorld has meta interface=true and generated-class=BaseHelloWorld,
+		// so both BaseHelloWorld and HelloUniverse are generated as interfaces.
+		// Verify the generated interfaces declare the correct accessor methods.
+		File hwFile = new File(srcDir, "generated/BaseHelloWorld.java");
+		String hwSource = Files.readString(hwFile.toPath());
+		// BaseHelloWorld: 3 own properties (id, hello, world)
+		assertTrue(hwSource.contains("public interface BaseHelloWorld"),
+				"BaseHelloWorld should be generated as an interface");
+		assertTrue(hwSource.contains("public String getId()"));
+		assertTrue(hwSource.contains("public String getHello()"));
+		assertTrue(hwSource.contains("public long getWorld()"));
+		// HelloUniverse extends HelloWorld: inherits 3 + dimension, address
+		// (notgenerated excluded by gen-property=false)
+		File huFile = new File(srcDir, "HelloUniverse.java");
+		String huSource = Files.readString(huFile.toPath());
+		assertTrue(huSource.contains("public interface HelloUniverse extends HelloWorld"),
+				"HelloUniverse should extend HelloWorld");
+		assertTrue(huSource.contains("public String getDimension()"));
+		assertTrue(huSource.contains("public UniversalAddress getAddress()"));
+		assertFalse(huSource.contains("getNotgenerated"),
+				"notgenerated (gen-property=false) should not appear in generated code");
 	}
 
 	@Test

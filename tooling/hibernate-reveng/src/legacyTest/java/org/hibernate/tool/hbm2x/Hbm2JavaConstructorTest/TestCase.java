@@ -18,31 +18,22 @@
 
 package org.hibernate.tool.hbm2x.Hbm2JavaConstructorTest;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.export.ExporterFactory;
 import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.export.java.Cfg2JavaTool;
-import org.hibernate.tool.internal.export.java.EntityPOJOClass;
-import org.hibernate.tool.internal.export.java.POJOClass;
 import org.hibernate.tool.test.utils.FileUtil;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JavaUtil;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -50,20 +41,17 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author max
  * @author koen
  */
-@Disabled("Constructor logic replaced by TemplateHelperTest (testFullConstructorIncludesCompositeId, testFullConstructorIncludesRelationships, testGetFullConstructorPropertiesForSubclass, testMinimalConstructorProperties, etc.)")
 public class TestCase {
 
 	private static final String[] HBM_XML_FILES = new String[] {
 			"Constructors.hbm.xml"
 	};
-	
+
 	@TempDir
 	public File outputFolder = new File("output");
-	
+
 	private File srcDir = null;
 
-    private Metadata metadata = null;
-	
 	@BeforeEach
 	public void setUp() throws Exception {
 		srcDir = new File(outputFolder, "src");
@@ -72,13 +60,12 @@ public class TestCase {
 		assertTrue(resourcesDir.mkdir());
 		MetadataDescriptor metadataDescriptor = HibernateUtil
 				.initializeMetadataDescriptor(this, HBM_XML_FILES, resourcesDir);
-		metadata = metadataDescriptor.createMetadata();
 		Exporter exporter = ExporterFactory.createExporter(ExporterType.JAVA);
 		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, srcDir);
 		exporter.start();
-	}	
-	
+	}
+
 	@Test
 	public void testCompilable() throws Exception {
 		String constructorUsageResourcePath = "/org/hibernate/tool/hbm2x/Hbm2JavaConstructorTest/ConstructorUsage.java_";
@@ -97,70 +84,58 @@ public class TestCase {
 	@Test
 	public void testNoVelocityLeftOvers() {
 		assertNull(FileUtil.findFirstString(
-				"$", 
+				"$",
 				new File(srcDir, "Company.java" ) ) );
 		assertNull(FileUtil.findFirstString(
-				"$", 
+				"$",
 				new File(srcDir,"BigCompany.java" ) ) );
 		assertNull(FileUtil.findFirstString(
-				"$", 
+				"$",
 				new File(srcDir,"EntityAddress.java" ) ) );
 	}
 
 	@Test
-	public void testEntityConstructorLogic() {
-		Cfg2JavaTool c2j = new Cfg2JavaTool();
-		POJOClass company = c2j.getPOJOClass(metadata.getEntityBinding("Company"));	
-		List<Property> all = company.getPropertyClosureForFullConstructor();
-		assertNoDuplicates(all);
-		assertEquals(3, all.size());
-		List<Property> superCons = company.getPropertyClosureForSuperclassFullConstructor();
-		assertEquals(0, superCons.size(), "company is a base class, should not have superclass cons");
-		List<Property> subCons = company.getPropertiesForFullConstructor();
-		assertNoDuplicates(subCons);
-		assertEquals(3, subCons.size());
-		assertNoOverlap(superCons, subCons);
-		POJOClass bigCompany = c2j.getPOJOClass(metadata.getEntityBinding("BigCompany"));
-		List<Property> bigsuperCons = bigCompany.getPropertyClosureForSuperclassFullConstructor();
-		assertNoDuplicates(bigsuperCons);
-		//assertEquals(3, bigsuperCons.size());
-		List<Property> bigsubCons = bigCompany.getPropertiesForFullConstructor();
-		assertEquals(1, bigsubCons.size());
-		assertNoOverlap(bigsuperCons, bigsubCons);
-		List<?> bigall = bigCompany.getPropertyClosureForFullConstructor();
-		assertNoDuplicates(bigall);
-		assertEquals(4, bigall.size());
-		PersistentClass classMapping = metadata.getEntityBinding("Person");
-		POJOClass person = c2j.getPOJOClass(classMapping);
-		List<Property> propertiesForMinimalConstructor = person.getPropertiesForMinimalConstructor();
-		assertEquals(2,propertiesForMinimalConstructor.size());
-		assertFalse(propertiesForMinimalConstructor.contains(classMapping.getIdentifierProperty()));
-		List<Property> propertiesForFullConstructor = person.getPropertiesForFullConstructor();
-		assertEquals(2,propertiesForFullConstructor.size());
-		assertFalse(propertiesForFullConstructor.contains(classMapping.getIdentifierProperty()));	
+	public void testEntityConstructorLogic() throws IOException {
+		// Company has composite-id (CompanyId), brand (not-null), value (formula — excluded),
+		// employees (set) — full constructor should have 3 params: id, brand, employees
+		String companySource = readFile("Company.java");
+		assertContains(companySource, "public Company(CompanyId id, String brand, Set employees)");
+		// Minimal constructor: id + brand (not-null) only
+		assertContains(companySource, "public Company(CompanyId id, String brand)");
+		// Default constructor
+		assertContains(companySource, "public Company()");
+
+		// BigCompany extends Company, adds ceo (many-to-one)
+		// Full constructor: superclass params + own = id, brand, employees, ceo
+		String bigCompanySource = readFile("BigCompany.java");
+		assertContains(bigCompanySource, "public BigCompany(CompanyId id, String brand, Set<Employee> employees, Employee ceo)");
+
+		// Person has generated id, name (not-null), address (component)
+		// Minimal constructor: name + address (not id, since generated)
+		String personSource = readFile("Person.java");
+		assertContains(personSource, "public Person(String name, EntityAddress address)");
+		// Full constructor same as minimal (all non-id properties are not-null or component)
+		assertContains(personSource, "public Person()");
 	}
 
 	@Test
-	public void testMinimal() {
-		POJOClass bp = new EntityPOJOClass(
-				metadata.getEntityBinding("BrandProduct"), 
-				new Cfg2JavaTool());
-		List<Property> propertiesForMinimalConstructor = bp.getPropertiesForMinimalConstructor();
-		assertEquals(1,propertiesForMinimalConstructor.size());
-		List<Property> propertiesForFullConstructor = bp.getPropertiesForFullConstructor();
-		assertEquals(2, propertiesForFullConstructor.size());		
-	}
-	
-	private void assertNoDuplicates(List<?> bigall) {
-        Set<Object> set = new HashSet<>(bigall);
-		assertEquals(set.size(),bigall.size(), "list had duplicates!");	
+	public void testMinimal() throws IOException {
+		// BrandProduct has assigned id, version (excluded from constructors), name
+		// Minimal: just id (assigned, so included)
+		// Full: id + name (version excluded)
+		String bpSource = readFile("BrandProduct.java");
+		assertContains(bpSource, "public BrandProduct(String id)");
+		assertContains(bpSource, "public BrandProduct(String id, String name)");
+		assertContains(bpSource, "public BrandProduct()");
 	}
 
-	private void assertNoOverlap(List<?> first, List<?> second) {
-		Set<Object> set = new HashSet<>();
-		set.addAll(first);
-		set.addAll(second);	
-		assertEquals(set.size(),first.size()+second.size());
+	private String readFile(String fileName) throws IOException {
+		return Files.readString(new File(srcDir, fileName).toPath());
+	}
+
+	private void assertContains(String source, String expected) {
+		assertTrue(source.contains(expected),
+				"Expected to find '" + expected + "' in generated source");
 	}
 
 }

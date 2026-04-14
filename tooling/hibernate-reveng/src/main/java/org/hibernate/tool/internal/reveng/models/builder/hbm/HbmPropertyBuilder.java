@@ -58,16 +58,26 @@ public class HbmPropertyBuilder {
 		String javaType = ctx.resolveJavaType(typeName != null ? typeName : "string");
 
 		DynamicFieldDetails field = ctx.createField(entityClass, name, javaType);
-		ctx.addColumnAnnotationFromBasicAttr(
-				field,
-				basicAttr.getColumnAttribute(),
-				basicAttr.isNotNull(),
-				basicAttr.getLength(),
-				basicAttr.getPrecision(),
-				basicAttr.getScale(),
-				basicAttr.isUnique(),
-				basicAttr.getColumnOrFormula(),
-				name);
+
+		// Handle formula attribute (formula="...")
+		String formulaAttr = basicAttr.getFormulaAttribute();
+		if (formulaAttr != null && !formulaAttr.isEmpty()) {
+			var formulaAnnotation = HibernateAnnotations.FORMULA
+					.createUsage(ctx.getModelsContext());
+			formulaAnnotation.value(formulaAttr);
+			field.addAnnotationUsage(formulaAnnotation);
+		} else {
+			ctx.addColumnAnnotationFromBasicAttr(
+					field,
+					basicAttr.getColumnAttribute(),
+					basicAttr.isNotNull(),
+					basicAttr.getLength(),
+					basicAttr.getPrecision(),
+					basicAttr.getScale(),
+					basicAttr.isUnique(),
+					basicAttr.getColumnOrFormula(),
+					name);
+		}
 
 		// Store type parameters from <type><param> elements as field meta attributes
 		if (typeElement != null) {

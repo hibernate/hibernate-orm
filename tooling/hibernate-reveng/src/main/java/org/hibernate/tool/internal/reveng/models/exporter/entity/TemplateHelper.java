@@ -447,6 +447,11 @@ public class TemplateHelper {
 		return fieldHasAnnotation(field, Version.class);
 	}
 
+	private boolean isGeneratedId(FieldDetails field) {
+		return isPrimaryKey(field)
+				&& fieldHasAnnotation(field, GeneratedValue.class);
+	}
+
 	public boolean isLob(FieldDetails field) {
 		return fieldHasAnnotation(field, Lob.class);
 	}
@@ -1756,9 +1761,10 @@ public class TemplateHelper {
 		if (cid != null) {
 			props.add(new FullConstructorProperty(getJavaTypeName(cid), getFieldName(cid)));
 		}
-		// Basic fields (skip version, respect gen-property)
+		// Basic fields (skip version, formula, generated id, respect gen-property)
 		for (FieldDetails field : getBasicFields()) {
-			if (!isVersion(field) && isGenProperty(field)) {
+			if (!isVersion(field) && isGenProperty(field) && !hasFormula(field)
+					&& !isGeneratedId(field)) {
 				props.add(new FullConstructorProperty(getJavaTypeName(field), getFieldName(field)));
 			}
 		}
@@ -1795,9 +1801,15 @@ public class TemplateHelper {
 
 	public List<FullConstructorProperty> getMinimalConstructorProperties() {
 		List<FullConstructorProperty> props = new ArrayList<>();
+		// Composite ID (always included — always assigned)
+		FieldDetails cid = getCompositeIdField();
+		if (cid != null) {
+			props.add(new FullConstructorProperty(getJavaTypeName(cid), getFieldName(cid)));
+		}
 		// Basic fields: non-nullable, non-version, non-generated-id, respects gen-property
 		for (FieldDetails field : getBasicFields()) {
-			if (isVersion(field) || !isGenProperty(field) || hasFieldDefaultValue(field)) {
+			if (isVersion(field) || !isGenProperty(field) || hasFieldDefaultValue(field)
+					|| hasFormula(field)) {
 				continue;
 			}
 			if (isPrimaryKey(field)) {
@@ -1820,6 +1832,10 @@ public class TemplateHelper {
 			if (m2o != null && !m2o.optional()) {
 				props.add(new FullConstructorProperty(getJavaTypeName(field), getFieldName(field)));
 			}
+		}
+		// Embedded components
+		for (FieldDetails field : getEmbeddedFields()) {
+			props.add(new FullConstructorProperty(getJavaTypeName(field), getFieldName(field)));
 		}
 		return props;
 	}

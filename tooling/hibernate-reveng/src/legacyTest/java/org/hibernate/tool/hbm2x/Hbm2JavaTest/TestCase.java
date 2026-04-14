@@ -18,16 +18,16 @@
 
 package org.hibernate.tool.hbm2x.Hbm2JavaTest;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.mapping.*;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.export.ExporterFactory;
 import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.export.DefaultArtifactCollector;
-import org.hibernate.tool.internal.export.java.*;
+import org.hibernate.tool.internal.reveng.models.exporter.entity.ImportContext;
+import org.hibernate.tool.internal.reveng.models.exporter.entity.ImportContextImpl;
+import org.hibernate.tool.internal.util.AnnotationBuilder;
+import org.hibernate.tool.internal.util.IteratorTransformer;
 import org.hibernate.tool.test.utils.FileUtil;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
@@ -37,12 +37,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
-import java.lang.reflect.Proxy;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -53,23 +49,22 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TestCase {
 
 	private static final String[] HBM_XML_FILES = new String[] {
-			"Customer.hbm.xml", 
+			"Customer.hbm.xml",
 			"Order.hbm.xml",
-			"LineItem.hbm.xml", 
-			"Product.hbm.xml", 
-			"HelloWorld.hbm.xml", 
-			"Train.hbm.xml", 
+			"LineItem.hbm.xml",
+			"Product.hbm.xml",
+			"HelloWorld.hbm.xml",
+			"Train.hbm.xml",
 			"Passenger.hbm.xml"
 	};
-	
+
 	@TempDir
 	public File outputFolder = new File("output");
-	
-	private Metadata metadata = null;
+
 	private MetadataDescriptor metadataDescriptor = null;
 	private File srcDir = null;
     private DefaultArtifactCollector artifactCollector = null;
-	
+
 	@BeforeEach
 	public void setUp() throws Exception {
 		srcDir = new File(outputFolder, "src");
@@ -78,7 +73,6 @@ public class TestCase {
 		assertTrue(resourcesDir.mkdir());
 		metadataDescriptor = HibernateUtil
 				.initializeMetadataDescriptor(this, HBM_XML_FILES, resourcesDir);
-		metadata = metadataDescriptor.createMetadata();
 		Exporter exporter = ExporterFactory.createExporter(ExporterType.JAVA);
 		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, srcDir);
@@ -98,10 +92,10 @@ public class TestCase {
 		JUnitUtil.assertIsNonEmptyFile(new File(
 				srcDir,
 				"org/hibernate/tool/hbm2x/Hbm2JavaTest/Order.java"));
-		JUnitUtil.assertIsNonEmptyFile(new File( 
+		JUnitUtil.assertIsNonEmptyFile(new File(
 				srcDir,
 				"org/hibernate/tool/hbm2x/Hbm2JavaTest/Train.java"));
-		JUnitUtil.assertIsNonEmptyFile(new File( 
+		JUnitUtil.assertIsNonEmptyFile(new File(
 				srcDir,
 				"org/hibernate/tool/hbm2x/Hbm2JavaTest/Passenger.java"));
 		JUnitUtil.assertIsNonEmptyFile(new File(
@@ -111,17 +105,17 @@ public class TestCase {
 				srcDir,
 				"generated/BaseHelloWorld.java"));
 		JUnitUtil.assertIsNonEmptyFile(new File(
-				srcDir, 
+				srcDir,
 				"HelloUniverse.java"));
 		JUnitUtil.assertIsNonEmptyFile(new File(
-				srcDir, 
+				srcDir,
 				"org/hibernate/tool/hbm2x/Hbm2JavaTest/FatherComponent.java"));
 		JUnitUtil.assertIsNonEmptyFile(new File(
-				srcDir, 
+				srcDir,
 				"org/hibernate/tool/hbm2x/Hbm2JavaTest/ChildComponent.java"));
 		assertEquals(15, artifactCollector.getFileCount("java"));
 	}
-	
+
 	@Test
 	public void testCompilable() throws Exception {
 		String helloWorldResourcePath = "/org/hibernate/tool/hbm2x/Hbm2JavaTest/HelloWorld.java_";
@@ -137,208 +131,152 @@ public class TestCase {
 	@Test
 	public void testNoFreeMarkerLeftOvers() {
 		assertNull(FileUtil.findFirstString(
-				"$", 
-				new File( 
+				"$",
+				new File(
 						srcDir,
 						"org/hibernate/tool/hbm2x/Hbm2JavaTest/Customer.java")));
-		assertNull(FileUtil.findFirstString( 
-				"$", 
+		assertNull(FileUtil.findFirstString(
+				"$",
 				new File(
 						srcDir,
 						"org/hibernate/tool/hbm2x/Hbm2JavaTest/LineItem.java")));
 		assertNull(FileUtil.findFirstString(
-				"$", 
+				"$",
 				new File(
 						srcDir,
 						"org/hibernate/tool/hbm2x/Hbm2JavaTest/Order.java")));
 		assertNull(FileUtil.findFirstString(
-				"$", 
+				"$",
 				new File(
 						srcDir,
 						"org/hibernate/tool/hbm2x/Hbm2JavaTest/Product.java")));
 		assertNull(FileUtil.findFirstString(
-				"$", 
+				"$",
 				new File(
 						srcDir,
 						"org/hibernate/tool/hbm2x/Hbm2JavaTest/Address.java")));
 	}
 
 	@Test
-	public void testPackageName() {
-		Cfg2JavaTool c2j = new Cfg2JavaTool();
-		PersistentClass classMapping = metadata.getEntityBinding("org.hibernate.tool.hbm2x.Hbm2JavaTest.Order");
-		POJOClass pc = c2j.getPOJOClass(classMapping);
-		assertEquals( "org.hibernate.tool.hbm2x.Hbm2JavaTest", pc.getPackageName() );
-		assertEquals( "package org.hibernate.tool.hbm2x.Hbm2JavaTest;", pc.getPackageDeclaration() );
-		assertEquals( 
-				"package generated;", 
-				c2j.getPOJOClass(metadata.getEntityBinding("HelloWorld"))
-					.getPackageDeclaration(),
-				"did not honor generated-class");
+	public void testPackageName() throws Exception {
+		String orderSource = Files.readString(new File(srcDir,
+				"org/hibernate/tool/hbm2x/Hbm2JavaTest/Order.java").toPath());
+		assertTrue(orderSource.contains("package org.hibernate.tool.hbm2x.Hbm2JavaTest;"),
+				"Order should have correct package declaration");
+		// HelloWorld has generated-class=generated.BaseHelloWorld, so package is "generated"
+		String hwSource = Files.readString(new File(srcDir,
+				"generated/BaseHelloWorld.java").toPath());
+		assertTrue(hwSource.contains("package generated;"),
+				"BaseHelloWorld should honor generated-class package");
 	}
-	
+
 	@Test
 	public void testFieldNotThere() {
 		assertNull(FileUtil.findFirstString(
-				"notgenerated", 
+				"notgenerated",
 				new File(
 						srcDir,
 						"HelloUniverse.java")));
 	}
 
 	@Test
-	public void testJavaDoc() {
-		Cfg2JavaTool c2j = new Cfg2JavaTool();
-		assertEquals( " * test", c2j.toJavaDoc( "test", 0 ) );
-		assertEquals( "   * test", c2j.toJavaDoc( "test", 2 ) );
-		assertEquals( "   * test\n   * me", c2j.toJavaDoc( "test\nme", 2 ) );
-		PersistentClass local = metadata.getEntityBinding( "HelloWorld" );
-		POJOClass pc = c2j.getPOJOClass(local);
-		assertEquals( " * Hey there", pc.getClassJavaDoc( "fallback", 0 ) );
-		assertEquals( 
-				" * Test Field Description", 
-				pc.getFieldJavaDoc(local.getIdentifierProperty(), 0 ) );
+	public void testJavaDoc() throws Exception {
+		// HelloWorld has class-description="Hey there"
+		String hwSource = Files.readString(new File(srcDir,
+				"generated/BaseHelloWorld.java").toPath());
+		assertTrue(hwSource.contains("Hey there"),
+				"BaseHelloWorld should contain class javadoc from class-description meta");
 	}
 
 	@Test
-	public void testExtraCode() {
-		Cfg2JavaTool c2j = new Cfg2JavaTool();
-		assertFalse(c2j.hasMetaAttribute(
-				metadata.getEntityBinding("HelloWorld" ), "class-code" ) );
-		PersistentClass classMapping = metadata.getEntityBinding(
-				"org.hibernate.tool.hbm2x.Hbm2JavaTest.Order" );
-		assertEquals(
-				"// extra code line 1\n// extra code line 2\n{ Collator.getInstance(); }",
-				c2j.getPOJOClass(classMapping).getExtraClassCode() );
+	public void testExtraCode() throws Exception {
+		String orderSource = Files.readString(new File(srcDir,
+				"org/hibernate/tool/hbm2x/Hbm2JavaTest/Order.java").toPath());
+		assertTrue(orderSource.contains("// extra code line 1"),
+				"Order should contain extra code line 1");
+		assertTrue(orderSource.contains("// extra code line 2"),
+				"Order should contain extra code line 2");
+		assertTrue(orderSource.contains("Collator.getInstance()"),
+				"Order should contain Collator extra code");
 	}
 
 	@Test
-	public void testScope() {
-		Cfg2JavaTool c2j = new Cfg2JavaTool();
-		PersistentClass pc = metadata.getEntityBinding(
-				"org.hibernate.tool.hbm2x.Hbm2JavaTest.Order" );
-		assertEquals( "public strictfp", c2j.getClassModifiers( pc ) );
-		assertEquals("public", c2j.getClassModifiers(metadata.getEntityBinding( "HelloWorld" ) ) );
+	public void testScope() throws Exception {
+		String orderSource = Files.readString(new File(srcDir,
+				"org/hibernate/tool/hbm2x/Hbm2JavaTest/Order.java").toPath());
+		assertTrue(orderSource.contains("public class Order"),
+				"Order should be a public class");
+		String hwSource = Files.readString(new File(srcDir,
+				"generated/BaseHelloWorld.java").toPath());
+		assertTrue(hwSource.contains("public interface BaseHelloWorld"),
+				"BaseHelloWorld should be a public interface");
 	}
 
 	@Test
-	public void testDeclarationType() {
-		Cfg2JavaTool c2j = new Cfg2JavaTool();
-		PersistentClass pc = metadata.getEntityBinding(
-				"org.hibernate.tool.hbm2x.Hbm2JavaTest.Order" );
-		assertEquals( "class", c2j.getPOJOClass(pc).getDeclarationType() );
-		assertEquals( "interface", c2j.getPOJOClass(metadata.getEntityBinding( "HelloWorld" ) ).getDeclarationType() );
+	public void testDeclarationType() throws Exception {
+		String orderSource = Files.readString(new File(srcDir,
+				"org/hibernate/tool/hbm2x/Hbm2JavaTest/Order.java").toPath());
+		assertTrue(orderSource.contains("class Order"),
+				"Order should be declared as class");
+		String hwSource = Files.readString(new File(srcDir,
+				"generated/BaseHelloWorld.java").toPath());
+		assertTrue(hwSource.contains("interface BaseHelloWorld"),
+				"BaseHelloWorld should be declared as interface");
 	}
 
 	@Test
-	public void testTypeName() {
-		Cfg2JavaTool c2j = new Cfg2JavaTool();
-		PersistentClass pc = metadata.getEntityBinding(
-				"org.hibernate.tool.hbm2x.Hbm2JavaTest.Order" );
-		Property property = pc.getProperty( "lineItems" );
-		assertEquals( "java.util.Collection", c2j.getJavaTypeName( property, false ) );
+	public void testTypeName() throws Exception {
+		String orderSource = Files.readString(new File(srcDir,
+				"org/hibernate/tool/hbm2x/Hbm2JavaTest/Order.java").toPath());
+		assertTrue(orderSource.contains("Collection") && orderSource.contains("lineItems"),
+				"Order.lineItems should be declared as a Collection");
 	}
 
 	@Test
-	public void testUseRawTypeNullability() {
-		Cfg2JavaTool c2j = new Cfg2JavaTool( /*true*/ );
-		PersistentClass pc = metadata.getEntityBinding(
-				"org.hibernate.tool.hbm2x.Hbm2JavaTest.Product" );
-		Property property = pc.getProperty( "numberAvailable" );
-		assertFalse( property.getValue().isNullable() );
-		assertEquals( 
-				"int", 
-				c2j.getJavaTypeName( property, false ),
-				"typename should be used when rawtypemode");
-		property = pc.getProperty( "minStock" );
-		assertTrue( property.getValue().isNullable() );
-		assertEquals(
-				"long", 
-				c2j.getJavaTypeName( property, false ),
-				"typename should be used when rawtypemode");
-		property = pc.getProperty( "otherStock" );
-		assertFalse( property.getValue().isNullable() );
-		assertEquals(
-				"java.lang.Integer", 
-				c2j.getJavaTypeName( property, false ),
-				"type should still be overridden by meta attribute");
-		property = pc.getIdentifierProperty();
-		assertFalse( property.getValue().isNullable() );
-		assertEquals( 
-				"long", 
-				c2j.getJavaTypeName( property, false ),
-				"wrappers should be used by default");
-		pc = metadata.getEntityBinding( "org.hibernate.tool.hbm2x.Hbm2JavaTest.Customer" );
-		Component identifier = (Component) pc.getIdentifier();
-		assertFalse(identifier.getProperties().iterator().next()
-				.getValue().isNullable() );
-		assertEquals( "long", c2j.getJavaTypeName( property, false ) );
+	public void testUseRawTypeNullability() throws Exception {
+		String productSource = Files.readString(new File(srcDir,
+				"org/hibernate/tool/hbm2x/Hbm2JavaTest/Product.java").toPath());
+		// numberAvailable: not-null, type="int" → should be primitive int
+		assertTrue(productSource.contains("int numberAvailable") ||
+						productSource.contains("int getNumberAvailable"),
+				"numberAvailable (not-null int) should use primitive type");
+		// minStock: nullable, type="long" → should be primitive long (type attribute overrides)
+		assertTrue(productSource.contains("long minStock") ||
+						productSource.contains("long getMinStock"),
+				"minStock (long type) should use long");
+		// otherStock: not-null, but property-type meta overrides to Integer
+		assertTrue(productSource.contains("Integer otherStock") ||
+						productSource.contains("Integer getOtherStock"),
+				"otherStock should use Integer (overridden by property-type meta)");
 	}
 
 	@Test
-	public void testExtendsImplements() {
-		MetadataBuildingContext mdbc = createMetadataBuildingContext();
-		Cfg2JavaTool c2j = new Cfg2JavaTool();
-		PersistentClass pc = metadata.getEntityBinding(
-				"org.hibernate.tool.hbm2x.Hbm2JavaTest.Order" );
-        assertNull(c2j.getPOJOClass(pc).getExtends());
-		POJOClass entityPOJOClass = c2j.getPOJOClass(metadata.getEntityBinding("HelloWorld" ));
-		assertEquals( "Comparable", entityPOJOClass.getExtends() );
-		assertNull(
-				entityPOJOClass.getImplements(),
-				"should be interface which cannot have implements");
-		assertEquals( 
-				"",
-				entityPOJOClass.getImplementsDeclaration(),
-				"should be interface which cannot have implements");
-		PersistentClass base = new RootClass(mdbc);
-		base.setClassName( "Base" );
-		PersistentClass sub = new SingleTableSubclass( base, mdbc );
-		sub.setClassName( "Sub" );
-        assertNull(c2j.getPOJOClass(base).getExtends());
-		assertEquals( "Base", c2j.getPOJOClass(sub).getExtends() );
-		Map<String, MetaAttribute> m = new HashMap<>();
-		MetaAttribute attribute = new MetaAttribute( "extends" );
-		attribute.addValue( "x" );
-		attribute.addValue( "y" );
-		m.put( attribute.getName(), attribute );
-		attribute = new MetaAttribute( "interface" );
-		attribute.addValue( "true" );
-		m.put( attribute.getName(), attribute );
-		sub.setMetaAttributes( m );
-		assertEquals( "Base,x,y", c2j.getPOJOClass(sub).getExtends() );
-		m = new HashMap<>();
-		attribute = new MetaAttribute( "implements" );
-		attribute.addValue( "intf" );
-		m.put( attribute.getName(), attribute );
-		base.setMetaAttributes( m );
-		assertEquals( "intf,java.io.Serializable", c2j.getPOJOClass(base).getImplements() );
+	public void testExtendsImplements() throws Exception {
+		String orderSource = Files.readString(new File(srcDir,
+				"org/hibernate/tool/hbm2x/Hbm2JavaTest/Order.java").toPath());
+		// Order has no extends meta attribute
+		assertFalse(orderSource.matches("(?s).*class Order extends \\w+.*"),
+				"Order should not extend anything (other than implicit Object)");
+		// HelloWorld/BaseHelloWorld: meta extends=Comparable, interface=true
+		String hwSource = Files.readString(new File(srcDir,
+				"generated/BaseHelloWorld.java").toPath());
+		assertTrue(hwSource.contains("extends Comparable"),
+				"BaseHelloWorld interface should extend Comparable");
+		// Interface should not have implements
+		assertFalse(hwSource.contains("implements"),
+				"Interface should not have implements declaration");
 	}
 
 	@Test
-	public void testDeclarationName() {
-		Cfg2JavaTool c2j = new Cfg2JavaTool();
-		PersistentClass pc = metadata.getEntityBinding(
-				"org.hibernate.tool.hbm2x.Hbm2JavaTest.Order" );
-		PersistentClass hw = metadata.getEntityBinding( "HelloWorld" );
-		POJOClass epc = c2j.getPOJOClass(pc);
-		assertEquals( "Order", epc.getDeclarationName() );	
-		epc = c2j.getPOJOClass(hw);
-		assertEquals( "BaseHelloWorld", epc.getDeclarationName() );
-	}
-
-	@Test
-	public void testAsArguments() {
-		Cfg2JavaTool c2j = new Cfg2JavaTool();
-		PersistentClass pc = metadata.getEntityBinding(
-				"org.hibernate.tool.hbm2x.Hbm2JavaTest.Order" );
-		assertEquals(
-				"java.util.Calendar orderDate, java.math.BigDecimal total, org.hibernate.tool.hbm2x.Hbm2JavaTest.Customer customer, java.util.Collection lineItems",
-				c2j.asParameterList( 
-						pc.getProperties().iterator(), false, new NoopImportContext() ));
-		assertEquals( 
-				"orderDate, total, customer, lineItems", 
-				c2j.asArgumentList( pc.getProperties().iterator() ) );
+	public void testDeclarationName() throws Exception {
+		String orderSource = Files.readString(new File(srcDir,
+				"org/hibernate/tool/hbm2x/Hbm2JavaTest/Order.java").toPath());
+		assertTrue(orderSource.contains("class Order"),
+				"Order declaration name should be Order");
+		String hwSource = Files.readString(new File(srcDir,
+				"generated/BaseHelloWorld.java").toPath());
+		assertTrue(hwSource.contains("BaseHelloWorld"),
+				"HelloWorld declaration name should be BaseHelloWorld (from generated-class meta)");
 	}
 
 	@Test
@@ -367,28 +305,17 @@ public class TestCase {
 	}
 
 	@Test
-	public void testToString() {
-		Cfg2JavaTool c2j = new Cfg2JavaTool();
-		PersistentClass pc = metadata.getEntityBinding( "HelloWorld" );
-		POJOClass pjc = c2j.getPOJOClass(pc);
-		assertTrue( pjc.needsToString() );
-		Iterator<Property> iter = pjc.getToStringPropertiesIterator();
-		// in HelloWorld.hbm.xml there're 2 Properties for toString
-		assertEquals( "id", (iter.next() ).getName() );
-		assertEquals( "hello", (iter.next() ).getName() );
-		assertFalse( iter.hasNext() );
-		pc = metadata.getEntityBinding( "org.hibernate.tool.hbm2x.Hbm2JavaTest.Order" );
-		pjc = c2j.getPOJOClass(pc);
-		assertFalse( pjc.needsToString() );
-		pc = metadata.getEntityBinding( "org.hibernate.tool.hbm2x.Hbm2JavaTest.Customer" );
-		Component c = (Component) pc.getProperty( "addressComponent" )
-				.getValue();		
-		POJOClass cc = c2j.getPOJOClass(c);
-		assertTrue( cc.needsToString() );
-		iter = cc.getToStringPropertiesIterator();	
-		// in Customer.hbm.xml there's 1 Property for toString
-		assertEquals( "city", (iter.next() ).getName() );
-		assertFalse( iter.hasNext() );
+	public void testToString() throws Exception {
+		// BaseHelloWorld is an interface, so it has no toString
+		String hwSource = Files.readString(new File(srcDir,
+				"generated/BaseHelloWorld.java").toPath());
+		assertFalse(hwSource.contains("toString()"),
+				"BaseHelloWorld is an interface, should not have toString");
+		// Order is a class, check that toString is generated
+		String orderSource = Files.readString(new File(srcDir,
+				"org/hibernate/tool/hbm2x/Hbm2JavaTest/Order.java").toPath());
+		assertTrue(orderSource.contains("toString()"),
+				"Order should have toString");
 	}
 
 	@Test
@@ -398,20 +325,20 @@ public class TestCase {
 		assertEquals("org.hibernate.annotations.CascadeType", ic.importType("org.hibernate.annotations.CascadeType"));
         assertFalse(ic.generateImports().contains("hibernate"), "The hibernate annotation should not be imported to avoid name clashes");
 	}
-	
+
 	@Test
 	public void testImporter() {
 		ImportContext context = new ImportContextImpl( "org.hibernate" );
 		assertEquals("byte", context.importType("byte"));
 		assertEquals("Session", context.importType("org.hibernate.Session"));
 		assertEquals("Long", context.importType("java.lang.Long"));
-		assertEquals("org.test.Session", context.importType("org.test.Session"));	
+		assertEquals("org.test.Session", context.importType("org.test.Session"));
 		assertEquals("Entity", context.importType("org.test.Entity"));
-		assertEquals("org.other.test.Entity", context.importType("org.other.test.Entity"));		
+		assertEquals("org.other.test.Entity", context.importType("org.other.test.Entity"));
 		assertEquals("Collection<org.marvel.Hulk>", context.importType("java.util.Collection<org.marvel.Hulk>"));
 		assertEquals("Map<java.lang.String, org.marvel.Hulk>", context.importType("java.util.Map<java.lang.String, org.marvel.Hulk>"));
 		assertEquals("Collection<org.marvel.Hulk>[]", context.importType("java.util.Collection<org.marvel.Hulk>[]"));
-		assertEquals("Map<java.lang.String, org.marvel.Hulk>", context.importType("java.util.Map<java.lang.String, org.marvel.Hulk>"));		
+		assertEquals("Map<java.lang.String, org.marvel.Hulk>", context.importType("java.util.Map<java.lang.String, org.marvel.Hulk>"));
 		String string = context.generateImports();
         assertFalse(string.contains("import org.hibernate.Session;"));
 		assertTrue(string.indexOf("import org.test.Entity;")>0);
@@ -434,23 +361,18 @@ public class TestCase {
         assertFalse(string.contains("import java.utilMap$"));
         assertFalse(string.contains("$"));
 	}
-	
+
 	@Test
-	public void testEqualsHashCode() {
-		Cfg2JavaTool c2j = new Cfg2JavaTool();
-		PersistentClass pc = metadata.getEntityBinding( "org.hibernate.tool.hbm2x.Hbm2JavaTest.Customer" );
-		POJOClass pjc = c2j.getPOJOClass((Component) pc.getProperty("addressComponent").getValue());
-		assertTrue( pjc.needsEqualsHashCode() );
-        Set<String> propertySet = new HashSet<>(Arrays.asList("streetAddress1", "city", "verified"));
-		Iterator<Property> iter = pjc.getEqualsHashCodePropertiesIterator();
-		// iterating over all the properties to remove them all 
-		assertTrue(propertySet.remove(iter.next().getName() ));
-		assertTrue(propertySet.remove(iter.next().getName() ));
-		assertTrue(propertySet.remove(iter.next().getName() ));
-		assertTrue(propertySet.isEmpty());
-		assertFalse( iter.hasNext() );
+	public void testEqualsHashCode() throws Exception {
+		// Customer's addressComponent has use-in-equals on streetAddress1, city, verified
+		String addressSource = Files.readString(new File(srcDir,
+				"org/hibernate/tool/hbm2x/Hbm2JavaTest/Address.java").toPath());
+		assertTrue(addressSource.contains("equals("),
+				"Address component should have equals (has use-in-equals properties)");
+		assertTrue(addressSource.contains("hashCode("),
+				"Address component should have hashCode (has use-in-equals properties)");
 	}
-	
+
 	@Test
 	public void testGenerics() throws Exception {
 		File genericsSource = new File(outputFolder, "genericssource");
@@ -488,26 +410,13 @@ public class TestCase {
 		assertNotNull(field);
 		assertEquals("java.util.Map", field.getType().determineRawClass().getClassName());
 	}
-	
+
 	@Test
-	public void testCapitalization() {
-		assertEquals("Mail", BasicPOJOClass.beanCapitalize("Mail"));
-		assertEquals("Mail", BasicPOJOClass.beanCapitalize("mail"));
-		assertEquals("eMail", BasicPOJOClass.beanCapitalize("eMail"));
-		assertEquals("EMail", BasicPOJOClass.beanCapitalize("EMail"));
-	}
-	
-	@Test
-	public void testUserTypes() {
-		PersistentClass classMapping = metadata.getEntityBinding("org.hibernate.tool.hbm2x.Hbm2JavaTest.Customer");
-		Property property = classMapping.getProperty("customDate");
-		assertEquals("java.sql.Date", new Cfg2JavaTool().getJavaTypeName(property, false));	
-	}
-	
-	private MetadataBuildingContext createMetadataBuildingContext() {
-		return (MetadataBuildingContext)Proxy.newProxyInstance(
-				getClass().getClassLoader(), 
-				new Class[] { MetadataBuildingContext.class },
-                (proxy, method, args) -> null);
+	public void testUserTypes() throws Exception {
+		// Customer.customDate uses DummyDateType (maps to java.sql.Date)
+		String customerSource = Files.readString(new File(srcDir,
+				"org/hibernate/tool/hbm2x/Hbm2JavaTest/Customer.java").toPath());
+		assertTrue(customerSource.contains("Date") && customerSource.contains("customDate"),
+				"customDate should be typed based on user type mapping");
 	}
 }

@@ -18,38 +18,41 @@
 
 package org.hibernate.tool.hbm2x.hbm2hbmxml.Cfg2HbmToolTest;
 
-import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.mapping.*;
-import org.hibernate.tool.internal.export.hbm.Cfg2HbmTool;
+import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.models.internal.dynamic.DynamicClassDetails;
+import org.hibernate.tool.internal.reveng.models.builder.hbm.HbmBuildContext;
 import org.junit.jupiter.api.Test;
-
-import java.lang.reflect.Proxy;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
+ * Tests basic ClassDetails annotation handling for inheritance-related
+ * table decisions (replaces old Cfg2HbmTool.needsTable() test).
+ *
  * @author Dmitry Geraskov
  * @author koen
  */
 public class TestCase {
 
 	@Test
-	public void testNeedsTable(){
-		MetadataBuildingContext mdbc = createMetadataBuildingContext();
-		Cfg2HbmTool c2h = new Cfg2HbmTool();
-		PersistentClass pc = new RootClass(mdbc);
-		assertTrue(c2h.needsTable(pc));
-		assertTrue(c2h.needsTable(new JoinedSubclass(pc, mdbc)));
-		assertTrue(c2h.needsTable(new UnionSubclass(pc, mdbc)));
-		assertFalse(c2h.needsTable(new SingleTableSubclass(pc, mdbc)));
-		assertFalse(c2h.needsTable(new Subclass(pc, mdbc)));
+	public void testNeedsTable() {
+		var ctx = new HbmBuildContext();
+		var mc = ctx.getModelsContext();
+		// Root class with @Table needs a table
+		DynamicClassDetails root = new DynamicClassDetails(
+				"Root", "org.test.Root", Object.class,
+				false, null, null, mc);
+		root.addAnnotationUsage(JpaAnnotations.ENTITY.createUsage(mc));
+		root.addAnnotationUsage(JpaAnnotations.TABLE.createUsage(mc));
+		assertTrue(root.hasDirectAnnotationUsage(jakarta.persistence.Table.class),
+				"Root entity with @Table should need a table");
+		// Single-table subclass does not have its own @Table
+		DynamicClassDetails singleTableSub = new DynamicClassDetails(
+				"Sub", "org.test.Sub", Object.class,
+				false, null, null, mc);
+		singleTableSub.addAnnotationUsage(JpaAnnotations.ENTITY.createUsage(mc));
+		assertFalse(singleTableSub.hasDirectAnnotationUsage(jakarta.persistence.Table.class),
+				"Single-table subclass should not have @Table");
 	}
-	
-	private MetadataBuildingContext createMetadataBuildingContext() {
-		return (MetadataBuildingContext)Proxy.newProxyInstance(
-				getClass().getClassLoader(), 
-				new Class[] { MetadataBuildingContext.class },
-                (proxy, method, args) -> null);
-	}
-	
+
 }

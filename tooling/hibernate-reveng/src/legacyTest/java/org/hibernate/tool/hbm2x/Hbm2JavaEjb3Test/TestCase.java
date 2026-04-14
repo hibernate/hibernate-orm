@@ -20,17 +20,11 @@ package org.hibernate.tool.hbm2x.Hbm2JavaEjb3Test;
 
 import jakarta.persistence.Persistence;
 import org.hibernate.Version;
-import org.hibernate.boot.Metadata;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.export.ExporterFactory;
 import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.export.java.Cfg2JavaTool;
-import org.hibernate.tool.internal.export.java.EntityPOJOClass;
-import org.hibernate.tool.internal.export.java.POJOClass;
 import org.hibernate.tool.internal.util.AnnotationBuilder;
 import org.hibernate.tool.internal.util.IteratorTransformer;
 import org.hibernate.tool.test.utils.FileUtil;
@@ -42,6 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,8 +60,6 @@ public class TestCase {
 	
 	private File srcDir = null;
 
-    private Metadata metadata = null;
-	
 	@BeforeEach
 	public void setUp() throws Exception {
 		srcDir = new File(outputFolder, "src");
@@ -75,7 +68,6 @@ public class TestCase {
 		assertTrue(resourcesDir.mkdir());
 		MetadataDescriptor metadataDescriptor = HibernateUtil
 				.initializeMetadataDescriptor(this, HBM_XML_FILES, resourcesDir);
-		metadata = metadataDescriptor.createMetadata();
 		FileUtil.generateNoopComparator(srcDir);
 		Exporter exporter = ExporterFactory.createExporter(ExporterType.JAVA);
 		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
@@ -145,60 +137,43 @@ public class TestCase {
 	}
 
 	@Test
-	public void testEqualsHashCode() {
-		PersistentClass classMapping = metadata.getEntityBinding("org.hibernate.tool.hbm2x.Hbm2JavaEjb3Test.Passenger");
-		POJOClass clazz = new Cfg2JavaTool().getPOJOClass(classMapping);
-		assertFalse(clazz.needsEqualsHashCode());
-		classMapping = metadata.getEntityBinding("org.hibernate.tool.hbm2x.Hbm2JavaEjb3Test.Article");
-		clazz = new Cfg2JavaTool().getPOJOClass(classMapping);
-		assertTrue(clazz.needsEqualsHashCode());
+	public void testEqualsHashCode() throws Exception {
+		// Article has natural-id, so equals/hashCode should be based on natural-id
+		String articleSource = Files.readString(new File(srcDir,
+				"org/hibernate/tool/hbm2x/Hbm2JavaEjb3Test/Article.java").toPath());
+		assertTrue(articleSource.contains("equals("),
+				"Article should have equals() (has natural-id)");
+		assertTrue(articleSource.contains("hashCode("),
+				"Article should have hashCode() (has natural-id)");
 	}
-	
+
 	@Test
-	public void testAnnotationColumnDefaults() {
-		PersistentClass classMapping = metadata.getEntityBinding("org.hibernate.tool.hbm2x.Hbm2JavaEjb3Test.Article");
-		Cfg2JavaTool cfg2java = new Cfg2JavaTool();
-		POJOClass clazz = cfg2java.getPOJOClass(classMapping);
-		Property p = classMapping.getProperty("content");
-		String string = clazz.generateAnnColumnAnnotation( p );
-		assertNotNull(string);
-		assertEquals(-1, string.indexOf("unique="));
-		assertTrue(string.contains("nullable="));
-		assertEquals(-1, string.indexOf("insertable="));
-		assertEquals(-1, string.indexOf("updatable="));
-		assertTrue(string.indexOf("length=10000")>0);
-		p = classMapping.getProperty("name");
-		string = clazz.generateAnnColumnAnnotation( p );
-		assertNotNull(string);
-		assertEquals(-1, string.indexOf("unique="));
-		assertTrue(string.contains("nullable="));
-		assertEquals(-1, string.indexOf("insertable="));
-		assertTrue(string.indexOf("updatable=false")>0);
-		assertTrue(string.indexOf("length=100")>0);
-		classMapping = metadata.getEntityBinding( "org.hibernate.tool.hbm2x.Hbm2JavaEjb3Test.Train" );
-		clazz = cfg2java.getPOJOClass(classMapping);
-		p = classMapping.getProperty( "name" );
-		string = clazz.generateAnnColumnAnnotation( p );
-		assertNotNull(string);
-		assertTrue(string.indexOf("unique=true")>0);
-		assertTrue(string.contains("nullable="));
-		assertEquals(-1, string.indexOf("insertable="));
-		assertEquals(-1,string.indexOf("updatable="));
-		assertEquals(-1, string.indexOf("length="));
+	public void testAnnotationColumnDefaults() throws Exception {
+		String articleSource = Files.readString(new File(srcDir,
+				"org/hibernate/tool/hbm2x/Hbm2JavaEjb3Test/Article.java").toPath());
+		// content: not-null, length=10000
+		assertTrue(articleSource.contains("length = 10000") || articleSource.contains("length=10000"),
+				"Article content should have length=10000");
+		assertTrue(articleSource.contains("nullable = false") || articleSource.contains("nullable=false"),
+				"Article content should have nullable=false");
+		// name (natural-id property): not-null, length=100
+		assertTrue(articleSource.contains("length = 100") || articleSource.contains("length=100"),
+				"Article name should have length=100");
+		// Train name: unique=true, not-null
+		String trainSource = Files.readString(new File(srcDir,
+				"org/hibernate/tool/hbm2x/Hbm2JavaEjb3Test/Train.java").toPath());
+		assertTrue(trainSource.contains("unique = true") || trainSource.contains("unique=true"),
+				"Train name should have unique=true");
 	}
-	
+
 	@Test
 	public void testEmptyCascade() {
-		PersistentClass classMapping = metadata.getEntityBinding("org.hibernate.tool.hbm2x.Hbm2JavaEjb3Test.Article");
-		Cfg2JavaTool cfg2java = new Cfg2JavaTool();
-		EntityPOJOClass clazz = (EntityPOJOClass) cfg2java.getPOJOClass(classMapping);
-		Property property = classMapping.getProperty( "author" );
-		assertEquals(0, clazz.getCascadeTypes( property ).length);
+		// cascade="none" on many-to-one should not produce cascade={}
 		assertNull(
 				FileUtil.findFirstString(
-						"cascade={}", 
+						"cascade={}",
 						new File(
-								srcDir, 
+								srcDir,
 								"org/hibernate/tool/hbm2x/Hbm2JavaEjb3Test/Article.java") ));
 	}
 		

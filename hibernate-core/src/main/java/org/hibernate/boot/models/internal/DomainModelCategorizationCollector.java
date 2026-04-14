@@ -127,8 +127,9 @@ public class DomainModelCategorizationCollector {
 	}
 
 	private static boolean isConverter(ClassDetails classDetails) {
-		return classDetails.getClassName() != null && classDetails.isImplementor( AttributeConverter.class )
-			|| classDetails.getDirectAnnotationUsage( Converter.class ) != null;
+		return classDetails.getClassName() != null && !classDetails.isInterface() && !classDetails.isAbstract()
+			&& ( classDetails.isImplementor( AttributeConverter.class )
+				|| classDetails.getDirectAnnotationUsage( Converter.class ) != null );
 	}
 
 	public static boolean isRootEntity(ClassDetails classInfo) {

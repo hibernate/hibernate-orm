@@ -31,7 +31,6 @@ import org.hibernate.tool.test.utils.ConnectionProvider;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.w3c.dom.Document;
@@ -93,7 +92,6 @@ public class TestCase {
 	}
 
 	@Test
-	@Disabled("many-to-one without explicit class attribute requires Java reflection to resolve target type")
 	public void testReadable() {
         ArrayList<File> files = new ArrayList<File>(4); 
         files.add(new File(

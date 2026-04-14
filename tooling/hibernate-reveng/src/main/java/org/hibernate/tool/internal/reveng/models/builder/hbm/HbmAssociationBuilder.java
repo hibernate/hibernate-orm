@@ -62,8 +62,13 @@ public class HbmAssociationBuilder {
 			targetClassName = m2o.getEntityName();
 		}
 		if (targetClassName == null || targetClassName.isEmpty()) {
-			// No class or entity-name specified — use the field name capitalized
-			targetClassName = name.substring(0, 1).toUpperCase() + name.substring(1);
+			// No class or entity-name specified — try reflection on the owning class
+			targetClassName = resolvePropertyTypeByReflection(
+					entityClass.getClassName(), name);
+			if (targetClassName == null) {
+				// Fallback: capitalize the field name
+				targetClassName = name.substring(0, 1).toUpperCase() + name.substring(1);
+			}
 		}
 		String fullTargetName = HbmBuildContext.resolveClassName(targetClassName, defaultPackage);
 		ClassDetails targetClass = ctx.resolveOrCreateClassDetails(
@@ -142,8 +147,12 @@ public class HbmAssociationBuilder {
 		String name = o2o.getName();
 		String targetClassName = o2o.getClazz();
 		if (targetClassName == null || targetClassName.isEmpty()) {
-			// When no class specified, capitalize the property name (Hibernate convention)
-			targetClassName = name.substring(0, 1).toUpperCase() + name.substring(1);
+			// No class specified — try reflection on the owning class
+			targetClassName = resolvePropertyTypeByReflection(
+					entityClass.getClassName(), name);
+			if (targetClassName == null) {
+				targetClassName = name.substring(0, 1).toUpperCase() + name.substring(1);
+			}
 		}
 		String fullTargetName = HbmBuildContext.resolveClassName(targetClassName, defaultPackage);
 		ClassDetails targetClass = ctx.resolveOrCreateClassDetails(
@@ -290,6 +299,46 @@ public class HbmAssociationBuilder {
 				}
 			}
 		};
+	}
+
+	/**
+	 * Try to resolve a many-to-one / one-to-one target type by reflection
+	 * on the owning class's getter or field.  Returns the fully-qualified
+	 * class name, or {@code null} if the class cannot be loaded or the
+	 * property cannot be found.
+	 */
+	private static String resolvePropertyTypeByReflection(
+			String ownerClassName, String propertyName) {
+		try {
+			Class<?> ownerClass = Class.forName(ownerClassName);
+			// Try getter first
+			String getterName = "get"
+					+ propertyName.substring(0, 1).toUpperCase()
+					+ propertyName.substring(1);
+			try {
+				java.lang.reflect.Method getter = ownerClass.getMethod(getterName);
+				return getter.getReturnType().getName();
+			} catch (NoSuchMethodException ignored) {}
+			// Try "is" getter for booleans
+			String isName = "is"
+					+ propertyName.substring(0, 1).toUpperCase()
+					+ propertyName.substring(1);
+			try {
+				java.lang.reflect.Method getter = ownerClass.getMethod(isName);
+				return getter.getReturnType().getName();
+			} catch (NoSuchMethodException ignored) {}
+			// Try field directly
+			try {
+				java.lang.reflect.Field f = ownerClass.getField(propertyName);
+				return f.getType().getName();
+			} catch (NoSuchFieldException ignored) {}
+			// Try declared field
+			try {
+				java.lang.reflect.Field f = ownerClass.getDeclaredField(propertyName);
+				return f.getType().getName();
+			} catch (NoSuchFieldException ignored) {}
+		} catch (ClassNotFoundException ignored) {}
+		return null;
 	}
 
 	static DiscriminatorType mapAnyDiscriminatorType(String metaType) {

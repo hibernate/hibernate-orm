@@ -21,7 +21,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
  * Support for modules that contain Java code
  */
 
-apply from: rootProject.file( 'gradle/libraries.gradle' )
+apply from: rootProject.file( 'gradle/libs.gradle' )
 apply from: rootProject.file( 'gradle/databases.gradle' )
 
 apply plugin: 'java'

@@ -13,7 +13,7 @@ plugins {
 
 
 apply plugin: 'java'
-apply from: rootProject.file( 'gradle/libraries.gradle' )
+apply from: rootProject.file( 'gradle/libs.gradle' )
 
 ext {
 	// NOTE : `wildflyVersion` comes from libraries.gradle...

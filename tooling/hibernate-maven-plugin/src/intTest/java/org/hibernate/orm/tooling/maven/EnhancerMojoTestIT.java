@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.tooling.maven;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -21,6 +22,8 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class EnhancerMojoTestIT {
@@ -225,11 +228,7 @@ public class EnhancerMojoTestIT {
 		assertFalse(fileExists("target/classes/Baz.class"));
 		assertFalse(fileExists("target/classes/Foo.class"));
 		// Execute the 'compile' target
-		mavenCli.doMain(
-				new String[]{"compile"},
-				projectDir.getAbsolutePath(),
-				null,
-				null);
+		runMaven( "compile" );
 		// The class files should exist now
 		assertTrue( fileExists( "target/classes/Bar.class" ) );
 		assertTrue( fileExists( "target/classes/Baz.class" ) );
@@ -242,16 +241,8 @@ public class EnhancerMojoTestIT {
 		assertFalse( isEnhanced( "Baz" ));
 		assertFalse( isEnhanced( "Foo" ));
 		// Execute the 'enhance' target
-		mavenCli.doMain(
-				new String[]{"process-classes"},
-				projectDir.getAbsolutePath(),
-				null,
-				null);
-		mavenCli.doMain(
-				new String[]{"dependency:copy-dependencies"},
-				projectDir.getAbsolutePath(),
-				null,
-				null);
+		runMaven( "process-classes" );
+		runMaven( "dependency:copy-dependencies" );
 		// The results are verified in the respective tests
 	}
 
@@ -358,6 +349,16 @@ public class EnhancerMojoTestIT {
 
 	private boolean fileExists(String relativePath) {
 		return new File( projectDir, relativePath ).exists();
+	}
+
+	private void runMaven(String... goals) {
+		List<String> args = new ArrayList<>( Arrays.asList( goals ) );
+		int result = mavenCli.doMain(
+				args.toArray( new String[0] ),
+				projectDir.getAbsolutePath(),
+				System.out,
+				System.err );
+		assertEquals( 0, result, "Maven invocation failed for goals: " + Arrays.asList( goals ) );
 	}
 
 }

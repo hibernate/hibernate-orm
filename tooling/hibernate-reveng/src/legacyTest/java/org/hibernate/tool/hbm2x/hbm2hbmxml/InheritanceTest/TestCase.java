@@ -30,7 +30,6 @@ import org.hibernate.tool.internal.export.common.DefaultArtifactCollector;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.w3c.dom.Document;
@@ -123,7 +122,6 @@ public class TestCase {
         assertNotNull(metadataDescriptor.createMetadata());
     }
 
-	@Disabled("HBM exporter does not yet generate <comment> elements for joined-subclass joins")
 	@Test
 	public void testComment() throws Exception {
 		File outputXml = new File(
@@ -135,7 +133,7 @@ public class TestCase {
 		Document document = db.parse(outputXml);
 		XPath xpath = XPathFactory.newInstance().newXPath();
 		NodeList nodeList = (NodeList)xpath
-				.compile("//hibernate-mapping/joined-subclass/comment")
+				.compile("//hibernate-mapping/subclass/join/comment")
 				.evaluate(document, XPathConstants.NODESET);
 		assertEquals(1, nodeList.getLength(), "Expected to get one comment element");
     }

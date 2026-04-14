@@ -31,6 +31,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmDynamicComponentType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmEntityDiscriminatorType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIdBagCollectionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmJoinedSubclassEntityType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSecondaryTableType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmListType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToOneType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmMapType;
@@ -252,6 +253,21 @@ public class HbmSubclassBuilder {
 		ctx.inheritClassMetaAttributes(fullName, parentEntity.getClassName());
 
 		processAttributes(subclassEntity, subclass.getAttributes(), defaultPackage, ctx);
+
+		// <join> on a discriminator subclass → secondary table
+		List<JaxbHbmSecondaryTableType> joins = subclass.getJoin();
+		if (joins != null && !joins.isEmpty()) {
+			HbmEntityAnnotationBuilder.processSecondaryTables(
+					subclassEntity, joins, ctx);
+			// Store join comment for HBM output
+			for (JaxbHbmSecondaryTableType join : joins) {
+				if (join.getComment() != null && !join.getComment().isEmpty()) {
+					ctx.addClassMetaAttribute(fullName,
+							"hibernate.join.comment." + join.getTable(),
+							join.getComment());
+				}
+			}
+		}
 
 		ctx.registerClassDetails(subclassEntity);
 		ctx.addSubclassEntityDetails(subclassEntity);

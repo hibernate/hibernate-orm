@@ -1462,6 +1462,7 @@ public class HbmTemplateHelper {
 			if (!entry.getKey().startsWith("hibernate.proxy")
 					&& !entry.getKey().equals("hibernate.comment")
 					&& !entry.getKey().equals("hibernate.class-name")
+					&& !entry.getKey().startsWith("hibernate.join.comment.")
 					&& !entry.getKey().startsWith("hibernate.sql-query.")) {
 				result.put(entry.getKey(), entry.getValue());
 			}
@@ -1782,6 +1783,11 @@ public class HbmTemplateHelper {
 			}
 		}
 		return new JoinInfo(st.name(), keyColumns);
+	}
+
+	public String getJoinComment(String tableName) {
+		List<String> values = metaAttributes.get("hibernate.join.comment." + tableName);
+		return (values != null && !values.isEmpty()) ? values.get(0) : null;
 	}
 
 	public record JoinInfo(String tableName, List<String> keyColumns) {}

@@ -119,6 +119,9 @@
 <#-- Joins (SecondaryTable) -->
 <#list helper.getJoins() as join>
     <join table="${join.tableName()}">
+<#if helper.getJoinComment(join.tableName())??>
+        <comment>${helper.getJoinComment(join.tableName())}</comment>
+</#if>
         <key>
 <#list join.keyColumns() as colName>
             <column name="${colName}"/>

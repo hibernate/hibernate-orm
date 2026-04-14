@@ -371,3 +371,43 @@
         </many-to-any>
     </${collTag}>
 </#list>
+<#-- Properties groups -->
+<#list helper.getPropertiesGroups() as group>
+    <properties name="${group.name()}"<#if group.unique()>
+        unique="true"</#if><#if !group.insert()>
+        insert="false"</#if><#if !group.update()>
+        update="false"</#if><#if !group.optimisticLock()>
+        optimistic-lock="false"</#if>>
+<#list group.fields() as field>
+<#if helper.isBasicField(field)>
+        <property name="${field.getName()}"<#if !helper.hasTypeParameters(field)>
+            type="${helper.getHibernateTypeName(field)}"</#if><#if !helper.isPropertyUpdatable(field)>
+            update="false"</#if><#if !helper.isPropertyInsertable(field)>
+            insert="false"</#if><#if helper.getFormula(field)??>
+            formula="${helper.getFormula(field)}"</#if>>
+<#if helper.hasTypeParameters(field)>
+            <type name="${helper.getHibernateTypeName(field)}">
+<#list helper.getTypeParameters(field)?keys as paramName>
+                <param name="${paramName}">${helper.getTypeParameters(field)[paramName]}</param>
+</#list>
+            </type>
+</#if>
+<#if !helper.getFormula(field)??>
+            <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
+</#if>
+        </property>
+<#elseif helper.isManyToOneField(field)>
+        <many-to-one
+            name="${field.getName()}"
+<#if helper.isManyToOneEntityNameRef(field)>
+            entity-name="${helper.getManyToOneEntityName(field)}"<#else>
+            class="${helper.getTargetEntityName(field)}"</#if><#if !helper.isManyToOneOptional(field)>
+            not-null="true"</#if>>
+<#list helper.getJoinColumnNames(field) as colName>
+            <column name="${colName}"/>
+</#list>
+        </many-to-one>
+</#if>
+</#list>
+    </properties>
+</#list>

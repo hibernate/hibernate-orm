@@ -650,6 +650,21 @@ public class HbmEntityAnnotationBuilder {
 			Object value = item instanceof JAXBElement<?> je ? je.getValue() : item;
 			if (value instanceof JaxbHbmSynchronizeType sync) {
 				querySpaces.add(sync.getTable());
+			} else if (value instanceof JaxbHbmNativeQueryReturnType returnType) {
+				String alias = returnType.getAlias();
+				String returnClass = returnType.getClazz();
+				if (returnClass != null && !returnClass.isEmpty()) {
+					returnClass = HbmBuildContext.resolveClassName(
+							returnClass, ctx.getDefaultPackage());
+				}
+				if (alias != null && !alias.isEmpty()) {
+					ctx.addClassMetaAttribute(entityClass.getClassName(),
+							"hibernate.sql-query." + name + ".return.alias", alias);
+				}
+				if (returnClass != null && !returnClass.isEmpty()) {
+					ctx.addClassMetaAttribute(entityClass.getClassName(),
+							"hibernate.sql-query." + name + ".return.class", returnClass);
+				}
 			} else if (value instanceof JaxbHbmNativeQueryJoinReturnType joinReturn) {
 				ctx.addClassMetaAttribute(entityClass.getClassName(),
 						"hibernate.sql-query." + name + ".return-join.alias",

@@ -31,7 +31,6 @@ import org.hibernate.tool.internal.reveng.models.exporter.hbm.HibernateMappingSe
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.w3c.dom.*;
@@ -375,7 +374,6 @@ public class TestCase {
 		assertEquals("next_hi_value", columnElement.getTextContent(), "Unexpected param value for column" );
     }
 
-	@Disabled("HQL queries (test_query_1, test_query_2) are commented out in input BasicGlobals.hbm.xml")
 	@Test
 	public void testGeneralHbmSettingsQuery()  throws Exception {
 		File outputXml = new File(
@@ -423,7 +421,7 @@ public class TestCase {
 		NodeList nodeList = (NodeList)xpath
 				.compile("//hibernate-mapping/sql-query")
 				.evaluate(document, XPathConstants.NODESET);
-		assertEquals(5, nodeList.getLength(), "Expected to get correct number of query elements" );
+		assertEquals(6, nodeList.getLength(), "Expected to get correct number of query elements" );
 		nodeList = (NodeList)xpath
 				.compile("//hibernate-mapping/sql-query[@name=\"test_sqlquery_1\"]")
 				.evaluate(document, XPathConstants.NODESET);
@@ -491,7 +489,6 @@ public class TestCase {
 		assertNull(returnEl, "Expected return element to be null");
 	}
 
-	@Disabled("sql-query test_sqlquery_4 with <return> is commented out in input BasicGlobals.hbm.xml")
 	@Test
 	public void testGeneralHbmSettingsSQLQueryWithReturnRoot()  throws Exception {
 		File outputXml = new File(
@@ -515,7 +512,7 @@ public class TestCase {
 		genAtt = returnEl.getAttributeNode("alias");
 		assertEquals("e", genAtt.getTextContent(), "Unexpected alias value for return element" );
 		genAtt = returnEl.getAttributeNode("class");
-		assertEquals("org.hibernate.tool.hbm2x.hbm2hbmxml.BasicGlobals", genAtt.getTextContent(), "Unexpected class value for return element");
+		assertEquals("org.hibernate.tool.hbm2x.hbm2hbmxml.Hbm2HbmXmlTest.BasicGlobals", genAtt.getTextContent(), "Unexpected class value for return element");
 	}
 
 	@Test

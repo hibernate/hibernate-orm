@@ -422,7 +422,33 @@ public class HbmSubclassBuilder {
 				HbmComponentBuilder.processDynamicComponent(entityClass, dynComponent, defaultPackage, ctx);
 			} else if (attribute instanceof JaxbHbmPropertiesType properties) {
 				// <properties> is a grouping element — recurse into its children
+				// then tag each child field with the group name
+				int fieldCountBefore = entityClass.getFields().size();
 				processAttributes(entityClass, properties.getAttributes(), defaultPackage, ctx);
+				String groupName = properties.getName();
+				if (groupName != null && !groupName.isEmpty()) {
+					for (int i = fieldCountBefore; i < entityClass.getFields().size(); i++) {
+						String fieldName = entityClass.getFields().get(i).getName();
+						ctx.addFieldMetaAttribute(entityClass.getClassName(), fieldName,
+								"hibernate.properties-group", groupName);
+					}
+					if (properties.isUnique()) {
+						ctx.addClassMetaAttribute(entityClass.getClassName(),
+								"hibernate.properties-group." + groupName + ".unique", "true");
+					}
+					if (!properties.isInsert()) {
+						ctx.addClassMetaAttribute(entityClass.getClassName(),
+								"hibernate.properties-group." + groupName + ".insert", "false");
+					}
+					if (!properties.isUpdate()) {
+						ctx.addClassMetaAttribute(entityClass.getClassName(),
+								"hibernate.properties-group." + groupName + ".update", "false");
+					}
+					if (!properties.isOptimisticLock()) {
+						ctx.addClassMetaAttribute(entityClass.getClassName(),
+								"hibernate.properties-group." + groupName + ".optimistic-lock", "false");
+					}
+				}
 			}
 			// Extract field-level <meta> attributes
 			if (attribute instanceof AttributeMapping am

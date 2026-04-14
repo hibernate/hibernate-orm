@@ -30,7 +30,6 @@ import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
 import org.hibernate.tool.test.utils.JavaUtil;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.w3c.dom.Document;
@@ -92,7 +91,6 @@ public class TestCase {
 	}
 	
 	@Test
-	@Disabled("<properties> grouping element not yet supported by new HBM exporter")
 	public void testGenerationOfEmbeddedProperties() throws Exception {
 		File outputXml = new File(outputDir,  "properties/PPerson.hbm.xml");
 		JUnitUtil.assertIsNonEmptyFile(outputXml);

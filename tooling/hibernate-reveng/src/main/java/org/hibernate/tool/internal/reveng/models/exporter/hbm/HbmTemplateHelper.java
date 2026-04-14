@@ -451,7 +451,8 @@ public class HbmTemplateHelper {
 					&& !field.hasDirectAnnotationUsage(ElementCollection.class)
 					&& !field.hasDirectAnnotationUsage(ManyToAny.class)
 					&& !field.hasDirectAnnotationUsage(NaturalId.class)
-					&& !isSecondaryTableField(field)) {
+					&& !isSecondaryTableField(field)
+					&& !isInPropertiesGroup(field)) {
 				result.add(field);
 			}
 		}
@@ -483,7 +484,13 @@ public class HbmTemplateHelper {
 	}
 
 	public List<FieldDetails> getManyToOneFields() {
-		return getFieldsWithAnnotation(ManyToOne.class);
+		List<FieldDetails> result = new ArrayList<>();
+		for (FieldDetails field : classDetails.getFields()) {
+			if (field.hasDirectAnnotationUsage(ManyToOne.class) && !isInPropertiesGroup(field)) {
+				result.add(field);
+			}
+		}
+		return result;
 	}
 
 	public List<FieldDetails> getOneToOneFields() {
@@ -1454,6 +1461,71 @@ public class HbmTemplateHelper {
 
 	public record AttributeOverrideInfo(String fieldName, String columnName) {}
 
+	// --- Properties groups (<properties> element) ---
+
+	private boolean isInPropertiesGroup(FieldDetails field) {
+		Map<String, List<String>> attrs = fieldMetaAttributes.getOrDefault(
+				field.getName(), Collections.emptyMap());
+		return attrs.containsKey("hibernate.properties-group");
+	}
+
+	public List<PropertiesGroupInfo> getPropertiesGroups() {
+		// Collect unique group names in field order
+		List<String> groupNames = new ArrayList<>();
+		for (FieldDetails field : classDetails.getFields()) {
+			Map<String, List<String>> attrs = fieldMetaAttributes.getOrDefault(
+					field.getName(), Collections.emptyMap());
+			List<String> groups = attrs.get("hibernate.properties-group");
+			if (groups != null && !groups.isEmpty()) {
+				String groupName = groups.get(0);
+				if (!groupNames.contains(groupName)) {
+					groupNames.add(groupName);
+				}
+			}
+		}
+		List<PropertiesGroupInfo> result = new ArrayList<>();
+		for (String groupName : groupNames) {
+			List<FieldDetails> fields = new ArrayList<>();
+			for (FieldDetails field : classDetails.getFields()) {
+				Map<String, List<String>> attrs = fieldMetaAttributes.getOrDefault(
+						field.getName(), Collections.emptyMap());
+				List<String> groups = attrs.get("hibernate.properties-group");
+				if (groups != null && groups.contains(groupName)) {
+					fields.add(field);
+				}
+			}
+			boolean unique = "true".equals(
+					getClassMetaValue("hibernate.properties-group." + groupName + ".unique"));
+			boolean insert = !"false".equals(
+					getClassMetaValue("hibernate.properties-group." + groupName + ".insert"));
+			boolean update = !"false".equals(
+					getClassMetaValue("hibernate.properties-group." + groupName + ".update"));
+			boolean optimisticLock = !"false".equals(
+					getClassMetaValue("hibernate.properties-group." + groupName + ".optimistic-lock"));
+			result.add(new PropertiesGroupInfo(groupName, unique, insert, update,
+					optimisticLock, fields));
+		}
+		return result;
+	}
+
+	public boolean isBasicField(FieldDetails field) {
+		return !isRelationshipField(field) && !isEmbeddedField(field)
+				&& !field.hasDirectAnnotationUsage(EmbeddedId.class)
+				&& !field.hasDirectAnnotationUsage(Id.class)
+				&& !field.hasDirectAnnotationUsage(Version.class)
+				&& !field.hasDirectAnnotationUsage(Any.class)
+				&& !field.hasDirectAnnotationUsage(ElementCollection.class)
+				&& !field.hasDirectAnnotationUsage(ManyToAny.class);
+	}
+
+	public boolean isManyToOneField(FieldDetails field) {
+		return field.hasDirectAnnotationUsage(ManyToOne.class);
+	}
+
+	public record PropertiesGroupInfo(String name, boolean unique, boolean insert,
+									   boolean update, boolean optimisticLock,
+									   List<FieldDetails> fields) {}
+
 	// --- Meta attributes ---
 
 	public Map<String, List<String>> getMetaAttributes() {
@@ -1463,7 +1535,8 @@ public class HbmTemplateHelper {
 					&& !entry.getKey().equals("hibernate.comment")
 					&& !entry.getKey().equals("hibernate.class-name")
 					&& !entry.getKey().startsWith("hibernate.join.comment.")
-					&& !entry.getKey().startsWith("hibernate.sql-query.")) {
+					&& !entry.getKey().startsWith("hibernate.sql-query.")
+					&& !entry.getKey().startsWith("hibernate.properties-group.")) {
 				result.put(entry.getKey(), entry.getValue());
 			}
 		}
@@ -1497,7 +1570,8 @@ public class HbmTemplateHelper {
 					&& !entry.getKey().startsWith("hibernate.array.")
 					&& !entry.getKey().startsWith("hibernate.dynamic-component")
 					&& !entry.getKey().equals("hibernate.cascade")
-					&& !entry.getKey().equals("hibernate.formula")) {
+					&& !entry.getKey().equals("hibernate.formula")
+					&& !entry.getKey().equals("hibernate.properties-group")) {
 				result.put(entry.getKey(), entry.getValue());
 			}
 		}
@@ -1669,7 +1743,8 @@ public class HbmTemplateHelper {
 		List<ScalarReturnInfo> scalarReturns = new ArrayList<>();
 		// Resolve returns from resultClass
 		if (resultClass != null && resultClass != void.class) {
-			entityReturns.add(new EntityReturnInfo(resultClass.getName(), "", List.of()));
+			entityReturns.add(new EntityReturnInfo(
+					resultClass.getName(), resultClass.getName(), "", List.of()));
 		}
 		// Resolve returns from @SqlResultSetMapping
 		if (resultSetMapping != null && !resultSetMapping.isEmpty()) {
@@ -1681,7 +1756,8 @@ public class HbmTemplateHelper {
 						fieldMappings.add(new FieldMappingInfo(fr.name(), fr.column()));
 					}
 					entityReturns.add(new EntityReturnInfo(
-							er.entityClass().getName(), er.discriminatorColumn(), fieldMappings));
+							er.entityClass().getName(), er.entityClass().getName(),
+							er.discriminatorColumn(), fieldMappings));
 				}
 				for (ColumnResult cr : mapping.columns()) {
 					scalarReturns.add(new ScalarReturnInfo(cr.name()));
@@ -1701,6 +1777,14 @@ public class HbmTemplateHelper {
 		String lcLockMode = getClassMetaValue("hibernate.sql-query." + name + ".load-collection.lock-mode");
 		if (lcAlias != null && lcRole != null) {
 			loadCollections.add(new LoadCollectionInfo(lcAlias, lcRole, lcLockMode));
+		}
+		// Resolve <return> from meta attributes
+		String retAlias = getClassMetaValue("hibernate.sql-query." + name + ".return.alias");
+		String retClass = getClassMetaValue("hibernate.sql-query." + name + ".return.class");
+		if (retClass != null) {
+			entityReturns.add(new EntityReturnInfo(
+					retAlias != null ? retAlias : retClass,
+					retClass, "", List.of()));
 		}
 		return new NamedNativeQueryInfo(name, query, flushMode, cacheable, cacheRegion,
 				fetchSize, timeout, comment, readOnly, querySpaces,
@@ -1736,7 +1820,8 @@ public class HbmTemplateHelper {
 									   List<ReturnJoinInfo> returnJoins,
 									   List<LoadCollectionInfo> loadCollections) {}
 
-	public record EntityReturnInfo(String entityClass, String discriminatorColumn,
+	public record EntityReturnInfo(String alias, String entityClass,
+								   String discriminatorColumn,
 								   List<FieldMappingInfo> fieldMappings) {}
 
 	public record FieldMappingInfo(String name, String column) {}

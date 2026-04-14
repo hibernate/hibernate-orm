@@ -306,7 +306,7 @@ public class HbmCollectionBuilder {
 					key, collectionInterfaceName, defaultPackage, ctx);
 		} else if (manyToMany != null) {
 			return buildManyToManyField(entityClass, name, manyToMany,
-					collectionInterfaceName, defaultPackage, ctx);
+					key, collectionInterfaceName, defaultPackage, ctx);
 		} else if (element != null) {
 			return buildElementCollectionField(entityClass, name, element,
 					key, collectionInterfaceName, ctx);
@@ -345,7 +345,7 @@ public class HbmCollectionBuilder {
 					key, keyClass, defaultPackage, ctx);
 		} else if (manyToMany != null) {
 			field = buildMapManyToManyField(entityClass, name, manyToMany,
-					keyClass, defaultPackage, ctx);
+					key, keyClass, defaultPackage, ctx);
 		} else if (manyToAny != null) {
 			field = buildMapManyToAnyField(entityClass, name, manyToAny,
 					key, keyClass, defaultPackage, ctx);
@@ -391,6 +391,7 @@ public class HbmCollectionBuilder {
 			DynamicClassDetails entityClass,
 			String name,
 			JaxbHbmManyToManyCollectionElementType manyToMany,
+			JaxbHbmKeyType key,
 			ClassDetails keyClass,
 			String defaultPackage,
 			HbmBuildContext ctx) {
@@ -405,6 +406,7 @@ public class HbmCollectionBuilder {
 		ManyToManyJpaAnnotation m2mAnnotation =
 				JpaAnnotations.MANY_TO_MANY.createUsage(ctx.getModelsContext());
 		field.addAnnotationUsage(m2mAnnotation);
+		addManyToManyJoinTable(field, key, manyToMany, ctx);
 		return field;
 	}
 
@@ -536,6 +538,7 @@ public class HbmCollectionBuilder {
 			DynamicClassDetails entityClass,
 			String name,
 			JaxbHbmManyToManyCollectionElementType manyToMany,
+			JaxbHbmKeyType key,
 			String collectionInterfaceName,
 			String defaultPackage,
 			HbmBuildContext ctx) {
@@ -553,7 +556,45 @@ public class HbmCollectionBuilder {
 		ManyToManyJpaAnnotation m2mAnnotation =
 				JpaAnnotations.MANY_TO_MANY.createUsage(ctx.getModelsContext());
 		field.addAnnotationUsage(m2mAnnotation);
+
+		// @JoinTable with join columns from <key>
+		addManyToManyJoinTable(field, key, manyToMany, ctx);
+
 		return field;
+	}
+
+	private static void addManyToManyJoinTable(DynamicFieldDetails field,
+											   JaxbHbmKeyType key,
+											   JaxbHbmManyToManyCollectionElementType manyToMany,
+											   HbmBuildContext ctx) {
+		if (key == null) {
+			return;
+		}
+		JoinTableJpaAnnotation jtAnnotation =
+				JpaAnnotations.JOIN_TABLE.createUsage(ctx.getModelsContext());
+
+		// Join columns from <key>
+		String keyColumn = key.getColumnAttribute();
+		if (keyColumn == null && key.getColumn() != null && !key.getColumn().isEmpty()) {
+			keyColumn = key.getColumn().get(0).getName();
+		}
+		if (keyColumn != null && !keyColumn.isEmpty()) {
+			JoinColumnJpaAnnotation jc =
+					JpaAnnotations.JOIN_COLUMN.createUsage(ctx.getModelsContext());
+			jc.name(keyColumn);
+			jtAnnotation.joinColumns(new jakarta.persistence.JoinColumn[]{jc});
+		}
+
+		// Inverse join columns from <many-to-many column="...">
+		String m2mColumn = manyToMany.getColumnAttribute();
+		if (m2mColumn != null && !m2mColumn.isEmpty()) {
+			JoinColumnJpaAnnotation ijc =
+					JpaAnnotations.JOIN_COLUMN.createUsage(ctx.getModelsContext());
+			ijc.name(m2mColumn);
+			jtAnnotation.inverseJoinColumns(new jakarta.persistence.JoinColumn[]{ijc});
+		}
+
+		field.addAnnotationUsage(jtAnnotation);
 	}
 
 	private static void applyListIndex(DynamicFieldDetails field,

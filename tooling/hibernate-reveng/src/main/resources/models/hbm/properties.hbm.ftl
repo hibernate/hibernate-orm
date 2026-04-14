@@ -139,9 +139,9 @@
 <#-- Collections (many-to-many) -->
 <#list helper.getManyToManyFields() as field>
 <#assign collTag = helper.getCollectionTag(field)>
-<#if helper.getJoinTableName(field)??>
-    <${collTag} name="${field.getName()}"
-        table="${helper.getJoinTableName(field)}"<#if helper.getJoinTableSchema(field)??>
+<#if helper.hasJoinTable(field)>
+    <${collTag} name="${field.getName()}"<#if helper.getJoinTableName(field)??>
+        table="${helper.getJoinTableName(field)}"</#if><#if helper.getJoinTableSchema(field)??>
         schema="${helper.getJoinTableSchema(field)}"</#if><#if helper.getJoinTableCatalog(field)??>
         catalog="${helper.getJoinTableCatalog(field)}"</#if><#if helper.getCollectionCascadeString(field)??>
         cascade="${helper.getCollectionCascadeString(field)}"</#if><#if helper.getCollectionLazy(field)??>

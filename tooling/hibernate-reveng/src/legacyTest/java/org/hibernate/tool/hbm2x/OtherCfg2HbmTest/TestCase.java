@@ -30,7 +30,6 @@ import org.hibernate.tool.test.utils.FileUtil;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.w3c.dom.Document;
@@ -90,7 +89,6 @@ public class TestCase {
 	}
 	
 	@Test
-	@Disabled("Re-parsing generated hbm.xml fails: list-index/array type attribute missing in round-trip output")
     public void testReadable() {
 		Properties properties = new Properties();
 		properties.put(AvailableSettings.DIALECT, HibernateUtil.Dialect.class.getName());
@@ -99,11 +97,11 @@ public class TestCase {
         hbmFiles[0] = new File(srcDir, "org/hibernate/tool/hbm2x/Customer.hbm.xml");
         hbmFiles[1] = new File(srcDir, "org/hibernate/tool/hbm2x/LineItem.hbm.xml");
         hbmFiles[2] = new File(srcDir, "org/hibernate/tool/hbm2x/Order.hbm.xml");
-        hbmFiles[3] = new File(srcDir, "org/hibernate/tool/hbm2x/Product.hbm.xml");       
+        hbmFiles[3] = new File(srcDir, "org/hibernate/tool/hbm2x/Product.hbm.xml");
         Metadata metadata = MetadataDescriptorFactory
         		.createNativeDescriptor(null, hbmFiles, properties)
         		.createMetadata();
-        assertNotNull(metadata);      
+        assertNotNull(metadata);
     }
 	
 	@Test

@@ -1110,7 +1110,15 @@ public class HbmTemplateHelper {
 
 	public String getJoinTableName(FieldDetails field) {
 		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
-		return jt != null ? jt.name() : null;
+		if (jt == null) {
+			return null;
+		}
+		String name = jt.name();
+		return (name != null && !name.isEmpty()) ? name : null;
+	}
+
+	public boolean hasJoinTable(FieldDetails field) {
+		return field.hasDirectAnnotationUsage(JoinTable.class);
 	}
 
 	public String getJoinTableSchema(FieldDetails field) {

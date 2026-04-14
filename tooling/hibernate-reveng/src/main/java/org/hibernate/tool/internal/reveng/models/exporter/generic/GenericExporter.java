@@ -261,7 +261,7 @@ public class GenericExporter implements Exporter {
 		if (exporterProperties != null) {
 			Object ac = exporterProperties.get(ExporterConstants.ARTIFACT_COLLECTOR);
 			model.put("artifacts", ac != null ? ac
-					: new org.hibernate.tool.internal.export.common.DefaultArtifactCollector());
+					: new org.hibernate.tool.api.export.DefaultArtifactCollector());
 		}
 		// Add exporter properties to the model (with hibernatetool. prefix handling)
 		if (exporterProperties != null) {

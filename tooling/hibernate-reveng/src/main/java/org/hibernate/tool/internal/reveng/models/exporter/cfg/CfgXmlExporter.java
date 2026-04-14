@@ -30,7 +30,7 @@ import org.hibernate.tool.api.export.ArtifactCollector;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.export.common.DefaultArtifactCollector;
+import org.hibernate.tool.api.export.DefaultArtifactCollector;
 import org.hibernate.tool.internal.reveng.models.exporter.MetadataHelper;
 
 /**

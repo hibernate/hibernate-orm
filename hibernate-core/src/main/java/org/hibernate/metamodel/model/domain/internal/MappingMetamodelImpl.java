@@ -784,10 +784,6 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 			return getTypeConfiguration().getBasicTypeForJavaType( ( (SqmFieldLiteral<?>) sqmExpressible).getJavaType() );
 		}
 
-		if ( sqmExpressible instanceof CompositeSqmPathSource ) {
-			throw new UnsupportedOperationException( "Resolution of embedded-valued SqmExpressible nodes not yet implemented" );
-		}
-
 		if ( sqmExpressible instanceof EmbeddableTypeImpl ) {
 			return (MappingModelExpressible<?>) sqmExpressible;
 		}

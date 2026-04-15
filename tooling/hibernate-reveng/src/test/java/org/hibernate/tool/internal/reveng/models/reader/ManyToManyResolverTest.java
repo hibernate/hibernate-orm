@@ -98,14 +98,14 @@ public class ManyToManyResolverTest {
 	}
 
 	@Test
-	public void testFilterEmptyColumnTableMarkedAsManyToMany() {
+	public void testFilterEmptyColumnTableSkipped() {
 		TableMetadata emptyTable = new TableMetadata("EMPTY_TABLE", "EmptyTable", "com.example");
 		tablesByName.put("EMPTY_TABLE", emptyTable);
 
 		ManyToManyResolver resolver = ManyToManyResolver.create(tablesByName, outgoingFksByTable, adapter);
 		Set<String> m2mTables = resolver.filterManyToManyTables();
 
-		assertTrue(m2mTables.contains("EMPTY_TABLE"));
+		assertFalse(m2mTables.contains("EMPTY_TABLE"));
 	}
 
 	@Test

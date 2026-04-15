@@ -36,6 +36,7 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import freemarker.template.TemplateExceptionHandler;
 
+import org.hibernate.boot.Metadata;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
@@ -60,6 +61,8 @@ public class HbmLintExporter implements Exporter {
 
 	private List<ClassDetails> entities;
 	private LintDetector[] detectors;
+	private RelationalModelDetector[] relationalDetectors;
+	private Metadata metadata;
 	private Configuration freemarkerConfig;
 	private BeansWrapper beansWrapper;
 	private Properties exporterProperties = new Properties();
@@ -80,17 +83,19 @@ public class HbmLintExporter implements Exporter {
 		String[] templatePath = (String[])
 				exporterProperties.get(ExporterConstants.TEMPLATE_PATH);
 		if (templatePath == null) templatePath = new String[0];
-		HbmLintExporter configured = create(
-				MetadataHelper.from(md).getEntityClassDetails(),
-				templatePath);
+		HbmLintExporter configured = create(md, templatePath);
 		configured.export(destDir);
 	}
 
 	private HbmLintExporter(List<ClassDetails> entities,
 							LintDetector[] detectors,
+							RelationalModelDetector[] relationalDetectors,
+							Metadata metadata,
 							String[] templatePath) {
 		this.entities = entities;
 		this.detectors = detectors;
+		this.relationalDetectors = relationalDetectors;
+		this.metadata = metadata;
 		this.beansWrapper = new BeansWrapperBuilder(
 				Configuration.VERSION_2_3_33).build();
 		this.freemarkerConfig =
@@ -105,24 +110,46 @@ public class HbmLintExporter implements Exporter {
 
 	public static HbmLintExporter create(List<ClassDetails> entities) {
 		return new HbmLintExporter(entities, defaultDetectors(),
-				new String[0]);
+				new RelationalModelDetector[0], null, new String[0]);
 	}
 
 	public static HbmLintExporter create(List<ClassDetails> entities,
 										  String[] templatePath) {
 		return new HbmLintExporter(entities, defaultDetectors(),
-				templatePath);
+				new RelationalModelDetector[0], null, templatePath);
 	}
 
 	public static HbmLintExporter create(List<ClassDetails> entities,
 										  LintDetector[] detectors) {
-		return new HbmLintExporter(entities, detectors, new String[0]);
+		return new HbmLintExporter(entities, detectors,
+				new RelationalModelDetector[0], null, new String[0]);
+	}
+
+	public static HbmLintExporter create(MetadataDescriptor md,
+										  String[] templatePath) {
+		MetadataHelper helper = MetadataHelper.from(md);
+		// For lint detection, we always need Metadata for schema-based
+		// detectors. MetadataHelper may skip createMetadata() for hbm.xml
+		// files, so fall back to calling it directly.
+		Metadata metadata = helper.getMetadata();
+		if (metadata == null) {
+			metadata = md.createMetadata();
+		}
+		return new HbmLintExporter(helper.getEntityClassDetails(),
+				defaultDetectors(), defaultRelationalDetectors(),
+				metadata, templatePath);
 	}
 
 	private static LintDetector[] defaultDetectors() {
 		return new LintDetector[] {
 				new BadCachingDetector(),
 				new ShadowedIdentifierDetector()
+		};
+	}
+
+	private static RelationalModelDetector[] defaultRelationalDetectors() {
+		return new RelationalModelDetector[] {
+				new SchemaByMetaDataDetector()
 		};
 	}
 
@@ -135,6 +162,12 @@ public class HbmLintExporter implements Exporter {
 		for (LintDetector detector : detectors) {
 			detector.initialize(entities);
 			detector.visit(collector);
+		}
+		if (metadata != null && relationalDetectors != null) {
+			for (RelationalModelDetector detector : relationalDetectors) {
+				detector.initialize(metadata);
+				detector.visit(collector);
+			}
 		}
 		return results;
 	}

@@ -20,6 +20,9 @@ package org.hibernate.tool.maven;
 import static org.apache.maven.plugins.annotations.LifecyclePhase.GENERATE_RESOURCES;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -34,10 +37,12 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
-import org.hibernate.tool.internal.export.mapping.MappingExporter;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.internal.reveng.models.builder.hbm.HbmClassDetailsBuilder;
+import org.hibernate.tool.internal.reveng.models.exporter.mapping.MappingXmlExporter;
 
 @Mojo(
-	name = "hbm2orm", 
+	name = "hbm2orm",
 	defaultPhase = GENERATE_RESOURCES,
 	requiresDependencyResolution = ResolutionScope.RUNTIME)
 public class TransformHbmMojo extends AbstractMojo {
@@ -57,14 +62,38 @@ public class TransformHbmMojo extends AbstractMojo {
         try {
             Thread.currentThread().setContextClassLoader(createClassLoader(original));
             getLog().info("Starting " + this.getClass().getSimpleName() + "...");
-            MappingExporter mappingExporter = new MappingExporter();
-            mappingExporter.setHbmFiles(getHbmFiles(inputFolder));
-            mappingExporter.setFormatResult(format);
-            mappingExporter.start();
+            List<File> hbmFiles = getHbmFiles(inputFolder);
+            if (hbmFiles.isEmpty()) {
+                getLog().info("No hbm.xml files found in " + inputFolder);
+                return;
+            }
+            HbmClassDetailsBuilder builder = new HbmClassDetailsBuilder();
+            List<ClassDetails> entities = builder.buildFromFiles(
+                    hbmFiles.toArray(new File[0]));
+            MappingXmlExporter exporter = MappingXmlExporter.create();
+            for (int i = 0; i < entities.size(); i++) {
+                ClassDetails entity = entities.get(i);
+                File hbmFile = hbmFiles.get(i);
+                File mappingFile = toMappingFile(hbmFile);
+                try (Writer writer = new FileWriter(mappingFile)) {
+                    exporter.export(writer, entity);
+                } catch (IOException e) {
+                    throw new RuntimeException(
+                            "Failed to write mapping file: " + mappingFile, e);
+                }
+                getLog().info("Transformed " + hbmFile.getName()
+                        + " -> " + mappingFile.getName());
+            }
             getLog().info("Finished " + this.getClass().getSimpleName() + "!");
         } finally {
             Thread.currentThread().setContextClassLoader(original);
         }
+    }
+
+    private File toMappingFile(File hbmFile) {
+        String name = hbmFile.getName();
+        String mappingName = name.replace(".hbm.xml", ".mapping.xml");
+        return new File(hbmFile.getParentFile(), mappingName);
     }
 
     private List<File> getHbmFiles(File f) {

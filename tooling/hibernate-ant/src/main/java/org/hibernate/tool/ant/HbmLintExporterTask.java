@@ -18,7 +18,8 @@
 package org.hibernate.tool.ant;
 
 import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.internal.export.lint.HbmLintExporter;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.internal.reveng.models.exporter.lint.HbmLintExporter;
 
 public class HbmLintExporterTask extends ExporterTask {
 
@@ -26,8 +27,16 @@ public class HbmLintExporterTask extends ExporterTask {
 		super( parent );
 	}
 
+	@Override
+	public void execute() {
+		MetadataDescriptor md = parent.getMetadataDescriptor();
+		String[] tPath = getTemplatePath().list();
+		HbmLintExporter exporter = HbmLintExporter.create(md, tPath);
+		exporter.export(getDestdir());
+	}
+
 	protected Exporter createExporter() {
-		return new HbmLintExporter();
+		return null;
 	}
 
 	String getName() {

@@ -21,13 +21,17 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
+import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.sql.model.ast.LogicalTableUpdate;
 import org.hibernate.sql.model.ast.MutatingTableReference;
+import org.hibernate.sql.model.ast.builder.AssigningTableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.ast.builder.VersionUpdateBuilder;
@@ -38,6 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.hibernate.action.queue.decompose.entity.DecompositionHelper.hasValueGenerationOnExecution;
 import static org.hibernate.generator.EventType.UPDATE;
 import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_INT_ARRAY;
 import static org.hibernate.internal.util.collections.ArrayHelper.join;
@@ -162,10 +167,23 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				|| effectiveOptLockStyle.isAllOrDirty()
 				|| entityPersister.hasUninitializedLazyProperties( entity );
 
-		final Map<String, LogicalTableUpdate<?>> effectiveGroup = needsDynamicUpdate
-				? generateDynamicUpdateOperations( identifier, rowId, state, previousState, previousState,
-				updateability, valuesAnalysis, session )
-				: staticUpdateOperations;
+		final Map<String, LogicalTableUpdate<?>> effectiveGroup;
+		if ( needsDynamicUpdate ) {
+			effectiveGroup = generateDynamicUpdateOperations(
+					entity,
+					identifier,
+					rowId,
+					state,
+					previousState,
+					previousVersion,
+					updateability,
+					valuesAnalysis,
+					session
+			);
+		}
+		else {
+			effectiveGroup = staticUpdateOperations;
+		}
 
 		var generatedValuesCollector = GeneratedValuesCollector.forUpdate( entityPersister, sessionFactory );
 		final PostUpdateHandling postUpdateHandling = new PostUpdateHandling( action, cacheKey, previousVersion, generatedValuesCollector, entityEntry );
@@ -399,10 +417,16 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 	}
 
 	private Map<String, LogicalTableUpdate<?>> generateStaticOperations() {
+		// todo : we should be skipping static update generation for DIRTY opt locking?
+
 		final Map<String, TableUpdateBuilder<?>> staticOperationBuilders = new HashMap<>();
 
 		// Process tables in forward order
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
+			if ( tableDescriptor.isInverse() ) {
+				// skip inverse tables
+				return;
+			}
 			staticOperationBuilders.put(
 					tableDescriptor.name(),
 					createTableUpdateBuilder(tableDescriptor)
@@ -415,7 +439,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		staticOperationBuilders.forEach( (name, operationBuilder) -> {
 			// Only build mutation if there are columns to update
 			// todo : hmmm, technically we might also need to delete for optional tables
-			if ( operationBuilder.hasValueBindings() ) {
+			if ( operationBuilder.hasAssignmentBindings() ) {
 				staticOperations.put( name, operationBuilder.buildMutation() );
 			}
 		} );
@@ -441,6 +465,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 	}
 
 	protected Map<String, LogicalTableUpdate<?>> generateDynamicUpdateOperations(
+			Object entity,
 			Object identifier,
 			Object rowId,
 			Object[] state,
@@ -453,6 +478,10 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 
 		// Process tables in forward order
 		entityPersister.forEachMutableTableDescriptor( (tableDescriptor) -> {
+			if (  tableDescriptor.isInverse() ) {
+				// skip inverse tables
+				return;
+			}
 			if ( valuesAnalysis.needsUpdate( tableDescriptor ) ) {
 				operationBuilders.put(
 						tableDescriptor.name(),
@@ -461,7 +490,16 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			}
 		} );
 
-		applyDynamicUpdateDetails( operationBuilders, state, previousState, version, valuesAnalysis, updateable, session );
+		applyDynamicUpdateDetails(
+				operationBuilders,
+				entity,
+				state,
+				previousState,
+				version,
+				valuesAnalysis,
+				updateable,
+				session
+		);
 
 		final Map<String, LogicalTableUpdate<?>> operations = new HashMap<>();
 		operationBuilders.forEach( (name, operationBuilder) -> {
@@ -476,7 +514,6 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 	private void applyStaticUpdateDetails(Map<String, TableUpdateBuilder<?>> builders) {
 		final boolean[] propertyUpdateability = entityPersister.getPropertyUpdateability();
 
-		// Apply SET clause columns
 		builders.forEach( (name, builder) -> {
 			// Get the TableDescriptor from the adapter
 			final var tableMapping = (TableDescriptorAsTableMapping) builder.getMutatingTable().getTableMapping();
@@ -486,10 +523,20 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				return;
 			}
 
+			// Apply SET clause columns for attributes
 			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
 				var attribute = tableDescriptor.attributes().get( i );
-				if ( propertyUpdateability[attribute.getStateArrayPosition()] ) {
-					attribute.forEachUpdatable( builder );
+				if ( propertyUpdateability[attribute.getStateArrayPosition()]
+						|| isValueGenerationOnUpdateInSql( attribute.getGenerator() )) {
+					applyValueAssignment(
+							// entity
+							null,
+							entityPersister.getVersionMapping(),
+							attribute,
+							builder,
+							// session
+							null
+					);
 				}
 			}
 
@@ -506,17 +553,64 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		}
 	}
 
+
+	private void applyValueAssignment(
+			Object entity,
+			EntityVersionMapping versionMapping,
+			AttributeMapping attributeMapping,
+			AssigningTableMutationBuilder<?> tableUpdateBuilder,
+			SharedSessionContractImplementor session) {
+		final var generator = attributeMapping.getGenerator();
+		if ( generator instanceof OnExecutionGenerator onExecutionGenerator
+				&& hasValueGenerationOnExecution( onExecutionGenerator, UPDATE, entity, session, dialect() ) ) {
+			handleValueGeneration( attributeMapping, tableUpdateBuilder, onExecutionGenerator );
+		}
+		else if ( versionMapping != null
+				&& versionMapping.getVersionAttribute() == attributeMapping) {
+			tableUpdateBuilder.addColumnAssignment( versionMapping.getVersionAttribute() );
+		}
+		else {
+			attributeMapping.forEachUpdatable( tableUpdateBuilder::addColumnAssignment );
+		}
+	}
+
+	private Dialect dialect() {
+		return sessionFactory.getJdbcServices().getDialect();
+	}
+
+	protected void handleValueGeneration(
+			AttributeMapping attributeMapping,
+			AssigningTableMutationBuilder<?> tableUpdateBuilder,
+			OnExecutionGenerator generator) {
+		final var dialect = sessionFactory.getJdbcServices().getDialect();
+		final var columnValues = generator.getReferencedColumnValues( dialect, UPDATE );
+		final var columnInclusions = generator.getColumnInclusions( dialect, UPDATE );
+		attributeMapping.forEachSelectable( (j, mapping) -> {
+			if ( columnInclusions == null || columnInclusions[j] ) {
+				final String columnValue = columnValues != null && columnValues[j] != null
+						? columnValues[j]
+						: "?";
+				tableUpdateBuilder.addColumnAssignment( mapping, columnValue );
+			}
+		} );
+	}
+
+	private boolean isValueGenerationOnUpdateInSql(Generator generator) {
+		return generator != null
+				&& generator.generatedOnExecution()
+				&& generator.generatesOnUpdate()
+				&& ( (OnExecutionGenerator) generator ).referenceColumnsInSql( dialect(), EventType.UPDATE );
+	}
+
 	private void applyDynamicUpdateDetails(
 			Map<String, TableUpdateBuilder<?>> builders,
+			Object entity,
 			Object[] state,
 			Object[] previousState,
 			Object version,
 			UpdateValuesAnalysis valuesAnalysis,
 			boolean[] updateable,
 			SharedSessionContractImplementor session) {
-		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
-
-		// Apply SET clause columns
 		builders.forEach( (name, builder) -> {
 			// Get the TableDescriptor from the adapter
 			final var tableMapping = (TableDescriptorAsTableMapping) builder.getMutatingTable().getTableMapping();
@@ -526,15 +620,15 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				return;
 			}
 
+			// Apply SET clause columns for attributes
 			for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
 				var attribute = tableDescriptor.attributes().get( i );
-				if ( shouldIncludeInDynamicUpdate( attribute.getStateArrayPosition(), updateable, valuesAnalysis ) ) {
+				if ( shouldIncludeInDynamicUpdate( attribute, builder, updateable, entity, valuesAnalysis, session ) ) {
 					if ( state[attribute.getStateArrayPosition()] == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
 						// it was not fetched and so could not have changed, skip it
 						continue;
 					}
-
-					attribute.forEachUpdatable( builder );
+					applyValueAssignment( entity, entityPersister.getVersionMapping(), attribute, builder, session );
 				}
 			}
 
@@ -552,16 +646,20 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 	}
 
 	private boolean shouldIncludeInDynamicUpdate(
-			int attributeIndex,
+			AttributeMapping attribute,
+			AssigningTableMutationBuilder<?> builder,
 			boolean[] updateable,
-			UpdateValuesAnalysis valuesAnalysis) {
-		if ( !updateable[attributeIndex] ) {
+			Object entity,
+			UpdateValuesAnalysis valuesAnalysis, SharedSessionContractImplementor session) {
+		// First check if the attribute is updateable or has update-generated values
+		if ( !updateable[attribute.getStateArrayPosition()]
+				&& !isValueGenerationOnUpdateInSql( attribute.getGenerator() )) {
 			return false;
 		}
 
 		// If we have dirty fields, only include dirty ones
 		if ( valuesAnalysis.hasDirtyAttributes() ) {
-			return valuesAnalysis.getDirtiness()[attributeIndex];
+			return valuesAnalysis.getDirtiness()[attribute.getStateArrayPosition()];
 		}
 
 		return true;

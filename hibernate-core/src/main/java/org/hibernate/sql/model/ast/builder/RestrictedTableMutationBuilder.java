@@ -95,6 +95,10 @@ public interface RestrictedTableMutationBuilder<O extends MutationOperation, M e
 	 */
 	void addOptimisticLockRestriction(SelectableMapping selectableMapping);
 
+	default void addOptimisticLockRestriction(int position, SelectableMapping selectableMapping) {
+		addOptimisticLockRestriction(  selectableMapping );
+	}
+
 	ColumnValueBindingList getKeyRestrictionBindings();
 
 	ColumnValueBindingList getOptimisticLockBindings();

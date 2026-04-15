@@ -1041,7 +1041,11 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			if ( indexDescriptor != null ) {
 				indexDescriptor.decompose(
 						persister.incrementIndexByBase( collection.getIndex( rowValue, rowPosition, persister ) ),
-						jdbcValueBindings::bindInsertAssignment,
+						(valueIndex, value, jdbcValueMapping) -> {
+							if ( persister.getIndexColumnIsSettable()[valueIndex] ) {
+								jdbcValueBindings.bindAssignment( valueIndex, value, jdbcValueMapping );
+							}
+						},
 						session
 				);
 			}
@@ -1049,7 +1053,11 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 
 		attributeMapping.getElementDescriptor().decompose(
 				collection.getElement( rowValue ),
-				jdbcValueBindings::bindAssignment,
+				(valueIndex, value, jdbcValueMapping) -> {
+					if ( persister.getElementColumnIsSettable()[valueIndex] ) {
+						jdbcValueBindings.bindAssignment( valueIndex, value, jdbcValueMapping );
+					}
+				},
 				session
 		);
 	}

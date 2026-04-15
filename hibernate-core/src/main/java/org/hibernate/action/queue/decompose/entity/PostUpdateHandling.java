@@ -53,50 +53,11 @@ public class PostUpdateHandling implements PostExecutionCallback {
 
 	@Override
 	public void handle(SessionImplementor session) {
-		if ( action.getPersister().isMutable() ) {
-			handleMutableEntity( entityEntry, session );
-		}
-		else {
+		if ( !action.getPersister().isMutable() ) {
 			handleImmutableEntity( entityEntry, session );
 		}
-	}
-
-	private void handleMutableEntity(EntityEntry entry, SessionImplementor session) {
-		// Apply aggregated GeneratedValues from all tables
-		if ( generatedValuesCollector != null ) {
-			final GeneratedValues generatedValues = generatedValuesCollector.generatedValues();
-			action.handleGeneratedProperties( entry, generatedValues );
-		}
-
-		// Handle application-generated version increment
-		// This is complementary to UpdateBindPlan's GeneratedValues processing:
-		// - UpdateBindPlan handles database-generated values (timestamps, etc.)
-		// - This section handles application-generated values (version increments)
-		finalizeVersion( entry );
-
-		// For non-versioned entities, finalizeVersion() returns early without calling
-		// entry.postUpdate(). We must still synchronize the loadedState to prevent
-		// the entity from appearing dirty on subsequent flushes.
-		if ( action.getNextVersion() == null ) {
-			entry.postUpdate( action.getInstance(), action.getState(), null );
-		}
-
-		action.handleDeleted( entry );
-		action.updateCacheItem( previousVersion, cacheKey, entry );
-		action.handleNaturalIdSharedResolutions( action.getId(), action.getPersister(), session.getPersistenceContext() );
-
-		// For entities being deleted in the same flush, skip firing POST_UPDATE events
-		// because the DELETE operation may have already removed the entity from the
-		// persistence context, causing event listeners to fail when they try to look up
-		// the EntityEntry.
-		final Status status = entry.getStatus();
-		if ( status != Status.DELETED && status != Status.GONE ) {
-			action.postUpdate();
-
-			final var statistics = session.getFactory().getStatistics();
-			if ( statistics.isStatisticsEnabled() ) {
-				statistics.updateEntity( action.getPersister().getEntityName() );
-			}
+		else {
+			handleMutableEntity( entityEntry, session );
 		}
 	}
 
@@ -114,38 +75,76 @@ public class PostUpdateHandling implements PostExecutionCallback {
 		}
 	}
 
-	private void finalizeVersion(org.hibernate.engine.spi.EntityEntry entry) {
-		final Object nextVersion = action.getNextVersion();
-		if ( nextVersion == null ) {
-			return;  // No version to update
-		}
-
+	private void handleMutableEntity(EntityEntry entry, SessionImplementor session) {
 		final var persister = action.getPersister();
 		final Object entity = action.getInstance();
-		final Object previousVersion = action.getPreviousVersion();
+		final Object[] state = action.getState();
+		Object nextVersion = action.getNextVersion();
 
-		// Defensive check: only update if not already updated by GeneratedValues
-		// (Rare case: database-generated version via trigger or RETURNING clause)
-		final Object currentVersion = persister.getVersion( entity );
-		if ( currentVersion != null && !currentVersion.equals( previousVersion ) ) {
-			// Version was already updated by GeneratedValues processing in UpdateBindPlan
-			// Still need to update EntityEntry to ensure loadedState is correct
-			if ( entry != null ) {
-				entry.postUpdate( entity, action.getState(), nextVersion );
+		// Apply generated values and update entity state
+		if ( entry.getStatus() == Status.MANAGED || persister.isVersionPropertyGenerated() ) {
+
+			// Deep copy state FIRST to clone component objects before applying generated values.
+			// This prevents component reference sharing that breaks dirty checking.
+			// It is safe to copy in place here.
+			org.hibernate.type.TypeHelper.deepCopy(
+					state,
+					persister.getPropertyTypes(),
+					persister.getPropertyCheckability(),
+					state,
+					session
+			);
+
+			// Apply aggregated GeneratedValues from all tables
+			if ( generatedValuesCollector != null ) {
+				final GeneratedValues generatedValues = generatedValuesCollector.generatedValues();
+				if ( persister.hasUpdateGeneratedProperties() ) {
+					persister.processUpdateGeneratedProperties( action.getId(), entity, state, generatedValues, session );
+				}
+				// Check if version was DB-generated
+				if ( persister.isVersionPropertyGenerated() ) {
+					nextVersion = persister.getVersion( entity );
+				}
 			}
-			return;
+
+			// Handle application-generated version increment (if not already DB-generated)
+			if ( nextVersion != null ) {
+				final Object previousVersion = action.getPreviousVersion();
+				final Object currentVersion = persister.getVersion( entity );
+				// Only increment if not already updated by DB generation
+				if ( currentVersion == null || currentVersion.equals( previousVersion ) ) {
+					final int versionPropertyIndex = persister.getVersionPropertyIndex();
+					if ( versionPropertyIndex >= 0 ) {
+						persister.setPropertyValue( entity, versionPropertyIndex, nextVersion );
+					}
+				}
+				else {
+					// Version was DB-generated, use that value
+					nextVersion = currentVersion;
+				}
+			}
 		}
 
-		// Version not yet updated - update it now (application-generated)
-		final int versionPropertyIndex = persister.getVersionPropertyIndex();
-		if ( versionPropertyIndex >= 0 ) {
-			persister.setPropertyValue( entity, versionPropertyIndex, nextVersion );
-		}
+		// Single call to postUpdate with deep-copied state
+		entry.postUpdate( entity, state, nextVersion );
+		entry.setMaybeLazySet( null );
 
-		// Update EntityEntry: this is critical for subsequent optimistic locking checks
-		// as it updates loadedState with the new version
-		if ( entry != null ) {
-			entry.postUpdate( entity, action.getState(), nextVersion );
+		action.handleDeleted( entry );
+		action.updateCacheItem( previousVersion, cacheKey, entry );
+		action.handleNaturalIdSharedResolutions( action.getId(), action.getPersister(), session.getPersistenceContext() );
+
+		// For entities being deleted in the same flush, skip firing POST_UPDATE events
+		// because the DELETE operation may have already removed the entity from the
+		// persistence context, causing event listeners to fail when they try to look up
+		// the EntityEntry.
+		final Status status = entry.getStatus();
+		if ( status != Status.DELETED && status != Status.GONE ) {
+			action.postUpdate();
+
+			final var statistics = session.getFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.updateEntity( action.getPersister().getEntityName() );
+			}
 		}
 	}
 

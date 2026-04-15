@@ -58,8 +58,7 @@ import java.util.Properties;
  * {@code ClassDetails}/{@code FieldDetails} in a shape compatible
  * with the template expectations.
  * <p>
- * This is the entity-side replacement for the old
- * {@code org.hibernate.tool.internal.export.doc.DocExporter}.
+ * This is the entity-side replacement for the old {@code DocExporter}.
  * Table-side documentation can be added separately.
  *
  * @author Koen Aers

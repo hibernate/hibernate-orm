@@ -111,13 +111,7 @@ public class EntityDocFileManager {
 
 		// Create per-schema folders and per-table files
 		for (String schema : docHelper.getSchemas()) {
-			DocFolder schemaFolder;
-			if (!schema.equals(EntityDocHelper.DEFAULT_NO_SCHEMA)) {
-				schemaFolder = new DocFolder(schema, tablesFolder);
-			}
-			else {
-				schemaFolder = tablesFolder;
-			}
+			DocFolder schemaFolder = new DocFolder(schema, tablesFolder);
 
 			DocFile schemaSummary =
 					new DocFile("summary.html", schemaFolder);

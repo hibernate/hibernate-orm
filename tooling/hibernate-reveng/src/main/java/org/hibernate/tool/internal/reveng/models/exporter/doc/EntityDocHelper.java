@@ -166,6 +166,11 @@ public class EntityDocHelper {
 								Map<String, TableMetadata> tableMetadataMap) {
 		// First pass: build TableDocInfo for each entity
 		for (ClassDetails entity : entities) {
+			// Skip abstract entities without explicit table mappings
+			// (e.g., abstract union superclasses have no physical table)
+			if (entity.isAbstract() && tableMetadataMap == null) {
+				continue;
+			}
 			String className = entity.getClassName();
 			TableDocInfo tableInfo;
 			if (tableMetadataMap != null

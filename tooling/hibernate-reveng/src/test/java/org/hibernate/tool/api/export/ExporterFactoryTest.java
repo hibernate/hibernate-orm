@@ -22,11 +22,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import org.hibernate.tool.internal.export.common.AbstractExporter;
+import java.util.Properties;
+
 import org.junit.jupiter.api.Test;
 
 public class ExporterFactoryTest {
-	
+
 	@Test
 	public void testCreateExporter() {
 		try {
@@ -42,12 +43,14 @@ public class ExporterFactoryTest {
 		exporter = ExporterFactory.createExporter(ExporterType.JAVA);
 		assertNotNull(exporter);
 		assertEquals(
-				ExporterType.JAVA.className(), 
+				ExporterType.JAVA.className(),
 				exporter.getClass().getName());
 	}
-	
-	public static class TestExporter extends AbstractExporter {
-		@Override protected void doStart() {}
+
+	public static class TestExporter implements Exporter {
+		private final Properties properties = new Properties();
+		@Override public Properties getProperties() { return properties; }
+		@Override public void start() {}
 	}
 
 }

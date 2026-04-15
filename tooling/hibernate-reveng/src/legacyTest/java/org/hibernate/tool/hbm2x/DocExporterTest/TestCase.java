@@ -19,9 +19,11 @@
 package org.hibernate.tool.hbm2x.DocExporterTest;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.export.doc.DocExporter;
 import org.hibernate.tool.test.utils.ConnectionProvider;
 import org.hibernate.tool.test.utils.FileUtil;
 import org.hibernate.tool.test.utils.HibernateUtil;
@@ -74,7 +76,7 @@ public class TestCase {
 		assertTrue(resourcesDir.mkdir());
 		MetadataDescriptor metadataDescriptor = HibernateUtil
 				.initializeMetadataDescriptor(this, HBM_XML_FILES, resourcesDir);
-		DocExporter exporter = new DocExporter();
+		Exporter exporter = ExporterFactory.createExporter(ExporterType.DOC);
 		Properties properties = new Properties();
 		properties.put( "jdk5", "true"); // test generics
 		properties.put(AvailableSettings.DIALECT, HibernateUtil.Dialect.class.getName());

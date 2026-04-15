@@ -190,7 +190,7 @@ public class TestCase {
 		p.setProperty("proptest", "A value");
 		p.setProperty( "refproperty", "proptest=${proptest}" );
 		p.setProperty("hibernatetool.booleanProperty", "true");
-		p.setProperty("hibernatetool.myTool.toolclass", "org.hibernate.tool.internal.export.java.Cfg2JavaTool");
+		p.setProperty("hibernatetool.myTool.toolclass", "org.hibernate.tool.hbm2x.GenericExporterTest.TestCase$UnqualifyTool");
 		ge.getProperties().putAll(p);
 		ge.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		ge.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
@@ -207,5 +207,12 @@ public class TestCase {
 		assertEquals("value", generated.getProperty("myTool.value"));
 		assertEquals("proptest=A value", generated.getProperty("refproperty"));
 	}
-	
+
+	public static class UnqualifyTool {
+		public String unqualify(String name) {
+			int loc = name.lastIndexOf('.');
+			return (loc < 0) ? name : name.substring(loc + 1);
+		}
+	}
+
 }

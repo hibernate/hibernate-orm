@@ -341,7 +341,7 @@ public class DocExporterTest {
 				List.of(entity), builder.getTableMetadataMap());
 		exporter.export(outputDir);
 
-		File tableFile = new File(outputDir, "tables/EMPLOYEE.html");
+		File tableFile = new File(outputDir, "tables/default/EMPLOYEE.html");
 		assertTrue(tableFile.exists(),
 				"Table detail file should exist");
 		String content = readFile(tableFile);
@@ -358,7 +358,7 @@ public class DocExporterTest {
 				List.of(entity), builder.getTableMetadataMap());
 		exporter.export(outputDir);
 
-		File tableFile = new File(outputDir, "tables/EMPLOYEE.html");
+		File tableFile = new File(outputDir, "tables/default/EMPLOYEE.html");
 		String content = readFile(tableFile);
 		assertTrue(content.contains("ID"),
 				"Should contain column ID");
@@ -375,7 +375,7 @@ public class DocExporterTest {
 				List.of(entity), builder.getTableMetadataMap());
 		exporter.export(outputDir);
 
-		File tableFile = new File(outputDir, "tables/EMPLOYEE.html");
+		File tableFile = new File(outputDir, "tables/default/EMPLOYEE.html");
 		String content = readFile(tableFile);
 		assertTrue(content.contains("Primary Key"),
 				"Should have Primary Key section");
@@ -395,8 +395,8 @@ public class DocExporterTest {
 				builder.getTableMetadataMap());
 		exporter.export(outputDir);
 
-		assertTrue(new File(outputDir, "tables/EMPLOYEE.html").exists());
-		assertTrue(new File(outputDir, "tables/DEPARTMENT.html").exists());
+		assertTrue(new File(outputDir, "tables/default/EMPLOYEE.html").exists());
+		assertTrue(new File(outputDir, "tables/default/DEPARTMENT.html").exists());
 
 		// All tables list should contain both
 		File allTables = new File(outputDir, "tables/alltables.html");
@@ -439,7 +439,7 @@ public class DocExporterTest {
 				List.of(dept, emp), builder.getTableMetadataMap());
 		exporter.export(outputDir);
 
-		File tableFile = new File(outputDir, "tables/EMPLOYEE.html");
+		File tableFile = new File(outputDir, "tables/default/EMPLOYEE.html");
 		String content = readFile(tableFile);
 		assertTrue(content.contains("Foreign Key"),
 				"Should have Foreign Keys section");
@@ -489,7 +489,7 @@ public class DocExporterTest {
 		exporter.export(outputDir);
 
 		// Table should still be generated from ClassDetails annotations
-		File tableFile = new File(outputDir, "tables/EMPLOYEE.html");
+		File tableFile = new File(outputDir, "tables/default/EMPLOYEE.html");
 		assertTrue(tableFile.exists(),
 				"Table file should exist from ClassDetails fallback");
 		String content = readFile(tableFile);

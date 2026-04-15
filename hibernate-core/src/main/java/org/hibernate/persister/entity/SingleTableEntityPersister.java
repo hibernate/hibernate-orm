@@ -25,6 +25,7 @@ import org.hibernate.persister.filter.internal.DynamicFilterAliasGenerator;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
+import org.hibernate.sql.model.ast.builder.TableDeleteBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
 import org.hibernate.type.BasicType;
@@ -501,6 +502,24 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			if ( discriminatorValue != DiscriminatorValue.Special.NULL ) {
 				jdbcValueBindings.bindAssignment( -1, discriminatorValue.value(),  getDiscriminatorMapping() );
 			}
+		}
+	}
+
+	@Override
+	public void addDiscriminatorToDelete(TableDeleteBuilder tableDeleteBuilder) {
+		if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
+			tableDeleteBuilder.addNonKeyRestriction( getDiscriminatorMapping(), TableMutationBuilder.NULL );
+		}
+		else {
+			// and apply the parameter
+			tableDeleteBuilder.addNonKeyRestriction( getDiscriminatorMapping() );
+		}
+	}
+
+	@Override
+	public void bindDiscriminatorForDelete(JdbcValueBindings jdbcValueBindings) {
+		if ( discriminatorValue != DiscriminatorValue.Special.NULL ) {
+			jdbcValueBindings.bindAssignment( -1, discriminatorValue.value(),  getDiscriminatorMapping() );
 		}
 	}
 

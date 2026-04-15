@@ -80,6 +80,10 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 		// Bind the identifier for the WHERE clause
 		breakDownKeyJdbcValue( valueBindings, session );
 
+		if ( tableDescriptor.isIdentifierTable() ) {
+			entityPersister.bindDiscriminatorForDelete( valueBindings );
+		}
+
 		// Apply optimistic locking if needed
 		if ( effectiveOptLockStyle == OptimisticLockStyle.VERSION ) {
 			applyVersionBasedOptLocking( valueBindings, session );

@@ -291,23 +291,25 @@ public interface ActionQueue extends TransactionCompletionCallbacks {
 	 * Sort entity actions if ordering is enabled.
 	 *
 	 * @deprecated This method is not used by {@link GraphBasedActionQueue}, which uses
-	 *             graph-based ordering instead. It is only needed for
-	 *             {@link org.hibernate.engine.spi.ActionQueueLegacy}.
-	 *             It will be removed when the legacy implementation is removed.
+	 * graph-based ordering instead. It is only needed for
+	 * {@link org.hibernate.engine.spi.ActionQueueLegacy}.
+	 * It will be removed when the legacy implementation is removed.
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
-	void sortActions();
+	default void sortActions() {
+	}
 
 	/**
 	 * Sort collection actions if ordering is enabled.
 	 *
 	 * @deprecated This method is not used by {@link GraphBasedActionQueue}, which uses
-	 *             graph-based ordering instead. It is only needed for
-	 *             {@link org.hibernate.engine.spi.ActionQueueLegacy}.
-	 *             It will be removed when the legacy implementation is removed.
+	 * graph-based ordering instead. It is only needed for
+	 * {@link org.hibernate.engine.spi.ActionQueueLegacy}.
+	 * It will be removed when the legacy implementation is removed.
 	 */
 	@Deprecated(since = "7.0", forRemoval = true)
-	void sortCollectionActions();
+	default void sortCollectionActions() {
+	}
 
 	/**
 	 * Un-schedule a deletion for an unloaded entity.

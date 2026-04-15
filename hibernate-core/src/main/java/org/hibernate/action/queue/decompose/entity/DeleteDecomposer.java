@@ -182,7 +182,6 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 			);
 
 			final List<PlannedOperation> operations = CollectionHelper.arrayList( effectiveGroup.size() );
-			int localOrd = 0;
 			for ( Map.Entry<String, TableDelete> entry : effectiveGroup.entrySet() ) {
 				var mutation = entry.getValue().createMutationOperation(null, sessionFactory);
 				var tableMapping = (TableDescriptorAsTableMapping) mutation.getTableDetails();
@@ -198,12 +197,26 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 						effectiveOptLockStyle
 				);
 
+				// For DELETE operations, use table position to ensure proper ordering across multiple entities:
+				// - Child tables (higher position) get negative ordinals to execute first
+				// - Parent tables (lower position, typically 0) get positive ordinals to execute last
+				// This ensures that when deleting multiple entities from joined inheritance,
+				// ALL child table deletes happen before ANY parent table deletes.
+				// Example: Cat(ordinalBase=1) and Dog(ordinalBase=2) both have animal parent table
+				//   - cat table (pos 1): 1 - (1 * 1_000_000) = -999_999
+				//   - dog table (pos 1): 2 - (1 * 1_000_000) = -999_998
+				//   - animal table (pos 0) for Cat: 1 - (0 * 1_000_000) = 1
+				//   - animal table (pos 0) for Dog: 2 - (0 * 1_000_000) = 2
+				//   → Execution order: cat, dog, animal/Cat, animal/Dog ✓
+				final int tablePosition = tableDescriptor.getRelativePosition();
+				final int ordinal = ordinalBase - (tablePosition * 1_000_000);
+
 				final PlannedOperation op = new PlannedOperation(
 						tableDescriptor,
 						mutationKind,
 						mutation,
 						bindPlan,
-						ordinalBase * 1_000 + (localOrd++),
+						ordinal,
 						"EntityDeleteAction(" + entityPersister.getEntityName() + ")"
 				);
 
@@ -335,6 +348,13 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 		// Apply key restrictions for all tables
 		builders.forEach( (name, builder) -> {
 			applyKeyRestriction( builder );
+
+			if ( builder.getMutatingTable().getTableMapping().isIdentifierTable() ) {
+				if ( entityPersister.getDiscriminatorMapping() != null
+						&& entityPersister.getDiscriminatorMapping().hasPhysicalColumn() ) {
+					entityPersister.addDiscriminatorToDelete( builder );
+				}
+			}
 		} );
 
 		// Apply version-based optimistic locking if applicable
@@ -351,6 +371,13 @@ public class DeleteDecomposer extends AbstractDecomposer<EntityDeleteAction> {
 		// Apply key restrictions for all tables
 		builders.forEach( (name, builder) -> {
 			applyKeyRestriction( builder );
+
+			if ( builder.getMutatingTable().getTableMapping().isIdentifierTable() ) {
+				if ( entityPersister.getDiscriminatorMapping() != null
+						&& entityPersister.getDiscriminatorMapping().hasPhysicalColumn() ) {
+					entityPersister.addDiscriminatorToDelete( builder );
+				}
+			}
 		} );
 
 		// Apply optimistic locking

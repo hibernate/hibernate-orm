@@ -449,32 +449,6 @@ public class GraphBasedActionQueue implements ActionQueue {
 		}
 	}
 
-	/// Sort entity actions.
-	///
-	/// Note: With GraphBasedActionQueue, sorting is handled by FlushCoordinator's graph-based
-	/// ordering, so this is a no-op for API compatibility.
-	///
-	/// @deprecated This method is not used by GraphBasedActionQueue. It exists only for
-	///             API compatibility with [org.hibernate.engine.spi.ActionQueueLegacy].
-	@Deprecated(since = "7.0", forRemoval = true)
-	@Override
-	public void sortActions() {
-		// No-op: FlushCoordinator handles ordering via graph
-	}
-
-	/// Sort collection actions.
-	///
-	/// Note: With GraphBasedActionQueue, sorting is handled by FlushCoordinator's graph-based
-	/// ordering, so this is a no-op for API compatibility.
-	///
-	/// @deprecated This method is not used by GraphBasedActionQueue. It exists only for
-	///             API compatibility with [org.hibernate.engine.spi.ActionQueueLegacy].
-	@Deprecated(since = "7.0", forRemoval = true)
-	@Override
-	public void sortCollectionActions() {
-		// No-op: FlushCoordinator handles ordering via graph
-	}
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Query Methods
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

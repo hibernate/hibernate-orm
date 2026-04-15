@@ -37,6 +37,11 @@ public class TableUpdateBuilderSkipped implements TableUpdateBuilder {
 	}
 
 	@Override
+	public void addNonKeyRestriction(SelectableMapping restrictableMapping, String restrictionExpression) {
+		// nothing to do
+	}
+
+	@Override
 	public void addKeyRestrictionBinding(SelectableMapping selectableMapping) {
 		// nothing to do
 	}

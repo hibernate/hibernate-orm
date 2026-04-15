@@ -15,6 +15,7 @@ import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.sql.model.GraphMutationTarget;
+import org.hibernate.sql.model.ast.builder.TableDeleteBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 
 /**
@@ -69,6 +70,18 @@ public interface GraphEntityMutationTarget extends GraphMutationTarget<EntityTab
 	 * Bind discriminator value for insert
 	 */
 	default void bindDiscriminatorForInsert(JdbcValueBindings jdbcValueBindings) {
+	}
+
+	/**
+	 * Add discriminator column to the delete operation builder (for the primary table).
+	 */
+	default void addDiscriminatorToDelete(TableDeleteBuilder tableDeleteBuilder) {
+	}
+
+	/**
+	 * Bind discriminator value for insert
+	 */
+	default void bindDiscriminatorForDelete(JdbcValueBindings jdbcValueBindings) {
 	}
 
 	/**

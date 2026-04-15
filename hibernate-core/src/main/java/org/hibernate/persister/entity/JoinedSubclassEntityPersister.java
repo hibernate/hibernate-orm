@@ -38,6 +38,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.UnknownTableReferenceException;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
+import org.hibernate.sql.model.ast.builder.TableDeleteBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
 import org.hibernate.type.BasicType;
@@ -800,6 +801,30 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				&& discriminatorValue != DiscriminatorValue.Special.NULL
 				&& discriminatorValue != DiscriminatorValue.Special.NOT_NULL ) {
 			jdbcValueBindings.bindAssignment( -1, discriminatorValue.value(), getDiscriminatorMapping() );
+		}
+	}
+
+	@Override
+	public void addDiscriminatorToDelete(TableDeleteBuilder tableDeleteBuilder) {
+		if ( explicitDiscriminatorColumnName != null ) {
+			if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
+				tableDeleteBuilder.addNonKeyRestriction( getDiscriminatorMapping(), TableMutationBuilder.NULL );
+			}
+			else if ( discriminatorValue == DiscriminatorValue.Special.NOT_NULL ) {
+				tableDeleteBuilder.addNonKeyRestriction( getDiscriminatorMapping(), TableMutationBuilder.NOT_NULL );
+			}
+			else {
+				tableDeleteBuilder.addNonKeyRestriction( getDiscriminatorMapping() );
+			}
+		}
+	}
+
+	@Override
+	public void bindDiscriminatorForDelete(JdbcValueBindings jdbcValueBindings) {
+		if ( explicitDiscriminatorColumnName != null
+				&& discriminatorValue != DiscriminatorValue.Special.NULL
+				&& discriminatorValue != DiscriminatorValue.Special.NOT_NULL ) {
+			jdbcValueBindings.bindRestriction( -1, discriminatorValue.value(), getDiscriminatorMapping() );
 		}
 	}
 

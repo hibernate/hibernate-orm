@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -319,11 +320,15 @@ public class FlushCoordinator {
 	/// @param groups the operation groups
 	/// @return a simple flush plan
 	private FlushPlan createSimplePlan(List<PlannedOperationGroup> groups) {
-		// Collect all operations from all groups, maintaining their order
+		// Collect all operations from all groups
 		final List<PlannedOperation> allOperations = new ArrayList<>();
 		for (PlannedOperationGroup group : groups) {
 			allOperations.addAll(group.operations());
 		}
+
+		// Sort operations by ordinal to ensure correct execution order
+		// (e.g., for joined inheritance DELETE: child tables before parent tables)
+		allOperations.sort(Comparator.comparingInt(PlannedOperation::getOrdinal));
 
 		// Create a single step with all operations
 		final PlanStep step = new SimplePlanStep(allOperations);
@@ -443,9 +448,16 @@ public class FlushCoordinator {
 
 		void addOperation(PlannedOperation op) {
 			this.operations.add(op);
-			// When merging operations from different entities, use the minimum ordinal
-			// to ensure the group executes at the earliest required point
-			this.ordinal = Math.min(this.ordinal, op.getOrdinal());
+			// When merging operations from different entities:
+			// - For DELETE: use maximum ordinal to ensure parent tables execute AFTER all child operations
+			//   (e.g., for joined inheritance: delete from child tables before parent tables)
+			// - For INSERT/UPDATE: use minimum ordinal to ensure dependencies execute first
+			if (kind == MutationKind.DELETE) {
+				this.ordinal = Math.max(this.ordinal, op.getOrdinal());
+			}
+			else {
+				this.ordinal = Math.min(this.ordinal, op.getOrdinal());
+			}
 		}
 
 		PlannedOperationGroup build() {

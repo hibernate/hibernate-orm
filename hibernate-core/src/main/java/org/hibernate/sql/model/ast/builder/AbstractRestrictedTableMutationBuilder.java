@@ -65,6 +65,17 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 	}
 
 	@Override
+	public void addNonKeyRestriction(SelectableMapping restrictableMapping, String restrictionExpression) {
+		optimisticLockBindings.addRestriction( ColumnValueBindingBuilder.createValueBinding(
+				restrictionExpression,
+				restrictableMapping,
+				getMutatingTable(),
+				ParameterUsage.RESTRICT,
+				getParameters()::apply
+		) );
+	}
+
+	@Override
 	public void addKeyRestrictionBinding(SelectableMapping selectableMapping) {
 		keyRestrictionBindings.addRestriction( selectableMapping );
 	}

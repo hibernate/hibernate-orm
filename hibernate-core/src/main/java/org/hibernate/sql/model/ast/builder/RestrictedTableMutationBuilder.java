@@ -30,6 +30,30 @@ public interface RestrictedTableMutationBuilder<O extends MutationOperation, M e
 	void addNonKeyRestriction(ColumnValueBinding valueBinding);
 
 	/**
+	 * Adds a restriction, which is assumed to be based on a selectable that is NOT
+	 * a table key, e.g. optimistic locking.
+	 *
+	 * @apiNote Be sure you know what you are doing before using this method.  Generally
+	 * prefer any of the other methods here for adding non-key restrictions.
+	 */
+	@Internal
+	@Incubating
+	default void addNonKeyRestriction(SelectableMapping restrictableMapping) {
+		addNonKeyRestriction( restrictableMapping, restrictableMapping.getWriteExpression() );
+	}
+
+	/**
+	 * Adds a restriction, which is assumed to be based on a selectable that is NOT
+	 * a table key, e.g. optimistic locking.
+	 *
+	 * @apiNote Be sure you know what you are doing before using this method.  Generally
+	 * prefer any of the other methods here for adding non-key restrictions.
+	 */
+	@Internal
+	@Incubating
+	void addNonKeyRestriction(SelectableMapping restrictableMapping, String restrictionExpression);
+
+	/**
 	 * Add a restriction as long as the selectable is not a formula and is not nullable
 	 */
 	default void addKeyRestrictions(SelectableMappings selectableMappings) {

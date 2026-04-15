@@ -41,14 +41,16 @@ public class StandardPlanStepExecutor extends AbstractStepExecutor implements Ex
 			binder.accept( valueBindings, session );
 			valueBindings.beforeStatement( stmnt, session );
 
-			final int affectedRowCount =
-					session.getJdbcCoordinator()
-							.getResultSetReturn()
-							.executeUpdate( stmnt, preparable.getSqlString() );
+			final int affectedRowCount = session.getJdbcCoordinator()
+					.getResultSetReturn()
+					.executeUpdate( stmnt, preparable.getSqlString() );
 
 			if ( resultChecker != null ) {
 				resultChecker.checkResult( affectedRowCount, -1, preparable.getSqlString(),  session.getFactory() );
 			}
+
+			// Explicitly release the statement from the resource registry to prevent accumulation
+			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( stmnt );
 		}
 		catch (SQLException sqle) {
 			throw session.getJdbcServices()

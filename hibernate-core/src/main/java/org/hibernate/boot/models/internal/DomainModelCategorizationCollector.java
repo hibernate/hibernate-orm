@@ -31,6 +31,7 @@ public class DomainModelCategorizationCollector {
 	private final ModelsContext modelsContext;
 
 	private final Set<ClassDetails> rootEntities = new HashSet<>();
+	private final Set<ClassDetails> entitySubclasses = new HashSet<>();
 	private final Map<String,ClassDetails> mappedSuperclasses = new HashMap<>();
 	private final Map<String,ClassDetails> embeddables = new HashMap<>();
 
@@ -47,6 +48,16 @@ public class DomainModelCategorizationCollector {
 
 	public Set<ClassDetails> getRootEntities() {
 		return rootEntities;
+	}
+
+	public Set<ClassDetails> getEntitySubclasses() {
+		return entitySubclasses;
+	}
+
+	public Set<ClassDetails> getAllEntities() {
+		Set<ClassDetails> all = new HashSet<>( rootEntities );
+		all.addAll( entitySubclasses );
+		return all;
 	}
 
 	public Map<String, ClassDetails> getMappedSuperclasses() {
@@ -113,6 +124,9 @@ public class DomainModelCategorizationCollector {
 		else if ( isEntity( classDetails ) ) {
 			if ( isRootEntity( classDetails ) ) {
 				rootEntities.add( classDetails );
+			}
+			else {
+				entitySubclasses.add( classDetails );
 			}
 		}
 		else if ( isEmbeddable( classDetails ) ) {

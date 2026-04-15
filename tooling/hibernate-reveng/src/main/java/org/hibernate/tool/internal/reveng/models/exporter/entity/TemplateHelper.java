@@ -1510,17 +1510,47 @@ public class TemplateHelper {
 			}
 			sb.append(")");
 		}
-		// @JoinColumn
-		JoinColumn jc = fieldGetAnnotation(field,JoinColumn.class);
-		if (jc != null) {
+		// @JoinColumn(s)
+		JoinColumns jcs = fieldGetAnnotation(field, JoinColumns.class);
+		if (jcs != null && jcs.value().length > 0) {
 			sb.append("\n    ");
 			importType("jakarta.persistence.JoinColumn");
-			sb.append("@JoinColumn(name = \"").append(jc.name()).append("\"");
-			if (jc.referencedColumnName() != null && !jc.referencedColumnName().isEmpty()) {
-				sb.append(", referencedColumnName = \"")
-						.append(jc.referencedColumnName()).append("\"");
+			importType("jakarta.persistence.JoinColumns");
+			sb.append("@JoinColumns({");
+			for (int i = 0; i < jcs.value().length; i++) {
+				if (i > 0) sb.append(", ");
+				sb.append("\n        @JoinColumn(name = \"").append(jcs.value()[i].name()).append("\"");
+				if (jcs.value()[i].referencedColumnName() != null && !jcs.value()[i].referencedColumnName().isEmpty()) {
+					sb.append(", referencedColumnName = \"")
+							.append(jcs.value()[i].referencedColumnName()).append("\"");
+				}
+				if (!jcs.value()[i].insertable()) {
+					sb.append(", insertable = false");
+				}
+				if (!jcs.value()[i].updatable()) {
+					sb.append(", updatable = false");
+				}
+				sb.append(")");
 			}
-			sb.append(")");
+			sb.append("\n    })");
+		} else {
+			JoinColumn jc = fieldGetAnnotation(field, JoinColumn.class);
+			if (jc != null) {
+				sb.append("\n    ");
+				importType("jakarta.persistence.JoinColumn");
+				sb.append("@JoinColumn(name = \"").append(jc.name()).append("\"");
+				if (jc.referencedColumnName() != null && !jc.referencedColumnName().isEmpty()) {
+					sb.append(", referencedColumnName = \"")
+							.append(jc.referencedColumnName()).append("\"");
+				}
+				if (!jc.insertable()) {
+					sb.append(", insertable = false");
+				}
+				if (!jc.updatable()) {
+					sb.append(", updatable = false");
+				}
+				sb.append(")");
+			}
 		}
 		return sb.toString();
 	}
@@ -1625,6 +1655,12 @@ public class TemplateHelper {
 					sb.append(", referencedColumnName = \"")
 							.append(jcs.value()[i].referencedColumnName()).append("\"");
 				}
+				if (!jcs.value()[i].insertable()) {
+					sb.append(", insertable = false");
+				}
+				if (!jcs.value()[i].updatable()) {
+					sb.append(", updatable = false");
+				}
 				sb.append(")");
 			}
 			sb.append("\n    })");
@@ -1637,6 +1673,12 @@ public class TemplateHelper {
 				if (jc.referencedColumnName() != null && !jc.referencedColumnName().isEmpty()) {
 					sb.append(", referencedColumnName = \"")
 							.append(jc.referencedColumnName()).append("\"");
+				}
+				if (!jc.insertable()) {
+					sb.append(", insertable = false");
+				}
+				if (!jc.updatable()) {
+					sb.append(", updatable = false");
 				}
 				sb.append(")");
 			}

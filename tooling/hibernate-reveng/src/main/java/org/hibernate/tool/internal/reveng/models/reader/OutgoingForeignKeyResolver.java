@@ -145,8 +145,13 @@ class OutgoingForeignKeyResolver {
 			adapter.foreignKeyToEntityName(primaryColumn, uniqueReference),
 			referencedTable.getEntityClassName(),
 			referencedTable.getEntityPackage());
+		// Only set referencedColumnName for composite FKs (needed to map
+		// each FK column to the correct PK column in @JoinColumns).
+		// For single-column FKs, JPA defaults to the PK column.
+		boolean isComposite = allColumns.size() > 1;
 		for (RawForeignKeyInfo col : allColumns) {
-			fkMetadata.addJoinColumn(col.fkColumnName(), null);
+			fkMetadata.addJoinColumn(col.fkColumnName(),
+				isComposite ? col.pkColumnName() : null);
 		}
 		fkTable.addForeignKey(fkMetadata);
 	}

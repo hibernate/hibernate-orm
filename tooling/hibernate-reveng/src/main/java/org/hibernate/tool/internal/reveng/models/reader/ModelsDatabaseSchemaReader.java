@@ -42,24 +42,36 @@ public class ModelsDatabaseSchemaReader {
 	private final RevengStrategy strategy;
 	private final String defaultCatalog;
 	private final String defaultSchema;
+	private final boolean preferBasicCompositeIds;
 
 	public static ModelsDatabaseSchemaReader create(
 			RevengDialect dialect,
 			RevengStrategy strategy,
 			String defaultCatalog,
 			String defaultSchema) {
-		return new ModelsDatabaseSchemaReader(dialect, strategy, defaultCatalog, defaultSchema);
+		return new ModelsDatabaseSchemaReader(dialect, strategy, defaultCatalog, defaultSchema, true);
+	}
+
+	public static ModelsDatabaseSchemaReader create(
+			RevengDialect dialect,
+			RevengStrategy strategy,
+			String defaultCatalog,
+			String defaultSchema,
+			boolean preferBasicCompositeIds) {
+		return new ModelsDatabaseSchemaReader(dialect, strategy, defaultCatalog, defaultSchema, preferBasicCompositeIds);
 	}
 
 	private ModelsDatabaseSchemaReader(
 			RevengDialect dialect,
 			RevengStrategy strategy,
 			String defaultCatalog,
-			String defaultSchema) {
+			String defaultSchema,
+			boolean preferBasicCompositeIds) {
 		this.dialect = dialect;
 		this.strategy = strategy;
 		this.defaultCatalog = defaultCatalog;
 		this.defaultSchema = defaultSchema;
+		this.preferBasicCompositeIds = preferBasicCompositeIds;
 	}
 
 	/**
@@ -124,7 +136,7 @@ public class ModelsDatabaseSchemaReader {
 				.resolveOutgoingForeignKeys();
 
 		IncomingForeignKeyResolver
-				.create(tablesByName, incomingFksByTable, manyToManyTables, adapter)
+				.create(tablesByName, incomingFksByTable, manyToManyTables, adapter, preferBasicCompositeIds)
 				.resolveIncomingForeignKeys();
 
 		manyToManyResolver.resolveManyToManyRelationships(manyToManyTables);

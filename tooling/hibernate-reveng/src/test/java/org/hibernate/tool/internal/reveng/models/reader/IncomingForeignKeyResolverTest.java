@@ -79,7 +79,7 @@ public class IncomingForeignKeyResolverTest {
 		incomingFksByTable.put("DEPARTMENT", List.of(fkInfo));
 
 		IncomingForeignKeyResolver.create(
-			tablesByName, incomingFksByTable, manyToManyTables, adapter)
+			tablesByName, incomingFksByTable, manyToManyTables, adapter, true)
 			.resolveIncomingForeignKeys();
 
 		assertEquals(1, department.getOneToManys().size());
@@ -98,7 +98,7 @@ public class IncomingForeignKeyResolverTest {
 		Map<String, List<RawForeignKeyInfo>> incomingFksByTable = new HashMap<>();
 
 		IncomingForeignKeyResolver.create(
-			tablesByName, incomingFksByTable, manyToManyTables, adapter)
+			tablesByName, incomingFksByTable, manyToManyTables, adapter, true)
 			.resolveIncomingForeignKeys();
 
 		assertTrue(department.getOneToManys().isEmpty());
@@ -120,7 +120,7 @@ public class IncomingForeignKeyResolverTest {
 		incomingFksByTable.put("DEPARTMENT", List.of(fkInfo));
 
 		IncomingForeignKeyResolver.create(
-			tablesByName, incomingFksByTable, manyToManyTables, adapter)
+			tablesByName, incomingFksByTable, manyToManyTables, adapter, true)
 			.resolveIncomingForeignKeys();
 
 		assertTrue(department.getOneToManys().isEmpty());
@@ -144,7 +144,7 @@ public class IncomingForeignKeyResolverTest {
 		incomingFksByTable.put("DEPARTMENT", List.of(fkInfo));
 
 		IncomingForeignKeyResolver.create(
-			tablesByName, incomingFksByTable, manyToManyTables, adapter)
+			tablesByName, incomingFksByTable, manyToManyTables, adapter, true)
 			.resolveIncomingForeignKeys();
 
 		assertTrue(department.getOneToManys().isEmpty());
@@ -167,7 +167,7 @@ public class IncomingForeignKeyResolverTest {
 		incomingFksByTable.put("DEPARTMENT", List.of(fkSeq2));
 
 		IncomingForeignKeyResolver.create(
-			tablesByName, incomingFksByTable, manyToManyTables, adapter)
+			tablesByName, incomingFksByTable, manyToManyTables, adapter, true)
 			.resolveIncomingForeignKeys();
 
 		assertTrue(department.getOneToManys().isEmpty());
@@ -188,7 +188,7 @@ public class IncomingForeignKeyResolverTest {
 		incomingFksByTable.put("DEPARTMENT", List.of(fkInfo));
 
 		IncomingForeignKeyResolver.create(
-			tablesByName, incomingFksByTable, manyToManyTables, adapter)
+			tablesByName, incomingFksByTable, manyToManyTables, adapter, true)
 			.resolveIncomingForeignKeys();
 
 		assertTrue(department.getOneToManys().isEmpty());
@@ -214,7 +214,7 @@ public class IncomingForeignKeyResolverTest {
 		incomingFksByTable.put("DEPARTMENT", List.of(fkInfo));
 
 		IncomingForeignKeyResolver.create(
-			tablesByName, incomingFksByTable, manyToManyTables, adapter)
+			tablesByName, incomingFksByTable, manyToManyTables, adapter, true)
 			.resolveIncomingForeignKeys();
 
 		assertEquals(1, department.getOneToManys().size());
@@ -252,7 +252,7 @@ public class IncomingForeignKeyResolverTest {
 		incomingFksByTable.put("DEPARTMENT", fks);
 
 		IncomingForeignKeyResolver.create(
-			tablesByName, incomingFksByTable, manyToManyTables, adapter)
+			tablesByName, incomingFksByTable, manyToManyTables, adapter, true)
 			.resolveIncomingForeignKeys();
 
 		assertEquals(2, department.getOneToManys().size());
@@ -279,7 +279,7 @@ public class IncomingForeignKeyResolverTest {
 		incomingFksByTable.put("DEPARTMENT", List.of(fkInfo));
 
 		IncomingForeignKeyResolver.create(
-			tablesByName, incomingFksByTable, manyToManyTables, adapter)
+			tablesByName, incomingFksByTable, manyToManyTables, adapter, true)
 			.resolveIncomingForeignKeys();
 
 		// Should produce a OneToMany (or OneToOne depending on adapter), with mappedBy from the OneToOne field

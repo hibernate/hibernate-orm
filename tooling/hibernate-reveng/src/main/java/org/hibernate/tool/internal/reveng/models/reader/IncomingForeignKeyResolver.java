@@ -39,24 +39,28 @@ class IncomingForeignKeyResolver {
 	private final Map<String, List<RawForeignKeyInfo>> incomingFksByTable;
 	private final Set<String> manyToManyTables;
 	private final RevengStrategyAdapter adapter;
+	private final boolean preferBasicCompositeIds;
 
 	static IncomingForeignKeyResolver create(
 			Map<String, TableMetadata> tablesByName,
 			Map<String, List<RawForeignKeyInfo>> incomingFksByTable,
 			Set<String> manyToManyTables,
-			RevengStrategyAdapter adapter) {
-		return new IncomingForeignKeyResolver(tablesByName, incomingFksByTable, manyToManyTables, adapter);
+			RevengStrategyAdapter adapter,
+			boolean preferBasicCompositeIds) {
+		return new IncomingForeignKeyResolver(tablesByName, incomingFksByTable, manyToManyTables, adapter, preferBasicCompositeIds);
 	}
 
 	private IncomingForeignKeyResolver(
 			Map<String, TableMetadata> tablesByName,
 			Map<String, List<RawForeignKeyInfo>> incomingFksByTable,
 			Set<String> manyToManyTables,
-			RevengStrategyAdapter adapter) {
+			RevengStrategyAdapter adapter,
+			boolean preferBasicCompositeIds) {
 		this.tablesByName = tablesByName;
 		this.incomingFksByTable = incomingFksByTable;
 		this.manyToManyTables = manyToManyTables;
 		this.adapter = adapter;
+		this.preferBasicCompositeIds = preferBasicCompositeIds;
 	}
 
 	void resolveIncomingForeignKeys() {
@@ -177,7 +181,15 @@ class IncomingForeignKeyResolver {
 	private String findManyToOneFieldName(TableMetadata fkTable, RawForeignKeyInfo fkInfo) {
 		for (ForeignKeyMetadata fk : fkTable.getForeignKeys()) {
 			if (fk.getForeignKeyColumnName().equals(fkInfo.fkColumnName())) {
-				return fk.getFieldName();
+				String fieldName = fk.getFieldName();
+				// When preferBasicCompositeIds=false and all FK columns are part of
+				// the composite PK, this FK will become a key-many-to-one inside the
+				// @EmbeddedId class. The mappedBy must reference "id.fieldName".
+				if (!preferBasicCompositeIds && fkTable.getCompositeId() != null
+						&& allFkColumnsArePrimaryKey(fk, fkTable)) {
+					fieldName = fkTable.getCompositeId().getFieldName() + "." + fieldName;
+				}
+				return fieldName;
 			}
 		}
 		for (OneToOneMetadata o2o : fkTable.getOneToOnes()) {
@@ -186,6 +198,16 @@ class IncomingForeignKeyResolver {
 			}
 		}
 		return null;
+	}
+
+	private boolean allFkColumnsArePrimaryKey(ForeignKeyMetadata fk, TableMetadata fkTable) {
+		Set<String> pkColumns = new java.util.HashSet<>();
+		for (org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata col : fkTable.getColumns()) {
+			if (col.isPrimaryKey()) {
+				pkColumns.add(col.getColumnName());
+			}
+		}
+		return pkColumns.containsAll(fk.getForeignKeyColumnNames());
 	}
 
 	private Map<String, List<RawForeignKeyInfo>> groupByFkTable(List<RawForeignKeyInfo> fks) {

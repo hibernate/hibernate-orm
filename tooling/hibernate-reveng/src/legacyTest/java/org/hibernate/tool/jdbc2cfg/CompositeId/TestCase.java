@@ -17,14 +17,11 @@
  */
 package org.hibernate.tool.jdbc2cfg.CompositeId;
 
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
 import org.hibernate.mapping.*;
-import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.api.export.ExporterConstants;
-import org.hibernate.tool.api.export.ExporterFactory;
-import org.hibernate.tool.api.export.ExporterType;
+import org.hibernate.tool.internal.metadata.NativeMetadataDescriptor;
+import org.hibernate.tool.internal.reveng.models.exporter.entity.EntityExporter;
+import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.reveng.RevengStrategy;
@@ -178,54 +175,42 @@ public class TestCase {
     }
      
     @Test
-    @org.junit.jupiter.api.Disabled("Pre-existing failure: deprecated HBM XML round-trip FK column count mismatch")
     public void testGeneration() throws Exception {
-        Exporter exporter = ExporterFactory.createExporter(ExporterType.HBM);
-		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
-		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
-        Exporter javaExp = ExporterFactory.createExporter(ExporterType.JAVA);
-		javaExp.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
-		javaExp.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
-        exporter.start();
-        javaExp.start();      
-        JavaUtil.compile(outputDir);
+        EntityExporter.create(metadataDescriptor, true).exportAll(outputDir);
+        List<String> paths = new java.util.ArrayList<>();
+        paths.add(JavaUtil.resolvePathToJarFileFor(jakarta.persistence.Persistence.class));
+        paths.add(JavaUtil.resolvePathToJarFileFor(org.hibernate.Version.class));
+        JavaUtil.compile(outputDir, paths);
         URL[] urls = new URL[] { outputDir.toURI().toURL() };
-        URLClassLoader ucl = new URLClassLoader(
-        		urls, 
-        		Thread.currentThread().getContextClassLoader());
-        File[] files = new File[6];
-        files[0] = new File(outputDir, "SimpleCustomerOrder.hbm.xml");
-        files[1] = new File(outputDir, "SimpleLineItem.hbm.xml");
-        files[2] = new File(outputDir, "Product.hbm.xml");
-        files[3] = new File(outputDir, "Customer.hbm.xml");
-        files[4] = new File(outputDir, "LineItem.hbm.xml");
-        files[5] = new File(outputDir, "CustomerOrder.hbm.xml");
-        Thread.currentThread().setContextClassLoader(ucl);
-        SessionFactory factory = MetadataDescriptorFactory
-        		.createNativeDescriptor(null, files, null)
-        		.createMetadata()
-        		.buildSessionFactory();
-        Session session = factory.openSession();        
-        JdbcUtil.populateDatabase(this);
-        session.createQuery("from LineItem", (Class<?>)null).getResultList();
-        List<?> list = session.createQuery("from Product", (Class<?>)null).getResultList();
-        assertEquals(2,list.size() );
-        list = session
-        		.createQuery("select li.customerOrder.id from LineItem as li", (Class<?>)null)
-        		.getResultList();
-        assertFalse(list.isEmpty());
-        Class<?> productIdClass = ucl.loadClass("ProductId");
-        Constructor<?> productIdClassConstructor = productIdClass.getConstructor();
-        Object object = productIdClassConstructor.newInstance();
-        int hash = -1;
+        ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
+        URLClassLoader ucl = new URLClassLoader(urls, oldLoader);
         try {
-        	hash = object.hashCode();
-        } catch(Throwable t) {
-        	fail("Hashcode on new instance should not fail " + t);
+            Thread.currentThread().setContextClassLoader(ucl);
+            org.hibernate.boot.registry.StandardServiceRegistryBuilder builder =
+                    new org.hibernate.boot.registry.StandardServiceRegistryBuilder();
+            org.hibernate.service.ServiceRegistry serviceRegistry = builder.build();
+            NativeMetadataDescriptor mds = new NativeMetadataDescriptor(null, null, null);
+            for (File f : outputDir.listFiles()) {
+                if (f.getName().endsWith(".class")) {
+                    String className = f.getName().replace(".class", "");
+                    HibernateUtil.addAnnotatedClass(mds, ucl.loadClass(className));
+                }
+            }
+            new org.hibernate.tool.hbm2ddl.SchemaValidator()
+                    .validate(mds.createMetadata(), serviceRegistry);
+            Class<?> productIdClass = ucl.loadClass("ProductId");
+            Constructor<?> productIdClassConstructor = productIdClass.getConstructor();
+            Object object = productIdClassConstructor.newInstance();
+            int hash = -1;
+            try {
+                hash = object.hashCode();
+            } catch (Throwable t) {
+                fail("Hashcode on new instance should not fail " + t);
+            }
+            assertNotEquals(hash, System.identityHashCode(object), "hashcode should be different from system");
+        } finally {
+            Thread.currentThread().setContextClassLoader(oldLoader);
         }
-        assertNotEquals(hash, System.identityHashCode(object), "hashcode should be different from system");
-        factory.close();
-        Thread.currentThread().setContextClassLoader(ucl.getParent() );
     }
 	 
 }

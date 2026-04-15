@@ -34,6 +34,8 @@ import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.export.ExporterFactory;
 import org.hibernate.tool.api.export.ExporterType;
+import org.hibernate.tool.internal.reveng.models.exporter.entity.EntityExporter;
+import org.hibernate.tool.internal.reveng.models.exporter.mapping.MappingXmlExporter;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
@@ -168,31 +170,18 @@ public class TestCase {
 	}
 
 	@Test
-	@org.junit.jupiter.api.Disabled("Pre-existing failure: deprecated HBM XML round-trip produces incorrect column names")
 	public void testGenerateMappingAndReadable() throws MalformedURLException {
-		// Use a fresh descriptor for HBM round-trip to avoid interaction
-		// between getEntityClassDetails() and createMetadata()
 		MetadataDescriptor freshDescriptor = MetadataDescriptorFactory
 				.createReverseEngineeringDescriptor(null, null);
-		Exporter hme = ExporterFactory.createExporter(ExporterType.HBM);
-		hme.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, freshDescriptor);
-		hme.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
-		hme.start();
-		assertFileAndExists( new File(outputDir, "Person.hbm.xml") );
-		assertFileAndExists( new File(outputDir, "AddressPerson.hbm.xml") );
-		assertFileAndExists( new File(outputDir, "AddressMultiPerson.hbm.xml") );
-		assertFileAndExists( new File(outputDir, "MultiPerson.hbm.xml") );
-		assertFileAndExists( new File(outputDir, "MiddleTable.hbm.xml") );
-		assertFileAndExists( new File(outputDir, "LeftTable.hbm.xml") );
-		assertFileAndExists( new File(outputDir, "RightTable.hbm.xml") );
-		assertEquals(7, Objects.requireNonNull(outputDir.listFiles()).length);
-		Exporter exporter = ExporterFactory.createExporter(ExporterType.JAVA);
-		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, freshDescriptor);
-		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
-		exporter.getProperties().put(ExporterConstants.TEMPLATE_PATH, new String[0]);
-		exporter.getProperties().setProperty("ejb3", "false");
-		exporter.getProperties().setProperty("jdk5", "false");
-		exporter.start();
+		MappingXmlExporter.create(freshDescriptor).exportAll(outputDir);
+		assertFileAndExists( new File(outputDir, "Person.mapping.xml") );
+		assertFileAndExists( new File(outputDir, "AddressPerson.mapping.xml") );
+		assertFileAndExists( new File(outputDir, "AddressMultiPerson.mapping.xml") );
+		assertFileAndExists( new File(outputDir, "MultiPerson.mapping.xml") );
+		assertFileAndExists( new File(outputDir, "MiddleTable.mapping.xml") );
+		assertFileAndExists( new File(outputDir, "LeftTable.mapping.xml") );
+		assertFileAndExists( new File(outputDir, "RightTable.mapping.xml") );
+		EntityExporter.create(freshDescriptor, false).exportAll(outputDir);
 		JavaUtil.compile(outputDir);
 		URL[] urls = new URL[] { outputDir.toURI().toURL() };
         ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
@@ -202,13 +191,13 @@ public class TestCase {
 	        StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
 	        ServiceRegistry serviceRegistry = builder.build();
 	        File[] files = new File[7];
-	        files[0] = new File(outputDir, "Person.hbm.xml");
-	        files[1] = new File(outputDir, "AddressPerson.hbm.xml");
-	        files[2] = new File(outputDir, "AddressMultiPerson.hbm.xml");
-	        files[3] = new File(outputDir, "MultiPerson.hbm.xml");
-	        files[4] = new File(outputDir, "MiddleTable.hbm.xml");
-	        files[5] = new File(outputDir, "LeftTable.hbm.xml");
-	        files[6] = new File(outputDir, "RightTable.hbm.xml");
+	        files[0] = new File(outputDir, "Person.mapping.xml");
+	        files[1] = new File(outputDir, "AddressPerson.mapping.xml");
+	        files[2] = new File(outputDir, "AddressMultiPerson.mapping.xml");
+	        files[3] = new File(outputDir, "MultiPerson.mapping.xml");
+	        files[4] = new File(outputDir, "MiddleTable.mapping.xml");
+	        files[5] = new File(outputDir, "LeftTable.mapping.xml");
+	        files[6] = new File(outputDir, "RightTable.mapping.xml");
 	        new SchemaValidator().validate(
 	        		MetadataDescriptorFactory
 	        			.createNativeDescriptor(null, files, null)

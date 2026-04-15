@@ -118,20 +118,21 @@ public class RevengMetadataDescriptor implements MetadataDescriptor {
                         AvailableSettings.DEFAULT_CATALOG);
                 String defaultSchema = (String) properties.get(
                         AvailableSettings.DEFAULT_SCHEMA);
+                Object preferBasic = properties.get(
+                        MetadataConstants.PREFER_BASIC_COMPOSITE_IDS);
+                boolean preferBasicBool = !(preferBasic instanceof Boolean)
+                        || (Boolean) preferBasic;
                 List<TableMetadata> tables =
                         ModelsDatabaseSchemaReader.create(
                                 revengDialect,
                                 reverseEngineeringStrategy,
                                 defaultCatalog,
-                                defaultSchema)
+                                defaultSchema,
+                                preferBasicBool)
                         .readSchema();
                 DynamicEntityBuilder builder =
                         new DynamicEntityBuilder();
-                Object preferBasic = properties.get(
-                        MetadataConstants.PREFER_BASIC_COMPOSITE_IDS);
-                if (preferBasic instanceof Boolean) {
-                    builder.setPreferBasicCompositeIds((Boolean) preferBasic);
-                }
+                builder.setPreferBasicCompositeIds(preferBasicBool);
                 List<ClassDetails> entities = new ArrayList<>();
                 for (TableMetadata table : tables) {
                     entities.add(

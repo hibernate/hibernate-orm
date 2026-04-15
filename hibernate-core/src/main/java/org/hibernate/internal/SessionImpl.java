@@ -2746,9 +2746,8 @@ public class SessionImpl
 		oos.defaultWriteObject();
 
 		PersistenceContexts.serialize( persistenceContext, oos );
-		actionQueue.serialize( oos );
-
 		oos.writeObject( loadQueryInfluencers );
+		actionQueue.serialize( oos );
 	}
 
 	/**
@@ -2768,9 +2767,8 @@ public class SessionImpl
 		ois.defaultReadObject();
 
 		persistenceContext = PersistenceContexts.deserialize( ois, this );
-		actionQueue = ActionQueue.deserialize( ois, this );
-
 		loadQueryInfluencers = (LoadQueryInfluencers) ois.readObject();
+		actionQueue = ActionQueue.deserialize( ois, this );
 
 		// LoadQueryInfluencers#getEnabledFilters() tries to validate each enabled
 		// filter, which will fail when called before FilterImpl#afterDeserialize( factory );

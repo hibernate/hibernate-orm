@@ -4,8 +4,10 @@
  */
 package org.hibernate.proxy;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
+import org.hibernate.audit.AuditLog;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.SessionException;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -35,6 +37,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private transient SharedSessionContractImplementor session;
 	private Boolean readOnlyBeforeAttachedToSession;
 
+	private @Nullable Object temporalIdentifier;
 	private String sessionFactoryUuid;
 	private String sessionFactoryName;
 	private boolean allowLoadOutsideTransaction;
@@ -49,6 +52,11 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	protected AbstractLazyInitializer(String entityName, Object id, SharedSessionContractImplementor session) {
 		this.entityName = entityName;
 		this.id = id;
+		// Capture the temporal identifier for revision-aware proxy initialization
+		if ( session != null ) {
+			final Object tempId = session.getLoadQueryInfluencers().getTemporalIdentifier();
+			this.temporalIdentifier = tempId != AuditLog.ALL_REVISIONS ? tempId : null;
+		}
 		// initialize other fields depending on session state
 		if ( session == null ) {
 			unsetSession();
@@ -179,7 +187,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 							+ entityName + "#" + id + "] - the owning session is disconnected" );
 				}
 				else {
-					target = session.immediateLoad( entityName, id );
+					target = immediateLoad( session );
 					initialized = true;
 					checkTargetState( session );
 				}
@@ -223,7 +231,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				}
 
 				try {
-					target = session.immediateLoad( entityName, id );
+					target = immediateLoad( session );
 					initialized = true;
 					checkTargetState( session );
 				}
@@ -246,13 +254,30 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			}
 		}
 		else if ( session.isOpenOrWaitingForAutoClose() && session.isConnected() ) {
-			target = session.immediateLoad( entityName, id );
+			target = immediateLoad( session );
 			initialized = true;
 			checkTargetState( session );
 		}
 		else {
 			throw new LazyInitializationException( "Could not initialize proxy ["
 					+ entityName + "#" + id + "] - session was closed or disconnected" );
+		}
+	}
+
+	private Object immediateLoad(SharedSessionContractImplementor session) {
+		if ( temporalIdentifier != null ) {
+			final var influencers = session.getLoadQueryInfluencers();
+			final Object previous = influencers.getTemporalIdentifier();
+			influencers.setTemporalIdentifier( temporalIdentifier );
+			try {
+				return session.immediateLoad( entityName, id );
+			}
+			finally {
+				influencers.setTemporalIdentifier( previous );
+			}
+		}
+		else {
+			return session.immediateLoad( entityName, id );
 		}
 	}
 

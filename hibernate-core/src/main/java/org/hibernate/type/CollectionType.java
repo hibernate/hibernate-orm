@@ -24,7 +24,6 @@ import org.hibernate.MappingException;
 import org.hibernate.collection.spi.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
@@ -774,7 +773,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	public Object getCollection(Object key, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) {
 		final var persister = getPersister( session );
 		final var persistenceContext = session.getPersistenceContextInternal();
-		final var collectionKey = new CollectionKey( persister, key );
+		final var collectionKey = session.generateCollectionKey( persister, key );
 		// check if collection is currently being loaded
 		final var loadingCollectionEntry =
 				persistenceContext.getLoadContexts().findLoadingCollectionEntry( collectionKey );

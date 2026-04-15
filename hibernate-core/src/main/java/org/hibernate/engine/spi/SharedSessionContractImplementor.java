@@ -9,6 +9,7 @@ import java.util.UUID;
 import jakarta.persistence.TransactionRequiredException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import org.hibernate.audit.spi.AuditWorkQueue;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
@@ -28,6 +29,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryProducerImplementor;
@@ -221,7 +223,7 @@ public interface SharedSessionContractImplementor
 	 * A transaction id representing the beginning of the current transaction,
 	 * for use with {@linkplain org.hibernate.annotations.Temporal temporal}
 	 * effectivity columns and with
-	 * {@linkplain org.hibernate.annotations.Audited#transactionId audit log
+	 * {@linkplain org.hibernate.annotations.Audited.Table#transactionIdColumn audit log
 	 * transaction id columns}.
 	 */
 	Object getCurrentTransactionIdentifier();
@@ -283,8 +285,21 @@ public interface SharedSessionContractImplementor
 	TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor();
 
 	/**
+	 * Access the transaction-scoped audit work queue for deferred
+	 * audit row writes. Lazily initialized on first access.
+	 *
+	 * @since 7.4
+	 */
+	@Incubating
+	AuditWorkQueue getAuditWorkQueue();
+
+	/**
 	 * Instantiate an {@link EntityKey} with the given id and for the
 	 * entity represented by the given {@link EntityPersister}.
+	 * <p>
+	 * When operating in a temporal context, this will automatically
+	 * create a {@link TemporalEntityKey} that includes the transaction
+	 * identifier.
 	 *
 	 * @param id The entity id
 	 * @param persister The entity persister
@@ -292,6 +307,21 @@ public interface SharedSessionContractImplementor
 	 * @return The entity key
 	 */
 	EntityKey generateEntityKey(Object id, EntityPersister persister);
+
+	/**
+	 * Instantiate a {@link CollectionKey} with the given key and for the
+	 * collection represented by the given {@link CollectionPersister}.
+	 * <p>
+	 * When operating in a temporal context, this will automatically
+	 * create a {@link TemporalCollectionKey} that includes the transaction
+	 * identifier.
+	 *
+	 * @param persister The collection persister
+	 * @param key The collection key (owner FK)
+	 *
+	 * @return The collection key
+	 */
+	CollectionKey generateCollectionKey(CollectionPersister persister, Object key);
 
 	/**
 	 * Retrieves the {@link Interceptor} associated with this session.

@@ -4,6 +4,8 @@
  */
 package org.hibernate.engine.spi;
 
+import org.hibernate.audit.spi.AuditWorkQueue;
+
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
@@ -53,6 +55,7 @@ import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.MutationQuery;
@@ -113,6 +116,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public AuditWorkQueue getAuditWorkQueue() {
+		return delegate.getAuditWorkQueue();
+	}
+
+	@Override
 	public SharedStatelessSessionBuilder statelessWithOptions() {
 		return delegate.statelessWithOptions();
 	}
@@ -140,6 +148,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public EntityKey generateEntityKey(Object id, EntityPersister persister) {
 		return delegate.generateEntityKey( id, persister );
+	}
+
+	@Override
+	public CollectionKey generateCollectionKey(CollectionPersister persister, Object key) {
+		return delegate.generateCollectionKey( persister, key );
 	}
 
 	@Override

@@ -305,9 +305,34 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 				if ( generator.referenceColumnsInSql( dialect ) ) {
 					final String[] columnValues = generator.getReferencedColumnValues( dialect );
 					if ( columnValues != null ) {
-						assert columnValues.length == 1;
-						assert tableDescriptor.keyDescriptor().columns().size() == 1;
-						builder.addColumnAssignment( tableDescriptor.keyDescriptor().columns().get( 0 ), columnValues[0] );
+						// Handle both single-column and composite key scenarios
+						final var keyColumns = tableDescriptor.keyDescriptor().columns();
+						assert columnValues.length == keyColumns.size()
+								: "Mismatch between referenced column values and key columns: "
+								+ columnValues.length + " vs " + keyColumns.size();
+
+						// For composite keys, each column may have its own generation strategy
+						for ( int i = 0; i < columnValues.length; i++ ) {
+							if ( columnValues[i] != null ) {
+								builder.addColumnAssignment( keyColumns.get( i ), columnValues[i] );
+							}
+							else {
+								// No special value reference - use parameter binding
+								builder.addColumnAssignment( keyColumns.get( i ) );
+							}
+						}
+					}
+					else {
+						// No referenced column values - all key columns use parameter binding
+						for (var keyColumn : tableDescriptor.keyDescriptor().columns()) {
+							builder.addColumnAssignment( keyColumn );
+						}
+					}
+				}
+				else {
+					// Generator doesn't reference columns in SQL - use parameter binding
+					for (var keyColumn : tableDescriptor.keyDescriptor().columns()) {
+						builder.addColumnAssignment( keyColumn );
 					}
 				}
 			}

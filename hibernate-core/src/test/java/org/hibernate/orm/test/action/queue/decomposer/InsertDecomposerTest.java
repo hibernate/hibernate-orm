@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.queue.MutationKind;
+import org.hibernate.action.queue.QueueType;
 import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
@@ -23,6 +24,7 @@ import org.hibernate.action.queue.decompose.entity.InsertDecomposer;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Embeddable;
@@ -61,6 +63,11 @@ public class InsertDecomposerTest {
 
 	@Test
 	public void testBasicInsertDecomposition(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -92,6 +99,11 @@ public class InsertDecomposerTest {
 
 	@Test
 	public void testSecondaryTableDecomposition(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -118,6 +130,11 @@ public class InsertDecomposerTest {
 
 	@Test
 	public void testJoinedInheritanceDecomposition(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -144,6 +161,11 @@ public class InsertDecomposerTest {
 
 	@Test
 	public void testDynamicInsertDecomposition(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -169,6 +191,11 @@ public class InsertDecomposerTest {
 
 	@Test
 	public void testEmbeddedComponentDecomposition(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -195,6 +222,11 @@ public class InsertDecomposerTest {
 
 	@Test
 	public void testInsertWithAssociation(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -225,6 +257,11 @@ public class InsertDecomposerTest {
 
 	@Test
 	public void testStaticInsertGroup(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -241,6 +278,11 @@ public class InsertDecomposerTest {
 
 	@Test
 	public void testDecompositionWithGeneratedId(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -263,6 +305,11 @@ public class InsertDecomposerTest {
 
 	@Test
 	public void testOrdinalAssignment(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();

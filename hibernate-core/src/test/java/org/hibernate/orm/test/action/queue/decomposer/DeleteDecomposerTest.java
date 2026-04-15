@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.queue.MutationKind;
+import org.hibernate.action.queue.QueueType;
 import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
@@ -24,6 +25,7 @@ import org.hibernate.action.queue.decompose.entity.DeleteDecomposer;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -59,6 +61,11 @@ public class DeleteDecomposerTest {
 
 	@Test
 	public void testBasicDeleteDecomposition(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -93,6 +100,11 @@ public class DeleteDecomposerTest {
 
 	@Test
 	public void testDeleteWithVersionedEntity(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -123,6 +135,11 @@ public class DeleteDecomposerTest {
 
 	@Test
 	public void testDeleteWithSecondaryTable(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -152,6 +169,11 @@ public class DeleteDecomposerTest {
 
 	@Test
 	public void testDeleteWithJoinedInheritance(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -181,6 +203,11 @@ public class DeleteDecomposerTest {
 
 	@Test
 	public void testSoftDeleteDecomposition(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -216,6 +243,11 @@ public class DeleteDecomposerTest {
 
 	@Test
 	public void testSoftDeleteWithVersion(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -246,6 +278,11 @@ public class DeleteDecomposerTest {
 
 	@Test
 	public void testDeleteWithAllOptimisticLock(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -275,6 +312,11 @@ public class DeleteDecomposerTest {
 
 	@Test
 	public void testStaticDeleteGroup(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -291,6 +333,11 @@ public class DeleteDecomposerTest {
 
 	@Test
 	public void testStaticSoftDeleteGroup(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -307,6 +354,11 @@ public class DeleteDecomposerTest {
 
 	@Test
 	public void testOrdinalAssignment(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -335,6 +387,11 @@ public class DeleteDecomposerTest {
 
 	@Test
 	public void testDeleteWithNullVersion(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -371,6 +428,11 @@ public class DeleteDecomposerTest {
 
 	@Test
 	public void testReverseOrderForMultipleTables(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();

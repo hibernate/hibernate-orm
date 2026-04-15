@@ -26,8 +26,8 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
-import org.hibernate.tool.internal.util.TableNameQualifier;
+import org.hibernate.tool.internal.reveng.util.JdbcToHibernateTypeHelper;
+import org.hibernate.tool.internal.reveng.util.TableNameQualifier;
 import org.hibernate.type.Type;
 
 public class TypeUtils {

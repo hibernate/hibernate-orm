@@ -28,7 +28,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.util.TableNameQualifier;
+import org.hibernate.tool.internal.reveng.util.TableNameQualifier;
 
 public class RevengMetadataCollector {
 

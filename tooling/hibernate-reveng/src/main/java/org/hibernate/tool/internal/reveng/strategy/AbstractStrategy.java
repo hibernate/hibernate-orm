@@ -37,9 +37,9 @@ import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.RevengSettings;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
-import org.hibernate.tool.internal.util.NameConverter;
-import org.hibernate.tool.internal.util.TableNameQualifier;
+import org.hibernate.tool.internal.reveng.util.JdbcToHibernateTypeHelper;
+import org.hibernate.tool.internal.reveng.util.NameConverter;
+import org.hibernate.tool.internal.reveng.util.TableNameQualifier;
 import org.jboss.logging.Logger;
 
 public abstract class AbstractStrategy implements RevengStrategy {

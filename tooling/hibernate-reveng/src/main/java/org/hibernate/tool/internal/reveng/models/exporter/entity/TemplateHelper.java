@@ -18,7 +18,7 @@ package org.hibernate.tool.internal.reveng.models.exporter.entity;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import org.hibernate.tool.internal.util.NameConverter;
+import org.hibernate.tool.internal.reveng.util.NameConverter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;

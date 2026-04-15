@@ -34,7 +34,7 @@ import org.apache.maven.project.MavenProject;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
-import org.hibernate.tool.internal.util.DummyDialect;
+import org.hibernate.tool.maven.DummyDialect;
 
 /**
  * Base class for mojos that read Hibernate mapping files

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.util;
+package org.hibernate.tool.internal.reveng.util;
 
 public class TableNameQualifier {
 
@@ -29,5 +29,5 @@ public class TableNameQualifier {
 		}
 		return qualifiedName.append( table ).toString();
 	}
-	
+
 }

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.util;
+package org.hibernate.tool.internal.stat;
 
 import javax.swing.event.EventListenerList;
 import javax.swing.event.TreeModelEvent;
@@ -50,7 +50,7 @@ public abstract class AbstractTreeModel implements TreeModel {
      *
      * @see     #addTreeModelListener
      * @param   l       the listener to remove
-     */  
+     */
     public void removeTreeModelListener(TreeModelListener l) {
         listenerList.remove(TreeModelListener.class, l);
     }
@@ -70,13 +70,13 @@ public abstract class AbstractTreeModel implements TreeModel {
 
     /*
      * Notify all listeners that have registered interest for
-     * notification on this event type.  The event instance 
-     * is lazily created using the parameters passed into 
+     * notification on this event type.  The event instance
+     * is lazily created using the parameters passed into
      * the fire method.
      * @see EventListenerList
      */
-    protected void fireTreeNodesChanged(Object source, Object[] path, 
-                                        int[] childIndices, 
+    protected void fireTreeNodesChanged(Object source, Object[] path,
+                                        int[] childIndices,
                                         Object[] children) {
         // Guaranteed to return a non-null array
         Object[] listeners = listenerList.getListenerList();
@@ -87,22 +87,22 @@ public abstract class AbstractTreeModel implements TreeModel {
             if (listeners[i]==TreeModelListener.class) {
                 // Lazily create the event:
                 if (e == null)
-                    e = new TreeModelEvent(source, path, 
+                    e = new TreeModelEvent(source, path,
                                            childIndices, children);
                 ((TreeModelListener)listeners[i+1]).treeNodesChanged(e);
-            }          
+            }
         }
     }
 
     /*
      * Notify all listeners that have registered interest for
-     * notification on this event type.  The event instance 
-     * is lazily created using the parameters passed into 
+     * notification on this event type.  The event instance
+     * is lazily created using the parameters passed into
      * the fire method.
      * @see EventListenerList
      */
-    protected void fireTreeNodesInserted(Object source, Object[] path, 
-                                        int[] childIndices, 
+    protected void fireTreeNodesInserted(Object source, Object[] path,
+                                        int[] childIndices,
                                         Object[] children) {
         // Guaranteed to return a non-null array
         Object[] listeners = listenerList.getListenerList();
@@ -113,22 +113,22 @@ public abstract class AbstractTreeModel implements TreeModel {
             if (listeners[i]==TreeModelListener.class) {
                 // Lazily create the event:
                 if (e == null)
-                    e = new TreeModelEvent(source, path, 
+                    e = new TreeModelEvent(source, path,
                                            childIndices, children);
                 ((TreeModelListener)listeners[i+1]).treeNodesInserted(e);
-            }          
+            }
         }
     }
 
     /*
      * Notify all listeners that have registered interest for
-     * notification on this event type.  The event instance 
-     * is lazily created using the parameters passed into 
+     * notification on this event type.  The event instance
+     * is lazily created using the parameters passed into
      * the fire method.
      * @see EventListenerList
      */
-    protected void fireTreeNodesRemoved(Object source, Object[] path, 
-                                        int[] childIndices, 
+    protected void fireTreeNodesRemoved(Object source, Object[] path,
+                                        int[] childIndices,
                                         Object[] children) {
         // Guaranteed to return a non-null array
         Object[] listeners = listenerList.getListenerList();
@@ -139,22 +139,22 @@ public abstract class AbstractTreeModel implements TreeModel {
             if (listeners[i]==TreeModelListener.class) {
                 // Lazily create the event:
                 if (e == null)
-                    e = new TreeModelEvent(source, path, 
+                    e = new TreeModelEvent(source, path,
                                            childIndices, children);
                 ((TreeModelListener)listeners[i+1]).treeNodesRemoved(e);
-            }          
+            }
         }
     }
 
     /*
      * Notify all listeners that have registered interest for
-     * notification on this event type.  The event instance 
-     * is lazily created using the parameters passed into 
+     * notification on this event type.  The event instance
+     * is lazily created using the parameters passed into
      * the fire method.
      * @see EventListenerList
      */
-    protected void fireTreeStructureChanged(Object source, Object[] path, 
-                                            int[] childIndices, 
+    protected void fireTreeStructureChanged(Object source, Object[] path,
+                                            int[] childIndices,
                                             Object[] children) {
         // Guaranteed to return a non-null array
         Object[] listeners = listenerList.getListenerList();
@@ -165,11 +165,11 @@ public abstract class AbstractTreeModel implements TreeModel {
             if (listeners[i]==TreeModelListener.class) {
                 // Lazily create the event:
                 if (e == null)
-                    e = new TreeModelEvent(source, path, 
+                    e = new TreeModelEvent(source, path,
                                            childIndices, children);
                 ((TreeModelListener)listeners[i+1]).treeStructureChanged(e);
-            }          
+            }
         }
     }
-    
+
 }

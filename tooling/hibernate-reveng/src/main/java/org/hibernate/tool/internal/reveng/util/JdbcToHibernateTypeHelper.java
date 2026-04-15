@@ -15,11 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.util;
+package org.hibernate.tool.internal.reveng.util;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.sql.SQLException;
 import java.sql.Types;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +28,7 @@ import org.hibernate.MappingException;
 
 /**
  * Utility class for mapping between sqltypes and hibernate type names.
- * 
+ *
  * @author max (based on parts from Sql2Java from Middlegen)
  *
  */

@@ -29,8 +29,8 @@ import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.hibernate.tool.internal.reveng.util.RevengUtils;
-import org.hibernate.tool.internal.util.StringUtil;
-import org.hibernate.tool.internal.util.TableNameQualifier;
+import org.hibernate.tool.internal.reveng.util.StringUtil;
+import org.hibernate.tool.internal.reveng.util.TableNameQualifier;
 import org.jboss.logging.Logger;
 
 public class ForeignKeyProcessor {

@@ -23,7 +23,6 @@ import java.util.Map;
 import org.hibernate.internal.util.collections.IdentityMap;
 import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.stat.Statistics;
-import org.hibernate.tool.internal.util.AbstractTreeModel;
 
 public class StatisticsTreeModel extends AbstractTreeModel {
 

@@ -31,7 +31,7 @@ import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.tool.api.reveng.RevengDialect;
-import org.hibernate.tool.internal.util.TableNameQualifier;
+import org.hibernate.tool.internal.reveng.util.TableNameQualifier;
 import org.jboss.logging.Logger;
 
 public class IndexProcessor {

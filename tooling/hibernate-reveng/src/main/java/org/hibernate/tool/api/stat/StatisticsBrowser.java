@@ -39,7 +39,7 @@ import javax.swing.table.TableCellRenderer;
 import org.hibernate.stat.Statistics;
 import org.hibernate.tool.internal.stat.StatisticsCellRenderer;
 import org.hibernate.tool.internal.stat.StatisticsTreeModel;
-import org.hibernate.tool.internal.util.BeanTableModel;
+import org.hibernate.tool.internal.stat.BeanTableModel;
 
 /**
  * Very rudimentary statistics browser.

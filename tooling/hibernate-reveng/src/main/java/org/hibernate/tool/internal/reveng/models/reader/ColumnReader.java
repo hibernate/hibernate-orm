@@ -27,7 +27,7 @@ import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
-import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
+import org.hibernate.tool.internal.reveng.util.JdbcToHibernateTypeHelper;
 
 /**
  * Reads column metadata and primary key information for a table

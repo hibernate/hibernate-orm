@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.util;
+package org.hibernate.tool.internal.reveng.util;
 
 import java.util.Objects;
 import java.util.StringTokenizer;
 
 /**
  * max: Removed methods that dependent on anything else than common.StringUtils.
- * 
+ *
  * <p>Common <code>String</code> manipulation routines.</p>
  *
- * <p>Originally from 
+ * <p>Originally from
  * <a href="http://jakarta.apache.org/turbine/">Turbine</a> and the
  * GenerationJavaCore library.</p>
  *

@@ -1,4 +1,4 @@
-package org.hibernate.tool.internal.util;
+package org.hibernate.tool.maven;
 
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;

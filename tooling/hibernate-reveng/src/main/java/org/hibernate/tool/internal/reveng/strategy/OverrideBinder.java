@@ -33,7 +33,7 @@ import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.strategy.MetaAttributeHelper.SimpleMetaAttribute;
 import org.hibernate.tool.internal.reveng.util.RevengUtils;
-import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
+import org.hibernate.tool.internal.reveng.util.JdbcToHibernateTypeHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;

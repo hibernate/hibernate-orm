@@ -50,8 +50,8 @@ import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
 import org.hibernate.tool.internal.reveng.reader.DatabaseReader;
 import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 import org.hibernate.tool.internal.reveng.strategy.TableSelectorStrategy;
-import org.hibernate.tool.internal.util.JdbcToHibernateTypeHelper;
-import org.hibernate.tool.internal.util.TableNameQualifier;
+import org.hibernate.tool.internal.reveng.util.JdbcToHibernateTypeHelper;
+import org.hibernate.tool.internal.reveng.util.TableNameQualifier;
 import org.hibernate.type.MappingContext;
 
 public class SchemaByMetaDataDetector extends RelationalModelDetector {

@@ -51,7 +51,9 @@ public class EntityDocInfo {
 	// --- POJOClass-compatible API for templates ---
 
 	public String getDeclarationName() {
-		return classDetails.getName();
+		String name = classDetails.getName();
+		int lastDot = name.lastIndexOf('.');
+		return lastDot >= 0 ? name.substring(lastDot + 1) : name;
 	}
 
 	public String getQualifiedDeclarationName() {
@@ -68,7 +70,9 @@ public class EntityDocInfo {
 	}
 
 	public String getShortName() {
-		return classDetails.getName();
+		String name = classDetails.getName();
+		int lastDot = name.lastIndexOf('.');
+		return lastDot >= 0 ? name.substring(lastDot + 1) : name;
 	}
 
 	public boolean isSubclass() {

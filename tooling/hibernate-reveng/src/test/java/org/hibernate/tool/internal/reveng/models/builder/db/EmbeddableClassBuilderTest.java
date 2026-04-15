@@ -65,7 +65,7 @@ public class EmbeddableClassBuilderTest {
 
 		ClassDetails result = EmbeddableClassBuilder.buildEmbeddableClass(metadata, modelsContext);
 
-		assertEquals("Address", result.getName());
+		assertEquals("com.example.Address", result.getName());
 	}
 
 	@Test
@@ -126,6 +126,6 @@ public class EmbeddableClassBuilderTest {
 		ClassDetails resolved = modelsContext.getClassDetailsRegistry()
 			.resolveClassDetails("com.example.Address");
 		assertNotNull(resolved, "Should be registered in the class details registry");
-		assertEquals("Address", resolved.getName());
+		assertEquals("com.example.Address", resolved.getName());
 	}
 }

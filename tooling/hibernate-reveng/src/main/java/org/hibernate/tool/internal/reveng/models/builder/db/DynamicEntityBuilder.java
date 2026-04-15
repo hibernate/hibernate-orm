@@ -95,7 +95,7 @@ public class DynamicEntityBuilder {
 
 		// Create the dynamic class with both simple name and fully qualified class name
 		DynamicClassDetails entityClass = new DynamicClassDetails(
-			tableMetadata.getEntityClassName(),
+			className,
 			className,
 			Object.class,
 			false,
@@ -105,7 +105,7 @@ public class DynamicEntityBuilder {
 		);
 
 		// Add @Entity annotation
-		addEntityAnnotation(entityClass, tableMetadata.getEntityClassName());
+		addEntityAnnotation(entityClass);
 
 		// Add @Table annotation
 		addTableAnnotation(entityClass, tableMetadata);
@@ -259,9 +259,8 @@ public class DynamicEntityBuilder {
 		return entityClass;
 	}
 
-	private void addEntityAnnotation(DynamicClassDetails entityClass, String entityName) {
+	private void addEntityAnnotation(DynamicClassDetails entityClass) {
         EntityJpaAnnotation entityAnnotation = JpaAnnotations.ENTITY.createUsage(modelsContext);
-		entityAnnotation.name(entityName);
 		entityClass.addAnnotationUsage(entityAnnotation);
 	}
 
@@ -383,7 +382,7 @@ public class DynamicEntityBuilder {
 			(MutableClassDetailsRegistry) modelsContext.getClassDetailsRegistry();
 		return registry.resolveClassDetails(
 			className,
-			name -> new DynamicClassDetails(simpleName, name, Object.class, false, null, null, modelsContext)
+			name -> new DynamicClassDetails(name, name, Object.class, false, null, null, modelsContext)
 		);
 	}
 

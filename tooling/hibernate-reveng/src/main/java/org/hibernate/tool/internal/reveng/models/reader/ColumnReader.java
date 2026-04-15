@@ -58,12 +58,13 @@ class ColumnReader {
 	 */
 	void readColumns(TableMetadata tableMetadata, TableIdentifier tableId,
 			String catalog, String schema) {
+		String jdbcTableName = unquote(tableMetadata.getTableName());
 		Set<String> pkColumns = PrimaryKeyReader
 				.create(dialect, strategy)
-				.readPrimaryKeys(catalog, schema, tableMetadata.getTableName(), tableId);
+				.readPrimaryKeys(catalog, schema, jdbcTableName, tableId);
 
 		Iterator<Map<String, Object>> columnIterator = dialect.getColumns(
-			catalog, schema, tableMetadata.getTableName(), null);
+			catalog, schema, jdbcTableName, null);
 		try {
 			while (columnIterator.hasNext()) {
 				readColumn(columnIterator.next(), tableMetadata, tableId, pkColumns);
@@ -129,12 +130,14 @@ class ColumnReader {
 
 	private String determineHibernateType(TableIdentifier tableId, RowInfo rowInfo) {
 		String hibernateType = strategy.columnToHibernateTypeName(
-			tableId, rowInfo.columnName(), rowInfo.sqlType(), rowInfo.columnSize(), rowInfo.decimalDigits(),
-			0, rowInfo.nullable(), rowInfo.primaryKey());
+			tableId, rowInfo.columnName(), rowInfo.sqlType(), rowInfo.columnSize(),
+			rowInfo.columnSize(), rowInfo.decimalDigits(),
+			rowInfo.nullable(), rowInfo.primaryKey());
 		if (hibernateType == null) {
 			hibernateType = JdbcToHibernateTypeHelper.getPreferredHibernateType(
-				rowInfo.sqlType(), rowInfo.columnSize(), rowInfo.decimalDigits(),
-				0, rowInfo.nullable(), rowInfo.primaryKey());
+				rowInfo.sqlType(), rowInfo.columnSize(),
+				rowInfo.columnSize(), rowInfo.decimalDigits(),
+				rowInfo.nullable(), rowInfo.primaryKey());
 		}
 		return hibernateType;
 	}
@@ -160,6 +163,14 @@ class ColumnReader {
 			return columnName.equals(optimisticLockColumn);
 		}
 		return strategy.useColumnForOptimisticLock(tableId, columnName);
+	}
+
+	private static String unquote(String name) {
+		if (name != null && name.length() > 1
+				&& name.charAt(0) == '`' && name.charAt(name.length() - 1) == '`') {
+			return name.substring(1, name.length() - 1);
+		}
+		return name;
 	}
 
 	private static String quote(String name, RevengDialect dialect) {

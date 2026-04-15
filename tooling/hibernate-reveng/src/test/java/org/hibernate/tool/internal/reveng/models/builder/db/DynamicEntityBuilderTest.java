@@ -104,15 +104,15 @@ public class DynamicEntityBuilderTest {
 
 		// THEN: Verify the entity structure
 		assertNotNull(personEntity);
-		// getName() returns the simple name, getClassName() returns the fully qualified name
-		assertEquals("Person", personEntity.getName());
+		// Both getName() and getClassName() return the fully qualified name
+		assertEquals("com.example.entity.Person", personEntity.getName());
 		assertEquals("com.example.entity.Person", personEntity.getClassName());
 
 		// Verify @Entity annotation - returned as the actual annotation type
 		Entity entityAnnotation =
 			personEntity.getAnnotationUsage(Entity.class, builder.getModelsContext());
 		assertNotNull(entityAnnotation, "Should have @Entity annotation");
-		assertEquals("Person", entityAnnotation.name());
+		assertEquals("", entityAnnotation.name());
 
 		// Verify @Table annotation
 		Table tableAnnotation =
@@ -253,17 +253,15 @@ public class DynamicEntityBuilderTest {
 		// Add imports
 		generatedCode.append("import jakarta.persistence.*;\n\n");
 
-		// Add class annotations - access via actual annotation type methods
-		Entity entityAnnotation =
-			userEntity.getAnnotationUsage(Entity.class, builder.getModelsContext());
-		generatedCode.append("@Entity(name = \"").append(entityAnnotation.name()).append("\")\n");
+		// Add class annotations
+		generatedCode.append("@Entity\n");
 
 		Table tableAnnotation =
 			userEntity.getAnnotationUsage(Table.class, builder.getModelsContext());
 		generatedCode.append("@Table(name = \"").append(tableAnnotation.name()).append("\")\n");
 
-		// Add class declaration - getName() gives the simple name
-		generatedCode.append("public class ").append(userEntity.getName()).append(" {\n\n");
+		// Add class declaration
+		generatedCode.append("public class ").append(getSimpleClassName(userEntity.getClassName())).append(" {\n\n");
 
 		// Add fields with annotations
 		for (FieldDetails field : userEntity.getFields()) {
@@ -284,7 +282,7 @@ public class DynamicEntityBuilderTest {
 		// THEN: Verify the generated code structure
 		String code = generatedCode.toString();
 		assertTrue(code.contains("package com.example.entity;"));
-		assertTrue(code.contains("@Entity(name = \"User\")"));
+		assertTrue(code.contains("@Entity"));
 		assertTrue(code.contains("@Table(name = \"USER_TABLE\")"));
 		assertTrue(code.contains("public class User {"));
 		assertTrue(code.contains("@Id"));
@@ -358,7 +356,7 @@ public class DynamicEntityBuilderTest {
 
 		// THEN: Verify the Employee entity structure
 		assertNotNull(employeeEntity);
-		assertEquals("Employee", employeeEntity.getName());
+		assertEquals("com.example.entity.Employee", employeeEntity.getName());
 		assertEquals("com.example.entity.Employee", employeeEntity.getClassName());
 
 		List<FieldDetails> fields = employeeEntity.getFields();
@@ -440,13 +438,12 @@ public class DynamicEntityBuilderTest {
 		code.append("package ").append(getPackageName(employeeEntity.getClassName())).append(";\n\n");
 		code.append("import jakarta.persistence.*;\n\n");
 
-		Entity entityAnn = employeeEntity.getAnnotationUsage(Entity.class, builder.getModelsContext());
-		code.append("@Entity(name = \"").append(entityAnn.name()).append("\")\n");
+		code.append("@Entity\n");
 
 		Table tableAnn = employeeEntity.getAnnotationUsage(Table.class, builder.getModelsContext());
 		code.append("@Table(name = \"").append(tableAnn.name()).append("\")\n");
 
-		code.append("public class ").append(employeeEntity.getName()).append(" {\n\n");
+		code.append("public class ").append(getSimpleClassName(employeeEntity.getClassName())).append(" {\n\n");
 
 		for (FieldDetails field : employeeEntity.getFields()) {
 			// @Id
@@ -528,7 +525,7 @@ public class DynamicEntityBuilderTest {
 
 		// THEN: Verify the entity
 		assertNotNull(departmentEntity);
-		assertEquals("Department", departmentEntity.getName());
+		assertEquals("com.example.entity.Department", departmentEntity.getName());
 
 		List<FieldDetails> fields = departmentEntity.getFields();
 		assertEquals(3, fields.size(), "Should have 3 fields (id, name, employees)");
@@ -988,7 +985,7 @@ public class DynamicEntityBuilderTest {
 
 		// THEN: Verify @Embeddable annotation
 		assertNotNull(addressClass);
-		assertEquals("Address", addressClass.getName());
+		assertEquals("com.example.entity.Address", addressClass.getName());
 		assertEquals("com.example.entity.Address", addressClass.getClassName());
 
 		Embeddable embeddableAnnotation =
@@ -1186,7 +1183,7 @@ public class DynamicEntityBuilderTest {
 
 		// THEN: Verify root entity annotations
 		assertNotNull(vehicleEntity);
-		assertEquals("Vehicle", vehicleEntity.getName());
+		assertEquals("com.example.entity.Vehicle", vehicleEntity.getName());
 
 		Inheritance inheritanceAnn =
 			vehicleEntity.getAnnotationUsage(Inheritance.class, builder.getModelsContext());
@@ -1224,7 +1221,7 @@ public class DynamicEntityBuilderTest {
 
 		// THEN: Verify Car subclass
 		assertNotNull(carEntity);
-		assertEquals("Car", carEntity.getName());
+		assertEquals("com.example.entity.Car", carEntity.getName());
 
 		// Verify superclass relationship
 		ClassDetails carSuperClass = carEntity.getSuperClass();
@@ -1264,7 +1261,7 @@ public class DynamicEntityBuilderTest {
 		ClassDetails truckEntity = builder.createEntityFromTable(truckMetadata);
 
 		// THEN: Verify Truck subclass
-		assertEquals("Truck", truckEntity.getName());
+		assertEquals("com.example.entity.Truck", truckEntity.getName());
 		assertEquals("com.example.entity.Vehicle", truckEntity.getSuperClass().getClassName());
 
 		DiscriminatorValue truckDiscVal =
@@ -1380,7 +1377,7 @@ public class DynamicEntityBuilderTest {
 
 		// THEN: Verify CreditCardPayment subclass
 		assertNotNull(ccPaymentEntity);
-		assertEquals("CreditCardPayment", ccPaymentEntity.getName());
+		assertEquals("com.example.entity.CreditCardPayment", ccPaymentEntity.getName());
 
 		// Verify superclass relationship
 		assertNotNull(ccPaymentEntity.getSuperClass());
@@ -1504,7 +1501,7 @@ public class DynamicEntityBuilderTest {
 
 		// THEN: Verify the ID class
 		assertNotNull(idClass);
-		assertEquals("OrderItemId", idClass.getName());
+		assertEquals("com.example.entity.OrderItemId", idClass.getName());
 		assertEquals("com.example.entity.OrderItemId", idClass.getClassName());
 
 		Embeddable embeddableAnn =
@@ -1541,7 +1538,7 @@ public class DynamicEntityBuilderTest {
 
 		// THEN: Verify entity structure
 		assertNotNull(orderItemEntity);
-		assertEquals("OrderItem", orderItemEntity.getName());
+		assertEquals("com.example.entity.OrderItem", orderItemEntity.getName());
 
 		List<FieldDetails> entityFields = orderItemEntity.getFields();
 		assertEquals(3, entityFields.size(), "Should have 3 fields (quantity, unitPrice, id)");
@@ -2047,8 +2044,7 @@ public class DynamicEntityBuilderTest {
 		code.append("import java.util.Set;\n");
 		code.append("import jakarta.persistence.*;\n\n");
 
-		Entity entityAnn = entity.getAnnotationUsage(Entity.class, builder.getModelsContext());
-		code.append("@Entity(name = \"").append(entityAnn.name()).append("\")\n");
+		code.append("@Entity\n");
 
 		Table tableAnn = entity.getAnnotationUsage(Table.class, builder.getModelsContext());
 		code.append("@Table(name = \"").append(tableAnn.name()).append("\")\n");
@@ -2082,7 +2078,7 @@ public class DynamicEntityBuilderTest {
 		}
 
 		// Class declaration with optional extends
-		code.append("public class ").append(entity.getName());
+		code.append("public class ").append(getSimpleClassName(entity.getClassName()));
 		ClassDetails superClass = entity.getSuperClass();
 		if (superClass != null) {
 			code.append(" extends ").append(getSimpleClassName(superClass.getClassName()));
@@ -2298,7 +2294,7 @@ public class DynamicEntityBuilderTest {
 		code.append("import jakarta.persistence.*;\n\n");
 
 		code.append("@Embeddable\n");
-		code.append("public class ").append(embeddable.getName()).append(" {\n\n");
+		code.append("public class ").append(getSimpleClassName(embeddable.getClassName())).append(" {\n\n");
 
 		for (FieldDetails field : embeddable.getFields()) {
 			// @Column

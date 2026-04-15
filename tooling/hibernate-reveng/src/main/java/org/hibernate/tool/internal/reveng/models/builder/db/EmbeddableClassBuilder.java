@@ -56,7 +56,7 @@ public class EmbeddableClassBuilder {
 		String className = embeddableMetadata.getPackageName()
 			+ "." + embeddableMetadata.getClassName();
 		return new DynamicClassDetails(
-			embeddableMetadata.getClassName(),
+			className,
 			className,
 			false,
 			null,

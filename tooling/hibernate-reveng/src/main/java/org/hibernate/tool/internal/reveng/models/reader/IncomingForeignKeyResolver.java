@@ -69,13 +69,27 @@ class IncomingForeignKeyResolver {
 			List<RawForeignKeyInfo> incomingFks = incomingFksByTable.getOrDefault(
 				tableName, java.util.Collections.emptyList());
 
-			for (RawForeignKeyInfo fkInfo : incomingFks) {
-				handleIncomingFK(fkInfo, referencedTable);
+			// Group FK entries by FK name to handle composite FKs
+			Map<String, List<RawForeignKeyInfo>> fksByName = groupByFkName(incomingFks);
+
+			for (Map.Entry<String, List<RawForeignKeyInfo>> fkEntry : fksByName.entrySet()) {
+				List<RawForeignKeyInfo> fkColumns = fkEntry.getValue();
+				RawForeignKeyInfo primaryColumn = null;
+				for (RawForeignKeyInfo col : fkColumns) {
+					if (col.keySeq() <= 1) {
+						primaryColumn = col;
+						break;
+					}
+				}
+				if (primaryColumn != null) {
+					handleIncomingFK(primaryColumn, fkColumns, referencedTable);
+				}
 			}
 		}
 	}
 
-	private void handleIncomingFK(RawForeignKeyInfo fkInfo, TableMetadata referencedTable) {
+	private void handleIncomingFK(RawForeignKeyInfo fkInfo, List<RawForeignKeyInfo> allColumns,
+			TableMetadata referencedTable) {
 		if (handlingIsNeeded(fkInfo)) {
 			TableMetadata fkTable = tablesByName.get(fkInfo.fkTableName());
 			List<RawForeignKeyInfo> allFks = collectAllRawFks(incomingFksByTable);
@@ -84,12 +98,20 @@ class IncomingForeignKeyResolver {
 			boolean uniqueReference = OutgoingForeignKeyResolver.isUniqueReference(
 				fkInfo, outgoingFksForFkTable);
 
-			if (adapter.isOneToOne(fkInfo, fkTable)) {
+			if (adapter.isOneToOne(allColumns, fkTable)) {
 				handleOneToOne(fkInfo, fkTable, referencedTable, uniqueReference);
 			} else {
 				handleOneToMany(fkInfo, fkTable, referencedTable, uniqueReference);
 			}
 		}
+	}
+
+	private Map<String, List<RawForeignKeyInfo>> groupByFkName(List<RawForeignKeyInfo> fks) {
+		Map<String, List<RawForeignKeyInfo>> result = new java.util.LinkedHashMap<>();
+		for (RawForeignKeyInfo fk : fks) {
+			result.computeIfAbsent(fk.fkName(), k -> new ArrayList<>()).add(fk);
+		}
+		return result;
 	}
 
 	private void handleOneToMany(RawForeignKeyInfo fkInfo, TableMetadata fkTable,

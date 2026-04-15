@@ -100,7 +100,7 @@ final public class NameConverter {
         boolean lastDecapitalized = false;
         for (int i = 0; i < s.length(); i++) {
             String c = s.substring(i, i + 1);
-            if ( "_".equals(c) || " ".equals(c) || "-".equals(c) ) {
+            if ( "_".equals(c) || " ".equals(c) || "-".equals(c) || "`".equals(c) ) {
                 capitalize = true;
                 continue;
             }

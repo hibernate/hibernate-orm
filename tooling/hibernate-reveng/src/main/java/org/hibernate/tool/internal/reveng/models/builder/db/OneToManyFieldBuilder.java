@@ -124,6 +124,10 @@ public class OneToManyFieldBuilder {
 			MutableAnnotationTarget field,
 			OneToManyMetadata o2mMetadata,
 			ModelsContext modelsContext) {
+		String mappedBy = o2mMetadata.getMappedBy();
+		if (mappedBy != null && !mappedBy.isEmpty()) {
+			return;
+		}
 		List<String> fkCols = o2mMetadata.getFkColumnNames();
 		if (fkCols.isEmpty()) {
 			return;

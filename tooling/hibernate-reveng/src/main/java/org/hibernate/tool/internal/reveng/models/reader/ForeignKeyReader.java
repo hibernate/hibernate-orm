@@ -61,7 +61,7 @@ class ForeignKeyReader {
 			String schema = table.getSchema() != null ? table.getSchema() : defaultSchema;
 
 			Iterator<Map<String, Object>> fkIterator = dialect.getExportedKeys(
-				catalog, schema, table.getTableName());
+				catalog, schema, unquote(table.getTableName()));
 			try {
 				while (fkIterator.hasNext()) {
 					allFks.add(readForeignKey(fkIterator.next(), table.getTableName(), catalog, schema));
@@ -93,6 +93,14 @@ class ForeignKeyReader {
 			fkColumnName, pkColumnName,
 			referencedTableName, referencedCatalog, referencedSchema,
 			keySeq);
+	}
+
+	private static String unquote(String name) {
+		if (name != null && name.length() > 1
+				&& name.charAt(0) == '`' && name.charAt(name.length() - 1) == '`') {
+			return name.substring(1, name.length() - 1);
+		}
+		return name;
 	}
 
 	private static String quote(String name, RevengDialect dialect) {

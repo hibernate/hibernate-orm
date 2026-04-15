@@ -140,12 +140,15 @@ public class RevengStrategyAdapter {
 	 * Gets the inverse entity property name for a one-to-one relationship.
 	 */
 	public String foreignKeyToInverseEntityName(RawForeignKeyInfo fkInfo, boolean uniqueReference) {
+		// Swap from/referenced: the legacy convention passes the referenced table
+		// (the entity receiving the inverse field) as "from" and the FK table
+		// (the entity the field points to) as "referenced"
 		return delegate.foreignKeyToInverseEntityName(
 			fkInfo.fkName(),
-			createFkTableIdentifier(fkInfo),
-			buildColumnList(fkInfo.fkColumnName()),
 			createReferencedTableIdentifier(fkInfo),
 			buildColumnList(fkInfo.pkColumnName()),
+			createFkTableIdentifier(fkInfo),
+			buildColumnList(fkInfo.fkColumnName()),
 			uniqueReference);
 	}
 

@@ -99,7 +99,7 @@ class TableReader {
 		String schema = quote((String) tableRow.get("TABLE_SCHEM"), dialect);
 		String comment = (String) tableRow.get("REMARKS");
 
-		TableIdentifier tableId = TableIdentifier.create(catalog, schema, tableName);
+		TableIdentifier tableId = normalizeTableId(catalog, schema, tableName);
 		if (!strategy.excludeTable(tableId)) {
 			TableMetadata tableMetadata = createTableMetadata(
 				tableName, catalog, schema, tableId, tableType);
@@ -168,7 +168,7 @@ class TableReader {
 
 		PrimaryKeyReader primaryKeyReader = PrimaryKeyReader.create(dialect, strategy);
 		String strategyName = primaryKeyReader.readIdentifierStrategy(
-			catalog, schema, tableMetadata.getTableName(), tableId);
+			catalog, schema, unquote(tableMetadata.getTableName()), tableId);
 		GenerationType genType = PrimaryKeyReader.toGenerationType(strategyName);
 		if (genType != null) {
 			pkColumn.generationType(genType);
@@ -195,8 +195,12 @@ class TableReader {
 				tableMetadata.getEntityClassName());
 		}
 
+		String idFieldName = strategy.tableToIdentifierPropertyName(tableId);
+		if (idFieldName == null) {
+			idFieldName = "id";
+		}
 		CompositeIdMetadata compositeId = new CompositeIdMetadata(
-			"id", idClassName, tableMetadata.getEntityPackage());
+			idFieldName, idClassName, tableMetadata.getEntityPackage());
 		for (ColumnMetadata pkCol : pkColumns) {
 			compositeId.addAttributeOverride(pkCol.getFieldName(), pkCol.getColumnName(), pkCol.getJavaType());
 		}
@@ -215,6 +219,20 @@ class TableReader {
 				}
 			}
 		}
+	}
+
+	private TableIdentifier normalizeTableId(String catalog, String schema, String tableName) {
+		String normCatalog = catalog != null && catalog.equals(defaultCatalog) ? null : catalog;
+		String normSchema = schema != null && schema.equals(defaultSchema) ? null : schema;
+		return TableIdentifier.create(normCatalog, normSchema, tableName);
+	}
+
+	private static String unquote(String name) {
+		if (name != null && name.length() > 1
+				&& name.charAt(0) == '`' && name.charAt(name.length() - 1) == '`') {
+			return name.substring(1, name.length() - 1);
+		}
+		return name;
 	}
 
 	private static String quote(String name, RevengDialect dialect) {

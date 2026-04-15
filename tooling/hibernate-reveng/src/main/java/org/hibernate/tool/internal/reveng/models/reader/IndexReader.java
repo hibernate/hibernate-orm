@@ -50,7 +50,7 @@ class IndexReader {
 	 * Reads indexes for the given table and populates the table metadata.
 	 */
 	void readIndexes(TableMetadata tableMetadata, String catalog, String schema) {
-		for (IndexMetadata index : collectIndexMetadatas(tableMetadata.getTableName(), catalog, schema)) {
+		for (IndexMetadata index : collectIndexMetadatas(unquote(tableMetadata.getTableName()), catalog, schema)) {
 			tableMetadata.addIndex(index);
 
 			// For single-column unique indexes, mark the column as unique
@@ -98,6 +98,14 @@ class IndexReader {
 		}
 
 		return indexesByName.values();
+	}
+
+	private static String unquote(String name) {
+		if (name != null && name.length() > 1
+				&& name.charAt(0) == '`' && name.charAt(name.length() - 1) == '`') {
+			return name.substring(1, name.length() - 1);
+		}
+		return name;
 	}
 
 	private static String quote(String name, RevengDialect dialect) {

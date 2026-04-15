@@ -71,7 +71,9 @@ public class DaoTemplateHelper {
 	}
 
 	public String getDeclarationName() {
-		return classDetails.getName();
+		String name = classDetails.getName();
+		int lastDot = name.lastIndexOf('.');
+		return lastDot >= 0 ? name.substring(lastDot + 1) : name;
 	}
 
 	public String getQualifiedDeclarationName() {

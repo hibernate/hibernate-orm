@@ -59,7 +59,6 @@ class ManyToManyResolver {
 			String tableName = entry.getKey();
 			TableMetadata table = entry.getValue();
 			if (table.getColumns().isEmpty()) {
-				manyToManyTables.add(tableName);
 				continue;
 			}
 			List<RawForeignKeyInfo> outgoingFks = outgoingFksByTable.getOrDefault(

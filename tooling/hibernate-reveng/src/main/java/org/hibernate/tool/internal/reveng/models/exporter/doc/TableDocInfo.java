@@ -223,7 +223,7 @@ public class TableDocInfo {
 		Table tableAnn = classDetails.getDirectAnnotationUsage(Table.class);
 		String tableName = tableAnn != null && !tableAnn.name().isEmpty()
 				? tableAnn.name()
-				: classDetails.getName();
+				: unqualifyName(classDetails.getName());
 		String schema = tableAnn != null && !tableAnn.schema().isEmpty()
 				? tableAnn.schema()
 				: null;
@@ -325,6 +325,11 @@ public class TableDocInfo {
 		return new TableDocInfo(tableName, schema, catalog, comment,
 				allColumns, pk, new LinkedHashMap<>(),
 				uniqueKeyMap, indexMap);
+	}
+
+	private static String unqualifyName(String name) {
+		int lastDot = name.lastIndexOf('.');
+		return lastDot >= 0 ? name.substring(lastDot + 1) : name;
 	}
 
 	private static List<TableColumnDocInfo> resolveColumns(

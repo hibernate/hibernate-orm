@@ -26,7 +26,6 @@ import org.hibernate.tool.api.export.ExporterFactory;
 import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.internal.util.AnnotationBuilder;
-import org.hibernate.tool.internal.util.IteratorTransformer;
 import org.hibernate.tool.test.utils.FileUtil;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
@@ -201,11 +200,7 @@ public class TestCase {
 		columns.add("first");
 		columns.add("second");
 		AnnotationBuilder constraint = AnnotationBuilder.createAnnotation( "UniqueConstraint" );
-		constraint.addQuotedAttributes( "columnNames", new IteratorTransformer<>(columns.iterator()) {
-            public String transform(String object) {
-                return object;
-            }
-        });
+		constraint.addQuotedAttributes( "columnNames", columns.iterator() );
 		constraint.addAttribute( "single", "value" );	
 		String attribute = constraint.getAttributeAsString("columnNames");
 		assertEquals("{\"first\", \"second\"}", attribute);

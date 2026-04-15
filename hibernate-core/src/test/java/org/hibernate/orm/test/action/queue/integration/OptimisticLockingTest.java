@@ -4,8 +4,11 @@
  */
 package org.hibernate.orm.test.action.queue.integration;
 
+import org.hibernate.action.queue.QueueType;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.*;
@@ -27,6 +30,11 @@ public class OptimisticLockingTest {
 
 	@Test
 	public void testVersionBasicIncrement(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long entityId = scope.fromTransaction( em -> {
 			VersionedEntity entity = new VersionedEntity();
 			entity.name = "Initial";
@@ -59,6 +67,11 @@ public class OptimisticLockingTest {
 
 	@Test
 	public void testVersionMultipleUpdates(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( em -> {
 			VersionedEntity entity = new VersionedEntity();
 			entity.name = "Initial";
@@ -83,6 +96,11 @@ public class OptimisticLockingTest {
 
 	@Test
 	public void testVersionConflictDetection(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long entityId = scope.fromTransaction( em -> {
 			VersionedEntity entity = new VersionedEntity();
 			entity.name = "Initial";
@@ -128,6 +146,11 @@ public class OptimisticLockingTest {
 
 	@Test
 	public void testVersionPreventsLostUpdate(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long entityId = scope.fromTransaction( em -> {
 			VersionedEntity entity = new VersionedEntity();
 			entity.name = "Initial";
@@ -167,6 +190,11 @@ public class OptimisticLockingTest {
 
 	@Test
 	public void testVersionOnDelete(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long entityId = scope.fromTransaction( em -> {
 			VersionedEntity entity = new VersionedEntity();
 			entity.name = "ToDelete";
@@ -197,6 +225,11 @@ public class OptimisticLockingTest {
 
 	@Test
 	public void testDeleteConflictWithVersion(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long entityId = scope.fromTransaction( em -> {
 			VersionedEntity entity = new VersionedEntity();
 			entity.name = "Test";
@@ -237,6 +270,11 @@ public class OptimisticLockingTest {
 
 	@Test
 	public void testNoVersionIncrementWithoutChanges(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( em -> {
 			VersionedEntity entity = new VersionedEntity();
 			entity.name = "Test";
@@ -256,6 +294,11 @@ public class OptimisticLockingTest {
 
 	@Test
 	public void testVersionIncrementOnlyForDirtyFields(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long entityId = scope.fromTransaction( em -> {
 			VersionedEntity entity = new VersionedEntity();
 			entity.name = "Initial";
@@ -284,6 +327,11 @@ public class OptimisticLockingTest {
 
 	@Test
 	public void testMultipleEntitiesVersionIncrement(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( em -> {
 			VersionedEntity e1 = new VersionedEntity();
 			e1.name = "Entity1";

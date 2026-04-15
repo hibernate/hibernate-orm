@@ -4,9 +4,12 @@
  */
 package org.hibernate.orm.test.action.queue.integration;
 
+import org.hibernate.action.queue.QueueType;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.*;
@@ -38,6 +41,11 @@ public class DeleteCascadeTest {
 
 	@Test
 	public void testDeleteWithCascadeAll(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long parentId = scope.fromTransaction( em -> {
 			Parent parent = new Parent();
 			parent.name = "Parent";
@@ -84,6 +92,11 @@ public class DeleteCascadeTest {
 
 	@Test
 	public void testDeleteWithOrphanRemoval(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long orderId = scope.fromTransaction( em -> {
 			Order order = new Order();
 			order.orderNumber = "ORD-001";
@@ -131,6 +144,11 @@ public class DeleteCascadeTest {
 
 	@Test
 	public void testDeleteParentWithCascade(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long parentId = scope.fromTransaction( em -> {
 			Parent parent = new Parent();
 			parent.name = "Parent";
@@ -173,6 +191,11 @@ public class DeleteCascadeTest {
 
 	@Test
 	public void testDeleteWithoutCascade(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long deptId = scope.fromTransaction( em -> {
 			Department dept = new Department();
 			dept.name = "Engineering";
@@ -233,6 +256,11 @@ public class DeleteCascadeTest {
 
 	@Test
 	public void testMultipleCascadeDeletes(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		List<Long> parentIds = scope.fromTransaction( em -> {
 			List<Long> ids = new ArrayList<>();
 
@@ -281,6 +309,11 @@ public class DeleteCascadeTest {
 
 	@Test
 	public void testOrphanRemovalClearsCollection(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long orderId = scope.fromTransaction( em -> {
 			Order order = new Order();
 			order.orderNumber = "ORD-001";

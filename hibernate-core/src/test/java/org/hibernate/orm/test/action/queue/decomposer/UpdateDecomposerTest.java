@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.queue.MutationKind;
+import org.hibernate.action.queue.QueueType;
 import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
@@ -24,6 +25,7 @@ import org.hibernate.action.queue.decompose.entity.UpdateDecomposer;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -60,6 +62,11 @@ public class UpdateDecomposerTest {
 
 	@Test
 	public void testBasicUpdateDecomposition(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -98,6 +105,11 @@ public class UpdateDecomposerTest {
 
 	@Test
 	public void testUpdateWithVersionedEntity(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -136,6 +148,11 @@ public class UpdateDecomposerTest {
 
 	@Test
 	public void testUpdateWithSecondaryTable(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -170,6 +187,11 @@ public class UpdateDecomposerTest {
 
 	@Test
 	public void testUpdateWithJoinedInheritance(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -204,6 +226,11 @@ public class UpdateDecomposerTest {
 
 	@Test
 	public void testDynamicUpdateDecomposition(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -236,6 +263,11 @@ public class UpdateDecomposerTest {
 
 	@Test
 	public void testUpdateWithAllOptimisticLock(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -269,6 +301,11 @@ public class UpdateDecomposerTest {
 
 	@Test
 	public void testUpdateWithDirtyOptimisticLock(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -302,6 +339,11 @@ public class UpdateDecomposerTest {
 
 	@Test
 	public void testNoStaticGroupForDynamicUpdate(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -318,6 +360,11 @@ public class UpdateDecomposerTest {
 
 	@Test
 	public void testOrdinalAssignment(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -349,6 +396,11 @@ public class UpdateDecomposerTest {
 
 	@Test
 	public void testUpdateWithNoDirtyFields(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -395,6 +447,11 @@ public class UpdateDecomposerTest {
 
 	@Test
 	public void testForwardTableOrder(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -425,6 +482,11 @@ public class UpdateDecomposerTest {
 
 	@Test
 	public void testOptionalSecondaryTableWithNullValues(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();
@@ -458,6 +520,11 @@ public class UpdateDecomposerTest {
 
 	@Test
 	public void testOptionalSecondaryTableWithValues(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SessionImplementor session = entityManager.unwrap( SessionImplementor.class );
 			SessionFactoryImplementor factory = session.getSessionFactory();

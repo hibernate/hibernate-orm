@@ -4,8 +4,11 @@
  */
 package org.hibernate.orm.test.action.queue.integration;
 
+import org.hibernate.action.queue.QueueType;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.*;
@@ -30,6 +33,11 @@ public class MixedOperationsTest {
 
 	@Test
 	public void testInsertUpdateDeleteInSameFlush(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Setup: Create entity to update and entity to delete
 		Long updateId = scope.fromTransaction( em -> {
 			SimpleEntity toUpdate = new SimpleEntity();
@@ -79,6 +87,11 @@ public class MixedOperationsTest {
 
 	@Test
 	public void testInsertThenUpdate(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( em -> {
 			// Insert entity
 			SimpleEntity entity = new SimpleEntity();
@@ -102,6 +115,11 @@ public class MixedOperationsTest {
 
 	@Test
 	public void testInsertThenDelete(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( em -> {
 			// Insert entity
 			SimpleEntity entity = new SimpleEntity();
@@ -124,6 +142,11 @@ public class MixedOperationsTest {
 
 	@Test
 	public void testUpdateThenDelete(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long entityId = scope.fromTransaction( em -> {
 			SimpleEntity entity = new SimpleEntity();
 			entity.name = "Initial";
@@ -152,6 +175,11 @@ public class MixedOperationsTest {
 
 	@Test
 	public void testInsertParentThenChild(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( em -> {
 			// Insert parent
 			Parent parent = new Parent();
@@ -175,6 +203,11 @@ public class MixedOperationsTest {
 
 	@Test
 	public void testInsertChildBeforeParent(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( em -> {
 			// Create parent (transient)
 			Parent parent = new Parent();
@@ -200,6 +233,11 @@ public class MixedOperationsTest {
 
 	@Test
 	public void testVersionedEntityMixedOperations(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long id1 = scope.fromTransaction( em -> {
 			VersionedEntity entity = new VersionedEntity();
 			entity.name = "Entity1";
@@ -231,6 +269,11 @@ public class MixedOperationsTest {
 
 	@Test
 	public void testMultipleUpdatesAndDeletesInSameFlush(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		List<Long> ids = scope.fromTransaction( em -> {
 			List<Long> result = new ArrayList<>();
 			for ( int i = 0; i < 5; i++ ) {
@@ -268,6 +311,11 @@ public class MixedOperationsTest {
 
 	@Test
 	public void testComplexMixedOperationsWithRelationships(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long parentId = scope.fromTransaction( em -> {
 			Parent parent = new Parent();
 			parent.name = "Parent";

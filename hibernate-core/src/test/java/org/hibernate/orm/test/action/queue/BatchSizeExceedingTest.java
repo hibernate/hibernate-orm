@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.action.queue;
 
 import jakarta.persistence.*;
+import org.hibernate.action.queue.QueueType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -12,6 +13,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -150,6 +152,11 @@ public class BatchSizeExceedingTest {
 
 	@Test
 	public void testInsertExceedingBatchSize_50Entities(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Batch size is 20, insert 50 entities (requires 3 batches)
 		scope.inTransaction(session -> {
 			for (int i = 0; i < 50; i++) {
@@ -167,6 +174,11 @@ public class BatchSizeExceedingTest {
 
 	@Test
 	public void testInsertExceedingBatchSize_100Entities(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Batch size is 20, insert 100 entities (requires 5 batches)
 		scope.inTransaction(session -> {
 			for (int i = 0; i < 100; i++) {
@@ -184,6 +196,11 @@ public class BatchSizeExceedingTest {
 
 	@Test
 	public void testUpdateExceedingBatchSize(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Insert 50 entities
 		List<Long> ids = new ArrayList<>();
 		scope.inTransaction(session -> {
@@ -214,6 +231,11 @@ public class BatchSizeExceedingTest {
 
 	@Test
 	public void testDeleteExceedingBatchSize(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Insert 60 entities
 		List<Long> ids = new ArrayList<>();
 		scope.inTransaction(session -> {
@@ -243,6 +265,11 @@ public class BatchSizeExceedingTest {
 
 	@Test
 	public void testMixedOperationsExceedingBatchSize(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Insert 30 entities
 		List<Long> ids = new ArrayList<>();
 		scope.inTransaction(session -> {
@@ -291,6 +318,11 @@ public class BatchSizeExceedingTest {
 
 	@Test
 	public void testCascadeExceedingBatchSize(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Create 25 parents with 3 children each = 100 entities total
 		// With batch size 20, this requires multiple batches
 		scope.inTransaction(session -> {
@@ -317,6 +349,11 @@ public class BatchSizeExceedingTest {
 
 	@Test
 	public void testLargeCascadeExceedingBatchSize(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Create 10 parents with 15 children each = 160 entities total
 		// This tests large cascades spanning multiple batches
 		scope.inTransaction(session -> {
@@ -352,6 +389,11 @@ public class BatchSizeExceedingTest {
 
 	@Test
 	public void testCascadeDeleteExceedingBatchSize(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Create and persist parents with children
 		List<Long> parentIds = new ArrayList<>();
 		scope.inTransaction(session -> {
@@ -389,6 +431,11 @@ public class BatchSizeExceedingTest {
 
 	@Test
 	public void testExtremelyLargeBatch_1000Entities(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Test with 1000 entities (50 batches with batch size 20)
 		// This tests ActionQueue scalability
 		scope.inTransaction(session -> {

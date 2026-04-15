@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.action.queue;
 
 import jakarta.persistence.*;
+import org.hibernate.action.queue.QueueType;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.cfg.FlushSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -13,8 +14,8 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIf;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -38,13 +39,7 @@ import static org.junit.jupiter.api.Assertions.*;
 		}
 )
 @SessionFactory
-@DisabledIf("notUsingGraphQueue")
 public class UniqueConstraintOrderingTest {
-	static boolean notUsingGraphQueue() {
-		// Check system property to determine which queue implementation is configured
-		String queueImpl = System.getProperty( "hibernate.flush.queue.type", "graph");
-		return "legacy".equalsIgnoreCase(queueImpl);
-	}
 
 	@Entity(name = "UserAccount")
 	@Table(name = "user_account")
@@ -202,6 +197,11 @@ public class UniqueConstraintOrderingTest {
 
 	@Test
 	public void testDeleteAndInsertSameTableWithPrimaryKey(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// This test verifies that DELETE → INSERT ordering works for tables with primary keys
 		// (all tables have PKs, so this should always be ordered)
 
@@ -240,6 +240,11 @@ public class UniqueConstraintOrderingTest {
 
 	@Test
 	public void testDeleteAndInsertSameTableMultipleEntities(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Insert multiple users
 		scope.inTransaction(session -> {
 			session.persist(new UserAccount("user1@example.com", "User 1"));
@@ -267,10 +272,13 @@ public class UniqueConstraintOrderingTest {
 		});
 	}
 
-	// TODO: This test requires more sophisticated handling (UPDATE ordering with cycle breaking)
-	// Phase 1 only handles DELETE → INSERT ordering at table level
-	// @Test
+	@Test
 	public void testOneToOneUniqueConstraintSwapping_FuturePhase(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// This tests swapping one-to-one relationships (unique FK constraint)
 		// Currently fails because it requires runtime value tracking and UPDATE cycle breaking
 
@@ -318,6 +326,11 @@ public class UniqueConstraintOrderingTest {
 
 	@Test
 	public void testMixedDeleteInsertUpdateSameTable(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Complex scenario: DELETE + INSERT + UPDATE all in same flush
 
 		Long[] userIds = scope.fromTransaction(session -> {
@@ -355,6 +368,11 @@ public class UniqueConstraintOrderingTest {
 
 	@Test
 	public void testPhase2ValueBasedOrdering(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Phase 2 test: DELETE and INSERT with different IDs should NOT be ordered
 		// Only DELETE and INSERT with SAME unique constraint values are ordered
 
@@ -402,6 +420,11 @@ public class UniqueConstraintOrderingTest {
 
 	@Test
 	public void testPhase4NaturalIdOrdering(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Phase 4 test: @NaturalId constraint should be tracked
 		// DELETE and INSERT with same natural ID should be ordered
 
@@ -447,6 +470,11 @@ public class UniqueConstraintOrderingTest {
 
 	@Test
 	public void testPhase4NaturalIdNonConflicting(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Phase 4 test: DELETE and INSERT with DIFFERENT natural IDs should NOT be ordered
 
 		// Create products
@@ -489,6 +517,11 @@ public class UniqueConstraintOrderingTest {
 
 	@Test
 	public void testPhase4OneToOneUniqueFK(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Phase 4 test: One-to-one unique FK should be tracked
 		// This tests UNIQUE_FOREIGN_KEY constraint type
 
@@ -537,6 +570,11 @@ public class UniqueConstraintOrderingTest {
 
 	@Test
 	public void testPhase3UpdateChangingNaturalId(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Phase 3 test: UPDATE that changes natural ID value
 		// Should detect that old SKU is released and new SKU is occupied
 
@@ -564,6 +602,11 @@ public class UniqueConstraintOrderingTest {
 
 	@Test
 	public void testPhase3UpdateConflictWithInsert(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Phase 3 test: UPDATE changes natural ID to value that INSERT will use
 		// This creates a conflict that should be detected
 
@@ -612,6 +655,11 @@ public class UniqueConstraintOrderingTest {
 
 	@Test
 	public void testPhase3OneToOneSwap(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Phase 3 test: Swap one-to-one relationships (creates cycle)
 		// Employee emp1: dept_id = 1
 		// Employee emp2: dept_id = 2

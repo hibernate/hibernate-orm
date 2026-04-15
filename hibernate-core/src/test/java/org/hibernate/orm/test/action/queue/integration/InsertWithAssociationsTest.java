@@ -4,8 +4,11 @@
  */
 package org.hibernate.orm.test.action.queue.integration;
 
+import org.hibernate.action.queue.QueueType;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.*;
@@ -31,6 +34,11 @@ public class InsertWithAssociationsTest {
 
 	@Test
 	public void testInsertWithManyToOne(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( em -> {
 			Company company = new Company();
 			company.name = "ACME Corp";
@@ -51,6 +59,11 @@ public class InsertWithAssociationsTest {
 
 	@Test
 	public void testInsertWithOneToMany(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( em -> {
 			Company company = new Company();
 			company.name = "ACME Corp";
@@ -81,6 +94,11 @@ public class InsertWithAssociationsTest {
 
 	@Test
 	public void testInsertWithBidirectional(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( em -> {
 			Department dept = new Department();
 			dept.name = "Engineering";
@@ -114,6 +132,11 @@ public class InsertWithAssociationsTest {
 
 	@Test
 	public void testInsertMultipleLevels(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( em -> {
 			// Company → Department → Employee (3 levels)
 			Company company = new Company();
@@ -145,6 +168,11 @@ public class InsertWithAssociationsTest {
 
 	@Test
 	public void testInsertInCorrectOrder(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( em -> {
 			// Insert in correct order: Company → Department → Employee
 			Company company = new Company();
@@ -172,6 +200,11 @@ public class InsertWithAssociationsTest {
 
 	@Test
 	public void testInsertInReverseOrder(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( em -> {
 			// Insert in reverse order: Employee → Department → Company
 			// Graph decomposer should handle correct ordering
@@ -205,6 +238,11 @@ public class InsertWithAssociationsTest {
 
 	@Test
 	public void testInsertWithNullableFK(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( em -> {
 			// Employee with no department (nullable FK)
 			Employee emp = new Employee();
@@ -221,6 +259,11 @@ public class InsertWithAssociationsTest {
 
 	@Test
 	public void testInsertComplexGraph(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( em -> {
 			// Complex graph: Project has multiple Tasks, each Task assigned to Employee
 			Project project = new Project();
@@ -278,6 +321,11 @@ public class InsertWithAssociationsTest {
 
 	@Test
 	public void testInsertDiamondDependency(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( em -> {
 			// Diamond: Company → Dept1 → Employee, Company → Dept2 → Employee
 			Company company = new Company();

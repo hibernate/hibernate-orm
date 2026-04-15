@@ -4,8 +4,11 @@
  */
 package org.hibernate.orm.test.action.queue.callback;
 
+import org.hibernate.action.queue.QueueType;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -34,6 +37,11 @@ public class PostDeleteHandlingTest {
 
 	@Test
 	public void testDeleteRemovesEntityFromPersistenceContext(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long entityId = scope.fromTransaction( entityManager -> {
 			SimpleEntity entity = new SimpleEntity();
 			entity.name = "Test";
@@ -63,6 +71,11 @@ public class PostDeleteHandlingTest {
 
 	@Test
 	public void testPostRemoveCallbackFired(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			EntityWithCallbacks entity = new EntityWithCallbacks();
 			entity.name = "Test";
@@ -89,6 +102,11 @@ public class PostDeleteHandlingTest {
 
 	@Test
 	public void testDeleteActuallyRemovesRow(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long entityId = scope.fromTransaction( entityManager -> {
 			SimpleEntity entity = new SimpleEntity();
 			entity.name = "Test";
@@ -117,6 +135,11 @@ public class PostDeleteHandlingTest {
 
 	@Test
 	public void testDeleteVersionedEntity(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long entityId = scope.fromTransaction( entityManager -> {
 			EntityWithVersion entity = new EntityWithVersion();
 			entity.name = "Test";
@@ -156,6 +179,11 @@ public class PostDeleteHandlingTest {
 
 	@Test
 	public void testMultipleDeletesInSameTransaction(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long id1 = scope.fromTransaction( entityManager -> {
 			SimpleEntity entity1 = new SimpleEntity();
 			entity1.name = "Entity1";
@@ -205,6 +233,11 @@ public class PostDeleteHandlingTest {
 
 	@Test
 	public void testDeleteThenTryToFind(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SimpleEntity entity = new SimpleEntity();
 			entity.name = "Test";
@@ -226,6 +259,11 @@ public class PostDeleteHandlingTest {
 
 	@Test
 	public void testDeleteMarksEntityAsNotManaged(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SimpleEntity entity = new SimpleEntity();
 			entity.name = "Test";
@@ -253,6 +291,11 @@ public class PostDeleteHandlingTest {
 
 	@Test
 	public void testDeleteAfterUpdate(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long entityId = scope.fromTransaction( entityManager -> {
 			SimpleEntity entity = new SimpleEntity();
 			entity.name = "Initial";

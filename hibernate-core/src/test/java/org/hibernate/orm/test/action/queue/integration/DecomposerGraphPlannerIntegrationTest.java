@@ -14,6 +14,7 @@ import org.hibernate.action.internal.EntityInsertAction;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.PlanningOptions;
+import org.hibernate.action.queue.QueueType;
 import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.constraint.ConstraintModel;
 import org.hibernate.action.queue.constraint.ConstraintModelBuilder;
@@ -35,6 +36,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -74,6 +76,11 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 	@Test
 	public void testSimpleInsertDecomposition(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction(session -> {
 			final SessionImplementor sessionImpl = (SessionImplementor) session;
 			final SessionFactoryImplementor factory = sessionImpl.getSessionFactory();
@@ -138,6 +145,11 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 	@Test
 	public void testInsertWithForeignKeyDependency(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction(session -> {
 			final SessionImplementor sessionImpl = session;
 			final SessionFactoryImplementor factory = sessionImpl.getSessionFactory();
@@ -231,6 +243,11 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 	@Test
 	public void testUpdateDecomposition(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction(session -> {
 			final SessionImplementor sessionImpl = (SessionImplementor) session;
 			final SessionFactoryImplementor factory = sessionImpl.getSessionFactory();
@@ -302,6 +319,11 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 	@Test
 	public void testDeleteDecomposition(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction(session -> {
 			final SessionImplementor sessionImpl = (SessionImplementor) session;
 			final SessionFactoryImplementor factory = sessionImpl.getSessionFactory();
@@ -366,6 +388,11 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 	@Test
 	public void testMixedOperations(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction(session -> {
 			final SessionImplementor sessionImpl = (SessionImplementor) session;
 			final SessionFactoryImplementor factory = sessionImpl.getSessionFactory();
@@ -474,6 +501,11 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 	@Test
 	public void testCyclicDependencyBreaking(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction(session -> {
 			final SessionImplementor sessionImpl = (SessionImplementor) session;
 			final SessionFactoryImplementor factory = sessionImpl.getSessionFactory();

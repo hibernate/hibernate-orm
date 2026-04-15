@@ -43,8 +43,6 @@ public class CollectionCoordinatorDecompositionTest {
 		scope.inTransaction( session -> {
 			Person person = session.find( Person.class, 1L );
 			assertNotNull( person );
-			System.out.println("LEGACY QUEUE TEST: person.emails.size() = " + person.emails.size());
-			System.out.println("LEGACY QUEUE TEST: person.emails = " + person.emails);
 			assertEquals( 1, person.emails.size() );
 			assertEquals( "test@example.com", person.emails.get(0) );
 		} );

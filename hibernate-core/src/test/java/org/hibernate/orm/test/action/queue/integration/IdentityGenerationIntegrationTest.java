@@ -5,10 +5,12 @@
 package org.hibernate.orm.test.action.queue.integration;
 
 import jakarta.persistence.*;
+import org.hibernate.action.queue.QueueType;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -47,6 +49,11 @@ public class IdentityGenerationIntegrationTest {
 
 	@Test
 	public void testSimpleIdentityInsert(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction(session -> {
 			IdentityEntity entity = new IdentityEntity();
 			entity.setName("Test");
@@ -71,6 +78,11 @@ public class IdentityGenerationIntegrationTest {
 
 	@Test
 	public void testIdentityInsertBeforeSequenceInsert(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		final List<String> executionOrder = new ArrayList<>();
 
 		scope.inTransaction(session -> {
@@ -116,6 +128,11 @@ public class IdentityGenerationIntegrationTest {
 
 	@Test
 	public void testIdentityWithForeignKey(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long parentId = scope.fromTransaction(session -> {
 			IdentityParent parent = new IdentityParent();
 			parent.setName("Parent");
@@ -148,6 +165,11 @@ public class IdentityGenerationIntegrationTest {
 
 	@Test
 	public void testIdentityChildWithSequenceParent(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Test mixing IDENTITY child with SEQUENCE parent
 		Long parentId = scope.fromTransaction(session -> {
 			RegularParent parent = new RegularParent();
@@ -181,6 +203,11 @@ public class IdentityGenerationIntegrationTest {
 
 	@Test
 	public void testMultipleIdentityInserts(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction(session -> {
 			// Create multiple IDENTITY entities
 			for (int i = 0; i < 5; i++) {

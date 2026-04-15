@@ -4,8 +4,11 @@
  */
 package org.hibernate.orm.test.action.queue.callback;
 
+import org.hibernate.action.queue.QueueType;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -34,6 +37,11 @@ public class PostUpdateHandlingTest {
 
 	@Test
 	public void testApplicationGeneratedVersionIncrement(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			EntityWithVersion entity = new EntityWithVersion();
 			entity.name = "Initial";
@@ -58,6 +66,11 @@ public class PostUpdateHandlingTest {
 
 	@Test
 	public void testMultipleUpdatesIncrementVersion(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			EntityWithVersion entity = new EntityWithVersion();
 			entity.name = "Initial";
@@ -89,6 +102,11 @@ public class PostUpdateHandlingTest {
 
 	@Test
 	public void testPostUpdateCallbackFired(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			EntityWithCallbacks entity = new EntityWithCallbacks();
 			entity.name = "Initial";
@@ -117,6 +135,11 @@ public class PostUpdateHandlingTest {
 
 	@Test
 	public void testUpdateWithNoChanges(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			EntityWithVersion entity = new EntityWithVersion();
 			entity.name = "Initial";
@@ -137,6 +160,11 @@ public class PostUpdateHandlingTest {
 
 	@Test
 	public void testEntityStateAfterUpdate(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long entityId = scope.fromTransaction( entityManager -> {
 			SimpleEntity entity = new SimpleEntity();
 			entity.name = "Initial";
@@ -168,6 +196,11 @@ public class PostUpdateHandlingTest {
 
 	@Test
 	public void testVersionUsedForOptimisticLocking(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long entityId = scope.fromTransaction( entityManager -> {
 			EntityWithVersion entity = new EntityWithVersion();
 			entity.name = "Initial";
@@ -200,6 +233,11 @@ public class PostUpdateHandlingTest {
 
 	@Test
 	public void testUpdateThenFindInSameTransaction(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SimpleEntity entity = new SimpleEntity();
 			entity.name = "Initial";
@@ -224,6 +262,11 @@ public class PostUpdateHandlingTest {
 
 	@Test
 	public void testMultipleUpdatesInSameFlush(EntityManagerFactoryScope scope) {
+		var sfi = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class );
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		scope.inTransaction( entityManager -> {
 			SimpleEntity entity1 = new SimpleEntity();
 			entity1.name = "Entity1";

@@ -7,6 +7,7 @@ package org.hibernate.orm.test.action.queue;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.action.queue.QueueType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -15,6 +16,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
@@ -75,6 +77,11 @@ public class NewEntityOrderColumnTest {
 	/// Status: PASSES ✓ (simple case works correctly)
 	@Test
 	public void testNewEntityWithPrePopulatedOrderColumn(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long parentId = scope.fromTransaction( session -> {
 			// Create NEW parent with NEW child in collection
 			Parent parent = new Parent();
@@ -108,6 +115,11 @@ public class NewEntityOrderColumnTest {
 	/// Status: PASSES ✓ (fixed by DELETE→INSERT dependency edges in GraphBasedActionQueue)
 	@Test
 	public void testReplaceParentWithNewParentAndChildren(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		// Setup: Create initial parent with children
 		scope.inTransaction( session -> {
 			Parent parent = new Parent();
@@ -162,6 +174,11 @@ public class NewEntityOrderColumnTest {
 	/// Status: PASSES ✓ (simple case with multiple elements works)
 	@Test
 	public void testNewEntityWithMultipleChildren(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long parentId = scope.fromTransaction( session -> {
 			Parent parent = new Parent();
 			parent.name = "parent";

@@ -4,12 +4,14 @@
  */
 package org.hibernate.orm.test.action.queue.decomposer;
 
+import org.hibernate.action.queue.QueueType;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -26,6 +28,11 @@ public class DirtyOptLockDebugTest {
 
 	@Test
 	public void testDirtyOptimisticLock(SessionFactoryScope scope) {
+		var sfi = scope.getSessionFactory();
+		if ( sfi.getActionQueueFactory().getConfiguredQueueType() != QueueType.GRAPH ) {
+			Assumptions.abort("Skipping GRAPH test with non-GRAPH queue type");
+		}
+
 		Long id = scope.fromTransaction( session -> {
 			TestEntity entity = new TestEntity();
 			entity.field1 = "Field1";

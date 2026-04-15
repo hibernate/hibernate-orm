@@ -17,14 +17,17 @@
  */
 package org.hibernate.tool.jdbc2cfg.NoPrimaryKey;
 
+import java.util.List;
+
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
+import org.hibernate.tool.internal.metadata.RevengMetadataDescriptor;
 import org.hibernate.tool.test.utils.JdbcUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author max
@@ -44,10 +47,10 @@ public class TestCase {
 
 	@Test
 	public void testMe() {
-		assertNotNull(
-			MetadataDescriptorFactory
-				.createReverseEngineeringDescriptor(null, null)
-				.createMetadata());
+		List<ClassDetails> entities = ((RevengMetadataDescriptor) MetadataDescriptorFactory
+				.createReverseEngineeringDescriptor(null, null))
+				.getEntityClassDetails();
+		assertNotNull(entities);
 	}
-	
+
 }

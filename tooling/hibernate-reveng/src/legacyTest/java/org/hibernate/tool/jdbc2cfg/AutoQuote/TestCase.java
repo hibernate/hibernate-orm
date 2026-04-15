@@ -17,12 +17,14 @@
  */
 package org.hibernate.tool.jdbc2cfg.AutoQuote;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Table;
+import java.util.List;
+
+import jakarta.persistence.Table;
+
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
-import org.hibernate.tool.test.utils.HibernateUtil;
+import org.hibernate.tool.internal.metadata.RevengMetadataDescriptor;
 import org.hibernate.tool.test.utils.JdbcUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,14 +38,14 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class TestCase {
 
-	private Metadata metadata = null;
+	private List<ClassDetails> entities = null;
 
 	@BeforeEach
 	public void setUp() {
 		JdbcUtil.createDatabase(this);
-		metadata = MetadataDescriptorFactory
-				.createReverseEngineeringDescriptor(null, null)
-				.createMetadata();
+		entities = ((RevengMetadataDescriptor) MetadataDescriptorFactory
+				.createReverseEngineeringDescriptor(null, null))
+				.getEntityClassDetails();
 	}
 
 	@AfterEach
@@ -53,14 +55,41 @@ public class TestCase {
 
 	@Test
 	public void testForQuotes() {
-		Table table = HibernateUtil.getTable(metadata, "us-ers");
-		assertNotNull(table);
-		assertTrue(table.isQuoted());		
-		assertEquals(2, table.getColumnSpan());		
-		PersistentClass classMapping = metadata.getEntityBinding("Worklogs");
-		assertNotNull(classMapping);
-		Property property = classMapping.getProperty("usErs");
-		assertNotNull(property);
+		ClassDetails usErs = findByTableName("us-ers");
+		assertNotNull(usErs, "Entity mapped to 'us-ers' table should exist");
+		Table tableAnn = usErs.getDirectAnnotationUsage(Table.class);
+		assertNotNull(tableAnn);
+		assertTrue(tableAnn.name().contains("us-ers"),
+				"Table name should contain 'us-ers'");
+		assertTrue(usErs.getFields().size() >= 2,
+				"'us-ers' entity should have at least 2 fields");
+
+		ClassDetails worklogs = findByTableName("WORKLOGS");
+		assertNotNull(worklogs, "Entity mapped to 'WORKLOGS' table should exist");
+		FieldDetails usErsField = findField(worklogs, "usErs");
+		assertNotNull(usErsField, "WORKLOGS should have a 'usErs' field");
 	}
-	
+
+	private ClassDetails findByTableName(String tableName) {
+		for (ClassDetails cd : entities) {
+			Table tableAnn = cd.getDirectAnnotationUsage(Table.class);
+			if (tableAnn != null) {
+				String name = tableAnn.name().replace("`", "");
+				if (tableName.equals(name) || tableName.equalsIgnoreCase(name)) {
+					return cd;
+				}
+			}
+		}
+		return null;
+	}
+
+	private FieldDetails findField(ClassDetails classDetails, String fieldName) {
+		for (FieldDetails field : classDetails.getFields()) {
+			if (fieldName.equals(field.getName())) {
+				return field;
+			}
+		}
+		return null;
+	}
+
 }

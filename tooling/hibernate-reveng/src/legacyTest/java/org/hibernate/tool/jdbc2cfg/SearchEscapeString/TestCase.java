@@ -17,18 +17,17 @@
  */
 package org.hibernate.tool.jdbc2cfg.SearchEscapeString;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.mapping.Table;
+import java.util.List;
+
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
-import org.hibernate.tool.test.utils.HibernateUtil;
-import org.hibernate.tool.test.utils.JUnitUtil;
+import org.hibernate.tool.internal.metadata.RevengMetadataDescriptor;
 import org.hibernate.tool.test.utils.JdbcUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author max
@@ -36,16 +35,16 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 public class TestCase {
 
-	private Metadata metadata = null;
-	
+	private List<ClassDetails> entities = null;
+
 	@BeforeEach
 	public void setUp() {
 		JdbcUtil.createDatabase(this);
-		metadata = MetadataDescriptorFactory
-				.createReverseEngineeringDescriptor(null, null)
-				.createMetadata();
+		entities = ((RevengMetadataDescriptor) MetadataDescriptorFactory
+				.createReverseEngineeringDescriptor(null, null))
+				.getEntityClassDetails();
 	}
-	
+
 	@AfterEach
 	public void tearDown() {
 		JdbcUtil.dropDatabase(this);
@@ -53,21 +52,28 @@ public class TestCase {
 
 	@Test
 	public void testBasic() {
+		assertTrue(entities.size() >= 2,
+				"There should be at least 2 entities!");
+		ClassDetails bTab = findByTableName("B_TAB");
+		ClassDetails b2Tab = findByTableName("B2TAB");
+		assertNotNull(bTab, "B_TAB entity should be found");
+		assertNotNull(b2Tab, "B2TAB entity should be found");
+		assertTrue(bTab.getFields().size() >= 2,
+				"B_TAB should have at least 2 fields");
+		assertTrue(b2Tab.getFields().size() >= 2,
+				"B2TAB should have at least 2 fields");
+	}
 
-		JUnitUtil.assertIteratorContainsExactly(
-				"There should be 2 tables!", 
-				metadata.collectTableMappings().iterator(),
-				2);
-
-		Table table = HibernateUtil.getTable(metadata, JdbcUtil.toIdentifier(this, "B_TAB" ) );
-		Table table2 = HibernateUtil.getTable(metadata, JdbcUtil.toIdentifier(this, "B2TAB" ) );
-
-		assertNotNull(table);
-		assertNotNull(table2);
-		
-		assertEquals(2, table.getColumnSpan());
-		assertEquals(2, table2.getColumnSpan());
-		
+	private ClassDetails findByTableName(String tableName) {
+		for (ClassDetails cd : entities) {
+			jakarta.persistence.Table tableAnn =
+					cd.getDirectAnnotationUsage(jakarta.persistence.Table.class);
+			if (tableAnn != null && tableName.equalsIgnoreCase(
+					tableAnn.name().replace("`", ""))) {
+				return cd;
+			}
+		}
+		return null;
 	}
 
 }

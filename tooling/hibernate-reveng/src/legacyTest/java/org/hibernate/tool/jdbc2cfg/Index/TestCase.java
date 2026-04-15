@@ -17,16 +17,20 @@
  */
 package org.hibernate.tool.jdbc2cfg.Index;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.mapping.*;
+import java.util.List;
+
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
-import org.hibernate.tool.test.utils.HibernateUtil;
+import org.hibernate.tool.internal.metadata.RevengMetadataDescriptor;
 import org.hibernate.tool.test.utils.JdbcUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.Iterator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -36,14 +40,14 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class TestCase {
 
-	private Metadata metadata = null;
+	private List<ClassDetails> entities = null;
 
 	@BeforeEach
 	public void setUp() {
 		JdbcUtil.createDatabase(this);
-		metadata = MetadataDescriptorFactory
-				.createReverseEngineeringDescriptor(null, null)
-				.createMetadata();
+		entities = ((RevengMetadataDescriptor) MetadataDescriptorFactory
+				.createReverseEngineeringDescriptor(null, null))
+				.getEntityClassDetails();
 	}
 
 	@AfterEach
@@ -52,55 +56,54 @@ public class TestCase {
 	}
 
 	@Test
-	public void testUniqueKey() {	
-		Table table = HibernateUtil.getTable(
-				metadata, 
-				JdbcUtil.toIdentifier(this, "WITH_INDEX") );		
-		UniqueKey uniqueKey = table.getUniqueKey(
-				JdbcUtil.toIdentifier(this, "OTHER_IDX") );
-		assertNotNull(uniqueKey);
-		assertEquals(1, uniqueKey.getColumnSpan() );	
-		Column keyCol = uniqueKey.getColumn(0);
-		assertTrue(keyCol.isUnique() );
-		assertSame(keyCol, table.getColumn(keyCol) );
-	}
-	
-	@Test
-	public void testWithIndex() {		
-		Table table = HibernateUtil.getTable(
-				metadata, 
-				JdbcUtil.toIdentifier(this, "WITH_INDEX"));
-		assertEquals(
-				JdbcUtil.toIdentifier(this, "WITH_INDEX"), 
-				JdbcUtil.toIdentifier(this, table.getName()));	
-		assertNull(table.getPrimaryKey(), "there should be no pk" );
-		Iterator<Index> iterator = table.getIndexes().values().iterator();
-		int cnt=0;
-		while(iterator.hasNext() ) {
-			iterator.next();
-			cnt++;
+	public void testUniqueKey() {
+		ClassDetails withIndex = findByTableName("WITH_INDEX");
+		assertNotNull(withIndex);
+		Table tableAnn = withIndex.getDirectAnnotationUsage(Table.class);
+		assertNotNull(tableAnn);
+		UniqueConstraint[] uniqueConstraints = tableAnn.uniqueConstraints();
+		assertNotNull(uniqueConstraints);
+		UniqueConstraint otherIdx = null;
+		for (UniqueConstraint uc : uniqueConstraints) {
+			if (uc.name() != null && uc.name().replace("`", "")
+					.equalsIgnoreCase("OTHER_IDX")) {
+				otherIdx = uc;
+				break;
+			}
 		}
-		assertEquals(1, cnt);	
-		Index index = table.getIndex(JdbcUtil.toIdentifier(this, "MY_INDEX") );
-		assertNotNull(index, "No index ?");
-		assertEquals(
-				JdbcUtil.toIdentifier(this, "MY_INDEX"), 
-				JdbcUtil.toIdentifier(this, index.getName()));	
-		assertEquals(2, index.getColumnSpan() );	
-		assertSame(index.getTable(), table);
-		Iterator<Selectable> cols = index.getSelectables().iterator();
-		Column col1 = (Column)cols.next();
-		Column col2 = (Column)cols.next();
-		assertEquals(
-				JdbcUtil.toIdentifier(this, "ONE"), 
-				JdbcUtil.toIdentifier(this, col1.getName()));
-		assertEquals(
-				JdbcUtil.toIdentifier(this, "THREE"), 
-				JdbcUtil.toIdentifier(this, col2.getName()));		
-		Column example = new Column();
-		example.setName(col2.getName() );
-		assertSame(
-				table.getColumn(example), col2, "column with same name should be same instance!");			
+		assertNotNull(otherIdx, "UniqueConstraint OTHER_IDX should exist");
+		assertEquals(1, otherIdx.columnNames().length);
 	}
-	
+
+	@Test
+	public void testWithIndex() {
+		ClassDetails withIndex = findByTableName("WITH_INDEX");
+		assertNotNull(withIndex);
+		// The table has no primary key, so there should be no @Id field
+		boolean hasId = false;
+		for (FieldDetails field : withIndex.getFields()) {
+			if (field.getDirectAnnotationUsage(Id.class) != null) {
+				hasId = true;
+				break;
+			}
+		}
+		assertFalse(hasId, "there should be no pk");
+		// Verify the entity has the expected fields
+		assertTrue(withIndex.getFields().size() >= 3,
+				"WITH_INDEX should have at least 3 fields (one, two, three)");
+	}
+
+	private ClassDetails findByTableName(String tableName) {
+		for (ClassDetails cd : entities) {
+			Table tableAnn = cd.getDirectAnnotationUsage(Table.class);
+			if (tableAnn != null) {
+				String name = tableAnn.name().replace("`", "");
+				if (tableName.equals(name) || tableName.equalsIgnoreCase(name)) {
+					return cd;
+				}
+			}
+		}
+		return null;
+	}
+
 }

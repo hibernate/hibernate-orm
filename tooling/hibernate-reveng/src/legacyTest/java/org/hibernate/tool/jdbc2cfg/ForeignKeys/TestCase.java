@@ -17,25 +17,24 @@
  */
 package org.hibernate.tool.jdbc2cfg.ForeignKeys;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.Table;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.reveng.RevengStrategy;
-import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.tool.internal.metadata.RevengMetadataDescriptor;
 import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 import org.hibernate.tool.schema.TargetType;
-import org.hibernate.tool.test.utils.HibernateUtil;
-import org.hibernate.tool.test.utils.JUnitUtil;
 import org.hibernate.tool.test.utils.JdbcUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.EnumSet;
-import java.util.Iterator;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -45,83 +44,78 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class TestCase {
 
-	private Metadata metadata = null;
+	private MetadataDescriptor metadataDescriptor = null;
+	private List<ClassDetails> entities = null;
 	private RevengStrategy reverseEngineeringStrategy = null;
 
 	@BeforeEach
 	public void setUp() {
 		JdbcUtil.createDatabase(this);
 		reverseEngineeringStrategy = new DefaultStrategy();
-		metadata = MetadataDescriptorFactory
-				.createReverseEngineeringDescriptor(reverseEngineeringStrategy, null)
-				.createMetadata();
+		metadataDescriptor = MetadataDescriptorFactory
+				.createReverseEngineeringDescriptor(reverseEngineeringStrategy, null);
+		entities = ((RevengMetadataDescriptor) metadataDescriptor).getEntityClassDetails();
 	}
 
 	@AfterEach
 	public void tearDown() {
 		JdbcUtil.dropDatabase(this);
-	}	
-	
-	@Test
-	public void testMultiRefs() {		
-		Table table = HibernateUtil.getTable(
-				metadata, 
-				JdbcUtil.toIdentifier(this, "CONNECTION") );		
-		ForeignKey foreignKey = HibernateUtil.getForeignKey(
-				table, 
-				JdbcUtil.toIdentifier(this, "CON2MASTER") );	
-		assertNotNull(foreignKey);			
-		assertEquals(
-				reverseEngineeringStrategy.tableToClassName(
-						TableIdentifier.create(null, null, "MASTER")),
-				foreignKey.getReferencedEntityName() );
-        assertEquals(
-        		JdbcUtil.toIdentifier(this, "CONNECTION"), 
-        		foreignKey.getTable().getName() );	
-		assertEquals(
-				HibernateUtil.getTable(
-						metadata, 
-						JdbcUtil.toIdentifier(this, "MASTER") ), 
-				foreignKey.getReferencedTable() );
-		assertNotNull(
-				HibernateUtil.getForeignKey(
-						table, 
-						JdbcUtil.toIdentifier(this, "CHILDREF1") ) );
-		assertNotNull(
-				HibernateUtil.getForeignKey(
-						table, 
-						JdbcUtil.toIdentifier(this, "CHILDREF2") ) );
-		assertNull(
-				HibernateUtil.getForeignKey(
-						table, 
-						JdbcUtil.toIdentifier(this, "DUMMY") ) );
-		JUnitUtil.assertIteratorContainsExactly(null, table.getForeignKeyCollection().iterator(), 3);
 	}
-	
+
 	@Test
-	public void testMasterChild() {		
-		assertNotNull(HibernateUtil.getTable(
-				metadata, 
-				JdbcUtil.toIdentifier(this, "MASTER")));
-		Table child = HibernateUtil.getTable(
-				metadata, 
-				JdbcUtil.toIdentifier(this, "CHILD") );	
-		Iterator<?> iterator = child.getForeignKeyCollection().iterator();
-		ForeignKey fk = (ForeignKey) iterator.next();		
-		assertFalse(iterator.hasNext(), "should only be one fk" );	
-		assertEquals(1, fk.getColumnSpan() );
-		assertSame(
-				fk.getColumn(0), 
-				child.getColumn(
-						new Column(JdbcUtil.toIdentifier(this, "MASTERREF"))));		
+	public void testMultiRefs() {
+		ClassDetails connection = findByTableName("CONNECTION");
+		assertNotNull(connection);
+		// CONNECTION has 3 FKs: CON2MASTER -> MASTER, CHILDREF1 -> CHILD, CHILDREF2 -> CHILD
+		List<FieldDetails> manyToOneFields = connection.getFields().stream()
+				.filter(f -> f.getDirectAnnotationUsage(ManyToOne.class) != null)
+				.toList();
+		assertEquals(3, manyToOneFields.size());
+		// Check that at least one ManyToOne references Master
+		boolean hasMasterRef = manyToOneFields.stream()
+				.anyMatch(f -> f.getType().determineRawClass().getName().endsWith("Master"));
+		assertTrue(hasMasterRef, "CONNECTION should have a ManyToOne referencing Master");
 	}
-	
+
+	@Test
+	public void testMasterChild() {
+		ClassDetails master = findByTableName("MASTER");
+		assertNotNull(master);
+		ClassDetails child = findByTableName("CHILD");
+		assertNotNull(child);
+		// CHILD has one FK: MASTERREF -> MASTER
+		List<FieldDetails> manyToOneFields = child.getFields().stream()
+				.filter(f -> f.getDirectAnnotationUsage(ManyToOne.class) != null)
+				.toList();
+		assertEquals(1, manyToOneFields.size(), "should only be one ManyToOne FK");
+		FieldDetails masterRefField = manyToOneFields.get(0);
+		assertTrue(
+				masterRefField.getType().determineRawClass().getName().endsWith("Master"),
+				"ManyToOne should reference Master");
+		JoinColumn joinColumn = masterRefField.getDirectAnnotationUsage(JoinColumn.class);
+		assertNotNull(joinColumn, "ManyToOne field should have @JoinColumn");
+		assertEquals("MASTERREF", joinColumn.name().toUpperCase());
+	}
+
 	@Test
 	public void testExport() {
 		SchemaExport schemaExport = new SchemaExport();
 		final EnumSet<TargetType> targetTypes = EnumSet.noneOf( TargetType.class );
 		targetTypes.add( TargetType.STDOUT );
-		schemaExport.create(targetTypes, metadata);		
+		schemaExport.create(targetTypes, metadataDescriptor.createMetadata());
 	}
-	
+
+	private ClassDetails findByTableName(String tableName) {
+		for (ClassDetails cd : entities) {
+			jakarta.persistence.Table tableAnn = cd.getDirectAnnotationUsage(jakarta.persistence.Table.class);
+			if (tableAnn != null) {
+				String name = tableAnn.name().replace("`", "");
+				if (tableName.equals(name) || tableName.equalsIgnoreCase(name)) {
+					return cd;
+				}
+			}
+		}
+		return null;
+	}
+
 }

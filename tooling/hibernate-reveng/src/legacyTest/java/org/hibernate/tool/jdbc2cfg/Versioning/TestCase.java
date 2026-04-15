@@ -17,23 +17,30 @@
  */
 package org.hibernate.tool.jdbc2cfg.Versioning;
 
+import java.io.File;
+import java.util.List;
+
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
-import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.export.ExporterFactory;
 import org.hibernate.tool.api.export.ExporterType;
+import org.hibernate.tool.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
+import org.hibernate.tool.internal.metadata.RevengMetadataDescriptor;
 import org.hibernate.tool.test.utils.JdbcUtil;
 import org.hibernate.tool.test.utils.TestTemplate;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-
-import java.io.File;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -62,20 +69,20 @@ public class TestCase extends TestTemplate {
             "hibernate.connection.url",
             "hibernate.connection.username",
     };
-	
-	private Metadata metadata = null;
+
+	private List<ClassDetails> entities = null;
 	private MetadataDescriptor metadataDescriptor = null;
-	
+
 	@TempDir
 	public File outputFolder = new File("output");
-	
+
 	@BeforeEach
 	public void setUp() {
 		JdbcUtil.createDatabase(this);
 		metadataDescriptor = MetadataDescriptorFactory
 				.createReverseEngineeringDescriptor(null, null);
-		metadata = metadataDescriptor
-				.createMetadata();
+		entities = ((RevengMetadataDescriptor) metadataDescriptor)
+				.getEntityClassDetails();
 	}
 
 	@AfterEach
@@ -84,35 +91,37 @@ public class TestCase extends TestTemplate {
 	}
 
 	@Test
-	public void testVersion() {		
-		PersistentClass cl = metadata.getEntityBinding("WithVersion");		
-		Property version = cl.getVersion();
-		assertNotNull(version);
-		assertEquals("version", version.getName());		
-		cl = metadata.getEntityBinding("NoVersion");
-		assertNotNull(cl);
-		version = cl.getVersion();
-		assertNull(version);		
+	public void testVersion() {
+		ClassDetails withVersion = findByTableName("WITH_VERSION");
+		assertNotNull(withVersion);
+		FieldDetails versionField = findVersionField(withVersion);
+		assertNotNull(versionField, "WITH_VERSION should have a @Version field");
+		assertEquals("version", versionField.getName());
+
+		ClassDetails noVersion = findByTableName("NO_VERSION");
+		assertNotNull(noVersion);
+		FieldDetails noVersionField = findVersionField(noVersion);
+		assertNull(noVersionField, "NO_VERSION should not have a @Version field");
 	}
-	
+
 	@Test
 	public void testGenerateMappings() {
         Exporter exporter = ExporterFactory.createExporter(ExporterType.HBM);
 		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);
- 		exporter.start();		
-		File[] files = new File[4];		
+ 		exporter.start();
+		File[] files = new File[4];
 		files[0] = new File(outputFolder, "WithVersion.hbm.xml");
 		files[1] = new File(outputFolder, "NoVersion.hbm.xml");
 		files[2] = new File(outputFolder, "WithRealTimestamp.hbm.xml");
-		files[3] = new File(outputFolder, "WithFakeTimestamp.hbm.xml");		
+		files[3] = new File(outputFolder, "WithFakeTimestamp.hbm.xml");
 		Metadata metadata = MetadataDescriptorFactory
 				.createNativeDescriptor(null, files, null)
 				.createMetadata();
-		PersistentClass cl = metadata.getEntityBinding( "WithVersion" );				
+		PersistentClass cl = metadata.getEntityBinding( "WithVersion" );
 		Property version = cl.getVersion();
 		assertNotNull(version);
-		assertEquals("version", version.getName());	
+		assertEquals("version", version.getName());
 		cl = metadata.getEntityBinding( "NoVersion" );
 		assertNotNull(cl);
 		version = cl.getVersion();
@@ -128,5 +137,27 @@ public class TestCase extends TestTemplate {
 		assertNotNull(version);
 		assertEquals("integer", version.getType().getName());
 	}
-    
+
+	private ClassDetails findByTableName(String tableName) {
+		for (ClassDetails cd : entities) {
+			Table tableAnn = cd.getDirectAnnotationUsage(Table.class);
+			if (tableAnn != null) {
+				String name = tableAnn.name().replace("`", "");
+				if (tableName.equals(name) || tableName.equalsIgnoreCase(name)) {
+					return cd;
+				}
+			}
+		}
+		return null;
+	}
+
+	private FieldDetails findVersionField(ClassDetails classDetails) {
+		for (FieldDetails field : classDetails.getFields()) {
+			if (field.getDirectAnnotationUsage(Version.class) != null) {
+				return field;
+			}
+		}
+		return null;
+	}
+
 }

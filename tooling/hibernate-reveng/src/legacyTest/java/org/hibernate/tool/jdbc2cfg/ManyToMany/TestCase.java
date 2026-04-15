@@ -17,17 +17,19 @@
  */
 package org.hibernate.tool.jdbc2cfg.ManyToMany;
 
-import org.hibernate.MappingException;
-import org.hibernate.boot.Metadata;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.reveng.RevengSettings;
-import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.api.export.ExporterFactory;
-import org.hibernate.tool.api.export.ExporterType;
+import org.hibernate.tool.internal.metadata.RevengMetadataDescriptor;
 import org.hibernate.tool.internal.reveng.strategy.AbstractStrategy;
 import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 import org.hibernate.tool.test.utils.JdbcUtil;
@@ -37,6 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
+import java.util.List;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,15 +49,15 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author koen
  */
 public class TestCase {
-	
+
 	@TempDir
 	public File outputDir = new File("output");
-	
+
 	@BeforeEach
 	public void setUp() {
 		JdbcUtil.createDatabase(this);
 	}
-	
+
 	@AfterEach
 	public void tearDown() {
 		JdbcUtil.dropDatabase(this);
@@ -62,125 +65,165 @@ public class TestCase {
 
 	@Test
 	public void testNoManyToManyBiDirectional() {
-        
-        AbstractStrategy c = new DefaultStrategy();
-        c.setSettings(new RevengSettings(c).setDetectManyToMany(false)); 
-        Metadata metadata =  MetadataDescriptorFactory
-        		.createReverseEngineeringDescriptor(c, null)
-        		.createMetadata();
 
-        PersistentClass project = metadata.getEntityBinding("Project");
-		
-		assertNotNull(project.getProperty("worksOns"));
-		//assertNotNull(project.getProperty("employee"));
-		assertEquals(3, project.getPropertyClosureSpan());		
-		assertEquals("projectId", project.getIdentifierProperty().getName());
-		
-		PersistentClass employee = metadata.getEntityBinding("Employee");
-		
-		assertNotNull(employee.getProperty("worksOns"));
-		assertNotNull(employee.getProperty("employees"));
-		assertNotNull(employee.getProperty("employee"));
-		//assertNotNull(employee.getProperty("projects"));
-		assertEquals(6, employee.getPropertyClosureSpan());
-		assertEquals("id", employee.getIdentifierProperty().getName());
-		
-		PersistentClass worksOn = metadata.getEntityBinding("WorksOn");
-		
-		assertNotNull(worksOn.getProperty("project"));
-		assertNotNull(worksOn.getProperty("employee"));
-		assertEquals(2, worksOn.getPropertyClosureSpan());
-		assertEquals("id", worksOn.getIdentifierProperty().getName());		
+        AbstractStrategy c = new DefaultStrategy();
+        c.setSettings(new RevengSettings(c).setDetectManyToMany(false));
+        List<ClassDetails> entities = ((RevengMetadataDescriptor) MetadataDescriptorFactory
+        		.createReverseEngineeringDescriptor(c, null))
+        		.getEntityClassDetails();
+
+        ClassDetails project = findEntity(entities, "Project");
+		assertNotNull(project);
+		assertNotNull(findField(project, "worksOns"));
+		// Non-ID fields count: worksOns + 2 others = 3
+		long projectNonIdFields = project.getFields().stream()
+				.filter(f -> !f.hasDirectAnnotationUsage(Id.class))
+				.count();
+		assertEquals(3, projectNonIdFields);
+		assertNotNull(findIdField(project, "projectId"));
+
+		ClassDetails employee = findEntity(entities, "Employee");
+		assertNotNull(employee);
+		assertNotNull(findField(employee, "worksOns"));
+		assertNotNull(findField(employee, "employees"));
+		assertNotNull(findField(employee, "employee"));
+		long employeeNonIdFields = employee.getFields().stream()
+				.filter(f -> !f.hasDirectAnnotationUsage(Id.class))
+				.count();
+		assertEquals(6, employeeNonIdFields);
+		assertNotNull(findIdField(employee, "id"));
+
+		ClassDetails worksOn = findEntity(entities, "WorksOn");
+		assertNotNull(worksOn);
+		FieldDetails worksOnProject = findField(worksOn, "project");
+		assertNotNull(worksOnProject);
+		assertTrue(worksOnProject.hasDirectAnnotationUsage(ManyToOne.class));
+		FieldDetails worksOnEmployee = findField(worksOn, "employee");
+		assertNotNull(worksOnEmployee);
+		assertTrue(worksOnEmployee.hasDirectAnnotationUsage(ManyToOne.class));
+		long worksOnNonIdFields = worksOn.getFields().stream()
+				.filter(f -> !f.hasDirectAnnotationUsage(Id.class)
+						&& !f.hasDirectAnnotationUsage(jakarta.persistence.EmbeddedId.class))
+				.count();
+		assertEquals(2, worksOnNonIdFields);
 	}
-	
+
 	@Test
 	public void testAutoCreation() {
-		Metadata metadata = MetadataDescriptorFactory
-				.createReverseEngineeringDescriptor(null, null)
-				.createMetadata();
-		
-        assertNull(metadata.getEntityBinding( "WorksOn" ), "No middle class should be generated.");
-        
-        assertNotNull(metadata.getEntityBinding( "WorksOnContext" ), "Should create worksontext since one of the foreign keys is not part of pk");
-        
-        PersistentClass projectClass = metadata.getEntityBinding("Project");
-		assertNotNull( projectClass );
+		List<ClassDetails> entities = ((RevengMetadataDescriptor) MetadataDescriptorFactory
+				.createReverseEngineeringDescriptor(null, null))
+				.getEntityClassDetails();
 
-		PersistentClass employeeClass = metadata.getEntityBinding("Employee");
-		assertNotNull( employeeClass );
+        assertNull(findEntity(entities, "WorksOn"), "No middle class should be generated.");
 
-		try {
-			projectClass.getProperty("worksOns");
-			fail("property worksOns should not exist on " + projectClass);
-		} catch(MappingException ignored) {}
-		try {
-			employeeClass.getProperty("worksOns");
-			fail("property worksOns should not exist on " + employeeClass);
-		} catch(MappingException ignored) {}
+        assertNotNull(findEntity(entities, "WorksOnContext"),
+        		"Should create worksontext since one of the foreign keys is not part of pk");
 
-        Property property = employeeClass.getProperty( "projects" );
-		assertNotNull( property);
-		assertNotNull( projectClass.getProperty( "employees" ));				
-		
+        ClassDetails projectClass = findEntity(entities, "Project");
+		assertNotNull(projectClass);
+
+		ClassDetails employeeClass = findEntity(entities, "Employee");
+		assertNotNull(employeeClass);
+
+		assertNull(findField(projectClass, "worksOns"),
+				"property worksOns should not exist on Project");
+		assertNull(findField(employeeClass, "worksOns"),
+				"property worksOns should not exist on Employee");
+
+        FieldDetails projects = findField(employeeClass, "projects");
+		assertNotNull(projects);
+		assertTrue(projects.hasDirectAnnotationUsage(ManyToMany.class));
+		FieldDetails employees = findField(projectClass, "employees");
+		assertNotNull(employees);
+		assertTrue(employees.hasDirectAnnotationUsage(ManyToMany.class));
 	}
 
 	@Test
 	public void testFalsePositive() {
-		Metadata metadata = MetadataDescriptorFactory
-				.createReverseEngineeringDescriptor(null, null)
-				.createMetadata();	    
-        assertNotNull(metadata.getEntityBinding( "NonMiddle" ), "Middle class should be generated.");	
+		List<ClassDetails> entities = ((RevengMetadataDescriptor) MetadataDescriptorFactory
+				.createReverseEngineeringDescriptor(null, null))
+				.getEntityClassDetails();
+        assertNotNull(findEntity(entities, "NonMiddle"), "Middle class should be generated.");
 	}
 
 	@Test
-	public void testBuildMappings() {		
-		Metadata metadata = MetadataDescriptorFactory
-				.createReverseEngineeringDescriptor(null, null)
-				.createMetadata();
-		assertNotNull(metadata);
+	public void testBuildMappings() {
+		List<ClassDetails> entities = ((RevengMetadataDescriptor) MetadataDescriptorFactory
+				.createReverseEngineeringDescriptor(null, null))
+				.getEntityClassDetails();
+		assertNotNull(entities);
+		assertFalse(entities.isEmpty());
 	}
-	
+
 	@Test
 	public void testGenerateAndReadable() {
-		
+
 		MetadataDescriptor metadataDescriptor = MetadataDescriptorFactory
 				.createReverseEngineeringDescriptor(null, null);
 
 		assertNotNull(metadataDescriptor.createMetadata());
-		
+
 		Exporter hme = ExporterFactory.createExporter(ExporterType.HBM);
 		hme.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		hme.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
-		hme.start();		
-		
+		hme.start();
+
 		assertFileAndExists( new File(outputDir, "Employee.hbm.xml") );
 		assertFileAndExists( new File(outputDir, "Project.hbm.xml") );
 		assertFileAndExists( new File(outputDir, "WorksOnContext.hbm.xml") );
-		
+
 		assertFileAndExists( new File(outputDir, "RightTable.hbm.xml") );
 		assertFileAndExists( new File(outputDir, "LeftTable.hbm.xml") );
 		assertFileAndExists( new File(outputDir, "NonMiddle.hbm.xml") ); //Must be there since it has a fkey that is not part of the pk
-		
+
 		assertFalse(new File(outputDir, "WorksOn.hbm.xml").exists() );
-		
+
 		assertEquals(6, Objects.requireNonNull(outputDir.listFiles()).length);
-		
+
 		File[] files = new File[3];
 		files[0] = new File(outputDir, "Employee.hbm.xml");
 		files[1] = new File(outputDir, "Project.hbm.xml");
 		files[2] = new File(outputDir, "WorksOnContext.hbm.xml");
-		
+
 		assertNotNull(MetadataDescriptorFactory
 				.createNativeDescriptor(null, files, null)
 				.createMetadata());
-		
+
 	}
-	
+
 
 	private void assertFileAndExists(File file) {
 		assertTrue(file.exists(), file + " does not exist");
-		assertTrue(file.isFile(), file + " not a file");		
+		assertTrue(file.isFile(), file + " not a file");
 		assertTrue(file.length()>0, file + " does not have any contents");
+	}
+
+	private ClassDetails findEntity(List<ClassDetails> entities, String name) {
+		return entities.stream()
+				.filter(cd -> {
+					String className = cd.getName();
+					// Strip backticks if present
+					if (className.startsWith("`") && className.endsWith("`")) {
+						className = className.substring(1, className.length() - 1);
+					}
+					return className.equals(name) || className.equalsIgnoreCase(name);
+				})
+				.findFirst()
+				.orElse(null);
+	}
+
+	private FieldDetails findField(ClassDetails classDetails, String fieldName) {
+		return classDetails.getFields().stream()
+				.filter(f -> f.getName().equals(fieldName))
+				.findFirst()
+				.orElse(null);
+	}
+
+	private FieldDetails findIdField(ClassDetails classDetails, String fieldName) {
+		return classDetails.getFields().stream()
+				.filter(f -> f.getName().equals(fieldName) && f.hasDirectAnnotationUsage(Id.class))
+				.findFirst()
+				.orElse(null);
 	}
 
 }

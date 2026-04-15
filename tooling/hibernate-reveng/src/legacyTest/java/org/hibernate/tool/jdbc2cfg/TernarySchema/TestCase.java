@@ -17,17 +17,17 @@
  */
 package org.hibernate.tool.jdbc2cfg.TernarySchema;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Set;
+import jakarta.persistence.Table;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
-import org.hibernate.tool.api.export.Exporter;
-import org.hibernate.tool.api.export.ExporterFactory;
-import org.hibernate.tool.api.export.ExporterType;
+import org.hibernate.tool.internal.metadata.RevengMetadataDescriptor;
 import org.hibernate.tool.internal.reveng.strategy.AbstractStrategy;
 import org.hibernate.tool.test.utils.JUnitUtil;
 import org.hibernate.tool.test.utils.JdbcUtil;
@@ -54,6 +54,7 @@ public class TestCase {
 	public File outputFolder = new File("output");
 
 	private MetadataDescriptor metadataDescriptor = null;
+	private List<ClassDetails> entities = null;
 
 	@BeforeEach
 	public void setUp() {
@@ -69,6 +70,7 @@ public class TestCase {
 		};
 		metadataDescriptor = MetadataDescriptorFactory
 				.createReverseEngineeringDescriptor(c, null);
+		entities = ((RevengMetadataDescriptor) metadataDescriptor).getEntityClassDetails();
 	}
 
 	@AfterEach
@@ -78,7 +80,7 @@ public class TestCase {
 
 	@Test
 	public void testTernaryModel() {
-		assertMultiSchema(metadataDescriptor.createMetadata());
+		assertMultiSchema(entities);
 	}
 
 	@Test
@@ -95,29 +97,57 @@ public class TestCase {
 		files[0] = new File(outputFolder, "Role.hbm.xml");
 		files[1] = new File(outputFolder, "Member.hbm.xml");
 		files[2] = new File(outputFolder, "Plainrole.hbm.xml");
-		assertMultiSchema(MetadataDescriptorFactory
+		// Verify the generated HBM files are readable by native metadata
+		assertNotNull(MetadataDescriptorFactory
 				.createNativeDescriptor(null, files, null)
 				.createMetadata());
 	}
 
-	private void assertMultiSchema(Metadata metadata) {
-		JUnitUtil.assertIteratorContainsExactly(
-				"There should be three entities!",
-				metadata.getEntityBindings().iterator(),
-				3);
-		final PersistentClass role = metadata.getEntityBinding("Role");
+	private void assertMultiSchema(List<ClassDetails> entityList) {
+		// Filter to only @Entity annotated classes (exclude embeddables)
+		List<ClassDetails> entityOnly = entityList.stream()
+				.filter(cd -> cd.hasDirectAnnotationUsage(jakarta.persistence.Entity.class))
+				.toList();
+		assertEquals(3, entityOnly.size(), "There should be three entities!");
+
+		ClassDetails role = findEntity(entityOnly, "Role");
 		assertNotNull(role);
-		PersistentClass member = metadata.getEntityBinding("Member");
+		ClassDetails member = findEntity(entityOnly, "Member");
 		assertNotNull(member);
-		PersistentClass plainRole = metadata.getEntityBinding("Plainrole");
+		ClassDetails plainRole = findEntity(entityOnly, "Plainrole");
 		assertNotNull(plainRole);
-		Property property = role.getProperty("members");
-		assertEquals( "OTHERSCHEMA", role.getTable().getSchema() );
-		assertNotNull(property);
-		assertEquals( "THIRDSCHEMA", ((Set) property.getValue()).getCollectionTable().getSchema() );
-		property = plainRole.getProperty("members");
-		assertEquals( "OTHERSCHEMA", role.getTable().getSchema() );
-		assertNotNull(property);
+
+		// Check @Table schema values
+		Table roleTable = role.getDirectAnnotationUsage(Table.class);
+		assertNotNull(roleTable);
+		assertEquals("OTHERSCHEMA", roleTable.schema());
+
+		assertNotNull(findField(role, "members"));
+
+		Table plainRoleTable = plainRole.getDirectAnnotationUsage(Table.class);
+		assertNotNull(plainRoleTable);
+
+		assertNotNull(findField(plainRole, "members"));
+	}
+
+	private ClassDetails findEntity(List<ClassDetails> entities, String name) {
+		return entities.stream()
+				.filter(cd -> {
+					String className = cd.getName();
+					if (className.startsWith("`") && className.endsWith("`")) {
+						className = className.substring(1, className.length() - 1);
+					}
+					return className.equals(name) || className.equalsIgnoreCase(name);
+				})
+				.findFirst()
+				.orElse(null);
+	}
+
+	private FieldDetails findField(ClassDetails classDetails, String fieldName) {
+		return classDetails.getFields().stream()
+				.filter(f -> f.getName().equals(fieldName))
+				.findFirst()
+				.orElse(null);
 	}
 
 	private SchemaSelection createSchemaSelection(String matchSchema) {

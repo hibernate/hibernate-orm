@@ -24,7 +24,6 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -316,7 +315,7 @@ public class TemporalMappingImpl implements TemporalMapping {
 	public void applyPredicate(
 			Supplier<Consumer<Predicate>> predicateCollector,
 			SqlAstCreationState creationState,
-			StandardTableGroup tableGroup,
+			TableGroup tableGroup,
 			NamedTableReference rootTableReference,
 			EntityMappingType entityMappingType) {
 		if ( useTemporalRestriction( creationState ) ) {
@@ -337,23 +336,28 @@ public class TemporalMappingImpl implements TemporalMapping {
 	}
 
 	private static boolean useTemporalRestriction(LoadQueryInfluencers influencers) {
-		return influencers.getSessionFactory().getJdbcServices().getDialect().getTemporalTableSupport()
-				.useTemporalRestriction( influencers );
+		return !influencers.isAllRevisions()
+				&& influencers.getSessionFactory().getJdbcServices().getDialect().getTemporalTableSupport()
+						.useTemporalRestriction( influencers );
 	}
 
 	private boolean useTemporalRestriction(SqlAstCreationState creationState) {
-		return creationState.getCreationContext().getDialect().getTemporalTableSupport()
-				.useTemporalRestriction( creationState.getLoadQueryInfluencers() );
+		final var influencers = creationState.getLoadQueryInfluencers();
+		return !influencers.isAllRevisions()
+				&& creationState.getCreationContext().getDialect().getTemporalTableSupport()
+						.useTemporalRestriction( influencers );
 	}
 
 	@Override
 	public boolean useAuxiliaryTable(LoadQueryInfluencers influencers) {
 		return temporalTableStrategy == TemporalTableStrategy.HISTORY_TABLE
-			&& influencers.getTemporalIdentifier() != null;
+			&& influencers.getTemporalIdentifier() != null
+			&& !influencers.isAllRevisions();
 	}
 
 	@Override
 	public boolean isAffectedByInfluencers(LoadQueryInfluencers influencers) {
-		return influencers.getTemporalIdentifier() != null;
+		return influencers.getTemporalIdentifier() != null
+				&& !influencers.isAllRevisions();
 	}
 }

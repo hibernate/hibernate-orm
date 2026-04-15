@@ -1041,7 +1041,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 		putCollectionEntry( collection, entry );
 		final Object key = collection.getKey();
 		if ( key != null ) {
-			final var collectionKey = new CollectionKey( entry.getLoadedPersister(), key );
+			final var collectionKey = session.generateCollectionKey( entry.getLoadedPersister(), key );
 			final var old = addCollectionByKey( collectionKey, collection );
 			if ( old == null ) {
 				throw new HibernateException( "No collection for replacement found: " + collectionKey.getRole() );
@@ -1058,7 +1058,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	 */
 	private void addCollection(PersistentCollection<?> coll, CollectionEntry entry, Object key) {
 		putCollectionEntry( coll, entry );
-		final var collectionKey = new CollectionKey( entry.getLoadedPersister(), key );
+		final var collectionKey = session.generateCollectionKey( entry.getLoadedPersister(), key );
 		final var old = addCollectionByKey( collectionKey, coll );
 		if ( old != null ) {
 			if ( old == coll ) {

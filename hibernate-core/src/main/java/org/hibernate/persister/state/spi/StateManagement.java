@@ -62,7 +62,7 @@ public interface StateManagement {
 
 	AuxiliaryMapping createAuxiliaryMapping(
 			EntityPersister persister,
-			RootClass rootClass,
+			RootClass bootDescriptor,
 			MappingModelCreationProcess creationProcess);
 
 	AuxiliaryMapping createAuxiliaryMapping(

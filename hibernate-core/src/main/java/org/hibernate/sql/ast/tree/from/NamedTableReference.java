@@ -67,7 +67,7 @@ public class NamedTableReference extends AbstractTableReference {
 				asOfTransactionIdentifier = new TemporalJdbcParameter( temporalMapping.getEndingColumnMapping() );
 			}
 			else if ( mapping instanceof AuditMapping auditMapping ) {
-				asOfTransactionIdentifier = new TemporalJdbcParameter( auditMapping.getTransactionIdMapping() );
+				asOfTransactionIdentifier = new TemporalJdbcParameter( auditMapping.getTransactionIdMapping( getTableExpression() ) );
 			}
 			else {
 				asOfTransactionIdentifier = null;

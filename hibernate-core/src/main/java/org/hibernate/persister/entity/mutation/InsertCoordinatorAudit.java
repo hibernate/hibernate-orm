@@ -8,7 +8,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.state.internal.AuditStateManagement;
+import org.hibernate.audit.ModificationType;
 import org.hibernate.sql.model.MutationOperationGroup;
 
 /**
@@ -36,7 +36,7 @@ public class InsertCoordinatorAudit extends AbstractAuditCoordinator implements 
 			Object[] values,
 			SharedSessionContractImplementor session) {
 		final var generatedValues = currentInsertCoordinator.insert( entity, values, session );
-		insertAuditRow( entity, null, values, AuditStateManagement.ModificationType.ADD, session );
+		enqueueAuditEntry( entity, values, ModificationType.ADD, session );
 		return generatedValues;
 	}
 
@@ -47,7 +47,7 @@ public class InsertCoordinatorAudit extends AbstractAuditCoordinator implements 
 			Object[] values,
 			SharedSessionContractImplementor session) {
 		final var generatedValues = currentInsertCoordinator.insert( entity, id, values, session );
-		insertAuditRow( entity, id, values, AuditStateManagement.ModificationType.ADD, session );
+		enqueueAuditEntry( entity, values, ModificationType.ADD, session );
 		return generatedValues;
 	}
 }

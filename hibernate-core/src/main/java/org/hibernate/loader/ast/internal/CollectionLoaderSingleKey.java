@@ -99,7 +99,7 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 
 	@Override
 	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
-		final var collectionKey = new CollectionKey( attributeMapping.getCollectionDescriptor(), key );
+		final var collectionKey = session.generateCollectionKey( attributeMapping.getCollectionDescriptor(), key );
 
 		final var jdbcParameterBindings = new JdbcParameterBindingsImpl( keyJdbcCount );
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(

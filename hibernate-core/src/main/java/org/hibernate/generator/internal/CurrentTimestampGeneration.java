@@ -318,6 +318,10 @@ public class CurrentTimestampGeneration implements BeforeExecutionGenerator, OnE
 		else if ( clazz == MonthDay.class ) {
 			return () -> MonthDay.now( baseClock == null ? Clock.systemDefaultZone() : baseClock );
 		}
+		else if ( clazz == Long.class || clazz == long.class ) {
+			final var clock = baseClock == null ? Clock.systemDefaultZone() : baseClock;
+			return clock::millis;
+		}
 		// DEPRECATED:
 		else if ( clazz == Date.class ) {
 			final var clock = ClockHelper.forPrecision( baseClock, precision, 3 );

@@ -311,7 +311,7 @@ public abstract class AbstractImmediateCollectionInitializer<Data extends Abstra
 							collectionDescriptor,
 							persistentCollection,
 							collectionKey.getKey(),
-							isReadOnly( rowProcessingState, session )
+							isReadOnly( collectionKey, rowProcessingState, session )
 					);
 
 					if ( !data.shallowCached ) {

@@ -396,10 +396,10 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				if ( cacheHit.isCacheCompatible() ) {
 					return cacheHit;
 				}
-				// Cached data incompatible with the resolved mapping — fall through to re-execute
+				// Cached data incompatible with the resolved mapping, fall through to re-execute
 			}
 			catch (CachedJdbcValuesMetadata.CacheMetadataIncompleteException e) {
-				// Cached metadata doesn't cover all required columns — fall through to re-execute
+				// Cached metadata doesn't cover all required columns, fall through to re-execute
 			}
 		}
 		// Execute query (cache miss or insufficient cached data)

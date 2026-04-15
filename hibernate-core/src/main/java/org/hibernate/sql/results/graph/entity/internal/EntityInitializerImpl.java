@@ -27,6 +27,7 @@ import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.TemporalEntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
@@ -67,6 +68,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.audit.AuditLog.ALL_REVISIONS;
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
@@ -116,6 +118,7 @@ public class EntityInitializerImpl
 	private final @Nullable BasicResultAssembler<?> discriminatorAssembler;
 	private final @Nullable DomainResultAssembler<?> versionAssembler;
 	private final @Nullable DomainResultAssembler<Object> rowIdAssembler;
+	private final @Nullable DomainResultAssembler<?> auditTransactionIdAssembler;
 
 	private final DomainResultAssembler<?>[][] assemblers;
 	private final @Nullable Initializer<?>[] allInitializers;
@@ -143,6 +146,7 @@ public class EntityInitializerImpl
 		protected @Nullable EntityKey entityKey;
 		protected @Nullable Object entityInstanceForNotify;
 		protected @Nullable EntityHolder entityHolder;
+		protected boolean allRevisions;
 
 		public EntityInitializerData(EntityInitializerImpl initializer, RowProcessingState rowProcessingState) {
 			super( rowProcessingState );
@@ -207,6 +211,7 @@ public class EntityInitializerImpl
 			@Nullable Fetch discriminatorFetch,
 			@Nullable DomainResult<?> keyResult,
 			@Nullable DomainResult<Object> rowIdResult,
+			@Nullable DomainResult<?> auditTransactionIdResult,
 			NotFoundAction notFoundAction,
 			boolean affectedByFilter,
 			@Nullable InitializerParent<?> parent,
@@ -265,9 +270,17 @@ public class EntityInitializerImpl
 		final var versionMapping = entityDescriptor.getVersionMapping();
 		if ( versionMapping != null ) {
 			final var versionFetch = resultDescriptor.findFetch( versionMapping );
-			// If there is a version mapping, there must be a fetch for it
-			assert versionFetch != null;
-			versionAssembler = versionFetch.createAssembler( this, creationState );
+			if ( versionFetch != null ) {
+				versionAssembler = versionFetch.createAssembler( this, creationState );
+			}
+			else {
+				// Version fetch is only expected to be null when the version
+				// property is excluded from audit tables
+				assert entityDescriptor.getAuditMapping() != null
+						&& entityDescriptor.isPropertyAuditedExcluded(
+								versionMapping.getVersionAttribute().getStateArrayPosition() );
+				versionAssembler = null;
+			}
 		}
 		else {
 			versionAssembler = null;
@@ -277,6 +290,11 @@ public class EntityInitializerImpl
 				rowIdResult == null
 						? null :
 						rowIdResult.createResultAssembler( this, creationState );
+
+		auditTransactionIdAssembler =
+				auditTransactionIdResult == null
+						? null
+						: auditTransactionIdResult.createResultAssembler( this, creationState );
 
 		final int fetchableCount = entityDescriptor.getNumberOfFetchables();
 		final var subMappingTypes = rootEntityDescriptor.getSubMappingTypes();
@@ -599,6 +617,7 @@ public class EntityInitializerImpl
 			if ( oldEntityKey != null
 					&& previousRowReuse
 					&& oldEntityInstance != null
+					&& !isAllRevisions( data )
 					&& areKeysEqual( oldEntityKey.getIdentifier(), id )
 					&& !oldEntityHolder.isDetached() ) {
 				data.setState( State.INITIALIZED );
@@ -796,7 +815,26 @@ public class EntityInitializerImpl
 							discriminatorAssembler, entityDescriptor );
 			assert concreteDescriptor != null;
 		}
-		data.entityKey = new EntityKey( id, concreteDescriptor );
+		final Object txId = resolveTransactionId( data );
+		data.entityKey = txId != null
+				? new TemporalEntityKey( id, concreteDescriptor, txId )
+				: new EntityKey( id, concreteDescriptor );
+	}
+
+	protected Object resolveTransactionId(EntityInitializerData data) {
+		// For audited entities, include the per-row transaction identifier in the key
+		// so the PC distinguishes the same entity at different points in time
+		final var temporalIdentifier = data.getRowProcessingState().getLoadQueryInfluencers().getTemporalIdentifier();
+		if ( auditTransactionIdAssembler != null ) {
+			return auditTransactionIdAssembler.assemble( data.getRowProcessingState() );
+		}
+		else if ( entityDescriptor.getAuditMapping() != null
+				&& temporalIdentifier != null && temporalIdentifier != ALL_REVISIONS ) {
+			return temporalIdentifier;
+		}
+		else {
+			return null;
+		}
 	}
 
 	protected void setMissing(EntityInitializerData data) {
@@ -1176,6 +1214,15 @@ public class EntityInitializerImpl
 									this
 							);
 
+			if ( isAllRevisions( data ) && data.entityKey.isTemporal() ) {
+				data.allRevisions = true;
+				// Set the per-row temporal identifier so that association loads
+				// (e.g. EntitySelectFetchInitializer) use the correct revision
+				data.getRowProcessingState().getSession()
+						.getLoadQueryInfluencers()
+						.setTemporalIdentifier( data.entityKey.getTransactionId() );
+			}
+
 			if ( useEmbeddedIdentifierInstanceAsEntity( data ) ) {
 				data.setInstance( data.entityInstanceForNotify = rowProcessingState.getEntityId() );
 			}
@@ -1498,7 +1545,7 @@ public class EntityInitializerImpl
 	public void initializeInstance(EntityInitializerData data) {
 		if ( data.getState() == State.RESOLVED ) {
 			if ( !skipInitialization( data ) ) {
-				assert consistentInstance( data );
+				assert data.allRevisions || consistentInstance( data );
 				initializeEntityInstance( data );
 			}
 			else {
@@ -1515,6 +1562,18 @@ public class EntityInitializerImpl
 			}
 			data.setState( State.INITIALIZED );
 		}
+	}
+
+	@Override
+	public void finishUpRow(EntityInitializerData data) {
+		if ( data.allRevisions ) {
+			// Restore ALL_REVISIONS sentinel after all initializers are done with this row
+			data.getRowProcessingState().getSession()
+					.getLoadQueryInfluencers()
+					.setTemporalIdentifier( ALL_REVISIONS );
+			data.allRevisions = false;
+		}
+		super.finishUpRow( data );
 	}
 
 	protected void updateInitializedEntityInstance(EntityInitializerData data) {
@@ -1667,7 +1726,9 @@ public class EntityInitializerImpl
 		if ( data.concreteDescriptor.canWriteToCache()
 				// No need to put into the entity cache if this is coming from the query cache already
 				&& !data.getRowProcessingState().isQueryCacheHit()
-				&& session.getCacheMode().isPutEnabled() ) {
+				&& session.getCacheMode().isPutEnabled()
+				// Don't cache temporal snapshots in the 2LC
+				&& ( data.entityKey == null || !data.entityKey.isTemporal() ) ) {
 			final var cacheAccess = data.concreteDescriptor.getCacheAccessStrategy();
 			if ( cacheAccess != null  ) {
 				putInCache( data, session, persistenceContext, resolvedEntityState, version, cacheAccess );
@@ -1709,6 +1770,10 @@ public class EntityInitializerImpl
 	}
 
 	private boolean isReallyReadOnly(EntityInitializerData data, SharedSessionContractImplementor session) {
+		// Temporal entities (loaded from audit tables) are always read-only snapshots
+		if ( data.entityKey != null && data.entityKey.isTemporal() ) {
+			return true;
+		}
 		if ( !data.concreteDescriptor.isMutable() ) {
 			return true;
 		}
@@ -1984,6 +2049,13 @@ public class EntityInitializerImpl
 				}
 			}
 		}
+	}
+
+	private boolean isAllRevisions(EntityInitializerData data) {
+		// In all-revisions mode, each row represents a distinct historical snapshot of the entity,
+		// so we must not reuse instances from the PersistenceContext.
+		return data.getRowProcessingState().getSession()
+				.getLoadQueryInfluencers().isAllRevisions();
 	}
 
 	private boolean isReadOnly(RowProcessingState rowProcessingState, SharedSessionContractImplementor persistenceContext) {

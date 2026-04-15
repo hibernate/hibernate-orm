@@ -6,13 +6,13 @@ package org.hibernate.persister.collection.mutation;
 
 import java.util.function.UnaryOperator;
 
+import org.hibernate.audit.ModificationType;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.persister.state.internal.AuditStateManagement;
 
 /**
  * Binds collection row values for audit table mutations.
@@ -53,19 +53,78 @@ final class AuditCollectionRowMutationHelper {
 			Object key,
 			Object rowValue,
 			int rowPosition,
-			AuditStateManagement.ModificationType modificationType,
+			ModificationType modificationType,
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings) {
 		if ( key == null ) {
 			throw new IllegalArgumentException( "null key for collection: " + mutationTarget.getRolePath() );
 		}
 
-		attributeMapping.getKeyDescriptor().getKeyPart().decompose(
+		decomposeRowIdentity(
+				collection,
 				key,
-				0,
+				rowValue,
+				rowPosition,
+				session,
 				jdbcValueBindings,
-				null,
-				this::bindSetValue,
+				ParameterUsage.SET
+		);
+
+		if ( !useServerTransactionTimestamps ) {
+			jdbcValueBindings.bindValue(
+					session.getCurrentTransactionIdentifier(),
+					auditTableName,
+					transactionIdMapping.getSelectionExpression(),
+					ParameterUsage.SET
+			);
+		}
+
+		jdbcValueBindings.bindValue(
+				modificationType,
+				auditTableName,
+				modificationTypeMapping.getSelectionExpression(),
+				ParameterUsage.SET
+		);
+	}
+
+	/**
+	 * Bind values for a REVEND UPDATE WHERE clause - same identity columns
+	 * as the INSERT, but with {@link ParameterUsage#RESTRICT}.
+	 */
+	void bindRestrictValues(
+			PersistentCollection<?> collection,
+			Object key,
+			Object rowValue,
+			int rowPosition,
+			SharedSessionContractImplementor session,
+			JdbcValueBindings jdbcValueBindings) {
+		decomposeRowIdentity(
+				collection,
+				key,
+				rowValue,
+				rowPosition,
+				session,
+				jdbcValueBindings,
+				ParameterUsage.RESTRICT
+		);
+	}
+
+	/**
+	 * Decompose the collection row's identity columns (key + identifier/index + element)
+	 * into JDBC value bindings with the given {@link ParameterUsage}.
+	 */
+	private void decomposeRowIdentity(
+			PersistentCollection<?> collection,
+			Object key,
+			Object rowValue,
+			int rowPosition,
+			SharedSessionContractImplementor session,
+			JdbcValueBindings jdbcValueBindings,
+			ParameterUsage parameterUsage) {
+		attributeMapping.getKeyDescriptor().getKeyPart().decompose(
+				key, 0, jdbcValueBindings, null,
+				(valueIndex, bindings, unused, jdbcValue, mapping) ->
+						bindValue( bindings, jdbcValue, mapping, parameterUsage ),
 				session
 		);
 
@@ -73,10 +132,9 @@ final class AuditCollectionRowMutationHelper {
 		if ( identifierDescriptor != null ) {
 			identifierDescriptor.decompose(
 					collection.getIdentifier( rowValue, rowPosition ),
-					0,
-					jdbcValueBindings,
-					null,
-					this::bindSetValue,
+					0, jdbcValueBindings, null,
+					(valueIndex, bindings, unused, jdbcValue, mapping) ->
+							bindValue( bindings, jdbcValue, mapping, parameterUsage ),
 					session
 			);
 		}
@@ -87,22 +145,9 @@ final class AuditCollectionRowMutationHelper {
 						collection.getIndex( rowValue, rowPosition, attributeMapping.getCollectionDescriptor() )
 				);
 				indexDescriptor.decompose(
-						index,
-						0,
-						indexColumnIsSettable,
-						jdbcValueBindings,
-						(valueIndex, settable, bindings, jdbcValue, jdbcValueMapping) -> {
-							if ( settable[valueIndex]
-									&& auditTableName.equals( jdbcValueMapping.getContainingTableExpression() )
-									&& !jdbcValueMapping.isFormula() ) {
-								bindings.bindValue(
-										jdbcValue,
-										auditTableName,
-										jdbcValueMapping.getSelectionExpression(),
-										ParameterUsage.SET
-								);
-							}
-						},
+						index, 0, indexColumnIsSettable, jdbcValueBindings,
+						(valueIndex, settable, bindings, jdbcValue, mapping) ->
+								bindSettableValue( valueIndex, settable, bindings, jdbcValue, mapping, parameterUsage ),
 						session
 				);
 			}
@@ -113,50 +158,31 @@ final class AuditCollectionRowMutationHelper {
 				0,
 				elementColumnIsSettable,
 				jdbcValueBindings,
-				(valueIndex, settable, bindings, jdbcValue, jdbcValueMapping) -> {
-					if ( settable[valueIndex] && !jdbcValueMapping.isFormula() ) {
-						bindings.bindValue(
-								jdbcValue,
-								auditTableName,
-								jdbcValueMapping.getSelectionExpression(),
-								ParameterUsage.SET
-						);
-					}
-				},
+				(valueIndex, settable, bindings, jdbcValue, mapping) ->
+						bindSettableValue( valueIndex, settable, bindings, jdbcValue, mapping, parameterUsage ),
 				session
-		);
-
-		if ( !useServerTransactionTimestamps ) {
-			jdbcValueBindings.bindValue(
-				session.getCurrentTransactionIdentifier(),
-				auditTableName,
-				transactionIdMapping.getSelectionExpression(),
-				ParameterUsage.SET
-			);
-		}
-
-		jdbcValueBindings.bindValue(
-				Integer.valueOf( modificationType.ordinal() ),
-				auditTableName,
-				modificationTypeMapping.getSelectionExpression(),
-				ParameterUsage.SET
 		);
 	}
 
-	private void bindSetValue(
-			int valueIndex,
-			JdbcValueBindings jdbcValueBindings,
-			Object unused,
+	private void bindValue(
+			JdbcValueBindings bindings,
 			Object jdbcValue,
-			SelectableMapping selectableMapping) {
-		if ( selectableMapping.isFormula() ) {
-			return;
+			SelectableMapping mapping,
+			ParameterUsage parameterUsage) {
+		if ( !mapping.isFormula() ) {
+			bindings.bindValue( jdbcValue, auditTableName, mapping.getSelectionExpression(), parameterUsage );
 		}
-		jdbcValueBindings.bindValue(
-				jdbcValue,
-				auditTableName,
-				selectableMapping.getSelectionExpression(),
-				ParameterUsage.SET
-		);
+	}
+
+	private void bindSettableValue(
+			int valueIndex,
+			boolean[] settable,
+			JdbcValueBindings bindings,
+			Object jdbcValue,
+			SelectableMapping mapping,
+			ParameterUsage parameterUsage) {
+		if ( settable[valueIndex] && !mapping.isFormula() ) {
+			bindings.bindValue( jdbcValue, auditTableName, mapping.getSelectionExpression(), parameterUsage );
+		}
 	}
 }

@@ -13,6 +13,8 @@ import jakarta.persistence.criteria.CriteriaUpdate;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityNameResolver;
+import org.hibernate.audit.AuditLog;
+import org.hibernate.audit.spi.AuditWorkQueue;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -40,6 +42,7 @@ import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.TemporalEntityKey;
 import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionEventListenerManager;
@@ -49,6 +52,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
@@ -640,7 +644,6 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public void afterTransactionBegin() {
-		initializeCurrentTransactionIdentifier();
 	}
 
 	protected void initializeCurrentTransactionIdentifier() {
@@ -851,9 +854,25 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		}
 	}
 
+	private AuditWorkQueue auditWorkQueue;
+
+	@Override
+	public AuditWorkQueue getAuditWorkQueue() {
+		if ( auditWorkQueue == null ) {
+			auditWorkQueue = new AuditWorkQueue();
+		}
+		return auditWorkQueue;
+	}
+
 	@Override
 	public EntityKey generateEntityKey(Object id, EntityPersister persister) {
-		return new EntityKey( id, persister );
+		final Object temporalId = getLoadQueryInfluencers().getTemporalIdentifier();
+		// Include the temporal identifier as a revision in the key when it's a
+		// real value (not null, not ALL_REVISIONS sentinel), so that the PC can
+		// distinguish the same entity at different points in time.
+		return temporalId != null && temporalId != AuditLog.ALL_REVISIONS
+				? new TemporalEntityKey( id, persister, temporalId )
+				: new EntityKey( id, persister );
 	}
 
 	@Override

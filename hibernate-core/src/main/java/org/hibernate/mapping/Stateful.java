@@ -21,25 +21,17 @@ import org.hibernate.persister.state.internal.StandardStateManagement;
  *
  * @since 7.4
  */
-public interface Stateful {
+public interface Stateful extends AuxiliaryTableHolder {
 
 	void setStateManagementType(Class<? extends StateManagement> stateManagementType);
 
 	Class<? extends StateManagement> getStateManagementType();
-
-	Table getAuxiliaryTable();
-
-	void setAuxiliaryTable(Table auxiliaryTable);
 
 	Table getMainTable();
 
 	boolean isMainTablePartitioned();
 
 	void setMainTablePartitioned(boolean partitioned);
-
-	Column getAuxiliaryColumn(String column);
-
-	void addAuxiliaryColumn(String name, Column column);
 
 	boolean isAuxiliaryColumnInPrimaryKey();
 

@@ -8,6 +8,7 @@ import org.hibernate.Incubating;
 import org.hibernate.cfg.StateManagementSettings;
 
 import java.lang.annotation.Documented;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -54,9 +55,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * the {@linkplain java.time.Instant#now() current JVM instant} is
  * used as the transaction identifier, but relying on this default
  * behavior is not recommended.
+ * <p>
+ * Use the nested {@link Table @Audited.Table} annotation to
+ * customize the audit log's table name, schema, catalog, or
+ * column names for the audit log.
  *
  * @author Gavin King
- *
  * @since 7.4
  */
 @Documented
@@ -64,25 +68,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 @Incubating
 public @interface Audited {
-	/**
-	 * The name of the audit log table. Defaults to the
-	 * name of the main table holding currently effective
-	 * data, with the suffix {@code _aud}.
-	 */
-	String tableName() default "";
-
-	/**
-	 * The name of the column holding the transaction identifier.
-	 * @see org.hibernate.engine.spi.SharedSessionContractImplementor#getCurrentTransactionIdentifier()
-	 */
-	String transactionId() default "REV";
-
-	/**
-	 * The name of the column holding the modification type,
-	 * encoded as 0 for creation, 1 for modification, and 2
-	 * for deletion
-	 */
-	String modificationType() default "REVTYPE";
 
 	/**
 	 * Excludes the annotated attribute from auditing.
@@ -95,5 +80,154 @@ public @interface Audited {
 	@Target({FIELD, METHOD})
 	@Retention(RUNTIME)
 	@interface Excluded {
+	}
+
+	/**
+	 * Specifies the audit log's table mapping for an audited
+	 * entity. Placed on the entity class alongside
+	 * {@link Audited @Audited} to customize the audit table
+	 * name, schema, catalog, and column names.
+	 * <p>
+	 * This annotation may also be placed on a subclass entity
+	 * in a JOINED or TABLE_PER_CLASS hierarchy to override
+	 * the audit table name, schema, or catalog for that
+	 * subclass. The subclass inherits auditing from the root
+	 * entity; the annotation on the subclass only customizes
+	 * table mapping.
+	 *
+	 * @since 7.4
+	 */
+	@Documented
+	@Target({TYPE, PACKAGE, ANNOTATION_TYPE})
+	@Retention(RUNTIME)
+	@interface Table {
+		String DEFAULT_TRANSACTION_ID = "REV";
+		String DEFAULT_MODIFICATION_TYPE = "REVTYPE";
+		String DEFAULT_TRANSACTION_END = "REVEND";
+
+		/**
+		 * The name of the audit log table. Defaults to the
+		 * name of the main table with the suffix {@code _AUD}.
+		 */
+		String name() default "";
+
+		/**
+		 * The schema of the audit log table. Defaults to the
+		 * schema of the main table.
+		 */
+		String schema() default "";
+
+		/**
+		 * The catalog of the audit log table. Defaults to the
+		 * catalog of the main table.
+		 */
+		String catalog() default "";
+
+		/**
+		 * The name of the column holding the transaction identifier.
+		 *
+		 * @see org.hibernate.engine.spi.SharedSessionContractImplementor#getCurrentTransactionIdentifier()
+		 */
+		String transactionIdColumn() default DEFAULT_TRANSACTION_ID;
+
+		/**
+		 * The name of the column holding the modification type,
+		 * encoded as 0 for creation, 1 for modification, and 2
+		 * for deletion.
+		 *
+		 * @see org.hibernate.audit.ModificationType
+		 */
+		String modificationTypeColumn() default DEFAULT_MODIFICATION_TYPE;
+
+		/**
+		 * The name of the column holding the end transaction
+		 * identifier, used only when the
+		 * {@linkplain StateManagementSettings#AUDIT_STRATEGY
+		 * audit strategy} is set to {@code "validity"}. When a
+		 * new audit row is written, the previous row's end
+		 * transaction id column is updated with the current
+		 * transaction identifier, marking it as superseded.
+		 * A {@code null} value indicates the row is current
+		 * (not yet superseded).
+		 */
+		String transactionEndIdColumn() default DEFAULT_TRANSACTION_END;
+
+		/**
+		 * The name of the column holding the timestamp of the
+		 * end transaction. Only used when the
+		 * {@linkplain StateManagementSettings#AUDIT_STRATEGY
+		 * audit strategy} is set to {@code "validity"} and this
+		 * attribute is set to a non-empty value. Stores the
+		 * timestamp of when the audit row was superseded.
+		 */
+		String transactionEndTimestampColumn() default "";
+	}
+
+	/**
+	 * Specifies a custom audit table name for a
+	 * {@link jakarta.persistence.SecondaryTable @SecondaryTable}.
+	 * Placed on the entity class alongside
+	 * {@link Audited @Audited}.
+	 *
+	 * @since 7.4
+	 */
+	@Documented
+	@Target(TYPE)
+	@Retention(RUNTIME)
+	@Repeatable(SecondaryTables.class)
+	@interface SecondaryTable {
+		/**
+		 * The name of the secondary table being overridden.
+		 */
+		String secondaryTableName();
+
+		/**
+		 * The custom audit table name for this secondary table.
+		 */
+		String secondaryAuditTableName();
+	}
+
+	/**
+	 * Container for repeatable {@link SecondaryTable} annotations.
+	 *
+	 * @see SecondaryTable
+	 * @since 7.4
+	 */
+	@Documented
+	@Target(TYPE)
+	@Retention(RUNTIME)
+	@interface SecondaryTables {
+		SecondaryTable[] value();
+	}
+
+	/**
+	 * Specifies a custom audit table name (and optionally schema
+	 * and catalog) for an audited collection.
+	 * Placed on the collection field or property.
+	 *
+	 * @since 7.4
+	 */
+	@Documented
+	@Retention(RUNTIME)
+	@Target({FIELD, METHOD})
+	@interface CollectionTable {
+		/**
+		 * The name of the collection audit table.
+		 */
+		String name();
+
+		/**
+		 * The schema of the collection audit table.
+		 * Defaults to the schema of the owning entity's
+		 * audit table.
+		 */
+		String schema() default "";
+
+		/**
+		 * The catalog of the collection audit table.
+		 * Defaults to the catalog of the owning entity's
+		 * audit table.
+		 */
+		String catalog() default "";
 	}
 }

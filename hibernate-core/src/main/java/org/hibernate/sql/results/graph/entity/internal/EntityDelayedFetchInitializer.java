@@ -195,7 +195,7 @@ public class EntityDelayedFetchInitializer
 		final var persistenceContext = session.getPersistenceContextInternal();
 
 		final var ek = entityKey == null ?
-				new EntityKey( data.entityIdentifier, concreteDescriptor ) :
+				session.generateEntityKey( data.entityIdentifier, concreteDescriptor ) :
 				entityKey;
 		final var holder = persistenceContext.getEntityHolder( ek );
 		if ( holder != null && holder.getEntity() != null ) {
@@ -326,7 +326,7 @@ public class EntityDelayedFetchInitializer
 			final var entityDescriptor = getEntityDescriptor();
 			data.entityIdentifier = entityDescriptor.getIdentifier( instance, session );
 
-			final var entityKey = new EntityKey( data.entityIdentifier, entityDescriptor );
+			final var entityKey = session.generateEntityKey( data.entityIdentifier, entityDescriptor );
 			final var entityHolder = session.getPersistenceContextInternal().getEntityHolder(
 					entityKey
 			);

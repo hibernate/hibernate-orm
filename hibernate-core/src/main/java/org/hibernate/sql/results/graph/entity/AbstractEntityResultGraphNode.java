@@ -18,6 +18,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -31,6 +32,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 	private @Nullable Fetch identifierFetch;
 	private BasicFetch<?> discriminatorFetch;
 	private DomainResult<Object> rowIdResult;
+	private @Nullable DomainResult<?> auditTransactionIdResult;
 	private final EntityValuedModelPart fetchContainer;
 
 	public AbstractEntityResultGraphNode(EntityValuedModelPart referencedModelPart, NavigablePath navigablePath) {
@@ -50,6 +52,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		discriminatorFetch = creationState.visitDiscriminatorFetch( entityResultGraphNode );
 
 		rowIdResult = rowIdResult( creationState, navigablePath, entityTableGroup );
+		auditTransactionIdResult = auditTransactionIdResult( creationState, entityTableGroup );
 
 		super.afterInitialize( fetchParent, creationState );
 	}
@@ -89,6 +92,38 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		}
 	}
 
+	private @Nullable DomainResult<?> auditTransactionIdResult(
+			DomainResultCreationState creationState,
+			TableGroup entityTableGroup) {
+		final var entityMappingType = getEntityValuedModelPart().getEntityMappingType();
+		final var auditMapping = entityMappingType.getAuditMapping();
+		if ( auditMapping == null ) {
+			return null;
+		}
+		final var influencers = creationState.getSqlAstCreationState().getLoadQueryInfluencers();
+		if ( !auditMapping.useAuxiliaryTable( influencers ) ) {
+			return null;
+		}
+		final String originalTable = entityMappingType.getMappedTableDetails().getTableName();
+		final var transactionIdMapping = auditMapping.getTransactionIdMapping( originalTable );
+		final var sqlAstCreationState = creationState.getSqlAstCreationState();
+		final var expressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final var tableReference = entityTableGroup.resolveTableReference(
+				auditMapping.resolveTableName( originalTable ) );
+		final var expression = expressionResolver.resolveSqlExpression( tableReference, transactionIdMapping );
+		final var sqlSelection = expressionResolver.resolveSqlSelection(
+				expression,
+				transactionIdMapping.getJdbcMapping().getJdbcJavaType(),
+				null,
+				sqlAstCreationState.getCreationContext().getTypeConfiguration()
+		);
+		return new BasicResult<>(
+				sqlSelection.getValuesArrayPosition(),
+				"audit_txn_id",
+				transactionIdMapping.getJdbcMapping()
+		);
+	}
+
 	@Override
 	public EntityMappingType getReferencedMappingContainer() {
 		return getEntityValuedModelPart().getEntityMappingType();
@@ -119,6 +154,10 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 
 	public DomainResult<Object> getRowIdResult() {
 		return rowIdResult;
+	}
+
+	public @Nullable DomainResult<?> getAuditTransactionIdResult() {
+		return auditTransactionIdResult;
 	}
 
 	@Override

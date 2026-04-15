@@ -117,7 +117,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			initialize( data );
 		}
 		else {
-			data.entityKey = new EntityKey( data.entityIdentifier, concreteDescriptor );
+			data.entityKey = data.getRowProcessingState().getSession().generateEntityKey( data.entityIdentifier, concreteDescriptor );
 			data.setInstance( getExistingInitializedInstance( data ) );
 			if ( data.getInstance() == null ) {
 				// need to add the key to the batch queue only when the entity has not been already loaded or
@@ -182,7 +182,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 			data.setInstance( lazyInitializer.getImplementation() );
 		}
 
-		data.entityKey = new EntityKey( data.entityIdentifier, concreteDescriptor );
+		data.entityKey = data.getRowProcessingState().getSession().generateEntityKey( data.entityIdentifier, concreteDescriptor );
 		final var entityHolder = persistenceContext.getEntityHolder(
 				data.entityKey
 		);
@@ -279,7 +279,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer<Data extends Abs
 		else {
 			final var lazyInitializer = extractLazyInitializer( instance );
 			if ( lazyInitializer != null && lazyInitializer.isUninitialized() ) {
-				data.entityKey = new EntityKey( lazyInitializer.getInternalIdentifier(), concreteDescriptor );
+				data.entityKey = data.getRowProcessingState().getSession().generateEntityKey( lazyInitializer.getInternalIdentifier(), concreteDescriptor );
 				registerToBatchFetchQueue( data );
 			}
 			data.setState( State.INITIALIZED );

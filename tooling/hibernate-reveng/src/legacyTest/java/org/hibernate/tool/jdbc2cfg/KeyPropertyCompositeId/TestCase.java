@@ -30,7 +30,6 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.export.hbm.HbmExporter;
 import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JavaUtil;
@@ -167,7 +166,7 @@ public class TestCase {
 
 	@Test
 	public void testGeneration() throws Exception {
-		Exporter exporter = new HbmExporter();
+		Exporter exporter = ExporterFactory.createExporter(ExporterType.HBM);
 		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
 		Exporter javaExp = ExporterFactory.createExporter(ExporterType.JAVA);

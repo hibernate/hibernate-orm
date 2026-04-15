@@ -17,19 +17,26 @@ package org.hibernate.tool.internal.reveng.models.metadata;
 
 import jakarta.persistence.FetchType;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Represents metadata for a database foreign key relationship.
+ * Supports both single-column and multi-column (composite) foreign keys.
  *
  * @author Koen Aers
  */
 public class ForeignKeyMetadata {
 	private final String fieldName;
-	private final String foreignKeyColumnName;
-	private String referencedColumnName;
+	private final List<JoinColumnPair> joinColumns = new ArrayList<>();
 	private final String targetEntityClassName;
 	private final String targetEntityPackage;
 	private FetchType fetchType;
 	private boolean optional;
+	private boolean partOfCompositeKey;
+
+	public record JoinColumnPair(String fkColumnName, String referencedColumnName) {}
 
 	public ForeignKeyMetadata(
 			String fieldName,
@@ -37,14 +44,32 @@ public class ForeignKeyMetadata {
 			String targetEntityClassName,
 			String targetEntityPackage) {
 		this.fieldName = fieldName;
-		this.foreignKeyColumnName = foreignKeyColumnName;
+		this.joinColumns.add(new JoinColumnPair(foreignKeyColumnName, null));
 		this.targetEntityClassName = targetEntityClassName;
 		this.targetEntityPackage = targetEntityPackage;
 		this.optional = true;
 	}
 
+	public ForeignKeyMetadata(
+			String fieldName,
+			String targetEntityClassName,
+			String targetEntityPackage) {
+		this.fieldName = fieldName;
+		this.targetEntityClassName = targetEntityClassName;
+		this.targetEntityPackage = targetEntityPackage;
+		this.optional = true;
+	}
+
+	public ForeignKeyMetadata addJoinColumn(String fkColumnName, String referencedColumnName) {
+		this.joinColumns.add(new JoinColumnPair(fkColumnName, referencedColumnName));
+		return this;
+	}
+
 	public ForeignKeyMetadata referencedColumnName(String referencedColumnName) {
-		this.referencedColumnName = referencedColumnName;
+		if (!joinColumns.isEmpty()) {
+			JoinColumnPair first = joinColumns.get(0);
+			joinColumns.set(0, new JoinColumnPair(first.fkColumnName(), referencedColumnName));
+		}
 		return this;
 	}
 
@@ -58,12 +83,32 @@ public class ForeignKeyMetadata {
 		return this;
 	}
 
+	public ForeignKeyMetadata partOfCompositeKey(boolean partOfCompositeKey) {
+		this.partOfCompositeKey = partOfCompositeKey;
+		return this;
+	}
+
 	// Getters
 	public String getFieldName() { return fieldName; }
-	public String getForeignKeyColumnName() { return foreignKeyColumnName; }
-	public String getReferencedColumnName() { return referencedColumnName; }
+	/** Returns the first FK column name (backward compatible). */
+	public String getForeignKeyColumnName() {
+		return joinColumns.isEmpty() ? null : joinColumns.get(0).fkColumnName();
+	}
+	/** Returns the first referenced column name (backward compatible). */
+	public String getReferencedColumnName() {
+		return joinColumns.isEmpty() ? null : joinColumns.get(0).referencedColumnName();
+	}
+	/** Returns all join column pairs. */
+	public List<JoinColumnPair> getJoinColumns() {
+		return Collections.unmodifiableList(joinColumns);
+	}
+	/** Returns all FK column names. */
+	public List<String> getForeignKeyColumnNames() {
+		return joinColumns.stream().map(JoinColumnPair::fkColumnName).toList();
+	}
 	public String getTargetEntityClassName() { return targetEntityClassName; }
 	public String getTargetEntityPackage() { return targetEntityPackage; }
 	public FetchType getFetchType() { return fetchType; }
 	public boolean isOptional() { return optional; }
+	public boolean isPartOfCompositeKey() { return partOfCompositeKey; }
 }

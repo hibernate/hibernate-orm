@@ -17,6 +17,7 @@ package org.hibernate.tool.internal.reveng.models.builder.db;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.JoinColumnsJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ManyToOneJpaAnnotation;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
@@ -26,6 +27,8 @@ import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
+
+import java.util.List;
 
 /**
  * Builds a {@code @ManyToOne} field on a dynamic class and attaches
@@ -91,13 +94,43 @@ public class ManyToOneFieldBuilder {
 			MutableAnnotationTarget field,
 			ForeignKeyMetadata fkMetadata,
 			ModelsContext modelsContext) {
-		JoinColumnJpaAnnotation joinColumnAnnotation =
-			JpaAnnotations.JOIN_COLUMN.createUsage(modelsContext);
-		joinColumnAnnotation.name(fkMetadata.getForeignKeyColumnName());
-		if (fkMetadata.getReferencedColumnName() != null) {
-			joinColumnAnnotation.referencedColumnName(fkMetadata.getReferencedColumnName());
+		List<ForeignKeyMetadata.JoinColumnPair> joinColumns = fkMetadata.getJoinColumns();
+		boolean readOnly = fkMetadata.isPartOfCompositeKey();
+		if (joinColumns.size() == 1) {
+			ForeignKeyMetadata.JoinColumnPair jc = joinColumns.get(0);
+			JoinColumnJpaAnnotation joinColumnAnnotation =
+				JpaAnnotations.JOIN_COLUMN.createUsage(modelsContext);
+			joinColumnAnnotation.name(jc.fkColumnName());
+			if (jc.referencedColumnName() != null) {
+				joinColumnAnnotation.referencedColumnName(jc.referencedColumnName());
+			}
+			joinColumnAnnotation.nullable(fkMetadata.isOptional());
+			if (readOnly) {
+				joinColumnAnnotation.insertable(false);
+				joinColumnAnnotation.updatable(false);
+			}
+			field.addAnnotationUsage(joinColumnAnnotation);
+		} else {
+			jakarta.persistence.JoinColumn[] jcArray =
+				new jakarta.persistence.JoinColumn[joinColumns.size()];
+			for (int i = 0; i < joinColumns.size(); i++) {
+				ForeignKeyMetadata.JoinColumnPair jc = joinColumns.get(i);
+				JoinColumnJpaAnnotation joinColumnAnnotation =
+					JpaAnnotations.JOIN_COLUMN.createUsage(modelsContext);
+				joinColumnAnnotation.name(jc.fkColumnName());
+				if (jc.referencedColumnName() != null) {
+					joinColumnAnnotation.referencedColumnName(jc.referencedColumnName());
+				}
+				if (readOnly) {
+					joinColumnAnnotation.insertable(false);
+					joinColumnAnnotation.updatable(false);
+				}
+				jcArray[i] = joinColumnAnnotation;
+			}
+			JoinColumnsJpaAnnotation joinColumnsAnnotation =
+				JpaAnnotations.JOIN_COLUMNS.createUsage(modelsContext);
+			joinColumnsAnnotation.value(jcArray);
+			field.addAnnotationUsage(joinColumnsAnnotation);
 		}
-		joinColumnAnnotation.nullable(fkMetadata.isOptional());
-		field.addAnnotationUsage(joinColumnAnnotation);
 	}
 }

@@ -112,6 +112,7 @@ public class HbmCollectionBuilder {
 			return;
 		}
 		applyAccessAnnotation(field, set.getAccess(), ctx);
+		applyInverse(field, set.isInverse(), entityClass, ctx);
 		applyCommonMetadata(field, set.getCascade(), set.getFetch(),
 				set.getLazy(), set.getWhere(), set.getBatchSize(),
 				set.getCache(), set.getFilter(),
@@ -164,6 +165,7 @@ public class HbmCollectionBuilder {
 			return;
 		}
 		applyAccessAnnotation(field, bag.getAccess(), ctx);
+		applyInverse(field, bag.isInverse(), entityClass, ctx);
 		applyCommonMetadata(field, bag.getCascade(), bag.getFetch(),
 				bag.getLazy(), bag.getWhere(), bag.getBatchSize(),
 				bag.getCache(), bag.getFilter(),
@@ -186,6 +188,7 @@ public class HbmCollectionBuilder {
 			return;
 		}
 		applyAccessAnnotation(field, map.getAccess(), ctx);
+		applyInverse(field, map.isInverse(), entityClass, ctx);
 		applyCommonMetadata(field, map.getCascade(), map.getFetch(),
 				map.getLazy(), map.getWhere(), map.getBatchSize(),
 				map.getCache(), map.getFilter(),
@@ -396,7 +399,10 @@ public class HbmCollectionBuilder {
 			String defaultPackage,
 			HbmBuildContext ctx) {
 		String targetClassName = manyToMany.getClazz();
-		if (targetClassName == null) {
+		if (targetClassName == null || targetClassName.isEmpty()) {
+			targetClassName = manyToMany.getEntityName();
+		}
+		if (targetClassName == null || targetClassName.isEmpty()) {
 			return null;
 		}
 		String fullTargetName = HbmBuildContext.resolveClassName(targetClassName, defaultPackage);
@@ -543,7 +549,10 @@ public class HbmCollectionBuilder {
 			String defaultPackage,
 			HbmBuildContext ctx) {
 		String targetClassName = manyToMany.getClazz();
-		if (targetClassName == null) {
+		if (targetClassName == null || targetClassName.isEmpty()) {
+			targetClassName = manyToMany.getEntityName();
+		}
+		if (targetClassName == null || targetClassName.isEmpty()) {
 			return null;
 		}
 		String fullTargetName = HbmBuildContext.resolveClassName(targetClassName, defaultPackage);
@@ -575,23 +584,59 @@ public class HbmCollectionBuilder {
 
 		// Join columns from <key>
 		String keyColumn = key.getColumnAttribute();
-		if (keyColumn == null && key.getColumn() != null && !key.getColumn().isEmpty()) {
-			keyColumn = key.getColumn().get(0).getName();
-		}
 		if (keyColumn != null && !keyColumn.isEmpty()) {
 			JoinColumnJpaAnnotation jc =
 					JpaAnnotations.JOIN_COLUMN.createUsage(ctx.getModelsContext());
 			jc.name(keyColumn);
 			jtAnnotation.joinColumns(new jakarta.persistence.JoinColumn[]{jc});
+		} else if (key.getColumn() != null && !key.getColumn().isEmpty()) {
+			List<JaxbHbmColumnType> keyCols = key.getColumn();
+			jakarta.persistence.JoinColumn[] jcArray =
+					new jakarta.persistence.JoinColumn[keyCols.size()];
+			for (int i = 0; i < keyCols.size(); i++) {
+				JoinColumnJpaAnnotation jc =
+						JpaAnnotations.JOIN_COLUMN.createUsage(ctx.getModelsContext());
+				jc.name(keyCols.get(i).getName());
+				jcArray[i] = jc;
+			}
+			jtAnnotation.joinColumns(jcArray);
 		}
 
-		// Inverse join columns from <many-to-many column="...">
+		// Inverse join columns from <many-to-many column="..."> or <many-to-many><column>/<formula>
 		String m2mColumn = manyToMany.getColumnAttribute();
 		if (m2mColumn != null && !m2mColumn.isEmpty()) {
 			JoinColumnJpaAnnotation ijc =
 					JpaAnnotations.JOIN_COLUMN.createUsage(ctx.getModelsContext());
 			ijc.name(m2mColumn);
 			jtAnnotation.inverseJoinColumns(new jakarta.persistence.JoinColumn[]{ijc});
+		} else {
+			// Process nested <column> and <formula> elements
+			List<JaxbHbmColumnType> columns = new ArrayList<>();
+			List<String> formulas = new ArrayList<>();
+			for (Object item : manyToMany.getColumnOrFormula()) {
+				if (item instanceof JaxbHbmColumnType col) {
+					columns.add(col);
+				} else if (item instanceof String formula) {
+					formulas.add(formula);
+				}
+			}
+			if (!columns.isEmpty()) {
+				jakarta.persistence.JoinColumn[] ijcArray =
+						new jakarta.persistence.JoinColumn[columns.size()];
+				for (int i = 0; i < columns.size(); i++) {
+					JoinColumnJpaAnnotation ijc =
+							JpaAnnotations.JOIN_COLUMN.createUsage(ctx.getModelsContext());
+					ijc.name(columns.get(i).getName());
+					ijcArray[i] = ijc;
+				}
+				jtAnnotation.inverseJoinColumns(ijcArray);
+			}
+			// Store formulas as field meta attributes for HBM round-trip
+			DynamicClassDetails owner = (DynamicClassDetails) field.getDeclaringType();
+			for (String formula : formulas) {
+				ctx.addFieldMetaAttribute(owner.getClassName(), field.getName(),
+						"hibernate.formula", formula);
+			}
 		}
 
 		field.addAnnotationUsage(jtAnnotation);
@@ -756,16 +801,23 @@ public class HbmCollectionBuilder {
 		applyCascade(field, cascade, ctx);
 
 		// lazy → FetchType on @OneToMany / @ManyToMany / @ElementCollection
-		if (lazy != null && lazy == JaxbHbmLazyWithExtraEnum.FALSE) {
-			ManyToManyJpaAnnotation m2m = (ManyToManyJpaAnnotation)
-					field.getDirectAnnotationUsage(jakarta.persistence.ManyToMany.class);
-			if (m2m != null) {
-				m2m.fetch(jakarta.persistence.FetchType.EAGER);
-			}
-			OneToManyJpaAnnotation o2m = (OneToManyJpaAnnotation)
-					field.getDirectAnnotationUsage(jakarta.persistence.OneToMany.class);
-			if (o2m != null) {
-				o2m.fetch(jakarta.persistence.FetchType.EAGER);
+		if (lazy != null) {
+			if (lazy == JaxbHbmLazyWithExtraEnum.FALSE) {
+				ManyToManyJpaAnnotation m2m = (ManyToManyJpaAnnotation)
+						field.getDirectAnnotationUsage(jakarta.persistence.ManyToMany.class);
+				if (m2m != null) {
+					m2m.fetch(jakarta.persistence.FetchType.EAGER);
+				}
+				OneToManyJpaAnnotation o2m = (OneToManyJpaAnnotation)
+						field.getDirectAnnotationUsage(jakarta.persistence.OneToMany.class);
+				if (o2m != null) {
+					o2m.fetch(jakarta.persistence.FetchType.EAGER);
+				}
+			} else if (lazy == JaxbHbmLazyWithExtraEnum.EXTRA) {
+				// Store lazy="extra" as meta attribute for HBM round-trip
+				DynamicClassDetails owner = (DynamicClassDetails) field.getDeclaringType();
+				ctx.addFieldMetaAttribute(owner.getClassName(), field.getName(),
+						"hibernate.lazy", "extra");
 			}
 		}
 
@@ -881,16 +933,31 @@ public class HbmCollectionBuilder {
 
 		// @JoinTable (collection table)
 		if (table != null && !table.isEmpty()) {
-			JoinTableJpaAnnotation jtAnnotation =
-					JpaAnnotations.JOIN_TABLE.createUsage(mc);
-			jtAnnotation.name(table);
+			// Check if a @JoinTable already exists (e.g., from many-to-many with join columns)
+			JoinTableJpaAnnotation jtAnnotation = (JoinTableJpaAnnotation)
+					field.getDirectAnnotationUsage(jakarta.persistence.JoinTable.class);
+			if (jtAnnotation != null) {
+				jtAnnotation.name(table);
+			} else {
+				jtAnnotation = JpaAnnotations.JOIN_TABLE.createUsage(mc);
+				jtAnnotation.name(table);
+				field.addAnnotationUsage(jtAnnotation);
+			}
 			if (schema != null && !schema.isEmpty()) {
 				jtAnnotation.schema(schema);
 			}
 			if (catalog != null && !catalog.isEmpty()) {
 				jtAnnotation.catalog(catalog);
 			}
-			field.addAnnotationUsage(jtAnnotation);
+		}
+	}
+
+	private static void applyInverse(DynamicFieldDetails field, boolean inverse,
+									  DynamicClassDetails entityClass,
+									  HbmBuildContext ctx) {
+		if (inverse) {
+			ctx.addFieldMetaAttribute(entityClass.getClassName(), field.getName(),
+					"hibernate.inverse", "true");
 		}
 	}
 

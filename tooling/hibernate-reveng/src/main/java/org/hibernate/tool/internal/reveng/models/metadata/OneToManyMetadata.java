@@ -18,6 +18,10 @@ package org.hibernate.tool.internal.reveng.models.metadata;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Represents metadata for a OneToMany (inverse) relationship.
  *
@@ -28,6 +32,7 @@ public class OneToManyMetadata {
 	private final String mappedBy;
 	private final String elementEntityClassName;
 	private final String elementEntityPackage;
+	private final List<String> fkColumnNames = new ArrayList<>();
 	private FetchType fetchType;
 	private CascadeType[] cascadeTypes;
 	private boolean orphanRemoval;
@@ -58,11 +63,17 @@ public class OneToManyMetadata {
 		return this;
 	}
 
+	public OneToManyMetadata fkColumnNames(List<String> columnNames) {
+		this.fkColumnNames.addAll(columnNames);
+		return this;
+	}
+
 	// Getters
 	public String getFieldName() { return fieldName; }
 	public String getMappedBy() { return mappedBy; }
 	public String getElementEntityClassName() { return elementEntityClassName; }
 	public String getElementEntityPackage() { return elementEntityPackage; }
+	public List<String> getFkColumnNames() { return Collections.unmodifiableList(fkColumnNames); }
 	public FetchType getFetchType() { return fetchType; }
 	public CascadeType[] getCascadeTypes() { return cascadeTypes; }
 	public boolean isOrphanRemoval() { return orphanRemoval; }

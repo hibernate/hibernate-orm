@@ -86,7 +86,7 @@ public class TableMetadata {
 
 	public boolean isForeignKeyColumn(String columnName) {
 		return foreignKeys.stream()
-			.anyMatch(fk -> fk.getForeignKeyColumnName().equals(columnName))
+			.anyMatch(fk -> fk.getForeignKeyColumnNames().contains(columnName))
 			|| oneToOnes.stream()
 			.anyMatch(o2o -> o2o.getForeignKeyColumnNames().contains(columnName));
 	}

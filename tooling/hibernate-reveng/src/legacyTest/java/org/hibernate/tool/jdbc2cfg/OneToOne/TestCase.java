@@ -33,7 +33,6 @@ import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
-import org.hibernate.tool.internal.export.hbm.HbmExporter;
 import org.hibernate.tool.internal.metadata.NativeMetadataDescriptor;
 import org.hibernate.tool.internal.reveng.util.EnhancedValue;
 import org.hibernate.tool.test.utils.HibernateUtil;
@@ -143,7 +142,7 @@ public class TestCase {
 
 	@Test
 	public void testGenerateMappingAndReadable() throws MalformedURLException {
-		HbmExporter hme = new HbmExporter();
+		Exporter hme = ExporterFactory.createExporter(ExporterType.HBM);
 		hme.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		hme.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
 		hme.start();		
@@ -181,7 +180,7 @@ public class TestCase {
 	        new SchemaValidator().validate(
 	        		MetadataDescriptorFactory
 	        			.createNativeDescriptor(null, files, null)
-	        			.createMetadata(), 
+	        			.createMetadata(),
 	        		serviceRegistry);
 		} finally {
 			Thread.currentThread().setContextClassLoader(oldLoader);			

@@ -101,7 +101,28 @@ class IncomingForeignKeyResolver {
 			mappedBy != null ? mappedBy : fieldName,
 			fkTable.getEntityClassName(),
 			fkTable.getEntityPackage());
+		// Look up FK column names from the FK table's ForeignKeyMetadata
+		java.util.List<String> fkColNames = findFkColumnNames(fkTable, fkInfo);
+		if (!fkColNames.isEmpty()) {
+			o2m.fkColumnNames(fkColNames);
+		}
 		referencedTable.addOneToMany(o2m);
+	}
+
+	private java.util.List<String> findFkColumnNames(TableMetadata fkTable, RawForeignKeyInfo fkInfo) {
+		for (ForeignKeyMetadata fk : fkTable.getForeignKeys()) {
+			if (fk.getForeignKeyColumnNames().contains(fkInfo.fkColumnName())) {
+				return fk.getForeignKeyColumnNames();
+			}
+		}
+		// Also check one-to-one relationships (constrained O2O where PK=FK)
+		for (OneToOneMetadata o2o : fkTable.getOneToOnes()) {
+			List<String> fkCols = o2o.getForeignKeyColumnNames();
+			if (fkCols.contains(fkInfo.fkColumnName())) {
+				return fkCols;
+			}
+		}
+		return java.util.Collections.emptyList();
 	}
 
 	private void handleOneToOne(RawForeignKeyInfo fkInfo, TableMetadata fkTable,

@@ -115,7 +115,7 @@ class OutgoingForeignKeyResolver {
 		if (adapter.isOneToOne(allColumns, fkTable)) {
 			handleOneToOne(primaryColumn, allColumns, fkTable, referencedTable, uniqueReference);
 		} else {
-			handleManyToOne(primaryColumn, fkTable, referencedTable, uniqueReference);
+			handleManyToOne(primaryColumn, allColumns, fkTable, referencedTable, uniqueReference);
 		}
 	}
 
@@ -137,13 +137,17 @@ class OutgoingForeignKeyResolver {
 		fkTable.addOneToOne(o2o);
 	}
 
-	private void handleManyToOne(RawForeignKeyInfo fkInfo, TableMetadata fkTable,
+	private void handleManyToOne(RawForeignKeyInfo primaryColumn,
+			List<RawForeignKeyInfo> allColumns,
+			TableMetadata fkTable,
 			TableMetadata referencedTable, boolean uniqueReference) {
 		ForeignKeyMetadata fkMetadata = new ForeignKeyMetadata(
-			adapter.foreignKeyToEntityName(fkInfo, uniqueReference),
-			fkInfo.fkColumnName(),
+			adapter.foreignKeyToEntityName(primaryColumn, uniqueReference),
 			referencedTable.getEntityClassName(),
 			referencedTable.getEntityPackage());
+		for (RawForeignKeyInfo col : allColumns) {
+			fkMetadata.addJoinColumn(col.fkColumnName(), null);
+		}
 		fkTable.addForeignKey(fkMetadata);
 	}
 

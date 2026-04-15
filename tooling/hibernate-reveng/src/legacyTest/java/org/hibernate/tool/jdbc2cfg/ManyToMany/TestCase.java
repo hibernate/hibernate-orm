@@ -25,7 +25,9 @@ import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.reveng.RevengSettings;
-import org.hibernate.tool.internal.export.hbm.HbmExporter;
+import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.internal.reveng.strategy.AbstractStrategy;
 import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 import org.hibernate.tool.test.utils.JdbcUtil;
@@ -146,7 +148,7 @@ public class TestCase {
 
 		assertNotNull(metadataDescriptor.createMetadata());
 		
-		HbmExporter hme = new HbmExporter();
+		Exporter hme = ExporterFactory.createExporter(ExporterType.HBM);
 		hme.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		hme.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
 		hme.start();		

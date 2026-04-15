@@ -23,6 +23,7 @@ import org.hibernate.boot.models.annotations.internal.AttributeOverridesJpaAnnot
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.EmbeddedIdJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.JoinColumnsJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ManyToOneJpaAnnotation;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
@@ -67,8 +68,7 @@ public class CompositeIdFieldBuilder {
 		addEmbeddedIdAnnotation(field, modelsContext);
 		addAttributeOverrides(field, compositeId, modelsContext);
 		addEmbeddableAnnotation((DynamicClassDetails) idClassDetails, modelsContext);
-		addEmbeddableFields((DynamicClassDetails) idClassDetails, compositeId, modelsContext);
-		addKeyManyToOneFields(
+		addEmbeddableFieldsInOrder(
 			(DynamicClassDetails) idClassDetails, compositeId, modelsContext);
 	}
 
@@ -136,48 +136,79 @@ public class CompositeIdFieldBuilder {
 		}
 	}
 
-	private static void addEmbeddableFields(
+	/**
+	 * Adds fields to the embeddable ID class in the original PK column order,
+	 * interleaving basic properties and key-many-to-one fields.
+	 */
+	private static void addEmbeddableFieldsInOrder(
 			DynamicClassDetails idClassDetails,
 			CompositeIdMetadata compositeId,
 			ModelsContext modelsContext) {
-		for (AttributeOverrideMetadata attr : compositeId.getAttributeOverrides()) {
-			Class<?> javaType = attr.getJavaType() != null ? attr.getJavaType() : Object.class;
-			ClassDetails fieldTypeDetails = modelsContext.getClassDetailsRegistry()
-				.resolveClassDetails(javaType.getName());
-			TypeDetails fieldType = new ClassTypeDetailsImpl(
-				fieldTypeDetails, TypeDetails.Kind.CLASS);
-			DynamicFieldDetails field = idClassDetails.applyAttribute(
-				attr.getFieldName(), fieldType, false, false, modelsContext);
-			ColumnJpaAnnotation columnAnnotation =
-				JpaAnnotations.COLUMN.createUsage(modelsContext);
-			columnAnnotation.name(attr.getColumnName());
-			field.addAnnotationUsage(columnAnnotation);
+		for (Object entry : compositeId.getOrderedEntries()) {
+			if (entry instanceof AttributeOverrideMetadata attr) {
+				addBasicEmbeddableField(idClassDetails, attr, modelsContext);
+			} else if (entry instanceof KeyManyToOneMetadata km2o) {
+				addKeyManyToOneField(idClassDetails, km2o, modelsContext);
+			}
 		}
 	}
 
-	private static void addKeyManyToOneFields(
+	private static void addBasicEmbeddableField(
 			DynamicClassDetails idClassDetails,
-			CompositeIdMetadata compositeId,
+			AttributeOverrideMetadata attr,
 			ModelsContext modelsContext) {
-		for (KeyManyToOneMetadata km2o : compositeId.getKeyManyToOnes()) {
-			String targetClassName = km2o.getTargetEntityPackage()
-					+ "." + km2o.getTargetEntityClassName();
-			ClassDetails targetClassDetails = resolveOrCreateClassDetails(
-					km2o.getTargetEntityClassName(), targetClassName, modelsContext);
+		Class<?> javaType = attr.getJavaType() != null ? attr.getJavaType() : Object.class;
+		ClassDetails fieldTypeDetails = modelsContext.getClassDetailsRegistry()
+			.resolveClassDetails(javaType.getName());
+		TypeDetails fieldType = new ClassTypeDetailsImpl(
+			fieldTypeDetails, TypeDetails.Kind.CLASS);
+		DynamicFieldDetails field = idClassDetails.applyAttribute(
+			attr.getFieldName(), fieldType, false, false, modelsContext);
+		ColumnJpaAnnotation columnAnnotation =
+			JpaAnnotations.COLUMN.createUsage(modelsContext);
+		columnAnnotation.name(attr.getColumnName());
+		field.addAnnotationUsage(columnAnnotation);
+	}
 
-			TypeDetails fieldType = new ClassTypeDetailsImpl(
-					targetClassDetails, TypeDetails.Kind.CLASS);
-			DynamicFieldDetails field = idClassDetails.applyAttribute(
-					km2o.getFieldName(), fieldType, false, false, modelsContext);
+	private static void addKeyManyToOneField(
+			DynamicClassDetails idClassDetails,
+			KeyManyToOneMetadata km2o,
+			ModelsContext modelsContext) {
+		String pkg = km2o.getTargetEntityPackage();
+		String targetClassName = (pkg == null || pkg.isEmpty())
+				? km2o.getTargetEntityClassName()
+				: pkg + "." + km2o.getTargetEntityClassName();
+		ClassDetails targetClassDetails = resolveOrCreateClassDetails(
+				km2o.getTargetEntityClassName(), targetClassName, modelsContext);
 
-			ManyToOneJpaAnnotation m2oAnnotation =
-					JpaAnnotations.MANY_TO_ONE.createUsage(modelsContext);
-			field.addAnnotationUsage(m2oAnnotation);
+		TypeDetails fieldType = new ClassTypeDetailsImpl(
+				targetClassDetails, TypeDetails.Kind.CLASS);
+		DynamicFieldDetails field = idClassDetails.applyAttribute(
+				km2o.getFieldName(), fieldType, false, false, modelsContext);
 
+		ManyToOneJpaAnnotation m2oAnnotation =
+				JpaAnnotations.MANY_TO_ONE.createUsage(modelsContext);
+		field.addAnnotationUsage(m2oAnnotation);
+
+		List<String> columnNames = km2o.getColumnNames();
+		if (columnNames.size() == 1) {
 			JoinColumnJpaAnnotation jcAnnotation =
 					JpaAnnotations.JOIN_COLUMN.createUsage(modelsContext);
-			jcAnnotation.name(km2o.getColumnName());
+			jcAnnotation.name(columnNames.get(0));
 			field.addAnnotationUsage(jcAnnotation);
+		} else {
+			jakarta.persistence.JoinColumn[] jcArray =
+					new jakarta.persistence.JoinColumn[columnNames.size()];
+			for (int i = 0; i < columnNames.size(); i++) {
+				JoinColumnJpaAnnotation jcAnnotation =
+						JpaAnnotations.JOIN_COLUMN.createUsage(modelsContext);
+				jcAnnotation.name(columnNames.get(i));
+				jcArray[i] = jcAnnotation;
+			}
+			JoinColumnsJpaAnnotation jcsAnnotation =
+					JpaAnnotations.JOIN_COLUMNS.createUsage(modelsContext);
+			jcsAnnotation.value(jcArray);
+			field.addAnnotationUsage(jcsAnnotation);
 		}
 	}
 

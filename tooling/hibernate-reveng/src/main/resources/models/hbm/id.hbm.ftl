@@ -3,7 +3,14 @@
     <composite-id
         name="${cid.getName()}"
         class="${helper.getCompositeIdClassName()}">
-<#list helper.getCompositeIdKeyProperties() as field>
+<#list helper.getCompositeIdAllFields() as field>
+<#if helper.isManyToOneField(field)>
+        <key-many-to-one name="${field.getName()}" class="${helper.getKeyManyToOneClassName(field)}">
+<#list helper.getKeyManyToOneColumnNames(field) as colName>
+            <column name="${colName}"/>
+</#list>
+        </key-many-to-one>
+<#else>
 <#assign hbType = helper.getHibernateTypeName(field)>
 <#assign colAttrs = helper.getColumnAttributes(field)>
         <key-property name="${field.getName()}"<#if hbType != "java.lang.Object">
@@ -16,11 +23,7 @@
             <column name="${helper.getColumnName(field)}"<#if colAttrs?has_content> ${colAttrs}</#if>/>
 </#if>
         </key-property>
-</#list>
-<#list helper.getCompositeIdKeyManyToOnes() as km2o>
-        <key-many-to-one name="${km2o.getName()}" class="${helper.getKeyManyToOneClassName(km2o)}">
-            <column name="${helper.getKeyManyToOneColumnName(km2o)}"/>
-        </key-many-to-one>
+</#if>
 </#list>
     </composite-id>
 <#elseif helper.hasIdClass()>
@@ -39,6 +42,31 @@
             <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
 </#if>
         </key-property>
+</#list>
+    </composite-id>
+<#elseif (helper.getIdFields()?size > 1)>
+    <composite-id>
+<#list helper.getIdFields() as field>
+<#if helper.isManyToOneField(field)>
+        <key-many-to-one name="${field.getName()}" class="${helper.getTargetEntityName(field)}">
+<#list helper.getJoinColumnNames(field) as colName>
+            <column name="${colName}"/>
+</#list>
+        </key-many-to-one>
+<#else>
+<#assign hbType = helper.getHibernateTypeName(field)>
+<#assign colAttrs = helper.getColumnAttributes(field)>
+        <key-property name="${field.getName()}"<#if hbType != "java.lang.Object">
+            type="${hbType}"</#if>>
+<#if helper.getColumnComment(field)??>
+            <column name="${helper.getColumnName(field)}"<#if colAttrs?has_content> ${colAttrs}</#if>>
+                <comment>${helper.getColumnComment(field)}</comment>
+            </column>
+<#else>
+            <column name="${helper.getColumnName(field)}"<#if colAttrs?has_content> ${colAttrs}</#if>/>
+</#if>
+        </key-property>
+</#if>
 </#list>
     </composite-id>
 <#else>

@@ -24,7 +24,8 @@ import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
-import org.hibernate.tool.internal.export.hbm.HbmExporter;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.test.utils.JdbcUtil;
 import org.hibernate.tool.test.utils.TestTemplate;
 import org.junit.jupiter.api.AfterEach;
@@ -96,7 +97,7 @@ public class TestCase extends TestTemplate {
 	
 	@Test
 	public void testGenerateMappings() {
-        Exporter exporter = new HbmExporter();		
+        Exporter exporter = ExporterFactory.createExporter(ExporterType.HBM);
 		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);
  		exporter.start();		

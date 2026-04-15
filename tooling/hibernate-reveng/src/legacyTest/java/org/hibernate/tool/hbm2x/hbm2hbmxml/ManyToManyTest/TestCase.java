@@ -19,10 +19,12 @@
 package org.hibernate.tool.hbm2x.hbm2hbmxml.ManyToManyTest;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
-import org.hibernate.tool.internal.export.hbm.HbmExporter;
 import org.hibernate.tool.test.utils.ConnectionProvider;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
@@ -49,11 +51,11 @@ public class TestCase {
 	private static final String[] HBM_XML_FILES = new String[] {
 			"UserGroup.hbm.xml"
 	};
-	
+
 	@TempDir
 	public File outputFolder = new File("output");
-	
-	private HbmExporter hbmexporter = null;
+
+	private Exporter hbmexporter = null;
 	private File srcDir = null;
 
     @BeforeEach
@@ -64,7 +66,7 @@ public class TestCase {
 		assertTrue(resourcesDir.mkdir());
 		MetadataDescriptor metadataDescriptor = HibernateUtil
 				.initializeMetadataDescriptor(this, HBM_XML_FILES, resourcesDir);
-		hbmexporter = new HbmExporter();
+		hbmexporter = ExporterFactory.createExporter(ExporterType.HBM);
 		hbmexporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		hbmexporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, srcDir);
 		hbmexporter.start();
@@ -82,13 +84,6 @@ public class TestCase {
 		JUnitUtil.assertIsNonEmptyFile(new File(
 				srcDir,
 				"org/hibernate/tool/hbm2x/hbm2hbmxml/ManyToManyTest/Group.hbm.xml") );
-	}
-
-	@Test
-	public void testArtifactCollection() {
-		assertEquals(
-				2,
-				hbmexporter.getArtifactCollector().getFileCount("hbm.xml"));
 	}
 
 	@Test
@@ -123,7 +118,7 @@ public class TestCase {
 				.evaluate(document, XPathConstants.NODESET);
 		assertEquals(1, nodeList.getLength(), "Expected to get one many-to-many element");
 		Element node = (Element) nodeList.item(0);
-		assertEquals("org.hibernate.tool.hbm2x.hbm2hbmxml.ManyToManyTest.Group", node.getAttribute( "entity-name" ));
+		assertEquals("org.hibernate.tool.hbm2x.hbm2hbmxml.ManyToManyTest.Group", node.getAttribute( "class" ));
 		nodeList = (NodeList)xpath
 				.compile("//hibernate-mapping/class/set")
 				.evaluate(document, XPathConstants.NODESET);

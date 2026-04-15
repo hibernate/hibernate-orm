@@ -399,6 +399,14 @@ public class HbmTemplateHelper {
 		return idClass != null ? idClass.value().getName() : null;
 	}
 
+	public List<FieldDetails> getCompositeIdAllFields() {
+		FieldDetails cid = getCompositeIdField();
+		if (cid == null) {
+			return Collections.emptyList();
+		}
+		return new ArrayList<>(cid.getType().determineRawClass().getFields());
+	}
+
 	public List<FieldDetails> getCompositeIdKeyProperties() {
 		FieldDetails cid = getCompositeIdField();
 		if (cid == null) {
@@ -411,6 +419,10 @@ public class HbmTemplateHelper {
 			}
 		}
 		return result;
+	}
+
+	public boolean hasCompositeIdKeyManyToOnes() {
+		return !getCompositeIdKeyManyToOnes().isEmpty();
 	}
 
 	public List<FieldDetails> getCompositeIdKeyManyToOnes() {
@@ -434,6 +446,24 @@ public class HbmTemplateHelper {
 	public String getKeyManyToOneColumnName(FieldDetails field) {
 		JoinColumn jc = field.getDirectAnnotationUsage(JoinColumn.class);
 		return jc != null ? jc.name() : field.getName();
+	}
+
+	public List<String> getKeyManyToOneColumnNames(FieldDetails field) {
+		List<String> result = new ArrayList<>();
+		JoinColumn single = field.getDirectAnnotationUsage(JoinColumn.class);
+		if (single != null) {
+			result.add(single.name());
+		}
+		JoinColumns container = field.getDirectAnnotationUsage(JoinColumns.class);
+		if (container != null) {
+			for (JoinColumn jc : container.value()) {
+				result.add(jc.name());
+			}
+		}
+		if (result.isEmpty()) {
+			result.add(field.getName());
+		}
+		return result;
 	}
 
 	public List<FieldDetails> getIdFields() {
@@ -486,7 +516,9 @@ public class HbmTemplateHelper {
 	public List<FieldDetails> getManyToOneFields() {
 		List<FieldDetails> result = new ArrayList<>();
 		for (FieldDetails field : classDetails.getFields()) {
-			if (field.hasDirectAnnotationUsage(ManyToOne.class) && !isInPropertiesGroup(field)) {
+			if (field.hasDirectAnnotationUsage(ManyToOne.class)
+					&& !field.hasDirectAnnotationUsage(Id.class)
+					&& !isInPropertiesGroup(field)) {
 				result.add(field);
 			}
 		}
@@ -494,7 +526,39 @@ public class HbmTemplateHelper {
 	}
 
 	public List<FieldDetails> getOneToOneFields() {
-		return getFieldsWithAnnotation(OneToOne.class);
+		boolean hasCompositeId = getCompositeIdField() != null;
+		if (!hasCompositeId) {
+			return getFieldsWithAnnotation(OneToOne.class);
+		}
+		// Exclude constrained O2O with composite PK — rendered as many-to-one
+		List<FieldDetails> result = new ArrayList<>();
+		for (FieldDetails field : classDetails.getFields()) {
+			if (field.hasDirectAnnotationUsage(OneToOne.class)
+					&& !isOneToOneConstrained(field)) {
+				result.add(field);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Returns constrained one-to-one fields that need composite FK column
+	 * mapping. These are rendered as many-to-one with unique="true" in HBM XML
+	 * because one-to-one constrained doesn't support explicit composite column
+	 * lists.
+	 */
+	public List<FieldDetails> getConstrainedOneToOneAsM2OFields() {
+		if (getCompositeIdField() == null) {
+			return Collections.emptyList();
+		}
+		List<FieldDetails> result = new ArrayList<>();
+		for (FieldDetails field : classDetails.getFields()) {
+			if (field.hasDirectAnnotationUsage(OneToOne.class)
+					&& isOneToOneConstrained(field)) {
+				result.add(field);
+			}
+		}
+		return result;
 	}
 
 	public List<FieldDetails> getOneToManyFields() {
@@ -1038,6 +1102,40 @@ public class HbmTemplateHelper {
 		return formulas != null ? formulas : Collections.emptyList();
 	}
 
+	// --- ManyToMany ---
+
+	/**
+	 * Returns true if the many-to-many target is referenced by entity-name.
+	 */
+	public boolean isManyToManyEntityNameRef(FieldDetails field) {
+		String targetClassName = getManyToManyTargetEntity(field);
+		Map<String, List<String>> targetMeta = allClassMetaAttributes.get(targetClassName);
+		if (targetMeta != null) {
+			List<String> realClass = targetMeta.get("hibernate.class-name");
+			if (realClass != null && !realClass.isEmpty()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Returns the entity-name for a many-to-many target, or null if not entity-name based.
+	 */
+	public String getManyToManyEntityName(FieldDetails field) {
+		if (!isManyToManyEntityNameRef(field)) {
+			return null;
+		}
+		String identityName = getManyToManyTargetEntity(field);
+		int dot = identityName.lastIndexOf('.');
+		return dot >= 0 ? identityName.substring(dot + 1) : identityName;
+	}
+
+	public List<String> getManyToManyFormulas(FieldDetails field) {
+		List<String> formulas = getFieldMetaAttribute(field, "hibernate.formula");
+		return formulas != null ? formulas : Collections.emptyList();
+	}
+
 	public boolean isManyToOneLazy(FieldDetails field) {
 		ManyToOne m2o = field.getDirectAnnotationUsage(ManyToOne.class);
 		return m2o != null && m2o.fetch() == jakarta.persistence.FetchType.LAZY;
@@ -1110,7 +1208,8 @@ public class HbmTemplateHelper {
 	}
 
 	public boolean isOneToOneConstrained(FieldDetails field) {
-		return field.hasDirectAnnotationUsage(JoinColumn.class);
+		return field.hasDirectAnnotationUsage(JoinColumn.class)
+				|| field.hasDirectAnnotationUsage(JoinColumns.class);
 	}
 
 	// --- OneToMany ---
@@ -1272,11 +1371,20 @@ public class HbmTemplateHelper {
 	public boolean isCollectionInverse(FieldDetails field) {
 		OneToMany o2m = field.getDirectAnnotationUsage(OneToMany.class);
 		if (o2m != null) {
-			return o2m.mappedBy() != null && !o2m.mappedBy().isEmpty();
+			if (o2m.mappedBy() != null && !o2m.mappedBy().isEmpty()) {
+				return true;
+			}
 		}
 		ManyToMany m2m = field.getDirectAnnotationUsage(ManyToMany.class);
 		if (m2m != null) {
-			return m2m.mappedBy() != null && !m2m.mappedBy().isEmpty();
+			if (m2m.mappedBy() != null && !m2m.mappedBy().isEmpty()) {
+				return true;
+			}
+		}
+		// Check meta attribute for HBM-sourced inverse
+		List<String> inverseAttr = getFieldMetaAttribute(field, "hibernate.inverse");
+		if (inverseAttr != null && !inverseAttr.isEmpty()) {
+			return "true".equals(inverseAttr.get(0));
 		}
 		return false;
 	}
@@ -1293,6 +1401,11 @@ public class HbmTemplateHelper {
 		ElementCollection ec = field.getDirectAnnotationUsage(ElementCollection.class);
 		if (ec != null && ec.fetch() == FetchType.EAGER) {
 			return "false";
+		}
+		// Check meta attribute for lazy="extra"
+		List<String> lazyAttr = getFieldMetaAttribute(field, "hibernate.lazy");
+		if (lazyAttr != null && !lazyAttr.isEmpty()) {
+			return lazyAttr.get(0);
 		}
 		return null;
 	}

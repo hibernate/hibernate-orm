@@ -61,6 +61,19 @@
 </#list>
     </many-to-one>
 </#list>
+<#-- Constrained one-to-one with composite FK (rendered as many-to-one unique="true") -->
+<#list helper.getConstrainedOneToOneAsM2OFields() as field>
+    <many-to-one
+        name="${field.getName()}"
+        class="${helper.getTargetEntityName(field)}"
+        update="false"
+        insert="false"
+        unique="true">
+<#list helper.getJoinColumnNames(field) as colName>
+        <column name="${colName}"/>
+</#list>
+    </many-to-one>
+</#list>
 <#-- One-to-one -->
 <#list helper.getOneToOneFields() as field>
 <#if (helper.getFieldMetaAttributes(field)?size == 0)>
@@ -148,7 +161,8 @@
     <${collTag} name="${field.getName()}"<#if helper.getJoinTableName(field)??>
         table="${helper.getJoinTableName(field)}"</#if><#if helper.getJoinTableSchema(field)??>
         schema="${helper.getJoinTableSchema(field)}"</#if><#if helper.getJoinTableCatalog(field)??>
-        catalog="${helper.getJoinTableCatalog(field)}"</#if><#if helper.getCollectionCascadeString(field)??>
+        catalog="${helper.getJoinTableCatalog(field)}"</#if><#if helper.isCollectionInverse(field)>
+        inverse="true"</#if><#if helper.getCollectionCascadeString(field)??>
         cascade="${helper.getCollectionCascadeString(field)}"</#if><#if helper.getCollectionLazy(field)??>
         lazy="${helper.getCollectionLazy(field)}"</#if><#if helper.getCollectionFetchMode(field)??>
         fetch="${helper.getCollectionFetchMode(field)}"</#if><#if (helper.getCollectionBatchSize(field) gt 1)>
@@ -184,9 +198,12 @@
             <generator class="${helper.getCollectionIdGenerator(field)!'native'}"/>
         </collection-id>
 </#if>
-        <many-to-many class="${helper.getManyToManyTargetEntity(field)}">
+        <many-to-many<#if helper.isManyToManyEntityNameRef(field)> entity-name="${helper.getManyToManyEntityName(field)}"<#else> class="${helper.getManyToManyTargetEntity(field)}"</#if>>
 <#list helper.getJoinTableInverseJoinColumnNames(field) as colName>
             <column name="${colName}"/>
+</#list>
+<#list helper.getManyToManyFormulas(field) as formula>
+            <formula>${formula}</formula>
 </#list>
         </many-to-many>
 <#list helper.getCollectionFilters(field) as fi>

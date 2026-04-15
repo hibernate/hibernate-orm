@@ -25,8 +25,9 @@ import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
-import org.hibernate.tool.internal.export.common.DefaultValueVisitor;
-import org.hibernate.tool.internal.export.hbm.HbmExporter;
+import org.hibernate.tool.api.export.Exporter;
+import org.hibernate.tool.api.export.ExporterFactory;
+import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.internal.reveng.strategy.AbstractStrategy;
 import org.hibernate.tool.test.utils.JUnitUtil;
 import org.hibernate.tool.test.utils.JdbcUtil;
@@ -82,7 +83,7 @@ public class TestCase {
 
 	@Test
 	public void testGeneration() {
-		HbmExporter hme = new HbmExporter();
+		Exporter hme = ExporterFactory.createExporter(ExporterType.HBM);
 		hme.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		hme.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);
 		hme.start();
@@ -113,24 +114,10 @@ public class TestCase {
 		Property property = role.getProperty("members");
 		assertEquals( "OTHERSCHEMA", role.getTable().getSchema() );
 		assertNotNull(property);
-		property.getValue().accept(new DefaultValueVisitor(true) {
-			public Object accept(Set o) {
-				assertEquals( "THIRDSCHEMA", o.getCollectionTable().getSchema() );
-				return null;
-			}
-		});
+		assertEquals( "THIRDSCHEMA", ((Set) property.getValue()).getCollectionTable().getSchema() );
 		property = plainRole.getProperty("members");
 		assertEquals( "OTHERSCHEMA", role.getTable().getSchema() );
 		assertNotNull(property);
-		property.getValue().accept(new DefaultValueVisitor(true) {
-			public Object accept(Set o) {
-				// TODO Investigate the ignored test: HBX-1410
-				// For some reason the explicit schema 'HTT' is not reproduced in the many-to-many set in the hbm.xml files
-				// Need to investigate the HBM generation and to try rebuild the metadata with the schema explicitly set
-				// assertEquals("HTT", o.getCollectionTable().getSchema() );
-				return null;
-			}
-		});
 	}
 
 	private SchemaSelection createSchemaSelection(String matchSchema) {

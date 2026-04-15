@@ -16,9 +16,12 @@
 package org.hibernate.tool.internal.reveng.models.builder.db;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import org.hibernate.boot.models.JpaAnnotations;
+import org.hibernate.boot.models.annotations.internal.JoinColumnJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.JoinColumnsJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.OneToManyJpaAnnotation;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.internal.ParameterizedTypeDetailsImpl;
@@ -65,6 +68,7 @@ public class OneToManyFieldBuilder {
 		DynamicFieldDetails field = createField(
 			entityClass, fieldName, elementClassDetails, modelsContext);
 		addOneToManyAnnotation(field, o2mMetadata, modelsContext);
+		addFkColumnAnnotations(field, o2mMetadata, modelsContext);
 	}
 
 	private static DynamicFieldDetails createField(
@@ -110,5 +114,38 @@ public class OneToManyFieldBuilder {
 		}
 		oneToManyAnnotation.orphanRemoval(o2mMetadata.isOrphanRemoval());
 		field.addAnnotationUsage(oneToManyAnnotation);
+	}
+
+	/**
+	 * Stores FK column names on the inverse collection field via @JoinColumn annotations.
+	 * These are used by the HBM exporter to render the correct key columns.
+	 */
+	private static void addFkColumnAnnotations(
+			MutableAnnotationTarget field,
+			OneToManyMetadata o2mMetadata,
+			ModelsContext modelsContext) {
+		List<String> fkCols = o2mMetadata.getFkColumnNames();
+		if (fkCols.isEmpty()) {
+			return;
+		}
+		if (fkCols.size() == 1) {
+			JoinColumnJpaAnnotation jcAnnotation =
+				JpaAnnotations.JOIN_COLUMN.createUsage(modelsContext);
+			jcAnnotation.name(fkCols.get(0));
+			field.addAnnotationUsage(jcAnnotation);
+		} else {
+			jakarta.persistence.JoinColumn[] jcArray =
+				new jakarta.persistence.JoinColumn[fkCols.size()];
+			for (int i = 0; i < fkCols.size(); i++) {
+				JoinColumnJpaAnnotation jcAnnotation =
+					JpaAnnotations.JOIN_COLUMN.createUsage(modelsContext);
+				jcAnnotation.name(fkCols.get(i));
+				jcArray[i] = jcAnnotation;
+			}
+			JoinColumnsJpaAnnotation jcsAnnotation =
+				JpaAnnotations.JOIN_COLUMNS.createUsage(modelsContext);
+			jcsAnnotation.value(jcArray);
+			field.addAnnotationUsage(jcsAnnotation);
+		}
 	}
 }

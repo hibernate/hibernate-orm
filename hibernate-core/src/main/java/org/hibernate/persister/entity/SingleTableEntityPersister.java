@@ -507,18 +507,20 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public void addDiscriminatorToDelete(TableDeleteBuilder tableDeleteBuilder) {
-		if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
-			tableDeleteBuilder.addNonKeyRestriction( getDiscriminatorMapping(), TableMutationBuilder.NULL );
-		}
-		else {
-			// and apply the parameter
-			tableDeleteBuilder.addNonKeyRestriction( getDiscriminatorMapping() );
+		if ( discriminatorValue != null ) {
+			if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
+				tableDeleteBuilder.addNonKeyRestriction( getDiscriminatorMapping(), TableMutationBuilder.NULL );
+			}
+			else {
+				// and apply the parameter
+				tableDeleteBuilder.addNonKeyRestriction( getDiscriminatorMapping() );
+			}
 		}
 	}
 
 	@Override
 	public void bindDiscriminatorForDelete(JdbcValueBindings jdbcValueBindings) {
-		if ( discriminatorValue != DiscriminatorValue.Special.NULL ) {
+		if ( discriminatorValue != null && discriminatorValue != DiscriminatorValue.Special.NULL ) {
 			jdbcValueBindings.bindAssignment( -1, discriminatorValue.value(),  getDiscriminatorMapping() );
 		}
 	}

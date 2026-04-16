@@ -197,6 +197,9 @@ public class GraphBasedActionQueue implements ActionQueue {
 			// AFTER makeEntityManaged() so this entity is available for FK references
 			flushCoordinator.executeIdentityInsert(insert, this::executePendingInserts);
 
+			// Register cleanup actions for this early insert (matches legacy queue pattern)
+			registerCleanupActions(insert);
+
 			// Still increment counter for stats
 			insertCount++;
 
@@ -249,7 +252,13 @@ public class GraphBasedActionQueue implements ActionQueue {
 		}
 
 		// Execute these inserts via FlushCoordinator
-		flushCoordinator.executeFlush(new ArrayList<>(insertions));
+		final List<AbstractEntityInsertAction> executedInserts = new ArrayList<>(insertions);
+		flushCoordinator.executeFlush(executedInserts);
+
+		// Register cleanup actions for executed inserts (matches legacy queue pattern)
+		for (AbstractEntityInsertAction action : executedInserts) {
+			registerCleanupActions(action);
+		}
 
 		// Clear executed actions from pending list
 		insertions.clear();
@@ -364,7 +373,14 @@ public class GraphBasedActionQueue implements ActionQueue {
 				}
 			}
 
-			flushCoordinator.executeFlush(new ArrayList<>(insertions));
+			final List<AbstractEntityInsertAction> executedInserts = new ArrayList<>(insertions);
+			flushCoordinator.executeFlush(executedInserts);
+
+			// Register cleanup actions for executed inserts (matches legacy queue pattern)
+			for (AbstractEntityInsertAction action : executedInserts) {
+				registerCleanupActions(action);
+			}
+
 			insertions.clear();
 
 			session.getJdbcCoordinator().executeBatch();
@@ -413,8 +429,35 @@ public class GraphBasedActionQueue implements ActionQueue {
 		flushCoordinator.executeFlush(combinedActions);
 
 		// Register transaction completion callbacks for executed actions
+		// Match legacy ActionQueue pattern: register callbacks inline, then call invalidateSpaces once
 		for (Executable action : combinedActions) {
-			registerCleanupActions(action);
+			final var beforeCompletionCallback = action.getBeforeTransactionCompletionProcess();
+			if (beforeCompletionCallback != null) {
+				transactionCompletionCallbacks.registerCallback(beforeCompletionCallback);
+			}
+			final var afterCompletionCallback = action.getAfterTransactionCompletionProcess();
+			if (afterCompletionCallback != null) {
+				transactionCompletionCallbacks.registerCallback(afterCompletionCallback);
+			}
+		}
+
+		// Invalidate query cache spaces ONCE for all actions (matches legacy queue pattern)
+		if (session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled()) {
+			// Collect all unique spaces from all actions
+			final List<String> allSpaces = new ArrayList<>();
+			for (Executable action : combinedActions) {
+				final String[] spaces = action.getPropertySpaces();
+				if (spaces != null && spaces.length > 0) {
+					for (String space : spaces) {
+						if (!allSpaces.contains(space)) {
+							allSpaces.add(space);
+						}
+					}
+				}
+			}
+			if (!allSpaces.isEmpty()) {
+				invalidateSpaces(allSpaces.toArray(new String[0]));
+			}
 		}
 
 		// clear all pending actions
@@ -422,12 +465,6 @@ public class GraphBasedActionQueue implements ActionQueue {
 
 		// Execute any pending JDBC batch
 		session.getJdbcCoordinator().executeBatch();
-
-		// Invalidate query cache regions
-		if (session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled()) {
-			// FlushCoordinator already tracked affected spaces
-			// TODO: Could optimize by collecting spaces during execution
-		}
 	}
 
 	/// Prepares the internal action queues for execution.

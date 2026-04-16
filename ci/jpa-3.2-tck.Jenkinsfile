@@ -7,7 +7,7 @@ if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
   	return
 }
 // This is a limited maintenance branch, so don't run this on pushes to the branch, only on PRs
-if ( !env.CHANGE_ID ) {
+if ( !currentBuild.getBuildCauses().toString().contains( 'UserIdCause' ) && !env.CHANGE_ID ) {
 	print "INFO: Build skipped because this job should only run for pull request, not for branch pushes"
 	currentBuild.result = 'NOT_BUILT'
 	return

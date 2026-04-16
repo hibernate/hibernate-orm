@@ -915,6 +915,12 @@ public class SqlTypes {
 			case TIMESTAMP:
 			case TIMESTAMP_WITH_TIMEZONE:
 			case TIMESTAMP_UTC:
+			case LOCAL_DATE_TIME:
+			case LOCAL_DATE:
+			case LOCAL_TIME:
+			case OFFSET_DATE_TIME:
+			case OFFSET_TIME:
+			case ZONED_DATE_TIME:
 			case INSTANT:
 				return true;
 			default:
@@ -946,6 +952,10 @@ public class SqlTypes {
 			case TIMESTAMP:
 			case TIMESTAMP_WITH_TIMEZONE:
 			case TIMESTAMP_UTC:
+			case OFFSET_DATE_TIME:
+			case ZONED_DATE_TIME:
+			case LOCAL_DATE_TIME:
+			case LOCAL_DATE:
 				return true;
 			default:
 				return false;
@@ -964,6 +974,11 @@ public class SqlTypes {
 			case TIMESTAMP:
 			case TIMESTAMP_WITH_TIMEZONE:
 			case TIMESTAMP_UTC:
+			case OFFSET_DATE_TIME:
+			case OFFSET_TIME:
+			case ZONED_DATE_TIME:
+			case LOCAL_DATE_TIME:
+			case LOCAL_TIME:
 				return true;
 			default:
 				return false;

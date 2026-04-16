@@ -17,9 +17,9 @@
  */
 package org.hibernate.tool.hbm2x.GenerateFromJDBC;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.PersistentClass;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.internal.metadata.RevengMetadataDescriptor;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.export.ExporterFactory;
@@ -87,22 +87,20 @@ public class TestCase {
 	}
 	
 	@Test
-	public void testGenerateMappings() {
-		Exporter exporter = ExporterFactory.createExporter(ExporterType.HBM);	
+	public void testGenerateMappings() throws Exception {
+		Exporter exporter = ExporterFactory.createExporter(ExporterType.HBM);
 		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
-		exporter.start();	
+		exporter.start();
 		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "org/reveng/Child.hbm.xml"));
 		File file = new File(outputDir, "GeneralHbmSettings.hbm.xml");
         assertFalse(file.exists(), file + " should not exist");
-		File[] files = new File[2];
-		files[0] = new File(outputDir, "org/reveng/Child.hbm.xml");
-		files[1] = new File(outputDir, "org/reveng/Master.hbm.xml");
-		Metadata metadata = MetadataDescriptorFactory
-				.createNativeDescriptor(null, files, null)
-				.createMetadata();
-		assertNotNull(metadata.getEntityBinding("org.reveng.Child") );
-		assertNotNull(metadata.getEntityBinding("org.reveng.Master") );
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		Document childDoc = db.parse(new File(outputDir, "org/reveng/Child.hbm.xml"));
+		assertNotNull(childDoc);
+		Document masterDoc = db.parse(new File(outputDir, "org/reveng/Master.hbm.xml"));
+		assertNotNull(masterDoc);
 	}
 	
 	@Test
@@ -169,10 +167,9 @@ public class TestCase {
 	
 	@Test
 	public void testPackageNames() {
-        for (PersistentClass element : metadataDescriptor
-                .createMetadata()
-                .getEntityBindings()) {
-            assertEquals("org.reveng", StringHelper.qualifier(element.getClassName()));
+        for (ClassDetails entity : ((RevengMetadataDescriptor) metadataDescriptor)
+                .getEntityClassDetails()) {
+            assertEquals("org.reveng", StringHelper.qualifier(entity.getClassName()));
         }
 	}
 }

@@ -20,12 +20,18 @@ package org.hibernate.tool.jdbc2cfg.Versioning;
 import java.io.File;
 import java.util.List;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.tool.api.export.Exporter;
@@ -105,37 +111,41 @@ public class TestCase extends TestTemplate {
 	}
 
 	@Test
-	public void testGenerateMappings() {
-        Exporter exporter = ExporterFactory.createExporter(ExporterType.HBM);
+	public void testGenerateMappings() throws Exception {
+		Exporter exporter = ExporterFactory.createExporter(ExporterType.HBM);
 		exporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		exporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);
- 		exporter.start();
-		File[] files = new File[4];
-		files[0] = new File(outputFolder, "WithVersion.hbm.xml");
-		files[1] = new File(outputFolder, "NoVersion.hbm.xml");
-		files[2] = new File(outputFolder, "WithRealTimestamp.hbm.xml");
-		files[3] = new File(outputFolder, "WithFakeTimestamp.hbm.xml");
-		Metadata metadata = MetadataDescriptorFactory
-				.createNativeDescriptor(null, files, null)
-				.createMetadata();
-		PersistentClass cl = metadata.getEntityBinding( "WithVersion" );
-		Property version = cl.getVersion();
-		assertNotNull(version);
-		assertEquals("version", version.getName());
-		cl = metadata.getEntityBinding( "NoVersion" );
-		assertNotNull(cl);
-		version = cl.getVersion();
-		assertNull(version);
-		cl = metadata.getEntityBinding( "WithRealTimestamp" );
-		assertNotNull(cl);
-		version = cl.getVersion();
-		assertNotNull(version);
-		assertEquals("timestamp", version.getType().getName());
-		cl = metadata.getEntityBinding( "WithFakeTimestamp" );
-		assertNotNull(cl);
-		version = cl.getVersion();
-		assertNotNull(version);
-		assertEquals("integer", version.getType().getName());
+		exporter.start();
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		XPath xpath = XPathFactory.newInstance().newXPath();
+		// WithVersion.hbm.xml should have a <version> element with name="version"
+		Document doc = db.parse(new File(outputFolder, "WithVersion.hbm.xml"));
+		NodeList versionNodes = (NodeList) xpath.evaluate(
+				"//version", doc, XPathConstants.NODESET);
+		assertEquals(1, versionNodes.getLength());
+		assertEquals("version", versionNodes.item(0).getAttributes()
+				.getNamedItem("name").getNodeValue());
+		// NoVersion.hbm.xml should have no <version> or <timestamp> elements
+		doc = db.parse(new File(outputFolder, "NoVersion.hbm.xml"));
+		versionNodes = (NodeList) xpath.evaluate(
+				"//version", doc, XPathConstants.NODESET);
+		assertEquals(0, versionNodes.getLength());
+		NodeList timestampNodes = (NodeList) xpath.evaluate(
+				"//timestamp", doc, XPathConstants.NODESET);
+		assertEquals(0, timestampNodes.getLength());
+		// WithRealTimestamp.hbm.xml should have a <timestamp> element
+		doc = db.parse(new File(outputFolder, "WithRealTimestamp.hbm.xml"));
+		timestampNodes = (NodeList) xpath.evaluate(
+				"//timestamp", doc, XPathConstants.NODESET);
+		assertEquals(1, timestampNodes.getLength());
+		// WithFakeTimestamp.hbm.xml should have a <version> element with type="integer"
+		doc = db.parse(new File(outputFolder, "WithFakeTimestamp.hbm.xml"));
+		versionNodes = (NodeList) xpath.evaluate(
+				"//version", doc, XPathConstants.NODESET);
+		assertEquals(1, versionNodes.getLength());
+		assertEquals("java.lang.Integer", versionNodes.item(0).getAttributes()
+				.getNamedItem("type").getNodeValue());
 	}
 
 	private ClassDetails findByTableName(String tableName) {

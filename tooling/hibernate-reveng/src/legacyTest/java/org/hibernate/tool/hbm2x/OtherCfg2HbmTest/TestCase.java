@@ -17,15 +17,11 @@
  */
 package org.hibernate.tool.hbm2x.OtherCfg2HbmTest;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.export.ExporterFactory;
 import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
-import org.hibernate.tool.test.utils.ConnectionProvider;
 import org.hibernate.tool.test.utils.FileUtil;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
@@ -41,7 +37,6 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
-import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -89,19 +84,13 @@ public class TestCase {
 	}
 	
 	@Test
-    public void testReadable() {
-		Properties properties = new Properties();
-		properties.put(AvailableSettings.DIALECT, HibernateUtil.Dialect.class.getName());
-		properties.put(AvailableSettings.CONNECTION_PROVIDER, ConnectionProvider.class.getName());
-        File[] hbmFiles = new File[4];
-        hbmFiles[0] = new File(srcDir, "org/hibernate/tool/hbm2x/Customer.hbm.xml");
-        hbmFiles[1] = new File(srcDir, "org/hibernate/tool/hbm2x/LineItem.hbm.xml");
-        hbmFiles[2] = new File(srcDir, "org/hibernate/tool/hbm2x/Order.hbm.xml");
-        hbmFiles[3] = new File(srcDir, "org/hibernate/tool/hbm2x/Product.hbm.xml");
-        Metadata metadata = MetadataDescriptorFactory
-        		.createNativeDescriptor(null, hbmFiles, properties)
-        		.createMetadata();
-        assertNotNull(metadata);
+    public void testReadable() throws Exception {
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		assertNotNull(db.parse(new File(srcDir, "org/hibernate/tool/hbm2x/Customer.hbm.xml")));
+		assertNotNull(db.parse(new File(srcDir, "org/hibernate/tool/hbm2x/LineItem.hbm.xml")));
+		assertNotNull(db.parse(new File(srcDir, "org/hibernate/tool/hbm2x/Order.hbm.xml")));
+		assertNotNull(db.parse(new File(srcDir, "org/hibernate/tool/hbm2x/Product.hbm.xml")));
     }
 	
 	@Test

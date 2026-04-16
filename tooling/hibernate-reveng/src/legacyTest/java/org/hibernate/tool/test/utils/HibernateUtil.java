@@ -17,12 +17,9 @@
  */
 package org.hibernate.tool.test.utils;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 
@@ -36,28 +33,6 @@ public class HibernateUtil {
 		public Dialect() {
 			super((DatabaseVersion)null);
 		}
-	}
-	
-	public static ForeignKey getForeignKey(Table table, String fkName) {
-		ForeignKey result = null;
-		for (ForeignKey fk : table.getForeignKeyCollection()) {
-			if (fk.getName().equals(fkName)) {
-				result = fk;
-				break;
-			}
-		}
-		return result;
-	}
-	
-	public static Table getTable(Metadata metadata, String tabName) {
-		if (metadata != null) {
-            for (Table table : metadata.collectTableMappings()) {
-                if (table.getName().equals(tabName)) {
-                    return table;
-                }
-            }
-		}
-		return null;
 	}
 	
 	public static MetadataDescriptor initializeMetadataDescriptor(

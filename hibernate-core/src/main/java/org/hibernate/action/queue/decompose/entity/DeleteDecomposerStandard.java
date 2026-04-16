@@ -396,11 +396,19 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 							loadedState[attribute.getStateArrayPosition()],
 							(valueIndex, jdbcValue, jdbcValueMapping) -> {
 								if ( !jdbcValueMapping.isFormula() ) {
-									if ( jdbcValue == null ) {
-										builder.addNullOptimisticLockRestriction( jdbcValueMapping );
-									}
-									else {
-										builder.addOptimisticLockRestriction( jdbcValueMapping );
+									// Skip columns already in key restrictions (matches AbstractDeleteCoordinator pattern)
+									// This prevents duplicate columns in WHERE clause (e.g., composite IDs, read-only FK mappings)
+									if ( !builder.getKeyRestrictionBindings()
+											.containsColumn(
+													jdbcValueMapping.getSelectableName(),
+													jdbcValueMapping.getJdbcMapping()
+											) ) {
+										if ( jdbcValue == null ) {
+											builder.addNullOptimisticLockRestriction( jdbcValueMapping );
+										}
+										else {
+											builder.addOptimisticLockRestriction( jdbcValueMapping );
+										}
 									}
 								}
 							},

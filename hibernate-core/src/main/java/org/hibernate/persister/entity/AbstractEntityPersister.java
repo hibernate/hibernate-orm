@@ -3455,6 +3455,12 @@ public abstract class AbstractEntityPersister
 				return;
 			}
 
+			// Skip read-only attributes (insertable=false, updatable=false)
+			// TableDescriptor targets mutation operations, so read-only attributes are not applicable
+			if ( isReadOnlyAttribute( attribute ) ) {
+				return;
+			}
+
 			final var tableName = attribute.getContainingTableExpression();
 			final var builder = tableBuilderMap.get( tableName );
 			if ( builder != null && !builder.isInverse ) {
@@ -3469,6 +3475,17 @@ public abstract class AbstractEntityPersister
 	protected boolean isIdentifierAttribute(AttributeMapping attribute) {
 		return attribute.isEntityIdentifierMapping() // @Id or @EmbeddedId
 				|| IDENTIFIER_MAPPER_PROPERTY.equals( attribute.getAttributeName() ); // @IdClass
+	}
+
+	protected boolean isReadOnlyAttribute(AttributeMapping attribute) {
+		for ( int i = 0; i < attribute.getJdbcTypeCount(); i++ ) {
+			var selectable = attribute.getSelectable( i );
+			if ( selectable.isInsertable() || selectable.isUpdateable() ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	private TableDescriptorBuilder getTableDescriptorBuilder(

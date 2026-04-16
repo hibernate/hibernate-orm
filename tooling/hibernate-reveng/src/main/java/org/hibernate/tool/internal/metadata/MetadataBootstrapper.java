@@ -21,6 +21,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl.MetadataBuildingOptionsImpl;
@@ -30,6 +35,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.FieldDetails;
 
 /**
  * Bootstraps Hibernate ORM {@link Metadata} from a list of
@@ -65,12 +71,18 @@ public class MetadataBootstrapper {
 				new BootstrapContextImpl(serviceRegistry, options);
 		options.setBootstrapContext(bootstrapContext);
 
-		// Register ClassDetails in the bootstrap's ClassDetailsRegistry
+		// Register ClassDetails in the bootstrap's ClassDetailsRegistry,
+		// filtering out @Entity classes that have no identifier — these
+		// cannot be processed by MetadataBuildingProcess and would throw
+		// AnnotationException. @Embeddable classes are always included.
 		MutableClassDetailsRegistry classDetailsRegistry =
 				(MutableClassDetailsRegistry) bootstrapContext
 						.getModelsContext().getClassDetailsRegistry();
 		List<String> classNames = new ArrayList<>();
 		for (ClassDetails entity : entities) {
+			if (isEntity(entity, bootstrapContext) && !hasIdentifier(entity)) {
+				continue;
+			}
 			classDetailsRegistry.addClassDetails(
 					entity.getClassName(), entity);
 			classNames.add(entity.getClassName());
@@ -85,6 +97,22 @@ public class MetadataBootstrapper {
 		Metadata metadata = MetadataBuildingProcess.complete(
 				managedResources, bootstrapContext, options);
 		return new MetadataContext(metadata, serviceRegistry);
+	}
+
+	private static boolean isEntity(ClassDetails cd,
+								   BootstrapContextImpl bootstrapContext) {
+		return cd.hasAnnotationUsage(Entity.class,
+				bootstrapContext.getModelsContext());
+	}
+
+	private static boolean hasIdentifier(ClassDetails cd) {
+		for (FieldDetails field : cd.getFields()) {
+			if (field.hasDirectAnnotationUsage(Id.class)
+					|| field.hasDirectAnnotationUsage(EmbeddedId.class)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

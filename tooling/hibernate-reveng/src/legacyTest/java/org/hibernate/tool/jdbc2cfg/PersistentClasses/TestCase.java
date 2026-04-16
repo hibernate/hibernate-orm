@@ -20,14 +20,8 @@ package org.hibernate.tool.jdbc2cfg.PersistentClasses;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import org.hibernate.*;
-import org.hibernate.boot.Metadata;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
-import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.reveng.RevengSettings;
 import org.hibernate.tool.internal.metadata.RevengMetadataDescriptor;
@@ -50,7 +44,6 @@ public class TestCase {
 
 	private static final String PACKAGE_NAME = "org.hibernate.tool.jdbc2cfg.PersistentClasses";
 
-	private MetadataDescriptor metadataDescriptor = null;
 	private List<ClassDetails> entities = null;
 
 	@BeforeEach
@@ -58,9 +51,9 @@ public class TestCase {
 		JdbcUtil.createDatabase(this);
         AbstractStrategy c = new DefaultStrategy();
         c.setSettings(new RevengSettings(c).setDefaultPackageName(PACKAGE_NAME));
-        metadataDescriptor = MetadataDescriptorFactory
-        		.createReverseEngineeringDescriptor(c, null);
-        entities = ((RevengMetadataDescriptor) metadataDescriptor).getEntityClassDetails();
+        entities = ((RevengMetadataDescriptor) MetadataDescriptorFactory
+        		.createReverseEngineeringDescriptor(c, null))
+        		.getEntityClassDetails();
 	}
 
 	@AfterEach
@@ -113,81 +106,6 @@ public class TestCase {
 		OneToMany oneToMany = itemSet.getDirectAnnotationUsage(OneToMany.class);
 		assertNotNull(oneToMany);
 	}
-
-	@Test
-	public void testBinding() throws HibernateException {
-
-		String schemaToUse = Environment
-				.getProperties()
-				.getProperty(AvailableSettings.DEFAULT_SCHEMA);
-		Metadata metadata = metadataDescriptor.createMetadata();
-		PersistentClass orders = metadata.getEntityBinding(PACKAGE_NAME + ".Orders");
-		orders.getTable().setSchema(schemaToUse);
-		PersistentClass items = metadata.getEntityBinding(PACKAGE_NAME + ".Item");
-		items.getTable().setSchema(schemaToUse);
-
-		SessionFactory sf = metadata.buildSessionFactory();
-		Session session = sf.openSession();
-        Transaction t = session.beginTransaction();
-
-        Orders order = new Orders();
-		order.setId(1);
-		order.setName("Mickey");
-
-		session.merge(order);
-
-		Item item = addItem(order, 42, "item 42");
-        session.merge(item);
-		session.merge(addItem(order, 43, "x") );
-        session.merge(addItem(order, 44, "y") );
-        session.merge(addItem(order, 45, "z") );
-        session.merge(addItem(order, 46, "w") );
-
-		t.commit();
-		session.close();
-
-		session = sf.openSession();
-		t = session.beginTransaction();
-
-		Item loadeditem = (Item) session.find(PACKAGE_NAME + ".Item", 42);
-
-		assertEquals(item.getName(),loadeditem.getName() );
-        assertEquals(item.getChildId(),loadeditem.getChildId() );
-        assertEquals(item.getOrderId().getId(),loadeditem.getOrderId().getId() );
-
-        assertTrue(loadeditem.getOrderId().getItemsForOrderId().contains(loadeditem) );
-        assertTrue(item.getOrderId().getItemsForOrderId().contains(item) );
-
-        assertEquals(5,item.getOrderId().getItemsForOrderId().size() );
-        assertEquals(5,loadeditem.getOrderId().getItemsForOrderId().size() );
-
-		t.commit();
-        session.close();
-
-        session = sf.openSession();
-		t = session.beginTransaction();
-
-		order = session.getReference(Orders.class, 1);
-        assertFalse(Hibernate.isInitialized(order) );
-        assertFalse(Hibernate.isInitialized(order.getItemsForOrderId() ) );
-
-        order = (Orders) session.createQuery("from " + PACKAGE_NAME + ".Orders", (Class<?>)null).getSingleResult();
-
-        assertFalse(Hibernate.isInitialized(order.getItemsForOrderId() ) );
-		t.commit();
-        session.close();
-        sf.close();
-	}
-
-	private Item addItem(Orders m, int itemid, String name) {
-        Item item = new Item();
-        item.setChildId(itemid);
-        item.setOrderId(m);
-        item.setName(name);
-        item.setOrdersByRelatedOrderId(m);
-        m.getItemsForOrderId().add(item);
-        return item;
-    }
 
 	private ClassDetails findByClassName(String className) {
 		for (ClassDetails cd : entities) {

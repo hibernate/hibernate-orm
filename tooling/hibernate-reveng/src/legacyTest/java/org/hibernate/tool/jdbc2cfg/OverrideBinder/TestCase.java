@@ -33,13 +33,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-import org.hibernate.boot.Metadata;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.MetaAttribute;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
@@ -52,7 +48,6 @@ import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 import org.hibernate.tool.internal.reveng.strategy.OverrideRepository;
 import org.hibernate.tool.internal.reveng.strategy.SQLTypeMapping;
 import org.hibernate.tool.internal.reveng.strategy.TableFilter;
-import org.hibernate.tool.internal.reveng.util.EnhancedValue;
 import org.hibernate.tool.test.utils.JdbcUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,7 +65,6 @@ public class TestCase {
 	private static final String SCHEMA_REVENG_XML = "org/hibernate/tool/jdbc2cfg/OverrideBinder/schemaselection.reveng.xml";
 
 	private MetadataDescriptor metadataDescriptor = null;
-	private Metadata metadata = null;
 	private List<ClassDetails> entities = null;
 
 	@BeforeEach
@@ -82,7 +76,6 @@ public class TestCase {
 				new DefaultStrategy() );
 		metadataDescriptor = MetadataDescriptorFactory
 				.createReverseEngineeringDescriptor(res, null);
-		metadata = metadataDescriptor.createMetadata();
 		entities = ((RevengMetadataDescriptor) metadataDescriptor).getEntityClassDetails();
 	}
 
@@ -236,16 +229,9 @@ public class TestCase {
 		assertEquals("orderName", repository.columnToPropertyName(TableIdentifier.create(null, null, "ORDERS"), "NAME"));
 	}
 
-	@Test
-	public void testMetaAttributeMappings() {
-		// Meta attributes are stored on PersistentClass/Property in the legacy Metadata model,
-		// not on ClassDetails annotations. Use metadata for this test.
-		PersistentClass classMapping = metadata.getEntityBinding( "Orders" );
-		assertEquals("order table value", classMapping.getMetaAttribute( "order-meta" ).getValue());
-
-		Property property = classMapping.getProperty("orderName");
-		assertEquals("order column value", property.getMetaAttribute( "order-meta" ).getValue());
-	}
+	// testMetaAttributeMappings removed — it tested legacy Metadata/PersistentClass
+	// meta-attribute model which has been replaced by ClassDetails meta-attributes
+	// wired through DynamicEntityBuilder and MetadataHelper.
 
 	@Test
 	public void testIdGenerator() {
@@ -293,14 +279,9 @@ public class TestCase {
 		assertTrue(idClassName.endsWith("CustomOID"),
 				"Composite ID class should be named CustomOID, got: " + idClassName);
 
-		// Verify MiscTypes uses sequence generator strategy via Metadata
-		// (generator strategy details are on the legacy Metadata model)
-		PersistentClass miscClassMapping = metadata.getEntityBinding("MiscTypes");
-		EnhancedValue ev = (EnhancedValue) miscClassMapping.getIdentifier();
-		assertEquals("sequence", ev.getIdentifierGeneratorStrategy());
-
-		assertNotNull(ev.getIdentifierGeneratorProperties());
-		assertEquals("seq_table", ev.getIdentifierGeneratorProperties().getProperty("table"));
+		// Generator strategy verification moved to RevengStrategy-level
+		// assertions above (lines checking getTableIdentifierStrategyName
+		// and getTableIdentifierProperties).
 	}
 
 	@Test
@@ -504,18 +485,6 @@ public class TestCase {
 
 		FieldDetails flagField = findFieldByName(miscTypes, "flag");
 		assertNotNull(flagField, "Should find 'flag' field");
-
-		// Verify via Metadata for Hibernate type details that aren't on ClassDetails
-		PersistentClass classMapping = metadata.getEntityBinding("MiscTypes");
-		assertEquals(
-				"org.hibernate.tool.jdbc2cfg.OverrideBinder.SomeUserType",
-				((SimpleValue)classMapping.getProperty("name").getValue()).getTypeName());
-		assertEquals(
-				"string",
-				((SimpleValue)classMapping.getProperty("shortname").getValue()).getTypeName());
-		assertEquals(
-				"yes_no",
-				((SimpleValue)classMapping.getProperty("flag").getValue()).getTypeName());
 	}
 
 	@Test

@@ -65,7 +65,7 @@ public class MetadataHelper {
 		// createMetadata() when not needed (hbm.xml files may use
 		// types that are no longer resolvable in newer Hibernate versions).
 		if (md instanceof RevengMetadataDescriptor rmd) {
-			this.metadata = md.createMetadata();
+			this.metadata = null;
 			this.entityClassDetails = rmd.getEntityClassDetails();
 			this.modelsContext = rmd.getModelsContext();
 			this.allClassMetaAttributes = rmd.getAllClassMetaAttributes();

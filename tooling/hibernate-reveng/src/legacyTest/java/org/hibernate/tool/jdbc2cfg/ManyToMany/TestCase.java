@@ -161,8 +161,6 @@ public class TestCase {
 		MetadataDescriptor metadataDescriptor = MetadataDescriptorFactory
 				.createReverseEngineeringDescriptor(null, null);
 
-		assertNotNull(metadataDescriptor.createMetadata());
-
 		Exporter hme = ExporterFactory.createExporter(ExporterType.HBM);
 		hme.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		hme.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);

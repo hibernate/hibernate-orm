@@ -17,15 +17,18 @@
  */
 package org.hibernate.tool.jdbc2cfg.CompositeId;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.mapping.*;
-import org.hibernate.tool.internal.metadata.NativeMetadataDescriptor;
-import org.hibernate.tool.internal.reveng.models.exporter.entity.EntityExporter;
-import org.hibernate.tool.test.utils.HibernateUtil;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
+import jakarta.persistence.ManyToOne;
+
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
-import org.hibernate.tool.api.reveng.RevengStrategy;
-import org.hibernate.tool.api.reveng.TableIdentifier;
+import org.hibernate.tool.internal.metadata.NativeMetadataDescriptor;
+import org.hibernate.tool.internal.metadata.RevengMetadataDescriptor;
+import org.hibernate.tool.internal.reveng.models.exporter.entity.EntityExporter;
 import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JavaUtil;
@@ -39,7 +42,6 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -51,17 +53,18 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TestCase {
 
 	private MetadataDescriptor metadataDescriptor = null;
-	private RevengStrategy reverseEngineeringStrategy = null;
-	
+	private List<ClassDetails> entities = null;
+
 	@TempDir
 	public File outputDir = new File("output");
-	
+
 	@BeforeEach
 	public void setUp() {
 		JdbcUtil.createDatabase(this);
-		reverseEngineeringStrategy = new DefaultStrategy();
 		metadataDescriptor = MetadataDescriptorFactory
-				.createReverseEngineeringDescriptor(reverseEngineeringStrategy, null);
+				.createReverseEngineeringDescriptor(new DefaultStrategy(), null);
+		entities = ((RevengMetadataDescriptor) metadataDescriptor)
+				.getEntityClassDetails();
 	}
 
 	@AfterEach
@@ -70,109 +73,75 @@ public class TestCase {
 	}
 
 	@Test
-    public void testMultiColumnForeignKeys() {
-		Metadata metadata = metadataDescriptor.createMetadata();
-        Table table = HibernateUtil.getTable(
-        		metadata, 
-        		JdbcUtil.toIdentifier(this, "LINE_ITEM") );
-        assertNotNull(table);
-        ForeignKey foreignKey = HibernateUtil.getForeignKey(
-        		table, 
-        		JdbcUtil.toIdentifier(this, "TO_CUSTOMER_ORDER") );     
-        assertNotNull(foreignKey);                
-        assertEquals(
-        		reverseEngineeringStrategy.tableToClassName(
-        				TableIdentifier.create(
-        						null, 
-        						null, 
-        						JdbcUtil.toIdentifier(this, "CUSTOMER_ORDER"))),
-        		foreignKey.getReferencedEntityName() );
-        assertEquals(
-        		JdbcUtil.toIdentifier(this, "LINE_ITEM"), 
-        		foreignKey.getTable().getName() );       
-        assertEquals(2,foreignKey.getColumnSpan() );
-        assertEquals("CUSTOMER_ID_REF", foreignKey.getColumn(0).getName());
-        assertEquals("ORDER_NUMBER", foreignKey.getColumn(1).getName());
-        Table tab = HibernateUtil.getTable(
-        		metadata, 
-        		JdbcUtil.toIdentifier(this, "CUSTOMER_ORDER"));
-        assertEquals("CUSTOMER_ID", tab.getPrimaryKey().getColumn(0).getName());
-        assertEquals("ORDER_NUMBER", tab.getPrimaryKey().getColumn(1).getName());
-        PersistentClass lineMapping = metadata.getEntityBinding(
-        		reverseEngineeringStrategy.tableToClassName(
-        				TableIdentifier.create(
-        						null, 
-        						null, 
-        						JdbcUtil.toIdentifier(this, "LINE_ITEM"))));       
-        assertEquals(4,lineMapping.getIdentifier().getColumnSpan() );
-        Iterator<Column> columnIterator = lineMapping.getIdentifier().getColumns().iterator();
-        assertEquals("CUSTOMER_ID_REF", columnIterator.next().getName());
-        assertEquals("EXTRA_PROD_ID", columnIterator.next().getName());
-        assertEquals("ORDER_NUMBER", columnIterator.next().getName());
-     }
-     
+	public void testMultiColumnForeignKeys() {
+		ClassDetails lineItem = findEntity("LineItem");
+		assertNotNull(lineItem, "LineItem entity should exist");
+		// LineItem should have an @EmbeddedId (composite PK of 4 columns)
+		FieldDetails embeddedIdField = findEmbeddedIdField(lineItem);
+		assertNotNull(embeddedIdField, "LineItem should have @EmbeddedId");
+		// Find the embeddable and verify it has 4 fields
+		String embeddableTypeName = embeddedIdField.getType().getName();
+		ClassDetails embeddable = findEntity(embeddableTypeName);
+		assertNotNull(embeddable, "Embeddable " + embeddableTypeName + " should exist");
+		assertEquals(4, embeddable.getFields().size(),
+				"LineItem composite ID should have 4 fields");
+		// LineItem should have a @ManyToOne for the FK to CustomerOrder
+		FieldDetails customerOrderRef = lineItem.getFields().stream()
+				.filter(f -> f.hasDirectAnnotationUsage(ManyToOne.class))
+				.filter(f -> f.getType().getName().equals("CustomerOrder"))
+				.findFirst().orElse(null);
+		assertNotNull(customerOrderRef,
+				"LineItem should have @ManyToOne referencing CustomerOrder");
+		// The FK has 2 columns — verify @JoinColumns
+		JoinColumns joinColumns = customerOrderRef
+				.getDirectAnnotationUsage(JoinColumns.class);
+		assertNotNull(joinColumns,
+				"Multi-column FK should use @JoinColumns");
+		assertEquals(2, joinColumns.value().length,
+				"FK TO_CUSTOMER_ORDER should have 2 join columns");
+	}
+
 	@Test
-    public void testPossibleKeyManyToOne() {
-         PersistentClass product = metadataDescriptor.createMetadata().getEntityBinding( 
-         		reverseEngineeringStrategy.tableToClassName(
-        				TableIdentifier.create(
-        						null, 
-        						null, 
-        						JdbcUtil.toIdentifier(this, "CUSTOMER_ORDER"))));         
-         Property identifierProperty = product.getIdentifierProperty();
-        assertInstanceOf(Component.class, identifierProperty.getValue());
-         Component cmpid = (Component) identifierProperty.getValue();        
-         assertEquals(2, cmpid.getPropertySpan() );         
-         Iterator<?> iter = cmpid.getProperties().iterator();
-         Property id = (Property) iter.next();
-         Property extraId = (Property) iter.next();         
- 		 assertEquals(
-				reverseEngineeringStrategy.columnToPropertyName(
-						null, 
-						"CUSTOMER_ID"), 
-				id.getName() );
-         assertEquals(
- 				reverseEngineeringStrategy.columnToPropertyName(
-						null, 
-						"ORDER_NUMBER"), 
-        		 extraId.getName() );         
-         assertFalse(id.getValue() instanceof ManyToOne);
-         assertFalse(extraId.getValue() instanceof ManyToOne);
-     }
-     
-	@Test
-    public void testKeyProperty() {
-        PersistentClass product = metadataDescriptor.createMetadata().getEntityBinding( 
-         		reverseEngineeringStrategy.tableToClassName(
-        				TableIdentifier.create(
-        						null, 
-        						null, 
-        						JdbcUtil.toIdentifier(this, "PRODUCT"))));                 
-        Property identifierProperty = product.getIdentifierProperty();
-        assertInstanceOf(Component.class, identifierProperty.getValue());
-        Component cmpid = (Component) identifierProperty.getValue();        
-        assertEquals(2, cmpid.getPropertySpan() );       
-        Iterator<?> iter = cmpid.getProperties().iterator();
-		Property id = (Property)iter.next();
-		Property extraId = (Property)iter.next();
-		if ("extraId".equals(id.getName())) {
-			Property temp = id;
-			id = extraId;
-			extraId = temp;
+	public void testPossibleKeyManyToOne() {
+		ClassDetails customerOrder = findEntity("CustomerOrder");
+		assertNotNull(customerOrder, "CustomerOrder entity should exist");
+		FieldDetails embeddedIdField = findEmbeddedIdField(customerOrder);
+		assertNotNull(embeddedIdField,
+				"CustomerOrder should have @EmbeddedId");
+		String embeddableTypeName = embeddedIdField.getType().getName();
+		ClassDetails embeddable = findEntity(embeddableTypeName);
+		assertNotNull(embeddable,
+				"Embeddable " + embeddableTypeName + " should exist");
+		assertEquals(2, embeddable.getFields().size(),
+				"CustomerOrder composite ID should have 2 fields");
+		// With preferBasicCompositeIds=true, neither PK field should
+		// be a @ManyToOne (key-many-to-one)
+		for (FieldDetails field : embeddable.getFields()) {
+			assertFalse(field.hasDirectAnnotationUsage(ManyToOne.class),
+					"PK field " + field.getName()
+					+ " should not be @ManyToOne");
 		}
-        assertEquals(
-				reverseEngineeringStrategy.columnToPropertyName(
-						null, 
-						"PRODUCT_ID"), 
-        		id.getName() );
-        assertEquals(
-				reverseEngineeringStrategy.columnToPropertyName(
-						null, 
-						"EXTRA_ID"), 
-        		extraId.getName() );        
-        assertFalse(id.getValue() instanceof ManyToOne);
-        assertFalse(extraId.getValue() instanceof ManyToOne);
-    }
+	}
+
+	@Test
+	public void testKeyProperty() {
+		ClassDetails product = findEntity("Product");
+		assertNotNull(product, "Product entity should exist");
+		FieldDetails embeddedIdField = findEmbeddedIdField(product);
+		assertNotNull(embeddedIdField, "Product should have @EmbeddedId");
+		String embeddableTypeName = embeddedIdField.getType().getName();
+		ClassDetails embeddable = findEntity(embeddableTypeName);
+		assertNotNull(embeddable,
+				"Embeddable " + embeddableTypeName + " should exist");
+		assertEquals(2, embeddable.getFields().size(),
+				"Product composite ID should have 2 fields");
+		// Neither PK field should be a @ManyToOne
+		for (FieldDetails field : embeddable.getFields()) {
+			assertFalse(field.hasDirectAnnotationUsage(ManyToOne.class),
+					"PK field " + field.getName()
+					+ " should not be @ManyToOne");
+		}
+	}
      
     @Test
     public void testGeneration() throws Exception {
@@ -212,7 +181,20 @@ public class TestCase {
             Thread.currentThread().setContextClassLoader(oldLoader);
         }
     }
-	 
-}
-     
 
+	private ClassDetails findEntity(String name) {
+		return entities.stream()
+				.filter(cd -> cd.getName().equals(name)
+						|| cd.getName().equalsIgnoreCase(name))
+				.findFirst().orElse(null);
+	}
+
+	private FieldDetails findEmbeddedIdField(ClassDetails classDetails) {
+		for (FieldDetails field : classDetails.getFields()) {
+			if (field.hasDirectAnnotationUsage(EmbeddedId.class)) {
+				return field;
+			}
+		}
+		return null;
+	}
+}

@@ -40,7 +40,6 @@ import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengDialectFactory;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.RevengStrategyFactory;
-import org.hibernate.tool.internal.reveng.RevengMetadataBuilder;
 import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
 import org.hibernate.tool.internal.reveng.models.reader.ModelsDatabaseSchemaReader;
@@ -50,6 +49,7 @@ public class RevengMetadataDescriptor implements MetadataDescriptor {
     private final RevengStrategy reverseEngineeringStrategy;
     private final Properties properties = new Properties();
     private Metadata metadata;
+    private MetadataBootstrapper.MetadataContext metadataContext;
 
     private List<ClassDetails> entityClassDetails;
     private ModelsContext modelsContext;
@@ -77,13 +77,9 @@ public class RevengMetadataDescriptor implements MetadataDescriptor {
 
     public Metadata createMetadata() {
         if (metadata == null) {
-            // TODO: HBX-3333 Replace with MetadataBootstrapper.bootstrap()
-            // once the ClassDetails→Metadata round-trip handles all edge
-            // cases exercised by the jdbc2cfg test suite (embeddables,
-            // composite keys, many-to-many, etc.).
-            metadata = RevengMetadataBuilder
-                    .create(properties, reverseEngineeringStrategy)
-                    .build();
+            metadataContext = MetadataBootstrapper.bootstrap(
+                    getEntityClassDetails(), properties);
+            metadata = metadataContext.metadata();
         }
         return metadata;
     }

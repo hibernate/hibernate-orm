@@ -299,11 +299,16 @@ tasks.withType( Test.class ).configureEach { test ->
         test.maxParallelForks = Runtime.runtime.availableProcessors()
         test.systemProperty 'maxParallelForks', test.maxParallelForks
     }
-    else if ( project.db == "spannerpgsql" ) {
+    else if ( project.db == "spannerpgsql" || project.db == "spanner" ) {
         def threadCount = Runtime.runtime.availableProcessors()
         def testThreads = project.findProperty( "test.threads" )
         if ( testThreads == null ) {
-            testThreads = threadCount >= 16 ? threadCount.intdiv( 4 ) : (threadCount.intdiv( 2 ) ?: 1)
+            def dbCount = threadCount.intdiv( 2 ) ?: 1
+            if ( dbCount > 8 ) {
+                testThreads = 4
+            } else {
+                testThreads = dbCount.intdiv( 2 ) ?: 1
+            }
         }
         else {
             testThreads = Integer.parseInt( testThreads.toString() )

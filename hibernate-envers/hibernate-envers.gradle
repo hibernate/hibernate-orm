@@ -83,6 +83,23 @@ tasks.withType( Test.class ).configureEach { test ->
         test.maxParallelForks = Runtime.runtime.availableProcessors()
         test.systemProperty 'maxParallelForks', test.maxParallelForks
     }
+    else if ( project.db == "spannerpgsql" || project.db == "spanner" ) {
+        def threadCount = Runtime.runtime.availableProcessors()
+        def testThreads = project.findProperty( "test.threads" )
+        if ( testThreads == null ) {
+            def dbCount = threadCount.intdiv( 2 ) ?: 1
+            if ( dbCount > 8 ) {
+                testThreads = 4
+            } else {
+                testThreads = dbCount.intdiv( 2 ) ?: 1
+            }
+        }
+        else {
+            testThreads = Integer.parseInt( testThreads.toString() )
+        }
+        test.maxParallelForks = Math.min( testThreads, 4 )
+        test.systemProperty 'maxParallelForks', test.maxParallelForks
+    }
 }
 
 sourcesJar {

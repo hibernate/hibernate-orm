@@ -507,7 +507,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public void addDiscriminatorToDelete(TableDeleteBuilder tableDeleteBuilder) {
-		if ( discriminatorValue != null ) {
+		if ( needsDiscriminatorForDelete() ) {
 			if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
 				tableDeleteBuilder.addNonKeyRestriction( getDiscriminatorMapping(), TableMutationBuilder.NULL );
 			}
@@ -518,10 +518,14 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
+	private boolean needsDiscriminatorForDelete() {
+		return discriminatorValue != null && needsDiscriminator() && getDiscriminatorMapping().hasPhysicalColumn();
+	}
+
 	@Override
 	public void bindDiscriminatorForDelete(JdbcValueBindings jdbcValueBindings) {
-		if ( discriminatorValue != null && discriminatorValue != DiscriminatorValue.Special.NULL ) {
-			jdbcValueBindings.bindAssignment( -1, discriminatorValue.value(),  getDiscriminatorMapping() );
+		if ( needsDiscriminatorForDelete() && discriminatorValue != DiscriminatorValue.Special.NULL ) {
+			jdbcValueBindings.bindRestriction( -1, discriminatorValue.value(),  getDiscriminatorMapping() );
 		}
 	}
 

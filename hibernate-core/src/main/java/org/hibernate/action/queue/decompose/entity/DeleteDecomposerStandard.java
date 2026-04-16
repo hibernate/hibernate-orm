@@ -78,32 +78,21 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 		}
 
 		final var definedOptimisticLockStyle = definedOptimisticLockStyle();
-		final var isAllOrDirtyLocking = definedOptimisticLockStyle.isAllOrDirty();
-		final var entityEntry = session.getPersistenceContextInternal().getEntry( action.getInstance() );
-		final var loadedState = entityEntry != null ? entityEntry.getLoadedState() : null;
-		final Object rowId = entityEntry != null ? entityEntry.getRowId() : null;
 
+		// Match AbstractDeleteCoordinator pattern for obtaining loadedState and rowId
+		final var isImpliedOptimisticLocking = definedOptimisticLockStyle.isAllOrDirty();
+		final var entityEntry = session.getPersistenceContextInternal().getEntry( action.getInstance() );
+		final var loadedState = entityEntry != null && isImpliedOptimisticLocking ? entityEntry.getLoadedState() : null;
+		final Object rowId = entityEntry != null ? entityEntry.getRowId() : null;
 
 		// Create post-execution callback for finalization work
 		final PostDeleteHandling postDeleteHandling = new PostDeleteHandling(action, cacheKey, veto);
 
-//
-//		// Determine if we need to apply optimistic locking
-//		final EntityEntry entityEntry;
-//		final Object[] loadedState;
-//		final Object rowId;
-//		if ( definedOptimisticLockStyle.isAllOrDirty() ) {
-//			loadedState = entityEntry != null ? entityEntry.getLoadedState() : null;
-//			rowId = entityEntry != null ? entityEntry.getRowId() : null;
-//		}
-//		else {
-//			entityEntry = null;
-//			loadedState = null;
-//			rowId = null;
-//		}
-
-
-		if ( isAllOrDirtyLocking && loadedState != null || rowId == null && entityPersister.hasRowId() ) {
+		// Decide between static and dynamic delete operations (matches AbstractDeleteCoordinator pattern)
+		// Use dynamic if:
+		// - IMPLIED optimistic locking (ALL/DIRTY) AND we have loadedState
+		// - OR rowId is null but entityPersister has rowId mapping
+		if ( isImpliedOptimisticLocking && loadedState != null || rowId == null && entityPersister.hasRowId() ) {
 			return decomposeDynamicDelete(
 					ordinalBase,
 					action.getInstance(),
@@ -147,6 +136,7 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 		final var dynamicMutations = generateMutations( null, loadedState, true, session );
 
 		final List<PlannedOperation> operations = CollectionHelper.arrayList( dynamicMutations.size() );
+		int localOrd = 0;
 		for ( Map.Entry<String, TableDelete> entry : dynamicMutations.entrySet() ) {
 			var mutation = entry.getValue().createMutationOperation(null, sessionFactory);
 			var tableMapping = (TableDescriptorAsTableMapping) mutation.getTableDetails();
@@ -162,26 +152,12 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 					optimisticLockStyle
 			);
 
-			// For DELETE operations, use table position to ensure proper ordering across multiple entities:
-			// - Child tables (higher position) get negative ordinals to execute first
-			// - Parent tables (lower position, typically 0) get positive ordinals to execute last
-			// This ensures that when deleting multiple entities from joined inheritance,
-			// ALL child table deletes happen before ANY parent table deletes.
-			// Example: Cat(ordinalBase=1) and Dog(ordinalBase=2) both have animal parent table
-			//   - cat table (pos 1): 1 - (1 * 1_000_000) = -999_999
-			//   - dog table (pos 1): 2 - (1 * 1_000_000) = -999_998
-			//   - animal table (pos 0) for Cat: 1 - (0 * 1_000_000) = 1
-			//   - animal table (pos 0) for Dog: 2 - (0 * 1_000_000) = 2
-			//   → Execution order: cat, dog, animal/Cat, animal/Dog ✓
-			final int tablePosition = tableDescriptor.getRelativePosition();
-			final int ordinal = ordinalBase - (tablePosition * 1_000_000);
-
 			final PlannedOperation op = new PlannedOperation(
 					tableDescriptor,
 					MutationKind.DELETE,
 					mutation,
 					bindPlan,
-					ordinal,
+					ordinalBase * 1_000 + (localOrd++),
 					"EntityDeleteAction(" + entityPersister.getEntityName() + ")"
 			);
 
@@ -222,6 +198,7 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 		}
 
 		final List<PlannedOperation> operations = CollectionHelper.arrayList( tableDeletesToUse.size() );
+		int localOrd = 0;
 		for ( Map.Entry<String, TableDelete> entry : tableDeletesToUse.entrySet() ) {
 			var mutation = entry.getValue().createMutationOperation(null, sessionFactory);
 			var tableMapping = (TableDescriptorAsTableMapping) mutation.getTableDetails();
@@ -237,26 +214,12 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 					applyVersion ? optimisticLockStyle : OptimisticLockStyle.NONE
 			);
 
-			// For DELETE operations, use table position to ensure proper ordering across multiple entities:
-			// - Child tables (higher position) get negative ordinals to execute first
-			// - Parent tables (lower position, typically 0) get positive ordinals to execute last
-			// This ensures that when deleting multiple entities from joined inheritance,
-			// ALL child table deletes happen before ANY parent table deletes.
-			// Example: Cat(ordinalBase=1) and Dog(ordinalBase=2) both have animal parent table
-			//   - cat table (pos 1): 1 - (1 * 1_000_000) = -999_999
-			//   - dog table (pos 1): 2 - (1 * 1_000_000) = -999_998
-			//   - animal table (pos 0) for Cat: 1 - (0 * 1_000_000) = 1
-			//   - animal table (pos 0) for Dog: 2 - (0 * 1_000_000) = 2
-			//   → Execution order: cat, dog, animal/Cat, animal/Dog ✓
-			final int tablePosition = tableDescriptor.getRelativePosition();
-			final int ordinal = ordinalBase - (tablePosition * 1_000_000);
-
 			final PlannedOperation op = new PlannedOperation(
 					tableDescriptor,
 					MutationKind.DELETE,
 					mutation,
 					bindPlan,
-					ordinal,
+					ordinalBase * 1_000 + (localOrd++),
 					"EntityDeleteAction(" + entityPersister.getEntityName() + ")"
 			);
 
@@ -352,10 +315,7 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 			applyKeyRestriction( builder, rowId );
 
 			if ( builder.getMutatingTable().getTableMapping().isIdentifierTable() ) {
-				if ( entityPersister.getDiscriminatorMapping() != null
-						&& entityPersister.getDiscriminatorMapping().hasPhysicalColumn() ) {
-					entityPersister.addDiscriminatorToDelete( builder );
-				}
+				entityPersister.addDiscriminatorToDelete( builder );
 			}
 		} );
 

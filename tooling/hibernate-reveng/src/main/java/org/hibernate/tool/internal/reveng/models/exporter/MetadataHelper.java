@@ -68,8 +68,8 @@ public class MetadataHelper {
 			this.metadata = md.createMetadata();
 			this.entityClassDetails = rmd.getEntityClassDetails();
 			this.modelsContext = rmd.getModelsContext();
-			this.allClassMetaAttributes = Collections.emptyMap();
-			this.allFieldMetaAttributes = Collections.emptyMap();
+			this.allClassMetaAttributes = rmd.getAllClassMetaAttributes();
+			this.allFieldMetaAttributes = rmd.getAllFieldMetaAttributes();
 		} else if (md instanceof NativeMetadataDescriptor nmd
 				&& nmd.getMappingFiles() != null) {
 			File[] hbmFiles = Stream.of(nmd.getMappingFiles())

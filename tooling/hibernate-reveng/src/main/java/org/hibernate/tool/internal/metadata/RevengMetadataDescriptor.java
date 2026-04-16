@@ -18,7 +18,9 @@
 package org.hibernate.tool.internal.metadata;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -51,6 +53,7 @@ public class RevengMetadataDescriptor implements MetadataDescriptor {
 
     private List<ClassDetails> entityClassDetails;
     private ModelsContext modelsContext;
+    private DynamicEntityBuilder entityBuilder;
 
     public RevengMetadataDescriptor(
             RevengStrategy reverseEngineeringStrategy,
@@ -141,6 +144,7 @@ public class RevengMetadataDescriptor implements MetadataDescriptor {
                 entities.addAll(builder.getEmbeddableClassDetails());
                 this.entityClassDetails = entities;
                 this.modelsContext = builder.getModelsContext();
+                this.entityBuilder = builder;
             }
             finally {
                 revengDialect.close();
@@ -149,6 +153,24 @@ public class RevengMetadataDescriptor implements MetadataDescriptor {
         finally {
             StandardServiceRegistryBuilder.destroy(serviceRegistry);
         }
+    }
+
+    public Map<String, Map<String, List<String>>> getAllClassMetaAttributes() {
+        if (entityBuilder == null) {
+            buildEntityClassDetails();
+        }
+        return entityBuilder != null
+                ? entityBuilder.getAllClassMetaAttributes()
+                : Collections.emptyMap();
+    }
+
+    public Map<String, Map<String, Map<String, List<String>>>> getAllFieldMetaAttributes() {
+        if (entityBuilder == null) {
+            buildEntityClassDetails();
+        }
+        return entityBuilder != null
+                ? entityBuilder.getAllFieldMetaAttributes()
+                : Collections.emptyMap();
     }
 
 }

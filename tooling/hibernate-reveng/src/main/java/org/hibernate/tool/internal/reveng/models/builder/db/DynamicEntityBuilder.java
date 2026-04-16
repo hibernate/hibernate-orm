@@ -61,6 +61,8 @@ public class DynamicEntityBuilder {
 
 	private final ModelsContext modelsContext;
 	private final Map<String, TableMetadata> tableMetadataByClassName = new LinkedHashMap<>();
+	private final Map<String, Map<String, List<String>>> allClassMetaAttributes = new LinkedHashMap<>();
+	private final Map<String, Map<String, Map<String, List<String>>>> allFieldMetaAttributes = new LinkedHashMap<>();
 	private final List<ClassDetails> embeddableClassDetails = new ArrayList<>();
 	private boolean preferBasicCompositeIds = true;
 
@@ -256,6 +258,9 @@ public class DynamicEntityBuilder {
 		// Store the original table metadata for later use (e.g., documentation)
 		tableMetadataByClassName.put(className, tableMetadata);
 
+		// Extract meta-attributes from table and column metadata
+		extractMetaAttributes(className, tableMetadata);
+
 		return entityClass;
 	}
 
@@ -419,5 +424,43 @@ public class DynamicEntityBuilder {
 	 */
 	public Map<String, TableMetadata> getTableMetadataMap() {
 		return Collections.unmodifiableMap(tableMetadataByClassName);
+	}
+
+	/**
+	 * Returns all class-level meta-attributes, keyed by fully qualified
+	 * entity class name, then by attribute name.
+	 */
+	public Map<String, Map<String, List<String>>> getAllClassMetaAttributes() {
+		return allClassMetaAttributes;
+	}
+
+	/**
+	 * Returns all field-level meta-attributes, keyed by fully qualified
+	 * entity class name, then by field name, then by attribute name.
+	 */
+	public Map<String, Map<String, Map<String, List<String>>>> getAllFieldMetaAttributes() {
+		return allFieldMetaAttributes;
+	}
+
+	/**
+	 * Extracts meta-attributes from {@link TableMetadata} and its
+	 * {@link ColumnMetadata} entries, populating the class-level and
+	 * field-level meta-attribute maps.
+	 */
+	private void extractMetaAttributes(String className, TableMetadata tableMetadata) {
+		Map<String, List<String>> tableMeta = tableMetadata.getMetaAttributes();
+		if (!tableMeta.isEmpty()) {
+			allClassMetaAttributes.put(className, tableMeta);
+		}
+		Map<String, Map<String, List<String>>> fieldMetas = new LinkedHashMap<>();
+		for (ColumnMetadata column : tableMetadata.getColumns()) {
+			Map<String, List<String>> colMeta = column.getMetaAttributes();
+			if (!colMeta.isEmpty() && column.getFieldName() != null) {
+				fieldMetas.put(column.getFieldName(), colMeta);
+			}
+		}
+		if (!fieldMetas.isEmpty()) {
+			allFieldMetaAttributes.put(className, fieldMetas);
+		}
 	}
 }

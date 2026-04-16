@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.internal.reveng.models.metadata.AttributeOverrideMetadata;
@@ -2323,6 +2324,75 @@ public class DynamicEntityBuilderTest {
 	private String getPackageName(String fullyQualifiedName) {
 		int lastDot = fullyQualifiedName.lastIndexOf('.');
 		return lastDot > 0 ? fullyQualifiedName.substring(0, lastDot) : "";
+	}
+
+	@Test
+	public void testMetaAttributeExtraction() {
+		// GIVEN: table with class-level and column-level meta-attributes
+		TableMetadata tableMetadata =
+			new TableMetadata("CUSTOMER", "Customer", "com.example");
+		tableMetadata.addMetaAttribute("scope-class", "public");
+		tableMetadata.addMetaAttribute("implements", "java.io.Serializable");
+		tableMetadata.addMetaAttribute("extra-import", "com.example.util.Helper");
+
+		ColumnMetadata idCol = new ColumnMetadata("ID", "id", Long.class)
+			.primaryKey(true);
+		idCol.addMetaAttribute("scope-field", "private");
+		tableMetadata.addColumn(idCol);
+
+		ColumnMetadata nameCol = new ColumnMetadata("NAME", "name", String.class);
+		nameCol.addMetaAttribute("scope-field", "protected");
+		nameCol.addMetaAttribute("use-in-tostring", "true");
+		tableMetadata.addColumn(nameCol);
+
+		// WHEN
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		builder.createEntityFromTable(tableMetadata);
+
+		// THEN: class meta-attributes
+		Map<String, Map<String, List<String>>> classMeta =
+			builder.getAllClassMetaAttributes();
+		assertEquals(1, classMeta.size());
+		Map<String, List<String>> customerMeta =
+			classMeta.get("com.example.Customer");
+		assertNotNull(customerMeta);
+		assertEquals(List.of("public"), customerMeta.get("scope-class"));
+		assertEquals(List.of("java.io.Serializable"),
+			customerMeta.get("implements"));
+		assertEquals(List.of("com.example.util.Helper"),
+			customerMeta.get("extra-import"));
+
+		// THEN: field meta-attributes
+		Map<String, Map<String, Map<String, List<String>>>> fieldMeta =
+			builder.getAllFieldMetaAttributes();
+		assertEquals(1, fieldMeta.size());
+		Map<String, Map<String, List<String>>> customerFields =
+			fieldMeta.get("com.example.Customer");
+		assertNotNull(customerFields);
+		assertEquals(2, customerFields.size());
+		assertEquals(List.of("private"),
+			customerFields.get("id").get("scope-field"));
+		assertEquals(List.of("protected"),
+			customerFields.get("name").get("scope-field"));
+		assertEquals(List.of("true"),
+			customerFields.get("name").get("use-in-tostring"));
+	}
+
+	@Test
+	public void testMetaAttributeExtractionEmpty() {
+		// GIVEN: table with no meta-attributes
+		TableMetadata tableMetadata =
+			new TableMetadata("SIMPLE", "Simple", "com.example");
+		tableMetadata.addColumn(
+			new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+
+		// WHEN
+		DynamicEntityBuilder builder = new DynamicEntityBuilder();
+		builder.createEntityFromTable(tableMetadata);
+
+		// THEN: maps are empty
+		assertTrue(builder.getAllClassMetaAttributes().isEmpty());
+		assertTrue(builder.getAllFieldMetaAttributes().isEmpty());
 	}
 
 	private String getSimpleClassName(String fullyQualifiedName) {

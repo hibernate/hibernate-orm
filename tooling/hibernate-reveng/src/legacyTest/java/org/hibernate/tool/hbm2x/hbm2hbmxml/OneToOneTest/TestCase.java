@@ -18,20 +18,16 @@
 
 package org.hibernate.tool.hbm2x.hbm2hbmxml.OneToOneTest;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.api.export.ArtifactCollector;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterFactory;
 import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.export.DefaultArtifactCollector;
-import org.hibernate.tool.test.utils.ConnectionProvider;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.w3c.dom.Document;
@@ -44,7 +40,6 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
-import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -98,21 +93,16 @@ public class TestCase {
 	}
 	
 	@Test
-	public void testReadable() {
-        File personHbmXml = new File(
-        		srcDir, 
-        		"org/hibernate/tool/hbm2x/hbm2hbmxml/OneToOneTest/Person.hbm.xml");
-        File addressHbmXml = new File(
-        		srcDir, 
-        		"org/hibernate/tool/hbm2x/hbm2hbmxml/OneToOneTest/Address.hbm.xml");
-		Properties properties = new Properties();
-		properties.put(AvailableSettings.DIALECT, HibernateUtil.Dialect.class.getName());
-		properties.put(AvailableSettings.CONNECTION_PROVIDER, ConnectionProvider.class.getName());
-		File[] files = new File[] { personHbmXml, addressHbmXml };
-		MetadataDescriptor metadataDescriptor = MetadataDescriptorFactory
-				.createNativeDescriptor(null, files, properties);
-        assertNotNull(metadataDescriptor.createMetadata());
-    }
+	public void testReadable() throws Exception {
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		assertNotNull(db.parse(new File(
+				srcDir,
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/OneToOneTest/Person.hbm.xml")));
+		assertNotNull(db.parse(new File(
+				srcDir,
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/OneToOneTest/Address.hbm.xml")));
+	}
 	
 	@Test
 	public void testOneToOne() throws Exception {

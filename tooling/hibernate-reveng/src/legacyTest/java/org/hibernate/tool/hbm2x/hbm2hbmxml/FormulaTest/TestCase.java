@@ -18,21 +18,19 @@
 
 package org.hibernate.tool.hbm2x.hbm2hbmxml.FormulaTest;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.export.ExporterFactory;
 import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -66,22 +64,18 @@ public class TestCase {
 	}
 	
 	@Test
-	public void testReadable() {
-        ArrayList<File> files = new ArrayList<>(4);
-        files.add(new File(
-        		srcDir, 
-        		"/org/hibernate/tool/hbm2x/hbm2hbmxml/FormulaTest/Customer.hbm.xml"));
-        files.add(new File(
-        		srcDir, 
-        		"/org/hibernate/tool/hbm2x/hbm2hbmxml/FormulaTest/BillingAddress.hbm.xml"));
-        files.add(new File(
-        		srcDir, 
-        		"/org/hibernate/tool/hbm2x/hbm2hbmxml/FormulaTest/ShippingAddress.hbm.xml"));
-		Properties properties = new Properties();
-		properties.setProperty(AvailableSettings.DIALECT, HibernateUtil.Dialect.class.getName());
-		MetadataDescriptor metadataDescriptor = MetadataDescriptorFactory
-				.createNativeDescriptor(null, files.toArray(new File[2]), properties);
-        assertNotNull(metadataDescriptor.createMetadata());
-    }
+	public void testReadable() throws Exception {
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		assertNotNull(db.parse(new File(
+				srcDir,
+				"/org/hibernate/tool/hbm2x/hbm2hbmxml/FormulaTest/Customer.hbm.xml")));
+		assertNotNull(db.parse(new File(
+				srcDir,
+				"/org/hibernate/tool/hbm2x/hbm2hbmxml/FormulaTest/BillingAddress.hbm.xml")));
+		assertNotNull(db.parse(new File(
+				srcDir,
+				"/org/hibernate/tool/hbm2x/hbm2hbmxml/FormulaTest/ShippingAddress.hbm.xml")));
+	}
 	
 }

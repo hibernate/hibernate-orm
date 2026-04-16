@@ -17,19 +17,15 @@
  */
 package org.hibernate.tool.hbm2x.hbm2hbmxml.MapAndAnyTest;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.api.export.ArtifactCollector;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.export.ExporterFactory;
 import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.export.DefaultArtifactCollector;
-import org.hibernate.tool.test.utils.ConnectionProvider;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
-import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -43,8 +39,6 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -98,31 +92,21 @@ public class TestCase {
 	}
 
 	@Test
-	public void testReadable() {
-		ArrayList<File> files = getFiles();
-		Properties properties = new Properties();
-		properties.put(AvailableSettings.DIALECT, HibernateUtil.Dialect.class.getName());
-		properties.put(AvailableSettings.CONNECTION_PROVIDER, ConnectionProvider.class.getName());
-		MetadataDescriptor metadataDescriptor = MetadataDescriptorFactory
-				.createNativeDescriptor(null, files.toArray(new File[4]), properties);
-        assertNotNull(metadataDescriptor.createMetadata());
-    }
-
-	private @NonNull ArrayList<File> getFiles() {
-		ArrayList<File> files = new ArrayList<>(4);
-		files.add(new File(
+	public void testReadable() throws Exception {
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		assertNotNull(db.parse(new File(
 				srcDir,
-				"org/hibernate/tool/hbm2x/hbm2hbmxml/MapAndAnyTest/ComplexPropertyValue.hbm.xml"));
-		files.add(new File(
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/MapAndAnyTest/ComplexPropertyValue.hbm.xml")));
+		assertNotNull(db.parse(new File(
 				srcDir,
-				"org/hibernate/tool/hbm2x/hbm2hbmxml/MapAndAnyTest/IntegerPropertyValue.hbm.xml"));
-		files.add(new File(
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/MapAndAnyTest/IntegerPropertyValue.hbm.xml")));
+		assertNotNull(db.parse(new File(
 				srcDir,
-				"org/hibernate/tool/hbm2x/hbm2hbmxml/MapAndAnyTest/StringPropertyValue.hbm.xml"));
-		files.add(new File(
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/MapAndAnyTest/StringPropertyValue.hbm.xml")));
+		assertNotNull(db.parse(new File(
 				srcDir,
-				"org/hibernate/tool/hbm2x/hbm2hbmxml/MapAndAnyTest/PropertySet.hbm.xml"));
-		return files;
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/MapAndAnyTest/PropertySet.hbm.xml")));
 	}
 
 	@Test

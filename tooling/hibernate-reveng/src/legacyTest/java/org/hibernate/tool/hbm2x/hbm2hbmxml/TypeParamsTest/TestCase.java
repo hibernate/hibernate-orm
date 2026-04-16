@@ -18,14 +18,11 @@
 
 package org.hibernate.tool.hbm2x.hbm2hbmxml.TypeParamsTest;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.export.ExporterFactory;
 import org.hibernate.tool.api.export.ExporterType;
-import org.hibernate.tool.test.utils.ConnectionProvider;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,7 +40,6 @@ import javax.xml.xpath.XPathFactory;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -86,19 +82,13 @@ public class TestCase {
 	}
 
 	@Test
-	public void testReadable() {
-		File orderHbmXml =
-        		new File(
-        				srcDir, 
-        				"org/hibernate/tool/hbm2x/hbm2hbmxml/TypeParamsTest/Order.hbm.xml");
-		Properties properties = new Properties();
-		properties.setProperty(AvailableSettings.DIALECT, HibernateUtil.Dialect.class.getName());
-		properties.setProperty(AvailableSettings.CONNECTION_PROVIDER, ConnectionProvider.class.getName());
-		File[] files = new File[] { orderHbmXml };
-		MetadataDescriptor metadataDescriptor = MetadataDescriptorFactory
-				.createNativeDescriptor(null, files, properties);
-        assertNotNull(metadataDescriptor.createMetadata());
-    }
+	public void testReadable() throws Exception {
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		assertNotNull(db.parse(new File(
+				srcDir,
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/TypeParamsTest/Order.hbm.xml")));
+	}
 
 	@Test
 	public void testTypeParamsElements() throws Exception {

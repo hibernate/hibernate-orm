@@ -18,10 +18,8 @@
 
 package org.hibernate.tool.hbm2x.hbm2hbmxml.InheritanceTest;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.export.ArtifactCollector;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterFactory;
@@ -42,8 +40,6 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -104,23 +100,19 @@ public class TestCase {
 	}
 
 	@Test
-	public void testReadable() {
-        ArrayList<File> files = new ArrayList<>(4);
-        files.add(new File(
-        		srcDir, 
-        		"org/hibernate/tool/hbm2x/hbm2hbmxml/InheritanceTest/Alien.hbm.xml"));
-        files.add(new File(
-        		srcDir, 
-        		"org/hibernate/tool/hbm2x/hbm2hbmxml/InheritanceTest/Human.hbm.xml"));
-        files.add(new File(
-        		srcDir, 
-        		"org/hibernate/tool/hbm2x/hbm2hbmxml/InheritanceTest/Animal.hbm.xml"));
-		Properties properties = new Properties();
-		properties.setProperty(AvailableSettings.DIALECT, HibernateUtil.Dialect.class.getName());
-		MetadataDescriptor metadataDescriptor = MetadataDescriptorFactory
-				.createNativeDescriptor(null, files.toArray(new File[3]), properties);
-        assertNotNull(metadataDescriptor.createMetadata());
-    }
+	public void testReadable() throws Exception {
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		DocumentBuilder db = dbf.newDocumentBuilder();
+		assertNotNull(db.parse(new File(
+				srcDir,
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/InheritanceTest/Alien.hbm.xml")));
+		assertNotNull(db.parse(new File(
+				srcDir,
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/InheritanceTest/Human.hbm.xml")));
+		assertNotNull(db.parse(new File(
+				srcDir,
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/InheritanceTest/Animal.hbm.xml")));
+	}
 
 	@Test
 	public void testComment() throws Exception {

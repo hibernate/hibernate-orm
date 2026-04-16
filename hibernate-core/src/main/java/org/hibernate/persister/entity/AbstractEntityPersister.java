@@ -19,6 +19,9 @@ import org.hibernate.MappingException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.QueryException;
 import org.hibernate.Timeouts;
+import org.hibernate.action.queue.decompose.entity.DeleteDecomposerInheritedSoftDelete;
+import org.hibernate.action.queue.decompose.entity.DeleteDecomposerSoftDelete;
+import org.hibernate.action.queue.decompose.entity.DeleteDecomposerStandard;
 import org.hibernate.action.queue.meta.ColumnDescriptor;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableKeyDescriptor;
@@ -3339,7 +3342,16 @@ public abstract class AbstractEntityPersister
 		// Now we can safely create decomposers which may access tableDescriptors
 		insertDecomposer = new InsertDecomposer( this, factory );
 		updateDecomposer = new UpdateDecomposer( this, factory );
-		deleteDecomposer = new DeleteDecomposer( this, factory );
+
+		if ( getSoftDeleteMapping() == null ) {
+			deleteDecomposer = new DeleteDecomposerStandard( this, factory );
+		}
+		else if ( getRootEntityDescriptor() == this ) {
+			deleteDecomposer = new DeleteDecomposerSoftDelete( this, factory );
+		}
+		else {
+			deleteDecomposer = new DeleteDecomposerInheritedSoftDelete( this, factory );
+		}
 
 		logStaticSQL();
 	}

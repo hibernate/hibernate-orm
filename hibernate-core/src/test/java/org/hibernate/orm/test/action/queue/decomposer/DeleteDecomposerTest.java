@@ -13,6 +13,7 @@ import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.QueueType;
 import org.hibernate.action.queue.StatementShapeKey;
+import org.hibernate.action.queue.decompose.entity.DeleteDecomposerStandard;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.annotations.SoftDelete;
@@ -21,7 +22,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.action.queue.decompose.entity.DeleteDecomposer;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Tests for {@link DeleteDecomposer}
+ * Tests for {@link DeleteDecomposerStandard}
  *
  * @author Steve Ebersole
  */
@@ -78,7 +78,7 @@ public class DeleteDecomposerTest {
 
 			EntityPersister persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SimpleEntity.class );
-			DeleteDecomposer decomposer = new DeleteDecomposer( persister, factory );
+			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
 			// Create delete action
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
@@ -117,7 +117,7 @@ public class DeleteDecomposerTest {
 
 			EntityPersister persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( EntityWithVersion.class );
-			DeleteDecomposer decomposer = new DeleteDecomposer( persister, factory );
+			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
 			// Verify version-based optimistic locking
 			assertEquals( OptimisticLockStyle.VERSION, persister.optimisticLockStyle() );
@@ -153,7 +153,7 @@ public class DeleteDecomposerTest {
 
 			EntityPersister persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( EntityWithSecondaryTable.class );
-			DeleteDecomposer decomposer = new DeleteDecomposer( persister, factory );
+			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
 			List<PlannedOperation> operations = decomposer.decompose(action, 0, session , null);
@@ -187,7 +187,7 @@ public class DeleteDecomposerTest {
 
 			EntityPersister persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( ChildEntity.class );
-			DeleteDecomposer decomposer = new DeleteDecomposer( persister, factory );
+			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
 			List<PlannedOperation> operations = decomposer.decompose(action, 0, session , null);
@@ -220,7 +220,7 @@ public class DeleteDecomposerTest {
 
 			EntityPersister persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SoftDeleteEntity.class );
-			DeleteDecomposer decomposer = new DeleteDecomposer( persister, factory );
+			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
 			// Verify soft delete is enabled
 			assertNotNull( persister.getSoftDeleteMapping(), "Soft delete should be enabled" );
@@ -260,7 +260,7 @@ public class DeleteDecomposerTest {
 
 			EntityPersister persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SoftDeleteWithVersion.class );
-			DeleteDecomposer decomposer = new DeleteDecomposer( persister, factory );
+			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
 			// Verify soft delete and version
 			assertNotNull( persister.getSoftDeleteMapping() );
@@ -296,7 +296,7 @@ public class DeleteDecomposerTest {
 
 			EntityPersister persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( EntityWithAllOptimisticLock.class );
-			DeleteDecomposer decomposer = new DeleteDecomposer( persister, factory );
+			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
 			// Verify ALL optimistic locking
 			assertEquals( OptimisticLockStyle.ALL, persister.optimisticLockStyle() );
@@ -323,7 +323,7 @@ public class DeleteDecomposerTest {
 
 			EntityPersister persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SimpleEntity.class );
-			DeleteDecomposer decomposer = new DeleteDecomposer( persister, factory );
+			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
 			// Static delete group should be pre-generated for hard deletes
 			assertNotNull( decomposer.getStaticDeleteOperations() );
@@ -344,7 +344,7 @@ public class DeleteDecomposerTest {
 
 			EntityPersister persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SoftDeleteEntity.class );
-			DeleteDecomposer decomposer = new DeleteDecomposer( persister, factory );
+			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
 			// Static delete group should be pre-generated for soft deletes too
 			assertNotNull( decomposer.getStaticDeleteOperations() );
@@ -370,7 +370,7 @@ public class DeleteDecomposerTest {
 
 			EntityPersister persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SimpleEntity.class );
-			DeleteDecomposer decomposer = new DeleteDecomposer( persister, factory );
+			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
 			int ordinalBase = 10;
@@ -404,7 +404,7 @@ public class DeleteDecomposerTest {
 
 			EntityPersister persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( EntityWithVersion.class );
-			DeleteDecomposer decomposer = new DeleteDecomposer( persister, factory );
+			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
 			// Create delete action with null version (simulating unloaded entity delete)
 			Object id = persister.getIdentifier( entity, session );
@@ -445,7 +445,7 @@ public class DeleteDecomposerTest {
 
 			EntityPersister persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( ChildEntity.class );
-			DeleteDecomposer decomposer = new DeleteDecomposer( persister, factory );
+			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
 			List<PlannedOperation> operations = decomposer.decompose(action, 0, session , null);

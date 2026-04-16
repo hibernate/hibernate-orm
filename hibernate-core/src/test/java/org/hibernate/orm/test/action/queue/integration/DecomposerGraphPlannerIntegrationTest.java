@@ -18,6 +18,7 @@ import org.hibernate.action.queue.QueueType;
 import org.hibernate.action.queue.StatementShapeKey;
 import org.hibernate.action.queue.constraint.ConstraintModel;
 import org.hibernate.action.queue.constraint.ConstraintModelBuilder;
+import org.hibernate.action.queue.decompose.entity.DeleteDecomposerStandard;
 import org.hibernate.action.queue.graph.Graph;
 import org.hibernate.action.queue.graph.StandardGraphBuilder;
 import org.hibernate.action.queue.plan.PlannedOperation;
@@ -29,7 +30,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.action.queue.decompose.entity.DeleteDecomposer;
 import org.hibernate.action.queue.decompose.entity.InsertDecomposer;
 import org.hibernate.action.queue.decompose.entity.UpdateDecomposer;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -349,7 +349,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			);
 
 			// Get decomposer
-			final DeleteDecomposer decomposer = new DeleteDecomposer(persister, factory);
+			final DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard(persister, factory);
 
 			// Decompose
 			final List<PlannedOperation> operations = decomposer.decompose(action, 0, sessionImpl, null);

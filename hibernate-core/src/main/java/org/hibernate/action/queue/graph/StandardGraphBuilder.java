@@ -122,14 +122,11 @@ public class StandardGraphBuilder implements GraphBuilder {
 		}
 
 		long edgeId = 1;
-		System.err.println("DEBUG StandardGraphBuilder: Processing " + constraintModel.foreignKeys().size() + " foreign keys");
 		for ( ForeignKey foreignKey : constraintModel.foreignKeys() ) {
-			System.err.println("  - FK: " + foreignKey.keyTable() + " -> " + foreignKey.targetTable() + " (deferrable=" + foreignKey.deferrable() + ")");
 			if ( ignoreDeferrableForOrdering() && foreignKey.deferrable() ) {
 				// if the foreign-key is known to be deferrable in the database,
 				// and we are allowed to take advantage of that, then there is no
 				// need to break.
-				System.err.println("    Skipping deferrable FK");
 				continue;
 			}
 

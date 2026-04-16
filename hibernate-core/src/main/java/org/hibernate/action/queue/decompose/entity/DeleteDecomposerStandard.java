@@ -133,7 +133,7 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 			OptimisticLockStyle optimisticLockStyle,
 			PostDeleteHandling postDeleteHandling,
 			SharedSessionContractImplementor session) {
-		final var dynamicMutations = generateMutations( null, loadedState, true, session );
+		final var dynamicMutations = generateMutations( rowId, loadedState, true, session );
 
 		final List<PlannedOperation> operations = CollectionHelper.arrayList( dynamicMutations.size() );
 		int localOrd = 0;
@@ -380,6 +380,8 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 		assert entityPersister.optimisticLockStyle().isAllOrDirty();
 		assert session != null;
 
+		final boolean[] versionability = entityPersister.getPropertyVersionability();
+
 		builders.forEach( (name, builder) -> {
 			var adapter = (TableDescriptorAsTableMapping) builder.getMutatingTable().getTableMapping();
 			var tableDescriptor = (EntityTableDescriptor) adapter.getDescriptor();
@@ -389,31 +391,24 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 					continue;
 				}
 
-				attribute.breakDownJdbcValues(
-						loadedState[attribute.getStateArrayPosition()],
-						(valueIndex, jdbcValue, jdbcValueMapping) -> {
-							if ( !jdbcValueMapping.isFormula() ) {
-								if ( jdbcValue == null ) {
-									builder.addNullOptimisticLockRestriction( jdbcValueMapping );
+				if ( versionability[attribute.getStateArrayPosition()] ) {
+					attribute.breakDownJdbcValues(
+							loadedState[attribute.getStateArrayPosition()],
+							(valueIndex, jdbcValue, jdbcValueMapping) -> {
+								if ( !jdbcValueMapping.isFormula() ) {
+									if ( jdbcValue == null ) {
+										builder.addNullOptimisticLockRestriction( jdbcValueMapping );
+									}
+									else {
+										builder.addOptimisticLockRestriction( jdbcValueMapping );
+									}
 								}
-								else {
-									builder.addOptimisticLockRestriction( jdbcValueMapping );
-								}
-							}
-						},
-						session
-				);
-			}
-		} );
-
-		final boolean[] versionability = entityPersister.getPropertyVersionability();
-		for ( int attributeIndex = 0; attributeIndex < versionability.length; attributeIndex++ ) {
-			if ( versionability[attributeIndex] ) {
-				final var attribute = entityPersister.getAttributeMapping( attributeIndex );
-				if ( !attribute.isPluralAttributeMapping() ) {
+							},
+							session
+					);
 				}
 			}
-		}
+		} );
 	}
 
 	private void applyPartitionRestrictions(Map<String, TableDeleteBuilder> builders) {

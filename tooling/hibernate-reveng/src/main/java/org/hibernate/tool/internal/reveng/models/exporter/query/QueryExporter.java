@@ -21,28 +21,37 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.List;
+import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.boot.Metadata;
+import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-
-import java.util.Properties;
+import org.hibernate.tool.internal.metadata.MetadataBootstrapper;
+import org.hibernate.tool.internal.reveng.models.exporter.MetadataHelper;
 
 /**
  * Executes HQL/JPQL queries against a database and writes the
- * results to a file or writer. Uses {@link Metadata} directly
- * to build a {@link SessionFactory}.
+ * results to a file or writer. Bootstraps {@link org.hibernate.boot.Metadata}
+ * from {@link ClassDetails} via {@link MetadataBootstrapper}, then
+ * builds a {@link SessionFactory} to execute the queries.
+ * <p>
+ * This exporter requires that the entity classes referenced by the
+ * {@code ClassDetails} are available on the classpath. When used
+ * with reverse-engineered entities (which have no compiled Java
+ * classes), a {@link HibernateException} will be thrown with a
+ * descriptive error message.
  *
  * @author Koen Aers
  */
 public class QueryExporter implements Exporter {
 
-	private Metadata metadata;
+	private List<ClassDetails> entities;
+	private Properties properties;
 	private List<String> queries;
 	private Properties exporterProperties = new Properties();
 
@@ -69,19 +78,27 @@ public class QueryExporter implements Exporter {
 		configured.export(outputFile);
 	}
 
-	private QueryExporter(Metadata metadata, List<String> queries) {
-		this.metadata = metadata;
+	private QueryExporter(List<ClassDetails> entities,
+						   Properties properties,
+						   List<String> queries) {
+		this.entities = entities;
+		this.properties = properties;
 		this.queries = queries;
 	}
 
-	public static QueryExporter create(Metadata metadata,
+	public static QueryExporter create(List<ClassDetails> entities,
+										Properties properties,
 										List<String> queries) {
-		return new QueryExporter(metadata, queries);
+		return new QueryExporter(entities, properties, queries);
 	}
 
 	public static QueryExporter create(MetadataDescriptor md,
 										List<String> queries) {
-		return new QueryExporter(md.createMetadata(), queries);
+		MetadataHelper helper = MetadataHelper.from(md);
+		return new QueryExporter(
+				helper.getEntityClassDetails(),
+				md.getProperties(),
+				queries);
 	}
 
 	/**
@@ -102,40 +119,51 @@ public class QueryExporter implements Exporter {
 	/**
 	 * Executes all queries and writes the results to the given
 	 * writer. Each result row is written on its own line.
+	 *
+	 * @throws HibernateException if the entity classes are not
+	 *         available on the classpath (e.g. reverse-engineered
+	 *         entities that have not been compiled yet)
 	 */
 	public void export(Writer output) {
-		SessionFactory sessionFactory = null;
-		Session session = null;
-		Transaction transaction = null;
-		try {
-			sessionFactory = metadata.buildSessionFactory();
-			session = sessionFactory.openSession();
-			transaction = session.beginTransaction();
-			PrintWriter pw = new PrintWriter(output);
-			for (String query : queries) {
-				List<?> results = session
-						.createQuery(query, (Class<?>) null)
-						.getResultList();
-				for (Object row : results) {
-					pw.println(row);
+		try (MetadataBootstrapper.MetadataContext ctx =
+				MetadataBootstrapper.bootstrap(entities, properties)) {
+			SessionFactory sessionFactory = null;
+			Session session = null;
+			Transaction transaction = null;
+			try {
+				sessionFactory = ctx.metadata().buildSessionFactory();
+				session = sessionFactory.openSession();
+				transaction = session.beginTransaction();
+				PrintWriter pw = new PrintWriter(output);
+				for (String query : queries) {
+					List<?> results = session
+							.createQuery(query, (Class<?>) null)
+							.getResultList();
+					for (Object row : results) {
+						pw.println(row);
+					}
 				}
+				pw.flush();
+				transaction.commit();
 			}
-			pw.flush();
-			transaction.commit();
-		}
-		catch (HibernateException e) {
-			if (transaction != null) {
-				transaction.rollback();
+			catch (HibernateException e) {
+				if (transaction != null) {
+					try {
+						transaction.rollback();
+					} catch (Exception ignored) {}
+				}
+				throw new HibernateException(
+						"Failed to execute queries. If using reverse-engineered "
+						+ "entities, ensure the generated Java classes have been "
+						+ "compiled and are available on the classpath.", e);
 			}
-			throw new RuntimeException(
-					"Error occurred while executing query", e);
-		}
-		finally {
-			if (session != null) {
-				session.close();
-			}
-			if (sessionFactory != null) {
-				sessionFactory.close();
+			finally {
+				if (session != null) {
+					session.close();
+				}
+				if (sessionFactory != null) {
+					sessionFactory.close();
+				}
 			}
 		}
 	}

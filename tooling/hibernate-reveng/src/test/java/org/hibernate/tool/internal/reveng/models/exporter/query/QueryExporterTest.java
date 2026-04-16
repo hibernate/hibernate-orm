@@ -25,14 +25,19 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import org.hibernate.boot.Metadata;
+import jakarta.persistence.Entity;
+
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.ModelsContext;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -79,7 +84,7 @@ public class QueryExporterTest {
 		return DriverManager.getConnection(H2_URL, "sa", "");
 	}
 
-	private Metadata buildMetadata() {
+	private Properties buildProperties() {
 		Properties props = new Properties();
 		props.put(AvailableSettings.URL, H2_URL);
 		props.put(AvailableSettings.DRIVER, "org.h2.Driver");
@@ -87,20 +92,34 @@ public class QueryExporterTest {
 		props.put(AvailableSettings.PASS, "");
 		props.put(AvailableSettings.DEFAULT_SCHEMA, "");
 		props.put(AvailableSettings.DEFAULT_CATALOG, "");
+		return props;
+	}
+
+	private List<ClassDetails> buildEntityClassDetails() {
 		StandardServiceRegistry serviceRegistry =
 				new StandardServiceRegistryBuilder()
-						.applySettings(props)
+						.applySettings(buildProperties())
 						.build();
 		MetadataSources sources = new MetadataSources(serviceRegistry);
 		sources.addAnnotatedClass(Employee.class);
-		return sources.buildMetadata();
+		MetadataImpl metadata = (MetadataImpl) sources.buildMetadata();
+		ModelsContext modelsContext = metadata.getBootstrapContext()
+				.getModelsContext();
+		List<ClassDetails> entities = new ArrayList<>();
+		modelsContext.getClassDetailsRegistry().forEachClassDetails(cd -> {
+			if (cd.hasAnnotationUsage(Entity.class, modelsContext)) {
+				entities.add(cd);
+			}
+		});
+		StandardServiceRegistryBuilder.destroy(serviceRegistry);
+		return entities;
 	}
 
 	@Test
 	public void testExportToWriter() {
-		Metadata metadata = buildMetadata();
 		QueryExporter exporter = QueryExporter.create(
-				metadata,
+				buildEntityClassDetails(),
+				buildProperties(),
 				List.of("from " + EMPLOYEE_CLASS));
 		StringWriter writer = new StringWriter();
 		exporter.export(writer);
@@ -115,11 +134,11 @@ public class QueryExporterTest {
 
 	@Test
 	public void testExportToFile() throws IOException {
-		Metadata metadata = buildMetadata();
 		File outputFile = new File(
 				"./target/test-query-output/results.txt");
 		QueryExporter exporter = QueryExporter.create(
-				metadata,
+				buildEntityClassDetails(),
+				buildProperties(),
 				List.of("from " + EMPLOYEE_CLASS));
 		exporter.export(outputFile);
 		assertTrue(outputFile.exists(),
@@ -135,9 +154,9 @@ public class QueryExporterTest {
 
 	@Test
 	public void testMultipleQueries() {
-		Metadata metadata = buildMetadata();
 		QueryExporter exporter = QueryExporter.create(
-				metadata,
+				buildEntityClassDetails(),
+				buildProperties(),
 				List.of(
 						"from " + EMPLOYEE_CLASS + " e"
 						+ " where e.name = 'Alice'",
@@ -156,9 +175,9 @@ public class QueryExporterTest {
 
 	@Test
 	public void testEmptyResult() {
-		Metadata metadata = buildMetadata();
 		QueryExporter exporter = QueryExporter.create(
-				metadata,
+				buildEntityClassDetails(),
+				buildProperties(),
 				List.of("from " + EMPLOYEE_CLASS + " e"
 						+ " where e.name = 'Nobody'"));
 		StringWriter writer = new StringWriter();
@@ -170,9 +189,9 @@ public class QueryExporterTest {
 
 	@Test
 	public void testEmptyQueryList() {
-		Metadata metadata = buildMetadata();
 		QueryExporter exporter = QueryExporter.create(
-				metadata,
+				buildEntityClassDetails(),
+				buildProperties(),
 				List.of());
 		StringWriter writer = new StringWriter();
 		exporter.export(writer);

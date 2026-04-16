@@ -482,7 +482,7 @@ public abstract class CollectionBinder {
 			mappedBy = null;
 			collectionBinder.setTargetEntity( ClassDetails.VOID_CLASS_DETAILS );
 			collectionBinder.setCascadeStrategy(
-					aggregateCascadeTypes( null, property, false, context ) );
+					aggregateCascadeTypes( property.getDirectAnnotationUsage( ManyToAny.class ).cascade(), property, false, context ) );
 			collectionBinder.setOneToMany( false );
 		}
 		else {

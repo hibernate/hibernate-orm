@@ -7,6 +7,7 @@ package org.hibernate.annotations;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 
 import static java.lang.annotation.ElementType.FIELD;
@@ -97,6 +98,14 @@ public @interface Any {
 	 * If not explicitly specified, the default is {@code EAGER}.
 	 */
 	FetchType fetch() default FetchType.EAGER;
+
+	/**
+	 * The operations that should be cascaded to the associated entities.
+	 * <p>
+	 *     By default, no operations are cascaded.
+	 * </p>
+	 */
+	CascadeType[] cascade() default {};
 
 	/**
 	 * Whether the association is optional.

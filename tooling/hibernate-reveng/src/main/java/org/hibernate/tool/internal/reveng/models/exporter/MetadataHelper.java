@@ -16,11 +16,14 @@
 package org.hibernate.tool.internal.reveng.models.exporter;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import jakarta.persistence.Entity;
 
@@ -32,6 +35,10 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.internal.metadata.NativeMetadataDescriptor;
 import org.hibernate.tool.internal.metadata.RevengMetadataDescriptor;
 import org.hibernate.tool.internal.reveng.models.builder.hbm.HbmClassDetailsBuilder;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 /**
  * Extracts {@link ClassDetails} and {@link ModelsContext} from a
@@ -71,7 +78,11 @@ public class MetadataHelper {
 			if (hbmFiles.length > 0) {
 				this.metadata = null;
 				HbmClassDetailsBuilder builder = new HbmClassDetailsBuilder();
-				this.entityClassDetails = builder.buildFromFiles(hbmFiles);
+				String[] cfgResources = nmd.getCfgXmlFile() != null
+						? extractCfgXmlMappingResources(nmd.getCfgXmlFile())
+						: new String[0];
+				this.entityClassDetails = builder.buildFromFilesAndResources(
+						hbmFiles, cfgResources);
 				this.modelsContext = builder.getModelsContext();
 				this.allClassMetaAttributes = builder.getAllClassMetaAttributes();
 				this.allFieldMetaAttributes = builder.getAllFieldMetaAttributes();
@@ -133,5 +144,36 @@ public class MetadataHelper {
 
 	public Map<String, Map<String, List<String>>> getFieldMetaAttributes(String className) {
 		return allFieldMetaAttributes.getOrDefault(className, Collections.emptyMap());
+	}
+
+	/**
+	 * Parses a hibernate.cfg.xml file and extracts classpath resource
+	 * paths from {@code <mapping resource="..."/>} elements.
+	 */
+	private static String[] extractCfgXmlMappingResources(File cfgXml) {
+		try {
+			DocumentBuilderFactory factory =
+					DocumentBuilderFactory.newInstance();
+			factory.setValidating(false);
+			factory.setFeature(
+					"http://apache.org/xml/features/"
+					+ "nonvalidating/load-external-dtd", false);
+			Document doc;
+			try (FileInputStream fis = new FileInputStream(cfgXml)) {
+				doc = factory.newDocumentBuilder().parse(fis);
+			}
+			NodeList mappings = doc.getElementsByTagName("mapping");
+			List<String> resources = new ArrayList<>();
+			for (int i = 0; i < mappings.getLength(); i++) {
+				Element mapping = (Element) mappings.item(i);
+				String resource = mapping.getAttribute("resource");
+				if (resource != null && !resource.isEmpty()) {
+					resources.add(resource);
+				}
+			}
+			return resources.toArray(new String[0]);
+		} catch (Exception e) {
+			return new String[0];
+		}
 	}
 }

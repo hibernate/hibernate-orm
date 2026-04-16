@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
@@ -185,6 +186,9 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 	public void visitGenerators(IssueCollector collector) {
 		Set<String> sequences = readSequences();
 
+		// Collect generator keys in a TreeMap so they are reported
+		// in alphabetical order, matching the legacy detector behaviour.
+		TreeMap<String, GenerationType> generators = new TreeMap<>();
 		for (ClassDetails entity : getEntities()) {
 			for (FieldDetails field : entity.getFields()) {
 				if (!field.hasDirectAnnotationUsage(Id.class)
@@ -197,33 +201,41 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 				if (gv == null) {
 					continue;
 				}
-				checkGenerator(field, gv, sequences, collector);
+				String key = resolveGeneratorKey(field, gv);
+				if (key != null) {
+					generators.put(key, gv.strategy());
+				}
+			}
+		}
+
+		for (Map.Entry<String, GenerationType> entry
+				: generators.entrySet()) {
+			String key = entry.getKey();
+			GenerationType strategy = entry.getValue();
+			if (!isSequence(key, sequences) && !isTable(key)) {
+				if (strategy == GenerationType.TABLE) {
+					collector.reportIssue(new Issue(
+							"SCHEMA_TABLE_MISSING",
+							Issue.HIGH_PRIORITY,
+							"Missing table " + key));
+				}
+				collector.reportIssue(new Issue(
+						"MISSING_ID_GENERATOR",
+						Issue.HIGH_PRIORITY,
+						"Missing sequence or table: " + key));
 			}
 		}
 	}
 
-	private void checkGenerator(FieldDetails field,
-								GeneratedValue gv,
-								Set<String> sequences,
-								IssueCollector collector) {
+	private String resolveGeneratorKey(FieldDetails field,
+										GeneratedValue gv) {
 		GenerationType strategy = gv.strategy();
 		if (strategy == GenerationType.SEQUENCE) {
-			String seqName = resolveSequenceName(field, gv);
-			if (seqName != null && !isSequence(seqName, sequences)) {
-				collector.reportIssue(new Issue(
-						"MISSING_ID_GENERATOR",
-						Issue.HIGH_PRIORITY,
-						"Missing sequence or table: " + seqName));
-			}
+			return resolveSequenceName(field, gv);
 		} else if (strategy == GenerationType.TABLE) {
-			String tableName = resolveGeneratorTableName(field, gv);
-			if (tableName != null && !isTable(tableName)) {
-				collector.reportIssue(new Issue(
-						"MISSING_ID_GENERATOR",
-						Issue.HIGH_PRIORITY,
-						"Missing sequence or table: " + tableName));
-			}
+			return resolveGeneratorTableName(field, gv);
 		}
+		return null;
 	}
 
 	private String resolveSequenceName(FieldDetails field,

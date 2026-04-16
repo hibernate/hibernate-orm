@@ -18,7 +18,10 @@
 package org.hibernate.tool.internal.metadata;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.Properties;
+
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -26,6 +29,10 @@ import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 public class NativeMetadataDescriptor implements MetadataDescriptor {
 
@@ -67,9 +74,14 @@ public class NativeMetadataDescriptor implements MetadataDescriptor {
                 new StandardServiceRegistryBuilder(bootstrapServiceRegistry);
         if (cfgXmlFile != null) {
             ssrb.configure(cfgXmlFile);
+            addCfgXmlMappings(metadataSources, cfgXmlFile);
         }
         ssrb.applySettings(getProperties());
         return metadataSources.buildMetadata(ssrb.build());
+    }
+
+    public File getCfgXmlFile() {
+        return cfgXmlFile;
     }
 
     public File[] getMappingFiles() {
@@ -85,6 +97,60 @@ public class NativeMetadataDescriptor implements MetadataDescriptor {
                     sources.addFile(file);
                 }
             }
+        }
+    }
+
+    /**
+     * Parses the hibernate.cfg.xml and adds any {@code <mapping>}
+     * elements to the given MetadataSources.
+     * {@code StandardServiceRegistryBuilder.configure()} only
+     * processes properties from the cfg.xml — mapping references
+     * are ignored. This method fills that gap.
+     */
+    private static void addCfgXmlMappings(MetadataSources sources,
+                                           File cfgXml) {
+        try {
+            DocumentBuilderFactory factory =
+                    DocumentBuilderFactory.newInstance();
+            factory.setValidating(false);
+            factory.setFeature(
+                    "http://apache.org/xml/features/"
+                    + "nonvalidating/load-external-dtd", false);
+            Document doc;
+            try (FileInputStream fis = new FileInputStream(cfgXml)) {
+                doc = factory.newDocumentBuilder().parse(fis);
+            }
+            NodeList mappings =
+                    doc.getElementsByTagName("mapping");
+            for (int i = 0; i < mappings.getLength(); i++) {
+                Element mapping = (Element) mappings.item(i);
+                String resource = mapping.getAttribute("resource");
+                if (resource != null && !resource.isEmpty()) {
+                    sources.addResource(resource);
+                }
+                String file = mapping.getAttribute("file");
+                if (file != null && !file.isEmpty()) {
+                    sources.addFile(file);
+                }
+                String jar = mapping.getAttribute("jar");
+                if (jar != null && !jar.isEmpty()) {
+                    sources.addJar(new File(jar));
+                }
+                String pkg = mapping.getAttribute("package");
+                if (pkg != null && !pkg.isEmpty()) {
+                    sources.addPackage(pkg);
+                }
+                String className = mapping.getAttribute("class");
+                if (className != null && !className.isEmpty()) {
+                    try {
+                        sources.addAnnotatedClass(
+                                Class.forName(className));
+                    } catch (ClassNotFoundException ignored) {}
+                }
+            }
+        } catch (Exception e) {
+            // cfg.xml parsing failed — mappings from cfg.xml will
+            // be unavailable but fileset mappings still work
         }
     }
 

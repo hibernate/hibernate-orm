@@ -20,6 +20,7 @@ package org.hibernate.tool.internal.reveng.models.builder.hbm;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -94,24 +95,22 @@ public class HbmClassDetailsBuilder {
 	 * {@link ClassDetails} with JPA annotations for each entity.
 	 */
 	public List<ClassDetails> buildFromFiles(File... hbmFiles) {
+		return buildFromFilesAndResources(hbmFiles, new String[0]);
+	}
+
+	/**
+	 * Parses the given hbm.xml files and classpath resources using
+	 * {@link MappingBinder} and builds {@link ClassDetails} with JPA
+	 * annotations for each entity.
+	 */
+	public List<ClassDetails> buildFromFilesAndResources(
+			File[] hbmFiles, String[] resourcePaths) {
 		List<ClassDetails> entities = new ArrayList<>();
 		for (File file : hbmFiles) {
-			JaxbHbmHibernateMapping mapping = parseHbmXml(file);
-			String packageName = mapping.getPackage();
-			ctx.setDefaultPackage(packageName);
-			List<JaxbHbmRootEntityType> rootEntities = mapping.getClazz();
-			for (JaxbHbmRootEntityType entityType : rootEntities) {
-				entities.add(buildEntity(entityType, packageName));
-			}
-			// Mapping-level <filter-def> and <fetch-profile> go on first entity
-			if (!rootEntities.isEmpty()) {
-				DynamicClassDetails firstEntity = (DynamicClassDetails) entities.get(
-						entities.size() - rootEntities.size());
-				HbmEntityAnnotationBuilder.processMappingLevelAnnotations(
-						firstEntity, mapping, ctx);
-			}
-			// Top-level <subclass>, <joined-subclass>, <union-subclass> elements
-			HbmSubclassBuilder.processTopLevelSubclasses(mapping, packageName, ctx);
+			processMapping(parseHbmXml(file), entities);
+		}
+		for (String resource : resourcePaths) {
+			processMapping(parseHbmXmlResource(resource), entities);
 		}
 		// Include subclass entities so they get exported as separate files.
 		entities.addAll(ctx.getSubclassEntityDetails());
@@ -119,6 +118,23 @@ public class HbmClassDetailsBuilder {
 		// get exported as separate .java files by the entity exporter.
 		entities.addAll(ctx.getEmbeddableClassDetails());
 		return entities;
+	}
+
+	private void processMapping(JaxbHbmHibernateMapping mapping,
+								 List<ClassDetails> entities) {
+		String packageName = mapping.getPackage();
+		ctx.setDefaultPackage(packageName);
+		List<JaxbHbmRootEntityType> rootEntities = mapping.getClazz();
+		for (JaxbHbmRootEntityType entityType : rootEntities) {
+			entities.add(buildEntity(entityType, packageName));
+		}
+		if (!rootEntities.isEmpty()) {
+			DynamicClassDetails firstEntity = (DynamicClassDetails) entities.get(
+					entities.size() - rootEntities.size());
+			HbmEntityAnnotationBuilder.processMappingLevelAnnotations(
+					firstEntity, mapping, ctx);
+		}
+		HbmSubclassBuilder.processTopLevelSubclasses(mapping, packageName, ctx);
 	}
 
 	private JaxbHbmHibernateMapping parseHbmXml(File hbmFile) {
@@ -129,6 +145,28 @@ public class HbmClassDetailsBuilder {
 		} catch (IOException e) {
 			throw new RuntimeException(
 					"Failed to parse hbm.xml file: " + hbmFile.getAbsolutePath(), e);
+		}
+	}
+
+	private JaxbHbmHibernateMapping parseHbmXmlResource(String resourcePath) {
+		// Strip leading slash — ClassLoader.getResourceAsStream expects
+		// paths without it (e.g. "org/..." not "/org/...")
+		String normalized = resourcePath.startsWith("/")
+				? resourcePath.substring(1) : resourcePath;
+		Origin origin = new Origin(SourceType.RESOURCE, normalized);
+		try (InputStream stream = Thread.currentThread()
+				.getContextClassLoader()
+				.getResourceAsStream(normalized)) {
+			if (stream == null) {
+				throw new RuntimeException(
+						"Classpath resource not found: " + resourcePath);
+			}
+			Binding<JaxbHbmHibernateMapping> binding =
+					mappingBinder.bind(stream, origin);
+			return binding.getRoot();
+		} catch (IOException e) {
+			throw new RuntimeException(
+					"Failed to parse hbm.xml resource: " + resourcePath, e);
 		}
 	}
 

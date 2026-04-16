@@ -303,6 +303,7 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.resolveAggregateColumnBasicType;
 import static org.hibernate.metamodel.mapping.internal.MappingModelHelper.isCompatibleModelPart;
 import static org.hibernate.pretty.MessageHelper.infoString;
+import static org.hibernate.spi.NavigablePath.IDENTIFIER_MAPPER_PROPERTY;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
@@ -3445,8 +3446,15 @@ public abstract class AbstractEntityPersister
 		} );
 	}
 
-	protected static void applyAttribute(LinkedHashMap<String, TableDescriptorBuilder> tableBuilderMap, AttributeMapping attribute) {
+	protected void applyAttribute(LinkedHashMap<String, TableDescriptorBuilder> tableBuilderMap, AttributeMapping attribute) {
 		if ( !attribute.isPluralAttributeMapping() ) {
+			// Skip identifier attributes - they're already represented in keyDescriptor
+			// For composite identifiers (@IdClass), the individual attributes (e.g., productId, operator)
+			// should not be duplicated in the attributes list
+			if ( isIdentifierAttribute( attribute ) ) {
+				return;
+			}
+
 			final var tableName = attribute.getContainingTableExpression();
 			final var builder = tableBuilderMap.get( tableName );
 			if ( builder != null && !builder.isInverse ) {
@@ -3456,6 +3464,11 @@ public abstract class AbstractEntityPersister
 				} );
 			}
 		}
+	}
+
+	protected boolean isIdentifierAttribute(AttributeMapping attribute) {
+		return attribute.isEntityIdentifierMapping() // @Id or @EmbeddedId
+				|| IDENTIFIER_MAPPER_PROPERTY.equals( attribute.getAttributeName() ); // @IdClass
 	}
 
 	private TableDescriptorBuilder getTableDescriptorBuilder(

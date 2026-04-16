@@ -29,6 +29,8 @@ import org.hibernate.boot.models.annotations.internal.EmbeddedIdJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.GeneratedValueJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.IdJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ManyToOneJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
@@ -67,10 +69,16 @@ public class HbmIdBuilder {
 			String genClass = generator.getClazz();
 			GenerationType genType = ctx.mapGeneratorClass(genClass);
 			if (genType != null) {
+				String generatorName = resolveGeneratorName(generator);
 				GeneratedValueJpaAnnotation genAnnotation =
 						JpaAnnotations.GENERATED_VALUE.createUsage(ctx.getModelsContext());
 				genAnnotation.strategy(genType);
+				if (generatorName != null) {
+					genAnnotation.generator(generatorName);
+				}
 				field.addAnnotationUsage(genAnnotation);
+				addGeneratorAnnotation(field, genType, generatorName,
+						generator, ctx);
 			}
 
 			// Store the original generator class name and params as meta attributes
@@ -200,6 +208,45 @@ public class HbmIdBuilder {
 						JpaAnnotations.MANY_TO_ONE.createUsage(ctx.getModelsContext());
 				field.addAnnotationUsage(m2oAnnotation);
 			}
+		}
+	}
+
+	private static String resolveGeneratorName(
+			JaxbHbmGeneratorSpecificationType generator) {
+		if (generator.getConfigParameters() != null) {
+			for (JaxbHbmConfigParameterType param : generator.getConfigParameters()) {
+				if ("sequence_name".equals(param.getName())
+						|| "table_name".equals(param.getName())) {
+					return param.getValue();
+				}
+			}
+		}
+		return null;
+	}
+
+	private static void addGeneratorAnnotation(
+			DynamicFieldDetails field,
+			GenerationType genType,
+			String generatorName,
+			JaxbHbmGeneratorSpecificationType generator,
+			HbmBuildContext ctx) {
+		if (generatorName == null) {
+			return;
+		}
+		if (genType == GenerationType.SEQUENCE) {
+			SequenceGeneratorJpaAnnotation seqGen =
+					JpaAnnotations.SEQUENCE_GENERATOR.createUsage(
+							ctx.getModelsContext());
+			seqGen.name(generatorName);
+			seqGen.sequenceName(generatorName);
+			field.addAnnotationUsage(seqGen);
+		} else if (genType == GenerationType.TABLE) {
+			TableGeneratorJpaAnnotation tableGen =
+					JpaAnnotations.TABLE_GENERATOR.createUsage(
+							ctx.getModelsContext());
+			tableGen.name(generatorName);
+			tableGen.table(generatorName);
+			field.addAnnotationUsage(tableGen);
 		}
 	}
 

@@ -17,310 +17,396 @@
  */
 package org.hibernate.tool.internal.reveng.models.exporter.lint;
 
-import java.util.Collection;
-import java.util.Collections;
+import java.math.BigDecimal;
+import java.sql.Types;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.TreeMap;
 
-import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
-import org.hibernate.boot.Metadata;
+import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.TableGenerator;
+
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.generator.Generator;
-import org.hibernate.id.PersistentIdentifierGenerator;
-import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.IdentifierCollection;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.RootClass;
-import org.hibernate.mapping.Table;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengDialectFactory;
-import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
-import org.hibernate.tool.internal.reveng.RevengMetadataCollector;
-import org.hibernate.tool.internal.reveng.reader.DatabaseReader;
-import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
-import org.hibernate.tool.internal.reveng.strategy.TableSelectorStrategy;
 import org.hibernate.tool.internal.reveng.util.JdbcToHibernateTypeHelper;
-import org.hibernate.tool.internal.reveng.util.TableNameQualifier;
-import org.hibernate.type.MappingContext;
 
+/**
+ * Lint detector that compares the entity model (from {@link ClassDetails})
+ * against the actual database schema. Reports missing tables, missing
+ * columns, column type mismatches, and missing identifier generators
+ * (sequences/tables).
+ */
 public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
-    public String getName() {
-        return "schema";
-    }
+	private Dialect dialect;
+	private RevengDialect revengDialect;
+	private ConnectionProvider connectionProvider;
+	private ServiceRegistry serviceRegistry;
 
-    DatabaseReader reader;
+	public String getName() {
+		return "schema";
+	}
 
-    private SequenceCollector sequenceCollector;
+	@Override
+	public void initialize(List<ClassDetails> entities, Properties properties) {
+		super.initialize(entities, properties);
+		Properties envProperties = Environment.getProperties();
+		StandardServiceRegistryBuilder builder =
+				new StandardServiceRegistryBuilder();
+		if (properties != null) {
+			builder.applySettings(properties);
+		}
+		try {
+			serviceRegistry = builder.build();
+			JdbcServices jdbcServices =
+					serviceRegistry.getService(JdbcServices.class);
+			if (jdbcServices != null) {
+				dialect = jdbcServices.getDialect();
+			}
+			revengDialect = RevengDialectFactory.createMetaDataDialect(
+					dialect, envProperties);
+			connectionProvider =
+					serviceRegistry.getService(ConnectionProvider.class);
+			revengDialect.configure(connectionProvider);
+		} catch (Exception e) {
+			// Database not available — schema checks will be skipped
+			revengDialect = null;
+		}
+	}
 
-    private TableSelectorStrategy tableSelector;
+	@Override
+	public void visit(IssueCollector collector) {
+		if (revengDialect == null) {
+			return;
+		}
+		super.visit(collector);
+		visitGenerators(collector);
+	}
 
-    private Dialect dialect;
+	@Override
+	protected void visitTable(ClassDetails entity,
+							  IssueCollector collector) {
+		String tableName = getTableName(entity);
+		String schema = getTableSchema(entity);
+		String catalog = getTableCatalog(entity);
 
-    private MappingContext mapping;
+		// Read the table from the database
+		Map<String, Map<String, Object>> dbColumns =
+				readDbColumns(catalog, schema, tableName);
 
-    /** current table as read from the database */
-    Table currentDbTable = null;
+		if (dbColumns == null) {
+			collector.reportIssue(new Issue(
+					"SCHEMA_TABLE_MISSING",
+					Issue.HIGH_PRIORITY,
+					"Missing table "
+					+ qualifyTableName(catalog, schema, tableName)));
+			return;
+		}
 
-    public void initialize(Metadata metadata) {
-        super.initialize(metadata);
-        StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
-        ServiceRegistry serviceRegistry = builder.build();
+		// Check each column
+		for (FieldDetails field : entity.getFields()) {
+			Column column = field.getDirectAnnotationUsage(Column.class);
+			if (column != null) {
+				visitColumn(entity, field, column, dbColumns, collector);
+			}
+		}
+	}
 
-        Properties properties = Environment.getProperties();
-        JdbcServices jdbcServices = serviceRegistry.getService(JdbcServices.class);
-        if (jdbcServices != null) {
-            dialect = jdbcServices.getDialect();
-        }
+	private void visitColumn(ClassDetails entity,
+							 FieldDetails field,
+							 Column column,
+							 Map<String, Map<String, Object>> dbColumns,
+							 IssueCollector collector) {
+		String tableName = getTableName(entity);
+		String schema = getTableSchema(entity);
+		String catalog = getTableCatalog(entity);
+		String columnName = column.name();
+		String qualifiedTable =
+				qualifyTableName(catalog, schema, tableName);
 
-        tableSelector = new TableSelectorStrategy(
-                new DefaultStrategy());
-        RevengDialect metadataDialect = RevengDialectFactory
-                .createMetaDataDialect(
-                        dialect,
-                        properties);
-        reader = DatabaseReader.create(
-                properties,
-                tableSelector,
-                metadataDialect,
-                serviceRegistry);
-        ConnectionProvider connectionProvider = serviceRegistry.getService(ConnectionProvider.class);
-        sequenceCollector = SequenceCollector.create(connectionProvider);
-    }
+		Map<String, Object> dbColumn =
+				dbColumns.get(columnName.toUpperCase());
+		if (dbColumn == null) {
+			collector.reportIssue(new Issue(
+					"SCHEMA_COLUMN_MISSING",
+					Issue.HIGH_PRIORITY,
+					qualifiedTable
+					+ " is missing column: " + columnName));
+			return;
+		}
 
-    public void visit(IssueCollector collector) {
-        super.visit(collector);
-        visitGenerators(collector);
-    }
+		// Compare SQL type codes
+		int dbTypeCode = (Integer) dbColumn.get("DATA_TYPE");
+		int modelTypeCode = resolveModelSqlTypeCode(field);
+		if (modelTypeCode != Integer.MIN_VALUE
+				&& dbTypeCode != modelTypeCode) {
+			collector.reportIssue(new Issue(
+					"SCHEMA_COLUMN_TYPE_MISMATCH",
+					Issue.NORMAL_PRIORITY,
+					qualifiedTable
+					+ " has a wrong column type for "
+					+ columnName + ", expected: "
+					+ JdbcToHibernateTypeHelper
+							.getJDBCTypeName(modelTypeCode)
+					+ " but was "
+					+ JdbcToHibernateTypeHelper
+							.getJDBCTypeName(dbTypeCode)
+					+ " in db"));
+		}
+	}
 
-    @Override
-    public void visitGenerators(IssueCollector collector) {
-        Iterator<?> iter = iterateGenerators();
+	@Override
+	protected void visitColumn(ClassDetails entity,
+							   FieldDetails field,
+							   Column column,
+							   IssueCollector collector) {
+		// Not used — we override visitTable to pass dbColumns through
+	}
 
-        Set<?> sequences = Collections.emptySet();
-        if (dialect.getSequenceSupport().supportsSequences()) {
-            sequences = sequenceCollector.readSequences(dialect.getQuerySequencesString());
-        }
+	@Override
+	public void visitGenerators(IssueCollector collector) {
+		Set<String> sequences = readSequences();
 
-        // TODO: move this check into something that could check per class or collection instead.
-        while (iter.hasNext()) {
-            PersistentIdentifierGenerator generator = (PersistentIdentifierGenerator) iter.next();
-            Object key = getGeneratorKey(generator);
-            if (!isSequence(key, sequences) && !isTable(key)) {
-                collector.reportIssue(new Issue("MISSING_ID_GENERATOR", Issue.HIGH_PRIORITY, "Missing sequence or table: " + key));
-            }
-        }
-    }
+		for (ClassDetails entity : getEntities()) {
+			for (FieldDetails field : entity.getFields()) {
+				if (!field.hasDirectAnnotationUsage(Id.class)
+						&& !field.hasDirectAnnotationUsage(
+								EmbeddedId.class)) {
+					continue;
+				}
+				GeneratedValue gv = field.getDirectAnnotationUsage(
+						GeneratedValue.class);
+				if (gv == null) {
+					continue;
+				}
+				checkGenerator(field, gv, sequences, collector);
+			}
+		}
+	}
 
-    private boolean isSequence(Object key, Set<?> sequences) {
-        if (key instanceof String) {
-            if (sequences.contains(key)) {
-                return true;
-            }
-            else {
-                String[] strings = StringHelper.split(".", (String) key);
-                if (strings.length == 3) {
-                    return sequences.contains(strings[2]);
-                }
-                else if (strings.length == 2) {
-                    return sequences.contains(strings[1]);
-                }
-            }
-        }
-        return false;
-    }
+	private void checkGenerator(FieldDetails field,
+								GeneratedValue gv,
+								Set<String> sequences,
+								IssueCollector collector) {
+		GenerationType strategy = gv.strategy();
+		if (strategy == GenerationType.SEQUENCE) {
+			String seqName = resolveSequenceName(field, gv);
+			if (seqName != null && !isSequence(seqName, sequences)) {
+				collector.reportIssue(new Issue(
+						"MISSING_ID_GENERATOR",
+						Issue.HIGH_PRIORITY,
+						"Missing sequence or table: " + seqName));
+			}
+		} else if (strategy == GenerationType.TABLE) {
+			String tableName = resolveGeneratorTableName(field, gv);
+			if (tableName != null && !isTable(tableName)) {
+				collector.reportIssue(new Issue(
+						"MISSING_ID_GENERATOR",
+						Issue.HIGH_PRIORITY,
+						"Missing sequence or table: " + tableName));
+			}
+		}
+	}
 
-    private boolean isTable(Object key) throws HibernateException {
-        // BIG HACK - should probably utilize the table cache before going to the jdbcreader :(
-        if (key instanceof String) {
-            String[] strings = StringHelper.split(".", (String) key);
-            if (strings.length == 1) {
-                tableSelector.clearSchemaSelections();
-                tableSelector.addSchemaSelection(createSchemaSelection(null, null, strings[0]));
-                Collection<Table> collection = readFromDatabase();
-                return !collection.isEmpty();
-            }
-            else if (strings.length == 3) {
-                tableSelector.clearSchemaSelections();
-                tableSelector.addSchemaSelection(createSchemaSelection(strings[0], strings[1], strings[2]));
-                Collection<Table> collection = readFromDatabase();
-                return !collection.isEmpty();
-            }
-            else if (strings.length == 2) {
-                tableSelector.clearSchemaSelections();
-                tableSelector.addSchemaSelection(createSchemaSelection(null, strings[0], strings[1]));
-                Collection<Table> collection = readFromDatabase();
-                return !collection.isEmpty();
-            }
-        }
-        return false;
-    }
+	private String resolveSequenceName(FieldDetails field,
+									   GeneratedValue gv) {
+		String generatorName = gv.generator();
+		if (generatorName != null && !generatorName.isEmpty()) {
+			SequenceGenerator sg = field.getDirectAnnotationUsage(
+					SequenceGenerator.class);
+			if (sg != null && generatorName.equals(sg.name())) {
+				return sg.sequenceName();
+			}
+			// Generator name without @SequenceGenerator — treat as
+			// the sequence name itself
+			return generatorName;
+		}
+		return null;
+	}
 
-    public void visit(Table table, IssueCollector pc) {
+	private String resolveGeneratorTableName(FieldDetails field,
+											  GeneratedValue gv) {
+		String generatorName = gv.generator();
+		if (generatorName != null && !generatorName.isEmpty()) {
+			TableGenerator tg = field.getDirectAnnotationUsage(
+					TableGenerator.class);
+			if (tg != null && generatorName.equals(tg.name())) {
+				return tg.table();
+			}
+			return generatorName;
+		}
+		return null;
+	}
 
-        if (table.isPhysicalTable()) {
-            setSchemaSelection(table);
+	// ---- Database access ----
 
-            Collection<Table> collection = readFromDatabase();
+	private Map<String, Map<String, Object>> readDbColumns(
+			String catalog, String schema, String tableName) {
+		try {
+			Iterator<Map<String, Object>> tableIter =
+					revengDialect.getTables(catalog, schema, tableName);
+			try {
+				if (!tableIter.hasNext()) {
+					return null;
+				}
+				tableIter.next();
+			} finally {
+				closeQuietly(tableIter);
+			}
 
-            if (collection.isEmpty()) {
-                pc.reportIssue(new Issue("SCHEMA_TABLE_MISSING",
-                        Issue.HIGH_PRIORITY, "Missing table "
-                        + TableNameQualifier.qualify(table.getCatalog(), table
-                        .getSchema(), table.getName())));
-            }
-            else if (collection.size() > 1) {
-                pc.reportIssue(new Issue("SCHEMA_TABLE_MISSING",
-                        Issue.NORMAL_PRIORITY, "Found "
-                        + collection.size()
-                        + " tables for "
-                        + TableNameQualifier.qualify(table.getCatalog(), table
-                        .getSchema(), table.getName())));
-            }
-            else {
-                currentDbTable = collection.iterator().next();
-                visitColumns(table, pc);
-            }
-        }
-    }
+			Map<String, Map<String, Object>> result = new HashMap<>();
+			Iterator<Map<String, Object>> columnIter =
+					revengDialect.getColumns(
+							catalog, schema, tableName, null);
+			try {
+				while (columnIter.hasNext()) {
+					Map<String, Object> col = columnIter.next();
+					String colName = (String) col.get("COLUMN_NAME");
+					if (colName != null) {
+						result.put(colName.toUpperCase(), col);
+					}
+				}
+			} finally {
+				closeQuietly(columnIter);
+			}
+			return result;
+		} catch (Exception e) {
+			// Database access failed — treat as missing table
+			return null;
+		}
+	}
 
-    String table(Table t) {
-        return TableNameQualifier.qualify(t.getCatalog(), t.getSchema(), t.getName());
-    }
+	private void closeQuietly(Iterator<?> iter) {
+		try {
+			revengDialect.close(iter);
+		} catch (Exception ignored) {
+			// Iterator may not have been fully initialized
+		}
+	}
 
-    public void visit(
-            Table table,
-            Column col,
-            IssueCollector pc) {
-        if (currentDbTable == null) {
-            return;
-        }
+	private Set<String> readSequences() {
+		if (dialect != null
+				&& dialect.getSequenceSupport().supportsSequences()) {
+			SequenceCollector seqCollector =
+					SequenceCollector.create(connectionProvider);
+			return seqCollector.readSequences(
+					dialect.getQuerySequencesString());
+		}
+		return new HashSet<>();
+	}
 
-        Column dbColumn = currentDbTable
-                .getColumn(new Column(col.getName()));
+	private boolean isSequence(String key, Set<String> sequences) {
+		if (sequences.contains(key.toLowerCase())) {
+			return true;
+		}
+		String[] parts = StringHelper.split(".", key);
+		if (parts.length == 3) {
+			return sequences.contains(parts[2].toLowerCase());
+		} else if (parts.length == 2) {
+			return sequences.contains(parts[1].toLowerCase());
+		}
+		return false;
+	}
 
-        if (dbColumn == null) {
-            pc.reportIssue(new Issue("SCHEMA_COLUMN_MISSING",
-                    Issue.HIGH_PRIORITY, table(table) + " is missing column: " + col.getName()));
-        }
-        else {
-            //TODO: this needs to be able to know if a type is truly compatible or not. Right now it requires an exact match.
-            //String sqlType = col.getSqlType( dialect, mapping );
-            int dbTypeCode = dbColumn.getSqlTypeCode();
-            int modelTypeCode = col
-                    .getSqlTypeCode(mapping);
-            // TODO: sqltype name string
-            if (!(dbTypeCode == modelTypeCode)) {
-                pc.reportIssue(new Issue("SCHEMA_COLUMN_TYPE_MISMATCH",
-                        Issue.NORMAL_PRIORITY, table(table) + " has a wrong column type for "
-                        + col.getName() + ", expected: "
-                        + JdbcToHibernateTypeHelper.getJDBCTypeName(modelTypeCode) + " but was " + JdbcToHibernateTypeHelper.getJDBCTypeName(dbTypeCode) + " in db"));
-            }
-        }
-    }
+	private boolean isTable(String tableName) {
+		String[] parts = StringHelper.split(".", tableName);
+		String catalog = null, schema = null, table;
+		if (parts.length == 3) {
+			catalog = parts[0];
+			schema = parts[1];
+			table = parts[2];
+		} else if (parts.length == 2) {
+			schema = parts[0];
+			table = parts[1];
+		} else {
+			table = parts[0];
+		}
+		try {
+			Iterator<Map<String, Object>> iter =
+					revengDialect.getTables(catalog, schema, table);
+			try {
+				return iter.hasNext();
+			} finally {
+				closeQuietly(iter);
+			}
+		} catch (Exception e) {
+			return false;
+		}
+	}
 
-    private void setSchemaSelection(Table table) {
-        tableSelector.clearSchemaSelections();
-        tableSelector.addSchemaSelection(createSchemaSelection(
-                table.getCatalog(),
-                table.getSchema(),
-                table.getName()));
-    }
+	// ---- Type resolution ----
 
-    /**
-     * @return iterator over all the IdentifierGenerator's found in the entitymodel and return a list of unique IdentifierGenerators
-     */
-    private Iterator<Generator> iterateGenerators() throws MappingException {
+	private static final Map<String, Integer> JAVA_TO_JDBC =
+			new HashMap<>();
+	static {
+		JAVA_TO_JDBC.put(String.class.getName(), Types.VARCHAR);
+		JAVA_TO_JDBC.put(Long.class.getName(), Types.BIGINT);
+		JAVA_TO_JDBC.put(long.class.getName(), Types.BIGINT);
+		JAVA_TO_JDBC.put(Integer.class.getName(), Types.INTEGER);
+		JAVA_TO_JDBC.put(int.class.getName(), Types.INTEGER);
+		JAVA_TO_JDBC.put(Short.class.getName(), Types.SMALLINT);
+		JAVA_TO_JDBC.put(short.class.getName(), Types.SMALLINT);
+		JAVA_TO_JDBC.put(Byte.class.getName(), Types.TINYINT);
+		JAVA_TO_JDBC.put(byte.class.getName(), Types.TINYINT);
+		JAVA_TO_JDBC.put(Float.class.getName(), Types.FLOAT);
+		JAVA_TO_JDBC.put(float.class.getName(), Types.FLOAT);
+		JAVA_TO_JDBC.put(Double.class.getName(), Types.DOUBLE);
+		JAVA_TO_JDBC.put(double.class.getName(), Types.DOUBLE);
+		JAVA_TO_JDBC.put(Boolean.class.getName(), Types.BOOLEAN);
+		JAVA_TO_JDBC.put(boolean.class.getName(), Types.BOOLEAN);
+		JAVA_TO_JDBC.put(BigDecimal.class.getName(), Types.NUMERIC);
+		JAVA_TO_JDBC.put(java.sql.Date.class.getName(), Types.DATE);
+		JAVA_TO_JDBC.put(java.sql.Time.class.getName(), Types.TIME);
+		JAVA_TO_JDBC.put(java.sql.Timestamp.class.getName(),
+				Types.TIMESTAMP);
+		JAVA_TO_JDBC.put(java.util.Date.class.getName(),
+				Types.TIMESTAMP);
+		JAVA_TO_JDBC.put(byte[].class.getName(), Types.VARBINARY);
+		JAVA_TO_JDBC.put(Character.class.getName(), Types.CHAR);
+		JAVA_TO_JDBC.put(char.class.getName(), Types.CHAR);
+	}
 
-        TreeMap<Object, Generator> generators =
-                new TreeMap<>();
+	private int resolveModelSqlTypeCode(FieldDetails field) {
+		if (field.getType() != null) {
+			String className = field.getType()
+					.determineRawClass().getClassName();
+			Integer jdbcType = JAVA_TO_JDBC.get(className);
+			if (jdbcType != null) {
+				return jdbcType;
+			}
+		}
+		return Integer.MIN_VALUE;
+	}
 
-        for (PersistentClass pc : getMetadata().getEntityBindings()) {
-            if (!pc.isInherited()) {
-
-                Generator ig = pc.getIdentifier()
-                        .createGenerator(
-                                dialect,
-                                (RootClass) pc
-                        );
-
-                if (ig instanceof PersistentIdentifierGenerator) {
-                    generators.put(getGeneratorKey((PersistentIdentifierGenerator) ig), ig);
-                }
-
-            }
-        }
-
-        for (org.hibernate.mapping.Collection collection : getMetadata().getCollectionBindings()) {
-            if (collection.isIdentified()) {
-
-                Generator ig = ((IdentifierCollection) collection).getIdentifier().createGenerator(
-                        dialect,
-                        null
-                );
-
-                if (ig instanceof PersistentIdentifierGenerator) {
-                    generators.put((getGeneratorKey((PersistentIdentifierGenerator) ig)), ig);
-                }
-
-            }
-        }
-
-        return generators.values().iterator();
-    }
-
-    private Collection<Table> readFromDatabase() {
-        RevengMetadataCollector revengMetadataCollector = new RevengMetadataCollector();
-        reader.readDatabaseSchema(revengMetadataCollector);
-        return revengMetadataCollector.getTables();
-    }
-
-    private SchemaSelection createSchemaSelection(String matchCatalog, String matchSchema, String matchTable) {
-        return new SchemaSelection() {
-            @Override
-            public String getMatchCatalog() {
-                return matchCatalog;
-            }
-            @Override
-            public String getMatchSchema() {
-                return matchSchema;
-            }
-            @Override
-            public String getMatchTable() {
-                return matchTable;
-            }
-
-        };
-    }
-
-    private String getGeneratorKey(PersistentIdentifierGenerator ig) {
-        String result = null;
-        if (ig instanceof SequenceStyleGenerator) {
-            result = getKeyForSequenceStyleGenerator((SequenceStyleGenerator) ig);
-        }
-        else if (ig instanceof TableGenerator) {
-            result = getKeyForTableGenerator((TableGenerator) ig);
-        }
-        return result;
-    }
-
-    private String getKeyForSequenceStyleGenerator(SequenceStyleGenerator ig) {
-        return ig.getDatabaseStructure().getPhysicalName().render();
-    }
-
-    private String getKeyForTableGenerator(TableGenerator ig) {
-        return ig.getTableName();
-    }
-
+	private static String qualifyTableName(String catalog,
+										   String schema,
+										   String table) {
+		StringBuilder sb = new StringBuilder();
+		if (catalog != null) {
+			sb.append(catalog).append('.');
+		}
+		if (schema != null) {
+			sb.append(schema).append('.');
+		}
+		sb.append(table);
+		return sb.toString();
+	}
 }

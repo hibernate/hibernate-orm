@@ -17,49 +17,84 @@
  */
 package org.hibernate.tool.internal.reveng.models.exporter.lint;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.mapping.Column;
-import org.hibernate.mapping.Table;
+import java.util.List;
+import java.util.Properties;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Table;
+
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.models.spi.FieldDetails;
 
 /**
  * Base class for lint detectors that analyze the relational model
- * ({@link Table}/{@link Column}) obtained from {@link Metadata}.
- * Iterates over all mapped tables, calling {@link #visit(Table, IssueCollector)}
- * and {@link #visit(Table, Column, IssueCollector)} for each.
+ * (table/column structure) derived from {@link ClassDetails} annotations.
+ * Iterates over all entities and their columns, calling
+ * {@link #visitTable} and {@link #visitColumn} for each.
  */
 public abstract class RelationalModelDetector {
 
-	private Metadata metadata;
+	private List<ClassDetails> entities;
+	private Properties properties;
 
-	public void initialize(Metadata metadata) {
-		this.metadata = metadata;
+	public void initialize(List<ClassDetails> entities, Properties properties) {
+		this.entities = entities;
+		this.properties = properties;
 	}
 
-	protected Metadata getMetadata() {
-		return metadata;
+	protected List<ClassDetails> getEntities() {
+		return entities;
+	}
+
+	protected Properties getProperties() {
+		return properties;
 	}
 
 	public void visit(IssueCollector collector) {
-		for (Table table : getMetadata().collectTableMappings()) {
-			this.visit(table, collector);
+		for (ClassDetails entity : entities) {
+			visitTable(entity, collector);
 		}
 	}
 
-	protected void visit(Table table, IssueCollector collector) {
-		visitColumns(table, collector);
-	}
-
-	protected void visitColumns(Table table, IssueCollector collector) {
-		for (Column col : table.getColumns()) {
-			this.visit(table, col, collector);
+	protected void visitTable(ClassDetails entity, IssueCollector collector) {
+		for (FieldDetails field : entity.getFields()) {
+			Column column = field.getDirectAnnotationUsage(Column.class);
+			if (column != null) {
+				visitColumn(entity, field, column, collector);
+			}
 		}
 	}
 
-	abstract protected void visit(Table table, Column col, IssueCollector collector);
+	protected abstract void visitColumn(ClassDetails entity,
+										FieldDetails field,
+										Column column,
+										IssueCollector collector);
 
 	public void visitGenerators(IssueCollector collector) {
 		// default no-op; subclasses override as needed
 	}
 
-	abstract public String getName();
+	public abstract String getName();
+
+	// ---- Helper methods for extracting table info ----
+
+	protected static String getTableName(ClassDetails entity) {
+		Table table = entity.getDirectAnnotationUsage(Table.class);
+		if (table != null && !table.name().isEmpty()) {
+			return table.name();
+		}
+		return entity.getName();
+	}
+
+	protected static String getTableSchema(ClassDetails entity) {
+		Table table = entity.getDirectAnnotationUsage(Table.class);
+		return table != null && !table.schema().isEmpty()
+				? table.schema() : null;
+	}
+
+	protected static String getTableCatalog(ClassDetails entity) {
+		Table table = entity.getDirectAnnotationUsage(Table.class);
+		return table != null && !table.catalog().isEmpty()
+				? table.catalog() : null;
+	}
 }

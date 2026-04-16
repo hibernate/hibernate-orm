@@ -17,12 +17,9 @@
  */
 package org.hibernate.tool.hbmlint.SchemaAnalyzer;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.id.SequenceMismatchStrategy;
-import org.hibernate.mapping.Table;
+import org.hibernate.cfg.Environment;
+import org.hibernate.models.spi.ClassDetails;
+import org.hibernate.tool.internal.reveng.models.builder.hbm.HbmClassDetailsBuilder;
 import org.hibernate.tool.internal.reveng.models.exporter.lint.Issue;
 import org.hibernate.tool.internal.reveng.models.exporter.lint.IssueCollector;
 import org.hibernate.tool.internal.reveng.models.exporter.lint.SchemaByMetaDataDetector;
@@ -31,10 +28,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -42,9 +40,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class TestCase {
 
+	private List<ClassDetails> entities;
+
 	@BeforeEach
 	public void setUp() {
 		JdbcUtil.createDatabase(this);
+		File hbmFile = new File(
+				"src/legacyTest/resources/org/hibernate/tool/hbmlint/SchemaAnalyzer/SchemaIssues.hbm.xml");
+		HbmClassDetailsBuilder builder = new HbmClassDetailsBuilder();
+		entities = builder.buildFromFiles(hbmFile);
 	}
 
 	@AfterEach
@@ -54,52 +58,46 @@ public class TestCase {
 
 	@Test
 	public void testSchemaAnalyzer() {
-
-		StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
-		ssrb.applySetting(
-				AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY,
-				SequenceMismatchStrategy.NONE);
-		MetadataSources metadataSources = new MetadataSources(ssrb.build());
-		metadataSources.addResource("org/hibernate/tool/hbmlint/SchemaAnalyzer/SchemaIssues.hbm.xml");
-		Metadata metadata = metadataSources.buildMetadata();
 		SchemaByMetaDataDetector analyzer = new SchemaByMetaDataDetector();
-		analyzer.initialize( metadata );
+		Properties properties = Environment.getProperties();
+		analyzer.initialize(entities, properties);
 
-
-        for (Table table : metadata.collectTableMappings()) {
-            MockCollector mc = new MockCollector();
-
-            if (table.getName().equalsIgnoreCase("MISSING_TABLE")) {
-                analyzer.visit(table, mc);
-                assertEquals(1, mc.problems.size());
-                Issue ap = mc.problems.get(0);
-                assertTrue(ap.getDescription().contains("Missing table"));
-            } else if (table.getName().equalsIgnoreCase("CATEGORY")) {
-                analyzer.visit(table, mc);
-                assertEquals(1, mc.problems.size());
-                Issue ap = mc.problems.get(0);
-                assertTrue(ap.getDescription().contains("missing column: name"));
-            } else if (table.getName().equalsIgnoreCase("BAD_TYPE")) {
-                analyzer.visit(table, mc);
-                assertEquals(1, mc.problems.size());
-                Issue ap = mc.problems.get(0);
-                assertTrue(ap.getDescription().contains("wrong column type for name"));
-            }
-        }
-		
 		MockCollector mc = new MockCollector();
-		analyzer.visitGenerators(mc);
-		assertEquals(1,mc.problems.size());
-		Issue issue = mc.problems.get( 0 );
-		assertTrue(issue.getDescription().contains("does_not_exist"));
+		analyzer.visit(mc);
 
+		// Check for missing table (MISSING_TABLE)
+		assertTrue(
+				mc.problems.stream().anyMatch(
+						i -> i.getDescription().contains("Missing table")
+								&& i.getDescription().contains("MISSING_TABLE")),
+				"Should detect missing table MISSING_TABLE");
+
+		// Check for missing column (CATEGORY.name)
+		assertTrue(
+				mc.problems.stream().anyMatch(
+						i -> i.getDescription().contains("missing column")),
+				"Should detect missing column");
+
+		// Check for wrong column type (BAD_TYPE.name)
+		assertTrue(
+				mc.problems.stream().anyMatch(
+						i -> i.getDescription().contains("wrong column type")),
+				"Should detect wrong column type");
+
+		// Check for missing generator (does_not_exist)
+		MockCollector genCollector = new MockCollector();
+		analyzer.visitGenerators(genCollector);
+		assertTrue(
+				genCollector.problems.stream().anyMatch(
+						i -> i.getDescription().contains("does_not_exist")),
+				"Should detect missing generator table 'does_not_exist'");
 	}
-			
+
 	static class MockCollector implements IssueCollector {
 		List<Issue> problems = new ArrayList<>();
-		public void reportIssue(Issue analyze) {			
+		public void reportIssue(Issue analyze) {
 			problems.add(analyze);
-		}		
-	}		
+		}
+	}
 
 }

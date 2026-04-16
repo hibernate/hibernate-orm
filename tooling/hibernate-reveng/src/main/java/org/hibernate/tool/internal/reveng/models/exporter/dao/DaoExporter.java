@@ -53,7 +53,7 @@ import java.util.Properties;
  */
 public class DaoExporter implements Exporter {
 
-	private static final String DEFAULT_TEMPLATE_PATH = "/models/dao";
+	private static final String DEFAULT_TEMPLATE_PATH = "/dao";
 	private static final String TEMPLATE_NAME = "main.dao.ftl";
 
 	private List<ClassDetails> entities;

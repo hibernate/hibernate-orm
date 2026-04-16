@@ -47,7 +47,7 @@ import org.hibernate.tool.internal.reveng.models.exporter.EntityFileWriter;
  */
 public class MappingXmlExporter {
 
-	private static final String DEFAULT_TEMPLATE_PATH = "/models/mapping";
+	private static final String DEFAULT_TEMPLATE_PATH = "/mapping";
 	private static final String TEMPLATE_NAME = "main.mapping.ftl";
 
 	private final Configuration freemarkerConfig;

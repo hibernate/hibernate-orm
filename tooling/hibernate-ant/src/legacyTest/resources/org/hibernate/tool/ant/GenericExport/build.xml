@@ -31,9 +31,9 @@
 				<fileset file="${resourcesDir}/TopDown.hbm.xml"/>
 			</configuration>
 
-			<hbmtemplate 
-				template="pojo/Pojo.ftl"
-				filepattern="X{package-name}/{class-name}.java" 
+			<hbmtemplate
+				template="entity/main.entity.ftl"
+				filepattern="X{package-name}/{class-name}.java"
 				foreach="entity">
 				<property key="jdk5" value="false" />
 				<property key="ejb3" value="false" />

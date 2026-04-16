@@ -13,8 +13,8 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-${pojo.getShortName()}
-${pojo.shortName}
+${templateHelper.getDeclarationName()}
+${templateHelper.declarationName}
 
 <#list [1,2,3] as cl>
  <@greet person=cl/>

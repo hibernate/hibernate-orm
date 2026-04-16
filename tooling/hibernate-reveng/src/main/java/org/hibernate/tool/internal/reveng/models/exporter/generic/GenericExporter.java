@@ -45,6 +45,8 @@ import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.internal.reveng.models.exporter.MetadataHelper;
+import org.hibernate.tool.internal.reveng.models.exporter.entity.ImportContextImpl;
+import org.hibernate.tool.internal.reveng.models.exporter.entity.TemplateHelper;
 import org.hibernate.tool.api.version.Version;
 
 /**
@@ -207,13 +209,15 @@ public class GenericExporter implements Exporter {
 		Map<String, Map<String, List<String>>> fieldMeta = metadataHelper != null
 				? metadataHelper.getFieldMetaAttributes(entity.getClassName())
 				: Collections.emptyMap();
-		POJOAdapter pojo = new POJOAdapter(entity, mc, classMeta, fieldMeta);
-		model.put("pojo", pojo);
+		ImportContextImpl importContext = new ImportContextImpl(packageName);
+		TemplateHelper templateHelper = new TemplateHelper(
+				entity, mc, importContext, false,
+				classMeta, fieldMeta);
+		model.put("templateHelper", templateHelper);
 		model.put("clazz", entity);
 		model.put("entity", entity);
 		model.put("className", simpleName);
 		model.put("packageName", packageName);
-		model.put("c2j", new Cfg2JavaToolAdapter());
 		processTemplate(model, output);
 	}
 
@@ -254,7 +258,7 @@ public class GenericExporter implements Exporter {
 
 	private Map<String, Object> buildModel() {
 		Map<String, Object> model = new HashMap<>();
-		model.put("date", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()));
+		model.put("date", new Date());
 		model.put("version", Version.versionString());
 		model.put("templates", new Templates());
 		// Add ArtifactCollector as "artifacts" (matches old AbstractExporter context)

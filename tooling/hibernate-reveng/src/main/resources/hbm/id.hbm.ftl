@@ -1,89 +1,102 @@
-<#--
-~ Copyright 2010 - 2025 Red Hat, Inc.
-~
-~ Licensed under the Apache License, Version 2.0 (the "License");
-~ you may not use this file except in compliance with the License.
-~ You may obtain a copy of the License at
-~
-~     http://www.apache.org/licenses/LICENSE-2.0
-~
-~ Unless required by applicable law or agreed to in writing, software
-~ distributed under the License is distributed on an "AS IS" basis,
-~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-~ See the License for the specific language governing permissions and
-~ limitations under the License.
--->
-<#if embeddedid?exists>
-   <composite-id>
- <#list embeddedid.properties as keyproperty>
-	<#if !c2h.isManyToOne(keyproperty)>
-	   <key-property name="${keyproperty.name}" type="${keyproperty.value.typeName}">
-	   <#list keyproperty.columns as column>
-         <#include "pkcolumn.hbm.ftl">
-       </#list>
-       </key-property>
-	<#else>
-	   <key-many-to-one name="${keyproperty.name}" class="${c2j.getJavaTypeName(keyproperty, false)}">
-	   <#list keyproperty.columns as column>
-          <#include "pkcolumn.hbm.ftl">
-       </#list>
-       </key-many-to-one>
-	</#if>
- </#list>   
-  </composite-id>   
-<#elseif !c2j.isComponent(property)>
-	<id 
-        name="${property.name}"
-        type="${property.value.typeName}"
- <#if c2h.isUnsavedValue(property)>
-        unsaved-value="${c2h.getUnsavedValue(property)}"
- </#if>
- <#if !property.basicPropertyAccessor>
-        access="${property.propertyAccessorName}"
- </#if>
-    >
-    <#assign metaattributable=property>
-	<#include "meta.hbm.ftl">
-    
- <#list property.columns as column>
- 	    <#include "pkcolumn.hbm.ftl">
- </#list>
- <#if !c2h.isIdentifierGeneratorProperties(property)>
-	    <generator class="${property.value.identifierGeneratorStrategy}" />
- <#else>
-	    <generator class="${property.value.identifierGeneratorStrategy}">
-        <#assign parameters = c2h.getIdentifierGeneratorProperties(property)>
-        <#list c2h.getFilteredIdentifierGeneratorKeySet(property, props) as paramkey>
-             <param name="${paramkey}">${parameters.get(paramkey)}</param>
-        </#list>
-		</generator>
- </#if>
-    </id>
-<#else>
+<#if helper.getCompositeIdField()??>
+<#assign cid = helper.getCompositeIdField()>
     <composite-id
-		name="${property.name}"
-        class="${property.value.getComponentClassName()}"
-<#if c2h.isUnsavedValue(property)>
-        unsaved-value="${c2h.getUnsavedValue(property)}"
+        name="${cid.getName()}"
+        class="${helper.getCompositeIdClassName()}">
+<#list helper.getCompositeIdAllFields() as field>
+<#if helper.isManyToOneField(field)>
+        <key-many-to-one name="${field.getName()}" class="${helper.getKeyManyToOneClassName(field)}">
+<#list helper.getKeyManyToOneColumnNames(field) as colName>
+            <column name="${colName}"/>
+</#list>
+        </key-many-to-one>
+<#else>
+<#assign hbType = helper.getHibernateTypeName(field)>
+<#assign colAttrs = helper.getColumnAttributes(field)>
+        <key-property name="${field.getName()}"<#if hbType != "java.lang.Object">
+            type="${hbType}"</#if>>
+<#if helper.getColumnComment(field)??>
+            <column name="${helper.getColumnName(field)}"<#if colAttrs?has_content> ${colAttrs}</#if>>
+                <comment>${helper.getColumnComment(field)}</comment>
+            </column>
+<#else>
+            <column name="${helper.getColumnName(field)}"<#if colAttrs?has_content> ${colAttrs}</#if>/>
 </#if>
-<#if !property.basicPropertyAccessor>
-        access="${property.propertyAccessorName}"
+        </key-property>
 </#if>
-    >		
-    <#list property.value.properties as keyproperty>
-	  <#if !c2h.isManyToOne(keyproperty)>
-	        <key-property name="${keyproperty.name}" type="${keyproperty.value.typeName}">
-	        <#list keyproperty.columns as column>
-	           <#include "pkcolumn.hbm.ftl">
-	        </#list>	
-	        </key-property>
-	  <#else>
-			<key-many-to-one name="${keyproperty.name}" class="${c2j.getJavaTypeName(keyproperty, false)}">
-			<#list keyproperty.columns as column>
-                <#include "pkcolumn.hbm.ftl">
-            </#list>
-        	</key-many-to-one>
-	  </#if>
-    </#list>
-    </composite-id>	
+</#list>
+    </composite-id>
+<#elseif helper.hasIdClass()>
+    <composite-id
+        class="${helper.getIdClassName()}"
+        mapped="true">
+<#list helper.getIdFields() as field>
+        <key-property
+            name="${field.getName()}"
+            type="${helper.getHibernateTypeName(field)}">
+<#if helper.getColumnComment(field)??>
+            <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}>
+                <comment>${helper.getColumnComment(field)}</comment>
+            </column>
+<#else>
+            <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
+</#if>
+        </key-property>
+</#list>
+    </composite-id>
+<#elseif (helper.getIdFields()?size > 1)>
+    <composite-id>
+<#list helper.getIdFields() as field>
+<#if helper.isManyToOneField(field)>
+        <key-many-to-one name="${field.getName()}" class="${helper.getTargetEntityName(field)}">
+<#list helper.getJoinColumnNames(field) as colName>
+            <column name="${colName}"/>
+</#list>
+        </key-many-to-one>
+<#else>
+<#assign hbType = helper.getHibernateTypeName(field)>
+<#assign colAttrs = helper.getColumnAttributes(field)>
+        <key-property name="${field.getName()}"<#if hbType != "java.lang.Object">
+            type="${hbType}"</#if>>
+<#if helper.getColumnComment(field)??>
+            <column name="${helper.getColumnName(field)}"<#if colAttrs?has_content> ${colAttrs}</#if>>
+                <comment>${helper.getColumnComment(field)}</comment>
+            </column>
+<#else>
+            <column name="${helper.getColumnName(field)}"<#if colAttrs?has_content> ${colAttrs}</#if>/>
+</#if>
+        </key-property>
+</#if>
+</#list>
+    </composite-id>
+<#else>
+<#list helper.getIdFields() as field>
+    <id
+        name="${field.getName()}"
+        type="${helper.getHibernateTypeName(field)}"<#if helper.getAccessType(field)??>
+        access="${helper.getAccessType(field)}"</#if>>
+<#list helper.getFieldMetaAttributes(field)?keys as metaName>
+<#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
+        <meta attribute="${metaName}">${metaValue}</meta>
+</#list>
+</#list>
+<#if helper.getColumnComment(field)??>
+        <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}>
+            <comment>${helper.getColumnComment(field)}</comment>
+        </column>
+<#else>
+        <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
+</#if>
+<#assign genParams = helper.getGeneratorParameters(field)>
+<#if genParams?has_content>
+        <generator class="${helper.getGeneratorClass(field)}">
+<#list genParams?keys as paramName>
+            <param name="${paramName}">${genParams[paramName]}</param>
+</#list>
+        </generator>
+<#else>
+        <generator class="${helper.getGeneratorClass(field)}"/>
+</#if>
+    </id>
+</#list>
 </#if>

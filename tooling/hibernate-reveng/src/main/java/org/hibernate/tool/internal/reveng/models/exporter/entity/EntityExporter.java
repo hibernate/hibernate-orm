@@ -54,9 +54,8 @@ import org.hibernate.tool.internal.reveng.models.exporter.EntityFileWriter;
  */
 public class EntityExporter implements Exporter {
 
-	private static final String DEFAULT_TEMPLATE_PATH = "/models/entity";
+	private static final String DEFAULT_TEMPLATE_PATH = "/entity";
 	private static final String TEMPLATE_NAME = "main.entity.ftl";
-	private static final String LEGACY_TEMPLATE_NAME = "pojo/Pojo.ftl";
 
 	private List<ClassDetails> entities;
 	private ModelsContext modelsContext;
@@ -286,12 +285,6 @@ public class EntityExporter implements Exporter {
 				File newTemplate = new File(path, TEMPLATE_NAME);
 				if (newTemplate.isFile()) {
 					return TEMPLATE_NAME;
-				}
-			}
-			for (String path : templatePath) {
-				File legacyTemplate = new File(path, LEGACY_TEMPLATE_NAME);
-				if (legacyTemplate.isFile()) {
-					return LEGACY_TEMPLATE_NAME;
 				}
 			}
 		}

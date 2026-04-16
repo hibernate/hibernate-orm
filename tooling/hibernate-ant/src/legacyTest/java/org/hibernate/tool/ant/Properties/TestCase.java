@@ -61,9 +61,8 @@ public class TestCase {
 		ResourceUtil.createResources(this, new String[] { "/hibernate.properties" }, resourcesDir);
 		File templatesDir = new File(resourcesDir, "templates");
 		assertTrue(templatesDir.mkdir());
-		File pojoTemplateDir = new File(templatesDir, "pojo");
-		assertTrue(pojoTemplateDir.mkdir());
-		ResourceUtil.createResources(this, new String[] { "Pojo.ftl" }, pojoTemplateDir);
+		ResourceUtil.createResources(this, new String[] { "Pojo.ftl" }, templatesDir);
+		assertTrue(new File(templatesDir, "Pojo.ftl").renameTo(new File(templatesDir, "main.entity.ftl")));
 		
 		AntUtil.Project project = AntUtil.createProject(buildFile);
 		project.setProperty("destinationDir", destinationDir.getAbsolutePath());

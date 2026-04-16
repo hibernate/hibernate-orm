@@ -14,7 +14,7 @@
   ~ limitations under the License.
   -->
 name=<#if item?if_exists>${item.getName()}</#if>
-pojo=${pojo.getDeclarationName()}
+pojo=${templateHelper.getDeclarationName()}
 unsetproperty=${unsetProperty?if_exists}
 proptest=${proptest?if_exists}
 hibernatetool.booleanProperty=${.data_model["hibernatetool.booleanProperty"]?if_exists?string}

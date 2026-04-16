@@ -55,7 +55,7 @@ import java.util.Properties;
  */
 public class HbmXmlExporter implements Exporter {
 
-	private static final String DEFAULT_TEMPLATE_PATH = "/models/hbm";
+	private static final String DEFAULT_TEMPLATE_PATH = "/hbm";
 	private static final String TEMPLATE_NAME = "main.hbm.ftl";
 
 	private Configuration freemarkerConfig;

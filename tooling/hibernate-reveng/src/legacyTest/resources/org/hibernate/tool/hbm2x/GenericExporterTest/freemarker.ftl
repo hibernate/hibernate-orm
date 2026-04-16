@@ -14,8 +14,8 @@
   ~ limitations under the License.
   -->
 
-${pojo.getShortName()}
-${pojo.shortName}
+${templateHelper.getDeclarationName()}
+${templateHelper.declarationName}
 
 <#list [1,2,3] as cl>
 <#include "freeinc.ftl"/> 
@@ -25,7 +25,7 @@ ${pojo.shortName}
 
 
 <#macro greet person>
-  <font size="+2">Hello ${person} ${pojo.shortName}!</font>
+  <font size="+2">Hello ${person} ${templateHelper.declarationName}!</font>
 </#macro>  
 
 

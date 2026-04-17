@@ -4,52 +4,37 @@
  */
 package org.hibernate.orm.tooling.maven;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import org.apache.maven.cli.MavenCli;
-import org.codehaus.plexus.classworlds.ClassWorld;
 import org.hibernate.bytecode.enhance.spi.EnhancementInfo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-public class EnhancerMojoTestIT {
-
-	public static final String MVN_HOME = "maven.multiModuleProjectDirectory";
+public class EnhancerMojoTestIT extends AbstractMavenTestIT {
 
 	@TempDir
 	File projectDir;
 
-	private ClassWorld classWorld;
-	private MavenCli mavenCli;
 	private URLClassLoader testClassLoader;
 
 	@BeforeEach
 	public void beforeEach() throws Exception {
 		copyJavFiles();
-		System.setProperty(MVN_HOME, projectDir.getAbsolutePath());
-		classWorld = new ClassWorld( "plexus.core", Thread.currentThread().getContextClassLoader() );
-		mavenCli = new MavenCli( classWorld );
 	}
 
 	@AfterEach
 	public void afterEach() throws Exception {
-		classWorld.close();
 		destroyTestClassLoader();
 	}
 
@@ -230,7 +215,7 @@ public class EnhancerMojoTestIT {
 		assertFalse(fileExists("target/classes/Baz.class"));
 		assertFalse(fileExists("target/classes/Foo.class"));
 		// Execute the 'compile' target
-		runMaven( "compile" );
+		runMaven( projectDir.getAbsolutePath(), "compile" );
 		// The class files should exist now
 		assertTrue( fileExists( "target/classes/Bar.class" ) );
 		assertTrue( fileExists( "target/classes/Baz.class" ) );
@@ -243,8 +228,8 @@ public class EnhancerMojoTestIT {
 		assertFalse( isEnhanced( "Baz" ));
 		assertFalse( isEnhanced( "Foo" ));
 		// Execute the 'enhance' target
-		runMaven( "process-classes" );
-		runMaven( "dependency:copy-dependencies" );
+		runMaven( projectDir.getAbsolutePath(), "process-classes" );
+		runMaven( projectDir.getAbsolutePath(), "dependency:copy-dependencies" );
 		// The results are verified in the respective tests
 	}
 
@@ -351,21 +336,6 @@ public class EnhancerMojoTestIT {
 
 	private boolean fileExists(String relativePath) {
 		return new File( projectDir, relativePath ).exists();
-	}
-
-	private void runMaven(String... goals) {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		ByteArrayOutputStream err = new ByteArrayOutputStream();
-		List<String> args = new ArrayList<>( Arrays.asList( goals ) );
-		int result = mavenCli.doMain(
-				args.toArray( new String[0] ),
-				projectDir.getAbsolutePath(),
-				new PrintStream( out ),
-				new PrintStream( err ) );
-		assertEquals( 0, result,
-				"Maven invocation failed for goals: " + Arrays.asList( goals )
-				+ "\n--- stdout ---\n" + out
-				+ "\n--- stderr ---\n" + err );
 	}
 
 }

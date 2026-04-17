@@ -6153,14 +6153,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else if ( paramType instanceof MappingModelExpressible<?> paramModelType ) {
 			final MappingModelExpressible<?> inferredValueMapping = getInferredValueMapping();
 			// Prefer the model part type instead of the bind type if possible as the model part type contains size information
-			if ( inferredValueMapping instanceof ModelPart ) {
-				final JdbcMapping paramJdbcMapping = paramModelType.getSingleJdbcMapping();
-				final JdbcMapping inferredJdbcMapping = inferredValueMapping.getSingleJdbcMapping();
+			if ( inferredValueMapping instanceof ModelPart inferredModelPart ) {
+				final JavaType<?> paramJavaType = ((SqmBindableType<?>) paramType).getExpressibleJavaType();
 				// Only use the inferred mapping as parameter type when the JavaType accepts values of the bind type
-				if ( ( inferredJdbcMapping.getMappedJavaType() == paramJdbcMapping.getMappedJavaType()
-						|| inferredJdbcMapping.getMappedJavaType().isWider( paramJdbcMapping.getMappedJavaType() ) )
+				if ( ( paramJavaType.getJavaTypeClass() == Object.class
+						|| inferredModelPart.getJavaType() == paramJavaType
+						|| inferredModelPart.getJavaType().isWider( paramJavaType ) )
 						// and the bind type is not explicit or the bind type has the same JDBC type
-						&& ( !bindingTypeExplicit || canUseInferredType( paramJdbcMapping, inferredJdbcMapping ) ) ) {
+						&& ( !bindingTypeExplicit || canUseInferredType( paramModelType, inferredValueMapping ) ) ) {
 					return resolveInferredValueMappingForParameter( inferredValueMapping );
 				}
 			}
@@ -6250,9 +6250,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
-	private static boolean canUseInferredType(JdbcMapping bindJdbcMapping, JdbcMapping inferredJdbcMapping) {
-		final JdbcType bindJdbcType = bindJdbcMapping.getJdbcType();
-		final JdbcType inferredJdbcType = inferredJdbcMapping.getJdbcType();
+	private static boolean canUseInferredType(MappingModelExpressible<?> bindType, MappingModelExpressible<?> inferredType) {
+		if ( inferredType.getJdbcTypeCount() != 1 ) {
+			// The inferred type is an embeddable or entity with embeddable id, which is more concrete
+			return true;
+		}
+		final JdbcType bindJdbcType = bindType.getSingleJdbcMapping().getJdbcType();
+		final JdbcType inferredJdbcType = inferredType.getSingleJdbcMapping().getJdbcType();
 		// If the bind type has a different JDBC type, we prefer that over the inferred type.
 		return bindJdbcType == inferredJdbcType
 			|| bindJdbcType instanceof ArrayJdbcType bindArrayType && inferredJdbcType instanceof ArrayJdbcType inferredArrayType

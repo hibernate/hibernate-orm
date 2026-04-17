@@ -19,7 +19,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.IdentityHashMap;
-import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asManagedEntity;
@@ -56,8 +55,7 @@ class EntityEntryContext {
 
 	private transient IdentityHashMap<Object,ManagedEntity> nonEnhancedEntityXref;
 
-	@SuppressWarnings("unchecked")
-	private transient Map.Entry<Object,EntityEntry>[] reentrantSafeEntries = new Map.Entry[0];
+	private transient ManagedEntity[] reentrantSafeEntries = new ManagedEntity[0];
 	private transient boolean dirty;
 
 	/**
@@ -328,22 +326,19 @@ class EntityEntryContext {
 	 * The main bugaboo with {@code IdentityMap} that warranted this class in the
 	 * first place.
 	 * <p>
-	 * Return an array of all the entity/{@link EntityEntry} pairs in this context.
+	 * Return an array of all the {@link ManagedEntity} in this context.
 	 * The array is to make sure that the iterators built off of it are safe from
 	 * concurrency/reentrancy.
 	 *
 	 * @return The safe array
 	 */
-	Map.Entry<Object, EntityEntry>[] reentrantSafeEntityEntries() {
+	ManagedEntity[] reentrantSafeEntityEntries() {
 		if ( dirty ) {
-			reentrantSafeEntries = new EntityEntryCrossRefImpl[count];
+			reentrantSafeEntries = new ManagedEntity[count];
 			int i = 0;
 			var managedEntity = head;
 			while ( managedEntity != null ) {
-				reentrantSafeEntries[i++] = new EntityEntryCrossRefImpl(
-						managedEntity.$$_hibernate_getEntityInstance(),
-						managedEntity.$$_hibernate_getEntityEntry()
-				);
+				reentrantSafeEntries[i++] = managedEntity;
 				managedEntity = managedEntity.$$_hibernate_getNextManagedEntity();
 			}
 			dirty = false;
@@ -753,65 +748,6 @@ class EntityEntryContext {
 			this.next = next;
 			managedEntity.$$_hibernate_setInstanceId( instanceId );
 			return oldEntry;
-		}
-	}
-
-	/**
-	 * Used in building the {@link #reentrantSafeEntityEntries()} entries
-	 */
-	private interface EntityEntryCrossRef extends Map.Entry<Object,EntityEntry> {
-		/**
-		 * The entity
-		 *
-		 * @return The entity
-		 */
-		Object getEntity();
-
-		/**
-		 * The associated EntityEntry
-		 *
-		 * @return The EntityEntry associated with the entity in this context
-		 */
-		EntityEntry getEntityEntry();
-	}
-
-	/**
-	 * Implementation of the EntityEntryCrossRef interface
-	 */
-	private static class EntityEntryCrossRefImpl implements EntityEntryCrossRef {
-		private final Object entity;
-		private EntityEntry entityEntry;
-
-		private EntityEntryCrossRefImpl(Object entity, EntityEntry entityEntry) {
-			this.entity = entity;
-			this.entityEntry = entityEntry;
-		}
-
-		@Override
-		public Object getEntity() {
-			return entity;
-		}
-
-		@Override
-		public EntityEntry getEntityEntry() {
-			return entityEntry;
-		}
-
-		@Override
-		public Object getKey() {
-			return getEntity();
-		}
-
-		@Override
-		public EntityEntry getValue() {
-			return getEntityEntry();
-		}
-
-		@Override
-		public EntityEntry setValue(EntityEntry entityEntry) {
-			final EntityEntry old = this.entityEntry;
-			this.entityEntry = entityEntry;
-			return old;
 		}
 	}
 }

@@ -24,5 +24,11 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * @author Steve Ebersole
  */
 public interface SessionFactoryProducer {
+	DropDataTiming[] NONE = new DropDataTiming[0];
+
 	SessionFactoryImplementor produceSessionFactory(MetadataImplementor model);
+
+	default DropDataTiming[] dropTestData() {
+		return NONE;
+	}
 }

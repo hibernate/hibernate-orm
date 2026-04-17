@@ -37,6 +37,7 @@ import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityEntryRef;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
@@ -1448,7 +1449,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Entry<Object,EntityEntry>[] reentrantSafeEntityEntries() {
+	public EntityEntryRef[] reentrantSafeEntityEntries() {
 		return entityEntryContext.reentrantSafeEntityEntries();
 	}
 
@@ -1478,10 +1479,10 @@ class StatefulPersistenceContext implements PersistenceContext {
 		//not found in case, proceed
 		// iterate all the entities currently associated with the persistence context.
 		for ( var me : reentrantSafeEntityEntries() ) {
-			final var entityEntry = me.getValue();
+			final var entityEntry = me.getEntityEntry();
 			// does this entity entry pertain to the entity persister in which we are interested (owner)?
 			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {
-				final Object entityEntryInstance = me.getKey();
+				final Object entityEntryInstance = me.getEntity();
 
 				//check if the managed object is the parent
 				boolean found = isFoundInParent(
@@ -1611,9 +1612,9 @@ class StatefulPersistenceContext implements PersistenceContext {
 
 		//Not found in cache, proceed
 		for ( var entry : reentrantSafeEntityEntries() ) {
-			final var entityEntry = entry.getValue();
+			final var entityEntry = entry.getEntityEntry();
 			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {
-				final Object instance = entry.getKey();
+				final Object instance = entry.getEntity();
 				Object index = getIndexInParent( property, childEntity, persister, collectionPersister, instance );
 				if ( index==null && mergeMap!=null ) {
 					final Object unMergedInstance = mergeMap.get( instance );

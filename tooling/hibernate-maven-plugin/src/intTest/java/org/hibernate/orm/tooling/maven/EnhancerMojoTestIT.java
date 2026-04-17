@@ -16,7 +16,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -352,13 +354,18 @@ public class EnhancerMojoTestIT {
 	}
 
 	private void runMaven(String... goals) {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		ByteArrayOutputStream err = new ByteArrayOutputStream();
 		List<String> args = new ArrayList<>( Arrays.asList( goals ) );
 		int result = mavenCli.doMain(
 				args.toArray( new String[0] ),
 				projectDir.getAbsolutePath(),
-				System.out,
-				System.err );
-		assertEquals( 0, result, "Maven invocation failed for goals: " + Arrays.asList( goals ) );
+				new PrintStream( out ),
+				new PrintStream( err ) );
+		assertEquals( 0, result,
+				"Maven invocation failed for goals: " + Arrays.asList( goals )
+				+ "\n--- stdout ---\n" + out
+				+ "\n--- stderr ---\n" + err );
 	}
 
 }

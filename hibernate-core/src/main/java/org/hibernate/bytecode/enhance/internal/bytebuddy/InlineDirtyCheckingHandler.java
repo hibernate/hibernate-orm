@@ -5,6 +5,7 @@
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
 
 import jakarta.persistence.EmbeddedId;
@@ -40,16 +41,19 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 
 	private final FieldDescription.InDefinedShape persistentField;
 	private final boolean applyLazyCheck;
+	private final boolean applySamenessCheck;
 
 	private InlineDirtyCheckingHandler(
 			Implementation delegate,
 			TypeDescription managedCtClass,
 			FieldDescription.InDefinedShape persistentField,
-			boolean applyLazyCheck) {
+			boolean applyLazyCheck,
+			boolean applySamenessCheck) {
 		this.delegate = delegate;
 		this.managedCtClass = managedCtClass;
 		this.persistentField = persistentField;
 		this.applyLazyCheck = applyLazyCheck;
+		this.applySamenessCheck = applySamenessCheck;
 	}
 
 	static Implementation wrap(
@@ -63,14 +67,16 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 				implementation = Advice.to( CodeTemplates.CompositeDirtyCheckingHandler.class ).wrap( implementation );
 			}
 			else if ( !persistentField.hasAnnotation( Id.class )
-					&& !persistentField.hasAnnotation( EmbeddedId.class )
-					&& !( persistentField.getType().asErasure().isAssignableTo( Collection.class )
-					&& enhancementContext.isMappedCollection( persistentField ) ) ) {
+					&& !persistentField.hasAnnotation( EmbeddedId.class ) ) {
 				implementation = new InlineDirtyCheckingHandler(
 						implementation,
 						managedCtClass,
 						persistentField.asDefined(),
-						enhancementContext.hasLazyLoadableAttributes( managedCtClass )
+						enhancementContext.hasLazyLoadableAttributes( managedCtClass ),
+						// Also track value changes (object identity) for persistent collection attributes
+						( persistentField.getType().asErasure().isAssignableTo( Collection.class )
+								|| persistentField.getType().asErasure().isAssignableTo( Map.class ) )
+								&& enhancementContext.isMappedCollection( persistentField )
 				);
 			}
 
@@ -158,7 +164,7 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 				methodVisitor.visitMethodInsn(
 						Opcodes.INVOKESTATIC,
 						HELPER_TYPE_NAME,
-						"areEquals",
+						applySamenessCheck ? "areSame" : "areEquals",
 						Type.getMethodDescriptor(
 								Type.BOOLEAN_TYPE,
 								PE_INTERCEPTABLE_TYPE,

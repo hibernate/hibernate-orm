@@ -48,7 +48,7 @@ import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.strategy.MetaAttributeHelper.SimpleMetaAttribute;
 import org.hibernate.tool.internal.util.TypeHelper;
-import org.hibernate.tool.internal.reveng.util.TableNameQualifier;
+import org.hibernate.tool.internal.util.TableNameQualifier;
 import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
 import org.xml.sax.ErrorHandler;

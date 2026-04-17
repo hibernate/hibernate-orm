@@ -46,7 +46,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengDialectFactory;
 import org.hibernate.tool.internal.util.TypeHelper;
-import org.hibernate.tool.internal.reveng.util.TableNameQualifier;
+import org.hibernate.tool.internal.util.TableNameQualifier;
 
 /**
  * Lint detector that compares the entity model (from {@link ClassDetails})

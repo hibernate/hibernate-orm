@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.util;
+package org.hibernate.tool.internal.util;
 
 import java.util.HashSet;
 import java.util.Set;

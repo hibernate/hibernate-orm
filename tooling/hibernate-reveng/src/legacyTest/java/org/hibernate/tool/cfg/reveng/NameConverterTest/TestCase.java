@@ -18,7 +18,7 @@
 
 package org.hibernate.tool.cfg.reveng.NameConverterTest;
 
-import org.hibernate.tool.internal.reveng.util.NameConverter;
+import org.hibernate.tool.internal.util.NameConverter;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

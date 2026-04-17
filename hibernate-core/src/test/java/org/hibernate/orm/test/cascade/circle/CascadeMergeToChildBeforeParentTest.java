@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
  */
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/cascade/circle/CascadeMergeToChildBeforeParent.hbm.xml"
+				"org/hibernate/orm/test/cascade/circle/CascadeMergeToChildBeforeParent.orm.xml"
 		}
 )
 @SessionFactory

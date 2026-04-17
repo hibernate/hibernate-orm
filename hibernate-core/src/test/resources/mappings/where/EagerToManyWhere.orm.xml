@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://www.hibernate.org/xsd/orm/mapping
+                 https://www.hibernate.org/xsd/orm/mapping/mapping-7.0.xsd"
+                 version="7.0">
+
+    <package>org.hibernate.orm.test.where.hbm</package>
+
+    <entity class="Product" access="PROPERTY">
+        <table name="PRODUCT"/>
+
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+                <generated-value generator="increment"/>
+            </id>
+
+            <one-to-many name="categoriesOneToMany" fetch="EAGER" fetch-mode="JOIN" target-entity="Category" classification="SET">
+                <join-column name="productOneToManyId"/>
+            </one-to-many>
+
+            <one-to-many name="categoriesWithDescOneToMany" fetch="EAGER" fetch-mode="JOIN" target-entity="Category" classification="SET">
+                <sql-restriction>description is not null</sql-restriction>
+                <join-column name="productWithDescOneToManyId"/>
+            </one-to-many>
+
+            <many-to-many name="categoriesManyToMany" fetch="EAGER" fetch-mode="JOIN" target-entity="Category" classification="SET">
+                <join-table name="categoriesManyToMany">
+                    <join-column name="productId"/>
+                    <inverse-join-column name="categoryId"/>
+                </join-table>
+            </many-to-many>
+
+            <many-to-many name="categoriesWithDescManyToMany" fetch="EAGER" fetch-mode="JOIN" target-entity="Category" classification="SET">
+                <sql-restriction>description is not null</sql-restriction>
+                <join-table name="categoriesWithDescManyToMany">
+                    <join-column name="productId"/>
+                    <inverse-join-column name="categoryId"/>
+                </join-table>
+            </many-to-many>
+
+            <many-to-many name="categoriesWithDescIdLt4ManyToMany" fetch="EAGER" fetch-mode="JOIN" target-entity="Category" classification="SET">
+                <sql-restriction>description is not null</sql-restriction>
+                <join-table name="categoriesWithDescIdLt4MToM">
+                    <join-column name="productId"/>
+                    <inverse-join-column name="categoryId"/>
+                </join-table>
+                <sql-join-table-restriction>categoryId != 4</sql-join-table-restriction>
+            </many-to-many>
+        </attributes>
+    </entity>
+
+    <entity class="Category" access="PROPERTY">
+        <table name="CATEGORY"/>
+        <sql-restriction>inactive = 0</sql-restriction>
+
+        <attributes>
+            <id name="id">
+                <column name="ID"/>
+            </id>
+
+            <basic name="name"/>
+
+            <basic name="description"/>
+
+            <basic name="inactive"/>
+        </attributes>
+    </entity>
+
+</entity-mappings>

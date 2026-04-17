@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://www.hibernate.org/xsd/orm/mapping
+                https://www.hibernate.org/xsd/orm/mapping/mapping-7.0.xsd"
+                 version="7.0">
+    <package>org.hibernate.orm.test.where.xml</package>
+    <entity class="LazyElementCollectionBasicNonUniqueIdWhereTest$Material" metadata-complete="true">
+        <table name="MAIN_TABLE"/>
+        <sql-restriction>CODE = 'MATERIAL'</sql-restriction>
+        <attributes>
+            <id name="id">
+                <column name="ID" unique="false" nullable="false" insertable="true" updatable="false"/>
+            </id>
+            <basic name="name" fetch="EAGER" optional="true" optimistic-lock="true">
+                <column name="NAME" unique="false" nullable="true"/>
+            </basic>
+            <element-collection name="sizesFromCombined" target-class="java.lang.String" fetch="LAZY" classification="SET">
+                <sql-restriction>MAIN_CODE='MATERIAL' AND VALUE_CODE='SIZE'</sql-restriction>
+                <column name="VAL" unique="false" nullable="true" insertable="true" updatable="true"/>
+                <collection-table name="COLLECTION_TABLE">
+                    <join-column name="MAIN_ID" unique="false" nullable="true" insertable="true" updatable="true"/>
+                </collection-table>
+            </element-collection>
+            <element-collection name="ratings" target-class="java.lang.String" fetch="LAZY" classification="SET">
+                <column name="RATING" unique="false" nullable="true" insertable="true" updatable="true"/>
+                <collection-table name="MATERIAL_RATINGS">
+                    <join-column name="MATERIAL_ID" unique="false" nullable="true" insertable="true" updatable="true"/>
+                </collection-table>
+            </element-collection>
+        </attributes>
+    </entity>
+<!--    <entity class="LazyElementCollectionBasicNonUniqueIdWhereTest$Building" metadata-complete="true">-->
+<!--        <table name="MAIN_TABLE"/>-->
+<!--        <sql-restriction>CODE = 'BUILDING'</sql-restriction>-->
+<!--        <attributes>-->
+<!--            <id name="id">-->
+<!--                <column name="ID" unique="false" nullable="false" insertable="true" updatable="false"/>-->
+<!--            </id>-->
+<!--            <basic name="name" fetch="EAGER" optional="true" optimistic-lock="true">-->
+<!--                <column name="NAME" unique="false" nullable="true"/>-->
+<!--            </basic>-->
+<!--            <element-collection name="sizesFromCombined" target-class="java.lang.String" fetch="LAZY" classification="SET">-->
+<!--                <sql-restriction>MAIN_CODE='BUILDING' AND VALUE_CODE='SIZE'</sql-restriction>-->
+<!--                <column name="VAL" unique="false" nullable="true" insertable="true" updatable="true"/>-->
+<!--                <collection-table name="COLLECTION_TABLE">-->
+<!--                    <join-column name="MAIN_ID" unique="false" nullable="true" insertable="true" updatable="true"/>-->
+<!--                </collection-table>-->
+<!--            </element-collection>-->
+<!--            <element-collection name="ratingsFromCombined" target-class="java.lang.String" fetch="LAZY" classification="SET">-->
+<!--                <sql-restriction>MAIN_CODE='BUILDING' AND VALUE_CODE='RATING'</sql-restriction>-->
+<!--                <column name="VAL" unique="false" nullable="true" insertable="true" updatable="true"/>-->
+<!--                <collection-table name="COLLECTION_TABLE">-->
+<!--                    <join-column name="MAIN_ID" unique="false" nullable="true" insertable="true" updatable="true"/>-->
+<!--                </collection-table>-->
+<!--            </element-collection>-->
+<!--        </attributes>-->
+<!--    </entity>-->
+</entity-mappings>

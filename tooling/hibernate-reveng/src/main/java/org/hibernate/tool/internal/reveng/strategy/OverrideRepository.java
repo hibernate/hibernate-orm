@@ -47,7 +47,7 @@ import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.strategy.MetaAttributeHelper.SimpleMetaAttribute;
-import org.hibernate.tool.internal.reveng.util.JdbcToHibernateTypeHelper;
+import org.hibernate.tool.internal.util.TypeHelper;
 import org.hibernate.tool.internal.reveng.util.TableNameQualifier;
 import org.jboss.logging.Logger;
 import org.w3c.dom.Document;
@@ -344,7 +344,7 @@ public class OverrideRepository  {
             public String columnToHibernateTypeName(TableIdentifier table, String columnName, int sqlType, int length, int precision, int scale, boolean nullable, boolean generatedIdentifier) {
                 String result;
                 String location = "";
-                String info = " t:" + JdbcToHibernateTypeHelper.getJDBCTypeName( sqlType ) + " l:" + length + " p:" + precision + " s:" + scale + " n:" + nullable + " id:" + generatedIdentifier;
+                String info = " t:" + TypeHelper.getJDBCTypeName( sqlType ) + " l:" + length + " p:" + precision + " s:" + scale + " n:" + nullable + " id:" + generatedIdentifier;
                 if(table!=null) {
                     location = TableNameQualifier.qualify(table.getCatalog(), table.getSchema(), table.getName() ) + "." + columnName;
                 }

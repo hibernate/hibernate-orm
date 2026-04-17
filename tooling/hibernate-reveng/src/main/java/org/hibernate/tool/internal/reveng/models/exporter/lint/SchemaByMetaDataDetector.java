@@ -17,8 +17,6 @@
  */
 package org.hibernate.tool.internal.reveng.models.exporter.lint;
 
-import java.math.BigDecimal;
-import java.sql.Types;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -47,7 +45,7 @@ import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengDialectFactory;
-import org.hibernate.tool.internal.reveng.util.JdbcToHibernateTypeHelper;
+import org.hibernate.tool.internal.util.TypeHelper;
 import org.hibernate.tool.internal.reveng.util.TableNameQualifier;
 
 /**
@@ -157,7 +155,9 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
 		// Compare SQL type codes
 		int dbTypeCode = (Integer) dbColumn.get("DATA_TYPE");
-		int modelTypeCode = resolveModelSqlTypeCode(field);
+		int modelTypeCode = field.getType() != null
+				? TypeHelper.getJdbcTypeCode(field.getType().determineRawClass().getClassName())
+				: Integer.MIN_VALUE;
 		if (modelTypeCode != Integer.MIN_VALUE
 				&& dbTypeCode != modelTypeCode) {
 			collector.reportIssue(new Issue(
@@ -166,10 +166,10 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 					qualifiedTable
 					+ " has a wrong column type for "
 					+ columnName + ", expected: "
-					+ JdbcToHibernateTypeHelper
+					+ TypeHelper
 							.getJDBCTypeName(modelTypeCode)
 					+ " but was "
-					+ JdbcToHibernateTypeHelper
+					+ TypeHelper
 							.getJDBCTypeName(dbTypeCode)
 					+ " in db"));
 		}
@@ -363,50 +363,6 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		} catch (Exception e) {
 			return false;
 		}
-	}
-
-	// ---- Type resolution ----
-
-	private static final Map<String, Integer> JAVA_TO_JDBC =
-			new HashMap<>();
-	static {
-		JAVA_TO_JDBC.put(String.class.getName(), Types.VARCHAR);
-		JAVA_TO_JDBC.put(Long.class.getName(), Types.BIGINT);
-		JAVA_TO_JDBC.put(long.class.getName(), Types.BIGINT);
-		JAVA_TO_JDBC.put(Integer.class.getName(), Types.INTEGER);
-		JAVA_TO_JDBC.put(int.class.getName(), Types.INTEGER);
-		JAVA_TO_JDBC.put(Short.class.getName(), Types.SMALLINT);
-		JAVA_TO_JDBC.put(short.class.getName(), Types.SMALLINT);
-		JAVA_TO_JDBC.put(Byte.class.getName(), Types.TINYINT);
-		JAVA_TO_JDBC.put(byte.class.getName(), Types.TINYINT);
-		JAVA_TO_JDBC.put(Float.class.getName(), Types.FLOAT);
-		JAVA_TO_JDBC.put(float.class.getName(), Types.FLOAT);
-		JAVA_TO_JDBC.put(Double.class.getName(), Types.DOUBLE);
-		JAVA_TO_JDBC.put(double.class.getName(), Types.DOUBLE);
-		JAVA_TO_JDBC.put(Boolean.class.getName(), Types.BOOLEAN);
-		JAVA_TO_JDBC.put(boolean.class.getName(), Types.BOOLEAN);
-		JAVA_TO_JDBC.put(BigDecimal.class.getName(), Types.NUMERIC);
-		JAVA_TO_JDBC.put(java.sql.Date.class.getName(), Types.DATE);
-		JAVA_TO_JDBC.put(java.sql.Time.class.getName(), Types.TIME);
-		JAVA_TO_JDBC.put(java.sql.Timestamp.class.getName(),
-				Types.TIMESTAMP);
-		JAVA_TO_JDBC.put(java.util.Date.class.getName(),
-				Types.TIMESTAMP);
-		JAVA_TO_JDBC.put(byte[].class.getName(), Types.VARBINARY);
-		JAVA_TO_JDBC.put(Character.class.getName(), Types.CHAR);
-		JAVA_TO_JDBC.put(char.class.getName(), Types.CHAR);
-	}
-
-	private int resolveModelSqlTypeCode(FieldDetails field) {
-		if (field.getType() != null) {
-			String className = field.getType()
-					.determineRawClass().getClassName();
-			Integer jdbcType = JAVA_TO_JDBC.get(className);
-			if (jdbcType != null) {
-				return jdbcType;
-			}
-		}
-		return Integer.MIN_VALUE;
 	}
 
 }

@@ -23,11 +23,11 @@ import java.util.Date;
 
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.tool.internal.util.TypeHelper;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for {@link HibernateTypeToJavaClass}, verifying all type name
- * to Java class mappings.
+ * Tests for {@link TypeHelper} Hibernate type name to Java class mappings.
  *
  * @author Koen Aers
  */
@@ -35,175 +35,175 @@ public class HibernateTypeToJavaClassTest {
 
 	@Test
 	public void testStringType() {
-		assertEquals(String.class, HibernateTypeToJavaClass.toJavaClass("string"));
+		assertEquals(String.class, TypeHelper.toJavaClass("string"));
 	}
 
 	@Test
 	public void testIntType() {
-		assertEquals(int.class, HibernateTypeToJavaClass.toJavaClass("int"));
+		assertEquals(int.class, TypeHelper.toJavaClass("int"));
 	}
 
 	@Test
 	public void testIntegerWrapperType() {
-		assertEquals(Integer.class, HibernateTypeToJavaClass.toJavaClass("java.lang.Integer"));
+		assertEquals(Integer.class, TypeHelper.toJavaClass("java.lang.Integer"));
 	}
 
 	@Test
 	public void testLongType() {
-		assertEquals(long.class, HibernateTypeToJavaClass.toJavaClass("long"));
+		assertEquals(long.class, TypeHelper.toJavaClass("long"));
 	}
 
 	@Test
 	public void testLongWrapperType() {
-		assertEquals(Long.class, HibernateTypeToJavaClass.toJavaClass("java.lang.Long"));
+		assertEquals(Long.class, TypeHelper.toJavaClass("java.lang.Long"));
 	}
 
 	@Test
 	public void testShortType() {
-		assertEquals(short.class, HibernateTypeToJavaClass.toJavaClass("short"));
+		assertEquals(short.class, TypeHelper.toJavaClass("short"));
 	}
 
 	@Test
 	public void testByteType() {
-		assertEquals(byte.class, HibernateTypeToJavaClass.toJavaClass("byte"));
+		assertEquals(byte.class, TypeHelper.toJavaClass("byte"));
 	}
 
 	@Test
 	public void testFloatType() {
-		assertEquals(float.class, HibernateTypeToJavaClass.toJavaClass("float"));
+		assertEquals(float.class, TypeHelper.toJavaClass("float"));
 	}
 
 	@Test
 	public void testDoubleType() {
-		assertEquals(double.class, HibernateTypeToJavaClass.toJavaClass("double"));
+		assertEquals(double.class, TypeHelper.toJavaClass("double"));
 	}
 
 	@Test
 	public void testBooleanType() {
-		assertEquals(boolean.class, HibernateTypeToJavaClass.toJavaClass("boolean"));
+		assertEquals(boolean.class, TypeHelper.toJavaClass("boolean"));
 	}
 
 	@Test
 	public void testCharType() {
-		assertEquals(char.class, HibernateTypeToJavaClass.toJavaClass("char"));
+		assertEquals(char.class, TypeHelper.toJavaClass("char"));
 	}
 
 	@Test
 	public void testCharacterType() {
-		assertEquals(char.class, HibernateTypeToJavaClass.toJavaClass("character"));
+		assertEquals(char.class, TypeHelper.toJavaClass("character"));
 	}
 
 	@Test
 	public void testBigDecimalType() {
-		assertEquals(BigDecimal.class, HibernateTypeToJavaClass.toJavaClass("big_decimal"));
+		assertEquals(BigDecimal.class, TypeHelper.toJavaClass("big_decimal"));
 	}
 
 	@Test
 	public void testBigIntegerType() {
-		assertEquals(BigInteger.class, HibernateTypeToJavaClass.toJavaClass("big_integer"));
+		assertEquals(BigInteger.class, TypeHelper.toJavaClass("big_integer"));
 	}
 
 	@Test
 	public void testDateType() {
-		assertEquals(Date.class, HibernateTypeToJavaClass.toJavaClass("date"));
+		assertEquals(Date.class, TypeHelper.toJavaClass("date"));
 	}
 
 	@Test
 	public void testTimeType() {
-		assertEquals(Date.class, HibernateTypeToJavaClass.toJavaClass("time"));
+		assertEquals(Date.class, TypeHelper.toJavaClass("time"));
 	}
 
 	@Test
 	public void testTimestampType() {
-		assertEquals(Date.class, HibernateTypeToJavaClass.toJavaClass("timestamp"));
+		assertEquals(Date.class, TypeHelper.toJavaClass("timestamp"));
 	}
 
 	@Test
 	public void testBinaryType() {
-		assertEquals(byte[].class, HibernateTypeToJavaClass.toJavaClass("binary"));
+		assertEquals(byte[].class, TypeHelper.toJavaClass("binary"));
 	}
 
 	@Test
 	public void testBlobType() {
-		assertEquals(byte[].class, HibernateTypeToJavaClass.toJavaClass("blob"));
+		assertEquals(byte[].class, TypeHelper.toJavaClass("blob"));
 	}
 
 	@Test
 	public void testClobType() {
-		assertEquals(String.class, HibernateTypeToJavaClass.toJavaClass("clob"));
+		assertEquals(String.class, TypeHelper.toJavaClass("clob"));
 	}
 
 	@Test
 	public void testSerializableType() {
-		assertEquals(java.io.Serializable.class, HibernateTypeToJavaClass.toJavaClass("serializable"));
+		assertEquals(java.io.Serializable.class, TypeHelper.toJavaClass("serializable"));
 	}
 
 	@Test
 	public void testNullReturnsObject() {
-		assertEquals(Object.class, HibernateTypeToJavaClass.toJavaClass(null));
+		assertEquals(Object.class, TypeHelper.toJavaClass(null));
 	}
 
 	@Test
 	public void testUnknownTypeReturnsObject() {
-		assertEquals(Object.class, HibernateTypeToJavaClass.toJavaClass("unknown_type"));
+		assertEquals(Object.class, TypeHelper.toJavaClass("unknown_type"));
 	}
 
 	@Test
 	public void testFullyQualifiedStringType() {
-		assertEquals(String.class, HibernateTypeToJavaClass.toJavaClass("java.lang.String"));
+		assertEquals(String.class, TypeHelper.toJavaClass("java.lang.String"));
 	}
 
 	@Test
 	public void testBooleanWrapperType() {
-		assertEquals(Boolean.class, HibernateTypeToJavaClass.toJavaClass("java.lang.Boolean"));
+		assertEquals(Boolean.class, TypeHelper.toJavaClass("java.lang.Boolean"));
 	}
 
 	// ---- Temporal type tests ----
 
 	@Test
 	public void testTemporalDate() {
-		assertEquals(TemporalType.DATE, HibernateTypeToJavaClass.toTemporalType("date"));
+		assertEquals(TemporalType.DATE, TypeHelper.toTemporalType("date"));
 	}
 
 	@Test
 	public void testTemporalTime() {
-		assertEquals(TemporalType.TIME, HibernateTypeToJavaClass.toTemporalType("time"));
+		assertEquals(TemporalType.TIME, TypeHelper.toTemporalType("time"));
 	}
 
 	@Test
 	public void testTemporalTimestamp() {
-		assertEquals(TemporalType.TIMESTAMP, HibernateTypeToJavaClass.toTemporalType("timestamp"));
+		assertEquals(TemporalType.TIMESTAMP, TypeHelper.toTemporalType("timestamp"));
 	}
 
 	@Test
 	public void testTemporalNonTemporal() {
-		assertNull(HibernateTypeToJavaClass.toTemporalType("string"));
+		assertNull(TypeHelper.toTemporalType("string"));
 	}
 
 	@Test
 	public void testTemporalNull() {
-		assertNull(HibernateTypeToJavaClass.toTemporalType(null));
+		assertNull(TypeHelper.toTemporalType(null));
 	}
 
 	// ---- LOB type tests ----
 
 	@Test
 	public void testIsLobBlob() {
-		assertTrue(HibernateTypeToJavaClass.isLob("blob"));
+		assertTrue(TypeHelper.isLob("blob"));
 	}
 
 	@Test
 	public void testIsLobClob() {
-		assertTrue(HibernateTypeToJavaClass.isLob("clob"));
+		assertTrue(TypeHelper.isLob("clob"));
 	}
 
 	@Test
 	public void testIsLobNonLob() {
-		assertFalse(HibernateTypeToJavaClass.isLob("string"));
+		assertFalse(TypeHelper.isLob("string"));
 	}
 
 	@Test
 	public void testIsLobNull() {
-		assertFalse(HibernateTypeToJavaClass.isLob(null));
+		assertFalse(TypeHelper.isLob(null));
 	}
 }

@@ -22,10 +22,11 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
 
+import org.hibernate.tool.internal.util.TypeHelper;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for {@link JavaClassToHibernateType}.
+ * Tests for {@link TypeHelper} Java class to Hibernate type mappings.
  *
  * @author Koen Aers
  */
@@ -35,137 +36,137 @@ public class JavaClassToHibernateTypeTest {
 
 	@Test
 	public void testInt() {
-		assertEquals("int", JavaClassToHibernateType.toHibernateType(int.class));
+		assertEquals("int", TypeHelper.toHibernateType(int.class));
 	}
 
 	@Test
 	public void testLong() {
-		assertEquals("long", JavaClassToHibernateType.toHibernateType(long.class));
+		assertEquals("long", TypeHelper.toHibernateType(long.class));
 	}
 
 	@Test
 	public void testShort() {
-		assertEquals("short", JavaClassToHibernateType.toHibernateType(short.class));
+		assertEquals("short", TypeHelper.toHibernateType(short.class));
 	}
 
 	@Test
 	public void testByte() {
-		assertEquals("byte", JavaClassToHibernateType.toHibernateType(byte.class));
+		assertEquals("byte", TypeHelper.toHibernateType(byte.class));
 	}
 
 	@Test
 	public void testFloat() {
-		assertEquals("float", JavaClassToHibernateType.toHibernateType(float.class));
+		assertEquals("float", TypeHelper.toHibernateType(float.class));
 	}
 
 	@Test
 	public void testDouble() {
-		assertEquals("double", JavaClassToHibernateType.toHibernateType(double.class));
+		assertEquals("double", TypeHelper.toHibernateType(double.class));
 	}
 
 	@Test
 	public void testBoolean() {
-		assertEquals("boolean", JavaClassToHibernateType.toHibernateType(boolean.class));
+		assertEquals("boolean", TypeHelper.toHibernateType(boolean.class));
 	}
 
 	@Test
 	public void testChar() {
-		assertEquals("character", JavaClassToHibernateType.toHibernateType(char.class));
+		assertEquals("character", TypeHelper.toHibernateType(char.class));
 	}
 
 	// --- Wrapper types ---
 
 	@Test
 	public void testIntegerWrapper() {
-		assertEquals("java.lang.Integer", JavaClassToHibernateType.toHibernateType(Integer.class));
+		assertEquals("java.lang.Integer", TypeHelper.toHibernateType(Integer.class));
 	}
 
 	@Test
 	public void testLongWrapper() {
-		assertEquals("java.lang.Long", JavaClassToHibernateType.toHibernateType(Long.class));
+		assertEquals("java.lang.Long", TypeHelper.toHibernateType(Long.class));
 	}
 
 	@Test
 	public void testShortWrapper() {
-		assertEquals("java.lang.Short", JavaClassToHibernateType.toHibernateType(Short.class));
+		assertEquals("java.lang.Short", TypeHelper.toHibernateType(Short.class));
 	}
 
 	@Test
 	public void testByteWrapper() {
-		assertEquals("java.lang.Byte", JavaClassToHibernateType.toHibernateType(Byte.class));
+		assertEquals("java.lang.Byte", TypeHelper.toHibernateType(Byte.class));
 	}
 
 	@Test
 	public void testFloatWrapper() {
-		assertEquals("java.lang.Float", JavaClassToHibernateType.toHibernateType(Float.class));
+		assertEquals("java.lang.Float", TypeHelper.toHibernateType(Float.class));
 	}
 
 	@Test
 	public void testDoubleWrapper() {
-		assertEquals("java.lang.Double", JavaClassToHibernateType.toHibernateType(Double.class));
+		assertEquals("java.lang.Double", TypeHelper.toHibernateType(Double.class));
 	}
 
 	@Test
 	public void testBooleanWrapper() {
-		assertEquals("java.lang.Boolean", JavaClassToHibernateType.toHibernateType(Boolean.class));
+		assertEquals("java.lang.Boolean", TypeHelper.toHibernateType(Boolean.class));
 	}
 
 	@Test
 	public void testCharacterWrapper() {
-		assertEquals("java.lang.Character", JavaClassToHibernateType.toHibernateType(Character.class));
+		assertEquals("java.lang.Character", TypeHelper.toHibernateType(Character.class));
 	}
 
 	// --- String ---
 
 	@Test
 	public void testString() {
-		assertEquals("string", JavaClassToHibernateType.toHibernateType(String.class));
+		assertEquals("string", TypeHelper.toHibernateType(String.class));
 	}
 
 	// --- Numeric types ---
 
 	@Test
 	public void testBigDecimal() {
-		assertEquals("big_decimal", JavaClassToHibernateType.toHibernateType(BigDecimal.class));
+		assertEquals("big_decimal", TypeHelper.toHibernateType(BigDecimal.class));
 	}
 
 	@Test
 	public void testBigInteger() {
-		assertEquals("big_integer", JavaClassToHibernateType.toHibernateType(BigInteger.class));
+		assertEquals("big_integer", TypeHelper.toHibernateType(BigInteger.class));
 	}
 
 	// --- Date/time ---
 
 	@Test
 	public void testDate() {
-		assertEquals("timestamp", JavaClassToHibernateType.toHibernateType(Date.class));
+		assertEquals("timestamp", TypeHelper.toHibernateType(Date.class));
 	}
 
 	// --- Binary ---
 
 	@Test
 	public void testByteArray() {
-		assertEquals("binary", JavaClassToHibernateType.toHibernateType(byte[].class));
+		assertEquals("binary", TypeHelper.toHibernateType(byte[].class));
 	}
 
 	// --- Serializable ---
 
 	@Test
 	public void testSerializable() {
-		assertEquals("serializable", JavaClassToHibernateType.toHibernateType(Serializable.class));
+		assertEquals("serializable", TypeHelper.toHibernateType(Serializable.class));
 	}
 
 	// --- Null ---
 
 	@Test
 	public void testNull() {
-		assertEquals("serializable", JavaClassToHibernateType.toHibernateType((Class<?>) null));
+		assertEquals("serializable", TypeHelper.toHibernateType((Class<?>) null));
 	}
 
 	// --- Unknown class falls back to class name ---
 
 	@Test
 	public void testUnknownClass() {
-		assertEquals("java.util.UUID", JavaClassToHibernateType.toHibernateType(java.util.UUID.class));
+		assertEquals("java.util.UUID", TypeHelper.toHibernateType(java.util.UUID.class));
 	}
 }

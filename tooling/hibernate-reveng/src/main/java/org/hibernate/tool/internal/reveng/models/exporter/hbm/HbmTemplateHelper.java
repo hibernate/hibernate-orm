@@ -118,6 +118,8 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.FlushModeType;
 
+import org.hibernate.tool.internal.util.TypeHelper;
+
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.TypeDetails;
@@ -654,7 +656,7 @@ public class HbmTemplateHelper {
 	public String getElementCollectionElementType(FieldDetails field) {
 		TypeDetails elementType = field.getElementType();
 		if (elementType != null) {
-			return JavaClassToHibernateType.toHibernateType(
+			return TypeHelper.toHibernateType(
 					elementType.determineRawClass().getClassName());
 		}
 		return null;
@@ -758,7 +760,7 @@ public class HbmTemplateHelper {
 	public String getAnyIdType(FieldDetails field) {
 		AnyKeyJavaClass akjc = field.getDirectAnnotationUsage(AnyKeyJavaClass.class);
 		if (akjc != null) {
-			return JavaClassToHibernateType.toHibernateType(akjc.value().getName());
+			return TypeHelper.toHibernateType(akjc.value().getName());
 		}
 		return "long";
 	}
@@ -966,7 +968,7 @@ public class HbmTemplateHelper {
 			return typeName.get(0);
 		}
 		String className = field.getType().determineRawClass().getClassName();
-		return JavaClassToHibernateType.toHibernateType(className);
+		return TypeHelper.toHibernateType(className);
 	}
 
 	public boolean hasTypeParameters(FieldDetails field) {
@@ -1512,7 +1514,7 @@ public class HbmTemplateHelper {
 	public String getMapKeyType(FieldDetails field) {
 		TypeDetails mapKeyType = field.getMapKeyType();
 		if (mapKeyType != null) {
-			return JavaClassToHibernateType.toHibernateType(
+			return TypeHelper.toHibernateType(
 					mapKeyType.determineRawClass().getClassName());
 		}
 		return null;
@@ -1747,7 +1749,7 @@ public class HbmTemplateHelper {
 		Map<String, String> params = new java.util.LinkedHashMap<>();
 		if (fd.parameters() != null) {
 			for (ParamDef pd : fd.parameters()) {
-				params.put(pd.name(), JavaClassToHibernateType.toHibernateType(pd.type().getName()));
+				params.put(pd.name(), TypeHelper.toHibernateType(pd.type().getName()));
 			}
 		}
 		return new FilterDefInfo(fd.name(), fd.defaultCondition(), params);

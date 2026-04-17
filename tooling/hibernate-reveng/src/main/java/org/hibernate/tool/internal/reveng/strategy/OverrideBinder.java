@@ -33,7 +33,7 @@ import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.strategy.MetaAttributeHelper.SimpleMetaAttribute;
 import org.hibernate.tool.internal.reveng.util.RevengUtils;
-import org.hibernate.tool.internal.reveng.util.JdbcToHibernateTypeHelper;
+import org.hibernate.tool.internal.util.TypeHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -139,7 +139,7 @@ public class OverrideBinder {
             column.setName(getAttribute(element, "name"));
             String attributeValue = getAttribute(element, "jdbc-type");
             if (StringHelper.isNotEmpty(attributeValue)) {
-                column.setSqlTypeCode( JdbcToHibernateTypeHelper.getJDBCType( attributeValue ) );
+                column.setSqlTypeCode( TypeHelper.getJDBCType( attributeValue ) );
             }
             TableIdentifier tableIdentifier = TableIdentifier.create(table);
             if (table.getColumn(column) != null) {
@@ -399,7 +399,7 @@ public class OverrideBinder {
     }
 
     private static void bindSqlType(Element sqlType, OverrideRepository repository) {
-        int jdbcType = JdbcToHibernateTypeHelper.getJDBCType(
+        int jdbcType = TypeHelper.getJDBCType(
                 getAttribute(sqlType, "jdbc-type"));
         SQLTypeMapping sqlTypeMapping = new SQLTypeMapping(jdbcType);
         sqlTypeMapping.setHibernateType(getHibernateType(sqlType));

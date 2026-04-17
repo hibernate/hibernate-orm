@@ -27,7 +27,7 @@ import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
-import org.hibernate.tool.internal.reveng.util.JdbcToHibernateTypeHelper;
+import org.hibernate.tool.internal.util.TypeHelper;
 
 /**
  * Reads column metadata and primary key information for a table
@@ -85,20 +85,20 @@ class ColumnReader {
 
 	private ColumnMetadata createColumnMetadata(TableIdentifier tableId, RowInfo rowInfo) {
 		String hibernateType = determineHibernateType(tableId, rowInfo);
-		Class<?> javaClass = HibernateTypeToJavaClass.toJavaClass(hibernateType);
+		Class<?> javaClass = TypeHelper.toJavaClass(hibernateType);
 		String fieldName = strategy.columnToPropertyName(tableId, rowInfo.columnName());
 
 		ColumnMetadata columnMetadata = new ColumnMetadata(rowInfo.columnName(), fieldName, javaClass)
 			.hibernateTypeName(hibernateType)
 			.nullable(rowInfo.nullable());
 
-		if (JdbcToHibernateTypeHelper.typeHasLength(rowInfo.sqlType())) {
+		if (TypeHelper.typeHasLength(rowInfo.sqlType())) {
 			columnMetadata.length(rowInfo.columnSize());
 		}
-		if (JdbcToHibernateTypeHelper.typeHasPrecision(rowInfo.sqlType())) {
+		if (TypeHelper.typeHasPrecision(rowInfo.sqlType())) {
 			columnMetadata.precision(rowInfo.columnSize());
 		}
-		if (JdbcToHibernateTypeHelper.typeHasScale(rowInfo.sqlType())) {
+		if (TypeHelper.typeHasScale(rowInfo.sqlType())) {
 			columnMetadata.scale(rowInfo.decimalDigits());
 		}
 
@@ -110,12 +110,12 @@ class ColumnReader {
 			columnMetadata.version(true);
 		}
 
-		TemporalType temporalType = HibernateTypeToJavaClass.toTemporalType(hibernateType);
+		TemporalType temporalType = TypeHelper.toTemporalType(hibernateType);
 		if (temporalType != null) {
 			columnMetadata.temporal(temporalType);
 		}
 
-		if (HibernateTypeToJavaClass.isLob(hibernateType)) {
+		if (TypeHelper.isLob(hibernateType)) {
 			columnMetadata.lob(true);
 		}
 
@@ -134,7 +134,7 @@ class ColumnReader {
 			rowInfo.columnSize(), rowInfo.decimalDigits(),
 			rowInfo.nullable(), rowInfo.primaryKey());
 		if (hibernateType == null) {
-			hibernateType = JdbcToHibernateTypeHelper.getPreferredHibernateType(
+			hibernateType = TypeHelper.getPreferredHibernateType(
 				rowInfo.sqlType(), rowInfo.columnSize(),
 				rowInfo.columnSize(), rowInfo.decimalDigits(),
 				rowInfo.nullable(), rowInfo.primaryKey());

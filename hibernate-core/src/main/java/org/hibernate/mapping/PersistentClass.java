@@ -860,8 +860,18 @@ public abstract sealed class PersistentClass
 			String name,
 			String condition,
 			boolean autoAliasInjection,
-			java.util.Map<String, String> aliasTableMap,
-			java.util.Map<String, String> aliasEntityMap) {
+			Map<String, String> aliasTableMap,
+			Map<String, String> aliasEntityMap) {
+		addFilter( name, condition, autoAliasInjection, aliasTableMap, aliasEntityMap, null );
+	}
+
+	public void addFilter(
+			String name,
+			String condition,
+			boolean autoAliasInjection,
+			Map<String, String> aliasTableMap,
+			Map<String, String> aliasEntityMap,
+			FilterJoinConfiguration joinConfiguration) {
 		filters.add(
 				new FilterConfiguration(
 						name,
@@ -869,6 +879,7 @@ public abstract sealed class PersistentClass
 						autoAliasInjection,
 						aliasTableMap,
 						aliasEntityMap,
+						joinConfiguration,
 						this
 				)
 		);

@@ -4,6 +4,7 @@
  */
 package org.hibernate.internal;
 
+import org.hibernate.StatementObserver;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -84,6 +85,11 @@ class JdbcSessionContextImpl implements JdbcSessionContext {
 	@Override
 	public boolean doesConnectionProviderDisableAutoCommit() {
 		return settings().doesConnectionProviderDisableAutoCommit();
+	}
+
+	@Override
+	public StatementObserver getStatementObserver() {
+		return sessionFactory.getStatementObserver();
 	}
 
 	@Override

@@ -135,6 +135,7 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 
 		// If we get here the statement is needed - make sure it is resolved
 		session.getJdbcServices().getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
+		session.getJdbcSessionContext().getStatementObserver().performingSql( statementDetails.getSqlString(), -1 );
 
 		try {
 			valueBindings.beforeStatement( statementDetails );

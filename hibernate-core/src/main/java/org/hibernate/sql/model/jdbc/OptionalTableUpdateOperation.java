@@ -202,6 +202,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		final var jdbcCoordinator = session.getJdbcCoordinator();
 		final var deleteStatement = createStatementDetails( jdbcDelete, jdbcCoordinator );
 		session.getJdbcServices().getSqlStatementLogger().logStatement( jdbcDelete.getSqlString() );
+		session.getJdbcSessionContext().getStatementObserver().performingSql( jdbcDelete.getSqlString(), -1 );
 		bindKeyValues( jdbcValueBindings, deleteStatement, jdbcDelete, session );
 		try {
 			session.getJdbcCoordinator().getResultSetReturn()
@@ -341,6 +342,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		try {
 			final var updateStatement = statementDetails.resolveStatement();
 			jdbcServices.getSqlStatementLogger().logStatement( sql );
+			session.getJdbcSessionContext().getStatementObserver().performingSql( sql, -1 );
 			bindUpdateValues( jdbcValueBindings, updateStatement, updateParameters, sql, session );
 			final int rowCount =
 					session.getJdbcCoordinator().getResultSetReturn()
@@ -421,6 +423,7 @@ public class OptionalTableUpdateOperation implements SelfExecutingUpdateOperatio
 		final String sql = jdbcInsert.getSqlString();
 		try {
 			jdbcServices.getSqlStatementLogger().logStatement( sql );
+			session.getJdbcSessionContext().getStatementObserver().performingSql( sql, -1 );
 			final var bindingGroup = jdbcValueBindings.getBindingGroup( tableMapping.getTableName() );
 			if ( bindingGroup != null ) {
 				bindingGroup.forEachBinding( binding -> {

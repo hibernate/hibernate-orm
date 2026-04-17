@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.hibernate.StatementObserver;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.ResultSetReturn;
@@ -28,6 +29,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 
 	private final SqlStatementLogger sqlStatementLogger;
 	private final SqlExceptionHelper sqlExceptionHelper;
+	private final StatementObserver statementObserver;
 
 	/**
 	 * Constructs a ResultSetReturnImpl
@@ -38,6 +40,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		this.jdbcCoordinator = jdbcCoordinator;
 		this.sqlStatementLogger = jdbcServices.getSqlStatementLogger();
 		this.sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
+		this.statementObserver = jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getStatementObserver();
 	}
 
 	@Override
@@ -89,6 +92,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	@Override
 	public ResultSet extract(Statement statement, String sql) {
 		sqlStatementLogger.logStatement( sql );
+		statementObserver.performingSql( sql, -1 );
 		long executeStartNanos = beginSlowQueryLogging();
 		try {
 			final var eventMonitor = getEventManager();
@@ -146,6 +150,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	@Override
 	public ResultSet execute(Statement statement, String sql) {
 		sqlStatementLogger.logStatement( sql );
+		statementObserver.performingSql( sql, -1 );
 		long executeStartNanos = beginSlowQueryLogging();
 		try {
 			final var eventMonitor = getEventManager();
@@ -198,6 +203,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	@Override
 	public int executeUpdate(Statement statement, String sql) {
 		sqlStatementLogger.logStatement( sql );
+		statementObserver.performingSql( sql, -1 );
 		long executeStartNanos = beginSlowQueryLogging();
 		final var eventMonitor = getEventManager();
 		final var executionEvent = eventMonitor.beginJdbcPreparedStatementExecutionEvent();

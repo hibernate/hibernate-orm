@@ -4,53 +4,29 @@
  */
 package org.hibernate.orm.tooling.maven.reveng;
 
-import org.apache.maven.cli.MavenCli;
-import org.codehaus.plexus.classworlds.ClassWorld;
+import org.hibernate.orm.tooling.maven.AbstractMavenTestIT;
 import org.hibernate.tool.reveng.api.version.Version;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.PrintStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TransformHbmTestIT {
-
-	public static final String MVN_HOME = "maven.multiModuleProjectDirectory";
-
-	private static ClassWorld classWorld;
-	private static MavenCli mavenCli;
+public class TransformHbmTestIT extends AbstractMavenTestIT {
 
 	@TempDir
 	private Path projectPath;
 
-	@BeforeAll
-	public static void beforeAll() throws Exception {
-		classWorld = new ClassWorld( "plexus.core", Thread.currentThread().getContextClassLoader() );
-		mavenCli = new MavenCli( classWorld );
-	}
-
-	@AfterAll
-	public static void afterAll() throws Exception {
-		classWorld.close();
-	}
-
 	@Test
 	public void testSimpleHbmTransformation() throws Exception {
-		System.setProperty(MVN_HOME, projectPath.toAbsolutePath().toString());
 		writePomFile();
 		copyHbmFile();
 		runTransformHbmToOrm();
@@ -81,26 +57,13 @@ public class TransformHbmTestIT {
 		File ormXmlFile = new File(destinationDir, "simple.mapping.xml");
 		assertFalse(ormXmlFile.exists());
 		runMaven(
+				projectPath.toAbsolutePath().toString(),
 				"compile",
 				"org.hibernate.orm:hibernate-maven-plugin:" + Version.versionString() + ":transformHbm" );
 		// Check the existence of the transformed file
 		assertTrue(ormXmlFile.exists());
 		// Check if it's pretty printed
 		assertTrue(Files.readString(ormXmlFile.toPath()).contains("\n        <table name=\"Foo\"/>\n"));
-	}
-
-	private void runMaven(String... goals) {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		ByteArrayOutputStream err = new ByteArrayOutputStream();
-		int result = mavenCli.doMain(
-				goals,
-				projectPath.toAbsolutePath().toString(),
-				new PrintStream( out ),
-				new PrintStream( err ) );
-		assertEquals( 0, result,
-				"Maven invocation failed for goals: " + Arrays.asList( goals )
-				+ "\n--- stdout ---\n" + out
-				+ "\n--- stderr ---\n" + err );
 	}
 
 	private static final String simplePomContents =

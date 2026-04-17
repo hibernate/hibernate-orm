@@ -4,35 +4,27 @@
  */
 package org.hibernate.orm.tooling.maven.reveng;
 
-import org.apache.maven.cli.MavenCli;
-import org.codehaus.plexus.classworlds.ClassWorld;
+import org.hibernate.orm.tooling.maven.AbstractMavenTestIT;
 import org.hibernate.tool.reveng.api.version.Version;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.PrintStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
-import java.util.Arrays;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-	public class ExamplesTestIT {
+	public class ExamplesTestIT extends AbstractMavenTestIT {
 
-		public static final String MVN_HOME = "maven.multiModuleProjectDirectory";
 		private static File baseFolder;
-		private static ClassWorld classWorld;
-		private static MavenCli mavenCli;
 
 		private File projectFolder;
 
@@ -46,18 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 		@BeforeAll
 		public static void beforeAll() throws Exception {
-			// The needed resource for this test are put in place
-			// in the 'baseFolder' (normally 'target/test-classes')
-			// by the 'build-helper-maven-plugin' execution.
-			// See the 'pom.xml'
 			baseFolder = determineBaseFolder();
-			classWorld = new ClassWorld( "plexus.core", Thread.currentThread().getContextClassLoader() );
-			mavenCli = new MavenCli( classWorld );
-		}
-
-		@AfterAll
-		public static void afterAll() throws Exception {
-			classWorld.close();
 		}
 
 		@Test
@@ -143,7 +124,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 			projectFolder = new File(baseFolder, "hbm2orm/simple-default");
 			File ormXmlFile = new File(projectFolder, "src/main/resources/simple.mapping.xml");
 			assertFalse(ormXmlFile.exists());
-			runMaven( "org.hibernate.orm:hibernate-maven-plugin:" + Version.versionString() + ":transformHbm");
+			runMaven( projectFolder.getAbsolutePath(), "org.hibernate.orm:hibernate-maven-plugin:" + Version.versionString() + ":transformHbm");
 			assertTrue(ormXmlFile.exists());
 			String ormXmlContents = Files.readString( ormXmlFile.toPath() );
 			assertTrue(ormXmlContents.contains("entity-mappings"));
@@ -152,7 +133,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		private void prepareProject(String projectName) throws Exception {
 			projectFolder = new File(baseFolder, projectName);
 			assertTrue(projectFolder.exists());
-			System.setProperty(MVN_HOME, projectFolder.getAbsolutePath());
 			editPomFile(projectFolder);
 			createHibernatePropertiesFile(projectFolder);
 			createDatabase();
@@ -173,22 +153,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 
 		private void runGenerateSources() {
-			runMaven( "generate-sources" );
-		}
-
-		private void runMaven(String... goals) {
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			ByteArrayOutputStream err = new ByteArrayOutputStream();
-			System.setProperty(MVN_HOME, projectFolder.getAbsolutePath());
-			int result = mavenCli.doMain(
-					goals,
-					projectFolder.getAbsolutePath(),
-					new PrintStream( out ),
-					new PrintStream( err ) );
-			assertEquals( 0, result,
-					"Maven invocation failed for goals: " + Arrays.asList( goals )
-					+ "\n--- stdout ---\n" + out
-					+ "\n--- stderr ---\n" + err );
+			runMaven( projectFolder.getAbsolutePath(), "generate-sources" );
 		}
 
 		private void assertNotGeneratedYet(String fileName) {

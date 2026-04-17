@@ -51,10 +51,6 @@ tasks.register('integrationTest', Test) {
     shouldRunAfter test
 
     useJUnitPlatform()
-
-    testLogging {
-        showStandardStreams = true
-    }
 }
 
 tasks.forbiddenApisIntTest {

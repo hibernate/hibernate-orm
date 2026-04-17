@@ -55,7 +55,6 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -137,6 +136,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.hibernate.dialect.HANAServerConfiguration.MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
@@ -576,7 +576,7 @@ public class HANALegacyDialect extends Dialect {
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+			final int errorCode = extractErrorCode( sqlException );
 
 			if ( errorCode == 131 ) {
 				// 131 - Transaction rolled back by lock wait timeout
@@ -612,8 +612,6 @@ public class HANALegacyDialect extends Dialect {
 			// 461 - foreign key constraint violation
 			// 462 - failed on update or delete by foreign key constraint violation
 			if ( errorCode == 287 || errorCode == 301 || errorCode == 461 || errorCode == 462 ) {
-				final String constraintName = getViolatedConstraintNameExtractor()
-						.extractConstraintName( sqlException );
 
 				return new ConstraintViolationException(
 						message,
@@ -622,7 +620,8 @@ public class HANALegacyDialect extends Dialect {
 						errorCode == 301
 								? ConstraintViolationException.ConstraintKind.UNIQUE
 								: ConstraintViolationException.ConstraintKind.OTHER,
-						constraintName
+						getViolatedConstraintNameExtractor()
+								.extractConstraintName( sqlException )
 				);
 			}
 

@@ -63,7 +63,6 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -122,6 +121,7 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.NUMERIC;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -434,7 +434,7 @@ public class SingleStoreDialect extends Dialect {
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR = new TemplatedViolatedConstraintNameExtractor(
 			sqle -> {
-				final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
+				final String sqlState = extractSqlState( sqle );
 				if ( sqlState != null ) {
 					if ( Integer.parseInt( sqlState ) == 23000 ) {
 						return extractUsingTemplate( " for key '", "'", sqle.getMessage() );
@@ -1174,7 +1174,7 @@ public class SingleStoreDialect extends Dialect {
 					);
 			}
 
-			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
+			final String sqlState = extractSqlState( sqlException );
 			if ( sqlState != null ) {
 				switch ( sqlState ) {
 					case "41000":

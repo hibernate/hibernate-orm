@@ -46,16 +46,16 @@ import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.builder.db.EmbeddableClassBuilder;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.EmbeddableMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.EmbeddedFieldMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.InheritanceMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.ManyToManyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToManyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToOneMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.EmbeddableDescriptor;
+import org.hibernate.tool.internal.descriptor.CompositeIdDescriptor;
+import org.hibernate.tool.internal.descriptor.EmbeddedFieldDescriptor;
+import org.hibernate.tool.internal.descriptor.ForeignKeyDescriptor;
+import org.hibernate.tool.internal.descriptor.InheritanceDescriptor;
+import org.hibernate.tool.internal.descriptor.ManyToManyDescriptor;
+import org.hibernate.tool.internal.descriptor.OneToManyDescriptor;
+import org.hibernate.tool.internal.descriptor.OneToOneDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -66,7 +66,7 @@ import org.junit.jupiter.api.io.TempDir;
  */
 public class MappingXmlExporterTest {
 
-	private String export(TableMetadata table) {
+	private String export(TableDescriptor table) {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		MappingXmlExporter exporter = MappingXmlExporter.create();
@@ -77,8 +77,8 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testXmlHeader() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		String xml = export(table);
 		assertTrue(xml.contains("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"), xml);
 		assertTrue(xml.contains("<entity-mappings"), xml);
@@ -88,16 +88,16 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testGeneratedHeader() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		String xml = export(table);
 		assertTrue(xml.matches("(?s).*<!-- Generated .+ by Hibernate Tools .+ -->.*"), xml);
 	}
 
 	@Test
 	public void testEntityAndTable() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		String xml = export(table);
 		assertTrue(xml.contains("<entity class=\"com.example.Employee\">"), xml);
 		assertTrue(xml.contains("<table name=\"EMPLOYEE\"/>"), xml);
@@ -105,10 +105,10 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testTableWithSchemaAndCatalog() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		table.setSchema("HR");
 		table.setCatalog("MYDB");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		String xml = export(table);
 		assertTrue(xml.contains("schema=\"HR\""), xml);
 		assertTrue(xml.contains("catalog=\"MYDB\""), xml);
@@ -116,8 +116,8 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testIdWithGeneratedValue() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class)
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.generationType(GenerationType.IDENTITY));
 		String xml = export(table);
@@ -129,8 +129,8 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testIdWithoutGeneratedValue() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		String xml = export(table);
 		assertTrue(xml.contains("<id name=\"id\">"), xml);
 		assertFalse(xml.contains("<generated-value"), xml);
@@ -138,9 +138,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testBasicColumn() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		String xml = export(table);
 		assertTrue(xml.contains("<basic name=\"name\">"), xml);
 		assertTrue(xml.contains("<column name=\"NAME\"/>"), xml);
@@ -149,11 +149,11 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testColumnAttributes() {
-		TableMetadata table = new TableMetadata("PRODUCT", "Product", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class)
+		TableDescriptor table = new TableDescriptor("PRODUCT", "Product", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class)
 				.nullable(false).unique(true).length(100));
-		table.addColumn(new ColumnMetadata("PRICE", "price", BigDecimal.class)
+		table.addColumn(new ColumnDescriptor("PRICE", "price", BigDecimal.class)
 				.precision(10).scale(2));
 		String xml = export(table);
 		assertTrue(xml.contains("nullable=\"false\""), xml);
@@ -165,9 +165,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testLobColumn() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("BIO", "bio", String.class).lob(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("BIO", "bio", String.class).lob(true));
 		String xml = export(table);
 		assertTrue(xml.contains("<basic name=\"bio\">"), xml);
 		assertTrue(xml.contains("<lob/>"), xml);
@@ -175,9 +175,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testTemporalColumn() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("HIRE_DATE", "hireDate", Date.class)
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("HIRE_DATE", "hireDate", Date.class)
 				.temporal(TemporalType.TIMESTAMP));
 		String xml = export(table);
 		assertTrue(xml.contains("<temporal>TIMESTAMP</temporal>"), xml);
@@ -185,9 +185,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testVersionColumn() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("VERSION", "version", Integer.class).version(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("VERSION", "version", Integer.class).version(true));
 		String xml = export(table);
 		assertTrue(xml.contains("<version name=\"version\">"), xml);
 		assertTrue(xml.contains("<column name=\"VERSION\""), xml);
@@ -197,10 +197,10 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testManyToOne() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example"));
 		String xml = export(table);
 		assertTrue(xml.contains("<many-to-one name=\"department\" target-entity=\"com.example.Department\""), xml);
@@ -211,10 +211,10 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testManyToOneWithFetchAndOptional() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example")
 				.fetchType(FetchType.LAZY)
 				.optional(false));
@@ -225,10 +225,10 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testManyToOneWithReferencedColumn() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_CODE", "deptCode", String.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_CODE", "deptCode", String.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_CODE", "Department", "com.example")
 				.referencedColumnName("CODE"));
 		String xml = export(table);
@@ -237,9 +237,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testOneToMany() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		String xml = export(table);
 		assertTrue(xml.contains("<one-to-many name=\"employees\" target-entity=\"com.example.Employee\" mapped-by=\"department\""), xml);
@@ -247,9 +247,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testOneToManyWithCascade() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example")
 				.cascade(CascadeType.ALL));
 		String xml = export(table);
@@ -261,9 +261,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testOneToManyWithFetchAndOrphanRemoval() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example")
 				.fetchType(FetchType.EAGER)
 				.orphanRemoval(true));
@@ -274,9 +274,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testOneToOneOwning() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("address", "Address", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("address", "Address", "com.example")
 				.foreignKeyColumnName("ADDRESS_ID"));
 		String xml = export(table);
 		assertTrue(xml.contains("<one-to-one name=\"address\" target-entity=\"com.example.Address\""), xml);
@@ -286,9 +286,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testOneToOneInverse() {
-		TableMetadata table = new TableMetadata("ADDRESS", "Address", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("employee", "Employee", "com.example")
+		TableDescriptor table = new TableDescriptor("ADDRESS", "Address", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("employee", "Employee", "com.example")
 				.mappedBy("address"));
 		String xml = export(table);
 		assertTrue(xml.contains("mapped-by=\"address\""), xml);
@@ -297,9 +297,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testManyToManyOwning() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("projects", "Project", "com.example")
 				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID"));
 		String xml = export(table);
 		assertTrue(xml.contains("<many-to-many name=\"projects\" target-entity=\"com.example.Project\""), xml);
@@ -312,9 +312,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testManyToManyInverse() {
-		TableMetadata table = new TableMetadata("PROJECT", "Project", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("employees", "Employee", "com.example")
+		TableDescriptor table = new TableDescriptor("PROJECT", "Project", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("employees", "Employee", "com.example")
 				.mappedBy("projects"));
 		String xml = export(table);
 		assertTrue(xml.contains("mapped-by=\"projects\""), xml);
@@ -323,9 +323,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testManyToManyWithCascade() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("projects", "Project", "com.example")
 				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID")
 				.cascade(CascadeType.PERSIST, CascadeType.MERGE));
 		String xml = export(table);
@@ -336,8 +336,8 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testCompositeId() {
-		TableMetadata table = new TableMetadata("ORDER_LINE", "OrderLine", "com.example");
-		table.compositeId(new CompositeIdMetadata("id", "OrderLineId", "com.example")
+		TableDescriptor table = new TableDescriptor("ORDER_LINE", "OrderLine", "com.example");
+		table.compositeId(new CompositeIdDescriptor("id", "OrderLineId", "com.example")
 				.addAttributeOverride("orderId", "ORDER_ID")
 				.addAttributeOverride("lineNumber", "LINE_NUMBER"));
 		String xml = export(table);
@@ -352,9 +352,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testEmbeddedField() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addEmbeddedField(new EmbeddedFieldMetadata("homeAddress", "Address", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addEmbeddedField(new EmbeddedFieldDescriptor("homeAddress", "Address", "com.example")
 				.addAttributeOverride("street", "HOME_STREET")
 				.addAttributeOverride("city", "HOME_CITY"));
 		String xml = export(table);
@@ -368,9 +368,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testInheritanceRoot() {
-		TableMetadata table = new TableMetadata("VEHICLE", "Vehicle", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.inheritance(new InheritanceMetadata(InheritanceType.SINGLE_TABLE)
+		TableDescriptor table = new TableDescriptor("VEHICLE", "Vehicle", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.inheritance(new InheritanceDescriptor(InheritanceType.SINGLE_TABLE)
 				.discriminatorColumn("DTYPE")
 				.discriminatorType(DiscriminatorType.STRING)
 				.discriminatorColumnLength(31));
@@ -383,8 +383,8 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testInheritanceSubclass() {
-		TableMetadata table = new TableMetadata("CAR", "Car", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("CAR", "Car", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		table.parent("Vehicle", "com.example");
 		table.discriminatorValue("CAR");
 		table.primaryKeyJoinColumn("VEHICLE_ID");
@@ -396,14 +396,14 @@ public class MappingXmlExporterTest {
 	@Test
 	public void testSeparateFilesPerEntity() {
 		DynamicEntityBuilder builder1 = new DynamicEntityBuilder();
-		TableMetadata deptTable = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		deptTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		deptTable.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor deptTable = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		deptTable.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		deptTable.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		ClassDetails dept = builder1.createEntityFromTable(deptTable);
 
 		DynamicEntityBuilder builder2 = new DynamicEntityBuilder();
-		TableMetadata empTable = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		empTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor empTable = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		empTable.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		ClassDetails emp = builder2.createEntityFromTable(empTable);
 
 		MappingXmlExporter exporter = MappingXmlExporter.create();
@@ -425,8 +425,8 @@ public class MappingXmlExporterTest {
 		Files.writeString(tempDir.resolve("main.mapping.ftl"),
 				"<!-- Custom mapping for ${helper.getClassName()} -->");
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		ClassDetails entity = builder.createEntityFromTable(table);
 		MappingXmlExporter exporter = MappingXmlExporter.create(
 				new String[] { tempDir.toString() });
@@ -437,7 +437,7 @@ public class MappingXmlExporterTest {
 
 	// --- Embeddable export ---
 
-	private String exportEmbeddable(EmbeddableMetadata metadata) {
+	private String exportEmbeddable(EmbeddableDescriptor metadata) {
 		ModelsContext ctx = new BasicModelsContextImpl(
 				SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
 		ClassDetails embeddable = EmbeddableClassBuilder.buildEmbeddableClass(metadata, ctx);
@@ -449,9 +449,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testEmbeddableExport() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
-				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
-				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("OrderLineId", "com.example")
+				.addColumn(new ColumnDescriptor("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnDescriptor("LINE_NUMBER", "lineNumber", Integer.class));
 		String xml = exportEmbeddable(metadata);
 		assertTrue(xml.contains("<embeddable class=\"com.example.OrderLineId\">"), xml);
 		assertFalse(xml.contains("<entity "), xml);
@@ -459,9 +459,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testEmbeddableExportAttributes() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
-				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
-				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("OrderLineId", "com.example")
+				.addColumn(new ColumnDescriptor("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnDescriptor("LINE_NUMBER", "lineNumber", Integer.class));
 		String xml = exportEmbeddable(metadata);
 		assertTrue(xml.contains("<basic name=\"orderId\">"), xml);
 		assertTrue(xml.contains("<column name=\"ORDER_ID\""), xml);
@@ -471,16 +471,16 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testEmbeddableExportPackage() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
-				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("OrderLineId", "com.example")
+				.addColumn(new ColumnDescriptor("ORDER_ID", "orderId", Long.class));
 		String xml = exportEmbeddable(metadata);
 		assertTrue(xml.contains("<package>com.example</package>"), xml);
 	}
 
 	@Test
 	public void testEmbeddableExportNoEntityElements() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
-				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("OrderLineId", "com.example")
+				.addColumn(new ColumnDescriptor("ORDER_ID", "orderId", Long.class));
 		String xml = exportEmbeddable(metadata);
 		assertFalse(xml.contains("<filter-def"), xml);
 		assertFalse(xml.contains("<named-query"), xml);
@@ -491,8 +491,8 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testEntityListenersElement() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		EntityListenersJpaAnnotation el = JpaAnnotations.ENTITY_LISTENERS.createUsage(builder.getModelsContext());
@@ -519,8 +519,8 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testLifecycleCallbackElements() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		DynamicClassDetails dc = (DynamicClassDetails) entity;
@@ -540,8 +540,8 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testEntityAccessTypeProperty() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation access =
@@ -557,17 +557,17 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testEntityAccessTypeDefault() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		String xml = export(table);
 		assertFalse(xml.contains("access="), xml);
 	}
 
 	@Test
 	public void testFieldAccessTypeProperty() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		// Find the "name" field and add @Access(PROPERTY)
@@ -590,27 +590,27 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testColumnInsertableFalse() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class).insertable(false));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class).insertable(false));
 		String xml = export(table);
 		assertTrue(xml.contains("insertable=\"false\""), xml);
 	}
 
 	@Test
 	public void testColumnUpdatableFalse() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class).updatable(false));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class).updatable(false));
 		String xml = export(table);
 		assertTrue(xml.contains("updatable=\"false\""), xml);
 	}
 
 	@Test
 	public void testColumnInsertableUpdatableDefault() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		String xml = export(table);
 		assertFalse(xml.contains("insertable="), xml);
 		assertFalse(xml.contains("updatable="), xml);
@@ -620,8 +620,8 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testGeneratorWithSequenceGenerator() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		for (var field : entity.getFields()) {
@@ -649,8 +649,8 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testGeneratorWithTableGenerator() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		for (var field : entity.getFields()) {
@@ -680,9 +680,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testColumnDefinition() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("BIO", "bio", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("BIO", "bio", String.class));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		for (var field : entity.getFields()) {
@@ -703,9 +703,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testColumnDefinitionDefault() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		String xml = export(table);
 		assertFalse(xml.contains("column-definition="), xml);
 	}
@@ -714,8 +714,8 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testSQLDeleteAll() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		org.hibernate.boot.models.annotations.internal.SQLDeleteAllAnnotation sda =
@@ -733,9 +733,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testManyToOneMultipleJoinColumns() {
-		TableMetadata table = new TableMetadata("ORDER_ITEM", "OrderItem", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("ORDER_ITEM", "OrderItem", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"order", "ORDER_ID", "Order", "com.example"));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
@@ -763,9 +763,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testManyToOneMultipleJoinColumnsWithReferencedColumn() {
-		TableMetadata table = new TableMetadata("ORDER_ITEM", "OrderItem", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("ORDER_ITEM", "OrderItem", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"order", "ORDER_ID", "Order", "com.example"));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
@@ -795,9 +795,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testOneToOneMultipleJoinColumns() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("address", "Address", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("address", "Address", "com.example")
 				.foreignKeyColumnName("ADDR_ID"));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
@@ -828,8 +828,8 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testMultiplePrimaryKeyJoinColumns() {
-		TableMetadata table = new TableMetadata("CAR", "Car", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("CAR", "Car", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		table.parent("Vehicle", "com.example");
 		table.primaryKeyJoinColumn("VEHICLE_ID");
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
@@ -855,9 +855,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testManyToManyMultipleJoinTableColumns() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("projects", "Project", "com.example")
 				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID"));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
@@ -894,9 +894,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testJoinTableSchemaCatalog() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("projects", "Project", "com.example")
 				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID"));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
@@ -930,9 +930,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testMapKeyJoinColumn() {
-		TableMetadata table = new TableMetadata("ORDERS", "Order", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata("items", "OrderItem", "com.example", "order"));
+		TableDescriptor table = new TableDescriptor("ORDERS", "Order", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor("items", "OrderItem", "com.example", "order"));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		ModelsContext ctx = builder.getModelsContext();
@@ -955,10 +955,10 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testFormulaOnManyToOne() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example"));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
@@ -982,9 +982,9 @@ public class MappingXmlExporterTest {
 
 	@Test
 	public void testFormulaOnOneToOne() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("badge", "Badge", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("badge", "Badge", "com.example")
 				.foreignKeyColumnName("BADGE_ID"));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);

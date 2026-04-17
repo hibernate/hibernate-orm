@@ -31,8 +31,8 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.tool.internal.reveng.models.exporter.entity.ImportContextImpl;
 import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -42,15 +42,15 @@ import org.junit.jupiter.api.Test;
  */
 public class DaoTemplateHelperTest {
 
-	private DaoTemplateHelper create(TableMetadata table) {
+	private DaoTemplateHelper create(TableDescriptor table) {
 		return create(table, true);
 	}
 
-	private DaoTemplateHelper create(TableMetadata table, boolean ejb3) {
+	private DaoTemplateHelper create(TableDescriptor table, boolean ejb3) {
 		return create(table, ejb3, "SessionFactory");
 	}
 
-	private DaoTemplateHelper create(TableMetadata table, boolean ejb3,
+	private DaoTemplateHelper create(TableDescriptor table, boolean ejb3,
 									 String sessionFactoryName) {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
@@ -62,11 +62,11 @@ public class DaoTemplateHelperTest {
 	private record TestContext(DaoTemplateHelper helper, ModelsContext modelsContext,
 							   ClassDetails classDetails) {}
 
-	private TestContext createWithContext(TableMetadata table) {
+	private TestContext createWithContext(TableDescriptor table) {
 		return createWithContext(table, true);
 	}
 
-	private TestContext createWithContext(TableMetadata table, boolean ejb3) {
+	private TestContext createWithContext(TableDescriptor table, boolean ejb3) {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		String pkg = table.getEntityPackage() != null ? table.getEntityPackage() : "";
@@ -79,36 +79,36 @@ public class DaoTemplateHelperTest {
 
 	@Test
 	public void testGetPackageDeclaration() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertEquals("package com.example;", create(table).getPackageDeclaration());
 	}
 
 	@Test
 	public void testGetPackageDeclarationEmpty() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertEquals("", create(table).getPackageDeclaration());
 	}
 
 	@Test
 	public void testGetDeclarationName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertEquals("Employee", create(table).getDeclarationName());
 	}
 
 	@Test
 	public void testGetQualifiedDeclarationName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertEquals("com.example.Employee", create(table).getQualifiedDeclarationName());
 	}
 
 	@Test
 	public void testGetEntityName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertEquals("com.example.Employee", create(table).getEntityName());
 	}
 
@@ -116,22 +116,22 @@ public class DaoTemplateHelperTest {
 
 	@Test
 	public void testIsEjb3True() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertTrue(create(table, true).isEjb3());
 	}
 
 	@Test
 	public void testIsEjb3False() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertFalse(create(table, false).isEjb3());
 	}
 
 	@Test
 	public void testGetSessionFactoryName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertEquals("MySessionFactory", create(table, false, "MySessionFactory").getSessionFactoryName());
 	}
 
@@ -139,22 +139,22 @@ public class DaoTemplateHelperTest {
 
 	@Test
 	public void testHasIdentifier() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertTrue(create(table).hasIdentifier());
 	}
 
 	@Test
 	public void testHasNoIdentifier() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		assertFalse(create(table).hasIdentifier());
 	}
 
 	@Test
 	public void testGetIdTypeName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertEquals("Long", create(table).getIdTypeName());
 	}
 
@@ -162,16 +162,16 @@ public class DaoTemplateHelperTest {
 
 	@Test
 	public void testHasNaturalIdFalse() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertFalse(create(table).hasNaturalId());
 	}
 
 	@Test
 	public void testHasNaturalIdTrue() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("EMAIL", "email", String.class));
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.classDetails();
 		for (var field : dc.getFields()) {
@@ -185,9 +185,9 @@ public class DaoTemplateHelperTest {
 
 	@Test
 	public void testGetNaturalIdFields() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("EMAIL", "email", String.class));
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.classDetails();
 		for (var field : dc.getFields()) {
@@ -203,10 +203,10 @@ public class DaoTemplateHelperTest {
 
 	@Test
 	public void testGetNaturalIdParameterList() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
-		table.addColumn(new ColumnMetadata("CODE", "code", Integer.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("EMAIL", "email", String.class));
+		table.addColumn(new ColumnDescriptor("CODE", "code", Integer.class));
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.classDetails();
 		for (var field : dc.getFields()) {
@@ -225,15 +225,15 @@ public class DaoTemplateHelperTest {
 
 	@Test
 	public void testGetNamedQueriesEmpty() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertTrue(create(table).getNamedQueries().isEmpty());
 	}
 
 	@Test
 	public void testGetNamedQueries() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.classDetails();
 		NamedQueryJpaAnnotation nq = new NamedQueryJpaAnnotation(ctx.modelsContext());
@@ -248,8 +248,8 @@ public class DaoTemplateHelperTest {
 
 	@Test
 	public void testGetEntityNamedQueriesMatching() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.classDetails();
 		NamedQueryJpaAnnotation nq = new NamedQueryJpaAnnotation(ctx.modelsContext());
@@ -263,8 +263,8 @@ public class DaoTemplateHelperTest {
 
 	@Test
 	public void testGetEntityNamedQueriesNonMatching() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.classDetails();
 		NamedQueryJpaAnnotation nq = new NamedQueryJpaAnnotation(ctx.modelsContext());
@@ -279,8 +279,8 @@ public class DaoTemplateHelperTest {
 
 	@Test
 	public void testGetQueryParameterNamesEmpty() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DaoTemplateHelper helper = create(table);
 		DaoTemplateHelper.NamedQueryInfo query =
 				new DaoTemplateHelper.NamedQueryInfo("findAll", "SELECT e FROM Employee e");
@@ -289,8 +289,8 @@ public class DaoTemplateHelperTest {
 
 	@Test
 	public void testGetQueryParameterNamesSingle() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DaoTemplateHelper helper = create(table);
 		DaoTemplateHelper.NamedQueryInfo query = new DaoTemplateHelper.NamedQueryInfo(
 				"findByDept", "SELECT e FROM Employee e WHERE e.department = :dept");
@@ -301,8 +301,8 @@ public class DaoTemplateHelperTest {
 
 	@Test
 	public void testGetQueryParameterNamesMultiple() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DaoTemplateHelper helper = create(table);
 		DaoTemplateHelper.NamedQueryInfo query = new DaoTemplateHelper.NamedQueryInfo(
 				"findByDeptAndName",
@@ -315,8 +315,8 @@ public class DaoTemplateHelperTest {
 
 	@Test
 	public void testGetQueryParameterNamesDeduplicated() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DaoTemplateHelper helper = create(table);
 		DaoTemplateHelper.NamedQueryInfo query = new DaoTemplateHelper.NamedQueryInfo(
 				"findByRange",
@@ -328,8 +328,8 @@ public class DaoTemplateHelperTest {
 
 	@Test
 	public void testGetQueryParameterListEmpty() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DaoTemplateHelper helper = create(table);
 		DaoTemplateHelper.NamedQueryInfo query =
 				new DaoTemplateHelper.NamedQueryInfo("findAll", "SELECT e FROM Employee e");
@@ -338,8 +338,8 @@ public class DaoTemplateHelperTest {
 
 	@Test
 	public void testGetQueryParameterListSingle() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DaoTemplateHelper helper = create(table);
 		DaoTemplateHelper.NamedQueryInfo query = new DaoTemplateHelper.NamedQueryInfo(
 				"findByDept", "SELECT e FROM Employee e WHERE e.department = :dept");
@@ -348,8 +348,8 @@ public class DaoTemplateHelperTest {
 
 	@Test
 	public void testGetQueryParameterListMultiple() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DaoTemplateHelper helper = create(table);
 		DaoTemplateHelper.NamedQueryInfo query = new DaoTemplateHelper.NamedQueryInfo(
 				"findByDeptAndName",
@@ -361,8 +361,8 @@ public class DaoTemplateHelperTest {
 
 	@Test
 	public void testUnqualify() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DaoTemplateHelper helper = create(table);
 		assertEquals("findAll", helper.unqualify("com.example.Employee.findAll"));
 		assertEquals("count", helper.unqualify("count"));

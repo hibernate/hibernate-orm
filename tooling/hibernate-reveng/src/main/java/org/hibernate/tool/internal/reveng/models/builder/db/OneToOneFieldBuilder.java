@@ -26,14 +26,14 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.TypeDetails;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToOneMetadata;
+import org.hibernate.tool.internal.descriptor.OneToOneDescriptor;
 
 import java.util.List;
 
 /**
  * Builds a {@code @OneToOne} field on a dynamic class and attaches
  * the appropriate JPA annotations ({@code @OneToOne},
- * {@code @JoinColumn}) based on {@link OneToOneMetadata}.
+ * {@code @JoinColumn}) based on {@link OneToOneDescriptor}.
  *
  * @author Koen Aers
  */
@@ -50,7 +50,7 @@ public class OneToOneFieldBuilder {
 	 */
 	public static void buildOneToOneField(
 			DynamicClassDetails entityClass,
-			OneToOneMetadata o2oMetadata,
+			OneToOneDescriptor o2oMetadata,
 			ClassDetails targetClassDetails,
 			ModelsContext modelsContext) {
 		DynamicFieldDetails field = createField(
@@ -62,7 +62,7 @@ public class OneToOneFieldBuilder {
 
 	private static DynamicFieldDetails createField(
 			DynamicClassDetails entityClass,
-			OneToOneMetadata o2oMetadata,
+			OneToOneDescriptor o2oMetadata,
 			ClassDetails targetClassDetails,
 			ModelsContext modelsContext) {
 		TypeDetails fieldType = new ClassTypeDetailsImpl(
@@ -80,7 +80,7 @@ public class OneToOneFieldBuilder {
 
 	private static void addOneToOneAnnotation(
 			MutableAnnotationTarget field,
-			OneToOneMetadata o2oMetadata,
+			OneToOneDescriptor o2oMetadata,
 			ModelsContext modelsContext) {
 		OneToOneJpaAnnotation oneToOneAnnotation =
 			JpaAnnotations.ONE_TO_ONE.createUsage(modelsContext);
@@ -100,14 +100,14 @@ public class OneToOneFieldBuilder {
 
 	private static void addJoinColumnAnnotation(
 			MutableAnnotationTarget field,
-			OneToOneMetadata o2oMetadata,
+			OneToOneDescriptor o2oMetadata,
 			ModelsContext modelsContext) {
-		List<OneToOneMetadata.JoinColumnPair> joinColumns = o2oMetadata.getJoinColumns();
+		List<OneToOneDescriptor.JoinColumnPair> joinColumns = o2oMetadata.getJoinColumns();
 		if (o2oMetadata.getMappedBy() != null || joinColumns.isEmpty()) {
 			return;
 		}
 		if (joinColumns.size() == 1) {
-			OneToOneMetadata.JoinColumnPair jc = joinColumns.get(0);
+			OneToOneDescriptor.JoinColumnPair jc = joinColumns.get(0);
 			JoinColumnJpaAnnotation joinColumnAnnotation =
 				JpaAnnotations.JOIN_COLUMN.createUsage(modelsContext);
 			joinColumnAnnotation.name(jc.fkColumnName());
@@ -121,7 +121,7 @@ public class OneToOneFieldBuilder {
 			jakarta.persistence.JoinColumn[] jcArray =
 				new jakarta.persistence.JoinColumn[joinColumns.size()];
 			for (int i = 0; i < joinColumns.size(); i++) {
-				OneToOneMetadata.JoinColumnPair jc = joinColumns.get(i);
+				OneToOneDescriptor.JoinColumnPair jc = joinColumns.get(i);
 				JoinColumnJpaAnnotation joinColumnAnnotation =
 					JpaAnnotations.JOIN_COLUMN.createUsage(modelsContext);
 				joinColumnAnnotation.name(jc.fkColumnName());
@@ -139,7 +139,7 @@ public class OneToOneFieldBuilder {
 
 	private static void addMapsIdAnnotation(
 			MutableAnnotationTarget field,
-			OneToOneMetadata o2oMetadata,
+			OneToOneDescriptor o2oMetadata,
 			ModelsContext modelsContext) {
 		if (o2oMetadata.isConstrained()) {
 			field.addAnnotationUsage(JpaAnnotations.MAPS_ID.createUsage(modelsContext));

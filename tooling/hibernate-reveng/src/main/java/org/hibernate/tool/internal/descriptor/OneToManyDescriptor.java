@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
@@ -27,7 +27,7 @@ import java.util.List;
  *
  * @author Koen Aers
  */
-public class OneToManyMetadata {
+public class OneToManyDescriptor {
 	private final String fieldName;
 	private final String mappedBy;
 	private final String elementEntityClassName;
@@ -37,7 +37,7 @@ public class OneToManyMetadata {
 	private CascadeType[] cascadeTypes;
 	private boolean orphanRemoval;
 
-	public OneToManyMetadata(
+	public OneToManyDescriptor(
 			String fieldName,
 			String mappedBy,
 			String elementEntityClassName,
@@ -48,22 +48,22 @@ public class OneToManyMetadata {
 		this.elementEntityPackage = elementEntityPackage;
 	}
 
-	public OneToManyMetadata fetchType(FetchType fetchType) {
+	public OneToManyDescriptor fetchType(FetchType fetchType) {
 		this.fetchType = fetchType;
 		return this;
 	}
 
-	public OneToManyMetadata cascade(CascadeType... cascadeTypes) {
+	public OneToManyDescriptor cascade(CascadeType... cascadeTypes) {
 		this.cascadeTypes = cascadeTypes;
 		return this;
 	}
 
-	public OneToManyMetadata orphanRemoval(boolean orphanRemoval) {
+	public OneToManyDescriptor orphanRemoval(boolean orphanRemoval) {
 		this.orphanRemoval = orphanRemoval;
 		return this;
 	}
 
-	public OneToManyMetadata fkColumnNames(List<String> columnNames) {
+	public OneToManyDescriptor fkColumnNames(List<String> columnNames) {
 		this.fkColumnNames.addAll(columnNames);
 		return this;
 	}

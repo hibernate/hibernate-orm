@@ -26,10 +26,10 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.tool.api.reveng.RevengSettings;
 import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.IndexMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.CompositeIdDescriptor;
+import org.hibernate.tool.internal.descriptor.IndexDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.hibernate.tool.internal.reader.ModelsDatabaseSchemaReaderTest.TestRevengDialect;
 import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,7 +57,7 @@ public class TableReaderTest {
 	@Test
 	public void testEmptySchema() {
 		TableReader reader = TableReader.create(dialect, strategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
 		assertTrue(result.isEmpty());
 	}
@@ -70,26 +70,26 @@ public class TableReaderTest {
 		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
 
 		TableReader reader = TableReader.create(dialect, strategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
 		assertEquals(1, result.size());
 		assertTrue(result.containsKey("EMPLOYEE"));
 
-		TableMetadata employee = result.get("EMPLOYEE");
+		TableDescriptor employee = result.get("EMPLOYEE");
 		assertEquals("EMPLOYEE", employee.getTableName());
 		assertEquals("Employee", employee.getEntityClassName());
 		assertEquals("com.example", employee.getEntityPackage());
 
-		List<ColumnMetadata> columns = employee.getColumns();
+		List<ColumnDescriptor> columns = employee.getColumns();
 		assertEquals(2, columns.size());
 
-		ColumnMetadata idCol = columns.get(0);
+		ColumnDescriptor idCol = columns.get(0);
 		assertEquals("ID", idCol.getColumnName());
 		assertEquals("id", idCol.getFieldName());
 		assertTrue(idCol.isPrimaryKey());
 		assertFalse(idCol.isNullable());
 
-		ColumnMetadata nameCol = columns.get(1);
+		ColumnDescriptor nameCol = columns.get(1);
 		assertEquals("NAME", nameCol.getColumnName());
 		assertEquals("name", nameCol.getFieldName());
 		assertFalse(nameCol.isPrimaryKey());
@@ -108,7 +108,7 @@ public class TableReaderTest {
 		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
 
 		TableReader reader = TableReader.create(dialect, strategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
 		assertEquals(2, result.size());
 		assertTrue(result.containsKey("DEPARTMENT"));
@@ -136,7 +136,7 @@ public class TableReaderTest {
 		excludingStrategy.setSettings(settings);
 
 		TableReader reader = TableReader.create(dialect, excludingStrategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
 		assertEquals(1, result.size());
 		assertTrue(result.containsKey("EMPLOYEE"));
@@ -150,9 +150,9 @@ public class TableReaderTest {
 		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
 
 		TableReader reader = TableReader.create(dialect, strategy, "DEFAULT_CAT", "DEFAULT_SCHEMA");
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
-		TableMetadata employee = result.get("EMPLOYEE");
+		TableDescriptor employee = result.get("EMPLOYEE");
 		assertEquals("MY_SCHEMA", employee.getSchema());
 		assertEquals("MY_CATALOG", employee.getCatalog());
 	}
@@ -164,9 +164,9 @@ public class TableReaderTest {
 		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
 
 		TableReader reader = TableReader.create(dialect, strategy, "DEFAULT_CAT", "DEFAULT_SCHEMA");
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
-		TableMetadata employee = result.get("EMPLOYEE");
+		TableDescriptor employee = result.get("EMPLOYEE");
 		assertNull(employee.getSchema());
 		assertNull(employee.getCatalog());
 	}
@@ -181,10 +181,10 @@ public class TableReaderTest {
 		dialect.addPrimaryKey("ORDER_ITEM", "PRODUCT_ID", 2);
 
 		TableReader reader = TableReader.create(dialect, strategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
-		TableMetadata orderItem = result.get("ORDER_ITEM");
-		CompositeIdMetadata compositeId = orderItem.getCompositeId();
+		TableDescriptor orderItem = result.get("ORDER_ITEM");
+		CompositeIdDescriptor compositeId = orderItem.getCompositeId();
 		assertNotNull(compositeId);
 		assertEquals("id", compositeId.getFieldName());
 		assertEquals("OrderItemId", compositeId.getIdClassName());
@@ -200,7 +200,7 @@ public class TableReaderTest {
 		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
 
 		TableReader reader = TableReader.create(dialect, strategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
 		assertNull(result.get("EMPLOYEE").getCompositeId());
 	}
@@ -215,9 +215,9 @@ public class TableReaderTest {
 		dialect.addPrimaryKey("EVENT", "ID", 1);
 
 		TableReader reader = TableReader.create(dialect, strategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
-		List<ColumnMetadata> columns = result.get("EVENT").getColumns();
+		List<ColumnDescriptor> columns = result.get("EVENT").getColumns();
 		assertEquals(TemporalType.DATE, findColumn(columns, "EVENT_DATE").getTemporalType());
 		assertEquals(TemporalType.TIME, findColumn(columns, "START_TIME").getTemporalType());
 		assertEquals(TemporalType.TIMESTAMP, findColumn(columns, "CREATED_AT").getTemporalType());
@@ -233,9 +233,9 @@ public class TableReaderTest {
 		dialect.addPrimaryKey("DOCUMENT", "ID", 1);
 
 		TableReader reader = TableReader.create(dialect, strategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
-		List<ColumnMetadata> columns = result.get("DOCUMENT").getColumns();
+		List<ColumnDescriptor> columns = result.get("DOCUMENT").getColumns();
 		assertTrue(findColumn(columns, "CONTENT").isLob());
 		assertEquals(String.class, findColumn(columns, "CONTENT").getJavaType());
 		assertTrue(findColumn(columns, "DATA").isLob());
@@ -252,9 +252,9 @@ public class TableReaderTest {
 		dialect.addPrimaryKey("TYPES_TABLE", "ID", 1);
 
 		TableReader reader = TableReader.create(dialect, strategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
-		List<ColumnMetadata> columns = result.get("TYPES_TABLE").getColumns();
+		List<ColumnDescriptor> columns = result.get("TYPES_TABLE").getColumns();
 		assertNotNull(findColumn(columns, "ID").getJavaType());
 		assertEquals(String.class, findColumn(columns, "NAME").getJavaType());
 	}
@@ -268,9 +268,9 @@ public class TableReaderTest {
 		dialect.addSuggestedPrimaryKeyStrategy("EMPLOYEE", "identity");
 
 		TableReader reader = TableReader.create(dialect, strategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
-		ColumnMetadata idCol = findColumn(result.get("EMPLOYEE").getColumns(), "ID");
+		ColumnDescriptor idCol = findColumn(result.get("EMPLOYEE").getColumns(), "ID");
 		assertEquals(GenerationType.IDENTITY, idCol.getGenerationType());
 		assertTrue(idCol.isAutoIncrement());
 	}
@@ -283,9 +283,9 @@ public class TableReaderTest {
 		dialect.addSuggestedPrimaryKeyStrategy("EMPLOYEE", "sequence");
 
 		TableReader reader = TableReader.create(dialect, strategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
-		ColumnMetadata idCol = findColumn(result.get("EMPLOYEE").getColumns(), "ID");
+		ColumnDescriptor idCol = findColumn(result.get("EMPLOYEE").getColumns(), "ID");
 		assertEquals(GenerationType.SEQUENCE, idCol.getGenerationType());
 		assertFalse(idCol.isAutoIncrement());
 	}
@@ -298,9 +298,9 @@ public class TableReaderTest {
 		dialect.addSuggestedPrimaryKeyStrategy("EMPLOYEE", "assigned");
 
 		TableReader reader = TableReader.create(dialect, strategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
-		ColumnMetadata idCol = findColumn(result.get("EMPLOYEE").getColumns(), "ID");
+		ColumnDescriptor idCol = findColumn(result.get("EMPLOYEE").getColumns(), "ID");
 		assertNull(idCol.getGenerationType());
 	}
 
@@ -311,9 +311,9 @@ public class TableReaderTest {
 		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
 
 		TableReader reader = TableReader.create(dialect, strategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
-		ColumnMetadata idCol = findColumn(result.get("EMPLOYEE").getColumns(), "ID");
+		ColumnDescriptor idCol = findColumn(result.get("EMPLOYEE").getColumns(), "ID");
 		assertNull(idCol.getGenerationType());
 	}
 
@@ -327,10 +327,10 @@ public class TableReaderTest {
 		dialect.addSuggestedPrimaryKeyStrategy("ORDER_ITEM", "identity");
 
 		TableReader reader = TableReader.create(dialect, strategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
 		// Composite ID should not get a generation strategy
-		ColumnMetadata orderIdCol = findColumn(result.get("ORDER_ITEM").getColumns(), "ORDER_ID");
+		ColumnDescriptor orderIdCol = findColumn(result.get("ORDER_ITEM").getColumns(), "ORDER_ID");
 		assertNull(orderIdCol.getGenerationType());
 	}
 
@@ -341,7 +341,7 @@ public class TableReaderTest {
 		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
 
 		TableReader reader = TableReader.create(dialect, strategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
 		assertEquals("Employee records", result.get("EMPLOYEE").getComment());
 	}
@@ -353,7 +353,7 @@ public class TableReaderTest {
 		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
 
 		TableReader reader = TableReader.create(dialect, strategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
 		assertNull(result.get("EMPLOYEE").getComment());
 	}
@@ -400,7 +400,7 @@ public class TableReaderTest {
 		dialect.addIndexInfo("EMPLOYEE_VIEW", "IDX_NAME", "NAME", true);
 
 		TableReader reader = TableReader.create(dialect, strategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
 		assertEquals(1, result.size());
 		assertTrue(result.containsKey("EMPLOYEE_VIEW"));
@@ -415,7 +415,7 @@ public class TableReaderTest {
 		dialect.addPrimaryKey("EMPLOYEE_SYN", "ID", 1);
 
 		TableReader reader = TableReader.create(dialect, strategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
 		assertEquals(1, result.size());
 		assertTrue(result.containsKey("EMPLOYEE_SYN"));
@@ -428,7 +428,7 @@ public class TableReaderTest {
 		dialect.addPrimaryKey("SYS_CONFIG", "ID", 1);
 
 		TableReader reader = TableReader.create(dialect, strategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
 		assertTrue(result.isEmpty(), "SYSTEM TABLE type should be excluded");
 	}
@@ -442,7 +442,7 @@ public class TableReaderTest {
 		dialect.addIndexInfo("EMPLOYEE", "IDX_NAME", "NAME", true);
 
 		TableReader reader = TableReader.create(dialect, strategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
 		assertFalse(result.get("EMPLOYEE").getIndexes().isEmpty(),
 			"TABLE type should have indexes processed");
@@ -456,10 +456,10 @@ public class TableReaderTest {
 		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
 
 		TableReader reader = TableReader.create(dialect, strategy, null, null);
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
 		assertTrue(result.containsKey("`EMPLOYEE`"));
-		TableMetadata employee = result.get("`EMPLOYEE`");
+		TableDescriptor employee = result.get("`EMPLOYEE`");
 		assertEquals("`EMPLOYEE`", employee.getTableName());
 	}
 
@@ -471,16 +471,16 @@ public class TableReaderTest {
 		dialect.addPrimaryKey("EMPLOYEE", "ID", 1);
 
 		TableReader reader = TableReader.create(dialect, strategy, "DEFAULT_CAT", "DEFAULT_SCHEMA");
-		Map<String, TableMetadata> result = reader.readTables();
+		Map<String, TableDescriptor> result = reader.readTables();
 
-		TableMetadata employee = result.get("`EMPLOYEE`");
+		TableDescriptor employee = result.get("`EMPLOYEE`");
 		assertNotNull(employee);
 		assertEquals("`MY-CATALOG`", employee.getCatalog());
 		assertEquals("`MY-SCHEMA`", employee.getSchema());
 	}
 
-	private ColumnMetadata findColumn(List<ColumnMetadata> columns, String columnName) {
-		for (ColumnMetadata c : columns) {
+	private ColumnDescriptor findColumn(List<ColumnDescriptor> columns, String columnName) {
+		for (ColumnDescriptor c : columns) {
 			if (c.getColumnName().equals(columnName)) {
 				return c;
 			}

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,13 +26,13 @@ import java.util.List;
  *
  * @author Koen Aers
  */
-public class KeyManyToOneMetadata {
+public class KeyManyToOneDescriptor {
 	private final String fieldName;
 	private final List<String> columnNames = new ArrayList<>();
 	private final String targetEntityClassName;
 	private final String targetEntityPackage;
 
-	public KeyManyToOneMetadata(
+	public KeyManyToOneDescriptor(
 			String fieldName,
 			String columnName,
 			String targetEntityClassName,
@@ -43,7 +43,7 @@ public class KeyManyToOneMetadata {
 		this.targetEntityPackage = targetEntityPackage;
 	}
 
-	public KeyManyToOneMetadata(
+	public KeyManyToOneDescriptor(
 			String fieldName,
 			List<String> columnNames,
 			String targetEntityClassName,

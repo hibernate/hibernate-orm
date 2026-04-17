@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,15 +22,15 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.InheritanceType;
 
 /**
- * Tests for {@link TableMetadata}.
+ * Tests for {@link TableDescriptor}.
  *
  * @author Koen Aers
  */
-public class TableMetadataTest {
+public class TableDescriptorTest {
 
 	@Test
 	public void testConstructorAndDefaults() {
-		TableMetadata table = new TableMetadata("PERSON", "Person", "com.example");
+		TableDescriptor table = new TableDescriptor("PERSON", "Person", "com.example");
 
 		assertEquals("PERSON", table.getTableName());
 		assertEquals("Person", table.getEntityClassName());
@@ -59,7 +59,7 @@ public class TableMetadataTest {
 
 	@Test
 	public void testSetters() {
-		TableMetadata table = new TableMetadata("PERSON", "Person", "com.example");
+		TableDescriptor table = new TableDescriptor("PERSON", "Person", "com.example");
 
 		table.setTableName("EMPLOYEE");
 		table.setEntityClassName("Employee");
@@ -76,9 +76,9 @@ public class TableMetadataTest {
 
 	@Test
 	public void testAddColumn() {
-		TableMetadata table = new TableMetadata("PERSON", "Person", "com.example")
-			.addColumn(new ColumnMetadata("ID", "id", Long.class))
-			.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("PERSON", "Person", "com.example")
+			.addColumn(new ColumnDescriptor("ID", "id", Long.class))
+			.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 
 		assertEquals(2, table.getColumns().size());
 		assertEquals("ID", table.getColumns().get(0).getColumnName());
@@ -87,8 +87,8 @@ public class TableMetadataTest {
 
 	@Test
 	public void testAddForeignKey() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example")
-			.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example")
+			.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPARTMENT_ID", "Department", "com.example"));
 
 		assertEquals(1, table.getForeignKeys().size());
@@ -97,8 +97,8 @@ public class TableMetadataTest {
 
 	@Test
 	public void testAddOneToMany() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example")
-			.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example")
+			.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 
 		assertEquals(1, table.getOneToManys().size());
@@ -107,8 +107,8 @@ public class TableMetadataTest {
 
 	@Test
 	public void testAddOneToOne() {
-		TableMetadata table = new TableMetadata("USER_TABLE", "User", "com.example")
-			.addOneToOne(new OneToOneMetadata(
+		TableDescriptor table = new TableDescriptor("USER_TABLE", "User", "com.example")
+			.addOneToOne(new OneToOneDescriptor(
 				"address", "Address", "com.example")
 				.foreignKeyColumnName("ADDRESS_ID"));
 
@@ -118,8 +118,8 @@ public class TableMetadataTest {
 
 	@Test
 	public void testAddManyToMany() {
-		TableMetadata table = new TableMetadata("STUDENT", "Student", "com.example")
-			.addManyToMany(new ManyToManyMetadata(
+		TableDescriptor table = new TableDescriptor("STUDENT", "Student", "com.example")
+			.addManyToMany(new ManyToManyDescriptor(
 				"courses", "Course", "com.example")
 				.joinTable("STUDENT_COURSE", "STUDENT_ID", "COURSE_ID"));
 
@@ -129,8 +129,8 @@ public class TableMetadataTest {
 
 	@Test
 	public void testAddEmbeddedField() {
-		TableMetadata table = new TableMetadata("PERSON", "Person", "com.example")
-			.addEmbeddedField(new EmbeddedFieldMetadata(
+		TableDescriptor table = new TableDescriptor("PERSON", "Person", "com.example")
+			.addEmbeddedField(new EmbeddedFieldDescriptor(
 				"address", "Address", "com.example"));
 
 		assertEquals(1, table.getEmbeddedFields().size());
@@ -139,8 +139,8 @@ public class TableMetadataTest {
 
 	@Test
 	public void testInheritance() {
-		InheritanceMetadata inheritance = new InheritanceMetadata(InheritanceType.SINGLE_TABLE);
-		TableMetadata table = new TableMetadata("VEHICLE", "Vehicle", "com.example")
+		InheritanceDescriptor inheritance = new InheritanceDescriptor(InheritanceType.SINGLE_TABLE);
+		TableDescriptor table = new TableDescriptor("VEHICLE", "Vehicle", "com.example")
 			.inheritance(inheritance);
 
 		assertSame(inheritance, table.getInheritance());
@@ -148,7 +148,7 @@ public class TableMetadataTest {
 
 	@Test
 	public void testDiscriminatorValue() {
-		TableMetadata table = new TableMetadata("VEHICLE", "Car", "com.example")
+		TableDescriptor table = new TableDescriptor("VEHICLE", "Car", "com.example")
 			.discriminatorValue("CAR");
 
 		assertEquals("CAR", table.getDiscriminatorValue());
@@ -156,7 +156,7 @@ public class TableMetadataTest {
 
 	@Test
 	public void testParent() {
-		TableMetadata table = new TableMetadata("CAR", "Car", "com.example")
+		TableDescriptor table = new TableDescriptor("CAR", "Car", "com.example")
 			.parent("Vehicle", "com.example");
 
 		assertEquals("Vehicle", table.getParentEntityClassName());
@@ -165,7 +165,7 @@ public class TableMetadataTest {
 
 	@Test
 	public void testPrimaryKeyJoinColumn() {
-		TableMetadata table = new TableMetadata("CREDIT_CARD_PAYMENT", "CreditCardPayment", "com.example")
+		TableDescriptor table = new TableDescriptor("CREDIT_CARD_PAYMENT", "CreditCardPayment", "com.example")
 			.primaryKeyJoinColumn("PAYMENT_ID");
 
 		assertEquals("PAYMENT_ID", table.getPrimaryKeyJoinColumnName());
@@ -173,9 +173,9 @@ public class TableMetadataTest {
 
 	@Test
 	public void testCompositeId() {
-		CompositeIdMetadata compositeId =
-			new CompositeIdMetadata("id", "OrderItemId", "com.example");
-		TableMetadata table = new TableMetadata("ORDER_ITEM", "OrderItem", "com.example")
+		CompositeIdDescriptor compositeId =
+			new CompositeIdDescriptor("id", "OrderItemId", "com.example");
+		TableDescriptor table = new TableDescriptor("ORDER_ITEM", "OrderItem", "com.example")
 			.compositeId(compositeId);
 
 		assertSame(compositeId, table.getCompositeId());
@@ -183,7 +183,7 @@ public class TableMetadataTest {
 
 	@Test
 	public void testComment() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example")
 			.comment("Employee records");
 
 		assertEquals("Employee records", table.getComment());
@@ -191,16 +191,16 @@ public class TableMetadataTest {
 
 	@Test
 	public void testCommentDefaultsToNull() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 
 		assertNull(table.getComment());
 	}
 
 	@Test
 	public void testAddIndex() {
-		IndexMetadata index = new IndexMetadata("IDX_EMAIL", true)
+		IndexDescriptor index = new IndexDescriptor("IDX_EMAIL", true)
 			.addColumn("EMAIL");
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example")
 			.addIndex(index);
 
 		assertEquals(1, table.getIndexes().size());
@@ -209,7 +209,7 @@ public class TableMetadataTest {
 
 	@Test
 	public void testIndexesDefaultToEmpty() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 
 		assertNotNull(table.getIndexes());
 		assertTrue(table.getIndexes().isEmpty());
@@ -217,8 +217,8 @@ public class TableMetadataTest {
 
 	@Test
 	public void testIsForeignKeyColumnWithForeignKey() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example")
-			.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example")
+			.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPARTMENT_ID", "Department", "com.example"));
 
 		assertTrue(table.isForeignKeyColumn("DEPARTMENT_ID"));
@@ -227,8 +227,8 @@ public class TableMetadataTest {
 
 	@Test
 	public void testIsForeignKeyColumnWithOneToOne() {
-		TableMetadata table = new TableMetadata("USER_TABLE", "User", "com.example")
-			.addOneToOne(new OneToOneMetadata(
+		TableDescriptor table = new TableDescriptor("USER_TABLE", "User", "com.example")
+			.addOneToOne(new OneToOneDescriptor(
 				"address", "Address", "com.example")
 				.foreignKeyColumnName("ADDRESS_ID"));
 
@@ -238,8 +238,8 @@ public class TableMetadataTest {
 
 	@Test
 	public void testIsForeignKeyColumnWithInverseOneToOne() {
-		TableMetadata table = new TableMetadata("ADDRESS", "Address", "com.example")
-			.addOneToOne(new OneToOneMetadata(
+		TableDescriptor table = new TableDescriptor("ADDRESS", "Address", "com.example")
+			.addOneToOne(new OneToOneDescriptor(
 				"user", "User", "com.example")
 				.mappedBy("address"));
 

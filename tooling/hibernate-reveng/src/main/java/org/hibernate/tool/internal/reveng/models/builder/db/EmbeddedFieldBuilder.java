@@ -29,13 +29,13 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.TypeDetails;
-import org.hibernate.tool.internal.reveng.models.metadata.AttributeOverrideMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.EmbeddedFieldMetadata;
+import org.hibernate.tool.internal.descriptor.AttributeOverrideDescriptor;
+import org.hibernate.tool.internal.descriptor.EmbeddedFieldDescriptor;
 
 /**
  * Builds an {@code @Embedded} field on a dynamic class and attaches
  * the appropriate JPA annotations ({@code @Embedded},
- * {@code @AttributeOverrides}) based on {@link EmbeddedFieldMetadata}.
+ * {@code @AttributeOverrides}) based on {@link EmbeddedFieldDescriptor}.
  *
  * @author Koen Aers
  */
@@ -52,7 +52,7 @@ public class EmbeddedFieldBuilder {
 	 */
 	public static void buildEmbeddedField(
 			DynamicClassDetails entityClass,
-			EmbeddedFieldMetadata embeddedMetadata,
+			EmbeddedFieldDescriptor embeddedMetadata,
 			ClassDetails embeddableClassDetails,
 			ModelsContext modelsContext) {
 		DynamicFieldDetails field = createField(
@@ -63,7 +63,7 @@ public class EmbeddedFieldBuilder {
 
 	private static DynamicFieldDetails createField(
 			DynamicClassDetails entityClass,
-			EmbeddedFieldMetadata embeddedMetadata,
+			EmbeddedFieldDescriptor embeddedMetadata,
 			ClassDetails embeddableClassDetails,
 			ModelsContext modelsContext) {
 		TypeDetails fieldType = new ClassTypeDetailsImpl(
@@ -89,9 +89,9 @@ public class EmbeddedFieldBuilder {
 
 	private static void addAttributeOverrides(
 			MutableAnnotationTarget field,
-			EmbeddedFieldMetadata embeddedMetadata,
+			EmbeddedFieldDescriptor embeddedMetadata,
 			ModelsContext modelsContext) {
-		List<AttributeOverrideMetadata> overrides = embeddedMetadata.getAttributeOverrides();
+		List<AttributeOverrideDescriptor> overrides = embeddedMetadata.getAttributeOverrides();
 		if (!overrides.isEmpty()) {
 			jakarta.persistence.AttributeOverride[] overrideArray =
 				new jakarta.persistence.AttributeOverride[overrides.size()];

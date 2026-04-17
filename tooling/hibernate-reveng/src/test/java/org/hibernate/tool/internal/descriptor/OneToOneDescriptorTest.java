@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,15 +23,15 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 
 /**
- * Tests for {@link OneToOneMetadata}.
+ * Tests for {@link OneToOneDescriptor}.
  *
  * @author Koen Aers
  */
-public class OneToOneMetadataTest {
+public class OneToOneDescriptorTest {
 
 	@Test
 	public void testConstructorAndDefaults() {
-		OneToOneMetadata oto = new OneToOneMetadata(
+		OneToOneDescriptor oto = new OneToOneDescriptor(
 			"address", "Address", "com.example");
 
 		assertEquals("address", oto.getFieldName());
@@ -48,7 +48,7 @@ public class OneToOneMetadataTest {
 
 	@Test
 	public void testOwningSide() {
-		OneToOneMetadata oto = new OneToOneMetadata(
+		OneToOneDescriptor oto = new OneToOneDescriptor(
 			"address", "Address", "com.example")
 			.foreignKeyColumnName("ADDRESS_ID")
 			.fetchType(FetchType.LAZY)
@@ -61,7 +61,7 @@ public class OneToOneMetadataTest {
 
 	@Test
 	public void testInverseSide() {
-		OneToOneMetadata oto = new OneToOneMetadata(
+		OneToOneDescriptor oto = new OneToOneDescriptor(
 			"user", "User", "com.example")
 			.mappedBy("address")
 			.fetchType(FetchType.LAZY);
@@ -72,7 +72,7 @@ public class OneToOneMetadataTest {
 
 	@Test
 	public void testReferencedColumnName() {
-		OneToOneMetadata oto = new OneToOneMetadata(
+		OneToOneDescriptor oto = new OneToOneDescriptor(
 			"address", "Address", "com.example")
 			.foreignKeyColumnName("ADDR_ID")
 			.referencedColumnName("ADDRESS_PK");
@@ -82,7 +82,7 @@ public class OneToOneMetadataTest {
 
 	@Test
 	public void testOptional() {
-		OneToOneMetadata oto = new OneToOneMetadata(
+		OneToOneDescriptor oto = new OneToOneDescriptor(
 			"address", "Address", "com.example")
 			.optional(false);
 
@@ -91,7 +91,7 @@ public class OneToOneMetadataTest {
 
 	@Test
 	public void testOrphanRemoval() {
-		OneToOneMetadata oto = new OneToOneMetadata(
+		OneToOneDescriptor oto = new OneToOneDescriptor(
 			"address", "Address", "com.example")
 			.orphanRemoval(true);
 
@@ -100,7 +100,7 @@ public class OneToOneMetadataTest {
 
 	@Test
 	public void testFluentChaining() {
-		OneToOneMetadata oto = new OneToOneMetadata(
+		OneToOneDescriptor oto = new OneToOneDescriptor(
 			"address", "Address", "com.example")
 			.foreignKeyColumnName("ADDRESS_ID")
 			.referencedColumnName("ID")

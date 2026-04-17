@@ -24,7 +24,7 @@ import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 
 /**
  * Reads user-defined foreign keys from {@link RevengStrategy#getForeignKeys(TableIdentifier)}
@@ -57,10 +57,10 @@ class UserDefinedForeignKeyReader {
 	 * @param tablesByName the discovered tables keyed by table name
 	 * @return all user-defined foreign key info records
 	 */
-	List<RawForeignKeyInfo> readUserForeignKeys(Map<String, TableMetadata> tablesByName) {
+	List<RawForeignKeyInfo> readUserForeignKeys(Map<String, TableDescriptor> tablesByName) {
 		List<RawForeignKeyInfo> result = new ArrayList<>();
-		for (Map.Entry<String, TableMetadata> entry : tablesByName.entrySet()) {
-			TableMetadata tableMetadata = entry.getValue();
+		for (Map.Entry<String, TableDescriptor> entry : tablesByName.entrySet()) {
+			TableDescriptor tableMetadata = entry.getValue();
 			String catalog = tableMetadata.getCatalog() != null
 				? tableMetadata.getCatalog() : defaultCatalog;
 			String schema = tableMetadata.getSchema() != null

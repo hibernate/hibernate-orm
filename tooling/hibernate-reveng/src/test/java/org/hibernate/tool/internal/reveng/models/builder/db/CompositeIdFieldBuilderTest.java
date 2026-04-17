@@ -26,7 +26,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassLoading;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.ModelsContext;
-import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
+import org.hibernate.tool.internal.descriptor.CompositeIdDescriptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -70,8 +70,8 @@ public class CompositeIdFieldBuilderTest {
 
 	@Test
 	public void testEmbeddedIdAnnotation() {
-		CompositeIdMetadata compositeId =
-			new CompositeIdMetadata("id", "OrderItemId", "com.example");
+		CompositeIdDescriptor compositeId =
+			new CompositeIdDescriptor("id", "OrderItemId", "com.example");
 
 		CompositeIdFieldBuilder.buildCompositeIdField(
 			entityClass, compositeId, idClassDetails, modelsContext);
@@ -87,8 +87,8 @@ public class CompositeIdFieldBuilderTest {
 
 	@Test
 	public void testFieldType() {
-		CompositeIdMetadata compositeId =
-			new CompositeIdMetadata("id", "OrderItemId", "com.example");
+		CompositeIdDescriptor compositeId =
+			new CompositeIdDescriptor("id", "OrderItemId", "com.example");
 
 		CompositeIdFieldBuilder.buildCompositeIdField(
 			entityClass, compositeId, idClassDetails, modelsContext);
@@ -99,8 +99,8 @@ public class CompositeIdFieldBuilderTest {
 
 	@Test
 	public void testNoAttributeOverrides() {
-		CompositeIdMetadata compositeId =
-			new CompositeIdMetadata("id", "OrderItemId", "com.example");
+		CompositeIdDescriptor compositeId =
+			new CompositeIdDescriptor("id", "OrderItemId", "com.example");
 
 		CompositeIdFieldBuilder.buildCompositeIdField(
 			entityClass, compositeId, idClassDetails, modelsContext);
@@ -113,8 +113,8 @@ public class CompositeIdFieldBuilderTest {
 
 	@Test
 	public void testWithAttributeOverrides() {
-		CompositeIdMetadata compositeId =
-			new CompositeIdMetadata("id", "OrderItemId", "com.example")
+		CompositeIdDescriptor compositeId =
+			new CompositeIdDescriptor("id", "OrderItemId", "com.example")
 				.addAttributeOverride("orderId", "ORDER_ID")
 				.addAttributeOverride("productId", "PRODUCT_ID");
 
@@ -142,8 +142,8 @@ public class CompositeIdFieldBuilderTest {
 
 	@Test
 	public void testSingleAttributeOverride() {
-		CompositeIdMetadata compositeId =
-			new CompositeIdMetadata("id", "OrderItemId", "com.example")
+		CompositeIdDescriptor compositeId =
+			new CompositeIdDescriptor("id", "OrderItemId", "com.example")
 				.addAttributeOverride("key", "PK_COLUMN");
 
 		CompositeIdFieldBuilder.buildCompositeIdField(

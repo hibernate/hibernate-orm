@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.InheritanceType;
@@ -23,27 +23,27 @@ import jakarta.persistence.InheritanceType;
  *
  * @author Koen Aers
  */
-public class InheritanceMetadata {
+public class InheritanceDescriptor {
 	private final InheritanceType strategy;
 	private String discriminatorColumnName;
 	private DiscriminatorType discriminatorType;
 	private int discriminatorColumnLength;
 
-	public InheritanceMetadata(InheritanceType strategy) {
+	public InheritanceDescriptor(InheritanceType strategy) {
 		this.strategy = strategy;
 	}
 
-	public InheritanceMetadata discriminatorColumn(String discriminatorColumnName) {
+	public InheritanceDescriptor discriminatorColumn(String discriminatorColumnName) {
 		this.discriminatorColumnName = discriminatorColumnName;
 		return this;
 	}
 
-	public InheritanceMetadata discriminatorType(DiscriminatorType discriminatorType) {
+	public InheritanceDescriptor discriminatorType(DiscriminatorType discriminatorType) {
 		this.discriminatorType = discriminatorType;
 		return this;
 	}
 
-	public InheritanceMetadata discriminatorColumnLength(int discriminatorColumnLength) {
+	public InheritanceDescriptor discriminatorColumnLength(int discriminatorColumnLength) {
 		this.discriminatorColumnLength = discriminatorColumnLength;
 		return this;
 	}

@@ -22,11 +22,11 @@ import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.MutableAnnotationTarget;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.EmbeddableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.EmbeddableDescriptor;
 
 /**
- * Builds a dynamic {@code @Embeddable} class from {@link EmbeddableMetadata},
+ * Builds a dynamic {@code @Embeddable} class from {@link EmbeddableDescriptor},
  * adding fields for each column and registering it in the models context.
  *
  * @author Koen Aers
@@ -41,7 +41,7 @@ public class EmbeddableClassBuilder {
 	 * @return ClassDetails with {@code @Embeddable} annotation attached
 	 */
 	public static ClassDetails buildEmbeddableClass(
-			EmbeddableMetadata embeddableMetadata,
+			EmbeddableDescriptor embeddableMetadata,
 			ModelsContext modelsContext) {
 		DynamicClassDetails embeddableClass = createClass(embeddableMetadata, modelsContext);
 		addEmbeddableAnnotation(embeddableClass, modelsContext);
@@ -51,7 +51,7 @@ public class EmbeddableClassBuilder {
 	}
 
 	private static DynamicClassDetails createClass(
-			EmbeddableMetadata embeddableMetadata,
+			EmbeddableDescriptor embeddableMetadata,
 			ModelsContext modelsContext) {
 		String className = embeddableMetadata.getPackageName()
 			+ "." + embeddableMetadata.getClassName();
@@ -75,9 +75,9 @@ public class EmbeddableClassBuilder {
 
 	private static void addFields(
 			DynamicClassDetails embeddableClass,
-			EmbeddableMetadata embeddableMetadata,
+			EmbeddableDescriptor embeddableMetadata,
 			ModelsContext modelsContext) {
-		for (ColumnMetadata columnMetadata : embeddableMetadata.getColumns()) {
+		for (ColumnDescriptor columnMetadata : embeddableMetadata.getColumns()) {
 			BasicFieldBuilder.addBasicField(embeddableClass, columnMetadata, modelsContext);
 		}
 	}

@@ -16,7 +16,7 @@
 package org.hibernate.tool.internal.reveng.models.builder.db;
 
 import org.hibernate.boot.models.JpaAnnotations;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
 import org.hibernate.boot.models.annotations.internal.BasicJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.GeneratedValueJpaAnnotation;
@@ -38,7 +38,7 @@ import jakarta.persistence.GenerationType;
  * Builds a basic (column-mapped) field on a dynamic class and attaches
  * the appropriate JPA annotations ({@code @Id}, {@code @GeneratedValue},
  * {@code @Version}, {@code @Basic}, {@code @Temporal}, {@code @Lob},
- * {@code @Column}) based on {@link ColumnMetadata}.
+ * {@code @Column}) based on {@link ColumnDescriptor}.
  *
  * @author Koen Aers
  */
@@ -54,14 +54,14 @@ public class BasicFieldBuilder {
 	 */
 	public static void addBasicField(
 			DynamicClassDetails entityClass,
-			ColumnMetadata columnMetadata,
+			ColumnDescriptor columnMetadata,
 			ModelsContext modelsContext) {
 		addBasicField(entityClass, columnMetadata, modelsContext, false);
 	}
 
 	public static void addBasicField(
 			DynamicClassDetails entityClass,
-			ColumnMetadata columnMetadata,
+			ColumnDescriptor columnMetadata,
 			ModelsContext modelsContext,
 			boolean skipIdAnnotation) {
 		DynamicFieldDetails field = createField(entityClass, columnMetadata, modelsContext);
@@ -77,7 +77,7 @@ public class BasicFieldBuilder {
 
 	private static DynamicFieldDetails createField(
 			DynamicClassDetails entityClass,
-			ColumnMetadata columnMetadata,
+			ColumnDescriptor columnMetadata,
 			ModelsContext modelsContext) {
 		ClassDetails fieldTypeClass = modelsContext.getClassDetailsRegistry()
 			.resolveClassDetails(columnMetadata.getJavaType().getName());
@@ -96,7 +96,7 @@ public class BasicFieldBuilder {
 
 	private static void addIdAnnotation(
 			MutableAnnotationTarget field,
-			ColumnMetadata columnMetadata,
+			ColumnDescriptor columnMetadata,
 			ModelsContext modelsContext) {
 		if (columnMetadata.isPrimaryKey()) {
 			IdJpaAnnotation idAnnotation = JpaAnnotations.ID.createUsage(modelsContext);
@@ -116,7 +116,7 @@ public class BasicFieldBuilder {
 
 	private static void addVersionAnnotation(
 			MutableAnnotationTarget field,
-			ColumnMetadata columnMetadata,
+			ColumnDescriptor columnMetadata,
 			ModelsContext modelsContext) {
 		if (columnMetadata.isVersion()) {
 			VersionJpaAnnotation versionAnnotation = JpaAnnotations.VERSION.createUsage(modelsContext);
@@ -126,7 +126,7 @@ public class BasicFieldBuilder {
 
 	private static void addBasicAnnotation(
 			MutableAnnotationTarget field,
-			ColumnMetadata columnMetadata,
+			ColumnDescriptor columnMetadata,
 			ModelsContext modelsContext) {
 		if (columnMetadata.getBasicFetchType() != null || columnMetadata.isBasicOptionalSet()) {
 			BasicJpaAnnotation basicAnnotation = JpaAnnotations.BASIC.createUsage(modelsContext);
@@ -142,7 +142,7 @@ public class BasicFieldBuilder {
 
 	private static void addTemporalAnnotation(
 			MutableAnnotationTarget field,
-			ColumnMetadata columnMetadata,
+			ColumnDescriptor columnMetadata,
 			ModelsContext modelsContext) {
 		if (columnMetadata.getTemporalType() != null) {
 			TemporalJpaAnnotation temporalAnnotation = JpaAnnotations.TEMPORAL.createUsage(modelsContext);
@@ -153,7 +153,7 @@ public class BasicFieldBuilder {
 
 	private static void addLobAnnotation(
 			MutableAnnotationTarget field,
-			ColumnMetadata columnMetadata,
+			ColumnDescriptor columnMetadata,
 			ModelsContext modelsContext) {
 		if (columnMetadata.isLob()) {
 			LobJpaAnnotation lobAnnotation = JpaAnnotations.LOB.createUsage(modelsContext);
@@ -163,7 +163,7 @@ public class BasicFieldBuilder {
 
 	private static void addColumnAnnotation(
 			MutableAnnotationTarget field,
-			ColumnMetadata columnMetadata,
+			ColumnDescriptor columnMetadata,
 			ModelsContext modelsContext) {
 		ColumnJpaAnnotation columnAnnotation = JpaAnnotations.COLUMN.createUsage(modelsContext);
 		columnAnnotation.name(columnMetadata.getColumnName());

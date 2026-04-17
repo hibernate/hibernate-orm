@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,13 +23,13 @@ import java.util.List;
  *
  * @author Koen Aers
  */
-public class EmbeddedFieldMetadata {
+public class EmbeddedFieldDescriptor {
 	private final String fieldName;
 	private final String embeddableClassName;
 	private final String embeddablePackage;
-	private final List<AttributeOverrideMetadata> attributeOverrides = new ArrayList<>();
+	private final List<AttributeOverrideDescriptor> attributeOverrides = new ArrayList<>();
 
-	public EmbeddedFieldMetadata(
+	public EmbeddedFieldDescriptor(
 			String fieldName,
 			String embeddableClassName,
 			String embeddablePackage) {
@@ -38,8 +38,8 @@ public class EmbeddedFieldMetadata {
 		this.embeddablePackage = embeddablePackage;
 	}
 
-	public EmbeddedFieldMetadata addAttributeOverride(String fieldName, String columnName) {
-		this.attributeOverrides.add(new AttributeOverrideMetadata(fieldName, columnName));
+	public EmbeddedFieldDescriptor addAttributeOverride(String fieldName, String columnName) {
+		this.attributeOverrides.add(new AttributeOverrideDescriptor(fieldName, columnName));
 		return this;
 	}
 
@@ -47,5 +47,5 @@ public class EmbeddedFieldMetadata {
 	public String getFieldName() { return fieldName; }
 	public String getEmbeddableClassName() { return embeddableClassName; }
 	public String getEmbeddablePackage() { return embeddablePackage; }
-	public List<AttributeOverrideMetadata> getAttributeOverrides() { return attributeOverrides; }
+	public List<AttributeOverrideDescriptor> getAttributeOverrides() { return attributeOverrides; }
 }

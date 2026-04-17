@@ -26,7 +26,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassLoading;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.ModelsContext;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToOneMetadata;
+import org.hibernate.tool.internal.descriptor.OneToOneDescriptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -71,8 +71,8 @@ public class OneToOneFieldBuilderTest {
 
 	@Test
 	public void testOneToOneAnnotation() {
-		OneToOneMetadata o2oMetadata =
-			new OneToOneMetadata("profile", "Profile", "com.example");
+		OneToOneDescriptor o2oMetadata =
+			new OneToOneDescriptor("profile", "Profile", "com.example");
 
 		OneToOneFieldBuilder.buildOneToOneField(
 			entityClass, o2oMetadata, targetClassDetails, modelsContext);
@@ -88,8 +88,8 @@ public class OneToOneFieldBuilderTest {
 
 	@Test
 	public void testFieldType() {
-		OneToOneMetadata o2oMetadata =
-			new OneToOneMetadata("profile", "Profile", "com.example");
+		OneToOneDescriptor o2oMetadata =
+			new OneToOneDescriptor("profile", "Profile", "com.example");
 
 		OneToOneFieldBuilder.buildOneToOneField(
 			entityClass, o2oMetadata, targetClassDetails, modelsContext);
@@ -100,8 +100,8 @@ public class OneToOneFieldBuilderTest {
 
 	@Test
 	public void testMappedBy() {
-		OneToOneMetadata o2oMetadata =
-			new OneToOneMetadata("profile", "Profile", "com.example")
+		OneToOneDescriptor o2oMetadata =
+			new OneToOneDescriptor("profile", "Profile", "com.example")
 				.mappedBy("user");
 
 		OneToOneFieldBuilder.buildOneToOneField(
@@ -116,8 +116,8 @@ public class OneToOneFieldBuilderTest {
 
 	@Test
 	public void testFetchType() {
-		OneToOneMetadata o2oMetadata =
-			new OneToOneMetadata("profile", "Profile", "com.example")
+		OneToOneDescriptor o2oMetadata =
+			new OneToOneDescriptor("profile", "Profile", "com.example")
 				.fetchType(FetchType.LAZY);
 
 		OneToOneFieldBuilder.buildOneToOneField(
@@ -132,8 +132,8 @@ public class OneToOneFieldBuilderTest {
 
 	@Test
 	public void testCascadeTypes() {
-		OneToOneMetadata o2oMetadata =
-			new OneToOneMetadata("profile", "Profile", "com.example")
+		OneToOneDescriptor o2oMetadata =
+			new OneToOneDescriptor("profile", "Profile", "com.example")
 				.cascade(CascadeType.ALL);
 
 		OneToOneFieldBuilder.buildOneToOneField(
@@ -150,8 +150,8 @@ public class OneToOneFieldBuilderTest {
 
 	@Test
 	public void testOptional() {
-		OneToOneMetadata o2oMetadata =
-			new OneToOneMetadata("profile", "Profile", "com.example")
+		OneToOneDescriptor o2oMetadata =
+			new OneToOneDescriptor("profile", "Profile", "com.example")
 				.optional(false);
 
 		OneToOneFieldBuilder.buildOneToOneField(
@@ -166,8 +166,8 @@ public class OneToOneFieldBuilderTest {
 
 	@Test
 	public void testOrphanRemoval() {
-		OneToOneMetadata o2oMetadata =
-			new OneToOneMetadata("profile", "Profile", "com.example")
+		OneToOneDescriptor o2oMetadata =
+			new OneToOneDescriptor("profile", "Profile", "com.example")
 				.orphanRemoval(true);
 
 		OneToOneFieldBuilder.buildOneToOneField(
@@ -182,8 +182,8 @@ public class OneToOneFieldBuilderTest {
 
 	@Test
 	public void testJoinColumn() {
-		OneToOneMetadata o2oMetadata =
-			new OneToOneMetadata("profile", "Profile", "com.example")
+		OneToOneDescriptor o2oMetadata =
+			new OneToOneDescriptor("profile", "Profile", "com.example")
 				.foreignKeyColumnName("PROFILE_ID");
 
 		OneToOneFieldBuilder.buildOneToOneField(
@@ -199,8 +199,8 @@ public class OneToOneFieldBuilderTest {
 
 	@Test
 	public void testJoinColumnWithReferencedColumn() {
-		OneToOneMetadata o2oMetadata =
-			new OneToOneMetadata("profile", "Profile", "com.example")
+		OneToOneDescriptor o2oMetadata =
+			new OneToOneDescriptor("profile", "Profile", "com.example")
 				.foreignKeyColumnName("PROFILE_ID")
 				.referencedColumnName("ID");
 
@@ -217,8 +217,8 @@ public class OneToOneFieldBuilderTest {
 
 	@Test
 	public void testMappedBySideHasNoJoinColumn() {
-		OneToOneMetadata o2oMetadata =
-			new OneToOneMetadata("user", "User", "com.example")
+		OneToOneDescriptor o2oMetadata =
+			new OneToOneDescriptor("user", "User", "com.example")
 				.mappedBy("profile");
 
 		OneToOneFieldBuilder.buildOneToOneField(
@@ -234,8 +234,8 @@ public class OneToOneFieldBuilderTest {
 
 	@Test
 	public void testJoinColumnNullableMatchesOptional() {
-		OneToOneMetadata o2oMetadata =
-			new OneToOneMetadata("profile", "Profile", "com.example")
+		OneToOneDescriptor o2oMetadata =
+			new OneToOneDescriptor("profile", "Profile", "com.example")
 				.foreignKeyColumnName("PROFILE_ID")
 				.optional(false);
 

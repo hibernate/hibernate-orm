@@ -26,9 +26,9 @@ import java.util.List;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.builder.db.EmbeddableClassBuilder;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.EmbeddableMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.EmbeddableDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -47,12 +47,12 @@ public class GenericExporterTest {
 
 	private List<ClassDetails> createEntities() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata authorTable = new TableMetadata("AUTHOR", "Author", "com.example");
-		authorTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		authorTable.addColumn(new ColumnMetadata("NAME", "name", String.class));
-		TableMetadata articleTable = new TableMetadata("ARTICLE", "Article", "com.example");
-		articleTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		articleTable.addColumn(new ColumnMetadata("TITLE", "title", String.class));
+		TableDescriptor authorTable = new TableDescriptor("AUTHOR", "Author", "com.example");
+		authorTable.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		authorTable.addColumn(new ColumnDescriptor("NAME", "name", String.class));
+		TableDescriptor articleTable = new TableDescriptor("ARTICLE", "Article", "com.example");
+		articleTable.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		articleTable.addColumn(new ColumnDescriptor("TITLE", "title", String.class));
 		ClassDetails author = builder.createEntityFromTable(authorTable);
 		ClassDetails article = builder.createEntityFromTable(articleTable);
 		return List.of(author, article);
@@ -60,13 +60,13 @@ public class GenericExporterTest {
 
 	private List<ClassDetails> createEntitiesAndEmbeddable() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata personTable = new TableMetadata("PERSON", "Person", "com.example");
-		personTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		personTable.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor personTable = new TableDescriptor("PERSON", "Person", "com.example");
+		personTable.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		personTable.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		ClassDetails person = builder.createEntityFromTable(personTable);
-		EmbeddableMetadata addressMeta = new EmbeddableMetadata("Address", "com.example");
-		addressMeta.addColumn(new ColumnMetadata("STREET", "street", String.class));
-		addressMeta.addColumn(new ColumnMetadata("CITY", "city", String.class));
+		EmbeddableDescriptor addressMeta = new EmbeddableDescriptor("Address", "com.example");
+		addressMeta.addColumn(new ColumnDescriptor("STREET", "street", String.class));
+		addressMeta.addColumn(new ColumnDescriptor("CITY", "city", String.class));
 		ClassDetails address = EmbeddableClassBuilder.buildEmbeddableClass(
 				addressMeta, builder.getModelsContext());
 		return List.of(person, address);
@@ -95,8 +95,8 @@ public class GenericExporterTest {
 	@Test
 	public void testPerEntityWithoutPackage() throws IOException {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata table = new TableMetadata("ITEM", "Item", null);
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("ITEM", "Item", null);
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		ClassDetails entity = builder.createEntityFromTable(table);
 		GenericExporter exporter = GenericExporter.create(
 				List.of(entity),
@@ -231,8 +231,8 @@ public class GenericExporterTest {
 	@Test
 	public void testExportToWriter() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		ClassDetails entity = builder.createEntityFromTable(table);
 		GenericExporter exporter = GenericExporter.create(
 				List.of(entity),
@@ -286,8 +286,8 @@ public class GenericExporterTest {
 	@Test
 	public void testTemplateErrorPropagated() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata table = new TableMetadata("ITEM", "Item", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("ITEM", "Item", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		ClassDetails entity = builder.createEntityFromTable(table);
 		GenericExporter exporter = GenericExporter.create(
 				List.of(entity),

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,17 +23,17 @@ import java.util.List;
  *
  * @author Koen Aers
  */
-public class IndexMetadata {
+public class IndexDescriptor {
 	private final String indexName;
 	private final boolean unique;
 	private final List<String> columnNames = new ArrayList<>();
 
-	public IndexMetadata(String indexName, boolean unique) {
+	public IndexDescriptor(String indexName, boolean unique) {
 		this.indexName = indexName;
 		this.unique = unique;
 	}
 
-	public IndexMetadata addColumn(String columnName) {
+	public IndexDescriptor addColumn(String columnName) {
 		this.columnNames.add(columnName);
 		return this;
 	}

@@ -26,7 +26,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassLoading;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.ModelsContext;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToManyMetadata;
+import org.hibernate.tool.internal.descriptor.OneToManyDescriptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -70,8 +70,8 @@ public class OneToManyFieldBuilderTest {
 
 	@Test
 	public void testOneToManyAnnotation() {
-		OneToManyMetadata o2mMetadata =
-			new OneToManyMetadata("employees", "department", "Employee", "com.example");
+		OneToManyDescriptor o2mMetadata =
+			new OneToManyDescriptor("employees", "department", "Employee", "com.example");
 
 		OneToManyFieldBuilder.buildOneToManyField(
 			entityClass, o2mMetadata, elementClassDetails, modelsContext);
@@ -88,8 +88,8 @@ public class OneToManyFieldBuilderTest {
 
 	@Test
 	public void testFieldType() {
-		OneToManyMetadata o2mMetadata =
-			new OneToManyMetadata("employees", "department", "Employee", "com.example");
+		OneToManyDescriptor o2mMetadata =
+			new OneToManyDescriptor("employees", "department", "Employee", "com.example");
 
 		OneToManyFieldBuilder.buildOneToManyField(
 			entityClass, o2mMetadata, elementClassDetails, modelsContext);
@@ -101,8 +101,8 @@ public class OneToManyFieldBuilderTest {
 
 	@Test
 	public void testFetchType() {
-		OneToManyMetadata o2mMetadata =
-			new OneToManyMetadata("employees", "department", "Employee", "com.example")
+		OneToManyDescriptor o2mMetadata =
+			new OneToManyDescriptor("employees", "department", "Employee", "com.example")
 				.fetchType(FetchType.EAGER);
 
 		OneToManyFieldBuilder.buildOneToManyField(
@@ -117,8 +117,8 @@ public class OneToManyFieldBuilderTest {
 
 	@Test
 	public void testCascadeTypes() {
-		OneToManyMetadata o2mMetadata =
-			new OneToManyMetadata("employees", "department", "Employee", "com.example")
+		OneToManyDescriptor o2mMetadata =
+			new OneToManyDescriptor("employees", "department", "Employee", "com.example")
 				.cascade(CascadeType.PERSIST, CascadeType.REMOVE);
 
 		OneToManyFieldBuilder.buildOneToManyField(
@@ -136,8 +136,8 @@ public class OneToManyFieldBuilderTest {
 
 	@Test
 	public void testOrphanRemoval() {
-		OneToManyMetadata o2mMetadata =
-			new OneToManyMetadata("employees", "department", "Employee", "com.example")
+		OneToManyDescriptor o2mMetadata =
+			new OneToManyDescriptor("employees", "department", "Employee", "com.example")
 				.orphanRemoval(true);
 
 		OneToManyFieldBuilder.buildOneToManyField(
@@ -152,8 +152,8 @@ public class OneToManyFieldBuilderTest {
 
 	@Test
 	public void testDefaultOrphanRemovalIsFalse() {
-		OneToManyMetadata o2mMetadata =
-			new OneToManyMetadata("employees", "department", "Employee", "com.example");
+		OneToManyDescriptor o2mMetadata =
+			new OneToManyDescriptor("employees", "department", "Employee", "com.example");
 
 		OneToManyFieldBuilder.buildOneToManyField(
 			entityClass, o2mMetadata, elementClassDetails, modelsContext);
@@ -167,8 +167,8 @@ public class OneToManyFieldBuilderTest {
 
 	@Test
 	public void testFullyConfigured() {
-		OneToManyMetadata o2mMetadata =
-			new OneToManyMetadata("employees", "department", "Employee", "com.example")
+		OneToManyDescriptor o2mMetadata =
+			new OneToManyDescriptor("employees", "department", "Employee", "com.example")
 				.fetchType(FetchType.LAZY)
 				.cascade(CascadeType.ALL)
 				.orphanRemoval(true);

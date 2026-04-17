@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,15 +24,15 @@ import java.util.List;
  *
  * @author Koen Aers
  */
-public class CompositeIdMetadata {
+public class CompositeIdDescriptor {
 	private final String fieldName;
 	private final String idClassName;
 	private final String idClassPackage;
-	private final List<AttributeOverrideMetadata> attributeOverrides = new ArrayList<>();
-	private final List<KeyManyToOneMetadata> keyManyToOnes = new ArrayList<>();
+	private final List<AttributeOverrideDescriptor> attributeOverrides = new ArrayList<>();
+	private final List<KeyManyToOneDescriptor> keyManyToOnes = new ArrayList<>();
 	private final List<String> originalColumnOrder = new ArrayList<>();
 
-	public CompositeIdMetadata(
+	public CompositeIdDescriptor(
 			String fieldName,
 			String idClassName,
 			String idClassPackage) {
@@ -41,30 +41,30 @@ public class CompositeIdMetadata {
 		this.idClassPackage = idClassPackage;
 	}
 
-	public CompositeIdMetadata addAttributeOverride(String fieldName, String columnName) {
-		this.attributeOverrides.add(new AttributeOverrideMetadata(fieldName, columnName));
+	public CompositeIdDescriptor addAttributeOverride(String fieldName, String columnName) {
+		this.attributeOverrides.add(new AttributeOverrideDescriptor(fieldName, columnName));
 		this.originalColumnOrder.add(columnName);
 		return this;
 	}
 
-	public CompositeIdMetadata addAttributeOverride(String fieldName, String columnName, Class<?> javaType) {
-		this.attributeOverrides.add(new AttributeOverrideMetadata(fieldName, columnName, javaType));
+	public CompositeIdDescriptor addAttributeOverride(String fieldName, String columnName, Class<?> javaType) {
+		this.attributeOverrides.add(new AttributeOverrideDescriptor(fieldName, columnName, javaType));
 		this.originalColumnOrder.add(columnName);
 		return this;
 	}
 
-	public CompositeIdMetadata addKeyManyToOne(
+	public CompositeIdDescriptor addKeyManyToOne(
 			String fieldName, String columnName,
 			String targetEntityClassName, String targetEntityPackage) {
-		this.keyManyToOnes.add(new KeyManyToOneMetadata(
+		this.keyManyToOnes.add(new KeyManyToOneDescriptor(
 				fieldName, columnName, targetEntityClassName, targetEntityPackage));
 		return this;
 	}
 
-	public CompositeIdMetadata addKeyManyToOne(
+	public CompositeIdDescriptor addKeyManyToOne(
 			String fieldName, List<String> columnNames,
 			String targetEntityClassName, String targetEntityPackage) {
-		this.keyManyToOnes.add(new KeyManyToOneMetadata(
+		this.keyManyToOnes.add(new KeyManyToOneDescriptor(
 				fieldName, columnNames, targetEntityClassName, targetEntityPackage));
 		return this;
 	}
@@ -73,14 +73,14 @@ public class CompositeIdMetadata {
 	public String getFieldName() { return fieldName; }
 	public String getIdClassName() { return idClassName; }
 	public String getIdClassPackage() { return idClassPackage; }
-	public List<AttributeOverrideMetadata> getAttributeOverrides() { return attributeOverrides; }
-	public List<KeyManyToOneMetadata> getKeyManyToOnes() { return keyManyToOnes; }
+	public List<AttributeOverrideDescriptor> getAttributeOverrides() { return attributeOverrides; }
+	public List<KeyManyToOneDescriptor> getKeyManyToOnes() { return keyManyToOnes; }
 	public List<String> getOriginalColumnOrder() { return originalColumnOrder; }
 
 	/**
 	 * Returns an ordered list of entries (attribute overrides and key-many-to-ones)
 	 * matching the original PK column order. Each entry is either an
-	 * {@link AttributeOverrideMetadata} or a {@link KeyManyToOneMetadata}.
+	 * {@link AttributeOverrideDescriptor} or a {@link KeyManyToOneDescriptor}.
 	 * Key-many-to-ones appear at the position of their first FK column.
 	 */
 	public List<Object> getOrderedEntries() {
@@ -97,8 +97,8 @@ public class CompositeIdMetadata {
 		java.util.Set<String> processedKeyManyToOnes = new java.util.HashSet<>();
 		for (String columnName : originalColumnOrder) {
 			// Check if this column belongs to a key-many-to-one
-			KeyManyToOneMetadata matchedKm2o = null;
-			for (KeyManyToOneMetadata km2o : keyManyToOnes) {
+			KeyManyToOneDescriptor matchedKm2o = null;
+			for (KeyManyToOneDescriptor km2o : keyManyToOnes) {
 				if (km2o.getColumnNames().contains(columnName)) {
 					matchedKm2o = km2o;
 					break;
@@ -111,7 +111,7 @@ public class CompositeIdMetadata {
 				}
 			} else {
 				// Check if it's still in the attribute overrides (not removed)
-				for (AttributeOverrideMetadata ao : attributeOverrides) {
+				for (AttributeOverrideDescriptor ao : attributeOverrides) {
 					if (ao.getColumnName().equals(columnName)) {
 						result.add(ao);
 						break;
@@ -121,7 +121,7 @@ public class CompositeIdMetadata {
 		}
 		// Append any key-many-to-ones not in the original column order
 		// (e.g., added directly without corresponding attribute overrides)
-		for (KeyManyToOneMetadata km2o : keyManyToOnes) {
+		for (KeyManyToOneDescriptor km2o : keyManyToOnes) {
 			if (!processedKeyManyToOnes.contains(km2o.getFieldName())) {
 				result.add(km2o);
 			}

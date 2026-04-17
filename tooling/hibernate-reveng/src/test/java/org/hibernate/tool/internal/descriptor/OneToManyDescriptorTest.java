@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,15 +23,15 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 
 /**
- * Tests for {@link OneToManyMetadata}.
+ * Tests for {@link OneToManyDescriptor}.
  *
  * @author Koen Aers
  */
-public class OneToManyMetadataTest {
+public class OneToManyDescriptorTest {
 
 	@Test
 	public void testConstructorAndDefaults() {
-		OneToManyMetadata otm = new OneToManyMetadata(
+		OneToManyDescriptor otm = new OneToManyDescriptor(
 			"employees", "department", "Employee", "com.example");
 
 		assertEquals("employees", otm.getFieldName());
@@ -45,7 +45,7 @@ public class OneToManyMetadataTest {
 
 	@Test
 	public void testFetchType() {
-		OneToManyMetadata otm = new OneToManyMetadata(
+		OneToManyDescriptor otm = new OneToManyDescriptor(
 			"employees", "department", "Employee", "com.example")
 			.fetchType(FetchType.EAGER);
 
@@ -54,7 +54,7 @@ public class OneToManyMetadataTest {
 
 	@Test
 	public void testCascadeTypes() {
-		OneToManyMetadata otm = new OneToManyMetadata(
+		OneToManyDescriptor otm = new OneToManyDescriptor(
 			"employees", "department", "Employee", "com.example")
 			.cascade(CascadeType.ALL);
 
@@ -63,7 +63,7 @@ public class OneToManyMetadataTest {
 
 	@Test
 	public void testMultipleCascadeTypes() {
-		OneToManyMetadata otm = new OneToManyMetadata(
+		OneToManyDescriptor otm = new OneToManyDescriptor(
 			"employees", "department", "Employee", "com.example")
 			.cascade(CascadeType.PERSIST, CascadeType.MERGE);
 
@@ -74,7 +74,7 @@ public class OneToManyMetadataTest {
 
 	@Test
 	public void testOrphanRemoval() {
-		OneToManyMetadata otm = new OneToManyMetadata(
+		OneToManyDescriptor otm = new OneToManyDescriptor(
 			"employees", "department", "Employee", "com.example")
 			.orphanRemoval(true);
 
@@ -83,7 +83,7 @@ public class OneToManyMetadataTest {
 
 	@Test
 	public void testFluentChaining() {
-		OneToManyMetadata otm = new OneToManyMetadata(
+		OneToManyDescriptor otm = new OneToManyDescriptor(
 			"employees", "department", "Employee", "com.example")
 			.fetchType(FetchType.LAZY)
 			.cascade(CascadeType.ALL)

@@ -23,11 +23,11 @@ import java.util.Set;
 
 import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengStrategy;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 
 /**
  * Reads a database schema via {@link RevengDialect} and produces
- * a list of {@link TableMetadata} objects. Uses {@link RevengStrategyAdapter}
+ * a list of {@link TableDescriptor} objects. Uses {@link RevengStrategyAdapter}
  * to call {@link RevengStrategy} methods that require
  * {@code org.hibernate.mapping.*} types.
  * <p>
@@ -77,11 +77,11 @@ public class ModelsDatabaseSchemaReader {
 	/**
 	 * Reads the database schema and returns fully populated table metadata.
 	 *
-	 * @return list of {@link TableMetadata} objects
+	 * @return list of {@link TableDescriptor} objects
 	 */
-	public List<TableMetadata> readSchema() {
+	public List<TableDescriptor> readSchema() {
 		// Read JDBC data into metadata objects
-		Map<String, TableMetadata> tablesByName = TableReader
+		Map<String, TableDescriptor> tablesByName = TableReader
 				.create(dialect, strategy, defaultCatalog, defaultSchema)
 				.readTables();
 		List<RawForeignKeyInfo> allFks = ForeignKeyReader
@@ -112,8 +112,8 @@ public class ModelsDatabaseSchemaReader {
 				tablesByName, outgoingFksByTable, incomingFksByTable);
 
 		// Return result (excluding M2M tables)
-		List<TableMetadata> result = new ArrayList<>();
-		for (Map.Entry<String, TableMetadata> entry : tablesByName.entrySet()) {
+		List<TableDescriptor> result = new ArrayList<>();
+		for (Map.Entry<String, TableDescriptor> entry : tablesByName.entrySet()) {
 			if (!manyToManyTables.contains(entry.getKey())) {
 				result.add(entry.getValue());
 			}
@@ -122,7 +122,7 @@ public class ModelsDatabaseSchemaReader {
 	}
 
 	private Set<String> applyAdapterToClassifyAndResolveRelationships(
-			Map<String, TableMetadata> tablesByName,
+			Map<String, TableDescriptor> tablesByName,
 			Map<String, List<RawForeignKeyInfo>> outgoingFksByTable,
 			Map<String, List<RawForeignKeyInfo>> incomingFksByTable) {
 		RevengStrategyAdapter adapter = RevengStrategyAdapter.create(strategy);

@@ -29,12 +29,12 @@ import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengSettings;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.ManyToManyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToManyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.CompositeIdDescriptor;
+import org.hibernate.tool.internal.descriptor.ForeignKeyDescriptor;
+import org.hibernate.tool.internal.descriptor.ManyToManyDescriptor;
+import org.hibernate.tool.internal.descriptor.OneToManyDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -71,31 +71,31 @@ public class ModelsDatabaseSchemaReaderTest {
 
 		ModelsDatabaseSchemaReader reader = ModelsDatabaseSchemaReader.create(
 			dialect, strategy, null, null);
-		List<TableMetadata> result = reader.readSchema();
+		List<TableDescriptor> result = reader.readSchema();
 
 		assertEquals(1, result.size());
-		TableMetadata employee = result.get(0);
+		TableDescriptor employee = result.get(0);
 		assertEquals("EMPLOYEE", employee.getTableName());
 		assertEquals("Employee", employee.getEntityClassName());
 		assertEquals("com.example", employee.getEntityPackage());
 
-		List<ColumnMetadata> columns = employee.getColumns();
+		List<ColumnDescriptor> columns = employee.getColumns();
 		assertEquals(3, columns.size());
 
-		ColumnMetadata idCol = columns.get(0);
+		ColumnDescriptor idCol = columns.get(0);
 		assertEquals("ID", idCol.getColumnName());
 		assertEquals("id", idCol.getFieldName());
 		assertTrue(idCol.isPrimaryKey());
 		assertFalse(idCol.isNullable());
 
-		ColumnMetadata nameCol = columns.get(1);
+		ColumnDescriptor nameCol = columns.get(1);
 		assertEquals("NAME", nameCol.getColumnName());
 		assertEquals("name", nameCol.getFieldName());
 		assertFalse(nameCol.isPrimaryKey());
 		assertTrue(nameCol.isNullable());
 		assertEquals(String.class, nameCol.getJavaType());
 
-		ColumnMetadata salaryCol = columns.get(2);
+		ColumnDescriptor salaryCol = columns.get(2);
 		assertEquals("SALARY", salaryCol.getColumnName());
 		assertEquals("salary", salaryCol.getFieldName());
 	}
@@ -121,26 +121,26 @@ public class ModelsDatabaseSchemaReaderTest {
 
 		ModelsDatabaseSchemaReader reader = ModelsDatabaseSchemaReader.create(
 			dialect, strategy, null, null);
-		List<TableMetadata> result = reader.readSchema();
+		List<TableDescriptor> result = reader.readSchema();
 
 		assertEquals(2, result.size());
 
 		// Find the tables
-		TableMetadata department = findTable(result, "DEPARTMENT");
-		TableMetadata employee = findTable(result, "EMPLOYEE");
+		TableDescriptor department = findTable(result, "DEPARTMENT");
+		TableDescriptor employee = findTable(result, "EMPLOYEE");
 		assertNotNull(department);
 		assertNotNull(employee);
 
 		// Employee should have a ManyToOne FK
 		assertEquals(1, employee.getForeignKeys().size());
-		ForeignKeyMetadata fk = employee.getForeignKeys().get(0);
+		ForeignKeyDescriptor fk = employee.getForeignKeys().get(0);
 		assertEquals("department", fk.getFieldName());
 		assertEquals("DEPARTMENT_ID", fk.getForeignKeyColumnName());
 		assertEquals("Department", fk.getTargetEntityClassName());
 
 		// Department should have a OneToMany
 		assertEquals(1, department.getOneToManys().size());
-		OneToManyMetadata o2m = department.getOneToManys().get(0);
+		OneToManyDescriptor o2m = department.getOneToManys().get(0);
 		assertEquals("Employee", o2m.getElementEntityClassName());
 		assertEquals("department", o2m.getMappedBy());
 	}
@@ -170,7 +170,7 @@ public class ModelsDatabaseSchemaReaderTest {
 
 		ModelsDatabaseSchemaReader reader = ModelsDatabaseSchemaReader.create(
 			dialect, strategy, null, null);
-		List<TableMetadata> result = reader.readSchema();
+		List<TableDescriptor> result = reader.readSchema();
 
 		// USER_ROLE should be filtered out as M2M join table
 		assertEquals(2, result.size());
@@ -192,34 +192,34 @@ public class ModelsDatabaseSchemaReaderTest {
 
 		ModelsDatabaseSchemaReader reader = ModelsDatabaseSchemaReader.create(
 			dialect, strategy, null, null);
-		List<TableMetadata> result = reader.readSchema();
+		List<TableDescriptor> result = reader.readSchema();
 
 		assertEquals(1, result.size());
-		TableMetadata event = result.get(0);
-		List<ColumnMetadata> columns = event.getColumns();
+		TableDescriptor event = result.get(0);
+		List<ColumnDescriptor> columns = event.getColumns();
 		assertEquals(6, columns.size());
 
-		ColumnMetadata dateCol = findColumn(columns, "EVENT_DATE");
+		ColumnDescriptor dateCol = findColumn(columns, "EVENT_DATE");
 		assertEquals(TemporalType.DATE, dateCol.getTemporalType());
 		assertFalse(dateCol.isLob());
 
-		ColumnMetadata timeCol = findColumn(columns, "START_TIME");
+		ColumnDescriptor timeCol = findColumn(columns, "START_TIME");
 		assertEquals(TemporalType.TIME, timeCol.getTemporalType());
 
-		ColumnMetadata timestampCol = findColumn(columns, "CREATED_AT");
+		ColumnDescriptor timestampCol = findColumn(columns, "CREATED_AT");
 		assertEquals(TemporalType.TIMESTAMP, timestampCol.getTemporalType());
 
-		ColumnMetadata descCol = findColumn(columns, "DESCRIPTION");
+		ColumnDescriptor descCol = findColumn(columns, "DESCRIPTION");
 		assertNull(descCol.getTemporalType());
 		assertTrue(descCol.isLob());
 		assertEquals(String.class, descCol.getJavaType());
 
-		ColumnMetadata photoCol = findColumn(columns, "PHOTO");
+		ColumnDescriptor photoCol = findColumn(columns, "PHOTO");
 		assertNull(photoCol.getTemporalType());
 		assertTrue(photoCol.isLob());
 		assertEquals(byte[].class, photoCol.getJavaType());
 
-		ColumnMetadata idCol = findColumn(columns, "ID");
+		ColumnDescriptor idCol = findColumn(columns, "ID");
 		assertNull(idCol.getTemporalType());
 		assertFalse(idCol.isLob());
 	}
@@ -235,12 +235,12 @@ public class ModelsDatabaseSchemaReaderTest {
 
 		ModelsDatabaseSchemaReader reader = ModelsDatabaseSchemaReader.create(
 			dialect, strategy, null, null);
-		List<TableMetadata> result = reader.readSchema();
+		List<TableDescriptor> result = reader.readSchema();
 
 		assertEquals(1, result.size());
-		TableMetadata orderItem = result.get(0);
+		TableDescriptor orderItem = result.get(0);
 
-		CompositeIdMetadata compositeId = orderItem.getCompositeId();
+		CompositeIdDescriptor compositeId = orderItem.getCompositeId();
 		assertNotNull(compositeId);
 		assertEquals("id", compositeId.getFieldName());
 		assertEquals("OrderItemId", compositeId.getIdClassName());
@@ -261,7 +261,7 @@ public class ModelsDatabaseSchemaReaderTest {
 
 		ModelsDatabaseSchemaReader reader = ModelsDatabaseSchemaReader.create(
 			dialect, strategy, null, null);
-		List<TableMetadata> result = reader.readSchema();
+		List<TableDescriptor> result = reader.readSchema();
 
 		assertEquals(1, result.size());
 		assertNull(result.get(0).getCompositeId());
@@ -292,12 +292,12 @@ public class ModelsDatabaseSchemaReaderTest {
 
 		ModelsDatabaseSchemaReader reader = ModelsDatabaseSchemaReader.create(
 			dialect, strategy, null, null);
-		List<TableMetadata> result = reader.readSchema();
+		List<TableDescriptor> result = reader.readSchema();
 
 		// Join table should be filtered out
 		assertEquals(2, result.size());
-		TableMetadata users = findTable(result, "USERS");
-		TableMetadata roles = findTable(result, "ROLES");
+		TableDescriptor users = findTable(result, "USERS");
+		TableDescriptor roles = findTable(result, "ROLES");
 		assertNotNull(users);
 		assertNotNull(roles);
 
@@ -305,8 +305,8 @@ public class ModelsDatabaseSchemaReaderTest {
 		int totalM2M = users.getManyToManys().size() + roles.getManyToManys().size();
 		assertEquals(2, totalM2M);
 
-		ManyToManyMetadata usersM2m = users.getManyToManys().get(0);
-		ManyToManyMetadata rolesM2m = roles.getManyToManys().get(0);
+		ManyToManyDescriptor usersM2m = users.getManyToManys().get(0);
+		ManyToManyDescriptor rolesM2m = roles.getManyToManys().get(0);
 
 		assertNotNull(usersM2m.getJoinTableName(), "Users side should have @JoinTable");
 		assertNotNull(rolesM2m.getJoinTableName(), "Roles side should have @JoinTable");
@@ -318,13 +318,13 @@ public class ModelsDatabaseSchemaReaderTest {
 	public void testEmptySchema() {
 		ModelsDatabaseSchemaReader reader = ModelsDatabaseSchemaReader.create(
 			dialect, strategy, null, null);
-		List<TableMetadata> result = reader.readSchema();
+		List<TableDescriptor> result = reader.readSchema();
 
 		assertTrue(result.isEmpty());
 	}
 
-	private TableMetadata findTable(List<TableMetadata> tables, String tableName) {
-		for (TableMetadata t : tables) {
+	private TableDescriptor findTable(List<TableDescriptor> tables, String tableName) {
+		for (TableDescriptor t : tables) {
 			if (t.getTableName().equals(tableName)) {
 				return t;
 			}
@@ -332,8 +332,8 @@ public class ModelsDatabaseSchemaReaderTest {
 		return null;
 	}
 
-	private ColumnMetadata findColumn(List<ColumnMetadata> columns, String columnName) {
-		for (ColumnMetadata c : columns) {
+	private ColumnDescriptor findColumn(List<ColumnDescriptor> columns, String columnName) {
+		for (ColumnDescriptor c : columns) {
 			if (c.getColumnName().equals(columnName)) {
 				return c;
 			}

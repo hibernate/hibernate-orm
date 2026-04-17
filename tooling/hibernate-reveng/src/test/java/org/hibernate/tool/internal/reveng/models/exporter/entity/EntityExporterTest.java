@@ -45,16 +45,16 @@ import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.builder.db.EmbeddableClassBuilder;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.EmbeddableMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.EmbeddedFieldMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.InheritanceMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.ManyToManyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToManyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToOneMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.EmbeddableDescriptor;
+import org.hibernate.tool.internal.descriptor.CompositeIdDescriptor;
+import org.hibernate.tool.internal.descriptor.EmbeddedFieldDescriptor;
+import org.hibernate.tool.internal.descriptor.ForeignKeyDescriptor;
+import org.hibernate.tool.internal.descriptor.InheritanceDescriptor;
+import org.hibernate.tool.internal.descriptor.ManyToManyDescriptor;
+import org.hibernate.tool.internal.descriptor.OneToManyDescriptor;
+import org.hibernate.tool.internal.descriptor.OneToOneDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -65,11 +65,11 @@ import org.junit.jupiter.api.io.TempDir;
  */
 public class EntityExporterTest {
 
-	private String export(TableMetadata table) {
+	private String export(TableDescriptor table) {
 		return export(table, true);
 	}
 
-	private String export(TableMetadata table, boolean annotated) {
+	private String export(TableDescriptor table, boolean annotated) {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		EntityExporter exporter = EntityExporter.create(
@@ -79,7 +79,7 @@ public class EntityExporterTest {
 		return writer.toString();
 	}
 
-	private String exportWithMeta(TableMetadata table,
+	private String exportWithMeta(TableDescriptor table,
 								  Map<String, List<String>> classMetaAttributes,
 								  Map<String, Map<String, List<String>>> fieldMetaAttributes) {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
@@ -93,32 +93,32 @@ public class EntityExporterTest {
 
 	@Test
 	public void testGeneratedHeader() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		String source = export(table);
 		assertTrue(source.matches("(?s).*// Generated .+ by Hibernate Tools .+\n.*"), source);
 	}
 
 	@Test
 	public void testPackageDeclaration() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		String source = export(table);
 		assertTrue(source.contains("package com.example;"), source);
 	}
 
 	@Test
 	public void testImplementsSerializable() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		String source = export(table);
 		assertTrue(source.contains("implements Serializable"), source);
 	}
 
 	@Test
 	public void testEntityAndTableAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		String source = export(table);
 		assertTrue(source.contains("@Entity"), source);
 		assertTrue(source.contains("@Table(name = \"EMPLOYEE\")"), source);
@@ -126,10 +126,10 @@ public class EntityExporterTest {
 
 	@Test
 	public void testTableAnnotationWithSchemaAndCatalog() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		table.setSchema("HR");
 		table.setCatalog("MYDB");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		String source = export(table);
 		assertTrue(source.contains("schema = \"HR\""), source);
 		assertTrue(source.contains("catalog = \"MYDB\""), source);
@@ -137,9 +137,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testBasicColumn() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		String source = export(table);
 		assertTrue(source.contains("private String name;"), source);
 		assertTrue(source.contains("@Column(name = \"NAME\")"), source);
@@ -149,8 +149,8 @@ public class EntityExporterTest {
 
 	@Test
 	public void testPrimaryKeyWithGeneratedValue() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class)
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.generationType(GenerationType.IDENTITY));
 		String source = export(table);
@@ -160,18 +160,18 @@ public class EntityExporterTest {
 
 	@Test
 	public void testVersionColumn() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("VERSION", "version", Integer.class).version(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("VERSION", "version", Integer.class).version(true));
 		String source = export(table);
 		assertTrue(source.contains("@Version"), source);
 	}
 
 	@Test
 	public void testTemporalColumn() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("HIRE_DATE", "hireDate", Date.class)
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("HIRE_DATE", "hireDate", Date.class)
 				.temporal(TemporalType.TIMESTAMP));
 		String source = export(table);
 		assertTrue(source.contains("@Temporal(TemporalType.TIMESTAMP)"), source);
@@ -179,19 +179,19 @@ public class EntityExporterTest {
 
 	@Test
 	public void testLobColumn() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("BIO", "bio", String.class).lob(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("BIO", "bio", String.class).lob(true));
 		String source = export(table);
 		assertTrue(source.contains("@Lob"), source);
 	}
 
 	@Test
 	public void testColumnLengthPrecisionScale() {
-		TableMetadata table = new TableMetadata("PRODUCT", "Product", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class).length(100));
-		table.addColumn(new ColumnMetadata("PRICE", "price", BigDecimal.class)
+		TableDescriptor table = new TableDescriptor("PRODUCT", "Product", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class).length(100));
+		table.addColumn(new ColumnDescriptor("PRICE", "price", BigDecimal.class)
 				.precision(10).scale(2));
 		String source = export(table);
 		assertTrue(source.contains("length = 100"), source);
@@ -201,10 +201,10 @@ public class EntityExporterTest {
 
 	@Test
 	public void testManyToOneRelationship() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example"));
 		String source = export(table);
 		assertTrue(source.contains("@ManyToOne"), source);
@@ -215,9 +215,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testOneToManyRelationship() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		String source = export(table);
 		assertTrue(source.contains("@OneToMany(mappedBy = \"department\")"), source);
@@ -227,9 +227,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testOneToOneOwning() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("address", "Address", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("address", "Address", "com.example")
 				.foreignKeyColumnName("ADDRESS_ID"));
 		String source = export(table);
 		assertTrue(source.contains("@OneToOne"), source);
@@ -239,9 +239,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testOneToOneInverse() {
-		TableMetadata table = new TableMetadata("ADDRESS", "Address", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("employee", "Employee", "com.example")
+		TableDescriptor table = new TableDescriptor("ADDRESS", "Address", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("employee", "Employee", "com.example")
 				.mappedBy("address"));
 		String source = export(table);
 		assertTrue(source.contains("@OneToOne(mappedBy = \"address\")"), source);
@@ -250,9 +250,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testManyToManyOwning() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("projects", "Project", "com.example")
 				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID"));
 		String source = export(table);
 		assertTrue(source.contains("@ManyToMany"), source);
@@ -264,9 +264,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testManyToManyInverse() {
-		TableMetadata table = new TableMetadata("PROJECT", "Project", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("employees", "Employee", "com.example")
+		TableDescriptor table = new TableDescriptor("PROJECT", "Project", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("employees", "Employee", "com.example")
 				.mappedBy("projects"));
 		String source = export(table);
 		assertTrue(source.contains("@ManyToMany(mappedBy = \"projects\")"), source);
@@ -275,8 +275,8 @@ public class EntityExporterTest {
 
 	@Test
 	public void testCompositeId() {
-		TableMetadata table = new TableMetadata("ORDER_LINE", "OrderLine", "com.example");
-		table.compositeId(new CompositeIdMetadata("id", "OrderLineId", "com.example")
+		TableDescriptor table = new TableDescriptor("ORDER_LINE", "OrderLine", "com.example");
+		table.compositeId(new CompositeIdDescriptor("id", "OrderLineId", "com.example")
 				.addAttributeOverride("orderId", "ORDER_ID")
 				.addAttributeOverride("lineNumber", "LINE_NUMBER"));
 		String source = export(table);
@@ -289,9 +289,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testEmbeddedField() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addEmbeddedField(new EmbeddedFieldMetadata("homeAddress", "Address", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addEmbeddedField(new EmbeddedFieldDescriptor("homeAddress", "Address", "com.example")
 				.addAttributeOverride("street", "HOME_STREET")
 				.addAttributeOverride("city", "HOME_CITY"));
 		String source = export(table);
@@ -304,9 +304,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testInheritanceRootEntity() {
-		TableMetadata table = new TableMetadata("VEHICLE", "Vehicle", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.inheritance(new InheritanceMetadata(InheritanceType.SINGLE_TABLE)
+		TableDescriptor table = new TableDescriptor("VEHICLE", "Vehicle", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.inheritance(new InheritanceDescriptor(InheritanceType.SINGLE_TABLE)
 				.discriminatorColumn("DTYPE")
 				.discriminatorType(DiscriminatorType.INTEGER));
 		String source = export(table);
@@ -317,8 +317,8 @@ public class EntityExporterTest {
 
 	@Test
 	public void testInheritanceSubclass() {
-		TableMetadata table = new TableMetadata("CAR", "Car", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("CAR", "Car", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		table.parent("Vehicle", "com.example");
 		table.discriminatorValue("CAR");
 		table.primaryKeyJoinColumn("VEHICLE_ID");
@@ -330,19 +330,19 @@ public class EntityExporterTest {
 
 	@Test
 	public void testDefaultConstructor() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		String source = export(table);
 		assertTrue(source.contains("public Employee() {"), source);
 	}
 
 	@Test
 	public void testImports() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class)
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.generationType(GenerationType.IDENTITY));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		String source = export(table);
 		assertTrue(source.contains("import jakarta.persistence.Entity;"), source);
 		assertTrue(source.contains("import jakarta.persistence.Table;"), source);
@@ -355,10 +355,10 @@ public class EntityExporterTest {
 
 	@Test
 	public void testForeignKeyColumnSkipped() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example"));
 		String source = export(table);
 		// The FK column should not have its own basic field
@@ -369,9 +369,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testFullConstructor() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		String source = export(table);
 		assertTrue(source.contains("public Employee(Long id, String name)"), source);
 		assertTrue(source.contains("this.id = id;"), source);
@@ -380,10 +380,10 @@ public class EntityExporterTest {
 
 	@Test
 	public void testFullConstructorSkipsVersion() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
-		table.addColumn(new ColumnMetadata("VERSION", "version", Integer.class).version(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
+		table.addColumn(new ColumnDescriptor("VERSION", "version", Integer.class).version(true));
 		String source = export(table);
 		// Full constructor should not include version field
 		assertTrue(source.contains("public Employee(Long id, String name)"), source);
@@ -392,9 +392,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testToString() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		String source = export(table);
 		assertTrue(source.contains("public String toString()"), source);
 		assertTrue(source.contains("getId()"), source);
@@ -403,10 +403,10 @@ public class EntityExporterTest {
 
 	@Test
 	public void testToStringSkipsForeignKeyColumns() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example"));
 		String source = export(table);
 		assertTrue(source.contains("getId()"), source);
@@ -415,9 +415,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testEqualsHashCodeWithSimpleId() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		String source = export(table);
 		assertTrue(source.contains("public boolean equals(Object other)"), source);
 		assertTrue(source.contains("public int hashCode()"), source);
@@ -428,8 +428,8 @@ public class EntityExporterTest {
 
 	@Test
 	public void testEqualsHashCodeWithCompositeId() {
-		TableMetadata table = new TableMetadata("ORDER_LINE", "OrderLine", "com.example");
-		table.compositeId(new CompositeIdMetadata("id", "OrderLineId", "com.example")
+		TableDescriptor table = new TableDescriptor("ORDER_LINE", "OrderLine", "com.example");
+		table.compositeId(new CompositeIdDescriptor("id", "OrderLineId", "com.example")
 				.addAttributeOverride("orderId", "ORDER_ID")
 				.addAttributeOverride("lineNumber", "LINE_NUMBER"));
 		String source = export(table);
@@ -440,8 +440,8 @@ public class EntityExporterTest {
 
 	@Test
 	public void testNoEqualsHashCodeForSubclass() {
-		TableMetadata table = new TableMetadata("CAR", "Car", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("CAR", "Car", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		table.parent("Vehicle", "com.example");
 		String source = export(table);
 		assertFalse(source.contains("public boolean equals("), source);
@@ -452,10 +452,10 @@ public class EntityExporterTest {
 
 	@Test
 	public void testGenPropertyFalseSkipsField() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("INTERNAL", "internal", String.class));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("INTERNAL", "internal", String.class));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		Map<String, Map<String, List<String>>> fieldMeta = new java.util.HashMap<>();
 		fieldMeta.put("internal", Map.of("gen-property", List.of("false")));
 		String source = exportWithMeta(table, Collections.emptyMap(), fieldMeta);
@@ -467,9 +467,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testFieldDescription() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		Map<String, Map<String, List<String>>> fieldMeta = new java.util.HashMap<>();
 		fieldMeta.put("name", Map.of("field-description", List.of("The employee name")));
 		String source = exportWithMeta(table, Collections.emptyMap(), fieldMeta);
@@ -478,9 +478,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testFieldDefaultValue() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("STATUS", "status", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("STATUS", "status", String.class));
 		Map<String, Map<String, List<String>>> fieldMeta = new java.util.HashMap<>();
 		fieldMeta.put("status", Map.of("default-value", List.of("\"active\"")));
 		String source = exportWithMeta(table, Collections.emptyMap(), fieldMeta);
@@ -489,9 +489,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testPropertyTypeOverride() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("STATUS", "status", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("STATUS", "status", String.class));
 		Map<String, Map<String, List<String>>> fieldMeta = new java.util.HashMap<>();
 		fieldMeta.put("status", Map.of("property-type", List.of("com.example.StatusEnum")));
 		String source = exportWithMeta(table, Collections.emptyMap(), fieldMeta);
@@ -500,8 +500,8 @@ public class EntityExporterTest {
 
 	@Test
 	public void testExtraClassCode() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		Map<String, List<String>> classMeta = Map.of(
 				"class-code", List.of("    public void customMethod() { }"));
 		String source = exportWithMeta(table, classMeta, Collections.emptyMap());
@@ -511,10 +511,10 @@ public class EntityExporterTest {
 
 	@Test
 	public void testUseInToString() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
-		table.addColumn(new ColumnMetadata("SECRET", "secret", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
+		table.addColumn(new ColumnDescriptor("SECRET", "secret", String.class));
 		Map<String, Map<String, List<String>>> fieldMeta = new java.util.HashMap<>();
 		fieldMeta.put("name", Map.of("use-in-tostring", List.of("true")));
 		String source = exportWithMeta(table, Collections.emptyMap(), fieldMeta);
@@ -537,9 +537,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testUseInEquals() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("EMAIL", "email", String.class));
 		Map<String, Map<String, List<String>>> fieldMeta = new java.util.HashMap<>();
 		fieldMeta.put("email", Map.of("use-in-equals", List.of("true")));
 		String source = exportWithMeta(table, Collections.emptyMap(), fieldMeta);
@@ -549,8 +549,8 @@ public class EntityExporterTest {
 
 	@Test
 	public void testNoExtraClassCodeWhenNotSet() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		String source = export(table);
 		assertFalse(source.contains("extra code"), source);
 	}
@@ -559,8 +559,8 @@ public class EntityExporterTest {
 
 	@Test
 	public void testUnannotatedNoEntityAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		String source = export(table, false);
 		assertFalse(source.contains("@Entity"), source);
 		assertFalse(source.contains("@Table"), source);
@@ -570,11 +570,11 @@ public class EntityExporterTest {
 
 	@Test
 	public void testUnannotatedNoColumnAnnotations() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class)
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.generationType(GenerationType.IDENTITY));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		String source = export(table, false);
 		assertFalse(source.contains("@Id"), source);
 		assertFalse(source.contains("@GeneratedValue"), source);
@@ -587,12 +587,12 @@ public class EntityExporterTest {
 
 	@Test
 	public void testUnannotatedNoRelationshipAnnotations() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example"));
-		table.addOneToMany(new OneToManyMetadata(
+		table.addOneToMany(new OneToManyDescriptor(
 				"projects", "employee", "Project", "com.example"));
 		String source = export(table, false);
 		assertFalse(source.contains("@ManyToOne"), source);
@@ -604,20 +604,20 @@ public class EntityExporterTest {
 
 	@Test
 	public void testUnannotatedNoJakartaImports() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class)
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.generationType(GenerationType.IDENTITY));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		String source = export(table, false);
 		assertFalse(source.contains("import jakarta.persistence"), source);
 	}
 
 	@Test
 	public void testUnannotatedNoVersionAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("VERSION", "version", Integer.class).version(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("VERSION", "version", Integer.class).version(true));
 		String source = export(table, false);
 		assertFalse(source.contains("@Version"), source);
 		assertTrue(source.contains("private Integer version;"), source);
@@ -625,11 +625,11 @@ public class EntityExporterTest {
 
 	@Test
 	public void testUnannotatedNoTemporalOrLobAnnotations() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("HIRE_DATE", "hireDate", Date.class)
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("HIRE_DATE", "hireDate", Date.class)
 				.temporal(TemporalType.TIMESTAMP));
-		table.addColumn(new ColumnMetadata("BIO", "bio", String.class).lob(true));
+		table.addColumn(new ColumnDescriptor("BIO", "bio", String.class).lob(true));
 		String source = export(table, false);
 		assertFalse(source.contains("@Temporal"), source);
 		assertFalse(source.contains("@Lob"), source);
@@ -639,10 +639,10 @@ public class EntityExporterTest {
 
 	@Test
 	public void testUnannotatedNoEmbeddedAnnotations() {
-		TableMetadata table = new TableMetadata("ORDER_LINE", "OrderLine", "com.example");
-		table.compositeId(new CompositeIdMetadata("id", "OrderLineId", "com.example")
+		TableDescriptor table = new TableDescriptor("ORDER_LINE", "OrderLine", "com.example");
+		table.compositeId(new CompositeIdDescriptor("id", "OrderLineId", "com.example")
 				.addAttributeOverride("orderId", "ORDER_ID"));
-		table.addEmbeddedField(new EmbeddedFieldMetadata("address", "Address", "com.example")
+		table.addEmbeddedField(new EmbeddedFieldDescriptor("address", "Address", "com.example")
 				.addAttributeOverride("street", "HOME_STREET"));
 		String source = export(table, false);
 		assertFalse(source.contains("@EmbeddedId"), source);
@@ -654,9 +654,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testUnannotatedConstructorsAndToStringStillGenerated() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		String source = export(table, false);
 		assertTrue(source.contains("public Employee() {"), source);
 		assertTrue(source.contains("public Employee(Long id, String name)"), source);
@@ -671,8 +671,8 @@ public class EntityExporterTest {
 	public void testCustomTemplatePath(@TempDir Path tempDir) throws IOException {
 		Files.writeString(tempDir.resolve("main.entity.ftl"),
 				"// Custom template for ${templateHelper.getDeclarationName()}");
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		EntityExporter exporter = EntityExporter.create(
@@ -686,8 +686,8 @@ public class EntityExporterTest {
 
 	@Test
 	public void testCustomTemplatePathFallsBackToDefault(@TempDir Path tempDir) {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		EntityExporter exporter = EntityExporter.create(
@@ -702,8 +702,8 @@ public class EntityExporterTest {
 
 	@Test
 	public void testCustomTemplatePathNonExistentDirectoryIgnored() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		EntityExporter exporter = EntityExporter.create(
@@ -718,7 +718,7 @@ public class EntityExporterTest {
 
 	// --- Embeddable export ---
 
-	private String exportEmbeddable(EmbeddableMetadata metadata) {
+	private String exportEmbeddable(EmbeddableDescriptor metadata) {
 		ModelsContext ctx = new BasicModelsContextImpl(
 				SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
 		ClassDetails embeddable = EmbeddableClassBuilder.buildEmbeddableClass(metadata, ctx);
@@ -731,9 +731,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testEmbeddableExport() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
-				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
-				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("OrderLineId", "com.example")
+				.addColumn(new ColumnDescriptor("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnDescriptor("LINE_NUMBER", "lineNumber", Integer.class));
 		String source = exportEmbeddable(metadata);
 		assertTrue(source.contains("package com.example;"), source);
 		assertTrue(source.contains("@Embeddable"), source);
@@ -745,9 +745,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testEmbeddableExportFields() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
-				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
-				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("OrderLineId", "com.example")
+				.addColumn(new ColumnDescriptor("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnDescriptor("LINE_NUMBER", "lineNumber", Integer.class));
 		String source = exportEmbeddable(metadata);
 		assertTrue(source.contains("private Long orderId;"), source);
 		assertTrue(source.contains("private Integer lineNumber;"), source);
@@ -755,9 +755,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testEmbeddableExportGettersSetters() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
-				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
-				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("OrderLineId", "com.example")
+				.addColumn(new ColumnDescriptor("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnDescriptor("LINE_NUMBER", "lineNumber", Integer.class));
 		String source = exportEmbeddable(metadata);
 		assertTrue(source.contains("public Long getOrderId()"), source);
 		assertTrue(source.contains("public void setOrderId(Long orderId)"), source);
@@ -767,9 +767,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testEmbeddableExportEqualsHashCode() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
-				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
-				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("OrderLineId", "com.example")
+				.addColumn(new ColumnDescriptor("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnDescriptor("LINE_NUMBER", "lineNumber", Integer.class));
 		String source = exportEmbeddable(metadata);
 		assertTrue(source.contains("public boolean equals(Object other)"), source);
 		assertTrue(source.contains("public int hashCode()"), source);
@@ -779,9 +779,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testEmbeddableExportConstructor() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
-				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
-				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("OrderLineId", "com.example")
+				.addColumn(new ColumnDescriptor("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnDescriptor("LINE_NUMBER", "lineNumber", Integer.class));
 		String source = exportEmbeddable(metadata);
 		assertTrue(source.contains("public OrderLineId()"), source);
 		assertTrue(source.contains("public OrderLineId(Long orderId, Integer lineNumber)"), source);
@@ -789,9 +789,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testEmbeddableExportColumnAnnotations() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
-				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
-				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("OrderLineId", "com.example")
+				.addColumn(new ColumnDescriptor("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnDescriptor("LINE_NUMBER", "lineNumber", Integer.class));
 		String source = exportEmbeddable(metadata);
 		assertTrue(source.contains("@Column(name = \"ORDER_ID\")"), source);
 		assertTrue(source.contains("@Column(name = \"LINE_NUMBER\")"), source);
@@ -801,8 +801,8 @@ public class EntityExporterTest {
 
 	@Test
 	public void testEntityListenersAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		EntityListenersJpaAnnotation el = JpaAnnotations.ENTITY_LISTENERS.createUsage(builder.getModelsContext());
@@ -827,8 +827,8 @@ public class EntityExporterTest {
 
 	@Test
 	public void testLifecycleCallbackMethods() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		DynamicClassDetails dc = (DynamicClassDetails) entity;
@@ -848,9 +848,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testScopeMetaAttributes() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		Map<String, Map<String, List<String>>> fieldMeta = new HashMap<>();
@@ -869,8 +869,8 @@ public class EntityExporterTest {
 
 	@Test
 	public void testImplementsMetaAttribute() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		Map<String, List<String>> classMeta = Map.of("implements", List.of("java.lang.Comparable"));
@@ -883,8 +883,8 @@ public class EntityExporterTest {
 
 	@Test
 	public void testExtendsMetaAttribute() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		Map<String, List<String>> classMeta = Map.of("extends", List.of("com.example.BaseEntity"));
@@ -897,8 +897,8 @@ public class EntityExporterTest {
 
 	@Test
 	public void testClassDescriptionMetaAttribute() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		Map<String, List<String>> classMeta = Map.of("class-description", List.of("Employee entity representation"));
@@ -913,8 +913,8 @@ public class EntityExporterTest {
 
 	@Test
 	public void testExtraImportMetaAttribute() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		Map<String, List<String>> classMeta = Map.of("extra-import", List.of("com.example.util.MyHelper"));
@@ -927,8 +927,8 @@ public class EntityExporterTest {
 
 	@Test
 	public void testGeneratedClassMetaAttribute() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		Map<String, List<String>> classMeta = Map.of("generated-class", List.of("com.generated.EmployeeBase"));
@@ -945,14 +945,14 @@ public class EntityExporterTest {
 	@Test
 	public void testSubclassFullConstructorCallsSuper() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata parentTable = new TableMetadata("VEHICLE", "Vehicle", "com.example");
-		parentTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		parentTable.addColumn(new ColumnMetadata("MAKE", "make", String.class));
+		TableDescriptor parentTable = new TableDescriptor("VEHICLE", "Vehicle", "com.example");
+		parentTable.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		parentTable.addColumn(new ColumnDescriptor("MAKE", "make", String.class));
 		builder.createEntityFromTable(parentTable);
-		TableMetadata childTable = new TableMetadata("CAR", "Car", "com.example");
+		TableDescriptor childTable = new TableDescriptor("CAR", "Car", "com.example");
 		childTable.parent("Vehicle", "com.example");
-		childTable.addColumn(new ColumnMetadata("CAR_ID", "carId", Long.class).primaryKey(true));
-		childTable.addColumn(new ColumnMetadata("DOORS", "doors", Integer.class));
+		childTable.addColumn(new ColumnDescriptor("CAR_ID", "carId", Long.class).primaryKey(true));
+		childTable.addColumn(new ColumnDescriptor("DOORS", "doors", Integer.class));
 		ClassDetails childEntity = builder.createEntityFromTable(childTable);
 		EntityExporter exporter = EntityExporter.create(
 				List.of(childEntity), builder.getModelsContext(), true);
@@ -969,15 +969,15 @@ public class EntityExporterTest {
 	@Test
 	public void testSubclassMinimalConstructorCallsSuper() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata parentTable = new TableMetadata("VEHICLE", "Vehicle", "com.example");
-		parentTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		parentTable.addColumn(new ColumnMetadata("MAKE", "make", String.class).nullable(false));
-		parentTable.addColumn(new ColumnMetadata("COLOR", "color", String.class));
+		TableDescriptor parentTable = new TableDescriptor("VEHICLE", "Vehicle", "com.example");
+		parentTable.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		parentTable.addColumn(new ColumnDescriptor("MAKE", "make", String.class).nullable(false));
+		parentTable.addColumn(new ColumnDescriptor("COLOR", "color", String.class));
 		builder.createEntityFromTable(parentTable);
-		TableMetadata childTable = new TableMetadata("CAR", "Car", "com.example");
+		TableDescriptor childTable = new TableDescriptor("CAR", "Car", "com.example");
 		childTable.parent("Vehicle", "com.example");
-		childTable.addColumn(new ColumnMetadata("CAR_ID", "carId", Long.class).primaryKey(true));
-		childTable.addColumn(new ColumnMetadata("DOORS", "doors", Integer.class));
+		childTable.addColumn(new ColumnDescriptor("CAR_ID", "carId", Long.class).primaryKey(true));
+		childTable.addColumn(new ColumnDescriptor("DOORS", "doors", Integer.class));
 		ClassDetails childEntity = builder.createEntityFromTable(childTable);
 		EntityExporter exporter = EntityExporter.create(
 				List.of(childEntity), builder.getModelsContext(), true);
@@ -990,9 +990,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testNonSubclassNoSuperCall() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		EntityExporter exporter = EntityExporter.create(
@@ -1007,9 +1007,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testTableUniqueConstraintRendered() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("EMAIL", "email", String.class));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
@@ -1032,9 +1032,9 @@ public class EntityExporterTest {
 
 	@Test
 	public void testColumnTransformerRendered() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("SALARY", "salary", java.math.BigDecimal.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("SALARY", "salary", java.math.BigDecimal.class));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		for (var field : entity.getFields()) {

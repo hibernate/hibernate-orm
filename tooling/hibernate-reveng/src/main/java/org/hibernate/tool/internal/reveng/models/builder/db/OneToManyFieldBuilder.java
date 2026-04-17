@@ -31,11 +31,11 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.TypeDetails;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToManyMetadata;
+import org.hibernate.tool.internal.descriptor.OneToManyDescriptor;
 
 /**
  * Builds a {@code @OneToMany} field on a dynamic class and attaches
- * the appropriate JPA annotations based on {@link OneToManyMetadata}.
+ * the appropriate JPA annotations based on {@link OneToManyDescriptor}.
  *
  * @author Koen Aers
  */
@@ -52,7 +52,7 @@ public class OneToManyFieldBuilder {
 	 */
 	public static void buildOneToManyField(
 			DynamicClassDetails entityClass,
-			OneToManyMetadata o2mMetadata,
+			OneToManyDescriptor o2mMetadata,
 			ClassDetails elementClassDetails,
 			ModelsContext modelsContext) {
 		buildOneToManyField(entityClass, o2mMetadata.getFieldName(),
@@ -62,7 +62,7 @@ public class OneToManyFieldBuilder {
 	public static void buildOneToManyField(
 			DynamicClassDetails entityClass,
 			String fieldName,
-			OneToManyMetadata o2mMetadata,
+			OneToManyDescriptor o2mMetadata,
 			ClassDetails elementClassDetails,
 			ModelsContext modelsContext) {
 		DynamicFieldDetails field = createField(
@@ -101,7 +101,7 @@ public class OneToManyFieldBuilder {
 
 	private static void addOneToManyAnnotation(
 			MutableAnnotationTarget field,
-			OneToManyMetadata o2mMetadata,
+			OneToManyDescriptor o2mMetadata,
 			ModelsContext modelsContext) {
 		OneToManyJpaAnnotation oneToManyAnnotation =
 			JpaAnnotations.ONE_TO_MANY.createUsage(modelsContext);
@@ -122,7 +122,7 @@ public class OneToManyFieldBuilder {
 	 */
 	private static void addFkColumnAnnotations(
 			MutableAnnotationTarget field,
-			OneToManyMetadata o2mMetadata,
+			OneToManyDescriptor o2mMetadata,
 			ModelsContext modelsContext) {
 		String mappedBy = o2mMetadata.getMappedBy();
 		if (mappedBy != null && !mappedBy.isEmpty()) {

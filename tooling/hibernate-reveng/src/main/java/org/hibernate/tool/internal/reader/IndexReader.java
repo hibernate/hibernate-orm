@@ -21,16 +21,16 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.hibernate.tool.api.reveng.RevengDialect;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.IndexMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.IndexDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 
 /**
  * Reads index information for a table from the database
  * via {@link RevengDialect#getIndexInfo(String, String, String)}
- * and populates the given {@link TableMetadata} with
- * {@link IndexMetadata} entries. For single-column unique indexes,
- * also marks the corresponding {@link ColumnMetadata} as unique.
+ * and populates the given {@link TableDescriptor} with
+ * {@link IndexDescriptor} entries. For single-column unique indexes,
+ * also marks the corresponding {@link ColumnDescriptor} as unique.
  *
  * @author Koen Aers
  */
@@ -49,14 +49,14 @@ class IndexReader {
 	/**
 	 * Reads indexes for the given table and populates the table metadata.
 	 */
-	void readIndexes(TableMetadata tableMetadata, String catalog, String schema) {
-		for (IndexMetadata index : collectIndexMetadatas(unquote(tableMetadata.getTableName()), catalog, schema)) {
+	void readIndexes(TableDescriptor tableMetadata, String catalog, String schema) {
+		for (IndexDescriptor index : collectIndexDescriptors(unquote(tableMetadata.getTableName()), catalog, schema)) {
 			tableMetadata.addIndex(index);
 
 			// For single-column unique indexes, mark the column as unique
 			if (index.isUnique() && index.getColumnNames().size() == 1) {
 				String columnName = index.getColumnNames().get(0);
-				for (ColumnMetadata col : tableMetadata.getColumns()) {
+				for (ColumnDescriptor col : tableMetadata.getColumns()) {
 					if (col.getColumnName().equals(columnName)) {
 						col.unique(true);
 						break;
@@ -66,8 +66,8 @@ class IndexReader {
 		}
 	}
 
-	private Collection<IndexMetadata> collectIndexMetadatas(String tableName, String catalog, String schema) {
-		Map<String, IndexMetadata> indexesByName = new LinkedHashMap<>();
+	private Collection<IndexDescriptor> collectIndexDescriptors(String tableName, String catalog, String schema) {
+		Map<String, IndexDescriptor> indexesByName = new LinkedHashMap<>();
 
 		Iterator<Map<String, Object>> indexIterator = dialect.getIndexInfo(
 			catalog, schema, tableName);
@@ -86,9 +86,9 @@ class IndexReader {
 					? (Boolean) row.get("NON_UNIQUE")
 					: true;
 
-				IndexMetadata index = indexesByName.get(indexName);
+				IndexDescriptor index = indexesByName.get(indexName);
 				if (index == null) {
-					index = new IndexMetadata(indexName, !nonUnique);
+					index = new IndexDescriptor(indexName, !nonUnique);
 					indexesByName.put(indexName, index);
 				}
 				index.addColumn(columnName);

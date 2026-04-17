@@ -26,11 +26,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.tool.api.reveng.RevengSettings;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToManyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToOneMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.ForeignKeyDescriptor;
+import org.hibernate.tool.internal.descriptor.OneToManyDescriptor;
+import org.hibernate.tool.internal.descriptor.OneToOneDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,7 +44,7 @@ public class IncomingForeignKeyResolverTest {
 
 	private DefaultStrategy strategy;
 	private RevengStrategyAdapter adapter;
-	private Map<String, TableMetadata> tablesByName;
+	private Map<String, TableDescriptor> tablesByName;
 	private Set<String> manyToManyTables;
 
 	@BeforeEach
@@ -61,11 +61,11 @@ public class IncomingForeignKeyResolverTest {
 
 	@Test
 	public void testSimpleOneToMany() {
-		TableMetadata department = createTable("DEPARTMENT", "Department",
+		TableDescriptor department = createTable("DEPARTMENT", "Department",
 			new String[]{"ID"}, new String[]{});
-		TableMetadata employee = createTable("EMPLOYEE", "Employee",
+		TableDescriptor employee = createTable("EMPLOYEE", "Employee",
 			new String[]{"ID"}, new String[]{"DEPARTMENT_ID"});
-		employee.addForeignKey(new ForeignKeyMetadata(
+		employee.addForeignKey(new ForeignKeyDescriptor(
 			"department", "DEPARTMENT_ID", "Department", "com.example"));
 
 		tablesByName.put("DEPARTMENT", department);
@@ -83,7 +83,7 @@ public class IncomingForeignKeyResolverTest {
 			.resolveIncomingForeignKeys();
 
 		assertEquals(1, department.getOneToManys().size());
-		OneToManyMetadata o2m = department.getOneToManys().get(0);
+		OneToManyDescriptor o2m = department.getOneToManys().get(0);
 		assertEquals("Employee", o2m.getElementEntityClassName());
 		assertEquals("com.example", o2m.getElementEntityPackage());
 		assertEquals("department", o2m.getMappedBy());
@@ -91,7 +91,7 @@ public class IncomingForeignKeyResolverTest {
 
 	@Test
 	public void testNoIncomingForeignKeys() {
-		TableMetadata department = createTable("DEPARTMENT", "Department",
+		TableDescriptor department = createTable("DEPARTMENT", "Department",
 			new String[]{"ID"}, new String[]{});
 		tablesByName.put("DEPARTMENT", department);
 
@@ -107,7 +107,7 @@ public class IncomingForeignKeyResolverTest {
 
 	@Test
 	public void testManyToManyTableSkipped() {
-		TableMetadata department = createTable("DEPARTMENT", "Department",
+		TableDescriptor department = createTable("DEPARTMENT", "Department",
 			new String[]{"ID"}, new String[]{});
 		tablesByName.put("DEPARTMENT", department);
 		manyToManyTables.add("DEPARTMENT");
@@ -128,9 +128,9 @@ public class IncomingForeignKeyResolverTest {
 
 	@Test
 	public void testFkFromManyToManyTableSkipped() {
-		TableMetadata department = createTable("DEPARTMENT", "Department",
+		TableDescriptor department = createTable("DEPARTMENT", "Department",
 			new String[]{"ID"}, new String[]{});
-		TableMetadata joinTable = createTable("DEPT_EMP", "DeptEmp",
+		TableDescriptor joinTable = createTable("DEPT_EMP", "DeptEmp",
 			new String[]{"DEPT_ID", "EMP_ID"}, new String[]{});
 		tablesByName.put("DEPARTMENT", department);
 		tablesByName.put("DEPT_EMP", joinTable);
@@ -152,9 +152,9 @@ public class IncomingForeignKeyResolverTest {
 
 	@Test
 	public void testCompositeKeySeqSkipped() {
-		TableMetadata department = createTable("DEPARTMENT", "Department",
+		TableDescriptor department = createTable("DEPARTMENT", "Department",
 			new String[]{"ID"}, new String[]{});
-		TableMetadata employee = createTable("EMPLOYEE", "Employee",
+		TableDescriptor employee = createTable("EMPLOYEE", "Employee",
 			new String[]{"ID"}, new String[]{"DEPARTMENT_ID"});
 		tablesByName.put("DEPARTMENT", department);
 		tablesByName.put("EMPLOYEE", employee);
@@ -175,7 +175,7 @@ public class IncomingForeignKeyResolverTest {
 
 	@Test
 	public void testFkTableNotInTablesMapSkipped() {
-		TableMetadata department = createTable("DEPARTMENT", "Department",
+		TableDescriptor department = createTable("DEPARTMENT", "Department",
 			new String[]{"ID"}, new String[]{});
 		tablesByName.put("DEPARTMENT", department);
 		// EMPLOYEE is NOT in tablesByName
@@ -196,11 +196,11 @@ public class IncomingForeignKeyResolverTest {
 
 	@Test
 	public void testMappedByFromManyToOneField() {
-		TableMetadata department = createTable("DEPARTMENT", "Department",
+		TableDescriptor department = createTable("DEPARTMENT", "Department",
 			new String[]{"ID"}, new String[]{});
-		TableMetadata employee = createTable("EMPLOYEE", "Employee",
+		TableDescriptor employee = createTable("EMPLOYEE", "Employee",
 			new String[]{"ID"}, new String[]{"DEPARTMENT_ID"});
-		employee.addForeignKey(new ForeignKeyMetadata(
+		employee.addForeignKey(new ForeignKeyDescriptor(
 			"myDept", "DEPARTMENT_ID", "Department", "com.example"));
 
 		tablesByName.put("DEPARTMENT", department);
@@ -223,15 +223,15 @@ public class IncomingForeignKeyResolverTest {
 
 	@Test
 	public void testMultipleIncomingForeignKeys() {
-		TableMetadata department = createTable("DEPARTMENT", "Department",
+		TableDescriptor department = createTable("DEPARTMENT", "Department",
 			new String[]{"ID"}, new String[]{});
-		TableMetadata employee = createTable("EMPLOYEE", "Employee",
+		TableDescriptor employee = createTable("EMPLOYEE", "Employee",
 			new String[]{"ID"}, new String[]{"DEPARTMENT_ID"});
-		TableMetadata project = createTable("PROJECT", "Project",
+		TableDescriptor project = createTable("PROJECT", "Project",
 			new String[]{"ID"}, new String[]{"DEPARTMENT_ID"});
-		employee.addForeignKey(new ForeignKeyMetadata(
+		employee.addForeignKey(new ForeignKeyDescriptor(
 			"department", "DEPARTMENT_ID", "Department", "com.example"));
-		project.addForeignKey(new ForeignKeyMetadata(
+		project.addForeignKey(new ForeignKeyDescriptor(
 			"department", "DEPARTMENT_ID", "Department", "com.example"));
 
 		tablesByName.put("DEPARTMENT", department);
@@ -260,11 +260,11 @@ public class IncomingForeignKeyResolverTest {
 
 	@Test
 	public void testMappedByFromOneToOneField() {
-		TableMetadata department = createTable("DEPARTMENT", "Department",
+		TableDescriptor department = createTable("DEPARTMENT", "Department",
 			new String[]{"ID"}, new String[]{});
-		TableMetadata employee = createTable("EMPLOYEE", "Employee",
+		TableDescriptor employee = createTable("EMPLOYEE", "Employee",
 			new String[]{"ID"}, new String[]{"DEPARTMENT_ID"});
-		employee.addOneToOne(new OneToOneMetadata(
+		employee.addOneToOne(new OneToOneDescriptor(
 			"dept", "Department", "com.example")
 			.foreignKeyColumnName("DEPARTMENT_ID"));
 
@@ -287,15 +287,15 @@ public class IncomingForeignKeyResolverTest {
 		assertTrue(totalRelationships > 0);
 	}
 
-	private TableMetadata createTable(String tableName, String entityClassName,
+	private TableDescriptor createTable(String tableName, String entityClassName,
 			String[] pkColumns, String[] otherColumns) {
-		TableMetadata table = new TableMetadata(tableName, entityClassName, "com.example");
+		TableDescriptor table = new TableDescriptor(tableName, entityClassName, "com.example");
 		for (String pk : pkColumns) {
-			table.addColumn(new ColumnMetadata(pk, pk.toLowerCase(), Long.class)
+			table.addColumn(new ColumnDescriptor(pk, pk.toLowerCase(), Long.class)
 				.primaryKey(true).nullable(false));
 		}
 		for (String col : otherColumns) {
-			table.addColumn(new ColumnMetadata(col, col.toLowerCase(), Long.class)
+			table.addColumn(new ColumnDescriptor(col, col.toLowerCase(), Long.class)
 				.nullable(true));
 		}
 		return table;

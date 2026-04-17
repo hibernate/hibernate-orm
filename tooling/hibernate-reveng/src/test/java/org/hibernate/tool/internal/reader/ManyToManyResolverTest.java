@@ -24,9 +24,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.tool.api.reveng.RevengSettings;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.ManyToManyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.ManyToManyDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,7 @@ public class ManyToManyResolverTest {
 
 	private DefaultStrategy strategy;
 	private RevengStrategyAdapter adapter;
-	private Map<String, TableMetadata> tablesByName;
+	private Map<String, TableDescriptor> tablesByName;
 	private Map<String, List<RawForeignKeyInfo>> outgoingFksByTable;
 
 	@BeforeEach
@@ -57,9 +57,9 @@ public class ManyToManyResolverTest {
 
 	@Test
 	public void testFilterManyToManyTables() {
-		TableMetadata users = createTable("USERS", "Users", new String[]{"ID"}, new String[]{});
-		TableMetadata roles = createTable("ROLES", "Roles", new String[]{"ID"}, new String[]{});
-		TableMetadata joinTable = createTable("USER_ROLE", "UserRole",
+		TableDescriptor users = createTable("USERS", "Users", new String[]{"ID"}, new String[]{});
+		TableDescriptor roles = createTable("ROLES", "Roles", new String[]{"ID"}, new String[]{});
+		TableDescriptor joinTable = createTable("USER_ROLE", "UserRole",
 			new String[]{"USER_ID", "ROLE_ID"}, new String[]{});
 
 		tablesByName.put("USERS", users);
@@ -87,7 +87,7 @@ public class ManyToManyResolverTest {
 
 	@Test
 	public void testFilterNoManyToManyTables() {
-		TableMetadata employee = createTable("EMPLOYEE", "Employee",
+		TableDescriptor employee = createTable("EMPLOYEE", "Employee",
 			new String[]{"ID"}, new String[]{"NAME"});
 		tablesByName.put("EMPLOYEE", employee);
 
@@ -99,7 +99,7 @@ public class ManyToManyResolverTest {
 
 	@Test
 	public void testFilterEmptyColumnTableSkipped() {
-		TableMetadata emptyTable = new TableMetadata("EMPTY_TABLE", "EmptyTable", "com.example");
+		TableDescriptor emptyTable = new TableDescriptor("EMPTY_TABLE", "EmptyTable", "com.example");
 		tablesByName.put("EMPTY_TABLE", emptyTable);
 
 		ManyToManyResolver resolver = ManyToManyResolver.create(tablesByName, outgoingFksByTable, adapter);
@@ -110,9 +110,9 @@ public class ManyToManyResolverTest {
 
 	@Test
 	public void testResolveManyToManyRelationships() {
-		TableMetadata users = createTable("USERS", "Users", new String[]{"ID"}, new String[]{});
-		TableMetadata roles = createTable("ROLES", "Roles", new String[]{"ID"}, new String[]{});
-		TableMetadata joinTable = createTable("USER_ROLE", "UserRole",
+		TableDescriptor users = createTable("USERS", "Users", new String[]{"ID"}, new String[]{});
+		TableDescriptor roles = createTable("ROLES", "Roles", new String[]{"ID"}, new String[]{});
+		TableDescriptor joinTable = createTable("USER_ROLE", "UserRole",
 			new String[]{"USER_ID", "ROLE_ID"}, new String[]{});
 
 		tablesByName.put("USERS", users);
@@ -138,8 +138,8 @@ public class ManyToManyResolverTest {
 		assertEquals(1, roles.getManyToManys().size());
 
 		// Both sides should have @JoinTable with swapped columns
-		ManyToManyMetadata usersM2m = users.getManyToManys().get(0);
-		ManyToManyMetadata rolesM2m = roles.getManyToManys().get(0);
+		ManyToManyDescriptor usersM2m = users.getManyToManys().get(0);
+		ManyToManyDescriptor rolesM2m = roles.getManyToManys().get(0);
 
 		assertNotNull(usersM2m.getJoinTableName(), "Users side should have joinTable");
 		assertNotNull(rolesM2m.getJoinTableName(), "Roles side should have joinTable");
@@ -149,7 +149,7 @@ public class ManyToManyResolverTest {
 
 	@Test
 	public void testResolveSkipsJoinTableNotInMap() {
-		TableMetadata users = createTable("USERS", "Users", new String[]{"ID"}, new String[]{});
+		TableDescriptor users = createTable("USERS", "Users", new String[]{"ID"}, new String[]{});
 		tablesByName.put("USERS", users);
 		// USER_ROLE is NOT in tablesByName
 
@@ -163,8 +163,8 @@ public class ManyToManyResolverTest {
 
 	@Test
 	public void testResolveSkipsWhenNotExactlyTwoFks() {
-		TableMetadata users = createTable("USERS", "Users", new String[]{"ID"}, new String[]{});
-		TableMetadata joinTable = createTable("BAD_JOIN", "BadJoin",
+		TableDescriptor users = createTable("USERS", "Users", new String[]{"ID"}, new String[]{});
+		TableDescriptor joinTable = createTable("BAD_JOIN", "BadJoin",
 			new String[]{"USER_ID"}, new String[]{});
 
 		tablesByName.put("USERS", users);
@@ -186,8 +186,8 @@ public class ManyToManyResolverTest {
 
 	@Test
 	public void testResolveSkipsWhenReferencedTableMissing() {
-		TableMetadata users = createTable("USERS", "Users", new String[]{"ID"}, new String[]{});
-		TableMetadata joinTable = createTable("USER_ROLE", "UserRole",
+		TableDescriptor users = createTable("USERS", "Users", new String[]{"ID"}, new String[]{});
+		TableDescriptor joinTable = createTable("USER_ROLE", "UserRole",
 			new String[]{"USER_ID", "ROLE_ID"}, new String[]{});
 
 		tablesByName.put("USERS", users);
@@ -215,9 +215,9 @@ public class ManyToManyResolverTest {
 
 	@Test
 	public void testCompositeKeySeqFilteredInResolve() {
-		TableMetadata users = createTable("USERS", "Users", new String[]{"ID"}, new String[]{});
-		TableMetadata roles = createTable("ROLES", "Roles", new String[]{"ID"}, new String[]{});
-		TableMetadata joinTable = createTable("USER_ROLE", "UserRole",
+		TableDescriptor users = createTable("USERS", "Users", new String[]{"ID"}, new String[]{});
+		TableDescriptor roles = createTable("ROLES", "Roles", new String[]{"ID"}, new String[]{});
+		TableDescriptor joinTable = createTable("USER_ROLE", "UserRole",
 			new String[]{"USER_ID", "ROLE_ID"}, new String[]{});
 
 		tablesByName.put("USERS", users);
@@ -252,9 +252,9 @@ public class ManyToManyResolverTest {
 
 	@Test
 	public void testBothSidesHaveJoinTableWithSwappedColumns() {
-		TableMetadata users = createTable("USERS", "Users", new String[]{"ID"}, new String[]{});
-		TableMetadata roles = createTable("ROLES", "Roles", new String[]{"ID"}, new String[]{});
-		TableMetadata joinTable = createTable("USER_ROLE", "UserRole",
+		TableDescriptor users = createTable("USERS", "Users", new String[]{"ID"}, new String[]{});
+		TableDescriptor roles = createTable("ROLES", "Roles", new String[]{"ID"}, new String[]{});
+		TableDescriptor joinTable = createTable("USER_ROLE", "UserRole",
 			new String[]{"USER_ID", "ROLE_ID"}, new String[]{});
 
 		tablesByName.put("USERS", users);
@@ -280,8 +280,8 @@ public class ManyToManyResolverTest {
 		assertEquals(1, users.getManyToManys().size());
 		assertEquals(1, roles.getManyToManys().size());
 
-		ManyToManyMetadata usersM2m = users.getManyToManys().get(0);
-		ManyToManyMetadata rolesM2m = roles.getManyToManys().get(0);
+		ManyToManyDescriptor usersM2m = users.getManyToManys().get(0);
+		ManyToManyDescriptor rolesM2m = roles.getManyToManys().get(0);
 
 		assertNotNull(usersM2m.getJoinTableName(), "Users side should have @JoinTable");
 		assertNotNull(rolesM2m.getJoinTableName(), "Roles side should have @JoinTable");
@@ -299,15 +299,15 @@ public class ManyToManyResolverTest {
 		assertEquals(usersM2m.getInverseJoinColumnName(), rolesM2m.getJoinColumnName());
 	}
 
-	private TableMetadata createTable(String tableName, String entityClassName,
+	private TableDescriptor createTable(String tableName, String entityClassName,
 			String[] pkColumns, String[] otherColumns) {
-		TableMetadata table = new TableMetadata(tableName, entityClassName, "com.example");
+		TableDescriptor table = new TableDescriptor(tableName, entityClassName, "com.example");
 		for (String pk : pkColumns) {
-			table.addColumn(new ColumnMetadata(pk, pk.toLowerCase(), Long.class)
+			table.addColumn(new ColumnDescriptor(pk, pk.toLowerCase(), Long.class)
 				.primaryKey(true).nullable(false));
 		}
 		for (String col : otherColumns) {
-			table.addColumn(new ColumnMetadata(col, col.toLowerCase(), Long.class)
+			table.addColumn(new ColumnDescriptor(col, col.toLowerCase(), Long.class)
 				.nullable(true));
 		}
 		return table;

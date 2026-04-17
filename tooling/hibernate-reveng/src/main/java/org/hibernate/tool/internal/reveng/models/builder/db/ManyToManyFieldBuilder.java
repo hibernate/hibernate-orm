@@ -31,12 +31,12 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.TypeDetails;
-import org.hibernate.tool.internal.reveng.models.metadata.ManyToManyMetadata;
+import org.hibernate.tool.internal.descriptor.ManyToManyDescriptor;
 
 /**
  * Builds a {@code @ManyToMany} field on a dynamic class and attaches
  * the appropriate JPA annotations ({@code @ManyToMany},
- * {@code @JoinTable}) based on {@link ManyToManyMetadata}.
+ * {@code @JoinTable}) based on {@link ManyToManyDescriptor}.
  *
  * @author Koen Aers
  */
@@ -53,7 +53,7 @@ public class ManyToManyFieldBuilder {
 	 */
 	public static void buildManyToManyField(
 			DynamicClassDetails entityClass,
-			ManyToManyMetadata m2mMetadata,
+			ManyToManyDescriptor m2mMetadata,
 			ClassDetails targetClassDetails,
 			ModelsContext modelsContext) {
 		buildManyToManyField(entityClass, m2mMetadata.getFieldName(),
@@ -63,7 +63,7 @@ public class ManyToManyFieldBuilder {
 	public static void buildManyToManyField(
 			DynamicClassDetails entityClass,
 			String fieldName,
-			ManyToManyMetadata m2mMetadata,
+			ManyToManyDescriptor m2mMetadata,
 			ClassDetails targetClassDetails,
 			ModelsContext modelsContext) {
 		DynamicFieldDetails field = createField(
@@ -102,7 +102,7 @@ public class ManyToManyFieldBuilder {
 
 	private static void addManyToManyAnnotation(
 			MutableAnnotationTarget field,
-			ManyToManyMetadata m2mMetadata,
+			ManyToManyDescriptor m2mMetadata,
 			ModelsContext modelsContext) {
 		ManyToManyJpaAnnotation manyToManyAnnotation =
 			JpaAnnotations.MANY_TO_MANY.createUsage(modelsContext);
@@ -120,7 +120,7 @@ public class ManyToManyFieldBuilder {
 
 	private static void addJoinTableAnnotation(
 			MutableAnnotationTarget field,
-			ManyToManyMetadata m2mMetadata,
+			ManyToManyDescriptor m2mMetadata,
 			ModelsContext modelsContext) {
 		if (m2mMetadata.getJoinTableName() != null) {
 			JoinTableJpaAnnotation joinTableAnnotation =

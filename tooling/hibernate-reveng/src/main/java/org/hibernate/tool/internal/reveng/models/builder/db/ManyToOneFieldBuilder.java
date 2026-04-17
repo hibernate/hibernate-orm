@@ -26,14 +26,14 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.TypeDetails;
-import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
+import org.hibernate.tool.internal.descriptor.ForeignKeyDescriptor;
 
 import java.util.List;
 
 /**
  * Builds a {@code @ManyToOne} field on a dynamic class and attaches
  * the appropriate JPA annotations ({@code @ManyToOne},
- * {@code @JoinColumn}) based on {@link ForeignKeyMetadata}.
+ * {@code @JoinColumn}) based on {@link ForeignKeyDescriptor}.
  *
  * @author Koen Aers
  */
@@ -50,7 +50,7 @@ public class ManyToOneFieldBuilder {
 	 */
 	public static void buildManyToOneField(
 			DynamicClassDetails entityClass,
-			ForeignKeyMetadata fkMetadata,
+			ForeignKeyDescriptor fkMetadata,
 			ClassDetails targetClassDetails,
 			ModelsContext modelsContext) {
 		DynamicFieldDetails field = createField(
@@ -61,7 +61,7 @@ public class ManyToOneFieldBuilder {
 
 	private static DynamicFieldDetails createField(
 			DynamicClassDetails entityClass,
-			ForeignKeyMetadata fkMetadata,
+			ForeignKeyDescriptor fkMetadata,
 			ClassDetails targetClassDetails,
 			ModelsContext modelsContext) {
 		TypeDetails fieldType = new ClassTypeDetailsImpl(
@@ -79,7 +79,7 @@ public class ManyToOneFieldBuilder {
 
 	private static void addManyToOneAnnotation(
 			MutableAnnotationTarget field,
-			ForeignKeyMetadata fkMetadata,
+			ForeignKeyDescriptor fkMetadata,
 			ModelsContext modelsContext) {
 		ManyToOneJpaAnnotation manyToOneAnnotation =
 			JpaAnnotations.MANY_TO_ONE.createUsage(modelsContext);
@@ -92,12 +92,12 @@ public class ManyToOneFieldBuilder {
 
 	private static void addJoinColumnAnnotation(
 			MutableAnnotationTarget field,
-			ForeignKeyMetadata fkMetadata,
+			ForeignKeyDescriptor fkMetadata,
 			ModelsContext modelsContext) {
-		List<ForeignKeyMetadata.JoinColumnPair> joinColumns = fkMetadata.getJoinColumns();
+		List<ForeignKeyDescriptor.JoinColumnPair> joinColumns = fkMetadata.getJoinColumns();
 		boolean readOnly = fkMetadata.isPartOfCompositeKey();
 		if (joinColumns.size() == 1) {
-			ForeignKeyMetadata.JoinColumnPair jc = joinColumns.get(0);
+			ForeignKeyDescriptor.JoinColumnPair jc = joinColumns.get(0);
 			JoinColumnJpaAnnotation joinColumnAnnotation =
 				JpaAnnotations.JOIN_COLUMN.createUsage(modelsContext);
 			joinColumnAnnotation.name(jc.fkColumnName());
@@ -114,7 +114,7 @@ public class ManyToOneFieldBuilder {
 			jakarta.persistence.JoinColumn[] jcArray =
 				new jakarta.persistence.JoinColumn[joinColumns.size()];
 			for (int i = 0; i < joinColumns.size(); i++) {
-				ForeignKeyMetadata.JoinColumnPair jc = joinColumns.get(i);
+				ForeignKeyDescriptor.JoinColumnPair jc = joinColumns.get(i);
 				JoinColumnJpaAnnotation joinColumnAnnotation =
 					JpaAnnotations.JOIN_COLUMN.createUsage(modelsContext);
 				joinColumnAnnotation.name(jc.fkColumnName());

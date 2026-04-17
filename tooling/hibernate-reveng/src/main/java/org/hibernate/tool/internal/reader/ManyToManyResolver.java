@@ -21,31 +21,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.ManyToManyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.ManyToManyDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 
 /**
  * Resolves many-to-many relationships by examining join tables and
- * adding {@link ManyToManyMetadata} to both sides of the relationship.
+ * adding {@link ManyToManyDescriptor} to both sides of the relationship.
  *
  * @author Koen Aers
  */
 class ManyToManyResolver {
 
-	private final Map<String, TableMetadata> tablesByName;
+	private final Map<String, TableDescriptor> tablesByName;
 	private final Map<String, List<RawForeignKeyInfo>> outgoingFksByTable;
 	private final RevengStrategyAdapter adapter;
 
 	static ManyToManyResolver create(
-			Map<String, TableMetadata> tablesByName,
+			Map<String, TableDescriptor> tablesByName,
 			Map<String, List<RawForeignKeyInfo>> outgoingFksByTable,
 			RevengStrategyAdapter adapter) {
 		return new ManyToManyResolver(tablesByName, outgoingFksByTable, adapter);
 	}
 
 	private ManyToManyResolver(
-			Map<String, TableMetadata> tablesByName,
+			Map<String, TableDescriptor> tablesByName,
 			Map<String, List<RawForeignKeyInfo>> outgoingFksByTable,
 			RevengStrategyAdapter adapter) {
 		this.tablesByName = tablesByName;
@@ -55,9 +55,9 @@ class ManyToManyResolver {
 
 	Set<String> filterManyToManyTables() {
 		Set<String> manyToManyTables = new HashSet<>();
-		for (Map.Entry<String, TableMetadata> entry : tablesByName.entrySet()) {
+		for (Map.Entry<String, TableDescriptor> entry : tablesByName.entrySet()) {
 			String tableName = entry.getKey();
-			TableMetadata table = entry.getValue();
+			TableDescriptor table = entry.getValue();
 			if (table.getColumns().isEmpty()) {
 				continue;
 			}
@@ -77,7 +77,7 @@ class ManyToManyResolver {
 	}
 
 	private void handleJoinTable(String joinTableName, Set<String> manyToManyTables) {
-		TableMetadata joinTable = tablesByName.get(joinTableName);
+		TableDescriptor joinTable = tablesByName.get(joinTableName);
 		if (joinTable == null) {
 			return;
 		}
@@ -92,8 +92,8 @@ class ManyToManyResolver {
 		RawForeignKeyInfo fk1 = firstColumnFks.get(0);
 		RawForeignKeyInfo fk2 = firstColumnFks.get(1);
 
-		TableMetadata table1 = tablesByName.get(fk1.referencedTableName());
-		TableMetadata table2 = tablesByName.get(fk2.referencedTableName());
+		TableDescriptor table1 = tablesByName.get(fk1.referencedTableName());
+		TableDescriptor table2 = tablesByName.get(fk2.referencedTableName());
 		if (table1 == null || table2 == null) {
 			return;
 		}
@@ -107,8 +107,8 @@ class ManyToManyResolver {
 
 		RawForeignKeyInfo owningFk;
 		RawForeignKeyInfo inverseFk;
-		TableMetadata owningTable;
-		TableMetadata inverseTable;
+		TableDescriptor owningTable;
+		TableDescriptor inverseTable;
 
 		if (fk1First) {
 			// fk1's column is first → fk1's referenced table is the inverse side
@@ -129,15 +129,15 @@ class ManyToManyResolver {
 			owningFk, inverseFk, owningTable, inverseTable);
 	}
 
-	private void handleOwningSide(String joinTableName, TableMetadata joinTable,
+	private void handleOwningSide(String joinTableName, TableDescriptor joinTable,
 			List<RawForeignKeyInfo> outgoingFks,
 			RawForeignKeyInfo owningFk, RawForeignKeyInfo inverseFk,
-			TableMetadata owningTable, TableMetadata inverseTable) {
+			TableDescriptor owningTable, TableDescriptor inverseTable) {
 		String owningFieldName = adapter.foreignKeyToManyToManyName(
 			owningFk, joinTable, outgoingFks, inverseFk, true);
 		List<String> owningColumns = collectFkColumns(owningFk.fkName(), outgoingFks);
 		List<String> inverseColumns = collectFkColumns(inverseFk.fkName(), outgoingFks);
-		ManyToManyMetadata owningM2m = new ManyToManyMetadata(
+		ManyToManyDescriptor owningM2m = new ManyToManyDescriptor(
 			owningFieldName,
 			inverseTable.getEntityClassName(),
 			inverseTable.getEntityPackage())
@@ -157,15 +157,15 @@ class ManyToManyResolver {
 		return columns;
 	}
 
-	private void handleInverseSide(String joinTableName, TableMetadata joinTable,
+	private void handleInverseSide(String joinTableName, TableDescriptor joinTable,
 			List<RawForeignKeyInfo> outgoingFks,
 			RawForeignKeyInfo owningFk, RawForeignKeyInfo inverseFk,
-			TableMetadata owningTable, TableMetadata inverseTable) {
+			TableDescriptor owningTable, TableDescriptor inverseTable) {
 		String inverseFieldName = adapter.foreignKeyToManyToManyName(
 			inverseFk, joinTable, outgoingFks, owningFk, true);
 		List<String> inverseColumns = collectFkColumns(inverseFk.fkName(), outgoingFks);
 		List<String> owningColumns = collectFkColumns(owningFk.fkName(), outgoingFks);
-		ManyToManyMetadata inverseM2m = new ManyToManyMetadata(
+		ManyToManyDescriptor inverseM2m = new ManyToManyDescriptor(
 			inverseFieldName,
 			owningTable.getEntityClassName(),
 			owningTable.getEntityPackage())
@@ -185,8 +185,8 @@ class ManyToManyResolver {
 		return firstColumnFks;
 	}
 
-	private int columnPosition(TableMetadata table, String columnName) {
-		List<ColumnMetadata> columns = table.getColumns();
+	private int columnPosition(TableDescriptor table, String columnName) {
+		List<ColumnDescriptor> columns = table.getColumns();
 		for (int i = 0; i < columns.size(); i++) {
 			if (columns.get(i).getColumnName().equals(columnName)) {
 				return i;

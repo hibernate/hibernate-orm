@@ -34,20 +34,20 @@ import org.hibernate.annotations.Comment;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.IndexMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.ForeignKeyDescriptor;
+import org.hibernate.tool.internal.descriptor.IndexDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 
 /**
  * Represents a database table for the table documentation templates.
  * <p>
- * When the original {@link TableMetadata} is available (i.e., the entity
+ * When the original {@link TableDescriptor} is available (i.e., the entity
  * was built from database metadata via {@code DynamicEntityBuilder}),
  * table info is extracted directly from it — preserving vendor-specific
  * SQL types, exact column definitions, and constraint names.
  * <p>
- * When no {@code TableMetadata} is available (e.g., hand-written entity
+ * When no {@code TableDescriptor} is available (e.g., hand-written entity
  * classes), table info is derived from JPA annotations on the
  * {@link ClassDetails} — producing vendor-independent documentation.
  * <p>
@@ -149,10 +149,10 @@ public class TableDocInfo {
 	// ---- Factory methods ----
 
 	/**
-	 * Builds a {@link TableDocInfo} from the original {@link TableMetadata},
+	 * Builds a {@link TableDocInfo} from the original {@link TableDescriptor},
 	 * preserving vendor-specific SQL types and database-level details.
 	 */
-	static TableDocInfo buildFromTableMetadata(TableMetadata tableMeta) {
+	static TableDocInfo buildFromTableDescriptor(TableDescriptor tableMeta) {
 		String tableName = tableMeta.getTableName();
 
 		// Build columns and track primary key columns
@@ -160,7 +160,7 @@ public class TableDocInfo {
 		List<TableColumnDocInfo> pkColumns = new ArrayList<>();
 		Map<String, TableColumnDocInfo> columnsByName = new LinkedHashMap<>();
 
-		for (ColumnMetadata col : tableMeta.getColumns()) {
+		for (ColumnDescriptor col : tableMeta.getColumns()) {
 			TableColumnDocInfo colInfo = new TableColumnDocInfo(
 					col.getColumnName(),
 					col.getJavaType().getName(),
@@ -178,7 +178,7 @@ public class TableDocInfo {
 		}
 
 		// Add foreign key columns
-		for (ForeignKeyMetadata fk : tableMeta.getForeignKeys()) {
+		for (ForeignKeyDescriptor fk : tableMeta.getForeignKeys()) {
 			String fkColName = fk.getForeignKeyColumnName();
 			if (!columnsByName.containsKey(fkColName)) {
 				TableColumnDocInfo fkCol = new TableColumnDocInfo(
@@ -199,7 +199,7 @@ public class TableDocInfo {
 
 		// Indexes
 		Map<String, IndexDocInfo> indexMap = new LinkedHashMap<>();
-		for (IndexMetadata idx : tableMeta.getIndexes()) {
+		for (IndexDescriptor idx : tableMeta.getIndexes()) {
 			List<TableColumnDocInfo> idxCols = resolveColumns(
 					idx.getColumnNames(), columnsByName);
 			indexMap.put(idx.getIndexName(),
@@ -216,7 +216,7 @@ public class TableDocInfo {
 	/**
 	 * Builds a {@link TableDocInfo} from JPA annotations on a
 	 * {@link ClassDetails} entity. Used as a fallback when no
-	 * {@code TableMetadata} is available, producing vendor-independent
+	 * {@code TableDescriptor} is available, producing vendor-independent
 	 * documentation.
 	 */
 	static TableDocInfo buildFromClassDetails(ClassDetails classDetails) {

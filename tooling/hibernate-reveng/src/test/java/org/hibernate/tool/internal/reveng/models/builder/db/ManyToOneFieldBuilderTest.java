@@ -26,7 +26,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassLoading;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.ModelsContext;
-import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
+import org.hibernate.tool.internal.descriptor.ForeignKeyDescriptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -70,8 +70,8 @@ public class ManyToOneFieldBuilderTest {
 
 	@Test
 	public void testManyToOneAnnotation() {
-		ForeignKeyMetadata fkMetadata =
-			new ForeignKeyMetadata("department", "DEPARTMENT_ID", "Department", "com.example");
+		ForeignKeyDescriptor fkMetadata =
+			new ForeignKeyDescriptor("department", "DEPARTMENT_ID", "Department", "com.example");
 
 		ManyToOneFieldBuilder.buildManyToOneField(
 			entityClass, fkMetadata, targetClassDetails, modelsContext);
@@ -87,8 +87,8 @@ public class ManyToOneFieldBuilderTest {
 
 	@Test
 	public void testFieldType() {
-		ForeignKeyMetadata fkMetadata =
-			new ForeignKeyMetadata("department", "DEPARTMENT_ID", "Department", "com.example");
+		ForeignKeyDescriptor fkMetadata =
+			new ForeignKeyDescriptor("department", "DEPARTMENT_ID", "Department", "com.example");
 
 		ManyToOneFieldBuilder.buildManyToOneField(
 			entityClass, fkMetadata, targetClassDetails, modelsContext);
@@ -99,8 +99,8 @@ public class ManyToOneFieldBuilderTest {
 
 	@Test
 	public void testJoinColumn() {
-		ForeignKeyMetadata fkMetadata =
-			new ForeignKeyMetadata("department", "DEPARTMENT_ID", "Department", "com.example");
+		ForeignKeyDescriptor fkMetadata =
+			new ForeignKeyDescriptor("department", "DEPARTMENT_ID", "Department", "com.example");
 
 		ManyToOneFieldBuilder.buildManyToOneField(
 			entityClass, fkMetadata, targetClassDetails, modelsContext);
@@ -114,8 +114,8 @@ public class ManyToOneFieldBuilderTest {
 
 	@Test
 	public void testFetchType() {
-		ForeignKeyMetadata fkMetadata =
-			new ForeignKeyMetadata("department", "DEPARTMENT_ID", "Department", "com.example")
+		ForeignKeyDescriptor fkMetadata =
+			new ForeignKeyDescriptor("department", "DEPARTMENT_ID", "Department", "com.example")
 				.fetchType(FetchType.LAZY);
 
 		ManyToOneFieldBuilder.buildManyToOneField(
@@ -130,8 +130,8 @@ public class ManyToOneFieldBuilderTest {
 
 	@Test
 	public void testOptionalTrue() {
-		ForeignKeyMetadata fkMetadata =
-			new ForeignKeyMetadata("department", "DEPARTMENT_ID", "Department", "com.example")
+		ForeignKeyDescriptor fkMetadata =
+			new ForeignKeyDescriptor("department", "DEPARTMENT_ID", "Department", "com.example")
 				.optional(true);
 
 		ManyToOneFieldBuilder.buildManyToOneField(
@@ -150,8 +150,8 @@ public class ManyToOneFieldBuilderTest {
 
 	@Test
 	public void testOptionalFalse() {
-		ForeignKeyMetadata fkMetadata =
-			new ForeignKeyMetadata("department", "DEPARTMENT_ID", "Department", "com.example")
+		ForeignKeyDescriptor fkMetadata =
+			new ForeignKeyDescriptor("department", "DEPARTMENT_ID", "Department", "com.example")
 				.optional(false);
 
 		ManyToOneFieldBuilder.buildManyToOneField(
@@ -170,8 +170,8 @@ public class ManyToOneFieldBuilderTest {
 
 	@Test
 	public void testReferencedColumnName() {
-		ForeignKeyMetadata fkMetadata =
-			new ForeignKeyMetadata("department", "DEPT_CODE", "Department", "com.example")
+		ForeignKeyDescriptor fkMetadata =
+			new ForeignKeyDescriptor("department", "DEPT_CODE", "Department", "com.example")
 				.referencedColumnName("CODE");
 
 		ManyToOneFieldBuilder.buildManyToOneField(
@@ -187,8 +187,8 @@ public class ManyToOneFieldBuilderTest {
 
 	@Test
 	public void testNoReferencedColumnName() {
-		ForeignKeyMetadata fkMetadata =
-			new ForeignKeyMetadata("department", "DEPARTMENT_ID", "Department", "com.example");
+		ForeignKeyDescriptor fkMetadata =
+			new ForeignKeyDescriptor("department", "DEPARTMENT_ID", "Department", "com.example");
 
 		ManyToOneFieldBuilder.buildManyToOneField(
 			entityClass, fkMetadata, targetClassDetails, modelsContext);
@@ -204,8 +204,8 @@ public class ManyToOneFieldBuilderTest {
 
 	@Test
 	public void testDefaultOptionalIsTrue() {
-		ForeignKeyMetadata fkMetadata =
-			new ForeignKeyMetadata("department", "DEPARTMENT_ID", "Department", "com.example");
+		ForeignKeyDescriptor fkMetadata =
+			new ForeignKeyDescriptor("department", "DEPARTMENT_ID", "Department", "com.example");
 
 		ManyToOneFieldBuilder.buildManyToOneField(
 			entityClass, fkMetadata, targetClassDetails, modelsContext);

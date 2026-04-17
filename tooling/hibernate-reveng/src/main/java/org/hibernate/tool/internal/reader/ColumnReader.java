@@ -25,14 +25,14 @@ import org.hibernate.mapping.MetaAttribute;
 import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.hibernate.tool.internal.util.TypeHelper;
 
 /**
  * Reads column metadata and primary key information for a table
  * from the database via {@link RevengDialect}. Populates the
- * given {@link TableMetadata} with {@link ColumnMetadata} entries,
+ * given {@link TableDescriptor} with {@link ColumnDescriptor} entries,
  * marking primary key columns, version columns, temporal types,
  * and LOB types.
  *
@@ -56,7 +56,7 @@ class ColumnReader {
 	 * Reads columns and primary keys for the given table and populates
 	 * the table metadata.
 	 */
-	void readColumns(TableMetadata tableMetadata, TableIdentifier tableId,
+	void readColumns(TableDescriptor tableMetadata, TableIdentifier tableId,
 			String catalog, String schema) {
 		String jdbcTableName = unquote(tableMetadata.getTableName());
 		Set<String> pkColumns = PrimaryKeyReader
@@ -74,21 +74,21 @@ class ColumnReader {
 		}
 	}
 
-	private void readColumn(Map<String, Object> colRow, TableMetadata tableMetadata,
+	private void readColumn(Map<String, Object> colRow, TableDescriptor tableMetadata,
 			TableIdentifier tableId, Set<String> pkColumns) {
 		RowInfo rowInfo = RowInfo.createFrom(colRow, pkColumns, dialect);
 
 		if (!strategy.excludeColumn(tableId, rowInfo.columnName())) {
-			tableMetadata.addColumn(createColumnMetadata(tableId, rowInfo));
+			tableMetadata.addColumn(createColumnDescriptor(tableId, rowInfo));
 		}
 	}
 
-	private ColumnMetadata createColumnMetadata(TableIdentifier tableId, RowInfo rowInfo) {
+	private ColumnDescriptor createColumnDescriptor(TableIdentifier tableId, RowInfo rowInfo) {
 		String hibernateType = determineHibernateType(tableId, rowInfo);
 		Class<?> javaClass = TypeHelper.toJavaClass(hibernateType);
 		String fieldName = strategy.columnToPropertyName(tableId, rowInfo.columnName());
 
-		ColumnMetadata columnMetadata = new ColumnMetadata(rowInfo.columnName(), fieldName, javaClass)
+		ColumnDescriptor columnMetadata = new ColumnDescriptor(rowInfo.columnName(), fieldName, javaClass)
 			.hibernateTypeName(hibernateType)
 			.nullable(rowInfo.nullable());
 
@@ -142,7 +142,7 @@ class ColumnReader {
 		return hibernateType;
 	}
 
-	private void applyColumnMetaAttributes(ColumnMetadata columnMetadata,
+	private void applyColumnMetaAttributes(ColumnDescriptor columnMetadata,
 			TableIdentifier tableId, String columnName) {
 		Map<String, MetaAttribute> metaMap = strategy.columnToMetaAttributes(tableId, columnName);
 		if (metaMap != null) {

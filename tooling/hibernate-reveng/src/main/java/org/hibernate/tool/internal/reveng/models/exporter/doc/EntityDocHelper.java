@@ -30,8 +30,8 @@ import jakarta.persistence.Table;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
-import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ForeignKeyDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 
 /**
  * Provides entity navigation and property helpers for the
@@ -64,7 +64,7 @@ public class EntityDocHelper {
 	}
 
 	public EntityDocHelper(List<ClassDetails> entities,
-						   Map<String, TableMetadata> tableMetadataMap) {
+						   Map<String, TableDescriptor> tableMetadataMap) {
 		for (ClassDetails entity : entities) {
 			EntityDocInfo info = new EntityDocInfo(entity);
 			processClass(info);
@@ -163,7 +163,7 @@ public class EntityDocHelper {
 	// ---- Table-side methods ----
 
 	private void buildTableInfo(List<ClassDetails> entities,
-								Map<String, TableMetadata> tableMetadataMap) {
+								Map<String, TableDescriptor> tableMetadataMap) {
 		// First pass: build TableDocInfo for each entity
 		for (ClassDetails entity : entities) {
 			// Skip abstract entities without explicit table mappings
@@ -175,7 +175,7 @@ public class EntityDocHelper {
 			TableDocInfo tableInfo;
 			if (tableMetadataMap != null
 					&& tableMetadataMap.containsKey(className)) {
-				tableInfo = TableDocInfo.buildFromTableMetadata(
+				tableInfo = TableDocInfo.buildFromTableDescriptor(
 						tableMetadataMap.get(className));
 			}
 			else {
@@ -196,7 +196,7 @@ public class EntityDocHelper {
 		// Build entity-class-name → table-name map for FK resolution
 		Map<String, String> entityClassToTableName = new HashMap<>();
 		if (tableMetadataMap != null) {
-			for (TableMetadata tm : tableMetadataMap.values()) {
+			for (TableDescriptor tm : tableMetadataMap.values()) {
 				String fqn = tm.getEntityPackage() + "."
 						+ tm.getEntityClassName();
 				entityClassToTableName.put(fqn, tm.getTableName());
@@ -205,13 +205,13 @@ public class EntityDocHelper {
 
 		// Second pass: resolve foreign key cross-references
 		if (tableMetadataMap != null) {
-			for (TableMetadata tableMeta : tableMetadataMap.values()) {
+			for (TableDescriptor tableMeta : tableMetadataMap.values()) {
 				TableDocInfo tableInfo =
 						tablesByName.get(tableMeta.getTableName());
 				if (tableInfo == null) {
 					continue;
 				}
-				for (ForeignKeyMetadata fk : tableMeta.getForeignKeys()) {
+				for (ForeignKeyDescriptor fk : tableMeta.getForeignKeys()) {
 					String targetFqn = fk.getTargetEntityPackage() + "."
 							+ fk.getTargetEntityClassName();
 					String targetTableName =

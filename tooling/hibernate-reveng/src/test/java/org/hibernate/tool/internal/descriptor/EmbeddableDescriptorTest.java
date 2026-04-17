@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for {@link EmbeddableMetadata}.
+ * Tests for {@link EmbeddableDescriptor}.
  *
  * @author Koen Aers
  */
-public class EmbeddableMetadataTest {
+public class EmbeddableDescriptorTest {
 
 	@Test
 	public void testConstructorAndDefaults() {
-		EmbeddableMetadata embeddable = new EmbeddableMetadata("Address", "com.example");
+		EmbeddableDescriptor embeddable = new EmbeddableDescriptor("Address", "com.example");
 
 		assertEquals("Address", embeddable.getClassName());
 		assertEquals("com.example", embeddable.getPackageName());
@@ -38,9 +38,9 @@ public class EmbeddableMetadataTest {
 
 	@Test
 	public void testAddColumn() {
-		EmbeddableMetadata embeddable = new EmbeddableMetadata("Address", "com.example")
-			.addColumn(new ColumnMetadata("STREET", "street", String.class))
-			.addColumn(new ColumnMetadata("CITY", "city", String.class));
+		EmbeddableDescriptor embeddable = new EmbeddableDescriptor("Address", "com.example")
+			.addColumn(new ColumnDescriptor("STREET", "street", String.class))
+			.addColumn(new ColumnDescriptor("CITY", "city", String.class));
 
 		assertEquals(2, embeddable.getColumns().size());
 		assertEquals("STREET", embeddable.getColumns().get(0).getColumnName());

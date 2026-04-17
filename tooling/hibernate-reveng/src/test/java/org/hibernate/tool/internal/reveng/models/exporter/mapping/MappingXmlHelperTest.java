@@ -92,15 +92,15 @@ import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.EmbeddedFieldMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.InheritanceMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.ManyToManyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToManyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToOneMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.CompositeIdDescriptor;
+import org.hibernate.tool.internal.descriptor.EmbeddedFieldDescriptor;
+import org.hibernate.tool.internal.descriptor.ForeignKeyDescriptor;
+import org.hibernate.tool.internal.descriptor.InheritanceDescriptor;
+import org.hibernate.tool.internal.descriptor.ManyToManyDescriptor;
+import org.hibernate.tool.internal.descriptor.OneToManyDescriptor;
+import org.hibernate.tool.internal.descriptor.OneToOneDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -110,7 +110,7 @@ import org.junit.jupiter.api.Test;
  */
 public class MappingXmlHelperTest {
 
-	private MappingXmlHelper create(TableMetadata table) {
+	private MappingXmlHelper create(TableDescriptor table) {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails classDetails = builder.createEntityFromTable(table);
 		return new MappingXmlHelper(classDetails);
@@ -170,8 +170,8 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetClassName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertEquals("com.example.Employee", create(table).getClassName());
 	}
 
@@ -179,38 +179,38 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetTableName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertEquals("EMPLOYEE", create(table).getTableName());
 	}
 
 	@Test
 	public void testGetSchema() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		table.setSchema("HR");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertEquals("HR", create(table).getSchema());
 	}
 
 	@Test
 	public void testGetSchemaNull() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertNull(create(table).getSchema());
 	}
 
 	@Test
 	public void testGetCatalog() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		table.setCatalog("MYDB");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertEquals("MYDB", create(table).getCatalog());
 	}
 
 	@Test
 	public void testGetCatalogNull() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertNull(create(table).getCatalog());
 	}
 
@@ -218,48 +218,48 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testHasInheritance() {
-		TableMetadata table = new TableMetadata("VEHICLE", "Vehicle", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.inheritance(new InheritanceMetadata(InheritanceType.SINGLE_TABLE));
+		TableDescriptor table = new TableDescriptor("VEHICLE", "Vehicle", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.inheritance(new InheritanceDescriptor(InheritanceType.SINGLE_TABLE));
 		assertTrue(create(table).hasInheritance());
 	}
 
 	@Test
 	public void testHasInheritanceFalse() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertFalse(create(table).hasInheritance());
 	}
 
 	@Test
 	public void testGetInheritanceStrategy() {
-		TableMetadata table = new TableMetadata("VEHICLE", "Vehicle", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.inheritance(new InheritanceMetadata(InheritanceType.JOINED));
+		TableDescriptor table = new TableDescriptor("VEHICLE", "Vehicle", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.inheritance(new InheritanceDescriptor(InheritanceType.JOINED));
 		assertEquals("JOINED", create(table).getInheritanceStrategy());
 	}
 
 	@Test
 	public void testGetDiscriminatorColumnName() {
-		TableMetadata table = new TableMetadata("VEHICLE", "Vehicle", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.inheritance(new InheritanceMetadata(InheritanceType.SINGLE_TABLE)
+		TableDescriptor table = new TableDescriptor("VEHICLE", "Vehicle", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.inheritance(new InheritanceDescriptor(InheritanceType.SINGLE_TABLE)
 				.discriminatorColumn("DTYPE"));
 		assertEquals("DTYPE", create(table).getDiscriminatorColumnName());
 	}
 
 	@Test
 	public void testGetDiscriminatorColumnNameNull() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertNull(create(table).getDiscriminatorColumnName());
 	}
 
 	@Test
 	public void testGetDiscriminatorType() {
-		TableMetadata table = new TableMetadata("VEHICLE", "Vehicle", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.inheritance(new InheritanceMetadata(InheritanceType.SINGLE_TABLE)
+		TableDescriptor table = new TableDescriptor("VEHICLE", "Vehicle", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.inheritance(new InheritanceDescriptor(InheritanceType.SINGLE_TABLE)
 				.discriminatorColumn("DTYPE")
 				.discriminatorType(DiscriminatorType.INTEGER));
 		assertEquals("INTEGER", create(table).getDiscriminatorType());
@@ -267,9 +267,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetDiscriminatorColumnLength() {
-		TableMetadata table = new TableMetadata("VEHICLE", "Vehicle", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.inheritance(new InheritanceMetadata(InheritanceType.SINGLE_TABLE)
+		TableDescriptor table = new TableDescriptor("VEHICLE", "Vehicle", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.inheritance(new InheritanceDescriptor(InheritanceType.SINGLE_TABLE)
 				.discriminatorColumn("DTYPE")
 				.discriminatorColumnLength(50));
 		assertEquals(50, create(table).getDiscriminatorColumnLength());
@@ -277,31 +277,31 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetDiscriminatorValue() {
-		TableMetadata table = new TableMetadata("CAR", "Car", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("CAR", "Car", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		table.discriminatorValue("CAR");
 		assertEquals("CAR", create(table).getDiscriminatorValue());
 	}
 
 	@Test
 	public void testGetDiscriminatorValueNull() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertNull(create(table).getDiscriminatorValue());
 	}
 
 	@Test
 	public void testGetPrimaryKeyJoinColumnName() {
-		TableMetadata table = new TableMetadata("CAR", "Car", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("CAR", "Car", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		table.primaryKeyJoinColumn("VEHICLE_ID");
 		assertEquals("VEHICLE_ID", create(table).getPrimaryKeyJoinColumnName());
 	}
 
 	@Test
 	public void testGetPrimaryKeyJoinColumnNameNull() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertNull(create(table).getPrimaryKeyJoinColumnName());
 	}
 
@@ -309,9 +309,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetIdFields() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		MappingXmlHelper helper = create(table);
 		List<FieldDetails> idFields = helper.getIdFields();
 		assertEquals(1, idFields.size());
@@ -320,10 +320,10 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetBasicFields() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
-		table.addColumn(new ColumnMetadata("AGE", "age", Integer.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
+		table.addColumn(new ColumnDescriptor("AGE", "age", Integer.class));
 		MappingXmlHelper helper = create(table);
 		List<FieldDetails> basicFields = helper.getBasicFields();
 		assertEquals(2, basicFields.size());
@@ -333,10 +333,10 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetBasicFieldsExcludesIdAndVersion() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("VERSION", "version", Integer.class).version(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("VERSION", "version", Integer.class).version(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		MappingXmlHelper helper = create(table);
 		List<FieldDetails> basicFields = helper.getBasicFields();
 		assertEquals(1, basicFields.size());
@@ -345,11 +345,11 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetBasicFieldsExcludesForeignKeys() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example"));
 		MappingXmlHelper helper = create(table);
 		List<FieldDetails> basicFields = helper.getBasicFields();
@@ -359,9 +359,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetVersionFields() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("VERSION", "version", Integer.class).version(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("VERSION", "version", Integer.class).version(true));
 		MappingXmlHelper helper = create(table);
 		List<FieldDetails> versionFields = helper.getVersionFields();
 		assertEquals(1, versionFields.size());
@@ -370,8 +370,8 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetCompositeIdField() {
-		TableMetadata table = new TableMetadata("ORDER_LINE", "OrderLine", "com.example");
-		table.compositeId(new CompositeIdMetadata("id", "OrderLineId", "com.example")
+		TableDescriptor table = new TableDescriptor("ORDER_LINE", "OrderLine", "com.example");
+		table.compositeId(new CompositeIdDescriptor("id", "OrderLineId", "com.example")
 				.addAttributeOverride("orderId", "ORDER_ID")
 				.addAttributeOverride("lineNumber", "LINE_NUMBER"));
 		MappingXmlHelper helper = create(table);
@@ -383,8 +383,8 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetCompositeIdFieldNull() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertNull(create(table).getCompositeIdField());
 	}
 
@@ -392,9 +392,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetColumnName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("FIRST_NAME", "firstName", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("FIRST_NAME", "firstName", String.class));
 		MappingXmlHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().get(0);
 		assertEquals("FIRST_NAME", helper.getColumnName(field));
@@ -402,10 +402,10 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testIsNullable() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class).nullable(false));
-		table.addColumn(new ColumnMetadata("NICK", "nick", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class).nullable(false));
+		table.addColumn(new ColumnDescriptor("NICK", "nick", String.class));
 		MappingXmlHelper helper = create(table);
 		List<FieldDetails> fields = helper.getBasicFields();
 		assertFalse(helper.isNullable(fields.get(0)));
@@ -414,10 +414,10 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testIsUnique() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class).unique(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("EMAIL", "email", String.class).unique(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		MappingXmlHelper helper = create(table);
 		List<FieldDetails> fields = helper.getBasicFields();
 		assertTrue(helper.isUnique(fields.get(0)));
@@ -426,27 +426,27 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetLength() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class).length(100));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class).length(100));
 		MappingXmlHelper helper = create(table);
 		assertEquals(100, helper.getLength(helper.getBasicFields().get(0)));
 	}
 
 	@Test
 	public void testGetLengthDefault() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		MappingXmlHelper helper = create(table);
 		assertEquals(0, helper.getLength(helper.getBasicFields().get(0)));
 	}
 
 	@Test
 	public void testGetPrecisionAndScale() {
-		TableMetadata table = new TableMetadata("PRODUCT", "Product", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("PRICE", "price", BigDecimal.class)
+		TableDescriptor table = new TableDescriptor("PRODUCT", "Product", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("PRICE", "price", BigDecimal.class)
 				.precision(10).scale(2));
 		MappingXmlHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().get(0);
@@ -456,10 +456,10 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testIsLob() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("BIO", "bio", String.class).lob(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("BIO", "bio", String.class).lob(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		MappingXmlHelper helper = create(table);
 		List<FieldDetails> fields = helper.getBasicFields();
 		assertTrue(helper.isLob(fields.get(0)));
@@ -468,9 +468,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetTemporalType() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("HIRE_DATE", "hireDate", Date.class)
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("HIRE_DATE", "hireDate", Date.class)
 				.temporal(TemporalType.TIMESTAMP));
 		MappingXmlHelper helper = create(table);
 		assertEquals("TIMESTAMP", helper.getTemporalType(helper.getBasicFields().get(0)));
@@ -478,17 +478,17 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetTemporalTypeNull() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		MappingXmlHelper helper = create(table);
 		assertNull(helper.getTemporalType(helper.getBasicFields().get(0)));
 	}
 
 	@Test
 	public void testGetGenerationType() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class)
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true).generationType(GenerationType.IDENTITY));
 		MappingXmlHelper helper = create(table);
 		assertEquals("IDENTITY", helper.getGenerationType(helper.getIdFields().get(0)));
@@ -496,8 +496,8 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetGenerationTypeNull() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		MappingXmlHelper helper = create(table);
 		assertNull(helper.getGenerationType(helper.getIdFields().get(0)));
 	}
@@ -506,10 +506,10 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetManyToOneFields() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example"));
 		MappingXmlHelper helper = create(table);
 		List<FieldDetails> m2oFields = helper.getManyToOneFields();
@@ -519,10 +519,10 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetTargetEntityName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example"));
 		MappingXmlHelper helper = create(table);
 		FieldDetails field = helper.getManyToOneFields().get(0);
@@ -531,10 +531,10 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetManyToOneFetchType() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example")
 				.fetchType(FetchType.LAZY));
 		MappingXmlHelper helper = create(table);
@@ -543,10 +543,10 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetManyToOneFetchTypeDefaultNull() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example"));
 		MappingXmlHelper helper = create(table);
 		assertNull(helper.getManyToOneFetchType(helper.getManyToOneFields().get(0)));
@@ -554,10 +554,10 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testIsManyToOneOptional() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example")
 				.optional(false));
 		MappingXmlHelper helper = create(table);
@@ -566,10 +566,10 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testIsManyToOneOptionalDefault() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example"));
 		MappingXmlHelper helper = create(table);
 		assertTrue(helper.isManyToOneOptional(helper.getManyToOneFields().get(0)));
@@ -579,10 +579,10 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetJoinColumnName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example"));
 		MappingXmlHelper helper = create(table);
 		assertEquals("DEPT_ID", helper.getJoinColumnName(helper.getManyToOneFields().get(0)));
@@ -590,10 +590,10 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetReferencedColumnName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_CODE", "deptCode", String.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_CODE", "deptCode", String.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_CODE", "Department", "com.example")
 				.referencedColumnName("CODE"));
 		MappingXmlHelper helper = create(table);
@@ -602,10 +602,10 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetReferencedColumnNameNull() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example"));
 		MappingXmlHelper helper = create(table);
 		assertNull(helper.getReferencedColumnName(helper.getManyToOneFields().get(0)));
@@ -615,9 +615,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetOneToManyFields() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		MappingXmlHelper helper = create(table);
 		List<FieldDetails> o2mFields = helper.getOneToManyFields();
@@ -627,9 +627,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetOneToManyTargetEntity() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		MappingXmlHelper helper = create(table);
 		assertEquals("com.example.Employee",
@@ -638,9 +638,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetOneToManyMappedBy() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		MappingXmlHelper helper = create(table);
 		assertEquals("department",
@@ -649,9 +649,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetOneToManyFetchType() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example")
 				.fetchType(FetchType.EAGER));
 		MappingXmlHelper helper = create(table);
@@ -661,9 +661,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetOneToManyFetchTypeDefaultNull() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		MappingXmlHelper helper = create(table);
 		assertNull(helper.getOneToManyFetchType(helper.getOneToManyFields().get(0)));
@@ -671,9 +671,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testIsOneToManyOrphanRemoval() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example")
 				.orphanRemoval(true));
 		MappingXmlHelper helper = create(table);
@@ -682,9 +682,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testIsOneToManyOrphanRemovalDefault() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		MappingXmlHelper helper = create(table);
 		assertFalse(helper.isOneToManyOrphanRemoval(helper.getOneToManyFields().get(0)));
@@ -692,9 +692,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetOneToManyCascadeTypes() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example")
 				.cascade(CascadeType.ALL));
 		MappingXmlHelper helper = create(table);
@@ -706,9 +706,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetOneToManyCascadeTypesEmpty() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		MappingXmlHelper helper = create(table);
 		assertTrue(helper.getOneToManyCascadeTypes(helper.getOneToManyFields().get(0)).isEmpty());
@@ -718,9 +718,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetOrderByDefault() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		MappingXmlHelper helper = create(table);
 		FieldDetails field = helper.getOneToManyFields().get(0);
@@ -740,9 +740,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetOrderColumnNameDefault() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		MappingXmlHelper helper = create(table);
 		FieldDetails field = helper.getOneToManyFields().get(0);
@@ -958,9 +958,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetOneToOneFields() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("address", "Address", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("address", "Address", "com.example")
 				.foreignKeyColumnName("ADDRESS_ID"));
 		MappingXmlHelper helper = create(table);
 		List<FieldDetails> o2oFields = helper.getOneToOneFields();
@@ -970,9 +970,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetOneToOneMappedBy() {
-		TableMetadata table = new TableMetadata("ADDRESS", "Address", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("employee", "Employee", "com.example")
+		TableDescriptor table = new TableDescriptor("ADDRESS", "Address", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("employee", "Employee", "com.example")
 				.mappedBy("address"));
 		MappingXmlHelper helper = create(table);
 		assertEquals("address",
@@ -981,9 +981,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetOneToOneMappedByNull() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("address", "Address", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("address", "Address", "com.example")
 				.foreignKeyColumnName("ADDRESS_ID"));
 		MappingXmlHelper helper = create(table);
 		assertNull(helper.getOneToOneMappedBy(helper.getOneToOneFields().get(0)));
@@ -991,9 +991,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetOneToOneFetchType() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("address", "Address", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("address", "Address", "com.example")
 				.foreignKeyColumnName("ADDRESS_ID")
 				.fetchType(FetchType.LAZY));
 		MappingXmlHelper helper = create(table);
@@ -1003,9 +1003,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetOneToOneFetchTypeDefaultNull() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("address", "Address", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("address", "Address", "com.example")
 				.foreignKeyColumnName("ADDRESS_ID"));
 		MappingXmlHelper helper = create(table);
 		assertNull(helper.getOneToOneFetchType(helper.getOneToOneFields().get(0)));
@@ -1013,9 +1013,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testIsOneToOneOptional() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("address", "Address", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("address", "Address", "com.example")
 				.foreignKeyColumnName("ADDRESS_ID")
 				.optional(false));
 		MappingXmlHelper helper = create(table);
@@ -1024,9 +1024,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testIsOneToOneOptionalDefault() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("address", "Address", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("address", "Address", "com.example")
 				.foreignKeyColumnName("ADDRESS_ID"));
 		MappingXmlHelper helper = create(table);
 		assertTrue(helper.isOneToOneOptional(helper.getOneToOneFields().get(0)));
@@ -1034,9 +1034,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testIsOneToOneOrphanRemoval() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("address", "Address", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("address", "Address", "com.example")
 				.foreignKeyColumnName("ADDRESS_ID")
 				.orphanRemoval(true));
 		MappingXmlHelper helper = create(table);
@@ -1045,9 +1045,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetOneToOneCascadeTypes() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("address", "Address", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("address", "Address", "com.example")
 				.foreignKeyColumnName("ADDRESS_ID")
 				.cascade(CascadeType.PERSIST, CascadeType.REMOVE));
 		MappingXmlHelper helper = create(table);
@@ -1060,9 +1060,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetOneToOneJoinColumnName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("address", "Address", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("address", "Address", "com.example")
 				.foreignKeyColumnName("ADDRESS_ID"));
 		MappingXmlHelper helper = create(table);
 		assertEquals("ADDRESS_ID",
@@ -1071,9 +1071,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetOneToOneJoinColumnNameNullForInverse() {
-		TableMetadata table = new TableMetadata("ADDRESS", "Address", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("employee", "Employee", "com.example")
+		TableDescriptor table = new TableDescriptor("ADDRESS", "Address", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("employee", "Employee", "com.example")
 				.mappedBy("address"));
 		MappingXmlHelper helper = create(table);
 		assertNull(helper.getJoinColumnName(helper.getOneToOneFields().get(0)));
@@ -1083,9 +1083,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetManyToManyFields() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("projects", "Project", "com.example")
 				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID"));
 		MappingXmlHelper helper = create(table);
 		List<FieldDetails> m2mFields = helper.getManyToManyFields();
@@ -1095,9 +1095,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetManyToManyTargetEntity() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("projects", "Project", "com.example")
 				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID"));
 		MappingXmlHelper helper = create(table);
 		assertEquals("com.example.Project",
@@ -1106,9 +1106,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetManyToManyMappedBy() {
-		TableMetadata table = new TableMetadata("PROJECT", "Project", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("employees", "Employee", "com.example")
+		TableDescriptor table = new TableDescriptor("PROJECT", "Project", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("employees", "Employee", "com.example")
 				.mappedBy("projects"));
 		MappingXmlHelper helper = create(table);
 		assertEquals("projects",
@@ -1117,9 +1117,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetManyToManyMappedByNull() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("projects", "Project", "com.example")
 				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID"));
 		MappingXmlHelper helper = create(table);
 		assertNull(helper.getManyToManyMappedBy(helper.getManyToManyFields().get(0)));
@@ -1127,9 +1127,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetManyToManyFetchType() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("projects", "Project", "com.example")
 				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID")
 				.fetchType(FetchType.EAGER));
 		MappingXmlHelper helper = create(table);
@@ -1139,9 +1139,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetManyToManyFetchTypeDefaultNull() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("projects", "Project", "com.example")
 				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID"));
 		MappingXmlHelper helper = create(table);
 		assertNull(helper.getManyToManyFetchType(helper.getManyToManyFields().get(0)));
@@ -1149,9 +1149,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetManyToManyCascadeTypes() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("projects", "Project", "com.example")
 				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID")
 				.cascade(CascadeType.PERSIST, CascadeType.MERGE));
 		MappingXmlHelper helper = create(table);
@@ -1164,9 +1164,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetManyToManyCascadeTypesEmpty() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("projects", "Project", "com.example")
 				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID"));
 		MappingXmlHelper helper = create(table);
 		assertTrue(helper.getManyToManyCascadeTypes(helper.getManyToManyFields().get(0)).isEmpty());
@@ -1174,9 +1174,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetJoinTableName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("projects", "Project", "com.example")
 				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID"));
 		MappingXmlHelper helper = create(table);
 		assertEquals("EMPLOYEE_PROJECT",
@@ -1185,9 +1185,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetJoinTableJoinColumnName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("projects", "Project", "com.example")
 				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID"));
 		MappingXmlHelper helper = create(table);
 		assertEquals("EMPLOYEE_ID",
@@ -1196,9 +1196,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetJoinTableInverseJoinColumnName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("projects", "Project", "com.example")
 				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID"));
 		MappingXmlHelper helper = create(table);
 		assertEquals("PROJECT_ID",
@@ -1207,9 +1207,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetJoinTableSchema() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("projects", "Project", "com.example")
 				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID"));
 		MappingXmlHelper helper = create(table);
 		FieldDetails field = helper.getManyToManyFields().get(0);
@@ -1257,9 +1257,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetJoinTableNameNullForInverse() {
-		TableMetadata table = new TableMetadata("PROJECT", "Project", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("employees", "Employee", "com.example")
+		TableDescriptor table = new TableDescriptor("PROJECT", "Project", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("employees", "Employee", "com.example")
 				.mappedBy("projects"));
 		MappingXmlHelper helper = create(table);
 		assertNull(helper.getJoinTableName(helper.getManyToManyFields().get(0)));
@@ -1269,9 +1269,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetEmbeddedFields() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addEmbeddedField(new EmbeddedFieldMetadata("homeAddress", "Address", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addEmbeddedField(new EmbeddedFieldDescriptor("homeAddress", "Address", "com.example")
 				.addAttributeOverride("street", "HOME_STREET")
 				.addAttributeOverride("city", "HOME_CITY"));
 		MappingXmlHelper helper = create(table);
@@ -1282,9 +1282,9 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetAttributeOverrides() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addEmbeddedField(new EmbeddedFieldMetadata("homeAddress", "Address", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addEmbeddedField(new EmbeddedFieldDescriptor("homeAddress", "Address", "com.example")
 				.addAttributeOverride("street", "HOME_STREET")
 				.addAttributeOverride("city", "HOME_CITY"));
 		MappingXmlHelper helper = create(table);
@@ -1299,8 +1299,8 @@ public class MappingXmlHelperTest {
 
 	@Test
 	public void testGetAttributeOverridesForCompositeId() {
-		TableMetadata table = new TableMetadata("ORDER_LINE", "OrderLine", "com.example");
-		table.compositeId(new CompositeIdMetadata("id", "OrderLineId", "com.example")
+		TableDescriptor table = new TableDescriptor("ORDER_LINE", "OrderLine", "com.example");
+		table.compositeId(new CompositeIdDescriptor("id", "OrderLineId", "com.example")
 				.addAttributeOverride("orderId", "ORDER_ID")
 				.addAttributeOverride("lineNumber", "LINE_NUMBER"));
 		MappingXmlHelper helper = create(table);

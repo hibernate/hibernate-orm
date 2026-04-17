@@ -21,28 +21,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToManyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToOneMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ForeignKeyDescriptor;
+import org.hibernate.tool.internal.descriptor.OneToManyDescriptor;
+import org.hibernate.tool.internal.descriptor.OneToOneDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 
 /**
  * Resolves incoming foreign keys (OneToMany / OneToOne on the inverse side)
- * for each non-M2M table, adding {@link OneToManyMetadata} or
- * {@link OneToOneMetadata} to the appropriate {@link TableMetadata}.
+ * for each non-M2M table, adding {@link OneToManyDescriptor} or
+ * {@link OneToOneDescriptor} to the appropriate {@link TableDescriptor}.
  *
  * @author Koen Aers
  */
 class IncomingForeignKeyResolver {
 
-	private final Map<String, TableMetadata> tablesByName;
+	private final Map<String, TableDescriptor> tablesByName;
 	private final Map<String, List<RawForeignKeyInfo>> incomingFksByTable;
 	private final Set<String> manyToManyTables;
 	private final RevengStrategyAdapter adapter;
 	private final boolean preferBasicCompositeIds;
 
 	static IncomingForeignKeyResolver create(
-			Map<String, TableMetadata> tablesByName,
+			Map<String, TableDescriptor> tablesByName,
 			Map<String, List<RawForeignKeyInfo>> incomingFksByTable,
 			Set<String> manyToManyTables,
 			RevengStrategyAdapter adapter,
@@ -51,7 +51,7 @@ class IncomingForeignKeyResolver {
 	}
 
 	private IncomingForeignKeyResolver(
-			Map<String, TableMetadata> tablesByName,
+			Map<String, TableDescriptor> tablesByName,
 			Map<String, List<RawForeignKeyInfo>> incomingFksByTable,
 			Set<String> manyToManyTables,
 			RevengStrategyAdapter adapter,
@@ -64,12 +64,12 @@ class IncomingForeignKeyResolver {
 	}
 
 	void resolveIncomingForeignKeys() {
-		for (Map.Entry<String, TableMetadata> entry : tablesByName.entrySet()) {
+		for (Map.Entry<String, TableDescriptor> entry : tablesByName.entrySet()) {
 			String tableName = entry.getKey();
 			if (manyToManyTables.contains(tableName)) {
 				continue;
 			}
-			TableMetadata referencedTable = entry.getValue();
+			TableDescriptor referencedTable = entry.getValue();
 			List<RawForeignKeyInfo> incomingFks = incomingFksByTable.getOrDefault(
 				tableName, java.util.Collections.emptyList());
 
@@ -93,9 +93,9 @@ class IncomingForeignKeyResolver {
 	}
 
 	private void handleIncomingFK(RawForeignKeyInfo fkInfo, List<RawForeignKeyInfo> allColumns,
-			TableMetadata referencedTable) {
+			TableDescriptor referencedTable) {
 		if (handlingIsNeeded(fkInfo)) {
-			TableMetadata fkTable = tablesByName.get(fkInfo.fkTableName());
+			TableDescriptor fkTable = tablesByName.get(fkInfo.fkTableName());
 			List<RawForeignKeyInfo> allFks = collectAllRawFks(incomingFksByTable);
 			List<RawForeignKeyInfo> outgoingFksForFkTable = groupByFkTable(allFks)
 				.getOrDefault(fkInfo.fkTableName(), java.util.Collections.emptyList());
@@ -118,16 +118,16 @@ class IncomingForeignKeyResolver {
 		return result;
 	}
 
-	private void handleOneToMany(RawForeignKeyInfo fkInfo, TableMetadata fkTable,
-			TableMetadata referencedTable, boolean uniqueReference) {
+	private void handleOneToMany(RawForeignKeyInfo fkInfo, TableDescriptor fkTable,
+			TableDescriptor referencedTable, boolean uniqueReference) {
 		String fieldName = adapter.foreignKeyToCollectionName(fkInfo, uniqueReference);
 		String mappedBy = findManyToOneFieldName(fkTable, fkInfo);
-		OneToManyMetadata o2m = new OneToManyMetadata(
+		OneToManyDescriptor o2m = new OneToManyDescriptor(
 			fieldName,
 			mappedBy != null ? mappedBy : fieldName,
 			fkTable.getEntityClassName(),
 			fkTable.getEntityPackage());
-		// Look up FK column names from the FK table's ForeignKeyMetadata
+		// Look up FK column names from the FK table's ForeignKeyDescriptor
 		java.util.List<String> fkColNames = findFkColumnNames(fkTable, fkInfo);
 		if (!fkColNames.isEmpty()) {
 			o2m.fkColumnNames(fkColNames);
@@ -135,14 +135,14 @@ class IncomingForeignKeyResolver {
 		referencedTable.addOneToMany(o2m);
 	}
 
-	private java.util.List<String> findFkColumnNames(TableMetadata fkTable, RawForeignKeyInfo fkInfo) {
-		for (ForeignKeyMetadata fk : fkTable.getForeignKeys()) {
+	private java.util.List<String> findFkColumnNames(TableDescriptor fkTable, RawForeignKeyInfo fkInfo) {
+		for (ForeignKeyDescriptor fk : fkTable.getForeignKeys()) {
 			if (fk.getForeignKeyColumnNames().contains(fkInfo.fkColumnName())) {
 				return fk.getForeignKeyColumnNames();
 			}
 		}
 		// Also check one-to-one relationships (constrained O2O where PK=FK)
-		for (OneToOneMetadata o2o : fkTable.getOneToOnes()) {
+		for (OneToOneDescriptor o2o : fkTable.getOneToOnes()) {
 			List<String> fkCols = o2o.getForeignKeyColumnNames();
 			if (fkCols.contains(fkInfo.fkColumnName())) {
 				return fkCols;
@@ -151,10 +151,10 @@ class IncomingForeignKeyResolver {
 		return java.util.Collections.emptyList();
 	}
 
-	private void handleOneToOne(RawForeignKeyInfo fkInfo, TableMetadata fkTable,
-			TableMetadata referencedTable, boolean uniqueReference) {
+	private void handleOneToOne(RawForeignKeyInfo fkInfo, TableDescriptor fkTable,
+			TableDescriptor referencedTable, boolean uniqueReference) {
 		String fieldName = adapter.foreignKeyToInverseEntityName(fkInfo, uniqueReference);
-		OneToOneMetadata o2o = new OneToOneMetadata(
+		OneToOneDescriptor o2o = new OneToOneDescriptor(
 			fieldName,
 			fkTable.getEntityClassName(),
 			fkTable.getEntityPackage())
@@ -178,8 +178,8 @@ class IncomingForeignKeyResolver {
 		return true;
 	}
 
-	private String findManyToOneFieldName(TableMetadata fkTable, RawForeignKeyInfo fkInfo) {
-		for (ForeignKeyMetadata fk : fkTable.getForeignKeys()) {
+	private String findManyToOneFieldName(TableDescriptor fkTable, RawForeignKeyInfo fkInfo) {
+		for (ForeignKeyDescriptor fk : fkTable.getForeignKeys()) {
 			if (fk.getForeignKeyColumnName().equals(fkInfo.fkColumnName())) {
 				String fieldName = fk.getFieldName();
 				// When preferBasicCompositeIds=false and all FK columns are part of
@@ -192,7 +192,7 @@ class IncomingForeignKeyResolver {
 				return fieldName;
 			}
 		}
-		for (OneToOneMetadata o2o : fkTable.getOneToOnes()) {
+		for (OneToOneDescriptor o2o : fkTable.getOneToOnes()) {
 			if (fkInfo.fkColumnName().equals(o2o.getForeignKeyColumnName())) {
 				return o2o.getFieldName();
 			}
@@ -200,9 +200,9 @@ class IncomingForeignKeyResolver {
 		return null;
 	}
 
-	private boolean allFkColumnsArePrimaryKey(ForeignKeyMetadata fk, TableMetadata fkTable) {
+	private boolean allFkColumnsArePrimaryKey(ForeignKeyDescriptor fk, TableDescriptor fkTable) {
 		Set<String> pkColumns = new java.util.HashSet<>();
-		for (org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata col : fkTable.getColumns()) {
+		for (org.hibernate.tool.internal.descriptor.ColumnDescriptor col : fkTable.getColumns()) {
 			if (col.isPrimaryKey()) {
 				pkColumns.add(col.getColumnName());
 			}

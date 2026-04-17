@@ -22,26 +22,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToOneMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ForeignKeyDescriptor;
+import org.hibernate.tool.internal.descriptor.OneToOneDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 
 /**
  * Resolves outgoing foreign keys (ManyToOne / OneToOne on the owning side)
- * for each non-M2M table, adding {@link ForeignKeyMetadata} or
- * {@link OneToOneMetadata} to the appropriate {@link TableMetadata}.
+ * for each non-M2M table, adding {@link ForeignKeyDescriptor} or
+ * {@link OneToOneDescriptor} to the appropriate {@link TableDescriptor}.
  *
  * @author Koen Aers
  */
 class OutgoingForeignKeyResolver {
 
-	private final Map<String, TableMetadata> tablesByName;
+	private final Map<String, TableDescriptor> tablesByName;
 	private final Map<String, List<RawForeignKeyInfo>> outgoingFksByTable;
 	private final Set<String> manyToManyTables;
 	private final RevengStrategyAdapter adapter;
 
 	static OutgoingForeignKeyResolver create(
-			Map<String, TableMetadata> tablesByName,
+			Map<String, TableDescriptor> tablesByName,
 			Map<String, List<RawForeignKeyInfo>> outgoingFksByTable,
 			Set<String> manyToManyTables,
 			RevengStrategyAdapter adapter) {
@@ -49,7 +49,7 @@ class OutgoingForeignKeyResolver {
 	}
 
 	private OutgoingForeignKeyResolver(
-			Map<String, TableMetadata> tablesByName,
+			Map<String, TableDescriptor> tablesByName,
 			Map<String, List<RawForeignKeyInfo>> outgoingFksByTable,
 			Set<String> manyToManyTables,
 			RevengStrategyAdapter adapter) {
@@ -60,12 +60,12 @@ class OutgoingForeignKeyResolver {
 	}
 
 	void resolveOutgoingForeignKeys() {
-		for (Map.Entry<String, TableMetadata> entry : tablesByName.entrySet()) {
+		for (Map.Entry<String, TableDescriptor> entry : tablesByName.entrySet()) {
 			String tableName = entry.getKey();
 			if (manyToManyTables.contains(tableName)) {
 				continue;
 			}
-			TableMetadata fkTable = entry.getValue();
+			TableDescriptor fkTable = entry.getValue();
 			List<RawForeignKeyInfo> outgoingFks = outgoingFksByTable.getOrDefault(
 				tableName, Collections.emptyList());
 
@@ -102,14 +102,14 @@ class OutgoingForeignKeyResolver {
 
 	private void handleOutgoingFK(RawForeignKeyInfo primaryColumn,
 			List<RawForeignKeyInfo> allColumns,
-			TableMetadata fkTable, List<RawForeignKeyInfo> outgoingFks) {
+			TableDescriptor fkTable, List<RawForeignKeyInfo> outgoingFks) {
 		if (adapter.excludeForeignKeyAsManytoOne(primaryColumn)) {
 			return;
 		}
 		if (tablesByName.get(primaryColumn.referencedTableName()) == null) {
 			return;
 		}
-		TableMetadata referencedTable = tablesByName.get(primaryColumn.referencedTableName());
+		TableDescriptor referencedTable = tablesByName.get(primaryColumn.referencedTableName());
 		boolean uniqueReference = isUniqueReference(primaryColumn, outgoingFks);
 
 		if (adapter.isOneToOne(allColumns, fkTable)) {
@@ -121,11 +121,11 @@ class OutgoingForeignKeyResolver {
 
 	private void handleOneToOne(RawForeignKeyInfo primaryColumn,
 			List<RawForeignKeyInfo> allColumns,
-			TableMetadata fkTable,
-			TableMetadata referencedTable, boolean uniqueReference) {
+			TableDescriptor fkTable,
+			TableDescriptor referencedTable, boolean uniqueReference) {
 		boolean isConstrained = fkTable.getColumns().stream()
 			.anyMatch(col -> col.getColumnName().equals(primaryColumn.fkColumnName()) && col.isPrimaryKey());
-		OneToOneMetadata o2o = new OneToOneMetadata(
+		OneToOneDescriptor o2o = new OneToOneDescriptor(
 			adapter.foreignKeyToEntityName(primaryColumn, uniqueReference),
 			referencedTable.getEntityClassName(),
 			referencedTable.getEntityPackage())
@@ -139,9 +139,9 @@ class OutgoingForeignKeyResolver {
 
 	private void handleManyToOne(RawForeignKeyInfo primaryColumn,
 			List<RawForeignKeyInfo> allColumns,
-			TableMetadata fkTable,
-			TableMetadata referencedTable, boolean uniqueReference) {
-		ForeignKeyMetadata fkMetadata = new ForeignKeyMetadata(
+			TableDescriptor fkTable,
+			TableDescriptor referencedTable, boolean uniqueReference) {
+		ForeignKeyDescriptor fkMetadata = new ForeignKeyDescriptor(
 			adapter.foreignKeyToEntityName(primaryColumn, uniqueReference),
 			referencedTable.getEntityClassName(),
 			referencedTable.getEntityPackage());

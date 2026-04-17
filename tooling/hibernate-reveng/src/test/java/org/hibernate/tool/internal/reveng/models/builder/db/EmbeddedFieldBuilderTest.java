@@ -26,7 +26,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassLoading;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.ModelsContext;
-import org.hibernate.tool.internal.reveng.models.metadata.EmbeddedFieldMetadata;
+import org.hibernate.tool.internal.descriptor.EmbeddedFieldDescriptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -70,8 +70,8 @@ public class EmbeddedFieldBuilderTest {
 
 	@Test
 	public void testEmbeddedAnnotation() {
-		EmbeddedFieldMetadata embeddedMetadata =
-			new EmbeddedFieldMetadata("address", "Address", "com.example");
+		EmbeddedFieldDescriptor embeddedMetadata =
+			new EmbeddedFieldDescriptor("address", "Address", "com.example");
 
 		EmbeddedFieldBuilder.buildEmbeddedField(
 			entityClass, embeddedMetadata, embeddableClassDetails, modelsContext);
@@ -87,8 +87,8 @@ public class EmbeddedFieldBuilderTest {
 
 	@Test
 	public void testFieldType() {
-		EmbeddedFieldMetadata embeddedMetadata =
-			new EmbeddedFieldMetadata("address", "Address", "com.example");
+		EmbeddedFieldDescriptor embeddedMetadata =
+			new EmbeddedFieldDescriptor("address", "Address", "com.example");
 
 		EmbeddedFieldBuilder.buildEmbeddedField(
 			entityClass, embeddedMetadata, embeddableClassDetails, modelsContext);
@@ -99,8 +99,8 @@ public class EmbeddedFieldBuilderTest {
 
 	@Test
 	public void testNoAttributeOverrides() {
-		EmbeddedFieldMetadata embeddedMetadata =
-			new EmbeddedFieldMetadata("address", "Address", "com.example");
+		EmbeddedFieldDescriptor embeddedMetadata =
+			new EmbeddedFieldDescriptor("address", "Address", "com.example");
 
 		EmbeddedFieldBuilder.buildEmbeddedField(
 			entityClass, embeddedMetadata, embeddableClassDetails, modelsContext);
@@ -113,8 +113,8 @@ public class EmbeddedFieldBuilderTest {
 
 	@Test
 	public void testWithAttributeOverrides() {
-		EmbeddedFieldMetadata embeddedMetadata =
-			new EmbeddedFieldMetadata("address", "Address", "com.example")
+		EmbeddedFieldDescriptor embeddedMetadata =
+			new EmbeddedFieldDescriptor("address", "Address", "com.example")
 				.addAttributeOverride("street", "STREET_NAME")
 				.addAttributeOverride("city", "CITY_NAME");
 
@@ -142,8 +142,8 @@ public class EmbeddedFieldBuilderTest {
 
 	@Test
 	public void testSingleAttributeOverride() {
-		EmbeddedFieldMetadata embeddedMetadata =
-			new EmbeddedFieldMetadata("address", "Address", "com.example")
+		EmbeddedFieldDescriptor embeddedMetadata =
+			new EmbeddedFieldDescriptor("address", "Address", "com.example")
 				.addAttributeOverride("zipCode", "ZIP_CODE");
 
 		EmbeddedFieldBuilder.buildEmbeddedField(

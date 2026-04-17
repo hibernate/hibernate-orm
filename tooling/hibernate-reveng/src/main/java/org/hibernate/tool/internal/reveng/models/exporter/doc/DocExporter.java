@@ -47,7 +47,7 @@ import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.internal.reveng.models.exporter.MetadataHelper;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 
 import java.util.Properties;
 
@@ -110,7 +110,7 @@ public class DocExporter implements Exporter {
 			Logger.getLogger(DocExporter.class.getName());
 
 	private List<ClassDetails> entities;
-	private Map<String, TableMetadata> tableMetadataMap;
+	private Map<String, TableDescriptor> tableMetadataMap;
 	private String dotExecutable;
 	private Configuration freemarkerConfig;
 	private BeansWrapper beansWrapper;
@@ -141,7 +141,7 @@ public class DocExporter implements Exporter {
 	}
 
 	private DocExporter(List<ClassDetails> entities,
-						Map<String, TableMetadata> tableMetadataMap,
+						Map<String, TableDescriptor> tableMetadataMap,
 						String dotExecutable,
 						String[] templatePath) {
 		this.entities = entities;
@@ -170,20 +170,20 @@ public class DocExporter implements Exporter {
 	}
 
 	public static DocExporter create(List<ClassDetails> entities,
-									  Map<String, TableMetadata> tableMetadataMap) {
+									  Map<String, TableDescriptor> tableMetadataMap) {
 		return new DocExporter(entities, tableMetadataMap, null,
 				new String[0]);
 	}
 
 	public static DocExporter create(List<ClassDetails> entities,
-									  Map<String, TableMetadata> tableMetadataMap,
+									  Map<String, TableDescriptor> tableMetadataMap,
 									  String[] templatePath) {
 		return new DocExporter(entities, tableMetadataMap, null,
 				templatePath);
 	}
 
 	public static DocExporter create(List<ClassDetails> entities,
-									  Map<String, TableMetadata> tableMetadataMap,
+									  Map<String, TableDescriptor> tableMetadataMap,
 									  String dotExecutable,
 									  String[] templatePath) {
 		return new DocExporter(entities, tableMetadataMap, dotExecutable,

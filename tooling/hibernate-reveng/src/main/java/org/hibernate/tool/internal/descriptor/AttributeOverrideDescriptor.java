@@ -13,23 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 /**
  * Represents metadata for an @AttributeOverride mapping.
  *
  * @author Koen Aers
  */
-public class AttributeOverrideMetadata {
+public class AttributeOverrideDescriptor {
 	private final String fieldName;
 	private final String columnName;
 	private final Class<?> javaType;
 
-	public AttributeOverrideMetadata(String fieldName, String columnName) {
+	public AttributeOverrideDescriptor(String fieldName, String columnName) {
 		this(fieldName, columnName, null);
 	}
 
-	public AttributeOverrideMetadata(String fieldName, String columnName, Class<?> javaType) {
+	public AttributeOverrideDescriptor(String fieldName, String columnName, Class<?> javaType) {
 		this.fieldName = fieldName;
 		this.columnName = columnName;
 		this.javaType = javaType;

@@ -29,13 +29,13 @@ import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.CompositeIdDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 
 /**
  * Discovers database tables via {@link RevengDialect} and populates
- * {@link TableMetadata} objects with columns, primary keys, and
+ * {@link TableDescriptor} objects with columns, primary keys, and
  * composite ID metadata. Uses {@link RevengStrategy} for entity
  * naming, table exclusions, and composite ID class names.
  *
@@ -65,8 +65,8 @@ class TableReader {
 	 * Discovers all tables and returns them keyed by table name,
 	 * with columns, primary keys, and composite ID metadata populated.
 	 */
-	Map<String, TableMetadata> readTables() {
-		Map<String, TableMetadata> tablesByName = new LinkedHashMap<>();
+	Map<String, TableDescriptor> readTables() {
+		Map<String, TableDescriptor> tablesByName = new LinkedHashMap<>();
 		for (SchemaSelection selection : getSchemaSelections()) {
 			readTablesForSchemaSelection(selection, tablesByName);
 		}
@@ -74,7 +74,7 @@ class TableReader {
 	}
 
 	private void readTablesForSchemaSelection(
-			SchemaSelection selection, Map<String, TableMetadata> tablesByName) {
+			SchemaSelection selection, Map<String, TableDescriptor> tablesByName) {
 		Iterator<Map<String, Object>> tableIterator = dialect.getTables(
 			StringHelper.replace(selection.getMatchCatalog(), ".*", "%"),
 			StringHelper.replace(selection.getMatchSchema(), ".*", "%"),
@@ -88,7 +88,7 @@ class TableReader {
 		}
 	}
 
-	private void readTable(Map<String, Object> tableRow, Map<String, TableMetadata> tablesByName) {
+	private void readTable(Map<String, Object> tableRow, Map<String, TableDescriptor> tablesByName) {
 		String tableType = (String) tableRow.get("TABLE_TYPE");
 		if (!isTypeToAdd(tableType)) {
 			return;
@@ -101,7 +101,7 @@ class TableReader {
 
 		TableIdentifier tableId = normalizeTableId(catalog, schema, tableName);
 		if (!strategy.excludeTable(tableId)) {
-			TableMetadata tableMetadata = createTableMetadata(
+			TableDescriptor tableMetadata = createTableDescriptor(
 				tableName, catalog, schema, tableId, tableType);
 			if (comment != null) {
 				tableMetadata.comment(comment);
@@ -116,14 +116,14 @@ class TableReader {
 			|| "SYNONYM".equals(tableType);
 	}
 
-	private TableMetadata createTableMetadata(
+	private TableDescriptor createTableDescriptor(
 			String tableName, String catalog, String schema,
 			TableIdentifier tableId, String tableType) {
 		String fullClassName = strategy.tableToClassName(tableId);
 		String entityPackage = StringHelper.qualifier(fullClassName);
 		String entityClassName = StringHelper.unqualify(fullClassName);
 
-		TableMetadata tableMetadata = new TableMetadata(tableName, entityClassName, entityPackage);
+		TableDescriptor tableMetadata = new TableDescriptor(tableName, entityClassName, entityPackage);
 		if (schema != null && !schema.equals(defaultSchema)) {
 			tableMetadata.setSchema(schema);
 		}
@@ -149,14 +149,14 @@ class TableReader {
 		return tableMetadata;
 	}
 
-	private void applyIdentifierStrategy(TableMetadata tableMetadata, TableIdentifier tableId,
+	private void applyIdentifierStrategy(TableDescriptor tableMetadata, TableIdentifier tableId,
 			String catalog, String schema) {
 		if (tableMetadata.getCompositeId() != null) {
 			return;
 		}
 
-		ColumnMetadata pkColumn = null;
-		for (ColumnMetadata col : tableMetadata.getColumns()) {
+		ColumnDescriptor pkColumn = null;
+		for (ColumnDescriptor col : tableMetadata.getColumns()) {
 			if (col.isPrimaryKey()) {
 				pkColumn = col;
 				break;
@@ -178,9 +178,9 @@ class TableReader {
 		}
 	}
 
-	private void detectCompositeId(TableMetadata tableMetadata, TableIdentifier tableId) {
-		List<ColumnMetadata> pkColumns = new ArrayList<>();
-		for (ColumnMetadata col : tableMetadata.getColumns()) {
+	private void detectCompositeId(TableDescriptor tableMetadata, TableIdentifier tableId) {
+		List<ColumnDescriptor> pkColumns = new ArrayList<>();
+		for (ColumnDescriptor col : tableMetadata.getColumns()) {
 			if (col.isPrimaryKey()) {
 				pkColumns.add(col);
 			}
@@ -199,15 +199,15 @@ class TableReader {
 		if (idFieldName == null) {
 			idFieldName = "id";
 		}
-		CompositeIdMetadata compositeId = new CompositeIdMetadata(
+		CompositeIdDescriptor compositeId = new CompositeIdDescriptor(
 			idFieldName, idClassName, tableMetadata.getEntityPackage());
-		for (ColumnMetadata pkCol : pkColumns) {
+		for (ColumnDescriptor pkCol : pkColumns) {
 			compositeId.addAttributeOverride(pkCol.getFieldName(), pkCol.getColumnName(), pkCol.getJavaType());
 		}
 		tableMetadata.compositeId(compositeId);
 	}
 
-	private void applyTableMetaAttributes(TableMetadata tableMetadata, TableIdentifier tableId) {
+	private void applyTableMetaAttributes(TableDescriptor tableMetadata, TableIdentifier tableId) {
 		Map<String, MetaAttribute> metaMap = strategy.tableToMetaAttributes(tableId);
 		if (metaMap != null) {
 			for (Map.Entry<String, MetaAttribute> entry : metaMap.entrySet()) {

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,16 +22,16 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for {@link CompositeIdMetadata}.
+ * Tests for {@link CompositeIdDescriptor}.
  *
  * @author Koen Aers
  */
-public class CompositeIdMetadataTest {
+public class CompositeIdDescriptorTest {
 
 	@Test
 	public void testConstructorAndDefaults() {
-		CompositeIdMetadata compositeId =
-			new CompositeIdMetadata("id", "OrderItemId", "com.example");
+		CompositeIdDescriptor compositeId =
+			new CompositeIdDescriptor("id", "OrderItemId", "com.example");
 
 		assertEquals("id", compositeId.getFieldName());
 		assertEquals("OrderItemId", compositeId.getIdClassName());
@@ -42,12 +42,12 @@ public class CompositeIdMetadataTest {
 
 	@Test
 	public void testAddAttributeOverride() {
-		CompositeIdMetadata compositeId =
-			new CompositeIdMetadata("id", "OrderItemId", "com.example")
+		CompositeIdDescriptor compositeId =
+			new CompositeIdDescriptor("id", "OrderItemId", "com.example")
 				.addAttributeOverride("orderId", "ORDER_ID")
 				.addAttributeOverride("productId", "PRODUCT_ID");
 
-		List<AttributeOverrideMetadata> overrides = compositeId.getAttributeOverrides();
+		List<AttributeOverrideDescriptor> overrides = compositeId.getAttributeOverrides();
 		assertEquals(2, overrides.size());
 		assertEquals("orderId", overrides.get(0).getFieldName());
 		assertEquals("ORDER_ID", overrides.get(0).getColumnName());

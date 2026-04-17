@@ -25,8 +25,8 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassLoading;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.ModelsContext;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.EmbeddableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.EmbeddableDescriptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -51,7 +51,7 @@ public class EmbeddableClassBuilderTest {
 
 	@Test
 	public void testEmbeddableAnnotation() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("Address", "com.example");
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("Address", "com.example");
 
 		ClassDetails result = EmbeddableClassBuilder.buildEmbeddableClass(metadata, modelsContext);
 
@@ -61,7 +61,7 @@ public class EmbeddableClassBuilderTest {
 
 	@Test
 	public void testClassName() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("Address", "com.example");
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("Address", "com.example");
 
 		ClassDetails result = EmbeddableClassBuilder.buildEmbeddableClass(metadata, modelsContext);
 
@@ -70,7 +70,7 @@ public class EmbeddableClassBuilderTest {
 
 	@Test
 	public void testNoFields() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("EmptyId", "com.example");
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("EmptyId", "com.example");
 
 		ClassDetails result = EmbeddableClassBuilder.buildEmbeddableClass(metadata, modelsContext);
 
@@ -80,10 +80,10 @@ public class EmbeddableClassBuilderTest {
 
 	@Test
 	public void testWithFields() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("Address", "com.example")
-			.addColumn(new ColumnMetadata("STREET", "street", String.class))
-			.addColumn(new ColumnMetadata("CITY", "city", String.class))
-			.addColumn(new ColumnMetadata("ZIP_CODE", "zipCode", String.class));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("Address", "com.example")
+			.addColumn(new ColumnDescriptor("STREET", "street", String.class))
+			.addColumn(new ColumnDescriptor("CITY", "city", String.class))
+			.addColumn(new ColumnDescriptor("ZIP_CODE", "zipCode", String.class));
 
 		ClassDetails result = EmbeddableClassBuilder.buildEmbeddableClass(metadata, modelsContext);
 
@@ -97,9 +97,9 @@ public class EmbeddableClassBuilderTest {
 
 	@Test
 	public void testFieldColumnAnnotations() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("Address", "com.example")
-			.addColumn(new ColumnMetadata("STREET_NAME", "street", String.class).length(200))
-			.addColumn(new ColumnMetadata("CITY", "city", String.class).nullable(false));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("Address", "com.example")
+			.addColumn(new ColumnDescriptor("STREET_NAME", "street", String.class).length(200))
+			.addColumn(new ColumnDescriptor("CITY", "city", String.class).nullable(false));
 
 		ClassDetails result = EmbeddableClassBuilder.buildEmbeddableClass(metadata, modelsContext);
 
@@ -119,7 +119,7 @@ public class EmbeddableClassBuilderTest {
 
 	@Test
 	public void testRegisteredInContext() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("Address", "com.example");
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("Address", "com.example");
 
 		EmbeddableClassBuilder.buildEmbeddableClass(metadata, modelsContext);
 

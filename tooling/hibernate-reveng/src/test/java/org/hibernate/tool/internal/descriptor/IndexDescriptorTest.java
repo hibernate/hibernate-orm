@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for {@link IndexMetadata}.
+ * Tests for {@link IndexDescriptor}.
  *
  * @author Koen Aers
  */
-public class IndexMetadataTest {
+public class IndexDescriptorTest {
 
 	@Test
 	public void testConstructorAndDefaults() {
-		IndexMetadata index = new IndexMetadata("IDX_NAME", true);
+		IndexDescriptor index = new IndexDescriptor("IDX_NAME", true);
 
 		assertEquals("IDX_NAME", index.getIndexName());
 		assertTrue(index.isUnique());
@@ -38,14 +38,14 @@ public class IndexMetadataTest {
 
 	@Test
 	public void testNonUniqueIndex() {
-		IndexMetadata index = new IndexMetadata("IDX_SEARCH", false);
+		IndexDescriptor index = new IndexDescriptor("IDX_SEARCH", false);
 
 		assertFalse(index.isUnique());
 	}
 
 	@Test
 	public void testAddColumns() {
-		IndexMetadata index = new IndexMetadata("IDX_COMPOSITE", true)
+		IndexDescriptor index = new IndexDescriptor("IDX_COMPOSITE", true)
 			.addColumn("COL_A")
 			.addColumn("COL_B");
 
@@ -56,7 +56,7 @@ public class IndexMetadataTest {
 
 	@Test
 	public void testSingleColumnIndex() {
-		IndexMetadata index = new IndexMetadata("IDX_EMAIL", true)
+		IndexDescriptor index = new IndexDescriptor("IDX_EMAIL", true)
 			.addColumn("EMAIL");
 
 		assertEquals(1, index.getColumnNames().size());

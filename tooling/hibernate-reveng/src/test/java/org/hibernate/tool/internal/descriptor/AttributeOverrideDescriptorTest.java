@@ -13,23 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for {@link AttributeOverrideMetadata}.
+ * Tests for {@link AttributeOverrideDescriptor}.
  *
  * @author Koen Aers
  */
-public class AttributeOverrideMetadataTest {
+public class AttributeOverrideDescriptorTest {
 
 	@Test
 	public void testConstructorAndGetters() {
-		AttributeOverrideMetadata override =
-			new AttributeOverrideMetadata("street", "HOME_STREET");
+		AttributeOverrideDescriptor override =
+			new AttributeOverrideDescriptor("street", "HOME_STREET");
 
 		assertEquals("street", override.getFieldName());
 		assertEquals("HOME_STREET", override.getColumnName());

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,15 +23,15 @@ import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.InheritanceType;
 
 /**
- * Tests for {@link InheritanceMetadata}.
+ * Tests for {@link InheritanceDescriptor}.
  *
  * @author Koen Aers
  */
-public class InheritanceMetadataTest {
+public class InheritanceDescriptorTest {
 
 	@Test
 	public void testConstructorAndDefaults() {
-		InheritanceMetadata inheritance = new InheritanceMetadata(InheritanceType.SINGLE_TABLE);
+		InheritanceDescriptor inheritance = new InheritanceDescriptor(InheritanceType.SINGLE_TABLE);
 
 		assertEquals(InheritanceType.SINGLE_TABLE, inheritance.getStrategy());
 		assertNull(inheritance.getDiscriminatorColumnName());
@@ -41,14 +41,14 @@ public class InheritanceMetadataTest {
 
 	@Test
 	public void testJoinedStrategy() {
-		InheritanceMetadata inheritance = new InheritanceMetadata(InheritanceType.JOINED);
+		InheritanceDescriptor inheritance = new InheritanceDescriptor(InheritanceType.JOINED);
 
 		assertEquals(InheritanceType.JOINED, inheritance.getStrategy());
 	}
 
 	@Test
 	public void testDiscriminatorColumn() {
-		InheritanceMetadata inheritance = new InheritanceMetadata(InheritanceType.SINGLE_TABLE)
+		InheritanceDescriptor inheritance = new InheritanceDescriptor(InheritanceType.SINGLE_TABLE)
 			.discriminatorColumn("VEHICLE_TYPE");
 
 		assertEquals("VEHICLE_TYPE", inheritance.getDiscriminatorColumnName());
@@ -56,7 +56,7 @@ public class InheritanceMetadataTest {
 
 	@Test
 	public void testDiscriminatorType() {
-		InheritanceMetadata inheritance = new InheritanceMetadata(InheritanceType.SINGLE_TABLE)
+		InheritanceDescriptor inheritance = new InheritanceDescriptor(InheritanceType.SINGLE_TABLE)
 			.discriminatorType(DiscriminatorType.STRING);
 
 		assertEquals(DiscriminatorType.STRING, inheritance.getDiscriminatorType());
@@ -64,7 +64,7 @@ public class InheritanceMetadataTest {
 
 	@Test
 	public void testDiscriminatorColumnLength() {
-		InheritanceMetadata inheritance = new InheritanceMetadata(InheritanceType.SINGLE_TABLE)
+		InheritanceDescriptor inheritance = new InheritanceDescriptor(InheritanceType.SINGLE_TABLE)
 			.discriminatorColumnLength(50);
 
 		assertEquals(50, inheritance.getDiscriminatorColumnLength());
@@ -72,7 +72,7 @@ public class InheritanceMetadataTest {
 
 	@Test
 	public void testFluentChaining() {
-		InheritanceMetadata inheritance = new InheritanceMetadata(InheritanceType.SINGLE_TABLE)
+		InheritanceDescriptor inheritance = new InheritanceDescriptor(InheritanceType.SINGLE_TABLE)
 			.discriminatorColumn("TYPE")
 			.discriminatorType(DiscriminatorType.INTEGER)
 			.discriminatorColumnLength(10);

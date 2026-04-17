@@ -95,16 +95,16 @@ import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.builder.db.EmbeddableClassBuilder;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.EmbeddableMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.EmbeddedFieldMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.InheritanceMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.ManyToManyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToManyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToOneMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.EmbeddableDescriptor;
+import org.hibernate.tool.internal.descriptor.CompositeIdDescriptor;
+import org.hibernate.tool.internal.descriptor.EmbeddedFieldDescriptor;
+import org.hibernate.tool.internal.descriptor.ForeignKeyDescriptor;
+import org.hibernate.tool.internal.descriptor.InheritanceDescriptor;
+import org.hibernate.tool.internal.descriptor.ManyToManyDescriptor;
+import org.hibernate.tool.internal.descriptor.OneToManyDescriptor;
+import org.hibernate.tool.internal.descriptor.OneToOneDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -114,15 +114,15 @@ import org.junit.jupiter.api.Test;
  */
 public class TemplateHelperTest {
 
-	private TemplateHelper create(TableMetadata table) {
+	private TemplateHelper create(TableDescriptor table) {
 		return create(table, true);
 	}
 
-	private TemplateHelper create(TableMetadata table, boolean annotated) {
+	private TemplateHelper create(TableDescriptor table, boolean annotated) {
 		return create(table, annotated, Collections.emptyMap(), Collections.emptyMap());
 	}
 
-	private TemplateHelper create(TableMetadata table, boolean annotated,
+	private TemplateHelper create(TableDescriptor table, boolean annotated,
 								  Map<String, List<String>> classMetaAttributes,
 								  Map<String, Map<String, List<String>>> fieldMetaAttributes) {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
@@ -143,38 +143,38 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetPackageDeclaration() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		assertEquals("package com.example;", create(table).getPackageDeclaration());
 	}
 
 	@Test
 	public void testGetPackageDeclarationEmpty() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "");
 		assertEquals("", create(table).getPackageDeclaration());
 	}
 
 	@Test
 	public void testGetDeclarationName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		assertEquals("Employee", create(table).getDeclarationName());
 	}
 
 	@Test
 	public void testGetExtendsDeclarationNoParent() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		assertEquals("", create(table).getExtendsDeclaration());
 	}
 
 	@Test
 	public void testGetExtendsDeclarationWithParent() {
-		TableMetadata table = new TableMetadata("CAR", "Car", "com.example");
+		TableDescriptor table = new TableDescriptor("CAR", "Car", "com.example");
 		table.parent("Vehicle", "com.example");
 		assertEquals("extends Vehicle ", create(table).getExtendsDeclaration());
 	}
 
 	@Test
 	public void testGetImplementsDeclaration() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		assertEquals("implements Serializable", create(table).getImplementsDeclaration());
 	}
 
@@ -182,9 +182,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetBasicFields() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table);
 		List<FieldDetails> fields = helper.getBasicFields();
 		assertEquals(2, fields.size());
@@ -194,10 +194,10 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetManyToOneFields() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example"));
 		TemplateHelper helper = create(table);
 		List<FieldDetails> m2oFields = helper.getManyToOneFields();
@@ -207,9 +207,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetOneToManyFields() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TemplateHelper helper = create(table);
 		List<FieldDetails> o2mFields = helper.getOneToManyFields();
@@ -219,8 +219,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetCompositeIdField() {
-		TableMetadata table = new TableMetadata("ORDER_LINE", "OrderLine", "com.example");
-		table.compositeId(new CompositeIdMetadata("id", "OrderLineId", "com.example")
+		TableDescriptor table = new TableDescriptor("ORDER_LINE", "OrderLine", "com.example");
+		table.compositeId(new CompositeIdDescriptor("id", "OrderLineId", "com.example")
 				.addAttributeOverride("orderId", "ORDER_ID"));
 		TemplateHelper helper = create(table);
 		FieldDetails cid = helper.getCompositeIdField();
@@ -232,8 +232,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetJavaTypeName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().stream()
 				.filter(f -> f.getName().equals("name")).findFirst().orElseThrow();
@@ -242,8 +242,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetJavaTypeNameBigDecimal() {
-		TableMetadata table = new TableMetadata("PRODUCT", "Product", "com.example");
-		table.addColumn(new ColumnMetadata("PRICE", "price", BigDecimal.class));
+		TableDescriptor table = new TableDescriptor("PRODUCT", "Product", "com.example");
+		table.addColumn(new ColumnDescriptor("PRICE", "price", BigDecimal.class));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().get(0);
 		assertEquals("BigDecimal", helper.getJavaTypeName(field));
@@ -252,9 +252,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetCollectionTypeNameOneToMany() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getOneToManyFields().get(0);
@@ -266,19 +266,19 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetterName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		assertEquals("getName", create(table).getGetterName("name"));
 	}
 
 	@Test
 	public void testSetterName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		assertEquals("setName", create(table).getSetterName("name"));
 	}
 
 	@Test
 	public void testGetterNameSingleChar() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		assertEquals("getX", create(table).getGetterName("x"));
 	}
 
@@ -286,7 +286,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotations() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		String result = create(table).generateClassAnnotations();
 		assertTrue(result.contains("@Entity"), result);
 		assertTrue(result.contains("@Table(name = \"EMPLOYEE\")"), result);
@@ -294,7 +294,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsWithSchemaAndCatalog() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		table.setSchema("HR");
 		table.setCatalog("MYDB");
 		String result = create(table).generateClassAnnotations();
@@ -304,8 +304,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsWithInheritance() {
-		TableMetadata table = new TableMetadata("VEHICLE", "Vehicle", "com.example");
-		table.inheritance(new InheritanceMetadata(InheritanceType.SINGLE_TABLE)
+		TableDescriptor table = new TableDescriptor("VEHICLE", "Vehicle", "com.example");
+		table.inheritance(new InheritanceDescriptor(InheritanceType.SINGLE_TABLE)
 				.discriminatorColumn("DTYPE")
 				.discriminatorType(DiscriminatorType.INTEGER)
 				.discriminatorColumnLength(10));
@@ -318,7 +318,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsWithDiscriminatorValue() {
-		TableMetadata table = new TableMetadata("CAR", "Car", "com.example");
+		TableDescriptor table = new TableDescriptor("CAR", "Car", "com.example");
 		table.discriminatorValue("CAR");
 		String result = create(table).generateClassAnnotations();
 		assertTrue(result.contains("@DiscriminatorValue(\"CAR\")"), result);
@@ -326,7 +326,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsWithPrimaryKeyJoinColumn() {
-		TableMetadata table = new TableMetadata("CAR", "Car", "com.example");
+		TableDescriptor table = new TableDescriptor("CAR", "Car", "com.example");
 		table.primaryKeyJoinColumn("VEHICLE_ID");
 		String result = create(table).generateClassAnnotations();
 		assertTrue(result.contains("@PrimaryKeyJoinColumn(name = \"VEHICLE_ID\")"), result);
@@ -336,8 +336,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsSecondaryTable() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		TestContext ctx = createWithContext(table);
 		PrimaryKeyJoinColumnJpaAnnotation pkjc = JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN.createUsage(ctx.modelsContext());
 		pkjc.name("EMP_ID");
@@ -352,8 +352,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsSecondaryTableNoPkJoinColumn() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		TestContext ctx = createWithContext(table);
 		SecondaryTableJpaAnnotation st = JpaAnnotations.SECONDARY_TABLE.createUsage(ctx.modelsContext());
 		st.name("EMP_DETAIL");
@@ -366,16 +366,16 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetSecondaryTablesNone() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		TemplateHelper helper = create(table);
 		assertTrue(helper.getSecondaryTables().isEmpty());
 	}
 
 	@Test
 	public void testGenerateIdAnnotations() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().stream()
 				.filter(f -> f.getName().equals("id")).findFirst().orElseThrow();
@@ -386,8 +386,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateIdAnnotationsWithGeneratedValue() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class)
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.generationType(GenerationType.IDENTITY));
 		TemplateHelper helper = create(table);
@@ -400,14 +400,14 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateVersionAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		assertEquals("@Version", create(table).generateVersionAnnotation());
 	}
 
 	@Test
 	public void testGenerateColumnAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().stream()
 				.filter(f -> f.getName().equals("name")).findFirst().orElseThrow();
@@ -417,8 +417,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateColumnAnnotationWithAttributes() {
-		TableMetadata table = new TableMetadata("PRODUCT", "Product", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class)
+		TableDescriptor table = new TableDescriptor("PRODUCT", "Product", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class)
 				.nullable(false).unique(true).length(100));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().get(0);
@@ -430,8 +430,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateColumnAnnotationWithPrecisionScale() {
-		TableMetadata table = new TableMetadata("PRODUCT", "Product", "com.example");
-		table.addColumn(new ColumnMetadata("PRICE", "price", BigDecimal.class)
+		TableDescriptor table = new TableDescriptor("PRODUCT", "Product", "com.example");
+		table.addColumn(new ColumnDescriptor("PRICE", "price", BigDecimal.class)
 				.precision(10).scale(2));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().get(0);
@@ -442,8 +442,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateBasicAnnotationNoAttributes() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().get(0);
 		assertEquals("", helper.generateBasicAnnotation(field));
@@ -451,8 +451,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateTemporalAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("HIRE_DATE", "hireDate", Date.class)
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("HIRE_DATE", "hireDate", Date.class)
 				.temporal(TemporalType.TIMESTAMP));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().get(0);
@@ -461,8 +461,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateTemporalAnnotationNone() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().get(0);
 		assertEquals("", helper.generateTemporalAnnotation(field));
@@ -470,15 +470,15 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateLobAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		assertEquals("@Lob", create(table).generateLobAnnotation());
 	}
 
 	@Test
 	public void testGenerateManyToOneAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example"));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getManyToOneFields().get(0);
@@ -489,9 +489,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateManyToOneAnnotationWithFetchAndOptional() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example")
 				.fetchType(FetchType.LAZY)
 				.optional(false));
@@ -504,9 +504,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateManyToOneAnnotationWithReferencedColumn() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("DEPT_CODE", "deptCode", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("DEPT_CODE", "deptCode", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_CODE", "Department", "com.example")
 				.referencedColumnName("CODE"));
 		TemplateHelper helper = create(table);
@@ -517,9 +517,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateOneToManyAnnotation() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getOneToManyFields().get(0);
@@ -529,9 +529,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateOneToManyAnnotationWithFetchAndCascade() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example")
 				.fetchType(FetchType.EAGER)
 				.cascade(CascadeType.ALL)
@@ -546,9 +546,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateOneToOneAnnotationOwning() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("address", "Address", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("address", "Address", "com.example")
 				.foreignKeyColumnName("ADDRESS_ID"));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getOneToOneFields().get(0);
@@ -559,9 +559,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateOneToOneAnnotationInverse() {
-		TableMetadata table = new TableMetadata("ADDRESS", "Address", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("employee", "Employee", "com.example")
+		TableDescriptor table = new TableDescriptor("ADDRESS", "Address", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("employee", "Employee", "com.example")
 				.mappedBy("address"));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getOneToOneFields().get(0);
@@ -572,9 +572,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateOneToOneAnnotationWithCascadeAndOrphanRemoval() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("address", "Address", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("address", "Address", "com.example")
 				.foreignKeyColumnName("ADDRESS_ID")
 				.cascade(CascadeType.ALL)
 				.orphanRemoval(true));
@@ -587,9 +587,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateManyToManyAnnotationOwning() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("projects", "Project", "com.example")
 				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID"));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getManyToManyFields().get(0);
@@ -602,9 +602,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateManyToManyAnnotationInverse() {
-		TableMetadata table = new TableMetadata("PROJECT", "Project", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("employees", "Employee", "com.example")
+		TableDescriptor table = new TableDescriptor("PROJECT", "Project", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("employees", "Employee", "com.example")
 				.mappedBy("projects"));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getManyToManyFields().get(0);
@@ -615,9 +615,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateManyToManyAnnotationWithMultipleCascade() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("projects", "Project", "com.example")
 				.joinTable("EMPLOYEE_PROJECT", "EMPLOYEE_ID", "PROJECT_ID")
 				.cascade(CascadeType.PERSIST, CascadeType.MERGE));
 		TemplateHelper helper = create(table);
@@ -628,8 +628,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateEmbeddedIdAnnotation() {
-		TableMetadata table = new TableMetadata("ORDER_LINE", "OrderLine", "com.example");
-		table.compositeId(new CompositeIdMetadata("id", "OrderLineId", "com.example")
+		TableDescriptor table = new TableDescriptor("ORDER_LINE", "OrderLine", "com.example");
+		table.compositeId(new CompositeIdDescriptor("id", "OrderLineId", "com.example")
 				.addAttributeOverride("orderId", "ORDER_ID")
 				.addAttributeOverride("lineNumber", "LINE_NUMBER"));
 		TemplateHelper helper = create(table);
@@ -643,9 +643,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateEmbeddedAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addEmbeddedField(new EmbeddedFieldMetadata("homeAddress", "Address", "com.example")
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addEmbeddedField(new EmbeddedFieldDescriptor("homeAddress", "Address", "com.example")
 				.addAttributeOverride("street", "HOME_STREET"));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getEmbeddedFields().get(0);
@@ -658,14 +658,14 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testUnannotatedClassAnnotations() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		assertEquals("", create(table, false).generateClassAnnotations());
 	}
 
 	@Test
 	public void testUnannotatedIdAnnotations() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class)
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true).generationType(GenerationType.IDENTITY));
 		TemplateHelper helper = create(table, false);
 		FieldDetails field = helper.getBasicFields().get(0);
@@ -674,14 +674,14 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testUnannotatedVersionAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		assertEquals("", create(table, false).generateVersionAnnotation());
 	}
 
 	@Test
 	public void testUnannotatedColumnAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table, false);
 		FieldDetails field = helper.getBasicFields().get(0);
 		assertEquals("", helper.generateColumnAnnotation(field));
@@ -689,8 +689,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testUnannotatedBasicAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table, false);
 		FieldDetails field = helper.getBasicFields().get(0);
 		assertEquals("", helper.generateBasicAnnotation(field));
@@ -698,8 +698,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testUnannotatedTemporalAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("HIRE_DATE", "hireDate", Date.class)
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("HIRE_DATE", "hireDate", Date.class)
 				.temporal(TemporalType.TIMESTAMP));
 		TemplateHelper helper = create(table, false);
 		FieldDetails field = helper.getBasicFields().get(0);
@@ -708,15 +708,15 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testUnannotatedLobAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		assertEquals("", create(table, false).generateLobAnnotation());
 	}
 
 	@Test
 	public void testUnannotatedManyToOneAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example"));
 		TemplateHelper helper = create(table, false);
 		FieldDetails field = helper.getManyToOneFields().get(0);
@@ -725,9 +725,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testUnannotatedOneToManyAnnotation() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TemplateHelper helper = create(table, false);
 		FieldDetails field = helper.getOneToManyFields().get(0);
@@ -736,9 +736,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testUnannotatedOneToOneAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("address", "Address", "com.example"));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("address", "Address", "com.example"));
 		TemplateHelper helper = create(table, false);
 		FieldDetails field = helper.getOneToOneFields().get(0);
 		assertEquals("", helper.generateOneToOneAnnotation(field));
@@ -746,9 +746,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testUnannotatedManyToManyAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addManyToMany(new ManyToManyMetadata("projects", "Project", "com.example"));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addManyToMany(new ManyToManyDescriptor("projects", "Project", "com.example"));
 		TemplateHelper helper = create(table, false);
 		FieldDetails field = helper.getManyToManyFields().get(0);
 		assertEquals("", helper.generateManyToManyAnnotation(field));
@@ -756,8 +756,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testUnannotatedEmbeddedIdAnnotation() {
-		TableMetadata table = new TableMetadata("ORDER_LINE", "OrderLine", "com.example");
-		table.compositeId(new CompositeIdMetadata("id", "OrderLineId", "com.example")
+		TableDescriptor table = new TableDescriptor("ORDER_LINE", "OrderLine", "com.example");
+		table.compositeId(new CompositeIdDescriptor("id", "OrderLineId", "com.example")
 				.addAttributeOverride("orderId", "ORDER_ID"));
 		TemplateHelper helper = create(table, false);
 		FieldDetails field = helper.getCompositeIdField();
@@ -766,9 +766,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testUnannotatedEmbeddedAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addEmbeddedField(new EmbeddedFieldMetadata("address", "Address", "com.example"));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addEmbeddedField(new EmbeddedFieldDescriptor("address", "Address", "com.example"));
 		TemplateHelper helper = create(table, false);
 		FieldDetails field = helper.getEmbeddedFields().get(0);
 		assertEquals("", helper.generateEmbeddedAnnotation(field));
@@ -778,13 +778,13 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testIsSubclassFalse() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		assertFalse(create(table).isSubclass());
 	}
 
 	@Test
 	public void testIsSubclassTrue() {
-		TableMetadata table = new TableMetadata("CAR", "Car", "com.example");
+		TableDescriptor table = new TableDescriptor("CAR", "Car", "com.example");
 		table.parent("Vehicle", "com.example");
 		assertTrue(create(table).isSubclass());
 	}
@@ -793,17 +793,17 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testNeedsFullConstructorWithColumns() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		assertTrue(create(table).needsFullConstructor());
 	}
 
 	@Test
 	public void testFullConstructorPropertiesBasicColumns() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		List<TemplateHelper.FullConstructorProperty> props = create(table).getFullConstructorProperties();
 		assertEquals(2, props.size());
 		assertEquals("Long", props.get(0).typeName());
@@ -814,9 +814,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testFullConstructorSkipsVersion() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("VERSION", "version", Integer.class).version(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("VERSION", "version", Integer.class).version(true));
 		List<TemplateHelper.FullConstructorProperty> props = create(table).getFullConstructorProperties();
 		assertEquals(1, props.size());
 		assertEquals("id", props.get(0).fieldName());
@@ -824,9 +824,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testFullConstructorSkipsGenPropertyFalse() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("INTERNAL", "internal", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("INTERNAL", "internal", String.class));
 		TemplateHelper helper = create(table, true,
 				Collections.emptyMap(),
 				fieldMeta("internal", "gen-property", "false"));
@@ -837,8 +837,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testFullConstructorIncludesCompositeId() {
-		TableMetadata table = new TableMetadata("ORDER_LINE", "OrderLine", "com.example");
-		table.compositeId(new CompositeIdMetadata("id", "OrderLineId", "com.example")
+		TableDescriptor table = new TableDescriptor("ORDER_LINE", "OrderLine", "com.example");
+		table.compositeId(new CompositeIdDescriptor("id", "OrderLineId", "com.example")
 				.addAttributeOverride("orderId", "ORDER_ID"));
 		List<TemplateHelper.FullConstructorProperty> props = create(table).getFullConstructorProperties();
 		assertEquals(1, props.size());
@@ -848,12 +848,12 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testFullConstructorIncludesRelationships() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToOne(new OneToOneMetadata("address", "Address", "com.example"));
-		table.addOneToMany(new OneToManyMetadata("projects", "employee", "Project", "com.example"));
-		table.addManyToMany(new ManyToManyMetadata("skills", "Skill", "com.example"));
-		table.addEmbeddedField(new EmbeddedFieldMetadata("info", "Info", "com.example"));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToOne(new OneToOneDescriptor("address", "Address", "com.example"));
+		table.addOneToMany(new OneToManyDescriptor("projects", "employee", "Project", "com.example"));
+		table.addManyToMany(new ManyToManyDescriptor("skills", "Skill", "com.example"));
+		table.addEmbeddedField(new EmbeddedFieldDescriptor("info", "Info", "com.example"));
 		List<TemplateHelper.FullConstructorProperty> props = create(table).getFullConstructorProperties();
 		assertEquals(5, props.size());
 		assertEquals("id", props.get(0).fieldName());
@@ -865,9 +865,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetFullConstructorParameterList() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		assertEquals("Long id, String name", create(table).getFullConstructorParameterList());
 	}
 
@@ -875,9 +875,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testToStringPropertiesDefault() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		List<TemplateHelper.ToStringProperty> props = create(table).getToStringProperties();
 		assertEquals(2, props.size());
 		assertEquals("id", props.get(0).fieldName());
@@ -888,10 +888,10 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testToStringPropertiesExplicitUseInToString() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
-		table.addColumn(new ColumnMetadata("SECRET", "secret", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
+		table.addColumn(new ColumnDescriptor("SECRET", "secret", String.class));
 		TemplateHelper helper = create(table, true,
 				Collections.emptyMap(),
 				fieldMeta("name", "use-in-tostring", "true"));
@@ -902,8 +902,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testToStringPropertiesWithCompositeId() {
-		TableMetadata table = new TableMetadata("ORDER_LINE", "OrderLine", "com.example");
-		table.compositeId(new CompositeIdMetadata("id", "OrderLineId", "com.example")
+		TableDescriptor table = new TableDescriptor("ORDER_LINE", "OrderLine", "com.example");
+		table.compositeId(new CompositeIdDescriptor("id", "OrderLineId", "com.example")
 				.addAttributeOverride("orderId", "ORDER_ID"));
 		List<TemplateHelper.ToStringProperty> props = create(table).getToStringProperties();
 		assertEquals(1, props.size());
@@ -914,28 +914,28 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testHasCompositeIdFalse() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		assertFalse(create(table).hasCompositeId());
 	}
 
 	@Test
 	public void testHasCompositeIdTrue() {
-		TableMetadata table = new TableMetadata("ORDER_LINE", "OrderLine", "com.example");
-		table.compositeId(new CompositeIdMetadata("id", "OrderLineId", "com.example"));
+		TableDescriptor table = new TableDescriptor("ORDER_LINE", "OrderLine", "com.example");
+		table.compositeId(new CompositeIdDescriptor("id", "OrderLineId", "com.example"));
 		assertTrue(create(table).hasCompositeId());
 	}
 
 	@Test
 	public void testNeedsEqualsHashCodeWithPrimaryKey() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		assertTrue(create(table).needsEqualsHashCode());
 	}
 
 	@Test
 	public void testNeedsEqualsHashCodeWithExplicitEquals() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("EMAIL", "email", String.class));
 		TemplateHelper helper = create(table, true,
 				Collections.emptyMap(),
 				fieldMeta("email", "use-in-equals", "true"));
@@ -944,9 +944,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testHasExplicitEqualsColumns() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("EMAIL", "email", String.class));
 		TemplateHelper helper = create(table, true,
 				Collections.emptyMap(),
 				fieldMeta("email", "use-in-equals", "true"));
@@ -958,9 +958,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetIdentifierFields() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		List<FieldDetails> idFields = create(table).getIdentifierFields();
 		assertEquals(1, idFields.size());
 		assertEquals("id", idFields.get(0).getName());
@@ -968,8 +968,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateEqualsExpressionObject() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().get(0);
 		String result = helper.generateEqualsExpression(field);
@@ -980,8 +980,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateHashCodeExpressionObject() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().get(0);
 		String result = helper.generateHashCodeExpression(field);
@@ -992,7 +992,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testHasClassMetaAttribute() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TemplateHelper helper = create(table, true,
 				Map.of("class-code", List.of("// custom")),
 				Collections.emptyMap());
@@ -1002,7 +1002,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetClassMetaAttribute() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TemplateHelper helper = create(table, true,
 				Map.of("class-code", List.of("public void custom() {}")),
 				Collections.emptyMap());
@@ -1011,14 +1011,14 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetClassMetaAttributeEmpty() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		assertEquals("", create(table).getClassMetaAttribute("nonexistent"));
 	}
 
 	@Test
 	public void testHasFieldMetaAttribute() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table, true,
 				Collections.emptyMap(),
 				fieldMeta("name", "field-description", "The name"));
@@ -1029,8 +1029,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetFieldMetaAsBool() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("INTERNAL", "internal", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("INTERNAL", "internal", String.class));
 		TemplateHelper helper = create(table, true,
 				Collections.emptyMap(),
 				fieldMeta("internal", "gen-property", "false"));
@@ -1040,8 +1040,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetFieldMetaAsBoolDefault() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().get(0);
 		assertTrue(helper.getFieldMetaAsBool(field, "gen-property", true));
@@ -1049,9 +1049,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testIsGenProperty() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
-		table.addColumn(new ColumnMetadata("INTERNAL", "internal", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
+		table.addColumn(new ColumnDescriptor("INTERNAL", "internal", String.class));
 		TemplateHelper helper = create(table, true,
 				Collections.emptyMap(),
 				fieldMeta("internal", "gen-property", "false"));
@@ -1066,9 +1066,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testHasFieldDescription() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		TemplateHelper helper = create(table, true,
 				Collections.emptyMap(),
 				fieldMeta("name", "field-description", "The employee name"));
@@ -1082,8 +1082,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetFieldDescription() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table, true,
 				Collections.emptyMap(),
 				fieldMeta("name", "field-description", "The employee name"));
@@ -1093,8 +1093,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testHasFieldDefaultValue() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("STATUS", "status", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("STATUS", "status", String.class));
 		TemplateHelper helper = create(table, true,
 				Collections.emptyMap(),
 				fieldMeta("status", "default-value", "\"active\""));
@@ -1104,16 +1104,16 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testHasFieldDefaultValueFalse() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		assertFalse(create(table).hasFieldDefaultValue(
 				create(table).getBasicFields().get(0)));
 	}
 
 	@Test
 	public void testGetFieldDefaultValue() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("STATUS", "status", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("STATUS", "status", String.class));
 		TemplateHelper helper = create(table, true,
 				Collections.emptyMap(),
 				fieldMeta("status", "default-value", "\"active\""));
@@ -1123,9 +1123,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testDefaultValueExcludesFromMinimalConstructor() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true).generationType(GenerationType.IDENTITY));
-		table.addColumn(new ColumnMetadata("STATUS", "status", String.class).nullable(false));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true).generationType(GenerationType.IDENTITY));
+		table.addColumn(new ColumnDescriptor("STATUS", "status", String.class).nullable(false));
 		TemplateHelper withDefault = create(table, true,
 				Collections.emptyMap(),
 				fieldMeta("status", "default-value", "\"active\""));
@@ -1136,8 +1136,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testPropertyTypeOverride() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("STATUS", "status", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("STATUS", "status", String.class));
 		TemplateHelper helper = create(table, true,
 				Collections.emptyMap(),
 				fieldMeta("status", "property-type", "com.example.StatusEnum"));
@@ -1147,15 +1147,15 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testPropertyTypeOverrideNotSet() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		FieldDetails field = create(table).getBasicFields().get(0);
 		assertEquals("String", create(table).getJavaTypeName(field));
 	}
 
 	@Test
 	public void testHasExtraClassCode() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		assertFalse(create(table).hasExtraClassCode());
 		TemplateHelper helper = create(table, true,
 				Map.of("class-code", List.of("// extra")),
@@ -1165,7 +1165,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetExtraClassCode() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TemplateHelper helper = create(table, true,
 				Map.of("class-code", List.of("public void customMethod() {}")),
 				Collections.emptyMap());
@@ -1176,9 +1176,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testIsPrimaryKey() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table);
 		FieldDetails idField = helper.getBasicFields().stream()
 				.filter(f -> f.getName().equals("id")).findFirst().orElseThrow();
@@ -1190,9 +1190,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testIsVersion() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("VERSION", "version", Integer.class).version(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("VERSION", "version", Integer.class).version(true));
 		TemplateHelper helper = create(table);
 		FieldDetails versionField = helper.getBasicFields().stream()
 				.filter(f -> f.getName().equals("version")).findFirst().orElseThrow();
@@ -1201,8 +1201,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testIsLob() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("BIO", "bio", String.class).lob(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("BIO", "bio", String.class).lob(true));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().get(0);
 		assertTrue(helper.isLob(field));
@@ -1212,9 +1212,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetterNameBooleanField() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("ACTIVE", "active", boolean.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("ACTIVE", "active", boolean.class));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().stream()
 				.filter(f -> f.getName().equals("active")).findFirst().orElseThrow();
@@ -1223,9 +1223,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetterNameNonBooleanField() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().stream()
 				.filter(f -> f.getName().equals("name")).findFirst().orElseThrow();
@@ -1234,9 +1234,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetterNameBooleanWrapperUsesGet() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("ACTIVE", "active", Boolean.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("ACTIVE", "active", Boolean.class));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().stream()
 				.filter(f -> f.getName().equals("active")).findFirst().orElseThrow();
@@ -1247,8 +1247,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testColumnAnnotationInsertableFalse() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		ColumnMetadata col = new ColumnMetadata("COMPUTED", "computed", String.class);
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		ColumnDescriptor col = new ColumnDescriptor("COMPUTED", "computed", String.class);
 		col.insertable(false);
 		table.addColumn(col);
 		TemplateHelper helper = create(table);
@@ -1259,8 +1259,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testColumnAnnotationUpdatableFalse() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		ColumnMetadata col = new ColumnMetadata("COMPUTED", "computed", String.class);
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		ColumnDescriptor col = new ColumnDescriptor("COMPUTED", "computed", String.class);
 		col.updatable(false);
 		table.addColumn(col);
 		TemplateHelper helper = create(table);
@@ -1271,7 +1271,7 @@ public class TemplateHelperTest {
 
 	// --- Embeddable support ---
 
-	private TemplateHelper createEmbeddable(EmbeddableMetadata metadata) {
+	private TemplateHelper createEmbeddable(EmbeddableDescriptor metadata) {
 		ModelsContext ctx = new BasicModelsContextImpl(
 				SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
 		ClassDetails classDetails = EmbeddableClassBuilder.buildEmbeddableClass(metadata, ctx);
@@ -1282,17 +1282,17 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testEmbeddableIsEmbeddable() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
-				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
-				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("OrderLineId", "com.example")
+				.addColumn(new ColumnDescriptor("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnDescriptor("LINE_NUMBER", "lineNumber", Integer.class));
 		TemplateHelper helper = createEmbeddable(metadata);
 		assertTrue(helper.isEmbeddable());
 	}
 
 	@Test
 	public void testEmbeddableClassAnnotations() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
-				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("OrderLineId", "com.example")
+				.addColumn(new ColumnDescriptor("ORDER_ID", "orderId", Long.class));
 		TemplateHelper helper = createEmbeddable(metadata);
 		String result = helper.generateClassAnnotations();
 		assertTrue(result.contains("@Embeddable"), result);
@@ -1302,18 +1302,18 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testEmbeddableNeedsEqualsHashCode() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
-				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
-				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("OrderLineId", "com.example")
+				.addColumn(new ColumnDescriptor("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnDescriptor("LINE_NUMBER", "lineNumber", Integer.class));
 		TemplateHelper helper = createEmbeddable(metadata);
 		assertTrue(helper.needsEqualsHashCode());
 	}
 
 	@Test
 	public void testEmbeddableIdentifierFieldsReturnsAllFields() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
-				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
-				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("OrderLineId", "com.example")
+				.addColumn(new ColumnDescriptor("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnDescriptor("LINE_NUMBER", "lineNumber", Integer.class));
 		TemplateHelper helper = createEmbeddable(metadata);
 		List<FieldDetails> idFields = helper.getIdentifierFields();
 		assertEquals(2, idFields.size());
@@ -1323,10 +1323,10 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testEmbeddableBasicFields() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("Address", "com.example")
-				.addColumn(new ColumnMetadata("STREET", "street", String.class))
-				.addColumn(new ColumnMetadata("CITY", "city", String.class))
-				.addColumn(new ColumnMetadata("ZIP", "zip", String.class));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("Address", "com.example")
+				.addColumn(new ColumnDescriptor("STREET", "street", String.class))
+				.addColumn(new ColumnDescriptor("CITY", "city", String.class))
+				.addColumn(new ColumnDescriptor("ZIP", "zip", String.class));
 		TemplateHelper helper = createEmbeddable(metadata);
 		List<FieldDetails> fields = helper.getBasicFields();
 		assertEquals(3, fields.size());
@@ -1334,33 +1334,33 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testEmbeddableDeclarationName() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
-				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("OrderLineId", "com.example")
+				.addColumn(new ColumnDescriptor("ORDER_ID", "orderId", Long.class));
 		TemplateHelper helper = createEmbeddable(metadata);
 		assertEquals("OrderLineId", helper.getDeclarationName());
 	}
 
 	@Test
 	public void testEmbeddablePackageDeclaration() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
-				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("OrderLineId", "com.example")
+				.addColumn(new ColumnDescriptor("ORDER_ID", "orderId", Long.class));
 		TemplateHelper helper = createEmbeddable(metadata);
 		assertEquals("package com.example;", helper.getPackageDeclaration());
 	}
 
 	@Test
 	public void testEmbeddableNotSubclass() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
-				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("OrderLineId", "com.example")
+				.addColumn(new ColumnDescriptor("ORDER_ID", "orderId", Long.class));
 		TemplateHelper helper = createEmbeddable(metadata);
 		assertFalse(helper.isSubclass());
 	}
 
 	@Test
 	public void testEmbeddableFullConstructor() {
-		EmbeddableMetadata metadata = new EmbeddableMetadata("OrderLineId", "com.example")
-				.addColumn(new ColumnMetadata("ORDER_ID", "orderId", Long.class))
-				.addColumn(new ColumnMetadata("LINE_NUMBER", "lineNumber", Integer.class));
+		EmbeddableDescriptor metadata = new EmbeddableDescriptor("OrderLineId", "com.example")
+				.addColumn(new ColumnDescriptor("ORDER_ID", "orderId", Long.class))
+				.addColumn(new ColumnDescriptor("LINE_NUMBER", "lineNumber", Integer.class));
 		TemplateHelper helper = createEmbeddable(metadata);
 		assertTrue(helper.needsFullConstructor());
 		assertEquals("Long orderId, Integer lineNumber",
@@ -1369,7 +1369,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testEntityIsNotEmbeddable() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		assertFalse(create(table).isEmbeddable());
 	}
 
@@ -1377,7 +1377,7 @@ public class TemplateHelperTest {
 
 	private record TestContext(TemplateHelper helper, ModelsContext modelsContext, ClassDetails classDetails) {}
 
-	private TestContext createWithContext(TableMetadata table) {
+	private TestContext createWithContext(TableDescriptor table) {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails classDetails = builder.createEntityFromTable(table);
 		String pkg = table.getEntityPackage() != null ? table.getEntityPackage() : "";
@@ -1389,7 +1389,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsImmutable() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		dc.addAnnotationUsage(HibernateAnnotations.IMMUTABLE.createUsage(ctx.modelsContext()));
@@ -1399,7 +1399,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsDynamicInsert() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		dc.addAnnotationUsage(HibernateAnnotations.DYNAMIC_INSERT.createUsage(ctx.modelsContext()));
@@ -1409,7 +1409,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsDynamicUpdate() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		dc.addAnnotationUsage(HibernateAnnotations.DYNAMIC_UPDATE.createUsage(ctx.modelsContext()));
@@ -1419,7 +1419,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsBatchSize() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		BatchSizeAnnotation bs = HibernateAnnotations.BATCH_SIZE.createUsage(ctx.modelsContext());
@@ -1433,7 +1433,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsCacheReadWrite() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx.modelsContext());
@@ -1445,7 +1445,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsCacheWithRegion() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx.modelsContext());
@@ -1459,7 +1459,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsCacheIncludeLazyFalse() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx.modelsContext());
@@ -1473,7 +1473,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsCacheNoneSkipped() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		CacheAnnotation cache = HibernateAnnotations.CACHE.createUsage(ctx.modelsContext());
@@ -1487,9 +1487,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateNaturalIdAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("EMAIL", "email", String.class));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getBasicFields().stream()
 				.filter(f -> f.getName().equals("email")).findFirst().orElseThrow();
@@ -1500,9 +1500,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateNaturalIdAnnotationMutable() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("EMAIL", "email", String.class));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getBasicFields().stream()
 				.filter(f -> f.getName().equals("email")).findFirst().orElseThrow();
@@ -1514,8 +1514,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateNaturalIdAnnotationNone() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("EMAIL", "email", String.class));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().get(0);
 		assertEquals("", helper.generateNaturalIdAnnotation(field));
@@ -1523,9 +1523,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testHasNaturalId() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("EMAIL", "email", String.class));
 		TestContext ctx = createWithContext(table);
 		assertFalse(ctx.helper().hasNaturalId());
 		FieldDetails field = ctx.helper().getBasicFields().stream()
@@ -1537,9 +1537,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testNaturalIdUsedForEqualsHashCode() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("EMAIL", "email", String.class));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getBasicFields().stream()
 				.filter(f -> f.getName().equals("email")).findFirst().orElseThrow();
@@ -1555,9 +1555,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateOrderByAnnotation() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
@@ -1570,9 +1570,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateOrderByAnnotationEmpty() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getOneToManyFields().get(0);
@@ -1583,9 +1583,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateOrderColumnAnnotation() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
@@ -1598,9 +1598,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateOrderColumnAnnotationEmpty() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getOneToManyFields().get(0);
@@ -1611,9 +1611,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateConvertAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("ACTIVE", "active", Boolean.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("ACTIVE", "active", Boolean.class));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getBasicFields().stream()
 				.filter(f -> f.getName().equals("active")).findFirst().orElseThrow();
@@ -1626,9 +1626,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateConvertAnnotationNone() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().stream()
 				.filter(f -> f.getName().equals("name")).findFirst().orElseThrow();
@@ -1637,9 +1637,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateConvertAnnotationDisabled() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("ACTIVE", "active", Boolean.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("ACTIVE", "active", Boolean.class));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getBasicFields().stream()
 				.filter(f -> f.getName().equals("active")).findFirst().orElseThrow();
@@ -1654,9 +1654,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateFetchAnnotationJoin() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
@@ -1668,9 +1668,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateFetchAnnotationSubselect() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
@@ -1682,9 +1682,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateFetchAnnotationNone() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getOneToManyFields().get(0);
@@ -1695,10 +1695,10 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateNotFoundAnnotationIgnore() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example"));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getManyToOneFields().get(0);
@@ -1711,10 +1711,10 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateNotFoundAnnotationExceptionSkipped() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example"));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getManyToOneFields().get(0);
@@ -1726,10 +1726,10 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateNotFoundAnnotationNone() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example"));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getManyToOneFields().get(0);
@@ -1740,8 +1740,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateAnyAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails entity = (DynamicClassDetails) ctx.classDetails();
 		ClassDetails objClass = ctx.modelsContext().getClassDetailsRegistry()
@@ -1771,16 +1771,16 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateAnyAnnotationNone() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		TemplateHelper helper = create(table);
 		assertTrue(helper.getAnyFields().isEmpty());
 	}
 
 	@Test
 	public void testGenerateManyToAnyAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails entity = (DynamicClassDetails) ctx.classDetails();
 		ClassDetails objClass = ctx.modelsContext().getClassDetailsRegistry()
@@ -1805,9 +1805,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateBagAnnotation() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
@@ -1818,9 +1818,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateBagAnnotationNone() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getOneToManyFields().get(0);
@@ -1829,9 +1829,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateCollectionIdAnnotation() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
@@ -1849,9 +1849,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateCollectionIdAnnotationNone() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getOneToManyFields().get(0);
@@ -1862,9 +1862,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateMapKeyAnnotation() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
@@ -1877,9 +1877,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateMapKeyAnnotationNoName() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
@@ -1891,9 +1891,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateMapKeyColumnAnnotation() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
@@ -1906,9 +1906,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateMapKeyAnnotationNone() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getOneToManyFields().get(0);
@@ -1920,8 +1920,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateFormulaAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("FULL_NAME", "fullName", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("FULL_NAME", "fullName", String.class));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getBasicFields().stream()
 				.filter(f -> f.getName().equals("fullName")).findFirst().orElseThrow();
@@ -1934,8 +1934,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateFormulaAnnotationNone() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().get(0);
 		assertEquals("", helper.generateFormulaAnnotation(field));
@@ -1943,8 +1943,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testHasFormula() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("FULL_NAME", "fullName", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("FULL_NAME", "fullName", String.class));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getBasicFields().get(0);
 		assertFalse(ctx.helper().hasFormula(field));
@@ -1958,8 +1958,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateIdAnnotationsWithSequenceGenerator() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class)
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true).generationType(GenerationType.SEQUENCE));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getBasicFields().stream()
@@ -1984,8 +1984,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateIdAnnotationsWithTableGenerator() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class)
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true).generationType(GenerationType.TABLE));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getBasicFields().stream()
@@ -2014,8 +2014,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetElementCollectionFields() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		addElementCollectionField(dc, "nicknames", String.class, ctx.modelsContext());
@@ -2026,9 +2026,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testBasicFieldsExcludesElementCollection() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		addElementCollectionField(dc, "nicknames", String.class, ctx.modelsContext());
@@ -2039,8 +2039,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateElementCollectionAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		DynamicFieldDetails field = addElementCollectionField(
@@ -2061,8 +2061,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateElementCollectionAnnotationNoAnnotated() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails classDetails = builder.createEntityFromTable(table);
 		DynamicClassDetails dc = (DynamicClassDetails) classDetails;
@@ -2078,19 +2078,19 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testNeedsMinimalConstructorTrue() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class).nullable(false));
-		table.addColumn(new ColumnMetadata("NICKNAME", "nickname", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class).nullable(false));
+		table.addColumn(new ColumnDescriptor("NICKNAME", "nickname", String.class));
 		TemplateHelper helper = create(table);
 		assertTrue(helper.needsMinimalConstructor());
 	}
 
 	@Test
 	public void testNeedsMinimalConstructorFalseAllRequired() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class).nullable(false));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class).nullable(false));
 		TemplateHelper helper = create(table);
 		// minimal = [id (assigned), name (non-nullable)] same size as full = [id, name]
 		assertFalse(helper.needsMinimalConstructor());
@@ -2098,10 +2098,10 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testNeedsMinimalConstructorFalseNoRequired() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class)
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true).generationType(GenerationType.IDENTITY));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table);
 		// minimal = [] (ID has generator, NAME is nullable), full = [id, name]
 		assertFalse(helper.needsMinimalConstructor());
@@ -2109,10 +2109,10 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testMinimalConstructorProperties() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class).nullable(false));
-		table.addColumn(new ColumnMetadata("NICKNAME", "nickname", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class).nullable(false));
+		table.addColumn(new ColumnDescriptor("NICKNAME", "nickname", String.class));
 		TemplateHelper helper = create(table);
 		List<TemplateHelper.FullConstructorProperty> props = helper.getMinimalConstructorProperties();
 		assertEquals(2, props.size());
@@ -2122,11 +2122,11 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testMinimalConstructorSkipsGeneratedId() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class)
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true).generationType(GenerationType.IDENTITY));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class).nullable(false));
-		table.addColumn(new ColumnMetadata("NICKNAME", "nickname", String.class));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class).nullable(false));
+		table.addColumn(new ColumnDescriptor("NICKNAME", "nickname", String.class));
 		TemplateHelper helper = create(table);
 		List<TemplateHelper.FullConstructorProperty> props = helper.getMinimalConstructorProperties();
 		assertEquals(1, props.size());
@@ -2135,11 +2135,11 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testMinimalConstructorSkipsVersion() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("VERSION", "version", Integer.class)
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("VERSION", "version", Integer.class)
 				.version(true).nullable(false));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class).nullable(false));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class).nullable(false));
 		TemplateHelper helper = create(table);
 		List<TemplateHelper.FullConstructorProperty> props = helper.getMinimalConstructorProperties();
 		assertTrue(props.stream().noneMatch(p -> p.fieldName().equals("version")));
@@ -2147,10 +2147,10 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testMinimalConstructorIncludesNonOptionalManyToOne() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("DEPT_ID", "deptId", Long.class));
-		table.addForeignKey(new ForeignKeyMetadata(
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", Long.class));
+		table.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID", "Department", "com.example")
 				.optional(false));
 		TemplateHelper helper = create(table);
@@ -2160,10 +2160,10 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testMinimalConstructorParameterList() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class).nullable(false));
-		table.addColumn(new ColumnMetadata("NICKNAME", "nickname", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class).nullable(false));
+		table.addColumn(new ColumnDescriptor("NICKNAME", "nickname", String.class));
 		assertEquals("Long id, String name", create(table).getMinimalConstructorParameterList());
 	}
 
@@ -2171,9 +2171,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetCollectionTypeNameSet() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getOneToManyFields().get(0);
@@ -2182,9 +2182,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetCollectionInitializerTypeSet() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getOneToManyFields().get(0);
@@ -2222,7 +2222,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsFilterSimple() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		FilterAnnotation filter = HibernateAnnotations.FILTER.createUsage(ctx.modelsContext());
@@ -2235,7 +2235,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsFilterNoCondition() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		FilterAnnotation filter = HibernateAnnotations.FILTER.createUsage(ctx.modelsContext());
@@ -2249,7 +2249,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsMultipleFilters() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		FilterAnnotation f1 = HibernateAnnotations.FILTER.createUsage(ctx.modelsContext());
@@ -2268,7 +2268,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsFilterDefSimple() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		FilterDefAnnotation fd = HibernateAnnotations.FILTER_DEF.createUsage(ctx.modelsContext());
@@ -2281,7 +2281,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsFilterDefNoCondition() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		FilterDefAnnotation fd = HibernateAnnotations.FILTER_DEF.createUsage(ctx.modelsContext());
@@ -2295,7 +2295,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsFilterDefWithParams() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		ParamDefAnnotation pd = new ParamDefAnnotation(ctx.modelsContext());
@@ -2313,14 +2313,14 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetFiltersNone() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		assertTrue(ctx.helper().getFilters().isEmpty());
 	}
 
 	@Test
 	public void testGetFilterDefsNone() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		assertTrue(ctx.helper().getFilterDefs().isEmpty());
 	}
@@ -2329,9 +2329,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateFilterAnnotationsOnOneToMany() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
@@ -2345,9 +2345,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateFilterAnnotationsNone() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getOneToManyFields().get(0);
@@ -2356,9 +2356,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateFilterAnnotationsMultiple() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
@@ -2380,7 +2380,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsNamedQuery() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		NamedQueryJpaAnnotation nq = JpaAnnotations.NAMED_QUERY.createUsage(ctx.modelsContext());
@@ -2393,7 +2393,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsNamedNativeQuery() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		NamedNativeQueryJpaAnnotation nnq = JpaAnnotations.NAMED_NATIVE_QUERY.createUsage(ctx.modelsContext());
@@ -2406,14 +2406,14 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetNamedQueriesNone() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		assertTrue(ctx.helper().getNamedQueries().isEmpty());
 	}
 
 	@Test
 	public void testGetNamedNativeQueriesNone() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		assertTrue(ctx.helper().getNamedNativeQueries().isEmpty());
 	}
@@ -2422,7 +2422,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsSQLInsert() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		SQLInsertAnnotation si = HibernateAnnotations.SQL_INSERT.createUsage(ctx.modelsContext());
 		si.sql("INSERT INTO EMPLOYEE (name) VALUES (?)");
@@ -2433,7 +2433,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsSQLUpdate() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		SQLUpdateAnnotation su = HibernateAnnotations.SQL_UPDATE.createUsage(ctx.modelsContext());
 		su.sql("UPDATE EMPLOYEE SET name = ? WHERE id = ?");
@@ -2444,7 +2444,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsSQLDelete() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		SQLDeleteAnnotation sd = HibernateAnnotations.SQL_DELETE.createUsage(ctx.modelsContext());
 		sd.sql("DELETE FROM EMPLOYEE WHERE id = ?");
@@ -2455,7 +2455,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsSQLInsertCallable() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		SQLInsertAnnotation si = HibernateAnnotations.SQL_INSERT.createUsage(ctx.modelsContext());
 		si.sql("{call insertEmployee(?)}");
@@ -2469,9 +2469,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateSortNaturalAnnotation() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
@@ -2482,9 +2482,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateSortComparatorAnnotation() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getOneToManyFields().get(0);
@@ -2498,9 +2498,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateSortAnnotationNone() {
-		TableMetadata table = new TableMetadata("DEPARTMENT", "Department", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addOneToMany(new OneToManyMetadata(
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addOneToMany(new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example"));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getOneToManyFields().get(0);
@@ -2511,7 +2511,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsFetchProfile() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		FetchProfileAnnotation fp = HibernateAnnotations.FETCH_PROFILE.createUsage(ctx.modelsContext());
 		fp.name("employee-with-dept");
@@ -2523,7 +2523,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetFetchProfilesNone() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TemplateHelper helper = create(table);
 		assertTrue(helper.getFetchProfiles().isEmpty());
 	}
@@ -2532,7 +2532,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsEntityListenersSingle() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		EntityListenersJpaAnnotation el = JpaAnnotations.ENTITY_LISTENERS.createUsage(ctx.modelsContext());
 		el.value(new Class<?>[] { java.io.Serializable.class });
@@ -2543,7 +2543,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsEntityListenersMultiple() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		EntityListenersJpaAnnotation el = JpaAnnotations.ENTITY_LISTENERS.createUsage(ctx.modelsContext());
 		el.value(new Class<?>[] { java.io.Serializable.class, java.lang.Comparable.class });
@@ -2554,7 +2554,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsNoEntityListeners() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		String result = ctx.helper().generateClassAnnotations();
 		assertFalse(result.contains("@EntityListeners"), result);
@@ -2578,7 +2578,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetLifecycleCallbacksSingle() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		addMethodsFrom(WithPrePersist.class, (DynamicClassDetails) ctx.classDetails(), ctx.modelsContext());
 		List<TemplateHelper.LifecycleCallbackInfo> callbacks = ctx.helper().getLifecycleCallbacks();
@@ -2589,7 +2589,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetLifecycleCallbacksMultiple() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		addMethodsFrom(WithMultipleCallbacks.class, (DynamicClassDetails) ctx.classDetails(), ctx.modelsContext());
 		List<TemplateHelper.LifecycleCallbackInfo> callbacks = ctx.helper().getLifecycleCallbacks();
@@ -2598,14 +2598,14 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetLifecycleCallbacksNone() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TemplateHelper helper = create(table);
 		assertTrue(helper.getLifecycleCallbacks().isEmpty());
 	}
 
 	@Test
 	public void testGenerateLifecycleCallbackAnnotation() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		TemplateHelper.LifecycleCallbackInfo callback =
 				new TemplateHelper.LifecycleCallbackInfo("PrePersist", "onPrePersist");
@@ -2641,8 +2641,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetFieldModifiersDefault() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().get(0);
 		assertEquals("private", helper.getFieldModifiers(field));
@@ -2650,8 +2650,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetFieldModifiersProtected() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		Map<String, Map<String, List<String>>> fieldMeta = fieldMeta("name", "scope-field", "protected");
 		TemplateHelper helper = create(table, true, Collections.emptyMap(), fieldMeta);
 		FieldDetails field = helper.getBasicFields().get(0);
@@ -2662,8 +2662,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetPropertyGetModifiersDefault() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().get(0);
 		assertEquals("public", helper.getPropertyGetModifiers(field));
@@ -2671,8 +2671,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetPropertyGetModifiersProtected() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		Map<String, Map<String, List<String>>> fieldMeta = fieldMeta("name", "scope-get", "protected");
 		TemplateHelper helper = create(table, true, Collections.emptyMap(), fieldMeta);
 		FieldDetails field = helper.getBasicFields().get(0);
@@ -2683,8 +2683,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetPropertySetModifiersDefault() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().get(0);
 		assertEquals("public", helper.getPropertySetModifiers(field));
@@ -2692,8 +2692,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetPropertySetModifiersPrivate() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		Map<String, Map<String, List<String>>> fieldMeta = fieldMeta("name", "scope-set", "private");
 		TemplateHelper helper = create(table, true, Collections.emptyMap(), fieldMeta);
 		FieldDetails field = helper.getBasicFields().get(0);
@@ -2704,14 +2704,14 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetImplementsDeclarationDefault() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TemplateHelper helper = create(table);
 		assertEquals("implements Serializable", helper.getImplementsDeclaration());
 	}
 
 	@Test
 	public void testGetImplementsDeclarationWithMeta() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		Map<String, List<String>> classMeta = Map.of("implements", List.of("java.lang.Comparable"));
 		TemplateHelper helper = create(table, true, classMeta, Collections.emptyMap());
 		String result = helper.getImplementsDeclaration();
@@ -2721,7 +2721,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetImplementsDeclarationMultiple() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		Map<String, List<String>> classMeta = Map.of("implements",
 				List.of("java.lang.Comparable", "java.lang.Cloneable"));
 		TemplateHelper helper = create(table, true, classMeta, Collections.emptyMap());
@@ -2735,14 +2735,14 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetExtendsDeclarationDefault() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TemplateHelper helper = create(table);
 		assertEquals("", helper.getExtendsDeclaration());
 	}
 
 	@Test
 	public void testGetExtendsDeclarationWithMeta() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		Map<String, List<String>> classMeta = Map.of("extends", List.of("com.example.BaseEntity"));
 		TemplateHelper helper = create(table, true, classMeta, Collections.emptyMap());
 		String result = helper.getExtendsDeclaration();
@@ -2754,14 +2754,14 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testHasClassDescriptionFalse() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TemplateHelper helper = create(table);
 		assertFalse(helper.hasClassDescription());
 	}
 
 	@Test
 	public void testHasClassDescriptionTrue() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		Map<String, List<String>> classMeta = Map.of("class-description", List.of("Employee entity"));
 		TemplateHelper helper = create(table, true, classMeta, Collections.emptyMap());
 		assertTrue(helper.hasClassDescription());
@@ -2772,7 +2772,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testExtraImport() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		Map<String, List<String>> classMeta = Map.of("extra-import", List.of("com.example.util.MyHelper"));
 		TemplateHelper helper = create(table, true, classMeta, Collections.emptyMap());
 		String imports = helper.generateImports();
@@ -2781,7 +2781,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testExtraImportMultiple() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		Map<String, List<String>> classMeta = Map.of("extra-import",
 				List.of("com.example.util.MyHelper", "com.example.util.AnotherHelper"));
 		TemplateHelper helper = create(table, true, classMeta, Collections.emptyMap());
@@ -2794,14 +2794,14 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetDeclarationNameDefault() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TemplateHelper helper = create(table);
 		assertEquals("Employee", helper.getDeclarationName());
 	}
 
 	@Test
 	public void testGetDeclarationNameWithGeneratedClass() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		Map<String, List<String>> classMeta = Map.of("generated-class", List.of("com.generated.EmployeeBase"));
 		TemplateHelper helper = create(table, true, classMeta, Collections.emptyMap());
 		assertEquals("EmployeeBase", helper.getDeclarationName());
@@ -2809,7 +2809,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetPackageDeclarationWithGeneratedClass() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		Map<String, List<String>> classMeta = Map.of("generated-class", List.of("com.generated.EmployeeBase"));
 		TemplateHelper helper = create(table, true, classMeta, Collections.emptyMap());
 		assertEquals("package com.generated;", helper.getPackageDeclaration());
@@ -2819,14 +2819,14 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetSqlResultSetMappingsNone() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		assertTrue(ctx.helper().getSqlResultSetMappings().isEmpty());
 	}
 
 	@Test
 	public void testGetSqlResultSetMappingsWithEntityResult() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		SqlResultSetMappingJpaAnnotation mapping = JpaAnnotations.SQL_RESULT_SET_MAPPING.createUsage(ctx.modelsContext());
 		mapping.name("empMapping");
@@ -2851,7 +2851,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGetSqlResultSetMappingsWithColumnResult() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		SqlResultSetMappingJpaAnnotation mapping = JpaAnnotations.SQL_RESULT_SET_MAPPING.createUsage(ctx.modelsContext());
 		mapping.name("scalarMapping");
@@ -2868,7 +2868,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsSqlResultSetMapping() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		SqlResultSetMappingJpaAnnotation mapping = JpaAnnotations.SQL_RESULT_SET_MAPPING.createUsage(ctx.modelsContext());
 		mapping.name("empMapping");
@@ -2893,7 +2893,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsNamedNativeQueryWithResultClass() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		NamedNativeQueryJpaAnnotation nnq = JpaAnnotations.NAMED_NATIVE_QUERY.createUsage(ctx.modelsContext());
@@ -2907,7 +2907,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsNamedNativeQueryWithResultSetMapping() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		NamedNativeQueryJpaAnnotation nnq = JpaAnnotations.NAMED_NATIVE_QUERY.createUsage(ctx.modelsContext());
@@ -2923,7 +2923,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsOptimisticLocking() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		org.hibernate.boot.models.annotations.internal.OptimisticLockingAnnotation ol =
@@ -2936,7 +2936,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsOptimisticLockingVersionNotRendered() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		org.hibernate.boot.models.annotations.internal.OptimisticLockingAnnotation ol =
@@ -2951,7 +2951,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsRowId() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		org.hibernate.boot.models.annotations.internal.RowIdAnnotation rid =
@@ -2966,7 +2966,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsSubselect() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		org.hibernate.boot.models.annotations.internal.SubselectAnnotation ss =
@@ -2981,7 +2981,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsConcreteProxy() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		dc.addAnnotationUsage(HibernateAnnotations.CONCRETE_PROXY.createUsage(ctx.modelsContext()));
@@ -2993,7 +2993,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsSQLRestriction() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		org.hibernate.boot.models.annotations.internal.SQLRestrictionAnnotation sr =
@@ -3008,7 +3008,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsAccessProperty() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation access =
@@ -3021,7 +3021,7 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateClassAnnotationsAccessFieldNotRendered() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		TestContext ctx = createWithContext(table);
 		DynamicClassDetails dc = (DynamicClassDetails) ctx.helper().getClassDetails();
 		org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation access =
@@ -3036,9 +3036,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateOptimisticLockAnnotationExcluded() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TestContext ctx = createWithContext(table);
 		FieldDetails nameField = ctx.helper().getBasicFields().stream()
 				.filter(f -> "name".equals(f.getName())).findFirst().orElseThrow();
@@ -3052,9 +3052,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateOptimisticLockAnnotationNotExcluded() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TestContext ctx = createWithContext(table);
 		FieldDetails nameField = ctx.helper().getBasicFields().stream()
 				.filter(f -> "name".equals(f.getName())).findFirst().orElseThrow();
@@ -3066,9 +3066,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateAccessAnnotationProperty() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TestContext ctx = createWithContext(table);
 		FieldDetails nameField = ctx.helper().getBasicFields().stream()
 				.filter(f -> "name".equals(f.getName())).findFirst().orElseThrow();
@@ -3082,9 +3082,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testGenerateAccessAnnotationFieldNotRendered() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TestContext ctx = createWithContext(table);
 		FieldDetails nameField = ctx.helper().getBasicFields().stream()
 				.filter(f -> "name".equals(f.getName())).findFirst().orElseThrow();
@@ -3097,14 +3097,14 @@ public class TemplateHelperTest {
 	@Test
 	public void testSuperclassFullConstructorProperties() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata parentTable = new TableMetadata("VEHICLE", "Vehicle", "com.example");
-		parentTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		parentTable.addColumn(new ColumnMetadata("MAKE", "make", String.class));
+		TableDescriptor parentTable = new TableDescriptor("VEHICLE", "Vehicle", "com.example");
+		parentTable.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		parentTable.addColumn(new ColumnDescriptor("MAKE", "make", String.class));
 		builder.createEntityFromTable(parentTable);
-		TableMetadata childTable = new TableMetadata("CAR", "Car", "com.example");
+		TableDescriptor childTable = new TableDescriptor("CAR", "Car", "com.example");
 		childTable.parent("Vehicle", "com.example");
-		childTable.addColumn(new ColumnMetadata("CAR_ID", "carId", Long.class).primaryKey(true));
-		childTable.addColumn(new ColumnMetadata("DOORS", "doors", Integer.class));
+		childTable.addColumn(new ColumnDescriptor("CAR_ID", "carId", Long.class).primaryKey(true));
+		childTable.addColumn(new ColumnDescriptor("DOORS", "doors", Integer.class));
 		ClassDetails childEntity = builder.createEntityFromTable(childTable);
 		TemplateHelper helper = new TemplateHelper(childEntity, builder.getModelsContext(),
 				new ImportContextImpl("com.example"), true);
@@ -3117,14 +3117,14 @@ public class TemplateHelperTest {
 	@Test
 	public void testSuperclassFullConstructorArgumentList() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata parentTable = new TableMetadata("VEHICLE", "Vehicle", "com.example");
-		parentTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		parentTable.addColumn(new ColumnMetadata("MAKE", "make", String.class));
+		TableDescriptor parentTable = new TableDescriptor("VEHICLE", "Vehicle", "com.example");
+		parentTable.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		parentTable.addColumn(new ColumnDescriptor("MAKE", "make", String.class));
 		builder.createEntityFromTable(parentTable);
-		TableMetadata childTable = new TableMetadata("CAR", "Car", "com.example");
+		TableDescriptor childTable = new TableDescriptor("CAR", "Car", "com.example");
 		childTable.parent("Vehicle", "com.example");
-		childTable.addColumn(new ColumnMetadata("CAR_ID", "carId", Long.class).primaryKey(true));
-		childTable.addColumn(new ColumnMetadata("DOORS", "doors", Integer.class));
+		childTable.addColumn(new ColumnDescriptor("CAR_ID", "carId", Long.class).primaryKey(true));
+		childTable.addColumn(new ColumnDescriptor("DOORS", "doors", Integer.class));
 		ClassDetails childEntity = builder.createEntityFromTable(childTable);
 		TemplateHelper helper = new TemplateHelper(childEntity, builder.getModelsContext(),
 				new ImportContextImpl("com.example"), true);
@@ -3134,14 +3134,14 @@ public class TemplateHelperTest {
 	@Test
 	public void testFullConstructorParameterListIncludesSuperclass() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata parentTable = new TableMetadata("VEHICLE", "Vehicle", "com.example");
-		parentTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		parentTable.addColumn(new ColumnMetadata("MAKE", "make", String.class));
+		TableDescriptor parentTable = new TableDescriptor("VEHICLE", "Vehicle", "com.example");
+		parentTable.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		parentTable.addColumn(new ColumnDescriptor("MAKE", "make", String.class));
 		builder.createEntityFromTable(parentTable);
-		TableMetadata childTable = new TableMetadata("CAR", "Car", "com.example");
+		TableDescriptor childTable = new TableDescriptor("CAR", "Car", "com.example");
 		childTable.parent("Vehicle", "com.example");
-		childTable.addColumn(new ColumnMetadata("CAR_ID", "carId", Long.class).primaryKey(true));
-		childTable.addColumn(new ColumnMetadata("DOORS", "doors", Integer.class));
+		childTable.addColumn(new ColumnDescriptor("CAR_ID", "carId", Long.class).primaryKey(true));
+		childTable.addColumn(new ColumnDescriptor("DOORS", "doors", Integer.class));
 		ClassDetails childEntity = builder.createEntityFromTable(childTable);
 		TemplateHelper helper = new TemplateHelper(childEntity, builder.getModelsContext(),
 				new ImportContextImpl("com.example"), true);
@@ -3152,15 +3152,15 @@ public class TemplateHelperTest {
 	@Test
 	public void testSuperclassMinimalConstructorProperties() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata parentTable = new TableMetadata("VEHICLE", "Vehicle", "com.example");
-		parentTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		parentTable.addColumn(new ColumnMetadata("MAKE", "make", String.class).nullable(false));
-		parentTable.addColumn(new ColumnMetadata("COLOR", "color", String.class));
+		TableDescriptor parentTable = new TableDescriptor("VEHICLE", "Vehicle", "com.example");
+		parentTable.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		parentTable.addColumn(new ColumnDescriptor("MAKE", "make", String.class).nullable(false));
+		parentTable.addColumn(new ColumnDescriptor("COLOR", "color", String.class));
 		builder.createEntityFromTable(parentTable);
-		TableMetadata childTable = new TableMetadata("CAR", "Car", "com.example");
+		TableDescriptor childTable = new TableDescriptor("CAR", "Car", "com.example");
 		childTable.parent("Vehicle", "com.example");
-		childTable.addColumn(new ColumnMetadata("CAR_ID", "carId", Long.class).primaryKey(true));
-		childTable.addColumn(new ColumnMetadata("DOORS", "doors", Integer.class));
+		childTable.addColumn(new ColumnDescriptor("CAR_ID", "carId", Long.class).primaryKey(true));
+		childTable.addColumn(new ColumnDescriptor("DOORS", "doors", Integer.class));
 		ClassDetails childEntity = builder.createEntityFromTable(childTable);
 		TemplateHelper helper = new TemplateHelper(childEntity, builder.getModelsContext(),
 				new ImportContextImpl("com.example"), true);
@@ -3172,8 +3172,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testNoSuperclassConstructorPropertiesWhenNotSubclass() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		TemplateHelper helper = create(table);
 		assertTrue(helper.getSuperclassFullConstructorProperties().isEmpty());
 		assertTrue(helper.getSuperclassMinimalConstructorProperties().isEmpty());
@@ -3184,15 +3184,15 @@ public class TemplateHelperTest {
 	@Test
 	public void testNeedsMinimalConstructorWithSuperclassDifference() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata parentTable = new TableMetadata("VEHICLE", "Vehicle", "com.example");
-		parentTable.addColumn(new ColumnMetadata("ID", "id", Long.class)
+		TableDescriptor parentTable = new TableDescriptor("VEHICLE", "Vehicle", "com.example");
+		parentTable.addColumn(new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true).generationType(GenerationType.IDENTITY));
-		parentTable.addColumn(new ColumnMetadata("MAKE", "make", String.class).nullable(false));
-		parentTable.addColumn(new ColumnMetadata("COLOR", "color", String.class));
+		parentTable.addColumn(new ColumnDescriptor("MAKE", "make", String.class).nullable(false));
+		parentTable.addColumn(new ColumnDescriptor("COLOR", "color", String.class));
 		builder.createEntityFromTable(parentTable);
-		TableMetadata childTable = new TableMetadata("CAR", "Car", "com.example");
+		TableDescriptor childTable = new TableDescriptor("CAR", "Car", "com.example");
 		childTable.parent("Vehicle", "com.example");
-		childTable.addColumn(new ColumnMetadata("CAR_ID", "carId", Long.class)
+		childTable.addColumn(new ColumnDescriptor("CAR_ID", "carId", Long.class)
 				.primaryKey(true).generationType(GenerationType.IDENTITY));
 		ClassDetails childEntity = builder.createEntityFromTable(childTable);
 		TemplateHelper helper = new TemplateHelper(childEntity, builder.getModelsContext(),
@@ -3207,9 +3207,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testTableUniqueConstraintSingle() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("EMAIL", "email", String.class));
 		TestContext ctx = createWithContext(table);
 		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
 				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
@@ -3222,9 +3222,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testTableUniqueConstraintWithName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("EMAIL", "email", String.class));
 		TestContext ctx = createWithContext(table);
 		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
 				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
@@ -3239,10 +3239,10 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testTableUniqueConstraintMultipleColumns() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("FIRST_NAME", "firstName", String.class));
-		table.addColumn(new ColumnMetadata("LAST_NAME", "lastName", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("FIRST_NAME", "firstName", String.class));
+		table.addColumn(new ColumnDescriptor("LAST_NAME", "lastName", String.class));
 		TestContext ctx = createWithContext(table);
 		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
 				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
@@ -3255,10 +3255,10 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testTableMultipleUniqueConstraints() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
-		table.addColumn(new ColumnMetadata("SSN", "ssn", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("EMAIL", "email", String.class));
+		table.addColumn(new ColumnDescriptor("SSN", "ssn", String.class));
 		TestContext ctx = createWithContext(table);
 		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
 				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
@@ -3273,8 +3273,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testTableNoUniqueConstraints() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		String result = create(table).generateClassAnnotations();
 		assertFalse(result.contains("uniqueConstraint"), result);
 		assertFalse(result.contains("UniqueConstraint"), result);
@@ -3284,9 +3284,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testTableIndexSingle() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TestContext ctx = createWithContext(table);
 		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
 				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
@@ -3299,9 +3299,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testTableIndexWithName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TestContext ctx = createWithContext(table);
 		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
 				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
@@ -3315,9 +3315,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testTableIndexUnique() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("EMAIL", "email", String.class));
 		TestContext ctx = createWithContext(table);
 		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
 				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
@@ -3331,10 +3331,10 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testTableMultipleIndexes() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
-		table.addColumn(new ColumnMetadata("EMAIL", "email", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
+		table.addColumn(new ColumnDescriptor("EMAIL", "email", String.class));
 		TestContext ctx = createWithContext(table);
 		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
 				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
@@ -3349,8 +3349,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testTableNoIndexes() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		String result = create(table).generateClassAnnotations();
 		assertFalse(result.contains("indexes"), result);
 		assertFalse(result.contains("@Index"), result);
@@ -3358,8 +3358,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testTableIndexMultiColumnList() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		TestContext ctx = createWithContext(table);
 		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
 				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
@@ -3375,9 +3375,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testTableCheckConstraintSingle() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("AGE", "age", Integer.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("AGE", "age", Integer.class));
 		TestContext ctx = createWithContext(table);
 		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
 				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
@@ -3390,9 +3390,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testTableCheckConstraintWithName() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("AGE", "age", Integer.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("AGE", "age", Integer.class));
 		TestContext ctx = createWithContext(table);
 		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
 				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
@@ -3407,8 +3407,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testTableMultipleCheckConstraints() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		TestContext ctx = createWithContext(table);
 		var tableAnn = (org.hibernate.boot.models.annotations.internal.TableJpaAnnotation)
 				ctx.classDetails().getDirectAnnotationUsage(jakarta.persistence.Table.class);
@@ -3423,8 +3423,8 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testTableNoCheckConstraints() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		String result = create(table).generateClassAnnotations();
 		assertFalse(result.contains("CheckConstraint"), result);
 		assertFalse(result.contains("check ="), result);
@@ -3434,9 +3434,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testColumnTransformerReadAndWrite() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("SALARY", "salary", java.math.BigDecimal.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("SALARY", "salary", java.math.BigDecimal.class));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getBasicFields().stream()
 				.filter(f -> "salary".equals(f.getName())).findFirst().orElseThrow();
@@ -3452,9 +3452,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testColumnTransformerReadOnly() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("SALARY", "salary", java.math.BigDecimal.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("SALARY", "salary", java.math.BigDecimal.class));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getBasicFields().stream()
 				.filter(f -> "salary".equals(f.getName())).findFirst().orElseThrow();
@@ -3467,9 +3467,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testColumnTransformerWithForColumn() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("SALARY", "salary", java.math.BigDecimal.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("SALARY", "salary", java.math.BigDecimal.class));
 		TestContext ctx = createWithContext(table);
 		FieldDetails field = ctx.helper().getBasicFields().stream()
 				.filter(f -> "salary".equals(f.getName())).findFirst().orElseThrow();
@@ -3484,9 +3484,9 @@ public class TemplateHelperTest {
 
 	@Test
 	public void testColumnTransformerNotPresent() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		TemplateHelper helper = create(table);
 		FieldDetails field = helper.getBasicFields().stream()
 				.filter(f -> "name".equals(f.getName())).findFirst().orElseThrow();
@@ -3498,10 +3498,10 @@ public class TemplateHelperTest {
 	@Test
 	public void testGetFullConstructorPropertiesForRootEntity() {
 		// HelloWorld: assigned id (string), hello (string), world (long)
-		TableMetadata helloWorldTable = new TableMetadata("HELLO_WORLD", "HelloWorld", "");
-		helloWorldTable.addColumn(new ColumnMetadata("ID", "id", String.class).primaryKey(true));
-		helloWorldTable.addColumn(new ColumnMetadata("HELLO", "hello", String.class));
-		helloWorldTable.addColumn(new ColumnMetadata("WORLD", "world", long.class));
+		TableDescriptor helloWorldTable = new TableDescriptor("HELLO_WORLD", "HelloWorld", "");
+		helloWorldTable.addColumn(new ColumnDescriptor("ID", "id", String.class).primaryKey(true));
+		helloWorldTable.addColumn(new ColumnDescriptor("HELLO", "hello", String.class));
+		helloWorldTable.addColumn(new ColumnDescriptor("WORLD", "world", long.class));
 		TemplateHelper hwHelper = create(helloWorldTable);
 		List<TemplateHelper.FullConstructorProperty> hwProps = hwHelper.getFullConstructorProperties();
 		assertEquals(3, hwProps.size());
@@ -3513,17 +3513,17 @@ public class TemplateHelperTest {
 	@Test
 	public void testGetFullConstructorPropertiesForSubclass() {
 		// HelloWorld: assigned id (string), hello (string), world (long)
-		TableMetadata helloWorldTable = new TableMetadata("HELLO_WORLD", "HelloWorld", "");
-		helloWorldTable.addColumn(new ColumnMetadata("ID", "id", String.class).primaryKey(true));
-		helloWorldTable.addColumn(new ColumnMetadata("HELLO", "hello", String.class));
-		helloWorldTable.addColumn(new ColumnMetadata("WORLD", "world", long.class));
+		TableDescriptor helloWorldTable = new TableDescriptor("HELLO_WORLD", "HelloWorld", "");
+		helloWorldTable.addColumn(new ColumnDescriptor("ID", "id", String.class).primaryKey(true));
+		helloWorldTable.addColumn(new ColumnDescriptor("HELLO", "hello", String.class));
+		helloWorldTable.addColumn(new ColumnDescriptor("WORLD", "world", long.class));
 		// HelloUniverse extends HelloWorld: dimension (string), address (embedded), notgenerated (excluded)
-		TableMetadata helloUniverseTable = new TableMetadata("HELLO_UNIVERSE", "HelloUniverse", "");
+		TableDescriptor helloUniverseTable = new TableDescriptor("HELLO_UNIVERSE", "HelloUniverse", "");
 		helloUniverseTable.parent("HelloWorld", "");
-		helloUniverseTable.addColumn(new ColumnMetadata("DIMENSION", "dimension", String.class));
-		helloUniverseTable.addColumn(new ColumnMetadata("NOTGENERATED", "notgenerated", String.class));
+		helloUniverseTable.addColumn(new ColumnDescriptor("DIMENSION", "dimension", String.class));
+		helloUniverseTable.addColumn(new ColumnDescriptor("NOTGENERATED", "notgenerated", String.class));
 		helloUniverseTable.addEmbeddedField(
-				new EmbeddedFieldMetadata("address", "UniversalAddress", ""));
+				new EmbeddedFieldDescriptor("address", "UniversalAddress", ""));
 		// Build both entities via the same builder so superclass is resolved
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		builder.createEntityFromTable(helloWorldTable);

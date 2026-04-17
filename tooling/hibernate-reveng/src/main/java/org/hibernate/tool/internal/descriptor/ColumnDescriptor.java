@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -30,7 +30,7 @@ import jakarta.persistence.TemporalType;
  *
  * @author Koen Aers
  */
-public class ColumnMetadata {
+public class ColumnDescriptor {
 	private final String columnName;
 	private final String fieldName;
 	private final Class<?> javaType;
@@ -53,95 +53,95 @@ public class ColumnMetadata {
 	private String hibernateTypeName;
 	private Map<String, List<String>> metaAttributes = new LinkedHashMap<>();
 
-	public ColumnMetadata(String columnName, String fieldName, Class<?> javaType) {
+	public ColumnDescriptor(String columnName, String fieldName, Class<?> javaType) {
 		this.columnName = columnName;
 		this.fieldName = fieldName;
 		this.javaType = javaType;
 		this.nullable = true;
 	}
 
-	public ColumnMetadata primaryKey(boolean primaryKey) {
+	public ColumnDescriptor primaryKey(boolean primaryKey) {
 		this.primaryKey = primaryKey;
 		this.nullable = false;
 		return this;
 	}
 
-	public ColumnMetadata autoIncrement(boolean autoIncrement) {
+	public ColumnDescriptor autoIncrement(boolean autoIncrement) {
 		this.autoIncrement = autoIncrement;
 		return this;
 	}
 
-	public ColumnMetadata nullable(boolean nullable) {
+	public ColumnDescriptor nullable(boolean nullable) {
 		this.nullable = nullable;
 		return this;
 	}
 
-	public ColumnMetadata length(int length) {
+	public ColumnDescriptor length(int length) {
 		this.length = length;
 		return this;
 	}
 
-	public ColumnMetadata precision(int precision) {
+	public ColumnDescriptor precision(int precision) {
 		this.precision = precision;
 		return this;
 	}
 
-	public ColumnMetadata scale(int scale) {
+	public ColumnDescriptor scale(int scale) {
 		this.scale = scale;
 		return this;
 	}
 
-	public ColumnMetadata version(boolean version) {
+	public ColumnDescriptor version(boolean version) {
 		this.version = version;
 		return this;
 	}
 
-	public ColumnMetadata basicFetch(FetchType fetchType) {
+	public ColumnDescriptor basicFetch(FetchType fetchType) {
 		this.basicFetchType = fetchType;
 		return this;
 	}
 
-	public ColumnMetadata basicOptional(boolean optional) {
+	public ColumnDescriptor basicOptional(boolean optional) {
 		this.basicOptional = optional;
 		return this;
 	}
 
-	public ColumnMetadata temporal(TemporalType temporalType) {
+	public ColumnDescriptor temporal(TemporalType temporalType) {
 		this.temporalType = temporalType;
 		return this;
 	}
 
-	public ColumnMetadata lob(boolean lob) {
+	public ColumnDescriptor lob(boolean lob) {
 		this.lob = lob;
 		return this;
 	}
 
-	public ColumnMetadata comment(String comment) {
+	public ColumnDescriptor comment(String comment) {
 		this.comment = comment;
 		return this;
 	}
 
-	public ColumnMetadata generationType(GenerationType generationType) {
+	public ColumnDescriptor generationType(GenerationType generationType) {
 		this.generationType = generationType;
 		return this;
 	}
 
-	public ColumnMetadata unique(boolean unique) {
+	public ColumnDescriptor unique(boolean unique) {
 		this.unique = unique;
 		return this;
 	}
 
-	public ColumnMetadata insertable(boolean insertable) {
+	public ColumnDescriptor insertable(boolean insertable) {
 		this.insertable = insertable;
 		return this;
 	}
 
-	public ColumnMetadata updatable(boolean updatable) {
+	public ColumnDescriptor updatable(boolean updatable) {
 		this.updatable = updatable;
 		return this;
 	}
 
-	public ColumnMetadata hibernateTypeName(String hibernateTypeName) {
+	public ColumnDescriptor hibernateTypeName(String hibernateTypeName) {
 		this.hibernateTypeName = hibernateTypeName;
 		return this;
 	}
@@ -170,11 +170,11 @@ public class ColumnMetadata {
 	public String getHibernateTypeName() { return hibernateTypeName; }
 
 	public Map<String, List<String>> getMetaAttributes() { return metaAttributes; }
-	public ColumnMetadata metaAttributes(Map<String, List<String>> metaAttributes) {
+	public ColumnDescriptor metaAttributes(Map<String, List<String>> metaAttributes) {
 		this.metaAttributes = metaAttributes;
 		return this;
 	}
-	public ColumnMetadata addMetaAttribute(String name, String value) {
+	public ColumnDescriptor addMetaAttribute(String name, String value) {
 		this.metaAttributes.computeIfAbsent(name, k -> new ArrayList<>()).add(value);
 		return this;
 	}

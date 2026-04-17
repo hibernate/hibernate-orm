@@ -22,8 +22,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.tool.api.reveng.RevengSettings;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,9 +52,9 @@ public class RevengStrategyAdapterTest {
 	@Test
 	public void testIsManyToManyTableTrue() {
 		// A join table: 2 columns, both PK, both FK
-		TableMetadata joinTable = new TableMetadata("USER_ROLE", "UserRole", "com.example")
-			.addColumn(new ColumnMetadata("USER_ID", "userId", long.class).primaryKey(true))
-			.addColumn(new ColumnMetadata("ROLE_ID", "roleId", long.class).primaryKey(true));
+		TableDescriptor joinTable = new TableDescriptor("USER_ROLE", "UserRole", "com.example")
+			.addColumn(new ColumnDescriptor("USER_ID", "userId", long.class).primaryKey(true))
+			.addColumn(new ColumnDescriptor("ROLE_ID", "roleId", long.class).primaryKey(true));
 
 		List<RawForeignKeyInfo> outgoingFks = Arrays.asList(
 			new RawForeignKeyInfo("FK_UR_USER", "USER_ROLE", null, null, "USER_ID", "ID",
@@ -69,10 +69,10 @@ public class RevengStrategyAdapterTest {
 	@Test
 	public void testIsManyToManyTableFalse() {
 		// A regular table with extra non-FK columns
-		TableMetadata regularTable = new TableMetadata("EMPLOYEE", "Employee", "com.example")
-			.addColumn(new ColumnMetadata("ID", "id", long.class).primaryKey(true))
-			.addColumn(new ColumnMetadata("NAME", "name", String.class))
-			.addColumn(new ColumnMetadata("DEPT_ID", "deptId", long.class));
+		TableDescriptor regularTable = new TableDescriptor("EMPLOYEE", "Employee", "com.example")
+			.addColumn(new ColumnDescriptor("ID", "id", long.class).primaryKey(true))
+			.addColumn(new ColumnDescriptor("NAME", "name", String.class))
+			.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", long.class));
 
 		List<RawForeignKeyInfo> outgoingFks = Collections.singletonList(
 			new RawForeignKeyInfo("FK_EMP_DEPT", "EMPLOYEE", null, null, "DEPT_ID", "ID",
@@ -84,9 +84,9 @@ public class RevengStrategyAdapterTest {
 
 	@Test
 	public void testIsManyToManyTableNoFks() {
-		TableMetadata table = new TableMetadata("EMPLOYEE", "Employee", "com.example")
-			.addColumn(new ColumnMetadata("ID", "id", long.class).primaryKey(true))
-			.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example")
+			.addColumn(new ColumnDescriptor("ID", "id", long.class).primaryKey(true))
+			.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 
 		assertFalse(adapter.isManyToManyTable(table, Collections.emptyList()));
 	}
@@ -94,9 +94,9 @@ public class RevengStrategyAdapterTest {
 	@Test
 	public void testIsOneToOneTrue() {
 		// FK columns match PK columns → one-to-one
-		TableMetadata fkTable = new TableMetadata("EMPLOYEE_DETAIL", "EmployeeDetail", "com.example")
-			.addColumn(new ColumnMetadata("EMPLOYEE_ID", "employeeId", long.class).primaryKey(true))
-			.addColumn(new ColumnMetadata("BIO", "bio", String.class));
+		TableDescriptor fkTable = new TableDescriptor("EMPLOYEE_DETAIL", "EmployeeDetail", "com.example")
+			.addColumn(new ColumnDescriptor("EMPLOYEE_ID", "employeeId", long.class).primaryKey(true))
+			.addColumn(new ColumnDescriptor("BIO", "bio", String.class));
 
 		RawForeignKeyInfo fkInfo = new RawForeignKeyInfo(
 			"FK_DETAIL_EMP", "EMPLOYEE_DETAIL", null, null, "EMPLOYEE_ID", "ID",
@@ -108,9 +108,9 @@ public class RevengStrategyAdapterTest {
 	@Test
 	public void testIsOneToOneFalse() {
 		// FK column does NOT match PK column → many-to-one
-		TableMetadata fkTable = new TableMetadata("EMPLOYEE", "Employee", "com.example")
-			.addColumn(new ColumnMetadata("ID", "id", long.class).primaryKey(true))
-			.addColumn(new ColumnMetadata("DEPT_ID", "deptId", long.class));
+		TableDescriptor fkTable = new TableDescriptor("EMPLOYEE", "Employee", "com.example")
+			.addColumn(new ColumnDescriptor("ID", "id", long.class).primaryKey(true))
+			.addColumn(new ColumnDescriptor("DEPT_ID", "deptId", long.class));
 
 		RawForeignKeyInfo fkInfo = new RawForeignKeyInfo(
 			"FK_EMP_DEPT", "EMPLOYEE", null, null, "DEPT_ID", "ID",
@@ -161,9 +161,9 @@ public class RevengStrategyAdapterTest {
 
 	@Test
 	public void testForeignKeyToManyToManyName() {
-		TableMetadata joinTable = new TableMetadata("USER_ROLE", "UserRole", "com.example")
-			.addColumn(new ColumnMetadata("USER_ID", "userId", long.class).primaryKey(true))
-			.addColumn(new ColumnMetadata("ROLE_ID", "roleId", long.class).primaryKey(true));
+		TableDescriptor joinTable = new TableDescriptor("USER_ROLE", "UserRole", "com.example")
+			.addColumn(new ColumnDescriptor("USER_ID", "userId", long.class).primaryKey(true))
+			.addColumn(new ColumnDescriptor("ROLE_ID", "roleId", long.class).primaryKey(true));
 
 		List<RawForeignKeyInfo> joinTableFks = Arrays.asList(
 			new RawForeignKeyInfo("FK_UR_USER", "USER_ROLE", null, null, "USER_ID", "ID",
@@ -180,9 +180,9 @@ public class RevengStrategyAdapterTest {
 
 	@Test
 	public void testIsForeignKeyCollectionInverse() {
-		TableMetadata joinTable = new TableMetadata("USER_ROLE", "UserRole", "com.example")
-			.addColumn(new ColumnMetadata("USER_ID", "userId", long.class).primaryKey(true))
-			.addColumn(new ColumnMetadata("ROLE_ID", "roleId", long.class).primaryKey(true));
+		TableDescriptor joinTable = new TableDescriptor("USER_ROLE", "UserRole", "com.example")
+			.addColumn(new ColumnDescriptor("USER_ID", "userId", long.class).primaryKey(true))
+			.addColumn(new ColumnDescriptor("ROLE_ID", "roleId", long.class).primaryKey(true));
 
 		List<RawForeignKeyInfo> joinTableFks = Arrays.asList(
 			new RawForeignKeyInfo("FK_UR_USER", "USER_ROLE", null, null, "USER_ID", "ID",

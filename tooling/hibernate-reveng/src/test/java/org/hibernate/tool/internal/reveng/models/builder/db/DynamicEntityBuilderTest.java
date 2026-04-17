@@ -22,17 +22,17 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.tool.internal.reveng.models.metadata.AttributeOverrideMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.EmbeddableMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.EmbeddedFieldMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.ForeignKeyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.InheritanceMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.ManyToManyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToManyMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.OneToOneMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.AttributeOverrideDescriptor;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.CompositeIdDescriptor;
+import org.hibernate.tool.internal.descriptor.EmbeddableDescriptor;
+import org.hibernate.tool.internal.descriptor.EmbeddedFieldDescriptor;
+import org.hibernate.tool.internal.descriptor.ForeignKeyDescriptor;
+import org.hibernate.tool.internal.descriptor.InheritanceDescriptor;
+import org.hibernate.tool.internal.descriptor.ManyToManyDescriptor;
+import org.hibernate.tool.internal.descriptor.OneToManyDescriptor;
+import org.hibernate.tool.internal.descriptor.OneToOneDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.hibernate.models.spi.FieldDetails;
 import org.junit.jupiter.api.Test;
 
@@ -78,24 +78,24 @@ public class DynamicEntityBuilderTest {
 	@Test
 	public void testCreateSimpleEntity() {
 		// GIVEN: Database table metadata for a PERSON table
-		TableMetadata tableMetadata =
-			new TableMetadata("PERSON", "Person", "com.example.entity");
+		TableDescriptor tableMetadata =
+			new TableDescriptor("PERSON", "Person", "com.example.entity");
 		tableMetadata.setSchema("public");
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.autoIncrement(true)
 		);
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("NAME", "name", String.class)
+			new ColumnDescriptor("NAME", "name", String.class)
 				.length(255)
 				.nullable(false)
 		);
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("EMAIL", "email", String.class)
+			new ColumnDescriptor("EMAIL", "email", String.class)
 				.length(100)
 		);
 
@@ -173,27 +173,27 @@ public class DynamicEntityBuilderTest {
 	@Test
 	public void testCreateEntityWithDifferentDataTypes() {
 		// GIVEN: Database table with various column types
-		TableMetadata tableMetadata =
-			new TableMetadata("PRODUCT", "Product", "com.example.entity");
+		TableDescriptor tableMetadata =
+			new TableDescriptor("PRODUCT", "Product", "com.example.entity");
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.autoIncrement(true)
 		);
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("PRICE", "price", BigDecimal.class)
+			new ColumnDescriptor("PRICE", "price", BigDecimal.class)
 				.precision(10)
 				.scale(2)
 		);
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("QUANTITY", "quantity", Integer.class)
+			new ColumnDescriptor("QUANTITY", "quantity", Integer.class)
 		);
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("ACTIVE", "active", Boolean.class)
+			new ColumnDescriptor("ACTIVE", "active", Boolean.class)
 		);
 
 		// WHEN: Building the entity
@@ -229,16 +229,16 @@ public class DynamicEntityBuilderTest {
 	@Test
 	public void testEntityMetadataCanBeUsedForCodeGeneration() {
 		// GIVEN: An entity built from database metadata
-		TableMetadata tableMetadata =
-			new TableMetadata("USER_TABLE", "User", "com.example.entity");
+		TableDescriptor tableMetadata =
+			new TableDescriptor("USER_TABLE", "User", "com.example.entity");
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("USER_ID", "userId", Long.class)
+			new ColumnDescriptor("USER_ID", "userId", Long.class)
 				.primaryKey(true)
 		);
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("USERNAME", "username", String.class)
+			new ColumnDescriptor("USERNAME", "username", String.class)
 				.length(50)
 				.nullable(false)
 		);
@@ -301,17 +301,17 @@ public class DynamicEntityBuilderTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
 		// GIVEN: A DEPARTMENT table (the target of the relationship)
-		TableMetadata departmentMetadata =
-			new TableMetadata("DEPARTMENT", "Department", "com.example.entity");
+		TableDescriptor departmentMetadata =
+			new TableDescriptor("DEPARTMENT", "Department", "com.example.entity");
 
 		departmentMetadata.addColumn(
-			new ColumnMetadata("DEPT_ID", "deptId", Long.class)
+			new ColumnDescriptor("DEPT_ID", "deptId", Long.class)
 				.primaryKey(true)
 				.autoIncrement(true)
 		);
 
 		departmentMetadata.addColumn(
-			new ColumnMetadata("DEPT_NAME", "deptName", String.class)
+			new ColumnDescriptor("DEPT_NAME", "deptName", String.class)
 				.length(100)
 				.nullable(false)
 		);
@@ -320,28 +320,28 @@ public class DynamicEntityBuilderTest {
 		ClassDetails departmentEntity = builder.createEntityFromTable(departmentMetadata);
 
 		// GIVEN: An EMPLOYEE table with a foreign key to DEPARTMENT
-		TableMetadata employeeMetadata =
-			new TableMetadata("EMPLOYEE", "Employee", "com.example.entity");
+		TableDescriptor employeeMetadata =
+			new TableDescriptor("EMPLOYEE", "Employee", "com.example.entity");
 
 		employeeMetadata.addColumn(
-			new ColumnMetadata("EMP_ID", "empId", Long.class)
+			new ColumnDescriptor("EMP_ID", "empId", Long.class)
 				.primaryKey(true)
 				.autoIncrement(true)
 		);
 
 		employeeMetadata.addColumn(
-			new ColumnMetadata("EMP_NAME", "empName", String.class)
+			new ColumnDescriptor("EMP_NAME", "empName", String.class)
 				.length(200)
 		);
 
 		// The FK column is still declared as a column but will be replaced by the relationship
 		employeeMetadata.addColumn(
-			new ColumnMetadata("DEPT_ID", "deptId", Long.class)
+			new ColumnDescriptor("DEPT_ID", "deptId", Long.class)
 		);
 
 		// Add foreign key: EMPLOYEE.DEPT_ID -> DEPARTMENT.DEPT_ID
 		employeeMetadata.addForeignKey(
-			new ForeignKeyMetadata(
+			new ForeignKeyDescriptor(
 				"department",      // field name on the entity
 				"DEPT_ID",         // FK column name
 				"Department",      // target entity class name
@@ -398,36 +398,36 @@ public class DynamicEntityBuilderTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
 		// Build Department first
-		TableMetadata departmentMetadata =
-			new TableMetadata("DEPARTMENT", "Department", "com.example.entity");
+		TableDescriptor departmentMetadata =
+			new TableDescriptor("DEPARTMENT", "Department", "com.example.entity");
 		departmentMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.autoIncrement(true)
 		);
 		departmentMetadata.addColumn(
-			new ColumnMetadata("NAME", "name", String.class)
+			new ColumnDescriptor("NAME", "name", String.class)
 				.length(100)
 		);
 		builder.createEntityFromTable(departmentMetadata);
 
 		// Build Employee with FK
-		TableMetadata employeeMetadata =
-			new TableMetadata("EMPLOYEE", "Employee", "com.example.entity");
+		TableDescriptor employeeMetadata =
+			new TableDescriptor("EMPLOYEE", "Employee", "com.example.entity");
 		employeeMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.autoIncrement(true)
 		);
 		employeeMetadata.addColumn(
-			new ColumnMetadata("NAME", "name", String.class)
+			new ColumnDescriptor("NAME", "name", String.class)
 				.length(200)
 		);
 		employeeMetadata.addColumn(
-			new ColumnMetadata("DEPARTMENT_ID", "departmentId", Long.class)
+			new ColumnDescriptor("DEPARTMENT_ID", "departmentId", Long.class)
 		);
 		employeeMetadata.addForeignKey(
-			new ForeignKeyMetadata(
+			new ForeignKeyDescriptor(
 				"department", "DEPARTMENT_ID", "Department", "com.example.entity"
 			).fetchType(FetchType.LAZY)
 		);
@@ -494,23 +494,23 @@ public class DynamicEntityBuilderTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
 		// GIVEN: A DEPARTMENT table with a OneToMany to EMPLOYEE
-		TableMetadata departmentMetadata =
-			new TableMetadata("DEPARTMENT", "Department", "com.example.entity");
+		TableDescriptor departmentMetadata =
+			new TableDescriptor("DEPARTMENT", "Department", "com.example.entity");
 
 		departmentMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.autoIncrement(true)
 		);
 
 		departmentMetadata.addColumn(
-			new ColumnMetadata("NAME", "name", String.class)
+			new ColumnDescriptor("NAME", "name", String.class)
 				.length(100)
 		);
 
 		// The inverse side: Department has a Set<Employee>
 		departmentMetadata.addOneToMany(
-			new OneToManyMetadata(
+			new OneToManyDescriptor(
 				"employees",         // field name
 				"department",        // mappedBy (the field on Employee)
 				"Employee",          // element entity class name
@@ -563,41 +563,41 @@ public class DynamicEntityBuilderTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
 		// Build Department with OneToMany
-		TableMetadata departmentMetadata =
-			new TableMetadata("DEPARTMENT", "Department", "com.example.entity");
+		TableDescriptor departmentMetadata =
+			new TableDescriptor("DEPARTMENT", "Department", "com.example.entity");
 		departmentMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.autoIncrement(true)
 		);
 		departmentMetadata.addColumn(
-			new ColumnMetadata("NAME", "name", String.class)
+			new ColumnDescriptor("NAME", "name", String.class)
 				.length(100)
 		);
 		departmentMetadata.addOneToMany(
-			new OneToManyMetadata(
+			new OneToManyDescriptor(
 				"employees", "department", "Employee", "com.example.entity"
 			).fetchType(FetchType.LAZY).cascade(CascadeType.ALL)
 		);
 		ClassDetails departmentEntity = builder.createEntityFromTable(departmentMetadata);
 
 		// Build Employee with ManyToOne
-		TableMetadata employeeMetadata =
-			new TableMetadata("EMPLOYEE", "Employee", "com.example.entity");
+		TableDescriptor employeeMetadata =
+			new TableDescriptor("EMPLOYEE", "Employee", "com.example.entity");
 		employeeMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.autoIncrement(true)
 		);
 		employeeMetadata.addColumn(
-			new ColumnMetadata("NAME", "name", String.class)
+			new ColumnDescriptor("NAME", "name", String.class)
 				.length(200)
 		);
 		employeeMetadata.addColumn(
-			new ColumnMetadata("DEPARTMENT_ID", "departmentId", Long.class)
+			new ColumnDescriptor("DEPARTMENT_ID", "departmentId", Long.class)
 		);
 		employeeMetadata.addForeignKey(
-			new ForeignKeyMetadata(
+			new ForeignKeyDescriptor(
 				"department", "DEPARTMENT_ID", "Department", "com.example.entity"
 			).fetchType(FetchType.LAZY)
 		);
@@ -629,28 +629,28 @@ public class DynamicEntityBuilderTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
 		// GIVEN: A USER table (owning side holds the FK to ADDRESS)
-		TableMetadata userMetadata =
-			new TableMetadata("USER_TABLE", "User", "com.example.entity");
+		TableDescriptor userMetadata =
+			new TableDescriptor("USER_TABLE", "User", "com.example.entity");
 
 		userMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.autoIncrement(true)
 		);
 
 		userMetadata.addColumn(
-			new ColumnMetadata("USERNAME", "username", String.class)
+			new ColumnDescriptor("USERNAME", "username", String.class)
 				.length(100)
 		);
 
 		// FK column that will be replaced by the relationship
 		userMetadata.addColumn(
-			new ColumnMetadata("ADDRESS_ID", "addressId", Long.class)
+			new ColumnDescriptor("ADDRESS_ID", "addressId", Long.class)
 		);
 
 		// OneToOne owning side: User -> Address via ADDRESS_ID
 		userMetadata.addOneToOne(
-			new OneToOneMetadata(
+			new OneToOneDescriptor(
 				"address", "Address", "com.example.entity"
 			)
 			.foreignKeyColumnName("ADDRESS_ID")
@@ -662,28 +662,28 @@ public class DynamicEntityBuilderTest {
 		ClassDetails userEntity = builder.createEntityFromTable(userMetadata);
 
 		// GIVEN: An ADDRESS table (inverse side, mapped by user.address)
-		TableMetadata addressMetadata =
-			new TableMetadata("ADDRESS", "Address", "com.example.entity");
+		TableDescriptor addressMetadata =
+			new TableDescriptor("ADDRESS", "Address", "com.example.entity");
 
 		addressMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.autoIncrement(true)
 		);
 
 		addressMetadata.addColumn(
-			new ColumnMetadata("STREET", "street", String.class)
+			new ColumnDescriptor("STREET", "street", String.class)
 				.length(255)
 		);
 
 		addressMetadata.addColumn(
-			new ColumnMetadata("CITY", "city", String.class)
+			new ColumnDescriptor("CITY", "city", String.class)
 				.length(100)
 		);
 
 		// OneToOne inverse side
 		addressMetadata.addOneToOne(
-			new OneToOneMetadata(
+			new OneToOneDescriptor(
 				"user", "User", "com.example.entity"
 			)
 			.mappedBy("address")
@@ -739,20 +739,20 @@ public class DynamicEntityBuilderTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
 		// Build User (owning side)
-		TableMetadata userMetadata =
-			new TableMetadata("USER_TABLE", "User", "com.example.entity");
+		TableDescriptor userMetadata =
+			new TableDescriptor("USER_TABLE", "User", "com.example.entity");
 		userMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true).autoIncrement(true)
 		);
 		userMetadata.addColumn(
-			new ColumnMetadata("USERNAME", "username", String.class).length(100)
+			new ColumnDescriptor("USERNAME", "username", String.class).length(100)
 		);
 		userMetadata.addColumn(
-			new ColumnMetadata("ADDRESS_ID", "addressId", Long.class)
+			new ColumnDescriptor("ADDRESS_ID", "addressId", Long.class)
 		);
 		userMetadata.addOneToOne(
-			new OneToOneMetadata("address", "Address", "com.example.entity")
+			new OneToOneDescriptor("address", "Address", "com.example.entity")
 				.foreignKeyColumnName("ADDRESS_ID")
 				.fetchType(FetchType.LAZY)
 				.cascade(CascadeType.ALL)
@@ -761,20 +761,20 @@ public class DynamicEntityBuilderTest {
 		ClassDetails userEntity = builder.createEntityFromTable(userMetadata);
 
 		// Build Address (inverse side)
-		TableMetadata addressMetadata =
-			new TableMetadata("ADDRESS", "Address", "com.example.entity");
+		TableDescriptor addressMetadata =
+			new TableDescriptor("ADDRESS", "Address", "com.example.entity");
 		addressMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true).autoIncrement(true)
 		);
 		addressMetadata.addColumn(
-			new ColumnMetadata("STREET", "street", String.class).length(255)
+			new ColumnDescriptor("STREET", "street", String.class).length(255)
 		);
 		addressMetadata.addColumn(
-			new ColumnMetadata("CITY", "city", String.class).length(100)
+			new ColumnDescriptor("CITY", "city", String.class).length(100)
 		);
 		addressMetadata.addOneToOne(
-			new OneToOneMetadata("user", "User", "com.example.entity")
+			new OneToOneDescriptor("user", "User", "com.example.entity")
 				.mappedBy("address")
 				.fetchType(FetchType.LAZY)
 		);
@@ -807,23 +807,23 @@ public class DynamicEntityBuilderTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
 		// GIVEN: A STUDENT table (owning side of ManyToMany with COURSE)
-		TableMetadata studentMetadata =
-			new TableMetadata("STUDENT", "Student", "com.example.entity");
+		TableDescriptor studentMetadata =
+			new TableDescriptor("STUDENT", "Student", "com.example.entity");
 
 		studentMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.autoIncrement(true)
 		);
 
 		studentMetadata.addColumn(
-			new ColumnMetadata("NAME", "name", String.class)
+			new ColumnDescriptor("NAME", "name", String.class)
 				.length(100)
 		);
 
 		// Owning side: Student owns the join table
 		studentMetadata.addManyToMany(
-			new ManyToManyMetadata(
+			new ManyToManyDescriptor(
 				"courses", "Course", "com.example.entity"
 			)
 			.joinTable("STUDENT_COURSE", "STUDENT_ID", "COURSE_ID")
@@ -834,23 +834,23 @@ public class DynamicEntityBuilderTest {
 		ClassDetails studentEntity = builder.createEntityFromTable(studentMetadata);
 
 		// GIVEN: A COURSE table (inverse side)
-		TableMetadata courseMetadata =
-			new TableMetadata("COURSE", "Course", "com.example.entity");
+		TableDescriptor courseMetadata =
+			new TableDescriptor("COURSE", "Course", "com.example.entity");
 
 		courseMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.autoIncrement(true)
 		);
 
 		courseMetadata.addColumn(
-			new ColumnMetadata("TITLE", "title", String.class)
+			new ColumnDescriptor("TITLE", "title", String.class)
 				.length(200)
 		);
 
 		// Inverse side
 		courseMetadata.addManyToMany(
-			new ManyToManyMetadata(
+			new ManyToManyDescriptor(
 				"students", "Student", "com.example.entity"
 			)
 			.mappedBy("courses")
@@ -904,34 +904,34 @@ public class DynamicEntityBuilderTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
 		// Build Student (owning side)
-		TableMetadata studentMetadata =
-			new TableMetadata("STUDENT", "Student", "com.example.entity");
+		TableDescriptor studentMetadata =
+			new TableDescriptor("STUDENT", "Student", "com.example.entity");
 		studentMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true).autoIncrement(true)
 		);
 		studentMetadata.addColumn(
-			new ColumnMetadata("NAME", "name", String.class).length(100)
+			new ColumnDescriptor("NAME", "name", String.class).length(100)
 		);
 		studentMetadata.addManyToMany(
-			new ManyToManyMetadata("courses", "Course", "com.example.entity")
+			new ManyToManyDescriptor("courses", "Course", "com.example.entity")
 				.joinTable("STUDENT_COURSE", "STUDENT_ID", "COURSE_ID")
 				.cascade(CascadeType.PERSIST, CascadeType.MERGE)
 		);
 		ClassDetails studentEntity = builder.createEntityFromTable(studentMetadata);
 
 		// Build Course (inverse side)
-		TableMetadata courseMetadata =
-			new TableMetadata("COURSE", "Course", "com.example.entity");
+		TableDescriptor courseMetadata =
+			new TableDescriptor("COURSE", "Course", "com.example.entity");
 		courseMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true).autoIncrement(true)
 		);
 		courseMetadata.addColumn(
-			new ColumnMetadata("TITLE", "title", String.class).length(200)
+			new ColumnDescriptor("TITLE", "title", String.class).length(200)
 		);
 		courseMetadata.addManyToMany(
-			new ManyToManyMetadata("students", "Student", "com.example.entity")
+			new ManyToManyDescriptor("students", "Student", "com.example.entity")
 				.mappedBy("courses")
 		);
 		ClassDetails courseEntity = builder.createEntityFromTable(courseMetadata);
@@ -963,21 +963,21 @@ public class DynamicEntityBuilderTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
 		// GIVEN: An embeddable Address class (from columns spread across tables)
-		EmbeddableMetadata addressEmbeddable =
-			new EmbeddableMetadata("Address", "com.example.entity");
+		EmbeddableDescriptor addressEmbeddable =
+			new EmbeddableDescriptor("Address", "com.example.entity");
 
 		addressEmbeddable.addColumn(
-			new ColumnMetadata("STREET", "street", String.class)
+			new ColumnDescriptor("STREET", "street", String.class)
 				.length(255)
 		);
 
 		addressEmbeddable.addColumn(
-			new ColumnMetadata("CITY", "city", String.class)
+			new ColumnDescriptor("CITY", "city", String.class)
 				.length(100)
 		);
 
 		addressEmbeddable.addColumn(
-			new ColumnMetadata("ZIP_CODE", "zipCode", String.class)
+			new ColumnDescriptor("ZIP_CODE", "zipCode", String.class)
 				.length(20)
 		);
 
@@ -1010,23 +1010,23 @@ public class DynamicEntityBuilderTest {
 		assertEquals(255, streetCol.length());
 
 		// GIVEN: A PERSON table with two embedded Address fields (home and work)
-		TableMetadata personMetadata =
-			new TableMetadata("PERSON", "Person", "com.example.entity");
+		TableDescriptor personMetadata =
+			new TableDescriptor("PERSON", "Person", "com.example.entity");
 
 		personMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.autoIncrement(true)
 		);
 
 		personMetadata.addColumn(
-			new ColumnMetadata("NAME", "name", String.class)
+			new ColumnDescriptor("NAME", "name", String.class)
 				.length(100)
 		);
 
 		// Home address: columns prefixed with HOME_
 		personMetadata.addEmbeddedField(
-			new EmbeddedFieldMetadata(
+			new EmbeddedFieldDescriptor(
 				"homeAddress", "Address", "com.example.entity"
 			)
 			.addAttributeOverride("street", "HOME_STREET")
@@ -1036,7 +1036,7 @@ public class DynamicEntityBuilderTest {
 
 		// Work address: columns prefixed with WORK_
 		personMetadata.addEmbeddedField(
-			new EmbeddedFieldMetadata(
+			new EmbeddedFieldDescriptor(
 				"workAddress", "Address", "com.example.entity"
 			)
 			.addAttributeOverride("street", "WORK_STREET")
@@ -1096,28 +1096,28 @@ public class DynamicEntityBuilderTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
 		// Build embeddable Address
-		EmbeddableMetadata addressEmbeddable =
-			new EmbeddableMetadata("Address", "com.example.entity");
+		EmbeddableDescriptor addressEmbeddable =
+			new EmbeddableDescriptor("Address", "com.example.entity");
 		addressEmbeddable.addColumn(
-			new ColumnMetadata("STREET", "street", String.class).length(255)
+			new ColumnDescriptor("STREET", "street", String.class).length(255)
 		);
 		addressEmbeddable.addColumn(
-			new ColumnMetadata("CITY", "city", String.class).length(100)
+			new ColumnDescriptor("CITY", "city", String.class).length(100)
 		);
 		ClassDetails addressClass = EmbeddableClassBuilder.buildEmbeddableClass(addressEmbeddable, builder.getModelsContext());
 
 		// Build Person with embedded Address
-		TableMetadata personMetadata =
-			new TableMetadata("PERSON", "Person", "com.example.entity");
+		TableDescriptor personMetadata =
+			new TableDescriptor("PERSON", "Person", "com.example.entity");
 		personMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true).autoIncrement(true)
 		);
 		personMetadata.addColumn(
-			new ColumnMetadata("NAME", "name", String.class).length(100)
+			new ColumnDescriptor("NAME", "name", String.class).length(100)
 		);
 		personMetadata.addEmbeddedField(
-			new EmbeddedFieldMetadata(
+			new EmbeddedFieldDescriptor(
 				"address", "Address", "com.example.entity"
 			)
 			.addAttributeOverride("street", "HOME_STREET")
@@ -1156,23 +1156,23 @@ public class DynamicEntityBuilderTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
 		// GIVEN: A VEHICLE root table with SINGLE_TABLE inheritance
-		TableMetadata vehicleMetadata =
-			new TableMetadata("VEHICLE", "Vehicle", "com.example.entity");
+		TableDescriptor vehicleMetadata =
+			new TableDescriptor("VEHICLE", "Vehicle", "com.example.entity");
 
 		vehicleMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.autoIncrement(true)
 		);
 
 		vehicleMetadata.addColumn(
-			new ColumnMetadata("MAKE", "make", String.class)
+			new ColumnDescriptor("MAKE", "make", String.class)
 				.length(100)
 		);
 
 		vehicleMetadata
 			.inheritance(
-				new InheritanceMetadata(InheritanceType.SINGLE_TABLE)
+				new InheritanceDescriptor(InheritanceType.SINGLE_TABLE)
 					.discriminatorColumn("VEHICLE_TYPE")
 					.discriminatorType(DiscriminatorType.STRING)
 					.discriminatorColumnLength(50)
@@ -1207,11 +1207,11 @@ public class DynamicEntityBuilderTest {
 		assertNull(vehicleEntity.getSuperClass(), "Root entity should have no superclass");
 
 		// GIVEN: A CAR subclass in the same table
-		TableMetadata carMetadata =
-			new TableMetadata("VEHICLE", "Car", "com.example.entity");
+		TableDescriptor carMetadata =
+			new TableDescriptor("VEHICLE", "Car", "com.example.entity");
 
 		carMetadata.addColumn(
-			new ColumnMetadata("NUM_DOORS", "numDoors", Integer.class)
+			new ColumnDescriptor("NUM_DOORS", "numDoors", Integer.class)
 		);
 
 		carMetadata
@@ -1248,11 +1248,11 @@ public class DynamicEntityBuilderTest {
 		assertNotNull(findField(carEntity.getFields(), "numDoors"));
 
 		// GIVEN: A TRUCK subclass
-		TableMetadata truckMetadata =
-			new TableMetadata("VEHICLE", "Truck", "com.example.entity");
+		TableDescriptor truckMetadata =
+			new TableDescriptor("VEHICLE", "Truck", "com.example.entity");
 
 		truckMetadata.addColumn(
-			new ColumnMetadata("PAYLOAD_CAPACITY", "payloadCapacity", Double.class)
+			new ColumnDescriptor("PAYLOAD_CAPACITY", "payloadCapacity", Double.class)
 		);
 
 		truckMetadata
@@ -1276,18 +1276,18 @@ public class DynamicEntityBuilderTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
 		// Build Vehicle root
-		TableMetadata vehicleMetadata =
-			new TableMetadata("VEHICLE", "Vehicle", "com.example.entity");
+		TableDescriptor vehicleMetadata =
+			new TableDescriptor("VEHICLE", "Vehicle", "com.example.entity");
 		vehicleMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true).autoIncrement(true)
 		);
 		vehicleMetadata.addColumn(
-			new ColumnMetadata("MAKE", "make", String.class).length(100)
+			new ColumnDescriptor("MAKE", "make", String.class).length(100)
 		);
 		vehicleMetadata
 			.inheritance(
-				new InheritanceMetadata(InheritanceType.SINGLE_TABLE)
+				new InheritanceDescriptor(InheritanceType.SINGLE_TABLE)
 					.discriminatorColumn("VEHICLE_TYPE")
 					.discriminatorType(DiscriminatorType.STRING)
 			)
@@ -1295,10 +1295,10 @@ public class DynamicEntityBuilderTest {
 		ClassDetails vehicleEntity = builder.createEntityFromTable(vehicleMetadata);
 
 		// Build Car subclass
-		TableMetadata carMetadata =
-			new TableMetadata("VEHICLE", "Car", "com.example.entity");
+		TableDescriptor carMetadata =
+			new TableDescriptor("VEHICLE", "Car", "com.example.entity");
 		carMetadata.addColumn(
-			new ColumnMetadata("NUM_DOORS", "numDoors", Integer.class)
+			new ColumnDescriptor("NUM_DOORS", "numDoors", Integer.class)
 		);
 		carMetadata
 			.parent("Vehicle", "com.example.entity")
@@ -1333,22 +1333,22 @@ public class DynamicEntityBuilderTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
 		// GIVEN: A PAYMENT root table with JOINED inheritance
-		TableMetadata paymentMetadata =
-			new TableMetadata("PAYMENT", "Payment", "com.example.entity");
+		TableDescriptor paymentMetadata =
+			new TableDescriptor("PAYMENT", "Payment", "com.example.entity");
 
 		paymentMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.autoIncrement(true)
 		);
 
 		paymentMetadata.addColumn(
-			new ColumnMetadata("AMOUNT", "amount", java.math.BigDecimal.class)
+			new ColumnDescriptor("AMOUNT", "amount", java.math.BigDecimal.class)
 				.precision(10).scale(2)
 		);
 
 		paymentMetadata
-			.inheritance(new InheritanceMetadata(InheritanceType.JOINED));
+			.inheritance(new InheritanceDescriptor(InheritanceType.JOINED));
 
 		ClassDetails paymentEntity = builder.createEntityFromTable(paymentMetadata);
 
@@ -1362,11 +1362,11 @@ public class DynamicEntityBuilderTest {
 		assertFalse(paymentEntity.hasAnnotationUsage(DiscriminatorColumn.class, builder.getModelsContext()));
 
 		// GIVEN: A CREDIT_CARD_PAYMENT subclass table with PK join column
-		TableMetadata ccPaymentMetadata =
-			new TableMetadata("CREDIT_CARD_PAYMENT", "CreditCardPayment", "com.example.entity");
+		TableDescriptor ccPaymentMetadata =
+			new TableDescriptor("CREDIT_CARD_PAYMENT", "CreditCardPayment", "com.example.entity");
 
 		ccPaymentMetadata.addColumn(
-			new ColumnMetadata("CARD_NUMBER", "cardNumber", String.class)
+			new ColumnDescriptor("CARD_NUMBER", "cardNumber", String.class)
 				.length(19)
 		);
 
@@ -1408,25 +1408,25 @@ public class DynamicEntityBuilderTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
 		// Build Payment root
-		TableMetadata paymentMetadata =
-			new TableMetadata("PAYMENT", "Payment", "com.example.entity");
+		TableDescriptor paymentMetadata =
+			new TableDescriptor("PAYMENT", "Payment", "com.example.entity");
 		paymentMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true).autoIncrement(true)
 		);
 		paymentMetadata.addColumn(
-			new ColumnMetadata("AMOUNT", "amount", java.math.BigDecimal.class)
+			new ColumnDescriptor("AMOUNT", "amount", java.math.BigDecimal.class)
 				.precision(10).scale(2)
 		);
 		paymentMetadata
-			.inheritance(new InheritanceMetadata(InheritanceType.JOINED));
+			.inheritance(new InheritanceDescriptor(InheritanceType.JOINED));
 		ClassDetails paymentEntity = builder.createEntityFromTable(paymentMetadata);
 
 		// Build CreditCardPayment subclass
-		TableMetadata ccPaymentMetadata =
-			new TableMetadata("CREDIT_CARD_PAYMENT", "CreditCardPayment", "com.example.entity");
+		TableDescriptor ccPaymentMetadata =
+			new TableDescriptor("CREDIT_CARD_PAYMENT", "CreditCardPayment", "com.example.entity");
 		ccPaymentMetadata.addColumn(
-			new ColumnMetadata("CARD_NUMBER", "cardNumber", String.class).length(19)
+			new ColumnDescriptor("CARD_NUMBER", "cardNumber", String.class).length(19)
 		);
 		ccPaymentMetadata
 			.parent("Payment", "com.example.entity")
@@ -1434,13 +1434,13 @@ public class DynamicEntityBuilderTest {
 		ClassDetails ccPaymentEntity = builder.createEntityFromTable(ccPaymentMetadata);
 
 		// Build BankTransferPayment subclass (no PK join column override)
-		TableMetadata btPaymentMetadata =
-			new TableMetadata("BANK_TRANSFER_PAYMENT", "BankTransferPayment", "com.example.entity");
+		TableDescriptor btPaymentMetadata =
+			new TableDescriptor("BANK_TRANSFER_PAYMENT", "BankTransferPayment", "com.example.entity");
 		btPaymentMetadata.addColumn(
-			new ColumnMetadata("BANK_NAME", "bankName", String.class).length(100)
+			new ColumnDescriptor("BANK_NAME", "bankName", String.class).length(100)
 		);
 		btPaymentMetadata.addColumn(
-			new ColumnMetadata("ACCOUNT_NUMBER", "accountNumber", String.class).length(34)
+			new ColumnDescriptor("ACCOUNT_NUMBER", "accountNumber", String.class).length(34)
 		);
 		btPaymentMetadata
 			.parent("Payment", "com.example.entity");
@@ -1484,16 +1484,16 @@ public class DynamicEntityBuilderTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
 		// GIVEN: An embeddable ID class for ORDER_ITEM composite PK
-		EmbeddableMetadata idClassMetadata =
-			new EmbeddableMetadata("OrderItemId", "com.example.entity");
+		EmbeddableDescriptor idClassMetadata =
+			new EmbeddableDescriptor("OrderItemId", "com.example.entity");
 
 		idClassMetadata.addColumn(
-			new ColumnMetadata("ORDER_ID", "orderId", Long.class)
+			new ColumnDescriptor("ORDER_ID", "orderId", Long.class)
 				.primaryKey(true)
 		);
 
 		idClassMetadata.addColumn(
-			new ColumnMetadata("PRODUCT_ID", "productId", Long.class)
+			new ColumnDescriptor("PRODUCT_ID", "productId", Long.class)
 				.primaryKey(true)
 		);
 
@@ -1515,21 +1515,21 @@ public class DynamicEntityBuilderTest {
 		assertNotNull(findField(idFields, "productId"));
 
 		// GIVEN: An ORDER_ITEM table with composite PK via @EmbeddedId
-		TableMetadata orderItemMetadata =
-			new TableMetadata("ORDER_ITEM", "OrderItem", "com.example.entity");
+		TableDescriptor orderItemMetadata =
+			new TableDescriptor("ORDER_ITEM", "OrderItem", "com.example.entity");
 
 		orderItemMetadata.addColumn(
-			new ColumnMetadata("QUANTITY", "quantity", Integer.class)
+			new ColumnDescriptor("QUANTITY", "quantity", Integer.class)
 		);
 
 		orderItemMetadata.addColumn(
-			new ColumnMetadata("UNIT_PRICE", "unitPrice", java.math.BigDecimal.class)
+			new ColumnDescriptor("UNIT_PRICE", "unitPrice", java.math.BigDecimal.class)
 				.precision(10).scale(2)
 		);
 
 		// Configure composite ID
 		orderItemMetadata.compositeId(
-			new CompositeIdMetadata(
+			new CompositeIdDescriptor(
 				"id", "OrderItemId", "com.example.entity"
 			)
 		);
@@ -1575,24 +1575,24 @@ public class DynamicEntityBuilderTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
 		// Build embeddable ID class
-		EmbeddableMetadata idClassMetadata =
-			new EmbeddableMetadata("FlightId", "com.example.entity");
+		EmbeddableDescriptor idClassMetadata =
+			new EmbeddableDescriptor("FlightId", "com.example.entity");
 		idClassMetadata.addColumn(
-			new ColumnMetadata("DEPARTURE", "departure", String.class).length(3)
+			new ColumnDescriptor("DEPARTURE", "departure", String.class).length(3)
 		);
 		idClassMetadata.addColumn(
-			new ColumnMetadata("ARRIVAL", "arrival", String.class).length(3)
+			new ColumnDescriptor("ARRIVAL", "arrival", String.class).length(3)
 		);
 		EmbeddableClassBuilder.buildEmbeddableClass(idClassMetadata, builder.getModelsContext());
 
 		// Build entity with @EmbeddedId and attribute overrides
-		TableMetadata flightMetadata =
-			new TableMetadata("FLIGHT", "Flight", "com.example.entity");
+		TableDescriptor flightMetadata =
+			new TableDescriptor("FLIGHT", "Flight", "com.example.entity");
 		flightMetadata.addColumn(
-			new ColumnMetadata("FLIGHT_NUMBER", "flightNumber", String.class).length(10)
+			new ColumnDescriptor("FLIGHT_NUMBER", "flightNumber", String.class).length(10)
 		);
 		flightMetadata.compositeId(
-			new CompositeIdMetadata(
+			new CompositeIdDescriptor(
 				"id", "FlightId", "com.example.entity"
 			)
 			.addAttributeOverride("departure", "DEPARTURE_AIRPORT")
@@ -1625,28 +1625,28 @@ public class DynamicEntityBuilderTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
 		// Build embeddable ID class
-		EmbeddableMetadata idClassMetadata =
-			new EmbeddableMetadata("OrderItemId", "com.example.entity");
+		EmbeddableDescriptor idClassMetadata =
+			new EmbeddableDescriptor("OrderItemId", "com.example.entity");
 		idClassMetadata.addColumn(
-			new ColumnMetadata("ORDER_ID", "orderId", Long.class)
+			new ColumnDescriptor("ORDER_ID", "orderId", Long.class)
 		);
 		idClassMetadata.addColumn(
-			new ColumnMetadata("PRODUCT_ID", "productId", Long.class)
+			new ColumnDescriptor("PRODUCT_ID", "productId", Long.class)
 		);
 		ClassDetails idClass = EmbeddableClassBuilder.buildEmbeddableClass(idClassMetadata, builder.getModelsContext());
 
 		// Build entity with @EmbeddedId
-		TableMetadata orderItemMetadata =
-			new TableMetadata("ORDER_ITEM", "OrderItem", "com.example.entity");
+		TableDescriptor orderItemMetadata =
+			new TableDescriptor("ORDER_ITEM", "OrderItem", "com.example.entity");
 		orderItemMetadata.addColumn(
-			new ColumnMetadata("QUANTITY", "quantity", Integer.class)
+			new ColumnDescriptor("QUANTITY", "quantity", Integer.class)
 		);
 		orderItemMetadata.addColumn(
-			new ColumnMetadata("UNIT_PRICE", "unitPrice", java.math.BigDecimal.class)
+			new ColumnDescriptor("UNIT_PRICE", "unitPrice", java.math.BigDecimal.class)
 				.precision(10).scale(2)
 		);
 		orderItemMetadata.compositeId(
-			new CompositeIdMetadata(
+			new CompositeIdDescriptor(
 				"id", "OrderItemId", "com.example.entity"
 			)
 		);
@@ -1680,27 +1680,27 @@ public class DynamicEntityBuilderTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
 		// GIVEN: A table with a version column for optimistic locking
-		TableMetadata tableMetadata =
-			new TableMetadata("ARTICLE", "Article", "com.example.entity");
+		TableDescriptor tableMetadata =
+			new TableDescriptor("ARTICLE", "Article", "com.example.entity");
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.autoIncrement(true)
 		);
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("TITLE", "title", String.class)
+			new ColumnDescriptor("TITLE", "title", String.class)
 				.length(200)
 				.nullable(false)
 		);
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("CONTENT", "content", String.class)
+			new ColumnDescriptor("CONTENT", "content", String.class)
 		);
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("VERSION", "version", Integer.class)
+			new ColumnDescriptor("VERSION", "version", Integer.class)
 				.version(true)
 		);
 
@@ -1742,17 +1742,17 @@ public class DynamicEntityBuilderTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
 		// Build entity with version field
-		TableMetadata tableMetadata =
-			new TableMetadata("ARTICLE", "Article", "com.example.entity");
+		TableDescriptor tableMetadata =
+			new TableDescriptor("ARTICLE", "Article", "com.example.entity");
 		tableMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true).autoIncrement(true)
 		);
 		tableMetadata.addColumn(
-			new ColumnMetadata("TITLE", "title", String.class).length(200)
+			new ColumnDescriptor("TITLE", "title", String.class).length(200)
 		);
 		tableMetadata.addColumn(
-			new ColumnMetadata("VERSION", "version", Long.class)
+			new ColumnDescriptor("VERSION", "version", Long.class)
 				.version(true)
 		);
 		ClassDetails articleEntity = builder.createEntityFromTable(tableMetadata);
@@ -1775,49 +1775,49 @@ public class DynamicEntityBuilderTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
 		// GIVEN: A table with @Basic and @Temporal fields
-		TableMetadata tableMetadata =
-			new TableMetadata("EVENT", "Event", "com.example.entity");
+		TableDescriptor tableMetadata =
+			new TableDescriptor("EVENT", "Event", "com.example.entity");
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.autoIncrement(true)
 		);
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("NAME", "name", String.class)
+			new ColumnDescriptor("NAME", "name", String.class)
 				.length(200)
 		);
 
 		// A LOB-like field with lazy fetch
 		tableMetadata.addColumn(
-			new ColumnMetadata("DESCRIPTION", "description", String.class)
+			new ColumnDescriptor("DESCRIPTION", "description", String.class)
 				.basicFetch(FetchType.LAZY)
 				.basicOptional(true)
 		);
 
 		// A non-optional basic field
 		tableMetadata.addColumn(
-			new ColumnMetadata("STATUS", "status", String.class)
+			new ColumnDescriptor("STATUS", "status", String.class)
 				.length(20)
 				.basicOptional(false)
 		);
 
 		// Date field with @Temporal(DATE)
 		tableMetadata.addColumn(
-			new ColumnMetadata("EVENT_DATE", "eventDate", java.util.Date.class)
+			new ColumnDescriptor("EVENT_DATE", "eventDate", java.util.Date.class)
 				.temporal(TemporalType.DATE)
 		);
 
 		// Timestamp field with @Temporal(TIMESTAMP)
 		tableMetadata.addColumn(
-			new ColumnMetadata("CREATED_AT", "createdAt", java.util.Date.class)
+			new ColumnDescriptor("CREATED_AT", "createdAt", java.util.Date.class)
 				.temporal(TemporalType.TIMESTAMP)
 		);
 
 		// Time field with @Temporal(TIME)
 		tableMetadata.addColumn(
-			new ColumnMetadata("START_TIME", "startTime", java.util.Date.class)
+			new ColumnDescriptor("START_TIME", "startTime", java.util.Date.class)
 				.temporal(TemporalType.TIME)
 		);
 
@@ -1874,31 +1874,31 @@ public class DynamicEntityBuilderTest {
 	public void testBasicAndTemporalCodeGeneration() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
-		TableMetadata tableMetadata =
-			new TableMetadata("EVENT", "Event", "com.example.entity");
+		TableDescriptor tableMetadata =
+			new TableDescriptor("EVENT", "Event", "com.example.entity");
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true).autoIncrement(true)
 		);
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("DESCRIPTION", "description", String.class)
+			new ColumnDescriptor("DESCRIPTION", "description", String.class)
 				.basicFetch(FetchType.LAZY)
 		);
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("STATUS", "status", String.class)
+			new ColumnDescriptor("STATUS", "status", String.class)
 				.basicOptional(false)
 		);
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("EVENT_DATE", "eventDate", java.util.Date.class)
+			new ColumnDescriptor("EVENT_DATE", "eventDate", java.util.Date.class)
 				.temporal(TemporalType.DATE)
 		);
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("CREATED_AT", "createdAt", java.util.Date.class)
+			new ColumnDescriptor("CREATED_AT", "createdAt", java.util.Date.class)
 				.temporal(TemporalType.TIMESTAMP)
 				.basicFetch(FetchType.EAGER)
 		);
@@ -1930,35 +1930,35 @@ public class DynamicEntityBuilderTest {
 	public void testCreateEntityWithLobField() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
-		TableMetadata tableMetadata =
-			new TableMetadata("DOCUMENT", "Document", "com.example.entity");
+		TableDescriptor tableMetadata =
+			new TableDescriptor("DOCUMENT", "Document", "com.example.entity");
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true)
 				.autoIncrement(true)
 		);
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("TITLE", "title", String.class)
+			new ColumnDescriptor("TITLE", "title", String.class)
 				.length(200)
 		);
 
 		// CLOB field
 		tableMetadata.addColumn(
-			new ColumnMetadata("CONTENT", "content", String.class)
+			new ColumnDescriptor("CONTENT", "content", String.class)
 				.lob(true)
 		);
 
 		// BLOB field
 		tableMetadata.addColumn(
-			new ColumnMetadata("ATTACHMENT", "attachment", byte[].class)
+			new ColumnDescriptor("ATTACHMENT", "attachment", byte[].class)
 				.lob(true)
 		);
 
 		// LOB with @Basic(fetch = LAZY)
 		tableMetadata.addColumn(
-			new ColumnMetadata("THUMBNAIL", "thumbnail", byte[].class)
+			new ColumnDescriptor("THUMBNAIL", "thumbnail", byte[].class)
 				.lob(true)
 				.basicFetch(FetchType.LAZY)
 		);
@@ -2000,21 +2000,21 @@ public class DynamicEntityBuilderTest {
 	public void testLobFieldCodeGeneration() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 
-		TableMetadata tableMetadata =
-			new TableMetadata("DOCUMENT", "Document", "com.example.entity");
+		TableDescriptor tableMetadata =
+			new TableDescriptor("DOCUMENT", "Document", "com.example.entity");
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class)
+			new ColumnDescriptor("ID", "id", Long.class)
 				.primaryKey(true).autoIncrement(true)
 		);
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("CONTENT", "content", String.class)
+			new ColumnDescriptor("CONTENT", "content", String.class)
 				.lob(true)
 		);
 
 		tableMetadata.addColumn(
-			new ColumnMetadata("DATA", "data", byte[].class)
+			new ColumnDescriptor("DATA", "data", byte[].class)
 				.lob(true)
 				.basicFetch(FetchType.LAZY)
 		);
@@ -2329,18 +2329,18 @@ public class DynamicEntityBuilderTest {
 	@Test
 	public void testMetaAttributeExtraction() {
 		// GIVEN: table with class-level and column-level meta-attributes
-		TableMetadata tableMetadata =
-			new TableMetadata("CUSTOMER", "Customer", "com.example");
+		TableDescriptor tableMetadata =
+			new TableDescriptor("CUSTOMER", "Customer", "com.example");
 		tableMetadata.addMetaAttribute("scope-class", "public");
 		tableMetadata.addMetaAttribute("implements", "java.io.Serializable");
 		tableMetadata.addMetaAttribute("extra-import", "com.example.util.Helper");
 
-		ColumnMetadata idCol = new ColumnMetadata("ID", "id", Long.class)
+		ColumnDescriptor idCol = new ColumnDescriptor("ID", "id", Long.class)
 			.primaryKey(true);
 		idCol.addMetaAttribute("scope-field", "private");
 		tableMetadata.addColumn(idCol);
 
-		ColumnMetadata nameCol = new ColumnMetadata("NAME", "name", String.class);
+		ColumnDescriptor nameCol = new ColumnDescriptor("NAME", "name", String.class);
 		nameCol.addMetaAttribute("scope-field", "protected");
 		nameCol.addMetaAttribute("use-in-tostring", "true");
 		tableMetadata.addColumn(nameCol);
@@ -2381,10 +2381,10 @@ public class DynamicEntityBuilderTest {
 	@Test
 	public void testMetaAttributeExtractionEmpty() {
 		// GIVEN: table with no meta-attributes
-		TableMetadata tableMetadata =
-			new TableMetadata("SIMPLE", "Simple", "com.example");
+		TableDescriptor tableMetadata =
+			new TableDescriptor("SIMPLE", "Simple", "com.example");
 		tableMetadata.addColumn(
-			new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+			new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 
 		// WHEN
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();

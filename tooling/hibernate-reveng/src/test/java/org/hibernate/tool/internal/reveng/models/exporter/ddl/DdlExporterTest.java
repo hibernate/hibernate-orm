@@ -30,8 +30,8 @@ import java.util.Properties;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 
 import org.junit.jupiter.api.AfterEach;
@@ -65,9 +65,9 @@ public class DdlExporterTest {
 
 	private ClassDetails buildEntity(DynamicEntityBuilder builder,
 									  String tableName, String className, String pkg) {
-		TableMetadata table = new TableMetadata(tableName, className, pkg);
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+		TableDescriptor table = new TableDescriptor(tableName, className, pkg);
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		return builder.createEntityFromTable(table);
 	}
 
@@ -174,10 +174,10 @@ public class DdlExporterTest {
 	@Test
 	public void testColumnTypes() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata table = new TableMetadata("PRODUCT", "Product", "com.example");
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("PRICE", "price", java.math.BigDecimal.class));
-		table.addColumn(new ColumnMetadata("ACTIVE", "active", Boolean.class));
+		TableDescriptor table = new TableDescriptor("PRODUCT", "Product", "com.example");
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("PRICE", "price", java.math.BigDecimal.class));
+		table.addColumn(new ColumnDescriptor("ACTIVE", "active", Boolean.class));
 		ClassDetails entity = builder.createEntityFromTable(table);
 		DdlExporter exporter = DdlExporter.create(List.of(entity), defaultProperties());
 		StringWriter writer = new StringWriter();

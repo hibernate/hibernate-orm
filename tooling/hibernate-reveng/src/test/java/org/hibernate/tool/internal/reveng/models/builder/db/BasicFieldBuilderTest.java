@@ -22,7 +22,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.hibernate.models.internal.BasicModelsContextImpl;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
 import org.hibernate.models.internal.SimpleClassLoading;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.spi.ClassLoading;
@@ -44,7 +44,7 @@ import jakarta.persistence.Version;
 
 /**
  * Tests for {@link BasicFieldBuilder}, verifying that each JPA annotation
- * is correctly applied to fields based on {@link ColumnMetadata} configuration.
+ * is correctly applied to fields based on {@link ColumnDescriptor} configuration.
  *
  * @author Koen Aers
  */
@@ -69,7 +69,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testSimpleField() {
-		ColumnMetadata column = new ColumnMetadata("USERNAME", "username", String.class)
+		ColumnDescriptor column = new ColumnDescriptor("USERNAME", "username", String.class)
 			.nullable(true);
 
 		BasicFieldBuilder.addBasicField(entityClass, column, modelsContext);
@@ -96,7 +96,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testPrimaryKeyField() {
-		ColumnMetadata column = new ColumnMetadata("ID", "id", Long.class)
+		ColumnDescriptor column = new ColumnDescriptor("ID", "id", Long.class)
 			.primaryKey(true)
 			.nullable(false);
 
@@ -113,7 +113,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testPrimaryKeyWithAutoIncrement() {
-		ColumnMetadata column = new ColumnMetadata("ID", "id", Long.class)
+		ColumnDescriptor column = new ColumnDescriptor("ID", "id", Long.class)
 			.primaryKey(true)
 			.autoIncrement(true)
 			.nullable(false);
@@ -131,7 +131,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testPrimaryKeyWithSequenceStrategy() {
-		ColumnMetadata column = new ColumnMetadata("ID", "id", Long.class)
+		ColumnDescriptor column = new ColumnDescriptor("ID", "id", Long.class)
 			.primaryKey(true)
 			.generationType(GenerationType.SEQUENCE)
 			.nullable(false);
@@ -149,7 +149,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testPrimaryKeyWithAutoStrategy() {
-		ColumnMetadata column = new ColumnMetadata("ID", "id", Long.class)
+		ColumnDescriptor column = new ColumnDescriptor("ID", "id", Long.class)
 			.primaryKey(true)
 			.generationType(GenerationType.AUTO)
 			.nullable(false);
@@ -165,7 +165,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testPrimaryKeyNoGenerationType() {
-		ColumnMetadata column = new ColumnMetadata("ID", "id", Long.class)
+		ColumnDescriptor column = new ColumnDescriptor("ID", "id", Long.class)
 			.primaryKey(true)
 			.nullable(false);
 
@@ -180,7 +180,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testAutoIncrementWithoutPrimaryKeyIsIgnored() {
-		ColumnMetadata column = new ColumnMetadata("SEQ", "seq", Long.class)
+		ColumnDescriptor column = new ColumnDescriptor("SEQ", "seq", Long.class)
 			.autoIncrement(true);
 
 		BasicFieldBuilder.addBasicField(entityClass, column, modelsContext);
@@ -195,7 +195,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testVersionField() {
-		ColumnMetadata column = new ColumnMetadata("VERSION", "version", Long.class)
+		ColumnDescriptor column = new ColumnDescriptor("VERSION", "version", Long.class)
 			.version(true);
 
 		BasicFieldBuilder.addBasicField(entityClass, column, modelsContext);
@@ -208,7 +208,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testBasicWithFetchType() {
-		ColumnMetadata column = new ColumnMetadata("DESCRIPTION", "description", String.class)
+		ColumnDescriptor column = new ColumnDescriptor("DESCRIPTION", "description", String.class)
 			.basicFetch(FetchType.LAZY);
 
 		BasicFieldBuilder.addBasicField(entityClass, column, modelsContext);
@@ -222,7 +222,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testBasicWithOptional() {
-		ColumnMetadata column = new ColumnMetadata("STATUS", "status", String.class)
+		ColumnDescriptor column = new ColumnDescriptor("STATUS", "status", String.class)
 			.basicOptional(false);
 
 		BasicFieldBuilder.addBasicField(entityClass, column, modelsContext);
@@ -236,7 +236,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testBasicWithFetchTypeAndOptional() {
-		ColumnMetadata column = new ColumnMetadata("NOTES", "notes", String.class)
+		ColumnDescriptor column = new ColumnDescriptor("NOTES", "notes", String.class)
 			.basicFetch(FetchType.EAGER)
 			.basicOptional(false);
 
@@ -252,7 +252,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testTemporalDate() {
-		ColumnMetadata column = new ColumnMetadata("EVENT_DATE", "eventDate", Date.class)
+		ColumnDescriptor column = new ColumnDescriptor("EVENT_DATE", "eventDate", Date.class)
 			.temporal(TemporalType.DATE);
 
 		BasicFieldBuilder.addBasicField(entityClass, column, modelsContext);
@@ -266,7 +266,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testTemporalTimestamp() {
-		ColumnMetadata column = new ColumnMetadata("CREATED_AT", "createdAt", Date.class)
+		ColumnDescriptor column = new ColumnDescriptor("CREATED_AT", "createdAt", Date.class)
 			.temporal(TemporalType.TIMESTAMP);
 
 		BasicFieldBuilder.addBasicField(entityClass, column, modelsContext);
@@ -280,7 +280,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testLobField() {
-		ColumnMetadata column = new ColumnMetadata("CONTENT", "content", String.class)
+		ColumnDescriptor column = new ColumnDescriptor("CONTENT", "content", String.class)
 			.lob(true);
 
 		BasicFieldBuilder.addBasicField(entityClass, column, modelsContext);
@@ -293,7 +293,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testColumnWithLength() {
-		ColumnMetadata column = new ColumnMetadata("NAME", "name", String.class)
+		ColumnDescriptor column = new ColumnDescriptor("NAME", "name", String.class)
 			.length(255);
 
 		BasicFieldBuilder.addBasicField(entityClass, column, modelsContext);
@@ -308,7 +308,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testColumnWithPrecisionAndScale() {
-		ColumnMetadata column = new ColumnMetadata("AMOUNT", "amount", BigDecimal.class)
+		ColumnDescriptor column = new ColumnDescriptor("AMOUNT", "amount", BigDecimal.class)
 			.precision(10)
 			.scale(2);
 
@@ -324,7 +324,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testColumnUnique() {
-		ColumnMetadata column = new ColumnMetadata("EMAIL", "email", String.class)
+		ColumnDescriptor column = new ColumnDescriptor("EMAIL", "email", String.class)
 			.unique(true);
 
 		BasicFieldBuilder.addBasicField(entityClass, column, modelsContext);
@@ -338,7 +338,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testColumnNotUnique() {
-		ColumnMetadata column = new ColumnMetadata("NAME", "name", String.class);
+		ColumnDescriptor column = new ColumnDescriptor("NAME", "name", String.class);
 
 		BasicFieldBuilder.addBasicField(entityClass, column, modelsContext);
 
@@ -351,7 +351,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testColumnNotNullable() {
-		ColumnMetadata column = new ColumnMetadata("EMAIL", "email", String.class)
+		ColumnDescriptor column = new ColumnDescriptor("EMAIL", "email", String.class)
 			.nullable(false);
 
 		BasicFieldBuilder.addBasicField(entityClass, column, modelsContext);
@@ -365,7 +365,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testFullyAnnotatedPrimaryKey() {
-		ColumnMetadata column = new ColumnMetadata("ID", "id", Long.class)
+		ColumnDescriptor column = new ColumnDescriptor("ID", "id", Long.class)
 			.primaryKey(true)
 			.autoIncrement(true)
 			.nullable(false);
@@ -386,7 +386,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testLobWithLazyFetch() {
-		ColumnMetadata column = new ColumnMetadata("DATA", "data", byte[].class)
+		ColumnDescriptor column = new ColumnDescriptor("DATA", "data", byte[].class)
 			.lob(true)
 			.basicFetch(FetchType.LAZY);
 
@@ -403,7 +403,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testTemporalWithBasicFetch() {
-		ColumnMetadata column = new ColumnMetadata("CREATED_AT", "createdAt", Date.class)
+		ColumnDescriptor column = new ColumnDescriptor("CREATED_AT", "createdAt", Date.class)
 			.temporal(TemporalType.TIMESTAMP)
 			.basicFetch(FetchType.EAGER);
 
@@ -422,13 +422,13 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testMultipleFields() {
-		ColumnMetadata idColumn = new ColumnMetadata("ID", "id", Long.class)
+		ColumnDescriptor idColumn = new ColumnDescriptor("ID", "id", Long.class)
 			.primaryKey(true)
 			.autoIncrement(true)
 			.nullable(false);
-		ColumnMetadata nameColumn = new ColumnMetadata("NAME", "name", String.class)
+		ColumnDescriptor nameColumn = new ColumnDescriptor("NAME", "name", String.class)
 			.length(100);
-		ColumnMetadata versionColumn = new ColumnMetadata("VERSION", "version", Long.class)
+		ColumnDescriptor versionColumn = new ColumnDescriptor("VERSION", "version", Long.class)
 			.version(true);
 
 		BasicFieldBuilder.addBasicField(entityClass, idColumn, modelsContext);
@@ -454,7 +454,7 @@ public class BasicFieldBuilderTest {
 
 	@Test
 	public void testFieldType() {
-		ColumnMetadata column = new ColumnMetadata("AMOUNT", "amount", BigDecimal.class);
+		ColumnDescriptor column = new ColumnDescriptor("AMOUNT", "amount", BigDecimal.class);
 
 		BasicFieldBuilder.addBasicField(entityClass, column, modelsContext);
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,16 +22,16 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for {@link EmbeddedFieldMetadata}.
+ * Tests for {@link EmbeddedFieldDescriptor}.
  *
  * @author Koen Aers
  */
-public class EmbeddedFieldMetadataTest {
+public class EmbeddedFieldDescriptorTest {
 
 	@Test
 	public void testConstructorAndDefaults() {
-		EmbeddedFieldMetadata embedded =
-			new EmbeddedFieldMetadata("address", "Address", "com.example");
+		EmbeddedFieldDescriptor embedded =
+			new EmbeddedFieldDescriptor("address", "Address", "com.example");
 
 		assertEquals("address", embedded.getFieldName());
 		assertEquals("Address", embedded.getEmbeddableClassName());
@@ -42,12 +42,12 @@ public class EmbeddedFieldMetadataTest {
 
 	@Test
 	public void testAddAttributeOverride() {
-		EmbeddedFieldMetadata embedded =
-			new EmbeddedFieldMetadata("address", "Address", "com.example")
+		EmbeddedFieldDescriptor embedded =
+			new EmbeddedFieldDescriptor("address", "Address", "com.example")
 				.addAttributeOverride("street", "HOME_STREET")
 				.addAttributeOverride("city", "HOME_CITY");
 
-		List<AttributeOverrideMetadata> overrides = embedded.getAttributeOverrides();
+		List<AttributeOverrideDescriptor> overrides = embedded.getAttributeOverrides();
 		assertEquals(2, overrides.size());
 		assertEquals("street", overrides.get(0).getFieldName());
 		assertEquals("HOME_STREET", overrides.get(0).getColumnName());

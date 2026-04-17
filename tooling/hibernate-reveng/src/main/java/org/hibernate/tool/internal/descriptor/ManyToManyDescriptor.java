@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import java.util.Collections;
 import java.util.List;
@@ -28,7 +28,7 @@ import jakarta.persistence.FetchType;
  *
  * @author Koen Aers
  */
-public class ManyToManyMetadata {
+public class ManyToManyDescriptor {
 	private final String fieldName;
 	private final String targetEntityClassName;
 	private final String targetEntityPackage;
@@ -43,7 +43,7 @@ public class ManyToManyMetadata {
 	private FetchType fetchType;
 	private CascadeType[] cascadeTypes;
 
-	public ManyToManyMetadata(
+	public ManyToManyDescriptor(
 			String fieldName,
 			String targetEntityClassName,
 			String targetEntityPackage) {
@@ -52,29 +52,29 @@ public class ManyToManyMetadata {
 		this.targetEntityPackage = targetEntityPackage;
 	}
 
-	public ManyToManyMetadata mappedBy(String mappedBy) {
+	public ManyToManyDescriptor mappedBy(String mappedBy) {
 		this.mappedBy = mappedBy;
 		return this;
 	}
 
-	public ManyToManyMetadata joinTableSchema(String schema) {
+	public ManyToManyDescriptor joinTableSchema(String schema) {
 		this.joinTableSchema = schema;
 		return this;
 	}
 
-	public ManyToManyMetadata joinTableCatalog(String catalog) {
+	public ManyToManyDescriptor joinTableCatalog(String catalog) {
 		this.joinTableCatalog = catalog;
 		return this;
 	}
 
-	public ManyToManyMetadata joinTable(String joinTableName, String joinColumnName, String inverseJoinColumnName) {
+	public ManyToManyDescriptor joinTable(String joinTableName, String joinColumnName, String inverseJoinColumnName) {
 		this.joinTableName = joinTableName;
 		this.joinColumnName = joinColumnName;
 		this.inverseJoinColumnName = inverseJoinColumnName;
 		return this;
 	}
 
-	public ManyToManyMetadata joinTable(String joinTableName, List<String> joinColumnNames, List<String> inverseJoinColumnNames) {
+	public ManyToManyDescriptor joinTable(String joinTableName, List<String> joinColumnNames, List<String> inverseJoinColumnNames) {
 		this.joinTableName = joinTableName;
 		this.joinColumnNames = joinColumnNames;
 		this.inverseJoinColumnNames = inverseJoinColumnNames;
@@ -87,12 +87,12 @@ public class ManyToManyMetadata {
 		return this;
 	}
 
-	public ManyToManyMetadata fetchType(FetchType fetchType) {
+	public ManyToManyDescriptor fetchType(FetchType fetchType) {
 		this.fetchType = fetchType;
 		return this;
 	}
 
-	public ManyToManyMetadata cascade(CascadeType... cascadeTypes) {
+	public ManyToManyDescriptor cascade(CascadeType... cascadeTypes) {
 		this.cascadeTypes = cascadeTypes;
 		return this;
 	}

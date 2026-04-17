@@ -21,7 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.hibernate.tool.internal.reader.ModelsDatabaseSchemaReaderTest.TestRevengDialect;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,8 +42,8 @@ public class ForeignKeyReaderTest {
 
 	@Test
 	public void testNoForeignKeys() {
-		Map<String, TableMetadata> tables = new LinkedHashMap<>();
-		tables.put("EMPLOYEE", new TableMetadata("EMPLOYEE", "Employee", "com.example"));
+		Map<String, TableDescriptor> tables = new LinkedHashMap<>();
+		tables.put("EMPLOYEE", new TableDescriptor("EMPLOYEE", "Employee", "com.example"));
 
 		ForeignKeyReader reader = ForeignKeyReader.create(dialect, null, null);
 		List<RawForeignKeyInfo> result = reader.readForeignKeys(tables);
@@ -55,8 +55,8 @@ public class ForeignKeyReaderTest {
 	public void testSingleForeignKey() {
 		dialect.addExportedKey("DEPARTMENT", "ID", "EMPLOYEE", "DEPARTMENT_ID", "FK_EMP_DEPT", 1);
 
-		Map<String, TableMetadata> tables = new LinkedHashMap<>();
-		tables.put("DEPARTMENT", new TableMetadata("DEPARTMENT", "Department", "com.example"));
+		Map<String, TableDescriptor> tables = new LinkedHashMap<>();
+		tables.put("DEPARTMENT", new TableDescriptor("DEPARTMENT", "Department", "com.example"));
 
 		ForeignKeyReader reader = ForeignKeyReader.create(dialect, null, null);
 		List<RawForeignKeyInfo> result = reader.readForeignKeys(tables);
@@ -76,8 +76,8 @@ public class ForeignKeyReaderTest {
 		dialect.addExportedKey("DEPARTMENT", "ID", "EMPLOYEE", "DEPARTMENT_ID", "FK_EMP_DEPT", 1);
 		dialect.addExportedKey("DEPARTMENT", "ID", "PROJECT", "DEPARTMENT_ID", "FK_PROJ_DEPT", 1);
 
-		Map<String, TableMetadata> tables = new LinkedHashMap<>();
-		tables.put("DEPARTMENT", new TableMetadata("DEPARTMENT", "Department", "com.example"));
+		Map<String, TableDescriptor> tables = new LinkedHashMap<>();
+		tables.put("DEPARTMENT", new TableDescriptor("DEPARTMENT", "Department", "com.example"));
 
 		ForeignKeyReader reader = ForeignKeyReader.create(dialect, null, null);
 		List<RawForeignKeyInfo> result = reader.readForeignKeys(tables);
@@ -92,8 +92,8 @@ public class ForeignKeyReaderTest {
 		dialect.addExportedKey("ORDER_ITEM", "ORDER_ID", "SHIPMENT", "ORDER_ID", "FK_SHIP_OI", 1);
 		dialect.addExportedKey("ORDER_ITEM", "PRODUCT_ID", "SHIPMENT", "PRODUCT_ID", "FK_SHIP_OI", 2);
 
-		Map<String, TableMetadata> tables = new LinkedHashMap<>();
-		tables.put("ORDER_ITEM", new TableMetadata("ORDER_ITEM", "OrderItem", "com.example"));
+		Map<String, TableDescriptor> tables = new LinkedHashMap<>();
+		tables.put("ORDER_ITEM", new TableDescriptor("ORDER_ITEM", "OrderItem", "com.example"));
 
 		ForeignKeyReader reader = ForeignKeyReader.create(dialect, null, null);
 		List<RawForeignKeyInfo> result = reader.readForeignKeys(tables);
@@ -112,9 +112,9 @@ public class ForeignKeyReaderTest {
 		dialect.addExportedKey("DEPARTMENT", "ID", "EMPLOYEE", "DEPARTMENT_ID", "FK_EMP_DEPT", 1);
 		dialect.addExportedKey("EMPLOYEE", "ID", "TASK", "EMPLOYEE_ID", "FK_TASK_EMP", 1);
 
-		Map<String, TableMetadata> tables = new LinkedHashMap<>();
-		tables.put("DEPARTMENT", new TableMetadata("DEPARTMENT", "Department", "com.example"));
-		tables.put("EMPLOYEE", new TableMetadata("EMPLOYEE", "Employee", "com.example"));
+		Map<String, TableDescriptor> tables = new LinkedHashMap<>();
+		tables.put("DEPARTMENT", new TableDescriptor("DEPARTMENT", "Department", "com.example"));
+		tables.put("EMPLOYEE", new TableDescriptor("EMPLOYEE", "Employee", "com.example"));
 
 		ForeignKeyReader reader = ForeignKeyReader.create(dialect, null, null);
 		List<RawForeignKeyInfo> result = reader.readForeignKeys(tables);
@@ -128,8 +128,8 @@ public class ForeignKeyReaderTest {
 	public void testNullForeignKeyNameGeneration() {
 		dialect.addExportedKey("DEPARTMENT", "ID", "EMPLOYEE", "DEPARTMENT_ID", null, 1);
 
-		Map<String, TableMetadata> tables = new LinkedHashMap<>();
-		tables.put("DEPARTMENT", new TableMetadata("DEPARTMENT", "Department", "com.example"));
+		Map<String, TableDescriptor> tables = new LinkedHashMap<>();
+		tables.put("DEPARTMENT", new TableDescriptor("DEPARTMENT", "Department", "com.example"));
 
 		ForeignKeyReader reader = ForeignKeyReader.create(dialect, null, null);
 		List<RawForeignKeyInfo> result = reader.readForeignKeys(tables);
@@ -143,8 +143,8 @@ public class ForeignKeyReaderTest {
 		dialect.addExportedKey("DEPARTMENT", "ID", "EMPLOYEE", "DEPARTMENT_ID", null, 1);
 		dialect.addExportedKey("DEPARTMENT", "ID", "PROJECT", "DEPARTMENT_ID", null, 1);
 
-		Map<String, TableMetadata> tables = new LinkedHashMap<>();
-		tables.put("DEPARTMENT", new TableMetadata("DEPARTMENT", "Department", "com.example"));
+		Map<String, TableDescriptor> tables = new LinkedHashMap<>();
+		tables.put("DEPARTMENT", new TableDescriptor("DEPARTMENT", "Department", "com.example"));
 
 		ForeignKeyReader reader = ForeignKeyReader.create(dialect, null, null);
 		List<RawForeignKeyInfo> result = reader.readForeignKeys(tables);
@@ -166,8 +166,8 @@ public class ForeignKeyReaderTest {
 	public void testDefaultCatalogAndSchemaUsedWhenTableHasNone() {
 		dialect.addExportedKey("DEPARTMENT", "ID", "EMPLOYEE", "DEPARTMENT_ID", "FK_EMP_DEPT", 1);
 
-		Map<String, TableMetadata> tables = new LinkedHashMap<>();
-		tables.put("DEPARTMENT", new TableMetadata("DEPARTMENT", "Department", "com.example"));
+		Map<String, TableDescriptor> tables = new LinkedHashMap<>();
+		tables.put("DEPARTMENT", new TableDescriptor("DEPARTMENT", "Department", "com.example"));
 
 		ForeignKeyReader reader = ForeignKeyReader.create(dialect, "DEFAULT_CAT", "DEFAULT_SCHEMA");
 		List<RawForeignKeyInfo> result = reader.readForeignKeys(tables);
@@ -181,8 +181,8 @@ public class ForeignKeyReaderTest {
 	public void testTableCatalogAndSchemaOverrideDefaults() {
 		dialect.addExportedKey("DEPARTMENT", "ID", "EMPLOYEE", "DEPARTMENT_ID", "FK_EMP_DEPT", 1);
 
-		Map<String, TableMetadata> tables = new LinkedHashMap<>();
-		TableMetadata dept = new TableMetadata("DEPARTMENT", "Department", "com.example");
+		Map<String, TableDescriptor> tables = new LinkedHashMap<>();
+		TableDescriptor dept = new TableDescriptor("DEPARTMENT", "Department", "com.example");
 		dept.setCatalog("MY_CAT");
 		dept.setSchema("MY_SCHEMA");
 		tables.put("DEPARTMENT", dept);

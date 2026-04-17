@@ -41,7 +41,7 @@ import org.hibernate.tool.api.reveng.RevengDialectFactory;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.RevengStrategyFactory;
 import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.hibernate.tool.internal.reader.ModelsDatabaseSchemaReader;
 
 public class RevengMetadataDescriptor implements MetadataDescriptor {
@@ -121,7 +121,7 @@ public class RevengMetadataDescriptor implements MetadataDescriptor {
                         MetadataConstants.PREFER_BASIC_COMPOSITE_IDS);
                 boolean preferBasicBool = !(preferBasic instanceof Boolean)
                         || (Boolean) preferBasic;
-                List<TableMetadata> tables =
+                List<TableDescriptor> tables =
                         ModelsDatabaseSchemaReader.create(
                                 revengDialect,
                                 reverseEngineeringStrategy,
@@ -133,7 +133,7 @@ public class RevengMetadataDescriptor implements MetadataDescriptor {
                         new DynamicEntityBuilder();
                 builder.setPreferBasicCompositeIds(preferBasicBool);
                 List<ClassDetails> entities = new ArrayList<>();
-                for (TableMetadata table : tables) {
+                for (TableDescriptor table : tables) {
                     entities.add(
                             builder.createEntityFromTable(table));
                 }

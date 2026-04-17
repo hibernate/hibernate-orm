@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,23 +23,23 @@ import java.util.List;
  *
  * @author Koen Aers
  */
-public class EmbeddableMetadata {
+public class EmbeddableDescriptor {
 	private final String className;
 	private final String packageName;
-	private final List<ColumnMetadata> columns = new ArrayList<>();
+	private final List<ColumnDescriptor> columns = new ArrayList<>();
 	private boolean idClass;
 
-	public EmbeddableMetadata(String className, String packageName) {
+	public EmbeddableDescriptor(String className, String packageName) {
 		this.className = className;
 		this.packageName = packageName;
 	}
 
-	public EmbeddableMetadata addColumn(ColumnMetadata column) {
+	public EmbeddableDescriptor addColumn(ColumnDescriptor column) {
 		this.columns.add(column);
 		return this;
 	}
 
-	public EmbeddableMetadata idClass(boolean idClass) {
+	public EmbeddableDescriptor idClass(boolean idClass) {
 		this.idClass = idClass;
 		return this;
 	}
@@ -47,6 +47,6 @@ public class EmbeddableMetadata {
 	// Getters
 	public String getClassName() { return className; }
 	public String getPackageName() { return packageName; }
-	public List<ColumnMetadata> getColumns() { return columns; }
+	public List<ColumnDescriptor> getColumns() { return columns; }
 	public boolean isIdClass() { return idClass; }
 }

@@ -26,7 +26,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassLoading;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.ModelsContext;
-import org.hibernate.tool.internal.reveng.models.metadata.ManyToManyMetadata;
+import org.hibernate.tool.internal.descriptor.ManyToManyDescriptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -71,8 +71,8 @@ public class ManyToManyFieldBuilderTest {
 
 	@Test
 	public void testManyToManyAnnotation() {
-		ManyToManyMetadata m2mMetadata =
-			new ManyToManyMetadata("courses", "Course", "com.example");
+		ManyToManyDescriptor m2mMetadata =
+			new ManyToManyDescriptor("courses", "Course", "com.example");
 
 		ManyToManyFieldBuilder.buildManyToManyField(
 			entityClass, m2mMetadata, targetClassDetails, modelsContext);
@@ -88,8 +88,8 @@ public class ManyToManyFieldBuilderTest {
 
 	@Test
 	public void testFieldType() {
-		ManyToManyMetadata m2mMetadata =
-			new ManyToManyMetadata("courses", "Course", "com.example");
+		ManyToManyDescriptor m2mMetadata =
+			new ManyToManyDescriptor("courses", "Course", "com.example");
 
 		ManyToManyFieldBuilder.buildManyToManyField(
 			entityClass, m2mMetadata, targetClassDetails, modelsContext);
@@ -101,8 +101,8 @@ public class ManyToManyFieldBuilderTest {
 
 	@Test
 	public void testMappedBy() {
-		ManyToManyMetadata m2mMetadata =
-			new ManyToManyMetadata("courses", "Course", "com.example")
+		ManyToManyDescriptor m2mMetadata =
+			new ManyToManyDescriptor("courses", "Course", "com.example")
 				.mappedBy("students");
 
 		ManyToManyFieldBuilder.buildManyToManyField(
@@ -117,8 +117,8 @@ public class ManyToManyFieldBuilderTest {
 
 	@Test
 	public void testFetchType() {
-		ManyToManyMetadata m2mMetadata =
-			new ManyToManyMetadata("courses", "Course", "com.example")
+		ManyToManyDescriptor m2mMetadata =
+			new ManyToManyDescriptor("courses", "Course", "com.example")
 				.fetchType(FetchType.LAZY);
 
 		ManyToManyFieldBuilder.buildManyToManyField(
@@ -133,8 +133,8 @@ public class ManyToManyFieldBuilderTest {
 
 	@Test
 	public void testCascadeTypes() {
-		ManyToManyMetadata m2mMetadata =
-			new ManyToManyMetadata("courses", "Course", "com.example")
+		ManyToManyDescriptor m2mMetadata =
+			new ManyToManyDescriptor("courses", "Course", "com.example")
 				.cascade(CascadeType.PERSIST, CascadeType.MERGE);
 
 		ManyToManyFieldBuilder.buildManyToManyField(
@@ -152,8 +152,8 @@ public class ManyToManyFieldBuilderTest {
 
 	@Test
 	public void testJoinTable() {
-		ManyToManyMetadata m2mMetadata =
-			new ManyToManyMetadata("courses", "Course", "com.example")
+		ManyToManyDescriptor m2mMetadata =
+			new ManyToManyDescriptor("courses", "Course", "com.example")
 				.joinTable("STUDENT_COURSE", "STUDENT_ID", "COURSE_ID");
 
 		ManyToManyFieldBuilder.buildManyToManyField(
@@ -172,8 +172,8 @@ public class ManyToManyFieldBuilderTest {
 
 	@Test
 	public void testMappedBySideHasNoJoinTable() {
-		ManyToManyMetadata m2mMetadata =
-			new ManyToManyMetadata("students", "Student", "com.example")
+		ManyToManyDescriptor m2mMetadata =
+			new ManyToManyDescriptor("students", "Student", "com.example")
 				.mappedBy("courses");
 
 		ManyToManyFieldBuilder.buildManyToManyField(
@@ -189,8 +189,8 @@ public class ManyToManyFieldBuilderTest {
 
 	@Test
 	public void testNoJoinTableWhenNotConfigured() {
-		ManyToManyMetadata m2mMetadata =
-			new ManyToManyMetadata("courses", "Course", "com.example");
+		ManyToManyDescriptor m2mMetadata =
+			new ManyToManyDescriptor("courses", "Course", "com.example");
 
 		ManyToManyFieldBuilder.buildManyToManyField(
 			entityClass, m2mMetadata, targetClassDetails, modelsContext);

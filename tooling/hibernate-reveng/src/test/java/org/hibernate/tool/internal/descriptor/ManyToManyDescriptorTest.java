@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -23,15 +23,15 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.FetchType;
 
 /**
- * Tests for {@link ManyToManyMetadata}.
+ * Tests for {@link ManyToManyDescriptor}.
  *
  * @author Koen Aers
  */
-public class ManyToManyMetadataTest {
+public class ManyToManyDescriptorTest {
 
 	@Test
 	public void testConstructorAndDefaults() {
-		ManyToManyMetadata mtm = new ManyToManyMetadata(
+		ManyToManyDescriptor mtm = new ManyToManyDescriptor(
 			"courses", "Course", "com.example");
 
 		assertEquals("courses", mtm.getFieldName());
@@ -47,7 +47,7 @@ public class ManyToManyMetadataTest {
 
 	@Test
 	public void testOwningSideWithJoinTable() {
-		ManyToManyMetadata mtm = new ManyToManyMetadata(
+		ManyToManyDescriptor mtm = new ManyToManyDescriptor(
 			"courses", "Course", "com.example")
 			.joinTable("STUDENT_COURSE", "STUDENT_ID", "COURSE_ID")
 			.cascade(CascadeType.PERSIST);
@@ -60,7 +60,7 @@ public class ManyToManyMetadataTest {
 
 	@Test
 	public void testInverseSideWithMappedBy() {
-		ManyToManyMetadata mtm = new ManyToManyMetadata(
+		ManyToManyDescriptor mtm = new ManyToManyDescriptor(
 			"students", "Student", "com.example")
 			.mappedBy("courses");
 
@@ -69,7 +69,7 @@ public class ManyToManyMetadataTest {
 
 	@Test
 	public void testFetchType() {
-		ManyToManyMetadata mtm = new ManyToManyMetadata(
+		ManyToManyDescriptor mtm = new ManyToManyDescriptor(
 			"courses", "Course", "com.example")
 			.fetchType(FetchType.EAGER);
 
@@ -78,7 +78,7 @@ public class ManyToManyMetadataTest {
 
 	@Test
 	public void testMultipleCascadeTypes() {
-		ManyToManyMetadata mtm = new ManyToManyMetadata(
+		ManyToManyDescriptor mtm = new ManyToManyDescriptor(
 			"courses", "Course", "com.example")
 			.cascade(CascadeType.PERSIST, CascadeType.MERGE);
 
@@ -89,7 +89,7 @@ public class ManyToManyMetadataTest {
 
 	@Test
 	public void testFluentChaining() {
-		ManyToManyMetadata mtm = new ManyToManyMetadata(
+		ManyToManyDescriptor mtm = new ManyToManyDescriptor(
 			"courses", "Course", "com.example")
 			.joinTable("STUDENT_COURSE", "STUDENT_ID", "COURSE_ID")
 			.fetchType(FetchType.LAZY)

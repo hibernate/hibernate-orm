@@ -26,8 +26,9 @@ import java.util.List;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.ForeignKeyDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -71,10 +72,10 @@ public class DocExporterTest {
 	private ClassDetails buildEntity(DynamicEntityBuilder builder,
 									  String tableName, String className,
 									  String pkg) {
-		TableMetadata table = new TableMetadata(tableName, className, pkg);
+		TableDescriptor table = new TableDescriptor(tableName, className, pkg);
 		table.addColumn(
-				new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
-		table.addColumn(new ColumnMetadata("NAME", "name", String.class));
+				new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
+		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
 		return builder.createEntityFromTable(table);
 	}
 
@@ -306,7 +307,7 @@ public class DocExporterTest {
 		ClassDetails entity = buildEntity(
 				builder, "EMPLOYEE", "Employee", "com.example");
 		DocExporter exporter = DocExporter.create(
-				List.of(entity), builder.getTableMetadataMap());
+				List.of(entity), builder.getTableDescriptorMap());
 		exporter.export(outputDir);
 
 		File indexFile = new File(outputDir, "tables/index.html");
@@ -322,7 +323,7 @@ public class DocExporterTest {
 		ClassDetails entity = buildEntity(
 				builder, "EMPLOYEE", "Employee", "com.example");
 		DocExporter exporter = DocExporter.create(
-				List.of(entity), builder.getTableMetadataMap());
+				List.of(entity), builder.getTableDescriptorMap());
 		exporter.export(outputDir);
 
 		File summaryFile = new File(outputDir, "tables/summary.html");
@@ -338,7 +339,7 @@ public class DocExporterTest {
 		ClassDetails entity = buildEntity(
 				builder, "EMPLOYEE", "Employee", "com.example");
 		DocExporter exporter = DocExporter.create(
-				List.of(entity), builder.getTableMetadataMap());
+				List.of(entity), builder.getTableDescriptorMap());
 		exporter.export(outputDir);
 
 		File tableFile = new File(outputDir, "tables/default/EMPLOYEE.html");
@@ -355,7 +356,7 @@ public class DocExporterTest {
 		ClassDetails entity = buildEntity(
 				builder, "EMPLOYEE", "Employee", "com.example");
 		DocExporter exporter = DocExporter.create(
-				List.of(entity), builder.getTableMetadataMap());
+				List.of(entity), builder.getTableDescriptorMap());
 		exporter.export(outputDir);
 
 		File tableFile = new File(outputDir, "tables/default/EMPLOYEE.html");
@@ -372,7 +373,7 @@ public class DocExporterTest {
 		ClassDetails entity = buildEntity(
 				builder, "EMPLOYEE", "Employee", "com.example");
 		DocExporter exporter = DocExporter.create(
-				List.of(entity), builder.getTableMetadataMap());
+				List.of(entity), builder.getTableDescriptorMap());
 		exporter.export(outputDir);
 
 		File tableFile = new File(outputDir, "tables/default/EMPLOYEE.html");
@@ -392,7 +393,7 @@ public class DocExporterTest {
 				builder, "DEPARTMENT", "Department", "com.example");
 		DocExporter exporter = DocExporter.create(
 				List.of(employee, department),
-				builder.getTableMetadataMap());
+				builder.getTableDescriptorMap());
 		exporter.export(outputDir);
 
 		assertTrue(new File(outputDir, "tables/default/EMPLOYEE.html").exists());
@@ -409,25 +410,24 @@ public class DocExporterTest {
 	public void testTableWithForeignKey() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		// Create department first (target)
-		TableMetadata deptTable = new TableMetadata(
+		TableDescriptor deptTable = new TableDescriptor(
 				"DEPARTMENT", "Department", "com.example");
 		deptTable.addColumn(
-				new ColumnMetadata("DEPT_ID", "id", Long.class)
+				new ColumnDescriptor("DEPT_ID", "id", Long.class)
 						.primaryKey(true));
 		deptTable.addColumn(
-				new ColumnMetadata("DEPT_NAME", "name", String.class));
+				new ColumnDescriptor("DEPT_NAME", "name", String.class));
 		builder.createEntityFromTable(deptTable);
 
 		// Create employee with FK to department
-		TableMetadata empTable = new TableMetadata(
+		TableDescriptor empTable = new TableDescriptor(
 				"EMPLOYEE", "Employee", "com.example");
 		empTable.addColumn(
-				new ColumnMetadata("EMP_ID", "id", Long.class)
+				new ColumnDescriptor("EMP_ID", "id", Long.class)
 						.primaryKey(true));
 		empTable.addColumn(
-				new ColumnMetadata("EMP_NAME", "name", String.class));
-		empTable.addForeignKey(new org.hibernate.tool.internal.reveng.models
-				.metadata.ForeignKeyMetadata(
+				new ColumnDescriptor("EMP_NAME", "name", String.class));
+		empTable.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID",
 				"Department", "com.example"));
 		ClassDetails dept = builder.getModelsContext()
@@ -436,7 +436,7 @@ public class DocExporterTest {
 		ClassDetails emp = builder.createEntityFromTable(empTable);
 
 		DocExporter exporter = DocExporter.create(
-				List.of(dept, emp), builder.getTableMetadataMap());
+				List.of(dept, emp), builder.getTableDescriptorMap());
 		exporter.export(outputDir);
 
 		File tableFile = new File(outputDir, "tables/default/EMPLOYEE.html");
@@ -450,17 +450,17 @@ public class DocExporterTest {
 	@Test
 	public void testTableWithSchema() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata table = new TableMetadata(
+		TableDescriptor table = new TableDescriptor(
 				"EMPLOYEE", "Employee", "com.example");
 		table.setSchema("HR");
 		table.addColumn(
-				new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+				new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		table.addColumn(
-				new ColumnMetadata("NAME", "name", String.class));
+				new ColumnDescriptor("NAME", "name", String.class));
 		ClassDetails entity = builder.createEntityFromTable(table);
 
 		DocExporter exporter = DocExporter.create(
-				List.of(entity), builder.getTableMetadataMap());
+				List.of(entity), builder.getTableDescriptorMap());
 		exporter.export(outputDir);
 
 		File tableFile = new File(outputDir, "tables/HR/EMPLOYEE.html");
@@ -479,7 +479,7 @@ public class DocExporterTest {
 
 	@Test
 	public void testTableFallbackFromClassDetails() {
-		// Create entity without using DynamicEntityBuilder (no TableMetadata)
+		// Create entity without using DynamicEntityBuilder (no TableDescriptor)
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = buildEntity(
 				builder, "EMPLOYEE", "Employee", "com.example");
@@ -511,7 +511,7 @@ public class DocExporterTest {
 		// be generated even though dot conversion will fail
 		DocExporter exporter = DocExporter.create(
 				List.of(employee, department),
-				builder.getTableMetadataMap(),
+				builder.getTableDescriptorMap(),
 				"/nonexistent/dot",
 				new String[0]);
 		exporter.export(outputDir);
@@ -539,7 +539,7 @@ public class DocExporterTest {
 
 		DocExporter exporter = DocExporter.create(
 				List.of(employee, department),
-				builder.getTableMetadataMap(),
+				builder.getTableDescriptorMap(),
 				"/nonexistent/dot",
 				new String[0]);
 		exporter.export(outputDir);
@@ -560,28 +560,28 @@ public class DocExporterTest {
 	@Test
 	public void testDotEntityGraphContainsSubclassEdge() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata parentTable = new TableMetadata(
+		TableDescriptor parentTable = new TableDescriptor(
 				"PERSON", "Person", "com.example");
 		parentTable.addColumn(
-				new ColumnMetadata("ID", "id", Long.class)
+				new ColumnDescriptor("ID", "id", Long.class)
 						.primaryKey(true));
 		parentTable.addColumn(
-				new ColumnMetadata("NAME", "name", String.class));
+				new ColumnDescriptor("NAME", "name", String.class));
 		ClassDetails parent = builder.createEntityFromTable(parentTable);
 
-		TableMetadata childTable = new TableMetadata(
+		TableDescriptor childTable = new TableDescriptor(
 				"EMPLOYEE", "Employee", "com.example");
 		childTable.addColumn(
-				new ColumnMetadata("ID", "id", Long.class)
+				new ColumnDescriptor("ID", "id", Long.class)
 						.primaryKey(true));
 		childTable.addColumn(
-				new ColumnMetadata("SALARY", "salary", Double.class));
+				new ColumnDescriptor("SALARY", "salary", Double.class));
 		childTable.parent("Person", "com.example");
 		ClassDetails child = builder.createEntityFromTable(childTable);
 
 		DocExporter exporter = DocExporter.create(
 				List.of(parent, child),
-				builder.getTableMetadataMap(),
+				builder.getTableDescriptorMap(),
 				"/nonexistent/dot",
 				new String[0]);
 		exporter.export(outputDir);
@@ -596,20 +596,19 @@ public class DocExporterTest {
 	@Test
 	public void testDotTableGraphContainsForeignKeyEdge() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata deptTable = new TableMetadata(
+		TableDescriptor deptTable = new TableDescriptor(
 				"DEPARTMENT", "Department", "com.example");
 		deptTable.addColumn(
-				new ColumnMetadata("DEPT_ID", "id", Long.class)
+				new ColumnDescriptor("DEPT_ID", "id", Long.class)
 						.primaryKey(true));
 		builder.createEntityFromTable(deptTable);
 
-		TableMetadata empTable = new TableMetadata(
+		TableDescriptor empTable = new TableDescriptor(
 				"EMPLOYEE", "Employee", "com.example");
 		empTable.addColumn(
-				new ColumnMetadata("EMP_ID", "id", Long.class)
+				new ColumnDescriptor("EMP_ID", "id", Long.class)
 						.primaryKey(true));
-		empTable.addForeignKey(new org.hibernate.tool.internal.reveng.models
-				.metadata.ForeignKeyMetadata(
+		empTable.addForeignKey(new ForeignKeyDescriptor(
 				"department", "DEPT_ID",
 				"Department", "com.example"));
 		ClassDetails dept = builder.getModelsContext()
@@ -619,7 +618,7 @@ public class DocExporterTest {
 
 		DocExporter exporter = DocExporter.create(
 				List.of(dept, emp),
-				builder.getTableMetadataMap(),
+				builder.getTableDescriptorMap(),
 				"/nonexistent/dot",
 				new String[0]);
 		exporter.export(outputDir);
@@ -639,7 +638,7 @@ public class DocExporterTest {
 		ClassDetails entity = buildEntity(
 				builder, "EMPLOYEE", "Employee", "com.example");
 		DocExporter exporter = DocExporter.create(
-				List.of(entity), builder.getTableMetadataMap());
+				List.of(entity), builder.getTableDescriptorMap());
 		exporter.export(outputDir);
 
 		File entityDot = new File(outputDir,

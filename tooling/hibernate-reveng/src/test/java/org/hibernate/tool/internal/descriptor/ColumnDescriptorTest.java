@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,15 +24,15 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.TemporalType;
 
 /**
- * Tests for {@link ColumnMetadata}.
+ * Tests for {@link ColumnDescriptor}.
  *
  * @author Koen Aers
  */
-public class ColumnMetadataTest {
+public class ColumnDescriptorTest {
 
 	@Test
 	public void testConstructorAndDefaults() {
-		ColumnMetadata column = new ColumnMetadata("USER_NAME", "userName", String.class);
+		ColumnDescriptor column = new ColumnDescriptor("USER_NAME", "userName", String.class);
 
 		assertEquals("USER_NAME", column.getColumnName());
 		assertEquals("userName", column.getFieldName());
@@ -54,7 +54,7 @@ public class ColumnMetadataTest {
 
 	@Test
 	public void testPrimaryKeySetsNullableToFalse() {
-		ColumnMetadata column = new ColumnMetadata("ID", "id", Long.class)
+		ColumnDescriptor column = new ColumnDescriptor("ID", "id", Long.class)
 			.primaryKey(true);
 
 		assertTrue(column.isPrimaryKey());
@@ -63,7 +63,7 @@ public class ColumnMetadataTest {
 
 	@Test
 	public void testNullableCanBeOverriddenAfterPrimaryKey() {
-		ColumnMetadata column = new ColumnMetadata("ID", "id", Long.class)
+		ColumnDescriptor column = new ColumnDescriptor("ID", "id", Long.class)
 			.primaryKey(true)
 			.nullable(true);
 
@@ -72,7 +72,7 @@ public class ColumnMetadataTest {
 
 	@Test
 	public void testAutoIncrement() {
-		ColumnMetadata column = new ColumnMetadata("ID", "id", Long.class)
+		ColumnDescriptor column = new ColumnDescriptor("ID", "id", Long.class)
 			.autoIncrement(true);
 
 		assertTrue(column.isAutoIncrement());
@@ -80,7 +80,7 @@ public class ColumnMetadataTest {
 
 	@Test
 	public void testLengthPrecisionScale() {
-		ColumnMetadata column = new ColumnMetadata("AMOUNT", "amount", java.math.BigDecimal.class)
+		ColumnDescriptor column = new ColumnDescriptor("AMOUNT", "amount", java.math.BigDecimal.class)
 			.length(255)
 			.precision(10)
 			.scale(2);
@@ -92,7 +92,7 @@ public class ColumnMetadataTest {
 
 	@Test
 	public void testVersion() {
-		ColumnMetadata column = new ColumnMetadata("VERSION", "version", Long.class)
+		ColumnDescriptor column = new ColumnDescriptor("VERSION", "version", Long.class)
 			.version(true);
 
 		assertTrue(column.isVersion());
@@ -100,7 +100,7 @@ public class ColumnMetadataTest {
 
 	@Test
 	public void testBasicFetchType() {
-		ColumnMetadata column = new ColumnMetadata("DATA", "data", String.class)
+		ColumnDescriptor column = new ColumnDescriptor("DATA", "data", String.class)
 			.basicFetch(FetchType.LAZY);
 
 		assertEquals(FetchType.LAZY, column.getBasicFetchType());
@@ -108,7 +108,7 @@ public class ColumnMetadataTest {
 
 	@Test
 	public void testBasicOptionalExplicitlySet() {
-		ColumnMetadata column = new ColumnMetadata("STATUS", "status", String.class)
+		ColumnDescriptor column = new ColumnDescriptor("STATUS", "status", String.class)
 			.basicOptional(false);
 
 		assertTrue(column.isBasicOptionalSet());
@@ -117,7 +117,7 @@ public class ColumnMetadataTest {
 
 	@Test
 	public void testBasicOptionalNotSet() {
-		ColumnMetadata column = new ColumnMetadata("STATUS", "status", String.class);
+		ColumnDescriptor column = new ColumnDescriptor("STATUS", "status", String.class);
 
 		assertFalse(column.isBasicOptionalSet());
 		assertTrue(column.isBasicOptional(), "Should default to true when not explicitly set");
@@ -125,7 +125,7 @@ public class ColumnMetadataTest {
 
 	@Test
 	public void testTemporalType() {
-		ColumnMetadata column = new ColumnMetadata("EVENT_DATE", "eventDate", java.util.Date.class)
+		ColumnDescriptor column = new ColumnDescriptor("EVENT_DATE", "eventDate", java.util.Date.class)
 			.temporal(TemporalType.TIMESTAMP);
 
 		assertEquals(TemporalType.TIMESTAMP, column.getTemporalType());
@@ -133,7 +133,7 @@ public class ColumnMetadataTest {
 
 	@Test
 	public void testLob() {
-		ColumnMetadata column = new ColumnMetadata("CONTENT", "content", byte[].class)
+		ColumnDescriptor column = new ColumnDescriptor("CONTENT", "content", byte[].class)
 			.lob(true);
 
 		assertTrue(column.isLob());
@@ -141,7 +141,7 @@ public class ColumnMetadataTest {
 
 	@Test
 	public void testComment() {
-		ColumnMetadata column = new ColumnMetadata("NAME", "name", String.class)
+		ColumnDescriptor column = new ColumnDescriptor("NAME", "name", String.class)
 			.comment("The user name");
 
 		assertEquals("The user name", column.getComment());
@@ -149,14 +149,14 @@ public class ColumnMetadataTest {
 
 	@Test
 	public void testCommentDefaultsToNull() {
-		ColumnMetadata column = new ColumnMetadata("NAME", "name", String.class);
+		ColumnDescriptor column = new ColumnDescriptor("NAME", "name", String.class);
 
 		assertNull(column.getComment());
 	}
 
 	@Test
 	public void testGenerationType() {
-		ColumnMetadata column = new ColumnMetadata("ID", "id", Long.class)
+		ColumnDescriptor column = new ColumnDescriptor("ID", "id", Long.class)
 			.generationType(GenerationType.SEQUENCE);
 
 		assertEquals(GenerationType.SEQUENCE, column.getGenerationType());
@@ -164,14 +164,14 @@ public class ColumnMetadataTest {
 
 	@Test
 	public void testGenerationTypeDefaultsToNull() {
-		ColumnMetadata column = new ColumnMetadata("ID", "id", Long.class);
+		ColumnDescriptor column = new ColumnDescriptor("ID", "id", Long.class);
 
 		assertNull(column.getGenerationType());
 	}
 
 	@Test
 	public void testUnique() {
-		ColumnMetadata column = new ColumnMetadata("EMAIL", "email", String.class)
+		ColumnDescriptor column = new ColumnDescriptor("EMAIL", "email", String.class)
 			.unique(true);
 
 		assertTrue(column.isUnique());
@@ -179,14 +179,14 @@ public class ColumnMetadataTest {
 
 	@Test
 	public void testUniqueDefaultsToFalse() {
-		ColumnMetadata column = new ColumnMetadata("EMAIL", "email", String.class);
+		ColumnDescriptor column = new ColumnDescriptor("EMAIL", "email", String.class);
 
 		assertFalse(column.isUnique());
 	}
 
 	@Test
 	public void testHibernateTypeName() {
-		ColumnMetadata column = new ColumnMetadata("NAME", "name", String.class)
+		ColumnDescriptor column = new ColumnDescriptor("NAME", "name", String.class)
 			.hibernateTypeName("string");
 
 		assertEquals("string", column.getHibernateTypeName());
@@ -194,14 +194,14 @@ public class ColumnMetadataTest {
 
 	@Test
 	public void testHibernateTypeNameDefaultsToNull() {
-		ColumnMetadata column = new ColumnMetadata("NAME", "name", String.class);
+		ColumnDescriptor column = new ColumnDescriptor("NAME", "name", String.class);
 
 		assertNull(column.getHibernateTypeName());
 	}
 
 	@Test
 	public void testFluentChaining() {
-		ColumnMetadata column = new ColumnMetadata("ID", "id", Long.class)
+		ColumnDescriptor column = new ColumnDescriptor("ID", "id", Long.class)
 			.primaryKey(true)
 			.autoIncrement(true)
 			.length(10)

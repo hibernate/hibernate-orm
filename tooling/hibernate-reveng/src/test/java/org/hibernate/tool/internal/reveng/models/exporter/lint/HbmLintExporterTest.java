@@ -40,8 +40,8 @@ import org.hibernate.models.spi.ClassLoading;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -87,13 +87,13 @@ public class HbmLintExporterTest {
 	@Test
 	public void testNoIssuesForCleanEntity() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata table = new TableMetadata(
+		TableDescriptor table = new TableDescriptor(
 				"EMPLOYEE", "Employee", "com.example");
 		table.addColumn(
-				new ColumnMetadata("EMP_ID", "empId", Long.class)
+				new ColumnDescriptor("EMP_ID", "empId", Long.class)
 						.primaryKey(true));
 		table.addColumn(
-				new ColumnMetadata("NAME", "name", String.class));
+				new ColumnDescriptor("NAME", "name", String.class));
 		ClassDetails entity = builder.createEntityFromTable(table);
 
 		HbmLintExporter exporter =
@@ -107,14 +107,14 @@ public class HbmLintExporterTest {
 	@Test
 	public void testShadowedIdDetected() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata table = new TableMetadata(
+		TableDescriptor table = new TableDescriptor(
 				"EMPLOYEE", "Employee", "com.example");
 		table.addColumn(
-				new ColumnMetadata("EMP_ID", "empId", Long.class)
+				new ColumnDescriptor("EMP_ID", "empId", Long.class)
 						.primaryKey(true));
 		// Add a non-PK column named "id" — should trigger warning
 		table.addColumn(
-				new ColumnMetadata("ID", "id", String.class));
+				new ColumnDescriptor("ID", "id", String.class));
 		ClassDetails entity = builder.createEntityFromTable(table);
 
 		HbmLintExporter exporter =
@@ -129,13 +129,13 @@ public class HbmLintExporterTest {
 	@Test
 	public void testNoShadowedIdWhenIdIsIdentifier() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata table = new TableMetadata(
+		TableDescriptor table = new TableDescriptor(
 				"EMPLOYEE", "Employee", "com.example");
 		table.addColumn(
-				new ColumnMetadata("ID", "id", Long.class)
+				new ColumnDescriptor("ID", "id", Long.class)
 						.primaryKey(true));
 		table.addColumn(
-				new ColumnMetadata("NAME", "name", String.class));
+				new ColumnDescriptor("NAME", "name", String.class));
 		ClassDetails entity = builder.createEntityFromTable(table);
 
 		HbmLintExporter exporter =
@@ -242,13 +242,13 @@ public class HbmLintExporterTest {
 	@Test
 	public void testExportGeneratesReportFile() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata table = new TableMetadata(
+		TableDescriptor table = new TableDescriptor(
 				"EMPLOYEE", "Employee", "com.example");
 		table.addColumn(
-				new ColumnMetadata("EMP_ID", "empId", Long.class)
+				new ColumnDescriptor("EMP_ID", "empId", Long.class)
 						.primaryKey(true));
 		table.addColumn(
-				new ColumnMetadata("NAME", "name", String.class));
+				new ColumnDescriptor("NAME", "name", String.class));
 		ClassDetails entity = builder.createEntityFromTable(table);
 
 		HbmLintExporter exporter =
@@ -263,13 +263,13 @@ public class HbmLintExporterTest {
 	@Test
 	public void testExportReportContainsIssues() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata table = new TableMetadata(
+		TableDescriptor table = new TableDescriptor(
 				"EMPLOYEE", "Employee", "com.example");
 		table.addColumn(
-				new ColumnMetadata("EMP_ID", "empId", Long.class)
+				new ColumnDescriptor("EMP_ID", "empId", Long.class)
 						.primaryKey(true));
 		table.addColumn(
-				new ColumnMetadata("ID", "id", String.class));
+				new ColumnDescriptor("ID", "id", String.class));
 		ClassDetails entity = builder.createEntityFromTable(table);
 
 		HbmLintExporter exporter =
@@ -285,13 +285,13 @@ public class HbmLintExporterTest {
 	@Test
 	public void testExportEmptyReportForCleanEntity() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata table = new TableMetadata(
+		TableDescriptor table = new TableDescriptor(
 				"EMPLOYEE", "Employee", "com.example");
 		table.addColumn(
-				new ColumnMetadata("EMP_ID", "empId", Long.class)
+				new ColumnDescriptor("EMP_ID", "empId", Long.class)
 						.primaryKey(true));
 		table.addColumn(
-				new ColumnMetadata("NAME", "name", String.class));
+				new ColumnDescriptor("NAME", "name", String.class));
 		ClassDetails entity = builder.createEntityFromTable(table);
 
 		HbmLintExporter exporter =

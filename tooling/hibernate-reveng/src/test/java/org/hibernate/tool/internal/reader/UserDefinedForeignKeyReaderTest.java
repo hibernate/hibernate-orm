@@ -28,7 +28,7 @@ import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.RevengSettings;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,8 +52,8 @@ public class UserDefinedForeignKeyReaderTest {
 
 	@Test
 	public void testNoUserDefinedForeignKeys() {
-		Map<String, TableMetadata> tables = new LinkedHashMap<>();
-		tables.put("EMPLOYEE", new TableMetadata("EMPLOYEE", "Employee", "com.example"));
+		Map<String, TableDescriptor> tables = new LinkedHashMap<>();
+		tables.put("EMPLOYEE", new TableDescriptor("EMPLOYEE", "Employee", "com.example"));
 
 		UserDefinedForeignKeyReader reader = UserDefinedForeignKeyReader.create(
 			strategy, null, null);
@@ -96,9 +96,9 @@ public class UserDefinedForeignKeyReaderTest {
 		settings.setDefaultPackageName("com.example");
 		customStrategy.setSettings(settings);
 
-		Map<String, TableMetadata> tables = new LinkedHashMap<>();
-		tables.put("DEPARTMENT", new TableMetadata("DEPARTMENT", "Department", "com.example"));
-		tables.put("EMPLOYEE", new TableMetadata("EMPLOYEE", "Employee", "com.example"));
+		Map<String, TableDescriptor> tables = new LinkedHashMap<>();
+		tables.put("DEPARTMENT", new TableDescriptor("DEPARTMENT", "Department", "com.example"));
+		tables.put("EMPLOYEE", new TableDescriptor("EMPLOYEE", "Employee", "com.example"));
 
 		UserDefinedForeignKeyReader reader = UserDefinedForeignKeyReader.create(
 			customStrategy, null, null);
@@ -125,8 +125,8 @@ public class UserDefinedForeignKeyReaderTest {
 
 	@Test
 	public void testDefaultCatalogAndSchemaUsed() {
-		Map<String, TableMetadata> tables = new LinkedHashMap<>();
-		tables.put("EMPLOYEE", new TableMetadata("EMPLOYEE", "Employee", "com.example"));
+		Map<String, TableDescriptor> tables = new LinkedHashMap<>();
+		tables.put("EMPLOYEE", new TableDescriptor("EMPLOYEE", "Employee", "com.example"));
 
 		UserDefinedForeignKeyReader reader = UserDefinedForeignKeyReader.create(
 			strategy, "DEFAULT_CAT", "DEFAULT_SCHEMA");

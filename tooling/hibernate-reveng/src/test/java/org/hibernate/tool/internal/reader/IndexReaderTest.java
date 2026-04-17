@@ -19,9 +19,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.IndexMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.IndexDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.hibernate.tool.internal.reader.ModelsDatabaseSchemaReaderTest.TestRevengDialect;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,16 +34,16 @@ import org.junit.jupiter.api.Test;
 public class IndexReaderTest {
 
 	private TestRevengDialect dialect;
-	private TableMetadata tableMetadata;
+	private TableDescriptor tableMetadata;
 
 	@BeforeEach
 	public void setUp() {
 		dialect = new TestRevengDialect();
-		tableMetadata = new TableMetadata("EMPLOYEE", "Employee", "com.example")
-			.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true))
-			.addColumn(new ColumnMetadata("EMAIL", "email", String.class))
-			.addColumn(new ColumnMetadata("NAME", "name", String.class))
-			.addColumn(new ColumnMetadata("DEPARTMENT_ID", "departmentId", Long.class));
+		tableMetadata = new TableDescriptor("EMPLOYEE", "Employee", "com.example")
+			.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true))
+			.addColumn(new ColumnDescriptor("EMAIL", "email", String.class))
+			.addColumn(new ColumnDescriptor("NAME", "name", String.class))
+			.addColumn(new ColumnDescriptor("DEPARTMENT_ID", "departmentId", Long.class));
 	}
 
 	@Test
@@ -61,7 +61,7 @@ public class IndexReaderTest {
 		IndexReader reader = IndexReader.create(dialect);
 		reader.readIndexes(tableMetadata, null, null);
 
-		List<IndexMetadata> indexes = tableMetadata.getIndexes();
+		List<IndexDescriptor> indexes = tableMetadata.getIndexes();
 		assertEquals(1, indexes.size());
 		assertEquals("IDX_EMAIL", indexes.get(0).getIndexName());
 		assertTrue(indexes.get(0).isUnique());
@@ -69,7 +69,7 @@ public class IndexReaderTest {
 		assertEquals("EMAIL", indexes.get(0).getColumnNames().get(0));
 
 		// Single-column unique index should mark the column as unique
-		ColumnMetadata emailCol = findColumn("EMAIL");
+		ColumnDescriptor emailCol = findColumn("EMAIL");
 		assertTrue(emailCol.isUnique());
 	}
 
@@ -80,12 +80,12 @@ public class IndexReaderTest {
 		IndexReader reader = IndexReader.create(dialect);
 		reader.readIndexes(tableMetadata, null, null);
 
-		List<IndexMetadata> indexes = tableMetadata.getIndexes();
+		List<IndexDescriptor> indexes = tableMetadata.getIndexes();
 		assertEquals(1, indexes.size());
 		assertFalse(indexes.get(0).isUnique());
 
 		// Non-unique index should NOT mark column as unique
-		ColumnMetadata deptCol = findColumn("DEPARTMENT_ID");
+		ColumnDescriptor deptCol = findColumn("DEPARTMENT_ID");
 		assertFalse(deptCol.isUnique());
 	}
 
@@ -97,7 +97,7 @@ public class IndexReaderTest {
 		IndexReader reader = IndexReader.create(dialect);
 		reader.readIndexes(tableMetadata, null, null);
 
-		List<IndexMetadata> indexes = tableMetadata.getIndexes();
+		List<IndexDescriptor> indexes = tableMetadata.getIndexes();
 		assertEquals(1, indexes.size());
 		assertTrue(indexes.get(0).isUnique());
 		assertEquals(2, indexes.get(0).getColumnNames().size());
@@ -115,12 +115,12 @@ public class IndexReaderTest {
 		IndexReader reader = IndexReader.create(dialect);
 		reader.readIndexes(tableMetadata, null, null);
 
-		List<IndexMetadata> indexes = tableMetadata.getIndexes();
+		List<IndexDescriptor> indexes = tableMetadata.getIndexes();
 		assertEquals(2, indexes.size());
 	}
 
-	private ColumnMetadata findColumn(String columnName) {
-		for (ColumnMetadata c : tableMetadata.getColumns()) {
+	private ColumnDescriptor findColumn(String columnName) {
+		for (ColumnDescriptor c : tableMetadata.getColumns()) {
 			if (c.getColumnName().equals(columnName)) {
 				return c;
 			}

@@ -23,8 +23,8 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.tool.api.reveng.RevengSettings;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.hibernate.tool.internal.reader.ModelsDatabaseSchemaReaderTest.TestRevengDialect;
 import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,7 +40,7 @@ public class ColumnReaderTest {
 	private DefaultStrategy strategy;
 	private TestRevengDialect dialect;
 	private TableIdentifier tableId;
-	private TableMetadata tableMetadata;
+	private TableDescriptor tableMetadata;
 
 	@BeforeEach
 	public void setUp() {
@@ -50,7 +50,7 @@ public class ColumnReaderTest {
 		strategy.setSettings(settings);
 		dialect = new TestRevengDialect();
 		tableId = TableIdentifier.create(null, null, "TEST_TABLE");
-		tableMetadata = new TableMetadata("TEST_TABLE", "TestTable", "com.example");
+		tableMetadata = new TableDescriptor("TEST_TABLE", "TestTable", "com.example");
 	}
 
 	@Test
@@ -62,15 +62,15 @@ public class ColumnReaderTest {
 		ColumnReader reader = ColumnReader.create(dialect, strategy);
 		reader.readColumns(tableMetadata, tableId, null, null);
 
-		List<ColumnMetadata> columns = tableMetadata.getColumns();
+		List<ColumnDescriptor> columns = tableMetadata.getColumns();
 		assertEquals(2, columns.size());
 
-		ColumnMetadata idCol = findColumn(columns, "ID");
+		ColumnDescriptor idCol = findColumn(columns, "ID");
 		assertEquals("id", idCol.getFieldName());
 		assertTrue(idCol.isPrimaryKey());
 		assertFalse(idCol.isNullable());
 
-		ColumnMetadata nameCol = findColumn(columns, "NAME");
+		ColumnDescriptor nameCol = findColumn(columns, "NAME");
 		assertEquals("name", nameCol.getFieldName());
 		assertFalse(nameCol.isPrimaryKey());
 		assertTrue(nameCol.isNullable());
@@ -85,11 +85,11 @@ public class ColumnReaderTest {
 		ColumnReader reader = ColumnReader.create(dialect, strategy);
 		reader.readColumns(tableMetadata, tableId, null, null);
 
-		List<ColumnMetadata> columns = tableMetadata.getColumns();
-		ColumnMetadata priceCol = findColumn(columns, "PRICE");
+		List<ColumnDescriptor> columns = tableMetadata.getColumns();
+		ColumnDescriptor priceCol = findColumn(columns, "PRICE");
 		assertEquals(100, priceCol.getLength());
 
-		ColumnMetadata amountCol = findColumn(columns, "AMOUNT");
+		ColumnDescriptor amountCol = findColumn(columns, "AMOUNT");
 		assertEquals(50, amountCol.getLength());
 	}
 
@@ -100,7 +100,7 @@ public class ColumnReaderTest {
 		ColumnReader reader = ColumnReader.create(dialect, strategy);
 		reader.readColumns(tableMetadata, tableId, null, null);
 
-		ColumnMetadata nameCol = findColumn(tableMetadata.getColumns(), "NAME");
+		ColumnDescriptor nameCol = findColumn(tableMetadata.getColumns(), "NAME");
 		assertEquals(255, nameCol.getLength(), "VARCHAR should have length");
 		assertEquals(0, nameCol.getPrecision(), "VARCHAR should not have precision");
 		assertEquals(0, nameCol.getScale(), "VARCHAR should not have scale");
@@ -113,7 +113,7 @@ public class ColumnReaderTest {
 		ColumnReader reader = ColumnReader.create(dialect, strategy);
 		reader.readColumns(tableMetadata, tableId, null, null);
 
-		ColumnMetadata bigNumCol = findColumn(tableMetadata.getColumns(), "BIG_NUM");
+		ColumnDescriptor bigNumCol = findColumn(tableMetadata.getColumns(), "BIG_NUM");
 		assertEquals(0, bigNumCol.getLength(), "BIGINT should not have length");
 		assertEquals(0, bigNumCol.getPrecision(), "BIGINT should not have precision");
 		assertEquals(0, bigNumCol.getScale(), "BIGINT should not have scale");
@@ -126,7 +126,7 @@ public class ColumnReaderTest {
 		ColumnReader reader = ColumnReader.create(dialect, strategy);
 		reader.readColumns(tableMetadata, tableId, null, null);
 
-		ColumnMetadata amountCol = findColumn(tableMetadata.getColumns(), "AMOUNT");
+		ColumnDescriptor amountCol = findColumn(tableMetadata.getColumns(), "AMOUNT");
 		assertEquals(0, amountCol.getLength(), "DECIMAL should not have length");
 		assertEquals(10, amountCol.getPrecision(), "DECIMAL should have precision");
 		assertEquals(2, amountCol.getScale(), "DECIMAL should have scale");
@@ -143,7 +143,7 @@ public class ColumnReaderTest {
 		ColumnReader reader = ColumnReader.create(dialect, strategy);
 		reader.readColumns(tableMetadata, tableId, null, null);
 
-		List<ColumnMetadata> columns = tableMetadata.getColumns();
+		List<ColumnDescriptor> columns = tableMetadata.getColumns();
 		assertTrue(findColumn(columns, "COL_A").isPrimaryKey());
 		assertFalse(findColumn(columns, "COL_B").isPrimaryKey());
 		assertTrue(findColumn(columns, "COL_C").isPrimaryKey());
@@ -159,7 +159,7 @@ public class ColumnReaderTest {
 		ColumnReader reader = ColumnReader.create(dialect, strategy);
 		reader.readColumns(tableMetadata, tableId, null, null);
 
-		List<ColumnMetadata> columns = tableMetadata.getColumns();
+		List<ColumnDescriptor> columns = tableMetadata.getColumns();
 		assertEquals(TemporalType.DATE, findColumn(columns, "DATE_COL").getTemporalType());
 		assertEquals(TemporalType.TIME, findColumn(columns, "TIME_COL").getTemporalType());
 		assertEquals(TemporalType.TIMESTAMP, findColumn(columns, "TS_COL").getTemporalType());
@@ -175,7 +175,7 @@ public class ColumnReaderTest {
 		ColumnReader reader = ColumnReader.create(dialect, strategy);
 		reader.readColumns(tableMetadata, tableId, null, null);
 
-		List<ColumnMetadata> columns = tableMetadata.getColumns();
+		List<ColumnDescriptor> columns = tableMetadata.getColumns();
 		assertTrue(findColumn(columns, "CLOB_COL").isLob());
 		assertEquals(String.class, findColumn(columns, "CLOB_COL").getJavaType());
 		assertTrue(findColumn(columns, "BLOB_COL").isLob());
@@ -202,7 +202,7 @@ public class ColumnReaderTest {
 		ColumnReader reader = ColumnReader.create(dialect, excludingStrategy);
 		reader.readColumns(tableMetadata, tableId, null, null);
 
-		List<ColumnMetadata> columns = tableMetadata.getColumns();
+		List<ColumnDescriptor> columns = tableMetadata.getColumns();
 		assertEquals(1, columns.size());
 		assertEquals("ID", columns.get(0).getColumnName());
 	}
@@ -234,7 +234,7 @@ public class ColumnReaderTest {
 		ColumnReader reader = ColumnReader.create(dialect, versionStrategy);
 		reader.readColumns(tableMetadata, tableId, null, null);
 
-		List<ColumnMetadata> columns = tableMetadata.getColumns();
+		List<ColumnDescriptor> columns = tableMetadata.getColumns();
 		assertFalse(findColumn(columns, "ID").isVersion());
 		assertTrue(findColumn(columns, "VERSION").isVersion());
 	}
@@ -247,7 +247,7 @@ public class ColumnReaderTest {
 		ColumnReader reader = ColumnReader.create(dialect, strategy);
 		reader.readColumns(tableMetadata, tableId, null, null);
 
-		List<ColumnMetadata> columns = tableMetadata.getColumns();
+		List<ColumnDescriptor> columns = tableMetadata.getColumns();
 		assertTrue(findColumn(columns, "NULLABLE_COL").isNullable());
 		assertFalse(findColumn(columns, "NOT_NULL_COL").isNullable());
 	}
@@ -262,7 +262,7 @@ public class ColumnReaderTest {
 		ColumnReader reader = ColumnReader.create(dialect, strategy);
 		reader.readColumns(tableMetadata, tableId, null, null);
 
-		List<ColumnMetadata> columns = tableMetadata.getColumns();
+		List<ColumnDescriptor> columns = tableMetadata.getColumns();
 		assertNull(findColumn(columns, "ID").getComment());
 		assertEquals("The employee name", findColumn(columns, "NAME").getComment());
 	}
@@ -277,7 +277,7 @@ public class ColumnReaderTest {
 		ColumnReader reader = ColumnReader.create(dialect, strategy);
 		reader.readColumns(tableMetadata, tableId, null, null);
 
-		List<ColumnMetadata> columns = tableMetadata.getColumns();
+		List<ColumnDescriptor> columns = tableMetadata.getColumns();
 		assertNotNull(findColumn(columns, "ID").getHibernateTypeName(),
 				"Hibernate type name should be stored for ID");
 		assertEquals("string", findColumn(columns, "NAME").getHibernateTypeName());
@@ -294,14 +294,14 @@ public class ColumnReaderTest {
 		ColumnReader reader = ColumnReader.create(dialect, strategy);
 		reader.readColumns(tableMetadata, tableId, null, null);
 
-		List<ColumnMetadata> columns = tableMetadata.getColumns();
+		List<ColumnDescriptor> columns = tableMetadata.getColumns();
 		assertEquals(2, columns.size());
 		assertNotNull(findColumn(columns, "`ID`"));
 		assertNotNull(findColumn(columns, "`NAME`"));
 	}
 
-	private ColumnMetadata findColumn(List<ColumnMetadata> columns, String columnName) {
-		for (ColumnMetadata c : columns) {
+	private ColumnDescriptor findColumn(List<ColumnDescriptor> columns, String columnName) {
+		for (ColumnDescriptor c : columns) {
 			if (c.getColumnName().equals(columnName)) {
 				return c;
 			}

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,15 +22,15 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.FetchType;
 
 /**
- * Tests for {@link ForeignKeyMetadata}.
+ * Tests for {@link ForeignKeyDescriptor}.
  *
  * @author Koen Aers
  */
-public class ForeignKeyMetadataTest {
+public class ForeignKeyDescriptorTest {
 
 	@Test
 	public void testConstructorAndDefaults() {
-		ForeignKeyMetadata fk = new ForeignKeyMetadata(
+		ForeignKeyDescriptor fk = new ForeignKeyDescriptor(
 			"department", "DEPARTMENT_ID", "Department", "com.example");
 
 		assertEquals("department", fk.getFieldName());
@@ -44,7 +44,7 @@ public class ForeignKeyMetadataTest {
 
 	@Test
 	public void testReferencedColumnName() {
-		ForeignKeyMetadata fk = new ForeignKeyMetadata(
+		ForeignKeyDescriptor fk = new ForeignKeyDescriptor(
 			"department", "DEPT_ID", "Department", "com.example")
 			.referencedColumnName("ID");
 
@@ -53,7 +53,7 @@ public class ForeignKeyMetadataTest {
 
 	@Test
 	public void testFetchType() {
-		ForeignKeyMetadata fk = new ForeignKeyMetadata(
+		ForeignKeyDescriptor fk = new ForeignKeyDescriptor(
 			"department", "DEPARTMENT_ID", "Department", "com.example")
 			.fetchType(FetchType.LAZY);
 
@@ -62,7 +62,7 @@ public class ForeignKeyMetadataTest {
 
 	@Test
 	public void testOptional() {
-		ForeignKeyMetadata fk = new ForeignKeyMetadata(
+		ForeignKeyDescriptor fk = new ForeignKeyDescriptor(
 			"department", "DEPARTMENT_ID", "Department", "com.example")
 			.optional(false);
 
@@ -71,7 +71,7 @@ public class ForeignKeyMetadataTest {
 
 	@Test
 	public void testFluentChaining() {
-		ForeignKeyMetadata fk = new ForeignKeyMetadata(
+		ForeignKeyDescriptor fk = new ForeignKeyDescriptor(
 			"department", "DEPARTMENT_ID", "Department", "com.example")
 			.referencedColumnName("DEPT_PK")
 			.fetchType(FetchType.EAGER)

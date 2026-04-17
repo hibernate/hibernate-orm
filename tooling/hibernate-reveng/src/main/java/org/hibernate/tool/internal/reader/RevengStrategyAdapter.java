@@ -24,12 +24,12 @@ import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 
 /**
  * Adapter that wraps {@link RevengStrategy} so the caller works with
- * metadata objects ({@link TableMetadata}, {@link RawForeignKeyInfo}).
+ * metadata objects ({@link TableDescriptor}, {@link RawForeignKeyInfo}).
  * For strategy methods that require {@code org.hibernate.mapping.*} types,
  * the adapter constructs the mapping objects internally, calls the
  * delegate strategy, and returns the result.
@@ -55,7 +55,7 @@ public class RevengStrategyAdapter {
 	 * Builds a mapping {@link Table} with columns, {@link PrimaryKey},
 	 * and {@link ForeignKey} collection from the metadata and outgoing FKs.
 	 */
-	public boolean isManyToManyTable(TableMetadata tableMetadata, List<RawForeignKeyInfo> outgoingFks) {
+	public boolean isManyToManyTable(TableDescriptor tableMetadata, List<RawForeignKeyInfo> outgoingFks) {
 		Table table = buildMappingTable(tableMetadata, outgoingFks);
 		return delegate.isManyToManyTable(table);
 	}
@@ -65,8 +65,8 @@ public class RevengStrategyAdapter {
 	 * Builds a mapping {@link ForeignKey} with column list and a reference
 	 * to a {@link Table} that has a {@link PrimaryKey}.
 	 */
-	public boolean isOneToOne(RawForeignKeyInfo fkInfo, TableMetadata fkTableMetadata) {
-		Table fkTable = buildMappingTable(fkTableMetadata, null);
+	public boolean isOneToOne(RawForeignKeyInfo fkInfo, TableDescriptor fkTableDescriptor) {
+		Table fkTable = buildMappingTable(fkTableDescriptor, null);
 		ForeignKey foreignKey = buildMappingForeignKey(fkInfo, fkTable);
 		return delegate.isOneToOne(foreignKey);
 	}
@@ -77,11 +77,11 @@ public class RevengStrategyAdapter {
 	 * comparison against the PK succeeds for composite keys.
 	 */
 	public boolean isOneToOne(java.util.List<RawForeignKeyInfo> fkColumns,
-			TableMetadata fkTableMetadata) {
+			TableDescriptor fkTableDescriptor) {
 		if (fkColumns.size() == 1) {
-			return isOneToOne(fkColumns.get(0), fkTableMetadata);
+			return isOneToOne(fkColumns.get(0), fkTableDescriptor);
 		}
-		Table fkTable = buildMappingTable(fkTableMetadata, null);
+		Table fkTable = buildMappingTable(fkTableDescriptor, null);
 		ForeignKey foreignKey = buildMappingCompositeForeignKey(fkColumns, fkTable);
 		return delegate.isOneToOne(foreignKey);
 	}
@@ -159,17 +159,17 @@ public class RevengStrategyAdapter {
 	 */
 	public String foreignKeyToManyToManyName(
 			RawForeignKeyInfo fromFk,
-			TableMetadata joinTableMetadata,
+			TableDescriptor joinTableDescriptor,
 			List<RawForeignKeyInfo> joinTableFks,
 			RawForeignKeyInfo toFk,
 			boolean uniqueReference) {
-		Table joinTable = buildMappingTable(joinTableMetadata, joinTableFks);
+		Table joinTable = buildMappingTable(joinTableDescriptor, joinTableFks);
 		ForeignKey fromKey = buildMappingForeignKey(fromFk, joinTable);
 		ForeignKey toKey = buildMappingForeignKey(toFk, joinTable);
 		TableIdentifier middleTableId = TableIdentifier.create(
-			joinTableMetadata.getCatalog(),
-			joinTableMetadata.getSchema(),
-			joinTableMetadata.getTableName());
+			joinTableDescriptor.getCatalog(),
+			joinTableDescriptor.getSchema(),
+			joinTableDescriptor.getTableName());
 		return delegate.foreignKeyToManyToManyName(fromKey, middleTableId, toKey, uniqueReference);
 	}
 
@@ -179,9 +179,9 @@ public class RevengStrategyAdapter {
 	 */
 	public boolean isForeignKeyCollectionInverse(
 			RawForeignKeyInfo fkInfo,
-			TableMetadata joinTableMetadata,
+			TableDescriptor joinTableDescriptor,
 			List<RawForeignKeyInfo> joinTableFks) {
-		Table joinTable = buildMappingTable(joinTableMetadata, joinTableFks);
+		Table joinTable = buildMappingTable(joinTableDescriptor, joinTableFks);
 		return delegate.isForeignKeyCollectionInverse(
 			fkInfo.fkName(),
 			joinTable,
@@ -192,7 +192,7 @@ public class RevengStrategyAdapter {
 
 	// ---- Internal helpers ----
 
-	private Table buildMappingTable(TableMetadata metadata, List<RawForeignKeyInfo> outgoingFks) {
+	private Table buildMappingTable(TableDescriptor metadata, List<RawForeignKeyInfo> outgoingFks) {
 		Table table = new Table("Hibernate Tools");
 		table.setAbstract(false);
 		table.setName(metadata.getTableName());
@@ -204,7 +204,7 @@ public class RevengStrategyAdapter {
 		return table;
 	}
 
-	private void setMappingPrimaryKey(Table table, TableMetadata metadata) {
+	private void setMappingPrimaryKey(Table table, TableDescriptor metadata) {
 		PrimaryKey pk = buildMappingPrimaryKey(table, metadata);
 		if (pk != null) {
 			table.setPrimaryKey(pk);
@@ -246,13 +246,13 @@ public class RevengStrategyAdapter {
 		}
 	}
 
-	private void addMappingColumns(Table table, TableMetadata metadata) {
-		for (ColumnMetadata colMeta : metadata.getColumns()) {
+	private void addMappingColumns(Table table, TableDescriptor metadata) {
+		for (ColumnDescriptor colMeta : metadata.getColumns()) {
 			table.addColumn(buildMappingColumn(colMeta));
 		}
 	}
 
-	private Column buildMappingColumn(ColumnMetadata colMeta) {
+	private Column buildMappingColumn(ColumnDescriptor colMeta) {
 		Column column = new Column();
 		column.setName(colMeta.getColumnName());
 		column.setNullable(colMeta.isNullable());
@@ -262,9 +262,9 @@ public class RevengStrategyAdapter {
 		return column;
 	}
 
-	private PrimaryKey buildMappingPrimaryKey(Table table, TableMetadata metadata) {
-		List<ColumnMetadata> pkColumns = new ArrayList<>();
-		for (ColumnMetadata colMeta : metadata.getColumns()) {
+	private PrimaryKey buildMappingPrimaryKey(Table table, TableDescriptor metadata) {
+		List<ColumnDescriptor> pkColumns = new ArrayList<>();
+		for (ColumnDescriptor colMeta : metadata.getColumns()) {
 			if (colMeta.isPrimaryKey()) {
 				pkColumns.add(colMeta);
 			}
@@ -273,7 +273,7 @@ public class RevengStrategyAdapter {
 			return null;
 		}
 		PrimaryKey pk = new PrimaryKey(table);
-		for (ColumnMetadata pkCol : pkColumns) {
+		for (ColumnDescriptor pkCol : pkColumns) {
 			Column column = table.getColumn(new Column(pkCol.getColumnName()));
 			if (column != null) {
 				pk.addColumn(column);

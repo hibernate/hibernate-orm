@@ -33,14 +33,14 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.MutableAnnotationTarget;
 import org.hibernate.models.spi.TypeDetails;
-import org.hibernate.tool.internal.reveng.models.metadata.AttributeOverrideMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.CompositeIdMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.KeyManyToOneMetadata;
+import org.hibernate.tool.internal.descriptor.AttributeOverrideDescriptor;
+import org.hibernate.tool.internal.descriptor.CompositeIdDescriptor;
+import org.hibernate.tool.internal.descriptor.KeyManyToOneDescriptor;
 
 /**
  * Builds an {@code @EmbeddedId} field on a dynamic class and attaches
  * the appropriate JPA annotations ({@code @EmbeddedId},
- * {@code @AttributeOverrides}) based on {@link CompositeIdMetadata}.
+ * {@code @AttributeOverrides}) based on {@link CompositeIdDescriptor}.
  * <p>
  * For key-many-to-one entries, adds {@code @ManyToOne} and
  * {@code @JoinColumn} fields to the embeddable ID class.
@@ -60,7 +60,7 @@ public class CompositeIdFieldBuilder {
 	 */
 	public static void buildCompositeIdField(
 			DynamicClassDetails entityClass,
-			CompositeIdMetadata compositeId,
+			CompositeIdDescriptor compositeId,
 			ClassDetails idClassDetails,
 			ModelsContext modelsContext) {
 		DynamicFieldDetails field = createField(
@@ -74,7 +74,7 @@ public class CompositeIdFieldBuilder {
 
 	private static DynamicFieldDetails createField(
 			DynamicClassDetails entityClass,
-			CompositeIdMetadata compositeId,
+			CompositeIdDescriptor compositeId,
 			ClassDetails idClassDetails,
 			ModelsContext modelsContext) {
 		TypeDetails fieldType = new ClassTypeDetailsImpl(
@@ -100,9 +100,9 @@ public class CompositeIdFieldBuilder {
 
 	private static void addAttributeOverrides(
 			MutableAnnotationTarget field,
-			CompositeIdMetadata compositeId,
+			CompositeIdDescriptor compositeId,
 			ModelsContext modelsContext) {
-		List<AttributeOverrideMetadata> overrides = compositeId.getAttributeOverrides();
+		List<AttributeOverrideDescriptor> overrides = compositeId.getAttributeOverrides();
 		if (!overrides.isEmpty()) {
 			jakarta.persistence.AttributeOverride[] overrideArray =
 				new jakarta.persistence.AttributeOverride[overrides.size()];
@@ -142,12 +142,12 @@ public class CompositeIdFieldBuilder {
 	 */
 	private static void addEmbeddableFieldsInOrder(
 			DynamicClassDetails idClassDetails,
-			CompositeIdMetadata compositeId,
+			CompositeIdDescriptor compositeId,
 			ModelsContext modelsContext) {
 		for (Object entry : compositeId.getOrderedEntries()) {
-			if (entry instanceof AttributeOverrideMetadata attr) {
+			if (entry instanceof AttributeOverrideDescriptor attr) {
 				addBasicEmbeddableField(idClassDetails, attr, modelsContext);
-			} else if (entry instanceof KeyManyToOneMetadata km2o) {
+			} else if (entry instanceof KeyManyToOneDescriptor km2o) {
 				addKeyManyToOneField(idClassDetails, km2o, modelsContext);
 			}
 		}
@@ -155,7 +155,7 @@ public class CompositeIdFieldBuilder {
 
 	private static void addBasicEmbeddableField(
 			DynamicClassDetails idClassDetails,
-			AttributeOverrideMetadata attr,
+			AttributeOverrideDescriptor attr,
 			ModelsContext modelsContext) {
 		Class<?> javaType = attr.getJavaType() != null ? attr.getJavaType() : Object.class;
 		ClassDetails fieldTypeDetails = modelsContext.getClassDetailsRegistry()
@@ -172,7 +172,7 @@ public class CompositeIdFieldBuilder {
 
 	private static void addKeyManyToOneField(
 			DynamicClassDetails idClassDetails,
-			KeyManyToOneMetadata km2o,
+			KeyManyToOneDescriptor km2o,
 			ModelsContext modelsContext) {
 		String pkg = km2o.getTargetEntityPackage();
 		String targetClassName = (pkg == null || pkg.isEmpty())

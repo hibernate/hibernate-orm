@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.models.metadata;
+package org.hibernate.tool.internal.descriptor;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,60 +26,60 @@ import java.util.Map;
  *
  * @author Koen Aers
  */
-public class TableMetadata {
+public class TableDescriptor {
 	private String tableName;
 	private String schema;
 	private String catalog;
 	private String entityClassName;
 	private String entityPackage;
-	private List<ColumnMetadata> columns = new ArrayList<>();
-	private List<ForeignKeyMetadata> foreignKeys = new ArrayList<>();
-	private List<OneToManyMetadata> oneToManys = new ArrayList<>();
-	private List<OneToOneMetadata> oneToOnes = new ArrayList<>();
-	private List<ManyToManyMetadata> manyToManys = new ArrayList<>();
-	private List<EmbeddedFieldMetadata> embeddedFields = new ArrayList<>();
-	private InheritanceMetadata inheritance;
+	private List<ColumnDescriptor> columns = new ArrayList<>();
+	private List<ForeignKeyDescriptor> foreignKeys = new ArrayList<>();
+	private List<OneToManyDescriptor> oneToManys = new ArrayList<>();
+	private List<OneToOneDescriptor> oneToOnes = new ArrayList<>();
+	private List<ManyToManyDescriptor> manyToManys = new ArrayList<>();
+	private List<EmbeddedFieldDescriptor> embeddedFields = new ArrayList<>();
+	private InheritanceDescriptor inheritance;
 	private String discriminatorValue;
 	private String parentEntityClassName;
 	private String parentEntityPackage;
 	private String primaryKeyJoinColumnName;
-	private CompositeIdMetadata compositeId;
+	private CompositeIdDescriptor compositeId;
 	private String comment;
-	private List<IndexMetadata> indexes = new ArrayList<>();
+	private List<IndexDescriptor> indexes = new ArrayList<>();
 	private Map<String, List<String>> metaAttributes = new LinkedHashMap<>();
 
-	public TableMetadata(String tableName, String entityClassName, String entityPackage) {
+	public TableDescriptor(String tableName, String entityClassName, String entityPackage) {
 		this.tableName = tableName;
 		this.entityClassName = entityClassName;
 		this.entityPackage = entityPackage;
 	}
 
-	public TableMetadata addColumn(ColumnMetadata column) {
+	public TableDescriptor addColumn(ColumnDescriptor column) {
 		this.columns.add(column);
 		return this;
 	}
 
-	public TableMetadata addForeignKey(ForeignKeyMetadata foreignKey) {
+	public TableDescriptor addForeignKey(ForeignKeyDescriptor foreignKey) {
 		this.foreignKeys.add(foreignKey);
 		return this;
 	}
 
-	public TableMetadata addOneToMany(OneToManyMetadata oneToMany) {
+	public TableDescriptor addOneToMany(OneToManyDescriptor oneToMany) {
 		this.oneToManys.add(oneToMany);
 		return this;
 	}
 
-	public TableMetadata addOneToOne(OneToOneMetadata oneToOne) {
+	public TableDescriptor addOneToOne(OneToOneDescriptor oneToOne) {
 		this.oneToOnes.add(oneToOne);
 		return this;
 	}
 
-	public TableMetadata addManyToMany(ManyToManyMetadata manyToMany) {
+	public TableDescriptor addManyToMany(ManyToManyDescriptor manyToMany) {
 		this.manyToManys.add(manyToMany);
 		return this;
 	}
 
-	public TableMetadata addEmbeddedField(EmbeddedFieldMetadata embeddedField) {
+	public TableDescriptor addEmbeddedField(EmbeddedFieldDescriptor embeddedField) {
 		this.embeddedFields.add(embeddedField);
 		return this;
 	}
@@ -107,74 +107,74 @@ public class TableMetadata {
 	public String getEntityPackage() { return entityPackage; }
 	public void setEntityPackage(String entityPackage) { this.entityPackage = entityPackage; }
 
-	public List<ColumnMetadata> getColumns() { return columns; }
-	public void setColumns(List<ColumnMetadata> columns) { this.columns = columns; }
+	public List<ColumnDescriptor> getColumns() { return columns; }
+	public void setColumns(List<ColumnDescriptor> columns) { this.columns = columns; }
 
-	public List<ForeignKeyMetadata> getForeignKeys() { return foreignKeys; }
-	public void setForeignKeys(List<ForeignKeyMetadata> foreignKeys) { this.foreignKeys = foreignKeys; }
+	public List<ForeignKeyDescriptor> getForeignKeys() { return foreignKeys; }
+	public void setForeignKeys(List<ForeignKeyDescriptor> foreignKeys) { this.foreignKeys = foreignKeys; }
 
-	public List<OneToManyMetadata> getOneToManys() { return oneToManys; }
-	public void setOneToManys(List<OneToManyMetadata> oneToManys) { this.oneToManys = oneToManys; }
+	public List<OneToManyDescriptor> getOneToManys() { return oneToManys; }
+	public void setOneToManys(List<OneToManyDescriptor> oneToManys) { this.oneToManys = oneToManys; }
 
-	public List<OneToOneMetadata> getOneToOnes() { return oneToOnes; }
-	public void setOneToOnes(List<OneToOneMetadata> oneToOnes) { this.oneToOnes = oneToOnes; }
+	public List<OneToOneDescriptor> getOneToOnes() { return oneToOnes; }
+	public void setOneToOnes(List<OneToOneDescriptor> oneToOnes) { this.oneToOnes = oneToOnes; }
 
-	public List<ManyToManyMetadata> getManyToManys() { return manyToManys; }
-	public void setManyToManys(List<ManyToManyMetadata> manyToManys) { this.manyToManys = manyToManys; }
+	public List<ManyToManyDescriptor> getManyToManys() { return manyToManys; }
+	public void setManyToManys(List<ManyToManyDescriptor> manyToManys) { this.manyToManys = manyToManys; }
 
-	public List<EmbeddedFieldMetadata> getEmbeddedFields() { return embeddedFields; }
-	public void setEmbeddedFields(List<EmbeddedFieldMetadata> embeddedFields) { this.embeddedFields = embeddedFields; }
+	public List<EmbeddedFieldDescriptor> getEmbeddedFields() { return embeddedFields; }
+	public void setEmbeddedFields(List<EmbeddedFieldDescriptor> embeddedFields) { this.embeddedFields = embeddedFields; }
 
-	public InheritanceMetadata getInheritance() { return inheritance; }
-	public TableMetadata inheritance(InheritanceMetadata inheritance) {
+	public InheritanceDescriptor getInheritance() { return inheritance; }
+	public TableDescriptor inheritance(InheritanceDescriptor inheritance) {
 		this.inheritance = inheritance;
 		return this;
 	}
 
 	public String getDiscriminatorValue() { return discriminatorValue; }
-	public TableMetadata discriminatorValue(String discriminatorValue) {
+	public TableDescriptor discriminatorValue(String discriminatorValue) {
 		this.discriminatorValue = discriminatorValue;
 		return this;
 	}
 
 	public String getParentEntityClassName() { return parentEntityClassName; }
 	public String getParentEntityPackage() { return parentEntityPackage; }
-	public TableMetadata parent(String parentEntityClassName, String parentEntityPackage) {
+	public TableDescriptor parent(String parentEntityClassName, String parentEntityPackage) {
 		this.parentEntityClassName = parentEntityClassName;
 		this.parentEntityPackage = parentEntityPackage;
 		return this;
 	}
 
 	public String getPrimaryKeyJoinColumnName() { return primaryKeyJoinColumnName; }
-	public TableMetadata primaryKeyJoinColumn(String primaryKeyJoinColumnName) {
+	public TableDescriptor primaryKeyJoinColumn(String primaryKeyJoinColumnName) {
 		this.primaryKeyJoinColumnName = primaryKeyJoinColumnName;
 		return this;
 	}
 
-	public CompositeIdMetadata getCompositeId() { return compositeId; }
-	public TableMetadata compositeId(CompositeIdMetadata compositeId) {
+	public CompositeIdDescriptor getCompositeId() { return compositeId; }
+	public TableDescriptor compositeId(CompositeIdDescriptor compositeId) {
 		this.compositeId = compositeId;
 		return this;
 	}
 
 	public String getComment() { return comment; }
-	public TableMetadata comment(String comment) {
+	public TableDescriptor comment(String comment) {
 		this.comment = comment;
 		return this;
 	}
 
-	public List<IndexMetadata> getIndexes() { return indexes; }
-	public TableMetadata addIndex(IndexMetadata index) {
+	public List<IndexDescriptor> getIndexes() { return indexes; }
+	public TableDescriptor addIndex(IndexDescriptor index) {
 		this.indexes.add(index);
 		return this;
 	}
 
 	public Map<String, List<String>> getMetaAttributes() { return metaAttributes; }
-	public TableMetadata metaAttributes(Map<String, List<String>> metaAttributes) {
+	public TableDescriptor metaAttributes(Map<String, List<String>> metaAttributes) {
 		this.metaAttributes = metaAttributes;
 		return this;
 	}
-	public TableMetadata addMetaAttribute(String name, String value) {
+	public TableDescriptor addMetaAttribute(String name, String value) {
 		this.metaAttributes.computeIfAbsent(name, k -> new ArrayList<>()).add(value);
 		return this;
 	}

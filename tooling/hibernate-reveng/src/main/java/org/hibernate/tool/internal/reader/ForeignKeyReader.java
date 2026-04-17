@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.tool.api.reveng.RevengDialect;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 
 /**
  * Reads exported foreign key information for all discovered tables
@@ -53,10 +53,10 @@ class ForeignKeyReader {
 	 * @param tablesByName the discovered tables keyed by table name
 	 * @return all foreign key info records
 	 */
-	List<RawForeignKeyInfo> readForeignKeys(Map<String, TableMetadata> tablesByName) {
+	List<RawForeignKeyInfo> readForeignKeys(Map<String, TableDescriptor> tablesByName) {
 		List<RawForeignKeyInfo> allFks = new ArrayList<>();
-		for (Map.Entry<String, TableMetadata> entry : tablesByName.entrySet()) {
-			TableMetadata table = entry.getValue();
+		for (Map.Entry<String, TableDescriptor> entry : tablesByName.entrySet()) {
+			TableDescriptor table = entry.getValue();
 			String catalog = table.getCatalog() != null ? table.getCatalog() : defaultCatalog;
 			String schema = table.getSchema() != null ? table.getSchema() : defaultSchema;
 

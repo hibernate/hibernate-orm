@@ -25,8 +25,8 @@ import java.util.Properties;
 import org.hibernate.cfg.Environment;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
-import org.hibernate.tool.internal.reveng.models.metadata.ColumnMetadata;
-import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
+import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
+import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -38,8 +38,8 @@ public class CfgXmlExporterTest {
 
 	private ClassDetails buildEntity(DynamicEntityBuilder builder, String tableName,
 									 String className, String pkg) {
-		TableMetadata table = new TableMetadata(tableName, className, pkg);
-		table.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor table = new TableDescriptor(tableName, className, pkg);
+		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		return builder.createEntityFromTable(table);
 	}
 
@@ -140,11 +140,11 @@ public class CfgXmlExporterTest {
 	@Test
 	public void testInheritanceHierarchy() {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
-		TableMetadata rootTable = new TableMetadata("VEHICLE", "Vehicle", "com.example");
-		rootTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor rootTable = new TableDescriptor("VEHICLE", "Vehicle", "com.example");
+		rootTable.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		ClassDetails root = builder.createEntityFromTable(rootTable);
-		TableMetadata childTable = new TableMetadata("CAR", "Car", "com.example");
-		childTable.addColumn(new ColumnMetadata("ID", "id", Long.class).primaryKey(true));
+		TableDescriptor childTable = new TableDescriptor("CAR", "Car", "com.example");
+		childTable.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		childTable.parent("Vehicle", "com.example");
 		ClassDetails child = builder.createEntityFromTable(childTable);
 		List<ClassDetails> entities = new ArrayList<>();

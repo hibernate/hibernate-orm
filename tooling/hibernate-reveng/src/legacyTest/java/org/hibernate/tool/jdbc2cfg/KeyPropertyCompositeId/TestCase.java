@@ -23,7 +23,7 @@ import jakarta.persistence.Table;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.tool.internal.metadata.NativeMetadataDescriptor;
-import org.hibernate.tool.internal.reveng.models.exporter.entity.EntityExporter;
+import org.hibernate.tool.internal.exporter.entity.EntityExporter;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.api.metadata.MetadataConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;

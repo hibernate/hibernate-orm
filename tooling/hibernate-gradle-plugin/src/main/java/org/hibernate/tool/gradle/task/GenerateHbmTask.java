@@ -22,7 +22,7 @@ import java.io.File;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.work.DisableCachingByDefault;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.reveng.models.exporter.hbm.HbmXmlExporter;
+import org.hibernate.tool.internal.exporter.hbm.HbmXmlExporter;
 
 @DisableCachingByDefault(because = "Generates output from a live database connection")
 public class GenerateHbmTask extends AbstractTask {

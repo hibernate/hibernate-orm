@@ -25,7 +25,7 @@ import java.util.Properties;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.work.DisableCachingByDefault;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.reveng.models.exporter.cfg.CfgXmlExporter;
+import org.hibernate.tool.internal.exporter.cfg.CfgXmlExporter;
 
 @DisableCachingByDefault(because = "Generates output from a live database connection")
 public class GenerateCfgTask extends AbstractTask {

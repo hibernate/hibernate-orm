@@ -19,7 +19,7 @@ package org.hibernate.tool.ant;
 
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.reveng.models.exporter.dao.DaoExporter;
+import org.hibernate.tool.internal.exporter.dao.DaoExporter;
 
 /**
  * @author Dennis Byrne

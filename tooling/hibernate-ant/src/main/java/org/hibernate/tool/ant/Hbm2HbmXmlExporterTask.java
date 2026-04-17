@@ -19,7 +19,7 @@ package org.hibernate.tool.ant;
 
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.reveng.models.exporter.hbm.HbmXmlExporter;
+import org.hibernate.tool.internal.exporter.hbm.HbmXmlExporter;
 
 public class Hbm2HbmXmlExporterTask extends ExporterTask {
 

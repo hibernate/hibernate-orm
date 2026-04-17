@@ -39,7 +39,7 @@ import org.apache.maven.project.MavenProject;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.internal.reveng.models.builder.hbm.HbmClassDetailsBuilder;
-import org.hibernate.tool.internal.reveng.models.exporter.mapping.MappingXmlExporter;
+import org.hibernate.tool.internal.exporter.mapping.MappingXmlExporter;
 
 @Mojo(
 	name = "hbm2orm",

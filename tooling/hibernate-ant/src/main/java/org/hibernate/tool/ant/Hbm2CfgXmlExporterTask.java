@@ -24,7 +24,7 @@ import java.util.Properties;
 
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.reveng.models.exporter.cfg.CfgXmlExporter;
+import org.hibernate.tool.internal.exporter.cfg.CfgXmlExporter;
 
 public class Hbm2CfgXmlExporterTask extends ExporterTask {
 

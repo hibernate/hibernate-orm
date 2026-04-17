@@ -21,7 +21,7 @@ import java.util.Properties;
 
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.reveng.models.exporter.entity.EntityExporter;
+import org.hibernate.tool.internal.exporter.entity.EntityExporter;
 
 /**
  * @author max

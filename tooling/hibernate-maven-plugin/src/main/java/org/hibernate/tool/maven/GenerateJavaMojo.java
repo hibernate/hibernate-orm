@@ -25,7 +25,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.reveng.models.exporter.entity.EntityExporter;
+import org.hibernate.tool.internal.exporter.entity.EntityExporter;
 
 /**
  * Mojo to generate Java JPA Entities from an existing database.

@@ -25,8 +25,8 @@ import org.hibernate.tool.api.export.ExporterFactory;
 import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.export.DefaultArtifactCollector;
-import org.hibernate.tool.internal.reveng.models.exporter.hbm.HbmXmlExporter;
-import org.hibernate.tool.internal.reveng.models.exporter.hbm.HibernateMappingSettings;
+import org.hibernate.tool.internal.exporter.hbm.HbmXmlExporter;
+import org.hibernate.tool.internal.exporter.hbm.HibernateMappingSettings;
 
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;

@@ -26,7 +26,7 @@ import java.util.Properties;
 import org.apache.tools.ant.BuildException;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.reveng.models.exporter.query.QueryExporter;
+import org.hibernate.tool.internal.exporter.query.QueryExporter;
 import org.hibernate.tool.util.StringUtil;
 
 public class QueryExporterTask extends ExporterTask {

@@ -26,10 +26,10 @@ public class ExporterTypeTest {
 	@Test
 	public void testExporterType() {
 		assertEquals(
-				"org.hibernate.tool.internal.reveng.models.exporter.entity.EntityExporter",
+				"org.hibernate.tool.internal.exporter.entity.EntityExporter",
 				ExporterType.JAVA.className());
 		assertEquals(
-				"org.hibernate.tool.internal.reveng.models.exporter.cfg.CfgXmlExporter",
+				"org.hibernate.tool.internal.exporter.cfg.CfgXmlExporter",
 				ExporterType.CFG.className());
 	}
 

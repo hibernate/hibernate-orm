@@ -22,7 +22,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.internal.reveng.models.exporter.ddl.DdlExporter;
+import org.hibernate.tool.internal.exporter.ddl.DdlExporter;
 import org.hibernate.tool.schema.TargetType;
 
 import java.io.File;

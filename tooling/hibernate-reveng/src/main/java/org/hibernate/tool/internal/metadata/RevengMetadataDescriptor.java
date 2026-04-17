@@ -42,7 +42,7 @@ import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.RevengStrategyFactory;
 import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
 import org.hibernate.tool.internal.reveng.models.metadata.TableMetadata;
-import org.hibernate.tool.internal.reveng.models.reader.ModelsDatabaseSchemaReader;
+import org.hibernate.tool.internal.reader.ModelsDatabaseSchemaReader;
 
 public class RevengMetadataDescriptor implements MetadataDescriptor {
 

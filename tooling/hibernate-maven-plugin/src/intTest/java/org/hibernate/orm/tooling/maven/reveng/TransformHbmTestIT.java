@@ -12,7 +12,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.PrintStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -88,12 +90,17 @@ public class TransformHbmTestIT {
 	}
 
 	private void runMaven(String... goals) {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		ByteArrayOutputStream err = new ByteArrayOutputStream();
 		int result = mavenCli.doMain(
 				goals,
 				projectPath.toAbsolutePath().toString(),
-				System.out,
-				System.err );
-		assertEquals( 0, result, "Maven invocation failed for goals: " + Arrays.asList( goals ) );
+				new PrintStream( out ),
+				new PrintStream( err ) );
+		assertEquals( 0, result,
+				"Maven invocation failed for goals: " + Arrays.asList( goals )
+				+ "\n--- stdout ---\n" + out
+				+ "\n--- stderr ---\n" + err );
 	}
 
 	private static final String simplePomContents =

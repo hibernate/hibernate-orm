@@ -1498,7 +1498,8 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public Object getElementByIndex(Object key, Object index, SharedSessionContractImplementor session, Object owner) {
 		final var influencers = session.getLoadQueryInfluencers();
-		if ( isAffectedByFilters( new HashSet<>(), attributeMapping.getElementDescriptor(), influencers, true ) ) {
+		if ( influencers.hasEnabledFilters()
+			&& isAffectedByFilters( new HashSet<>(), attributeMapping.getElementDescriptor(), influencers, true ) ) {
 			return new CollectionElementLoaderByIndex( attributeMapping, influencers, factory )
 					.load( key, index, session );
 		}
@@ -1581,7 +1582,7 @@ public abstract class AbstractCollectionPersister
 			final var enabledFilters = influencers.getEnabledFilters();
 			return filterHelper != null && filterHelper.isAffectedBy( enabledFilters )
 				|| manyToManyFilterHelper != null && manyToManyFilterHelper.isAffectedBy( enabledFilters )
-				|| isKeyOrElementAffectedByFilters( new HashSet<>(), influencers, onlyApplyForLoadByKeyFilters);
+				|| isKeyOrElementAffectedByFilters( new HashSet<>(), influencers, onlyApplyForLoadByKeyFilters );
 		}
 		else {
 			return false;
@@ -1593,15 +1594,11 @@ public abstract class AbstractCollectionPersister
 			Set<ManagedMappingType> visitedTypes,
 			LoadQueryInfluencers influencers,
 			boolean onlyApplyForLoadByKeyFilters) {
-		if ( influencers.hasEnabledFilters() ) {
-			final var enabledFilters = influencers.getEnabledFilters();
-			return filterHelper != null && filterHelper.isAffectedBy( enabledFilters )
-				|| manyToManyFilterHelper != null && manyToManyFilterHelper.isAffectedBy( enabledFilters )
-				|| isKeyOrElementAffectedByFilters( visitedTypes, influencers, onlyApplyForLoadByKeyFilters);
-		}
-		else {
-			return false;
-		}
+		assert influencers.hasEnabledFilters();
+		final var enabledFilters = influencers.getEnabledFilters();
+		return filterHelper != null && filterHelper.isAffectedBy( enabledFilters )
+			|| manyToManyFilterHelper != null && manyToManyFilterHelper.isAffectedBy( enabledFilters )
+			|| isKeyOrElementAffectedByFilters( visitedTypes, influencers, onlyApplyForLoadByKeyFilters );
 	}
 
 	private boolean isKeyOrElementAffectedByFilters(

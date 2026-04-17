@@ -93,6 +93,9 @@ publishingExtension.publications.named("publishedArtifacts") {
 integrationTest {
     environment "hibernateVersion", project.version
     environment "h2Version", jdbcLibs.versions.h2.get()
+    if (project.hasProperty("mavenMirror")) {
+        environment "mavenMirror", project.property("mavenMirror")
+    }
 }
 
 integrationTest.dependsOn project(':hibernate-core').tasks.publishToMavenLocal

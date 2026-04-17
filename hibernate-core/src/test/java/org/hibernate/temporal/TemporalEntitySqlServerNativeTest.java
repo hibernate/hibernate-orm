@@ -5,6 +5,7 @@
 package org.hibernate.temporal;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
@@ -29,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -235,8 +237,8 @@ class TemporalEntitySqlServerNativeTest {
 		);
 		scope.getSessionFactory().inStatelessTransaction(
 				session -> {
-					TemporalEntity entity = session.get( TemporalEntity.class, 2L );
-					assertNull( entity );
+					assertThatThrownBy( () -> session.get( TemporalEntity.class, 2L ) )
+							.isInstanceOf( EntityNotFoundException.class );
 				}
 		);
 		try (var session = scope.getSessionFactory().withStatelessOptions().asOf(instant).open()) {

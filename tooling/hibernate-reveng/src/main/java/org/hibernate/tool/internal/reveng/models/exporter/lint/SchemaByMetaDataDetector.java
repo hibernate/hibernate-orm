@@ -48,6 +48,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengDialectFactory;
 import org.hibernate.tool.internal.reveng.util.JdbcToHibernateTypeHelper;
+import org.hibernate.tool.internal.reveng.util.TableNameQualifier;
 
 /**
  * Lint detector that compares the entity model (from {@link ClassDetails})
@@ -118,7 +119,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 					"SCHEMA_TABLE_MISSING",
 					Issue.HIGH_PRIORITY,
 					"Missing table "
-					+ qualifyTableName(catalog, schema, tableName)));
+					+ TableNameQualifier.qualify(catalog, schema, tableName)));
 			return;
 		}
 
@@ -141,7 +142,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		String catalog = getTableCatalog(entity);
 		String columnName = column.name();
 		String qualifiedTable =
-				qualifyTableName(catalog, schema, tableName);
+				TableNameQualifier.qualify(catalog, schema, tableName);
 
 		Map<String, Object> dbColumn =
 				dbColumns.get(columnName.toUpperCase());
@@ -408,17 +409,4 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		return Integer.MIN_VALUE;
 	}
 
-	private static String qualifyTableName(String catalog,
-										   String schema,
-										   String table) {
-		StringBuilder sb = new StringBuilder();
-		if (catalog != null) {
-			sb.append(catalog).append('.');
-		}
-		if (schema != null) {
-			sb.append(schema).append('.');
-		}
-		sb.append(table);
-		return sb.toString();
-	}
 }

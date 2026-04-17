@@ -25,7 +25,6 @@ import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.export.ExporterFactory;
 import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.reveng.util.AnnotationBuilder;
 import org.hibernate.tool.test.utils.FileUtil;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
@@ -176,35 +175,4 @@ public class TestCase {
 								"org/hibernate/tool/hbm2x/Hbm2JavaEjb3Test/Article.java") ));
 	}
 		
-	@Test
-	public void testAnnotationBuilder() {
-		AnnotationBuilder builder =  AnnotationBuilder.createAnnotation("SingleCleared").resetAnnotation( "Single" );
-		assertEquals("@Single", builder.getResult());
-		builder = AnnotationBuilder.createAnnotation("jakarta.persistence.OneToMany")
-				    .addAttribute("willbecleared", (String)null)
-				    .resetAnnotation("jakarta.persistence.OneToMany")
-					.addAttribute("cascade", new String[] { "val1", "val2"})
-					.addAttribute("fetch", "singleValue");
-		assertEquals("@jakarta.persistence.OneToMany(cascade={val1, val2}, fetch=singleValue)", builder.getResult());
-		builder = AnnotationBuilder.createAnnotation("jakarta.persistence.OneToMany");
-		builder.addAttribute("cascade", (String[])null);
-		builder.addAttribute("fetch", (String)null);
-		assertEquals("@jakarta.persistence.OneToMany", builder.getResult());
-		builder = AnnotationBuilder.createAnnotation("abc");
-		ArrayList<Object> list = new ArrayList<>();
-		list.add(42);
-		list.add("xxx");
-		builder.addQuotedAttributes( "it", list.iterator() );
-		assertEquals("@abc(it={\"42\", \"xxx\"})", builder.getResult());		
-		List<String> columns = new ArrayList<>();
-		columns.add("first");
-		columns.add("second");
-		AnnotationBuilder constraint = AnnotationBuilder.createAnnotation( "UniqueConstraint" );
-		constraint.addQuotedAttributes( "columnNames", columns.iterator() );
-		constraint.addAttribute( "single", "value" );	
-		String attribute = constraint.getAttributeAsString("columnNames");
-		assertEquals("{\"first\", \"second\"}", attribute);
-		assertEquals("value", constraint.getAttributeAsString( "single" ));
-	}
-	
 }

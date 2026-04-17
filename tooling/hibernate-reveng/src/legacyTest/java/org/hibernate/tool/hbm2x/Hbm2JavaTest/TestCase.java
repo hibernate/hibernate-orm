@@ -26,7 +26,6 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.export.DefaultArtifactCollector;
 import org.hibernate.tool.internal.reveng.models.exporter.entity.ImportContext;
 import org.hibernate.tool.internal.reveng.models.exporter.entity.ImportContextImpl;
-import org.hibernate.tool.internal.reveng.util.AnnotationBuilder;
 import org.hibernate.tool.test.utils.FileUtil;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;

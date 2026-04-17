@@ -17,12 +17,12 @@ jobs:
     steps:
       # Checkout target branch which has trusted code
       - name: Check out target branch
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
           ref: ${{ github.ref }}
       - name: Set up JDK
-        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           distribution: 'temurin'
           java-version: '25'
@@ -38,7 +38,7 @@ jobs:
           echo "buildtool-monthly-branch-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}" >> $GITHUB_OUTPUT
           echo "buildtool-cache-key=${ROOT_CACHE_KEY}-${CURRENT_MONTH}-${CURRENT_BRANCH}-${CURRENT_DAY}" >> $GITHUB_OUTPUT
       - name: Restore Maven/Gradle Dependency/Dist Caches
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         with:
           path: |
             ~/.m2/repository/
@@ -52,7 +52,7 @@ jobs:
 
       - name: Download GitHub Actions artifacts for the Develocity build scans
         id: downloadBuildScan
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           pattern: build-scan-data-*
           github-token: ${{ github.token }}
@@ -101,8 +101,10 @@ jobs:
 
             echo "::notice::PR found. Target branch is: $TARGET_BRANCH"
             echo "::notice::          Pull Request number is: $PR_ID"
+            echo "::notice::          Branch to merge is: $BRANCH_NAME"
             echo "original_branch_ref=$TARGET_BRANCH" >> "$GITHUB_OUTPUT"
             echo "pr_id=$PR_ID" >> "$GITHUB_OUTPUT"
+            echo "branch_to_merge=$BRANCH_NAME" >> "$GITHUB_OUTPUT"
           else
             echo "::notice::Triggering workflow was executed for a push event? Using the head_branch value."
             echo "original_branch_ref=${{ github.event.workflow_run.head_branch }}" >> "$GITHUB_OUTPUT"
@@ -178,16 +180,8 @@ jobs:
           EXTRA_ARGS=""
           if [ "${{ github.event.workflow_run.event }}" == "pull_request" ]; then
             echo "::notice::Triggering workflow was executed for a pull request"
-
-            FORK_OWNER="${{ github.event.workflow_run.head_repository.owner.login }}"
-            BRANCH_NAME="${{ github.event.workflow_run.head_branch }}"
-            if [ "${{ github.event.workflow_run.head_repository.owner.login }}" != "${{ github.event.workflow_run.repository.owner.login }}" ]; then
-              BRANCH_NAME="$FORK_OWNER:$BRANCH_NAME"
-            fi
-            TARGET_BRANCH=$(gh pr view "$BRANCH_NAME" --repo ${{ github.event.workflow_run.repository.full_name }} --json baseRefName -q .baseRefName)
-            PR_ID=$(gh pr view "$BRANCH_NAME" --repo ${{ github.event.workflow_run.repository.full_name }} --json number -q .number)
-
-            EXTRA_ARGS="-Dsonar.pullrequest.branch=$BRANCH_NAME -Dsonar.pullrequest.key=$PR_ID -Dsonar.pullrequest.base=${{steps.determine_branch_ref.outputs.original_branch_ref}} -Dsonar.pullrequest.provider=GitHub -Dsonar.pullrequest.github.repository=hibernate/hibernate-orm"
+          
+            EXTRA_ARGS="-Dsonar.pullrequest.branch=${{steps.determine_branch_ref.outputs.branch_to_merge}} -Dsonar.pullrequest.key=${{steps.determine_branch_ref.outputs.pr_id}} -Dsonar.pullrequest.base=${{steps.determine_branch_ref.outputs.original_branch_ref}} -Dsonar.pullrequest.provider=GitHub -Dsonar.pullrequest.github.repository=hibernate/hibernate-orm"
           else
             EXTRA_ARGS="-Dsonar.branch.name=${{github.event.workflow_run.head_branch}}"
           fi

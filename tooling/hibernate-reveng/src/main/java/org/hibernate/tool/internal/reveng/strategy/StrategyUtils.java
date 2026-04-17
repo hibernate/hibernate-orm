@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.util;
+package org.hibernate.tool.internal.reveng.strategy;
 
 import java.util.List;
 
@@ -24,9 +24,9 @@ import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 
-public class RevengUtils {
+class StrategyUtils {
 
-	public static List<String> getPrimaryKeyInfoInRevengStrategy(
+	static List<String> getPrimaryKeyInfoInRevengStrategy(
 			RevengStrategy revengStrat, 
 			Table table, 
 			String defaultCatalog, 
@@ -43,7 +43,7 @@ public class RevengUtils {
 		return result;
 	}
 	
-	public static String getTableIdentifierStrategyNameInRevengStrategy(
+	static String getTableIdentifierStrategyNameInRevengStrategy(
 			RevengStrategy revengStrat, 
 			TableIdentifier tableIdentifier, 
 			String defaultCatalog, 
@@ -59,7 +59,7 @@ public class RevengUtils {
 		return result;	
 	}
 
-	public static TableIdentifier createTableIdentifier(
+	static TableIdentifier createTableIdentifier(
 			Table table, 
 			String defaultCatalog, 
 			String defaultSchema) {
@@ -69,7 +69,7 @@ public class RevengUtils {
 		return TableIdentifier.create(tableCatalog, tableSchema, tableName);
 	}
 	
-	public static AssociationInfo createAssociationInfo(			
+	static AssociationInfo createAssociationInfo(			
 			String cascade, 
 			String fetch, 
 			Boolean insert, 

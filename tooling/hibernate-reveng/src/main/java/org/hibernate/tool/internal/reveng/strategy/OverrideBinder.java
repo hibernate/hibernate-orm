@@ -32,7 +32,6 @@ import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reveng.strategy.MetaAttributeHelper.SimpleMetaAttribute;
-import org.hibernate.tool.internal.reveng.util.RevengUtils;
 import org.hibernate.tool.internal.util.TypeHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -331,7 +330,7 @@ public class OverrideBinder {
     }
 
     private static AssociationInfo extractAssociationInfo(Element manyToOne) {
-        return RevengUtils.createAssociationInfo(
+        return StrategyUtils.createAssociationInfo(
                 manyToOne.hasAttribute("cascade") ? manyToOne.getAttribute("cascade") : null,
                 manyToOne.hasAttribute("fetch") ? manyToOne.getAttribute("fetch") : null,
                 manyToOne.hasAttribute("insert") ?

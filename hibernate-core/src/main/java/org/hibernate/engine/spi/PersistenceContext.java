@@ -571,7 +571,7 @@ public interface PersistenceContext {
 	 * Provides access to the entity/EntityEntry combos associated with the persistence context in a manner that
 	 * is safe from reentrant access.  Specifically, it is safe from additions/removals while iterating.
 	 */
-	Map.Entry<Object,EntityEntry>[] reentrantSafeEntityEntries();
+	EntityEntryRef[] reentrantSafeEntityEntries();
 
 //	/**
 //	 * Get the mapping from entity instance to entity entry

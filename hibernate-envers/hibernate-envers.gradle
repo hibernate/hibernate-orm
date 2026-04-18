@@ -14,15 +14,15 @@ dependencies {
     api project( ':hibernate-core' )
 
     implementation libs.hibernateModels
-    implementation jakartaLibs.jaxbApi
-    implementation jakartaLibs.jaxb
+    implementation libs.jakarta.jaxbApi
+    implementation libs.jakarta.jaxb
     implementation libs.jandex
     implementation libs.hibernateModels
 
     compileOnly libs.ant
 
     annotationProcessor project( ':hibernate-processor' )
-    compileOnly jakartaLibs.annotation
+    compileOnly libs.jakarta.annotation
 
     testImplementation project( ':hibernate-testing' )
 

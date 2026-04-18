@@ -220,8 +220,8 @@ public class StandardRowReader<T> implements RowReader<T> {
 	}
 
 	private void finishUpRow() {
-		for ( var data : initializersData ) {
-			data.setState( Initializer.State.UNINITIALIZED );
+		for ( int i = 0; i < initializers.length; i++ ) {
+			initializers[i].finishUpRow( initializersData[i] );
 		}
 	}
 

@@ -9,6 +9,7 @@ import java.util.UUID;
 import jakarta.persistence.TransactionRequiredException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import org.hibernate.audit.spi.AuditWorkQueue;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
@@ -221,7 +222,7 @@ public interface SharedSessionContractImplementor
 	 * A transaction id representing the beginning of the current transaction,
 	 * for use with {@linkplain org.hibernate.annotations.Temporal temporal}
 	 * effectivity columns and with
-	 * {@linkplain org.hibernate.annotations.Audited#transactionId audit log
+	 * {@linkplain org.hibernate.annotations.Audited.Table#transactionId audit log
 	 * transaction id columns}.
 	 */
 	Object getCurrentTransactionIdentifier();
@@ -281,6 +282,15 @@ public interface SharedSessionContractImplementor
 	 */
 	@Incubating
 	TransactionCompletionCallbacksImplementor getTransactionCompletionCallbacksImplementor();
+
+	/**
+	 * Access the transaction-scoped audit work queue for deferred
+	 * audit row writes. Lazily initialized on first access.
+	 *
+	 * @since 7.4
+	 */
+	@Incubating
+	AuditWorkQueue getAuditWorkQueue();
 
 	/**
 	 * Instantiate an {@link EntityKey} with the given id and for the

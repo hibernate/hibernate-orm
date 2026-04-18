@@ -4,10 +4,10 @@
  */
 package org.hibernate.persister.entity.mutation;
 
+import org.hibernate.audit.ModificationType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.state.internal.AuditStateManagement;
 import org.hibernate.sql.model.MutationOperationGroup;
 
 /**
@@ -35,24 +35,20 @@ public class DeleteCoordinatorAudit extends AbstractAuditCoordinator implements 
 			Object id,
 			Object version,
 			SharedSessionContractImplementor session) {
-		currentDeleteCoordinator.delete( entity, id, version, session );
-		final var state = resolveDeleteState( entity, session );
-		if ( state != null ) {
-			insertAuditRow( entity, id, state, AuditStateManagement.ModificationType.DEL, session );
-		}
-	}
+		final var entityEntry = session.getPersistenceContextInternal().getEntry( entity );
+		final var state = entityEntry.getLoadedState() != null
+				? entityEntry.getLoadedState()
+				: entityPersister().getValues( entity );
 
-	private Object[] resolveDeleteState(Object entity, SharedSessionContractImplementor session) {
-		if ( entity == null ) {
-			return null;
-		}
-		else {
-			final var persistenceContext = session.getPersistenceContextInternal();
-			final var entry = persistenceContext.getEntry( entity );
-			return entry != null
-				&& entry.getLoadedState() != null
-					? entry.getLoadedState()
-					: entityPersister().getValues( entity );
-		}
+		currentDeleteCoordinator.delete( entity, id, version, session );
+
+		session.getAuditWorkQueue().enqueue(
+				entityEntry.getEntityKey(),
+				entity,
+				state,
+				ModificationType.DEL,
+				this,
+				session
+		);
 	}
 }

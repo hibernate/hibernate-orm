@@ -259,12 +259,17 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 			catch (RuntimeException e) {
 				// something went wrong, so make a last-ditch,
 				// hail-mary attempt to roll back the transaction
-				try {
-					rollback();
+				if ( isActive() ) {
+					try {
+						rollback();
+					}
+					catch (RuntimeException e2) {
+						e.addSuppressed( e2 );
+						JDBC_LOGGER.encounteredFailureRollingBackFailedCommit( e2 );
+					}
 				}
-				catch (RuntimeException e2) {
-					e.addSuppressed( e2 );
-					JDBC_LOGGER.encounteredFailureRollingBackFailedCommit( e2 );
+				else {
+					afterCompletionCallback( false );
 				}
 				throw e;
 			}
@@ -281,8 +286,12 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		@Override
 		public void rollback() {
 			if ( isActive() ) {
-				jdbcResourceTransaction.rollback();
-				afterCompletionCallback( false );
+				try {
+					jdbcResourceTransaction.rollback();
+				}
+				finally {
+					afterCompletionCallback( false );
+				}
 			}
 		}
 

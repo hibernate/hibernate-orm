@@ -525,29 +525,7 @@ public class ComponentType extends AbstractType
 			SharedSessionContractImplementor session,
 			Object owner,
 			Map<Object, Object> copyCache) {
-		if ( original == null ) {
-			return null;
-		}
-		else {
-			final Object[] originalValues = getPropertyValues( original );
-			final Object[] resultValues = getPropertyValues( target );
-			final Object[] replacedValues = TypeHelper.replace(
-					originalValues,
-					resultValues,
-					propertyTypes,
-					session,
-					owner,
-					copyCache
-			);
-
-			if ( target == null || !isMutable() ) {
-				return instantiator( original ).instantiate( () -> replacedValues );
-			}
-			else {
-				setPropertyValues( target, replacedValues );
-				return target;
-			}
-		}
+		return replaceComponentValue( original, target, session, owner, copyCache, null );
 	}
 
 	@Override
@@ -558,23 +536,52 @@ public class ComponentType extends AbstractType
 			Object owner,
 			Map<Object, Object> copyCache,
 			ForeignKeyDirection foreignKeyDirection) {
+		return replaceComponentValue( original, target, session, owner, copyCache, foreignKeyDirection );
+	}
+
+	private Object replaceComponentValue(
+			Object original,
+			Object target,
+			SharedSessionContractImplementor session,
+			Object owner,
+			Map<Object, Object> copyCache,
+			ForeignKeyDirection foreignKeyDirection) {
 		if ( original == null ) {
 			return null;
 		}
 		else {
+			final var mappingType = embeddableTypeDescriptor();
+			final boolean polymorphic = mappingType.isPolymorphic();
+
 			final Object[] originalValues = getPropertyValues( original );
 			final Object[] resultValues = getPropertyValues( target );
-			final Object[] replacedValues = TypeHelper.replace(
-					originalValues,
-					resultValues,
-					propertyTypes,
-					session,
-					owner,
-					copyCache,
-					foreignKeyDirection
-			);
 
-			if ( target == null || !isMutable() ) {
+			Object[] replacedValues;
+			if ( foreignKeyDirection == null ) {
+				replacedValues = TypeHelper.replace(
+						originalValues,
+						resultValues,
+						propertyTypes,
+						propertySpan,
+						session,
+						owner,
+						copyCache
+				);
+			}
+			else {
+				replacedValues = TypeHelper.replace(
+						originalValues,
+						resultValues,
+						propertyTypes,
+						propertySpan,
+						session,
+						owner,
+						copyCache,
+						foreignKeyDirection
+				);
+			}
+
+			if ( target == null || !isMutable() || polymorphic ) {
 				return instantiator( original ).instantiate( () -> replacedValues );
 			}
 			else {

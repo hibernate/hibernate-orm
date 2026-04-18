@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.tooling.maven.reveng;
 
-import org.apache.maven.cli.MavenCli;
+import org.hibernate.orm.tooling.maven.AbstractMavenTestIT;
 import org.hibernate.tool.reveng.api.version.Version;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -20,16 +20,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class TransformHbmTestIT {
-
-	public static final String MVN_HOME = "maven.multiModuleProjectDirectory";
+public class TransformHbmTestIT extends AbstractMavenTestIT {
 
 	@TempDir
 	private Path projectPath;
 
 	@Test
 	public void testSimpleHbmTransformation() throws Exception {
-		System.setProperty(MVN_HOME, projectPath.toAbsolutePath().toString());
 		writePomFile();
 		copyHbmFile();
 		runTransformHbmToOrm();
@@ -59,14 +56,10 @@ public class TransformHbmTestIT {
 		File destinationDir = new File(projectPath.toFile(), "src/main/resources/");
 		File ormXmlFile = new File(destinationDir, "simple.mapping.xml");
 		assertFalse(ormXmlFile.exists());
-		new MavenCli().doMain(
-				new String[] {
-						"compile",
-						"org.hibernate.orm:hibernate-maven-plugin:" + Version.versionString() + ":transformHbm"
-				},
+		runMaven(
 				projectPath.toAbsolutePath().toString(),
-				null,
-				null);
+				"compile",
+				"org.hibernate.orm:hibernate-maven-plugin:" + Version.versionString() + ":transformHbm" );
 		// Check the existence of the transformed file
 		assertTrue(ormXmlFile.exists());
 		// Check if it's pretty printed

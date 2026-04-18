@@ -45,8 +45,9 @@ public class AnyBinder {
 				joinColumn.setExplicitTableName( join.getTable().getName() );
 			}
 		}
+		final var any = memberDetails.getDirectAnnotationUsage( org.hibernate.annotations.Any.class );
 		bindAny(
-				aggregateCascadeTypes( null, memberDetails, false, context ),
+				aggregateCascadeTypes( any.cascade(), memberDetails, false, context ),
 				//@Any has no cascade attribute
 				joinColumns,
 				onDeleteAnn == null ? null : onDeleteAnn.action(),

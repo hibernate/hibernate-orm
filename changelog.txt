@@ -1,6 +1,19 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.2.12.Final (April 19, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/38758
+
+
+** Bug
+    * HHH-20320 detached versioned entity parameter triggers auto-flush transient check
+    * HHH-20317 Envers does not reflect @DiscriminatorOptions for history entities
+
+** Task
+    * HHH-20334 Upgrade to Log4j 2.25.4
+
 Changes in 7.2.11.Final (April 12, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

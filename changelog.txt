@@ -1,6 +1,18 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.1.24.Final (April 19, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/38759
+
+
+** Bug
+    * HHH-20317 Envers does not reflect @DiscriminatorOptions for history entities
+
+** Task
+    * HHH-20334 Upgrade to Log4j 2.25.4
+
 Changes in 7.1.23.Final (April 12, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

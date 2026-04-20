@@ -23,6 +23,7 @@ import static org.hibernate.Hibernate.isInitialized;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SessionFactory(useCollectingStatementInspector = true)
@@ -138,6 +139,40 @@ class JoinFetchAnyTest {
 			var singleResult = s.find( graph, 2L );
 			assertTrue( isInitialized( singleResult.anything ) );
 			assertInstanceOf( SomeOtherThing.class, singleResult.anything );
+			assertEquals( 1, statementInspector.getSqlQueries().size() );
+		} );
+	}
+
+	@Test
+	void testJoinFetchInitializesExistingLazyProxyOnManagedParent(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			var anyThing = new AnyThing();
+			var someThing = new SomeThing();
+			someThing.description = "Some thing";
+			anyThing.anything = someThing;
+			s.persist( someThing );
+			s.persist( anyThing );
+		} );
+		final var statementInspector = scope.getCollectingStatementInspector();
+
+		statementInspector.clear();
+		scope.inTransaction( s -> {
+			final AnyThing managed = s.find( AnyThing.class, 1L );
+			assertFalse( isInitialized( managed.anything ) );
+			assertInstanceOf( SomeThing.class, managed.anything );
+			assertEquals( 1, statementInspector.getSqlQueries().size() );
+
+			statementInspector.clear();
+
+			final AnyThing fetched = s.createQuery(
+					"from AnyThing a join fetch a.anything where a.id = :id",
+					AnyThing.class
+			).setParameter( "id", managed.id ).getSingleResult();
+
+			assertSame( managed, fetched );
+			assertSame( managed.anything, fetched.anything );
+			assertTrue( isInitialized( managed.anything ) );
+			assertEquals( "Some thing", ( (SomeThing) fetched.anything ).getDescription() );
 			assertEquals( 1, statementInspector.getSqlQueries().size() );
 		} );
 	}

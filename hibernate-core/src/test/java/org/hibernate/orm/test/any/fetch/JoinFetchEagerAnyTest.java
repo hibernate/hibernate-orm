@@ -83,7 +83,7 @@ class JoinFetchEagerAnyTest {
 			var singleResult = s.find( graph, 1L );
 			assertTrue( isInitialized( singleResult.anything ) );
 			assertInstanceOf( SomeThing.class, singleResult.anything );
-			assertEquals( 2, statementInspector.getSqlQueries().size() );
+			assertEquals( 1, statementInspector.getSqlQueries().size() );
 			assertEquals( "Some thing", ((SomeThing) singleResult.anything).getDescription() );
 		} );
 	}
@@ -119,9 +119,7 @@ class JoinFetchEagerAnyTest {
 		} );
 		statementInspector.clear();
 		scope.inTransaction( s -> {
-			var graph = s.createEntityGraph( AnyThing.class );
-			graph.addAttributeNode( JoinFetchEagerAnyTest_.AnyThing_.anything );
-			var singleResult = s.find( graph, 1L );
+			var singleResult = s.find( AnyThing.class, 1L );
 			assertTrue( isInitialized( singleResult.anything ) );
 			assertInstanceOf( SomeThing.class, singleResult.anything );
 			assertEquals( "Some thing", ((SomeThing) singleResult.anything).description );
@@ -129,9 +127,7 @@ class JoinFetchEagerAnyTest {
 		} );
 		statementInspector.clear();
 		scope.inTransaction( s -> {
-			var graph = s.createEntityGraph( AnyThing.class );
-			graph.addAttributeNode( JoinFetchEagerAnyTest_.AnyThing_.anything );
-			var singleResult = s.find( graph, 2L );
+			var singleResult = s.find( AnyThing.class, 2L );
 			assertTrue( isInitialized( singleResult.anything ) );
 			assertInstanceOf( SomeOtherThing.class, singleResult.anything );
 			assertEquals( 1, statementInspector.getSqlQueries().size() );

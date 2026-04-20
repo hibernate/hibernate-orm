@@ -83,7 +83,7 @@ public class DiscriminatedAssociationAttributeMapping
 				fetchableIndex,
 				attributeMetadata,
 				fetchTiming,
-				FetchStyle.SELECT,
+				fetchTiming == FetchTiming.IMMEDIATE ? FetchStyle.JOIN : FetchStyle.SELECT,
 				declaringType,
 				propertyAccess
 		);

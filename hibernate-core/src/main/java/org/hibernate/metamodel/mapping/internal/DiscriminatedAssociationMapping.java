@@ -44,7 +44,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.entity.internal.DiscriminatedEntityFetchJoinedImpl;
+import org.hibernate.sql.results.graph.entity.internal.JoinedDiscriminatedEntityFetch;
 import org.hibernate.sql.results.graph.entity.internal.DiscriminatedEntityFetch;
 import org.hibernate.sql.results.graph.entity.internal.DiscriminatedEntityResult;
 import org.hibernate.type.AnyType;
@@ -343,7 +343,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 	@Override
 	public FetchStyle getStyle() {
-		return FetchStyle.SELECT;
+		return fetchTiming == FetchTiming.IMMEDIATE ? FetchStyle.JOIN : FetchStyle.SELECT;
 	}
 
 	@Override
@@ -542,7 +542,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			DomainResultCreationState creationState) {
 		if ( selected ) {
 			resolveJoinedFetchTableGroup( fetchParent, fetchablePath, resultVariable, creationState );
-			return new DiscriminatedEntityFetchJoinedImpl(
+			return new JoinedDiscriminatedEntityFetch(
 					fetchablePath,
 					baseAssociationJtd,
 					modelPart,

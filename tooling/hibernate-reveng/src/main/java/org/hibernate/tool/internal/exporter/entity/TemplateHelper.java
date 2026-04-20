@@ -24,24 +24,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
-import jakarta.persistence.JoinTable;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapsId;
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.EntityResult;
 import jakarta.persistence.FieldResult;
@@ -659,302 +651,39 @@ public class TemplateHelper {
 	}
 
 	public String generateManyToOneAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		ManyToOne m2o = fieldGetAnnotation(field,ManyToOne.class);
-		if (m2o == null) {
-			return "";
-		}
-		StringBuilder sb = new StringBuilder();
-		importType("jakarta.persistence.ManyToOne");
-		sb.append("@ManyToOne");
-		boolean hasAttrs = m2o.fetch() != FetchType.EAGER || !m2o.optional();
-		if (hasAttrs) {
-			sb.append("(");
-			boolean needComma = false;
-			if (m2o.fetch() != FetchType.EAGER) {
-				importType("jakarta.persistence.FetchType");
-				sb.append("fetch = FetchType.").append(m2o.fetch().name());
-				needComma = true;
-			}
-			if (!m2o.optional()) {
-				if (needComma) sb.append(", ");
-				sb.append("optional = false");
-			}
-			sb.append(")");
-		}
-		// @JoinColumn(s)
-		JoinColumns jcs = fieldGetAnnotation(field, JoinColumns.class);
-		if (jcs != null && jcs.value().length > 0) {
-			sb.append("\n    ");
-			importType("jakarta.persistence.JoinColumn");
-			importType("jakarta.persistence.JoinColumns");
-			sb.append("@JoinColumns({");
-			for (int i = 0; i < jcs.value().length; i++) {
-				if (i > 0) sb.append(", ");
-				sb.append("\n        @JoinColumn(name = \"").append(jcs.value()[i].name()).append("\"");
-				if (jcs.value()[i].referencedColumnName() != null && !jcs.value()[i].referencedColumnName().isEmpty()) {
-					sb.append(", referencedColumnName = \"")
-							.append(jcs.value()[i].referencedColumnName()).append("\"");
-				}
-				if (!jcs.value()[i].insertable()) {
-					sb.append(", insertable = false");
-				}
-				if (!jcs.value()[i].updatable()) {
-					sb.append(", updatable = false");
-				}
-				sb.append(")");
-			}
-			sb.append("\n    })");
-		} else {
-			JoinColumn jc = fieldGetAnnotation(field, JoinColumn.class);
-			if (jc != null) {
-				sb.append("\n    ");
-				importType("jakarta.persistence.JoinColumn");
-				sb.append("@JoinColumn(name = \"").append(jc.name()).append("\"");
-				if (jc.referencedColumnName() != null && !jc.referencedColumnName().isEmpty()) {
-					sb.append(", referencedColumnName = \"")
-							.append(jc.referencedColumnName()).append("\"");
-				}
-				if (!jc.insertable()) {
-					sb.append(", insertable = false");
-				}
-				if (!jc.updatable()) {
-					sb.append(", updatable = false");
-				}
-				sb.append(")");
-			}
-		}
-		return sb.toString();
+		if (!annotated) return "";
+		return new RelationshipAnnotationGenerator(importContext, this)
+				.generateManyToOneAnnotation(field);
 	}
 
 	public String generateOneToManyAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		OneToMany o2m = fieldGetAnnotation(field,OneToMany.class);
-		if (o2m == null) {
-			return "";
-		}
-		importType("jakarta.persistence.OneToMany");
-		StringBuilder sb = new StringBuilder("@OneToMany(");
-		boolean needComma = false;
-		String mappedBy = o2m.mappedBy();
-		if (mappedBy != null && !mappedBy.isEmpty()) {
-			sb.append("mappedBy = \"").append(mappedBy).append("\"");
-			needComma = true;
-		}
-		if (o2m.fetch() != FetchType.LAZY) {
-			if (needComma) sb.append(", ");
-			importType("jakarta.persistence.FetchType");
-			sb.append("fetch = FetchType.").append(o2m.fetch().name());
-			needComma = true;
-		}
-		if (o2m.cascade().length > 0) {
-			if (needComma) sb.append(", ");
-			importType("jakarta.persistence.CascadeType");
-			sb.append("cascade = ");
-			appendCascade(sb, o2m.cascade());
-			needComma = true;
-		}
-		if (o2m.orphanRemoval()) {
-			if (needComma) sb.append(", ");
-			sb.append("orphanRemoval = true");
-		}
-		sb.append(")");
-		return sb.toString();
+		if (!annotated) return "";
+		return new RelationshipAnnotationGenerator(importContext, this)
+				.generateOneToManyAnnotation(field);
 	}
 
 	public String generateOneToOneAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		OneToOne o2o = fieldGetAnnotation(field,OneToOne.class);
-		if (o2o == null) {
-			return "";
-		}
-		StringBuilder sb = new StringBuilder();
-		importType("jakarta.persistence.OneToOne");
-		sb.append("@OneToOne");
-		String mappedBy = o2o.mappedBy();
-		boolean hasMappedBy = mappedBy != null && !mappedBy.isEmpty();
-		boolean hasAttrs = hasMappedBy
-				|| o2o.fetch() != FetchType.EAGER
-				|| !o2o.optional()
-				|| o2o.cascade().length > 0
-				|| o2o.orphanRemoval();
-		if (hasAttrs) {
-			sb.append("(");
-			boolean needComma = false;
-			if (hasMappedBy) {
-				sb.append("mappedBy = \"").append(mappedBy).append("\"");
-				needComma = true;
-			}
-			if (o2o.fetch() != FetchType.EAGER) {
-				if (needComma) sb.append(", ");
-				importType("jakarta.persistence.FetchType");
-				sb.append("fetch = FetchType.").append(o2o.fetch().name());
-				needComma = true;
-			}
-			if (!o2o.optional()) {
-				if (needComma) sb.append(", ");
-				sb.append("optional = false");
-				needComma = true;
-			}
-			if (o2o.cascade().length > 0) {
-				if (needComma) sb.append(", ");
-				importType("jakarta.persistence.CascadeType");
-				sb.append("cascade = ");
-				appendCascade(sb, o2o.cascade());
-				needComma = true;
-			}
-			if (o2o.orphanRemoval()) {
-				if (needComma) sb.append(", ");
-				sb.append("orphanRemoval = true");
-			}
-			sb.append(")");
-		}
-		// @JoinColumn(s) for owning side
-		JoinColumns jcs = fieldGetAnnotation(field, JoinColumns.class);
-		if (jcs != null && jcs.value().length > 0) {
-			sb.append("\n    ");
-			importType("jakarta.persistence.JoinColumn");
-			importType("jakarta.persistence.JoinColumns");
-			sb.append("@JoinColumns({");
-			for (int i = 0; i < jcs.value().length; i++) {
-				if (i > 0) sb.append(", ");
-				sb.append("\n        @JoinColumn(name = \"").append(jcs.value()[i].name()).append("\"");
-				if (jcs.value()[i].referencedColumnName() != null && !jcs.value()[i].referencedColumnName().isEmpty()) {
-					sb.append(", referencedColumnName = \"")
-							.append(jcs.value()[i].referencedColumnName()).append("\"");
-				}
-				if (!jcs.value()[i].insertable()) {
-					sb.append(", insertable = false");
-				}
-				if (!jcs.value()[i].updatable()) {
-					sb.append(", updatable = false");
-				}
-				sb.append(")");
-			}
-			sb.append("\n    })");
-		} else {
-			JoinColumn jc = fieldGetAnnotation(field,JoinColumn.class);
-			if (jc != null) {
-				sb.append("\n    ");
-				importType("jakarta.persistence.JoinColumn");
-				sb.append("@JoinColumn(name = \"").append(jc.name()).append("\"");
-				if (jc.referencedColumnName() != null && !jc.referencedColumnName().isEmpty()) {
-					sb.append(", referencedColumnName = \"")
-							.append(jc.referencedColumnName()).append("\"");
-				}
-				if (!jc.insertable()) {
-					sb.append(", insertable = false");
-				}
-				if (!jc.updatable()) {
-					sb.append(", updatable = false");
-				}
-				sb.append(")");
-			}
-		}
-		// @MapsId for constrained one-to-one (shared PK)
-		if (fieldHasAnnotation(field, MapsId.class)) {
-			sb.append("\n    ");
-			importType("jakarta.persistence.MapsId");
-			sb.append("@MapsId");
-		}
-		return sb.toString();
+		if (!annotated) return "";
+		return new RelationshipAnnotationGenerator(importContext, this)
+				.generateOneToOneAnnotation(field);
 	}
 
 	public String generateManyToManyAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		ManyToMany m2m = fieldGetAnnotation(field,ManyToMany.class);
-		if (m2m == null) {
-			return "";
-		}
-		StringBuilder sb = new StringBuilder();
-		importType("jakarta.persistence.ManyToMany");
-		sb.append("@ManyToMany");
-		String mappedBy = m2m.mappedBy();
-		boolean hasMappedBy = mappedBy != null && !mappedBy.isEmpty();
-		boolean hasAttrs = hasMappedBy
-				|| m2m.fetch() != FetchType.LAZY
-				|| m2m.cascade().length > 0;
-		if (hasAttrs) {
-			sb.append("(");
-			boolean needComma = false;
-			if (hasMappedBy) {
-				sb.append("mappedBy = \"").append(mappedBy).append("\"");
-				needComma = true;
-			}
-			if (m2m.fetch() != FetchType.LAZY) {
-				if (needComma) sb.append(", ");
-				importType("jakarta.persistence.FetchType");
-				sb.append("fetch = FetchType.").append(m2m.fetch().name());
-				needComma = true;
-			}
-			if (m2m.cascade().length > 0) {
-				if (needComma) sb.append(", ");
-				importType("jakarta.persistence.CascadeType");
-				sb.append("cascade = ");
-				appendCascade(sb, m2m.cascade());
-			}
-			sb.append(")");
-		}
-		// @JoinTable for owning side
-		JoinTable jt = fieldGetAnnotation(field,JoinTable.class);
-		if (jt != null) {
-			sb.append("\n    ");
-			importType("jakarta.persistence.JoinTable");
-			importType("jakarta.persistence.JoinColumn");
-			sb.append("@JoinTable(name = \"").append(jt.name()).append("\"");
-			if (jt.joinColumns().length > 0) {
-				appendJoinColumns(sb, "joinColumns", jt.joinColumns());
-			}
-			if (jt.inverseJoinColumns().length > 0) {
-				appendJoinColumns(sb, "inverseJoinColumns", jt.inverseJoinColumns());
-			}
-			sb.append(")");
-		}
-		return sb.toString();
+		if (!annotated) return "";
+		return new RelationshipAnnotationGenerator(importContext, this)
+				.generateManyToManyAnnotation(field);
 	}
 
 	public String generateEmbeddedIdAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		if (!fieldHasAnnotation(field, EmbeddedId.class)) {
-			return "";
-		}
-		StringBuilder sb = new StringBuilder();
-		importType("jakarta.persistence.EmbeddedId");
-		sb.append("@EmbeddedId");
-		AttributeOverrides overrides = fieldGetAnnotation(field,AttributeOverrides.class);
-		if (overrides != null && overrides.value().length > 0) {
-			sb.append("\n    ");
-			appendAttributeOverrides(sb, overrides.value());
-		}
-		return sb.toString();
+		if (!annotated) return "";
+		return new RelationshipAnnotationGenerator(importContext, this)
+				.generateEmbeddedIdAnnotation(field);
 	}
 
 	public String generateEmbeddedAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		if (!fieldHasAnnotation(field, Embedded.class)) {
-			return "";
-		}
-		StringBuilder sb = new StringBuilder();
-		importType("jakarta.persistence.Embedded");
-		sb.append("@Embedded");
-		AttributeOverrides overrides = fieldGetAnnotation(field,AttributeOverrides.class);
-		if (overrides != null && overrides.value().length > 0) {
-			sb.append("\n    ");
-			appendAttributeOverrides(sb, overrides.value());
-		}
-		return sb.toString();
+		if (!annotated) return "";
+		return new RelationshipAnnotationGenerator(importContext, this)
+				.generateEmbeddedAnnotation(field);
 	}
 
 	// --- Subclass check ---
@@ -1681,50 +1410,6 @@ public class TemplateHelper {
 			case "double" -> "java.lang.Double";
 			default -> className;
 		};
-	}
-
-	private void appendJoinColumns(StringBuilder sb, String attributeName, JoinColumn[] columns) {
-		if (columns.length == 1) {
-			sb.append(",\n            ").append(attributeName).append(" = @JoinColumn(name = \"")
-					.append(columns[0].name()).append("\")");
-		} else {
-			sb.append(",\n            ").append(attributeName).append(" = {\n");
-			for (int i = 0; i < columns.length; i++) {
-				if (i > 0) sb.append(",\n");
-				sb.append("                @JoinColumn(name = \"").append(columns[i].name()).append("\")");
-			}
-			sb.append("\n            }");
-		}
-	}
-
-	private void appendCascade(StringBuilder sb, CascadeType[] types) {
-		if (types.length == 1) {
-			sb.append("CascadeType.").append(types[0].name());
-		} else {
-			sb.append("{ ");
-			for (int i = 0; i < types.length; i++) {
-				if (i > 0) sb.append(", ");
-				sb.append("CascadeType.").append(types[i].name());
-			}
-			sb.append(" }");
-		}
-	}
-
-	private void appendAttributeOverrides(StringBuilder sb, AttributeOverride[] overrides) {
-		importType("jakarta.persistence.AttributeOverrides");
-		importType("jakarta.persistence.AttributeOverride");
-		importType("jakarta.persistence.Column");
-		sb.append("@AttributeOverrides({\n");
-		for (int i = 0; i < overrides.length; i++) {
-			AttributeOverride ao = overrides[i];
-			sb.append("        @AttributeOverride(name = \"").append(ao.name())
-					.append("\", column = @Column(name = \"").append(ao.column().name()).append("\"))");
-			if (i < overrides.length - 1) {
-				sb.append(",");
-			}
-			sb.append("\n");
-		}
-		sb.append("    })");
 	}
 
 	private static String capitalize(String name) {

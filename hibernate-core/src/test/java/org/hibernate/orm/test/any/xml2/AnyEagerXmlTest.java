@@ -73,7 +73,7 @@ public class AnyEagerXmlTest {
 					.createQuery( "from NamedAnyContainer", NamedAnyContainer.class )
 					.uniqueResult();
 
-			assertThat( sqlCollector.getSqlQueries() ).hasSize( 4 );
+			assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
 
 			assertThat( result ).isNotNull();
 			assertThat( result.getSpecificProperty() ).isNull();
@@ -84,7 +84,7 @@ public class AnyEagerXmlTest {
 			assertThat( result.getGeneralProperties().stream().map( NamedProperty::getName ) )
 					.containsOnly( "name", "age" );
 
-			assertThat( sqlCollector.getSqlQueries() ).hasSize( 4 );
+			assertThat( sqlCollector.getSqlQueries() ).hasSize( 2 );
 		} );
 	}
 }

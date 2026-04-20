@@ -102,6 +102,7 @@ public class AnyNullabilityTest {
 
 		private String name;
 
+		@Column( name = "property_value" )
 		private Integer value;
 
 		public Long getId() {
@@ -138,6 +139,7 @@ public class AnyNullabilityTest {
 
 		private String name;
 
+		@Column( name = "property_value" )
 		private String value;
 
 		public Long getId() {

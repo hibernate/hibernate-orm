@@ -24,30 +24,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.persistence.Access;
-import jakarta.persistence.AccessType;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
-import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.DiscriminatorColumn;
-import jakarta.persistence.DiscriminatorType;
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.Inheritance;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
 import jakarta.persistence.JoinTable;
@@ -55,8 +42,6 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
-import jakarta.persistence.MapKey;
-import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.EntityResult;
 import jakarta.persistence.FieldResult;
@@ -68,8 +53,6 @@ import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.SqlResultSetMappings;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.OrderBy;
-import jakarta.persistence.OrderColumn;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
@@ -80,58 +63,25 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.SecondaryTables;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
-import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
 
 import org.hibernate.annotations.Any;
-import org.hibernate.annotations.AnyDiscriminator;
-import org.hibernate.annotations.AnyDiscriminatorValue;
-import org.hibernate.annotations.AnyDiscriminatorValues;
-import org.hibernate.annotations.AnyKeyJavaClass;
-import org.hibernate.annotations.Bag;
-import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.CollectionId;
-import org.hibernate.annotations.ColumnTransformer;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.DynamicInsert;
-import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfiles;
 import org.hibernate.annotations.Formula;
-import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.annotations.ConcreteProxy;
-import org.hibernate.annotations.OptimisticLock;
-import org.hibernate.annotations.OptimisticLockType;
-import org.hibernate.annotations.OptimisticLocking;
-import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLDeletes;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLInserts;
-import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SQLUpdates;
-import org.hibernate.annotations.SortComparator;
-import org.hibernate.annotations.SortNatural;
-import org.hibernate.annotations.Subselect;
 
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
@@ -240,14 +190,18 @@ public class TemplateHelper {
 		return field;
 	}
 
-	private <A extends Annotation> boolean fieldHasAnnotation(
+	<A extends Annotation> boolean fieldHasAnnotation(
 			FieldDetails field, Class<A> annotationType) {
 		return getAnnotationSource(field).hasDirectAnnotationUsage(annotationType);
 	}
 
-	private <A extends Annotation> A fieldGetAnnotation(
+	<A extends Annotation> A fieldGetAnnotation(
 			FieldDetails field, Class<A> annotationType) {
 		return getAnnotationSource(field).getDirectAnnotationUsage(annotationType);
+	}
+
+	boolean isAnnotated() {
+		return annotated;
 	}
 
 	// --- Package / class ---
@@ -542,564 +496,55 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		StringBuilder sb = new StringBuilder();
-		// @Embeddable
-		if (classDetails.hasDirectAnnotationUsage(Embeddable.class)) {
-			importType("jakarta.persistence.Embeddable");
-			sb.append("@Embeddable\n");
-			return sb.toString().stripTrailing();
-		}
-		// @Entity — always generated for non-embeddable entities in annotated mode
-		importType("jakarta.persistence.Entity");
-		sb.append("@Entity\n");
-		// @Table
-		Table table = classDetails.getDirectAnnotationUsage(Table.class);
-		if (table != null) {
-			sb.append(generateTableAnnotation(table));
-		}
-		// @SecondaryTable(s)
-		for (SecondaryTableInfo st : getSecondaryTables()) {
-			importType("jakarta.persistence.SecondaryTable");
-			sb.append("@SecondaryTable(name = \"").append(st.tableName()).append("\"");
-			if (!st.keyColumns().isEmpty()) {
-				importType("jakarta.persistence.PrimaryKeyJoinColumn");
-				if (st.keyColumns().size() == 1) {
-					sb.append(", pkJoinColumns = @PrimaryKeyJoinColumn(name = \"")
-							.append(st.keyColumns().get(0)).append("\")");
-				} else {
-					sb.append(", pkJoinColumns = {");
-					for (int i = 0; i < st.keyColumns().size(); i++) {
-						if (i > 0) sb.append(", ");
-						sb.append("@PrimaryKeyJoinColumn(name = \"")
-								.append(st.keyColumns().get(i)).append("\")");
-					}
-					sb.append("}");
-				}
-			}
-			sb.append(")\n");
-		}
-		// @Inheritance
-		Inheritance inh = classDetails.getDirectAnnotationUsage(Inheritance.class);
-		if (inh != null) {
-			sb.append(generateInheritanceAnnotation(inh));
-		}
-		// @DiscriminatorValue
-		DiscriminatorValue dv = classDetails.getDirectAnnotationUsage(DiscriminatorValue.class);
-		if (dv != null) {
-			importType("jakarta.persistence.DiscriminatorValue");
-			sb.append("@DiscriminatorValue(\"").append(dv.value()).append("\")\n");
-		}
-		// @PrimaryKeyJoinColumn
-		PrimaryKeyJoinColumn pkjc = classDetails.getDirectAnnotationUsage(PrimaryKeyJoinColumn.class);
-		if (pkjc != null) {
-			importType("jakarta.persistence.PrimaryKeyJoinColumn");
-			sb.append("@PrimaryKeyJoinColumn(name = \"").append(pkjc.name()).append("\")\n");
-		}
-		// Hibernate-specific class annotations
-		if (classDetails.hasDirectAnnotationUsage(Immutable.class)) {
-			importType("org.hibernate.annotations.Immutable");
-			sb.append("@Immutable\n");
-		}
-		if (classDetails.hasDirectAnnotationUsage(DynamicInsert.class)) {
-			importType("org.hibernate.annotations.DynamicInsert");
-			sb.append("@DynamicInsert\n");
-		}
-		if (classDetails.hasDirectAnnotationUsage(DynamicUpdate.class)) {
-			importType("org.hibernate.annotations.DynamicUpdate");
-			sb.append("@DynamicUpdate\n");
-		}
-		BatchSize bs = classDetails.getDirectAnnotationUsage(BatchSize.class);
-		if (bs != null) {
-			importType("org.hibernate.annotations.BatchSize");
-			sb.append("@BatchSize(size = ").append(bs.size()).append(")\n");
-		}
-		Cache cache = classDetails.getDirectAnnotationUsage(Cache.class);
-		if (cache != null && cache.usage() != CacheConcurrencyStrategy.NONE) {
-			importType("org.hibernate.annotations.Cache");
-			importType("org.hibernate.annotations.CacheConcurrencyStrategy");
-			sb.append("@Cache(usage = CacheConcurrencyStrategy.").append(cache.usage().name());
-			if (cache.region() != null && !cache.region().isEmpty()) {
-				sb.append(", region = \"").append(cache.region()).append("\"");
-			}
-			if (!cache.includeLazy()) {
-				sb.append(", includeLazy = false");
-			}
-			sb.append(")\n");
-		}
-		// @OptimisticLocking
-		OptimisticLocking ol = classDetails.getDirectAnnotationUsage(OptimisticLocking.class);
-		if (ol != null && ol.type() != OptimisticLockType.VERSION) {
-			importType("org.hibernate.annotations.OptimisticLocking");
-			importType("org.hibernate.annotations.OptimisticLockType");
-			sb.append("@OptimisticLocking(type = OptimisticLockType.").append(ol.type().name()).append(")\n");
-		}
-		// @RowId
-		RowId rowId = classDetails.getDirectAnnotationUsage(RowId.class);
-		if (rowId != null && rowId.value() != null && !rowId.value().isEmpty()) {
-			importType("org.hibernate.annotations.RowId");
-			sb.append("@RowId(\"").append(rowId.value()).append("\")\n");
-		}
-		// @Subselect
-		Subselect subselect = classDetails.getDirectAnnotationUsage(Subselect.class);
-		if (subselect != null) {
-			importType("org.hibernate.annotations.Subselect");
-			sb.append("@Subselect(\"").append(subselect.value()).append("\")\n");
-		}
-		// @ConcreteProxy
-		if (classDetails.hasDirectAnnotationUsage(ConcreteProxy.class)) {
-			importType("org.hibernate.annotations.ConcreteProxy");
-			sb.append("@ConcreteProxy\n");
-		}
-		// @SQLRestriction
-		SQLRestriction sqlRestriction = classDetails.getDirectAnnotationUsage(SQLRestriction.class);
-		if (sqlRestriction != null) {
-			importType("org.hibernate.annotations.SQLRestriction");
-			sb.append("@SQLRestriction(\"").append(sqlRestriction.value()).append("\")\n");
-		}
-		// @Access (class-level)
-		Access classAccess = classDetails.getDirectAnnotationUsage(Access.class);
-		if (classAccess != null && classAccess.value() != AccessType.FIELD) {
-			importType("jakarta.persistence.Access");
-			importType("jakarta.persistence.AccessType");
-			sb.append("@Access(AccessType.").append(classAccess.value().name()).append(")\n");
-		}
-		// @NamedQuery / @NamedNativeQuery
-		for (NamedQueryInfo nq : getNamedQueries()) {
-			importType("jakarta.persistence.NamedQuery");
-			sb.append("@NamedQuery(name = \"").append(nq.name())
-					.append("\", query = \"").append(nq.query()).append("\")\n");
-		}
-		for (SqlResultSetMappingInfo mapping : getSqlResultSetMappings()) {
-			importType("jakarta.persistence.SqlResultSetMapping");
-			sb.append("@SqlResultSetMapping(name = \"").append(mapping.name()).append("\"");
-			if (!mapping.entityResults().isEmpty()) {
-				importType("jakarta.persistence.EntityResult");
-				sb.append(", entities = {");
-				for (int i = 0; i < mapping.entityResults().size(); i++) {
-					if (i > 0) sb.append(", ");
-					EntityResultInfo er = mapping.entityResults().get(i);
-					String simpleEntityClass = importType(er.entityClass());
-					sb.append("@EntityResult(entityClass = ").append(simpleEntityClass).append(".class");
-					if (er.discriminatorColumn() != null) {
-						sb.append(", discriminatorColumn = \"").append(er.discriminatorColumn()).append("\"");
-					}
-					if (!er.fieldResults().isEmpty()) {
-						importType("jakarta.persistence.FieldResult");
-						sb.append(", fields = {");
-						for (int j = 0; j < er.fieldResults().size(); j++) {
-							if (j > 0) sb.append(", ");
-							FieldResultInfo fr = er.fieldResults().get(j);
-							sb.append("@FieldResult(name = \"").append(fr.name())
-									.append("\", column = \"").append(fr.column()).append("\")");
-						}
-						sb.append("}");
-					}
-					sb.append(")");
-				}
-				sb.append("}");
-			}
-			if (!mapping.columnResults().isEmpty()) {
-				importType("jakarta.persistence.ColumnResult");
-				sb.append(", columns = {");
-				for (int i = 0; i < mapping.columnResults().size(); i++) {
-					if (i > 0) sb.append(", ");
-					sb.append("@ColumnResult(name = \"").append(mapping.columnResults().get(i).name()).append("\")");
-				}
-				sb.append("}");
-			}
-			sb.append(")\n");
-		}
-		for (NamedNativeQueryInfo nnq : getNamedNativeQueries()) {
-			importType("jakarta.persistence.NamedNativeQuery");
-			sb.append("@NamedNativeQuery(name = \"").append(nnq.name())
-					.append("\", query = \"").append(nnq.query()).append("\"");
-			if (nnq.resultClass() != null) {
-				String simpleResultClass = importType(nnq.resultClass());
-				sb.append(", resultClass = ").append(simpleResultClass).append(".class");
-			}
-			if (nnq.resultSetMapping() != null) {
-				sb.append(", resultSetMapping = \"").append(nnq.resultSetMapping()).append("\"");
-			}
-			sb.append(")\n");
-		}
-		// @FilterDef / @Filter
-		for (FilterDefInfo fd : getFilterDefs()) {
-			importType("org.hibernate.annotations.FilterDef");
-			sb.append("@FilterDef(name = \"").append(fd.name()).append("\"");
-			if (!fd.defaultCondition().isEmpty()) {
-				sb.append(", defaultCondition = \"").append(fd.defaultCondition()).append("\"");
-			}
-			if (!fd.parameters().isEmpty()) {
-				importType("org.hibernate.annotations.ParamDef");
-				sb.append(", parameters = {");
-				boolean first = true;
-				for (Map.Entry<String, Class<?>> entry : fd.parameters().entrySet()) {
-					if (!first) sb.append(", ");
-					first = false;
-					String simpleType = importType(entry.getValue().getName());
-					sb.append("@ParamDef(name = \"").append(entry.getKey())
-							.append("\", type = ").append(simpleType).append(".class)");
-				}
-				sb.append("}");
-			}
-			sb.append(")\n");
-		}
-		for (FilterInfo fi : getFilters()) {
-			importType("org.hibernate.annotations.Filter");
-			sb.append("@Filter(name = \"").append(fi.name()).append("\"");
-			if (!fi.condition().isEmpty()) {
-				sb.append(", condition = \"").append(fi.condition()).append("\"");
-			}
-			sb.append(")\n");
-		}
-		// @SQLInsert / @SQLUpdate / @SQLDelete / @SQLDeleteAll
-		for (SQLInsert si : getSQLInserts()) {
-			importType("org.hibernate.annotations.SQLInsert");
-			sb.append("@SQLInsert(sql = \"").append(si.sql()).append("\"");
-			if (si.callable()) {
-				sb.append(", callable = true");
-			}
-			sb.append(")\n");
-		}
-		for (SQLUpdate su : getSQLUpdates()) {
-			importType("org.hibernate.annotations.SQLUpdate");
-			sb.append("@SQLUpdate(sql = \"").append(su.sql()).append("\"");
-			if (su.callable()) {
-				sb.append(", callable = true");
-			}
-			sb.append(")\n");
-		}
-		for (SQLDelete sd : getSQLDeletes()) {
-			importType("org.hibernate.annotations.SQLDelete");
-			sb.append("@SQLDelete(sql = \"").append(sd.sql()).append("\"");
-			if (sd.callable()) {
-				sb.append(", callable = true");
-			}
-			sb.append(")\n");
-		}
-		SQLDeleteAll sda = classDetails.getDirectAnnotationUsage(SQLDeleteAll.class);
-		if (sda != null) {
-			importType("org.hibernate.annotations.SQLDeleteAll");
-			sb.append("@SQLDeleteAll(sql = \"").append(sda.sql()).append("\"");
-			if (sda.callable()) {
-				sb.append(", callable = true");
-			}
-			sb.append(")\n");
-		}
-		// @FetchProfile
-		for (FetchProfile fp : getFetchProfiles()) {
-			importType("org.hibernate.annotations.FetchProfile");
-			sb.append("@FetchProfile(name = \"").append(fp.name()).append("\"");
-			if (fp.fetchOverrides().length > 0) {
-				importType("org.hibernate.annotations.FetchMode");
-				sb.append(", fetchOverrides = {");
-				for (int i = 0; i < fp.fetchOverrides().length; i++) {
-					if (i > 0) sb.append(", ");
-					FetchProfile.FetchOverride fo = fp.fetchOverrides()[i];
-					String simpleEntity = importType(fo.entity().getName());
-					sb.append("@FetchProfile.FetchOverride(entity = ").append(simpleEntity)
-							.append(".class, association = \"").append(fo.association())
-							.append("\", mode = FetchMode.").append(fo.mode().name()).append(")");
-				}
-				sb.append("}");
-			}
-			sb.append(")\n");
-		}
-		// @EntityListeners
-		EntityListeners el = classDetails.getDirectAnnotationUsage(EntityListeners.class);
-		if (el != null && el.value() != null && el.value().length > 0) {
-			importType("jakarta.persistence.EntityListeners");
-			sb.append("@EntityListeners(");
-			if (el.value().length == 1) {
-				String simpleType = importType(el.value()[0].getName());
-				sb.append(simpleType).append(".class");
-			} else {
-				sb.append("{");
-				for (int i = 0; i < el.value().length; i++) {
-					if (i > 0) sb.append(", ");
-					String simpleType = importType(el.value()[i].getName());
-					sb.append(simpleType).append(".class");
-				}
-				sb.append("}");
-			}
-			sb.append(")\n");
-		}
-		return sb.toString().stripTrailing();
-	}
-
-	private String generateTableAnnotation(Table table) {
-		StringBuilder sb = new StringBuilder();
-		importType("jakarta.persistence.Table");
-		sb.append("@Table(name = \"").append(table.name()).append("\"");
-		if (table.schema() != null && !table.schema().isEmpty()) {
-			sb.append(", schema = \"").append(table.schema()).append("\"");
-		}
-		if (table.catalog() != null && !table.catalog().isEmpty()) {
-			sb.append(", catalog = \"").append(table.catalog()).append("\"");
-		}
-		UniqueConstraint[] ucs = table.uniqueConstraints();
-		if (ucs != null && ucs.length > 0) {
-			importType("jakarta.persistence.UniqueConstraint");
-			sb.append(", uniqueConstraints = ");
-			if (ucs.length == 1) {
-				sb.append(formatUniqueConstraint(ucs[0]));
-			} else {
-				sb.append("{ ");
-				for (int i = 0; i < ucs.length; i++) {
-					if (i > 0) sb.append(", ");
-					sb.append(formatUniqueConstraint(ucs[i]));
-				}
-				sb.append(" }");
-			}
-		}
-		Index[] indexes = table.indexes();
-		if (indexes != null && indexes.length > 0) {
-			importType("jakarta.persistence.Index");
-			sb.append(", indexes = ");
-			if (indexes.length == 1) {
-				sb.append(formatIndex(indexes[0]));
-			} else {
-				sb.append("{ ");
-				for (int i = 0; i < indexes.length; i++) {
-					if (i > 0) sb.append(", ");
-					sb.append(formatIndex(indexes[i]));
-				}
-				sb.append(" }");
-			}
-		}
-		CheckConstraint[] checks = table.check();
-		if (checks != null && checks.length > 0) {
-			importType("jakarta.persistence.CheckConstraint");
-			sb.append(", check = ");
-			if (checks.length == 1) {
-				sb.append(formatCheckConstraint(checks[0]));
-			} else {
-				sb.append("{ ");
-				for (int i = 0; i < checks.length; i++) {
-					if (i > 0) sb.append(", ");
-					sb.append(formatCheckConstraint(checks[i]));
-				}
-				sb.append(" }");
-			}
-		}
-		sb.append(")\n");
-		return sb.toString();
-	}
-
-	private String formatCheckConstraint(CheckConstraint cc) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("@CheckConstraint(");
-		if (cc.name() != null && !cc.name().isEmpty()) {
-			sb.append("name = \"").append(cc.name()).append("\", ");
-		}
-		sb.append("constraint = \"").append(cc.constraint()).append("\"");
-		sb.append(")");
-		return sb.toString();
-	}
-
-	private String formatIndex(Index idx) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("@Index(");
-		boolean hasName = idx.name() != null && !idx.name().isEmpty();
-		if (hasName) {
-			sb.append("name = \"").append(idx.name()).append("\", ");
-		}
-		sb.append("columnList = \"").append(idx.columnList()).append("\"");
-		if (idx.unique()) {
-			sb.append(", unique = true");
-		}
-		sb.append(")");
-		return sb.toString();
-	}
-
-	private String formatUniqueConstraint(UniqueConstraint uc) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("@UniqueConstraint(");
-		if (uc.name() != null && !uc.name().isEmpty()) {
-			sb.append("name = \"").append(uc.name()).append("\", ");
-		}
-		sb.append("columnNames = { ");
-		String[] cols = uc.columnNames();
-		for (int i = 0; i < cols.length; i++) {
-			if (i > 0) sb.append(", ");
-			sb.append("\"").append(cols[i]).append("\"");
-		}
-		sb.append(" })");
-		return sb.toString();
-	}
-
-	private String generateInheritanceAnnotation(Inheritance inh) {
-		StringBuilder sb = new StringBuilder();
-		importType("jakarta.persistence.Inheritance");
-		importType("jakarta.persistence.InheritanceType");
-		sb.append("@Inheritance(strategy = InheritanceType.").append(inh.strategy().name()).append(")\n");
-		DiscriminatorColumn dc = classDetails.getDirectAnnotationUsage(DiscriminatorColumn.class);
-		if (dc != null) {
-			importType("jakarta.persistence.DiscriminatorColumn");
-			sb.append("@DiscriminatorColumn(name = \"").append(dc.name()).append("\"");
-			if (dc.discriminatorType() != DiscriminatorType.STRING) {
-				importType("jakarta.persistence.DiscriminatorType");
-				sb.append(", discriminatorType = DiscriminatorType.").append(dc.discriminatorType().name());
-			}
-			if (dc.length() != 31) {
-				sb.append(", length = ").append(dc.length());
-			}
-			sb.append(")\n");
-		}
-		return sb.toString();
+		return new ClassAnnotationGenerator(classDetails, importContext, this).generate();
 	}
 
 	public String generateIdAnnotations(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		StringBuilder sb = new StringBuilder();
-		if (fieldHasAnnotation(field, Id.class)) {
-			importType("jakarta.persistence.Id");
-			sb.append("@Id\n");
-			GeneratedValue gv = fieldGetAnnotation(field,GeneratedValue.class);
-			if (gv != null) {
-				importType("jakarta.persistence.GeneratedValue");
-				importType("jakarta.persistence.GenerationType");
-				sb.append("    @GeneratedValue(strategy = GenerationType.")
-						.append(gv.strategy().name());
-				if (gv.generator() != null && !gv.generator().isEmpty()) {
-					sb.append(", generator = \"").append(gv.generator()).append("\"");
-				}
-				sb.append(")\n");
-				// @SequenceGenerator
-				SequenceGenerator sg = fieldGetAnnotation(field,SequenceGenerator.class);
-				if (sg != null) {
-					importType("jakarta.persistence.SequenceGenerator");
-					sb.append("    @SequenceGenerator(name = \"").append(sg.name()).append("\"");
-					if (sg.sequenceName() != null && !sg.sequenceName().isEmpty()) {
-						sb.append(", sequenceName = \"").append(sg.sequenceName()).append("\"");
-					}
-					if (sg.allocationSize() != 50) {
-						sb.append(", allocationSize = ").append(sg.allocationSize());
-					}
-					if (sg.initialValue() != 1) {
-						sb.append(", initialValue = ").append(sg.initialValue());
-					}
-					sb.append(")\n");
-				}
-				// @TableGenerator
-				TableGenerator tg = fieldGetAnnotation(field,TableGenerator.class);
-				if (tg != null) {
-					importType("jakarta.persistence.TableGenerator");
-					sb.append("    @TableGenerator(name = \"").append(tg.name()).append("\"");
-					if (tg.table() != null && !tg.table().isEmpty()) {
-						sb.append(", table = \"").append(tg.table()).append("\"");
-					}
-					if (tg.pkColumnName() != null && !tg.pkColumnName().isEmpty()) {
-						sb.append(", pkColumnName = \"").append(tg.pkColumnName()).append("\"");
-					}
-					if (tg.valueColumnName() != null && !tg.valueColumnName().isEmpty()) {
-						sb.append(", valueColumnName = \"").append(tg.valueColumnName()).append("\"");
-					}
-					if (tg.allocationSize() != 50) {
-						sb.append(", allocationSize = ").append(tg.allocationSize());
-					}
-					sb.append(")\n");
-				}
-			}
-		}
-		return sb.toString().stripTrailing();
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateIdAnnotations(field);
 	}
 
 	public String generateVersionAnnotation() {
-		if (!annotated) {
-			return "";
-		}
-		importType("jakarta.persistence.Version");
-		return "@Version";
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateVersionAnnotation();
 	}
 
 	public String generateBasicAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		Basic basic = fieldGetAnnotation(field,Basic.class);
-		if (basic == null) {
-			return "";
-		}
-		boolean hasFetch = basic.fetch() != FetchType.EAGER;
-		boolean hasOptional = !basic.optional();
-		if (!hasFetch && !hasOptional) {
-			return "";
-		}
-		importType("jakarta.persistence.Basic");
-		StringBuilder sb = new StringBuilder("@Basic(");
-		boolean needComma = false;
-		if (hasFetch) {
-			importType("jakarta.persistence.FetchType");
-			sb.append("fetch = FetchType.").append(basic.fetch().name());
-			needComma = true;
-		}
-		if (hasOptional) {
-			if (needComma) sb.append(", ");
-			sb.append("optional = ").append(basic.optional());
-		}
-		sb.append(")");
-		return sb.toString();
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateBasicAnnotation(field);
 	}
 
 	public String generateOptimisticLockAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		OptimisticLock ol = fieldGetAnnotation(field,OptimisticLock.class);
-		if (ol == null || !ol.excluded()) {
-			return "";
-		}
-		importType("org.hibernate.annotations.OptimisticLock");
-		return "@OptimisticLock(excluded = true)";
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateOptimisticLockAnnotation(field);
 	}
 
 	public String generateAccessAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		Access access = fieldGetAnnotation(field,Access.class);
-		if (access == null || access.value() == AccessType.FIELD) {
-			return "";
-		}
-		importType("jakarta.persistence.Access");
-		importType("jakarta.persistence.AccessType");
-		return "@Access(AccessType." + access.value().name() + ")";
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateAccessAnnotation(field);
 	}
 
 	public String generateTemporalAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		Temporal temporal = fieldGetAnnotation(field,Temporal.class);
-		if (temporal == null) {
-			return "";
-		}
-		importType("jakarta.persistence.Temporal");
-		importType("jakarta.persistence.TemporalType");
-		return "@Temporal(TemporalType." + temporal.value().name() + ")";
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateTemporalAnnotation(field);
 	}
 
 	public String generateLobAnnotation() {
-		if (!annotated) {
-			return "";
-		}
-		importType("jakarta.persistence.Lob");
-		return "@Lob";
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateLobAnnotation();
 	}
 
 	public String generateFormulaAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		Formula formula = fieldGetAnnotation(field,Formula.class);
-		if (formula == null) {
-			return "";
-		}
-		importType("org.hibernate.annotations.Formula");
-		return "@Formula(\"" + formula.value() + "\")";
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateFormulaAnnotation(field);
 	}
 
 	public boolean hasFormula(FieldDetails field) {
@@ -1107,381 +552,110 @@ public class TemplateHelper {
 	}
 
 	public String generateElementCollectionAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		ElementCollection ec = fieldGetAnnotation(field,ElementCollection.class);
-		if (ec == null) {
-			return "";
-		}
-		StringBuilder sb = new StringBuilder();
-		importType("jakarta.persistence.ElementCollection");
-		sb.append("@ElementCollection");
-		if (ec.fetch() != FetchType.LAZY) {
-			sb.append("(fetch = ");
-			importType("jakarta.persistence.FetchType");
-			sb.append("FetchType.").append(ec.fetch().name()).append(")");
-		}
-		// @CollectionTable
-		CollectionTable ct = fieldGetAnnotation(field,CollectionTable.class);
-		if (ct != null) {
-			sb.append("\n    ");
-			importType("jakarta.persistence.CollectionTable");
-			sb.append("@CollectionTable(name = \"").append(ct.name()).append("\"");
-			if (ct.joinColumns() != null && ct.joinColumns().length > 0) {
-				importType("jakarta.persistence.JoinColumn");
-				sb.append(",\n            joinColumns = @JoinColumn(name = \"")
-						.append(ct.joinColumns()[0].name()).append("\")");
-			}
-			sb.append(")");
-		}
-		// @Column for element
-		Column col = fieldGetAnnotation(field,Column.class);
-		if (col != null) {
-			sb.append("\n    ");
-			importType("jakarta.persistence.Column");
-			sb.append("@Column(name = \"").append(col.name()).append("\")");
-		}
-		return sb.toString();
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateElementCollectionAnnotation(field);
 	}
 
 	public String generateNaturalIdAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		NaturalId nid = fieldGetAnnotation(field,NaturalId.class);
-		if (nid == null) {
-			return "";
-		}
-		importType("org.hibernate.annotations.NaturalId");
-		if (nid.mutable()) {
-			return "@NaturalId(mutable = true)";
-		}
-		return "@NaturalId";
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateNaturalIdAnnotation(field);
 	}
 
 	public String generateOrderByAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		OrderBy ob = fieldGetAnnotation(field,OrderBy.class);
-		if (ob == null) {
-			return "";
-		}
-		importType("jakarta.persistence.OrderBy");
-		if (ob.value() != null && !ob.value().isEmpty()) {
-			return "@OrderBy(\"" + ob.value() + "\")";
-		}
-		return "@OrderBy";
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateOrderByAnnotation(field);
 	}
 
 	public String generateOrderColumnAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		OrderColumn oc = fieldGetAnnotation(field,OrderColumn.class);
-		if (oc == null) {
-			return "";
-		}
-		importType("jakarta.persistence.OrderColumn");
-		if (oc.name() != null && !oc.name().isEmpty()) {
-			return "@OrderColumn(name = \"" + oc.name() + "\")";
-		}
-		return "@OrderColumn";
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateOrderColumnAnnotation(field);
 	}
 
 	public String generateFilterAnnotations(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		List<FilterInfo> filters = getFieldFilters(field);
-		if (filters.isEmpty()) {
-			return "";
-		}
-		importType("org.hibernate.annotations.Filter");
-		StringBuilder sb = new StringBuilder();
-		for (FilterInfo fi : filters) {
-			sb.append("@Filter(name = \"").append(fi.name()).append("\"");
-			if (!fi.condition().isEmpty()) {
-				sb.append(", condition = \"").append(fi.condition()).append("\"");
-			}
-			sb.append(")\n    ");
-		}
-		return sb.toString().stripTrailing();
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateFilterAnnotations(field);
 	}
 
 	public List<FilterInfo> getFieldFilters(FieldDetails field) {
-		List<FilterInfo> result = new ArrayList<>();
-		Filter single = fieldGetAnnotation(field,Filter.class);
-		if (single != null) {
-			result.add(new FilterInfo(single.name(), single.condition()));
-		}
-		Filters container = fieldGetAnnotation(field,Filters.class);
-		if (container != null) {
-			for (Filter f : container.value()) {
-				result.add(new FilterInfo(f.name(), f.condition()));
-			}
-		}
-		return result;
+		return new FieldAnnotationGenerator(importContext, this)
+				.getFieldFilters(field);
 	}
 
 	public String generateBagAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		if (!fieldHasAnnotation(field, Bag.class)) {
-			return "";
-		}
-		importType("org.hibernate.annotations.Bag");
-		return "@Bag";
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateBagAnnotation(field);
 	}
 
 	public String generateCollectionIdAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		CollectionId cid = fieldGetAnnotation(field,CollectionId.class);
-		if (cid == null) {
-			return "";
-		}
-		importType("org.hibernate.annotations.CollectionId");
-		StringBuilder sb = new StringBuilder("@CollectionId(");
-		if (cid.column() != null && cid.column().name() != null && !cid.column().name().isEmpty()) {
-			importType("jakarta.persistence.Column");
-			sb.append("column = @Column(name = \"").append(cid.column().name()).append("\"), ");
-		}
-		if (cid.generator() != null && !cid.generator().isEmpty()) {
-			sb.append("generator = \"").append(cid.generator()).append("\"");
-		}
-		String result = sb.toString();
-		if (result.endsWith(", ")) {
-			result = result.substring(0, result.length() - 2);
-		}
-		return result + ")";
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateCollectionIdAnnotation(field);
 	}
 
 	public String generateSortAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		if (fieldHasAnnotation(field, SortNatural.class)) {
-			importType("org.hibernate.annotations.SortNatural");
-			return "@SortNatural";
-		}
-		SortComparator sc = fieldGetAnnotation(field,SortComparator.class);
-		if (sc != null) {
-			importType("org.hibernate.annotations.SortComparator");
-			String simpleType = importType(sc.value().getName());
-			return "@SortComparator(" + simpleType + ".class)";
-		}
-		return "";
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateSortAnnotation(field);
 	}
 
 	public String generateMapKeyAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		MapKey mk = fieldGetAnnotation(field,MapKey.class);
-		if (mk == null) {
-			return "";
-		}
-		importType("jakarta.persistence.MapKey");
-		if (mk.name() != null && !mk.name().isEmpty()) {
-			return "@MapKey(name = \"" + mk.name() + "\")";
-		}
-		return "@MapKey";
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateMapKeyAnnotation(field);
 	}
 
 	public String generateMapKeyColumnAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		MapKeyColumn mkc = fieldGetAnnotation(field,MapKeyColumn.class);
-		if (mkc == null) {
-			return "";
-		}
-		importType("jakarta.persistence.MapKeyColumn");
-		if (mkc.name() != null && !mkc.name().isEmpty()) {
-			return "@MapKeyColumn(name = \"" + mkc.name() + "\")";
-		}
-		return "@MapKeyColumn";
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateMapKeyColumnAnnotation(field);
 	}
 
 	public String generateFetchAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		Fetch fetch = fieldGetAnnotation(field,Fetch.class);
-		if (fetch == null) {
-			return "";
-		}
-		importType("org.hibernate.annotations.Fetch");
-		importType("org.hibernate.annotations.FetchMode");
-		return "@Fetch(FetchMode." + fetch.value().name() + ")";
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateFetchAnnotation(field);
 	}
 
 	public String generateNotFoundAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		NotFound nf = fieldGetAnnotation(field,NotFound.class);
-		if (nf == null || nf.action() == NotFoundAction.EXCEPTION) {
-			return "";
-		}
-		importType("org.hibernate.annotations.NotFound");
-		importType("org.hibernate.annotations.NotFoundAction");
-		return "@NotFound(action = NotFoundAction." + nf.action().name() + ")";
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateNotFoundAnnotation(field);
 	}
 
 	public String generateAnyAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		if (!fieldHasAnnotation(field, Any.class)) {
-			return "";
-		}
-		StringBuilder sb = new StringBuilder();
-		importType("org.hibernate.annotations.Any");
-		sb.append("@Any\n");
-		sb.append(generateAnyDiscriminatorAnnotations(field));
-		return sb.toString().stripTrailing();
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateAnyAnnotation(field);
 	}
 
 	public String generateManyToAnyAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		if (!fieldHasAnnotation(field, ManyToAny.class)) {
-			return "";
-		}
-		StringBuilder sb = new StringBuilder();
-		importType("org.hibernate.annotations.ManyToAny");
-		sb.append("@ManyToAny\n");
-		sb.append(generateAnyDiscriminatorAnnotations(field));
-		return sb.toString().stripTrailing();
-	}
-
-	private String generateAnyDiscriminatorAnnotations(FieldDetails field) {
-		StringBuilder sb = new StringBuilder();
-		// @AnyDiscriminator
-		AnyDiscriminator ad = fieldGetAnnotation(field,AnyDiscriminator.class);
-		if (ad != null) {
-			importType("org.hibernate.annotations.AnyDiscriminator");
-			importType("jakarta.persistence.DiscriminatorType");
-			sb.append("    @AnyDiscriminator(DiscriminatorType.").append(ad.value().name()).append(")\n");
-		}
-		// @AnyDiscriminatorValue(s)
-		List<AnyDiscriminatorValue> values = new ArrayList<>();
-		AnyDiscriminatorValue single = fieldGetAnnotation(field,AnyDiscriminatorValue.class);
-		if (single != null) {
-			values.add(single);
-		}
-		AnyDiscriminatorValues container = fieldGetAnnotation(field,AnyDiscriminatorValues.class);
-		if (container != null) {
-			for (AnyDiscriminatorValue adv : container.value()) {
-				values.add(adv);
-			}
-		}
-		for (AnyDiscriminatorValue adv : values) {
-			importType("org.hibernate.annotations.AnyDiscriminatorValue");
-			String simpleEntity = importType(adv.entity().getName());
-			sb.append("    @AnyDiscriminatorValue(discriminator = \"").append(adv.discriminator())
-					.append("\", entity = ").append(simpleEntity).append(".class)\n");
-		}
-		// @AnyKeyJavaClass
-		AnyKeyJavaClass akjc = fieldGetAnnotation(field,AnyKeyJavaClass.class);
-		if (akjc != null) {
-			importType("org.hibernate.annotations.AnyKeyJavaClass");
-			String simpleType = importType(akjc.value().getName());
-			sb.append("    @AnyKeyJavaClass(").append(simpleType).append(".class)\n");
-		}
-		return sb.toString();
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateManyToAnyAnnotation(field);
 	}
 
 	public String generateConvertAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		Convert convert = fieldGetAnnotation(field,Convert.class);
-		if (convert == null || convert.disableConversion()) {
-			return "";
-		}
-		Class<?> converterClass = convert.converter();
-		if (converterClass == null || converterClass == jakarta.persistence.AttributeConverter.class) {
-			return "";
-		}
-		importType("jakarta.persistence.Convert");
-		String simpleType = importType(converterClass.getName());
-		return "@Convert(converter = " + simpleType + ".class)";
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateConvertAnnotation(field);
 	}
 
 	public String generateColumnAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		Column col = fieldGetAnnotation(field,Column.class);
-		if (col == null) {
-			return "";
-		}
-		importType("jakarta.persistence.Column");
-		StringBuilder sb = new StringBuilder("@Column(name = \"");
-		sb.append(col.name()).append("\"");
-		if (!col.nullable()) {
-			sb.append(", nullable = false");
-		}
-		if (col.unique()) {
-			sb.append(", unique = true");
-		}
-		if (col.length() != 255) {
-			sb.append(", length = ").append(col.length());
-		}
-		if (col.precision() != 0) {
-			sb.append(", precision = ").append(col.precision());
-		}
-		if (col.scale() != 0) {
-			sb.append(", scale = ").append(col.scale());
-		}
-		if (!col.insertable()) {
-			sb.append(", insertable = false");
-		}
-		if (!col.updatable()) {
-			sb.append(", updatable = false");
-		}
-		sb.append(")");
-		return sb.toString();
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateColumnAnnotation(field);
 	}
 
 	public String generateColumnTransformerAnnotation(FieldDetails field) {
-		if (!annotated) {
-			return "";
-		}
-		ColumnTransformer ct = fieldGetAnnotation(field,ColumnTransformer.class);
-		if (ct == null) {
-			return "";
-		}
-		boolean hasRead = ct.read() != null && !ct.read().isEmpty();
-		boolean hasWrite = ct.write() != null && !ct.write().isEmpty();
-		if (!hasRead && !hasWrite) {
-			return "";
-		}
-		importType("org.hibernate.annotations.ColumnTransformer");
-		StringBuilder sb = new StringBuilder("@ColumnTransformer(");
-		boolean needComma = false;
-		if (ct.forColumn() != null && !ct.forColumn().isEmpty()) {
-			sb.append("forColumn = \"").append(ct.forColumn()).append("\"");
-			needComma = true;
-		}
-		if (hasRead) {
-			if (needComma) sb.append(", ");
-			sb.append("read = \"").append(ct.read()).append("\"");
-			needComma = true;
-		}
-		if (hasWrite) {
-			if (needComma) sb.append(", ");
-			sb.append("write = \"").append(ct.write()).append("\"");
-		}
-		sb.append(")");
-		return sb.toString();
+		if (!annotated) return "";
+		return new FieldAnnotationGenerator(importContext, this)
+				.generateColumnTransformerAnnotation(field);
 	}
 
 	public String generateManyToOneAnnotation(FieldDetails field) {

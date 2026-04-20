@@ -43,7 +43,7 @@ import org.hibernate.boot.models.annotations.internal.SqlResultSetMappingJpaAnno
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
-import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
+import org.hibernate.tool.internal.builder.db.DynamicEntityBuilder;
 import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
 import org.hibernate.tool.internal.descriptor.CompositeIdDescriptor;
 import org.hibernate.tool.internal.descriptor.EmbeddedFieldDescriptor;

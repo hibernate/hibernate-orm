@@ -34,7 +34,7 @@ import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.internal.metadata.NativeMetadataDescriptor;
 import org.hibernate.tool.internal.metadata.RevengMetadataDescriptor;
-import org.hibernate.tool.internal.reveng.models.builder.hbm.HbmClassDetailsBuilder;
+import org.hibernate.tool.internal.builder.hbm.HbmClassDetailsBuilder;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

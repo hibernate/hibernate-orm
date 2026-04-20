@@ -30,7 +30,7 @@ import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.tool.internal.exporter.entity.ImportContextImpl;
-import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
+import org.hibernate.tool.internal.builder.db.DynamicEntityBuilder;
 import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
 import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.junit.jupiter.api.Test;

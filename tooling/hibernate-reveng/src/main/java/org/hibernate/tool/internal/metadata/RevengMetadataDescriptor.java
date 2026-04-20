@@ -40,7 +40,7 @@ import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengDialectFactory;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.RevengStrategyFactory;
-import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
+import org.hibernate.tool.internal.builder.db.DynamicEntityBuilder;
 import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.hibernate.tool.internal.reader.ModelsDatabaseSchemaReader;
 

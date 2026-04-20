@@ -395,14 +395,14 @@ public class TestCase {
 	public void testDynamicComponent() {
 		// Build a ClassDetails from an HBM with a <dynamic-component> and verify
 		// that the field type is java.util.Map
-		var ctx = new org.hibernate.tool.internal.reveng.models.builder.hbm.HbmBuildContext();
+		var ctx = new org.hibernate.tool.internal.builder.hbm.HbmBuildContext();
 		var modelsContext = ctx.getModelsContext();
 		var entityClass = new org.hibernate.models.internal.dynamic.DynamicClassDetails(
 				"DynTest", "org.test.DynTest", Object.class,
 				false, null, null, modelsContext);
 		var dynComponent = new org.hibernate.boot.jaxb.hbm.spi.JaxbHbmDynamicComponentType();
 		dynComponent.setName("dynaMap");
-		org.hibernate.tool.internal.reveng.models.builder.hbm.HbmComponentBuilder
+		org.hibernate.tool.internal.builder.hbm.HbmComponentBuilder
 				.processDynamicComponent(entityClass, dynComponent, "org.test", ctx);
 		var field = entityClass.findFieldByName("dynaMap");
 		assertNotNull(field);

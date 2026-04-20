@@ -19,7 +19,7 @@ package org.hibernate.tool.hbmlint.SchemaAnalyzer;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.tool.internal.reveng.models.builder.hbm.HbmClassDetailsBuilder;
+import org.hibernate.tool.internal.builder.hbm.HbmClassDetailsBuilder;
 import org.hibernate.tool.internal.exporter.lint.Issue;
 import org.hibernate.tool.internal.exporter.lint.IssueCollector;
 import org.hibernate.tool.internal.exporter.lint.SchemaByMetaDataDetector;

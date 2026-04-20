@@ -20,7 +20,7 @@ package org.hibernate.tool.hbm2x.hbm2hbmxml.Cfg2HbmToolTest;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
-import org.hibernate.tool.internal.reveng.models.builder.hbm.HbmBuildContext;
+import org.hibernate.tool.internal.builder.hbm.HbmBuildContext;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

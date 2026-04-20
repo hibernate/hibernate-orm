@@ -24,7 +24,7 @@ import java.util.Properties;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
+import org.hibernate.tool.internal.builder.db.DynamicEntityBuilder;
 import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
 import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.junit.jupiter.api.Test;

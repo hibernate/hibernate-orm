@@ -25,7 +25,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.hibernate.models.spi.ClassDetails;
-import org.hibernate.tool.internal.reveng.models.builder.db.DynamicEntityBuilder;
+import org.hibernate.tool.internal.builder.db.DynamicEntityBuilder;
 import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
 import org.hibernate.tool.internal.descriptor.ForeignKeyDescriptor;
 import org.hibernate.tool.internal.descriptor.TableDescriptor;

@@ -1560,7 +1560,7 @@ spanner_pg() {
 
 spanner_emulator() {
   local dialect=${1:-GOOGLE_STANDARD_SQL}
-  local emulator_image=${SPANNER_EMULATOR:-gcr.io/cloud-spanner-emulator/emulator:1.5.51}
+  local emulator_image=${SPANNER_EMULATOR:-gcr.io/cloud-spanner-emulator/emulator:1.5.52}
   if [[ $DB_COUNT -gt 8 ]]; then
     DB_COUNT=4
   else

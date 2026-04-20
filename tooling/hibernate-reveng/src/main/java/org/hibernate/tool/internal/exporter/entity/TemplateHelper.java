@@ -64,7 +64,6 @@ import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfiles;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.ManyToAny;
-import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeletes;
@@ -762,31 +761,19 @@ public class TemplateHelper {
 	// --- equals/hashCode support ---
 
 	public boolean hasCompositeId() {
-		return getCompositeIdField() != null;
+		return new EqualsHashCodeHelper(this, importContext).hasCompositeId();
 	}
 
 	public boolean needsEqualsHashCode() {
-		if (isEmbeddable()) return true;
-		if (hasNaturalId()) return true;
-		boolean hasExplicitEquals = getBasicFields().stream()
-				.anyMatch(f -> hasFieldMetaAttribute(f, "use-in-equals"));
-		if (hasExplicitEquals) return true;
-		return hasCompositeId() || !getIdentifierFields().isEmpty();
+		return new EqualsHashCodeHelper(this, importContext).needsEqualsHashCode();
 	}
 
 	public boolean hasNaturalId() {
-		return getBasicFields().stream()
-				.anyMatch(f -> fieldHasAnnotation(f, NaturalId.class));
+		return new EqualsHashCodeHelper(this, importContext).hasNaturalId();
 	}
 
 	public List<FieldDetails> getNaturalIdFields() {
-		List<FieldDetails> result = new ArrayList<>();
-		for (FieldDetails field : getBasicFields()) {
-			if (fieldHasAnnotation(field, NaturalId.class)) {
-				result.add(field);
-			}
-		}
-		return result;
+		return new EqualsHashCodeHelper(this, importContext).getNaturalIdFields();
 	}
 
 	// --- Named queries ---
@@ -1015,66 +1002,23 @@ public class TemplateHelper {
 	}
 
 	public boolean hasExplicitEqualsColumns() {
-		return getBasicFields().stream()
-				.anyMatch(f -> getFieldMetaAsBool(f, "use-in-equals", false));
+		return new EqualsHashCodeHelper(this, importContext).getEqualsFields().size() > 0;
 	}
 
 	public List<FieldDetails> getEqualsFields() {
-		List<FieldDetails> result = new ArrayList<>();
-		for (FieldDetails field : getBasicFields()) {
-			if (getFieldMetaAsBool(field, "use-in-equals", false)) {
-				result.add(field);
-			}
-		}
-		return result;
+		return new EqualsHashCodeHelper(this, importContext).getEqualsFields();
 	}
 
 	public List<FieldDetails> getIdentifierFields() {
-		if (isEmbeddable()) {
-			return getBasicFields();
-		}
-		// Prefer @NaturalId fields for equals/hashCode
-		List<FieldDetails> naturalIdFields = getNaturalIdFields();
-		if (!naturalIdFields.isEmpty()) {
-			return naturalIdFields;
-		}
-		List<FieldDetails> result = new ArrayList<>();
-		for (FieldDetails field : getBasicFields()) {
-			if (isPrimaryKey(field)) {
-				result.add(field);
-			}
-		}
-		return result;
+		return new EqualsHashCodeHelper(this, importContext).getIdentifierFields();
 	}
 
 	public String generateEqualsExpression(FieldDetails field) {
-		String getter = getGetterName(field) + "()";
-		String typeName = field.getType().determineRawClass().getClassName();
-		if (isPrimitiveType(typeName)) {
-			return "this." + getter + " == castOther." + getter;
-		}
-		return "((this." + getter + " == castOther." + getter + ") || "
-				+ "(this." + getter + " != null && castOther." + getter + " != null && "
-				+ "this." + getter + ".equals(castOther." + getter + ")))";
+		return new EqualsHashCodeHelper(this, importContext).generateEqualsExpression(field);
 	}
 
 	public String generateHashCodeExpression(FieldDetails field) {
-		String getter = "this." + getGetterName(field) + "()";
-		String typeName = field.getType().determineRawClass().getClassName();
-		return switch (typeName) {
-			case "int", "char", "short", "byte" -> getter;
-			case "boolean" -> "(" + getter + " ? 1 : 0)";
-			case "long" -> "(int) " + getter;
-			case "float" -> {
-				importType("java.lang.Float");
-				yield "Float.floatToIntBits(" + getter + ")";
-			}
-			case "double" -> {
-				importType("java.lang.Double");
-				yield "(int) Double.doubleToLongBits(" + getter + ")";
-			}
-			default -> "(" + getter + " == null ? 0 : " + getter + ".hashCode())";
-		};
+		return new EqualsHashCodeHelper(this, importContext).generateHashCodeExpression(field);
 	}
 
 	// --- Meta-attribute support ---
@@ -1273,13 +1217,6 @@ public class TemplateHelper {
 			}
 		}
 		return result;
-	}
-
-	private boolean isPrimitiveType(String className) {
-		return switch (className) {
-			case "int", "long", "short", "byte", "char", "boolean", "float", "double" -> true;
-			default -> false;
-		};
 	}
 
 	private String boxPrimitive(String className) {

@@ -39,6 +39,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static org.hibernate.processor.util.Constants.MANY_TO_ANY;
 import static org.hibernate.processor.util.StringUtil.decapitalize;
 import static java.util.stream.Stream.concat;
 import static org.hibernate.internal.util.StringHelper.split;
@@ -572,8 +573,7 @@ public final class TypeUtils {
 	}
 
 	public static boolean isPluralAttribute(Element element) {
-		// TODO: should MANY_TO_ANY be on this list?
-		return hasAnnotation( element, MANY_TO_MANY, ONE_TO_MANY, ELEMENT_COLLECTION );
+		return hasAnnotation( element, MANY_TO_MANY, ONE_TO_MANY, ELEMENT_COLLECTION, MANY_TO_ANY );
 	}
 
 	public static @Nullable String getFullyQualifiedClassNameOfTargetEntity(

@@ -26,7 +26,7 @@ import jakarta.persistence.GenerationType;
 import org.hibernate.tool.api.reveng.RevengSettings;
 import org.hibernate.tool.api.reveng.TableIdentifier;
 import org.hibernate.tool.internal.reader.ModelsDatabaseSchemaReaderTest.TestRevengDialect;
-import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
+import org.hibernate.tool.internal.strategy.DefaultStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

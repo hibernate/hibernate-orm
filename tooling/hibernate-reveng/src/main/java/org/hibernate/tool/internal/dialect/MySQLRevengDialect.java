@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.dialect;
+package org.hibernate.tool.internal.dialect;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,13 +24,12 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-/**
- * 
- * @author ddukker
- *
- */
-public class SQLServerRevengDialect extends JDBCRevengDialect {
+public class MySQLRevengDialect extends JDBCRevengDialect {
 
+    /**
+     * Based on info from <a href="http://dev.mysql.com/doc/refman/5.0/en/show-table-status.html">...</a>
+     * Should work on pre-mysql 5 too since it uses the "old" SHOW TABLE command instead of SELECT from infotable.
+     */
     public Iterator<Map<String, Object>> getSuggestedPrimaryKeyStrategyName(String catalog, String schema, String table) {
         String sql;
         try {
@@ -40,16 +39,8 @@ public class SQLServerRevengDialect extends JDBCRevengDialect {
 
             log.debug("geSuggestedPrimaryKeyStrategyName(" + catalog + "." + schema + "." + table + ")");
 
-            sql = "SELECT a.TABLE_CATALOG, a.TABLE_SCHEMA, a.TABLE_NAME as table_name, c.DATA_TYPE as data_type, b.CONSTRAINT_TYPE,  OBJECTPROPERTY(OBJECT_ID(a.TABLE_NAME),'TableHasIdentity') as hasIdentity " +
-                    "FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE a " +
-                    "INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS b on a.CONSTRAINT_NAME = b.CONSTRAINT_NAME " +
-                    "INNER JOIN INFORMATION_SCHEMA.COLUMNS c on a.TABLE_CATALOG = c.TABLE_CATALOG AND a.TABLE_SCHEMA = c.TABLE_SCHEMA AND a.TABLE_NAME = c.TABLE_NAME AND a.COLUMN_NAME = c.COLUMN_NAME " +
-                    "WHERE a.TABLE_NAME=? AND a.TABLE_SCHEMA=? AND a.TABLE_CATALOG=? AND b.CONSTRAINT_TYPE = 'Primary key'";
-
+            sql = "show table status " + (catalog==null?"":" from " + catalog + " ") + (table==null?"":" like '" + table + "' ");
             PreparedStatement statement = getConnection().prepareStatement( sql );
-            statement.setString(1, table);
-            statement.setString( 2, schema );
-            statement.setString( 3, catalog );
 
             final String sc = schema;
             final String cat = catalog;
@@ -58,26 +49,16 @@ public class SQLServerRevengDialect extends JDBCRevengDialect {
                 final Map<String, Object> element = new HashMap<>();
                 protected Map<String, Object> convertRow(ResultSet tableRs) throws SQLException {
                     element.clear();
-                    element.put("TABLE_NAME", tableRs.getString("table_name"));
+                    element.put("TABLE_NAME", tableRs.getString("NAME"));
                     element.put("TABLE_SCHEM", sc);
                     element.put("TABLE_CAT", cat);
 
-                    String string = tableRs.getString("data_type");
-
-                    boolean bool = tableRs.getBoolean("hasIdentity");
-                    if(string!=null) {
-                        if(string.equalsIgnoreCase("uniqueidentifier")){
-                            element.put("HIBERNATE_STRATEGY", "guid");
-                        }
-                        else if(bool){
-                            element.put("HIBERNATE_STRATEGY", "identity");
-                        }
-                        else{
-                            element.put("HIBERNATE_STRATEGY", null);
-                        }
+                    String string = tableRs.getString("AUTO_INCREMENT");
+                    if(string==null) {
+                        element.put("HIBERNATE_STRATEGY", null);
                     }
                     else {
-                        element.put("HIBERNATE_STRATEGY", null);
+                        element.put("HIBERNATE_STRATEGY", "identity");
                     }
                     return element;
                 }
@@ -90,9 +71,30 @@ public class SQLServerRevengDialect extends JDBCRevengDialect {
             };
         }
         catch (SQLException e) {
-            throw new RuntimeException(
-                    "Could not get list of suggested identity strategies from database. Probably a JDBC driver problem. ", e);
+            throw new RuntimeException("Could not get list of suggested identity strategies from database. Probably a JDBC driver problem. ", e);
         }
+    }
+
+    @Override
+    public Iterator<Map<String,Object>> getTables(
+            String xcatalog,
+            String xschema,
+            String xtable) {
+        // MySql JDBC Driver doesn't like 'null' values for the table search pattern, use '%' instead
+        return super.getTables(xcatalog, xschema, xtable != null ? xtable : "%");
+    }
+
+    public Iterator<Map<String, Object>> getColumns(
+            String xcatalog,
+            String xschema,
+            String xtable,
+            String xcolumn) {
+        // MySql JDBC Driver doesn't like 'null' values for the table and column search patterns, use '%' instead
+        return super.getColumns(
+                xcatalog,
+                xschema,
+                xtable != null ? xtable : "%",
+                xcolumn != null ? xcolumn : "%");
     }
 
 }

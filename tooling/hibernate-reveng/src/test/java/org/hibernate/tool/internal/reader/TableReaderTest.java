@@ -31,7 +31,7 @@ import org.hibernate.tool.internal.descriptor.CompositeIdDescriptor;
 import org.hibernate.tool.internal.descriptor.IndexDescriptor;
 import org.hibernate.tool.internal.descriptor.TableDescriptor;
 import org.hibernate.tool.internal.reader.ModelsDatabaseSchemaReaderTest.TestRevengDialect;
-import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
+import org.hibernate.tool.internal.strategy.DefaultStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

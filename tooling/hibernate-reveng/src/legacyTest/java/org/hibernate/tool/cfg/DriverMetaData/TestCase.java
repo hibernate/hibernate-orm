@@ -24,7 +24,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengDialectFactory;
-import org.hibernate.tool.internal.reveng.dialect.JDBCRevengDialect;
+import org.hibernate.tool.internal.dialect.JDBCRevengDialect;
 import org.hibernate.tool.test.utils.JUnitUtil;
 import org.hibernate.tool.test.utils.JdbcUtil;
 import org.junit.jupiter.api.AfterEach;

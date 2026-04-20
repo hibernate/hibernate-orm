@@ -20,7 +20,7 @@ package org.hibernate.tool.cfg.RevengDialectFactoryTest;
 
 import org.hibernate.dialect.*;
 import org.hibernate.tool.api.reveng.RevengDialectFactory;
-import org.hibernate.tool.internal.reveng.dialect.*;
+import org.hibernate.tool.internal.dialect.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.Properties;

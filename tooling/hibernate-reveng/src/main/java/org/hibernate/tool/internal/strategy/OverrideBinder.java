@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.strategy;
+package org.hibernate.tool.internal.strategy;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +31,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.reveng.strategy.MetaAttributeHelper.SimpleMetaAttribute;
+import org.hibernate.tool.internal.strategy.MetaAttributeHelper.SimpleMetaAttribute;
 import org.hibernate.tool.internal.util.TypeHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

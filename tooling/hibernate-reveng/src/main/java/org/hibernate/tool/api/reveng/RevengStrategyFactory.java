@@ -21,8 +21,8 @@ import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
-import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
-import org.hibernate.tool.internal.reveng.strategy.OverrideRepository;
+import org.hibernate.tool.internal.strategy.DefaultStrategy;
+import org.hibernate.tool.internal.strategy.OverrideRepository;
 import org.hibernate.tool.util.ReflectionUtil;
 import org.jboss.logging.Logger;
 

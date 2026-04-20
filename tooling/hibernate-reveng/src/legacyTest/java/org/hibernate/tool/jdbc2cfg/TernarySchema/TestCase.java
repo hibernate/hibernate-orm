@@ -28,7 +28,7 @@ import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
 import org.hibernate.tool.internal.metadata.RevengMetadataDescriptor;
-import org.hibernate.tool.internal.reveng.strategy.AbstractStrategy;
+import org.hibernate.tool.internal.strategy.AbstractStrategy;
 import org.hibernate.tool.test.utils.JUnitUtil;
 import org.hibernate.tool.test.utils.JdbcUtil;
 import org.junit.jupiter.api.AfterEach;

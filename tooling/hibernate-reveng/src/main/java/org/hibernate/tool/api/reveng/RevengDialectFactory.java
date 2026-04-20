@@ -27,12 +27,12 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.tool.internal.reveng.dialect.H2RevengDialect;
-import org.hibernate.tool.internal.reveng.dialect.HSQLRevengDialect;
-import org.hibernate.tool.internal.reveng.dialect.JDBCRevengDialect;
-import org.hibernate.tool.internal.reveng.dialect.MySQLRevengDialect;
-import org.hibernate.tool.internal.reveng.dialect.OracleRevengDialect;
-import org.hibernate.tool.internal.reveng.dialect.SQLServerRevengDialect;
+import org.hibernate.tool.internal.dialect.H2RevengDialect;
+import org.hibernate.tool.internal.dialect.HSQLRevengDialect;
+import org.hibernate.tool.internal.dialect.JDBCRevengDialect;
+import org.hibernate.tool.internal.dialect.MySQLRevengDialect;
+import org.hibernate.tool.internal.dialect.OracleRevengDialect;
+import org.hibernate.tool.internal.dialect.SQLServerRevengDialect;
 
 public class RevengDialectFactory {
 

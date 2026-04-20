@@ -31,7 +31,7 @@ import org.hibernate.tool.internal.descriptor.ForeignKeyDescriptor;
 import org.hibernate.tool.internal.descriptor.OneToManyDescriptor;
 import org.hibernate.tool.internal.descriptor.OneToOneDescriptor;
 import org.hibernate.tool.internal.descriptor.TableDescriptor;
-import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
+import org.hibernate.tool.internal.strategy.DefaultStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

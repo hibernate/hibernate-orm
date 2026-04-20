@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.strategy;
+package org.hibernate.tool.internal.strategy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -28,7 +28,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.apache.commons.collections4.MultiValuedMap;
-import org.hibernate.tool.internal.reveng.strategy.MetaAttributeHelper.SimpleMetaAttribute;
+import org.hibernate.tool.internal.strategy.MetaAttributeHelper.SimpleMetaAttribute;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 

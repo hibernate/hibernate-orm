@@ -29,7 +29,7 @@ import org.hibernate.tool.api.metadata.MetadataDescriptorFactory;
 import org.hibernate.tool.internal.metadata.NativeMetadataDescriptor;
 import org.hibernate.tool.internal.metadata.RevengMetadataDescriptor;
 import org.hibernate.tool.internal.exporter.entity.EntityExporter;
-import org.hibernate.tool.internal.reveng.strategy.DefaultStrategy;
+import org.hibernate.tool.internal.strategy.DefaultStrategy;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JavaUtil;
 import org.hibernate.tool.test.utils.JdbcUtil;

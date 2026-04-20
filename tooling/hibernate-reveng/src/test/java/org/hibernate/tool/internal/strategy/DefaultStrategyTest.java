@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.hibernate.tool.internal.reveng.strategy;
+package org.hibernate.tool.internal.strategy;
 
 import org.hibernate.mapping.Column;
 import org.hibernate.tool.api.reveng.RevengSettings;

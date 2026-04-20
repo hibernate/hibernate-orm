@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.strategy;
+package org.hibernate.tool.internal.strategy;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,7 +46,7 @@ import org.hibernate.tool.api.reveng.AssociationInfo;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.api.reveng.RevengStrategy.SchemaSelection;
 import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.reveng.strategy.MetaAttributeHelper.SimpleMetaAttribute;
+import org.hibernate.tool.internal.strategy.MetaAttributeHelper.SimpleMetaAttribute;
 import org.hibernate.tool.internal.util.TypeHelper;
 import org.hibernate.tool.internal.util.TableNameQualifier;
 import org.jboss.logging.Logger;

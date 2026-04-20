@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.internal.reveng.strategy;
+package org.hibernate.tool.internal.strategy;
 
 public class SQLTypeMapping implements Comparable<SQLTypeMapping> {
 

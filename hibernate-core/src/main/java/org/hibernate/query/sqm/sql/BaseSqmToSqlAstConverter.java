@@ -4580,8 +4580,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Expression visitAnyValuedValuedPath(SqmAnyValuedSimplePath<?> sqmPath) {
+		final Clause currentClause = getCurrentClauseStack().getCurrent();
 		return withTreatRestriction(
-				prepareReusablePath( sqmPath, () -> DiscriminatedAssociationPathInterpretation.from( sqmPath, this ) ),
+				currentClause == Clause.INSERT || currentClause == Clause.SET
+						? DiscriminatedAssociationPathInterpretation.from( sqmPath, this )
+						: prepareReusablePath( sqmPath, () -> DiscriminatedAssociationPathInterpretation.from( sqmPath, this ) ),
 				sqmPath
 		);
 	}

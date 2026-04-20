@@ -24,12 +24,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
@@ -136,6 +134,10 @@ public class TemplateHelper {
 				classMetaAttributes, fieldMetaAttributes, Collections.emptyMap());
 	}
 
+	TemplateHelper(ClassDetails classDetails, TemplateHelper parent) {
+		this(classDetails, parent.modelsContext, parent.importContext, parent.annotated);
+	}
+
 	TemplateHelper(ClassDetails classDetails, ModelsContext modelsContext,
 				   ImportContext importContext, boolean annotated,
 				   boolean useGenerics,
@@ -215,7 +217,7 @@ public class TemplateHelper {
 		return isInterface() ? "interface" : "class";
 	}
 
-	private boolean isSuperclassInterface() {
+	boolean isSuperclassInterface() {
 		ClassDetails superClass = classDetails.getSuperClass();
 		if (superClass == null || "java.lang.Object".equals(superClass.getClassName())) {
 			return false;
@@ -391,11 +393,6 @@ public class TemplateHelper {
 
 	public boolean isVersion(FieldDetails field) {
 		return fieldHasAnnotation(field, Version.class);
-	}
-
-	private boolean isGeneratedId(FieldDetails field) {
-		return isPrimaryKey(field)
-				&& fieldHasAnnotation(field, GeneratedValue.class);
 	}
 
 	public boolean isLob(FieldDetails field) {
@@ -696,156 +693,43 @@ public class TemplateHelper {
 	// --- Constructor support ---
 
 	public boolean needsFullConstructor() {
-		return !getFullConstructorProperties().isEmpty();
+		return new ConstructorHelper(this).needsFullConstructor();
 	}
 
 	public List<FullConstructorProperty> getFullConstructorProperties() {
-		List<FullConstructorProperty> props = new ArrayList<>();
-		// Composite ID
-		FieldDetails cid = getCompositeIdField();
-		if (cid != null) {
-			props.add(new FullConstructorProperty(getJavaTypeName(cid), getFieldName(cid)));
-		}
-		// Basic fields (skip version, formula, generated id, respect gen-property)
-		for (FieldDetails field : getBasicFields()) {
-			if (!isVersion(field) && isGenProperty(field) && !hasFormula(field)
-					&& !isGeneratedId(field)) {
-				props.add(new FullConstructorProperty(getJavaTypeName(field), getFieldName(field)));
-			}
-		}
-		// ManyToOne
-		for (FieldDetails field : getManyToOneFields()) {
-			props.add(new FullConstructorProperty(getJavaTypeName(field), getFieldName(field)));
-		}
-		// OneToOne
-		for (FieldDetails field : getOneToOneFields()) {
-			props.add(new FullConstructorProperty(getJavaTypeName(field), getFieldName(field)));
-		}
-		// OneToMany
-		for (FieldDetails field : getOneToManyFields()) {
-			props.add(new FullConstructorProperty(getCollectionTypeName(field), getFieldName(field)));
-		}
-		// ManyToMany
-		for (FieldDetails field : getManyToManyFields()) {
-			props.add(new FullConstructorProperty(getCollectionTypeName(field), getFieldName(field)));
-		}
-		// Embedded
-		for (FieldDetails field : getEmbeddedFields()) {
-			props.add(new FullConstructorProperty(getJavaTypeName(field), getFieldName(field)));
-		}
-		return props;
+		return new ConstructorHelper(this).getFullConstructorProperties();
 	}
 
 	public boolean needsMinimalConstructor() {
-		int minTotal = getMinimalConstructorProperties().size()
-				+ getSuperclassMinimalConstructorProperties().size();
-		int fullTotal = getFullConstructorProperties().size()
-				+ getSuperclassFullConstructorProperties().size();
-		return minTotal > 0 && minTotal < fullTotal;
+		return new ConstructorHelper(this).needsMinimalConstructor();
 	}
 
 	public List<FullConstructorProperty> getMinimalConstructorProperties() {
-		List<FullConstructorProperty> props = new ArrayList<>();
-		// Composite ID (always included — always assigned)
-		FieldDetails cid = getCompositeIdField();
-		if (cid != null) {
-			props.add(new FullConstructorProperty(getJavaTypeName(cid), getFieldName(cid)));
-		}
-		// Basic fields: non-nullable, non-version, non-generated-id, respects gen-property
-		for (FieldDetails field : getBasicFields()) {
-			if (isVersion(field) || !isGenProperty(field) || hasFieldDefaultValue(field)
-					|| hasFormula(field)) {
-				continue;
-			}
-			if (isPrimaryKey(field)) {
-				// Include ID only if no generator (assigned)
-				GeneratedValue gv = fieldGetAnnotation(field,GeneratedValue.class);
-				if (gv != null) {
-					continue;
-				}
-				props.add(new FullConstructorProperty(getJavaTypeName(field), getFieldName(field)));
-			} else {
-				Column col = fieldGetAnnotation(field,Column.class);
-				if (col != null && !col.nullable()) {
-					props.add(new FullConstructorProperty(getJavaTypeName(field), getFieldName(field)));
-				}
-			}
-		}
-		// ManyToOne: non-optional
-		for (FieldDetails field : getManyToOneFields()) {
-			ManyToOne m2o = fieldGetAnnotation(field,ManyToOne.class);
-			if (m2o != null && !m2o.optional()) {
-				props.add(new FullConstructorProperty(getJavaTypeName(field), getFieldName(field)));
-			}
-		}
-		// Embedded components
-		for (FieldDetails field : getEmbeddedFields()) {
-			props.add(new FullConstructorProperty(getJavaTypeName(field), getFieldName(field)));
-		}
-		return props;
+		return new ConstructorHelper(this).getMinimalConstructorProperties();
 	}
 
 	public String getMinimalConstructorParameterList() {
-		StringBuilder sb = new StringBuilder();
-		for (FullConstructorProperty prop : getSuperclassMinimalConstructorProperties()) {
-			if (!sb.isEmpty()) sb.append(", ");
-			sb.append(prop.typeName()).append(" ").append(prop.fieldName());
-		}
-		for (FullConstructorProperty prop : getMinimalConstructorProperties()) {
-			if (!sb.isEmpty()) sb.append(", ");
-			sb.append(prop.typeName()).append(" ").append(prop.fieldName());
-		}
-		return sb.toString();
+		return new ConstructorHelper(this).getMinimalConstructorParameterList();
 	}
 
 	public String getFullConstructorParameterList() {
-		StringBuilder sb = new StringBuilder();
-		for (FullConstructorProperty prop : getSuperclassFullConstructorProperties()) {
-			if (!sb.isEmpty()) sb.append(", ");
-			sb.append(prop.typeName()).append(" ").append(prop.fieldName());
-		}
-		for (FullConstructorProperty prop : getFullConstructorProperties()) {
-			if (!sb.isEmpty()) sb.append(", ");
-			sb.append(prop.typeName()).append(" ").append(prop.fieldName());
-		}
-		return sb.toString();
+		return new ConstructorHelper(this).getFullConstructorParameterList();
 	}
 
 	public List<FullConstructorProperty> getSuperclassFullConstructorProperties() {
-		if (!isSubclass() || isSuperclassInterface()) {
-			return Collections.emptyList();
-		}
-		return createSuperclassHelper().getFullConstructorProperties();
+		return new ConstructorHelper(this).getSuperclassFullConstructorProperties();
 	}
 
 	public String getSuperclassFullConstructorArgumentList() {
-		StringBuilder sb = new StringBuilder();
-		for (FullConstructorProperty prop : getSuperclassFullConstructorProperties()) {
-			if (!sb.isEmpty()) sb.append(", ");
-			sb.append(prop.fieldName());
-		}
-		return sb.toString();
+		return new ConstructorHelper(this).getSuperclassFullConstructorArgumentList();
 	}
 
 	public List<FullConstructorProperty> getSuperclassMinimalConstructorProperties() {
-		if (!isSubclass() || isSuperclassInterface()) {
-			return Collections.emptyList();
-		}
-		return createSuperclassHelper().getMinimalConstructorProperties();
+		return new ConstructorHelper(this).getSuperclassMinimalConstructorProperties();
 	}
 
 	public String getSuperclassMinimalConstructorArgumentList() {
-		StringBuilder sb = new StringBuilder();
-		for (FullConstructorProperty prop : getSuperclassMinimalConstructorProperties()) {
-			if (!sb.isEmpty()) sb.append(", ");
-			sb.append(prop.fieldName());
-		}
-		return sb.toString();
-	}
-
-	private TemplateHelper createSuperclassHelper() {
-		ClassDetails superClass = classDetails.getSuperClass();
-		return new TemplateHelper(superClass, modelsContext, importContext, annotated);
+		return new ConstructorHelper(this).getSuperclassMinimalConstructorArgumentList();
 	}
 
 	// --- toString support ---

@@ -155,8 +155,8 @@ public class SingularAttributeImpl<D,J>
 			boolean fetched,
 			SqmCreationState creationState) {
 		final var nodeBuilder = creationState.getCreationContext().getNodeBuilder();
-		if ( getType() instanceof AnyMappingDomainType ) {
-			throw new SemanticException( "An @Any attribute cannot be join fetched" );
+		if ( getType() instanceof AnyMappingDomainType && !fetched ) {
+			throw new SemanticException( "An @Any attribute cannot be joined unless it is join fetched" );
 		}
 		else if ( sqmPathSource.getPathType() instanceof BasicPluralType<?,?> ) {
 			final SqmSetReturningFunction<J> setReturningFunction =

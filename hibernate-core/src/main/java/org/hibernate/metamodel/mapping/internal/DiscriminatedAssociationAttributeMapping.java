@@ -139,8 +139,17 @@ public class DiscriminatedAssociationAttributeMapping
 				fetchTiming,
 				selected,
 				resultVariable,
-				creationState
-		);
+					creationState
+			);
+	}
+
+	@Override
+	public Fetch resolveCircularFetch(
+			NavigablePath fetchablePath,
+			FetchParent fetchParent,
+			FetchTiming fetchTiming,
+			DomainResultCreationState creationState) {
+		return discriminatorMapping.resolveCircularFetch( fetchParent, fetchablePath, fetchTiming, creationState );
 	}
 
 	@Override

@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -16,6 +17,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Column;
+import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatorMapping;
@@ -161,6 +163,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	private final JavaType<?> baseAssociationJtd;
 	private final FetchTiming fetchTiming;
 	private final SessionFactoryImplementor sessionFactory;
+	private AssociationKey associationKey;
 
 	public DiscriminatedAssociationMapping(
 			DiscriminatedAssociationModelPart modelPart,
@@ -349,6 +352,48 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	@Override
 	public FetchTiming getTiming() {
 		return fetchTiming;
+	}
+
+	AssociationKey getAssociationKey() {
+		if ( associationKey == null ) {
+			final List<String> columns = new ArrayList<>( discriminatorPart.getJdbcTypeCount() + keyPart.getJdbcTypeCount() );
+			discriminatorPart.forEachSelectable( (selectionIndex, selectableMapping) -> columns.add( selectableMapping.getSelectionExpression() ) );
+			keyPart.forEachSelectable( (selectionIndex, selectableMapping) -> columns.add( selectableMapping.getSelectionExpression() ) );
+			associationKey = new AssociationKey( discriminatorPart.getContainingTableExpression(), columns );
+		}
+		return associationKey;
+	}
+
+	Fetch resolveCircularFetch(
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			FetchTiming fetchTiming,
+			DomainResultCreationState creationState) {
+		if ( creationState.isAssociationKeyVisited( getAssociationKey() ) ) {
+			return new DiscriminatedEntityFetch(
+					fetchablePath,
+					baseAssociationJtd,
+					modelPart,
+					fetchTiming,
+					fetchParent,
+					creationState
+			);
+		}
+		return null;
+	}
+
+	private Fetch withRegisteredAssociationKey(
+			Supplier<Fetch> fetchCreator,
+			DomainResultCreationState creationState) {
+		final boolean added = creationState.registerVisitedAssociationKey( getAssociationKey() );
+		try {
+			return fetchCreator.get();
+		}
+		finally {
+			if ( added ) {
+				creationState.removeVisitedAssociationKey( getAssociationKey() );
+			}
+		}
 	}
 
 	List<DiscriminatorValueDetails> getMappedEntityValueDetails() {
@@ -541,14 +586,19 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		if ( selected ) {
-			resolveJoinedFetchTableGroup( fetchParent, fetchablePath, resultVariable, creationState );
-			return new JoinedDiscriminatedEntityFetch(
-					fetchablePath,
-					baseAssociationJtd,
-					modelPart,
-					fetchTiming,
-					fetchParent,
-					getMappedEntityValueDetails(),
+			return withRegisteredAssociationKey(
+					() -> {
+						resolveJoinedFetchTableGroup( fetchParent, fetchablePath, resultVariable, creationState );
+						return new JoinedDiscriminatedEntityFetch(
+								fetchablePath,
+								baseAssociationJtd,
+								modelPart,
+								fetchTiming,
+								fetchParent,
+								getMappedEntityValueDetails(),
+								creationState
+						);
+					},
 					creationState
 			);
 		}

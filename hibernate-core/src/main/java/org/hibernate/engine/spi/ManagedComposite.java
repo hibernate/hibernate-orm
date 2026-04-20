@@ -5,7 +5,8 @@
 package org.hibernate.engine.spi;
 
 /**
- * Specialized {@link Managed} contract for component/embeddable classes.
+ * Specialized {@link Managed} contract for
+ * {@linkplain jakarta.persistence.Embeddable embeddable classes}.
  *
  * @author Steve Ebersole
  */

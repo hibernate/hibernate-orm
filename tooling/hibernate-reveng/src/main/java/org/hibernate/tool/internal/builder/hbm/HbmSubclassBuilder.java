@@ -20,28 +20,12 @@ package org.hibernate.tool.internal.builder.hbm;
 import java.io.Serializable;
 import java.util.List;
 
-import org.hibernate.boot.jaxb.hbm.spi.AttributeMapping;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmAnyAssociationType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmArrayType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBasicAttributeType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmBagCollectionType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCompositeAttributeType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmDiscriminatorSubclassEntityType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmDynamicComponentType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmEntityDiscriminatorType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmIdBagCollectionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmJoinedSubclassEntityType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSecondaryTableType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmListType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmManyToOneType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmMapType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOneToOneType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPrimitiveArrayType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPropertiesType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSetType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSecondaryTableType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmUnionSubclassEntityType;
-import org.hibernate.boot.jaxb.hbm.spi.ToolingHintContainer;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.DiscriminatorColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.DiscriminatorValueJpaAnnotation;
@@ -390,73 +374,7 @@ public class HbmSubclassBuilder {
 								   List<Serializable> attributes,
 								   String defaultPackage,
 								   HbmBuildContext ctx) {
-		if (attributes == null) {
-			return;
-		}
-		for (Serializable attribute : attributes) {
-			if (attribute instanceof JaxbHbmBasicAttributeType basicAttr) {
-				HbmPropertyBuilder.processProperty(entityClass, basicAttr, ctx);
-			} else if (attribute instanceof JaxbHbmManyToOneType m2o) {
-				HbmAssociationBuilder.processManyToOne(entityClass, m2o, defaultPackage, ctx);
-			} else if (attribute instanceof JaxbHbmOneToOneType o2o) {
-				HbmAssociationBuilder.processOneToOne(entityClass, o2o, defaultPackage, ctx);
-			} else if (attribute instanceof JaxbHbmAnyAssociationType any) {
-				HbmAssociationBuilder.processAny(entityClass, any, defaultPackage, ctx);
-			} else if (attribute instanceof JaxbHbmSetType set) {
-				HbmCollectionBuilder.processSet(entityClass, set, defaultPackage, ctx);
-			} else if (attribute instanceof JaxbHbmListType list) {
-				HbmCollectionBuilder.processList(entityClass, list, defaultPackage, ctx);
-			} else if (attribute instanceof JaxbHbmBagCollectionType bag) {
-				HbmCollectionBuilder.processBag(entityClass, bag, defaultPackage, ctx);
-			} else if (attribute instanceof JaxbHbmMapType map) {
-				HbmCollectionBuilder.processMap(entityClass, map, defaultPackage, ctx);
-			} else if (attribute instanceof JaxbHbmArrayType array) {
-				HbmCollectionBuilder.processArray(entityClass, array, defaultPackage, ctx);
-			} else if (attribute instanceof JaxbHbmPrimitiveArrayType primArray) {
-				HbmCollectionBuilder.processPrimitiveArray(entityClass, primArray, defaultPackage, ctx);
-			} else if (attribute instanceof JaxbHbmIdBagCollectionType idBag) {
-				HbmCollectionBuilder.processIdBag(entityClass, idBag, defaultPackage, ctx);
-			} else if (attribute instanceof JaxbHbmCompositeAttributeType component) {
-				HbmComponentBuilder.processComponent(entityClass, component, defaultPackage, ctx);
-			} else if (attribute instanceof JaxbHbmDynamicComponentType dynComponent) {
-				HbmComponentBuilder.processDynamicComponent(entityClass, dynComponent, defaultPackage, ctx);
-			} else if (attribute instanceof JaxbHbmPropertiesType properties) {
-				// <properties> is a grouping element — recurse into its children
-				// then tag each child field with the group name
-				int fieldCountBefore = entityClass.getFields().size();
-				processAttributes(entityClass, properties.getAttributes(), defaultPackage, ctx);
-				String groupName = properties.getName();
-				if (groupName != null && !groupName.isEmpty()) {
-					for (int i = fieldCountBefore; i < entityClass.getFields().size(); i++) {
-						String fieldName = entityClass.getFields().get(i).getName();
-						ctx.addFieldMetaAttribute(entityClass.getClassName(), fieldName,
-								"hibernate.properties-group", groupName);
-					}
-					if (properties.isUnique()) {
-						ctx.addClassMetaAttribute(entityClass.getClassName(),
-								"hibernate.properties-group." + groupName + ".unique", "true");
-					}
-					if (!properties.isInsert()) {
-						ctx.addClassMetaAttribute(entityClass.getClassName(),
-								"hibernate.properties-group." + groupName + ".insert", "false");
-					}
-					if (!properties.isUpdate()) {
-						ctx.addClassMetaAttribute(entityClass.getClassName(),
-								"hibernate.properties-group." + groupName + ".update", "false");
-					}
-					if (!properties.isOptimisticLock()) {
-						ctx.addClassMetaAttribute(entityClass.getClassName(),
-								"hibernate.properties-group." + groupName + ".optimistic-lock", "false");
-					}
-				}
-			}
-			// Extract field-level <meta> attributes
-			if (attribute instanceof AttributeMapping am
-					&& attribute instanceof ToolingHintContainer thc) {
-				ctx.extractFieldMetaAttributes(
-						entityClass.getClassName(), am.getName(), thc);
-			}
-		}
+		HbmAttributeProcessor.processAttributes(entityClass, attributes, defaultPackage, ctx);
 	}
 
 	private static DiscriminatorType mapDiscriminatorType(String hbmType) {

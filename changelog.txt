@@ -1,6 +1,21 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.3.2.Final (April 20, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/38725
+
+
+** Bug
+    * HHH-20321 import.sql not executed when there are no @Entity classes
+    * HHH-20320 detached versioned entity parameter triggers auto-flush transient check
+    * HHH-20317 Envers does not reflect @DiscriminatorOptions for history entities
+    * HHH-20313 Criteria query comparing double path to integer expression containing integer parameter fails
+
+** Task
+    * HHH-20334 Upgrade to Log4j 2.25.4
+
 Changes in 7.3.1.Final (April 10, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

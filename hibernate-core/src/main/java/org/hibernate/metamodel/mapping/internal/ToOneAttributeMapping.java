@@ -1014,8 +1014,18 @@ public class ToOneAttributeMapping
 				// then there can't be a circular fetch
 				return null;
 			}
+			final var fetchParentNavigablePath = fetchParent.getNavigablePath();
 			var parentNavigablePath = fetchablePath.getParent();
-			assert parentNavigablePath.equals( fetchParent.getNavigablePath() );
+			assert parentNavigablePath.equals( fetchParentNavigablePath )
+				|| fetchParentNavigablePath instanceof TreatedNavigablePath
+						&& parentNavigablePath.equals( fetchParentNavigablePath.getRealParent() );
+			if ( fetchParentNavigablePath instanceof TreatedNavigablePath
+					&& parentNavigablePath.equals( fetchParentNavigablePath.getRealParent() ) ) {
+				// Children of treated paths report the untreated path as their parent.
+				// For circular-fetch resolution we need the actual treated fetch-parent path,
+				// otherwise bidirectional checks compare against the wrong navigable path.
+				parentNavigablePath = fetchParentNavigablePath;
+			}
 			// The parent navigable path is {fk} if we are creating the domain result for the foreign key for a circular fetch
 			// In the following example, we create a circular fetch for the composite `Card.field.{id}.card.field`
 			// While creating the domain result for the foreign key of `Card#field`, we run into this condition

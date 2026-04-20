@@ -73,8 +73,7 @@ public class TemplateHelper {
 	private final ImportContext importContext;
 	private final boolean annotated;
 	private final boolean useGenerics;
-	private final Map<String, List<String>> classMetaAttributes;
-	private final Map<String, Map<String, List<String>>> fieldMetaAttributes;
+	private final MetaAttributeSupport metaSupport;
 	// All class meta attributes keyed by fully-qualified class name — used
 	// to check meta attributes of the superclass (e.g. whether it is an interface)
 	private final Map<String, Map<String, List<String>>> allClassMetaAttributes;
@@ -127,12 +126,9 @@ public class TemplateHelper {
 		this.importContext = importContext;
 		this.annotated = annotated;
 		this.useGenerics = useGenerics;
-		this.classMetaAttributes = classMetaAttributes != null ? classMetaAttributes : Collections.emptyMap();
-		this.fieldMetaAttributes = fieldMetaAttributes != null ? fieldMetaAttributes : Collections.emptyMap();
+		this.metaSupport = new MetaAttributeSupport(classMetaAttributes, fieldMetaAttributes);
 		this.allClassMetaAttributes = allClassMetaAttributes != null ? allClassMetaAttributes : Collections.emptyMap();
-		// Process extra-import meta-attribute
-		List<String> extraImports = this.classMetaAttributes.getOrDefault("extra-import", Collections.emptyList());
-		for (String fqcn : extraImports) {
+		for (String fqcn : metaSupport.getClassMetaAttributeValues("extra-import")) {
 			importType(fqcn);
 		}
 		// Build getter method map for property-access entities
@@ -263,7 +259,7 @@ public class TemplateHelper {
 			interfaces.add(importType(superClass.getClassName()));
 		}
 		if (hasClassMetaAttribute("implements")) {
-			for (String fqcn : classMetaAttributes.get("implements")) {
+			for (String fqcn : metaSupport.getClassMetaAttributeValues("implements")) {
 				interfaces.add(importType(fqcn));
 			}
 		}
@@ -278,7 +274,7 @@ public class TemplateHelper {
 	 */
 	public String getEqualsInstanceOfType() {
 		if (hasClassMetaAttribute("implements")) {
-			List<String> impls = classMetaAttributes.get("implements");
+			List<String> impls = metaSupport.getClassMetaAttributeValues("implements");
 			// Use the first non-Serializable interface as the proxy type
 			for (String fqcn : impls) {
 				if (!"java.io.Serializable".equals(fqcn)) {
@@ -838,95 +834,75 @@ public class TemplateHelper {
 		return new EqualsHashCodeHelper(this, importContext).generateHashCodeExpression(field);
 	}
 
-	// --- Meta-attribute support ---
+	// --- Meta-attribute support (delegated to MetaAttributeSupport) ---
 
 	public boolean hasClassMetaAttribute(String name) {
-		return classMetaAttributes.containsKey(name);
+		return metaSupport.hasClassMetaAttribute(name);
 	}
 
 	public String getClassMetaAttribute(String name) {
-		List<String> values = classMetaAttributes.getOrDefault(name, Collections.emptyList());
-		return values.isEmpty() ? "" : String.join("\n", values);
+		return metaSupport.getClassMetaAttribute(name);
 	}
 
 	public boolean hasFieldMetaAttribute(FieldDetails field, String name) {
-		Map<String, List<String>> attrs = fieldMetaAttributes.getOrDefault(
-				field.getName(), Collections.emptyMap());
-		return attrs.containsKey(name);
+		return metaSupport.hasFieldMetaAttribute(field, name);
 	}
 
-	public boolean getFieldMetaAsBool(FieldDetails field, String name, boolean defaultValue) {
-		Map<String, List<String>> attrs = fieldMetaAttributes.getOrDefault(
-				field.getName(), Collections.emptyMap());
-		List<String> values = attrs.getOrDefault(name, Collections.emptyList());
-		if (values.isEmpty()) {
-			return defaultValue;
-		}
-		return Boolean.parseBoolean(values.get(0));
+	public boolean getFieldMetaAsBool(
+			FieldDetails field, String name, boolean defaultValue) {
+		return metaSupport.getFieldMetaAsBool(field, name, defaultValue);
 	}
 
 	public String getFieldMetaAttribute(FieldDetails field, String name) {
-		Map<String, List<String>> attrs = fieldMetaAttributes.getOrDefault(
-				field.getName(), Collections.emptyMap());
-		List<String> values = attrs.getOrDefault(name, Collections.emptyList());
-		return values.isEmpty() ? "" : String.join("\n", values);
+		return metaSupport.getFieldMetaAttribute(field, name);
 	}
 
 	public String getFieldModifiers(FieldDetails field) {
-		if (hasFieldMetaAttribute(field, "scope-field")) {
-			return getFieldMetaAttribute(field, "scope-field");
-		}
-		return "private";
+		return metaSupport.getFieldModifiers(field);
 	}
 
 	public String getPropertyGetModifiers(FieldDetails field) {
-		if (hasFieldMetaAttribute(field, "scope-get")) {
-			return getFieldMetaAttribute(field, "scope-get");
-		}
-		return "public";
+		return metaSupport.getPropertyGetModifiers(field);
 	}
 
 	public String getPropertySetModifiers(FieldDetails field) {
-		if (hasFieldMetaAttribute(field, "scope-set")) {
-			return getFieldMetaAttribute(field, "scope-set");
-		}
-		return "public";
+		return metaSupport.getPropertySetModifiers(field);
 	}
 
 	public boolean hasClassDescription() {
-		return hasClassMetaAttribute("class-description");
+		return metaSupport.hasClassDescription();
 	}
 
 	public String getClassDescription() {
-		return getClassMetaAttribute("class-description");
+		return metaSupport.getClassDescription();
 	}
 
 	public boolean isGenProperty(FieldDetails field) {
-		return getFieldMetaAsBool(field, "gen-property", true);
+		return metaSupport.isGenProperty(field);
 	}
 
 	public boolean hasFieldDescription(FieldDetails field) {
-		return hasFieldMetaAttribute(field, "field-description");
+		return metaSupport.hasFieldDescription(field);
 	}
 
 	public String getFieldDescription(FieldDetails field) {
-		return getFieldMetaAttribute(field, "field-description");
+		return metaSupport.getFieldDescription(field);
 	}
 
 	public boolean hasFieldDefaultValue(FieldDetails field) {
-		return hasFieldMetaAttribute(field, "default-value");
+		return metaSupport.hasFieldDefaultValue(field);
 	}
 
 	public String getFieldDefaultValue(FieldDetails field) {
-		return getFieldMetaAttribute(field, "default-value");
+		return metaSupport.getFieldDefaultValue(field);
 	}
 
 	public boolean hasExtraClassCode() {
-		return hasClassMetaAttribute("class-code");
+		return metaSupport.hasExtraClassCode();
 	}
 
 	public String getExtraClassCode() {
-		return getClassMetaAttribute("class-code");
+		return metaSupport.getExtraClassCode();
 	}
 
 	// --- Inner record types for template data ---

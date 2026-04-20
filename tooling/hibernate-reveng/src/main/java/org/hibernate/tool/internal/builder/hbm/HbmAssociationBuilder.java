@@ -88,7 +88,7 @@ public class HbmAssociationBuilder {
 		field.addAnnotationUsage(m2oAnnotation);
 
 		// @Cascade
-		HbmCollectionBuilder.applyCascade(field, m2o.getCascade(), ctx);
+		HbmCollectionMetadataApplier.applyCascade(field, m2o.getCascade(), ctx);
 
 		boolean insertable = m2o.isInsert();
 		boolean updatable = m2o.isUpdate();
@@ -183,7 +183,7 @@ public class HbmAssociationBuilder {
 		}
 
 		// access attribute
-		HbmCollectionBuilder.applyAccessAnnotation(field, o2o.getAccess(), ctx);
+		HbmCollectionMetadataApplier.applyAccessAnnotation(field, o2o.getAccess(), ctx);
 	}
 
 	public static void processAny(DynamicClassDetails entityClass,
@@ -250,10 +250,10 @@ public class HbmAssociationBuilder {
 		}
 
 		// @Cascade
-		HbmCollectionBuilder.applyCascade(field, any.getCascade(), ctx);
+		HbmCollectionMetadataApplier.applyCascade(field, any.getCascade(), ctx);
 
 		// @Access
-		HbmCollectionBuilder.applyAccessAnnotation(field, any.getAccess(), ctx);
+		HbmCollectionMetadataApplier.applyAccessAnnotation(field, any.getAccess(), ctx);
 	}
 
 	/**

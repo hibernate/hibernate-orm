@@ -30,7 +30,7 @@ import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.hibernate.tool.api.reveng.RevengStrategy;
 import org.hibernate.tool.gradle.Extension;
-import org.hibernate.tool.internal.reveng.strategy.AbstractStrategy;
+import org.hibernate.tool.internal.strategy.AbstractStrategy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

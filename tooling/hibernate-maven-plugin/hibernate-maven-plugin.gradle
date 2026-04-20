@@ -87,6 +87,9 @@ integrationTest {
     if (project.hasProperty("mavenMirror")) {
         environment "mavenMirror", project.property("mavenMirror")
     }
+    testLogging {
+        exceptionFormat = 'full'
+    }
 }
 
 integrationTest.dependsOn project(':hibernate-core').tasks.publishToMavenLocal

@@ -42,9 +42,9 @@ import org.hibernate.tool.api.export.ArtifactCollector;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.exporter.MetadataHelper;
+import org.hibernate.tool.internal.util.MetadataHelper;
 import org.hibernate.tool.api.version.Version;
-import org.hibernate.tool.internal.exporter.EntityFileWriter;
+import org.hibernate.tool.internal.util.EntityFileWriter;
 
 /**
  * Generates JPA-annotated Java entity source files from {@link ClassDetails}

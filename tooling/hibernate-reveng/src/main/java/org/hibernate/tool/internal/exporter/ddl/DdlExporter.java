@@ -33,7 +33,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.exporter.MetadataHelper;
+import org.hibernate.tool.internal.util.MetadataHelper;
 import org.hibernate.tool.internal.metadata.MetadataBootstrapper;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;

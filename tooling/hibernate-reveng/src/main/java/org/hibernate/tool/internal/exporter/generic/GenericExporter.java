@@ -44,7 +44,7 @@ import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.exporter.MetadataHelper;
+import org.hibernate.tool.internal.util.MetadataHelper;
 import org.hibernate.tool.internal.exporter.entity.ImportContextImpl;
 import org.hibernate.tool.internal.exporter.entity.TemplateHelper;
 import org.hibernate.tool.api.version.Version;

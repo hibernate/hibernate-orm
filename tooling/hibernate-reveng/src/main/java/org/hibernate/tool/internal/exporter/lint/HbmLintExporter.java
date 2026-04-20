@@ -39,7 +39,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.exporter.MetadataHelper;
+import org.hibernate.tool.internal.util.MetadataHelper;
 
 /**
  * Analyzes entities for common mapping issues and generates a

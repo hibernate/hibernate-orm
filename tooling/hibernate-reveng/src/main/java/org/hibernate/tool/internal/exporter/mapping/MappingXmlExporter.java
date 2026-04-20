@@ -35,9 +35,9 @@ import freemarker.template.TemplateExceptionHandler;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.exporter.MetadataHelper;
+import org.hibernate.tool.internal.util.MetadataHelper;
 import org.hibernate.tool.api.version.Version;
-import org.hibernate.tool.internal.exporter.EntityFileWriter;
+import org.hibernate.tool.internal.util.EntityFileWriter;
 
 /**
  * Generates a JPA {@code mapping.xml} file per entity from {@link ClassDetails}

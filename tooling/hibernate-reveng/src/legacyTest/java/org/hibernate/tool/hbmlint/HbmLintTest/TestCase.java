@@ -22,7 +22,7 @@ import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.export.ExporterFactory;
 import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
-import org.hibernate.tool.internal.exporter.MetadataHelper;
+import org.hibernate.tool.internal.util.MetadataHelper;
 import org.hibernate.tool.internal.exporter.lint.BadCachingDetector;
 import org.hibernate.tool.internal.exporter.lint.HbmLintExporter;
 import org.hibernate.tool.internal.exporter.lint.Issue;

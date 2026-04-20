@@ -123,8 +123,8 @@ public class HbmIdBuilder {
 												 String defaultPackage,
 												 HbmBuildContext ctx) {
 		String className = compositeId.getClazz();
-		String fullClassName = HbmBuildContext.resolveClassName(className, defaultPackage);
-		String simpleName = HbmBuildContext.simpleName(fullClassName);
+		String fullClassName = HbmTypeResolver.resolveClassName(className, defaultPackage);
+		String simpleName = HbmTypeResolver.simpleName(fullClassName);
 
 		// Create the @Embeddable class for the composite key
 		DynamicClassDetails embeddableClass = new DynamicClassDetails(
@@ -147,10 +147,10 @@ public class HbmIdBuilder {
 			} else if (keyProp instanceof JaxbHbmCompositeKeyManyToOneType keyM2o) {
 				String name = keyM2o.getName();
 				String targetClassName = keyM2o.getClazz();
-				String fullTargetName = HbmBuildContext.resolveClassName(
+				String fullTargetName = HbmTypeResolver.resolveClassName(
 						targetClassName, defaultPackage);
 				ClassDetails targetClass = ctx.resolveOrCreateClassDetails(
-						HbmBuildContext.simpleName(fullTargetName), fullTargetName);
+						HbmTypeResolver.simpleName(fullTargetName), fullTargetName);
 				TypeDetails fieldType = new ClassTypeDetailsImpl(
 						targetClass, TypeDetails.Kind.CLASS);
 				DynamicFieldDetails field = entityClass.applyAttribute(
@@ -193,9 +193,9 @@ public class HbmIdBuilder {
 			} else if (keyProp instanceof JaxbHbmCompositeKeyManyToOneType keyM2o) {
 				String name = keyM2o.getName();
 				String targetClassName = keyM2o.getClazz();
-				String fullTargetName = HbmBuildContext.resolveClassName(targetClassName, defaultPackage);
+				String fullTargetName = HbmTypeResolver.resolveClassName(targetClassName, defaultPackage);
 				ClassDetails targetClass = ctx.resolveOrCreateClassDetails(
-						HbmBuildContext.simpleName(fullTargetName), fullTargetName);
+						HbmTypeResolver.simpleName(fullTargetName), fullTargetName);
 
 				TypeDetails fieldType = new ClassTypeDetailsImpl(
 						targetClass, TypeDetails.Kind.CLASS);

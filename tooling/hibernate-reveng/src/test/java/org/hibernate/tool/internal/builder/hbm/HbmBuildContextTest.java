@@ -189,52 +189,18 @@ public class HbmBuildContextTest {
 		assertEquals(GenerationType.AUTO, ctx.mapGeneratorClass("custom-generator"));
 	}
 
-	// --- Class name resolution ---
+	// --- Instance resolveClassName (delegates to HbmTypeResolver) ---
 
 	@Test
-	public void testResolveClassNameSimple() {
-		assertEquals("com.example.Employee",
-				HbmBuildContext.resolveClassName("Employee", "com.example"));
+	public void testResolveClassNameInstance() {
+		ctx.setDefaultPackage("com.example");
+		assertEquals("com.example.Employee", ctx.resolveClassName("Employee"));
 	}
 
 	@Test
-	public void testResolveClassNameAlreadyQualified() {
-		assertEquals("com.other.Employee",
-				HbmBuildContext.resolveClassName("com.other.Employee", "com.example"));
-	}
-
-	@Test
-	public void testResolveClassNameNoPackage() {
-		assertEquals("Employee",
-				HbmBuildContext.resolveClassName("Employee", null));
-	}
-
-	@Test
-	public void testResolveClassNameEmptyPackage() {
-		assertEquals("Employee",
-				HbmBuildContext.resolveClassName("Employee", ""));
-	}
-
-	@Test
-	public void testResolveClassNameNull() {
-		assertNull(HbmBuildContext.resolveClassName(null, "com.example"));
-	}
-
-	@Test
-	public void testResolveClassNameEmpty() {
-		assertEquals("", HbmBuildContext.resolveClassName("", "com.example"));
-	}
-
-	// --- Simple name ---
-
-	@Test
-	public void testSimpleName() {
-		assertEquals("Employee", HbmBuildContext.simpleName("com.example.Employee"));
-	}
-
-	@Test
-	public void testSimpleNameAlreadySimple() {
-		assertEquals("Employee", HbmBuildContext.simpleName("Employee"));
+	public void testResolveClassNameInstanceAlreadyQualified() {
+		ctx.setDefaultPackage("com.example");
+		assertEquals("com.other.Employee", ctx.resolveClassName("com.other.Employee"));
 	}
 
 	// --- Field creation ---

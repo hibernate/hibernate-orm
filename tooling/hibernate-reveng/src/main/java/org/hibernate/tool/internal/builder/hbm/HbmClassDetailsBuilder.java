@@ -172,17 +172,17 @@ public class HbmClassDetailsBuilder {
 
 	private ClassDetails buildEntity(JaxbHbmRootEntityType entityType, String defaultPackage) {
 		String className = entityType.getName();
-		String fullName = HbmBuildContext.resolveClassName(className, defaultPackage);
-		String simpleName = HbmBuildContext.simpleName(fullName);
+		String fullName = HbmTypeResolver.resolveClassName(className, defaultPackage);
+		String simpleName = HbmTypeResolver.simpleName(fullName);
 
 		// When entity-name differs from class name, use entity-name as ClassDetails identity
 		String entityName = entityType.getEntityName();
 		boolean hasEntityName = entityName != null && !entityName.isEmpty()
 				&& !entityName.equals(simpleName) && !entityName.equals(fullName);
 		String identityName = hasEntityName
-				? HbmBuildContext.resolveClassName(entityName, defaultPackage) : fullName;
+				? HbmTypeResolver.resolveClassName(entityName, defaultPackage) : fullName;
 		String identitySimpleName = hasEntityName
-				? HbmBuildContext.simpleName(identityName) : simpleName;
+				? HbmTypeResolver.simpleName(identityName) : simpleName;
 
 		boolean isAbstract = entityType.isAbstract() != null && entityType.isAbstract();
 		DynamicClassDetails entityClass = new DynamicClassDetails(

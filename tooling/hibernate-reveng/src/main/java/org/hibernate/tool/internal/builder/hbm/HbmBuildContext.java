@@ -48,6 +48,8 @@ import org.hibernate.models.spi.TypeDetails;
 
 import jakarta.persistence.GenerationType;
 
+import static org.hibernate.tool.internal.builder.hbm.HbmTypeResolver.isPrimitiveType;
+
 /**
  * Shared context for hbm.xml → ClassDetails building.
  * Holds the {@link ModelsContext}, type resolution logic,
@@ -57,37 +59,6 @@ import jakarta.persistence.GenerationType;
  * @author Koen Aers
  */
 public class HbmBuildContext {
-
-	private static final Map<String, String> HIBERNATE_TYPE_MAP = new HashMap<>();
-
-	static {
-		HIBERNATE_TYPE_MAP.put("string", "java.lang.String");
-		HIBERNATE_TYPE_MAP.put("long", "long");
-		HIBERNATE_TYPE_MAP.put("int", "int");
-		HIBERNATE_TYPE_MAP.put("integer", "java.lang.Integer");
-		HIBERNATE_TYPE_MAP.put("short", "short");
-		HIBERNATE_TYPE_MAP.put("byte", "byte");
-		HIBERNATE_TYPE_MAP.put("float", "float");
-		HIBERNATE_TYPE_MAP.put("double", "double");
-		HIBERNATE_TYPE_MAP.put("boolean", "boolean");
-		HIBERNATE_TYPE_MAP.put("yes_no", "java.lang.Boolean");
-		HIBERNATE_TYPE_MAP.put("true_false", "java.lang.Boolean");
-		HIBERNATE_TYPE_MAP.put("big_decimal", "java.math.BigDecimal");
-		HIBERNATE_TYPE_MAP.put("big_integer", "java.math.BigInteger");
-		HIBERNATE_TYPE_MAP.put("character", "java.lang.Character");
-		HIBERNATE_TYPE_MAP.put("char", "char");
-		HIBERNATE_TYPE_MAP.put("date", "java.util.Date");
-		HIBERNATE_TYPE_MAP.put("time", "java.util.Date");
-		HIBERNATE_TYPE_MAP.put("timestamp", "java.util.Date");
-		HIBERNATE_TYPE_MAP.put("calendar", "java.util.Calendar");
-		HIBERNATE_TYPE_MAP.put("calendar_date", "java.util.Calendar");
-		HIBERNATE_TYPE_MAP.put("binary", "byte[]");
-		HIBERNATE_TYPE_MAP.put("byte[]", "byte[]");
-		HIBERNATE_TYPE_MAP.put("text", "java.lang.String");
-		HIBERNATE_TYPE_MAP.put("clob", "java.sql.Clob");
-		HIBERNATE_TYPE_MAP.put("blob", "java.sql.Blob");
-		HIBERNATE_TYPE_MAP.put("serializable", "java.io.Serializable");
-	}
 
 	private final ModelsContext modelsContext;
 	private final List<ClassDetails> embeddableClassDetails = new ArrayList<>();
@@ -117,68 +88,18 @@ public class HbmBuildContext {
 		this.defaultPackage = defaultPackage;
 	}
 
-	// --- Type resolution ---
+	// --- Type resolution (delegates to HbmTypeResolver) ---
 
 	public String resolveJavaType(String hibernateType) {
-		if (hibernateType == null || hibernateType.isEmpty()) {
-			return "java.lang.String";
-		}
-		String mapped = HIBERNATE_TYPE_MAP.get(hibernateType.toLowerCase());
-		if (mapped != null) {
-			return mapped;
-		}
-		if (hibernateType.contains(".")) {
-			return hibernateType;
-		}
-		return "java.lang.String";
-	}
-
-	private static final java.util.Set<String> PRIMITIVE_TYPES = java.util.Set.of(
-			"boolean", "byte", "char", "short", "int", "long", "float", "double");
-
-	private static boolean isPrimitiveType(String javaType) {
-		return PRIMITIVE_TYPES.contains(javaType);
+		return HbmTypeResolver.resolveJavaType(hibernateType);
 	}
 
 	public GenerationType mapGeneratorClass(String generatorClass) {
-		if (generatorClass == null || generatorClass.isEmpty()) {
-			return null;
-		}
-		return switch (generatorClass) {
-			case "identity", "native" -> GenerationType.IDENTITY;
-			case "sequence", "seqhilo",
-				 "enhanced-sequence", "org.hibernate.id.enhanced.SequenceStyleGenerator"
-					-> GenerationType.SEQUENCE;
-			case "enhanced-table", "org.hibernate.id.enhanced.TableGenerator"
-					-> GenerationType.TABLE;
-			case "uuid", "uuid2", "guid" -> GenerationType.UUID;
-			case "assigned" -> null;
-			default -> GenerationType.AUTO;
-		};
+		return HbmTypeResolver.mapGeneratorClass(generatorClass);
 	}
-
-	// --- Class name resolution ---
 
 	public String resolveClassName(String name) {
-		return resolveClassName(name, defaultPackage);
-	}
-
-	public static String resolveClassName(String name, String defaultPackage) {
-		if (name == null || name.isEmpty()) {
-			return name;
-		}
-		if (name.contains(".")) {
-			return name;
-		}
-		if (defaultPackage != null && !defaultPackage.isEmpty()) {
-			return defaultPackage + "." + name;
-		}
-		return name;
-	}
-
-	public static String simpleName(String fullName) {
-		int lastDot = fullName.lastIndexOf('.');
-		return lastDot > 0 ? fullName.substring(lastDot + 1) : fullName;
+		return HbmTypeResolver.resolveClassName(name, defaultPackage);
 	}
 
 	// --- ClassDetails registry helpers ---

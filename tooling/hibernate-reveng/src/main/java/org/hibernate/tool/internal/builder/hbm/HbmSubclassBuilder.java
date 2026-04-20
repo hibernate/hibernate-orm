@@ -155,7 +155,7 @@ public class HbmSubclassBuilder {
 		if (extendsName == null || extendsName.isEmpty()) {
 			return null;
 		}
-		String fullName = HbmBuildContext.resolveClassName(extendsName, defaultPackage);
+		String fullName = HbmTypeResolver.resolveClassName(extendsName, defaultPackage);
 		return (DynamicClassDetails) ctx.getModelsContext()
 				.getClassDetailsRegistry().findClassDetails(fullName);
 	}
@@ -238,8 +238,8 @@ public class HbmSubclassBuilder {
 													String defaultPackage,
 													HbmBuildContext ctx) {
 		String className = subclass.getName();
-		String fullName = HbmBuildContext.resolveClassName(className, defaultPackage);
-		String simpleName = HbmBuildContext.simpleName(fullName);
+		String fullName = HbmTypeResolver.resolveClassName(className, defaultPackage);
+		String simpleName = HbmTypeResolver.simpleName(fullName);
 
 		DynamicClassDetails subclassEntity = new DynamicClassDetails(
 				simpleName, fullName, Object.class,
@@ -283,8 +283,8 @@ public class HbmSubclassBuilder {
 											 String defaultPackage,
 											 HbmBuildContext ctx) {
 		String className = subclass.getName();
-		String fullName = HbmBuildContext.resolveClassName(className, defaultPackage);
-		String simpleName = HbmBuildContext.simpleName(fullName);
+		String fullName = HbmTypeResolver.resolveClassName(className, defaultPackage);
+		String simpleName = HbmTypeResolver.simpleName(fullName);
 
 		DynamicClassDetails subclassEntity = new DynamicClassDetails(
 				simpleName, fullName, Object.class,
@@ -338,8 +338,8 @@ public class HbmSubclassBuilder {
 											String defaultPackage,
 											HbmBuildContext ctx) {
 		String className = subclass.getName();
-		String fullName = HbmBuildContext.resolveClassName(className, defaultPackage);
-		String simpleName = HbmBuildContext.simpleName(fullName);
+		String fullName = HbmTypeResolver.resolveClassName(className, defaultPackage);
+		String simpleName = HbmTypeResolver.simpleName(fullName);
 
 		DynamicClassDetails subclassEntity = new DynamicClassDetails(
 				simpleName, fullName, Object.class,

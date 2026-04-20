@@ -128,9 +128,9 @@ class HbmCollectionFieldFactory {
 		if (componentClassName == null) {
 			return null;
 		}
-		String fullComponentName = HbmBuildContext.resolveClassName(componentClassName, defaultPackage);
+		String fullComponentName = HbmTypeResolver.resolveClassName(componentClassName, defaultPackage);
 		ClassDetails componentClass = ctx.resolveOrCreateClassDetails(
-				HbmBuildContext.simpleName(fullComponentName), fullComponentName);
+				HbmTypeResolver.simpleName(fullComponentName), fullComponentName);
 		if (componentClass instanceof DynamicClassDetails dynamicComponent) {
 			HbmComponentBuilder.buildEmbeddableFromCompositeElement(
 					dynamicComponent, compositeElement, defaultPackage, ctx);
@@ -158,9 +158,9 @@ class HbmCollectionFieldFactory {
 		if (targetClassName == null) {
 			return null;
 		}
-		String fullTargetName = HbmBuildContext.resolveClassName(targetClassName, defaultPackage);
+		String fullTargetName = HbmTypeResolver.resolveClassName(targetClassName, defaultPackage);
 		ClassDetails targetClass = ctx.resolveOrCreateClassDetails(
-				HbmBuildContext.simpleName(fullTargetName), fullTargetName);
+				HbmTypeResolver.simpleName(fullTargetName), fullTargetName);
 		DynamicFieldDetails field = ctx.createCollectionField(
 				entityClass, name, targetClass, collectionInterfaceName);
 		HbmCollectionMetadataApplier.addKeyJoinColumns(field, key, ctx);
@@ -185,9 +185,9 @@ class HbmCollectionFieldFactory {
 		if (targetClassName == null || targetClassName.isEmpty()) {
 			return null;
 		}
-		String fullTargetName = HbmBuildContext.resolveClassName(targetClassName, defaultPackage);
+		String fullTargetName = HbmTypeResolver.resolveClassName(targetClassName, defaultPackage);
 		ClassDetails targetClass = ctx.resolveOrCreateClassDetails(
-				HbmBuildContext.simpleName(fullTargetName), fullTargetName);
+				HbmTypeResolver.simpleName(fullTargetName), fullTargetName);
 		DynamicFieldDetails field = ctx.createCollectionField(
 				entityClass, name, targetClass, collectionInterfaceName);
 		ManyToManyJpaAnnotation m2mAnnotation =
@@ -238,9 +238,9 @@ class HbmCollectionFieldFactory {
 		if (targetClassName == null) {
 			return null;
 		}
-		String fullTargetName = HbmBuildContext.resolveClassName(targetClassName, defaultPackage);
+		String fullTargetName = HbmTypeResolver.resolveClassName(targetClassName, defaultPackage);
 		ClassDetails targetClass = ctx.resolveOrCreateClassDetails(
-				HbmBuildContext.simpleName(fullTargetName), fullTargetName);
+				HbmTypeResolver.simpleName(fullTargetName), fullTargetName);
 		DynamicFieldDetails field = ctx.createMapField(entityClass, name, keyClass, targetClass);
 		HbmCollectionMetadataApplier.addKeyJoinColumns(field, key, ctx);
 		OneToManyJpaAnnotation o2mAnnotation =
@@ -264,9 +264,9 @@ class HbmCollectionFieldFactory {
 		if (targetClassName == null || targetClassName.isEmpty()) {
 			return null;
 		}
-		String fullTargetName = HbmBuildContext.resolveClassName(targetClassName, defaultPackage);
+		String fullTargetName = HbmTypeResolver.resolveClassName(targetClassName, defaultPackage);
 		ClassDetails targetClass = ctx.resolveOrCreateClassDetails(
-				HbmBuildContext.simpleName(fullTargetName), fullTargetName);
+				HbmTypeResolver.simpleName(fullTargetName), fullTargetName);
 		DynamicFieldDetails field = ctx.createMapField(entityClass, name, keyClass, targetClass);
 		ManyToManyJpaAnnotation m2mAnnotation =
 				JpaAnnotations.MANY_TO_MANY.createUsage(ctx.getModelsContext());

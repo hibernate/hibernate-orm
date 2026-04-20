@@ -51,12 +51,12 @@ public class HbmComponentBuilder {
 		String componentClassName = component.getClazz();
 		if (componentClassName == null || componentClassName.isEmpty()) {
 			// No class specified — synthesize from entity + field name
-			String entitySimple = HbmBuildContext.simpleName(entityClass.getClassName());
+			String entitySimple = HbmTypeResolver.simpleName(entityClass.getClassName());
 			componentClassName = entitySimple + fieldName.substring(0, 1).toUpperCase()
 					+ fieldName.substring(1);
 		}
-		String fullClassName = HbmBuildContext.resolveClassName(componentClassName, defaultPackage);
-		String simpleName = HbmBuildContext.simpleName(fullClassName);
+		String fullClassName = HbmTypeResolver.resolveClassName(componentClassName, defaultPackage);
+		String simpleName = HbmTypeResolver.simpleName(fullClassName);
 
 		// Create the @Embeddable class
 		DynamicClassDetails embeddableClass = new DynamicClassDetails(
@@ -133,8 +133,8 @@ public class HbmComponentBuilder {
 		if (className == null) {
 			return;
 		}
-		String fullName = HbmBuildContext.resolveClassName(className, defaultPackage);
-		String simpleName = HbmBuildContext.simpleName(fullName);
+		String fullName = HbmTypeResolver.resolveClassName(className, defaultPackage);
+		String simpleName = HbmTypeResolver.simpleName(fullName);
 
 		DynamicClassDetails nestedClass = new DynamicClassDetails(
 				simpleName, fullName, Object.class,

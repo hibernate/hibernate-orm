@@ -168,7 +168,7 @@ public class HbmCollectionBuilder {
 				"hibernate.collection.tag", "array");
 		String elementClass = array.getElementClass();
 		if (elementClass != null && !elementClass.isEmpty()) {
-			String fullElementClass = HbmBuildContext.resolveClassName(elementClass, defaultPackage);
+			String fullElementClass = HbmTypeResolver.resolveClassName(elementClass, defaultPackage);
 			ctx.addFieldMetaAttribute(entityClass.getClassName(), array.getName(),
 					"hibernate.array.element-class", fullElementClass);
 		}

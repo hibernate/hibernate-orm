@@ -654,7 +654,7 @@ public class HbmEntityAnnotationBuilder {
 				String alias = returnType.getAlias();
 				String returnClass = returnType.getClazz();
 				if (returnClass != null && !returnClass.isEmpty()) {
-					returnClass = HbmBuildContext.resolveClassName(
+					returnClass = HbmTypeResolver.resolveClassName(
 							returnClass, ctx.getDefaultPackage());
 				}
 				if (alias != null && !alias.isEmpty()) {
@@ -680,7 +680,7 @@ public class HbmEntityAnnotationBuilder {
 				if (role != null && role.contains(".")) {
 					String roleClass = role.substring(0, role.lastIndexOf('.'));
 					String roleProperty = role.substring(role.lastIndexOf('.') + 1);
-					String resolvedClass = HbmBuildContext.resolveClassName(
+					String resolvedClass = HbmTypeResolver.resolveClassName(
 							roleClass, ctx.getDefaultPackage());
 					role = resolvedClass + "." + roleProperty;
 				}
@@ -743,7 +743,7 @@ public class HbmEntityAnnotationBuilder {
 					HibernateAnnotations.CONCRETE_PROXY.createUsage(
 							ctx.getModelsContext()));
 			// Add proxy interface to implements list if it differs from the entity class
-			String proxyFqn = HbmBuildContext.resolveClassName(proxy, ctx.getDefaultPackage());
+			String proxyFqn = HbmTypeResolver.resolveClassName(proxy, ctx.getDefaultPackage());
 			if (!proxyFqn.equals(entityClass.getClassName())) {
 				ctx.addClassMetaAttribute(entityClass.getClassName(), "implements", proxyFqn);
 				ctx.addClassMetaAttribute(entityClass.getClassName(), "hibernate.proxy", proxyFqn);

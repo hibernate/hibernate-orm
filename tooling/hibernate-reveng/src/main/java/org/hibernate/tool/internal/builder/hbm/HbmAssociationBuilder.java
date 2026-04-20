@@ -70,9 +70,9 @@ public class HbmAssociationBuilder {
 				targetClassName = name.substring(0, 1).toUpperCase() + name.substring(1);
 			}
 		}
-		String fullTargetName = HbmBuildContext.resolveClassName(targetClassName, defaultPackage);
+		String fullTargetName = HbmTypeResolver.resolveClassName(targetClassName, defaultPackage);
 		ClassDetails targetClass = ctx.resolveOrCreateClassDetails(
-				HbmBuildContext.simpleName(fullTargetName), fullTargetName);
+				HbmTypeResolver.simpleName(fullTargetName), fullTargetName);
 
 		TypeDetails fieldType = new ClassTypeDetailsImpl(
 				targetClass, TypeDetails.Kind.CLASS);
@@ -162,9 +162,9 @@ public class HbmAssociationBuilder {
 				targetClassName = name.substring(0, 1).toUpperCase() + name.substring(1);
 			}
 		}
-		String fullTargetName = HbmBuildContext.resolveClassName(targetClassName, defaultPackage);
+		String fullTargetName = HbmTypeResolver.resolveClassName(targetClassName, defaultPackage);
 		ClassDetails targetClass = ctx.resolveOrCreateClassDetails(
-				HbmBuildContext.simpleName(fullTargetName), fullTargetName);
+				HbmTypeResolver.simpleName(fullTargetName), fullTargetName);
 
 		TypeDetails fieldType = new ClassTypeDetailsImpl(
 				targetClass, TypeDetails.Kind.CLASS);
@@ -272,7 +272,7 @@ public class HbmAssociationBuilder {
 			AnyDiscriminatorValueAnnotation dvAnnotation =
 					HibernateAnnotations.ANY_DISCRIMINATOR_VALUE.createUsage(ctx.getModelsContext());
 			dvAnnotation.discriminator(mv.getValue());
-			String entityClassName = HbmBuildContext.resolveClassName(mv.getClazz(), defaultPackage);
+			String entityClassName = HbmTypeResolver.resolveClassName(mv.getClazz(), defaultPackage);
 			try {
 				dvAnnotation.entity(Class.forName(entityClassName));
 			} catch (ClassNotFoundException e) {

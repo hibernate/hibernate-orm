@@ -24,7 +24,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.api.reveng.RevengDialect;
 import org.hibernate.tool.api.reveng.RevengDialectFactory;
-import org.hibernate.tool.internal.reveng.dialect.JDBCMetaDataDialect;
+import org.hibernate.tool.internal.reveng.dialect.JDBCRevengDialect;
 import org.hibernate.tool.test.utils.JUnitUtil;
 import org.hibernate.tool.test.utils.JdbcUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -61,7 +61,7 @@ public class TestCase {
 
 	@Test
 	public void testExportedKeys() {	
-		RevengDialect dialect = new JDBCMetaDataDialect();
+		RevengDialect dialect = new JDBCRevengDialect();
 		StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
 		ServiceRegistry serviceRegistry = ssrb.build();
 		ConnectionProvider connectionProvider = 
@@ -122,7 +122,7 @@ public class TestCase {
 	
 	@Test
 	public void testCaseTest() {
-		RevengDialect dialect = new JDBCMetaDataDialect();
+		RevengDialect dialect = new JDBCRevengDialect();
 		ConnectionProvider connectionProvider = 
 				serviceRegistry.getService(ConnectionProvider.class);
 		dialect.configure(connectionProvider);

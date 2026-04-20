@@ -39,7 +39,7 @@ import org.jboss.logging.Logger;
  * @author max
  *
  */
-public abstract class AbstractMetaDataDialect implements RevengDialect {
+public abstract class AbstractRevengDialect implements RevengDialect {
 
     protected final Logger log = Logger.getLogger(this.getClass());
 

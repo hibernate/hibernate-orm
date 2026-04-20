@@ -37,11 +37,11 @@ import org.hibernate.tool.internal.util.TableNameQualifier;
  *  
  */
 
-public class OracleMetaDataDialect extends AbstractMetaDataDialect {
+public class OracleRevengDialect extends AbstractRevengDialect {
 
 
 
-    public OracleMetaDataDialect() {
+    public OracleRevengDialect() {
         super();
     }
 

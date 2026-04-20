@@ -31,7 +31,7 @@ import org.hibernate.tool.internal.util.TableNameQualifier;
  * @author Dmitry Geraskov
  *
  */
-public class HSQLMetaDataDialect extends JDBCMetaDataDialect {
+public class HSQLRevengDialect extends JDBCRevengDialect {
 
     private String quote(String columnName) {
         if(columnName==null) return null;

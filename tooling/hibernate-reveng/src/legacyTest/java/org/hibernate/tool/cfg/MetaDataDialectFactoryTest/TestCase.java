@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.hibernate.tool.cfg.MetaDataDialectFactoryTest;
+package org.hibernate.tool.cfg.RevengDialectFactoryTest;
 
 import org.hibernate.dialect.*;
 import org.hibernate.tool.api.reveng.RevengDialectFactory;
@@ -42,38 +42,38 @@ public class TestCase {
 	}
 	
 	@Test
-	public void testCreateMetaDataDialect() {
+	public void testCreateRevengDialect() {
 		assertSameClass(
 				"Generic metadata for dialects with no specifics", 
-				JDBCMetaDataDialect.class, 
+				JDBCRevengDialect.class, 
 				RevengDialectFactory.createMetaDataDialect(
 						new NoNameDialect(), 
 						new Properties()));
 		assertSameClass(
-				H2MetaDataDialect.class, 
+				H2RevengDialect.class, 
 				RevengDialectFactory.createMetaDataDialect(new H2NamedDialect(), new Properties()));
 		assertSameClass(
-				OracleMetaDataDialect.class, 
+				OracleRevengDialect.class, 
 				RevengDialectFactory.createMetaDataDialect(
 						new OracleDialect(), 
 						new Properties()));		
 		assertSameClass(
-				MySQLMetaDataDialect.class, 
+				MySQLRevengDialect.class, 
 				RevengDialectFactory.createMetaDataDialect(
 						new MySQLDialect(), 
 						new Properties()));
 		Properties p = new Properties();
 		p.setProperty(
 				"hibernatetool.metadatadialect", 
-				H2MetaDataDialect.class.getCanonicalName());
+				H2RevengDialect.class.getCanonicalName());
 		assertSameClass(
 				"property should override specific dialect", 
-				H2MetaDataDialect.class, 
+				H2RevengDialect.class, 
 				RevengDialectFactory.createMetaDataDialect(new MySQLDialect(), p));
 	}
 
 	@Test
-	public void testCreateMetaDataDialectNonExistingOverride() {
+	public void testCreateRevengDialectNonExistingOverride() {
 		Properties p = new Properties();
 		p.setProperty("hibernatetool.metadatadialect", "DoesNotExists");
 		try {
@@ -93,16 +93,16 @@ public class TestCase {
 				null, 
 				RevengDialectFactory.fromDialect(new NoNameDialect()));	
 		assertSameClass(
-				OracleMetaDataDialect.class, 
+				OracleRevengDialect.class, 
 				RevengDialectFactory.fromDialect(new OracleDialect()));
 		assertSameClass(
-				MySQLMetaDataDialect.class, 
+				MySQLRevengDialect.class, 
 				RevengDialectFactory.fromDialect(new MySQLDialect()));
 		assertSameClass(
-				H2MetaDataDialect.class, 
+				H2RevengDialect.class, 
 				RevengDialectFactory.fromDialect(new H2Dialect()));
 		assertSameClass(
-				HSQLMetaDataDialect.class,
+				HSQLRevengDialect.class,
 				RevengDialectFactory.fromDialect(new HSQLDialect()));
 		
 	}
@@ -113,19 +113,19 @@ public class TestCase {
 				null, 
 				RevengDialectFactory.fromDialectName("BlahBlah"));
 		assertSameClass(
-				OracleMetaDataDialect.class, 
+				OracleRevengDialect.class, 
 				RevengDialectFactory.fromDialectName("mYorAcleDialect"));
 		assertSameClass(
-				OracleMetaDataDialect.class, 
+				OracleRevengDialect.class, 
 				RevengDialectFactory.fromDialectName(OracleDialect.class.getName()));
 		assertSameClass(
-				MySQLMetaDataDialect.class, 
+				MySQLRevengDialect.class, 
 				RevengDialectFactory.fromDialectName(MySQLDialect.class.getName()));
 		assertSameClass(
-				H2MetaDataDialect.class, 
+				H2RevengDialect.class, 
 				RevengDialectFactory.fromDialectName(H2Dialect.class.getName()));
 		assertSameClass(
-				HSQLMetaDataDialect.class, 
+				HSQLRevengDialect.class, 
 				RevengDialectFactory.fromDialectName(HSQLDialect.class.getName()));
 		
 	}

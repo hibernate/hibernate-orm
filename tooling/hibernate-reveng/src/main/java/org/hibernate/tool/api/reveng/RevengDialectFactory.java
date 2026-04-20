@@ -27,12 +27,12 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.tool.internal.reveng.dialect.H2MetaDataDialect;
-import org.hibernate.tool.internal.reveng.dialect.HSQLMetaDataDialect;
-import org.hibernate.tool.internal.reveng.dialect.JDBCMetaDataDialect;
-import org.hibernate.tool.internal.reveng.dialect.MySQLMetaDataDialect;
-import org.hibernate.tool.internal.reveng.dialect.OracleMetaDataDialect;
-import org.hibernate.tool.internal.reveng.dialect.SQLServerMetaDataDialect;
+import org.hibernate.tool.internal.reveng.dialect.H2RevengDialect;
+import org.hibernate.tool.internal.reveng.dialect.HSQLRevengDialect;
+import org.hibernate.tool.internal.reveng.dialect.JDBCRevengDialect;
+import org.hibernate.tool.internal.reveng.dialect.MySQLRevengDialect;
+import org.hibernate.tool.internal.reveng.dialect.OracleRevengDialect;
+import org.hibernate.tool.internal.reveng.dialect.SQLServerRevengDialect;
 
 public class RevengDialectFactory {
 
@@ -48,7 +48,7 @@ public class RevengDialectFactory {
             mdd = fromDialectName(dialect.getClass().getName());
         }
         if(mdd==null) {
-            mdd = new JDBCMetaDataDialect();
+            mdd = new JDBCRevengDialect();
         }
         return mdd;
     }
@@ -64,7 +64,7 @@ public class RevengDialectFactory {
             }
             catch (Throwable e) {
                 throw new RuntimeException(
-                        "Could not load MetaDataDialect: " + property, e );
+                        "Could not load RevengDialect: " + property, e );
             }
         }
         else {
@@ -75,19 +75,19 @@ public class RevengDialectFactory {
     public static RevengDialect fromDialect(Dialect dialect) {
         if(dialect!=null) {
             if(dialect instanceof OracleDialect) {
-                return new OracleMetaDataDialect();
+                return new OracleRevengDialect();
             }
             else if (dialect instanceof H2Dialect) {
-                return new H2MetaDataDialect();
+                return new H2RevengDialect();
             }
             else if (dialect instanceof MySQLDialect) {
-                return new MySQLMetaDataDialect();
+                return new MySQLRevengDialect();
             }
             else if (dialect instanceof HSQLDialect) {
-                return new HSQLMetaDataDialect();
+                return new HSQLRevengDialect();
             }
             else if (dialect instanceof SQLServerDialect) {
-                return new SQLServerMetaDataDialect();
+                return new SQLServerRevengDialect();
             }
         }
         return null;
@@ -95,19 +95,19 @@ public class RevengDialectFactory {
 
     public static RevengDialect fromDialectName(String dialect) {
         if (dialect.toLowerCase().contains("oracle")) {
-            return new OracleMetaDataDialect();
+            return new OracleRevengDialect();
         }
         if (dialect.toLowerCase().contains("mysql")) {
-            return new MySQLMetaDataDialect();
+            return new MySQLRevengDialect();
         }
         if (dialect.toLowerCase().contains("h2")) {
-            return new H2MetaDataDialect();
+            return new H2RevengDialect();
         }
         if (dialect.toLowerCase().contains("hsql")) {
-            return new HSQLMetaDataDialect();
+            return new HSQLRevengDialect();
         }
         if (dialect.toLowerCase().contains("sqlserver")) {
-            return new SQLServerMetaDataDialect();
+            return new SQLServerRevengDialect();
         }
         return null;
     }

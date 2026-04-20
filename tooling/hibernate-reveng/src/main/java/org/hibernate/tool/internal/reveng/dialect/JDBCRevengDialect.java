@@ -31,7 +31,7 @@ import org.hibernate.tool.internal.util.TableNameQualifier;
  * @author Max Rydahl Andersen
  *
  */
-public class JDBCMetaDataDialect extends AbstractMetaDataDialect {
+public class JDBCRevengDialect extends AbstractRevengDialect {
 
     public Iterator<Map<String,Object>> getTables(String xcatalog, String xschema, String xtable) {
         try {

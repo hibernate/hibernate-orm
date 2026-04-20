@@ -26,7 +26,7 @@ import java.util.Map;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.tool.api.reveng.RevengDialect;
 
-public class CachedMetaDataDialect implements RevengDialect {
+public class CachedRevengDialect implements RevengDialect {
 
     RevengDialect delegate;
     private final Map<StringKey, List<Map<String, Object>>> cachedTables = new HashMap<>();
@@ -36,7 +36,7 @@ public class CachedMetaDataDialect implements RevengDialect {
     private final Map<StringKey, List<Map<String, Object>>> cachedIndexInfo = new HashMap<>();
     private final Map<StringKey, List<Map<String, Object>>> cachedPrimaryKeyStrategyName = new HashMap<>();
 
-    public CachedMetaDataDialect(RevengDialect realMetaData) {
+    public CachedRevengDialect(RevengDialect realMetaData) {
         this.delegate = realMetaData;
     }
 
@@ -187,8 +187,8 @@ public class CachedMetaDataDialect implements RevengDialect {
         private StringKey target;
         private Map<StringKey, List<Map<String, Object>>> destination;
         private Iterator<Map<String, Object>> realIterator;
-        final CachedMetaDataDialect owner;
-        public CachedIterator(CachedMetaDataDialect owner, Map<StringKey, List<Map<String, Object>>> destination, StringKey sk, List<Map<String, Object>> cache, Iterator<Map<String, Object>> realIterator) {
+        final CachedRevengDialect owner;
+        public CachedIterator(CachedRevengDialect owner, Map<StringKey, List<Map<String, Object>>> destination, StringKey sk, List<Map<String, Object>> cache, Iterator<Map<String, Object>> realIterator) {
             this.owner = owner;
             this.destination = destination;
             this.target = sk;
@@ -196,7 +196,7 @@ public class CachedMetaDataDialect implements RevengDialect {
             this.cache = cache;
         }
 
-        public CachedMetaDataDialect getOwner() {
+        public CachedRevengDialect getOwner() {
             return owner;
         }
 
@@ -206,7 +206,7 @@ public class CachedMetaDataDialect implements RevengDialect {
 
         public Map<String, Object> next() {
             Map<String, Object> map = realIterator.next();
-            cache.add( new HashMap<>( map )); // need to copy since MetaDataDialect might reuse it.
+            cache.add( new HashMap<>( map )); // need to copy since RevengDialect might reuse it.
             return map;
         }
 
@@ -216,7 +216,7 @@ public class CachedMetaDataDialect implements RevengDialect {
 
         public void store() {
             destination.put( target, cache );
-            if(realIterator.hasNext()) throw new IllegalStateException("CachedMetaDataDialect have not been fully initialized!");
+            if(realIterator.hasNext()) throw new IllegalStateException("CachedRevengDialect have not been fully initialized!");
             cache = null;
             target = null;
             destination = null;

@@ -33,7 +33,7 @@ import org.hibernate.tool.util.ReflectionUtil;
  * @author Max Rydahl Andersen
  *
  */
-public class H2MetaDataDialect extends JDBCMetaDataDialect {
+public class H2RevengDialect extends JDBCRevengDialect {
 
     private static final String SPKSQ_H2_1_X =
             "SELECT " +
@@ -73,7 +73,7 @@ public class H2MetaDataDialect extends JDBCMetaDataDialect {
 
     private String suggested_primary_key_strategy_query = null;
 
-    public H2MetaDataDialect() {
+    public H2RevengDialect() {
         super();
         try {
             Class<?> constants = ReflectionUtil.classForName( "org.h2.engine.Constants" );

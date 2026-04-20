@@ -58,6 +58,10 @@ public class UnifiedAnyDiscriminatorConverter<O,R> extends DiscriminatorConverte
 		} );
 	}
 
+	public boolean hasImplicitValueStrategy() {
+		return implicitValueStrategy != null;
+	}
+
 	private ImplicitDiscriminatorStrategy resolveImplicitValueStrategy(
 			ImplicitDiscriminatorStrategy implicitValueStrategy,
 			Map<DiscriminatorValue, String> explicitValueMappings) {

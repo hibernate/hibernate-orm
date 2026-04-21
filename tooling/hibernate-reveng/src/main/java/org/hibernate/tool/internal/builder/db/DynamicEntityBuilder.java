@@ -15,13 +15,10 @@
  */
 package org.hibernate.tool.internal.builder.db;
 
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
 import org.hibernate.tool.internal.descriptor.CompositeIdDescriptor;
 import org.hibernate.tool.internal.descriptor.EmbeddedFieldDescriptor;
 import org.hibernate.tool.internal.descriptor.ForeignKeyDescriptor;
-import org.hibernate.tool.internal.descriptor.IndexDescriptor;
-import org.hibernate.tool.internal.descriptor.InheritanceDescriptor;
 import org.hibernate.tool.internal.descriptor.ManyToManyDescriptor;
 import org.hibernate.tool.internal.descriptor.OneToManyDescriptor;
 import org.hibernate.tool.internal.descriptor.OneToOneDescriptor;
@@ -34,13 +31,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.hibernate.boot.models.annotations.internal.EntityJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.DiscriminatorColumnJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.DiscriminatorValueJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.InheritanceJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.PrimaryKeyJoinColumnJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.TableJpaAnnotation;
-import org.hibernate.boot.models.annotations.internal.UniqueConstraintJpaAnnotation;
 import org.hibernate.models.internal.BasicModelsContextImpl;
 import org.hibernate.models.internal.MutableClassDetailsRegistry;
 import org.hibernate.models.internal.SimpleClassLoading;
@@ -83,272 +73,198 @@ public class DynamicEntityBuilder {
 	 * @return ClassDetails with JPA annotations attached
 	 */
 	public ClassDetails createEntityFromTable(TableDescriptor tableMetadata) {
-		String className = qualifiedName(tableMetadata.getEntityPackage(), tableMetadata.getEntityClassName());
-
-		// Resolve parent class if this is a subclass
-		ClassDetails superClass = null;
-		if (tableMetadata.getParentEntityClassName() != null) {
-			String parentClassName = qualifiedName(tableMetadata.getParentEntityPackage(), tableMetadata.getParentEntityClassName());
-			superClass = resolveOrCreateClassDetails(
-				tableMetadata.getParentEntityClassName(),
-				parentClassName
-			);
-		}
-
-		// Create the dynamic class with both simple name and fully qualified class name
-		DynamicClassDetails entityClass = new DynamicClassDetails(
-			className,
-			className,
-			Object.class,
-			false,
-			superClass,
-			null,
-			modelsContext
-		);
-
-		// Add @Entity annotation
-		addEntityAnnotation(entityClass);
-
-		// Add @Table annotation
-		addTableAnnotation(entityClass, tableMetadata);
-
-		// Add inheritance annotations
-		addInheritanceAnnotations(entityClass, tableMetadata);
-
-		// Add fields for each column:
-		// - skip FK columns (handled by ManyToOne/OneToOne)
-		// - PK columns in composite ID: add WITHOUT @Id (used by non-annotated mode)
-		// - Constrained OneToOne PK/FK columns: add WITH @Id (needs @Id + @MapsId)
-		boolean hasCompositeId = tableMetadata.getCompositeId() != null;
-		Set<String> constrainedOneToOneFkColumns = new HashSet<>();
-		for (OneToOneDescriptor o2o : tableMetadata.getOneToOnes()) {
-			if (o2o.isConstrained()) {
-				constrainedOneToOneFkColumns.addAll(o2o.getForeignKeyColumnNames());
-			}
-		}
-		for (ColumnDescriptor columnMetadata : tableMetadata.getColumns()) {
-			boolean isFk = tableMetadata.isForeignKeyColumn(columnMetadata.getColumnName());
-			boolean isPk = columnMetadata.isPrimaryKey();
-			boolean isConstrainedO2O = constrainedOneToOneFkColumns.contains(columnMetadata.getColumnName());
-			// Skip FK columns, unless it's a constrained one-to-one PK (needs @Id)
-			if (isFk && !(isPk && isConstrainedO2O)) continue;
-			// Skip PK columns in composite ID — they're in the embedded ID class
-			if (hasCompositeId && isPk) continue;
-			BasicFieldBuilder.addBasicField(entityClass, columnMetadata, modelsContext, false);
-		}
-
-		// Detect FK columns that are part of the composite PK (key-many-to-one)
-		// Only when preferBasicCompositeIds is false — otherwise keep basic attribute overrides
-		Set<String> keyManyToOneFkColumns = new HashSet<>();
-		if (tableMetadata.getCompositeId() != null && !preferBasicCompositeIds) {
-			Set<String> pkColumnNames = new HashSet<>();
-			for (ColumnDescriptor col : tableMetadata.getColumns()) {
-				if (col.isPrimaryKey()) {
-					pkColumnNames.add(col.getColumnName());
-				}
-			}
-			CompositeIdDescriptor compositeId = tableMetadata.getCompositeId();
-			for (ForeignKeyDescriptor fkMetadata : tableMetadata.getForeignKeys()) {
-				List<String> fkCols = fkMetadata.getForeignKeyColumnNames();
-				if (pkColumnNames.containsAll(fkCols)) {
-					// All FK columns are part of the composite PK — convert to key-many-to-one
-					compositeId.addKeyManyToOne(
-						fkMetadata.getFieldName(),
-						fkCols,
-						fkMetadata.getTargetEntityClassName(),
-						fkMetadata.getTargetEntityPackage());
-					// Remove the basic attribute overrides for all FK columns
-					for (String fkCol : fkCols) {
-						compositeId.getAttributeOverrides().removeIf(
-							ao -> ao.getColumnName().equals(fkCol));
-						keyManyToOneFkColumns.add(fkCol);
-					}
-				}
-			}
-		}
-
-		// When preferBasicCompositeIds is true, FK columns that overlap with
-		// the composite PK stay as basic key-properties. The ManyToOne field is
-		// still created but its @JoinColumn must be insertable=false, updatable=false.
-		if (tableMetadata.getCompositeId() != null && preferBasicCompositeIds) {
-			Set<String> pkColumnNames = new HashSet<>();
-			for (ColumnDescriptor col : tableMetadata.getColumns()) {
-				if (col.isPrimaryKey()) {
-					pkColumnNames.add(col.getColumnName());
-				}
-			}
-			for (ForeignKeyDescriptor fkMetadata : tableMetadata.getForeignKeys()) {
-				List<String> fkCols = fkMetadata.getForeignKeyColumnNames();
-				if (pkColumnNames.containsAll(fkCols)) {
-					fkMetadata.partOfCompositeKey(true);
-				}
-			}
-		}
-
-		// Add ManyToOne relationship fields (skip FKs that became key-many-to-one)
-		for (ForeignKeyDescriptor fkMetadata : tableMetadata.getForeignKeys()) {
-			List<String> fkCols = fkMetadata.getForeignKeyColumnNames();
-			if (keyManyToOneFkColumns.containsAll(fkCols)) {
-				continue;
-			}
-			String targetClassName = qualifiedName(fkMetadata.getTargetEntityPackage(),
-				fkMetadata.getTargetEntityClassName());
-			ClassDetails targetClassDetails = resolveOrCreateClassDetails(
-				fkMetadata.getTargetEntityClassName(), targetClassName);
-			ManyToOneFieldBuilder.buildManyToOneField(
-				entityClass, fkMetadata, targetClassDetails, modelsContext);
-		}
-
-		// Add OneToMany relationship fields (deduplicate names to avoid collisions)
-		for (OneToManyDescriptor o2mMetadata : tableMetadata.getOneToManys()) {
-			String elementClassName = qualifiedName(o2mMetadata.getElementEntityPackage(),
-				o2mMetadata.getElementEntityClassName());
-			ClassDetails elementClassDetails = resolveOrCreateClassDetails(
-				o2mMetadata.getElementEntityClassName(), elementClassName);
-			String uniqueName = makeUniqueFieldName(entityClass, o2mMetadata.getFieldName());
-			OneToManyFieldBuilder.buildOneToManyField(
-				entityClass, uniqueName, o2mMetadata, elementClassDetails, modelsContext);
-		}
-
-		// Add OneToOne relationship fields
-		for (OneToOneDescriptor o2oMetadata : tableMetadata.getOneToOnes()) {
-			String targetClassName = qualifiedName(o2oMetadata.getTargetEntityPackage(),
-				o2oMetadata.getTargetEntityClassName());
-			ClassDetails targetClassDetails = resolveOrCreateClassDetails(
-				o2oMetadata.getTargetEntityClassName(), targetClassName);
-			OneToOneFieldBuilder.buildOneToOneField(
-				entityClass, o2oMetadata, targetClassDetails, modelsContext);
-		}
-
-		// Add ManyToMany relationship fields (deduplicate names to avoid collisions)
-		for (ManyToManyDescriptor m2mMetadata : tableMetadata.getManyToManys()) {
-			String targetClassName = qualifiedName(m2mMetadata.getTargetEntityPackage(),
-				m2mMetadata.getTargetEntityClassName());
-			ClassDetails targetClassDetails = resolveOrCreateClassDetails(
-				m2mMetadata.getTargetEntityClassName(), targetClassName);
-			String uniqueName = makeUniqueFieldName(entityClass, m2mMetadata.getFieldName());
-			ManyToManyFieldBuilder.buildManyToManyField(
-				entityClass, uniqueName, m2mMetadata, targetClassDetails, modelsContext);
-		}
-
-		// Add Embedded fields
-		for (EmbeddedFieldDescriptor embeddedMetadata : tableMetadata.getEmbeddedFields()) {
-			String embeddableClassName = qualifiedName(embeddedMetadata.getEmbeddablePackage(),
-				embeddedMetadata.getEmbeddableClassName());
-			ClassDetails embeddableClassDetails = resolveOrCreateClassDetails(
-				embeddedMetadata.getEmbeddableClassName(), embeddableClassName);
-			EmbeddedFieldBuilder.buildEmbeddedField(
-				entityClass, embeddedMetadata, embeddableClassDetails, modelsContext);
-		}
-
-		// Add @EmbeddedId composite key field
-		if (tableMetadata.getCompositeId() != null) {
-			CompositeIdDescriptor compositeId = tableMetadata.getCompositeId();
-			String idClassName = qualifiedName(compositeId.getIdClassPackage(), compositeId.getIdClassName());
-			ClassDetails idClassDetails = resolveOrCreateClassDetails(
-				compositeId.getIdClassName(), idClassName);
-			CompositeIdFieldBuilder.buildCompositeIdField(
-				entityClass, compositeId, idClassDetails, modelsContext);
-			embeddableClassDetails.add(idClassDetails);
-		}
-
-		// Register in the context
+		String className = qualifiedName(
+				tableMetadata.getEntityPackage(),
+				tableMetadata.getEntityClassName());
+		DynamicClassDetails entityClass = createEntityClass(className, tableMetadata);
+		EntityAnnotationApplier.addEntityAnnotation(entityClass, modelsContext);
+		EntityAnnotationApplier.addTableAnnotation(
+				entityClass, tableMetadata, modelsContext);
+		EntityAnnotationApplier.addInheritanceAnnotations(
+				entityClass, tableMetadata, modelsContext);
+		buildBasicFields(entityClass, tableMetadata);
+		Set<String> keyManyToOneFkColumns =
+				handleCompositeKeyForeignKeys(tableMetadata);
+		buildRelationshipFields(entityClass, tableMetadata, keyManyToOneFkColumns);
+		buildCompositeId(entityClass, tableMetadata);
 		registerClassDetails(entityClass);
-
-		// Store the original table metadata for later use (e.g., documentation)
 		tableMetadataByClassName.put(className, tableMetadata);
-
-		// Extract meta-attributes from table and column metadata
 		extractMetaAttributes(className, tableMetadata);
-
 		return entityClass;
 	}
 
-	private void addEntityAnnotation(DynamicClassDetails entityClass) {
-        EntityJpaAnnotation entityAnnotation = JpaAnnotations.ENTITY.createUsage(modelsContext);
-		entityClass.addAnnotationUsage(entityAnnotation);
+	private DynamicClassDetails createEntityClass(
+			String className, TableDescriptor tableMetadata) {
+		ClassDetails superClass = null;
+		if (tableMetadata.getParentEntityClassName() != null) {
+			String parentClassName = qualifiedName(
+					tableMetadata.getParentEntityPackage(),
+					tableMetadata.getParentEntityClassName());
+			superClass = resolveOrCreateClassDetails(
+					tableMetadata.getParentEntityClassName(), parentClassName);
+		}
+		return new DynamicClassDetails(
+				className, className, Object.class,
+				false, superClass, null, modelsContext);
 	}
 
-	private void addTableAnnotation(DynamicClassDetails entityClass, TableDescriptor tableMetadata) {
-        TableJpaAnnotation tableAnnotation = JpaAnnotations.TABLE.createUsage(modelsContext);
-		tableAnnotation.name(tableMetadata.getTableName());
-
-		if (tableMetadata.getSchema() != null) {
-			tableAnnotation.schema(tableMetadata.getSchema());
-		}
-		if (tableMetadata.getCatalog() != null) {
-			tableAnnotation.catalog(tableMetadata.getCatalog());
-		}
-
-		// Add unique constraints from unique indexes, excluding PK-only indexes
-		Set<String> pkColumnNames = new HashSet<>();
+	private void buildBasicFields(
+			DynamicClassDetails entityClass, TableDescriptor tableMetadata) {
+		boolean hasCompositeId = tableMetadata.getCompositeId() != null;
+		Set<String> constrainedO2OCols = collectConstrainedOneToOneColumns(tableMetadata);
 		for (ColumnDescriptor col : tableMetadata.getColumns()) {
-			if (col.isPrimaryKey()) {
-				pkColumnNames.add(col.getColumnName());
-			}
+			boolean isFk = tableMetadata.isForeignKeyColumn(col.getColumnName());
+			boolean isPk = col.isPrimaryKey();
+			boolean isConstrainedO2O = constrainedO2OCols.contains(col.getColumnName());
+			if (isFk && !(isPk && isConstrainedO2O)) continue;
+			if (hasCompositeId && isPk) continue;
+			BasicFieldBuilder.addBasicField(entityClass, col, modelsContext, false);
 		}
-		List<IndexDescriptor> uniqueIndexes = new ArrayList<>();
-		for (IndexDescriptor index : tableMetadata.getIndexes()) {
-			if (index.isUnique() && !pkColumnNames.containsAll(index.getColumnNames())) {
-				uniqueIndexes.add(index);
-			}
-		}
-		if (!uniqueIndexes.isEmpty()) {
-			jakarta.persistence.UniqueConstraint[] uniqueConstraints =
-				new jakarta.persistence.UniqueConstraint[uniqueIndexes.size()];
-			for (int i = 0; i < uniqueIndexes.size(); i++) {
-				IndexDescriptor idx = uniqueIndexes.get(i);
-				UniqueConstraintJpaAnnotation uc =
-					JpaAnnotations.UNIQUE_CONSTRAINT.createUsage(modelsContext);
-				uc.name(idx.getIndexName());
-				uc.columnNames(idx.getColumnNames().toArray(new String[0]));
-				uniqueConstraints[i] = uc;
-			}
-			tableAnnotation.uniqueConstraints(uniqueConstraints);
-		}
-
-		entityClass.addAnnotationUsage(tableAnnotation);
 	}
 
-	private void addInheritanceAnnotations(DynamicClassDetails entityClass, TableDescriptor tableMetadata) {
-
-        // Add @Inheritance on root entities
-		InheritanceDescriptor inheritance = tableMetadata.getInheritance();
-		if (inheritance != null) {
-			InheritanceJpaAnnotation inheritanceAnnotation = JpaAnnotations.INHERITANCE.createUsage(modelsContext);
-			inheritanceAnnotation.strategy(inheritance.getStrategy());
-			entityClass.addAnnotationUsage(inheritanceAnnotation);
-
-			// Add @DiscriminatorColumn on root entities with discriminator-based strategies
-			if (inheritance.getDiscriminatorColumnName() != null) {
-				DiscriminatorColumnJpaAnnotation discColAnnotation =
-					JpaAnnotations.DISCRIMINATOR_COLUMN.createUsage(modelsContext);
-				discColAnnotation.name(inheritance.getDiscriminatorColumnName());
-				if (inheritance.getDiscriminatorType() != null) {
-					discColAnnotation.discriminatorType(inheritance.getDiscriminatorType());
-				}
-				if (inheritance.getDiscriminatorColumnLength() > 0) {
-					discColAnnotation.length(inheritance.getDiscriminatorColumnLength());
-				}
-				entityClass.addAnnotationUsage(discColAnnotation);
+	private Set<String> collectConstrainedOneToOneColumns(
+			TableDescriptor tableMetadata) {
+		Set<String> result = new HashSet<>();
+		for (OneToOneDescriptor o2o : tableMetadata.getOneToOnes()) {
+			if (o2o.isConstrained()) {
+				result.addAll(o2o.getForeignKeyColumnNames());
 			}
 		}
+		return result;
+	}
 
-		// Add @DiscriminatorValue on entities in discriminator-based hierarchies
-		if (tableMetadata.getDiscriminatorValue() != null) {
-			DiscriminatorValueJpaAnnotation discValAnnotation =
-				JpaAnnotations.DISCRIMINATOR_VALUE.createUsage(modelsContext);
-			discValAnnotation.value(tableMetadata.getDiscriminatorValue());
-			entityClass.addAnnotationUsage(discValAnnotation);
+	private Set<String> handleCompositeKeyForeignKeys(
+			TableDescriptor tableMetadata) {
+		if (tableMetadata.getCompositeId() == null) {
+			return Set.of();
 		}
+		Set<String> pkColumnNames =
+				EntityAnnotationApplier.collectPrimaryKeyColumnNames(tableMetadata);
+		if (!preferBasicCompositeIds) {
+			return convertToKeyManyToOne(tableMetadata, pkColumnNames);
+		}
+		markCompositeKeyForeignKeys(tableMetadata, pkColumnNames);
+		return Set.of();
+	}
 
-		// Add @PrimaryKeyJoinColumn on subclasses in JOINED strategy
-		if (tableMetadata.getPrimaryKeyJoinColumnName() != null) {
-			PrimaryKeyJoinColumnJpaAnnotation pkJoinColAnnotation =
-				JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN.createUsage(modelsContext);
-			pkJoinColAnnotation.name(tableMetadata.getPrimaryKeyJoinColumnName());
-			entityClass.addAnnotationUsage(pkJoinColAnnotation);
+	private Set<String> convertToKeyManyToOne(
+			TableDescriptor tableMetadata, Set<String> pkColumnNames) {
+		Set<String> keyManyToOneFkColumns = new HashSet<>();
+		CompositeIdDescriptor compositeId = tableMetadata.getCompositeId();
+		for (ForeignKeyDescriptor fk : tableMetadata.getForeignKeys()) {
+			List<String> fkCols = fk.getForeignKeyColumnNames();
+			if (!pkColumnNames.containsAll(fkCols)) continue;
+			compositeId.addKeyManyToOne(
+					fk.getFieldName(), fkCols,
+					fk.getTargetEntityClassName(),
+					fk.getTargetEntityPackage());
+			for (String fkCol : fkCols) {
+				compositeId.getAttributeOverrides().removeIf(
+						ao -> ao.getColumnName().equals(fkCol));
+				keyManyToOneFkColumns.add(fkCol);
+			}
 		}
+		return keyManyToOneFkColumns;
+	}
+
+	private void markCompositeKeyForeignKeys(
+			TableDescriptor tableMetadata, Set<String> pkColumnNames) {
+		for (ForeignKeyDescriptor fk : tableMetadata.getForeignKeys()) {
+			if (pkColumnNames.containsAll(fk.getForeignKeyColumnNames())) {
+				fk.partOfCompositeKey(true);
+			}
+		}
+	}
+
+	private void buildRelationshipFields(
+			DynamicClassDetails entityClass,
+			TableDescriptor tableMetadata,
+			Set<String> keyManyToOneFkColumns) {
+		buildManyToOneFields(entityClass, tableMetadata, keyManyToOneFkColumns);
+		buildOneToManyFields(entityClass, tableMetadata);
+		buildOneToOneFields(entityClass, tableMetadata);
+		buildManyToManyFields(entityClass, tableMetadata);
+		buildEmbeddedFields(entityClass, tableMetadata);
+	}
+
+	private void buildManyToOneFields(
+			DynamicClassDetails entityClass,
+			TableDescriptor tableMetadata,
+			Set<String> keyManyToOneFkColumns) {
+		for (ForeignKeyDescriptor fk : tableMetadata.getForeignKeys()) {
+			if (keyManyToOneFkColumns.containsAll(fk.getForeignKeyColumnNames())) {
+				continue;
+			}
+			String targetClassName = qualifiedName(
+					fk.getTargetEntityPackage(), fk.getTargetEntityClassName());
+			ClassDetails target = resolveOrCreateClassDetails(
+					fk.getTargetEntityClassName(), targetClassName);
+			ManyToOneFieldBuilder.buildManyToOneField(
+					entityClass, fk, target, modelsContext);
+		}
+	}
+
+	private void buildOneToManyFields(
+			DynamicClassDetails entityClass, TableDescriptor tableMetadata) {
+		for (OneToManyDescriptor o2m : tableMetadata.getOneToManys()) {
+			String elementClassName = qualifiedName(
+					o2m.getElementEntityPackage(), o2m.getElementEntityClassName());
+			ClassDetails element = resolveOrCreateClassDetails(
+					o2m.getElementEntityClassName(), elementClassName);
+			String uniqueName = makeUniqueFieldName(entityClass, o2m.getFieldName());
+			OneToManyFieldBuilder.buildOneToManyField(
+					entityClass, uniqueName, o2m, element, modelsContext);
+		}
+	}
+
+	private void buildOneToOneFields(
+			DynamicClassDetails entityClass, TableDescriptor tableMetadata) {
+		for (OneToOneDescriptor o2o : tableMetadata.getOneToOnes()) {
+			String targetClassName = qualifiedName(
+					o2o.getTargetEntityPackage(), o2o.getTargetEntityClassName());
+			ClassDetails target = resolveOrCreateClassDetails(
+					o2o.getTargetEntityClassName(), targetClassName);
+			OneToOneFieldBuilder.buildOneToOneField(
+					entityClass, o2o, target, modelsContext);
+		}
+	}
+
+	private void buildManyToManyFields(
+			DynamicClassDetails entityClass, TableDescriptor tableMetadata) {
+		for (ManyToManyDescriptor m2m : tableMetadata.getManyToManys()) {
+			String targetClassName = qualifiedName(
+					m2m.getTargetEntityPackage(), m2m.getTargetEntityClassName());
+			ClassDetails target = resolveOrCreateClassDetails(
+					m2m.getTargetEntityClassName(), targetClassName);
+			String uniqueName = makeUniqueFieldName(entityClass, m2m.getFieldName());
+			ManyToManyFieldBuilder.buildManyToManyField(
+					entityClass, uniqueName, m2m, target, modelsContext);
+		}
+	}
+
+	private void buildEmbeddedFields(
+			DynamicClassDetails entityClass, TableDescriptor tableMetadata) {
+		for (EmbeddedFieldDescriptor emb : tableMetadata.getEmbeddedFields()) {
+			String embClassName = qualifiedName(
+					emb.getEmbeddablePackage(), emb.getEmbeddableClassName());
+			ClassDetails embClass = resolveOrCreateClassDetails(
+					emb.getEmbeddableClassName(), embClassName);
+			EmbeddedFieldBuilder.buildEmbeddedField(
+					entityClass, emb, embClass, modelsContext);
+		}
+	}
+
+	private void buildCompositeId(
+			DynamicClassDetails entityClass, TableDescriptor tableMetadata) {
+		if (tableMetadata.getCompositeId() == null) return;
+		CompositeIdDescriptor compositeId = tableMetadata.getCompositeId();
+		String idClassName = qualifiedName(
+				compositeId.getIdClassPackage(), compositeId.getIdClassName());
+		ClassDetails idClassDetails = resolveOrCreateClassDetails(
+				compositeId.getIdClassName(), idClassName);
+		CompositeIdFieldBuilder.buildCompositeIdField(
+				entityClass, compositeId, idClassDetails, modelsContext);
+		embeddableClassDetails.add(idClassDetails);
 	}
 
 	private static String qualifiedName(String packageName, String simpleName) {

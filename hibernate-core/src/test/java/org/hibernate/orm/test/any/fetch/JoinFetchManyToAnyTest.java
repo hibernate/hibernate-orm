@@ -18,6 +18,7 @@ import org.hibernate.annotations.ManyToAny;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
@@ -30,6 +31,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(annotatedClasses = {JoinFetchManyToAnyTest.Parent.class,
 		JoinFetchManyToAnyTest.NormalChild.class, JoinFetchManyToAnyTest.SpecialChild.class})
 class JoinFetchManyToAnyTest {
+	@BeforeEach
+	void cleanup(SessionFactoryScope scope) {
+		scope.dropData();
+	}
+
 	@Entity(name = "Parent")
 	static class Parent {
 		@Id
@@ -69,12 +75,17 @@ class JoinFetchManyToAnyTest {
 	@Test
 	void test(SessionFactoryScope scope) {
 		final var statementInspector = scope.getCollectingStatementInspector();
-		scope.inTransaction(s -> {
-			Parent parent = new Parent();
-			parent.children = Set.of(new NormalChild(), new SpecialChild());
-			s.persist(parent);
-			parent.children.forEach(s::persist);
-		});
+		scope.inTransaction( s1 -> {
+			final Parent parent = new Parent();
+			final NormalChild normalChild = new NormalChild();
+			normalChild.intValue = 1;
+			final SpecialChild specialChild = new SpecialChild();
+			specialChild.strValue = "special";
+			parent.children = Set.of( normalChild, specialChild );
+			s1.persist( parent );
+			s1.persist( normalChild );
+			s1.persist( specialChild );
+		} );
 		statementInspector.clear();
 		scope.inTransaction(s -> {
 			Parent parent = s.createQuery("from Parent", Parent.class).getSingleResult();

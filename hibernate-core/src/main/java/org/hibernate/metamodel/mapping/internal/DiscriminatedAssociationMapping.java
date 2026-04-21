@@ -47,6 +47,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.entity.internal.JoinedDiscriminatedEntityFetch;
+import org.hibernate.sql.results.graph.entity.internal.JoinedDiscriminatedEntityResult;
 import org.hibernate.sql.results.graph.entity.internal.DiscriminatedEntityFetch;
 import org.hibernate.sql.results.graph.entity.internal.DiscriminatedEntityResult;
 import org.hibernate.type.AnyType;
@@ -617,13 +618,49 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return new DiscriminatedEntityResult<>(
-				navigablePath,
-				baseAssociationJtd,
-				modelPart,
-				resultVariable,
-				creationState
-		);
+		if ( resolveJoinedResultTableGroup( navigablePath, tableGroup, creationState ) != null ) {
+			return new JoinedDiscriminatedEntityResult<>(
+					navigablePath,
+					baseAssociationJtd,
+					modelPart,
+					resultVariable,
+					getMappedEntityValueDetails(),
+					creationState
+			);
+		}
+		else {
+			return new DiscriminatedEntityResult<>(
+					navigablePath,
+					baseAssociationJtd,
+					modelPart,
+					resultVariable,
+					creationState
+			);
+		}
+	}
+
+	private TableGroup resolveJoinedResultTableGroup(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
+		final TableGroup joinedTableGroup =
+				creationState.getSqlAstCreationState().getFromClauseAccess()
+						.findTableGroup( navigablePath );
+		if ( joinedTableGroup != null
+				&& isModelPartWithRealJoins( joinedTableGroup ) ) {
+			return joinedTableGroup;
+		}
+		else if ( isModelPartWithRealJoins( tableGroup ) ) {
+			return tableGroup;
+		}
+		else {
+			return null;
+		}
+	}
+
+	private boolean isModelPartWithRealJoins(TableGroup joinedTableGroup) {
+		return joinedTableGroup.getModelPart() == modelPart
+			&& joinedTableGroup.hasRealJoins();
 	}
 
 }

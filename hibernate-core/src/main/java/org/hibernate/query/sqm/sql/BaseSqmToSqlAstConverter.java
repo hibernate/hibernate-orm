@@ -6,6 +6,7 @@ package org.hibernate.query.sqm.sql;
 
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.metamodel.SingularAttribute;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -40,6 +41,7 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatorMapping;
 import org.hibernate.metamodel.mapping.DiscriminatorValueDetails;
@@ -85,7 +87,6 @@ import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPathSour
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
-import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.persister.entity.DiscriminatorHelper;
 import org.hibernate.persister.entity.EntityNameUse;
@@ -3280,12 +3281,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		// The AND junction allows to create an intersection of entity name lists of all sub-predicates
 		if ( tableGroup.getModelPart().getPartMappingType() instanceof EntityMappingType mappingType ) {
 			final EntityPersister persister = mappingType.getEntityPersister();
-			// Avoid resolving subclass tables for persisters with physical discriminators as we won't need them
-			if ( !persister.getDiscriminatorMapping().hasPhysicalColumn() ) {
+			if ( persister.isPolymorphic()
+					// Avoid resolving subclass tables for persisters with physical discriminators as we won't need them
+					&& persister.getDiscriminatorMapping() != null
+					&& !persister.getDiscriminatorMapping().hasPhysicalColumn() ) {
 				if ( getCurrentClauseStack().getCurrent() != Clause.WHERE
 						&& getCurrentClauseStack().getCurrent() != Clause.HAVING ) {
 					// Where and having clauses are handled specially with EntityNameUse.FILTER and pruning
-					registerEntityNameUsage( tableGroup, EntityNameUse.PROJECTION, persister.getEntityName(), true );
+					registerEntityNameUsage( tableGroup, EntityNameUse.PROJECTION, persister.getEntityName(),
+							true );
 				}
 				else {
 					final int subclassTableSpan = persister.getSubclassTableSpan();
@@ -3414,9 +3418,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final List<SqmTreatedFrom<?, ?, ?>> sqmTreats = sqmJoin.getSqmTreats();
 		final SqmPredicate joinPredicate;
 		final SqmPredicate[] treatPredicates;
+		final boolean discriminatedAssociationTreatJoin =
+				isDiscriminatedAssociationTreatJoin( sqmJoin, sqmTreats, modelPart );
 		final boolean hasPredicate;
 		if ( !sqmTreats.isEmpty() ) {
-			if ( sqmTreats.size() == 1 ) {
+			if ( sqmTreats.size() == 1 && !discriminatedAssociationTreatJoin ) {
 				// If there is only a single treat, combine the predicates just as they are
 				joinPredicate = SqmCreationHelper.combinePredicates(
 						sqmJoin.getJoinPredicate(),
@@ -3435,7 +3441,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					treatPredicates[i] = p;
 					hasTreatPredicate = hasTreatPredicate || p != null;
 				}
-				hasPredicate = joinPredicate != null || hasTreatPredicate;
+				hasPredicate = joinPredicate != null || hasTreatPredicate || discriminatedAssociationTreatJoin;
 			}
 		}
 		else {
@@ -3515,16 +3521,25 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				for ( int i = 0; i < treatPredicates.length; i++ ) {
 					final var treatType = (EntityDomainType<?>) sqmTreats.get( i ).getTreatTarget();
 					orPredicate.add( combinePredicates(
-							createTreatTypeRestriction( sqmJoin, treatType ),
+							discriminatedAssociationTreatJoin
+									? createDiscriminatedAssociationTreatTypeRestriction( joinedTableGroup, modelPart, treatType )
+									: createTreatTypeRestriction( sqmJoin, treatType ),
 							treatPredicates[i] == null ? null : visitNestedTopLevelPredicate( treatPredicates[i] )
 					) );
 				}
 				predicate = predicate != null ? combinePredicates( predicate, orPredicate ) : orPredicate;
 			}
 			joinForPredicate = determineJoinForPredicateApply( joinedTableGroupJoin );
+			if ( discriminatedAssociationTreatJoin
+					&& sqmJoinType == SqmJoinType.INNER
+					&& ( joinedTableGroup.isVirtual() || joinForPredicate.getJoinedGroup().isVirtual() ) ) {
+				// Predicates on the virtual join itself are not rendered, so for inner joins
+				// we can safely enforce the treat restriction as an equivalent query predicate.
+				additionalRestrictions = combinePredicates( additionalRestrictions, predicate );
+			}
 			// If translating the join predicate didn't initialize the table group,
 			// we can safely apply it on the collection table group instead
-			if ( joinForPredicate.getJoinedGroup().isInitialized() ) {
+			else if ( joinForPredicate.getJoinedGroup().isInitialized() ) {
 				joinForPredicate.applyPredicate( predicate );
 			}
 			else {
@@ -3552,6 +3567,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			consumeExplicitJoins( sqmJoin, joinedTableGroup );
 		}
 		return joinedTableGroup;
+	}
+
+	private static boolean isDiscriminatedAssociationTreatJoin(
+			SqmAttributeJoin<?, ?> sqmJoin, List<SqmTreatedFrom<?, ?, ?>> sqmTreats, ModelPart modelPart) {
+		return !sqmTreats.isEmpty()
+			&& ( modelPart instanceof DiscriminatedAssociationModelPart
+				|| modelPart instanceof PluralAttributeMapping pluralAttributeMapping
+						&& pluralAttributeMapping.getElementDescriptor() instanceof DiscriminatedAssociationModelPart
+				|| sqmJoin.getNodeType() instanceof AnyMappingDomainType<?> );
 	}
 
 	private TableGroup consumeCrossJoin(SqmCrossJoin<?> sqmJoin, TableGroup lhsTableGroup, boolean transitive) {
@@ -4457,6 +4481,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									"Replace uses of the root with paths instead e.g. `derivedRoot.get(\"alias1\")` or `derivedRoot.alias1`"
 					);
 				}
+			}
+			else if ( actualModelPart instanceof DiscriminatedAssociationModelPart discriminatedAssociationModelPart ) {
+				result = DiscriminatedAssociationPathInterpretation.from(
+						navigablePath,
+						discriminatedAssociationModelPart,
+						tableGroup,
+						this
+				);
 			}
 			else {
 				throw new SemanticException(
@@ -5471,11 +5503,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			EntityMappingType partMappingType,
 			Map<String, EntityNameUse> entityNameUses) {
 		final Set<String> entityNameUsesSet = new HashSet<>( entityNameUses.size() );
-		for ( Map.Entry<String, EntityNameUse> entry : entityNameUses.entrySet() ) {
-			if ( entry.getValue() == EntityNameUse.PROJECTION ) {
-				continue;
+		for ( var entry : entityNameUses.entrySet() ) {
+			if ( entry.getValue() != EntityNameUse.PROJECTION ) {
+				entityNameUsesSet.add( entry.getKey() );
 			}
-			entityNameUsesSet.add( entry.getKey() );
 		}
 
 		if ( entityNameUsesSet.containsAll( partMappingType.getSubclassEntityNames() ) ) {
@@ -5486,14 +5517,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// If the conjunct contains FILTER uses we can omit the treat type restriction
 			return emptySet();
 		}
+		final String partEntityName = partMappingType.getEntityName();
 		final String baseEntityNameToAdd;
-		if ( entityNameUsesSet.contains( partMappingType.getEntityName() ) ) {
-			if ( !partMappingType.isAbstract() ) {
-				baseEntityNameToAdd = partMappingType.getEntityName();
-			}
-			else {
-				baseEntityNameToAdd = null;
-			}
+		if ( entityNameUsesSet.contains( partEntityName ) ) {
+			baseEntityNameToAdd = partMappingType.isAbstract() ? null : partEntityName;
 			if ( entityNameUses.size() == 1 ) {
 				return emptySet();
 			}
@@ -5502,15 +5529,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			baseEntityNameToAdd = null;
 		}
 		final Set<String> entityNames = new HashSet<>( entityNameUsesSet.size() );
-		for ( Map.Entry<String, EntityNameUse> entityNameUse : entityNameUses.entrySet() ) {
+		for ( var entityNameUse : entityNameUses.entrySet() ) {
 			if ( entityNameUse.getValue() == EntityNameUse.TREAT ) {
 				final String entityName = entityNameUse.getKey();
-				final EntityPersister entityDescriptor = creationContext.getMappingMetamodel()
-						.findEntityDescriptor( entityName );
+				final var entityDescriptor =
+						creationContext.getMappingMetamodel()
+								.findEntityDescriptor( entityName );
 				if ( !entityDescriptor.isAbstract() ) {
 					entityNames.add( entityDescriptor.getEntityName() );
 				}
-				for ( EntityMappingType subMappingType : entityDescriptor.getSubMappingTypes() ) {
+				for ( var subMappingType : entityDescriptor.getSubMappingTypes() ) {
 					if ( !subMappingType.isAbstract() ) {
 						entityNames.add( subMappingType.getEntityName() );
 					}
@@ -5518,13 +5546,70 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 		do {
-			entityNames.remove( partMappingType.getEntityName() );
+			entityNames.remove( partEntityName );
 			partMappingType = partMappingType.getSuperMappingType();
 		} while ( partMappingType != null );
 		if ( !entityNames.isEmpty() && baseEntityNameToAdd != null ) {
 			entityNames.add( baseEntityNameToAdd );
 		}
 		return entityNames;
+	}
+
+	private Predicate createDiscriminatedAssociationTreatTypeRestriction(
+			TableGroup tableGroup,
+			ModelPart modelPart,
+			EntityDomainType<?> treatTarget) {
+		final var associationModelPart = resolveDiscriminatedAssociationModelPart( modelPart );
+		if ( associationModelPart == null ) {
+			return null;
+		}
+
+		final var entityDescriptor =
+				domainModel.findEntityDescriptor( treatTarget.getHibernateEntityName() );
+		final Set<String> entityNames =
+				entityDescriptor.isPolymorphic()
+						? entityDescriptor.getSubclassEntityNames()
+						: Set.of( entityDescriptor.getEntityName() );
+		final var discriminatorMapping = associationModelPart.getDiscriminatorMapping();
+		final var tableReference =
+				tableGroup.resolveTableReference( null,
+						discriminatorMapping.getContainingTableExpression() );
+		final var discriminatorColumn = new ColumnReference( tableReference, discriminatorMapping );
+		if ( entityNames.size() == 1 ) {
+			return new ComparisonPredicate(
+					discriminatorColumn,
+					ComparisonOperator.EQUAL,
+					discriminatorValueLiteral( discriminatorMapping,
+							entityNames.iterator().next() )
+			);
+		}
+		else {
+			final List<Expression> typeLiterals = new ArrayList<>( entityNames.size() );
+			for ( String entityName : entityNames ) {
+				typeLiterals.add( discriminatorValueLiteral( discriminatorMapping, entityName ) );
+			}
+			return new InListPredicate( discriminatorColumn, typeLiterals );
+		}
+	}
+
+	private static @NonNull QueryLiteral<Object> discriminatorValueLiteral(
+			DiscriminatorMapping discriminatorMapping, String entityName) {
+		return new QueryLiteral<>(
+				discriminatorMapping.getValueConverter()
+						.getDetailsForEntityName( entityName ).getValue(),
+				discriminatorMapping
+		);
+	}
+
+	private DiscriminatedAssociationModelPart resolveDiscriminatedAssociationModelPart(ModelPart modelPart) {
+		if ( modelPart instanceof DiscriminatedAssociationModelPart associationModelPart ) {
+			return associationModelPart;
+		}
+		if ( modelPart instanceof PluralAttributeMapping pluralAttributeMapping
+				&& pluralAttributeMapping.getElementDescriptor() instanceof DiscriminatedAssociationModelPart associationModelPart ) {
+			return associationModelPart;
+		}
+		return null;
 	}
 
 	private Set<String> determineEmbeddableNamesForTreatTypeRestriction(
@@ -5543,22 +5628,39 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private Predicate createTreatTypeRestriction(SqmPath<?> lhs, EntityDomainType<?> treatTarget) {
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( treatTarget.getHibernateEntityName() );
-		if ( entityDescriptor.isPolymorphic() && lhs.getNodeType() != treatTarget ) {
-			final Set<String> subclassEntityNames = entityDescriptor.getSubclassEntityNames();
-			return createTreatTypeRestriction( lhs, subclassEntityNames );
+		final var entityDescriptor = domainModel.findEntityDescriptor( treatTarget.getHibernateEntityName() );
+		final var nodeType = lhs.getNodeType();
+		final boolean polymorphic = entityDescriptor.isPolymorphic();
+		if ( nodeType instanceof AnyMappingDomainType<?>
+				&& SqmExpressionHelper.get( lhs, DISCRIMINATOR_ROLE_NAME )
+						instanceof AnyDiscriminatorSqmPath<?> ) {
+			return createTreatTypeRestriction(
+					lhs,
+					polymorphic
+							? entityDescriptor.getSubclassEntityNames()
+							: Set.of( entityDescriptor.getEntityName() )
+			);
 		}
-		return null;
+		else if ( polymorphic && nodeType != treatTarget ) {
+			return createTreatTypeRestriction( lhs,
+					entityDescriptor.getSubclassEntityNames() );
+		}
+		else {
+			return null;
+		}
 	}
 
 	private Predicate createTreatTypeRestriction(SqmPath<?> lhs, Set<String> subclassEntityNames) {
 		// Do what visitSelfInterpretingSqmPath does, except for calling preparingReusablePath
 		// as that would register a type usage for the table group that we don't want here
-		final EntityDiscriminatorSqmPath<?> discriminatorSqmPath =
-				(EntityDiscriminatorSqmPath<?>) SqmExpressionHelper.get( lhs, DISCRIMINATOR_ROLE_NAME );
+		final var discriminatorSqmPath =
+				(DiscriminatorSqmPath<?>)
+						SqmExpressionHelper.get( lhs, DISCRIMINATOR_ROLE_NAME );
 		registerTypeUsage( discriminatorSqmPath );
 		return createTreatTypeRestriction(
-				DiscriminatorPathInterpretation.from( discriminatorSqmPath, this ),
+				discriminatorSqmPath instanceof AnyDiscriminatorSqmPath<?> anyDiscriminatorSqmPath
+						? AnyDiscriminatorPathInterpretation.from( anyDiscriminatorSqmPath, this )
+						: DiscriminatorPathInterpretation.from( discriminatorSqmPath, this ),
 				subclassEntityNames,
 				false,
 				true
@@ -5597,12 +5699,26 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private Expression getTypeLiteral(SqmPathInterpretation<?> typeExpression, String typeName, boolean entity) {
 		if ( entity ) {
-			return new EntityTypeLiteral( domainModel.findEntityDescriptor( typeName ) );
+			if ( typeExpression instanceof AnyDiscriminatorPathInterpretation<?> ) {
+				final var discriminatorMapping = (DiscriminatorMapping) typeExpression.getExpressionType();
+				return new QueryLiteral<>(
+						discriminatorMapping.getValueConverter()
+								.getDetailsForEntityName( typeName )
+								.getValue(),
+						discriminatorMapping
+				);
+			}
+			else {
+				return new EntityTypeLiteral( domainModel.findEntityDescriptor( typeName ) );
+			}
 		}
 		else {
-			final EmbeddableDomainType<?> embeddable = creationContext.getJpaMetamodel().embeddable( typeName );
-			return new EmbeddableTypeLiteral( embeddable,
-					(BasicType<?>) typeExpression.getExpressionType().getSingleJdbcMapping() );
+			return new EmbeddableTypeLiteral(
+					creationContext.getJpaMetamodel().embeddable( typeName ),
+					(BasicType<?>)
+							typeExpression.getExpressionType()
+									.getSingleJdbcMapping()
+			);
 		}
 	}
 

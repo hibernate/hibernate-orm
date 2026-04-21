@@ -27,8 +27,6 @@ import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
-import jakarta.persistence.DiscriminatorColumn;
-import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
@@ -36,8 +34,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
-import jakarta.persistence.Inheritance;
-import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
 import jakarta.persistence.JoinTable;
@@ -48,9 +44,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
 import jakarta.persistence.Version;
 
@@ -61,26 +55,13 @@ import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ManyToAny;
-import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Comment;
-import org.hibernate.annotations.ConcreteProxy;
-import org.hibernate.annotations.DynamicInsert;
-import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Formula;
-import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OptimisticLock;
-import org.hibernate.annotations.OptimisticLockType;
-import org.hibernate.annotations.OptimisticLocking;
-import org.hibernate.annotations.RowId;
-import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.Parameter;
 
@@ -106,6 +87,7 @@ public class HbmTemplateHelper {
 	private final Map<String, Map<String, List<String>>> allClassMetaAttributes;
 	private final HbmQueryAndFilterHelper queryAndFilterHelper;
 	private final HbmCollectionAttributeHelper collectionAttributeHelper;
+	private final HbmClassInfoHelper classInfoHelper;
 
 	HbmTemplateHelper(ClassDetails classDetails) {
 		this(classDetails, null, Collections.emptyMap(), Collections.emptyMap(),
@@ -146,204 +128,135 @@ public class HbmTemplateHelper {
 		this.allClassMetaAttributes = allClassMetaAttributes != null ? allClassMetaAttributes : Collections.emptyMap();
 		this.queryAndFilterHelper = new HbmQueryAndFilterHelper(classDetails, this.metaAttributes);
 		this.collectionAttributeHelper = new HbmCollectionAttributeHelper(this.fieldMetaAttributes);
+		this.classInfoHelper = new HbmClassInfoHelper(classDetails, comment, this.metaAttributes);
 	}
 
 	// --- Entity / class ---
 
 	public String getClassName() {
-		// When entity-name differs from class name, the real Java class name is
-		// stored as a meta attribute; ClassDetails.getClassName() holds the entity-name
-		List<String> realClass = getClassMetaAttribute("hibernate.class-name");
-		String name = (realClass != null && !realClass.isEmpty())
-				? realClass.get(0) : classDetails.getClassName();
-		return name.startsWith(".") ? name.substring(1) : name;
+		return classInfoHelper.getClassName();
 	}
 
 	public String getPackageName() {
-		String name = getClassName();
-		int dot = name.lastIndexOf('.');
-		return dot > 0 ? name.substring(0, dot) : null;
+		return classInfoHelper.getPackageName();
 	}
 
 	// --- Table ---
 
 	public String getTableName() {
-		Table table = classDetails.getDirectAnnotationUsage(Table.class);
-		return table != null ? table.name() : null;
+		return classInfoHelper.getTableName();
 	}
 
 	public String getSchema() {
-		Table table = classDetails.getDirectAnnotationUsage(Table.class);
-		return table != null && table.schema() != null && !table.schema().isEmpty()
-				? table.schema() : null;
+		return classInfoHelper.getSchema();
 	}
 
 	public String getCatalog() {
-		Table table = classDetails.getDirectAnnotationUsage(Table.class);
-		return table != null && table.catalog() != null && !table.catalog().isEmpty()
-				? table.catalog() : null;
+		return classInfoHelper.getCatalog();
 	}
 
 	public String getComment() {
-		return comment;
+		return classInfoHelper.getComment();
 	}
 
 	// --- Class-level attributes ---
 
 	public boolean isMutable() {
-		return !classDetails.hasDirectAnnotationUsage(Immutable.class);
+		return classInfoHelper.isMutable();
 	}
 
 	public boolean isDynamicUpdate() {
-		return classDetails.hasDirectAnnotationUsage(DynamicUpdate.class);
+		return classInfoHelper.isDynamicUpdate();
 	}
 
 	public boolean isDynamicInsert() {
-		return classDetails.hasDirectAnnotationUsage(DynamicInsert.class);
+		return classInfoHelper.isDynamicInsert();
 	}
 
 	public int getBatchSize() {
-		BatchSize bs = classDetails.getDirectAnnotationUsage(BatchSize.class);
-		return bs != null ? bs.size() : 0;
+		return classInfoHelper.getBatchSize();
 	}
 
 	public String getCacheUsage() {
-		Cache cache = classDetails.getDirectAnnotationUsage(Cache.class);
-		if (cache == null || cache.usage() == CacheConcurrencyStrategy.NONE) {
-			return null;
-		}
-		return cache.usage().name().toLowerCase().replace('_', '-');
+		return classInfoHelper.getCacheUsage();
 	}
 
 	public String getCacheRegion() {
-		Cache cache = classDetails.getDirectAnnotationUsage(Cache.class);
-		return cache != null && cache.region() != null && !cache.region().isEmpty()
-				? cache.region() : null;
+		return classInfoHelper.getCacheRegion();
 	}
 
 	public String getCacheInclude() {
-		Cache cache = classDetails.getDirectAnnotationUsage(Cache.class);
-		return cache != null && !cache.includeLazy() ? "non-lazy" : null;
+		return classInfoHelper.getCacheInclude();
 	}
 
 	public String getWhere() {
-		SQLRestriction sr = classDetails.getDirectAnnotationUsage(SQLRestriction.class);
-		return sr != null ? sr.value() : null;
+		return classInfoHelper.getWhere();
 	}
 
 	public boolean isAbstract() {
-		return classDetails.isAbstract();
+		return classInfoHelper.isAbstract();
 	}
 
 	public String getOptimisticLockMode() {
-		OptimisticLocking ol = classDetails.getDirectAnnotationUsage(OptimisticLocking.class);
-		if (ol == null || ol.type() == OptimisticLockType.VERSION) {
-			return null;
-		}
-		return ol.type().name().toLowerCase();
+		return classInfoHelper.getOptimisticLockMode();
 	}
 
 	public String getRowId() {
-		RowId rid = classDetails.getDirectAnnotationUsage(RowId.class);
-		return rid != null && rid.value() != null && !rid.value().isEmpty()
-				? rid.value() : null;
+		return classInfoHelper.getRowId();
 	}
 
 	public String getSubselect() {
-		Subselect ss = classDetails.getDirectAnnotationUsage(Subselect.class);
-		return ss != null ? ss.value() : null;
+		return classInfoHelper.getSubselect();
 	}
 
 	public boolean isConcreteProxy() {
-		return classDetails.hasDirectAnnotationUsage(ConcreteProxy.class)
-				&& getProxy() == null;
+		return classInfoHelper.isConcreteProxy();
 	}
 
 	public String getProxy() {
-		List<String> proxyValues = metaAttributes.get("hibernate.proxy");
-		return proxyValues != null && !proxyValues.isEmpty() ? proxyValues.get(0) : null;
+		return classInfoHelper.getProxy();
 	}
 
 	public String getEntityName() {
-		jakarta.persistence.Entity entity = classDetails.getDirectAnnotationUsage(jakarta.persistence.Entity.class);
-		if (entity == null || entity.name() == null || entity.name().isEmpty()) {
-			return null;
-		}
-		String simpleName = getClassName();
-		int dot = simpleName.lastIndexOf('.');
-		if (dot >= 0) {
-			simpleName = simpleName.substring(dot + 1);
-		}
-		return entity.name().equals(simpleName) ? null : entity.name();
+		return classInfoHelper.getEntityName();
 	}
 
 	// --- Inheritance ---
 
 	public boolean isSubclass() {
-		ClassDetails superClass = classDetails.getSuperClass();
-		return superClass != null
-				&& !"java.lang.Object".equals(superClass.getClassName());
+		return classInfoHelper.isSubclass();
 	}
 
 	public String getParentClassName() {
-		if (!isSubclass()) {
-			return null;
-		}
-		String name = classDetails.getSuperClass().getClassName();
-		return name.startsWith(".") ? name.substring(1) : name;
+		return classInfoHelper.getParentClassName();
 	}
 
 	public String getClassTag() {
-		if (!isSubclass()) {
-			return "class";
-		}
-		Inheritance inh = classDetails.getDirectAnnotationUsage(Inheritance.class);
-		if (inh != null && inh.strategy() == InheritanceType.TABLE_PER_CLASS) {
-			return "union-subclass";
-		}
-		if (classDetails.hasDirectAnnotationUsage(PrimaryKeyJoinColumn.class)) {
-			return "joined-subclass";
-		}
-		return "subclass";
+		return classInfoHelper.getClassTag();
 	}
 
 	public boolean needsDiscriminator() {
-		return classDetails.hasDirectAnnotationUsage(DiscriminatorColumn.class);
+		return classInfoHelper.needsDiscriminator();
 	}
 
 	public String getDiscriminatorColumnName() {
-		DiscriminatorColumn dc = classDetails.getDirectAnnotationUsage(DiscriminatorColumn.class);
-		return dc != null ? dc.name() : null;
+		return classInfoHelper.getDiscriminatorColumnName();
 	}
 
 	public String getDiscriminatorTypeName() {
-		DiscriminatorColumn dc = classDetails.getDirectAnnotationUsage(DiscriminatorColumn.class);
-		if (dc == null) {
-			return "string";
-		}
-		return switch (dc.discriminatorType()) {
-			case STRING -> "string";
-			case CHAR -> "character";
-			case INTEGER -> "integer";
-		};
+		return classInfoHelper.getDiscriminatorTypeName();
 	}
 
 	public int getDiscriminatorColumnLength() {
-		DiscriminatorColumn dc = classDetails.getDirectAnnotationUsage(DiscriminatorColumn.class);
-		if (dc == null) {
-			return 0;
-		}
-		return dc.length() != 31 ? dc.length() : 0;
+		return classInfoHelper.getDiscriminatorColumnLength();
 	}
 
 	public String getDiscriminatorValue() {
-		DiscriminatorValue dv = classDetails.getDirectAnnotationUsage(DiscriminatorValue.class);
-		return dv != null ? dv.value() : null;
+		return classInfoHelper.getDiscriminatorValue();
 	}
 
 	public String getPrimaryKeyJoinColumnName() {
-		PrimaryKeyJoinColumn pkjc = classDetails.getDirectAnnotationUsage(PrimaryKeyJoinColumn.class);
-		return pkjc != null ? pkjc.name() : null;
+		return classInfoHelper.getPrimaryKeyJoinColumnName();
 	}
 
 	// --- Field categorization ---

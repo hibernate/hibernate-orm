@@ -11,6 +11,7 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatorMapping;
@@ -224,7 +225,7 @@ public class JoinedDiscriminatedEntityInitializer
 		}
 		else {
 			final var rowProcessingState = data.getRowProcessingState();
-			resolveConcreteAssociation( instance, data, rowProcessingState );
+			resolveConcreteAssociation( instance, data, rowProcessingState.getSession() );
 
 			final var concreteInitializer = data.concreteInitializer;
 			if ( concreteInitializer != null ) {
@@ -259,8 +260,7 @@ public class JoinedDiscriminatedEntityInitializer
 	private void resolveConcreteAssociation(
 			Object instance,
 			JoinedDiscriminatedEntityInitializerData data,
-			RowProcessingState processingState) {
-		final var session = processingState.getSession();
+			SharedSessionContractImplementor session) {
 		final var lazyInitializer = extractLazyInitializer( instance );
 		data.initializeExistingProxy = false;
 		if ( lazyInitializer == null ) {
@@ -350,12 +350,13 @@ public class JoinedDiscriminatedEntityInitializer
 		}
 		else {
 			data.setInstance( instance );
-			resolveConcreteAssociation( instance, data, data.getRowProcessingState() );
+			final var rowProcessingState = data.getRowProcessingState();
+			resolveConcreteAssociation( instance, data, rowProcessingState.getSession() );
 			final var concreteInitializer = data.concreteInitializer;
 			if ( concreteInitializer != null ) {
-				concreteInitializer.initializeInstanceFromParent( instance, data.getRowProcessingState() );
-				data.concreteDescriptor = concreteInitializer.getConcreteDescriptor( data.getRowProcessingState() );
-				data.entityIdentifier = concreteInitializer.getEntityIdentifier( data.getRowProcessingState() );
+				concreteInitializer.initializeInstanceFromParent( instance, rowProcessingState );
+				data.concreteDescriptor = concreteInitializer.getConcreteDescriptor( rowProcessingState );
+				data.entityIdentifier = concreteInitializer.getEntityIdentifier( rowProcessingState );
 				transferConcreteResolution( concreteInitializer, data );
 			}
 			else {

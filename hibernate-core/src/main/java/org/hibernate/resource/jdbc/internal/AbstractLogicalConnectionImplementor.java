@@ -147,7 +147,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 	}
 
 	@Override
-	public TransactionStatus getStatus(){
+	public TransactionStatus getStatus() {
 		return status;
 	}
 

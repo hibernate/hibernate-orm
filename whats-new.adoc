@@ -37,3 +37,15 @@ See the link:{userGuideBase}#reveng[Reverse Engineering] chapter in the User Gui
 The Maven plugin now includes a `transformHbm` goal that transforms legacy `hbm.xml` mapping files into ORM `mapping.xml` files. This does not involve reverse engineering from a database -- it converts existing HBM mappings.
 
 See the link:{userGuideBase}#tooling-maven-transformhbm[HBM XML Transformation] section in the User Guide for details.
+
+[[any-join]]
+== Joins and join fetching for `@Any` and `@ManyToAny`
+
+Discriminated association mappings may now:
+
+- be used freely in HQL joins and treated joins.
+- be fetched using a join.
+
+The joining and fetching semantics for `@Any` and `@ManyToAny` are aligned with `@ManyToOne` and `@ManyToMany` respectively.
+
+Join fetching may be requested using `join fetch` in HQL, or using an `EntityGraph`.

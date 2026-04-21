@@ -969,22 +969,9 @@ There are a number of annotations which are useful to express this sort of compl
 | `@JoinColumn` | Specifies the foreign key column
 |===
 
+As a general principle, an `@Any` association shares the semantics of `@ManyToAny`, and, since Hibernate 7.4, may be used just like a  `@ManyToOne` in HQL and so on.
+
 Of course, `@Any` mappings are disfavored, except in extremely special cases, since it's much more difficult to enforce referential integrity at the database level.
-
-There's also currently some limitations around querying `@Any` associations in HQL.
-This is allowed:
-
-[source,hql]
-----
-from Order ord
-    join CashPayment cash
-        on id(ord.payment) = cash.id
-----
-
-[CAUTION]
-====
-Polymorphic association joins for `@Any` mappings are not currently implemented.
-====
 
 Further information may be found in the {any-doc}[User Guide].
 

@@ -33,7 +33,8 @@ public class TimestampUtcAsJdbcTimestampJdbcType implements JdbcType {
 
 	public static final TimestampUtcAsJdbcTimestampJdbcType INSTANCE = new TimestampUtcAsJdbcTimestampJdbcType();
 	private static final ThreadLocal<Calendar> UTC_CALENDAR =
-			ThreadLocal.withInitial(() -> Calendar.getInstance(TimeZone.getTimeZone("UTC")));
+			ThreadLocal.withInitial( () -> Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
+
 	public TimestampUtcAsJdbcTimestampJdbcType() {
 	}
 

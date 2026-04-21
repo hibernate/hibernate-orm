@@ -174,6 +174,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
+	protected void cleanupOnClose() {
+		// detach any tracked entities and collections so
+		// they don't hold references to a closed session
+		temporaryPersistenceContext.clear();
+	}
+
+	@Override
 	public boolean shouldAutoJoinTransaction() {
 		return true;
 	}
@@ -828,21 +835,23 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	@Override
 	public Object get(String entityName, Object id, LockMode lockMode) {
 		checkOpen();
+		final Object entity = getEntity( entityName, id, lockMode );
+		if ( temporaryPersistenceContext.isLoadFinished() ) {
+			temporaryPersistenceContext.clear();
+		}
+		return entity;
+	}
 
+	private Object getEntity(String entityName, Object id, LockMode lockMode) {
 		final var persister = requireEntityPersister( entityName );
 		if ( persister.canReadFromCache() ) {
 			final Object cachedEntity =
 					loadFromSecondLevelCache( persister, generateEntityKey( id, persister ), null, lockMode );
 			if ( cachedEntity != null ) {
-				temporaryPersistenceContext.clear();
 				return cachedEntity;
 			}
 		}
-		final Object result = persister.load( id, null, getNullSafeLockMode( lockMode ), this );
-		if ( temporaryPersistenceContext.isLoadFinished() ) {
-			temporaryPersistenceContext.clear();
-		}
-		return result;
+		return persister.load( id, null, getNullSafeLockMode( lockMode ), this );
 	}
 
 	@Override

@@ -20,7 +20,6 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.property.access.internal.PropertyAccessStrategyBasicImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.spi.NavigablePath;
@@ -50,6 +49,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.Objects.requireNonNullElse;
+import static org.hibernate.metamodel.mapping.internal.ParentPropertyAccessHelper.parentPropertyAccess;
 
 /**
  * @author Steve Ebersole
@@ -75,15 +75,8 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 		this.navigableRole = collectionDescriptor.getNavigableRole().appendContainer( nature.getName() );
 		this.collectionDescriptor = collectionDescriptor;
 		this.nature = nature;
-		if ( parentInjectionAttributeName != null ) {
-			parentInjectionAttributePropertyAccess = PropertyAccessStrategyBasicImpl.INSTANCE.buildPropertyAccess(
-					embeddableMappingType.getMappedJavaType().getJavaTypeClass(),
-					parentInjectionAttributeName,
-					true );
-		}
-		else {
-			parentInjectionAttributePropertyAccess = null;
-		}
+		this.parentInjectionAttributePropertyAccess =
+				parentPropertyAccess( parentInjectionAttributeName, embeddableMappingType );
 		this.embeddableMappingType = embeddableMappingType;
 
 		this.containingTableExpression = containingTableExpression;

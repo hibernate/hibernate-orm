@@ -23,6 +23,7 @@ import static org.hibernate.Hibernate.isInitialized;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -106,6 +107,8 @@ class JoinFetchAnyTest {
 			anyThingElse.anything = otherThing;
 			s.persist( otherThing );
 			s.persist( anyThingElse );
+			var emptyThing = new AnyThing();
+			s.persist( emptyThing );
 		} );
 		final var statementInspector = scope.getCollectingStatementInspector();
 
@@ -115,12 +118,16 @@ class JoinFetchAnyTest {
 			var results =
 					s.createQuery( "from AnyThing a join fetch a.anything order by a.id", AnyThing.class )
 							.getResultList();
+			assertEquals( 3, results.size() );
 			AnyThing anyThing = results.get( 0 );
 			AnyThing anyThingElse = results.get( 1 );
+			AnyThing emptyThing = results.get( 2 );
 			assertTrue( isInitialized( anyThing.anything ) );
 			assertInstanceOf( SomeThing.class, anyThing.anything );
 			assertTrue( isInitialized( anyThingElse.anything ) );
 			assertInstanceOf( SomeOtherThing.class, anyThingElse.anything );
+			assertTrue( isInitialized( emptyThing.anything ) );
+			assertNull( emptyThing.anything );
 		} );
 		statementInspector.clear();
 		scope.inTransaction( s -> {
@@ -139,6 +146,15 @@ class JoinFetchAnyTest {
 			var singleResult = s.find( graph, 2L );
 			assertTrue( isInitialized( singleResult.anything ) );
 			assertInstanceOf( SomeOtherThing.class, singleResult.anything );
+			assertEquals( 1, statementInspector.getSqlQueries().size() );
+		} );
+		statementInspector.clear();
+		scope.inTransaction( s -> {
+			var graph = s.createEntityGraph( AnyThing.class );
+			graph.addAttributeNode( JoinFetchAnyTest_.AnyThing_.anything );
+			var singleResult = s.find( graph, 3L );
+			assertTrue( isInitialized( singleResult.anything ) );
+			assertNull( singleResult.anything );
 			assertEquals( 1, statementInspector.getSqlQueries().size() );
 		} );
 	}

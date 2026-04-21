@@ -75,6 +75,13 @@ general defaults or explicit user configuration.
 Applications that relied on the previous implicit default should explicitly set
 `hibernate.max_fetch_depth` if required.
 
+=== Join fetching for eager @Any mappings
+
+An `@Any` discriminated association mapping defaults to `fetch=EAGER`.
+Previously, such eager `@Any` associations were always fetched using a separate
+`SELECT` statement, which was inefficient. Eager `@Any` associations are now
+join fetched by default when an entity is loaded by id.
+
 === Schema actions now executed even without mapped entities
 
 Previously, if a persistence unit had no `@Entity` classes, all schema management

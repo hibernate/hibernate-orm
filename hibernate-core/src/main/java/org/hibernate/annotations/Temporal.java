@@ -57,7 +57,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *         referencing this table have no constraints, and so
  *         the database cannot enforce referential integrity.
  *         The table may be {@linkplain HistoryPartitioning
- *         partitioned} into current and historical partitions
+ *         partitioned} into current and historical partitions.
  *     <li>In the {@linkplain TemporalTableStrategy#HISTORY_TABLE
  *         separate history table} strategy, current data is stored
  *         in one table, and historical data is stored in a second
@@ -109,7 +109,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * is to provide a custom {@link java.util.function.Supplier} of
  * transaction ids by specifying the configuration property
  * {@value StateManagementSettings#TRANSACTION_ID_SUPPLIER}.
- * Transactions ids must be unique and comparable and must increase
+ * Transaction ids must be unique and comparable and must increase
  * monotonically. Typically, such an id is obtained by persisting
  * an instance of an application-defined entity class with a
  * generated id which represents the current unit of work. This

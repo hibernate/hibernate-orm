@@ -80,14 +80,14 @@ public class TimestampUtcAsJdbcTimestampJdbcType implements JdbcType {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				final Instant instant = javaType.unwrap( value, Instant.class, options );
-				st.setTimestamp( index, Timestamp.from( instant ), Calendar.getInstance() );
+				st.setTimestamp( index, Timestamp.from( instant ), Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
 				final Instant instant = javaType.unwrap( value, Instant.class, options );
-				st.setTimestamp( name, Timestamp.from( instant ), Calendar.getInstance() );
+				st.setTimestamp( name, Timestamp.from( instant ), Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
 			}
 		};
 	}
@@ -97,19 +97,19 @@ public class TimestampUtcAsJdbcTimestampJdbcType implements JdbcType {
 		return new BasicExtractor<>( javaType, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				final Timestamp timestamp = rs.getTimestamp( paramIndex, Calendar.getInstance() );
+				final Timestamp timestamp = rs.getTimestamp( paramIndex, Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
 				return javaType.wrap( timestamp == null ? null : timestamp.toInstant(), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				final Timestamp timestamp = statement.getTimestamp( index, Calendar.getInstance() );
+				final Timestamp timestamp = statement.getTimestamp( index, Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
 				return javaType.wrap( timestamp == null ? null : timestamp.toInstant(), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				final Timestamp timestamp = statement.getTimestamp( name, Calendar.getInstance() );
+				final Timestamp timestamp = statement.getTimestamp( name, Calendar.getInstance( TimeZone.getTimeZone( "UTC" ) ) );
 				return javaType.wrap( timestamp == null ? null : timestamp.toInstant(), options );
 			}
 		};

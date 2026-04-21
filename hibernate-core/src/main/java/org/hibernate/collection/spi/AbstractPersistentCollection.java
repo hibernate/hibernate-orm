@@ -17,7 +17,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.engine.spi.CollectionEntry;
@@ -314,10 +313,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 			throwLazyInitializationException( "SessionFactory UUID not known; cannot create temporary session for loading" );
 		}
 
-		final var session = SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid ).openSession();
-		session.getPersistenceContextInternal().setDefaultReadOnly( true );
-		session.setHibernateFlushMode( FlushMode.MANUAL );
-		return session;
+		return (SharedSessionContractImplementor)
+				SessionFactoryRegistry.INSTANCE.getSessionFactory( sessionFactoryUuid ).openStatelessSession();
 	}
 
 	protected Boolean readIndexExistence(final Object index) {

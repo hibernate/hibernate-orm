@@ -2500,7 +2500,8 @@ public abstract class CollectionBinder {
 						+ targetEntityMessage( elementType ) );
 			}
 			else if (isManyToAny) {
-				if ( propertyHolder.getJoinTable( property ) == null ) {
+				final var joinTable = propertyHolder.getJoinTable( property );
+				if ( joinTable == null ) {
 					throw new AnnotationException( "Association '" + safeCollectionRole()
 							+ "' is a '@ManyToAny' and must specify a '@JoinTable'" );
 				}

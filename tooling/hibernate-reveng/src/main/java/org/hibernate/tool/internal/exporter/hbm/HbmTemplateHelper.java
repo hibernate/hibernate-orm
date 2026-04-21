@@ -44,26 +44,15 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.ColumnResult;
-import jakarta.persistence.EntityResult;
-import jakarta.persistence.FieldResult;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.MapKeyJoinColumn;
-import jakarta.persistence.NamedNativeQueries;
-import jakarta.persistence.NamedNativeQuery;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.SqlResultSetMapping;
-import jakarta.persistence.SqlResultSetMappings;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.PrimaryKeyJoinColumn;
-import jakarta.persistence.SecondaryTable;
-import jakarta.persistence.SecondaryTables;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
@@ -88,8 +77,6 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Immutable;
@@ -99,15 +86,12 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
-import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLDeletes;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLInserts;
-import org.hibernate.annotations.FetchProfile;
-import org.hibernate.annotations.FetchProfiles;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SQLUpdates;
@@ -116,7 +100,6 @@ import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.FlushModeType;
 
 import org.hibernate.tool.internal.util.TypeHelper;
 
@@ -138,6 +121,7 @@ public class HbmTemplateHelper {
 	private final Map<String, String> imports;
 	private final Map<String, Map<String, List<String>>> fieldMetaAttributes;
 	private final Map<String, Map<String, List<String>>> allClassMetaAttributes;
+	private final HbmQueryAndFilterHelper queryAndFilterHelper;
 
 	HbmTemplateHelper(ClassDetails classDetails) {
 		this(classDetails, null, Collections.emptyMap(), Collections.emptyMap(),
@@ -176,6 +160,7 @@ public class HbmTemplateHelper {
 		this.imports = imports != null ? imports : Collections.emptyMap();
 		this.fieldMetaAttributes = fieldMetaAttributes != null ? fieldMetaAttributes : Collections.emptyMap();
 		this.allClassMetaAttributes = allClassMetaAttributes != null ? allClassMetaAttributes : Collections.emptyMap();
+		this.queryAndFilterHelper = new HbmQueryAndFilterHelper(classDetails, this.metaAttributes);
 	}
 
 	// --- Entity / class ---
@@ -1716,43 +1701,11 @@ public class HbmTemplateHelper {
 	// --- Filters ---
 
 	public List<FilterInfo> getFilters() {
-		List<FilterInfo> result = new ArrayList<>();
-		Filter single = classDetails.getDirectAnnotationUsage(Filter.class);
-		if (single != null) {
-			result.add(new FilterInfo(single.name(), single.condition()));
-		}
-		Filters container = classDetails.getDirectAnnotationUsage(Filters.class);
-		if (container != null) {
-			for (Filter f : container.value()) {
-				result.add(new FilterInfo(f.name(), f.condition()));
-			}
-		}
-		return result;
+		return queryAndFilterHelper.getFilters();
 	}
 
 	public List<FilterDefInfo> getFilterDefs() {
-		List<FilterDefInfo> result = new ArrayList<>();
-		FilterDef single = classDetails.getDirectAnnotationUsage(FilterDef.class);
-		if (single != null) {
-			result.add(toFilterDefInfo(single));
-		}
-		FilterDefs container = classDetails.getDirectAnnotationUsage(FilterDefs.class);
-		if (container != null) {
-			for (FilterDef fd : container.value()) {
-				result.add(toFilterDefInfo(fd));
-			}
-		}
-		return result;
-	}
-
-	private FilterDefInfo toFilterDefInfo(FilterDef fd) {
-		Map<String, String> params = new java.util.LinkedHashMap<>();
-		if (fd.parameters() != null) {
-			for (ParamDef pd : fd.parameters()) {
-				params.put(pd.name(), TypeHelper.toHibernateType(pd.type().getName()));
-			}
-		}
-		return new FilterDefInfo(fd.name(), fd.defaultCondition(), params);
+		return queryAndFilterHelper.getFilterDefs();
 	}
 
 	public record FilterInfo(String name, String condition) {}
@@ -1762,164 +1715,11 @@ public class HbmTemplateHelper {
 	// --- Named queries ---
 
 	public List<NamedQueryInfo> getNamedQueries() {
-		List<NamedQueryInfo> result = new ArrayList<>();
-		// Check Hibernate @NamedQuery (has typed attributes)
-		org.hibernate.annotations.NamedQuery hibSingle =
-				classDetails.getDirectAnnotationUsage(org.hibernate.annotations.NamedQuery.class);
-		if (hibSingle != null) {
-			result.add(toNamedQueryInfo(hibSingle));
-		}
-		org.hibernate.annotations.NamedQueries hibContainer =
-				classDetails.getDirectAnnotationUsage(org.hibernate.annotations.NamedQueries.class);
-		if (hibContainer != null) {
-			for (org.hibernate.annotations.NamedQuery nq : hibContainer.value()) {
-				result.add(toNamedQueryInfo(nq));
-			}
-		}
-		// Check JPA @NamedQuery (no typed attributes for flush-mode etc.)
-		if (result.isEmpty()) {
-			NamedQuery single = classDetails.getDirectAnnotationUsage(NamedQuery.class);
-			if (single != null) {
-				result.add(new NamedQueryInfo(single.name(), single.query(),
-						"", false, "", -1, -1, "", false));
-			}
-			NamedQueries container = classDetails.getDirectAnnotationUsage(NamedQueries.class);
-			if (container != null) {
-				for (NamedQuery nq : container.value()) {
-					result.add(new NamedQueryInfo(nq.name(), nq.query(),
-							"", false, "", -1, -1, "", false));
-				}
-			}
-		}
-		return result;
-	}
-
-	private NamedQueryInfo toNamedQueryInfo(org.hibernate.annotations.NamedQuery nq) {
-		String flushMode = nq.flushMode() != FlushModeType.PERSISTENCE_CONTEXT
-				? nq.flushMode().name().toLowerCase() : "";
-		return new NamedQueryInfo(nq.name(), nq.query(), flushMode,
-				nq.cacheable(), nq.cacheRegion(), nq.fetchSize(), nq.timeout(),
-				nq.comment(), nq.readOnly());
+		return queryAndFilterHelper.getNamedQueries();
 	}
 
 	public List<NamedNativeQueryInfo> getNamedNativeQueries() {
-		List<NamedNativeQueryInfo> result = new ArrayList<>();
-		// Check Hibernate @NamedNativeQuery (has typed attributes)
-		org.hibernate.annotations.NamedNativeQuery hibSingle =
-				classDetails.getDirectAnnotationUsage(org.hibernate.annotations.NamedNativeQuery.class);
-		if (hibSingle != null) {
-			result.add(toNamedNativeQueryInfo(hibSingle.name(), hibSingle.query(),
-					hibSingle.flushMode(), hibSingle.cacheable(), hibSingle.cacheRegion(),
-					hibSingle.fetchSize(), hibSingle.timeout(), hibSingle.comment(),
-					hibSingle.readOnly(), hibSingle.querySpaces(),
-					hibSingle.resultClass(), hibSingle.resultSetMapping()));
-		}
-		org.hibernate.annotations.NamedNativeQueries hibContainer =
-				classDetails.getDirectAnnotationUsage(org.hibernate.annotations.NamedNativeQueries.class);
-		if (hibContainer != null) {
-			for (org.hibernate.annotations.NamedNativeQuery nnq : hibContainer.value()) {
-				result.add(toNamedNativeQueryInfo(nnq.name(), nnq.query(),
-						nnq.flushMode(), nnq.cacheable(), nnq.cacheRegion(),
-						nnq.fetchSize(), nnq.timeout(), nnq.comment(),
-						nnq.readOnly(), nnq.querySpaces(),
-						nnq.resultClass(), nnq.resultSetMapping()));
-			}
-		}
-		// Check JPA @NamedNativeQuery (no typed attributes for flush-mode etc.)
-		if (result.isEmpty()) {
-			NamedNativeQuery single = classDetails.getDirectAnnotationUsage(NamedNativeQuery.class);
-			if (single != null) {
-				result.add(toNamedNativeQueryInfo(single.name(), single.query(),
-						FlushModeType.PERSISTENCE_CONTEXT, false, "", -1, -1, "",
-						false, new String[0], single.resultClass(), single.resultSetMapping()));
-			}
-			NamedNativeQueries container = classDetails.getDirectAnnotationUsage(NamedNativeQueries.class);
-			if (container != null) {
-				for (NamedNativeQuery nnq : container.value()) {
-					result.add(toNamedNativeQueryInfo(nnq.name(), nnq.query(),
-							FlushModeType.PERSISTENCE_CONTEXT, false, "", -1, -1, "",
-							false, new String[0], nnq.resultClass(), nnq.resultSetMapping()));
-				}
-			}
-		}
-		return result;
-	}
-
-	private NamedNativeQueryInfo toNamedNativeQueryInfo(
-			String name, String query, FlushModeType flushModeType,
-			boolean cacheable, String cacheRegion, int fetchSize, int timeout,
-			String comment, boolean readOnly, String[] spaces,
-			Class<?> resultClass, String resultSetMapping) {
-		String flushMode = flushModeType != FlushModeType.PERSISTENCE_CONTEXT
-				? flushModeType.name().toLowerCase() : "";
-		List<String> querySpaces = spaces != null && spaces.length > 0
-				? List.of(spaces) : List.of();
-		List<EntityReturnInfo> entityReturns = new ArrayList<>();
-		List<ScalarReturnInfo> scalarReturns = new ArrayList<>();
-		// Resolve returns from resultClass
-		if (resultClass != null && resultClass != void.class) {
-			entityReturns.add(new EntityReturnInfo(
-					resultClass.getName(), resultClass.getName(), "", List.of()));
-		}
-		// Resolve returns from @SqlResultSetMapping
-		if (resultSetMapping != null && !resultSetMapping.isEmpty()) {
-			SqlResultSetMapping mapping = findSqlResultSetMapping(resultSetMapping);
-			if (mapping != null) {
-				for (EntityResult er : mapping.entities()) {
-					List<FieldMappingInfo> fieldMappings = new ArrayList<>();
-					for (FieldResult fr : er.fields()) {
-						fieldMappings.add(new FieldMappingInfo(fr.name(), fr.column()));
-					}
-					entityReturns.add(new EntityReturnInfo(
-							er.entityClass().getName(), er.entityClass().getName(),
-							er.discriminatorColumn(), fieldMappings));
-				}
-				for (ColumnResult cr : mapping.columns()) {
-					scalarReturns.add(new ScalarReturnInfo(cr.name()));
-				}
-			}
-		}
-		// Resolve return-join and load-collection from meta attributes
-		List<ReturnJoinInfo> returnJoins = new ArrayList<>();
-		List<LoadCollectionInfo> loadCollections = new ArrayList<>();
-		String rjAlias = getClassMetaValue("hibernate.sql-query." + name + ".return-join.alias");
-		String rjProperty = getClassMetaValue("hibernate.sql-query." + name + ".return-join.property");
-		if (rjAlias != null && rjProperty != null) {
-			returnJoins.add(new ReturnJoinInfo(rjAlias, rjProperty));
-		}
-		String lcAlias = getClassMetaValue("hibernate.sql-query." + name + ".load-collection.alias");
-		String lcRole = getClassMetaValue("hibernate.sql-query." + name + ".load-collection.role");
-		String lcLockMode = getClassMetaValue("hibernate.sql-query." + name + ".load-collection.lock-mode");
-		if (lcAlias != null && lcRole != null) {
-			loadCollections.add(new LoadCollectionInfo(lcAlias, lcRole, lcLockMode));
-		}
-		// Resolve <return> from meta attributes
-		String retAlias = getClassMetaValue("hibernate.sql-query." + name + ".return.alias");
-		String retClass = getClassMetaValue("hibernate.sql-query." + name + ".return.class");
-		if (retClass != null) {
-			entityReturns.add(new EntityReturnInfo(
-					retAlias != null ? retAlias : retClass,
-					retClass, "", List.of()));
-		}
-		return new NamedNativeQueryInfo(name, query, flushMode, cacheable, cacheRegion,
-				fetchSize, timeout, comment, readOnly, querySpaces,
-				entityReturns, scalarReturns, returnJoins, loadCollections);
-	}
-
-	private SqlResultSetMapping findSqlResultSetMapping(String name) {
-		SqlResultSetMapping single = classDetails.getDirectAnnotationUsage(SqlResultSetMapping.class);
-		if (single != null && name.equals(single.name())) {
-			return single;
-		}
-		SqlResultSetMappings container = classDetails.getDirectAnnotationUsage(SqlResultSetMappings.class);
-		if (container != null) {
-			for (SqlResultSetMapping mapping : container.value()) {
-				if (name.equals(mapping.name())) {
-					return mapping;
-				}
-			}
-		}
-		return null;
+		return queryAndFilterHelper.getNamedNativeQueries();
 	}
 
 	public record NamedQueryInfo(String name, String query, String flushMode,
@@ -1950,44 +1750,15 @@ public class HbmTemplateHelper {
 	// --- SecondaryTable / Joins ---
 
 	public List<JoinInfo> getJoins() {
-		List<JoinInfo> result = new ArrayList<>();
-		SecondaryTable single = classDetails.getDirectAnnotationUsage(SecondaryTable.class);
-		if (single != null) {
-			result.add(toJoinInfo(single));
-		}
-		SecondaryTables container = classDetails.getDirectAnnotationUsage(SecondaryTables.class);
-		if (container != null) {
-			for (SecondaryTable st : container.value()) {
-				result.add(toJoinInfo(st));
-			}
-		}
-		return result;
+		return queryAndFilterHelper.getJoins();
 	}
 
 	public List<FieldDetails> getJoinProperties(String tableName) {
-		List<FieldDetails> result = new ArrayList<>();
-		for (FieldDetails field : classDetails.getFields()) {
-			Column col = field.getDirectAnnotationUsage(Column.class);
-			if (col != null && tableName.equals(col.table())) {
-				result.add(field);
-			}
-		}
-		return result;
-	}
-
-	private JoinInfo toJoinInfo(SecondaryTable st) {
-		List<String> keyColumns = new ArrayList<>();
-		if (st.pkJoinColumns() != null) {
-			for (PrimaryKeyJoinColumn pkjc : st.pkJoinColumns()) {
-				keyColumns.add(pkjc.name());
-			}
-		}
-		return new JoinInfo(st.name(), keyColumns);
+		return queryAndFilterHelper.getJoinProperties(tableName);
 	}
 
 	public String getJoinComment(String tableName) {
-		List<String> values = metaAttributes.get("hibernate.join.comment." + tableName);
-		return (values != null && !values.isEmpty()) ? values.get(0) : null;
+		return queryAndFilterHelper.getJoinComment(tableName);
 	}
 
 	public record JoinInfo(String tableName, List<String> keyColumns) {}
@@ -2063,23 +1834,19 @@ public class HbmTemplateHelper {
 	public record CustomSqlInfo(String sql, boolean callable) {}
 
 	public CustomSqlInfo getSQLInsert() {
-		SQLInsert si = classDetails.getDirectAnnotationUsage(SQLInsert.class);
-		return si != null ? new CustomSqlInfo(si.sql(), si.callable()) : null;
+		return queryAndFilterHelper.getSQLInsert();
 	}
 
 	public CustomSqlInfo getSQLUpdate() {
-		SQLUpdate su = classDetails.getDirectAnnotationUsage(SQLUpdate.class);
-		return su != null ? new CustomSqlInfo(su.sql(), su.callable()) : null;
+		return queryAndFilterHelper.getSQLUpdate();
 	}
 
 	public CustomSqlInfo getSQLDelete() {
-		SQLDelete sd = classDetails.getDirectAnnotationUsage(SQLDelete.class);
-		return sd != null ? new CustomSqlInfo(sd.sql(), sd.callable()) : null;
+		return queryAndFilterHelper.getSQLDelete();
 	}
 
 	public CustomSqlInfo getSQLDeleteAll() {
-		SQLDeleteAll sda = classDetails.getDirectAnnotationUsage(SQLDeleteAll.class);
-		return sda != null ? new CustomSqlInfo(sda.sql(), sda.callable()) : null;
+		return queryAndFilterHelper.getSQLDeleteAll();
 	}
 
 	public CustomSqlInfo getCollectionSQLInsert(FieldDetails field) {
@@ -2122,26 +1889,6 @@ public class HbmTemplateHelper {
 	public record FetchOverrideInfo(String entity, String association, String style) {}
 
 	public List<FetchProfileInfo> getFetchProfiles() {
-		List<FetchProfileInfo> result = new ArrayList<>();
-		FetchProfile single = classDetails.getDirectAnnotationUsage(FetchProfile.class);
-		if (single != null) {
-			result.add(toFetchProfileInfo(single));
-		}
-		FetchProfiles container = classDetails.getDirectAnnotationUsage(FetchProfiles.class);
-		if (container != null) {
-			for (FetchProfile fp : container.value()) {
-				result.add(toFetchProfileInfo(fp));
-			}
-		}
-		return result;
-	}
-
-	private FetchProfileInfo toFetchProfileInfo(FetchProfile fp) {
-		List<FetchOverrideInfo> overrides = new ArrayList<>();
-		for (FetchProfile.FetchOverride fo : fp.fetchOverrides()) {
-			overrides.add(new FetchOverrideInfo(
-					fo.entity().getName(), fo.association(), fo.mode().name().toLowerCase()));
-		}
-		return new FetchProfileInfo(fp.name(), overrides);
+		return queryAndFilterHelper.getFetchProfiles();
 	}
 }

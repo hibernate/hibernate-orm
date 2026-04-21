@@ -6,7 +6,9 @@ package org.hibernate.tool.schema.internal;
 
 import java.util.Map;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -25,8 +27,31 @@ public class SchemaManagementToolInitiator implements StandardServiceInitiator<S
 		return registry.requireService( StrategySelector.class )
 				.<SchemaManagementTool>resolveDefaultableStrategy( SchemaManagementTool.class,
 						configurationValues.get( SCHEMA_MANAGEMENT_TOOL ),
-						() -> registry.requireService( JdbcServices.class ).getDialect()
-								.getFallbackSchemaManagementTool( configurationValues, registry ) );
+						() -> {
+							final var discovered = discover( registry.requireService( ClassLoaderService.class ) );
+							if ( discovered != null ) {
+								return discovered;
+							}
+							return registry.requireService( JdbcServices.class ).getDialect()
+									.getFallbackSchemaManagementTool( configurationValues, registry );
+						} );
+	}
+
+	private static SchemaManagementTool discover(ClassLoaderService classLoaderService) {
+		final var discovered = classLoaderService.loadJavaServices( SchemaManagementTool.class );
+		final var iterator = discovered.iterator();
+		if ( iterator.hasNext() ) {
+			final var selected = iterator.next();
+			if ( iterator.hasNext() ) {
+				throw new HibernateException(
+						"Multiple SchemaManagementTool service registrations found via ServiceLoader; "
+						+ "specify one explicitly via '" + SCHEMA_MANAGEMENT_TOOL + "'" );
+			}
+			return selected;
+		}
+		else {
+			return null;
+		}
 	}
 
 	@Override

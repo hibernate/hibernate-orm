@@ -36,32 +36,56 @@ public class MutationExecutorServiceInitiator implements StandardServiceInitiato
 	@Override
 	public MutationExecutorService initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
 		final Object custom = configurationValues.get( EXECUTOR_KEY );
+		final var classLoaderService = registry.requireService( ClassLoaderService.class );
 
 		if ( custom == null ) {
-			return createStandardService( configurationValues );
+			final MutationExecutorService discovered = discover( classLoaderService );
+			return discovered != null
+					? discovered
+					: createStandardService( configurationValues );
 		}
-
-		if ( custom instanceof MutationExecutorService mutationExecutorService ) {
+		else if ( custom instanceof MutationExecutorService mutationExecutorService ) {
 			return mutationExecutorService;
 		}
+		else {
+			final Class<? extends MutationExecutorService> customImplClass;
+			if ( custom instanceof Class ) {
+				//noinspection unchecked
+				customImplClass = (Class<? extends MutationExecutorService>) custom;
+			}
+			else {
+				customImplClass = classLoaderService.classForName( custom.toString() );
+			}
 
-		final Class<? extends MutationExecutorService> customImplClass;
-		if ( custom instanceof Class ) {
-			//noinspection unchecked
-			customImplClass = (Class<? extends MutationExecutorService>) custom;
+			try {
+				return customImplClass.getConstructor().newInstance();
+			}
+			catch (NoSuchMethodException e) {
+				throw new HibernateException(
+						"Could not locate appropriate MutationExecutorService constructor : " + customImplClass.getName(),
+						e );
+			}
+			catch (Exception e) {
+				throw new HibernateException(
+						"Unable to instantiate custom MutationExecutorService : " + customImplClass.getName(), e );
+			}
+		}
+	}
+
+	private static MutationExecutorService discover(ClassLoaderService classLoaderService) {
+		final var discovered = classLoaderService.loadJavaServices( MutationExecutorService.class );
+		final var iterator = discovered.iterator();
+		if ( iterator.hasNext() ) {
+			final var selected = iterator.next();
+			if ( iterator.hasNext() ) {
+				throw new HibernateException(
+						"Multiple MutationExecutorService service registrations found via ServiceLoader; "
+						+ "specify one explicitly via '" + EXECUTOR_KEY + "'" );
+			}
+			return selected;
 		}
 		else {
-			customImplClass = registry.requireService( ClassLoaderService.class ).classForName( custom.toString() );
-		}
-
-		try {
-			return customImplClass.getConstructor().newInstance();
-		}
-		catch (NoSuchMethodException e) {
-			throw new HibernateException( "Could not locate appropriate MutationExecutorService constructor : " + customImplClass.getName(), e );
-		}
-		catch (Exception e) {
-			throw new HibernateException( "Unable to instantiate custom MutationExecutorService : " + customImplClass.getName(), e );
+			return null;
 		}
 	}
 

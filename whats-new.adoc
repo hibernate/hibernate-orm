@@ -70,6 +70,8 @@ The joining and fetching semantics for `@Any` and `@ManyToAny` are aligned with 
 
 Join fetching may be requested using `join fetch` in HQL, or using an `EntityGraph`.
 
+Also, the `cascade` member was added to `@Any` and `@ManyToAny` as a replacement for the deprecated `@Cascade` annotation.
+
 [[join-formula]]
 == `@OneToMany` with `@JoinFormula`
 

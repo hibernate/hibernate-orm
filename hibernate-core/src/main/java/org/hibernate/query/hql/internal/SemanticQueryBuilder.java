@@ -44,6 +44,7 @@ import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.internal.AnyKeyPart;
+import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -6070,24 +6071,26 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private SqmPath<?> consumeManagedTypeReference(HqlParser.PathContext parserPath) {
 		final var sqmPath = consumeDomainPath( parserPath );
-		final var pathSource = sqmPath.getReferencedPathSource();
-		if ( pathSource.getPathType() instanceof ManagedDomainType<?> ) {
+		final var pathType = sqmPath.getReferencedPathSource().getPathType();
+		if ( pathType instanceof ManagedDomainType<?> || pathType instanceof AnyMappingDomainType<?> ) {
 			return sqmPath;
 		}
 		else {
-			throw new PathException( "Expecting ManagedType valued path [" + sqmPath.getNavigablePath()
-					+ "], but found: " + pathSource.getPathType() );
+			throw new PathException( "Expecting ManagedType or @Any valued path ["
+						+ sqmPath.getNavigablePath() + "], but found: " + pathType );
 		}
 	}
 
 	private SqmPath<?> consumePluralAttributeReference(HqlParser.PathContext parserPath) {
 		final var sqmPath = consumeDomainPath( parserPath );
-		if ( sqmPath.getReferencedPathSource() instanceof PluralPersistentAttribute ) {
+		final var pathSource = sqmPath.getReferencedPathSource();
+		if ( pathSource instanceof PluralPersistentAttribute ) {
 			return sqmPath;
 		}
 		else {
-			throw new PathException( "Expecting plural attribute valued path [" + sqmPath.getNavigablePath()
-					+ "], but found: " + sqmPath.getReferencedPathSource().getPathType() );
+			throw new PathException( "Expecting plural attribute valued path ["
+						+ sqmPath.getNavigablePath() + "], but found: "
+						+ pathSource.getPathType() );
 		}
 	}
 

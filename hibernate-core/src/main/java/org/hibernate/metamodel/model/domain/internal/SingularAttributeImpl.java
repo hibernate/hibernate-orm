@@ -10,11 +10,9 @@ import java.lang.reflect.Member;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.AttributeClassification;
-import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
-import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -155,10 +153,7 @@ public class SingularAttributeImpl<D,J>
 			boolean fetched,
 			SqmCreationState creationState) {
 		final var nodeBuilder = creationState.getCreationContext().getNodeBuilder();
-		if ( getType() instanceof AnyMappingDomainType && !fetched ) {
-			throw new SemanticException( "An @Any attribute cannot be joined unless it is join fetched" );
-		}
-		else if ( sqmPathSource.getPathType() instanceof BasicPluralType<?,?> ) {
+		if ( sqmPathSource.getPathType() instanceof BasicPluralType<?,?> ) {
 			final SqmSetReturningFunction<J> setReturningFunction =
 					nodeBuilder.unnestArray( lhs.get( getName() ) );
 			final var join = new SqmFunctionJoin<>(

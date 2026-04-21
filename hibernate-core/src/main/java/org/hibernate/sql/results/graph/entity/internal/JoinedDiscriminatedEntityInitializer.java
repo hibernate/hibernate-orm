@@ -60,7 +60,6 @@ public class JoinedDiscriminatedEntityInitializer
 		protected EntityPersister concreteDescriptor;
 		protected Object entityIdentifier;
 		protected EntityInitializer<?> concreteInitializer;
-		protected boolean initializeExistingProxy;
 
 		public JoinedDiscriminatedEntityInitializerData(RowProcessingState rowProcessingState) {
 			super( rowProcessingState );
@@ -157,7 +156,6 @@ public class JoinedDiscriminatedEntityInitializer
 		if ( data.getState() == State.UNINITIALIZED ) {
 			final var rowProcessingState = data.getRowProcessingState();
 			final Object discriminatorValue = discriminatorAssembler.assemble( rowProcessingState );
-			data.initializeExistingProxy = false;
 			if ( discriminatorValue == null ) {
 				data.setState( State.MISSING );
 				data.concreteDescriptor = null;
@@ -239,13 +237,11 @@ public class JoinedDiscriminatedEntityInitializer
 			data.entityIdentifier = null;
 			data.concreteDescriptor = null;
 			data.concreteInitializer = null;
-			data.initializeExistingProxy = false;
 			data.setInstance( null );
 		}
 		else {
 			final var rowProcessingState = data.getRowProcessingState();
 			resolveConcreteAssociation( instance, data, rowProcessingState.getSession() );
-
 			final var concreteInitializer = data.concreteInitializer;
 			if ( concreteInitializer != null ) {
 				concreteInitializer.resolveInstance( instance, rowProcessingState );
@@ -255,13 +251,10 @@ public class JoinedDiscriminatedEntityInitializer
 			}
 			else {
 				data.setInstance( instance );
-				if ( eager && !Hibernate.isInitialized( instance ) ) {  //TODO: don't like this
-					data.initializeExistingProxy = true;
-					data.setState( State.RESOLVED );
+				if ( eager ) {
+					Hibernate.initialize( instance ); //TODO: don't love this
 				}
-				else {
-					data.setState( State.INITIALIZED );
-				}
+				data.setState( State.INITIALIZED );
 			}
 
 			if ( keyIsEager ) {
@@ -281,7 +274,6 @@ public class JoinedDiscriminatedEntityInitializer
 			JoinedDiscriminatedEntityInitializerData data,
 			SharedSessionContractImplementor session) {
 		final var lazyInitializer = extractLazyInitializer( instance );
-		data.initializeExistingProxy = false;
 		if ( lazyInitializer == null ) {
 			data.concreteDescriptor = session.getEntityPersister( null, instance );
 			data.entityIdentifier = data.concreteDescriptor.getIdentifier( instance, session );
@@ -299,27 +291,9 @@ public class JoinedDiscriminatedEntityInitializer
 	@Override
 	public void initializeInstance(JoinedDiscriminatedEntityInitializerData data) {
 		if ( data.getState() == State.RESOLVED ) {
-			if ( data.initializeExistingProxy ) {
-				data.initializeExistingProxy = false;
-				Hibernate.initialize( data.getInstance() );
-			}
-			else {
-				final var concreteInitializer = data.concreteInitializer;
-				final var rowProcessingState = data.getRowProcessingState();
-				if ( concreteInitializer != null ) {
-					concreteInitializer.initializeInstance( rowProcessingState );
-					data.setInstance( concreteInitializer.getResolvedInstance( rowProcessingState ) );
-				}
-				else {
-					data.setInstance( rowProcessingState.getSession()
-							.internalLoad(
-									data.concreteDescriptor.getEntityName(),
-									data.entityIdentifier,
-									eager,
-									false
-							) );
-				}
-			}
+			final var rowProcessingState = data.getRowProcessingState();
+			data.concreteInitializer.initializeInstance( rowProcessingState );
+			data.setInstance( data.concreteInitializer.getResolvedInstance( rowProcessingState ) );
 			data.setState( State.INITIALIZED );
 		}
 	}
@@ -362,7 +336,6 @@ public class JoinedDiscriminatedEntityInitializer
 		data.entityIdentifier = null;
 		data.concreteDescriptor = null;
 		data.concreteInitializer = null;
-		data.initializeExistingProxy = false;
 		if ( instance == null ) {
 			data.setState( State.MISSING );
 			data.setInstance( null );
@@ -381,7 +354,7 @@ public class JoinedDiscriminatedEntityInitializer
 			else {
 				data.setState( State.INITIALIZED );
 				if ( eager ) {
-					Hibernate.initialize( instance ); //TODO: don't like this
+					Hibernate.initialize( instance );
 				}
 			}
 		}

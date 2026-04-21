@@ -101,9 +101,8 @@ public @interface Any {
 
 	/**
 	 * The operations that should be cascaded to the associated entities.
-	 * <p>
-	 *     By default, no operations are cascaded.
-	 * </p>
+	 * <p>By default, no operations are cascaded.
+	 * @since 7.4
 	 */
 	CascadeType[] cascade() default {};
 

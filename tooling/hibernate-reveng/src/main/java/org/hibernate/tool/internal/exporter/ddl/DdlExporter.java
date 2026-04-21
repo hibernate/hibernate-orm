@@ -20,42 +20,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.internal.util.MetadataHelper;
-import org.hibernate.tool.internal.metadata.MetadataBootstrapper;
-import org.hibernate.tool.schema.TargetType;
-import org.hibernate.tool.schema.internal.ExceptionHandlerHaltImpl;
-import org.hibernate.tool.schema.internal.ExceptionHandlerLoggedImpl;
-import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
-import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
-import org.hibernate.tool.schema.internal.SchemaDropperImpl;
-import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
-import org.hibernate.tool.schema.internal.exec.GenerationTargetToScript;
-import org.hibernate.tool.schema.internal.exec.JdbcContext;
-import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToWriter;
-import org.hibernate.tool.schema.spi.ContributableMatcher;
-import org.hibernate.tool.schema.spi.ExceptionHandler;
-import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.hibernate.tool.schema.spi.GenerationTarget;
-import org.hibernate.tool.schema.spi.SchemaManagementTool;
-import org.hibernate.tool.schema.spi.SchemaMigrator;
-import org.hibernate.tool.schema.spi.ScriptSourceInput;
-import org.hibernate.tool.schema.spi.ScriptTargetOutput;
-import org.hibernate.tool.schema.SourceType;
-import org.hibernate.tool.schema.spi.SourceDescriptor;
-import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 /**
  * Generates DDL (CREATE/DROP/UPDATE) statements from a list of
@@ -239,239 +211,55 @@ public class DdlExporter implements Exporter {
 
 	// ---- Writer export methods ----
 
-	/**
-	 * Generates CREATE DDL statements and writes them to the given writer.
-	 */
 	public void exportCreateDdl(Writer output) {
-		try (MetadataBootstrapper.MetadataContext ctx = buildMetadata()) {
-			SchemaCreatorImpl creator = new SchemaCreatorImpl(ctx.serviceRegistry());
-			List<String> commands = creator.generateCreationCommands(ctx.metadata(), format);
-			writeCommands(output, commands);
-		}
+		schemaOperations().createDdl(output);
 	}
 
-	/**
-	 * Generates DROP DDL statements and writes them to the given writer.
-	 */
 	public void exportDropDdl(Writer output) {
-		try (MetadataBootstrapper.MetadataContext ctx = buildMetadata()) {
-			SchemaDropperImpl dropper = new SchemaDropperImpl(ctx.serviceRegistry());
-			ScriptTargetOutput scriptTarget = new ScriptTargetOutputToWriter(output);
-			GenerationTarget target = new GenerationTargetToScript(scriptTarget, delimiter);
-			target.prepare();
-			dropper.doDrop(ctx.metadata(), false, target);
-			target.release();
-		}
+		schemaOperations().dropDdl(output);
 	}
 
-	/**
-	 * Generates both DROP and CREATE DDL statements and writes them
-	 * to the given writer (drop first, then create).
-	 */
 	public void exportBothDdl(Writer output) {
-		try (MetadataBootstrapper.MetadataContext ctx = buildMetadata()) {
-			SchemaDropperImpl dropper = new SchemaDropperImpl(ctx.serviceRegistry());
-			ScriptTargetOutput scriptTarget = new ScriptTargetOutputToWriter(output);
-			GenerationTarget target = new GenerationTargetToScript(scriptTarget, delimiter);
-			target.prepare();
-			dropper.doDrop(ctx.metadata(), false, target);
-			target.release();
-
-			SchemaCreatorImpl creator = new SchemaCreatorImpl(ctx.serviceRegistry());
-			List<String> commands = creator.generateCreationCommands(ctx.metadata(), format);
-			writeCommands(output, commands);
-		}
+		schemaOperations().bothDdl(output);
 	}
 
-	/**
-	 * Generates schema migration (ALTER) DDL by comparing the metadata model
-	 * to the current database schema, and writes the statements to the given writer.
-	 * <p>
-	 * Requires database connection properties (e.g. {@code hibernate.connection.url})
-	 * because the migrator must inspect the live database schema.
-	 */
 	public void exportUpdateDdl(Writer output) {
-		try (MetadataBootstrapper.MetadataContext ctx = buildMetadata()) {
-			SchemaMigrator migrator = ctx.serviceRegistry()
-					.requireService(SchemaManagementTool.class)
-					.getSchemaMigrator(configurationValues());
-			migrator.doMigration(
-					ctx.metadata(),
-					executionOptions(),
-					ContributableMatcher.ALL,
-					scriptTargetDescriptor(output));
-		}
+		schemaOperations().updateDdl(output);
 	}
 
-	// ---- Database execution methods (execute DDL against the database) ----
+	// ---- Database execution methods ----
 
-	/**
-	 * Executes CREATE DDL statements against the configured database.
-	 */
 	public void executeCreateDdl() {
-		try (MetadataBootstrapper.MetadataContext ctx = buildMetadata()) {
-			GenerationTarget dbTarget = buildDatabaseTarget(ctx);
-			SchemaCreatorImpl creator = new SchemaCreatorImpl(ctx.serviceRegistry());
-			creator.doCreation(ctx.metadata(), ctx.serviceRegistry().requireService(JdbcEnvironment.class).getDialect(), executionOptions(),
-					ContributableMatcher.ALL, metadataSourceDescriptor(), dbTarget);
-		}
+		schemaOperations().executeCreate();
 	}
 
-	/**
-	 * Executes DROP DDL statements against the configured database.
-	 */
 	public void executeDropDdl() {
-		try (MetadataBootstrapper.MetadataContext ctx = buildMetadata()) {
-			GenerationTarget dbTarget = buildDatabaseTarget(ctx);
-			SchemaDropperImpl dropper = new SchemaDropperImpl(ctx.serviceRegistry());
-			dropper.doDrop(ctx.metadata(), executionOptions(), ContributableMatcher.ALL,
-					ctx.serviceRegistry().requireService(JdbcEnvironment.class).getDialect(), metadataSourceDescriptor(), dbTarget);
-		}
+		schemaOperations().executeDrop();
 	}
 
-	/**
-	 * Executes both DROP and CREATE DDL statements against the
-	 * configured database (drop first, then create).
-	 */
 	public void executeBothDdl() {
-		try (MetadataBootstrapper.MetadataContext ctx = buildMetadata()) {
-			ExecutionOptions options = executionOptions();
-			SourceDescriptor source = metadataSourceDescriptor();
-
-			GenerationTarget dropTarget = buildDatabaseTarget(ctx);
-			SchemaDropperImpl dropper = new SchemaDropperImpl(ctx.serviceRegistry());
-			dropper.doDrop(ctx.metadata(), options, ContributableMatcher.ALL,
-					ctx.serviceRegistry().requireService(JdbcEnvironment.class).getDialect(), source, dropTarget);
-
-			GenerationTarget createTarget = buildDatabaseTarget(ctx);
-			SchemaCreatorImpl creator = new SchemaCreatorImpl(ctx.serviceRegistry());
-			creator.doCreation(ctx.metadata(), ctx.serviceRegistry().requireService(JdbcEnvironment.class).getDialect(), options,
-					ContributableMatcher.ALL, source, createTarget);
-		}
+		schemaOperations().executeBoth();
 	}
 
-	/**
-	 * Executes schema migration (ALTER) DDL against the configured database
-	 * by comparing the metadata model to the current database schema.
-	 */
 	public void executeUpdateDdl() {
-		try (MetadataBootstrapper.MetadataContext ctx = buildMetadata()) {
-			SchemaMigrator migrator = ctx.serviceRegistry()
-					.requireService(SchemaManagementTool.class)
-					.getSchemaMigrator(configurationValues());
-			migrator.doMigration(
-					ctx.metadata(),
-					executionOptions(),
-					ContributableMatcher.ALL,
-					databaseTargetDescriptor());
-		}
+		schemaOperations().executeUpdate();
 	}
 
 	// ---- Internal helpers ----
 
-	private void writeToFile(File file, java.util.function.Consumer<Writer> exporter) {
+	private DdlSchemaOperations schemaOperations() {
+		return new DdlSchemaOperations(
+				entities, properties, delimiter, format, haltOnError);
+	}
+
+	private void writeToFile(
+			File file, java.util.function.Consumer<Writer> exporter) {
 		try (Writer writer = new FileWriter(file)) {
 			exporter.accept(writer);
+		} catch (IOException e) {
+			throw new RuntimeException(
+					"Failed to write DDL to " + file, e);
 		}
-		catch (IOException e) {
-			throw new RuntimeException("Failed to write DDL to " + file, e);
-		}
-	}
-
-	private Map<String, Object> configurationValues() {
-		Map<String, Object> values = new HashMap<>();
-		for (String key : properties.stringPropertyNames()) {
-			values.put(key, properties.getProperty(key));
-		}
-		return values;
-	}
-
-	private ExecutionOptions executionOptions() {
-		Map<String, Object> config = configurationValues();
-		ExceptionHandler handler = haltOnError
-				? ExceptionHandlerHaltImpl.INSTANCE
-				: ExceptionHandlerLoggedImpl.INSTANCE;
-		return new ExecutionOptions() {
-			@Override
-			public Map<String, Object> getConfigurationValues() {
-				return config;
-			}
-
-			@Override
-			public boolean shouldManageNamespaces() {
-				return false;
-			}
-
-			@Override
-			public ExceptionHandler getExceptionHandler() {
-				return handler;
-			}
-		};
-	}
-
-	private SourceDescriptor metadataSourceDescriptor() {
-		return new SourceDescriptor() {
-			@Override
-			public SourceType getSourceType() {
-				return SourceType.METADATA;
-			}
-
-			@Override
-			public ScriptSourceInput getScriptSourceInput() {
-				return null;
-			}
-		};
-	}
-
-	private TargetDescriptor scriptTargetDescriptor(Writer output) {
-		ScriptTargetOutput scriptTarget = new ScriptTargetOutputToWriter(output);
-		return new TargetDescriptor() {
-			@Override
-			public EnumSet<TargetType> getTargetTypes() {
-				return EnumSet.of(TargetType.SCRIPT);
-			}
-
-			@Override
-			public ScriptTargetOutput getScriptTargetOutput() {
-				return scriptTarget;
-			}
-		};
-	}
-
-	private TargetDescriptor databaseTargetDescriptor() {
-		return new TargetDescriptor() {
-			@Override
-			public EnumSet<TargetType> getTargetTypes() {
-				return EnumSet.of(TargetType.DATABASE);
-			}
-
-			@Override
-			public ScriptTargetOutput getScriptTargetOutput() {
-				return null;
-			}
-		};
-	}
-
-	private GenerationTarget buildDatabaseTarget(MetadataBootstrapper.MetadataContext ctx) {
-		HibernateSchemaManagementTool tool = (HibernateSchemaManagementTool)
-				ctx.serviceRegistry().requireService(SchemaManagementTool.class);
-		JdbcContext jdbcContext = tool.resolveJdbcContext(configurationValues());
-		return new GenerationTargetToDatabase(
-				tool.getDdlTransactionIsolator(jdbcContext), true, true);
-	}
-
-	private MetadataBootstrapper.MetadataContext buildMetadata() {
-		return MetadataBootstrapper.bootstrap(entities, properties);
-	}
-
-	private void writeCommands(Writer output, List<String> commands) {
-		ScriptTargetOutput scriptTarget = new ScriptTargetOutputToWriter(output);
-		GenerationTarget target = new GenerationTargetToScript(scriptTarget, delimiter);
-		target.prepare();
-		for (String command : commands) {
-			target.accept(command);
-		}
-		target.release();
 	}
 
 }

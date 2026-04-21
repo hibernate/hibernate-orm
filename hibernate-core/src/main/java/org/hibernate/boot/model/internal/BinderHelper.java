@@ -23,7 +23,6 @@ import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.AttributeContainer;
 import org.hibernate.mapping.BasicValue;
@@ -70,6 +69,7 @@ import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualifier;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.internal.util.collections.ArrayHelper.forEach;
 import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
 import static org.hibernate.models.spi.TypeDetailsHelper.resolveRawClass;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
@@ -797,11 +797,15 @@ public class BinderHelper {
 			}
 		}
 		keyValueBinder.setType( memberDetails, memberDetails.getType() );
+		final var firstKeyColumn = columns.get( 0 ); //TODO: nasty
+		if ( firstKeyColumn.isNameDeferred() ) {
+			firstKeyColumn.applyDefaultAnyKeyColumnNaming();
+		}
 		final var keyDescriptor = keyValueBinder.make();
 		any.setKey( keyDescriptor );
 		keyValueBinder.fillSimpleValue();
 		keyColumns.checkPropertyConsistency();
-		columns.get(0).linkWithValue( keyDescriptor ); //TODO: nasty
+		firstKeyColumn.linkWithValue( keyDescriptor );
 		return any;
 	}
 
@@ -812,7 +816,7 @@ public class BinderHelper {
 		final var anyDiscriminatorValues =
 				property.locateAnnotationUsage( AnyDiscriminatorValues.class, sourceModelContext );
 		if ( anyDiscriminatorValues != null ) {
-			ArrayHelper.forEach( anyDiscriminatorValues.value(), consumer );
+			forEach( anyDiscriminatorValues.value(), consumer );
 		}
 		else {
 			final var anyDiscriminatorValue =

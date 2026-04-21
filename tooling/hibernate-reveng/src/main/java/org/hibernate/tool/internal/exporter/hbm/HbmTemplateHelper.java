@@ -22,40 +22,26 @@ import java.util.Map;
 
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
-import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
 import jakarta.persistence.JoinTable;
-import jakarta.persistence.Access;
-import jakarta.persistence.AccessType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.TableGenerator;
 
 import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.Comment;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.Formula;
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.annotations.OptimisticLock;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.Parameter;
 
 import org.hibernate.tool.internal.util.TypeHelper;
 
@@ -81,6 +67,7 @@ public class HbmTemplateHelper {
 	private final HbmCollectionAttributeHelper collectionAttributeHelper;
 	private final HbmClassInfoHelper classInfoHelper;
 	private final HbmFieldCategorizationHelper fieldCategorizationHelper;
+	private final HbmFieldAttributeHelper fieldAttributeHelper;
 
 	HbmTemplateHelper(ClassDetails classDetails) {
 		this(classDetails, null, Collections.emptyMap(), Collections.emptyMap(),
@@ -123,6 +110,7 @@ public class HbmTemplateHelper {
 		this.collectionAttributeHelper = new HbmCollectionAttributeHelper(this.fieldMetaAttributes);
 		this.classInfoHelper = new HbmClassInfoHelper(classDetails, comment, this.metaAttributes);
 		this.fieldCategorizationHelper = new HbmFieldCategorizationHelper(classDetails, this.fieldMetaAttributes);
+		this.fieldAttributeHelper = new HbmFieldAttributeHelper(this.fieldMetaAttributes);
 	}
 
 	// --- Entity / class ---
@@ -603,175 +591,63 @@ public class HbmTemplateHelper {
 	// --- Property-level attributes ---
 
 	public String getFormula(FieldDetails field) {
-		Formula formula = field.getDirectAnnotationUsage(Formula.class);
-		return formula != null ? formula.value() : null;
+		return fieldAttributeHelper.getFormula(field);
 	}
 
 	public String getAccessType(FieldDetails field) {
-		Access access = field.getDirectAnnotationUsage(Access.class);
-		if (access == null) {
-			return null;
-		}
-		return access.value().name().toLowerCase();
+		return fieldAttributeHelper.getAccessType(field);
 	}
 
 	public String getFetchMode(FieldDetails field) {
-		Fetch fetch = field.getDirectAnnotationUsage(Fetch.class);
-		if (fetch == null) {
-			return null;
-		}
-		return switch (fetch.value()) {
-			case JOIN -> "join";
-			case SELECT -> "select";
-			case SUBSELECT -> "subselect";
-		};
+		return fieldAttributeHelper.getFetchMode(field);
 	}
 
 	public String getNotFoundAction(FieldDetails field) {
-		NotFound nf = field.getDirectAnnotationUsage(NotFound.class);
-		if (nf == null || nf.action() == NotFoundAction.EXCEPTION) {
-			return null;
-		}
-		return "ignore";
+		return fieldAttributeHelper.getNotFoundAction(field);
 	}
 
 	public boolean isTimestamp(FieldDetails field) {
-		String className = field.getType().determineRawClass().getClassName();
-		return "java.util.Date".equals(className)
-				|| "java.sql.Timestamp".equals(className)
-				|| "java.util.Calendar".equals(className)
-				|| "java.time.Instant".equals(className)
-				|| "java.time.LocalDateTime".equals(className);
+		return fieldAttributeHelper.isTimestamp(field);
 	}
 
 	public boolean isPropertyUpdatable(FieldDetails field) {
-		Column col = field.getDirectAnnotationUsage(Column.class);
-		return col == null || col.updatable();
+		return fieldAttributeHelper.isPropertyUpdatable(field);
 	}
 
 	public boolean isPropertyInsertable(FieldDetails field) {
-		Column col = field.getDirectAnnotationUsage(Column.class);
-		return col == null || col.insertable();
+		return fieldAttributeHelper.isPropertyInsertable(field);
 	}
 
 	public boolean isPropertyLazy(FieldDetails field) {
-		Basic basic = field.getDirectAnnotationUsage(Basic.class);
-		return basic != null && basic.fetch() == FetchType.LAZY;
+		return fieldAttributeHelper.isPropertyLazy(field);
 	}
 
 	public boolean isOptimisticLockExcluded(FieldDetails field) {
-		OptimisticLock ol = field.getDirectAnnotationUsage(OptimisticLock.class);
-		return ol != null && ol.excluded();
+		return fieldAttributeHelper.isOptimisticLockExcluded(field);
 	}
 
 	// --- Generator parameters ---
 
 	public Map<String, String> getGeneratorParameters(FieldDetails field) {
-		Map<String, String> params = new java.util.LinkedHashMap<>();
-		SequenceGenerator sg = field.getDirectAnnotationUsage(SequenceGenerator.class);
-		if (sg != null) {
-			if (sg.sequenceName() != null && !sg.sequenceName().isEmpty()) {
-				params.put("sequence", sg.sequenceName());
-			}
-			if (sg.allocationSize() != 50) {
-				params.put("increment_size", String.valueOf(sg.allocationSize()));
-			}
-			if (sg.initialValue() != 1) {
-				params.put("initial_value", String.valueOf(sg.initialValue()));
-			}
-			return params;
-		}
-		TableGenerator tg = field.getDirectAnnotationUsage(TableGenerator.class);
-		if (tg != null) {
-			if (tg.table() != null && !tg.table().isEmpty()) {
-				params.put("table", tg.table());
-			}
-			if (tg.pkColumnName() != null && !tg.pkColumnName().isEmpty()) {
-				params.put("segment_column_name", tg.pkColumnName());
-			}
-			if (tg.valueColumnName() != null && !tg.valueColumnName().isEmpty()) {
-				params.put("value_column_name", tg.valueColumnName());
-			}
-			if (tg.pkColumnValue() != null && !tg.pkColumnValue().isEmpty()) {
-				params.put("segment_value", tg.pkColumnValue());
-			}
-		}
-		if (params.isEmpty()) {
-			// Fallback to meta-based generator params (e.g. foreign generator)
-			params = getGeneratorParametersFromMeta(field);
-		}
-		return params;
+		return fieldAttributeHelper.getGeneratorParameters(field);
 	}
 
 	// --- Column / type attributes ---
 
 	public String getColumnName(FieldDetails field) {
-		Column col = field.getDirectAnnotationUsage(Column.class);
-		return col != null ? col.name() : field.getName();
+		return fieldAttributeHelper.getColumnName(field);
 	}
 
 	public String getHibernateTypeName(FieldDetails field) {
-		Type typeAnn = field.getDirectAnnotationUsage(Type.class);
-		if (typeAnn != null) {
-			return typeAnn.value().getName();
-		}
-		// Check for type name stored as field meta attribute (from hbm.xml <type> element)
-		Map<String, List<String>> fieldMeta = getFieldMetaAttributeMap(field);
-		List<String> typeName = fieldMeta.get("hibernate.type.name");
-		if (typeName != null && !typeName.isEmpty()) {
-			return typeName.get(0);
-		}
-		String className = field.getType().determineRawClass().getClassName();
-		return TypeHelper.toHibernateType(className);
+		return fieldAttributeHelper.getHibernateTypeName(field);
 	}
 
 	public boolean hasTypeParameters(FieldDetails field) {
-		Type typeAnn = field.getDirectAnnotationUsage(Type.class);
-		if (typeAnn != null && typeAnn.parameters() != null && typeAnn.parameters().length > 0) {
-			return true;
-		}
-		// Check for type params stored as field meta attributes
-		return !getTypeParametersFromMeta(field).isEmpty();
+		return fieldAttributeHelper.hasTypeParameters(field);
 	}
 
 	public Map<String, String> getTypeParameters(FieldDetails field) {
-		Type typeAnn = field.getDirectAnnotationUsage(Type.class);
-		if (typeAnn != null && typeAnn.parameters() != null && typeAnn.parameters().length > 0) {
-			Map<String, String> params = new java.util.LinkedHashMap<>();
-			for (Parameter param : typeAnn.parameters()) {
-				params.put(param.name(), param.value());
-			}
-			return params;
-		}
-		return getTypeParametersFromMeta(field);
-	}
-
-	private Map<String, String> getTypeParametersFromMeta(FieldDetails field) {
-		Map<String, List<String>> fieldMeta = getFieldMetaAttributeMap(field);
-		Map<String, String> params = new java.util.LinkedHashMap<>();
-		String prefix = "hibernate.type.param:";
-		for (Map.Entry<String, List<String>> entry : fieldMeta.entrySet()) {
-			if (entry.getKey().startsWith(prefix)) {
-				String paramName = entry.getKey().substring(prefix.length());
-				String paramValue = entry.getValue().isEmpty() ? "" : entry.getValue().get(0);
-				params.put(paramName, paramValue);
-			}
-		}
-		return params;
-	}
-
-	private Map<String, String> getGeneratorParametersFromMeta(FieldDetails field) {
-		Map<String, List<String>> fieldMeta = getFieldMetaAttributeMap(field);
-		Map<String, String> params = new java.util.LinkedHashMap<>();
-		String prefix = "hibernate.generator.param:";
-		for (Map.Entry<String, List<String>> entry : fieldMeta.entrySet()) {
-			if (entry.getKey().startsWith(prefix)) {
-				String paramName = entry.getKey().substring(prefix.length());
-				String paramValue = entry.getValue().isEmpty() ? "" : entry.getValue().get(0);
-				params.put(paramName, paramValue);
-			}
-		}
-		return params;
+		return fieldAttributeHelper.getTypeParameters(field);
 	}
 
 	private Map<String, List<String>> getFieldMetaAttributeMap(FieldDetails field) {
@@ -779,40 +655,15 @@ public class HbmTemplateHelper {
 	}
 
 	public String getColumnAttributes(FieldDetails field) {
-		Column col = field.getDirectAnnotationUsage(Column.class);
-		StringBuilder sb = new StringBuilder();
-		if (col != null && !col.nullable()) {
-			sb.append("not-null=\"true\" ");
-		}
-		if (col != null && col.unique()) {
-			sb.append("unique=\"true\" ");
-		}
-		if (col != null && col.length() != 255 && col.length() > 0) {
-			sb.append("length=\"").append(col.length()).append("\" ");
-		}
-		if (col != null && col.precision() > 0) {
-			sb.append("precision=\"").append(col.precision()).append("\" ");
-		}
-		if (col != null && col.scale() > 0) {
-			sb.append("scale=\"").append(col.scale()).append("\" ");
-		}
-		return sb.toString().stripTrailing();
+		return fieldAttributeHelper.getColumnAttributes(field);
 	}
 
 	public String getColumnComment(FieldDetails field) {
-		Comment comment = field.getDirectAnnotationUsage(Comment.class);
-		return comment != null && !comment.value().isEmpty() ? comment.value() : null;
+		return fieldAttributeHelper.getColumnComment(field);
 	}
 
 	public String getGeneratorClass(FieldDetails field) {
-		// Check meta attribute first (preserves original hbm.xml generator class like "foreign")
-		Map<String, List<String>> fieldMeta = getFieldMetaAttributeMap(field);
-		List<String> genClassMeta = fieldMeta.get("hibernate.generator.class");
-		if (genClassMeta != null && !genClassMeta.isEmpty()) {
-			return genClassMeta.get(0);
-		}
-		GeneratedValue gv = field.getDirectAnnotationUsage(GeneratedValue.class);
-		return toGeneratorClass(gv != null ? gv.strategy() : null);
+		return fieldAttributeHelper.getGeneratorClass(field);
 	}
 
 	// --- ManyToOne ---
@@ -1401,16 +1252,7 @@ public class HbmTemplateHelper {
 	}
 
 	String toGeneratorClass(GenerationType generationType) {
-		if (generationType == null) {
-			return "assigned";
-		}
-		return switch (generationType) {
-			case IDENTITY -> "identity";
-			case SEQUENCE -> "sequence";
-			case TABLE -> "table";
-			case AUTO -> "native";
-			case UUID -> "uuid2";
-		};
+		return fieldAttributeHelper.toGeneratorClass(generationType);
 	}
 
 	// --- Private helpers ---

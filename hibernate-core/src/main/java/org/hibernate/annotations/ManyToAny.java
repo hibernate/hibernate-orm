@@ -27,7 +27,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * <p>
  * For example:
  * <pre>
- * &#64;ManyToAny
+ * &#64;ManyToAny(cascade = PERSIST)
  * &#64;Column(name = "property_type")
  * &#64;AnyKeyJavaClass(Long.class)
  * &#64;AnyDiscriminatorValue(discriminator = "S", entity = StringProperty.class)
@@ -35,7 +35,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * &#64;JoinTable(name = "repository_properties",
  *            joinColumns = @JoinColumn(name = "repository_id"),
  *            inverseJoinColumns = @JoinColumn(name = "property_id"))
- * &#64;Cascade(PERSIST)
  * private List&lt;Property&lt;?&gt;&gt; properties = new ArrayList&lt;&gt;();
  * </pre>
  * <p>

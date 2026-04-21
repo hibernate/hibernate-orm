@@ -1366,7 +1366,7 @@ tidb() {
 
 tidb_8_5() {
     $CONTAINER_CLI rm -f tidb || true
-    $CONTAINER_CLI run --name tidb -p4000:4000 -d ${DB_IMAGE_TIDB_8_5:-docker.io/pingcap/tidb:v8.5.5}
+    $CONTAINER_CLI run --name tidb -p4000:4000 -d ${DB_IMAGE_TIDB_8_5:-docker.io/pingcap/tidb:v8.5.6}
 
     # Wait for TiDB to start
     OUTPUT=

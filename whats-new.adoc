@@ -12,6 +12,26 @@ Describes the new features and capabilities added to Hibernate ORM in {version}.
 
 IMPORTANT: If migrating from earlier versions, be sure to also check out the link:{migrationGuide}[Migration Guide] for discussion of impactful changes.
 
+[[temporal-audited]]
+== Temporal and Audited Data
+
+As an incubating feature, this release introduces the brand new and extremely powerful `StateManagement` SPI along with:
+
+- The `@Temporal` annotation, for mapping temporal data and querying based on temporal effectivity, and
+- The `@Audited` annotation, for mapping data with modifications tracked in a separate audit log.
+
+Temporal data may be mapped to:
+
+- database-native temporal tables (when provided by the underlying RDBMS),
+- a single table with effectivity columns (which might be partitioned into current and historical partitions), or
+- a table holding currently effective data, and a second table holding historical data with effectivity.
+
+The mapping strategy is transparent to client code.
+
+Historical temporal data may be queried at a given effective data/time.
+
+Audited data is mapped to a regular table along with an audit log which is backward compatible with Hibernate Envers.
+
 [[reveng]]
 == Reverse Engineering
 
@@ -49,3 +69,13 @@ Discriminated association mappings may now:
 The joining and fetching semantics for `@Any` and `@ManyToAny` are aligned with `@ManyToOne` and `@ManyToMany` respectively.
 
 Join fetching may be requested using `join fetch` in HQL, or using an `EntityGraph`.
+
+[[join-formula]]
+== `@OneToMany` with `@JoinFormula`
+
+Mappings combining `@OneToMany` and `@JoinFormula` now function correctly.
+
+[[post-insert-generated-pk]]
+== Database-generated columns within primary keys
+
+A database-generated column (for example, an identity column) may now form part of a composite primary key.

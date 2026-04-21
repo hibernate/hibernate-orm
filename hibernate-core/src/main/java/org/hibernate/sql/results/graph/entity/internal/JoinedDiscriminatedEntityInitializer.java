@@ -181,6 +181,25 @@ public class JoinedDiscriminatedEntityInitializer
 	}
 
 	@Override
+	public void resolveFromPreviousRow(JoinedDiscriminatedEntityInitializerData data) {
+		if ( data.getState() == State.UNINITIALIZED ) {
+			if ( data.getInstance() == null ) {
+				data.setState( State.MISSING );
+			}
+			else {
+				final var initializer = keyValueAssembler.getInitializer();
+				if ( initializer != null ) {
+					initializer.resolveFromPreviousRow( data.getRowProcessingState() );
+				}
+				if ( data.concreteInitializer != null ) {
+					data.concreteInitializer.resolveFromPreviousRow( data.getRowProcessingState() );
+				}
+				data.setState( State.INITIALIZED );
+			}
+		}
+	}
+
+	@Override
 	public void resolveState(JoinedDiscriminatedEntityInitializerData data) {
 		final var rowProcessingState = data.getRowProcessingState();
 		discriminatorAssembler.resolveState( rowProcessingState );

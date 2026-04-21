@@ -270,8 +270,7 @@ public class JoinedDiscriminatedEntityInitializer
 		else {
 			data.concreteDescriptor =
 					lazyInitializer.isUninitialized()
-							? fetchedPart.resolveDiscriminatorValue( discriminatorAssembler.assemble( processingState ) )
-									.getEntityPersister()
+							? session.getFactory().getMappingMetamodel().getEntityDescriptor( lazyInitializer.getEntityName() )
 							: session.getEntityPersister( null, lazyInitializer.getImplementation() );
 			data.entityIdentifier = lazyInitializer.getInternalIdentifier();
 		}
@@ -284,7 +283,6 @@ public class JoinedDiscriminatedEntityInitializer
 			if ( data.initializeExistingProxy ) {
 				data.initializeExistingProxy = false;
 				Hibernate.initialize( data.getInstance() );
-				data.setState( State.INITIALIZED );
 			}
 			else {
 				final var concreteInitializer = data.concreteInitializer;
@@ -302,8 +300,8 @@ public class JoinedDiscriminatedEntityInitializer
 									false
 							) );
 				}
-				data.setState( State.INITIALIZED );
 			}
+			data.setState( State.INITIALIZED );
 		}
 	}
 
@@ -351,10 +349,20 @@ public class JoinedDiscriminatedEntityInitializer
 			data.setInstance( null );
 		}
 		else {
-			data.setState( State.INITIALIZED );
 			data.setInstance( instance );
-			if ( eager ) {
-				Hibernate.initialize( instance ); //TODO: don't like this
+			resolveConcreteAssociation( instance, data, data.getRowProcessingState() );
+			final var concreteInitializer = data.concreteInitializer;
+			if ( concreteInitializer != null ) {
+				concreteInitializer.initializeInstanceFromParent( instance, data.getRowProcessingState() );
+				data.concreteDescriptor = concreteInitializer.getConcreteDescriptor( data.getRowProcessingState() );
+				data.entityIdentifier = concreteInitializer.getEntityIdentifier( data.getRowProcessingState() );
+				transferConcreteResolution( concreteInitializer, data );
+			}
+			else {
+				data.setState( State.INITIALIZED );
+				if ( eager ) {
+					Hibernate.initialize( instance ); //TODO: don't like this
+				}
 			}
 		}
 	}

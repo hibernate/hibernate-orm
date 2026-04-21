@@ -46,12 +46,8 @@ import jakarta.persistence.AccessType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapKeyColumn;
-import jakarta.persistence.MapKeyJoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.OrderBy;
-import jakarta.persistence.OrderColumn;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
@@ -65,19 +61,15 @@ import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ManyToAny;
-import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.ConcreteProxy;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.NaturalId;
@@ -87,16 +79,7 @@ import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.annotations.RowId;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLDeleteAll;
-import org.hibernate.annotations.SQLDeletes;
-import org.hibernate.annotations.SQLInsert;
-import org.hibernate.annotations.SQLInserts;
 import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.annotations.SQLUpdate;
-import org.hibernate.annotations.SQLUpdates;
-import org.hibernate.annotations.SortComparator;
-import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.Parameter;
@@ -122,6 +105,7 @@ public class HbmTemplateHelper {
 	private final Map<String, Map<String, List<String>>> fieldMetaAttributes;
 	private final Map<String, Map<String, List<String>>> allClassMetaAttributes;
 	private final HbmQueryAndFilterHelper queryAndFilterHelper;
+	private final HbmCollectionAttributeHelper collectionAttributeHelper;
 
 	HbmTemplateHelper(ClassDetails classDetails) {
 		this(classDetails, null, Collections.emptyMap(), Collections.emptyMap(),
@@ -161,6 +145,7 @@ public class HbmTemplateHelper {
 		this.fieldMetaAttributes = fieldMetaAttributes != null ? fieldMetaAttributes : Collections.emptyMap();
 		this.allClassMetaAttributes = allClassMetaAttributes != null ? allClassMetaAttributes : Collections.emptyMap();
 		this.queryAndFilterHelper = new HbmQueryAndFilterHelper(classDetails, this.metaAttributes);
+		this.collectionAttributeHelper = new HbmCollectionAttributeHelper(this.fieldMetaAttributes);
 	}
 
 	// --- Entity / class ---
@@ -797,6 +782,10 @@ public class HbmTemplateHelper {
 		if (cascade == null || cascade.value().length == 0) {
 			return null;
 		}
+		return getAnyCascadeString(cascade);
+	}
+
+	private String getAnyCascadeString(Cascade cascade) {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < cascade.value().length; i++) {
 			if (i > 0) sb.append(", ");
@@ -1325,221 +1314,87 @@ public class HbmTemplateHelper {
 	// --- Collection type ---
 
 	public String getCollectionTag(FieldDetails field) {
-		// Check for explicitly stored tag (e.g. "array" from hbm.xml <array>)
-		Map<String, List<String>> fieldMeta = getFieldMetaAttributeMap(field);
-		List<String> tagMeta = fieldMeta.get("hibernate.collection.tag");
-		if (tagMeta != null && !tagMeta.isEmpty()) {
-			return tagMeta.get(0);
-		}
-		if (field.hasDirectAnnotationUsage(Bag.class)) {
-			return "bag";
-		}
-		if (field.hasDirectAnnotationUsage(OrderColumn.class)) {
-			return "list";
-		}
-		if (field.hasDirectAnnotationUsage(CollectionId.class)) {
-			return "idbag";
-		}
-		TypeDetails type = field.getType();
-		if (type.isImplementor(java.util.Map.class)) {
-			return "map";
-		}
-		if (field.isArray()) {
-			TypeDetails elementType = field.getElementType();
-			if (elementType != null
-					&& elementType.getTypeKind() == TypeDetails.Kind.PRIMITIVE) {
-				return "primitive-array";
-			}
-			return "array";
-		}
-		return "set";
+		return collectionAttributeHelper.getCollectionTag(field);
 	}
 
 	public boolean isCollectionInverse(FieldDetails field) {
-		OneToMany o2m = field.getDirectAnnotationUsage(OneToMany.class);
-		if (o2m != null) {
-			if (o2m.mappedBy() != null && !o2m.mappedBy().isEmpty()) {
-				return true;
-			}
-		}
-		ManyToMany m2m = field.getDirectAnnotationUsage(ManyToMany.class);
-		if (m2m != null) {
-			if (m2m.mappedBy() != null && !m2m.mappedBy().isEmpty()) {
-				return true;
-			}
-		}
-		// Check meta attribute for HBM-sourced inverse
-		List<String> inverseAttr = getFieldMetaAttribute(field, "hibernate.inverse");
-		if (inverseAttr != null && !inverseAttr.isEmpty()) {
-			return "true".equals(inverseAttr.get(0));
-		}
-		return false;
+		return collectionAttributeHelper.isCollectionInverse(field);
 	}
 
 	public String getCollectionLazy(FieldDetails field) {
-		OneToMany o2m = field.getDirectAnnotationUsage(OneToMany.class);
-		if (o2m != null && o2m.fetch() == FetchType.EAGER) {
-			return "false";
-		}
-		ManyToMany m2m = field.getDirectAnnotationUsage(ManyToMany.class);
-		if (m2m != null && m2m.fetch() == FetchType.EAGER) {
-			return "false";
-		}
-		ElementCollection ec = field.getDirectAnnotationUsage(ElementCollection.class);
-		if (ec != null && ec.fetch() == FetchType.EAGER) {
-			return "false";
-		}
-		// Check meta attribute for lazy="extra"
-		List<String> lazyAttr = getFieldMetaAttribute(field, "hibernate.lazy");
-		if (lazyAttr != null && !lazyAttr.isEmpty()) {
-			return lazyAttr.get(0);
-		}
-		return null;
+		return collectionAttributeHelper.getCollectionLazy(field);
 	}
 
 	public String getCollectionFetchMode(FieldDetails field) {
-		Fetch fetch = field.getDirectAnnotationUsage(Fetch.class);
-		if (fetch == null) {
-			return null;
-		}
-		return switch (fetch.value()) {
-			case JOIN -> "join";
-			case SELECT -> "select";
-			case SUBSELECT -> "subselect";
-		};
+		return collectionAttributeHelper.getCollectionFetchMode(field);
 	}
 
 	public int getCollectionBatchSize(FieldDetails field) {
-		BatchSize bs = field.getDirectAnnotationUsage(BatchSize.class);
-		return bs != null ? bs.size() : 0;
+		return collectionAttributeHelper.getCollectionBatchSize(field);
 	}
 
 	public String getCollectionCascadeString(FieldDetails field) {
-		// Prefer the raw cascade string stored during parsing for round-trip fidelity
-		Map<String, List<String>> fieldMeta = fieldMetaAttributes.getOrDefault(
-				field.getName(), Collections.emptyMap());
-		List<String> rawCascade = fieldMeta.get("hibernate.cascade");
-		if (rawCascade != null && !rawCascade.isEmpty()) {
-			return rawCascade.get(0);
-		}
-		OneToMany o2m = field.getDirectAnnotationUsage(OneToMany.class);
-		if (o2m != null && o2m.cascade().length > 0) {
-			return getCascadeString(o2m.cascade());
-		}
-		ManyToMany m2m = field.getDirectAnnotationUsage(ManyToMany.class);
-		if (m2m != null && m2m.cascade().length > 0) {
-			return getCascadeString(m2m.cascade());
-		}
-		// Fall back to Hibernate @Cascade (used by @ManyToAny and @Any)
-		Cascade cascade = field.getDirectAnnotationUsage(Cascade.class);
-		if (cascade != null && cascade.value().length > 0) {
-			return getAnyCascadeString(cascade);
-		}
-		return null;
-	}
-
-	private String getAnyCascadeString(Cascade cascade) {
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < cascade.value().length; i++) {
-			if (i > 0) sb.append(", ");
-			sb.append(toHbmHibernateCascade(cascade.value()[i]));
-		}
-		return sb.toString();
+		return collectionAttributeHelper.getCollectionCascadeString(field);
 	}
 
 	public String getCollectionOrderBy(FieldDetails field) {
-		OrderBy ob = field.getDirectAnnotationUsage(OrderBy.class);
-		return ob != null && ob.value() != null && !ob.value().isEmpty()
-				? ob.value() : null;
+		return collectionAttributeHelper.getCollectionOrderBy(field);
 	}
 
 	public String getCollectionCacheUsage(FieldDetails field) {
-		Cache cache = field.getDirectAnnotationUsage(Cache.class);
-		if (cache == null || cache.usage() == CacheConcurrencyStrategy.NONE) {
-			return null;
-		}
-		return cache.usage().name().toLowerCase().replace('_', '-');
+		return collectionAttributeHelper.getCollectionCacheUsage(field);
 	}
 
 	public String getCollectionCacheRegion(FieldDetails field) {
-		Cache cache = field.getDirectAnnotationUsage(Cache.class);
-		return cache != null && cache.region() != null && !cache.region().isEmpty()
-				? cache.region() : null;
+		return collectionAttributeHelper.getCollectionCacheRegion(field);
 	}
 
 	public List<FilterInfo> getCollectionFilters(FieldDetails field) {
-		List<FilterInfo> result = new ArrayList<>();
-		Filter single = field.getDirectAnnotationUsage(Filter.class);
-		if (single != null) {
-			result.add(new FilterInfo(single.name(), single.condition()));
-		}
-		Filters container = field.getDirectAnnotationUsage(Filters.class);
-		if (container != null) {
-			for (Filter f : container.value()) {
-				result.add(new FilterInfo(f.name(), f.condition()));
-			}
-		}
-		return result;
+		return collectionAttributeHelper.getCollectionFilters(field);
 	}
 
 	// --- List-specific ---
 
 	public String getListIndexColumnName(FieldDetails field) {
-		OrderColumn oc = field.getDirectAnnotationUsage(OrderColumn.class);
-		return oc != null ? oc.name() : null;
+		return collectionAttributeHelper.getListIndexColumnName(field);
 	}
 
 	// --- Map-specific ---
 
 	public String getMapKeyColumnName(FieldDetails field) {
-		MapKeyColumn mkc = field.getDirectAnnotationUsage(MapKeyColumn.class);
-		return mkc != null ? mkc.name() : null;
+		return collectionAttributeHelper.getMapKeyColumnName(field);
 	}
 
 	public String getMapKeyType(FieldDetails field) {
-		TypeDetails mapKeyType = field.getMapKeyType();
-		if (mapKeyType != null) {
-			return TypeHelper.toHibernateType(
-					mapKeyType.determineRawClass().getClassName());
-		}
-		return null;
+		return collectionAttributeHelper.getMapKeyType(field);
 	}
 
 	public boolean hasMapKeyJoinColumn(FieldDetails field) {
-		return field.hasDirectAnnotationUsage(MapKeyJoinColumn.class);
+		return collectionAttributeHelper.hasMapKeyJoinColumn(field);
 	}
 
 	public String getMapKeyJoinColumnName(FieldDetails field) {
-		MapKeyJoinColumn mkjc = field.getDirectAnnotationUsage(MapKeyJoinColumn.class);
-		return mkjc != null ? mkjc.name() : null;
+		return collectionAttributeHelper.getMapKeyJoinColumnName(field);
 	}
 
 	public String getMapKeyEntityClass(FieldDetails field) {
-		TypeDetails mapKeyType = field.getMapKeyType();
-		if (mapKeyType != null) {
-			return mapKeyType.determineRawClass().getClassName();
-		}
-		return null;
+		return collectionAttributeHelper.getMapKeyEntityClass(field);
 	}
 
 	// --- IdBag-specific ---
 
 	public String getCollectionIdColumnName(FieldDetails field) {
-		CollectionId cid = field.getDirectAnnotationUsage(CollectionId.class);
-		return cid != null ? cid.column().name() : null;
+		return collectionAttributeHelper.getCollectionIdColumnName(field);
 	}
 
 	public String getCollectionIdGenerator(FieldDetails field) {
-		CollectionId cid = field.getDirectAnnotationUsage(CollectionId.class);
-		return cid != null && cid.generator() != null && !cid.generator().isEmpty()
-				? cid.generator() : null;
+		return collectionAttributeHelper.getCollectionIdGenerator(field);
 	}
 
 	// --- Collection element type ---
 
 	public String getCollectionElementType(FieldDetails field) {
-		TypeDetails elementType = field.getElementType();
-		return elementType != null ? elementType.determineRawClass().getClassName() : null;
+		return collectionAttributeHelper.getCollectionElementType(field);
 	}
 
 	// --- Embedded / EmbeddedId attribute overrides ---
@@ -1850,36 +1705,25 @@ public class HbmTemplateHelper {
 	}
 
 	public CustomSqlInfo getCollectionSQLInsert(FieldDetails field) {
-		SQLInsert si = field.getDirectAnnotationUsage(SQLInsert.class);
-		return si != null ? new CustomSqlInfo(si.sql(), si.callable()) : null;
+		return collectionAttributeHelper.getCollectionSQLInsert(field);
 	}
 
 	public CustomSqlInfo getCollectionSQLUpdate(FieldDetails field) {
-		SQLUpdate su = field.getDirectAnnotationUsage(SQLUpdate.class);
-		return su != null ? new CustomSqlInfo(su.sql(), su.callable()) : null;
+		return collectionAttributeHelper.getCollectionSQLUpdate(field);
 	}
 
 	public CustomSqlInfo getCollectionSQLDelete(FieldDetails field) {
-		SQLDelete sd = field.getDirectAnnotationUsage(SQLDelete.class);
-		return sd != null ? new CustomSqlInfo(sd.sql(), sd.callable()) : null;
+		return collectionAttributeHelper.getCollectionSQLDelete(field);
 	}
 
 	public CustomSqlInfo getCollectionSQLDeleteAll(FieldDetails field) {
-		SQLDeleteAll sda = field.getDirectAnnotationUsage(SQLDeleteAll.class);
-		return sda != null ? new CustomSqlInfo(sda.sql(), sda.callable()) : null;
+		return collectionAttributeHelper.getCollectionSQLDeleteAll(field);
 	}
 
 	// --- Sort ---
 
 	public String getSort(FieldDetails field) {
-		if (field.hasDirectAnnotationUsage(SortNatural.class)) {
-			return "natural";
-		}
-		SortComparator sc = field.getDirectAnnotationUsage(SortComparator.class);
-		if (sc != null) {
-			return sc.value().getName();
-		}
-		return null;
+		return collectionAttributeHelper.getSort(field);
 	}
 
 	// --- Fetch profiles ---

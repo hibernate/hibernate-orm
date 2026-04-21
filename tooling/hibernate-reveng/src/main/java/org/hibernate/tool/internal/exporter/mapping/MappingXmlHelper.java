@@ -29,20 +29,15 @@ import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
-import jakarta.persistence.DiscriminatorColumn;
-import jakarta.persistence.DiscriminatorValue;
-import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.Inheritance;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
 import jakarta.persistence.JoinTable;
-import jakarta.persistence.PrimaryKeyJoinColumns;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
@@ -63,15 +58,11 @@ import jakarta.persistence.PostUpdate;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreRemove;
 import jakarta.persistence.PreUpdate;
-import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
-import jakarta.persistence.SecondaryTable;
-import jakarta.persistence.SecondaryTables;
 import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.Version;
@@ -81,28 +72,18 @@ import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.AnyKeyJavaClass;
-import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.ConcreteProxy;
-import org.hibernate.annotations.DynamicInsert;
-import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.Formula;
-import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.annotations.OptimisticLockType;
-import org.hibernate.annotations.OptimisticLocking;
-import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLDeletes;
@@ -110,12 +91,10 @@ import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLInserts;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfiles;
-import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SQLUpdates;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
-import org.hibernate.annotations.Subselect;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
@@ -131,169 +110,127 @@ import org.hibernate.models.spi.TypeDetails;
 public class MappingXmlHelper {
 
 	private final ClassDetails classDetails;
+	private final MappingEntityInfoHelper entityInfoHelper;
 
 	MappingXmlHelper(ClassDetails classDetails) {
 		this.classDetails = classDetails;
+		this.entityInfoHelper = new MappingEntityInfoHelper(classDetails);
 	}
 
 	// --- Entity / class ---
 
 	public boolean isEmbeddable() {
-		return classDetails.hasDirectAnnotationUsage(Embeddable.class);
+		return entityInfoHelper.isEmbeddable();
 	}
 
 	public String getClassName() {
-		return classDetails.getClassName();
+		return entityInfoHelper.getClassName();
 	}
 
 	public String getPackageName() {
-		String name = getClassName();
-		int dot = name.lastIndexOf('.');
-		return dot > 0 ? name.substring(0, dot) : null;
+		return entityInfoHelper.getPackageName();
 	}
 
 	// --- Entity-level Hibernate extensions ---
 
 	public boolean isMutable() {
-		return !classDetails.hasDirectAnnotationUsage(Immutable.class);
+		return entityInfoHelper.isMutable();
 	}
 
 	public boolean isDynamicUpdate() {
-		return classDetails.hasDirectAnnotationUsage(DynamicUpdate.class);
+		return entityInfoHelper.isDynamicUpdate();
 	}
 
 	public boolean isDynamicInsert() {
-		return classDetails.hasDirectAnnotationUsage(DynamicInsert.class);
+		return entityInfoHelper.isDynamicInsert();
 	}
 
 	public int getBatchSize() {
-		BatchSize bs = classDetails.getDirectAnnotationUsage(BatchSize.class);
-		return bs != null ? bs.size() : 0;
+		return entityInfoHelper.getBatchSize();
 	}
 
 	public String getCacheAccessType() {
-		Cache cache = classDetails.getDirectAnnotationUsage(Cache.class);
-		if (cache == null || cache.usage() == CacheConcurrencyStrategy.NONE) {
-			return null;
-		}
-		return cache.usage().name();
+		return entityInfoHelper.getCacheAccessType();
 	}
 
 	public String getCacheRegion() {
-		Cache cache = classDetails.getDirectAnnotationUsage(Cache.class);
-		return cache != null && cache.region() != null && !cache.region().isEmpty()
-				? cache.region() : null;
+		return entityInfoHelper.getCacheRegion();
 	}
 
 	public boolean isCacheIncludeLazy() {
-		Cache cache = classDetails.getDirectAnnotationUsage(Cache.class);
-		return cache == null || cache.includeLazy();
+		return entityInfoHelper.isCacheIncludeLazy();
 	}
 
 	public String getSqlRestriction() {
-		SQLRestriction sr = classDetails.getDirectAnnotationUsage(SQLRestriction.class);
-		return sr != null ? sr.value() : null;
+		return entityInfoHelper.getSqlRestriction();
 	}
 
 	public String getOptimisticLockMode() {
-		OptimisticLocking ol = classDetails.getDirectAnnotationUsage(OptimisticLocking.class);
-		if (ol == null || ol.type() == OptimisticLockType.VERSION) {
-			return null;
-		}
-		return ol.type().name();
+		return entityInfoHelper.getOptimisticLockMode();
 	}
 
 	public String getRowId() {
-		RowId rid = classDetails.getDirectAnnotationUsage(RowId.class);
-		return rid != null && rid.value() != null && !rid.value().isEmpty()
-				? rid.value() : null;
+		return entityInfoHelper.getRowId();
 	}
 
 	public String getSubselect() {
-		Subselect ss = classDetails.getDirectAnnotationUsage(Subselect.class);
-		return ss != null ? ss.value() : null;
+		return entityInfoHelper.getSubselect();
 	}
 
 	public boolean isConcreteProxy() {
-		return classDetails.hasDirectAnnotationUsage(ConcreteProxy.class);
+		return entityInfoHelper.isConcreteProxy();
 	}
 
 	public String getAccessType() {
-		Access access = classDetails.getDirectAnnotationUsage(Access.class);
-		if (access == null || access.value() == AccessType.FIELD) {
-			return null;
-		}
-		return access.value().name();
+		return entityInfoHelper.getClassAccessType();
 	}
 
 	// --- Table ---
 
 	public String getTableName() {
-		Table table = classDetails.getDirectAnnotationUsage(Table.class);
-		return table != null ? table.name() : null;
+		return entityInfoHelper.getTableName();
 	}
 
 	public String getSchema() {
-		Table table = classDetails.getDirectAnnotationUsage(Table.class);
-		return table != null && table.schema() != null && !table.schema().isEmpty()
-				? table.schema() : null;
+		return entityInfoHelper.getSchema();
 	}
 
 	public String getCatalog() {
-		Table table = classDetails.getDirectAnnotationUsage(Table.class);
-		return table != null && table.catalog() != null && !table.catalog().isEmpty()
-				? table.catalog() : null;
+		return entityInfoHelper.getCatalog();
 	}
 
 	// --- Inheritance ---
 
 	public boolean hasInheritance() {
-		return classDetails.hasDirectAnnotationUsage(Inheritance.class);
+		return entityInfoHelper.hasInheritance();
 	}
 
 	public String getInheritanceStrategy() {
-		Inheritance inh = classDetails.getDirectAnnotationUsage(Inheritance.class);
-		return inh != null ? inh.strategy().name() : null;
+		return entityInfoHelper.getInheritanceStrategy();
 	}
 
 	public String getDiscriminatorColumnName() {
-		DiscriminatorColumn dc = classDetails.getDirectAnnotationUsage(DiscriminatorColumn.class);
-		return dc != null ? dc.name() : null;
+		return entityInfoHelper.getDiscriminatorColumnName();
 	}
 
 	public String getDiscriminatorType() {
-		DiscriminatorColumn dc = classDetails.getDirectAnnotationUsage(DiscriminatorColumn.class);
-		return dc != null ? dc.discriminatorType().name() : null;
+		return entityInfoHelper.getDiscriminatorType();
 	}
 
 	public int getDiscriminatorColumnLength() {
-		DiscriminatorColumn dc = classDetails.getDirectAnnotationUsage(DiscriminatorColumn.class);
-		return dc != null ? dc.length() : 0;
+		return entityInfoHelper.getDiscriminatorColumnLength();
 	}
 
 	public String getDiscriminatorValue() {
-		DiscriminatorValue dv = classDetails.getDirectAnnotationUsage(DiscriminatorValue.class);
-		return dv != null ? dv.value() : null;
+		return entityInfoHelper.getDiscriminatorValue();
 	}
 
 	public String getPrimaryKeyJoinColumnName() {
-		PrimaryKeyJoinColumn pkjc = classDetails.getDirectAnnotationUsage(PrimaryKeyJoinColumn.class);
-		return pkjc != null ? pkjc.name() : null;
+		return entityInfoHelper.getPrimaryKeyJoinColumnName();
 	}
 
 	public List<String> getPrimaryKeyJoinColumnNames() {
-		List<String> result = new ArrayList<>();
-		PrimaryKeyJoinColumn single = classDetails.getDirectAnnotationUsage(PrimaryKeyJoinColumn.class);
-		if (single != null) {
-			result.add(single.name());
-		}
-		PrimaryKeyJoinColumns container = classDetails.getDirectAnnotationUsage(PrimaryKeyJoinColumns.class);
-		if (container != null) {
-			for (PrimaryKeyJoinColumn pkjc : container.value()) {
-				result.add(pkjc.name());
-			}
-		}
-		return result;
+		return entityInfoHelper.getPrimaryKeyJoinColumnNames();
 	}
 
 	// --- Field categorization ---
@@ -853,28 +790,7 @@ public class MappingXmlHelper {
 	// --- Secondary tables ---
 
 	public List<SecondaryTableInfo> getSecondaryTables() {
-		List<SecondaryTableInfo> result = new ArrayList<>();
-		SecondaryTable single = classDetails.getDirectAnnotationUsage(SecondaryTable.class);
-		if (single != null) {
-			result.add(toSecondaryTableInfo(single));
-		}
-		SecondaryTables container = classDetails.getDirectAnnotationUsage(SecondaryTables.class);
-		if (container != null) {
-			for (SecondaryTable st : container.value()) {
-				result.add(toSecondaryTableInfo(st));
-			}
-		}
-		return result;
-	}
-
-	private SecondaryTableInfo toSecondaryTableInfo(SecondaryTable st) {
-		List<String> keyColumns = new ArrayList<>();
-		if (st.pkJoinColumns() != null) {
-			for (PrimaryKeyJoinColumn pkjc : st.pkJoinColumns()) {
-				keyColumns.add(pkjc.name());
-			}
-		}
-		return new SecondaryTableInfo(st.name(), keyColumns);
+		return entityInfoHelper.getSecondaryTables();
 	}
 
 	public record SecondaryTableInfo(String tableName, List<String> keyColumns) {}

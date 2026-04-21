@@ -15,7 +15,6 @@
  */
 package org.hibernate.tool.internal.exporter.hbm;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,11 +28,8 @@ import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
-import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
 import jakarta.persistence.JoinTable;
@@ -46,19 +42,15 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Version;
 
-import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.Formula;
-import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OptimisticLock;
@@ -88,6 +80,7 @@ public class HbmTemplateHelper {
 	private final HbmQueryAndFilterHelper queryAndFilterHelper;
 	private final HbmCollectionAttributeHelper collectionAttributeHelper;
 	private final HbmClassInfoHelper classInfoHelper;
+	private final HbmFieldCategorizationHelper fieldCategorizationHelper;
 
 	HbmTemplateHelper(ClassDetails classDetails) {
 		this(classDetails, null, Collections.emptyMap(), Collections.emptyMap(),
@@ -129,6 +122,7 @@ public class HbmTemplateHelper {
 		this.queryAndFilterHelper = new HbmQueryAndFilterHelper(classDetails, this.metaAttributes);
 		this.collectionAttributeHelper = new HbmCollectionAttributeHelper(this.fieldMetaAttributes);
 		this.classInfoHelper = new HbmClassInfoHelper(classDetails, comment, this.metaAttributes);
+		this.fieldCategorizationHelper = new HbmFieldCategorizationHelper(classDetails, this.fieldMetaAttributes);
 	}
 
 	// --- Entity / class ---
@@ -262,240 +256,113 @@ public class HbmTemplateHelper {
 	// --- Field categorization ---
 
 	public FieldDetails getCompositeIdField() {
-		for (FieldDetails field : classDetails.getFields()) {
-			if (field.hasDirectAnnotationUsage(EmbeddedId.class)) {
-				return field;
-			}
-		}
-		return null;
+		return fieldCategorizationHelper.getCompositeIdField();
 	}
 
 	public String getCompositeIdClassName() {
-		FieldDetails cid = getCompositeIdField();
-		return cid != null ? cid.getType().determineRawClass().getClassName() : null;
+		return fieldCategorizationHelper.getCompositeIdClassName();
 	}
 
 	public boolean hasIdClass() {
-		return classDetails.hasDirectAnnotationUsage(IdClass.class);
+		return fieldCategorizationHelper.hasIdClass();
 	}
 
 	public String getIdClassName() {
-		IdClass idClass = classDetails.getDirectAnnotationUsage(IdClass.class);
-		return idClass != null ? idClass.value().getName() : null;
+		return fieldCategorizationHelper.getIdClassName();
 	}
 
 	public List<FieldDetails> getCompositeIdAllFields() {
-		FieldDetails cid = getCompositeIdField();
-		if (cid == null) {
-			return Collections.emptyList();
-		}
-		return new ArrayList<>(cid.getType().determineRawClass().getFields());
+		return fieldCategorizationHelper.getCompositeIdAllFields();
 	}
 
 	public List<FieldDetails> getCompositeIdKeyProperties() {
-		FieldDetails cid = getCompositeIdField();
-		if (cid == null) {
-			return Collections.emptyList();
-		}
-		List<FieldDetails> result = new ArrayList<>();
-		for (FieldDetails field : cid.getType().determineRawClass().getFields()) {
-			if (!field.hasDirectAnnotationUsage(ManyToOne.class)) {
-				result.add(field);
-			}
-		}
-		return result;
+		return fieldCategorizationHelper.getCompositeIdKeyProperties();
 	}
 
 	public boolean hasCompositeIdKeyManyToOnes() {
-		return !getCompositeIdKeyManyToOnes().isEmpty();
+		return fieldCategorizationHelper.hasCompositeIdKeyManyToOnes();
 	}
 
 	public List<FieldDetails> getCompositeIdKeyManyToOnes() {
-		FieldDetails cid = getCompositeIdField();
-		if (cid == null) {
-			return Collections.emptyList();
-		}
-		List<FieldDetails> result = new ArrayList<>();
-		for (FieldDetails field : cid.getType().determineRawClass().getFields()) {
-			if (field.hasDirectAnnotationUsage(ManyToOne.class)) {
-				result.add(field);
-			}
-		}
-		return result;
+		return fieldCategorizationHelper.getCompositeIdKeyManyToOnes();
 	}
 
 	public String getKeyManyToOneClassName(FieldDetails field) {
-		return field.getType().determineRawClass().getClassName();
+		return fieldCategorizationHelper.getKeyManyToOneClassName(field);
 	}
 
 	public String getKeyManyToOneColumnName(FieldDetails field) {
-		JoinColumn jc = field.getDirectAnnotationUsage(JoinColumn.class);
-		return jc != null ? jc.name() : field.getName();
+		return fieldCategorizationHelper.getKeyManyToOneColumnName(field);
 	}
 
 	public List<String> getKeyManyToOneColumnNames(FieldDetails field) {
-		List<String> result = new ArrayList<>();
-		JoinColumn single = field.getDirectAnnotationUsage(JoinColumn.class);
-		if (single != null) {
-			result.add(single.name());
-		}
-		JoinColumns container = field.getDirectAnnotationUsage(JoinColumns.class);
-		if (container != null) {
-			for (JoinColumn jc : container.value()) {
-				result.add(jc.name());
-			}
-		}
-		if (result.isEmpty()) {
-			result.add(field.getName());
-		}
-		return result;
+		return fieldCategorizationHelper.getKeyManyToOneColumnNames(field);
 	}
 
 	public List<FieldDetails> getIdFields() {
-		return getFieldsWithAnnotation(Id.class);
+		return fieldCategorizationHelper.getIdFields();
 	}
 
 	public List<FieldDetails> getBasicFields() {
-		List<FieldDetails> result = new ArrayList<>();
-		for (FieldDetails field : classDetails.getFields()) {
-			if (!isRelationshipField(field) && !isEmbeddedField(field)
-					&& !field.hasDirectAnnotationUsage(EmbeddedId.class)
-					&& !field.hasDirectAnnotationUsage(Id.class)
-					&& !field.hasDirectAnnotationUsage(Version.class)
-					&& !field.hasDirectAnnotationUsage(Any.class)
-					&& !field.hasDirectAnnotationUsage(ElementCollection.class)
-					&& !field.hasDirectAnnotationUsage(ManyToAny.class)
-					&& !field.hasDirectAnnotationUsage(NaturalId.class)
-					&& !isSecondaryTableField(field)
-					&& !isInPropertiesGroup(field)) {
-				result.add(field);
-			}
-		}
-		return result;
+		return fieldCategorizationHelper.getBasicFields();
 	}
 
 	public List<FieldDetails> getNaturalIdFields() {
-		List<FieldDetails> result = new ArrayList<>();
-		for (FieldDetails field : classDetails.getFields()) {
-			if (field.hasDirectAnnotationUsage(NaturalId.class)) {
-				result.add(field);
-			}
-		}
-		return result;
+		return fieldCategorizationHelper.getNaturalIdFields();
 	}
 
 	public boolean isNaturalIdMutable() {
-		for (FieldDetails field : classDetails.getFields()) {
-			NaturalId nid = field.getDirectAnnotationUsage(NaturalId.class);
-			if (nid != null) {
-				return nid.mutable();
-			}
-		}
-		return false;
+		return fieldCategorizationHelper.isNaturalIdMutable();
 	}
 
 	public List<FieldDetails> getVersionFields() {
-		return getFieldsWithAnnotation(Version.class);
+		return fieldCategorizationHelper.getVersionFields();
 	}
 
 	public List<FieldDetails> getManyToOneFields() {
-		List<FieldDetails> result = new ArrayList<>();
-		for (FieldDetails field : classDetails.getFields()) {
-			if (field.hasDirectAnnotationUsage(ManyToOne.class)
-					&& !field.hasDirectAnnotationUsage(Id.class)
-					&& !isInPropertiesGroup(field)) {
-				result.add(field);
-			}
-		}
-		return result;
+		return fieldCategorizationHelper.getManyToOneFields();
 	}
 
 	public List<FieldDetails> getOneToOneFields() {
-		boolean hasCompositeId = getCompositeIdField() != null;
-		if (!hasCompositeId) {
-			return getFieldsWithAnnotation(OneToOne.class);
-		}
-		// Exclude constrained O2O with composite PK — rendered as many-to-one
-		List<FieldDetails> result = new ArrayList<>();
-		for (FieldDetails field : classDetails.getFields()) {
-			if (field.hasDirectAnnotationUsage(OneToOne.class)
-					&& !isOneToOneConstrained(field)) {
-				result.add(field);
-			}
-		}
-		return result;
+		return fieldCategorizationHelper.getOneToOneFields();
 	}
 
-	/**
-	 * Returns constrained one-to-one fields that need composite FK column
-	 * mapping. These are rendered as many-to-one with unique="true" in HBM XML
-	 * because one-to-one constrained doesn't support explicit composite column
-	 * lists.
-	 */
 	public List<FieldDetails> getConstrainedOneToOneAsM2OFields() {
-		if (getCompositeIdField() == null) {
-			return Collections.emptyList();
-		}
-		List<FieldDetails> result = new ArrayList<>();
-		for (FieldDetails field : classDetails.getFields()) {
-			if (field.hasDirectAnnotationUsage(OneToOne.class)
-					&& isOneToOneConstrained(field)) {
-				result.add(field);
-			}
-		}
-		return result;
+		return fieldCategorizationHelper.getConstrainedOneToOneAsM2OFields();
 	}
 
 	public List<FieldDetails> getOneToManyFields() {
-		return getFieldsWithAnnotation(OneToMany.class);
+		return fieldCategorizationHelper.getOneToManyFields();
 	}
 
 	public List<FieldDetails> getManyToManyFields() {
-		return getFieldsWithAnnotation(ManyToMany.class);
+		return fieldCategorizationHelper.getManyToManyFields();
 	}
 
 	public List<FieldDetails> getEmbeddedFields() {
-		return getFieldsWithAnnotation(Embedded.class);
+		return fieldCategorizationHelper.getEmbeddedFields();
 	}
 
 	public List<FieldDetails> getAnyFields() {
-		return getFieldsWithAnnotation(Any.class);
+		return fieldCategorizationHelper.getAnyFields();
 	}
 
 	public List<FieldDetails> getElementCollectionFields() {
-		return getFieldsWithAnnotation(ElementCollection.class);
+		return fieldCategorizationHelper.getElementCollectionFields();
 	}
 
 	public List<FieldDetails> getManyToAnyFields() {
-		return getFieldsWithAnnotation(ManyToAny.class);
+		return fieldCategorizationHelper.getManyToAnyFields();
 	}
 
 	// --- Dynamic component ---
 
 	public List<FieldDetails> getDynamicComponentFields() {
-		List<FieldDetails> result = new ArrayList<>();
-		for (FieldDetails field : classDetails.getFields()) {
-			Map<String, List<String>> fieldMeta = getFieldMetaAttributeMap(field);
-			List<String> dynComp = fieldMeta.get("hibernate.dynamic-component");
-			if (dynComp != null && !dynComp.isEmpty() && "true".equals(dynComp.get(0))) {
-				result.add(field);
-			}
-		}
-		return result;
+		return fieldCategorizationHelper.getDynamicComponentFields();
 	}
 
 	public List<DynamicComponentProperty> getDynamicComponentProperties(FieldDetails field) {
-		List<DynamicComponentProperty> result = new ArrayList<>();
-		Map<String, List<String>> fieldMeta = getFieldMetaAttributeMap(field);
-		String prefix = "hibernate.dynamic-component.property:";
-		for (Map.Entry<String, List<String>> entry : fieldMeta.entrySet()) {
-			if (entry.getKey().startsWith(prefix)) {
-				String propName = entry.getKey().substring(prefix.length());
-				String typeName = entry.getValue().get(0);
-				result.add(new DynamicComponentProperty(propName, typeName));
-			}
-		}
-		return result;
+		return fieldCategorizationHelper.getDynamicComponentProperties(field);
 	}
 
 	public record DynamicComponentProperty(String name, String type) {}
@@ -1331,12 +1198,6 @@ public class HbmTemplateHelper {
 
 	// --- Properties groups (<properties> element) ---
 
-	private boolean isInPropertiesGroup(FieldDetails field) {
-		Map<String, List<String>> attrs = fieldMetaAttributes.getOrDefault(
-				field.getName(), Collections.emptyMap());
-		return attrs.containsKey("hibernate.properties-group");
-	}
-
 	public List<PropertiesGroupInfo> getPropertiesGroups() {
 		// Collect unique group names in field order
 		List<String> groupNames = new ArrayList<>();
@@ -1377,17 +1238,11 @@ public class HbmTemplateHelper {
 	}
 
 	public boolean isBasicField(FieldDetails field) {
-		return !isRelationshipField(field) && !isEmbeddedField(field)
-				&& !field.hasDirectAnnotationUsage(EmbeddedId.class)
-				&& !field.hasDirectAnnotationUsage(Id.class)
-				&& !field.hasDirectAnnotationUsage(Version.class)
-				&& !field.hasDirectAnnotationUsage(Any.class)
-				&& !field.hasDirectAnnotationUsage(ElementCollection.class)
-				&& !field.hasDirectAnnotationUsage(ManyToAny.class);
+		return fieldCategorizationHelper.isBasicField(field);
 	}
 
 	public boolean isManyToOneField(FieldDetails field) {
-		return field.hasDirectAnnotationUsage(ManyToOne.class);
+		return fieldCategorizationHelper.isManyToOneField(field);
 	}
 
 	public record PropertiesGroupInfo(String name, boolean unique, boolean insert,
@@ -1559,32 +1414,6 @@ public class HbmTemplateHelper {
 	}
 
 	// --- Private helpers ---
-
-	private boolean isRelationshipField(FieldDetails field) {
-		return field.hasDirectAnnotationUsage(ManyToOne.class)
-				|| field.hasDirectAnnotationUsage(OneToMany.class)
-				|| field.hasDirectAnnotationUsage(OneToOne.class)
-				|| field.hasDirectAnnotationUsage(ManyToMany.class);
-	}
-
-	private boolean isEmbeddedField(FieldDetails field) {
-		return field.hasDirectAnnotationUsage(Embedded.class);
-	}
-
-	private boolean isSecondaryTableField(FieldDetails field) {
-		Column col = field.getDirectAnnotationUsage(Column.class);
-		return col != null && col.table() != null && !col.table().isEmpty();
-	}
-
-	private <A extends Annotation> List<FieldDetails> getFieldsWithAnnotation(Class<A> annotationType) {
-		List<FieldDetails> result = new ArrayList<>();
-		for (FieldDetails field : classDetails.getFields()) {
-			if (field.hasDirectAnnotationUsage(annotationType)) {
-				result.add(field);
-			}
-		}
-		return result;
-	}
 
 	private String toHbmCascade(CascadeType cascadeType) {
 		return switch (cascadeType) {

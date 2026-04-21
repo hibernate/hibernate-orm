@@ -281,12 +281,16 @@ public interface Statistics {
 	long getSecondLevelCachePutCount();
 
 	/**
-	 * The global number of sessions closed.
+	 * The global number of sessions closed, counting both stateful
+	 * {@linkplain org.hibernate.Session sessions} and
+	 * {@linkplain org.hibernate.StatelessSession stateless sessions}.
 	 */
 	long getSessionCloseCount();
 
 	/**
-	 * The global number of sessions opened.
+	 * The global number of sessions opened, counting both stateful
+	 * {@linkplain org.hibernate.Session sessions} and
+	 * {@linkplain org.hibernate.StatelessSession stateless sessions}.
 	 */
 	long getSessionOpenCount();
 

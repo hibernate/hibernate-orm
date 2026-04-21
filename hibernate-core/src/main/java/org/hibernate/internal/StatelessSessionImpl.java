@@ -155,6 +155,22 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		// A nonzero batch size forces the use of write-behind
 		// Therefore, ignore the value of hibernate.jdbc.batch_size
 		setJdbcBatchSize( 0 );
+
+		final var statistics = factory.getStatistics();
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.openSession();
+		}
+	}
+
+	@Override
+	public void close() {
+		if ( !isClosed() ) {
+			final var statistics = getFactory().getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.closeSession();
+			}
+		}
+		super.close();
 	}
 
 	@Override

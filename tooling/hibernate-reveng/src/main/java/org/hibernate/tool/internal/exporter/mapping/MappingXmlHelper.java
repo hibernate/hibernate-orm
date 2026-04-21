@@ -18,7 +18,6 @@ package org.hibernate.tool.internal.exporter.mapping;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +30,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -51,17 +49,6 @@ import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Basic;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
-import jakarta.persistence.PostLoad;
-import jakarta.persistence.PostPersist;
-import jakarta.persistence.PostRemove;
-import jakarta.persistence.PostUpdate;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreRemove;
-import jakarta.persistence.PreUpdate;
-import jakarta.persistence.NamedNativeQueries;
-import jakarta.persistence.NamedNativeQuery;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
 import jakarta.persistence.Temporal;
@@ -73,32 +60,17 @@ import org.hibernate.annotations.AnyDiscriminatorValue;
 import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterDefs;
-import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.OptimisticLock;
-import org.hibernate.annotations.ParamDef;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLDeleteAll;
-import org.hibernate.annotations.SQLDeletes;
-import org.hibernate.annotations.SQLInsert;
-import org.hibernate.annotations.SQLInserts;
-import org.hibernate.annotations.FetchProfile;
-import org.hibernate.annotations.FetchProfiles;
-import org.hibernate.annotations.SQLUpdate;
-import org.hibernate.annotations.SQLUpdates;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
-import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.TypeDetails;
 
 /**
@@ -111,10 +83,12 @@ public class MappingXmlHelper {
 
 	private final ClassDetails classDetails;
 	private final MappingEntityInfoHelper entityInfoHelper;
+	private final MappingQueryAndFilterHelper queryAndFilterHelper;
 
 	MappingXmlHelper(ClassDetails classDetails) {
 		this.classDetails = classDetails;
 		this.entityInfoHelper = new MappingEntityInfoHelper(classDetails);
+		this.queryAndFilterHelper = new MappingQueryAndFilterHelper(classDetails);
 	}
 
 	// --- Entity / class ---
@@ -577,18 +551,7 @@ public class MappingXmlHelper {
 	// --- Collection-level filters ---
 
 	public List<FilterInfo> getCollectionFilters(FieldDetails field) {
-		List<FilterInfo> result = new ArrayList<>();
-		Filter single = field.getDirectAnnotationUsage(Filter.class);
-		if (single != null) {
-			result.add(new FilterInfo(single.name(), single.condition()));
-		}
-		Filters container = field.getDirectAnnotationUsage(Filters.class);
-		if (container != null) {
-			for (Filter f : container.value()) {
-				result.add(new FilterInfo(f.name(), f.condition()));
-			}
-		}
-		return result;
+		return queryAndFilterHelper.getCollectionFilters(field);
 	}
 
 	// --- OneToOne ---
@@ -710,43 +673,11 @@ public class MappingXmlHelper {
 	// --- Filters ---
 
 	public List<FilterInfo> getFilters() {
-		List<FilterInfo> result = new ArrayList<>();
-		Filter single = classDetails.getDirectAnnotationUsage(Filter.class);
-		if (single != null) {
-			result.add(new FilterInfo(single.name(), single.condition()));
-		}
-		Filters container = classDetails.getDirectAnnotationUsage(Filters.class);
-		if (container != null) {
-			for (Filter f : container.value()) {
-				result.add(new FilterInfo(f.name(), f.condition()));
-			}
-		}
-		return result;
+		return queryAndFilterHelper.getFilters();
 	}
 
 	public List<FilterDefInfo> getFilterDefs() {
-		List<FilterDefInfo> result = new ArrayList<>();
-		FilterDef single = classDetails.getDirectAnnotationUsage(FilterDef.class);
-		if (single != null) {
-			result.add(toFilterDefInfo(single));
-		}
-		FilterDefs container = classDetails.getDirectAnnotationUsage(FilterDefs.class);
-		if (container != null) {
-			for (FilterDef fd : container.value()) {
-				result.add(toFilterDefInfo(fd));
-			}
-		}
-		return result;
-	}
-
-	private FilterDefInfo toFilterDefInfo(FilterDef fd) {
-		Map<String, String> params = new LinkedHashMap<>();
-		if (fd.parameters() != null) {
-			for (ParamDef pd : fd.parameters()) {
-				params.put(pd.name(), pd.type().getName());
-			}
-		}
-		return new FilterDefInfo(fd.name(), fd.defaultCondition(), params);
+		return queryAndFilterHelper.getFilterDefs();
 	}
 
 	public record FilterInfo(String name, String condition) {}
@@ -756,33 +687,11 @@ public class MappingXmlHelper {
 	// --- Named queries ---
 
 	public List<NamedQueryInfo> getNamedQueries() {
-		List<NamedQueryInfo> result = new ArrayList<>();
-		NamedQuery single = classDetails.getDirectAnnotationUsage(NamedQuery.class);
-		if (single != null) {
-			result.add(new NamedQueryInfo(single.name(), single.query()));
-		}
-		NamedQueries container = classDetails.getDirectAnnotationUsage(NamedQueries.class);
-		if (container != null) {
-			for (NamedQuery nq : container.value()) {
-				result.add(new NamedQueryInfo(nq.name(), nq.query()));
-			}
-		}
-		return result;
+		return queryAndFilterHelper.getNamedQueries();
 	}
 
 	public List<NamedQueryInfo> getNamedNativeQueries() {
-		List<NamedQueryInfo> result = new ArrayList<>();
-		NamedNativeQuery single = classDetails.getDirectAnnotationUsage(NamedNativeQuery.class);
-		if (single != null) {
-			result.add(new NamedQueryInfo(single.name(), single.query()));
-		}
-		NamedNativeQueries container = classDetails.getDirectAnnotationUsage(NamedNativeQueries.class);
-		if (container != null) {
-			for (NamedNativeQuery nnq : container.value()) {
-				result.add(new NamedQueryInfo(nnq.name(), nnq.query()));
-			}
-		}
-		return result;
+		return queryAndFilterHelper.getNamedNativeQueries();
 	}
 
 	public record NamedQueryInfo(String name, String query) {}
@@ -912,27 +821,7 @@ public class MappingXmlHelper {
 	public record FetchOverrideInfo(String entity, String association, String style) {}
 
 	public List<FetchProfileInfo> getFetchProfiles() {
-		List<FetchProfileInfo> result = new ArrayList<>();
-		FetchProfile single = classDetails.getDirectAnnotationUsage(FetchProfile.class);
-		if (single != null) {
-			result.add(toFetchProfileInfo(single));
-		}
-		FetchProfiles container = classDetails.getDirectAnnotationUsage(FetchProfiles.class);
-		if (container != null) {
-			for (FetchProfile fp : container.value()) {
-				result.add(toFetchProfileInfo(fp));
-			}
-		}
-		return result;
-	}
-
-	private FetchProfileInfo toFetchProfileInfo(FetchProfile fp) {
-		List<FetchOverrideInfo> overrides = new ArrayList<>();
-		for (FetchProfile.FetchOverride fo : fp.fetchOverrides()) {
-			overrides.add(new FetchOverrideInfo(
-					fo.entity().getName(), fo.association(), fo.mode().name().toLowerCase()));
-		}
-		return new FetchProfileInfo(fp.name(), overrides);
+		return queryAndFilterHelper.getFetchProfiles();
 	}
 
 	// --- SQL operations ---
@@ -940,23 +829,19 @@ public class MappingXmlHelper {
 	public record CustomSqlInfo(String sql, boolean callable) {}
 
 	public CustomSqlInfo getSQLInsert() {
-		SQLInsert si = classDetails.getDirectAnnotationUsage(SQLInsert.class);
-		return si != null ? new CustomSqlInfo(si.sql(), si.callable()) : null;
+		return queryAndFilterHelper.getSQLInsert();
 	}
 
 	public CustomSqlInfo getSQLUpdate() {
-		SQLUpdate su = classDetails.getDirectAnnotationUsage(SQLUpdate.class);
-		return su != null ? new CustomSqlInfo(su.sql(), su.callable()) : null;
+		return queryAndFilterHelper.getSQLUpdate();
 	}
 
 	public CustomSqlInfo getSQLDelete() {
-		SQLDelete sd = classDetails.getDirectAnnotationUsage(SQLDelete.class);
-		return sd != null ? new CustomSqlInfo(sd.sql(), sd.callable()) : null;
+		return queryAndFilterHelper.getSQLDelete();
 	}
 
 	public CustomSqlInfo getSQLDeleteAll() {
-		SQLDeleteAll sda = classDetails.getDirectAnnotationUsage(SQLDeleteAll.class);
-		return sda != null ? new CustomSqlInfo(sda.sql(), sda.callable()) : null;
+		return queryAndFilterHelper.getSQLDeleteAll();
 	}
 
 	// --- Sort ---
@@ -973,49 +858,13 @@ public class MappingXmlHelper {
 	// --- Entity listeners ---
 
 	public List<String> getEntityListenerClassNames() {
-		EntityListeners el = classDetails.getDirectAnnotationUsage(EntityListeners.class);
-		if (el == null || el.value() == null || el.value().length == 0) {
-			return List.of();
-		}
-		List<String> result = new ArrayList<>();
-		for (Class<?> c : el.value()) {
-			result.add(c.getName());
-		}
-		return result;
+		return queryAndFilterHelper.getEntityListenerClassNames();
 	}
 
 	// --- Lifecycle callbacks ---
 
-	@SuppressWarnings("unchecked")
-	private static final Class<? extends Annotation>[] LIFECYCLE_ANNOTATIONS = new Class[] {
-			PrePersist.class, PostPersist.class,
-			PreRemove.class, PostRemove.class,
-			PreUpdate.class, PostUpdate.class,
-			PostLoad.class
-	};
-
 	public List<LifecycleCallbackInfo> getLifecycleCallbacks() {
-		List<LifecycleCallbackInfo> result = new ArrayList<>();
-		for (MethodDetails method : classDetails.getMethods()) {
-			for (Class<? extends Annotation> ann : LIFECYCLE_ANNOTATIONS) {
-				if (method.hasDirectAnnotationUsage(ann)) {
-					result.add(new LifecycleCallbackInfo(toElementName(ann), method.getName()));
-				}
-			}
-		}
-		return result;
-	}
-
-	private String toElementName(Class<? extends Annotation> ann) {
-		// Convert e.g. "PrePersist" → "pre-persist"
-		StringBuilder sb = new StringBuilder();
-		for (char c : ann.getSimpleName().toCharArray()) {
-			if (Character.isUpperCase(c) && !sb.isEmpty()) {
-				sb.append('-');
-			}
-			sb.append(Character.toLowerCase(c));
-		}
-		return sb.toString();
+		return queryAndFilterHelper.getLifecycleCallbacks();
 	}
 
 	public record LifecycleCallbackInfo(String elementName, String methodName) {}

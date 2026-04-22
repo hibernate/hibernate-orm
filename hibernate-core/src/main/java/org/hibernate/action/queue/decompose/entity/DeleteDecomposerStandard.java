@@ -91,8 +91,11 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 		// Decide between static and dynamic delete operations (matches AbstractDeleteCoordinator pattern)
 		// Use dynamic if:
 		// - IMPLIED optimistic locking (ALL/DIRTY) AND we have loadedState
+		// - entity defines a partition, but we can not know the partition (because loaded state is unknown)
 		// - OR rowId is null but entityPersister has rowId mapping
-		if ( isImpliedOptimisticLocking && loadedState != null || rowId == null && entityPersister.hasRowId() ) {
+		if ( (isImpliedOptimisticLocking && loadedState != null)
+				|| ((entityEntry == null || entityEntry.getLoadedState() == null) && entityPersister.hasPartitionedSelectionMapping())
+				|| (rowId == null && entityPersister.hasRowId()) ) {
 			return decomposeDynamicDelete(
 					ordinalBase,
 					action.getInstance(),
@@ -114,7 +117,7 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 					rowId,
 					version,
 					state,
-					loadedState,
+					entityEntry == null ? null : entityEntry.getLoadedState(),
 					definedOptimisticLockStyle,
 					postDeleteHandling,
 					session
@@ -423,7 +426,7 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 					final String tableNameForMutation = entityPersister.physicalTableNameForMutation( selectableMapping );
 					final TableDeleteBuilder builder = builders.get( tableNameForMutation );
 					if ( builder != null ) {
-						builder.addKeyRestriction( selectableMapping );
+						builder.addKeyRestrictionLeniently( selectableMapping );
 					}
 				}
 			}

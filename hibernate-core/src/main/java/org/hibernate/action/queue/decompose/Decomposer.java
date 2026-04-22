@@ -62,24 +62,27 @@ public class Decomposer implements DecompositionContext {
 	}
 
 	/// Begin a flush operation - track all entities being inserted/deleted in this flush
-	public void beginFlush(List<? extends Executable> actions) {
+	public void beginFlush(
+			List<AbstractEntityInsertAction> insertions,
+			List<EntityDeleteAction> deletions) {
 		// if this ever shows up as a hot spot (unlikely), we could move collecting these
 		// into the action queue proper as the actions are added and then pass into the
 		// Decomposer as arguments.
 		entitiesBeingInserted = Collections.newSetFromMap(new IdentityHashMap<>());
 		entitiesBeingDeleted = Collections.newSetFromMap(new IdentityHashMap<>());
-		int deleteCount = 0;
-		for (Executable action : actions) {
-			if (action instanceof AbstractEntityInsertAction insert) {
-				entitiesBeingInserted.add(insert.getInstance());
-			}
-			else if (action instanceof EntityDeleteAction delete) {
-				entitiesBeingDeleted.add(delete.getInstance());
-				deleteCount++;
-			}
+// or?
+//		entitiesBeingInserted = new IdentitySet<>( insertions.size() );
+//		entitiesBeingDeleted = new IdentitySet<>( deletions.size() );
+
+		for ( AbstractEntityInsertAction insertion : insertions ) {
+			entitiesBeingInserted.add( insertion.getInstance() );
 		}
+		for ( EntityDeleteAction deletion : deletions ) {
+			entitiesBeingDeleted.add( deletion.getInstance() );
+		}
+
 		ACTION_LOGGER.tracef("Beginning flush with %d INSERT actions, %d DELETE actions",
-			entitiesBeingInserted.size(), deleteCount);
+			entitiesBeingInserted.size(), entitiesBeingDeleted.size());
 	}
 
 	/// End a flush operation - clear the tracking sets

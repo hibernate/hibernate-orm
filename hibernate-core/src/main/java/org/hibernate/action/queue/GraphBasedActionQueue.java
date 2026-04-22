@@ -253,7 +253,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 
 		// Execute these inserts via FlushCoordinator
 		final List<AbstractEntityInsertAction> executedInserts = new ArrayList<>(insertions);
-		flushCoordinator.executeFlush(executedInserts);
+		flushCoordinator.executeInsertFlush(executedInserts);
 
 		// Register cleanup actions for executed inserts (matches legacy queue pattern)
 		for (AbstractEntityInsertAction action : executedInserts) {
@@ -374,7 +374,7 @@ public class GraphBasedActionQueue implements ActionQueue {
 			}
 
 			final List<AbstractEntityInsertAction> executedInserts = new ArrayList<>(insertions);
-			flushCoordinator.executeFlush(executedInserts);
+			flushCoordinator.executeInsertFlush(executedInserts);
 
 			// Register cleanup actions for executed inserts (matches legacy queue pattern)
 			for (AbstractEntityInsertAction action : executedInserts) {
@@ -404,33 +404,49 @@ public class GraphBasedActionQueue implements ActionQueue {
 			ACTION_LOGGER.tracef( "GraphBasedActionQueue.executeActions() - %d total actions", totalActions );
 		}
 
-		// Combine actions in legacy ActionQueue order for proper dependency resolution:
-		// 1. OrphanCollectionRemoveAction - collections owned by entities being orphan-removed
-		// 2. OrphanRemovalAction - orphaned entities
-		// 3. EntityInsertAction - new entities
-		// 4. EntityUpdateAction - updated entities
-		// 5. QueuedOperationCollectionAction - extra-lazy collection operations
-		// 6. CollectionRemoveAction - removed collections
-		// 7. CollectionUpdateAction - updated collections
-		// 8. CollectionRecreateAction - recreated collections
-		// 9. EntityDeleteAction - deleted entities
-		List<Executable> combinedActions = new ArrayList<>();
-		combinedActions.addAll(orphanCollectionRemovals);
-		combinedActions.addAll(orphanRemovals);
-		combinedActions.addAll(insertions);
-		combinedActions.addAll(updates);
-		combinedActions.addAll(collectionQueuedOps);
-		combinedActions.addAll(collectionRemovals);
-		combinedActions.addAll(collectionUpdates);
-		combinedActions.addAll(collectionCreations);
-		combinedActions.addAll(deletions);
-
 		// Delegate to FlushCoordinator for graph-based execution
-		flushCoordinator.executeFlush(combinedActions);
+		// Pass separate action lists to preserve phase boundaries and cascade metadata
+		flushCoordinator.executeFlush(
+				orphanCollectionRemovals,
+				orphanRemovals,
+				insertions,
+				updates,
+				collectionQueuedOps,
+				collectionRemovals,
+				collectionUpdates,
+				collectionCreations,
+				deletions
+		);
 
-		// Register transaction completion callbacks for executed actions
-		// Match legacy ActionQueue pattern: register callbacks inline, then call invalidateSpaces once
-		for (Executable action : combinedActions) {
+		// Collect before and after transaction-completion callbacks, and
+		// collect all unique spaces from all actions
+		final List<String> allSpaces = new ArrayList<>();
+		prepareForTransactionCompletion( orphanCollectionRemovals, allSpaces );
+		prepareForTransactionCompletion( orphanRemovals, allSpaces );
+		prepareForTransactionCompletion( insertions, allSpaces );
+		prepareForTransactionCompletion( updates, allSpaces );
+		prepareForTransactionCompletion( collectionQueuedOps, allSpaces );
+		prepareForTransactionCompletion( collectionRemovals, allSpaces );
+		prepareForTransactionCompletion( collectionUpdates, allSpaces );
+		prepareForTransactionCompletion( collectionCreations, allSpaces );
+		prepareForTransactionCompletion( deletions, allSpaces );
+
+		if (!allSpaces.isEmpty()) {
+			invalidateSpaces(allSpaces.toArray(new String[0]));
+		}
+
+		// clear all pending actions
+		clear();
+
+		// Execute any pending JDBC batch
+		session.getJdbcCoordinator().executeBatch();
+	}
+
+	private void prepareForTransactionCompletion(
+			List<? extends Executable> actions,
+			List<String> allSpaces) {
+		var isQueryCacheEnabled = session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled();
+		for ( Executable action : actions ) {
 			final var beforeCompletionCallback = action.getBeforeTransactionCompletionProcess();
 			if (beforeCompletionCallback != null) {
 				transactionCompletionCallbacks.registerCallback(beforeCompletionCallback);
@@ -439,32 +455,18 @@ public class GraphBasedActionQueue implements ActionQueue {
 			if (afterCompletionCallback != null) {
 				transactionCompletionCallbacks.registerCallback(afterCompletionCallback);
 			}
-		}
 
-		// Invalidate query cache spaces ONCE for all actions (matches legacy queue pattern)
-		if (session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled()) {
-			// Collect all unique spaces from all actions
-			final List<String> allSpaces = new ArrayList<>();
-			for (Executable action : combinedActions) {
+			if ( isQueryCacheEnabled ) {
 				final String[] spaces = action.getPropertySpaces();
-				if (spaces != null && spaces.length > 0) {
-					for (String space : spaces) {
-						if (!allSpaces.contains(space)) {
-							allSpaces.add(space);
+				if ( CollectionHelper.isNotEmpty( spaces ) ) {
+					for ( String space : spaces) {
+						if ( !allSpaces.contains(space) ) {
+							allSpaces.add( space );
 						}
 					}
 				}
 			}
-			if (!allSpaces.isEmpty()) {
-				invalidateSpaces(allSpaces.toArray(new String[0]));
-			}
 		}
-
-		// clear all pending actions
-		clear();
-
-		// Execute any pending JDBC batch
-		session.getJdbcCoordinator().executeBatch();
 	}
 
 	/// Prepares the internal action queues for execution.

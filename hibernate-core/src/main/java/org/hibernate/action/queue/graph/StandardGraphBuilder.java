@@ -255,10 +255,11 @@ public class StandardGraphBuilder implements GraphBuilder {
 
 		for ( GroupNode parentDelete : parentDeletes ) {
 			for ( GroupNode childDelete : childDeletes ) {
-				// DELETE edges with nullable FKs can be broken by NULLing the FK before DELETE
-				// Non-nullable DELETE edges rely on deferrable constraints or database cascades
-				final boolean breakable = foreignKey.nullable();
-				final int breakCost = breakable ? 500 : 0;
+				// DELETE edges can't be broken with NULL strategy (would need to re-insert row)
+				// Breaking relies on deferrable constraints or action queue ordering
+				// Ordinal-based cycle breaking in CycleBreaker will prefer to keep forward-flowing edges
+				final boolean breakable = false;
+				final int breakCost = 0;
 
 				// Edge direction for DELETE: child -> parent (reversed!)
 				final GraphEdge edge = new GraphEdge(

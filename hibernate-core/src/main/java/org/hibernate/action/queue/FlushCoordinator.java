@@ -7,6 +7,13 @@ package org.hibernate.action.queue;
 import org.hibernate.HibernateException;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.ActionLogging;
+import org.hibernate.action.internal.CollectionRecreateAction;
+import org.hibernate.action.internal.CollectionRemoveAction;
+import org.hibernate.action.internal.CollectionUpdateAction;
+import org.hibernate.action.internal.EntityDeleteAction;
+import org.hibernate.action.internal.EntityUpdateAction;
+import org.hibernate.action.internal.OrphanRemovalAction;
+import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.queue.constraint.ConstraintModel;
 import org.hibernate.action.queue.exec.PlanStepExecutor;
 import org.hibernate.action.queue.exec.PlanStepExecutorFactory;
@@ -33,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.hibernate.action.queue.CollectionOrdinalSupport.extractCollectionOrdinal;
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /// Orchestrates the steps needed to flush a Session, using a graph-based approach to
 /// model mutation-operation scheduling that automatically handles foreign key dependencies,
@@ -151,12 +157,47 @@ public class FlushCoordinator {
 		}
 	}
 
-	public void executeFlush(List<? extends Executable> actions) {
-		if ( actions.isEmpty() ) {
+	public void executeInsertFlush(List<AbstractEntityInsertAction> insertActions) {
+
+	}
+
+	/**
+	 * Execute flush with separate action phases.
+	 * Preserves phase boundaries to maintain execution order intent.
+	 */
+	public void executeFlush(
+			List<CollectionRemoveAction> orphanCollectionRemovals,
+			List<OrphanRemovalAction> orphanRemovals,
+			List<AbstractEntityInsertAction> insertions,
+			List<EntityUpdateAction> updates,
+			List<QueuedOperationCollectionAction> collectionQueuedOps,
+			List<CollectionRemoveAction> collectionRemovals,
+			List<CollectionUpdateAction> collectionUpdates,
+			List<CollectionRecreateAction> collectionCreations,
+			List<EntityDeleteAction> deletions) {
+
+		// Count for early opt-out (return)
+		int totalActions = orphanCollectionRemovals.size() + orphanRemovals.size() + insertions.size()
+				+ updates.size() + collectionQueuedOps.size() + collectionRemovals.size()
+				+ collectionUpdates.size() + collectionCreations.size() + deletions.size();
+
+		if ( totalActions == 0 ) {
+			// EARLY EXIT!!
 			return;
 		}
 
-		var operationGroups = decomposeExecutables( actions );
+		// Decompose each phase separately to preserve phase identity
+		var operationGroups = decomposeExecutablePhases(
+				orphanCollectionRemovals,
+				orphanRemovals,
+				insertions,
+				updates,
+				collectionQueuedOps,
+				collectionRemovals,
+				collectionUpdates,
+				collectionCreations,
+				deletions
+		);
 
 		if ( operationGroups.isEmpty() ) {
 			// No SQL operations needed - post-execution callbacks (if any) were already
@@ -268,8 +309,11 @@ public class FlushCoordinator {
 
 		// For each foreign key, check if it creates a dependency between groups
 		for (var fk : constraintModel.foreignKeys()) {
-			if (!fk.isAssociation()) {
-				continue; // Skip non-association FKs (secondary tables, inheritance)
+			// For DELETE operations, we must consider ALL FKs including inheritance FKs
+			// (e.g., joined inheritance where dog.id -> animal.id requires deleting dog before animal)
+			// For INSERT operations, we only need association FKs (inheritance inserts are ordered by table structure)
+			if (!fk.isAssociation() && kind != MutationKind.DELETE) {
+				continue; // Skip non-association FKs for INSERTs (secondary tables, inheritance handled separately)
 			}
 
 			final String keyTable = fk.keyTable();
@@ -342,26 +386,51 @@ public class FlushCoordinator {
 		public List<PlannedOperation> operations() {
 			return operations;
 		}
+
 	}
 
-	private List<PlannedOperationGroup> decomposeExecutables(
-			List<? extends Executable> executables) {
-		// Build a set of all entities being inserted in this flush
-		// This allows the decomposer to recognize that these entities are not unresolved dependencies
-		decomposer.beginFlush(executables);
+	/**
+	 * Decompose executables from separate phases, preserving phase boundaries.
+	 */
+	private List<PlannedOperationGroup> decomposeExecutablePhases(
+			List<CollectionRemoveAction> orphanCollectionRemovals,
+			List<OrphanRemovalAction> orphanRemovals,
+			List<AbstractEntityInsertAction> insertions,
+			List<EntityUpdateAction> updates,
+			List<QueuedOperationCollectionAction> collectionQueuedOps,
+			List<CollectionRemoveAction> collectionRemovals,
+			List<CollectionUpdateAction> collectionUpdates,
+			List<CollectionRecreateAction> collectionCreations,
+			List<EntityDeleteAction> deletions) {
 
-		final ArrayList<PlannedOperation> operations = arrayList( executables.size() * 2);
+		decomposer.beginFlush( insertions, deletions );
+
+		final ArrayList<PlannedOperation> operations = new ArrayList<>();
 		int ordinalBase = 0;
-		for (Executable e : executables) {
-			var ops = decomposer.decompose( e, ordinalBase++ );
-			operations.addAll( ops );
-		}
 
-		// Clear the flush context
+		// Decompose each phase separately, maintaining ordinal ordering
+		ordinalBase = decomposePhase(orphanCollectionRemovals, ordinalBase, operations);
+		ordinalBase = decomposePhase(orphanRemovals, ordinalBase, operations);
+		ordinalBase = decomposePhase(insertions, ordinalBase, operations);
+		ordinalBase = decomposePhase(updates, ordinalBase, operations);
+		ordinalBase = decomposePhase(collectionQueuedOps, ordinalBase, operations);
+		ordinalBase = decomposePhase(collectionRemovals, ordinalBase, operations);
+		ordinalBase = decomposePhase(collectionUpdates, ordinalBase, operations);
+		ordinalBase = decomposePhase(collectionCreations, ordinalBase, operations);
+		ordinalBase = decomposePhase(deletions, ordinalBase, operations);
+
 		decomposer.endFlush();
 
 		// Group operations by shape
 		return groupOperations(operations);
+	}
+
+	private int decomposePhase(List<? extends Executable> executables, int ordinalBase, List<PlannedOperation> operations) {
+		for (Executable e : executables) {
+			var ops = decomposer.decompose(e, ordinalBase++);
+			operations.addAll(ops);
+		}
+		return ordinalBase;
 	}
 
 	/// Groups PlannedOperations by their StatementShapeKey (table + kind + SQL shape).
@@ -387,16 +456,25 @@ public class FlushCoordinator {
 		}
 
 		// Group operations by their shape, optionally including ordinalBase for self-referential tables
+		// Also separate by cascade source to preserve cascade metadata fidelity
 		final Map<OperationGroupKey, OperationGroupBuilder> builders = new LinkedHashMap<>();
 
 		for (PlannedOperation operation : operations) {
 			final StatementShapeKey shapeKey = operation.getShapeKey();
 
-			// For self-referential tables, include ordinalBase to avoid false cycles
-			// For other tables, merge across entities for better batching
-			final OperationGroupKey key = operation.getMutatingTableDescriptor().isSelfReferential()
-					? new CompositeOperationGroupKey( shapeKey, extractCollectionOrdinal( operation.getOrdinal() ) )
-					: shapeKey;
+			// Build composite key considering self-referential tables
+			// Self-referential tables need ordinalBase to avoid false cycles
+			final OperationGroupKey key;
+			if (operation.getMutatingTableDescriptor().isSelfReferential()) {
+				key = new OrdinalAwareOperationGroupKey(
+						shapeKey,
+						extractCollectionOrdinal(operation.getOrdinal())
+				);
+			}
+			else {
+				// Non-self-referential: use simple shape key
+				key = shapeKey;
+			}
 
 			var builder = builders.get(key);
 			if (builder == null) {
@@ -521,6 +599,14 @@ public class FlushCoordinator {
 	private record CompositeOperationGroupKey(
 			StatementShapeKey shapeKey,
 			int ordinalBase) implements OperationGroupKey {
+	}
+
+	/**
+	 * Operation group key that includes ordinal information for self-referential tables.
+	 */
+	private record OrdinalAwareOperationGroupKey(
+			StatementShapeKey shapeKey,
+			Integer ordinalBase) implements OperationGroupKey {
 	}
 
 

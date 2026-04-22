@@ -19,6 +19,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
@@ -200,6 +201,35 @@ public class CascadeOnUninitializedTest {
 		);
 	}
 
+	@Test
+	public void testDelete(SessionFactoryScope scope) {
+		Person person = persistPersonWithBoth( scope );
+
+		// get a detached Person
+		Person detachedPerson = scope.fromTransaction( session -> session.get( Person.class, person.getId() ) );
+
+		// primaryAddress should be initialized as an enhanced-proxy
+		assertTrue( Hibernate.isPropertyInitialized( detachedPerson, "primaryAddress" ) );
+		assertThat( detachedPerson ).isNotInstanceOf( HibernateProxy.class );
+		assertFalse( Hibernate.isInitialized( detachedPerson.getPrimaryAddress() ) );
+
+		// address should not be initialized in order to reproduce the problem
+		assertFalse( Hibernate.isInitialized( detachedPerson.getAddresses() ) );
+
+		// deleting detachedPerson should result in detachedPerson.addresses and
+		// detachedPerson.primaryAddress being initialized, so that the DELETE
+		// operation can be cascaded to it.
+		scope.inTransaction( session -> session.remove( detachedPerson ) );
+
+		// both the Person and its Address should be deleted
+		scope.inTransaction( session -> {
+					assertNull( session.find( Person.class, person.getId() ) );
+					assertNull( session.find( Person.class, person.getAddresses().iterator().next().getId() ) );
+					assertNull( session.find( Person.class, person.primaryAddress.getId() ) );
+				}
+		);
+	}
+
 	public Person persistPersonWithManyToOne(SessionFactoryScope scope) {
 		Address address = new Address();
 		address.setDescription( "ABC" );
@@ -224,6 +254,28 @@ public class CascadeOnUninitializedTest {
 		scope.inTransaction( session -> session.persist( person ) );
 
 		return person;
+	}
+
+	public Person persistPersonWithBoth(SessionFactoryScope scope) {
+		Address primaryAddress = new Address();
+		primaryAddress.setDescription( "primary" );
+
+		Address secondaryAddress = new Address();
+		secondaryAddress.setDescription( "secondary" );
+
+		final Person person = new Person();
+		person.setName( "John Doe" );
+		person.setPrimaryAddress( primaryAddress );
+		person.getAddresses().add( secondaryAddress );
+
+		scope.inTransaction( session -> session.persist( person ) );
+
+		return person;
+	}
+
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Entity

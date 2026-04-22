@@ -240,8 +240,21 @@ public class CycleBreaker {
 			else if (e.getBreakCost() < best.getBreakCost()) {
 				best = e;
 			}
-			else if (e.getBreakCost() == best.getBreakCost() && e.getStableId() < best.getStableId()) {
-				best = e;
+			else if (e.getBreakCost() == best.getBreakCost()) {
+				// Prefer not to break backward-flowing edges (preserve action queue order)
+				// Backward flow: toOrdinal < fromOrdinal (e.g., cascaded delete -> root delete)
+				// Forward flow: toOrdinal >= fromOrdinal (e.g., root delete -> cascaded delete)
+				final boolean eBackward = e.getTo().group().ordinal() < e.getFrom().group().ordinal();
+				final boolean bestBackward = best.getTo().group().ordinal() < best.getFrom().group().ordinal();
+
+				if (bestBackward && !eBackward) {
+					// Current best flows backward, e flows forward - prefer e
+					best = e;
+				}
+				else if (eBackward == bestBackward && e.getStableId() < best.getStableId()) {
+					// Both flow same direction - use stableId as tiebreaker
+					best = e;
+				}
 			}
 		}
 		return best;

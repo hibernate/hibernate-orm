@@ -766,7 +766,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 							entityPersister.physicalTableNameForMutation( selectableMapping );
 					final TableUpdateBuilder<?> builder = builders.get( tableNameForMutation );
 					if ( builder != null ) {
-						builder.addKeyRestriction( selectableMapping );
+						builder.addKeyRestrictionLeniently( selectableMapping );
 					}
 				}
 			}

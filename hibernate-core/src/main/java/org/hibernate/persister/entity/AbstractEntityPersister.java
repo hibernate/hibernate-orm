@@ -3343,18 +3343,21 @@ public abstract class AbstractEntityPersister
 		// Now we can safely create decomposers which may access tableDescriptors
 		insertDecomposer = new InsertDecomposer( this, factory );
 		updateDecomposer = new UpdateDecomposer( this, factory );
-
-		if ( getSoftDeleteMapping() == null ) {
-			deleteDecomposer = new DeleteDecomposerStandard( this, factory );
-		}
-		else if ( getRootEntityDescriptor() == this ) {
-			deleteDecomposer = new DeleteDecomposerSoftDelete( this, factory );
-		}
-		else {
-			deleteDecomposer = new DeleteDecomposerInheritedSoftDelete( this, factory );
-		}
+		deleteDecomposer = buildDeleteDecomposer( factory );
 
 		logStaticSQL();
+	}
+
+	protected DeleteDecomposer buildDeleteDecomposer(SessionFactoryImplementor factory) {
+		if ( getSoftDeleteMapping() == null ) {
+			return new DeleteDecomposerStandard( this, factory );
+		}
+		else if ( getRootEntityDescriptor() == this ) {
+			return new DeleteDecomposerSoftDelete( this, factory );
+		}
+		else {
+			return new DeleteDecomposerInheritedSoftDelete( this, factory );
+		}
 	}
 
 	private void doLateInit() {

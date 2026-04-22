@@ -462,17 +462,20 @@ public class FlushCoordinator {
 		for (PlannedOperation operation : operations) {
 			final StatementShapeKey shapeKey = operation.getShapeKey();
 
-			// Build composite key considering self-referential tables
-			// Self-referential tables need ordinalBase to avoid false cycles
+			// Build composite key considering:
+			// 1. Self-referential tables: include ordinal to avoid false cycles
+			// 2. DELETE to tables with cyclic FKs: include ordinal to preserve cascade chain distinction
 			final OperationGroupKey key;
-			if (operation.getMutatingTableDescriptor().isSelfReferential()) {
+			if (operation.getMutatingTableDescriptor().isSelfReferential()
+					|| (operation.getKind() == MutationKind.DELETE
+						&& constraintModel.hasTableCyclicForeignKeys(operation.getTableExpression()))) {
 				key = new OrdinalAwareOperationGroupKey(
 						shapeKey,
 						extractCollectionOrdinal(operation.getOrdinal())
 				);
 			}
 			else {
-				// Non-self-referential: use simple shape key
+				// Normal case: use simple shape key for batching
 				key = shapeKey;
 			}
 

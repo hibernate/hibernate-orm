@@ -94,6 +94,19 @@ public final class ConstraintModelBuilder {
 		Map<String, List<UniqueConstraint>> uniqueConstraintsByTable = uniqueConstraints.stream()
 				.collect(Collectors.groupingBy(UniqueConstraint::tableName));
 
+		// Index foreign keys by target table (inbound FKs - pointing TO this table)
+		Map<String, List<ForeignKey>> inboundForeignKeysByTable = foreignKeys.stream()
+				.collect(Collectors.groupingBy(ForeignKey::targetTable));
+
+		// Index foreign keys by key table (outbound FKs - FROM this table)
+		Map<String, List<ForeignKey>> outboundForeignKeysByTable = foreignKeys.stream()
+				.collect(Collectors.groupingBy(ForeignKey::keyTable));
+
+		// Identify tables with cyclic foreign key relationships (bidirectional FKs)
+		var tablesWithCyclicForeignKeys = identifyTablesWithCyclicForeignKeys(
+				inboundForeignKeysByTable,
+				outboundForeignKeysByTable
+		);
 
 		// Identify tables with self-referential associations
 		var selfReferentialTables = identifySelfReferentialTables( foreignKeys );
@@ -102,6 +115,9 @@ public final class ConstraintModelBuilder {
 				foreignKeys,
 				uniqueConstraints,
 				uniqueConstraintsByTable,
+				inboundForeignKeysByTable,
+				outboundForeignKeysByTable,
+				tablesWithCyclicForeignKeys,
 				selfReferentialTables
 		);
 	}
@@ -537,6 +553,42 @@ public final class ConstraintModelBuilder {
 				}
 			}
 		}
+		return tables;
+	}
+
+	/// Identifies tables that participate in cyclic foreign key relationships.
+	/// A table has cyclic FKs if it has bidirectional FK relationships - i.e., it has
+	/// an FK pointing to another table AND that table has an FK pointing back to it.
+	///
+	/// Example: Person table has FK to Address AND Address table has FK to Person.
+	/// When deleting entities from different cascade paths, batching their DELETEs
+	/// by shape alone can create false cycles.
+	private java.util.Set<String> identifyTablesWithCyclicForeignKeys(
+			Map<String, List<ForeignKey>> inboundForeignKeysByTable,
+			Map<String, List<ForeignKey>> outboundForeignKeysByTable) {
+		final java.util.Set<String> tables = new java.util.HashSet<>();
+
+		// For each table, check if it has bidirectional FK relationships
+		for (String table : inboundForeignKeysByTable.keySet()) {
+			List<ForeignKey> inboundFKs = inboundForeignKeysByTable.getOrDefault(table, List.of());
+			List<ForeignKey> outboundFKs = outboundForeignKeysByTable.getOrDefault(table, List.of());
+
+			// Check for bidirectional relationships
+			for (ForeignKey inbound : inboundFKs) {
+				String sourceTable = inbound.keyTable();
+				for (ForeignKey outbound : outboundFKs) {
+					if (outbound.targetTable().equals(sourceTable)) {
+						// Found bidirectional FK: table <-> sourceTable
+						tables.add(table);
+						break;
+					}
+				}
+				if (tables.contains(table)) {
+					break;
+				}
+			}
+		}
+
 		return tables;
 	}
 }

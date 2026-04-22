@@ -1,0 +1,210 @@
+
+    private final ${helper.importType("org.hibernate.SessionFactory")} sessionFactory = getSessionFactory();
+
+    protected ${helper.importType("org.hibernate.SessionFactory")} getSessionFactory() {
+        try {
+            return (${helper.importType("org.hibernate.SessionFactory")}) new ${helper.importType("javax.naming.InitialContext")}().lookup("${helper.getSessionFactoryName()}");
+        }
+        catch (Exception e) {
+            logger.log(${helper.importType("java.util.logging.Level")}.SEVERE, "Could not locate SessionFactory in JNDI", e);
+            throw new IllegalStateException("Could not locate SessionFactory in JNDI");
+        }
+    }
+
+    public void persist(${declarationName} transientInstance) {
+        logger.log(${helper.importType("java.util.logging.Level")}.INFO, "persisting ${declarationName} instance");
+        try {
+            sessionFactory.getCurrentSession().persist(transientInstance);
+            logger.log(${helper.importType("java.util.logging.Level")}.INFO, "persist successful");
+        }
+        catch (RuntimeException re) {
+            logger.log(${helper.importType("java.util.logging.Level")}.SEVERE, "persist failed", re);
+            throw re;
+        }
+    }
+
+    public void attachDirty(${declarationName} instance) {
+        logger.log(${helper.importType("java.util.logging.Level")}.INFO, "attaching dirty ${declarationName} instance");
+        try {
+            sessionFactory.getCurrentSession().merge(instance);
+            logger.log(${helper.importType("java.util.logging.Level")}.INFO, "attach successful");
+        }
+        catch (RuntimeException re) {
+            logger.log(${helper.importType("java.util.logging.Level")}.SEVERE, "attach failed", re);
+            throw re;
+        }
+    }
+
+    public void attachClean(${declarationName} instance) {
+        logger.log(${helper.importType("java.util.logging.Level")}.INFO, "attaching clean ${declarationName} instance");
+        try {
+            sessionFactory.getCurrentSession().lock(instance, ${helper.importType("org.hibernate.LockMode")}.NONE);
+            logger.log(${helper.importType("java.util.logging.Level")}.INFO, "attach successful");
+        }
+        catch (RuntimeException re) {
+            logger.log(${helper.importType("java.util.logging.Level")}.SEVERE, "attach failed", re);
+            throw re;
+        }
+    }
+
+    public void remove(${declarationName} persistentInstance) {
+        logger.log(${helper.importType("java.util.logging.Level")}.INFO, "removing ${declarationName} instance");
+        try {
+            sessionFactory.getCurrentSession().remove(persistentInstance);
+            logger.log(${helper.importType("java.util.logging.Level")}.INFO, "remove successful");
+        }
+        catch (RuntimeException re) {
+            logger.log(${helper.importType("java.util.logging.Level")}.SEVERE, "remove failed", re);
+            throw re;
+        }
+    }
+
+    public ${declarationName} merge(${declarationName} detachedInstance) {
+        logger.log(${helper.importType("java.util.logging.Level")}.INFO, "merging ${declarationName} instance");
+        try {
+            ${declarationName} result = (${declarationName}) sessionFactory.getCurrentSession()
+                    .merge(detachedInstance);
+            logger.log(${helper.importType("java.util.logging.Level")}.INFO, "merge successful");
+            return result;
+        }
+        catch (RuntimeException re) {
+            logger.log(${helper.importType("java.util.logging.Level")}.SEVERE, "merge failed", re);
+            throw re;
+        }
+    }
+
+<#if helper.hasIdentifier()>
+    public ${declarationName} findById( ${helper.getIdTypeName()} id) {
+        logger.log(${helper.importType("java.util.logging.Level")}.INFO, "getting ${declarationName} instance with id: " + id);
+        try {
+            ${declarationName} instance = (${declarationName}) sessionFactory.getCurrentSession()
+                    .get("${helper.getEntityName()}", id);
+            if (instance==null) {
+                logger.log(${helper.importType("java.util.logging.Level")}.INFO, "get successful, no instance found");
+            }
+            else {
+                logger.log(${helper.importType("java.util.logging.Level")}.INFO, "get successful, instance found");
+            }
+            return instance;
+        }
+        catch (RuntimeException re) {
+            logger.log(${helper.importType("java.util.logging.Level")}.SEVERE, "get failed", re);
+            throw re;
+        }
+    }
+</#if>
+
+<#if helper.hasNaturalId()>
+    public ${declarationName} findByNaturalId(${helper.getNaturalIdParameterList()}) {
+        logger.log(${helper.importType("java.util.logging.Level")}.INFO, "getting ${declarationName} instance by natural id");
+        try {
+            ${helper.importType("jakarta.persistence.criteria.CriteriaBuilder")} criteriaBuilder = sessionFactory.getCriteriaBuilder();
+            ${helper.importType("jakarta.persistence.criteria.CriteriaQuery")}<${declarationName}> criteriaQuery = criteriaBuilder.createQuery(${declarationName}.class);
+            ${helper.importType("jakarta.persistence.criteria.Root")}<${declarationName}> root = criteriaQuery.from(${declarationName}.class);
+            criteriaQuery.where(
+<#assign notFirst = false/>
+<#list helper.getNaturalIdFields() as field>
+                    <#if notFirst>,</#if>criteriaBuilder.equal(root.get("${field.getName()}"), ${field.getName()})
+<#assign notFirst = true/>
+</#list>
+            );
+            ${declarationName} instance = sessionFactory
+                    .getCurrentSession()
+                    .createQuery(criteriaQuery)
+                    .getSingleResult();
+            if (instance==null) {
+                logger.log(${helper.importType("java.util.logging.Level")}.INFO, "get successful, no instance found");
+            }
+            else {
+                logger.log(${helper.importType("java.util.logging.Level")}.INFO, "get successful, instance found");
+            }
+            return instance;
+        }
+        catch (RuntimeException re) {
+            logger.log(${helper.importType("java.util.logging.Level")}.SEVERE, "query failed", re);
+            throw re;
+        }
+    }
+</#if>
+
+    public void persistAll(${helper.importType("java.util.List")}<${declarationName}> entities, int batchSize) {
+        logger.log(${helper.importType("java.util.logging.Level")}.INFO, "batch persisting " + entities.size() + " ${declarationName} instances");
+        ${helper.importType("org.hibernate.Session")} session = sessionFactory.getCurrentSession();
+        for (int i = 0; i < entities.size(); i++) {
+            session.persist(entities.get(i));
+            if (i > 0 && i % batchSize == 0) {
+                session.flush();
+                session.clear();
+            }
+        }
+    }
+
+    public ${helper.importType("java.util.List")}<${declarationName}> mergeAll(${helper.importType("java.util.List")}<${declarationName}> entities, int batchSize) {
+        logger.log(${helper.importType("java.util.logging.Level")}.INFO, "batch merging " + entities.size() + " ${declarationName} instances");
+        ${helper.importType("org.hibernate.Session")} session = sessionFactory.getCurrentSession();
+        ${helper.importType("java.util.List")}<${declarationName}> result = new ${helper.importType("java.util.ArrayList")}<>();
+        for (int i = 0; i < entities.size(); i++) {
+            result.add((${declarationName}) session.merge(entities.get(i)));
+            if (i > 0 && i % batchSize == 0) {
+                session.flush();
+                session.clear();
+            }
+        }
+        return result;
+    }
+
+    public void removeAll(${helper.importType("java.util.List")}<${declarationName}> entities, int batchSize) {
+        logger.log(${helper.importType("java.util.logging.Level")}.INFO, "batch removing " + entities.size() + " ${declarationName} instances");
+        ${helper.importType("org.hibernate.Session")} session = sessionFactory.getCurrentSession();
+        for (int i = 0; i < entities.size(); i++) {
+            session.remove(session.contains(entities.get(i)) ? entities.get(i) : session.merge(entities.get(i)));
+            if (i > 0 && i % batchSize == 0) {
+                session.flush();
+                session.clear();
+            }
+        }
+    }
+
+    public ${helper.importType("java.util.List")}<${declarationName}> findAll(int firstResult, int maxResults) {
+        logger.log(${helper.importType("java.util.logging.Level")}.INFO, "finding ${declarationName} instances with pagination");
+        try {
+            ${helper.importType("jakarta.persistence.criteria.CriteriaBuilder")} criteriaBuilder = sessionFactory.getCriteriaBuilder();
+            ${helper.importType("jakarta.persistence.criteria.CriteriaQuery")}<${declarationName}> criteriaQuery = criteriaBuilder.createQuery(${declarationName}.class);
+            criteriaQuery.from(${declarationName}.class);
+            return sessionFactory.getCurrentSession()
+                    .createQuery(criteriaQuery)
+                    .setFirstResult(firstResult)
+                    .setMaxResults(maxResults)
+                    .getResultList();
+        }
+        catch (RuntimeException re) {
+            logger.log(${helper.importType("java.util.logging.Level")}.SEVERE, "find all failed", re);
+            throw re;
+        }
+    }
+
+<#list helper.getEntityNamedQueries() as query>
+<#assign methname = helper.unqualify(query.name())>
+<#assign paramList = helper.getQueryParameterList(query)>
+<#assign paramNames = helper.getQueryParameterNames(query)>
+<#if methname?starts_with("find")>
+    public ${helper.importType("java.util.List")}<${declarationName}> ${methname}(${paramList}) {
+<#elseif methname?starts_with("count")>
+    public int ${methname}(${paramList}) {
+<#else>
+    public ${helper.importType("java.util.List")} ${methname}(${paramList}) {
+</#if>
+        ${helper.importType("org.hibernate.query.Query")} query = sessionFactory.getCurrentSession()
+                .createNamedQuery("${query.name()}");
+<#list paramNames as param>
+        query.setParameter("${param}", ${param});
+</#list>
+<#if methname?starts_with("find")>
+        return (List<${declarationName}>) query.list();
+<#elseif methname?starts_with("count")>
+        return ( (Integer) query.uniqueResult() ).intValue();
+<#else>
+        return query.list();
+</#if>
+    }
+</#list>

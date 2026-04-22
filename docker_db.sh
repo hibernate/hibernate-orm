@@ -1,21 +1,30 @@
 #! /bin/bash
 
+# Detect container runtime
 if command -v docker > /dev/null; then
   CONTAINER_CLI=$(command -v docker)
-  HEALTCHECK_PATH="{{.State.Health.Status}}"
-  PRIVILEGED_CLI=""
-  IS_PODMAN=false
   if [[ "$(docker version | grep Podman)" == "" ]]; then
     IS_DOCKER_RUNTIME=true
+    IS_PODMAN=false
   else
     IS_DOCKER_RUNTIME=false
+    IS_PODMAN=true
   fi
-else
+elif command -v podman > /dev/null; then
   CONTAINER_CLI=$(command -v podman)
-  HEALTCHECK_PATH="{{.State.Healthcheck.Status}}"
-  IS_PODMAN=true
   IS_DOCKER_RUNTIME=false
-  # Only use sudo for podman
+  IS_PODMAN=true
+else
+  echo "ERROR: Neither docker nor podman found on PATH"
+  exit 1
+fi
+
+# Set runtime-specific defaults
+if [[ "$IS_DOCKER_RUNTIME" == "true" ]]; then
+  HEALTHCHECK_PATH="{{.State.Health.Status}}"
+  PRIVILEGED_CLI=""
+elif [[ "$IS_PODMAN" == "true" ]]; then
+  HEALTHCHECK_PATH="{{.State.Healthcheck.Status}}"
   if command -v sudo > /dev/null; then
     PRIVILEGED_CLI="sudo"
   else
@@ -810,7 +819,7 @@ oracle_setup() {
         if ! command -v docker > /dev/null; then
           $PRIVILEGED_CLI $CONTAINER_CLI healthcheck run oracle > /dev/null
         fi
-        HEALTHSTATUS="`$PRIVILEGED_CLI $CONTAINER_CLI inspect -f $HEALTCHECK_PATH oracle`"
+        HEALTHSTATUS="`$PRIVILEGED_CLI $CONTAINER_CLI inspect -f $HEALTHCHECK_PATH oracle`"
         HEALTHSTATUS=${HEALTHSTATUS##+( )} #Remove longest matching series of spaces from the front
         HEALTHSTATUS=${HEALTHSTATUS%%+( )} #Remove longest matching series of spaces from the back
     done
@@ -906,7 +915,7 @@ oracle_free_setup() {
         if ! command -v docker > /dev/null; then
           $PRIVILEGED_CLI $CONTAINER_CLI healthcheck run oracle > /dev/null
         fi
-        HEALTHSTATUS="`$PRIVILEGED_CLI $CONTAINER_CLI inspect -f $HEALTCHECK_PATH oracle`"
+        HEALTHSTATUS="`$PRIVILEGED_CLI $CONTAINER_CLI inspect -f $HEALTHCHECK_PATH oracle`"
         HEALTHSTATUS=${HEALTHSTATUS##+( )} #Remove longest matching series of spaces from the front
         HEALTHSTATUS=${HEALTHSTATUS%%+( )} #Remove longest matching series of spaces from the back
     done
@@ -995,7 +1004,7 @@ EOF\""
 
 disable_userland_proxy() {
   if [[ "$IS_DOCKER_RUNTIME" == "true" ]]; then
-    if [[ "$HEALTCHECK_PATH" == "{{.State.Health.Status}}" ]]; then
+    if [[ "$HEALTHCHECK_PATH" == "{{.State.Health.Status}}" ]]; then
       if [[ ! -f /etc/docker/daemon.json ]]; then
         echo "Didn't find /etc/docker/daemon.json but need to disable userland-proxy..."
         echo "Stopping docker..."

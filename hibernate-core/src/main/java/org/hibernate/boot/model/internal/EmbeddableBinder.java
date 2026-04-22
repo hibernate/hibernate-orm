@@ -67,6 +67,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
 import static org.hibernate.boot.model.internal.ComponentPropertyHolder.applyExplicitTableName;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
+import static org.hibernate.boot.model.internal.InheritanceState.getSuperclassInheritanceState;
 import static org.hibernate.boot.model.internal.GeneratorBinder.createIdGeneratorsFromGeneratorAnnotations;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
@@ -490,6 +491,14 @@ public class EmbeddableBinder {
 					context
 			);
 		}
+		else {
+			// We need to register ancestor @MappedSuperclass metadata even for embedded types of classes
+			// that are not annotated as @Embeddable (i.e. that don't have an inheritance state)
+			final var superState = getSuperclassInheritanceState( returnedClassOrElement, inheritanceStatePerClass );
+			if ( superState != null && superState.isEmbeddableSuperclass() ) {
+				superState.postProcess( embeddable );
+			}
+		}
 
 		final var annotatedTypeDetails = inferredData.getPropertyType();
 
@@ -621,7 +630,8 @@ public class EmbeddableBinder {
 			PropertyData propertyData,
 			InheritanceState inheritanceState,
 			MetadataBuildingContext context) {
-		if ( inheritanceState != null ) {
+		// Discriminated inheritance only applies to explicit @Embeddable types
+		if ( !inheritanceState.isEmbeddableSuperclass() ) {
 			final var discriminatorColumn = processEmbeddableDiscriminatorProperties(
 					componentClass,
 					propertyData,

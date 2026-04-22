@@ -332,7 +332,9 @@ public class InheritanceState {
 				superEntityState != null ?
 						buildingContext.getMetadataCollector().getEntityBinding( superEntityState.getClazz().getName() ) :
 						null;
-		final int lastMappedSuperclass = classesToProcessForMappedSuperclass.size() - 1;
+		final int lastMappedSuperclass = isEmbeddableSuperclass
+				? classesToProcessForMappedSuperclass.size()
+				: classesToProcessForMappedSuperclass.size() - 1;
 		org.hibernate.mapping.MappedSuperclass mappedSuperclass = null;
 		for ( int index = 0; index < lastMappedSuperclass; index++ ) {
 			org.hibernate.mapping.MappedSuperclass parentSuperclass = mappedSuperclass;

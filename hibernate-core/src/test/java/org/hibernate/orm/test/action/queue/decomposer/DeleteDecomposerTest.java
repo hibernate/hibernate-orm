@@ -13,6 +13,7 @@ import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.QueueType;
 import org.hibernate.action.queue.StatementShapeKey;
+import org.hibernate.action.queue.decompose.entity.DeleteDecomposerSoftDelete;
 import org.hibernate.action.queue.decompose.entity.DeleteDecomposerStandard;
 import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
@@ -220,7 +221,7 @@ public class DeleteDecomposerTest {
 
 			EntityPersister persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SoftDeleteEntity.class );
-			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
+			DeleteDecomposerSoftDelete decomposer = new DeleteDecomposerSoftDelete( persister, factory );
 
 			// Verify soft delete is enabled
 			assertNotNull( persister.getSoftDeleteMapping(), "Soft delete should be enabled" );
@@ -260,7 +261,7 @@ public class DeleteDecomposerTest {
 
 			EntityPersister persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SoftDeleteWithVersion.class );
-			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
+			DeleteDecomposerSoftDelete decomposer = new DeleteDecomposerSoftDelete( persister, factory );
 
 			// Verify soft delete and version
 			assertNotNull( persister.getSoftDeleteMapping() );
@@ -344,7 +345,7 @@ public class DeleteDecomposerTest {
 
 			EntityPersister persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SoftDeleteEntity.class );
-			DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard( persister, factory );
+			DeleteDecomposerSoftDelete decomposer = new DeleteDecomposerSoftDelete( persister, factory );
 
 			// Static delete group should be pre-generated for soft deletes too
 			assertNotNull( decomposer.getStaticDeleteOperations() );

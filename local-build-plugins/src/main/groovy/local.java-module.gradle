@@ -335,6 +335,36 @@ tasks.named("jar") {
                         // Temporarily support JTA 1.1 -- Karaf and other frameworks still
                         // use it.  Without this, the plugin generates [1.2,2).
                         'javax.transaction;version="[1.1,2)"',
+                        // Optional dependencies, see OracleOsonJacksonHelper class
+                        'com.fasterxml.jackson.core;resolution:="optional"',
+                        // Optional dependencies, see JacksonIntegration class
+                        'com.fasterxml.jackson.databind;resolution:="optional"',
+                        'com.fasterxml.jackson.databind.module;resolution:="optional"',
+                        'com.fasterxml.jackson.databind.ser.std;resolution:="optional"',
+                        'com.fasterxml.jackson.dataformat.xml;resolution:="optional"',
+                        'com.fasterxml.jackson.dataformat.xml.std;resolution:="optional"',
+                        'com.fasterxml.jackson.dataformat.xml.annotation;resolution:="optional"',
+                        'com.fasterxml.jackson.dataformat.xml.ser;resolution:="optional"',
+                        'tools.jackson.databind;resolution:="optional"',
+                        'tools.jackson.databind.module;resolution:="optional"',
+                        'tools.jackson.databind.cfg;resolution:="optional"',
+                        'tools.jackson.databind.json;resolution:="optional"',
+                        'tools.jackson.databind.ser.std;resolution:="optional"',
+                        'tools.jackson.core;resolution:="optional"',
+                        'tools.jackson.dataformat.xml;resolution:="optional"',
+                        'tools.jackson.dataformat.xml.annotation;resolution:="optional"',
+                        // Optional dependencies, see JakartaJsonIntegration class
+                        'jakarta.json.bind;resolution:="optional"',
+                        'jakarta.xml.bind;resolution:="optional"',
+                        'jakarta.xml.bind.annotation;resolution:="optional"',
+                        'jakarta.xml.bind.annotation.adapters;resolution:="optional"',
+                        // Database driver dependencies are optional
+                        'oracle.jdbc;resolution:="optional"',
+                        'oracle.jdbc.driver.json.tree;resolution:="optional"',
+                        'oracle.jdbc.provider.oson;resolution:="optional"',
+                        'oracle.sql;resolution:="optional"',
+                        'oracle.sql.json;resolution:="optional"',
+                        'org.postgresql.util;resolution:="optional"',
                         // Also import every package referenced in the code
                         // (note that '*' is resolved at build time to a list of packages)
                         '*'

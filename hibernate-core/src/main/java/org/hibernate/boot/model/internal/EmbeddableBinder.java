@@ -68,6 +68,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.getPropertyOverridd
 import static org.hibernate.boot.model.internal.BinderHelper.getRelativePath;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
 import static org.hibernate.boot.model.internal.HCANNHelper.findContainingAnnotations;
+import static org.hibernate.boot.model.internal.InheritanceState.getSuperclassInheritanceState;
 import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClass;
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.PropertyBinder.processId;
@@ -393,6 +394,14 @@ public class EmbeddableBinder {
 					context
 			);
 		}
+		else {
+			// We need to register ancestor @MappedSuperclass metadata even for embedded types of classes
+			// that are not annotated as @Embeddable (i.e. that don't have an inheritance state)
+			final var superState = getSuperclassInheritanceState( returnedClassOrElement, inheritanceStatePerClass );
+			if ( superState != null && superState.isEmbeddableSuperclass() ) {
+				superState.postProcess( component );
+			}
+		}
 
 		final XClass annotatedClass = inferredData.getPropertyClass();
 		final Map<String, String> subclassToSuperclass = component.isPolymorphic() ? new HashMap<>() : null;
@@ -510,19 +519,19 @@ public class EmbeddableBinder {
 			PropertyData propertyData,
 			InheritanceState inheritanceState,
 			MetadataBuildingContext context) {
-		if ( inheritanceState == null ) {
-			return;
-		}
-		final AnnotatedDiscriminatorColumn discriminatorColumn = processEmbeddableDiscriminatorProperties(
-				componentClass,
-				propertyData,
-				parentHolder,
-				holder,
-				inheritanceState,
-				context
-		);
-		if ( discriminatorColumn != null ) {
-			bindDiscriminatorColumnToComponent( component, discriminatorColumn, holder, context );
+		// Discriminated inheritance only applies to explicit @Embeddable types
+		if (  !inheritanceState.isEmbeddableSuperclass()) {
+			final AnnotatedDiscriminatorColumn discriminatorColumn = processEmbeddableDiscriminatorProperties(
+					componentClass,
+					propertyData,
+					parentHolder,
+					holder,
+					inheritanceState,
+					context
+			);
+			if ( discriminatorColumn != null ) {
+				bindDiscriminatorColumnToComponent( component, discriminatorColumn, holder, context );
+			}
 		}
 	}
 

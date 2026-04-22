@@ -539,6 +539,34 @@ public class EmbeddableBinder {
 				DiscriminatorFormula.class,
 				context
 		);
+		if ( isMappedSuperclass( annotatedClass ) ) {
+			if ( discriminatorColumn == null && discriminatorFormula == null ) {
+				/*
+				 * Only apply discriminator properties if the Embeddable is part of an inheritance hierarchy
+				 * and is not itself a MappedSuperclass.
+				 *
+				 * e.g.
+				 * @Entity
+				 *  class Item {
+				 * 		@Embedded
+				 * 		private DescriptionBase description; // it's a @MappedSuperclass
+				 * }
+				 *
+				 * @MappedSuperclass
+				 * public static class DescriptionBase {}
+				 *
+				 * @Embeddable
+				 * DescriptionExtended extends DescriptionBase {}
+				 */
+				return null;
+			}
+			else {
+				throw new AnnotationException( String.format(
+						"MappedSuperclass '%s' is annotated with '@DiscriminatorColumn' or '@DiscriminatorFormula' but used as an Embeddable so it cannot be annotated with  '@DiscriminatorColumn' or `@DiscriminatorFormula`",
+						annotatedClass.getName()
+				) );
+			}
+		}
 		if ( !inheritanceState.hasParents() ) {
 			if ( inheritanceState.hasSiblings() ) {
 				final String path = qualify( holder.getPath(), EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME );
@@ -577,6 +605,10 @@ public class EmbeddableBinder {
 			}
 		}
 		return null;
+	}
+
+	private static boolean isMappedSuperclass(XClass annotatedClass) {
+		return annotatedClass.getAnnotation( MappedSuperclass.class ) != null;
 	}
 
 	private static void bindDiscriminatorColumnToComponent(

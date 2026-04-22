@@ -61,11 +61,19 @@ public class ImplicitNamingStrategyLegacyJpaImpl extends ImplicitNamingStrategyJ
 //			name = transformAttributePath( source.getAttributePath() );
 //		}
 //		else if ( source.getNature() == Nature.ELEMENT_COLLECTION
+		final Identifier referencedColumnName = source.getReferencedColumnName();
+		final boolean useReferencedTableName =
+				source.getNature() == Nature.ELEMENT_COLLECTION || source.getAttributePath() == null;
+		final Identifier referencedTableName = source.getReferencedTableName();
 		final String qualifier =
-				source.getNature() == Nature.ELEMENT_COLLECTION || source.getAttributePath() == null
-						? source.getReferencedTableName().getText()
+				useReferencedTableName
+						? referencedTableName.getText()
 						: transformAttributePath( source.getAttributePath() );
-		final String name = qualifier + '_' + source.getReferencedColumnName().getText();
-		return toIdentifier( name, source.getBuildingContext() );
+		final String name = qualifier + '_' + referencedColumnName.getText();
+		final Identifier identifier = toIdentifier( name, source.getBuildingContext() );
+		return referencedColumnName.isQuoted()
+			|| useReferencedTableName && referencedTableName.isQuoted()
+				? identifier.quoted()
+				: identifier;
 	}
 }

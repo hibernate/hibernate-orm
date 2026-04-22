@@ -142,9 +142,10 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 				source.getNature() == ELEMENT_COLLECTION || source.getAttributePath() == null
 						? transformEntityName( source.getEntityNaming() )
 						: transformAttributePath( source.getAttributePath() );
-		final String referencedColumnName = source.getReferencedColumnName().getText();
-		final String name = referencingPropertyOrEntity + '_' + referencedColumnName;
-		return toIdentifier( name, source.getBuildingContext() );
+		final Identifier referencedColumnName = source.getReferencedColumnName();
+		final String name = referencingPropertyOrEntity + '_' + referencedColumnName.getText();
+		final Identifier identifier = toIdentifier( name, source.getBuildingContext() );
+		return referencedColumnName.isQuoted() ? identifier.quoted() : identifier;
 	}
 
 	/**

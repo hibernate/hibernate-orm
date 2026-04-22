@@ -50,6 +50,7 @@ import static org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource.Natur
 import static org.hibernate.boot.model.naming.ImplicitJoinColumnNameSource.Nature.ENTITY_COLLECTION;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.isNotBlank;
+import static org.hibernate.internal.util.StringHelper.isQuoted;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.internal.util.collections.ArrayHelper.isEmpty;
@@ -426,19 +427,23 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			ImplicitNamingStrategy implicitNamingStrategy,
 			InFlightMetadataCollector collector,
 			Database database) {
+		final boolean isRefColumnQuoted = isQuoted( logicalReferencedColumn );
+
 		if ( isMappedBySide() ) {
 			// NOTE: An @ElementCollection can't be mappedBy, but the client code
 			//       also handles the inverse side of many-to-many mappings
-			return implicitNamingStrategy.determineJoinColumnName(
+			final Identifier columnIdentifier = implicitNamingStrategy.determineJoinColumnName(
 					new UnownedImplicitJoinColumnNameSource( referencedEntity, logicalReferencedColumn )
 			);
+			//one element was quoted so we quote
+			return quoteIfNecessary( isRefColumnQuoted, getMappedByTableName(), columnIdentifier );
 		}
 		else if ( isOwnerSide() ) {
 			final String logicalTableName = collector.getLogicalTableName( referencedEntity.getTable() );
 			final Identifier columnIdentifier = implicitNamingStrategy.determineJoinColumnName(
 					new OwnedImplicitJoinColumnNameSource( referencedEntity, logicalTableName, logicalReferencedColumn )
 			);
-			return handleElement( columnIdentifier );
+			return quoteIfNecessary( isRefColumnQuoted, logicalTableName, handleElement( columnIdentifier ) );
 		}
 		else {
 			final Identifier logicalTableName = database.toIdentifier(
@@ -463,7 +468,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 						}
 					}
 			);
-			return columnIdentifier;
+			return quoteIfNecessary( isRefColumnQuoted, logicalTableName, columnIdentifier );
 		}
 	}
 
@@ -479,6 +484,22 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		else {
 			return columnIdentifier;
 		}
+	}
+
+	private static Identifier quoteIfNecessary(
+			boolean isRefColumnQuoted, Identifier logicalTableName, Identifier columnIdentifier) {
+		return !columnIdentifier.isQuoted()
+			&& ( isRefColumnQuoted || logicalTableName.isQuoted() )
+				? columnIdentifier.quoted()
+				: columnIdentifier;
+	}
+
+	private static Identifier quoteIfNecessary(
+			boolean isRefColumnQuoted, String logicalTableName, Identifier columnIdentifier) {
+		//one element was quoted so we quote
+		return isRefColumnQuoted || isQuoted( logicalTableName )
+				? columnIdentifier.quoted()
+				: columnIdentifier;
 	}
 
 	private boolean isOwnerSide() {

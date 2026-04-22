@@ -142,9 +142,12 @@ public class ImplicitNamingStrategyJpaCompliantImpl implements ImplicitNamingStr
 				source.getNature() == ELEMENT_COLLECTION || source.getAttributePath() == null
 						? transformEntityName( source.getEntityNaming() )
 						: transformAttributePath( source.getAttributePath() );
-		final String referencedColumnName = source.getReferencedColumnName().getText();
-		final String name = referencingPropertyOrEntity + '_' + referencedColumnName;
-		return toIdentifier( name, source.getBuildingContext() );
+		final Identifier referencedColumn = source.getReferencedColumnName();
+		final String name = referencingPropertyOrEntity + '_' + referencedColumn.getText();
+		final Identifier implicit = toIdentifier( name, source.getBuildingContext() );
+		// propagate quoting from the referenced PK column, whose text is
+		// embedded in the derived column name (HHH-20042)
+		return referencedColumn.isQuoted() && !implicit.isQuoted() ? implicit.quoted() : implicit;
 	}
 
 	/**

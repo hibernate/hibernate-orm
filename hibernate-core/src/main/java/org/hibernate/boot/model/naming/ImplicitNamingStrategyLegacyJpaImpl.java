@@ -61,11 +61,19 @@ public class ImplicitNamingStrategyLegacyJpaImpl extends ImplicitNamingStrategyJ
 //			name = transformAttributePath( source.getAttributePath() );
 //		}
 //		else if ( source.getNature() == Nature.ELEMENT_COLLECTION
-		final String qualifier =
-				source.getNature() == Nature.ELEMENT_COLLECTION || source.getAttributePath() == null
-						? source.getReferencedTableName().getText()
-						: transformAttributePath( source.getAttributePath() );
-		final String name = qualifier + '_' + source.getReferencedColumnName().getText();
-		return toIdentifier( name, source.getBuildingContext() );
+		final Identifier referencedColumn = source.getReferencedColumnName();
+		final boolean useTableName =
+				source.getNature() == Nature.ELEMENT_COLLECTION || source.getAttributePath() == null;
+		final Identifier referencedTable = useTableName ? source.getReferencedTableName() : null;
+		final String qualifier = useTableName
+				? referencedTable.getText()
+				: transformAttributePath( source.getAttributePath() );
+		final String name = qualifier + '_' + referencedColumn.getText();
+		final Identifier implicit = toIdentifier( name, source.getBuildingContext() );
+		// propagate quoting from whichever inputs were embedded in the name (HHH-20042)
+		final boolean shouldQuote = !implicit.isQuoted()
+				&& ( referencedColumn.isQuoted()
+						|| referencedTable != null && referencedTable.isQuoted() );
+		return shouldQuote ? implicit.quoted() : implicit;
 	}
 }

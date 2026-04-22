@@ -442,10 +442,13 @@ public class AnnotatedColumn {
 
 		// HHH-6005 magic
 		if ( implicitName.getText().contains( "_{element}_" ) ) {
-			implicitName = Identifier.toIdentifier(
-					implicitName.getText().replace( "_{element}_", "_" ),
-					implicitName.isQuoted()
-			);
+			// Re-derive the identifier (and its quoting) from the replaced text:
+			// the "{" and "}" characters in "{element}" auto-quote the original
+			// identifier, but after replacement the text contains no special
+			// characters so it should be unquoted again — otherwise it bypasses
+			// the PhysicalNamingStrategy, which leaves quoted identifiers alone.
+			final String replaced = implicitName.getText().replace( "_{element}_", "_" );
+			implicitName = getObjectNameNormalizer().normalizeIdentifierQuoting( Identifier.toIdentifier( replaced ) );
 		}
 
 		return implicitName.render( getDatabase().getDialect() );

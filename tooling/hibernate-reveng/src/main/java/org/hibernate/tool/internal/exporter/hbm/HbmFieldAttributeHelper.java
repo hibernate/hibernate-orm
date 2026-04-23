@@ -57,7 +57,7 @@ class HbmFieldAttributeHelper {
 	}
 
 	private Map<String, List<String>> getFieldMetaAttributeMap(FieldDetails field) {
-		return fieldMetaAttributes.getOrDefault(field.getName(), Collections.emptyMap());
+		return FieldMetaUtil.forField(fieldMetaAttributes, field);
 	}
 
 	// --- Property-level attributes ---

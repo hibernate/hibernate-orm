@@ -20,9 +20,7 @@ package org.hibernate.tool.internal.builder.hbm;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CascadeType;
-import org.hibernate.annotations.FetchMode;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCacheType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmColumnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCustomSqlDmlType;
@@ -59,6 +57,7 @@ import org.hibernate.boot.models.annotations.internal.SQLUpdateAnnotation;
 import org.hibernate.boot.models.annotations.internal.SortComparatorAnnotation;
 import org.hibernate.boot.models.annotations.internal.SortNaturalAnnotation;
 import org.hibernate.cache.spi.access.AccessType;
+import org.hibernate.tool.internal.util.HbmEnumMapper;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
 import org.hibernate.models.spi.ModelsContext;
@@ -362,7 +361,7 @@ class HbmCollectionMetadataApplier {
 		if (fetch != null) {
 			FetchAnnotation fetchAnnotation =
 					HibernateAnnotations.FETCH.createUsage(mc);
-			fetchAnnotation.value(mapFetchMode(fetch));
+			fetchAnnotation.value(HbmEnumMapper.mapFetchMode(fetch));
 			field.addAnnotationUsage(fetchAnnotation);
 		}
 	}
@@ -392,7 +391,7 @@ class HbmCollectionMetadataApplier {
 		if (cache != null) {
 			CacheAnnotation cacheAnnotation =
 					HibernateAnnotations.CACHE.createUsage(mc);
-			cacheAnnotation.usage(mapCacheConcurrency(cache.getUsage()));
+			cacheAnnotation.usage(HbmEnumMapper.mapCacheConcurrency(cache.getUsage()));
 			String region = cache.getRegion();
 			if (region != null && !region.isEmpty()) {
 				cacheAnnotation.region(region);
@@ -551,20 +550,4 @@ class HbmCollectionMetadataApplier {
 		};
 	}
 
-	private static FetchMode mapFetchMode(JaxbHbmFetchStyleWithSubselectEnum fetch) {
-		return switch (fetch) {
-			case JOIN -> FetchMode.JOIN;
-			case SELECT -> FetchMode.SELECT;
-			case SUBSELECT -> FetchMode.SUBSELECT;
-		};
-	}
-
-	private static CacheConcurrencyStrategy mapCacheConcurrency(AccessType usage) {
-		return switch (usage) {
-			case READ_ONLY -> CacheConcurrencyStrategy.READ_ONLY;
-			case READ_WRITE -> CacheConcurrencyStrategy.READ_WRITE;
-			case NONSTRICT_READ_WRITE -> CacheConcurrencyStrategy.NONSTRICT_READ_WRITE;
-			case TRANSACTIONAL -> CacheConcurrencyStrategy.TRANSACTIONAL;
-		};
-	}
 }

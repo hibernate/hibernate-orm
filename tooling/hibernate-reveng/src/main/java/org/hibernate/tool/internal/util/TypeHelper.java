@@ -411,4 +411,15 @@ public final class TypeHelper {
 				|| sqlType == Types.LONGVARCHAR || sqlType == Types.TIME || sqlType == Types.TIMESTAMP
 				|| sqlType == Types.VARCHAR );
 	}
+
+	// ========================================================================
+	// Primitive type checking
+	// ========================================================================
+
+	private static final Set<String> PRIMITIVE_TYPES = Set.of(
+			"boolean", "byte", "char", "short", "int", "long", "float", "double");
+
+	public static boolean isPrimitiveType(String className) {
+		return className != null && PRIMITIVE_TYPES.contains(className);
+	}
 }

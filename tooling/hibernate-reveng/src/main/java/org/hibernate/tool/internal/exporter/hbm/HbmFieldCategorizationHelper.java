@@ -61,7 +61,7 @@ class HbmFieldCategorizationHelper {
 	}
 
 	private Map<String, List<String>> getFieldMetaAttributeMap(FieldDetails field) {
-		return fieldMetaAttributes.getOrDefault(field.getName(), Collections.emptyMap());
+		return FieldMetaUtil.forField(fieldMetaAttributes, field);
 	}
 
 	// --- Composite ID ---

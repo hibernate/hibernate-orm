@@ -43,6 +43,7 @@ import org.hibernate.annotations.AnyDiscriminatorValues;
 import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.annotations.Cascade;
 
+import org.hibernate.tool.internal.util.CascadeUtil;
 import org.hibernate.tool.internal.util.TypeHelper;
 
 import org.hibernate.models.spi.ClassDetails;
@@ -554,26 +555,7 @@ public class HbmTemplateHelper {
 	}
 
 	private String getAnyCascadeString(Cascade cascade) {
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < cascade.value().length; i++) {
-			if (i > 0) sb.append(", ");
-			sb.append(toHbmHibernateCascade(cascade.value()[i]));
-		}
-		return sb.toString();
-	}
-
-	private String toHbmHibernateCascade(org.hibernate.annotations.CascadeType cascadeType) {
-		return switch (cascadeType) {
-			case ALL -> "all";
-			case PERSIST -> "persist";
-			case MERGE -> "merge";
-			case REMOVE -> "delete";
-			case REFRESH -> "refresh";
-			case DETACH -> "evict";
-			case LOCK -> "lock";
-			case REPLICATE -> "replicate";
-			case DELETE_ORPHAN -> "delete-orphan";
-		};
+		return CascadeUtil.formatHibernateCascade(cascade);
 	}
 
 	public String getArrayElementClass(FieldDetails field) {
@@ -1240,32 +1222,11 @@ public class HbmTemplateHelper {
 	// --- Utilities ---
 
 	public String getCascadeString(CascadeType[] cascadeTypes) {
-		if (cascadeTypes == null || cascadeTypes.length == 0) {
-			return "none";
-		}
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < cascadeTypes.length; i++) {
-			if (i > 0) sb.append(", ");
-			sb.append(toHbmCascade(cascadeTypes[i]));
-		}
-		return sb.toString();
+		return CascadeUtil.formatJpaCascade(cascadeTypes);
 	}
 
 	String toGeneratorClass(GenerationType generationType) {
 		return fieldAttributeHelper.toGeneratorClass(generationType);
-	}
-
-	// --- Private helpers ---
-
-	private String toHbmCascade(CascadeType cascadeType) {
-		return switch (cascadeType) {
-			case ALL -> "all";
-			case PERSIST -> "persist";
-			case MERGE -> "merge";
-			case REMOVE -> "delete";
-			case REFRESH -> "refresh";
-			case DETACH -> "evict";
-		};
 	}
 
 	// --- SQL operations ---

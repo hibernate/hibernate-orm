@@ -15,17 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.hibernate.tool.util;
+package org.hibernate.tool.internal.exporter.hbm;
 
-public class StringUtil {
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
-	public static boolean isEmptyOrNull(String string) {
-		return string == null || string.isEmpty();
+import org.hibernate.models.spi.FieldDetails;
+
+final class FieldMetaUtil {
+
+	private FieldMetaUtil() {
 	}
 
-	public static String capitalize(String name) {
-		if (name == null || name.isEmpty()) return name;
-		return Character.toUpperCase(name.charAt(0)) + name.substring(1);
+	static Map<String, List<String>> forField(
+			Map<String, Map<String, List<String>>> allFieldMeta, FieldDetails field) {
+		return allFieldMeta.getOrDefault(field.getName(), Collections.emptyMap());
 	}
-
 }

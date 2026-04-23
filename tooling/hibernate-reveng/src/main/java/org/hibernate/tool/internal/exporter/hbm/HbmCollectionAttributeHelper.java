@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToMany;
@@ -46,6 +45,7 @@ import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 
+import org.hibernate.tool.internal.util.CascadeUtil;
 import org.hibernate.tool.internal.util.TypeHelper;
 
 import org.hibernate.models.spi.FieldDetails;
@@ -67,11 +67,11 @@ class HbmCollectionAttributeHelper {
 	}
 
 	private Map<String, List<String>> getFieldMetaAttributeMap(FieldDetails field) {
-		return fieldMetaAttributes.getOrDefault(field.getName(), Collections.emptyMap());
+		return FieldMetaUtil.forField(fieldMetaAttributes, field);
 	}
 
 	private List<String> getFieldMetaAttribute(FieldDetails field, String name) {
-		return fieldMetaAttributes.getOrDefault(field.getName(), Collections.emptyMap())
+		return FieldMetaUtil.forField(fieldMetaAttributes, field)
 				.getOrDefault(name, Collections.emptyList());
 	}
 
@@ -173,15 +173,15 @@ class HbmCollectionAttributeHelper {
 		}
 		OneToMany o2m = field.getDirectAnnotationUsage(OneToMany.class);
 		if (o2m != null && o2m.cascade().length > 0) {
-			return jpaCascadeString(o2m.cascade());
+			return CascadeUtil.formatJpaCascade(o2m.cascade());
 		}
 		ManyToMany m2m = field.getDirectAnnotationUsage(ManyToMany.class);
 		if (m2m != null && m2m.cascade().length > 0) {
-			return jpaCascadeString(m2m.cascade());
+			return CascadeUtil.formatJpaCascade(m2m.cascade());
 		}
 		Cascade cascade = field.getDirectAnnotationUsage(Cascade.class);
 		if (cascade != null && cascade.value().length > 0) {
-			return hibernateCascadeString(cascade);
+			return CascadeUtil.formatHibernateCascade(cascade);
 		}
 		return null;
 	}
@@ -316,48 +316,4 @@ class HbmCollectionAttributeHelper {
 		return null;
 	}
 
-	// --- Cascade utilities ---
-
-	private String jpaCascadeString(CascadeType[] cascadeTypes) {
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < cascadeTypes.length; i++) {
-			if (i > 0) sb.append(", ");
-			sb.append(toHbmCascade(cascadeTypes[i]));
-		}
-		return sb.toString();
-	}
-
-	private String hibernateCascadeString(Cascade cascade) {
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < cascade.value().length; i++) {
-			if (i > 0) sb.append(", ");
-			sb.append(toHbmHibernateCascade(cascade.value()[i]));
-		}
-		return sb.toString();
-	}
-
-	private String toHbmCascade(CascadeType cascadeType) {
-		return switch (cascadeType) {
-			case ALL -> "all";
-			case PERSIST -> "persist";
-			case MERGE -> "merge";
-			case REMOVE -> "delete";
-			case REFRESH -> "refresh";
-			case DETACH -> "evict";
-		};
-	}
-
-	private String toHbmHibernateCascade(org.hibernate.annotations.CascadeType cascadeType) {
-		return switch (cascadeType) {
-			case ALL -> "all";
-			case PERSIST -> "persist";
-			case MERGE -> "merge";
-			case REMOVE -> "delete";
-			case REFRESH -> "refresh";
-			case DETACH -> "evict";
-			case LOCK -> "lock";
-			case REPLICATE -> "replicate";
-			case DELETE_ORPHAN -> "delete-orphan";
-		};
-	}
 }

@@ -19,8 +19,7 @@ package org.hibernate.tool.internal.builder.hbm;
 
 import java.util.List;
 
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.OptimisticLockType;
+import org.hibernate.tool.internal.util.HbmEnumMapper;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCacheType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmColumnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmCustomSqlDmlType;
@@ -234,7 +233,7 @@ class HbmEntityBehaviorBuilder {
 		if (lockStyle != null && lockStyle != OptimisticLockStyle.VERSION) {
 			OptimisticLockingAnnotation olAnnotation =
 					HibernateAnnotations.OPTIMISTIC_LOCKING.createUsage(mc);
-			olAnnotation.type(mapOptimisticLockType(lockStyle));
+			olAnnotation.type(HbmEnumMapper.mapOptimisticLockType(lockStyle));
 			entityClass.addAnnotationUsage(olAnnotation);
 		}
 	}
@@ -297,7 +296,7 @@ class HbmEntityBehaviorBuilder {
 		if (cache != null) {
 			CacheAnnotation cacheAnnotation =
 					HibernateAnnotations.CACHE.createUsage(mc);
-			cacheAnnotation.usage(mapCacheConcurrency(cache.getUsage()));
+			cacheAnnotation.usage(HbmEnumMapper.mapCacheConcurrency(cache.getUsage()));
 			String region = cache.getRegion();
 			if (region != null && !region.isEmpty()) {
 				cacheAnnotation.region(region);
@@ -331,24 +330,6 @@ class HbmEntityBehaviorBuilder {
 			syncAnnotation.value(tables);
 			entityClass.addAnnotationUsage(syncAnnotation);
 		}
-	}
-
-	static OptimisticLockType mapOptimisticLockType(OptimisticLockStyle style) {
-		return switch (style) {
-			case NONE -> OptimisticLockType.NONE;
-			case DIRTY -> OptimisticLockType.DIRTY;
-			case ALL -> OptimisticLockType.ALL;
-			default -> OptimisticLockType.VERSION;
-		};
-	}
-
-	static CacheConcurrencyStrategy mapCacheConcurrency(AccessType usage) {
-		return switch (usage) {
-			case READ_ONLY -> CacheConcurrencyStrategy.READ_ONLY;
-			case READ_WRITE -> CacheConcurrencyStrategy.READ_WRITE;
-			case NONSTRICT_READ_WRITE -> CacheConcurrencyStrategy.NONSTRICT_READ_WRITE;
-			case TRANSACTIONAL -> CacheConcurrencyStrategy.TRANSACTIONAL;
-		};
 	}
 
 	// --- Concrete Proxy (proxy/lazy) ---

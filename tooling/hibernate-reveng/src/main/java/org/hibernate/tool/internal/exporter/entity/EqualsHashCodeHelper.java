@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.tool.internal.util.TypeHelper;
 
 import org.hibernate.models.spi.FieldDetails;
 
@@ -88,7 +89,7 @@ class EqualsHashCodeHelper {
 	String generateEqualsExpression(FieldDetails field) {
 		String getter = templateHelper.getGetterName(field) + "()";
 		String typeName = field.getType().determineRawClass().getClassName();
-		if (isPrimitiveType(typeName)) {
+		if (TypeHelper.isPrimitiveType(typeName)) {
 			return "this." + getter + " == castOther." + getter;
 		}
 		return "((this." + getter + " == castOther." + getter + ") || "
@@ -115,11 +116,4 @@ class EqualsHashCodeHelper {
 		};
 	}
 
-	private boolean isPrimitiveType(String className) {
-		return switch (className) {
-			case "int", "long", "short", "byte", "char",
-					"boolean", "float", "double" -> true;
-			default -> false;
-		};
-	}
 }

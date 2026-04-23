@@ -43,6 +43,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.TypeDetails;
 
 import jakarta.persistence.DiscriminatorType;
+import org.hibernate.tool.internal.util.HbmEnumMapper;
 
 /**
  * Builds {@code @ManyToOne}, {@code @OneToOne}, and {@code @Any} fields from
@@ -350,13 +351,6 @@ public class HbmAssociationBuilder {
 	}
 
 	static DiscriminatorType mapAnyDiscriminatorType(String metaType) {
-		if (metaType == null) {
-			return DiscriminatorType.STRING;
-		}
-		return switch (metaType.toLowerCase()) {
-			case "integer", "int", "long", "short" -> DiscriminatorType.INTEGER;
-			case "character", "char" -> DiscriminatorType.CHAR;
-			default -> DiscriminatorType.STRING;
-		};
+		return HbmEnumMapper.mapAnyDiscriminatorType(metaType);
 	}
 }

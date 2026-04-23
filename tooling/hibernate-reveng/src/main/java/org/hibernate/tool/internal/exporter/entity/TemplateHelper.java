@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import org.hibernate.tool.internal.util.NameConverter;
+import org.hibernate.tool.util.StringUtil;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -440,17 +441,17 @@ public class TemplateHelper {
 	}
 
 	public String getGetterName(String fieldName) {
-		return "get" + capitalize(fieldName);
+		return "get" + StringUtil.capitalize(fieldName);
 	}
 
 	public String getGetterName(FieldDetails field) {
 		String prefix = "boolean".equals(
 				field.getType().determineRawClass().getClassName()) ? "is" : "get";
-		return prefix + capitalize(field.getName());
+		return prefix + StringUtil.capitalize(field.getName());
 	}
 
 	public String getSetterName(String fieldName) {
-		return "set" + capitalize(fieldName);
+		return "set" + StringUtil.capitalize(fieldName);
 	}
 
 	// --- Annotation generation ---
@@ -1026,8 +1027,4 @@ public class TemplateHelper {
 		};
 	}
 
-	private static String capitalize(String name) {
-		if (name == null || name.isEmpty()) return name;
-		return Character.toUpperCase(name.charAt(0)) + name.substring(1);
-	}
 }

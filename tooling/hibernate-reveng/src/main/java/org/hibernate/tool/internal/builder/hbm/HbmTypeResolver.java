@@ -19,9 +19,10 @@ package org.hibernate.tool.internal.builder.hbm;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import jakarta.persistence.GenerationType;
+
+import org.hibernate.tool.internal.util.TypeHelper;
 
 /**
  * Static utility for resolving Hibernate type names to Java types,
@@ -62,9 +63,6 @@ class HbmTypeResolver {
 		HIBERNATE_TYPE_MAP.put("serializable", "java.io.Serializable");
 	}
 
-	private static final Set<String> PRIMITIVE_TYPES = Set.of(
-			"boolean", "byte", "char", "short", "int", "long", "float", "double");
-
 	static String resolveJavaType(String hibernateType) {
 		if (hibernateType == null || hibernateType.isEmpty()) {
 			return "java.lang.String";
@@ -80,7 +78,7 @@ class HbmTypeResolver {
 	}
 
 	static boolean isPrimitiveType(String javaType) {
-		return PRIMITIVE_TYPES.contains(javaType);
+		return TypeHelper.isPrimitiveType(javaType);
 	}
 
 	static String resolveClassName(String name, String defaultPackage) {

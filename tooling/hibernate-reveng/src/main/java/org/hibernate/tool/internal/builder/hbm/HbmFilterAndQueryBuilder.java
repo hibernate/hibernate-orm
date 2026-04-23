@@ -24,6 +24,7 @@ import java.util.List;
 import jakarta.xml.bind.JAXBElement;
 
 import org.hibernate.annotations.FlushModeType;
+import org.hibernate.tool.internal.util.HbmEnumMapper;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterDefinitionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterParameterType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterType;
@@ -422,13 +423,7 @@ class HbmFilterAndQueryBuilder {
 	}
 
 	static FlushModeType mapFlushMode(org.hibernate.FlushMode flushMode) {
-		return switch (flushMode) {
-			case AUTO -> FlushModeType.AUTO;
-			case ALWAYS -> FlushModeType.ALWAYS;
-			case COMMIT -> FlushModeType.COMMIT;
-			case MANUAL -> FlushModeType.MANUAL;
-			default -> FlushModeType.PERSISTENCE_CONTEXT;
-		};
+		return HbmEnumMapper.mapFlushMode(flushMode);
 	}
 
 	static String extractQueryString(List<Serializable> content) {

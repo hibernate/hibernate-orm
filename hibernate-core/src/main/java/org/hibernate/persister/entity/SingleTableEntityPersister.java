@@ -509,7 +509,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	public void addDiscriminatorToDelete(TableDeleteBuilder tableDeleteBuilder) {
 		if ( needsDiscriminatorForDelete() ) {
 			if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
-				tableDeleteBuilder.addNonKeyRestriction( getDiscriminatorMapping(), TableMutationBuilder.NULL );
+				tableDeleteBuilder.addNullRestriction( getDiscriminatorMapping() );
 			}
 			else {
 				// and apply the parameter

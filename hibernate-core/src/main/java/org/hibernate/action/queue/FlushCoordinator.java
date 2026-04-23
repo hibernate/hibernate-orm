@@ -152,6 +152,10 @@ public class FlushCoordinator {
 				}
 			}
 		}
+		catch (HibernateException e) {
+			// this will almost always be a more informative exception (ConstraintViolationException, etc.) ...
+			throw e;
+		}
 		catch (Exception e) {
 			throw new HibernateException("Could not execute IDENTITY insert", e);
 		}

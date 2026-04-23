@@ -7,12 +7,15 @@ package org.hibernate.orm.test.ops;
 import java.util.List;
 import jakarta.persistence.PersistenceException;
 
+import jakarta.persistence.Tuple;
+import org.assertj.core.api.Assertions;
 import org.hibernate.Hibernate;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -844,7 +847,9 @@ public class MergeMultipleEntityCopiesAllowedTest {
 	}
 
 	@Test
-	//@FailureExpected( jiraKey = "HHH-9106" )
+	@Jira("https://hibernate.atlassian.net/browse/HHH-9106")
+	@Jira("https://hibernate.atlassian.net/browse/HHH-20359")
+	@FailureExpected(jiraKey = "HHH-20359")
 	public void testTopLevelUnidirOneToManyBackrefWithRemovedElement(SessionFactoryScope scope) {
 		Item item1 = new Item();
 		item1.setName( "item1 name" );
@@ -892,6 +897,12 @@ public class MergeMultipleEntityCopiesAllowedTest {
 					SubItem subItem = session.get( SubItem.class, subItem1.getId() );
 					// cascade does not include delete-orphan, so subItem1 should still be persistent.
 					assertNotNull( subItem );
+
+					// however, the foreign-key should be "broken" and only one row be associated with the Item
+					var results = session.createNativeQuery( "select id, indx, name from SubItem where parentItem = ?", Tuple.class )
+							.setParameter( 1, item1.getId() )
+							.list();
+					Assertions.assertThat( results ).hasSize( 1 );
 				}
 		);
 

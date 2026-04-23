@@ -10,6 +10,7 @@ import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.RollbackException;
 
+import org.assertj.core.api.Assertions;
 import org.hibernate.StaleStateException;
 import org.hibernate.TransactionException;
 import org.hibernate.TransientObjectException;
@@ -32,9 +33,10 @@ public interface ExceptionExpectations {
 
 			@Override
 			public void onConstraintViolationOnPersistAndMergeAndFlush(RuntimeException e) {
-				assertThat( e, instanceOf( PersistenceException.class ) );
-				assertThat( e, instanceOf( ConstraintViolationException.class ) );
-				assertThat( e.getCause(), instanceOf( SQLException.class ) );
+				// redundant instanceof checks, but does not hurt
+				Assertions.assertThat( e ).isInstanceOf( PersistenceException.class );
+				Assertions.assertThat( e ).isInstanceOf( ConstraintViolationException.class );
+				Assertions.assertThat( e.getCause() ).isInstanceOf( SQLException.class );
 			}
 
 			@Override
@@ -195,9 +197,10 @@ public interface ExceptionExpectations {
 
 			@Override
 			public void onConstraintViolationOnPersistAndMergeAndFlush(RuntimeException e) {
-				assertThat( e, instanceOf( PersistenceException.class ) );
-				assertThat( e, instanceOf( ConstraintViolationException.class ) );
-				assertThat( e.getCause(), instanceOf( SQLException.class ) );
+				// redundant instanceof checks, but does not hurt
+				Assertions.assertThat( e ).isInstanceOf( PersistenceException.class );
+				Assertions.assertThat( e ).isInstanceOf( ConstraintViolationException.class );
+				Assertions.assertThat( e.getCause() ).isInstanceOf( SQLException.class );
 			}
 
 			@Override

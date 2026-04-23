@@ -793,85 +793,48 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsStructAggregate implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			try {
-				return dialect.getAggregateSupport() != null
-						&& dialect.getAggregateSupport().aggregateComponentCustomReadExpression(
-						"",
-						"",
-						"",
-						"",
-						SqlTypes.STRUCT,
-						new SqlTypedMappingImpl(
-								"varchar",
-								null,
-								null,
-								null,
-								null,
-								null,
-								new BasicTypeImpl<>( StringJavaType.INSTANCE, VarcharJdbcType.INSTANCE )
-						),
-						new TypeConfiguration()
-				) != null;
-			}
-			catch (UnsupportedOperationException | IllegalArgumentException e) {
-				return false;
-			}
+			return supportsAggregate( dialect, SqlTypes.STRUCT );
 		}
 	}
 
 	public static class SupportsJsonAggregate implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			try {
-				return dialect.getAggregateSupport() != null
-						&& dialect.getAggregateSupport().aggregateComponentCustomReadExpression(
-						"",
-						"",
-						"",
-						"",
-						SqlTypes.JSON,
-						new SqlTypedMappingImpl(
-								"varchar",
-								null,
-								null,
-								null,
-								null,
-								null,
-								new BasicTypeImpl<>( StringJavaType.INSTANCE, VarcharJdbcType.INSTANCE )
-						),
-						new TypeConfiguration()
-				) != null;
-			}
-			catch (UnsupportedOperationException | IllegalArgumentException e) {
-				return false;
-			}
+			return supportsAggregate( dialect, SqlTypes.JSON );
 		}
 	}
 
 	public static class SupportsXmlAggregate implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			try {
-				return dialect.getAggregateSupport() != null
-						&& dialect.getAggregateSupport().aggregateComponentCustomReadExpression(
-						"",
-						"",
-						"",
-						"",
-						SqlTypes.SQLXML,
-						new SqlTypedMappingImpl(
-								"varchar",
-								null,
-								null,
-								null,
-								null,
-								null,
-								new BasicTypeImpl<>( StringJavaType.INSTANCE, VarcharJdbcType.INSTANCE )
-						),
-						new TypeConfiguration()
-				) != null;
-			}
-			catch (UnsupportedOperationException | IllegalArgumentException e) {
-				return false;
-			}
+			return supportsAggregate( dialect, SqlTypes.SQLXML );
+		}
+	}
+
+	private static boolean supportsAggregate(Dialect dialect, int aggregateColumnTypeCode) {
+		if ( dialect.getAggregateSupport() == null ) {
+			return false;
+		}
+		final TypeConfiguration typeConfiguration = getFunctionContributions( dialect ).getTypeConfiguration();
+		try {
+			return dialect.getAggregateSupport().aggregateComponentCustomReadExpression(
+					"",
+					"",
+					"",
+					"",
+					aggregateColumnTypeCode,
+					new SqlTypedMappingImpl(
+							"varchar",
+							null,
+							null,
+							null,
+							null,
+							null,
+							new BasicTypeImpl<>( StringJavaType.INSTANCE, VarcharJdbcType.INSTANCE )
+					),
+					typeConfiguration
+			) != null;
+		}
+		catch (UnsupportedOperationException | IllegalArgumentException e) {
+			return false;
 		}
 	}
 

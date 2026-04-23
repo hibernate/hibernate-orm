@@ -111,6 +111,8 @@ A unique constraint is now added to the table mapped by an `@ElementCollection` 
 
 A column mapped by a `@CreationTimestamp` or `@UpdateTimestamp` generator now has a `NOT NULL` constraint added automatically.
 
+`Map` values in `@ElementCollection` are now declared `not null` by default.
+
 [[dependency-changes]]
 == Changes in Dependencies
 

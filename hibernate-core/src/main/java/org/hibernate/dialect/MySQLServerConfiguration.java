@@ -28,17 +28,31 @@ public class MySQLServerConfiguration {
 	private final int bytesPerCharacter;
 	private final boolean noBackslashEscapesEnabled;
 	private final String storageEngine;
+	private final boolean foreignKeysInServer;
 
 	public MySQLServerConfiguration(int bytesPerCharacter, boolean noBackslashEscapesEnabled) {
 		this.bytesPerCharacter = bytesPerCharacter;
 		this.noBackslashEscapesEnabled = noBackslashEscapesEnabled;
 		this.storageEngine = null;
+		this.foreignKeysInServer = false;
 	}
 
 	public MySQLServerConfiguration(int bytesPerCharacter, boolean noBackslashEscapesEnabled, String storageEngine) {
 		this.bytesPerCharacter = bytesPerCharacter;
 		this.noBackslashEscapesEnabled = noBackslashEscapesEnabled;
 		this.storageEngine = storageEngine;
+		this.foreignKeysInServer = false;
+	}
+
+	private MySQLServerConfiguration(
+			int bytesPerCharacter,
+			boolean noBackslashEscapesEnabled,
+			String storageEngine,
+			boolean foreignKeysInServer) {
+		this.bytesPerCharacter = bytesPerCharacter;
+		this.noBackslashEscapesEnabled = noBackslashEscapesEnabled;
+		this.storageEngine = storageEngine;
+		this.foreignKeysInServer = foreignKeysInServer;
 	}
 
 	public int getBytesPerCharacter() {
@@ -51,6 +65,15 @@ public class MySQLServerConfiguration {
 
 	public String getConfiguredStorageEngine() {
 		return storageEngine;
+	}
+
+	/**
+	 * When {@code @@innodb_native_foreign_keys} is OFF, InnoDB delegates
+	 * foreign-key handling to the server-level implementation, which does
+	 * not support circular cascade deletes.
+	 */
+	public boolean isForeignKeysInServer() {
+		return foreignKeysInServer;
 	}
 
 	static Integer getBytesPerCharacter(String characterSet) {
@@ -67,6 +90,7 @@ public class MySQLServerConfiguration {
 	public static MySQLServerConfiguration fromDialectResolutionInfo(DialectResolutionInfo info) {
 		Integer bytesPerCharacter = null;
 		Boolean noBackslashEscapes = null;
+		boolean foreignKeysInServer = false;
 		final var databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
 			try ( var statement = databaseMetaData.getConnection().createStatement();
@@ -82,6 +106,16 @@ public class MySQLServerConfiguration {
 			catch (SQLException ex) {
 				// Ignore
 			}
+			try ( var statement = databaseMetaData.getConnection().createStatement();
+					var resultSet = statement.executeQuery( "SELECT @@innodb_native_foreign_keys" ) ) {
+				if ( resultSet.next() ) {
+					// 0 = foreign keys handled by the server, 1 = handled by InnoDB natively
+					foreignKeysInServer = resultSet.getInt( 1 ) == 0;
+				}
+			}
+			catch (SQLException ex) {
+				// Variable unavailable: assume InnoDB-native (the MySQL default)
+			}
 		}
 		// default to the dialect-specific configuration settings
 		if ( bytesPerCharacter == null ) {
@@ -94,7 +128,8 @@ public class MySQLServerConfiguration {
 		return new MySQLServerConfiguration(
 				bytesPerCharacter,
 				noBackslashEscapes,
-				ConfigurationHelper.getString( AvailableSettings.STORAGE_ENGINE, info.getConfigurationValues() ) );
+				ConfigurationHelper.getString( AvailableSettings.STORAGE_ENGINE, info.getConfigurationValues() ),
+				foreignKeysInServer );
 	}
 
 	/**

@@ -204,7 +204,6 @@ public class MappingModelCreationHelper {
 			boolean isAttrFormula,
 			String readExpr,
 			String writeExpr,
-			String columnDefinition,
 			Long length,
 			Integer precision,
 			Integer scale,
@@ -230,7 +229,6 @@ public class MappingModelCreationHelper {
 				isAttrFormula,
 				readExpr,
 				writeExpr,
-				columnDefinition,
 				length,
 				null,
 				precision,
@@ -261,7 +259,6 @@ public class MappingModelCreationHelper {
 			boolean isAttrFormula,
 			String readExpr,
 			String writeExpr,
-			String columnDefinition,
 			Long length,
 			Integer arrayLength,
 			Integer precision,
@@ -316,7 +313,6 @@ public class MappingModelCreationHelper {
 				isAttrFormula,
 				readExpr,
 				writeExpr,
-				columnDefinition,
 				length,
 				arrayLength,
 				precision,
@@ -586,7 +582,6 @@ public class MappingModelCreationHelper {
 						false,
 						false,
 						dialect,
-						creationProcess.getSqmFunctionRegistry(),
 						creationProcess.getCreationContext()
 				);
 				indexDescriptor = new BasicValuedCollectionPart(
@@ -641,7 +636,6 @@ public class MappingModelCreationHelper {
 						false,
 						false,
 						dialect,
-						creationProcess.getSqmFunctionRegistry(),
 						creationProcess.getCreationContext()
 				);
 				indexDescriptor = new BasicValuedCollectionPart(
@@ -853,7 +847,6 @@ public class MappingModelCreationHelper {
 					false,
 					false,
 					dialect,
-					creationProcess.getSqmFunctionRegistry(),
 					creationProcess.getCreationContext()
 			);
 
@@ -1052,7 +1045,6 @@ public class MappingModelCreationHelper {
 						value.isPartitionKey(),
 						false,
 						dialect,
-						creationProcess.getSqmFunctionRegistry(),
 						creationProcess.getCreationContext()
 				);
 				i++;
@@ -1071,7 +1063,6 @@ public class MappingModelCreationHelper {
 						value.isPartitionKey(),
 						false,
 						dialect,
-						creationProcess.getSqmFunctionRegistry(),
 						creationProcess.getCreationContext()
 				);
 			}
@@ -1438,7 +1429,6 @@ public class MappingModelCreationHelper {
 					false,
 					false,
 					dialect,
-					creationProcess.getSqmFunctionRegistry(),
 					creationProcess.getCreationContext()
 			);
 			return new BasicValuedCollectionPart(
@@ -1536,7 +1526,6 @@ public class MappingModelCreationHelper {
 					basicElement.isPartitionKey(),
 					true, // element collection does not support null elements
 					dialect,
-					creationProcess.getSqmFunctionRegistry(),
 					creationProcess.getCreationContext()
 			);
 			return new BasicValuedCollectionPart(

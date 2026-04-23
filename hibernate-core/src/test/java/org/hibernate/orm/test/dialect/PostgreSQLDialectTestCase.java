@@ -148,7 +148,6 @@ public class PostgreSQLDialectTestCase {
 		);
 		final String textNullString = dialect.getSelectClauseNullString(
 				new SqlTypedMappingImpl(
-						null,
 						(long) Length.LONG32,
 						null,
 						null,

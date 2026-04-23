@@ -55,10 +55,8 @@ public class HANAJsonValueFunction extends JsonValueFunction {
 		}
 	}
 
-	public static String jsonValueReturningType(SqlTypedMapping column) {
-		final String columnDefinition = column.getColumnDefinition();
-		assert columnDefinition != null;
-		return jsonValueReturningType( columnDefinition );
+	public static String jsonValueReturningType(SqlTypedMapping column, TypeConfiguration typeConfiguration) {
+		return jsonValueReturningType( getCastTypeName( column, typeConfiguration ) );
 	}
 
 	public static String jsonValueReturningType(String columnDefinition) {

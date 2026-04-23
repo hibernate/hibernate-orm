@@ -102,7 +102,6 @@ public class AuditMappingImpl implements AuditMapping {
 				false,
 				false,
 				dialect,
-				sqmFunctionRegistry,
 				creationContext
 		);
 
@@ -118,7 +117,6 @@ public class AuditMappingImpl implements AuditMapping {
 				false,
 				false,
 				dialect,
-				sqmFunctionRegistry,
 				creationContext
 		);
 

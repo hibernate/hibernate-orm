@@ -500,7 +500,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				sqlTypeCode,
 				isLob( sqlTypeCode ),
 				columnType( sqlTypeCode ),
+				null,
 				castType( sqlTypeCode ),
+				narrowCastType( sqlTypeCode ),
 				this
 		);
 	}
@@ -652,6 +654,36 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	protected String castType(int sqlTypeCode) {
 		return columnType( sqlTypeCode );
+	}
+
+	/**
+	 * The SQL type to use as the target of a cast, or as the declared column
+	 * type produced by a set-returning function like {@code json_table()} or
+	 * {@code xmltable()}, in positions where {@code CLOB}, {@code NCLOB}, and
+	 * {@code BLOB} are not accepted.
+	 * <p>
+	 * The default implementation maps LOB types (and their {@code LONG32}
+	 * siblings) to the {@linkplain #columnType column type} of the corresponding
+	 * {@code VARCHAR}-family type code, and defers to {@link #columnType} for
+	 * every other type code. This is the right answer for most dialects; a
+	 * few override the {@code VARCHAR}-family {@code columnType} so that
+	 * substitution is automatically picked up.
+	 *
+	 * @param sqlTypeCode The JDBC type code representing the target type
+	 * @return The SQL type name to use in the narrow cast position
+	 *
+	 * @since 7.4
+	 */
+	@Incubating
+	protected String narrowCastType(int sqlTypeCode) {
+		return columnType(
+				switch ( sqlTypeCode ) {
+					case CLOB, LONG32VARCHAR -> VARCHAR;
+					case NCLOB, LONG32NVARCHAR -> NVARCHAR;
+					case BLOB, LONG32VARBINARY -> VARBINARY;
+					default -> sqlTypeCode;
+				}
+		);
 	}
 
 	/**

@@ -322,7 +322,6 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				}
 				final var role = navigableRole.append( bootPropertyDescriptor.getName() );
 				final SelectablePath selectablePath;
-				final String columnDefinition;
 				final Long length;
 				final Integer arrayLength;
 				final Integer precision;
@@ -331,7 +330,6 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				final boolean isLob;
 				final boolean nullable;
 				if ( selectable instanceof Column column ) {
-					columnDefinition = column.getSqlType();
 					length = column.getLength();
 					arrayLength = column.getArrayLength();
 					precision = column.getPrecision();
@@ -343,7 +341,6 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					MappingModelCreationHelper.resolveAggregateColumnBasicType( creationProcess, role, column );
 				}
 				else {
-					columnDefinition = null;
 					length = null;
 					arrayLength = null;
 					precision = null;
@@ -372,7 +369,6 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 								dialect,
 								creationContext.getBootModel()
 						),
-						columnDefinition,
 						length,
 						arrayLength,
 						precision,

@@ -149,11 +149,6 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 	}
 
 	@Override
-	public @Nullable String getColumnDefinition() {
-		return null;
-	}
-
-	@Override
 	public @Nullable Long getLength() {
 		return null;
 	}

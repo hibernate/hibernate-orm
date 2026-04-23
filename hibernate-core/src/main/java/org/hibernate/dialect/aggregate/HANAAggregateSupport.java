@@ -25,6 +25,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.hibernate.dialect.function.array.DdlTypeHelper.getCastTypeName;
+import static org.hibernate.dialect.function.array.DdlTypeHelper.getTypeName;
 import static org.hibernate.dialect.function.json.HANAJsonValueFunction.jsonValueReturningType;
 import static org.hibernate.dialect.function.xml.HANAXmlTableFunction.xmlValueReturningType;
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -104,7 +106,7 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 					case TIMESTAMP_UTC:
 						return template.replace(
 								placeholder,
-								"cast(json_value(" + jsonParentPartExpression + columnExpression + "') as " + column.getColumnDefinition() + ")"
+								"cast(json_value(" + jsonParentPartExpression + columnExpression + "') as " + getCastTypeName( column, typeConfiguration ) + ")"
 						);
 					case BINARY:
 					case VARBINARY:
@@ -132,7 +134,7 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 					default:
 						return template.replace(
 								placeholder,
-								"json_value(" + jsonParentPartExpression + columnExpression + "' returning " + jsonValueReturningType( column ) + " error on error)"
+								"json_value(" + jsonParentPartExpression + columnExpression + "' returning " + jsonValueReturningType( column, typeConfiguration ) + " error on error)"
 						);
 				}
 			case SQLXML:
@@ -172,7 +174,7 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 						// Cast from clob to varchar first
 						return template.replace(
 								placeholder,
-								caseExpression + "cast(cast(xmlextractvalue(" + xmlParentPartExpression + columnExpression + "') as varchar(36)) as " + xmlValueReturningType( column, column.getColumnDefinition() ) + ") end"
+								caseExpression + "cast(cast(xmlextractvalue(" + xmlParentPartExpression + columnExpression + "') as varchar(36)) as " + xmlValueReturningType( column, getCastTypeName( column, typeConfiguration ) ) + ") end"
 						);
 					case SQLXML:
 						return template.replace(
@@ -200,7 +202,7 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 					default:
 						return template.replace(
 								placeholder,
-								caseExpression + "cast(xmlextractvalue(" + xmlParentPartExpression + columnExpression + "') as " + xmlValueReturningType( column, column.getColumnDefinition() ) + ") end"
+								caseExpression + "cast(xmlextractvalue(" + xmlParentPartExpression + columnExpression + "') as " + xmlValueReturningType( column, getCastTypeName( column, typeConfiguration ) ) + ") end"
 						);
 				}
 		}
@@ -296,9 +298,9 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 		final int aggregateSqlTypeCode = aggregateColumn.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode();
 		switch ( aggregateSqlTypeCode ) {
 			case JSON:
-				return new RootJsonWriteExpression( aggregateColumn, columnsToUpdate );
+				return new RootJsonWriteExpression( aggregateColumn, columnsToUpdate, typeConfiguration );
 			case SQLXML:
-				return new RootXmlWriteExpression( aggregateColumn, columnsToUpdate );
+				return new RootXmlWriteExpression( aggregateColumn, columnsToUpdate, typeConfiguration );
 		}
 		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateSqlTypeCode );
 	}
@@ -314,12 +316,12 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 	private static class AggregateJsonWriteExpression implements JsonWriteExpression {
 
 		private final SelectableMapping selectableMapping;
-		private final String columnDefinition;
+		private final String aggregateTypeName;
 		private final LinkedHashMap<String, JsonWriteExpression> subExpressions = new LinkedHashMap<>();
 
-		private AggregateJsonWriteExpression(SelectableMapping selectableMapping, String columnDefinition) {
+		private AggregateJsonWriteExpression(SelectableMapping selectableMapping, String aggregateTypeName) {
 			this.selectableMapping = selectableMapping;
-			this.columnDefinition = columnDefinition;
+			this.aggregateTypeName = aggregateTypeName;
 		}
 
 		@Override
@@ -338,7 +340,7 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 					final int selectableIndex = embeddableMappingType.getSelectableIndex( parts[i].getSelectableName() );
 					currentAggregate = (AggregateJsonWriteExpression) currentAggregate.subExpressions.computeIfAbsent(
 							parts[i].getSelectableName(),
-							k -> new AggregateJsonWriteExpression( embeddableMappingType.getJdbcValueSelectable( selectableIndex ), columnDefinition )
+							k -> new AggregateJsonWriteExpression( embeddableMappingType.getJdbcValueSelectable( selectableIndex ), aggregateTypeName )
 					);
 				}
 				final String customWriteExpression = column.getWriteExpression();
@@ -400,11 +402,11 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 				}
 				sb.append( " from sys.dummy for json('arraywrap'='no','omitnull'='no')" );
 				sb.append( " returns " );
-				sb.append( columnDefinition );
+				sb.append( aggregateTypeName );
 			}
 			else {
 				sb.append( " cast('{}' as " );
-				sb.append( columnDefinition );
+				sb.append( aggregateTypeName );
 				sb.append( ") jsonresult from sys.dummy" );
 			}
 			sb.append( ')' );
@@ -452,8 +454,8 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 			implements WriteExpressionRenderer {
 		private final String path;
 
-		RootJsonWriteExpression(SelectableMapping aggregateColumn, SelectableMapping[] columns) {
-			super( aggregateColumn, aggregateColumn.getColumnDefinition() );
+		RootJsonWriteExpression(SelectableMapping aggregateColumn, SelectableMapping[] columns, TypeConfiguration typeConfiguration) {
+			super( aggregateColumn, getTypeName( aggregateColumn, typeConfiguration ) );
 			path = aggregateColumn.getSelectionExpression();
 			initializeSubExpressions( aggregateColumn, columns );
 		}
@@ -559,7 +561,7 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 					sb.append( parentPartExpression );
 					sb.append( selectableMapping.getSelectableName() );
 					sb.append( "' returning " );
-					sb.append( jsonValueReturningType( selectableMapping ) );
+					sb.append( jsonValueReturningType( selectableMapping, translator.getSessionFactory().getTypeConfiguration() ) );
 					sb.append( " error on error)" );
 					break;
 				case JSON:
@@ -590,12 +592,12 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 	private static class AggregateXmlWriteExpression implements XmlWriteExpression {
 
 		private final SelectableMapping selectableMapping;
-		private final String columnDefinition;
+		private final String aggregateTypeName;
 		private final LinkedHashMap<String, XmlWriteExpression> subExpressions = new LinkedHashMap<>();
 
-		private AggregateXmlWriteExpression(SelectableMapping selectableMapping, String columnDefinition) {
+		private AggregateXmlWriteExpression(SelectableMapping selectableMapping, String aggregateTypeName) {
 			this.selectableMapping = selectableMapping;
-			this.columnDefinition = columnDefinition;
+			this.aggregateTypeName = aggregateTypeName;
 		}
 
 		@Override
@@ -614,7 +616,7 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 					final int selectableIndex = embeddableMappingType.getSelectableIndex( parts[i].getSelectableName() );
 					currentAggregate = (AggregateXmlWriteExpression) currentAggregate.subExpressions.computeIfAbsent(
 							parts[i].getSelectableName(),
-							k -> new AggregateXmlWriteExpression( embeddableMappingType.getJdbcValueSelectable( selectableIndex ), columnDefinition )
+							k -> new AggregateXmlWriteExpression( embeddableMappingType.getJdbcValueSelectable( selectableIndex ), aggregateTypeName )
 					);
 				}
 				final String customWriteExpression = column.getWriteExpression();
@@ -683,7 +685,7 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 				sb.append( " from sys.dummy for xml('root'='no','rowname'='" );
 				sb.append( getTagName() );
 				sb.append( "','format'='no','nullstyle'='attribute') returns " );
-				sb.append( columnDefinition );
+				sb.append( aggregateTypeName );
 			}
 			else {
 				sb.append( " cast('<" );
@@ -691,7 +693,7 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 				sb.append( "></" );
 				sb.append( getTagName() );
 				sb.append( ">' as " );
-				sb.append( columnDefinition );
+				sb.append( aggregateTypeName );
 				sb.append( ") xmlresult from sys.dummy" );
 			}
 			sb.append( ')' );
@@ -736,8 +738,8 @@ public class HANAAggregateSupport extends AggregateSupportImpl {
 			implements WriteExpressionRenderer {
 		private final String path;
 
-		RootXmlWriteExpression(SelectableMapping aggregateColumn, SelectableMapping[] columns) {
-			super( aggregateColumn, aggregateColumn.getColumnDefinition() );
+		RootXmlWriteExpression(SelectableMapping aggregateColumn, SelectableMapping[] columns, TypeConfiguration typeConfiguration) {
+			super( aggregateColumn, getTypeName( aggregateColumn, typeConfiguration ) );
 			path = aggregateColumn.getSelectionExpression();
 			initializeSubExpressions( aggregateColumn, columns );
 		}

@@ -132,11 +132,6 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
-	public @Nullable String getColumnDefinition() {
-		return selectableMapping.getColumnDefinition();
-	}
-
-	@Override
 	public @Nullable Long getLength() {
 		return selectableMapping.getLength();
 	}

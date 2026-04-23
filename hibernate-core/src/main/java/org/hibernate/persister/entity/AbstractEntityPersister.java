@@ -5110,7 +5110,6 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			final String discriminatorColumnExpression;
-			final String columnDefinition;
 			final Long length;
 			final Integer arrayLength;
 			final Integer precision;
@@ -5124,14 +5123,12 @@ public abstract class AbstractEntityPersister
 								: discriminator.getColumns().get( 0 );
 				discriminatorColumnExpression = getDiscriminatorColumnReaders();
 				if ( column == null ) {
-					columnDefinition = null;
 					length = null;
 					arrayLength = null;
 					precision = null;
 					scale = null;
 				}
 				else {
-					columnDefinition = column.getSqlType();
 					length = column.getLength();
 					arrayLength = column.getArrayLength();
 					precision = column.getPrecision();
@@ -5140,7 +5137,6 @@ public abstract class AbstractEntityPersister
 			}
 			else {
 				discriminatorColumnExpression = discriminatorFormulaTemplate;
-				columnDefinition = null;
 				length = null;
 				arrayLength = null;
 				precision = null;
@@ -5154,7 +5150,6 @@ public abstract class AbstractEntityPersister
 					discriminatorFormulaTemplate != null,
 					isPhysicalDiscriminator(),
 					false,
-					columnDefinition,
 					null,
 					length,
 					arrayLength,
@@ -5304,14 +5299,12 @@ public abstract class AbstractEntityPersister
 			// otherwise we have a non-encapsulated composite-identifier
 			return generateNonEncapsulatedCompositeIdentifierMapping( creationProcess, bootEntityDescriptor );
 		}
-		final String columnDefinition;
 		final Long length;
 		final Integer arrayLength;
 		final Integer precision;
 		final Integer scale;
 		final var identifier = bootEntityDescriptor.getIdentifier();
 		if ( identifier == null ) {
-			columnDefinition = null;
 			length = null;
 			arrayLength = null;
 			precision = null;
@@ -5319,7 +5312,6 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			final var column = identifier.getColumns().get( 0 );
-			columnDefinition = column.getSqlType();
 			length = column.getLength();
 			arrayLength = column.getArrayLength();
 			precision = column.getPrecision();
@@ -5334,7 +5326,6 @@ public abstract class AbstractEntityPersister
 				identifierProperty.getName(),
 				getTableName(),
 				rootTableKeyColumnNames[0],
-				columnDefinition,
 				length,
 				arrayLength,
 				precision,
@@ -5381,7 +5372,6 @@ public abstract class AbstractEntityPersister
 				bootModelRootEntityDescriptor.getVersion().getName(),
 				entityPersister.getTableName(),
 				column.getText( dialect ),
-				column.getSqlType(),
 				column.getLength(),
 				column.getArrayLength(),
 				column.getPrecision(),
@@ -5451,7 +5441,6 @@ public abstract class AbstractEntityPersister
 					false,
 					null,
 					"?",
-					column.getSqlType(),
 					column.getLength(),
 					column.getArrayLength(),
 					column.getPrecision(),
@@ -5473,7 +5462,6 @@ public abstract class AbstractEntityPersister
 			final boolean isAttrColumnExpressionFormula;
 			final String customReadExpr;
 			final String customWriteExpr;
-			final String columnDefinition;
 			final Long length;
 			final Integer arrayLength;
 			final Integer precision;
@@ -5488,7 +5476,6 @@ public abstract class AbstractEntityPersister
 				customReadExpr = null;
 				customWriteExpr = "?";
 				Column column = value.getColumns().get( 0 );
-				columnDefinition = column.getSqlType();
 				length = column.getLength();
 				arrayLength = column.getArrayLength();
 				precision = column.getPrecision();
@@ -5522,7 +5509,6 @@ public abstract class AbstractEntityPersister
 							creationContext.getBootModel()
 					);
 					final var column = value.getColumns().get( 0 );
-					columnDefinition = column.getSqlType();
 					length = column.getLength();
 					arrayLength = column.getArrayLength();
 					precision = column.getPrecision();
@@ -5537,7 +5523,6 @@ public abstract class AbstractEntityPersister
 					isAttrColumnExpressionFormula = true;
 					customReadExpr = null;
 					customWriteExpr = null;
-					columnDefinition = null;
 					length = null;
 					arrayLength = null;
 					precision = null;
@@ -5562,7 +5547,6 @@ public abstract class AbstractEntityPersister
 					isAttrColumnExpressionFormula,
 					customReadExpr,
 					customWriteExpr,
-					columnDefinition,
 					length,
 					arrayLength,
 					precision,

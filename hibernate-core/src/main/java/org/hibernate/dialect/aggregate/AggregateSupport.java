@@ -60,7 +60,6 @@ public interface AggregateSupport {
 				// which we can easily get from the type code of the aggregate column
 				sqlTypeCode == SqlTypes.ARRAY ? aggregateColumn.getTypeCode() : sqlTypeCode,
 				new SqlTypedMappingImpl(
-						column.getTypeName(),
 						column.getLength(),
 						column.getArrayLength(),
 						column.getPrecision(),

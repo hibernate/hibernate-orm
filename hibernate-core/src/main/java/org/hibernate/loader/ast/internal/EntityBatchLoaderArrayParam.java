@@ -77,8 +77,8 @@ public class EntityBatchLoaderArrayParam<T>
 		final SelectableMapping selectable = identifierMapping.getSelectable( 0 );
 		final JdbcMapping jdbcMapping = selectable.getJdbcMapping();
 		arraySqlTypedMapping = new SqlTypedMappingImpl(
-				selectable.getColumnDefinition(),
 				selectable.getLength(),
+				selectable.getArrayLength(),
 				selectable.getPrecision(),
 				selectable.getScale(),
 				selectable.getTemporalPrecision(),

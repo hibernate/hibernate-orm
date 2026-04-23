@@ -24,6 +24,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.dialect.function.array.DdlTypeHelper.getCastTypeName;
+import static org.hibernate.dialect.function.array.DdlTypeHelper.getNarrowCastTypeName;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.JSON;
@@ -66,11 +68,16 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 						// We encode binary data as hex, so we have to decode here
 						return template.replace(
 								placeholder,
-								hexDecodeExpression( queryExpression( readExpression ), column.getColumnDefinition() )
+								hexDecodeExpression( queryExpression( readExpression ), getCastTypeName( column, typeConfiguration ) )
 						);
 					case ARRAY:
 						final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) column.getJdbcMapping();
-						final String elementTypeName = getElementTypeName( column.getColumnDefinition() );
+						// narrow cast type avoids clob/blob in array_agg, which H2 handles
+						// poorly. Pass the column's size so that the element inherits length/
+						// precision from the array column's @Column annotation.
+						final String elementTypeName =
+								getNarrowCastTypeName( pluralType.getElementType(),
+										column.toSize(), typeConfiguration );
 						switch ( pluralType.getElementType().getJdbcType().getDefaultSqlTypeCode() ) {
 							case BINARY:
 							case VARBINARY:
@@ -89,17 +96,11 @@ public class H2AggregateSupport extends AggregateSupportImpl {
 					default:
 						return template.replace(
 								placeholder,
-								valueExpression( readExpression, column.getColumnDefinition() )
+								valueExpression( readExpression, getCastTypeName( column, typeConfiguration ) )
 						);
 				}
 		}
 		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
-	}
-
-	private static String getElementTypeName(String arrayTypeName) {
-		final String elementTypeName = arrayTypeName.substring( 0, arrayTypeName.lastIndexOf( " array" ) );
-		// Doing array_agg on clob produces funky results
-		return elementTypeName.equals( "clob" ) ? "varchar" : elementTypeName;
 	}
 
 	private static String hexDecodeExpression(String valueExpression, String columnType) {

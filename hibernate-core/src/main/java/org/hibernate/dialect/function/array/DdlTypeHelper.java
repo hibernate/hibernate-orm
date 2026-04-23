@@ -70,7 +70,7 @@ public class DdlTypeHelper {
 
 	public static String getTypeName(JdbcMappingContainer type, Size size, TypeConfiguration typeConfiguration) {
 		if ( type instanceof SqlTypedMapping sqlTypedMapping ) {
-			return getSqlTypeName( sqlTypedMapping, typeConfiguration );
+			return getTypeName( sqlTypedMapping, typeConfiguration );
 		}
 		else {
 			final var basicType = (BasicType<?>) type.getSingleJdbcMapping();
@@ -86,7 +86,7 @@ public class DdlTypeHelper {
 
 	public static String getTypeName(ReturnableType<?> type, Size size, TypeConfiguration typeConfiguration) {
 		if ( type instanceof SqlTypedMapping sqlTypedMapping ) {
-			return getSqlTypeName( sqlTypedMapping, typeConfiguration );
+			return getTypeName( sqlTypedMapping, typeConfiguration );
 		}
 		else {
 			final var basicType = (BasicType<?>) ( (JdbcMappingContainer) type ).getSingleJdbcMapping();
@@ -143,7 +143,7 @@ public class DdlTypeHelper {
 		return ddlType == null ? ddlTypeRegistry.getDescriptor( SqlTypes.INTEGER ) : ddlType;
 	}
 
-	private static String getSqlTypeName(SqlTypedMapping castTarget, TypeConfiguration typeConfiguration) {
+	public static String getTypeName(SqlTypedMapping castTarget, TypeConfiguration typeConfiguration) {
 		final var expressionType = (BasicType<?>) castTarget.getJdbcMapping();
 		final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
 		return getDdlType( ddlTypeRegistry, expressionType )
@@ -155,5 +155,38 @@ public class DdlTypeHelper {
 		final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
 		return getDdlType( ddlTypeRegistry, expressionType )
 				.getCastTypeName( castTarget.toSize(), expressionType, ddlTypeRegistry );
+	}
+
+	/**
+	 * Returns the type name to use as a cast target, or as the declared type of
+	 * a column produced by a set-returning function like {@code json_table()}
+	 * or {@code xmltable()}, in positions where LOB types ({@code CLOB},
+	 * {@code NCLOB}, {@code BLOB}) are not accepted.
+	 */
+	public static String getNarrowCastTypeName(SqlTypedMapping castTarget, TypeConfiguration typeConfiguration) {
+		final var expressionType = (BasicType<?>) castTarget.getJdbcMapping();
+		final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+		return getDdlType( ddlTypeRegistry, expressionType )
+				.getNarrowCastTypeName( castTarget.toSize(), expressionType, ddlTypeRegistry );
+	}
+
+	public static String getNarrowCastTypeName(BasicType<?> type, TypeConfiguration typeConfiguration) {
+		return getNarrowCastTypeName( type, Size.nil(), typeConfiguration );
+	}
+
+	public static String getNarrowCastTypeName(BasicType<?> type, Size size, TypeConfiguration typeConfiguration) {
+		final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+		return getDdlType( ddlTypeRegistry, type )
+				.getNarrowCastTypeName( size, type, ddlTypeRegistry );
+	}
+
+	public static String removeUnresolvedTypeArguments(String typeName) {
+		final int parenthesisIndex = typeName.indexOf( '(' );
+		if ( parenthesisIndex != -1
+				&& parenthesisIndex + 1 < typeName.length()
+				&& typeName.charAt( parenthesisIndex + 1 ) == '$' ) {
+			return typeName.substring( 0, parenthesisIndex );
+		}
+		return typeName;
 	}
 }

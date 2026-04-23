@@ -40,7 +40,6 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			@Nullable SelectablePath selectablePath,
 			@Nullable String customReadExpression,
 			@Nullable String customWriteExpression,
-			@Nullable String columnDefinition,
 			@Nullable Long length,
 			@Nullable Integer precision,
 			@Nullable Integer scale,
@@ -58,7 +57,6 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 				selectablePath,
 				customReadExpression,
 				customWriteExpression,
-				columnDefinition,
 				length,
 				null,
 				precision,
@@ -80,7 +78,6 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			@Nullable SelectablePath selectablePath,
 			@Nullable String customReadExpression,
 			@Nullable String customWriteExpression,
-			@Nullable String columnDefinition,
 			@Nullable Long length,
 			@Nullable Integer arrayLength,
 			@Nullable Integer precision,
@@ -93,7 +90,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			boolean partitioned,
 			boolean isFormula,
 			JdbcMapping jdbcMapping) {
-		super( columnDefinition, length, arrayLength, precision, scale, temporalPrecision, jdbcMapping );
+		super( length, arrayLength, precision, scale, temporalPrecision, jdbcMapping );
 		assert selectionExpression != null;
 		// Save memory by using interned strings. Probability is high that we have multiple duplicate strings
 		this.containingTableExpression = containingTableExpression.intern();
@@ -221,7 +218,6 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 				partitioned,
 				forceNotNullable,
 				dialect,
-				sqmFunctionRegistry,
 				creationContext
 		);
 	}
@@ -240,22 +236,18 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			boolean partitioned,
 			boolean forceNotNullable,
 			final Dialect dialect,
-			final SqmFunctionRegistry sqmFunctionRegistry,
 			RuntimeModelCreationContext creationContext) {
 		final String columnExpression;
-		final String columnDefinition;
 		final Long length;
 		final Integer arrayLength;
 		final Integer precision;
 		final Integer scale;
 		final Integer temporalPrecision;
-		final String selectableName;
 		final SelectablePath selectablePath;
 		final boolean isLob;
 		final boolean isNullable;
 		if ( selectable.isFormula() ) {
 			columnExpression = selectable.getTemplate( dialect, typeConfiguration );
-			columnDefinition = null;
 			length = null;
 			arrayLength = null;
 			precision = null;
@@ -263,14 +255,12 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			temporalPrecision = null;
 			isNullable = true;
 			isLob = false;
-			selectableName = propertyPath;
 			assert propertyPath != null : "Property path must be non-null for formulas";
 			selectablePath = new SelectablePath( propertyPath );
 		}
 		else {
 			var column = (Column) selectable;
 			columnExpression = selectable.getText( dialect );
-			columnDefinition = column.getSqlType();
 			length = column.getLength();
 			arrayLength = column.getArrayLength();
 			precision = column.getPrecision();
@@ -279,10 +269,9 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 
 			isNullable = !forceNotNullable && column.isNullable();
 			isLob = column.isSqlTypeLob( creationContext.getMetadata() );
-			selectableName = column.getQuotedName( dialect );
 			selectablePath = parentPath == null
 					? null
-					: parentPath.append( selectableName );
+					: parentPath.append( column.getQuotedName( dialect ) );
 		}
 		return new SelectableMappingImpl(
 				containingTableExpression,
@@ -290,7 +279,6 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 				selectablePath,
 				selectable.getCustomReadExpression(),
 				selectable.getWriteExpr( jdbcMapping, dialect, creationContext.getBootModel() ),
-				columnDefinition,
 				length,
 				arrayLength,
 				precision,

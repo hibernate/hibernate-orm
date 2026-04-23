@@ -196,11 +196,6 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 	}
 
 	@Override
-	public @Nullable String getColumnDefinition() {
-		return null;
-	}
-
-	@Override
 	public @Nullable Long getLength() {
 		return null;
 	}

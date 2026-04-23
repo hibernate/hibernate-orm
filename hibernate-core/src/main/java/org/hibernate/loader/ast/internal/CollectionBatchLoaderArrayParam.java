@@ -71,8 +71,8 @@ public class CollectionBatchLoaderArrayParam
 		final var jdbcJavaTypeClass = jdbcMapping.getJdbcJavaType().getJavaTypeClass();
 
 		arraySqlTypedMapping = new SqlTypedMappingImpl(
-				selectable.getColumnDefinition(),
 				selectable.getLength(),
+				selectable.getArrayLength(),
 				selectable.getPrecision(),
 				selectable.getScale(),
 				selectable.getTemporalPrecision(),

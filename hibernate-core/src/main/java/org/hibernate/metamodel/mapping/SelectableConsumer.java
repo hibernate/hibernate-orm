@@ -142,11 +142,6 @@ public interface SelectableConsumer {
 			}
 
 			@Override
-			public @Nullable String getColumnDefinition() {
-				return getDelegate().getColumnDefinition();
-			}
-
-			@Override
 			public @Nullable Long getLength() {
 				return getDelegate().getLength();
 			}
@@ -255,13 +250,6 @@ public interface SelectableConsumer {
 		}
 
 		@Override
-		public String getColumnDefinition() {
-			// we could probably use the details from `base`, but
-			// this method should really never be called on this object
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
 		public @Nullable Long getLength() {
 			// we could probably use the details from `base`, but
 			// this method should really never be called on this object
@@ -338,11 +326,6 @@ public interface SelectableConsumer {
 
 			@Override
 			public @Nullable String getCustomWriteExpression() {
-				return null;
-			}
-
-			@Override
-			public @Nullable String getColumnDefinition() {
 				return null;
 			}
 

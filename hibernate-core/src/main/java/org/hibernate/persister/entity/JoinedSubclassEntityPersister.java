@@ -1029,13 +1029,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			MappingModelCreationProcess creationProcess,
 			BasicType<?> idType) {
 		final var identifier = persistentClass.getIdentifier();
-		final String columnDefinition;
 		final Long length;
 		final Integer arrayLength;
 		final Integer precision;
 		final Integer scale;
 		if ( identifier == null ) {
-			columnDefinition = null;
 			length = null;
 			arrayLength = null;
 			precision = null;
@@ -1043,7 +1041,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 		else {
 			final var column = identifier.getColumns().get( 0 );
-			columnDefinition = column.getSqlType();
 			length = column.getLength();
 			arrayLength = column.getArrayLength();
 			precision = column.getPrecision();
@@ -1057,7 +1054,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				identifierProperty.getName(),
 				getTableName(),
 				tableKeyColumns[0][0],
-				columnDefinition,
 				length,
 				arrayLength,
 				precision,

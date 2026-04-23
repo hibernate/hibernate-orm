@@ -6462,7 +6462,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return new SqlTypedMappingImpl(
 					null,
 					null,
-					null,
 					precision,
 					0,
 					null,
@@ -6471,7 +6470,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else if ( bindValue instanceof BigDecimal bigDecimal ) {
 			return new SqlTypedMappingImpl(
-					null,
 					null,
 					null,
 					bigDecimal.precision(),
@@ -6692,7 +6690,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return new CastTarget(
 					targetType.getJdbcMapping(),
 					null,
-					null,
 					target.getLength().intValue(),
 					null,
 					null
@@ -6701,9 +6698,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else {
 			return new CastTarget(
 					targetType.getJdbcMapping(),
-					null,
 					target.getLength(),
-					null,
 					target.getPrecision(),
 					target.getScale()
 			);

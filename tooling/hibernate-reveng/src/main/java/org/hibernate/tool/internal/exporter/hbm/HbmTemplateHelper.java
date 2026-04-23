@@ -15,40 +15,17 @@
  */
 package org.hibernate.tool.internal.exporter.hbm;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-
-import org.hibernate.annotations.AnyDiscriminator;
-import org.hibernate.annotations.AnyDiscriminatorValue;
-import org.hibernate.annotations.AnyDiscriminatorValues;
-import org.hibernate.annotations.AnyKeyJavaClass;
-import org.hibernate.annotations.Cascade;
 
 import org.hibernate.tool.internal.util.CascadeUtil;
-import org.hibernate.tool.internal.util.TypeHelper;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
-import org.hibernate.models.spi.TypeDetails;
 
 /**
  * Wraps a {@link ClassDetails} and provides template-friendly methods
@@ -69,6 +46,7 @@ public class HbmTemplateHelper {
 	private final HbmClassInfoHelper classInfoHelper;
 	private final HbmFieldCategorizationHelper fieldCategorizationHelper;
 	private final HbmFieldAttributeHelper fieldAttributeHelper;
+	private final HbmAssociationAttributeHelper associationAttributeHelper;
 
 	HbmTemplateHelper(ClassDetails classDetails) {
 		this(classDetails, null, Collections.emptyMap(), Collections.emptyMap(),
@@ -111,7 +89,8 @@ public class HbmTemplateHelper {
 		this.collectionAttributeHelper = new HbmCollectionAttributeHelper(this.fieldMetaAttributes);
 		this.classInfoHelper = new HbmClassInfoHelper(classDetails, comment, this.metaAttributes, this.imports);
 		this.fieldCategorizationHelper = new HbmFieldCategorizationHelper(classDetails, this.fieldMetaAttributes, this.metaAttributes);
-		this.fieldAttributeHelper = new HbmFieldAttributeHelper(this.fieldMetaAttributes, this.allClassMetaAttributes);
+		this.fieldAttributeHelper = new HbmFieldAttributeHelper(this.fieldMetaAttributes);
+		this.associationAttributeHelper = new HbmAssociationAttributeHelper(this.fieldMetaAttributes, this.allClassMetaAttributes);
 	}
 
 	// --- Delegate accessors ---
@@ -126,6 +105,10 @@ public class HbmTemplateHelper {
 
 	public HbmFieldAttributeHelper getFieldAttributeHelper() {
 		return fieldAttributeHelper;
+	}
+
+	public HbmAssociationAttributeHelper getAssociationAttributeHelper() {
+		return associationAttributeHelper;
 	}
 
 	public HbmCollectionAttributeHelper getCollectionAttributeHelper() {
@@ -423,7 +406,7 @@ public class HbmTemplateHelper {
 	}
 
 	public String getManyToOneCascadeString(FieldDetails field) {
-		return fieldAttributeHelper.getManyToOneCascadeString(field);
+		return associationAttributeHelper.getManyToOneCascadeString(field);
 	}
 
 	// --- Any ---
@@ -447,11 +430,11 @@ public class HbmTemplateHelper {
 	}
 
 	public String getArrayElementClass(FieldDetails field) {
-		return fieldAttributeHelper.getArrayElementClass(field);
+		return associationAttributeHelper.getArrayElementClass(field);
 	}
 
 	public String getManyToAnyFkColumnName(FieldDetails field) {
-		return fieldAttributeHelper.getManyToAnyFkColumnName(field);
+		return associationAttributeHelper.getManyToAnyFkColumnName(field);
 	}
 
 	// --- Property-level attributes ---
@@ -535,137 +518,137 @@ public class HbmTemplateHelper {
 	}
 
 	public boolean isManyToOneEntityNameRef(FieldDetails field) {
-		return fieldAttributeHelper.isManyToOneEntityNameRef(field);
+		return associationAttributeHelper.isManyToOneEntityNameRef(field);
 	}
 
 	public String getManyToOneEntityName(FieldDetails field) {
-		return fieldAttributeHelper.getManyToOneEntityName(field);
+		return associationAttributeHelper.getManyToOneEntityName(field);
 	}
 
 	public List<String> getManyToOneFormulas(FieldDetails field) {
-		return fieldAttributeHelper.getManyToOneFormulas(field);
+		return associationAttributeHelper.getManyToOneFormulas(field);
 	}
 
 	// --- ManyToMany ---
 
 	public boolean isManyToManyEntityNameRef(FieldDetails field) {
-		return fieldAttributeHelper.isManyToManyEntityNameRef(field);
+		return associationAttributeHelper.isManyToManyEntityNameRef(field);
 	}
 
 	public String getManyToManyEntityName(FieldDetails field) {
-		return fieldAttributeHelper.getManyToManyEntityName(field);
+		return associationAttributeHelper.getManyToManyEntityName(field);
 	}
 
 	public List<String> getManyToManyFormulas(FieldDetails field) {
-		return fieldAttributeHelper.getManyToManyFormulas(field);
+		return associationAttributeHelper.getManyToManyFormulas(field);
 	}
 
 	public boolean isManyToOneLazy(FieldDetails field) {
-		return fieldAttributeHelper.isManyToOneLazy(field);
+		return associationAttributeHelper.isManyToOneLazy(field);
 	}
 
 	public boolean isManyToOneUpdatable(FieldDetails field) {
-		return fieldAttributeHelper.isManyToOneUpdatable(field);
+		return associationAttributeHelper.isManyToOneUpdatable(field);
 	}
 
 	public boolean isManyToOneInsertable(FieldDetails field) {
-		return fieldAttributeHelper.isManyToOneInsertable(field);
+		return associationAttributeHelper.isManyToOneInsertable(field);
 	}
 
 	public boolean isManyToOneOptional(FieldDetails field) {
-		return fieldAttributeHelper.isManyToOneOptional(field);
+		return associationAttributeHelper.isManyToOneOptional(field);
 	}
 
 	// --- JoinColumn (shared by ManyToOne, OneToOne) ---
 
 	public String getPropertyRef(FieldDetails field) {
-		return fieldAttributeHelper.getPropertyRef(field);
+		return associationAttributeHelper.getPropertyRef(field);
 	}
 
 	public String getJoinColumnName(FieldDetails field) {
-		return fieldAttributeHelper.getJoinColumnName(field);
+		return associationAttributeHelper.getJoinColumnName(field);
 	}
 
 	public List<String> getJoinColumnNames(FieldDetails field) {
-		return fieldAttributeHelper.getJoinColumnNames(field);
+		return associationAttributeHelper.getJoinColumnNames(field);
 	}
 
 	// --- OneToOne ---
 
 	public String getOneToOneMappedBy(FieldDetails field) {
-		return fieldAttributeHelper.getOneToOneMappedBy(field);
+		return associationAttributeHelper.getOneToOneMappedBy(field);
 	}
 
 	public String getOneToOneCascadeString(FieldDetails field) {
-		return fieldAttributeHelper.getOneToOneCascadeString(field);
+		return associationAttributeHelper.getOneToOneCascadeString(field);
 	}
 
 	public boolean isOneToOneConstrained(FieldDetails field) {
-		return fieldAttributeHelper.isOneToOneConstrained(field);
+		return associationAttributeHelper.isOneToOneConstrained(field);
 	}
 
 	// --- OneToMany ---
 
 	public String getOneToManyTargetEntity(FieldDetails field) {
-		return fieldAttributeHelper.getOneToManyTargetEntity(field);
+		return associationAttributeHelper.getOneToManyTargetEntity(field);
 	}
 
 	public List<String> getKeyColumnNames(FieldDetails field) {
-		return fieldAttributeHelper.getKeyColumnNames(field);
+		return associationAttributeHelper.getKeyColumnNames(field);
 	}
 
 	public String getOneToManyCascadeString(FieldDetails field) {
-		return fieldAttributeHelper.getOneToManyCascadeString(field);
+		return associationAttributeHelper.getOneToManyCascadeString(field);
 	}
 
 	public boolean isOneToManyEager(FieldDetails field) {
-		return fieldAttributeHelper.isOneToManyEager(field);
+		return associationAttributeHelper.isOneToManyEager(field);
 	}
 
 	// --- ManyToMany ---
 
 	public String getManyToManyTargetEntity(FieldDetails field) {
-		return fieldAttributeHelper.getManyToManyTargetEntity(field);
+		return associationAttributeHelper.getManyToManyTargetEntity(field);
 	}
 
 	public boolean isManyToManyInverse(FieldDetails field) {
-		return fieldAttributeHelper.isManyToManyInverse(field);
+		return associationAttributeHelper.isManyToManyInverse(field);
 	}
 
 	public String getJoinTableName(FieldDetails field) {
-		return fieldAttributeHelper.getJoinTableName(field);
+		return associationAttributeHelper.getJoinTableName(field);
 	}
 
 	public boolean hasJoinTable(FieldDetails field) {
-		return fieldAttributeHelper.hasJoinTable(field);
+		return associationAttributeHelper.hasJoinTable(field);
 	}
 
 	public String getJoinTableSchema(FieldDetails field) {
-		return fieldAttributeHelper.getJoinTableSchema(field);
+		return associationAttributeHelper.getJoinTableSchema(field);
 	}
 
 	public String getJoinTableCatalog(FieldDetails field) {
-		return fieldAttributeHelper.getJoinTableCatalog(field);
+		return associationAttributeHelper.getJoinTableCatalog(field);
 	}
 
 	public String getJoinTableJoinColumnName(FieldDetails field) {
-		return fieldAttributeHelper.getJoinTableJoinColumnName(field);
+		return associationAttributeHelper.getJoinTableJoinColumnName(field);
 	}
 
 	public List<String> getJoinTableJoinColumnNames(FieldDetails field) {
-		return fieldAttributeHelper.getJoinTableJoinColumnNames(field);
+		return associationAttributeHelper.getJoinTableJoinColumnNames(field);
 	}
 
 	public String getJoinTableInverseJoinColumnName(FieldDetails field) {
-		return fieldAttributeHelper.getJoinTableInverseJoinColumnName(field);
+		return associationAttributeHelper.getJoinTableInverseJoinColumnName(field);
 	}
 
 	public List<String> getJoinTableInverseJoinColumnNames(FieldDetails field) {
-		return fieldAttributeHelper.getJoinTableInverseJoinColumnNames(field);
+		return associationAttributeHelper.getJoinTableInverseJoinColumnNames(field);
 	}
 
 	public String getManyToManyCascadeString(FieldDetails field) {
-		return fieldAttributeHelper.getManyToManyCascadeString(field);
+		return associationAttributeHelper.getManyToManyCascadeString(field);
 	}
 
 	// --- Collection type ---
@@ -761,7 +744,7 @@ public class HbmTemplateHelper {
 	}
 
 	public List<AttributeOverrideInfo> getAttributeOverrides(FieldDetails field) {
-		return fieldAttributeHelper.getAttributeOverrides(field);
+		return associationAttributeHelper.getAttributeOverrides(field);
 	}
 
 	public record AttributeOverrideInfo(String fieldName, String columnName) {}

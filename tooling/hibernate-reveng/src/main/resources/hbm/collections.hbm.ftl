@@ -8,8 +8,8 @@
         fetch="${collections.getCollectionFetchMode(field)}"</#if><#if (collections.getCollectionBatchSize(field) gt 1)>
         batch-size="${collections.getCollectionBatchSize(field)?c}"</#if><#if collections.getCollectionOrderBy(field)??>
         order-by="${collections.getCollectionOrderBy(field)}"</#if><#if collections.getSort(field)??>
-        sort="${collections.getSort(field)}"</#if><#if fieldAttrs.getArrayElementClass(field)??>
-        element-class="${fieldAttrs.getArrayElementClass(field)}"</#if><#if fieldAttrs.getAccessType(field)??>
+        sort="${collections.getSort(field)}"</#if><#if assocAttrs.getArrayElementClass(field)??>
+        element-class="${assocAttrs.getArrayElementClass(field)}"</#if><#if fieldAttrs.getAccessType(field)??>
         access="${fieldAttrs.getAccessType(field)}"</#if>>
 <#list fieldAttrs.getFieldMetaAttributes(field)?keys as metaName>
 <#list fieldAttrs.getFieldMetaAttribute(field, metaName) as metaValue>
@@ -19,8 +19,8 @@
 <#if collections.getCollectionCacheUsage(field)??>
         <cache usage="${collections.getCollectionCacheUsage(field)}"<#if collections.getCollectionCacheRegion(field)??> region="${collections.getCollectionCacheRegion(field)}"</#if>/>
 </#if>
-        <key<#if fieldAttrs.getPropertyRef(field)??> property-ref="${fieldAttrs.getPropertyRef(field)}"</#if>>
-<#list fieldAttrs.getKeyColumnNames(field) as keyCol>
+        <key<#if assocAttrs.getPropertyRef(field)??> property-ref="${assocAttrs.getPropertyRef(field)}"</#if>>
+<#list assocAttrs.getKeyColumnNames(field) as keyCol>
             <column name="${keyCol}"/>
 </#list>
         </key>
@@ -34,7 +34,7 @@
         <map-key column="${collections.getMapKeyColumnName(field)!field.getName() + '_KEY'}" type="${collections.getMapKeyType(field)!'string'}"/>
 </#if>
 </#if>
-        <one-to-many class="${fieldAttrs.getOneToManyTargetEntity(field)}"/>
+        <one-to-many class="${assocAttrs.getOneToManyTargetEntity(field)}"/>
 <#list collections.getCollectionFilters(field) as fi>
         <filter name="${fi.name()}"<#if fi.condition()?has_content> condition="${fi.condition()}"</#if>/>
 </#list>
@@ -55,11 +55,11 @@
 <#-- Collections (many-to-many) -->
 <#list fields.getManyToManyFields() as field>
 <#assign collTag = collections.getCollectionTag(field)>
-<#if fieldAttrs.hasJoinTable(field)>
-    <${collTag} name="${field.getName()}"<#if fieldAttrs.getJoinTableName(field)??>
-        table="${fieldAttrs.getJoinTableName(field)}"</#if><#if fieldAttrs.getJoinTableSchema(field)??>
-        schema="${fieldAttrs.getJoinTableSchema(field)}"</#if><#if fieldAttrs.getJoinTableCatalog(field)??>
-        catalog="${fieldAttrs.getJoinTableCatalog(field)}"</#if><#if collections.isCollectionInverse(field)>
+<#if assocAttrs.hasJoinTable(field)>
+    <${collTag} name="${field.getName()}"<#if assocAttrs.getJoinTableName(field)??>
+        table="${assocAttrs.getJoinTableName(field)}"</#if><#if assocAttrs.getJoinTableSchema(field)??>
+        schema="${assocAttrs.getJoinTableSchema(field)}"</#if><#if assocAttrs.getJoinTableCatalog(field)??>
+        catalog="${assocAttrs.getJoinTableCatalog(field)}"</#if><#if collections.isCollectionInverse(field)>
         inverse="true"</#if><#if collections.getCollectionCascadeString(field)??>
         cascade="${collections.getCollectionCascadeString(field)}"</#if><#if collections.getCollectionLazy(field)??>
         lazy="${collections.getCollectionLazy(field)}"</#if><#if collections.getCollectionFetchMode(field)??>
@@ -77,7 +77,7 @@
         <cache usage="${collections.getCollectionCacheUsage(field)}"<#if collections.getCollectionCacheRegion(field)??> region="${collections.getCollectionCacheRegion(field)}"</#if>/>
 </#if>
         <key>
-<#list fieldAttrs.getJoinTableJoinColumnNames(field) as colName>
+<#list assocAttrs.getJoinTableJoinColumnNames(field) as colName>
             <column name="${colName}"/>
 </#list>
         </key>
@@ -96,11 +96,11 @@
             <generator class="${collections.getCollectionIdGenerator(field)!'native'}"/>
         </collection-id>
 </#if>
-        <many-to-many<#if fieldAttrs.isManyToManyEntityNameRef(field)> entity-name="${fieldAttrs.getManyToManyEntityName(field)}"<#else> class="${fieldAttrs.getManyToManyTargetEntity(field)}"</#if>>
-<#list fieldAttrs.getJoinTableInverseJoinColumnNames(field) as colName>
+        <many-to-many<#if assocAttrs.isManyToManyEntityNameRef(field)> entity-name="${assocAttrs.getManyToManyEntityName(field)}"<#else> class="${assocAttrs.getManyToManyTargetEntity(field)}"</#if>>
+<#list assocAttrs.getJoinTableInverseJoinColumnNames(field) as colName>
             <column name="${colName}"/>
 </#list>
-<#list fieldAttrs.getManyToManyFormulas(field) as formula>
+<#list assocAttrs.getManyToManyFormulas(field) as formula>
             <formula>${formula}</formula>
 </#list>
         </many-to-many>
@@ -138,7 +138,7 @@
         <key>
             <column name="${field.getName()}"/>
         </key>
-        <many-to-many class="${fieldAttrs.getManyToManyTargetEntity(field)}"/>
+        <many-to-many class="${assocAttrs.getManyToManyTargetEntity(field)}"/>
     </${collTag}>
 </#if>
 </#list>

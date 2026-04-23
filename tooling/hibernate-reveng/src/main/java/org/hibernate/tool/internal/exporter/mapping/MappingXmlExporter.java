@@ -91,6 +91,7 @@ public class MappingXmlExporter {
 		Map<String, Object> model = new HashMap<>();
 		model.put("entityInfo", new MappingEntityInfoHelper(entity));
 		model.put("fieldInfo", new MappingFieldAnnotationHelper(entity));
+		model.put("assocInfo", new MappingAssociationHelper(entity));
 		model.put("queries", new MappingQueryAndFilterHelper(entity));
 		model.put("date", new Date());
 		model.put("version", Version.versionString());

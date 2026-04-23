@@ -49,7 +49,7 @@
 <#list fields.getIdFields() as field>
 <#if fields.isManyToOneField(field)>
         <key-many-to-one name="${field.getName()}" class="${fieldAttrs.getTargetEntityName(field)}">
-<#list fieldAttrs.getJoinColumnNames(field) as colName>
+<#list assocAttrs.getJoinColumnNames(field) as colName>
             <column name="${colName}"/>
 </#list>
         </key-many-to-one>

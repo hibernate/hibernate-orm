@@ -6,7 +6,7 @@
         <meta attribute="${metaName}">${metaValue}</meta>
 </#list>
 </#list>
-<#list fieldAttrs.getAttributeOverrides(field) as ao>
+<#list assocAttrs.getAttributeOverrides(field) as ao>
         <property name="${ao.fieldName()}">
             <column name="${ao.columnName()}"/>
         </property>
@@ -37,8 +37,8 @@
         <meta-value value="${mv.value()}" class="${mv.entityClass()}"/>
 </#list>
         <column name="${fieldAttrs.getColumnName(field)}"/>
-<#if fieldAttrs.getJoinColumnName(field)??>
-        <column name="${fieldAttrs.getJoinColumnName(field)}"/>
+<#if assocAttrs.getJoinColumnName(field)??>
+        <column name="${assocAttrs.getJoinColumnName(field)}"/>
 </#if>
     </any>
 </#list>
@@ -92,7 +92,7 @@
             </nested-composite-element>
 </#list>
 <#list fields.getCompositeElementManyToOnes(field) as m2oField>
-            <many-to-one name="${m2oField.getName()}" class="${fieldAttrs.getTargetEntityName(m2oField)}"<#if fieldAttrs.getManyToOneCascadeString(m2oField)??> cascade="${fieldAttrs.getManyToOneCascadeString(m2oField)}"</#if>/>
+            <many-to-one name="${m2oField.getName()}" class="${fieldAttrs.getTargetEntityName(m2oField)}"<#if assocAttrs.getManyToOneCascadeString(m2oField)??> cascade="${assocAttrs.getManyToOneCascadeString(m2oField)}"</#if>/>
 </#list>
         </composite-element>
 <#else>
@@ -107,7 +107,7 @@
 <#-- ManyToAny -->
 <#list fields.getManyToAnyFields() as field>
 <#assign collTag = collections.getCollectionTag(field)>
-    <${collTag} name="${field.getName()}"<#if fieldAttrs.getJoinTableName(field)??> table="${fieldAttrs.getJoinTableName(field)}"</#if><#if collections.getCollectionCascadeString(field)??>
+    <${collTag} name="${field.getName()}"<#if assocAttrs.getJoinTableName(field)??> table="${assocAttrs.getJoinTableName(field)}"</#if><#if collections.getCollectionCascadeString(field)??>
         cascade="${collections.getCollectionCascadeString(field)}"</#if><#if collections.getCollectionLazy(field)??>
         lazy="${collections.getCollectionLazy(field)}"</#if><#if collections.getCollectionFetchMode(field)??>
         fetch="${collections.getCollectionFetchMode(field)}"</#if><#if fieldAttrs.getAccessType(field)??>
@@ -118,7 +118,7 @@
 </#list>
 </#list>
         <key>
-<#list fieldAttrs.getKeyColumnNames(field) as keyCol>
+<#list assocAttrs.getKeyColumnNames(field) as keyCol>
             <column name="${keyCol}"/>
 </#list>
         </key>
@@ -136,8 +136,8 @@
 <#if fieldAttrs.getColumnName(field)??>
             <column name="${fieldAttrs.getColumnName(field)}"/>
 </#if>
-<#if fieldAttrs.getManyToAnyFkColumnName(field)??>
-            <column name="${fieldAttrs.getManyToAnyFkColumnName(field)}"/>
+<#if assocAttrs.getManyToAnyFkColumnName(field)??>
+            <column name="${assocAttrs.getManyToAnyFkColumnName(field)}"/>
 </#if>
         </many-to-any>
     </${collTag}>
@@ -170,11 +170,11 @@
 <#elseif fields.isManyToOneField(field)>
         <many-to-one
             name="${field.getName()}"
-<#if fieldAttrs.isManyToOneEntityNameRef(field)>
-            entity-name="${fieldAttrs.getManyToOneEntityName(field)}"<#else>
-            class="${fieldAttrs.getTargetEntityName(field)}"</#if><#if !fieldAttrs.isManyToOneOptional(field)>
+<#if assocAttrs.isManyToOneEntityNameRef(field)>
+            entity-name="${assocAttrs.getManyToOneEntityName(field)}"<#else>
+            class="${fieldAttrs.getTargetEntityName(field)}"</#if><#if !assocAttrs.isManyToOneOptional(field)>
             not-null="true"</#if>>
-<#list fieldAttrs.getJoinColumnNames(field) as colName>
+<#list assocAttrs.getJoinColumnNames(field) as colName>
             <column name="${colName}"/>
 </#list>
         </many-to-one>

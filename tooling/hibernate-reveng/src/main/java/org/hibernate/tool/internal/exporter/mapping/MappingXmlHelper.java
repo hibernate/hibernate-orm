@@ -34,11 +34,13 @@ public class MappingXmlHelper {
 	private final MappingEntityInfoHelper entityInfoHelper;
 	private final MappingQueryAndFilterHelper queryAndFilterHelper;
 	private final MappingFieldAnnotationHelper fieldAnnotationHelper;
+	private final MappingAssociationHelper associationHelper;
 
 	MappingXmlHelper(ClassDetails classDetails) {
 		this.entityInfoHelper = new MappingEntityInfoHelper(classDetails);
 		this.queryAndFilterHelper = new MappingQueryAndFilterHelper(classDetails);
 		this.fieldAnnotationHelper = new MappingFieldAnnotationHelper(classDetails);
+		this.associationHelper = new MappingAssociationHelper(classDetails);
 	}
 
 	public MappingEntityInfoHelper getEntityInfoHelper() {
@@ -381,29 +383,29 @@ public class MappingXmlHelper {
 	// --- ManyToOne ---
 
 	public String getTargetEntityName(FieldDetails field) {
-		return fieldAnnotationHelper.getTargetEntityName(field);
+		return associationHelper.getTargetEntityName(field);
 	}
 
 	public String getManyToOneFetchType(FieldDetails field) {
-		return fieldAnnotationHelper.getManyToOneFetchType(field);
+		return associationHelper.getManyToOneFetchType(field);
 	}
 
 	public boolean isManyToOneOptional(FieldDetails field) {
-		return fieldAnnotationHelper.isManyToOneOptional(field);
+		return associationHelper.isManyToOneOptional(field);
 	}
 
 	// --- JoinColumn ---
 
 	public String getJoinColumnName(FieldDetails field) {
-		return fieldAnnotationHelper.getJoinColumnName(field);
+		return associationHelper.getJoinColumnName(field);
 	}
 
 	public String getReferencedColumnName(FieldDetails field) {
-		return fieldAnnotationHelper.getReferencedColumnName(field);
+		return associationHelper.getReferencedColumnName(field);
 	}
 
 	public List<JoinColumnInfo> getJoinColumns(FieldDetails field) {
-		return fieldAnnotationHelper.getJoinColumns(field);
+		return associationHelper.getJoinColumns(field);
 	}
 
 	public record JoinColumnInfo(String name, String referencedColumnName) {}
@@ -411,139 +413,139 @@ public class MappingXmlHelper {
 	// --- OneToMany ---
 
 	public String getOneToManyTargetEntity(FieldDetails field) {
-		return fieldAnnotationHelper.getOneToManyTargetEntity(field);
+		return associationHelper.getOneToManyTargetEntity(field);
 	}
 
 	public String getOneToManyMappedBy(FieldDetails field) {
-		return fieldAnnotationHelper.getOneToManyMappedBy(field);
+		return associationHelper.getOneToManyMappedBy(field);
 	}
 
 	public String getOneToManyFetchType(FieldDetails field) {
-		return fieldAnnotationHelper.getOneToManyFetchType(field);
+		return associationHelper.getOneToManyFetchType(field);
 	}
 
 	public boolean isOneToManyOrphanRemoval(FieldDetails field) {
-		return fieldAnnotationHelper.isOneToManyOrphanRemoval(field);
+		return associationHelper.isOneToManyOrphanRemoval(field);
 	}
 
 	public List<CascadeType> getOneToManyCascadeTypes(FieldDetails field) {
-		return fieldAnnotationHelper.getOneToManyCascadeTypes(field);
+		return associationHelper.getOneToManyCascadeTypes(field);
 	}
 
 	// --- Ordering ---
 
 	public String getOrderBy(FieldDetails field) {
-		return fieldAnnotationHelper.getOrderBy(field);
+		return associationHelper.getOrderBy(field);
 	}
 
 	public String getOrderColumnName(FieldDetails field) {
-		return fieldAnnotationHelper.getOrderColumnName(field);
+		return associationHelper.getOrderColumnName(field);
 	}
 
 	// --- Map key ---
 
 	public String getMapKeyName(FieldDetails field) {
-		return fieldAnnotationHelper.getMapKeyName(field);
+		return associationHelper.getMapKeyName(field);
 	}
 
 	public String getMapKeyColumnName(FieldDetails field) {
-		return fieldAnnotationHelper.getMapKeyColumnName(field);
+		return associationHelper.getMapKeyColumnName(field);
 	}
 
 	public String getMapKeyJoinColumnName(FieldDetails field) {
-		return fieldAnnotationHelper.getMapKeyJoinColumnName(field);
+		return associationHelper.getMapKeyJoinColumnName(field);
 	}
 
 	// --- Fetch mode ---
 
 	public String getFetchMode(FieldDetails field) {
-		return fieldAnnotationHelper.getFetchMode(field);
+		return associationHelper.getFetchMode(field);
 	}
 
 	// --- NotFound ---
 
 	public String getNotFoundAction(FieldDetails field) {
-		return fieldAnnotationHelper.getNotFoundAction(field);
+		return associationHelper.getNotFoundAction(field);
 	}
 
 	// --- Convert ---
 
 	public String getConverterClassName(FieldDetails field) {
-		return fieldAnnotationHelper.getConverterClassName(field);
+		return associationHelper.getConverterClassName(field);
 	}
 
 	// --- OneToOne ---
 
 	public String getOneToOneMappedBy(FieldDetails field) {
-		return fieldAnnotationHelper.getOneToOneMappedBy(field);
+		return associationHelper.getOneToOneMappedBy(field);
 	}
 
 	public String getOneToOneFetchType(FieldDetails field) {
-		return fieldAnnotationHelper.getOneToOneFetchType(field);
+		return associationHelper.getOneToOneFetchType(field);
 	}
 
 	public boolean isOneToOneOptional(FieldDetails field) {
-		return fieldAnnotationHelper.isOneToOneOptional(field);
+		return associationHelper.isOneToOneOptional(field);
 	}
 
 	public boolean isOneToOneOrphanRemoval(FieldDetails field) {
-		return fieldAnnotationHelper.isOneToOneOrphanRemoval(field);
+		return associationHelper.isOneToOneOrphanRemoval(field);
 	}
 
 	public List<CascadeType> getOneToOneCascadeTypes(FieldDetails field) {
-		return fieldAnnotationHelper.getOneToOneCascadeTypes(field);
+		return associationHelper.getOneToOneCascadeTypes(field);
 	}
 
 	// --- ManyToMany ---
 
 	public String getManyToManyTargetEntity(FieldDetails field) {
-		return fieldAnnotationHelper.getManyToManyTargetEntity(field);
+		return associationHelper.getManyToManyTargetEntity(field);
 	}
 
 	public String getManyToManyMappedBy(FieldDetails field) {
-		return fieldAnnotationHelper.getManyToManyMappedBy(field);
+		return associationHelper.getManyToManyMappedBy(field);
 	}
 
 	public String getManyToManyFetchType(FieldDetails field) {
-		return fieldAnnotationHelper.getManyToManyFetchType(field);
+		return associationHelper.getManyToManyFetchType(field);
 	}
 
 	public List<CascadeType> getManyToManyCascadeTypes(FieldDetails field) {
-		return fieldAnnotationHelper.getManyToManyCascadeTypes(field);
+		return associationHelper.getManyToManyCascadeTypes(field);
 	}
 
 	public String getJoinTableName(FieldDetails field) {
-		return fieldAnnotationHelper.getJoinTableName(field);
+		return associationHelper.getJoinTableName(field);
 	}
 
 	public String getJoinTableSchema(FieldDetails field) {
-		return fieldAnnotationHelper.getJoinTableSchema(field);
+		return associationHelper.getJoinTableSchema(field);
 	}
 
 	public String getJoinTableCatalog(FieldDetails field) {
-		return fieldAnnotationHelper.getJoinTableCatalog(field);
+		return associationHelper.getJoinTableCatalog(field);
 	}
 
 	public String getJoinTableJoinColumnName(FieldDetails field) {
-		return fieldAnnotationHelper.getJoinTableJoinColumnName(field);
+		return associationHelper.getJoinTableJoinColumnName(field);
 	}
 
 	public String getJoinTableInverseJoinColumnName(FieldDetails field) {
-		return fieldAnnotationHelper.getJoinTableInverseJoinColumnName(field);
+		return associationHelper.getJoinTableInverseJoinColumnName(field);
 	}
 
 	public List<String> getJoinTableJoinColumnNames(FieldDetails field) {
-		return fieldAnnotationHelper.getJoinTableJoinColumnNames(field);
+		return associationHelper.getJoinTableJoinColumnNames(field);
 	}
 
 	public List<String> getJoinTableInverseJoinColumnNames(FieldDetails field) {
-		return fieldAnnotationHelper.getJoinTableInverseJoinColumnNames(field);
+		return associationHelper.getJoinTableInverseJoinColumnNames(field);
 	}
 
 	// --- Embedded / EmbeddedId attribute overrides ---
 
 	public List<AttributeOverrideInfo> getAttributeOverrides(FieldDetails field) {
-		return fieldAnnotationHelper.getAttributeOverrides(field);
+		return associationHelper.getAttributeOverrides(field);
 	}
 
 	public record AttributeOverrideInfo(String fieldName, String columnName) {}
@@ -551,37 +553,37 @@ public class MappingXmlHelper {
 	// --- Property-level attributes ---
 
 	public String getColumnTable(FieldDetails field) {
-		return fieldAnnotationHelper.getColumnTable(field);
+		return associationHelper.getColumnTable(field);
 	}
 
 	public String getFormula(FieldDetails field) {
-		return fieldAnnotationHelper.getFormula(field);
+		return associationHelper.getFormula(field);
 	}
 
 	public boolean isPropertyLazy(FieldDetails field) {
-		return fieldAnnotationHelper.isPropertyLazy(field);
+		return associationHelper.isPropertyLazy(field);
 	}
 
 	public String getAccessType(FieldDetails field) {
-		return fieldAnnotationHelper.getFieldAccessType(field);
+		return associationHelper.getFieldAccessType(field);
 	}
 
 	public boolean isOptimisticLockExcluded(FieldDetails field) {
-		return fieldAnnotationHelper.isOptimisticLockExcluded(field);
+		return associationHelper.isOptimisticLockExcluded(field);
 	}
 
 	// --- Any ---
 
 	public String getAnyDiscriminatorType(FieldDetails field) {
-		return fieldAnnotationHelper.getAnyDiscriminatorType(field);
+		return associationHelper.getAnyDiscriminatorType(field);
 	}
 
 	public String getAnyKeyType(FieldDetails field) {
-		return fieldAnnotationHelper.getAnyKeyType(field);
+		return associationHelper.getAnyKeyType(field);
 	}
 
 	public List<AnyDiscriminatorMapping> getAnyDiscriminatorMappings(FieldDetails field) {
-		return fieldAnnotationHelper.getAnyDiscriminatorMappings(field);
+		return associationHelper.getAnyDiscriminatorMappings(field);
 	}
 
 	public record AnyDiscriminatorMapping(String value, String entityClass) {}
@@ -589,32 +591,32 @@ public class MappingXmlHelper {
 	// --- ElementCollection ---
 
 	public boolean isElementCollectionOfEmbeddable(FieldDetails field) {
-		return fieldAnnotationHelper.isElementCollectionOfEmbeddable(field);
+		return associationHelper.isElementCollectionOfEmbeddable(field);
 	}
 
 	public String getElementCollectionTableName(FieldDetails field) {
-		return fieldAnnotationHelper.getElementCollectionTableName(field);
+		return associationHelper.getElementCollectionTableName(field);
 	}
 
 	public String getElementCollectionKeyColumnName(FieldDetails field) {
-		return fieldAnnotationHelper.getElementCollectionKeyColumnName(field);
+		return associationHelper.getElementCollectionKeyColumnName(field);
 	}
 
 	public String getElementCollectionTargetClass(FieldDetails field) {
-		return fieldAnnotationHelper.getElementCollectionTargetClass(field);
+		return associationHelper.getElementCollectionTargetClass(field);
 	}
 
 	public String getElementCollectionColumnName(FieldDetails field) {
-		return fieldAnnotationHelper.getElementCollectionColumnName(field);
+		return associationHelper.getElementCollectionColumnName(field);
 	}
 
 	// --- Sort ---
 
 	public boolean isSortNatural(FieldDetails field) {
-		return fieldAnnotationHelper.isSortNatural(field);
+		return associationHelper.isSortNatural(field);
 	}
 
 	public String getSortComparatorClass(FieldDetails field) {
-		return fieldAnnotationHelper.getSortComparatorClass(field);
+		return associationHelper.getSortComparatorClass(field);
 	}
 }

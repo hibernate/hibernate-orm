@@ -82,6 +82,10 @@ class MappingFieldAnnotationHelperTest {
 		return new MappingFieldAnnotationHelper(entity);
 	}
 
+	private MappingAssociationHelper createAssocHelper(DynamicClassDetails entity) {
+		return new MappingAssociationHelper(entity);
+	}
+
 	private DynamicFieldDetails addBasicField(
 			DynamicClassDetails entity, String name, Class<?> type, ModelsContext ctx) {
 		ClassDetails typeClass = ctx.getClassDetailsRegistry().resolveClassDetails(type.getName());
@@ -452,7 +456,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "parent", String.class, ctx);
-		assertEquals("java.lang.String", createHelper(entity).getTargetEntityName(field));
+		assertEquals("java.lang.String", createAssocHelper(entity).getTargetEntityName(field));
 	}
 
 	@Test
@@ -460,7 +464,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "parent", Object.class, ctx);
-		assertNull(createHelper(entity).getManyToOneFetchType(field));
+		assertNull(createAssocHelper(entity).getManyToOneFetchType(field));
 	}
 
 	@Test
@@ -471,7 +475,7 @@ class MappingFieldAnnotationHelperTest {
 		ManyToOneJpaAnnotation m2o = JpaAnnotations.MANY_TO_ONE.createUsage(ctx);
 		m2o.fetch(FetchType.LAZY);
 		field.addAnnotationUsage(m2o);
-		assertEquals("LAZY", createHelper(entity).getManyToOneFetchType(field));
+		assertEquals("LAZY", createAssocHelper(entity).getManyToOneFetchType(field));
 	}
 
 	@Test
@@ -479,7 +483,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "parent", Object.class, ctx);
-		assertTrue(createHelper(entity).isManyToOneOptional(field));
+		assertTrue(createAssocHelper(entity).isManyToOneOptional(field));
 	}
 
 	// --- JoinColumn ---
@@ -489,7 +493,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "parent", Object.class, ctx);
-		assertNull(createHelper(entity).getJoinColumnName(field));
+		assertNull(createAssocHelper(entity).getJoinColumnName(field));
 	}
 
 	@Test
@@ -500,7 +504,7 @@ class MappingFieldAnnotationHelperTest {
 		JoinColumnJpaAnnotation jc = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
 		jc.name("PARENT_ID");
 		field.addAnnotationUsage(jc);
-		assertEquals("PARENT_ID", createHelper(entity).getJoinColumnName(field));
+		assertEquals("PARENT_ID", createAssocHelper(entity).getJoinColumnName(field));
 	}
 
 	@Test
@@ -508,7 +512,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "parent", Object.class, ctx);
-		assertNull(createHelper(entity).getReferencedColumnName(field));
+		assertNull(createAssocHelper(entity).getReferencedColumnName(field));
 	}
 
 	@Test
@@ -516,7 +520,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "parent", Object.class, ctx);
-		assertTrue(createHelper(entity).getJoinColumns(field).isEmpty());
+		assertTrue(createAssocHelper(entity).getJoinColumns(field).isEmpty());
 	}
 
 	@Test
@@ -527,7 +531,7 @@ class MappingFieldAnnotationHelperTest {
 		JoinColumnJpaAnnotation jc = JpaAnnotations.JOIN_COLUMN.createUsage(ctx);
 		jc.name("PARENT_ID");
 		field.addAnnotationUsage(jc);
-		List<MappingXmlHelper.JoinColumnInfo> cols = createHelper(entity).getJoinColumns(field);
+		List<MappingXmlHelper.JoinColumnInfo> cols = createAssocHelper(entity).getJoinColumns(field);
 		assertEquals(1, cols.size());
 		assertEquals("PARENT_ID", cols.get(0).name());
 	}
@@ -540,7 +544,7 @@ class MappingFieldAnnotationHelperTest {
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
 		field.addAnnotationUsage(JpaAnnotations.ONE_TO_MANY.createUsage(ctx));
-		assertEquals("com.example.Item", createHelper(entity).getOneToManyTargetEntity(field));
+		assertEquals("com.example.Item", createAssocHelper(entity).getOneToManyTargetEntity(field));
 	}
 
 	@Test
@@ -548,7 +552,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
-		assertNull(createHelper(entity).getOneToManyMappedBy(field));
+		assertNull(createAssocHelper(entity).getOneToManyMappedBy(field));
 	}
 
 	@Test
@@ -559,7 +563,7 @@ class MappingFieldAnnotationHelperTest {
 		OneToManyJpaAnnotation o2m = JpaAnnotations.ONE_TO_MANY.createUsage(ctx);
 		o2m.mappedBy("parent");
 		field.addAnnotationUsage(o2m);
-		assertEquals("parent", createHelper(entity).getOneToManyMappedBy(field));
+		assertEquals("parent", createAssocHelper(entity).getOneToManyMappedBy(field));
 	}
 
 	@Test
@@ -567,7 +571,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
-		assertNull(createHelper(entity).getOneToManyFetchType(field));
+		assertNull(createAssocHelper(entity).getOneToManyFetchType(field));
 	}
 
 	@Test
@@ -575,7 +579,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
-		assertFalse(createHelper(entity).isOneToManyOrphanRemoval(field));
+		assertFalse(createAssocHelper(entity).isOneToManyOrphanRemoval(field));
 	}
 
 	@Test
@@ -583,7 +587,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
-		assertTrue(createHelper(entity).getOneToManyCascadeTypes(field).isEmpty());
+		assertTrue(createAssocHelper(entity).getOneToManyCascadeTypes(field).isEmpty());
 	}
 
 	@Test
@@ -594,8 +598,8 @@ class MappingFieldAnnotationHelperTest {
 		OneToManyJpaAnnotation o2m = JpaAnnotations.ONE_TO_MANY.createUsage(ctx);
 		o2m.cascade(new CascadeType[]{CascadeType.ALL});
 		field.addAnnotationUsage(o2m);
-		assertEquals(1, createHelper(entity).getOneToManyCascadeTypes(field).size());
-		assertEquals(CascadeType.ALL, createHelper(entity).getOneToManyCascadeTypes(field).get(0));
+		assertEquals(1, createAssocHelper(entity).getOneToManyCascadeTypes(field).size());
+		assertEquals(CascadeType.ALL, createAssocHelper(entity).getOneToManyCascadeTypes(field).get(0));
 	}
 
 	// --- Ordering ---
@@ -605,7 +609,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
-		assertNull(createHelper(entity).getOrderBy(field));
+		assertNull(createAssocHelper(entity).getOrderBy(field));
 	}
 
 	@Test
@@ -616,7 +620,7 @@ class MappingFieldAnnotationHelperTest {
 		OrderByJpaAnnotation ob = JpaAnnotations.ORDER_BY.createUsage(ctx);
 		ob.value("name ASC");
 		field.addAnnotationUsage(ob);
-		assertEquals("name ASC", createHelper(entity).getOrderBy(field));
+		assertEquals("name ASC", createAssocHelper(entity).getOrderBy(field));
 	}
 
 	@Test
@@ -624,7 +628,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
-		assertNull(createHelper(entity).getOrderColumnName(field));
+		assertNull(createAssocHelper(entity).getOrderColumnName(field));
 	}
 
 	@Test
@@ -635,7 +639,7 @@ class MappingFieldAnnotationHelperTest {
 		OrderColumnJpaAnnotation oc = JpaAnnotations.ORDER_COLUMN.createUsage(ctx);
 		oc.name("SORT_ORDER");
 		field.addAnnotationUsage(oc);
-		assertEquals("SORT_ORDER", createHelper(entity).getOrderColumnName(field));
+		assertEquals("SORT_ORDER", createAssocHelper(entity).getOrderColumnName(field));
 	}
 
 	// --- Map key ---
@@ -645,7 +649,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
-		assertNull(createHelper(entity).getMapKeyName(field));
+		assertNull(createAssocHelper(entity).getMapKeyName(field));
 	}
 
 	@Test
@@ -656,7 +660,7 @@ class MappingFieldAnnotationHelperTest {
 		MapKeyJpaAnnotation mk = JpaAnnotations.MAP_KEY.createUsage(ctx);
 		mk.name("code");
 		field.addAnnotationUsage(mk);
-		assertEquals("code", createHelper(entity).getMapKeyName(field));
+		assertEquals("code", createAssocHelper(entity).getMapKeyName(field));
 	}
 
 	// --- Fetch mode ---
@@ -666,7 +670,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "parent", Object.class, ctx);
-		assertNull(createHelper(entity).getFetchMode(field));
+		assertNull(createAssocHelper(entity).getFetchMode(field));
 	}
 
 	@Test
@@ -677,7 +681,7 @@ class MappingFieldAnnotationHelperTest {
 		FetchAnnotation fetch = HibernateAnnotations.FETCH.createUsage(ctx);
 		fetch.value(org.hibernate.annotations.FetchMode.JOIN);
 		field.addAnnotationUsage(fetch);
-		assertEquals("JOIN", createHelper(entity).getFetchMode(field));
+		assertEquals("JOIN", createAssocHelper(entity).getFetchMode(field));
 	}
 
 	// --- NotFound ---
@@ -687,7 +691,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "parent", Object.class, ctx);
-		assertNull(createHelper(entity).getNotFoundAction(field));
+		assertNull(createAssocHelper(entity).getNotFoundAction(field));
 	}
 
 	@Test
@@ -698,7 +702,7 @@ class MappingFieldAnnotationHelperTest {
 		NotFoundAnnotation nf = HibernateAnnotations.NOT_FOUND.createUsage(ctx);
 		nf.action(org.hibernate.annotations.NotFoundAction.IGNORE);
 		field.addAnnotationUsage(nf);
-		assertEquals("IGNORE", createHelper(entity).getNotFoundAction(field));
+		assertEquals("IGNORE", createAssocHelper(entity).getNotFoundAction(field));
 	}
 
 	// --- Convert ---
@@ -708,7 +712,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "status", String.class, ctx);
-		assertNull(createHelper(entity).getConverterClassName(field));
+		assertNull(createAssocHelper(entity).getConverterClassName(field));
 	}
 
 	// --- OneToOne ---
@@ -718,7 +722,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "detail", Object.class, ctx);
-		assertNull(createHelper(entity).getOneToOneMappedBy(field));
+		assertNull(createAssocHelper(entity).getOneToOneMappedBy(field));
 	}
 
 	@Test
@@ -729,7 +733,7 @@ class MappingFieldAnnotationHelperTest {
 		OneToOneJpaAnnotation o2o = JpaAnnotations.ONE_TO_ONE.createUsage(ctx);
 		o2o.mappedBy("owner");
 		field.addAnnotationUsage(o2o);
-		assertEquals("owner", createHelper(entity).getOneToOneMappedBy(field));
+		assertEquals("owner", createAssocHelper(entity).getOneToOneMappedBy(field));
 	}
 
 	@Test
@@ -737,7 +741,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "detail", Object.class, ctx);
-		assertNull(createHelper(entity).getOneToOneFetchType(field));
+		assertNull(createAssocHelper(entity).getOneToOneFetchType(field));
 	}
 
 	@Test
@@ -745,7 +749,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "detail", Object.class, ctx);
-		assertTrue(createHelper(entity).isOneToOneOptional(field));
+		assertTrue(createAssocHelper(entity).isOneToOneOptional(field));
 	}
 
 	@Test
@@ -753,7 +757,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "detail", Object.class, ctx);
-		assertTrue(createHelper(entity).getOneToOneCascadeTypes(field).isEmpty());
+		assertTrue(createAssocHelper(entity).getOneToOneCascadeTypes(field).isEmpty());
 	}
 
 	// --- ManyToMany ---
@@ -763,7 +767,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "tags", ctx);
-		assertNull(createHelper(entity).getManyToManyMappedBy(field));
+		assertNull(createAssocHelper(entity).getManyToManyMappedBy(field));
 	}
 
 	@Test
@@ -771,7 +775,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "tags", ctx);
-		assertNull(createHelper(entity).getManyToManyFetchType(field));
+		assertNull(createAssocHelper(entity).getManyToManyFetchType(field));
 	}
 
 	@Test
@@ -779,7 +783,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "tags", ctx);
-		assertTrue(createHelper(entity).getManyToManyCascadeTypes(field).isEmpty());
+		assertTrue(createAssocHelper(entity).getManyToManyCascadeTypes(field).isEmpty());
 	}
 
 	@Test
@@ -787,7 +791,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "tags", ctx);
-		assertNull(createHelper(entity).getJoinTableName(field));
+		assertNull(createAssocHelper(entity).getJoinTableName(field));
 	}
 
 	@Test
@@ -798,7 +802,7 @@ class MappingFieldAnnotationHelperTest {
 		JoinTableJpaAnnotation jt = JpaAnnotations.JOIN_TABLE.createUsage(ctx);
 		jt.name("ENTITY_TAGS");
 		field.addAnnotationUsage(jt);
-		assertEquals("ENTITY_TAGS", createHelper(entity).getJoinTableName(field));
+		assertEquals("ENTITY_TAGS", createAssocHelper(entity).getJoinTableName(field));
 	}
 
 	@Test
@@ -806,7 +810,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "tags", ctx);
-		assertNull(createHelper(entity).getJoinTableSchema(field));
+		assertNull(createAssocHelper(entity).getJoinTableSchema(field));
 	}
 
 	@Test
@@ -814,7 +818,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "tags", ctx);
-		assertNull(createHelper(entity).getJoinTableCatalog(field));
+		assertNull(createAssocHelper(entity).getJoinTableCatalog(field));
 	}
 
 	// --- Embedded ---
@@ -824,7 +828,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "address", Object.class, ctx);
-		assertTrue(createHelper(entity).getAttributeOverrides(field).isEmpty());
+		assertTrue(createAssocHelper(entity).getAttributeOverrides(field).isEmpty());
 	}
 
 	// --- Property-level attributes ---
@@ -834,7 +838,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
-		assertNull(createHelper(entity).getColumnTable(field));
+		assertNull(createAssocHelper(entity).getColumnTable(field));
 	}
 
 	@Test
@@ -842,7 +846,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
-		assertNull(createHelper(entity).getFormula(field));
+		assertNull(createAssocHelper(entity).getFormula(field));
 	}
 
 	@Test
@@ -853,7 +857,7 @@ class MappingFieldAnnotationHelperTest {
 		FormulaAnnotation formula = HibernateAnnotations.FORMULA.createUsage(ctx);
 		formula.value("first_name || ' ' || last_name");
 		field.addAnnotationUsage(formula);
-		assertEquals("first_name || ' ' || last_name", createHelper(entity).getFormula(field));
+		assertEquals("first_name || ' ' || last_name", createAssocHelper(entity).getFormula(field));
 	}
 
 	@Test
@@ -861,7 +865,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
-		assertFalse(createHelper(entity).isPropertyLazy(field));
+		assertFalse(createAssocHelper(entity).isPropertyLazy(field));
 	}
 
 	@Test
@@ -872,7 +876,7 @@ class MappingFieldAnnotationHelperTest {
 		BasicJpaAnnotation basic = JpaAnnotations.BASIC.createUsage(ctx);
 		basic.fetch(FetchType.LAZY);
 		field.addAnnotationUsage(basic);
-		assertTrue(createHelper(entity).isPropertyLazy(field));
+		assertTrue(createAssocHelper(entity).isPropertyLazy(field));
 	}
 
 	@Test
@@ -880,7 +884,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
-		assertNull(createHelper(entity).getFieldAccessType(field));
+		assertNull(createAssocHelper(entity).getFieldAccessType(field));
 	}
 
 	@Test
@@ -891,7 +895,7 @@ class MappingFieldAnnotationHelperTest {
 		AccessJpaAnnotation access = JpaAnnotations.ACCESS.createUsage(ctx);
 		access.value(AccessType.PROPERTY);
 		field.addAnnotationUsage(access);
-		assertEquals("PROPERTY", createHelper(entity).getFieldAccessType(field));
+		assertEquals("PROPERTY", createAssocHelper(entity).getFieldAccessType(field));
 	}
 
 	@Test
@@ -899,7 +903,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "name", String.class, ctx);
-		assertFalse(createHelper(entity).isOptimisticLockExcluded(field));
+		assertFalse(createAssocHelper(entity).isOptimisticLockExcluded(field));
 	}
 
 	@Test
@@ -910,7 +914,7 @@ class MappingFieldAnnotationHelperTest {
 		OptimisticLockAnnotation ol = HibernateAnnotations.OPTIMISTIC_LOCK.createUsage(ctx);
 		ol.excluded(true);
 		field.addAnnotationUsage(ol);
-		assertTrue(createHelper(entity).isOptimisticLockExcluded(field));
+		assertTrue(createAssocHelper(entity).isOptimisticLockExcluded(field));
 	}
 
 	// --- Any ---
@@ -920,7 +924,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "target", Object.class, ctx);
-		assertEquals("STRING", createHelper(entity).getAnyDiscriminatorType(field));
+		assertEquals("STRING", createAssocHelper(entity).getAnyDiscriminatorType(field));
 	}
 
 	@Test
@@ -928,7 +932,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "target", Object.class, ctx);
-		assertEquals("java.lang.Long", createHelper(entity).getAnyKeyType(field));
+		assertEquals("java.lang.Long", createAssocHelper(entity).getAnyKeyType(field));
 	}
 
 	@Test
@@ -936,7 +940,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "target", Object.class, ctx);
-		assertTrue(createHelper(entity).getAnyDiscriminatorMappings(field).isEmpty());
+		assertTrue(createAssocHelper(entity).getAnyDiscriminatorMappings(field).isEmpty());
 	}
 
 	// --- ElementCollection ---
@@ -946,7 +950,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "tags", ctx);
-		assertNull(createHelper(entity).getElementCollectionTableName(field));
+		assertNull(createAssocHelper(entity).getElementCollectionTableName(field));
 	}
 
 	@Test
@@ -954,7 +958,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "tags", ctx);
-		assertNull(createHelper(entity).getElementCollectionKeyColumnName(field));
+		assertNull(createAssocHelper(entity).getElementCollectionKeyColumnName(field));
 	}
 
 	@Test
@@ -962,7 +966,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addBasicField(entity, "tag", String.class, ctx);
-		assertNull(createHelper(entity).getElementCollectionColumnName(field));
+		assertNull(createAssocHelper(entity).getElementCollectionColumnName(field));
 	}
 
 	// --- Sort ---
@@ -972,7 +976,7 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
-		assertFalse(createHelper(entity).isSortNatural(field));
+		assertFalse(createAssocHelper(entity).isSortNatural(field));
 	}
 
 	@Test
@@ -981,7 +985,7 @@ class MappingFieldAnnotationHelperTest {
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
 		field.addAnnotationUsage(HibernateAnnotations.SORT_NATURAL.createUsage(ctx));
-		assertTrue(createHelper(entity).isSortNatural(field));
+		assertTrue(createAssocHelper(entity).isSortNatural(field));
 	}
 
 	@Test
@@ -989,6 +993,6 @@ class MappingFieldAnnotationHelperTest {
 		ModelsContext ctx = createContext();
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		DynamicFieldDetails field = addOneToManyField(entity, "items", ctx);
-		assertNull(createHelper(entity).getSortComparatorClass(field));
+		assertNull(createAssocHelper(entity).getSortComparatorClass(field));
 	}
 }

@@ -2,28 +2,28 @@
 <#list fields.getManyToOneFields() as field>
     <many-to-one
         name="${field.getName()}"
-<#if fieldAttrs.isManyToOneEntityNameRef(field)>
-        entity-name="${fieldAttrs.getManyToOneEntityName(field)}"<#else>
-        class="${fieldAttrs.getTargetEntityName(field)}"</#if><#if fieldAttrs.getPropertyRef(field)??>
-        property-ref="${fieldAttrs.getPropertyRef(field)}"</#if><#if fieldAttrs.isManyToOneLazy(field)>
+<#if assocAttrs.isManyToOneEntityNameRef(field)>
+        entity-name="${assocAttrs.getManyToOneEntityName(field)}"<#else>
+        class="${fieldAttrs.getTargetEntityName(field)}"</#if><#if assocAttrs.getPropertyRef(field)??>
+        property-ref="${assocAttrs.getPropertyRef(field)}"</#if><#if assocAttrs.isManyToOneLazy(field)>
         fetch="select"
         lazy="proxy"</#if><#if fieldAttrs.getFetchMode(field)??>
-        fetch="${fieldAttrs.getFetchMode(field)}"</#if><#if !fieldAttrs.isManyToOneOptional(field)>
+        fetch="${fieldAttrs.getFetchMode(field)}"</#if><#if !assocAttrs.isManyToOneOptional(field)>
         not-null="true"</#if><#if fieldAttrs.getAccessType(field)??>
         access="${fieldAttrs.getAccessType(field)}"</#if><#if fieldAttrs.getNotFoundAction(field)??>
         not-found="${fieldAttrs.getNotFoundAction(field)}"</#if><#if fieldAttrs.isOptimisticLockExcluded(field)>
-        optimistic-lock="false"</#if><#if !fieldAttrs.isManyToOneUpdatable(field)>
-        update="false"</#if><#if !fieldAttrs.isManyToOneInsertable(field)>
+        optimistic-lock="false"</#if><#if !assocAttrs.isManyToOneUpdatable(field)>
+        update="false"</#if><#if !assocAttrs.isManyToOneInsertable(field)>
         insert="false"</#if>>
 <#list fieldAttrs.getFieldMetaAttributes(field)?keys as metaName>
 <#list fieldAttrs.getFieldMetaAttribute(field, metaName) as metaValue>
         <meta attribute="${metaName}">${metaValue}</meta>
 </#list>
 </#list>
-<#list fieldAttrs.getJoinColumnNames(field) as colName>
+<#list assocAttrs.getJoinColumnNames(field) as colName>
         <column name="${colName}"/>
 </#list>
-<#list fieldAttrs.getManyToOneFormulas(field) as formula>
+<#list assocAttrs.getManyToOneFormulas(field) as formula>
         <formula>${formula}</formula>
 </#list>
     </many-to-one>
@@ -36,7 +36,7 @@
         update="false"
         insert="false"
         unique="true">
-<#list fieldAttrs.getJoinColumnNames(field) as colName>
+<#list assocAttrs.getJoinColumnNames(field) as colName>
         <column name="${colName}"/>
 </#list>
     </many-to-one>
@@ -46,18 +46,18 @@
 <#if (fieldAttrs.getFieldMetaAttributes(field)?size == 0)>
     <one-to-one
         name="${field.getName()}"
-        class="${fieldAttrs.getTargetEntityName(field)}"<#if fieldAttrs.getOneToOneMappedBy(field)??>
-        property-ref="${fieldAttrs.getOneToOneMappedBy(field)}"</#if><#if fieldAttrs.getOneToOneCascadeString(field)??>
-        cascade="${fieldAttrs.getOneToOneCascadeString(field)}"</#if>
-        constrained="${fieldAttrs.isOneToOneConstrained(field)?string('true', 'false')}"<#if fieldAttrs.getAccessType(field)??>
+        class="${fieldAttrs.getTargetEntityName(field)}"<#if assocAttrs.getOneToOneMappedBy(field)??>
+        property-ref="${assocAttrs.getOneToOneMappedBy(field)}"</#if><#if assocAttrs.getOneToOneCascadeString(field)??>
+        cascade="${assocAttrs.getOneToOneCascadeString(field)}"</#if>
+        constrained="${assocAttrs.isOneToOneConstrained(field)?string('true', 'false')}"<#if fieldAttrs.getAccessType(field)??>
         access="${fieldAttrs.getAccessType(field)}"</#if>/>
 <#else>
     <one-to-one
         name="${field.getName()}"
-        class="${fieldAttrs.getTargetEntityName(field)}"<#if fieldAttrs.getOneToOneMappedBy(field)??>
-        property-ref="${fieldAttrs.getOneToOneMappedBy(field)}"</#if><#if fieldAttrs.getOneToOneCascadeString(field)??>
-        cascade="${fieldAttrs.getOneToOneCascadeString(field)}"</#if>
-        constrained="${fieldAttrs.isOneToOneConstrained(field)?string('true', 'false')}"<#if fieldAttrs.getAccessType(field)??>
+        class="${fieldAttrs.getTargetEntityName(field)}"<#if assocAttrs.getOneToOneMappedBy(field)??>
+        property-ref="${assocAttrs.getOneToOneMappedBy(field)}"</#if><#if assocAttrs.getOneToOneCascadeString(field)??>
+        cascade="${assocAttrs.getOneToOneCascadeString(field)}"</#if>
+        constrained="${assocAttrs.isOneToOneConstrained(field)?string('true', 'false')}"<#if fieldAttrs.getAccessType(field)??>
         access="${fieldAttrs.getAccessType(field)}"</#if>>
 <#list fieldAttrs.getFieldMetaAttributes(field)?keys as metaName>
 <#list fieldAttrs.getFieldMetaAttribute(field, metaName) as metaValue>

@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embedded;
@@ -36,11 +37,20 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Version;
 
 import org.hibernate.annotations.Any;
+import org.hibernate.annotations.AnyDiscriminator;
+import org.hibernate.annotations.AnyDiscriminatorValue;
+import org.hibernate.annotations.AnyDiscriminatorValues;
+import org.hibernate.annotations.AnyKeyJavaClass;
+import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.NaturalId;
 
+import org.hibernate.tool.internal.util.CascadeUtil;
+import org.hibernate.tool.internal.util.TypeHelper;
+
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
+import org.hibernate.models.spi.TypeDetails;
 
 /**
  * Handles field categorization for HBM template generation: composite ID,
@@ -49,15 +59,18 @@ import org.hibernate.models.spi.FieldDetails;
  *
  * @author Koen Aers
  */
-class HbmFieldCategorizationHelper {
+public class HbmFieldCategorizationHelper {
 
 	private final ClassDetails classDetails;
 	private final Map<String, Map<String, List<String>>> fieldMetaAttributes;
+	private final Map<String, List<String>> metaAttributes;
 
 	HbmFieldCategorizationHelper(ClassDetails classDetails,
-								  Map<String, Map<String, List<String>>> fieldMetaAttributes) {
+								  Map<String, Map<String, List<String>>> fieldMetaAttributes,
+								  Map<String, List<String>> metaAttributes) {
 		this.classDetails = classDetails;
 		this.fieldMetaAttributes = fieldMetaAttributes;
+		this.metaAttributes = metaAttributes;
 	}
 
 	private Map<String, List<String>> getFieldMetaAttributeMap(FieldDetails field) {
@@ -66,7 +79,7 @@ class HbmFieldCategorizationHelper {
 
 	// --- Composite ID ---
 
-	FieldDetails getCompositeIdField() {
+	public FieldDetails getCompositeIdField() {
 		for (FieldDetails field : classDetails.getFields()) {
 			if (field.hasDirectAnnotationUsage(EmbeddedId.class)) {
 				return field;
@@ -75,21 +88,21 @@ class HbmFieldCategorizationHelper {
 		return null;
 	}
 
-	String getCompositeIdClassName() {
+	public String getCompositeIdClassName() {
 		FieldDetails cid = getCompositeIdField();
 		return cid != null ? cid.getType().determineRawClass().getClassName() : null;
 	}
 
-	boolean hasIdClass() {
+	public boolean hasIdClass() {
 		return classDetails.hasDirectAnnotationUsage(IdClass.class);
 	}
 
-	String getIdClassName() {
+	public String getIdClassName() {
 		IdClass idClass = classDetails.getDirectAnnotationUsage(IdClass.class);
 		return idClass != null ? idClass.value().getName() : null;
 	}
 
-	List<FieldDetails> getCompositeIdAllFields() {
+	public List<FieldDetails> getCompositeIdAllFields() {
 		FieldDetails cid = getCompositeIdField();
 		if (cid == null) {
 			return Collections.emptyList();
@@ -97,7 +110,7 @@ class HbmFieldCategorizationHelper {
 		return new ArrayList<>(cid.getType().determineRawClass().getFields());
 	}
 
-	List<FieldDetails> getCompositeIdKeyProperties() {
+	public List<FieldDetails> getCompositeIdKeyProperties() {
 		FieldDetails cid = getCompositeIdField();
 		if (cid == null) {
 			return Collections.emptyList();
@@ -111,11 +124,11 @@ class HbmFieldCategorizationHelper {
 		return result;
 	}
 
-	boolean hasCompositeIdKeyManyToOnes() {
+	public boolean hasCompositeIdKeyManyToOnes() {
 		return !getCompositeIdKeyManyToOnes().isEmpty();
 	}
 
-	List<FieldDetails> getCompositeIdKeyManyToOnes() {
+	public List<FieldDetails> getCompositeIdKeyManyToOnes() {
 		FieldDetails cid = getCompositeIdField();
 		if (cid == null) {
 			return Collections.emptyList();
@@ -129,16 +142,16 @@ class HbmFieldCategorizationHelper {
 		return result;
 	}
 
-	String getKeyManyToOneClassName(FieldDetails field) {
+	public String getKeyManyToOneClassName(FieldDetails field) {
 		return field.getType().determineRawClass().getClassName();
 	}
 
-	String getKeyManyToOneColumnName(FieldDetails field) {
+	public String getKeyManyToOneColumnName(FieldDetails field) {
 		JoinColumn jc = field.getDirectAnnotationUsage(JoinColumn.class);
 		return jc != null ? jc.name() : field.getName();
 	}
 
-	List<String> getKeyManyToOneColumnNames(FieldDetails field) {
+	public List<String> getKeyManyToOneColumnNames(FieldDetails field) {
 		List<String> result = new ArrayList<>();
 		JoinColumn single = field.getDirectAnnotationUsage(JoinColumn.class);
 		if (single != null) {
@@ -158,11 +171,11 @@ class HbmFieldCategorizationHelper {
 
 	// --- Field lists ---
 
-	List<FieldDetails> getIdFields() {
+	public List<FieldDetails> getIdFields() {
 		return getFieldsWithAnnotation(Id.class);
 	}
 
-	List<FieldDetails> getBasicFields() {
+	public List<FieldDetails> getBasicFields() {
 		List<FieldDetails> result = new ArrayList<>();
 		for (FieldDetails field : classDetails.getFields()) {
 			if (!isRelationshipField(field) && !isEmbeddedField(field)
@@ -181,7 +194,7 @@ class HbmFieldCategorizationHelper {
 		return result;
 	}
 
-	List<FieldDetails> getNaturalIdFields() {
+	public List<FieldDetails> getNaturalIdFields() {
 		List<FieldDetails> result = new ArrayList<>();
 		for (FieldDetails field : classDetails.getFields()) {
 			if (field.hasDirectAnnotationUsage(NaturalId.class)) {
@@ -191,7 +204,7 @@ class HbmFieldCategorizationHelper {
 		return result;
 	}
 
-	boolean isNaturalIdMutable() {
+	public boolean isNaturalIdMutable() {
 		for (FieldDetails field : classDetails.getFields()) {
 			NaturalId nid = field.getDirectAnnotationUsage(NaturalId.class);
 			if (nid != null) {
@@ -201,11 +214,11 @@ class HbmFieldCategorizationHelper {
 		return false;
 	}
 
-	List<FieldDetails> getVersionFields() {
+	public List<FieldDetails> getVersionFields() {
 		return getFieldsWithAnnotation(Version.class);
 	}
 
-	List<FieldDetails> getManyToOneFields() {
+	public List<FieldDetails> getManyToOneFields() {
 		List<FieldDetails> result = new ArrayList<>();
 		for (FieldDetails field : classDetails.getFields()) {
 			if (field.hasDirectAnnotationUsage(ManyToOne.class)
@@ -217,7 +230,7 @@ class HbmFieldCategorizationHelper {
 		return result;
 	}
 
-	List<FieldDetails> getOneToOneFields() {
+	public List<FieldDetails> getOneToOneFields() {
 		boolean hasCompositeId = getCompositeIdField() != null;
 		if (!hasCompositeId) {
 			return getFieldsWithAnnotation(OneToOne.class);
@@ -232,7 +245,7 @@ class HbmFieldCategorizationHelper {
 		return result;
 	}
 
-	List<FieldDetails> getConstrainedOneToOneAsM2OFields() {
+	public List<FieldDetails> getConstrainedOneToOneAsM2OFields() {
 		if (getCompositeIdField() == null) {
 			return Collections.emptyList();
 		}
@@ -246,33 +259,33 @@ class HbmFieldCategorizationHelper {
 		return result;
 	}
 
-	List<FieldDetails> getOneToManyFields() {
+	public List<FieldDetails> getOneToManyFields() {
 		return getFieldsWithAnnotation(OneToMany.class);
 	}
 
-	List<FieldDetails> getManyToManyFields() {
+	public List<FieldDetails> getManyToManyFields() {
 		return getFieldsWithAnnotation(ManyToMany.class);
 	}
 
-	List<FieldDetails> getEmbeddedFields() {
+	public List<FieldDetails> getEmbeddedFields() {
 		return getFieldsWithAnnotation(Embedded.class);
 	}
 
-	List<FieldDetails> getAnyFields() {
+	public List<FieldDetails> getAnyFields() {
 		return getFieldsWithAnnotation(Any.class);
 	}
 
-	List<FieldDetails> getElementCollectionFields() {
+	public List<FieldDetails> getElementCollectionFields() {
 		return getFieldsWithAnnotation(ElementCollection.class);
 	}
 
-	List<FieldDetails> getManyToAnyFields() {
+	public List<FieldDetails> getManyToAnyFields() {
 		return getFieldsWithAnnotation(ManyToAny.class);
 	}
 
 	// --- Dynamic component ---
 
-	List<FieldDetails> getDynamicComponentFields() {
+	public List<FieldDetails> getDynamicComponentFields() {
 		List<FieldDetails> result = new ArrayList<>();
 		for (FieldDetails field : classDetails.getFields()) {
 			Map<String, List<String>> fieldMeta = getFieldMetaAttributeMap(field);
@@ -284,7 +297,7 @@ class HbmFieldCategorizationHelper {
 		return result;
 	}
 
-	List<HbmTemplateHelper.DynamicComponentProperty> getDynamicComponentProperties(
+	public List<HbmTemplateHelper.DynamicComponentProperty> getDynamicComponentProperties(
 			FieldDetails field) {
 		List<HbmTemplateHelper.DynamicComponentProperty> result = new ArrayList<>();
 		Map<String, List<String>> fieldMeta = getFieldMetaAttributeMap(field);
@@ -301,7 +314,7 @@ class HbmFieldCategorizationHelper {
 
 	// --- Field type checks ---
 
-	boolean isBasicField(FieldDetails field) {
+	public boolean isBasicField(FieldDetails field) {
 		return !isRelationshipField(field) && !isEmbeddedField(field)
 				&& !field.hasDirectAnnotationUsage(EmbeddedId.class)
 				&& !field.hasDirectAnnotationUsage(Id.class)
@@ -311,7 +324,7 @@ class HbmFieldCategorizationHelper {
 				&& !field.hasDirectAnnotationUsage(ManyToAny.class);
 	}
 
-	boolean isManyToOneField(FieldDetails field) {
+	public boolean isManyToOneField(FieldDetails field) {
 		return field.hasDirectAnnotationUsage(ManyToOne.class);
 	}
 
@@ -351,6 +364,197 @@ class HbmFieldCategorizationHelper {
 			if (field.hasDirectAnnotationUsage(annotationType)) {
 				result.add(field);
 			}
+		}
+		return result;
+	}
+
+	private String getClassMetaValue(String key) {
+		List<String> values = metaAttributes.get(key);
+		return values != null && !values.isEmpty() ? values.get(0) : null;
+	}
+
+	// --- ElementCollection ---
+
+	public boolean isElementCollectionOfEmbeddable(FieldDetails field) {
+		TypeDetails elementType = field.getElementType();
+		if (elementType == null) return false;
+		ClassDetails rawClass = elementType.determineRawClass();
+		return rawClass.hasDirectAnnotationUsage(jakarta.persistence.Embeddable.class);
+	}
+
+	public String getElementCollectionTableName(FieldDetails field) {
+		CollectionTable ct = field.getDirectAnnotationUsage(CollectionTable.class);
+		return ct != null && ct.name() != null && !ct.name().isEmpty() ? ct.name() : null;
+	}
+
+	public String getElementCollectionTableSchema(FieldDetails field) {
+		CollectionTable ct = field.getDirectAnnotationUsage(CollectionTable.class);
+		return ct != null && ct.schema() != null && !ct.schema().isEmpty() ? ct.schema() : null;
+	}
+
+	public String getElementCollectionTableCatalog(FieldDetails field) {
+		CollectionTable ct = field.getDirectAnnotationUsage(CollectionTable.class);
+		return ct != null && ct.catalog() != null && !ct.catalog().isEmpty() ? ct.catalog() : null;
+	}
+
+	public String getElementCollectionKeyColumnName(FieldDetails field) {
+		CollectionTable ct = field.getDirectAnnotationUsage(CollectionTable.class);
+		if (ct != null && ct.joinColumns() != null && ct.joinColumns().length > 0) {
+			return ct.joinColumns()[0].name();
+		}
+		return null;
+	}
+
+	public String getElementCollectionElementType(FieldDetails field) {
+		TypeDetails elementType = field.getElementType();
+		if (elementType != null) {
+			return TypeHelper.toHibernateType(elementType.determineRawClass().getClassName());
+		}
+		return null;
+	}
+
+	public String getElementCollectionElementColumnName(FieldDetails field) {
+		Column col = field.getDirectAnnotationUsage(Column.class);
+		return col != null && col.name() != null && !col.name().isEmpty() ? col.name() : null;
+	}
+
+	// --- Composite element (embeddable inside ElementCollection) ---
+
+	private ClassDetails resolveCompositeClass(FieldDetails field) {
+		if (field.hasDirectAnnotationUsage(ElementCollection.class)) {
+			TypeDetails elementType = field.getElementType();
+			return elementType != null ? elementType.determineRawClass() : null;
+		}
+		if (field.hasDirectAnnotationUsage(Embedded.class)) {
+			return field.getType().determineRawClass();
+		}
+		return null;
+	}
+
+	public List<FieldDetails> getCompositeElementProperties(FieldDetails field) {
+		ClassDetails embeddable = resolveCompositeClass(field);
+		if (embeddable == null) return Collections.emptyList();
+		List<FieldDetails> result = new ArrayList<>();
+		for (FieldDetails f : embeddable.getFields()) {
+			if (!f.hasDirectAnnotationUsage(ManyToOne.class) &&
+					!f.hasDirectAnnotationUsage(Embedded.class) &&
+					!f.hasDirectAnnotationUsage(OneToMany.class) &&
+					!f.hasDirectAnnotationUsage(ManyToMany.class) &&
+					!f.hasDirectAnnotationUsage(ElementCollection.class)) {
+				result.add(f);
+			}
+		}
+		return result;
+	}
+
+	public List<FieldDetails> getCompositeElementManyToOnes(FieldDetails field) {
+		ClassDetails embeddable = resolveCompositeClass(field);
+		if (embeddable == null) return Collections.emptyList();
+		List<FieldDetails> result = new ArrayList<>();
+		for (FieldDetails f : embeddable.getFields()) {
+			if (f.hasDirectAnnotationUsage(ManyToOne.class)) {
+				result.add(f);
+			}
+		}
+		return result;
+	}
+
+	public List<FieldDetails> getCompositeElementEmbeddeds(FieldDetails field) {
+		ClassDetails embeddable = resolveCompositeClass(field);
+		if (embeddable == null) return Collections.emptyList();
+		List<FieldDetails> result = new ArrayList<>();
+		for (FieldDetails f : embeddable.getFields()) {
+			if (f.hasDirectAnnotationUsage(Embedded.class)) {
+				result.add(f);
+			}
+		}
+		return result;
+	}
+
+	// --- Any ---
+
+	public String getAnyIdType(FieldDetails field) {
+		AnyKeyJavaClass akjc = field.getDirectAnnotationUsage(AnyKeyJavaClass.class);
+		if (akjc != null) {
+			return TypeHelper.toHibernateType(akjc.value().getName());
+		}
+		return "long";
+	}
+
+	public String getAnyMetaType(FieldDetails field) {
+		AnyDiscriminator ad = field.getDirectAnnotationUsage(AnyDiscriminator.class);
+		if (ad == null) return "string";
+		return switch (ad.value()) {
+			case STRING -> "string";
+			case CHAR -> "character";
+			case INTEGER -> "integer";
+		};
+	}
+
+	public List<HbmTemplateHelper.AnyMetaValue> getAnyMetaValues(FieldDetails field) {
+		List<HbmTemplateHelper.AnyMetaValue> result = new ArrayList<>();
+		Map<String, List<String>> fieldMeta = FieldMetaUtil.forField(fieldMetaAttributes, field);
+		AnyDiscriminatorValue single = field.getDirectAnnotationUsage(AnyDiscriminatorValue.class);
+		if (single != null) {
+			String entityName = resolveAnyEntityClass(single, fieldMeta);
+			result.add(new HbmTemplateHelper.AnyMetaValue(single.discriminator(), entityName));
+		}
+		AnyDiscriminatorValues container = field.getDirectAnnotationUsage(AnyDiscriminatorValues.class);
+		if (container != null) {
+			for (AnyDiscriminatorValue adv : container.value()) {
+				String entityName = resolveAnyEntityClass(adv, fieldMeta);
+				result.add(new HbmTemplateHelper.AnyMetaValue(adv.discriminator(), entityName));
+			}
+		}
+		return result;
+	}
+
+	private String resolveAnyEntityClass(AnyDiscriminatorValue adv,
+										  Map<String, List<String>> fieldMeta) {
+		List<String> metaClassName = fieldMeta.get("hibernate.any.meta-value:" + adv.discriminator());
+		if (metaClassName != null && !metaClassName.isEmpty()) {
+			return metaClassName.get(0);
+		}
+		return adv.entity().getName();
+	}
+
+	public String getAnyCascadeString(FieldDetails field) {
+		Cascade cascade = field.getDirectAnnotationUsage(Cascade.class);
+		if (cascade == null || cascade.value().length == 0) return null;
+		return CascadeUtil.formatHibernateCascade(cascade);
+	}
+
+	// --- Properties groups (<properties> element) ---
+
+	public List<HbmTemplateHelper.PropertiesGroupInfo> getPropertiesGroups() {
+		List<String> groupNames = new ArrayList<>();
+		for (FieldDetails field : classDetails.getFields()) {
+			Map<String, List<String>> attrs = fieldMetaAttributes.getOrDefault(
+					field.getName(), Collections.emptyMap());
+			List<String> groups = attrs.get("hibernate.properties-group");
+			if (groups != null && !groups.isEmpty()) {
+				String groupName = groups.get(0);
+				if (!groupNames.contains(groupName)) {
+					groupNames.add(groupName);
+				}
+			}
+		}
+		List<HbmTemplateHelper.PropertiesGroupInfo> result = new ArrayList<>();
+		for (String groupName : groupNames) {
+			List<FieldDetails> fields = new ArrayList<>();
+			for (FieldDetails field : classDetails.getFields()) {
+				Map<String, List<String>> attrs = fieldMetaAttributes.getOrDefault(
+						field.getName(), Collections.emptyMap());
+				List<String> groups = attrs.get("hibernate.properties-group");
+				if (groups != null && groups.contains(groupName)) {
+					fields.add(field);
+				}
+			}
+			boolean unique = "true".equals(getClassMetaValue("hibernate.properties-group." + groupName + ".unique"));
+			boolean insert = !"false".equals(getClassMetaValue("hibernate.properties-group." + groupName + ".insert"));
+			boolean update = !"false".equals(getClassMetaValue("hibernate.properties-group." + groupName + ".update"));
+			boolean optimisticLock = !"false".equals(getClassMetaValue("hibernate.properties-group." + groupName + ".optimistic-lock"));
+			result.add(new HbmTemplateHelper.PropertiesGroupInfo(groupName, unique, insert, update, optimisticLock, fields));
 		}
 		return result;
 	}

@@ -58,7 +58,7 @@ import org.hibernate.models.spi.TypeDetails;
  *
  * @author Koen Aers
  */
-class HbmCollectionAttributeHelper {
+public class HbmCollectionAttributeHelper {
 
 	private final Map<String, Map<String, List<String>>> fieldMetaAttributes;
 
@@ -77,7 +77,7 @@ class HbmCollectionAttributeHelper {
 
 	// --- Collection type ---
 
-	String getCollectionTag(FieldDetails field) {
+	public String getCollectionTag(FieldDetails field) {
 		Map<String, List<String>> fieldMeta = getFieldMetaAttributeMap(field);
 		List<String> tagMeta = fieldMeta.get("hibernate.collection.tag");
 		if (tagMeta != null && !tagMeta.isEmpty()) {
@@ -107,7 +107,7 @@ class HbmCollectionAttributeHelper {
 		return "set";
 	}
 
-	boolean isCollectionInverse(FieldDetails field) {
+	public boolean isCollectionInverse(FieldDetails field) {
 		OneToMany o2m = field.getDirectAnnotationUsage(OneToMany.class);
 		if (o2m != null) {
 			if (o2m.mappedBy() != null && !o2m.mappedBy().isEmpty()) {
@@ -127,7 +127,7 @@ class HbmCollectionAttributeHelper {
 		return false;
 	}
 
-	String getCollectionLazy(FieldDetails field) {
+	public String getCollectionLazy(FieldDetails field) {
 		OneToMany o2m = field.getDirectAnnotationUsage(OneToMany.class);
 		if (o2m != null && o2m.fetch() == FetchType.EAGER) {
 			return "false";
@@ -147,7 +147,7 @@ class HbmCollectionAttributeHelper {
 		return null;
 	}
 
-	String getCollectionFetchMode(FieldDetails field) {
+	public String getCollectionFetchMode(FieldDetails field) {
 		Fetch fetch = field.getDirectAnnotationUsage(Fetch.class);
 		if (fetch == null) {
 			return null;
@@ -159,12 +159,12 @@ class HbmCollectionAttributeHelper {
 		};
 	}
 
-	int getCollectionBatchSize(FieldDetails field) {
+	public int getCollectionBatchSize(FieldDetails field) {
 		BatchSize bs = field.getDirectAnnotationUsage(BatchSize.class);
 		return bs != null ? bs.size() : 0;
 	}
 
-	String getCollectionCascadeString(FieldDetails field) {
+	public String getCollectionCascadeString(FieldDetails field) {
 		Map<String, List<String>> fieldMeta = fieldMetaAttributes.getOrDefault(
 				field.getName(), Collections.emptyMap());
 		List<String> rawCascade = fieldMeta.get("hibernate.cascade");
@@ -186,13 +186,13 @@ class HbmCollectionAttributeHelper {
 		return null;
 	}
 
-	String getCollectionOrderBy(FieldDetails field) {
+	public String getCollectionOrderBy(FieldDetails field) {
 		OrderBy ob = field.getDirectAnnotationUsage(OrderBy.class);
 		return ob != null && ob.value() != null && !ob.value().isEmpty()
 				? ob.value() : null;
 	}
 
-	String getCollectionCacheUsage(FieldDetails field) {
+	public String getCollectionCacheUsage(FieldDetails field) {
 		Cache cache = field.getDirectAnnotationUsage(Cache.class);
 		if (cache == null || cache.usage() == CacheConcurrencyStrategy.NONE) {
 			return null;
@@ -200,13 +200,13 @@ class HbmCollectionAttributeHelper {
 		return cache.usage().name().toLowerCase().replace('_', '-');
 	}
 
-	String getCollectionCacheRegion(FieldDetails field) {
+	public String getCollectionCacheRegion(FieldDetails field) {
 		Cache cache = field.getDirectAnnotationUsage(Cache.class);
 		return cache != null && cache.region() != null && !cache.region().isEmpty()
 				? cache.region() : null;
 	}
 
-	List<HbmTemplateHelper.FilterInfo> getCollectionFilters(FieldDetails field) {
+	public List<HbmTemplateHelper.FilterInfo> getCollectionFilters(FieldDetails field) {
 		List<HbmTemplateHelper.FilterInfo> result = new ArrayList<>();
 		Filter single = field.getDirectAnnotationUsage(Filter.class);
 		if (single != null) {
@@ -223,19 +223,19 @@ class HbmCollectionAttributeHelper {
 
 	// --- List-specific ---
 
-	String getListIndexColumnName(FieldDetails field) {
+	public String getListIndexColumnName(FieldDetails field) {
 		OrderColumn oc = field.getDirectAnnotationUsage(OrderColumn.class);
 		return oc != null ? oc.name() : null;
 	}
 
 	// --- Map-specific ---
 
-	String getMapKeyColumnName(FieldDetails field) {
+	public String getMapKeyColumnName(FieldDetails field) {
 		MapKeyColumn mkc = field.getDirectAnnotationUsage(MapKeyColumn.class);
 		return mkc != null ? mkc.name() : null;
 	}
 
-	String getMapKeyType(FieldDetails field) {
+	public String getMapKeyType(FieldDetails field) {
 		TypeDetails mapKeyType = field.getMapKeyType();
 		if (mapKeyType != null) {
 			return TypeHelper.toHibernateType(
@@ -244,16 +244,16 @@ class HbmCollectionAttributeHelper {
 		return null;
 	}
 
-	boolean hasMapKeyJoinColumn(FieldDetails field) {
+	public boolean hasMapKeyJoinColumn(FieldDetails field) {
 		return field.hasDirectAnnotationUsage(MapKeyJoinColumn.class);
 	}
 
-	String getMapKeyJoinColumnName(FieldDetails field) {
+	public String getMapKeyJoinColumnName(FieldDetails field) {
 		MapKeyJoinColumn mkjc = field.getDirectAnnotationUsage(MapKeyJoinColumn.class);
 		return mkjc != null ? mkjc.name() : null;
 	}
 
-	String getMapKeyEntityClass(FieldDetails field) {
+	public String getMapKeyEntityClass(FieldDetails field) {
 		TypeDetails mapKeyType = field.getMapKeyType();
 		if (mapKeyType != null) {
 			return mapKeyType.determineRawClass().getClassName();
@@ -263,12 +263,12 @@ class HbmCollectionAttributeHelper {
 
 	// --- IdBag-specific ---
 
-	String getCollectionIdColumnName(FieldDetails field) {
+	public String getCollectionIdColumnName(FieldDetails field) {
 		CollectionId cid = field.getDirectAnnotationUsage(CollectionId.class);
 		return cid != null ? cid.column().name() : null;
 	}
 
-	String getCollectionIdGenerator(FieldDetails field) {
+	public String getCollectionIdGenerator(FieldDetails field) {
 		CollectionId cid = field.getDirectAnnotationUsage(CollectionId.class);
 		return cid != null && cid.generator() != null && !cid.generator().isEmpty()
 				? cid.generator() : null;
@@ -276,36 +276,36 @@ class HbmCollectionAttributeHelper {
 
 	// --- Collection element type ---
 
-	String getCollectionElementType(FieldDetails field) {
+	public String getCollectionElementType(FieldDetails field) {
 		TypeDetails elementType = field.getElementType();
 		return elementType != null ? elementType.determineRawClass().getClassName() : null;
 	}
 
 	// --- Collection SQL operations ---
 
-	HbmTemplateHelper.CustomSqlInfo getCollectionSQLInsert(FieldDetails field) {
+	public HbmTemplateHelper.CustomSqlInfo getCollectionSQLInsert(FieldDetails field) {
 		SQLInsert si = field.getDirectAnnotationUsage(SQLInsert.class);
 		return si != null ? new HbmTemplateHelper.CustomSqlInfo(si.sql(), si.callable()) : null;
 	}
 
-	HbmTemplateHelper.CustomSqlInfo getCollectionSQLUpdate(FieldDetails field) {
+	public HbmTemplateHelper.CustomSqlInfo getCollectionSQLUpdate(FieldDetails field) {
 		SQLUpdate su = field.getDirectAnnotationUsage(SQLUpdate.class);
 		return su != null ? new HbmTemplateHelper.CustomSqlInfo(su.sql(), su.callable()) : null;
 	}
 
-	HbmTemplateHelper.CustomSqlInfo getCollectionSQLDelete(FieldDetails field) {
+	public HbmTemplateHelper.CustomSqlInfo getCollectionSQLDelete(FieldDetails field) {
 		SQLDelete sd = field.getDirectAnnotationUsage(SQLDelete.class);
 		return sd != null ? new HbmTemplateHelper.CustomSqlInfo(sd.sql(), sd.callable()) : null;
 	}
 
-	HbmTemplateHelper.CustomSqlInfo getCollectionSQLDeleteAll(FieldDetails field) {
+	public HbmTemplateHelper.CustomSqlInfo getCollectionSQLDeleteAll(FieldDetails field) {
 		SQLDeleteAll sda = field.getDirectAnnotationUsage(SQLDeleteAll.class);
 		return sda != null ? new HbmTemplateHelper.CustomSqlInfo(sda.sql(), sda.callable()) : null;
 	}
 
 	// --- Sort ---
 
-	String getSort(FieldDetails field) {
+	public String getSort(FieldDetails field) {
 		if (field.hasDirectAnnotationUsage(SortNatural.class)) {
 			return "natural";
 		}

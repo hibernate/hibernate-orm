@@ -1,32 +1,32 @@
 <#-- Basic properties (skip PK, version, FK columns) -->
-<#list helper.getBasicFields() as field>
-    <property name="${field.getName()}"<#if !helper.hasTypeParameters(field)>
-        type="${helper.getHibernateTypeName(field)}"</#if><#if helper.getAccessType(field)??>
-        access="${helper.getAccessType(field)}"</#if><#if !helper.isPropertyUpdatable(field)>
-        update="false"</#if><#if !helper.isPropertyInsertable(field)>
-        insert="false"</#if><#if helper.isPropertyLazy(field)>
-        lazy="true"</#if><#if helper.isOptimisticLockExcluded(field)>
-        optimistic-lock="false"</#if><#if helper.getFormula(field)??>
-        formula="${helper.getFormula(field)}"</#if>>
-<#list helper.getFieldMetaAttributes(field)?keys as metaName>
-<#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
+<#list fields.getBasicFields() as field>
+    <property name="${field.getName()}"<#if !fieldAttrs.hasTypeParameters(field)>
+        type="${fieldAttrs.getHibernateTypeName(field)}"</#if><#if fieldAttrs.getAccessType(field)??>
+        access="${fieldAttrs.getAccessType(field)}"</#if><#if !fieldAttrs.isPropertyUpdatable(field)>
+        update="false"</#if><#if !fieldAttrs.isPropertyInsertable(field)>
+        insert="false"</#if><#if fieldAttrs.isPropertyLazy(field)>
+        lazy="true"</#if><#if fieldAttrs.isOptimisticLockExcluded(field)>
+        optimistic-lock="false"</#if><#if fieldAttrs.getFormula(field)??>
+        formula="${fieldAttrs.getFormula(field)}"</#if>>
+<#list fieldAttrs.getFieldMetaAttributes(field)?keys as metaName>
+<#list fieldAttrs.getFieldMetaAttribute(field, metaName) as metaValue>
         <meta attribute="${metaName}">${metaValue}</meta>
 </#list>
 </#list>
-<#if helper.hasTypeParameters(field)>
-        <type name="${helper.getHibernateTypeName(field)}">
-<#list helper.getTypeParameters(field)?keys as paramName>
-            <param name="${paramName}">${helper.getTypeParameters(field)[paramName]}</param>
+<#if fieldAttrs.hasTypeParameters(field)>
+        <type name="${fieldAttrs.getHibernateTypeName(field)}">
+<#list fieldAttrs.getTypeParameters(field)?keys as paramName>
+            <param name="${paramName}">${fieldAttrs.getTypeParameters(field)[paramName]}</param>
 </#list>
         </type>
 </#if>
-<#if !helper.getFormula(field)??>
-<#if helper.getColumnComment(field)??>
-        <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}>
-            <comment>${helper.getColumnComment(field)}</comment>
+<#if !fieldAttrs.getFormula(field)??>
+<#if fieldAttrs.getColumnComment(field)??>
+        <column name="${fieldAttrs.getColumnName(field)}" ${fieldAttrs.getColumnAttributes(field)}>
+            <comment>${fieldAttrs.getColumnComment(field)}</comment>
         </column>
 <#else>
-        <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
+        <column name="${fieldAttrs.getColumnName(field)}" ${fieldAttrs.getColumnAttributes(field)}/>
 </#if>
 </#if>
     </property>

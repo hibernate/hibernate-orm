@@ -1,12 +1,12 @@
 <#-- Components (embedded) -->
-<#list helper.getEmbeddedFields() as field>
-    <component name="${field.getName()}" class="${helper.getEmbeddableClassName(field)}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if>>
-<#list helper.getFieldMetaAttributes(field)?keys as metaName>
-<#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
+<#list fields.getEmbeddedFields() as field>
+    <component name="${field.getName()}" class="${fieldAttrs.getEmbeddableClassName(field)}"<#if fieldAttrs.getAccessType(field)??> access="${fieldAttrs.getAccessType(field)}"</#if>>
+<#list fieldAttrs.getFieldMetaAttributes(field)?keys as metaName>
+<#list fieldAttrs.getFieldMetaAttribute(field, metaName) as metaValue>
         <meta attribute="${metaName}">${metaValue}</meta>
 </#list>
 </#list>
-<#list helper.getAttributeOverrides(field) as ao>
+<#list fieldAttrs.getAttributeOverrides(field) as ao>
         <property name="${ao.fieldName()}">
             <column name="${ao.columnName()}"/>
         </property>
@@ -14,167 +14,167 @@
     </component>
 </#list>
 <#-- Dynamic components -->
-<#list helper.getDynamicComponentFields() as field>
+<#list fields.getDynamicComponentFields() as field>
     <dynamic-component name="${field.getName()}">
-<#list helper.getDynamicComponentProperties(field) as prop>
+<#list fields.getDynamicComponentProperties(field) as prop>
         <property name="${prop.name()}" type="${prop.type()}"/>
 </#list>
     </dynamic-component>
 </#list>
 <#-- Any -->
-<#list helper.getAnyFields() as field>
+<#list fields.getAnyFields() as field>
     <any name="${field.getName()}"
-        id-type="${helper.getAnyIdType(field)}"
-        meta-type="${helper.getAnyMetaType(field)}"<#if helper.getAccessType(field)??>
-        access="${helper.getAccessType(field)}"</#if><#if helper.getAnyCascadeString(field)??>
-        cascade="${helper.getAnyCascadeString(field)}"</#if>>
-<#list helper.getFieldMetaAttributes(field)?keys as metaName>
-<#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
+        id-type="${fields.getAnyIdType(field)}"
+        meta-type="${fields.getAnyMetaType(field)}"<#if fieldAttrs.getAccessType(field)??>
+        access="${fieldAttrs.getAccessType(field)}"</#if><#if fields.getAnyCascadeString(field)??>
+        cascade="${fields.getAnyCascadeString(field)}"</#if>>
+<#list fieldAttrs.getFieldMetaAttributes(field)?keys as metaName>
+<#list fieldAttrs.getFieldMetaAttribute(field, metaName) as metaValue>
         <meta attribute="${metaName}">${metaValue}</meta>
 </#list>
 </#list>
-<#list helper.getAnyMetaValues(field) as mv>
+<#list fields.getAnyMetaValues(field) as mv>
         <meta-value value="${mv.value()}" class="${mv.entityClass()}"/>
 </#list>
-        <column name="${helper.getColumnName(field)}"/>
-<#if helper.getJoinColumnName(field)??>
-        <column name="${helper.getJoinColumnName(field)}"/>
+        <column name="${fieldAttrs.getColumnName(field)}"/>
+<#if fieldAttrs.getJoinColumnName(field)??>
+        <column name="${fieldAttrs.getJoinColumnName(field)}"/>
 </#if>
     </any>
 </#list>
 <#-- Element collections -->
-<#list helper.getElementCollectionFields() as field>
-<#assign collTag = helper.getCollectionTag(field)>
-    <${collTag} name="${field.getName()}"<#if helper.getElementCollectionTableName(field)??>
-        table="${helper.getElementCollectionTableName(field)}"</#if><#if helper.getElementCollectionTableSchema(field)??>
-        schema="${helper.getElementCollectionTableSchema(field)}"</#if><#if helper.getElementCollectionTableCatalog(field)??>
-        catalog="${helper.getElementCollectionTableCatalog(field)}"</#if><#if helper.getCollectionCascadeString(field)??>
-        cascade="${helper.getCollectionCascadeString(field)}"</#if><#if helper.getCollectionLazy(field)??>
-        lazy="${helper.getCollectionLazy(field)}"</#if><#if helper.getCollectionFetchMode(field)??>
-        fetch="${helper.getCollectionFetchMode(field)}"</#if><#if helper.getCollectionOrderBy(field)??>
-        order-by="${helper.getCollectionOrderBy(field)}"</#if><#if helper.getSort(field)??>
-        sort="${helper.getSort(field)}"</#if><#if helper.getAccessType(field)??>
-        access="${helper.getAccessType(field)}"</#if>>
-<#list helper.getFieldMetaAttributes(field)?keys as metaName>
-<#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
+<#list fields.getElementCollectionFields() as field>
+<#assign collTag = collections.getCollectionTag(field)>
+    <${collTag} name="${field.getName()}"<#if fields.getElementCollectionTableName(field)??>
+        table="${fields.getElementCollectionTableName(field)}"</#if><#if fields.getElementCollectionTableSchema(field)??>
+        schema="${fields.getElementCollectionTableSchema(field)}"</#if><#if fields.getElementCollectionTableCatalog(field)??>
+        catalog="${fields.getElementCollectionTableCatalog(field)}"</#if><#if collections.getCollectionCascadeString(field)??>
+        cascade="${collections.getCollectionCascadeString(field)}"</#if><#if collections.getCollectionLazy(field)??>
+        lazy="${collections.getCollectionLazy(field)}"</#if><#if collections.getCollectionFetchMode(field)??>
+        fetch="${collections.getCollectionFetchMode(field)}"</#if><#if collections.getCollectionOrderBy(field)??>
+        order-by="${collections.getCollectionOrderBy(field)}"</#if><#if collections.getSort(field)??>
+        sort="${collections.getSort(field)}"</#if><#if fieldAttrs.getAccessType(field)??>
+        access="${fieldAttrs.getAccessType(field)}"</#if>>
+<#list fieldAttrs.getFieldMetaAttributes(field)?keys as metaName>
+<#list fieldAttrs.getFieldMetaAttribute(field, metaName) as metaValue>
         <meta attribute="${metaName}">${metaValue}</meta>
 </#list>
 </#list>
         <key>
-<#if helper.getElementCollectionKeyColumnName(field)??>
-            <column name="${helper.getElementCollectionKeyColumnName(field)}"/>
+<#if fields.getElementCollectionKeyColumnName(field)??>
+            <column name="${fields.getElementCollectionKeyColumnName(field)}"/>
 </#if>
         </key>
 <#if collTag == "list">
-        <list-index column="${helper.getListIndexColumnName(field)!'POSITION'}"/>
+        <list-index column="${collections.getListIndexColumnName(field)!'POSITION'}"/>
 </#if>
 <#if collTag == "map">
-<#if helper.hasMapKeyJoinColumn(field)>
-        <map-key-many-to-many class="${helper.getMapKeyEntityClass(field)}" column="${helper.getMapKeyJoinColumnName(field)}"/>
+<#if collections.hasMapKeyJoinColumn(field)>
+        <map-key-many-to-many class="${collections.getMapKeyEntityClass(field)}" column="${collections.getMapKeyJoinColumnName(field)}"/>
 <#else>
-        <map-key column="${helper.getMapKeyColumnName(field)!field.getName() + '_KEY'}" type="${helper.getMapKeyType(field)!'string'}"/>
+        <map-key column="${collections.getMapKeyColumnName(field)!field.getName() + '_KEY'}" type="${collections.getMapKeyType(field)!'string'}"/>
 </#if>
 </#if>
-<#if helper.isElementCollectionOfEmbeddable(field)>
-        <composite-element class="${helper.getCollectionElementType(field)}">
-<#list helper.getCompositeElementProperties(field) as prop>
-            <property name="${prop.getName()}"<#if helper.getHibernateTypeName(prop)??> type="${helper.getHibernateTypeName(prop)}"</#if>>
-                <column name="${helper.getColumnName(prop)}"/>
+<#if fields.isElementCollectionOfEmbeddable(field)>
+        <composite-element class="${collections.getCollectionElementType(field)}">
+<#list fields.getCompositeElementProperties(field) as prop>
+            <property name="${prop.getName()}"<#if fieldAttrs.getHibernateTypeName(prop)??> type="${fieldAttrs.getHibernateTypeName(prop)}"</#if>>
+                <column name="${fieldAttrs.getColumnName(prop)}"/>
             </property>
 </#list>
-<#list helper.getCompositeElementEmbeddeds(field) as embField>
-            <nested-composite-element name="${embField.getName()}" class="${helper.getEmbeddableClassName(embField)}">
-<#list helper.getCompositeElementProperties(embField) as nestedProp>
-                <property name="${nestedProp.getName()}"<#if helper.getHibernateTypeName(nestedProp)??> type="${helper.getHibernateTypeName(nestedProp)}"</#if>>
-                    <column name="${helper.getColumnName(nestedProp)}"/>
+<#list fields.getCompositeElementEmbeddeds(field) as embField>
+            <nested-composite-element name="${embField.getName()}" class="${fieldAttrs.getEmbeddableClassName(embField)}">
+<#list fields.getCompositeElementProperties(embField) as nestedProp>
+                <property name="${nestedProp.getName()}"<#if fieldAttrs.getHibernateTypeName(nestedProp)??> type="${fieldAttrs.getHibernateTypeName(nestedProp)}"</#if>>
+                    <column name="${fieldAttrs.getColumnName(nestedProp)}"/>
                 </property>
 </#list>
             </nested-composite-element>
 </#list>
-<#list helper.getCompositeElementManyToOnes(field) as m2oField>
-            <many-to-one name="${m2oField.getName()}" class="${helper.getTargetEntityName(m2oField)}"<#if helper.getManyToOneCascadeString(m2oField)??> cascade="${helper.getManyToOneCascadeString(m2oField)}"</#if>/>
+<#list fields.getCompositeElementManyToOnes(field) as m2oField>
+            <many-to-one name="${m2oField.getName()}" class="${fieldAttrs.getTargetEntityName(m2oField)}"<#if fieldAttrs.getManyToOneCascadeString(m2oField)??> cascade="${fieldAttrs.getManyToOneCascadeString(m2oField)}"</#if>/>
 </#list>
         </composite-element>
 <#else>
-        <element type="${helper.getElementCollectionElementType(field)!'string'}">
-<#if helper.getElementCollectionElementColumnName(field)??>
-            <column name="${helper.getElementCollectionElementColumnName(field)}"/>
+        <element type="${fields.getElementCollectionElementType(field)!'string'}">
+<#if fields.getElementCollectionElementColumnName(field)??>
+            <column name="${fields.getElementCollectionElementColumnName(field)}"/>
 </#if>
         </element>
 </#if>
     </${collTag}>
 </#list>
 <#-- ManyToAny -->
-<#list helper.getManyToAnyFields() as field>
-<#assign collTag = helper.getCollectionTag(field)>
-    <${collTag} name="${field.getName()}"<#if helper.getJoinTableName(field)??> table="${helper.getJoinTableName(field)}"</#if><#if helper.getCollectionCascadeString(field)??>
-        cascade="${helper.getCollectionCascadeString(field)}"</#if><#if helper.getCollectionLazy(field)??>
-        lazy="${helper.getCollectionLazy(field)}"</#if><#if helper.getCollectionFetchMode(field)??>
-        fetch="${helper.getCollectionFetchMode(field)}"</#if><#if helper.getAccessType(field)??>
-        access="${helper.getAccessType(field)}"</#if>>
-<#list helper.getFieldMetaAttributes(field)?keys as metaName>
-<#list helper.getFieldMetaAttribute(field, metaName) as metaValue>
+<#list fields.getManyToAnyFields() as field>
+<#assign collTag = collections.getCollectionTag(field)>
+    <${collTag} name="${field.getName()}"<#if fieldAttrs.getJoinTableName(field)??> table="${fieldAttrs.getJoinTableName(field)}"</#if><#if collections.getCollectionCascadeString(field)??>
+        cascade="${collections.getCollectionCascadeString(field)}"</#if><#if collections.getCollectionLazy(field)??>
+        lazy="${collections.getCollectionLazy(field)}"</#if><#if collections.getCollectionFetchMode(field)??>
+        fetch="${collections.getCollectionFetchMode(field)}"</#if><#if fieldAttrs.getAccessType(field)??>
+        access="${fieldAttrs.getAccessType(field)}"</#if>>
+<#list fieldAttrs.getFieldMetaAttributes(field)?keys as metaName>
+<#list fieldAttrs.getFieldMetaAttribute(field, metaName) as metaValue>
         <meta attribute="${metaName}">${metaValue}</meta>
 </#list>
 </#list>
         <key>
-<#list helper.getKeyColumnNames(field) as keyCol>
+<#list fieldAttrs.getKeyColumnNames(field) as keyCol>
             <column name="${keyCol}"/>
 </#list>
         </key>
 <#if collTag == "map">
-<#if helper.hasMapKeyJoinColumn(field)>
-        <map-key-many-to-many class="${helper.getMapKeyEntityClass(field)}" column="${helper.getMapKeyJoinColumnName(field)}"/>
+<#if collections.hasMapKeyJoinColumn(field)>
+        <map-key-many-to-many class="${collections.getMapKeyEntityClass(field)}" column="${collections.getMapKeyJoinColumnName(field)}"/>
 <#else>
-        <map-key column="${helper.getMapKeyColumnName(field)!field.getName() + '_KEY'}" type="${helper.getMapKeyType(field)!'string'}"/>
+        <map-key column="${collections.getMapKeyColumnName(field)!field.getName() + '_KEY'}" type="${collections.getMapKeyType(field)!'string'}"/>
 </#if>
 </#if>
-        <many-to-any id-type="${helper.getAnyIdType(field)}" meta-type="${helper.getAnyMetaType(field)}">
-<#list helper.getAnyMetaValues(field) as mv>
+        <many-to-any id-type="${fields.getAnyIdType(field)}" meta-type="${fields.getAnyMetaType(field)}">
+<#list fields.getAnyMetaValues(field) as mv>
             <meta-value value="${mv.value()}" class="${mv.entityClass()}"/>
 </#list>
-<#if helper.getColumnName(field)??>
-            <column name="${helper.getColumnName(field)}"/>
+<#if fieldAttrs.getColumnName(field)??>
+            <column name="${fieldAttrs.getColumnName(field)}"/>
 </#if>
-<#if helper.getManyToAnyFkColumnName(field)??>
-            <column name="${helper.getManyToAnyFkColumnName(field)}"/>
+<#if fieldAttrs.getManyToAnyFkColumnName(field)??>
+            <column name="${fieldAttrs.getManyToAnyFkColumnName(field)}"/>
 </#if>
         </many-to-any>
     </${collTag}>
 </#list>
 <#-- Properties groups -->
-<#list helper.getPropertiesGroups() as group>
+<#list fields.getPropertiesGroups() as group>
     <properties name="${group.name()}"<#if group.unique()>
         unique="true"</#if><#if !group.insert()>
         insert="false"</#if><#if !group.update()>
         update="false"</#if><#if !group.optimisticLock()>
         optimistic-lock="false"</#if>>
 <#list group.fields() as field>
-<#if helper.isBasicField(field)>
-        <property name="${field.getName()}"<#if !helper.hasTypeParameters(field)>
-            type="${helper.getHibernateTypeName(field)}"</#if><#if !helper.isPropertyUpdatable(field)>
-            update="false"</#if><#if !helper.isPropertyInsertable(field)>
-            insert="false"</#if><#if helper.getFormula(field)??>
-            formula="${helper.getFormula(field)}"</#if>>
-<#if helper.hasTypeParameters(field)>
-            <type name="${helper.getHibernateTypeName(field)}">
-<#list helper.getTypeParameters(field)?keys as paramName>
-                <param name="${paramName}">${helper.getTypeParameters(field)[paramName]}</param>
+<#if fields.isBasicField(field)>
+        <property name="${field.getName()}"<#if !fieldAttrs.hasTypeParameters(field)>
+            type="${fieldAttrs.getHibernateTypeName(field)}"</#if><#if !fieldAttrs.isPropertyUpdatable(field)>
+            update="false"</#if><#if !fieldAttrs.isPropertyInsertable(field)>
+            insert="false"</#if><#if fieldAttrs.getFormula(field)??>
+            formula="${fieldAttrs.getFormula(field)}"</#if>>
+<#if fieldAttrs.hasTypeParameters(field)>
+            <type name="${fieldAttrs.getHibernateTypeName(field)}">
+<#list fieldAttrs.getTypeParameters(field)?keys as paramName>
+                <param name="${paramName}">${fieldAttrs.getTypeParameters(field)[paramName]}</param>
 </#list>
             </type>
 </#if>
-<#if !helper.getFormula(field)??>
-            <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
+<#if !fieldAttrs.getFormula(field)??>
+            <column name="${fieldAttrs.getColumnName(field)}" ${fieldAttrs.getColumnAttributes(field)}/>
 </#if>
         </property>
-<#elseif helper.isManyToOneField(field)>
+<#elseif fields.isManyToOneField(field)>
         <many-to-one
             name="${field.getName()}"
-<#if helper.isManyToOneEntityNameRef(field)>
-            entity-name="${helper.getManyToOneEntityName(field)}"<#else>
-            class="${helper.getTargetEntityName(field)}"</#if><#if !helper.isManyToOneOptional(field)>
+<#if fieldAttrs.isManyToOneEntityNameRef(field)>
+            entity-name="${fieldAttrs.getManyToOneEntityName(field)}"<#else>
+            class="${fieldAttrs.getTargetEntityName(field)}"</#if><#if !fieldAttrs.isManyToOneOptional(field)>
             not-null="true"</#if>>
-<#list helper.getJoinColumnNames(field) as colName>
+<#list fieldAttrs.getJoinColumnNames(field) as colName>
             <column name="${colName}"/>
 </#list>
         </many-to-one>

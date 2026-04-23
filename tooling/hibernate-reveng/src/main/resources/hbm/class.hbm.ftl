@@ -1,115 +1,115 @@
-<${helper.getClassTag()} name="${helper.getClassName()}"
-<#if helper.isSubclass()>
-    extends="${helper.getParentClassName()}"
+<${classInfo.getClassTag()} name="${classInfo.getClassName()}"
+<#if classInfo.isSubclass()>
+    extends="${classInfo.getParentClassName()}"
 </#if>
-<#if !helper.isSubclass()>
-    table="${helper.getTableName()}"
-<#if helper.getSchema()??>
-    schema="${helper.getSchema()}"
+<#if !classInfo.isSubclass()>
+    table="${classInfo.getTableName()}"
+<#if classInfo.getSchema()??>
+    schema="${classInfo.getSchema()}"
 </#if>
-<#if helper.getCatalog()??>
-    catalog="${helper.getCatalog()}"
+<#if classInfo.getCatalog()??>
+    catalog="${classInfo.getCatalog()}"
 </#if>
 </#if>
-<#if helper.getDiscriminatorValue()??>
-    discriminator-value="${helper.getDiscriminatorValue()}"
+<#if classInfo.getDiscriminatorValue()??>
+    discriminator-value="${classInfo.getDiscriminatorValue()}"
 </#if>
-<#if !helper.isMutable()>
+<#if !classInfo.isMutable()>
     mutable="false"
 </#if>
-<#if helper.isDynamicUpdate()>
+<#if classInfo.isDynamicUpdate()>
     dynamic-update="true"
 </#if>
-<#if helper.isDynamicInsert()>
+<#if classInfo.isDynamicInsert()>
     dynamic-insert="true"
 </#if>
-<#if helper.isAbstract()>
+<#if classInfo.isAbstract()>
     abstract="true"
 </#if>
-<#if helper.getProxy()??>
-    proxy="${helper.getProxy()}"
-<#elseif helper.isConcreteProxy()>
+<#if classInfo.getProxy()??>
+    proxy="${classInfo.getProxy()}"
+<#elseif classInfo.isConcreteProxy()>
     lazy="false"
 </#if>
-<#if (helper.getBatchSize() gt 1)>
-    batch-size="${helper.getBatchSize()?c}"
+<#if (classInfo.getBatchSize() gt 1)>
+    batch-size="${classInfo.getBatchSize()?c}"
 </#if>
-<#if helper.getWhere()??>
-    where="${helper.getWhere()}"
+<#if classInfo.getWhere()??>
+    where="${classInfo.getWhere()}"
 </#if>
-<#if helper.getOptimisticLockMode()??>
-    optimistic-lock="${helper.getOptimisticLockMode()}"
+<#if classInfo.getOptimisticLockMode()??>
+    optimistic-lock="${classInfo.getOptimisticLockMode()}"
 </#if>
-<#if helper.getRowId()??>
-    rowid="${helper.getRowId()}"
+<#if classInfo.getRowId()??>
+    rowid="${classInfo.getRowId()}"
 </#if>
-<#if helper.getSubselect()??>
-    subselect="${helper.getSubselect()}"
+<#if classInfo.getSubselect()??>
+    subselect="${classInfo.getSubselect()}"
 </#if>
-<#if helper.getEntityName()??>
-    entity-name="${helper.getEntityName()}"
+<#if classInfo.getEntityName()??>
+    entity-name="${classInfo.getEntityName()}"
 </#if>
 >
-<#if helper.getComment()?? && helper.getComment()?trim?length != 0>
-    <comment>${helper.getComment()}</comment>
+<#if classInfo.getComment()?? && classInfo.getComment()?trim?length != 0>
+    <comment>${classInfo.getComment()}</comment>
 </#if>
 <#-- Meta attributes -->
 <#include "meta.hbm.ftl"/>
 <#-- Cache -->
-<#if helper.getCacheUsage()??>
-    <cache usage="${helper.getCacheUsage()}"<#if helper.getCacheRegion()??> region="${helper.getCacheRegion()}"</#if><#if helper.getCacheInclude()??> include="${helper.getCacheInclude()}"</#if>/>
+<#if classInfo.getCacheUsage()??>
+    <cache usage="${classInfo.getCacheUsage()}"<#if classInfo.getCacheRegion()??> region="${classInfo.getCacheRegion()}"</#if><#if classInfo.getCacheInclude()??> include="${classInfo.getCacheInclude()}"</#if>/>
 </#if>
 <#-- ID / Key -->
-<#if !helper.isSubclass()>
+<#if !classInfo.isSubclass()>
 <#include "id.hbm.ftl"/>
-<#elseif helper.getPrimaryKeyJoinColumnName()??>
+<#elseif classInfo.getPrimaryKeyJoinColumnName()??>
     <key>
-        <column name="${helper.getPrimaryKeyJoinColumnName()}"/>
+        <column name="${classInfo.getPrimaryKeyJoinColumnName()}"/>
     </key>
 </#if>
 <#-- Natural ID -->
-<#if (helper.getNaturalIdFields()?size > 0)>
-    <natural-id mutable="${helper.isNaturalIdMutable()?c}">
-<#list helper.getNaturalIdFields() as field>
+<#if (fields.getNaturalIdFields()?size > 0)>
+    <natural-id mutable="${fields.isNaturalIdMutable()?c}">
+<#list fields.getNaturalIdFields() as field>
         <property
             name="${field.getName()}"
-            type="${helper.getHibernateTypeName(field)}">
-<#if helper.getColumnComment(field)??>
-            <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}>
-                <comment>${helper.getColumnComment(field)}</comment>
+            type="${fieldAttrs.getHibernateTypeName(field)}">
+<#if fieldAttrs.getColumnComment(field)??>
+            <column name="${fieldAttrs.getColumnName(field)}" ${fieldAttrs.getColumnAttributes(field)}>
+                <comment>${fieldAttrs.getColumnComment(field)}</comment>
             </column>
 <#else>
-            <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
+            <column name="${fieldAttrs.getColumnName(field)}" ${fieldAttrs.getColumnAttributes(field)}/>
 </#if>
         </property>
 </#list>
     </natural-id>
 </#if>
 <#-- Discriminator -->
-<#if helper.needsDiscriminator()>
+<#if classInfo.needsDiscriminator()>
     <discriminator
-        column="${helper.getDiscriminatorColumnName()}"
-        type="${helper.getDiscriminatorTypeName()}"<#if (helper.getDiscriminatorColumnLength() gt 0)>
-        length="${helper.getDiscriminatorColumnLength()?c}"</#if>/>
+        column="${classInfo.getDiscriminatorColumnName()}"
+        type="${classInfo.getDiscriminatorTypeName()}"<#if (classInfo.getDiscriminatorColumnLength() gt 0)>
+        length="${classInfo.getDiscriminatorColumnLength()?c}"</#if>/>
 </#if>
 <#-- Version / Timestamp -->
-<#list helper.getVersionFields() as field>
-<#if helper.isTimestamp(field)>
+<#list fields.getVersionFields() as field>
+<#if fieldAttrs.isTimestamp(field)>
     <timestamp
         name="${field.getName()}"
-        column="${helper.getColumnName(field)}"<#if helper.getAccessType(field)??>
-        access="${helper.getAccessType(field)}"</#if>/>
+        column="${fieldAttrs.getColumnName(field)}"<#if fieldAttrs.getAccessType(field)??>
+        access="${fieldAttrs.getAccessType(field)}"</#if>/>
 <#else>
     <version
         name="${field.getName()}"
-        type="${helper.getHibernateTypeName(field)}"<#if helper.getAccessType(field)??>
-        access="${helper.getAccessType(field)}"</#if>>
-<#if helper.getColumnComment(field)??>
-        <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}>
-            <comment>${helper.getColumnComment(field)}</comment>
+        type="${fieldAttrs.getHibernateTypeName(field)}"<#if fieldAttrs.getAccessType(field)??>
+        access="${fieldAttrs.getAccessType(field)}"</#if>>
+<#if fieldAttrs.getColumnComment(field)??>
+        <column name="${fieldAttrs.getColumnName(field)}" ${fieldAttrs.getColumnAttributes(field)}>
+            <comment>${fieldAttrs.getColumnComment(field)}</comment>
         </column>
 <#else>
-        <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
+        <column name="${fieldAttrs.getColumnName(field)}" ${fieldAttrs.getColumnAttributes(field)}/>
 </#if>
     </version>
 </#if>
@@ -117,44 +117,44 @@
 <#-- Properties -->
 <#include "properties.hbm.ftl"/>
 <#-- Joins (SecondaryTable) -->
-<#list helper.getJoins() as join>
+<#list queries.getJoins() as join>
     <join table="${join.tableName()}">
-<#if helper.getJoinComment(join.tableName())??>
-        <comment>${helper.getJoinComment(join.tableName())}</comment>
+<#if queries.getJoinComment(join.tableName())??>
+        <comment>${queries.getJoinComment(join.tableName())}</comment>
 </#if>
         <key>
 <#list join.keyColumns() as colName>
             <column name="${colName}"/>
 </#list>
         </key>
-<#list helper.getJoinProperties(join.tableName()) as field>
+<#list queries.getJoinProperties(join.tableName()) as field>
         <property
             name="${field.getName()}"
-            type="${helper.getHibernateTypeName(field)}"<#if helper.getAccessType(field)??>
-            access="${helper.getAccessType(field)}"</#if>>
-<#if helper.getColumnComment(field)??>
-            <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}>
-                <comment>${helper.getColumnComment(field)}</comment>
+            type="${fieldAttrs.getHibernateTypeName(field)}"<#if fieldAttrs.getAccessType(field)??>
+            access="${fieldAttrs.getAccessType(field)}"</#if>>
+<#if fieldAttrs.getColumnComment(field)??>
+            <column name="${fieldAttrs.getColumnName(field)}" ${fieldAttrs.getColumnAttributes(field)}>
+                <comment>${fieldAttrs.getColumnComment(field)}</comment>
             </column>
 <#else>
-            <column name="${helper.getColumnName(field)}" ${helper.getColumnAttributes(field)}/>
+            <column name="${fieldAttrs.getColumnName(field)}" ${fieldAttrs.getColumnAttributes(field)}/>
 </#if>
         </property>
 </#list>
     </join>
 </#list>
 <#-- SQL operations -->
-<#if helper.getSQLInsert()??>
-    <sql-insert<#if helper.getSQLInsert().callable()> callable="true"</#if>>${helper.getSQLInsert().sql()}</sql-insert>
+<#if queries.getSQLInsert()??>
+    <sql-insert<#if queries.getSQLInsert().callable()> callable="true"</#if>>${queries.getSQLInsert().sql()}</sql-insert>
 </#if>
-<#if helper.getSQLUpdate()??>
-    <sql-update<#if helper.getSQLUpdate().callable()> callable="true"</#if>>${helper.getSQLUpdate().sql()}</sql-update>
+<#if queries.getSQLUpdate()??>
+    <sql-update<#if queries.getSQLUpdate().callable()> callable="true"</#if>>${queries.getSQLUpdate().sql()}</sql-update>
 </#if>
-<#if helper.getSQLDelete()??>
-    <sql-delete<#if helper.getSQLDelete().callable()> callable="true"</#if>>${helper.getSQLDelete().sql()}</sql-delete>
+<#if queries.getSQLDelete()??>
+    <sql-delete<#if queries.getSQLDelete().callable()> callable="true"</#if>>${queries.getSQLDelete().sql()}</sql-delete>
 </#if>
 <#-- Fetch profiles -->
-<#list helper.getFetchProfiles() as fp>
+<#list queries.getFetchProfiles() as fp>
     <fetch-profile name="${fp.name()}">
 <#list fp.overrides() as fo>
         <fetch entity="${fo.entity()}" association="${fo.association()}" style="${fo.style()}"/>
@@ -162,7 +162,7 @@
     </fetch-profile>
 </#list>
 <#-- Filters -->
-<#list helper.getFilters() as filter>
+<#list queries.getFilters() as filter>
     <filter name="${filter.name()}"<#if filter.condition()?? && filter.condition()?length != 0> condition="${filter.condition()}"</#if>/>
 </#list>
-</${helper.getClassTag()}>
+</${classInfo.getClassTag()}>

@@ -59,7 +59,7 @@ import org.hibernate.models.spi.FieldDetails;
  *
  * @author Koen Aers
  */
-class HbmQueryAndFilterHelper {
+public class HbmQueryAndFilterHelper {
 
 	private final ClassDetails classDetails;
 	private final Map<String, List<String>> metaAttributes;
@@ -77,7 +77,7 @@ class HbmQueryAndFilterHelper {
 
 	// --- Filters ---
 
-	List<HbmTemplateHelper.FilterInfo> getFilters() {
+	public List<HbmTemplateHelper.FilterInfo> getFilters() {
 		List<HbmTemplateHelper.FilterInfo> result = new ArrayList<>();
 		Filter single = classDetails.getDirectAnnotationUsage(Filter.class);
 		if (single != null) {
@@ -92,7 +92,7 @@ class HbmQueryAndFilterHelper {
 		return result;
 	}
 
-	List<HbmTemplateHelper.FilterDefInfo> getFilterDefs() {
+	public List<HbmTemplateHelper.FilterDefInfo> getFilterDefs() {
 		List<HbmTemplateHelper.FilterDefInfo> result = new ArrayList<>();
 		FilterDef single = classDetails.getDirectAnnotationUsage(FilterDef.class);
 		if (single != null) {
@@ -119,7 +119,7 @@ class HbmQueryAndFilterHelper {
 
 	// --- Named queries ---
 
-	List<HbmTemplateHelper.NamedQueryInfo> getNamedQueries() {
+	public List<HbmTemplateHelper.NamedQueryInfo> getNamedQueries() {
 		List<HbmTemplateHelper.NamedQueryInfo> result = new ArrayList<>();
 		org.hibernate.annotations.NamedQuery hibSingle =
 				classDetails.getDirectAnnotationUsage(org.hibernate.annotations.NamedQuery.class);
@@ -159,7 +159,7 @@ class HbmQueryAndFilterHelper {
 				nq.comment(), nq.readOnly());
 	}
 
-	List<HbmTemplateHelper.NamedNativeQueryInfo> getNamedNativeQueries() {
+	public List<HbmTemplateHelper.NamedNativeQueryInfo> getNamedNativeQueries() {
 		List<HbmTemplateHelper.NamedNativeQueryInfo> result = new ArrayList<>();
 		org.hibernate.annotations.NamedNativeQuery hibSingle =
 				classDetails.getDirectAnnotationUsage(org.hibernate.annotations.NamedNativeQuery.class);
@@ -275,7 +275,7 @@ class HbmQueryAndFilterHelper {
 
 	// --- SecondaryTable / Joins ---
 
-	List<HbmTemplateHelper.JoinInfo> getJoins() {
+	public List<HbmTemplateHelper.JoinInfo> getJoins() {
 		List<HbmTemplateHelper.JoinInfo> result = new ArrayList<>();
 		SecondaryTable single = classDetails.getDirectAnnotationUsage(SecondaryTable.class);
 		if (single != null) {
@@ -290,7 +290,7 @@ class HbmQueryAndFilterHelper {
 		return result;
 	}
 
-	List<FieldDetails> getJoinProperties(String tableName) {
+	public List<FieldDetails> getJoinProperties(String tableName) {
 		List<FieldDetails> result = new ArrayList<>();
 		for (FieldDetails field : classDetails.getFields()) {
 			Column col = field.getDirectAnnotationUsage(Column.class);
@@ -311,35 +311,35 @@ class HbmQueryAndFilterHelper {
 		return new HbmTemplateHelper.JoinInfo(st.name(), keyColumns);
 	}
 
-	String getJoinComment(String tableName) {
+	public String getJoinComment(String tableName) {
 		return getClassMetaValue("hibernate.join.comment." + tableName);
 	}
 
 	// --- SQL operations ---
 
-	HbmTemplateHelper.CustomSqlInfo getSQLInsert() {
+	public HbmTemplateHelper.CustomSqlInfo getSQLInsert() {
 		SQLInsert si = classDetails.getDirectAnnotationUsage(SQLInsert.class);
 		return si != null ? new HbmTemplateHelper.CustomSqlInfo(si.sql(), si.callable()) : null;
 	}
 
-	HbmTemplateHelper.CustomSqlInfo getSQLUpdate() {
+	public HbmTemplateHelper.CustomSqlInfo getSQLUpdate() {
 		SQLUpdate su = classDetails.getDirectAnnotationUsage(SQLUpdate.class);
 		return su != null ? new HbmTemplateHelper.CustomSqlInfo(su.sql(), su.callable()) : null;
 	}
 
-	HbmTemplateHelper.CustomSqlInfo getSQLDelete() {
+	public HbmTemplateHelper.CustomSqlInfo getSQLDelete() {
 		SQLDelete sd = classDetails.getDirectAnnotationUsage(SQLDelete.class);
 		return sd != null ? new HbmTemplateHelper.CustomSqlInfo(sd.sql(), sd.callable()) : null;
 	}
 
-	HbmTemplateHelper.CustomSqlInfo getSQLDeleteAll() {
+	public HbmTemplateHelper.CustomSqlInfo getSQLDeleteAll() {
 		SQLDeleteAll sda = classDetails.getDirectAnnotationUsage(SQLDeleteAll.class);
 		return sda != null ? new HbmTemplateHelper.CustomSqlInfo(sda.sql(), sda.callable()) : null;
 	}
 
 	// --- Fetch profiles ---
 
-	List<HbmTemplateHelper.FetchProfileInfo> getFetchProfiles() {
+	public List<HbmTemplateHelper.FetchProfileInfo> getFetchProfiles() {
 		List<HbmTemplateHelper.FetchProfileInfo> result = new ArrayList<>();
 		FetchProfile single = classDetails.getDirectAnnotationUsage(FetchProfile.class);
 		if (single != null) {

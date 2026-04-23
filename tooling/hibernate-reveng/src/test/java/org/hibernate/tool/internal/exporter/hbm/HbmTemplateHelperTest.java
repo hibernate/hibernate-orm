@@ -2212,7 +2212,7 @@ public class HbmTemplateHelperTest {
 		DynamicClassDetails entity = createMinimalEntity(ctx);
 		Map<String, String> imports = Map.of("com.example.Foo", "Bar");
 		HbmTemplateHelper helper = new HbmTemplateHelper(entity, null, Collections.emptyMap(), imports);
-		List<HbmTemplateHelper.ImportInfo> result = helper.getImports();
+		List<HbmClassInfoHelper.ImportInfo> result = helper.getImports();
 		assertEquals(1, result.size());
 		assertEquals("com.example.Foo", result.get(0).className());
 		assertEquals("Bar", result.get(0).rename());
@@ -2236,7 +2236,7 @@ public class HbmTemplateHelperTest {
 		imports.put("com.example.Bar", "BarAlias");
 		imports.put("com.example.Baz", "com.example.Baz"); // same — excluded
 		HbmTemplateHelper helper = new HbmTemplateHelper(entity, null, Collections.emptyMap(), imports);
-		List<HbmTemplateHelper.ImportInfo> result = helper.getImports();
+		List<HbmClassInfoHelper.ImportInfo> result = helper.getImports();
 		assertEquals(2, result.size());
 	}
 

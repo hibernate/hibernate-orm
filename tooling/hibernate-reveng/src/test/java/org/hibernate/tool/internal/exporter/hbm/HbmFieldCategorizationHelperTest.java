@@ -87,12 +87,12 @@ class HbmFieldCategorizationHelperTest {
 	}
 
 	private HbmFieldCategorizationHelper createHelper(DynamicClassDetails entity) {
-		return new HbmFieldCategorizationHelper(entity, Collections.emptyMap());
+		return new HbmFieldCategorizationHelper(entity, Collections.emptyMap(), Collections.emptyMap());
 	}
 
 	private HbmFieldCategorizationHelper createHelper(
 			DynamicClassDetails entity, Map<String, Map<String, List<String>>> fieldMeta) {
-		return new HbmFieldCategorizationHelper(entity, fieldMeta);
+		return new HbmFieldCategorizationHelper(entity, fieldMeta, Collections.emptyMap());
 	}
 
 	// --- Composite ID ---

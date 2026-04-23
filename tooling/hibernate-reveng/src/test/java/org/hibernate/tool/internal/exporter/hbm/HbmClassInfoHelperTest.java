@@ -68,16 +68,16 @@ class HbmClassInfoHelperTest {
 	}
 
 	private HbmClassInfoHelper createHelper(DynamicClassDetails entity) {
-		return new HbmClassInfoHelper(entity, null, Collections.emptyMap());
+		return new HbmClassInfoHelper(entity, null, Collections.emptyMap(), Collections.emptyMap());
 	}
 
 	private HbmClassInfoHelper createHelper(DynamicClassDetails entity, String comment) {
-		return new HbmClassInfoHelper(entity, comment, Collections.emptyMap());
+		return new HbmClassInfoHelper(entity, comment, Collections.emptyMap(), Collections.emptyMap());
 	}
 
 	private HbmClassInfoHelper createHelper(DynamicClassDetails entity,
 											 Map<String, List<String>> metaAttributes) {
-		return new HbmClassInfoHelper(entity, null, metaAttributes);
+		return new HbmClassInfoHelper(entity, null, metaAttributes, Collections.emptyMap());
 	}
 
 	// --- getClassName ---

@@ -4,12 +4,12 @@
 	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <!-- Generated ${date?datetime} by Hibernate Tools ${version} -->
 
-<hibernate-mapping<#if helper.getPackageName()??> package="${helper.getPackageName()}"</#if><#if settings.hasSchema()> schema="${settings.schema()}"</#if><#if settings.hasCatalog()> catalog="${settings.catalog()}"</#if><#if settings.hasNonDefaultAccess()> default-access="${settings.defaultAccess()}"</#if><#if settings.hasNonDefaultCascade()> default-cascade="${settings.defaultCascade()}"</#if><#if !settings.defaultLazy()> default-lazy="false"</#if><#if !settings.autoImport()> auto-import="false"</#if>>
-<#list helper.getImports() as imp>
+<hibernate-mapping<#if classInfo.getPackageName()??> package="${classInfo.getPackageName()}"</#if><#if settings.hasSchema()> schema="${settings.schema()}"</#if><#if settings.hasCatalog()> catalog="${settings.catalog()}"</#if><#if settings.hasNonDefaultAccess()> default-access="${settings.defaultAccess()}"</#if><#if settings.hasNonDefaultCascade()> default-cascade="${settings.defaultCascade()}"</#if><#if !settings.defaultLazy()> default-lazy="false"</#if><#if !settings.autoImport()> auto-import="false"</#if>>
+<#list classInfo.getImports() as imp>
     <import class="${imp.className()}" rename="${imp.rename()}"/>
 </#list>
 <#include "class.hbm.ftl"/>
-<#list helper.getFilterDefs() as fd>
+<#list queries.getFilterDefs() as fd>
 <#if fd.parameters()?size == 0>
     <filter-def name="${fd.name()}"<#if fd.defaultCondition()?? && fd.defaultCondition()?length != 0> condition="${fd.defaultCondition()}"</#if>/>
 <#else>
@@ -20,7 +20,7 @@
     </filter-def>
 </#if>
 </#list>
-<#list helper.getNamedQueries() as nq>
+<#list queries.getNamedQueries() as nq>
     <query
         name="${nq.name()}"<#if nq.flushMode()?has_content>
         flush-mode="${nq.flushMode()}"</#if><#if nq.cacheable()>
@@ -31,7 +31,7 @@
         read-only="true"</#if><#if nq.comment()?has_content>
         comment="${nq.comment()}"</#if>><![CDATA[${nq.query()}]]></query>
 </#list>
-<#list helper.getNamedNativeQueries() as nq>
+<#list queries.getNamedNativeQueries() as nq>
     <sql-query
         name="${nq.name()}"<#if nq.flushMode()?has_content>
         flush-mode="${nq.flushMode()}"</#if><#if nq.cacheable()>

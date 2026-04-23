@@ -80,12 +80,12 @@ class HbmFieldAttributeHelperTest {
 	}
 
 	private HbmFieldAttributeHelper createHelper() {
-		return new HbmFieldAttributeHelper(Collections.emptyMap());
+		return new HbmFieldAttributeHelper(Collections.emptyMap(), Collections.emptyMap());
 	}
 
 	private HbmFieldAttributeHelper createHelper(
 			Map<String, Map<String, List<String>>> fieldMeta) {
-		return new HbmFieldAttributeHelper(fieldMeta);
+		return new HbmFieldAttributeHelper(fieldMeta, Collections.emptyMap());
 	}
 
 	// --- getFormula ---

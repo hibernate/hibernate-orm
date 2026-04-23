@@ -209,6 +209,11 @@ public class HbmXmlExporter implements Exporter {
 				fieldMetaAttributes, allClassMetaAttributes);
 		Map<String, Object> model = new HashMap<>();
 		model.put("helper", helper);
+		model.put("classInfo", helper.getClassInfoHelper());
+		model.put("fields", helper.getFieldCategorizationHelper());
+		model.put("fieldAttrs", helper.getFieldAttributeHelper());
+		model.put("collections", helper.getCollectionAttributeHelper());
+		model.put("queries", helper.getQueryAndFilterHelper());
 		model.put("settings", mappingSettings);
 		model.put("date", new Date());
 		model.put("version", Version.versionString());

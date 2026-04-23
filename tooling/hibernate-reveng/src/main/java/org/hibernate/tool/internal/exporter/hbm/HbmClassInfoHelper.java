@@ -15,6 +15,9 @@
  */
 package org.hibernate.tool.internal.exporter.hbm;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,17 +50,20 @@ import org.hibernate.models.spi.ClassDetails;
  *
  * @author Koen Aers
  */
-class HbmClassInfoHelper {
+public class HbmClassInfoHelper {
 
 	private final ClassDetails classDetails;
 	private final String comment;
 	private final Map<String, List<String>> metaAttributes;
+	private final Map<String, String> imports;
 
 	HbmClassInfoHelper(ClassDetails classDetails, String comment,
-						Map<String, List<String>> metaAttributes) {
+						Map<String, List<String>> metaAttributes,
+						Map<String, String> imports) {
 		this.classDetails = classDetails;
 		this.comment = comment;
 		this.metaAttributes = metaAttributes;
+		this.imports = imports;
 	}
 
 	private List<String> getClassMetaAttribute(String name) {
@@ -67,14 +73,14 @@ class HbmClassInfoHelper {
 
 	// --- Entity / class ---
 
-	String getClassName() {
+	public String getClassName() {
 		List<String> realClass = getClassMetaAttribute("hibernate.class-name");
 		String name = (realClass != null && !realClass.isEmpty())
 				? realClass.get(0) : classDetails.getClassName();
 		return name.startsWith(".") ? name.substring(1) : name;
 	}
 
-	String getPackageName() {
+	public String getPackageName() {
 		String name = getClassName();
 		int dot = name.lastIndexOf('.');
 		return dot > 0 ? name.substring(0, dot) : null;
@@ -82,47 +88,47 @@ class HbmClassInfoHelper {
 
 	// --- Table ---
 
-	String getTableName() {
+	public String getTableName() {
 		Table table = classDetails.getDirectAnnotationUsage(Table.class);
 		return table != null ? table.name() : null;
 	}
 
-	String getSchema() {
+	public String getSchema() {
 		Table table = classDetails.getDirectAnnotationUsage(Table.class);
 		return table != null && table.schema() != null && !table.schema().isEmpty()
 				? table.schema() : null;
 	}
 
-	String getCatalog() {
+	public String getCatalog() {
 		Table table = classDetails.getDirectAnnotationUsage(Table.class);
 		return table != null && table.catalog() != null && !table.catalog().isEmpty()
 				? table.catalog() : null;
 	}
 
-	String getComment() {
+	public String getComment() {
 		return comment;
 	}
 
 	// --- Class-level attributes ---
 
-	boolean isMutable() {
+	public boolean isMutable() {
 		return !classDetails.hasDirectAnnotationUsage(Immutable.class);
 	}
 
-	boolean isDynamicUpdate() {
+	public boolean isDynamicUpdate() {
 		return classDetails.hasDirectAnnotationUsage(DynamicUpdate.class);
 	}
 
-	boolean isDynamicInsert() {
+	public boolean isDynamicInsert() {
 		return classDetails.hasDirectAnnotationUsage(DynamicInsert.class);
 	}
 
-	int getBatchSize() {
+	public int getBatchSize() {
 		BatchSize bs = classDetails.getDirectAnnotationUsage(BatchSize.class);
 		return bs != null ? bs.size() : 0;
 	}
 
-	String getCacheUsage() {
+	public String getCacheUsage() {
 		Cache cache = classDetails.getDirectAnnotationUsage(Cache.class);
 		if (cache == null || cache.usage() == CacheConcurrencyStrategy.NONE) {
 			return null;
@@ -130,27 +136,27 @@ class HbmClassInfoHelper {
 		return cache.usage().name().toLowerCase().replace('_', '-');
 	}
 
-	String getCacheRegion() {
+	public String getCacheRegion() {
 		Cache cache = classDetails.getDirectAnnotationUsage(Cache.class);
 		return cache != null && cache.region() != null && !cache.region().isEmpty()
 				? cache.region() : null;
 	}
 
-	String getCacheInclude() {
+	public String getCacheInclude() {
 		Cache cache = classDetails.getDirectAnnotationUsage(Cache.class);
 		return cache != null && !cache.includeLazy() ? "non-lazy" : null;
 	}
 
-	String getWhere() {
+	public String getWhere() {
 		SQLRestriction sr = classDetails.getDirectAnnotationUsage(SQLRestriction.class);
 		return sr != null ? sr.value() : null;
 	}
 
-	boolean isAbstract() {
+	public boolean isAbstract() {
 		return classDetails.isAbstract();
 	}
 
-	String getOptimisticLockMode() {
+	public String getOptimisticLockMode() {
 		OptimisticLocking ol = classDetails.getDirectAnnotationUsage(OptimisticLocking.class);
 		if (ol == null || ol.type() == OptimisticLockType.VERSION) {
 			return null;
@@ -158,28 +164,28 @@ class HbmClassInfoHelper {
 		return ol.type().name().toLowerCase();
 	}
 
-	String getRowId() {
+	public String getRowId() {
 		RowId rid = classDetails.getDirectAnnotationUsage(RowId.class);
 		return rid != null && rid.value() != null && !rid.value().isEmpty()
 				? rid.value() : null;
 	}
 
-	String getSubselect() {
+	public String getSubselect() {
 		Subselect ss = classDetails.getDirectAnnotationUsage(Subselect.class);
 		return ss != null ? ss.value() : null;
 	}
 
-	boolean isConcreteProxy() {
+	public boolean isConcreteProxy() {
 		return classDetails.hasDirectAnnotationUsage(ConcreteProxy.class)
 				&& getProxy() == null;
 	}
 
-	String getProxy() {
+	public String getProxy() {
 		List<String> proxyValues = metaAttributes.get("hibernate.proxy");
 		return proxyValues != null && !proxyValues.isEmpty() ? proxyValues.get(0) : null;
 	}
 
-	String getEntityName() {
+	public String getEntityName() {
 		jakarta.persistence.Entity entity = classDetails.getDirectAnnotationUsage(jakarta.persistence.Entity.class);
 		if (entity == null || entity.name() == null || entity.name().isEmpty()) {
 			return null;
@@ -194,13 +200,13 @@ class HbmClassInfoHelper {
 
 	// --- Inheritance ---
 
-	boolean isSubclass() {
+	public boolean isSubclass() {
 		ClassDetails superClass = classDetails.getSuperClass();
 		return superClass != null
 				&& !"java.lang.Object".equals(superClass.getClassName());
 	}
 
-	String getParentClassName() {
+	public String getParentClassName() {
 		if (!isSubclass()) {
 			return null;
 		}
@@ -208,7 +214,7 @@ class HbmClassInfoHelper {
 		return name.startsWith(".") ? name.substring(1) : name;
 	}
 
-	String getClassTag() {
+	public String getClassTag() {
 		if (!isSubclass()) {
 			return "class";
 		}
@@ -222,16 +228,16 @@ class HbmClassInfoHelper {
 		return "subclass";
 	}
 
-	boolean needsDiscriminator() {
+	public boolean needsDiscriminator() {
 		return classDetails.hasDirectAnnotationUsage(DiscriminatorColumn.class);
 	}
 
-	String getDiscriminatorColumnName() {
+	public String getDiscriminatorColumnName() {
 		DiscriminatorColumn dc = classDetails.getDirectAnnotationUsage(DiscriminatorColumn.class);
 		return dc != null ? dc.name() : null;
 	}
 
-	String getDiscriminatorTypeName() {
+	public String getDiscriminatorTypeName() {
 		DiscriminatorColumn dc = classDetails.getDirectAnnotationUsage(DiscriminatorColumn.class);
 		if (dc == null) {
 			return "string";
@@ -243,7 +249,7 @@ class HbmClassInfoHelper {
 		};
 	}
 
-	int getDiscriminatorColumnLength() {
+	public int getDiscriminatorColumnLength() {
 		DiscriminatorColumn dc = classDetails.getDirectAnnotationUsage(DiscriminatorColumn.class);
 		if (dc == null) {
 			return 0;
@@ -251,13 +257,48 @@ class HbmClassInfoHelper {
 		return dc.length() != 31 ? dc.length() : 0;
 	}
 
-	String getDiscriminatorValue() {
+	public String getDiscriminatorValue() {
 		DiscriminatorValue dv = classDetails.getDirectAnnotationUsage(DiscriminatorValue.class);
 		return dv != null ? dv.value() : null;
 	}
 
-	String getPrimaryKeyJoinColumnName() {
+	public String getPrimaryKeyJoinColumnName() {
 		PrimaryKeyJoinColumn pkjc = classDetails.getDirectAnnotationUsage(PrimaryKeyJoinColumn.class);
 		return pkjc != null ? pkjc.name() : null;
 	}
+
+	// --- Meta attributes ---
+
+	public Map<String, List<String>> getMetaAttributes() {
+		Map<String, List<String>> result = new LinkedHashMap<>();
+		for (Map.Entry<String, List<String>> entry : metaAttributes.entrySet()) {
+			if (!entry.getKey().startsWith("hibernate.proxy")
+					&& !entry.getKey().equals("hibernate.comment")
+					&& !entry.getKey().equals("hibernate.class-name")
+					&& !entry.getKey().startsWith("hibernate.join.comment.")
+					&& !entry.getKey().startsWith("hibernate.sql-query.")
+					&& !entry.getKey().startsWith("hibernate.properties-group.")) {
+				result.put(entry.getKey(), entry.getValue());
+			}
+		}
+		return result;
+	}
+
+	public List<String> getMetaAttribute(String name) {
+		return metaAttributes.getOrDefault(name, Collections.emptyList());
+	}
+
+	// --- Imports ---
+
+	public List<ImportInfo> getImports() {
+		List<ImportInfo> result = new ArrayList<>();
+		for (Map.Entry<String, String> entry : imports.entrySet()) {
+			if (!entry.getKey().equals(entry.getValue())) {
+				result.add(new ImportInfo(entry.getKey(), entry.getValue()));
+			}
+		}
+		return result;
+	}
+
+	public record ImportInfo(String className, String rename) {}
 }

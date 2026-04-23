@@ -533,7 +533,7 @@ public class HbmXmlExporterTest {
 	@Test
 	public void testCustomTemplatePath(@TempDir Path tempDir) throws IOException {
 		Files.writeString(tempDir.resolve("main.hbm.ftl"),
-				"<!-- Custom HBM for ${helper.getClassName()} -->");
+				"<!-- Custom HBM for ${classInfo.getClassName()} -->");
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));

@@ -88,12 +88,10 @@ public class MappingXmlExporter {
 	}
 
 	public void export(Writer output, ClassDetails entity) {
-		MappingXmlHelper helper = new MappingXmlHelper(entity);
 		Map<String, Object> model = new HashMap<>();
-		model.put("helper", helper);
-		model.put("entityInfo", helper.getEntityInfoHelper());
-		model.put("fieldInfo", helper.getFieldAnnotationHelper());
-		model.put("queries", helper.getQueryAndFilterHelper());
+		model.put("entityInfo", new MappingEntityInfoHelper(entity));
+		model.put("fieldInfo", new MappingFieldAnnotationHelper(entity));
+		model.put("queries", new MappingQueryAndFilterHelper(entity));
 		model.put("date", new Date());
 		model.put("version", Version.versionString());
 		try {

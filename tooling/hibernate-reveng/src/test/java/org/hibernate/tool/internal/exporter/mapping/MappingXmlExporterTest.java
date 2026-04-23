@@ -423,7 +423,7 @@ public class MappingXmlExporterTest {
 	@Test
 	public void testCustomTemplatePath(@TempDir Path tempDir) throws IOException {
 		Files.writeString(tempDir.resolve("main.mapping.ftl"),
-				"<!-- Custom mapping for ${helper.getClassName()} -->");
+				"<!-- Custom mapping for ${entityInfo.getClassName()} -->");
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
 		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));

@@ -245,12 +245,14 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
+import static java.util.function.Function.identity;
 import static org.hibernate.engine.internal.CacheHelper.fromSharedCache;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
@@ -465,6 +467,23 @@ public abstract class AbstractEntityPersister
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
 			final RuntimeModelCreationContext creationContext) throws HibernateException {
+		this(
+				persistentClass,
+				cacheAccessStrategy,
+				naturalIdRegionAccessStrategy,
+				creationContext,
+				identity()
+		);
+	}
+
+	// Used by Hibernate Reactive: it needs to override teh StateManagement
+	protected AbstractEntityPersister(
+			final PersistentClass persistentClass,
+			final EntityDataAccess cacheAccessStrategy,
+			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
+			final RuntimeModelCreationContext creationContext,
+			final Function<StateManagement, StateManagement> statementManagerConverter)
+				throws HibernateException {
 		super( persistentClass, creationContext );
 
 		final var factoryOptions = creationContext.getSessionFactoryOptions();
@@ -797,7 +816,8 @@ public abstract class AbstractEntityPersister
 			getNamedQueryMemento( creationContext.getBootModel() );
 		}
 
-		stateManagement = persistentClass.getRootClass().getStateManagement();
+		// Hibernate Reactive needs to convert the stateManagement so that it can create reactive coordinators
+		stateManagement = statementManagerConverter.apply( persistentClass.getRootClass().getStateManagement() );
 	}
 
 	@Override

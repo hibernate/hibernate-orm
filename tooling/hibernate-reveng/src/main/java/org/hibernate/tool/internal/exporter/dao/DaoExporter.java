@@ -40,7 +40,7 @@ import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.internal.util.MetadataHelper;
 import org.hibernate.tool.api.version.Version;
-import org.hibernate.tool.internal.exporter.entity.ImportContextImpl;
+import org.hibernate.tool.internal.exporter.entity.ImportContext;
 import org.hibernate.tool.internal.util.EntityFileWriter;
 
 import java.util.Properties;
@@ -133,7 +133,7 @@ public class DaoExporter implements Exporter {
 
 	public void export(Writer output, ClassDetails entity) {
 		String packageName = getPackageName(entity);
-		ImportContextImpl importContext = new ImportContextImpl(packageName);
+		ImportContext importContext = new ImportContext(packageName);
 		DaoTemplateHelper helper = new DaoTemplateHelper(
 				entity, importContext, ejb3, sessionFactoryName);
 		Map<String, Object> model = new HashMap<>();

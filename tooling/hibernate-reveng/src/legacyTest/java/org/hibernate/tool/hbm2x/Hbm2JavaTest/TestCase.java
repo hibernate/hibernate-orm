@@ -25,7 +25,6 @@ import org.hibernate.tool.api.export.ExporterType;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.api.export.DefaultArtifactCollector;
 import org.hibernate.tool.internal.exporter.entity.ImportContext;
-import org.hibernate.tool.internal.exporter.entity.ImportContextImpl;
 import org.hibernate.tool.test.utils.FileUtil;
 import org.hibernate.tool.test.utils.HibernateUtil;
 import org.hibernate.tool.test.utils.JUnitUtil;
@@ -318,7 +317,7 @@ public class TestCase {
 
 	@Test
 	public void testImportOfSameName() {
-		ImportContext ic = new ImportContextImpl("foobar");
+		ImportContext ic = new ImportContext("foobar");
 		assertEquals("CascadeType", ic.importType("jakarta.persistence.CascadeType"));
 		assertEquals("org.hibernate.annotations.CascadeType", ic.importType("org.hibernate.annotations.CascadeType"));
         assertFalse(ic.generateImports().contains("hibernate"), "The hibernate annotation should not be imported to avoid name clashes");
@@ -326,7 +325,7 @@ public class TestCase {
 
 	@Test
 	public void testImporter() {
-		ImportContext context = new ImportContextImpl( "org.hibernate" );
+		ImportContext context = new ImportContext( "org.hibernate" );
 		assertEquals("byte", context.importType("byte"));
 		assertEquals("Session", context.importType("org.hibernate.Session"));
 		assertEquals("Long", context.importType("java.lang.Long"));

@@ -74,7 +74,7 @@ class FieldAnnotationGeneratorTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails classDetails = builder.createEntityFromTable(table);
 		String pkg = table.getEntityPackage() != null ? table.getEntityPackage() : "";
-		ImportContext importContext = new ImportContextImpl(pkg);
+		ImportContext importContext = new ImportContext(pkg);
 		TemplateHelper helper = new TemplateHelper(classDetails, builder.getModelsContext(),
 				importContext, true, Collections.emptyMap(), Collections.emptyMap());
 		FieldAnnotationGenerator generator = new FieldAnnotationGenerator(importContext, helper);

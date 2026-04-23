@@ -187,7 +187,7 @@ public class EntityExporter implements Exporter {
 				packageName = gc.substring(0, lastDot);
 			}
 		}
-		ImportContextImpl importContext = new ImportContextImpl(packageName);
+		ImportContext importContext = new ImportContext(packageName);
 		Map<String, Map<String, List<String>>> allClassMeta = getAllClassMeta();
 		TemplateHelper templateHelper = new TemplateHelper(
 				entity, modelsContext, importContext, annotated, useGenerics,

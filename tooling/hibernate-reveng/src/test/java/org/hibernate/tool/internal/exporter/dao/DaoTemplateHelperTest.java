@@ -29,7 +29,7 @@ import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
 import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
-import org.hibernate.tool.internal.exporter.entity.ImportContextImpl;
+import org.hibernate.tool.internal.exporter.entity.ImportContext;
 import org.hibernate.tool.internal.builder.db.DynamicEntityBuilder;
 import org.hibernate.tool.internal.descriptor.ColumnDescriptor;
 import org.hibernate.tool.internal.descriptor.TableDescriptor;
@@ -55,7 +55,7 @@ public class DaoTemplateHelperTest {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		String pkg = table.getEntityPackage() != null ? table.getEntityPackage() : "";
-		return new DaoTemplateHelper(entity, new ImportContextImpl(pkg),
+		return new DaoTemplateHelper(entity, new ImportContext(pkg),
 				ejb3, sessionFactoryName);
 	}
 
@@ -71,7 +71,7 @@ public class DaoTemplateHelperTest {
 		ClassDetails entity = builder.createEntityFromTable(table);
 		String pkg = table.getEntityPackage() != null ? table.getEntityPackage() : "";
 		DaoTemplateHelper helper = new DaoTemplateHelper(entity,
-				new ImportContextImpl(pkg), ejb3, "SessionFactory");
+				new ImportContext(pkg), ejb3, "SessionFactory");
 		return new TestContext(helper, builder.getModelsContext(), entity);
 	}
 

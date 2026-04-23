@@ -129,7 +129,7 @@ public class TemplateHelperTest {
 		ClassDetails classDetails = builder.createEntityFromTable(table);
 		String pkg = table.getEntityPackage() != null ? table.getEntityPackage() : "";
 		return new TemplateHelper(classDetails, builder.getModelsContext(),
-				new ImportContextImpl(pkg), annotated,
+				new ImportContext(pkg), annotated,
 				classMetaAttributes, fieldMetaAttributes);
 	}
 
@@ -1276,7 +1276,7 @@ public class TemplateHelperTest {
 				SimpleClassLoading.SIMPLE_CLASS_LOADING, false, null);
 		ClassDetails classDetails = EmbeddableClassBuilder.buildEmbeddableClass(metadata, ctx);
 		return new TemplateHelper(classDetails, ctx,
-				new ImportContextImpl(metadata.getPackageName()), true,
+				new ImportContext(metadata.getPackageName()), true,
 				Collections.emptyMap(), Collections.emptyMap());
 	}
 
@@ -1382,7 +1382,7 @@ public class TemplateHelperTest {
 		ClassDetails classDetails = builder.createEntityFromTable(table);
 		String pkg = table.getEntityPackage() != null ? table.getEntityPackage() : "";
 		TemplateHelper helper = new TemplateHelper(classDetails, builder.getModelsContext(),
-				new ImportContextImpl(pkg), true,
+				new ImportContext(pkg), true,
 				Collections.emptyMap(), Collections.emptyMap());
 		return new TestContext(helper, builder.getModelsContext(), classDetails);
 	}
@@ -2069,7 +2069,7 @@ public class TemplateHelperTest {
 		DynamicFieldDetails field = addElementCollectionField(
 				dc, "nicknames", String.class, builder.getModelsContext());
 		TemplateHelper helper = new TemplateHelper(classDetails, builder.getModelsContext(),
-				new ImportContextImpl("com.example"), false,
+				new ImportContext("com.example"), false,
 				Collections.emptyMap(), Collections.emptyMap());
 		assertEquals("", helper.generateElementCollectionAnnotation(field));
 	}
@@ -2212,7 +2212,7 @@ public class TemplateHelperTest {
 				"employees", fieldType, false, true, ctx);
 		field.addAnnotationUsage(JpaAnnotations.ONE_TO_MANY.createUsage(ctx));
 		TemplateHelper helper = new TemplateHelper(entity, ctx,
-				new ImportContextImpl("com.example"), true,
+				new ImportContext("com.example"), true,
 				Collections.emptyMap(), Collections.emptyMap());
 		assertEquals("List<Employee>", helper.getCollectionTypeName(field));
 		assertEquals("ArrayList", helper.getCollectionInitializerType(field));
@@ -3107,7 +3107,7 @@ public class TemplateHelperTest {
 		childTable.addColumn(new ColumnDescriptor("DOORS", "doors", Integer.class));
 		ClassDetails childEntity = builder.createEntityFromTable(childTable);
 		TemplateHelper helper = new TemplateHelper(childEntity, builder.getModelsContext(),
-				new ImportContextImpl("com.example"), true);
+				new ImportContext("com.example"), true);
 		List<TemplateHelper.FullConstructorProperty> superProps = helper.getSuperclassFullConstructorProperties();
 		assertEquals(2, superProps.size());
 		assertEquals("id", superProps.get(0).fieldName());
@@ -3127,7 +3127,7 @@ public class TemplateHelperTest {
 		childTable.addColumn(new ColumnDescriptor("DOORS", "doors", Integer.class));
 		ClassDetails childEntity = builder.createEntityFromTable(childTable);
 		TemplateHelper helper = new TemplateHelper(childEntity, builder.getModelsContext(),
-				new ImportContextImpl("com.example"), true);
+				new ImportContext("com.example"), true);
 		assertEquals("id, make", helper.getSuperclassFullConstructorArgumentList());
 	}
 
@@ -3144,7 +3144,7 @@ public class TemplateHelperTest {
 		childTable.addColumn(new ColumnDescriptor("DOORS", "doors", Integer.class));
 		ClassDetails childEntity = builder.createEntityFromTable(childTable);
 		TemplateHelper helper = new TemplateHelper(childEntity, builder.getModelsContext(),
-				new ImportContextImpl("com.example"), true);
+				new ImportContext("com.example"), true);
 		assertEquals("Long id, String make, Long carId, Integer doors",
 				helper.getFullConstructorParameterList());
 	}
@@ -3163,7 +3163,7 @@ public class TemplateHelperTest {
 		childTable.addColumn(new ColumnDescriptor("DOORS", "doors", Integer.class));
 		ClassDetails childEntity = builder.createEntityFromTable(childTable);
 		TemplateHelper helper = new TemplateHelper(childEntity, builder.getModelsContext(),
-				new ImportContextImpl("com.example"), true);
+				new ImportContext("com.example"), true);
 		List<TemplateHelper.FullConstructorProperty> superMinProps = helper.getSuperclassMinimalConstructorProperties();
 		assertEquals(2, superMinProps.size());
 		assertEquals("id", superMinProps.get(0).fieldName());
@@ -3196,7 +3196,7 @@ public class TemplateHelperTest {
 				.primaryKey(true).generationType(GenerationType.IDENTITY));
 		ClassDetails childEntity = builder.createEntityFromTable(childTable);
 		TemplateHelper helper = new TemplateHelper(childEntity, builder.getModelsContext(),
-				new ImportContextImpl("com.example"), true);
+				new ImportContext("com.example"), true);
 		// Super full=[id,make,color], super minimal=[make]
 		// Own full=[] (carId has generator), own minimal=[]
 		// Total full=3, total minimal=1 → needs minimal
@@ -3530,7 +3530,7 @@ public class TemplateHelperTest {
 		ClassDetails universeClass = builder.createEntityFromTable(helloUniverseTable);
 		TemplateHelper huHelper = new TemplateHelper(
 				universeClass, builder.getModelsContext(),
-				new ImportContextImpl(""), true,
+				new ImportContext(""), true,
 				Collections.emptyMap(),
 				Map.of("notgenerated", Map.of("gen-property", List.of("false"))));
 		// Own properties: dimension + address = 2

@@ -31,7 +31,7 @@ import org.hibernate.tool.api.export.Exporter;
 import org.hibernate.tool.api.export.ExporterConstants;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.internal.util.MetadataHelper;
-import org.hibernate.tool.internal.exporter.entity.ImportContextImpl;
+import org.hibernate.tool.internal.exporter.entity.ImportContext;
 import org.hibernate.tool.internal.exporter.entity.TemplateHelper;
 
 /**
@@ -221,8 +221,8 @@ public class GenericExporter implements Exporter {
 				? metadataHelper.getFieldMetaAttributes(
 						entity.getClassName())
 				: Collections.emptyMap();
-		ImportContextImpl importContext =
-				new ImportContextImpl(packageName);
+		ImportContext importContext =
+				new ImportContext(packageName);
 		TemplateHelper templateHelper = new TemplateHelper(
 				entity, mc, importContext, false,
 				classMeta, fieldMeta);

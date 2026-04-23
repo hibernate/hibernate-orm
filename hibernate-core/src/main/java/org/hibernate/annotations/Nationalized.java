@@ -12,6 +12,7 @@ import org.hibernate.dialect.Dialect;
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
@@ -31,13 +32,18 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *         <p>
  *         See {@link org.hibernate.dialect.NationalizationSupport#EXPLICIT}.
  * </ul>
+ * <p>This annotation may be applied to a field or property or to a
+ * package descriptor. When applied at the package level, it acts as
+ * a default for every character-typed attribute of every entity or
+ * embeddable belonging to the package. This annotation may also be
+ * used as a meta-annotation.
  *
  * @see org.hibernate.dialect.NationalizationSupport
  * @see org.hibernate.cfg.AvailableSettings#USE_NATIONALIZED_CHARACTER_DATA
  *
  * @author Steve Ebersole
  */
-@Target( { METHOD, FIELD, ANNOTATION_TYPE } )
-@Retention( RUNTIME )
+@Target({PACKAGE, METHOD, FIELD, ANNOTATION_TYPE})
+@Retention(RUNTIME)
 public @interface Nationalized {
 }

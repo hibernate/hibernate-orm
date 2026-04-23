@@ -666,7 +666,7 @@ public interface HibernateAnnotations {
 	OrmAnnotationDescriptor<Nationalized, NationalizedAnnotation> NATIONALIZED = new OrmAnnotationDescriptor<>(
 			Nationalized.class,
 			NationalizedAnnotation.class,
-			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION ),
+			EnumSet.of( Kind.METHOD, Kind.FIELD, Kind.ANNOTATION, Kind.PACKAGE ),
 			false
 	);
 	OrmAnnotationDescriptor<NativeGenerator, NativeGeneratorAnnotation> NATIVE_GENERATOR = new OrmAnnotationDescriptor<>(

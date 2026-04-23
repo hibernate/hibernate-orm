@@ -289,6 +289,7 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 	private final TypeSizingProfile typeSizingProfile;
 
 	private final boolean noBackslashEscapesEnabled;
+	private final boolean foreignKeysInServer;
 
 	@SPI( IMPLEMENT )
 	public MySQLDialect() {
@@ -320,6 +321,7 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 				.maxVarbinaryLength( maxVarbinaryLength ).maxVarbinaryCapacity( maxVarbinaryLength )
 				.build();
 		noBackslashEscapesEnabled = serverConfiguration.isNoBackslashEscapesEnabled();
+		foreignKeysInServer = serverConfiguration.isForeignKeysInServer();
 		storageEngine = createStorageEngine( serverConfiguration.getConfiguredStorageEngine() );
 		schemaDropSupport = new SchemaDropSupport(
 				List.of(),
@@ -564,6 +566,18 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 
 	public boolean isNoBackslashEscapesEnabled() {
 		return noBackslashEscapesEnabled;
+	}
+
+	/**
+	 * Whether foreign keys are enforced by the server rather than natively by InnoDB,
+	 * that is, whether {@code @@innodb_native_foreign_keys} is {@code OFF}.
+	 * <p>
+	 * The server-level implementation does not yet fully support circular cascade deletes.
+	 *
+	 * @see org.hibernate.cfg.DialectSpecificSettings#MYSQL_FOREIGN_KEYS_IN_SERVER
+	 */
+	public boolean isForeignKeysInServer() {
+		return foreignKeysInServer;
 	}
 
 	@Override

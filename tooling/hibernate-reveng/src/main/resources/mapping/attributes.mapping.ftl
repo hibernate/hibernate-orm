@@ -1,9 +1,9 @@
         <attributes>
 <#-- Embedded ID -->
-<#if helper.getCompositeIdField()??>
-<#assign cid = helper.getCompositeIdField()>
+<#if fieldInfo.getCompositeIdField()??>
+<#assign cid = fieldInfo.getCompositeIdField()>
             <embedded-id name="${cid.getName()}">
-<#list helper.getAttributeOverrides(cid) as ao>
+<#list fieldInfo.getAttributeOverrides(cid) as ao>
                 <attribute-override name="${ao.fieldName()}">
                     <column name="${ao.columnName()}"/>
                 </attribute-override>
@@ -11,126 +11,126 @@
             </embedded-id>
 </#if>
 <#-- ID fields (skip if composite ID) -->
-<#if !helper.getCompositeIdField()??>
-<#list helper.getIdFields() as field>
+<#if !fieldInfo.getCompositeIdField()??>
+<#list fieldInfo.getIdFields() as field>
             <id name="${field.getName()}">
-                <column name="${helper.getColumnName(field)}"<#if !helper.isNullable(field)> nullable="false"</#if><#if helper.isUnique(field)> unique="true"</#if>/>
-<#if helper.getGenerationType(field)??>
-                <generated-value strategy="${helper.getGenerationType(field)}"<#if helper.getGeneratorName(field)??> generator="${helper.getGeneratorName(field)}"</#if>/>
+                <column name="${fieldInfo.getColumnName(field)}"<#if !fieldInfo.isNullable(field)> nullable="false"</#if><#if fieldInfo.isUnique(field)> unique="true"</#if>/>
+<#if fieldInfo.getGenerationType(field)??>
+                <generated-value strategy="${fieldInfo.getGenerationType(field)}"<#if fieldInfo.getGeneratorName(field)??> generator="${fieldInfo.getGeneratorName(field)}"</#if>/>
 </#if>
-<#if helper.getSequenceGenerator(field)??>
-<#assign sg = helper.getSequenceGenerator(field)>
+<#if fieldInfo.getSequenceGenerator(field)??>
+<#assign sg = fieldInfo.getSequenceGenerator(field)>
                 <sequence-generator name="${sg.name()}"<#if sg.sequenceName()??> sequence-name="${sg.sequenceName()}"</#if><#if sg.allocationSize()??> allocation-size="${sg.allocationSize()?c}"</#if><#if sg.initialValue()??> initial-value="${sg.initialValue()?c}"</#if>/>
 </#if>
-<#if helper.getTableGenerator(field)??>
-<#assign tg = helper.getTableGenerator(field)>
+<#if fieldInfo.getTableGenerator(field)??>
+<#assign tg = fieldInfo.getTableGenerator(field)>
                 <table-generator name="${tg.name()}"<#if tg.table()??> table="${tg.table()}"</#if><#if tg.pkColumnName()??> pk-column-name="${tg.pkColumnName()}"</#if><#if tg.valueColumnName()??> value-column-name="${tg.valueColumnName()}"</#if><#if tg.pkColumnValue()??> pk-column-value="${tg.pkColumnValue()}"</#if><#if tg.allocationSize()??> allocation-size="${tg.allocationSize()?c}"</#if><#if tg.initialValue()??> initial-value="${tg.initialValue()?c}"</#if>/>
 </#if>
             </id>
 </#list>
 </#if>
 <#-- Natural ID -->
-<#if (helper.getNaturalIdFields()?size > 0)>
-            <natural-id mutable="${helper.isNaturalIdMutable()?c}">
-<#list helper.getNaturalIdFields() as field>
+<#if (fieldInfo.getNaturalIdFields()?size > 0)>
+            <natural-id mutable="${fieldInfo.isNaturalIdMutable()?c}">
+<#list fieldInfo.getNaturalIdFields() as field>
                 <basic name="${field.getName()}">
-                    <column name="${helper.getColumnName(field)}"<#if !helper.isNullable(field)> nullable="false"</#if><#if helper.isUnique(field)> unique="true"</#if>/>
+                    <column name="${fieldInfo.getColumnName(field)}"<#if !fieldInfo.isNullable(field)> nullable="false"</#if><#if fieldInfo.isUnique(field)> unique="true"</#if>/>
                 </basic>
 </#list>
             </natural-id>
 </#if>
 <#-- Basic fields (non-PK, non-version, non-FK) -->
-<#list helper.getBasicFields() as field>
-            <basic name="${field.getName()}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if><#if helper.isPropertyLazy(field)> fetch="LAZY"</#if><#if helper.isOptimisticLockExcluded(field)> optimistic-lock="false"</#if>>
-<#if helper.getFormula(field)??>
-                <formula>${helper.getFormula(field)}</formula>
+<#list fieldInfo.getBasicFields() as field>
+            <basic name="${field.getName()}"<#if fieldInfo.getFieldAccessType(field)??> access="${fieldInfo.getFieldAccessType(field)}"</#if><#if fieldInfo.isPropertyLazy(field)> fetch="LAZY"</#if><#if fieldInfo.isOptimisticLockExcluded(field)> optimistic-lock="false"</#if>>
+<#if fieldInfo.getFormula(field)??>
+                <formula>${fieldInfo.getFormula(field)}</formula>
 <#else>
-                <column name="${helper.getColumnName(field)}"<#if !helper.isNullable(field)> nullable="false"</#if><#if helper.isUnique(field)> unique="true"</#if><#if !helper.isInsertable(field)> insertable="false"</#if><#if !helper.isUpdatable(field)> updatable="false"</#if><#if (helper.getLength(field) > 0)> length="${helper.getLength(field)?c}"</#if><#if (helper.getPrecision(field) > 0)> precision="${helper.getPrecision(field)?c}"</#if><#if (helper.getScale(field) > 0)> scale="${helper.getScale(field)?c}"</#if><#if helper.getColumnTable(field)??> table="${helper.getColumnTable(field)}"</#if><#if helper.getColumnDefinition(field)??> column-definition="${helper.getColumnDefinition(field)}"</#if>/>
+                <column name="${fieldInfo.getColumnName(field)}"<#if !fieldInfo.isNullable(field)> nullable="false"</#if><#if fieldInfo.isUnique(field)> unique="true"</#if><#if !fieldInfo.isInsertable(field)> insertable="false"</#if><#if !fieldInfo.isUpdatable(field)> updatable="false"</#if><#if (fieldInfo.getLength(field) > 0)> length="${fieldInfo.getLength(field)?c}"</#if><#if (fieldInfo.getPrecision(field) > 0)> precision="${fieldInfo.getPrecision(field)?c}"</#if><#if (fieldInfo.getScale(field) > 0)> scale="${fieldInfo.getScale(field)?c}"</#if><#if fieldInfo.getColumnTable(field)??> table="${fieldInfo.getColumnTable(field)}"</#if><#if fieldInfo.getColumnDefinition(field)??> column-definition="${fieldInfo.getColumnDefinition(field)}"</#if>/>
 </#if>
-<#if helper.isLob(field)>
+<#if fieldInfo.isLob(field)>
                 <lob/>
 </#if>
-<#if helper.getTemporalType(field)??>
-                <temporal>${helper.getTemporalType(field)}</temporal>
+<#if fieldInfo.getTemporalType(field)??>
+                <temporal>${fieldInfo.getTemporalType(field)}</temporal>
 </#if>
-<#if helper.getConverterClassName(field)??>
-                <convert converter="${helper.getConverterClassName(field)}"/>
+<#if fieldInfo.getConverterClassName(field)??>
+                <convert converter="${fieldInfo.getConverterClassName(field)}"/>
 </#if>
             </basic>
 </#list>
 <#-- Version fields -->
-<#list helper.getVersionFields() as field>
+<#list fieldInfo.getVersionFields() as field>
             <version name="${field.getName()}">
-                <column name="${helper.getColumnName(field)}"<#if !helper.isNullable(field)> nullable="false"</#if>/>
+                <column name="${fieldInfo.getColumnName(field)}"<#if !fieldInfo.isNullable(field)> nullable="false"</#if>/>
             </version>
 </#list>
 <#-- Many-to-one -->
-<#list helper.getManyToOneFields() as field>
-            <many-to-one name="${field.getName()}" target-entity="${helper.getTargetEntityName(field)}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if><#if helper.getManyToOneFetchType(field)??> fetch="${helper.getManyToOneFetchType(field)}"</#if><#if helper.getFetchMode(field)??> fetch-mode="${helper.getFetchMode(field)}"</#if><#if !helper.isManyToOneOptional(field)> optional="false"</#if><#if helper.getNotFoundAction(field)??> not-found="${helper.getNotFoundAction(field)}"</#if>>
-<#if helper.getFormula(field)??>
-                <formula>${helper.getFormula(field)}</formula>
+<#list fieldInfo.getManyToOneFields() as field>
+            <many-to-one name="${field.getName()}" target-entity="${fieldInfo.getTargetEntityName(field)}"<#if fieldInfo.getFieldAccessType(field)??> access="${fieldInfo.getFieldAccessType(field)}"</#if><#if fieldInfo.getManyToOneFetchType(field)??> fetch="${fieldInfo.getManyToOneFetchType(field)}"</#if><#if fieldInfo.getFetchMode(field)??> fetch-mode="${fieldInfo.getFetchMode(field)}"</#if><#if !fieldInfo.isManyToOneOptional(field)> optional="false"</#if><#if fieldInfo.getNotFoundAction(field)??> not-found="${fieldInfo.getNotFoundAction(field)}"</#if>>
+<#if fieldInfo.getFormula(field)??>
+                <formula>${fieldInfo.getFormula(field)}</formula>
 <#else>
-<#list helper.getJoinColumns(field) as jc>
+<#list fieldInfo.getJoinColumns(field) as jc>
                 <join-column name="${jc.name()}"<#if jc.referencedColumnName()??> referenced-column-name="${jc.referencedColumnName()}"</#if>/>
 </#list>
 </#if>
             </many-to-one>
 </#list>
 <#-- One-to-many -->
-<#list helper.getOneToManyFields() as field>
-<#assign o2mHasCascade = (helper.getOneToManyCascadeTypes(field)?size > 0)>
-<#assign o2mHasOrderBy = helper.getOrderBy(field)??>
-<#assign o2mHasOrderCol = helper.getOrderColumnName(field)??>
-<#assign o2mHasFilters = (helper.getCollectionFilters(field)?size > 0)>
-<#assign o2mHasMapKey = helper.getMapKeyName(field)?? || helper.getMapKeyColumnName(field)?? || helper.getMapKeyJoinColumnName(field)??>
-<#assign o2mHasSort = helper.isSortNatural(field) || helper.getSortComparatorClass(field)??>
+<#list fieldInfo.getOneToManyFields() as field>
+<#assign o2mHasCascade = (fieldInfo.getOneToManyCascadeTypes(field)?size > 0)>
+<#assign o2mHasOrderBy = fieldInfo.getOrderBy(field)??>
+<#assign o2mHasOrderCol = fieldInfo.getOrderColumnName(field)??>
+<#assign o2mHasFilters = (queries.getCollectionFilters(field)?size > 0)>
+<#assign o2mHasMapKey = fieldInfo.getMapKeyName(field)?? || fieldInfo.getMapKeyColumnName(field)?? || fieldInfo.getMapKeyJoinColumnName(field)??>
+<#assign o2mHasSort = fieldInfo.isSortNatural(field) || fieldInfo.getSortComparatorClass(field)??>
 <#assign o2mHasChildren = o2mHasCascade || o2mHasOrderBy || o2mHasOrderCol || o2mHasFilters || o2mHasMapKey || o2mHasSort>
-            <one-to-many name="${field.getName()}" target-entity="${helper.getOneToManyTargetEntity(field)}" mapped-by="${helper.getOneToManyMappedBy(field)}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if><#if helper.getOneToManyFetchType(field)??> fetch="${helper.getOneToManyFetchType(field)}"</#if><#if helper.getFetchMode(field)??> fetch-mode="${helper.getFetchMode(field)}"</#if><#if helper.isOneToManyOrphanRemoval(field)> orphan-removal="true"</#if><#if o2mHasChildren>>
-<#if helper.getMapKeyName(field)??>
-                <map-key name="${helper.getMapKeyName(field)}"/>
+            <one-to-many name="${field.getName()}" target-entity="${fieldInfo.getOneToManyTargetEntity(field)}" mapped-by="${fieldInfo.getOneToManyMappedBy(field)}"<#if fieldInfo.getFieldAccessType(field)??> access="${fieldInfo.getFieldAccessType(field)}"</#if><#if fieldInfo.getOneToManyFetchType(field)??> fetch="${fieldInfo.getOneToManyFetchType(field)}"</#if><#if fieldInfo.getFetchMode(field)??> fetch-mode="${fieldInfo.getFetchMode(field)}"</#if><#if fieldInfo.isOneToManyOrphanRemoval(field)> orphan-removal="true"</#if><#if o2mHasChildren>>
+<#if fieldInfo.getMapKeyName(field)??>
+                <map-key name="${fieldInfo.getMapKeyName(field)}"/>
 </#if>
-<#if helper.getMapKeyColumnName(field)??>
-                <map-key-column name="${helper.getMapKeyColumnName(field)}"/>
+<#if fieldInfo.getMapKeyColumnName(field)??>
+                <map-key-column name="${fieldInfo.getMapKeyColumnName(field)}"/>
 </#if>
-<#if helper.getMapKeyJoinColumnName(field)??>
-                <map-key-join-column name="${helper.getMapKeyJoinColumnName(field)}"/>
+<#if fieldInfo.getMapKeyJoinColumnName(field)??>
+                <map-key-join-column name="${fieldInfo.getMapKeyJoinColumnName(field)}"/>
 </#if>
 <#if o2mHasOrderBy>
-                <order-by>${helper.getOrderBy(field)}</order-by>
+                <order-by>${fieldInfo.getOrderBy(field)}</order-by>
 </#if>
 <#if o2mHasOrderCol>
-                <order-column name="${helper.getOrderColumnName(field)}"/>
+                <order-column name="${fieldInfo.getOrderColumnName(field)}"/>
 </#if>
 <#if o2mHasCascade>
-<#assign cascadeTypes = helper.getOneToManyCascadeTypes(field)>
+<#assign cascadeTypes = fieldInfo.getOneToManyCascadeTypes(field)>
 <#include "cascade.mapping.ftl"/>
 </#if>
-<#list helper.getCollectionFilters(field) as fi>
+<#list queries.getCollectionFilters(field) as fi>
                 <filter name="${fi.name()}"<#if fi.condition()?has_content> condition="${fi.condition()}"</#if>/>
 </#list>
-<#if helper.isSortNatural(field)>
+<#if fieldInfo.isSortNatural(field)>
                 <sort-natural/>
 </#if>
-<#if helper.getSortComparatorClass(field)??>
-                <sort-comparator class="${helper.getSortComparatorClass(field)}"/>
+<#if fieldInfo.getSortComparatorClass(field)??>
+                <sort-comparator class="${fieldInfo.getSortComparatorClass(field)}"/>
 </#if>
             </one-to-many>
 <#else/>/>
 </#if>
 </#list>
 <#-- One-to-one -->
-<#list helper.getOneToOneFields() as field>
-<#assign o2oHasCascade = (helper.getOneToOneCascadeTypes(field)?size > 0)>
-<#assign o2oJoinCols = helper.getJoinColumns(field)>
-<#assign o2oHasFormula = helper.getFormula(field)??>
+<#list fieldInfo.getOneToOneFields() as field>
+<#assign o2oHasCascade = (fieldInfo.getOneToOneCascadeTypes(field)?size > 0)>
+<#assign o2oJoinCols = fieldInfo.getJoinColumns(field)>
+<#assign o2oHasFormula = fieldInfo.getFormula(field)??>
 <#assign o2oHasChildren = (o2oJoinCols?size > 0) || o2oHasCascade || o2oHasFormula>
-            <one-to-one name="${field.getName()}" target-entity="${helper.getTargetEntityName(field)}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if><#if helper.getOneToOneMappedBy(field)??> mapped-by="${helper.getOneToOneMappedBy(field)}"</#if><#if helper.getOneToOneFetchType(field)??> fetch="${helper.getOneToOneFetchType(field)}"</#if><#if helper.getFetchMode(field)??> fetch-mode="${helper.getFetchMode(field)}"</#if><#if !helper.isOneToOneOptional(field)> optional="false"</#if><#if helper.isOneToOneOrphanRemoval(field)> orphan-removal="true"</#if><#if helper.getNotFoundAction(field)??> not-found="${helper.getNotFoundAction(field)}"</#if><#if o2oHasChildren>>
+            <one-to-one name="${field.getName()}" target-entity="${fieldInfo.getTargetEntityName(field)}"<#if fieldInfo.getFieldAccessType(field)??> access="${fieldInfo.getFieldAccessType(field)}"</#if><#if fieldInfo.getOneToOneMappedBy(field)??> mapped-by="${fieldInfo.getOneToOneMappedBy(field)}"</#if><#if fieldInfo.getOneToOneFetchType(field)??> fetch="${fieldInfo.getOneToOneFetchType(field)}"</#if><#if fieldInfo.getFetchMode(field)??> fetch-mode="${fieldInfo.getFetchMode(field)}"</#if><#if !fieldInfo.isOneToOneOptional(field)> optional="false"</#if><#if fieldInfo.isOneToOneOrphanRemoval(field)> orphan-removal="true"</#if><#if fieldInfo.getNotFoundAction(field)??> not-found="${fieldInfo.getNotFoundAction(field)}"</#if><#if o2oHasChildren>>
 <#if o2oHasCascade>
-<#assign cascadeTypes = helper.getOneToOneCascadeTypes(field)>
+<#assign cascadeTypes = fieldInfo.getOneToOneCascadeTypes(field)>
 <#include "cascade.mapping.ftl"/>
 </#if>
 <#if o2oHasFormula>
-                <formula>${helper.getFormula(field)}</formula>
+                <formula>${fieldInfo.getFormula(field)}</formula>
 <#else>
 <#list o2oJoinCols as jc>
                 <join-column name="${jc.name()}"<#if jc.referencedColumnName()??> referenced-column-name="${jc.referencedColumnName()}"</#if>/>
@@ -141,82 +141,82 @@
 </#if>
 </#list>
 <#-- Many-to-many -->
-<#list helper.getManyToManyFields() as field>
-<#assign m2mHasCascade = (helper.getManyToManyCascadeTypes(field)?size > 0)>
-<#assign m2mHasOrderBy = helper.getOrderBy(field)??>
-<#assign m2mHasOrderCol = helper.getOrderColumnName(field)??>
-<#assign m2mHasFilters = (helper.getCollectionFilters(field)?size > 0)>
-<#assign m2mHasMapKey = helper.getMapKeyName(field)?? || helper.getMapKeyColumnName(field)?? || helper.getMapKeyJoinColumnName(field)??>
-<#assign m2mHasSort = helper.isSortNatural(field) || helper.getSortComparatorClass(field)??>
-<#assign m2mHasChildren = helper.getJoinTableName(field)?? || m2mHasCascade || m2mHasOrderBy || m2mHasOrderCol || m2mHasFilters || m2mHasMapKey || m2mHasSort>
-            <many-to-many name="${field.getName()}" target-entity="${helper.getManyToManyTargetEntity(field)}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if><#if helper.getManyToManyMappedBy(field)??> mapped-by="${helper.getManyToManyMappedBy(field)}"</#if><#if helper.getManyToManyFetchType(field)??> fetch="${helper.getManyToManyFetchType(field)}"</#if><#if helper.getFetchMode(field)??> fetch-mode="${helper.getFetchMode(field)}"</#if><#if m2mHasChildren>>
-<#if helper.getMapKeyName(field)??>
-                <map-key name="${helper.getMapKeyName(field)}"/>
+<#list fieldInfo.getManyToManyFields() as field>
+<#assign m2mHasCascade = (fieldInfo.getManyToManyCascadeTypes(field)?size > 0)>
+<#assign m2mHasOrderBy = fieldInfo.getOrderBy(field)??>
+<#assign m2mHasOrderCol = fieldInfo.getOrderColumnName(field)??>
+<#assign m2mHasFilters = (queries.getCollectionFilters(field)?size > 0)>
+<#assign m2mHasMapKey = fieldInfo.getMapKeyName(field)?? || fieldInfo.getMapKeyColumnName(field)?? || fieldInfo.getMapKeyJoinColumnName(field)??>
+<#assign m2mHasSort = fieldInfo.isSortNatural(field) || fieldInfo.getSortComparatorClass(field)??>
+<#assign m2mHasChildren = fieldInfo.getJoinTableName(field)?? || m2mHasCascade || m2mHasOrderBy || m2mHasOrderCol || m2mHasFilters || m2mHasMapKey || m2mHasSort>
+            <many-to-many name="${field.getName()}" target-entity="${fieldInfo.getManyToManyTargetEntity(field)}"<#if fieldInfo.getFieldAccessType(field)??> access="${fieldInfo.getFieldAccessType(field)}"</#if><#if fieldInfo.getManyToManyMappedBy(field)??> mapped-by="${fieldInfo.getManyToManyMappedBy(field)}"</#if><#if fieldInfo.getManyToManyFetchType(field)??> fetch="${fieldInfo.getManyToManyFetchType(field)}"</#if><#if fieldInfo.getFetchMode(field)??> fetch-mode="${fieldInfo.getFetchMode(field)}"</#if><#if m2mHasChildren>>
+<#if fieldInfo.getMapKeyName(field)??>
+                <map-key name="${fieldInfo.getMapKeyName(field)}"/>
 </#if>
-<#if helper.getMapKeyColumnName(field)??>
-                <map-key-column name="${helper.getMapKeyColumnName(field)}"/>
+<#if fieldInfo.getMapKeyColumnName(field)??>
+                <map-key-column name="${fieldInfo.getMapKeyColumnName(field)}"/>
 </#if>
-<#if helper.getMapKeyJoinColumnName(field)??>
-                <map-key-join-column name="${helper.getMapKeyJoinColumnName(field)}"/>
+<#if fieldInfo.getMapKeyJoinColumnName(field)??>
+                <map-key-join-column name="${fieldInfo.getMapKeyJoinColumnName(field)}"/>
 </#if>
 <#if m2mHasOrderBy>
-                <order-by>${helper.getOrderBy(field)}</order-by>
+                <order-by>${fieldInfo.getOrderBy(field)}</order-by>
 </#if>
 <#if m2mHasOrderCol>
-                <order-column name="${helper.getOrderColumnName(field)}"/>
+                <order-column name="${fieldInfo.getOrderColumnName(field)}"/>
 </#if>
 <#if m2mHasCascade>
-<#assign cascadeTypes = helper.getManyToManyCascadeTypes(field)>
+<#assign cascadeTypes = fieldInfo.getManyToManyCascadeTypes(field)>
 <#include "cascade.mapping.ftl"/>
 </#if>
-<#if helper.getJoinTableName(field)??>
-                <join-table name="${helper.getJoinTableName(field)}"<#if helper.getJoinTableSchema(field)??> schema="${helper.getJoinTableSchema(field)}"</#if><#if helper.getJoinTableCatalog(field)??> catalog="${helper.getJoinTableCatalog(field)}"</#if>>
-<#list helper.getJoinTableJoinColumnNames(field) as colName>
+<#if fieldInfo.getJoinTableName(field)??>
+                <join-table name="${fieldInfo.getJoinTableName(field)}"<#if fieldInfo.getJoinTableSchema(field)??> schema="${fieldInfo.getJoinTableSchema(field)}"</#if><#if fieldInfo.getJoinTableCatalog(field)??> catalog="${fieldInfo.getJoinTableCatalog(field)}"</#if>>
+<#list fieldInfo.getJoinTableJoinColumnNames(field) as colName>
                     <join-column name="${colName}"/>
 </#list>
-<#list helper.getJoinTableInverseJoinColumnNames(field) as colName>
+<#list fieldInfo.getJoinTableInverseJoinColumnNames(field) as colName>
                     <inverse-join-column name="${colName}"/>
 </#list>
                 </join-table>
 </#if>
-<#list helper.getCollectionFilters(field) as fi>
+<#list queries.getCollectionFilters(field) as fi>
                 <filter name="${fi.name()}"<#if fi.condition()?has_content> condition="${fi.condition()}"</#if>/>
 </#list>
-<#if helper.isSortNatural(field)>
+<#if fieldInfo.isSortNatural(field)>
                 <sort-natural/>
 </#if>
-<#if helper.getSortComparatorClass(field)??>
-                <sort-comparator class="${helper.getSortComparatorClass(field)}"/>
+<#if fieldInfo.getSortComparatorClass(field)??>
+                <sort-comparator class="${fieldInfo.getSortComparatorClass(field)}"/>
 </#if>
             </many-to-many>
 <#else/>/>
 </#if>
 </#list>
 <#-- Element collections -->
-<#list helper.getElementCollectionFields() as field>
-            <element-collection name="${field.getName()}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if><#if helper.getElementCollectionTargetClass(field)??> target-class="${helper.getElementCollectionTargetClass(field)}"</#if>>
-<#if helper.getOrderBy(field)??>
-                <order-by>${helper.getOrderBy(field)}</order-by>
+<#list fieldInfo.getElementCollectionFields() as field>
+            <element-collection name="${field.getName()}"<#if fieldInfo.getFieldAccessType(field)??> access="${fieldInfo.getFieldAccessType(field)}"</#if><#if fieldInfo.getElementCollectionTargetClass(field)??> target-class="${fieldInfo.getElementCollectionTargetClass(field)}"</#if>>
+<#if fieldInfo.getOrderBy(field)??>
+                <order-by>${fieldInfo.getOrderBy(field)}</order-by>
 </#if>
-<#if helper.getOrderColumnName(field)??>
-                <order-column name="${helper.getOrderColumnName(field)}"/>
+<#if fieldInfo.getOrderColumnName(field)??>
+                <order-column name="${fieldInfo.getOrderColumnName(field)}"/>
 </#if>
-<#if helper.getElementCollectionColumnName(field)??>
-                <column name="${helper.getElementCollectionColumnName(field)}"/>
+<#if fieldInfo.getElementCollectionColumnName(field)??>
+                <column name="${fieldInfo.getElementCollectionColumnName(field)}"/>
 </#if>
-<#if helper.getElementCollectionTableName(field)??>
-                <collection-table name="${helper.getElementCollectionTableName(field)}">
-<#if helper.getElementCollectionKeyColumnName(field)??>
-                    <join-column name="${helper.getElementCollectionKeyColumnName(field)}"/>
+<#if fieldInfo.getElementCollectionTableName(field)??>
+                <collection-table name="${fieldInfo.getElementCollectionTableName(field)}">
+<#if fieldInfo.getElementCollectionKeyColumnName(field)??>
+                    <join-column name="${fieldInfo.getElementCollectionKeyColumnName(field)}"/>
 </#if>
                 </collection-table>
 </#if>
             </element-collection>
 </#list>
 <#-- Embedded fields -->
-<#list helper.getEmbeddedFields() as field>
-            <embedded name="${field.getName()}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if>>
-<#list helper.getAttributeOverrides(field) as ao>
+<#list fieldInfo.getEmbeddedFields() as field>
+            <embedded name="${field.getName()}"<#if fieldInfo.getFieldAccessType(field)??> access="${fieldInfo.getFieldAccessType(field)}"</#if>>
+<#list fieldInfo.getAttributeOverrides(field) as ao>
                 <attribute-override name="${ao.fieldName()}">
                     <column name="${ao.columnName()}"/>
                 </attribute-override>
@@ -224,39 +224,39 @@
             </embedded>
 </#list>
 <#-- Any fields -->
-<#list helper.getAnyFields() as field>
-            <any name="${field.getName()}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if>>
+<#list fieldInfo.getAnyFields() as field>
+            <any name="${field.getName()}"<#if fieldInfo.getFieldAccessType(field)??> access="${fieldInfo.getFieldAccessType(field)}"</#if>>
                 <discriminator>
-<#list helper.getAnyDiscriminatorMappings(field) as mapping>
+<#list fieldInfo.getAnyDiscriminatorMappings(field) as mapping>
                     <mapping value="${mapping.value()}">${mapping.entityClass()}</mapping>
 </#list>
                 </discriminator>
                 <key>
-                    <java-class>${helper.getAnyKeyType(field)}</java-class>
-<#if helper.getJoinColumnName(field)??>
-                    <column name="${helper.getJoinColumnName(field)}"/>
+                    <java-class>${fieldInfo.getAnyKeyType(field)}</java-class>
+<#if fieldInfo.getJoinColumnName(field)??>
+                    <column name="${fieldInfo.getJoinColumnName(field)}"/>
 </#if>
                 </key>
             </any>
 </#list>
 <#-- Many-to-any fields -->
-<#list helper.getManyToAnyFields() as field>
-            <many-to-any name="${field.getName()}"<#if helper.getAccessType(field)??> access="${helper.getAccessType(field)}"</#if>>
+<#list fieldInfo.getManyToAnyFields() as field>
+            <many-to-any name="${field.getName()}"<#if fieldInfo.getFieldAccessType(field)??> access="${fieldInfo.getFieldAccessType(field)}"</#if>>
                 <discriminator>
-<#list helper.getAnyDiscriminatorMappings(field) as mapping>
+<#list fieldInfo.getAnyDiscriminatorMappings(field) as mapping>
                     <mapping value="${mapping.value()}">${mapping.entityClass()}</mapping>
 </#list>
                 </discriminator>
                 <key>
-                    <java-class>${helper.getAnyKeyType(field)}</java-class>
+                    <java-class>${fieldInfo.getAnyKeyType(field)}</java-class>
                 </key>
-<#if helper.getJoinTableName(field)??>
-                <join-table name="${helper.getJoinTableName(field)}"<#if helper.getJoinTableSchema(field)??> schema="${helper.getJoinTableSchema(field)}"</#if><#if helper.getJoinTableCatalog(field)??> catalog="${helper.getJoinTableCatalog(field)}"</#if>>
-<#if helper.getJoinTableJoinColumnName(field)??>
-                    <join-column name="${helper.getJoinTableJoinColumnName(field)}"/>
+<#if fieldInfo.getJoinTableName(field)??>
+                <join-table name="${fieldInfo.getJoinTableName(field)}"<#if fieldInfo.getJoinTableSchema(field)??> schema="${fieldInfo.getJoinTableSchema(field)}"</#if><#if fieldInfo.getJoinTableCatalog(field)??> catalog="${fieldInfo.getJoinTableCatalog(field)}"</#if>>
+<#if fieldInfo.getJoinTableJoinColumnName(field)??>
+                    <join-column name="${fieldInfo.getJoinTableJoinColumnName(field)}"/>
 </#if>
-<#if helper.getJoinTableInverseJoinColumnName(field)??>
-                    <inverse-join-column name="${helper.getJoinTableInverseJoinColumnName(field)}"/>
+<#if fieldInfo.getJoinTableInverseJoinColumnName(field)??>
+                    <inverse-join-column name="${fieldInfo.getJoinTableInverseJoinColumnName(field)}"/>
 </#if>
                 </join-table>
 </#if>

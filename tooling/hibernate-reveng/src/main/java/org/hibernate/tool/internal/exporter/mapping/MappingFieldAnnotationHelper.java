@@ -79,7 +79,7 @@ import org.hibernate.models.spi.TypeDetails;
  *
  * @author Koen Aers
  */
-class MappingFieldAnnotationHelper {
+public class MappingFieldAnnotationHelper {
 
 	private final ClassDetails classDetails;
 
@@ -89,7 +89,7 @@ class MappingFieldAnnotationHelper {
 
 	// --- Field categorization ---
 
-	FieldDetails getCompositeIdField() {
+	public FieldDetails getCompositeIdField() {
 		for (FieldDetails field : classDetails.getFields()) {
 			if (field.hasDirectAnnotationUsage(EmbeddedId.class)) {
 				return field;
@@ -98,11 +98,11 @@ class MappingFieldAnnotationHelper {
 		return null;
 	}
 
-	List<FieldDetails> getIdFields() {
+	public List<FieldDetails> getIdFields() {
 		return getFieldsWithAnnotation(Id.class);
 	}
 
-	List<FieldDetails> getBasicFields() {
+	public List<FieldDetails> getBasicFields() {
 		List<FieldDetails> result = new ArrayList<>();
 		for (FieldDetails field : classDetails.getFields()) {
 			if (!isRelationshipField(field) && !isEmbeddedField(field)
@@ -119,7 +119,7 @@ class MappingFieldAnnotationHelper {
 		return result;
 	}
 
-	List<FieldDetails> getNaturalIdFields() {
+	public List<FieldDetails> getNaturalIdFields() {
 		List<FieldDetails> result = new ArrayList<>();
 		for (FieldDetails field : classDetails.getFields()) {
 			if (field.hasDirectAnnotationUsage(NaturalId.class)) {
@@ -129,7 +129,7 @@ class MappingFieldAnnotationHelper {
 		return result;
 	}
 
-	boolean isNaturalIdMutable() {
+	public boolean isNaturalIdMutable() {
 		for (FieldDetails field : classDetails.getFields()) {
 			NaturalId nid = field.getDirectAnnotationUsage(NaturalId.class);
 			if (nid != null) {
@@ -139,112 +139,112 @@ class MappingFieldAnnotationHelper {
 		return false;
 	}
 
-	List<FieldDetails> getVersionFields() {
+	public List<FieldDetails> getVersionFields() {
 		return getFieldsWithAnnotation(Version.class);
 	}
 
-	List<FieldDetails> getManyToOneFields() {
+	public List<FieldDetails> getManyToOneFields() {
 		return getFieldsWithAnnotation(ManyToOne.class);
 	}
 
-	List<FieldDetails> getOneToManyFields() {
+	public List<FieldDetails> getOneToManyFields() {
 		return getFieldsWithAnnotation(OneToMany.class);
 	}
 
-	List<FieldDetails> getOneToOneFields() {
+	public List<FieldDetails> getOneToOneFields() {
 		return getFieldsWithAnnotation(OneToOne.class);
 	}
 
-	List<FieldDetails> getManyToManyFields() {
+	public List<FieldDetails> getManyToManyFields() {
 		return getFieldsWithAnnotation(ManyToMany.class);
 	}
 
-	List<FieldDetails> getEmbeddedFields() {
+	public List<FieldDetails> getEmbeddedFields() {
 		return getFieldsWithAnnotation(Embedded.class);
 	}
 
-	List<FieldDetails> getAnyFields() {
+	public List<FieldDetails> getAnyFields() {
 		return getFieldsWithAnnotation(Any.class);
 	}
 
-	List<FieldDetails> getManyToAnyFields() {
+	public List<FieldDetails> getManyToAnyFields() {
 		return getFieldsWithAnnotation(ManyToAny.class);
 	}
 
-	List<FieldDetails> getElementCollectionFields() {
+	public List<FieldDetails> getElementCollectionFields() {
 		return getFieldsWithAnnotation(ElementCollection.class);
 	}
 
 	// --- Column attributes ---
 
-	String getColumnName(FieldDetails field) {
+	public String getColumnName(FieldDetails field) {
 		Column col = field.getDirectAnnotationUsage(Column.class);
 		return col != null ? col.name() : field.getName();
 	}
 
-	boolean isNullable(FieldDetails field) {
+	public boolean isNullable(FieldDetails field) {
 		Column col = field.getDirectAnnotationUsage(Column.class);
 		return col == null || col.nullable();
 	}
 
-	boolean isUnique(FieldDetails field) {
+	public boolean isUnique(FieldDetails field) {
 		Column col = field.getDirectAnnotationUsage(Column.class);
 		return col != null && col.unique();
 	}
 
-	int getLength(FieldDetails field) {
+	public int getLength(FieldDetails field) {
 		Column col = field.getDirectAnnotationUsage(Column.class);
 		if (col == null) return 0;
 		return col.length() != 255 ? col.length() : 0;
 	}
 
-	int getPrecision(FieldDetails field) {
+	public int getPrecision(FieldDetails field) {
 		Column col = field.getDirectAnnotationUsage(Column.class);
 		return col != null ? col.precision() : 0;
 	}
 
-	int getScale(FieldDetails field) {
+	public int getScale(FieldDetails field) {
 		Column col = field.getDirectAnnotationUsage(Column.class);
 		return col != null ? col.scale() : 0;
 	}
 
-	String getColumnDefinition(FieldDetails field) {
+	public String getColumnDefinition(FieldDetails field) {
 		Column col = field.getDirectAnnotationUsage(Column.class);
 		return col != null && col.columnDefinition() != null && !col.columnDefinition().isEmpty()
 				? col.columnDefinition() : null;
 	}
 
-	boolean isInsertable(FieldDetails field) {
+	public boolean isInsertable(FieldDetails field) {
 		Column col = field.getDirectAnnotationUsage(Column.class);
 		return col == null || col.insertable();
 	}
 
-	boolean isUpdatable(FieldDetails field) {
+	public boolean isUpdatable(FieldDetails field) {
 		Column col = field.getDirectAnnotationUsage(Column.class);
 		return col == null || col.updatable();
 	}
 
-	boolean isLob(FieldDetails field) {
+	public boolean isLob(FieldDetails field) {
 		return field.hasDirectAnnotationUsage(Lob.class);
 	}
 
-	String getTemporalType(FieldDetails field) {
+	public String getTemporalType(FieldDetails field) {
 		Temporal temporal = field.getDirectAnnotationUsage(Temporal.class);
 		return temporal != null ? temporal.value().name() : null;
 	}
 
-	String getGenerationType(FieldDetails field) {
+	public String getGenerationType(FieldDetails field) {
 		GeneratedValue gv = field.getDirectAnnotationUsage(GeneratedValue.class);
 		return gv != null ? gv.strategy().name() : null;
 	}
 
-	String getGeneratorName(FieldDetails field) {
+	public String getGeneratorName(FieldDetails field) {
 		GeneratedValue gv = field.getDirectAnnotationUsage(GeneratedValue.class);
 		return gv != null && gv.generator() != null && !gv.generator().isEmpty()
 				? gv.generator() : null;
 	}
 
-	MappingXmlHelper.SequenceGeneratorInfo getSequenceGenerator(FieldDetails field) {
+	public MappingXmlHelper.SequenceGeneratorInfo getSequenceGenerator(FieldDetails field) {
 		SequenceGenerator sg = field.getDirectAnnotationUsage(SequenceGenerator.class);
 		if (sg == null) {
 			return null;
@@ -256,7 +256,7 @@ class MappingFieldAnnotationHelper {
 				sg.initialValue() != 1 ? sg.initialValue() : null);
 	}
 
-	MappingXmlHelper.TableGeneratorInfo getTableGenerator(FieldDetails field) {
+	public MappingXmlHelper.TableGeneratorInfo getTableGenerator(FieldDetails field) {
 		TableGenerator tg = field.getDirectAnnotationUsage(TableGenerator.class);
 		if (tg == null) {
 			return null;
@@ -273,35 +273,35 @@ class MappingFieldAnnotationHelper {
 
 	// --- ManyToOne ---
 
-	String getTargetEntityName(FieldDetails field) {
+	public String getTargetEntityName(FieldDetails field) {
 		return field.getType().determineRawClass().getClassName();
 	}
 
-	String getManyToOneFetchType(FieldDetails field) {
+	public String getManyToOneFetchType(FieldDetails field) {
 		ManyToOne m2o = field.getDirectAnnotationUsage(ManyToOne.class);
 		return m2o != null && m2o.fetch() != FetchType.EAGER ? m2o.fetch().name() : null;
 	}
 
-	boolean isManyToOneOptional(FieldDetails field) {
+	public boolean isManyToOneOptional(FieldDetails field) {
 		ManyToOne m2o = field.getDirectAnnotationUsage(ManyToOne.class);
 		return m2o == null || m2o.optional();
 	}
 
 	// --- JoinColumn ---
 
-	String getJoinColumnName(FieldDetails field) {
+	public String getJoinColumnName(FieldDetails field) {
 		JoinColumn jc = field.getDirectAnnotationUsage(JoinColumn.class);
 		return jc != null ? jc.name() : null;
 	}
 
-	String getReferencedColumnName(FieldDetails field) {
+	public String getReferencedColumnName(FieldDetails field) {
 		JoinColumn jc = field.getDirectAnnotationUsage(JoinColumn.class);
 		return jc != null && jc.referencedColumnName() != null
 				&& !jc.referencedColumnName().isEmpty()
 				? jc.referencedColumnName() : null;
 	}
 
-	List<MappingXmlHelper.JoinColumnInfo> getJoinColumns(FieldDetails field) {
+	public List<MappingXmlHelper.JoinColumnInfo> getJoinColumns(FieldDetails field) {
 		List<MappingXmlHelper.JoinColumnInfo> result = new ArrayList<>();
 		JoinColumn single = field.getDirectAnnotationUsage(JoinColumn.class);
 		if (single != null) {
@@ -325,28 +325,28 @@ class MappingFieldAnnotationHelper {
 
 	// --- OneToMany ---
 
-	String getOneToManyTargetEntity(FieldDetails field) {
+	public String getOneToManyTargetEntity(FieldDetails field) {
 		TypeDetails elementType = field.getElementType();
 		return elementType != null ? elementType.determineRawClass().getClassName() : null;
 	}
 
-	String getOneToManyMappedBy(FieldDetails field) {
+	public String getOneToManyMappedBy(FieldDetails field) {
 		OneToMany o2m = field.getDirectAnnotationUsage(OneToMany.class);
 		return o2m != null && o2m.mappedBy() != null && !o2m.mappedBy().isEmpty()
 				? o2m.mappedBy() : null;
 	}
 
-	String getOneToManyFetchType(FieldDetails field) {
+	public String getOneToManyFetchType(FieldDetails field) {
 		OneToMany o2m = field.getDirectAnnotationUsage(OneToMany.class);
 		return o2m != null && o2m.fetch() != FetchType.LAZY ? o2m.fetch().name() : null;
 	}
 
-	boolean isOneToManyOrphanRemoval(FieldDetails field) {
+	public boolean isOneToManyOrphanRemoval(FieldDetails field) {
 		OneToMany o2m = field.getDirectAnnotationUsage(OneToMany.class);
 		return o2m != null && o2m.orphanRemoval();
 	}
 
-	List<CascadeType> getOneToManyCascadeTypes(FieldDetails field) {
+	public List<CascadeType> getOneToManyCascadeTypes(FieldDetails field) {
 		OneToMany o2m = field.getDirectAnnotationUsage(OneToMany.class);
 		return o2m != null && o2m.cascade().length > 0
 				? Arrays.asList(o2m.cascade()) : List.of();
@@ -354,13 +354,13 @@ class MappingFieldAnnotationHelper {
 
 	// --- Ordering ---
 
-	String getOrderBy(FieldDetails field) {
+	public String getOrderBy(FieldDetails field) {
 		OrderBy ob = field.getDirectAnnotationUsage(OrderBy.class);
 		return ob != null && ob.value() != null && !ob.value().isEmpty()
 				? ob.value() : null;
 	}
 
-	String getOrderColumnName(FieldDetails field) {
+	public String getOrderColumnName(FieldDetails field) {
 		OrderColumn oc = field.getDirectAnnotationUsage(OrderColumn.class);
 		return oc != null && oc.name() != null && !oc.name().isEmpty()
 				? oc.name() : null;
@@ -368,18 +368,18 @@ class MappingFieldAnnotationHelper {
 
 	// --- Map key ---
 
-	String getMapKeyName(FieldDetails field) {
+	public String getMapKeyName(FieldDetails field) {
 		MapKey mk = field.getDirectAnnotationUsage(MapKey.class);
 		return mk != null ? mk.name() : null;
 	}
 
-	String getMapKeyColumnName(FieldDetails field) {
+	public String getMapKeyColumnName(FieldDetails field) {
 		MapKeyColumn mkc = field.getDirectAnnotationUsage(MapKeyColumn.class);
 		return mkc != null && mkc.name() != null && !mkc.name().isEmpty()
 				? mkc.name() : null;
 	}
 
-	String getMapKeyJoinColumnName(FieldDetails field) {
+	public String getMapKeyJoinColumnName(FieldDetails field) {
 		MapKeyJoinColumn mkjc = field.getDirectAnnotationUsage(MapKeyJoinColumn.class);
 		return mkjc != null && mkjc.name() != null && !mkjc.name().isEmpty()
 				? mkjc.name() : null;
@@ -387,7 +387,7 @@ class MappingFieldAnnotationHelper {
 
 	// --- Fetch mode ---
 
-	String getFetchMode(FieldDetails field) {
+	public String getFetchMode(FieldDetails field) {
 		Fetch fetch = field.getDirectAnnotationUsage(Fetch.class);
 		if (fetch == null) {
 			return null;
@@ -397,7 +397,7 @@ class MappingFieldAnnotationHelper {
 
 	// --- NotFound ---
 
-	String getNotFoundAction(FieldDetails field) {
+	public String getNotFoundAction(FieldDetails field) {
 		NotFound nf = field.getDirectAnnotationUsage(NotFound.class);
 		if (nf == null || nf.action() == NotFoundAction.EXCEPTION) {
 			return null;
@@ -407,7 +407,7 @@ class MappingFieldAnnotationHelper {
 
 	// --- Convert ---
 
-	String getConverterClassName(FieldDetails field) {
+	public String getConverterClassName(FieldDetails field) {
 		Convert convert = field.getDirectAnnotationUsage(Convert.class);
 		if (convert == null || convert.disableConversion()) {
 			return null;
@@ -421,28 +421,28 @@ class MappingFieldAnnotationHelper {
 
 	// --- OneToOne ---
 
-	String getOneToOneMappedBy(FieldDetails field) {
+	public String getOneToOneMappedBy(FieldDetails field) {
 		OneToOne o2o = field.getDirectAnnotationUsage(OneToOne.class);
 		return o2o != null && o2o.mappedBy() != null && !o2o.mappedBy().isEmpty()
 				? o2o.mappedBy() : null;
 	}
 
-	String getOneToOneFetchType(FieldDetails field) {
+	public String getOneToOneFetchType(FieldDetails field) {
 		OneToOne o2o = field.getDirectAnnotationUsage(OneToOne.class);
 		return o2o != null && o2o.fetch() != FetchType.EAGER ? o2o.fetch().name() : null;
 	}
 
-	boolean isOneToOneOptional(FieldDetails field) {
+	public boolean isOneToOneOptional(FieldDetails field) {
 		OneToOne o2o = field.getDirectAnnotationUsage(OneToOne.class);
 		return o2o == null || o2o.optional();
 	}
 
-	boolean isOneToOneOrphanRemoval(FieldDetails field) {
+	public boolean isOneToOneOrphanRemoval(FieldDetails field) {
 		OneToOne o2o = field.getDirectAnnotationUsage(OneToOne.class);
 		return o2o != null && o2o.orphanRemoval();
 	}
 
-	List<CascadeType> getOneToOneCascadeTypes(FieldDetails field) {
+	public List<CascadeType> getOneToOneCascadeTypes(FieldDetails field) {
 		OneToOne o2o = field.getDirectAnnotationUsage(OneToOne.class);
 		return o2o != null && o2o.cascade().length > 0
 				? Arrays.asList(o2o.cascade()) : List.of();
@@ -450,55 +450,55 @@ class MappingFieldAnnotationHelper {
 
 	// --- ManyToMany ---
 
-	String getManyToManyTargetEntity(FieldDetails field) {
+	public String getManyToManyTargetEntity(FieldDetails field) {
 		TypeDetails elementType = field.getElementType();
 		return elementType != null ? elementType.determineRawClass().getClassName() : null;
 	}
 
-	String getManyToManyMappedBy(FieldDetails field) {
+	public String getManyToManyMappedBy(FieldDetails field) {
 		ManyToMany m2m = field.getDirectAnnotationUsage(ManyToMany.class);
 		return m2m != null && m2m.mappedBy() != null && !m2m.mappedBy().isEmpty()
 				? m2m.mappedBy() : null;
 	}
 
-	String getManyToManyFetchType(FieldDetails field) {
+	public String getManyToManyFetchType(FieldDetails field) {
 		ManyToMany m2m = field.getDirectAnnotationUsage(ManyToMany.class);
 		return m2m != null && m2m.fetch() != FetchType.LAZY ? m2m.fetch().name() : null;
 	}
 
-	List<CascadeType> getManyToManyCascadeTypes(FieldDetails field) {
+	public List<CascadeType> getManyToManyCascadeTypes(FieldDetails field) {
 		ManyToMany m2m = field.getDirectAnnotationUsage(ManyToMany.class);
 		return m2m != null && m2m.cascade().length > 0
 				? Arrays.asList(m2m.cascade()) : List.of();
 	}
 
-	String getJoinTableName(FieldDetails field) {
+	public String getJoinTableName(FieldDetails field) {
 		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
 		return jt != null ? jt.name() : null;
 	}
 
-	String getJoinTableSchema(FieldDetails field) {
+	public String getJoinTableSchema(FieldDetails field) {
 		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
 		return jt != null && jt.schema() != null && !jt.schema().isEmpty() ? jt.schema() : null;
 	}
 
-	String getJoinTableCatalog(FieldDetails field) {
+	public String getJoinTableCatalog(FieldDetails field) {
 		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
 		return jt != null && jt.catalog() != null && !jt.catalog().isEmpty() ? jt.catalog() : null;
 	}
 
-	String getJoinTableJoinColumnName(FieldDetails field) {
+	public String getJoinTableJoinColumnName(FieldDetails field) {
 		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
 		return jt != null && jt.joinColumns().length > 0 ? jt.joinColumns()[0].name() : null;
 	}
 
-	String getJoinTableInverseJoinColumnName(FieldDetails field) {
+	public String getJoinTableInverseJoinColumnName(FieldDetails field) {
 		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
 		return jt != null && jt.inverseJoinColumns().length > 0
 				? jt.inverseJoinColumns()[0].name() : null;
 	}
 
-	List<String> getJoinTableJoinColumnNames(FieldDetails field) {
+	public List<String> getJoinTableJoinColumnNames(FieldDetails field) {
 		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
 		List<String> result = new ArrayList<>();
 		if (jt != null) {
@@ -509,7 +509,7 @@ class MappingFieldAnnotationHelper {
 		return result;
 	}
 
-	List<String> getJoinTableInverseJoinColumnNames(FieldDetails field) {
+	public List<String> getJoinTableInverseJoinColumnNames(FieldDetails field) {
 		JoinTable jt = field.getDirectAnnotationUsage(JoinTable.class);
 		List<String> result = new ArrayList<>();
 		if (jt != null) {
@@ -522,7 +522,7 @@ class MappingFieldAnnotationHelper {
 
 	// --- Embedded / EmbeddedId attribute overrides ---
 
-	List<MappingXmlHelper.AttributeOverrideInfo> getAttributeOverrides(FieldDetails field) {
+	public List<MappingXmlHelper.AttributeOverrideInfo> getAttributeOverrides(FieldDetails field) {
 		List<MappingXmlHelper.AttributeOverrideInfo> result = new ArrayList<>();
 		AttributeOverrides overrides = field.getDirectAnnotationUsage(AttributeOverrides.class);
 		if (overrides != null) {
@@ -535,23 +535,23 @@ class MappingFieldAnnotationHelper {
 
 	// --- Property-level attributes ---
 
-	String getColumnTable(FieldDetails field) {
+	public String getColumnTable(FieldDetails field) {
 		Column col = field.getDirectAnnotationUsage(Column.class);
 		return col != null && col.table() != null && !col.table().isEmpty()
 				? col.table() : null;
 	}
 
-	String getFormula(FieldDetails field) {
+	public String getFormula(FieldDetails field) {
 		Formula formula = field.getDirectAnnotationUsage(Formula.class);
 		return formula != null ? formula.value() : null;
 	}
 
-	boolean isPropertyLazy(FieldDetails field) {
+	public boolean isPropertyLazy(FieldDetails field) {
 		Basic basic = field.getDirectAnnotationUsage(Basic.class);
 		return basic != null && basic.fetch() == FetchType.LAZY;
 	}
 
-	String getFieldAccessType(FieldDetails field) {
+	public String getFieldAccessType(FieldDetails field) {
 		Access access = field.getDirectAnnotationUsage(Access.class);
 		if (access == null || access.value() == AccessType.FIELD) {
 			return null;
@@ -559,14 +559,14 @@ class MappingFieldAnnotationHelper {
 		return access.value().name();
 	}
 
-	boolean isOptimisticLockExcluded(FieldDetails field) {
+	public boolean isOptimisticLockExcluded(FieldDetails field) {
 		OptimisticLock ol = field.getDirectAnnotationUsage(OptimisticLock.class);
 		return ol != null && ol.excluded();
 	}
 
 	// --- Any ---
 
-	String getAnyDiscriminatorType(FieldDetails field) {
+	public String getAnyDiscriminatorType(FieldDetails field) {
 		AnyDiscriminator ad = field.getDirectAnnotationUsage(AnyDiscriminator.class);
 		if (ad == null) {
 			return "STRING";
@@ -574,12 +574,12 @@ class MappingFieldAnnotationHelper {
 		return ad.value().name();
 	}
 
-	String getAnyKeyType(FieldDetails field) {
+	public String getAnyKeyType(FieldDetails field) {
 		AnyKeyJavaClass akjc = field.getDirectAnnotationUsage(AnyKeyJavaClass.class);
 		return akjc != null ? akjc.value().getName() : "java.lang.Long";
 	}
 
-	List<MappingXmlHelper.AnyDiscriminatorMapping> getAnyDiscriminatorMappings(FieldDetails field) {
+	public List<MappingXmlHelper.AnyDiscriminatorMapping> getAnyDiscriminatorMappings(FieldDetails field) {
 		List<MappingXmlHelper.AnyDiscriminatorMapping> result = new ArrayList<>();
 		AnyDiscriminatorValue single = field.getDirectAnnotationUsage(AnyDiscriminatorValue.class);
 		if (single != null) {
@@ -598,7 +598,7 @@ class MappingFieldAnnotationHelper {
 
 	// --- ElementCollection ---
 
-	boolean isElementCollectionOfEmbeddable(FieldDetails field) {
+	public boolean isElementCollectionOfEmbeddable(FieldDetails field) {
 		TypeDetails elementType = field.getElementType();
 		if (elementType == null) {
 			return false;
@@ -607,12 +607,12 @@ class MappingFieldAnnotationHelper {
 		return rawClass.hasDirectAnnotationUsage(jakarta.persistence.Embeddable.class);
 	}
 
-	String getElementCollectionTableName(FieldDetails field) {
+	public String getElementCollectionTableName(FieldDetails field) {
 		CollectionTable ct = field.getDirectAnnotationUsage(CollectionTable.class);
 		return ct != null && ct.name() != null && !ct.name().isEmpty() ? ct.name() : null;
 	}
 
-	String getElementCollectionKeyColumnName(FieldDetails field) {
+	public String getElementCollectionKeyColumnName(FieldDetails field) {
 		CollectionTable ct = field.getDirectAnnotationUsage(CollectionTable.class);
 		if (ct != null && ct.joinColumns() != null && ct.joinColumns().length > 0) {
 			return ct.joinColumns()[0].name();
@@ -620,23 +620,23 @@ class MappingFieldAnnotationHelper {
 		return null;
 	}
 
-	String getElementCollectionTargetClass(FieldDetails field) {
+	public String getElementCollectionTargetClass(FieldDetails field) {
 		TypeDetails elementType = field.getElementType();
 		return elementType != null ? elementType.determineRawClass().getClassName() : null;
 	}
 
-	String getElementCollectionColumnName(FieldDetails field) {
+	public String getElementCollectionColumnName(FieldDetails field) {
 		Column col = field.getDirectAnnotationUsage(Column.class);
 		return col != null && col.name() != null && !col.name().isEmpty() ? col.name() : null;
 	}
 
 	// --- Sort ---
 
-	boolean isSortNatural(FieldDetails field) {
+	public boolean isSortNatural(FieldDetails field) {
 		return field.hasDirectAnnotationUsage(SortNatural.class);
 	}
 
-	String getSortComparatorClass(FieldDetails field) {
+	public String getSortComparatorClass(FieldDetails field) {
 		SortComparator sc = field.getDirectAnnotationUsage(SortComparator.class);
 		return sc != null ? sc.value().getName() : null;
 	}

@@ -52,7 +52,7 @@ import org.hibernate.models.spi.ClassDetails;
  *
  * @author Koen Aers
  */
-class MappingEntityInfoHelper {
+public class MappingEntityInfoHelper {
 
 	private final ClassDetails classDetails;
 
@@ -62,15 +62,15 @@ class MappingEntityInfoHelper {
 
 	// --- Entity / class ---
 
-	boolean isEmbeddable() {
+	public boolean isEmbeddable() {
 		return classDetails.hasDirectAnnotationUsage(Embeddable.class);
 	}
 
-	String getClassName() {
+	public String getClassName() {
 		return classDetails.getClassName();
 	}
 
-	String getPackageName() {
+	public String getPackageName() {
 		String name = getClassName();
 		int dot = name.lastIndexOf('.');
 		return dot > 0 ? name.substring(0, dot) : null;
@@ -78,24 +78,24 @@ class MappingEntityInfoHelper {
 
 	// --- Entity-level Hibernate extensions ---
 
-	boolean isMutable() {
+	public boolean isMutable() {
 		return !classDetails.hasDirectAnnotationUsage(Immutable.class);
 	}
 
-	boolean isDynamicUpdate() {
+	public boolean isDynamicUpdate() {
 		return classDetails.hasDirectAnnotationUsage(DynamicUpdate.class);
 	}
 
-	boolean isDynamicInsert() {
+	public boolean isDynamicInsert() {
 		return classDetails.hasDirectAnnotationUsage(DynamicInsert.class);
 	}
 
-	int getBatchSize() {
+	public int getBatchSize() {
 		BatchSize bs = classDetails.getDirectAnnotationUsage(BatchSize.class);
 		return bs != null ? bs.size() : 0;
 	}
 
-	String getCacheAccessType() {
+	public String getCacheAccessType() {
 		Cache cache = classDetails.getDirectAnnotationUsage(Cache.class);
 		if (cache == null || cache.usage() == CacheConcurrencyStrategy.NONE) {
 			return null;
@@ -103,23 +103,23 @@ class MappingEntityInfoHelper {
 		return cache.usage().name();
 	}
 
-	String getCacheRegion() {
+	public String getCacheRegion() {
 		Cache cache = classDetails.getDirectAnnotationUsage(Cache.class);
 		return cache != null && cache.region() != null && !cache.region().isEmpty()
 				? cache.region() : null;
 	}
 
-	boolean isCacheIncludeLazy() {
+	public boolean isCacheIncludeLazy() {
 		Cache cache = classDetails.getDirectAnnotationUsage(Cache.class);
 		return cache == null || cache.includeLazy();
 	}
 
-	String getSqlRestriction() {
+	public String getSqlRestriction() {
 		SQLRestriction sr = classDetails.getDirectAnnotationUsage(SQLRestriction.class);
 		return sr != null ? sr.value() : null;
 	}
 
-	String getOptimisticLockMode() {
+	public String getOptimisticLockMode() {
 		OptimisticLocking ol = classDetails.getDirectAnnotationUsage(OptimisticLocking.class);
 		if (ol == null || ol.type() == OptimisticLockType.VERSION) {
 			return null;
@@ -127,22 +127,22 @@ class MappingEntityInfoHelper {
 		return ol.type().name();
 	}
 
-	String getRowId() {
+	public String getRowId() {
 		RowId rid = classDetails.getDirectAnnotationUsage(RowId.class);
 		return rid != null && rid.value() != null && !rid.value().isEmpty()
 				? rid.value() : null;
 	}
 
-	String getSubselect() {
+	public String getSubselect() {
 		Subselect ss = classDetails.getDirectAnnotationUsage(Subselect.class);
 		return ss != null ? ss.value() : null;
 	}
 
-	boolean isConcreteProxy() {
+	public boolean isConcreteProxy() {
 		return classDetails.hasDirectAnnotationUsage(ConcreteProxy.class);
 	}
 
-	String getClassAccessType() {
+	public String getClassAccessType() {
 		Access access = classDetails.getDirectAnnotationUsage(Access.class);
 		if (access == null || access.value() == AccessType.FIELD) {
 			return null;
@@ -152,18 +152,18 @@ class MappingEntityInfoHelper {
 
 	// --- Table ---
 
-	String getTableName() {
+	public String getTableName() {
 		Table table = classDetails.getDirectAnnotationUsage(Table.class);
 		return table != null ? table.name() : null;
 	}
 
-	String getSchema() {
+	public String getSchema() {
 		Table table = classDetails.getDirectAnnotationUsage(Table.class);
 		return table != null && table.schema() != null && !table.schema().isEmpty()
 				? table.schema() : null;
 	}
 
-	String getCatalog() {
+	public String getCatalog() {
 		Table table = classDetails.getDirectAnnotationUsage(Table.class);
 		return table != null && table.catalog() != null && !table.catalog().isEmpty()
 				? table.catalog() : null;
@@ -171,41 +171,41 @@ class MappingEntityInfoHelper {
 
 	// --- Inheritance ---
 
-	boolean hasInheritance() {
+	public boolean hasInheritance() {
 		return classDetails.hasDirectAnnotationUsage(Inheritance.class);
 	}
 
-	String getInheritanceStrategy() {
+	public String getInheritanceStrategy() {
 		Inheritance inh = classDetails.getDirectAnnotationUsage(Inheritance.class);
 		return inh != null ? inh.strategy().name() : null;
 	}
 
-	String getDiscriminatorColumnName() {
+	public String getDiscriminatorColumnName() {
 		DiscriminatorColumn dc = classDetails.getDirectAnnotationUsage(DiscriminatorColumn.class);
 		return dc != null ? dc.name() : null;
 	}
 
-	String getDiscriminatorType() {
+	public String getDiscriminatorType() {
 		DiscriminatorColumn dc = classDetails.getDirectAnnotationUsage(DiscriminatorColumn.class);
 		return dc != null ? dc.discriminatorType().name() : null;
 	}
 
-	int getDiscriminatorColumnLength() {
+	public int getDiscriminatorColumnLength() {
 		DiscriminatorColumn dc = classDetails.getDirectAnnotationUsage(DiscriminatorColumn.class);
 		return dc != null ? dc.length() : 0;
 	}
 
-	String getDiscriminatorValue() {
+	public String getDiscriminatorValue() {
 		DiscriminatorValue dv = classDetails.getDirectAnnotationUsage(DiscriminatorValue.class);
 		return dv != null ? dv.value() : null;
 	}
 
-	String getPrimaryKeyJoinColumnName() {
+	public String getPrimaryKeyJoinColumnName() {
 		PrimaryKeyJoinColumn pkjc = classDetails.getDirectAnnotationUsage(PrimaryKeyJoinColumn.class);
 		return pkjc != null ? pkjc.name() : null;
 	}
 
-	List<String> getPrimaryKeyJoinColumnNames() {
+	public List<String> getPrimaryKeyJoinColumnNames() {
 		List<String> result = new ArrayList<>();
 		PrimaryKeyJoinColumn single = classDetails.getDirectAnnotationUsage(PrimaryKeyJoinColumn.class);
 		if (single != null) {
@@ -222,7 +222,7 @@ class MappingEntityInfoHelper {
 
 	// --- Secondary tables ---
 
-	List<MappingXmlHelper.SecondaryTableInfo> getSecondaryTables() {
+	public List<MappingXmlHelper.SecondaryTableInfo> getSecondaryTables() {
 		List<MappingXmlHelper.SecondaryTableInfo> result = new ArrayList<>();
 		SecondaryTable single = classDetails.getDirectAnnotationUsage(SecondaryTable.class);
 		if (single != null) {

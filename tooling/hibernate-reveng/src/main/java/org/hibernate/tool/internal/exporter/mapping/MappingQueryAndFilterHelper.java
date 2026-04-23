@@ -56,7 +56,7 @@ import org.hibernate.models.spi.MethodDetails;
  *
  * @author Koen Aers
  */
-class MappingQueryAndFilterHelper {
+public class MappingQueryAndFilterHelper {
 
 	private final ClassDetails classDetails;
 
@@ -74,7 +74,7 @@ class MappingQueryAndFilterHelper {
 
 	// --- Filters ---
 
-	List<MappingXmlHelper.FilterInfo> getFilters() {
+	public List<MappingXmlHelper.FilterInfo> getFilters() {
 		List<MappingXmlHelper.FilterInfo> result = new ArrayList<>();
 		Filter single = classDetails.getDirectAnnotationUsage(Filter.class);
 		if (single != null) {
@@ -89,7 +89,7 @@ class MappingQueryAndFilterHelper {
 		return result;
 	}
 
-	List<MappingXmlHelper.FilterDefInfo> getFilterDefs() {
+	public List<MappingXmlHelper.FilterDefInfo> getFilterDefs() {
 		List<MappingXmlHelper.FilterDefInfo> result = new ArrayList<>();
 		FilterDef single = classDetails.getDirectAnnotationUsage(FilterDef.class);
 		if (single != null) {
@@ -114,7 +114,7 @@ class MappingQueryAndFilterHelper {
 		return new MappingXmlHelper.FilterDefInfo(fd.name(), fd.defaultCondition(), params);
 	}
 
-	List<MappingXmlHelper.FilterInfo> getCollectionFilters(FieldDetails field) {
+	public List<MappingXmlHelper.FilterInfo> getCollectionFilters(FieldDetails field) {
 		List<MappingXmlHelper.FilterInfo> result = new ArrayList<>();
 		Filter single = field.getDirectAnnotationUsage(Filter.class);
 		if (single != null) {
@@ -131,7 +131,7 @@ class MappingQueryAndFilterHelper {
 
 	// --- Named queries ---
 
-	List<MappingXmlHelper.NamedQueryInfo> getNamedQueries() {
+	public List<MappingXmlHelper.NamedQueryInfo> getNamedQueries() {
 		List<MappingXmlHelper.NamedQueryInfo> result = new ArrayList<>();
 		NamedQuery single = classDetails.getDirectAnnotationUsage(NamedQuery.class);
 		if (single != null) {
@@ -146,7 +146,7 @@ class MappingQueryAndFilterHelper {
 		return result;
 	}
 
-	List<MappingXmlHelper.NamedQueryInfo> getNamedNativeQueries() {
+	public List<MappingXmlHelper.NamedQueryInfo> getNamedNativeQueries() {
 		List<MappingXmlHelper.NamedQueryInfo> result = new ArrayList<>();
 		NamedNativeQuery single = classDetails.getDirectAnnotationUsage(NamedNativeQuery.class);
 		if (single != null) {
@@ -163,7 +163,7 @@ class MappingQueryAndFilterHelper {
 
 	// --- Fetch profiles ---
 
-	List<MappingXmlHelper.FetchProfileInfo> getFetchProfiles() {
+	public List<MappingXmlHelper.FetchProfileInfo> getFetchProfiles() {
 		List<MappingXmlHelper.FetchProfileInfo> result = new ArrayList<>();
 		FetchProfile single = classDetails.getDirectAnnotationUsage(FetchProfile.class);
 		if (single != null) {
@@ -189,29 +189,29 @@ class MappingQueryAndFilterHelper {
 
 	// --- SQL operations ---
 
-	MappingXmlHelper.CustomSqlInfo getSQLInsert() {
+	public MappingXmlHelper.CustomSqlInfo getSQLInsert() {
 		SQLInsert si = classDetails.getDirectAnnotationUsage(SQLInsert.class);
 		return si != null ? new MappingXmlHelper.CustomSqlInfo(si.sql(), si.callable()) : null;
 	}
 
-	MappingXmlHelper.CustomSqlInfo getSQLUpdate() {
+	public MappingXmlHelper.CustomSqlInfo getSQLUpdate() {
 		SQLUpdate su = classDetails.getDirectAnnotationUsage(SQLUpdate.class);
 		return su != null ? new MappingXmlHelper.CustomSqlInfo(su.sql(), su.callable()) : null;
 	}
 
-	MappingXmlHelper.CustomSqlInfo getSQLDelete() {
+	public MappingXmlHelper.CustomSqlInfo getSQLDelete() {
 		SQLDelete sd = classDetails.getDirectAnnotationUsage(SQLDelete.class);
 		return sd != null ? new MappingXmlHelper.CustomSqlInfo(sd.sql(), sd.callable()) : null;
 	}
 
-	MappingXmlHelper.CustomSqlInfo getSQLDeleteAll() {
+	public MappingXmlHelper.CustomSqlInfo getSQLDeleteAll() {
 		SQLDeleteAll sda = classDetails.getDirectAnnotationUsage(SQLDeleteAll.class);
 		return sda != null ? new MappingXmlHelper.CustomSqlInfo(sda.sql(), sda.callable()) : null;
 	}
 
 	// --- Entity listeners ---
 
-	List<String> getEntityListenerClassNames() {
+	public List<String> getEntityListenerClassNames() {
 		EntityListeners el = classDetails.getDirectAnnotationUsage(EntityListeners.class);
 		if (el == null || el.value() == null || el.value().length == 0) {
 			return List.of();
@@ -225,7 +225,7 @@ class MappingQueryAndFilterHelper {
 
 	// --- Lifecycle callbacks ---
 
-	List<MappingXmlHelper.LifecycleCallbackInfo> getLifecycleCallbacks() {
+	public List<MappingXmlHelper.LifecycleCallbackInfo> getLifecycleCallbacks() {
 		List<MappingXmlHelper.LifecycleCallbackInfo> result = new ArrayList<>();
 		for (MethodDetails method : classDetails.getMethods()) {
 			for (Class<? extends Annotation> ann : LIFECYCLE_ANNOTATIONS) {

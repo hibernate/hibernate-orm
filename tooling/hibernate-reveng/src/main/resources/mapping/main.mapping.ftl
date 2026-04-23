@@ -2,15 +2,15 @@
 <!-- Generated ${date?datetime} by Hibernate Tools ${version} -->
 <entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
                  version="8.0">
-<#if helper.getPackageName()??>
-    <package>${helper.getPackageName()}</package>
+<#if entityInfo.getPackageName()??>
+    <package>${entityInfo.getPackageName()}</package>
 </#if>
-<#if helper.isEmbeddable()>
-    <embeddable class="${helper.getClassName()}">
+<#if entityInfo.isEmbeddable()>
+    <embeddable class="${entityInfo.getClassName()}">
 <#include "attributes.mapping.ftl"/>
     </embeddable>
 <#else>
-<#list helper.getFilterDefs() as fd>
+<#list queries.getFilterDefs() as fd>
     <filter-def name="${fd.name()}">
 <#if fd.defaultCondition()?has_content>
         <default-condition>${fd.defaultCondition()}</default-condition>
@@ -21,12 +21,12 @@
     </filter-def>
 </#list>
 <#include "entity.mapping.ftl"/>
-<#list helper.getNamedQueries() as nq>
+<#list queries.getNamedQueries() as nq>
     <named-query name="${nq.name()}">
         <query>${nq.query()}</query>
     </named-query>
 </#list>
-<#list helper.getNamedNativeQueries() as nnq>
+<#list queries.getNamedNativeQueries() as nnq>
     <named-native-query name="${nnq.name()}">
         <query>${nnq.query()}</query>
     </named-native-query>

@@ -41,6 +41,18 @@ public class MappingXmlHelper {
 		this.fieldAnnotationHelper = new MappingFieldAnnotationHelper(classDetails);
 	}
 
+	public MappingEntityInfoHelper getEntityInfoHelper() {
+		return entityInfoHelper;
+	}
+
+	public MappingFieldAnnotationHelper getFieldAnnotationHelper() {
+		return fieldAnnotationHelper;
+	}
+
+	public MappingQueryAndFilterHelper getQueryAndFilterHelper() {
+		return queryAndFilterHelper;
+	}
+
 	// --- Entity / class ---
 
 	public boolean isEmbeddable() {

@@ -1,12 +1,12 @@
-<#if helper.hasInheritance()>
-        <inheritance strategy="${helper.getInheritanceStrategy()}"/>
-<#if helper.getDiscriminatorColumnName()??>
-        <discriminator-column name="${helper.getDiscriminatorColumnName()}"<#if helper.getDiscriminatorType()??> discriminator-type="${helper.getDiscriminatorType()}"</#if><#if (helper.getDiscriminatorColumnLength() > 0)> length="${helper.getDiscriminatorColumnLength()?c}"</#if>/>
+<#if entityInfo.hasInheritance()>
+        <inheritance strategy="${entityInfo.getInheritanceStrategy()}"/>
+<#if entityInfo.getDiscriminatorColumnName()??>
+        <discriminator-column name="${entityInfo.getDiscriminatorColumnName()}"<#if entityInfo.getDiscriminatorType()??> discriminator-type="${entityInfo.getDiscriminatorType()}"</#if><#if (entityInfo.getDiscriminatorColumnLength() > 0)> length="${entityInfo.getDiscriminatorColumnLength()?c}"</#if>/>
 </#if>
 </#if>
-<#if helper.getDiscriminatorValue()??>
-        <discriminator-value>${helper.getDiscriminatorValue()}</discriminator-value>
+<#if entityInfo.getDiscriminatorValue()??>
+        <discriminator-value>${entityInfo.getDiscriminatorValue()}</discriminator-value>
 </#if>
-<#list helper.getPrimaryKeyJoinColumnNames() as pkjcName>
+<#list entityInfo.getPrimaryKeyJoinColumnNames() as pkjcName>
         <primary-key-join-column name="${pkjcName}"/>
 </#list>

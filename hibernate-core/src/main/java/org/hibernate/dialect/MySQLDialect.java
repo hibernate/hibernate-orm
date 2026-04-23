@@ -289,6 +289,7 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 	private final TypeSizingProfile typeSizingProfile;
 
 	private final boolean noBackslashEscapesEnabled;
+	private final boolean foreignKeysInServer;
 
 	@SPI( IMPLEMENT )
 	public MySQLDialect() {
@@ -320,12 +321,22 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 				.maxVarbinaryLength( maxVarbinaryLength ).maxVarbinaryCapacity( maxVarbinaryLength )
 				.build();
 		noBackslashEscapesEnabled = serverConfiguration.isNoBackslashEscapesEnabled();
+		foreignKeysInServer = serverConfiguration.isForeignKeysInServer();
 		storageEngine = createStorageEngine( serverConfiguration.getConfiguredStorageEngine() );
 		schemaDropSupport = new SchemaDropSupport(
 				List.of(),
 				storageEngine.dropConstraints() ? ConstraintDropMode.EXPLICIT : ConstraintDropMode.IMPLICIT,
 				""
 		);
+	}
+
+	public MySQLDialect(DatabaseVersion version, int bytesPerCharacter, boolean noBackslashEscapes) {
+		super( version );
+		maxVarcharLength = maxVarcharLength( getMySQLVersion(), bytesPerCharacter ); //conservative assumption
+		maxVarbinaryLength = maxVarbinaryLength( getMySQLVersion() );
+		noBackslashEscapesEnabled = noBackslashEscapes;
+		foreignKeysInServer = false;
+		storageEngine = createStorageEngine( Environment.getProperties().getProperty( STORAGE_ENGINE ) );
 	}
 
 	@SPI( IMPLEMENT )
@@ -1603,5 +1614,13 @@ public class MySQLDialect extends Dialect implements CurrentTemporalSupport, Tem
 						org.hibernate.dialect.constraint.spi.CheckConstraintPlacement.TABLE
 				)
 		);
+	}
+
+	@Override
+	public boolean supportsCircularCascadeDeleteConstraints() {
+		// When innodb_native_foreign_keys=OFF, InnoDB delegates FK handling to the server-level
+		// implementation, which does not yet fully support circular cascade deletes. The older InnoDB-native
+		// implementation does support them.
+		return !foreignKeysInServer;
 	}
 }

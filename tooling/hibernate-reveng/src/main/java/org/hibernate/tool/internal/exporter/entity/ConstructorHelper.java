@@ -27,7 +27,7 @@ import org.hibernate.models.spi.FieldDetails;
 
 import org.hibernate.tool.internal.exporter.entity.TemplateHelper.FullConstructorProperty;
 
-class ConstructorHelper {
+public class ConstructorHelper {
 
 	private final TemplateHelper templateHelper;
 
@@ -35,11 +35,11 @@ class ConstructorHelper {
 		this.templateHelper = templateHelper;
 	}
 
-	boolean needsFullConstructor() {
+	public boolean needsFullConstructor() {
 		return !getFullConstructorProperties().isEmpty();
 	}
 
-	List<FullConstructorProperty> getFullConstructorProperties() {
+	public List<FullConstructorProperty> getFullConstructorProperties() {
 		List<FullConstructorProperty> props = new ArrayList<>();
 		addCompositeId(props);
 		addBasicFieldsFull(props);
@@ -51,7 +51,7 @@ class ConstructorHelper {
 		return props;
 	}
 
-	boolean needsMinimalConstructor() {
+	public boolean needsMinimalConstructor() {
 		int minTotal = getMinimalConstructorProperties().size()
 				+ getSuperclassMinimalConstructorProperties().size();
 		int fullTotal = getFullConstructorProperties().size()
@@ -59,7 +59,7 @@ class ConstructorHelper {
 		return minTotal > 0 && minTotal < fullTotal;
 	}
 
-	List<FullConstructorProperty> getMinimalConstructorProperties() {
+	public List<FullConstructorProperty> getMinimalConstructorProperties() {
 		List<FullConstructorProperty> props = new ArrayList<>();
 		addCompositeId(props);
 		addBasicFieldsMinimal(props);
@@ -68,37 +68,37 @@ class ConstructorHelper {
 		return props;
 	}
 
-	String getMinimalConstructorParameterList() {
+	public String getMinimalConstructorParameterList() {
 		return buildParameterList(
 				getSuperclassMinimalConstructorProperties(),
 				getMinimalConstructorProperties());
 	}
 
-	String getFullConstructorParameterList() {
+	public String getFullConstructorParameterList() {
 		return buildParameterList(
 				getSuperclassFullConstructorProperties(),
 				getFullConstructorProperties());
 	}
 
-	List<FullConstructorProperty> getSuperclassFullConstructorProperties() {
+	public List<FullConstructorProperty> getSuperclassFullConstructorProperties() {
 		if (!templateHelper.isSubclass() || templateHelper.isSuperclassInterface()) {
 			return Collections.emptyList();
 		}
 		return createSuperclassConstructorHelper().getFullConstructorProperties();
 	}
 
-	String getSuperclassFullConstructorArgumentList() {
+	public String getSuperclassFullConstructorArgumentList() {
 		return buildArgumentList(getSuperclassFullConstructorProperties());
 	}
 
-	List<FullConstructorProperty> getSuperclassMinimalConstructorProperties() {
+	public List<FullConstructorProperty> getSuperclassMinimalConstructorProperties() {
 		if (!templateHelper.isSubclass() || templateHelper.isSuperclassInterface()) {
 			return Collections.emptyList();
 		}
 		return createSuperclassConstructorHelper().getMinimalConstructorProperties();
 	}
 
-	String getSuperclassMinimalConstructorArgumentList() {
+	public String getSuperclassMinimalConstructorArgumentList() {
 		return buildArgumentList(getSuperclassMinimalConstructorProperties());
 	}
 

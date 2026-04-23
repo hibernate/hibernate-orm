@@ -1,9 +1,9 @@
-<#if templateHelper.hasClassDescription()>
+<#if meta.hasClassDescription()>
 /**
- * ${templateHelper.getClassDescription()}
+ * ${meta.getClassDescription()}
  */
 </#if>
-<#assign classAnnotations = templateHelper.generateClassAnnotations()>
+<#assign classAnnotations = classInfo.generate()>
 <#if classAnnotations?has_content>
 ${classAnnotations}
 </#if>

@@ -62,17 +62,20 @@ import org.hibernate.models.spi.FieldDetails;
 
 import org.hibernate.tool.internal.exporter.entity.TemplateHelper.FilterInfo;
 
-class FieldAnnotationGenerator {
+public class FieldAnnotationGenerator {
 
 	private final ImportContext importContext;
 	private final TemplateHelper templateHelper;
+	private final boolean annotated;
 
 	FieldAnnotationGenerator(ImportContext importContext, TemplateHelper templateHelper) {
 		this.importContext = importContext;
 		this.templateHelper = templateHelper;
+		this.annotated = templateHelper.isAnnotated();
 	}
 
-	String generateIdAnnotations(FieldDetails field) {
+	public String generateIdAnnotations(FieldDetails field) {
+		if (!annotated) return "";
 		StringBuilder sb = new StringBuilder();
 		if (!templateHelper.fieldHasAnnotation(field, Id.class)) {
 			return "";
@@ -140,12 +143,14 @@ class FieldAnnotationGenerator {
 		sb.append(")\n");
 	}
 
-	String generateVersionAnnotation() {
+	public String generateVersionAnnotation() {
+		if (!annotated) return "";
 		importType("jakarta.persistence.Version");
 		return "@Version";
 	}
 
-	String generateBasicAnnotation(FieldDetails field) {
+	public String generateBasicAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		Basic basic = templateHelper.fieldGetAnnotation(field, Basic.class);
 		if (basic == null) {
 			return "";
@@ -171,7 +176,8 @@ class FieldAnnotationGenerator {
 		return sb.toString();
 	}
 
-	String generateOptimisticLockAnnotation(FieldDetails field) {
+	public String generateOptimisticLockAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		OptimisticLock ol = templateHelper.fieldGetAnnotation(field, OptimisticLock.class);
 		if (ol == null || !ol.excluded()) {
 			return "";
@@ -180,7 +186,8 @@ class FieldAnnotationGenerator {
 		return "@OptimisticLock(excluded = true)";
 	}
 
-	String generateAccessAnnotation(FieldDetails field) {
+	public String generateAccessAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		Access access = templateHelper.fieldGetAnnotation(field, Access.class);
 		if (access == null || access.value() == AccessType.FIELD) {
 			return "";
@@ -190,7 +197,8 @@ class FieldAnnotationGenerator {
 		return "@Access(AccessType." + access.value().name() + ")";
 	}
 
-	String generateTemporalAnnotation(FieldDetails field) {
+	public String generateTemporalAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		Temporal temporal = templateHelper.fieldGetAnnotation(field, Temporal.class);
 		if (temporal == null) {
 			return "";
@@ -200,12 +208,14 @@ class FieldAnnotationGenerator {
 		return "@Temporal(TemporalType." + temporal.value().name() + ")";
 	}
 
-	String generateLobAnnotation() {
+	public String generateLobAnnotation() {
+		if (!annotated) return "";
 		importType("jakarta.persistence.Lob");
 		return "@Lob";
 	}
 
-	String generateFormulaAnnotation(FieldDetails field) {
+	public String generateFormulaAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		Formula formula = templateHelper.fieldGetAnnotation(field, Formula.class);
 		if (formula == null) {
 			return "";
@@ -214,7 +224,8 @@ class FieldAnnotationGenerator {
 		return "@Formula(\"" + formula.value() + "\")";
 	}
 
-	String generateElementCollectionAnnotation(FieldDetails field) {
+	public String generateElementCollectionAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		ElementCollection ec = templateHelper.fieldGetAnnotation(field, ElementCollection.class);
 		if (ec == null) {
 			return "";
@@ -257,7 +268,8 @@ class FieldAnnotationGenerator {
 		sb.append("@Column(name = \"").append(col.name()).append("\")");
 	}
 
-	String generateNaturalIdAnnotation(FieldDetails field) {
+	public String generateNaturalIdAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		NaturalId nid = templateHelper.fieldGetAnnotation(field, NaturalId.class);
 		if (nid == null) {
 			return "";
@@ -269,7 +281,8 @@ class FieldAnnotationGenerator {
 		return "@NaturalId";
 	}
 
-	String generateColumnAnnotation(FieldDetails field) {
+	public String generateColumnAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		Column col = templateHelper.fieldGetAnnotation(field, Column.class);
 		if (col == null) {
 			return "";
@@ -306,7 +319,8 @@ class FieldAnnotationGenerator {
 		}
 	}
 
-	String generateColumnTransformerAnnotation(FieldDetails field) {
+	public String generateColumnTransformerAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		ColumnTransformer ct = templateHelper.fieldGetAnnotation(field, ColumnTransformer.class);
 		if (ct == null) {
 			return "";
@@ -336,7 +350,8 @@ class FieldAnnotationGenerator {
 		return sb.toString();
 	}
 
-	String generateConvertAnnotation(FieldDetails field) {
+	public String generateConvertAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		Convert convert = templateHelper.fieldGetAnnotation(field, Convert.class);
 		if (convert == null || convert.disableConversion()) {
 			return "";
@@ -351,7 +366,8 @@ class FieldAnnotationGenerator {
 		return "@Convert(converter = " + simpleType + ".class)";
 	}
 
-	String generateOrderByAnnotation(FieldDetails field) {
+	public String generateOrderByAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		OrderBy ob = templateHelper.fieldGetAnnotation(field, OrderBy.class);
 		if (ob == null) {
 			return "";
@@ -363,7 +379,8 @@ class FieldAnnotationGenerator {
 		return "@OrderBy";
 	}
 
-	String generateOrderColumnAnnotation(FieldDetails field) {
+	public String generateOrderColumnAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		OrderColumn oc = templateHelper.fieldGetAnnotation(field, OrderColumn.class);
 		if (oc == null) {
 			return "";
@@ -375,7 +392,8 @@ class FieldAnnotationGenerator {
 		return "@OrderColumn";
 	}
 
-	String generateFilterAnnotations(FieldDetails field) {
+	public String generateFilterAnnotations(FieldDetails field) {
+		if (!annotated) return "";
 		List<FilterInfo> filters = getFieldFilters(field);
 		if (filters.isEmpty()) {
 			return "";
@@ -392,7 +410,7 @@ class FieldAnnotationGenerator {
 		return sb.toString().stripTrailing();
 	}
 
-	List<FilterInfo> getFieldFilters(FieldDetails field) {
+	public List<FilterInfo> getFieldFilters(FieldDetails field) {
 		List<FilterInfo> result = new ArrayList<>();
 		Filter single = templateHelper.fieldGetAnnotation(field, Filter.class);
 		if (single != null) {
@@ -407,7 +425,8 @@ class FieldAnnotationGenerator {
 		return result;
 	}
 
-	String generateBagAnnotation(FieldDetails field) {
+	public String generateBagAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		if (!templateHelper.fieldHasAnnotation(field, Bag.class)) {
 			return "";
 		}
@@ -415,7 +434,8 @@ class FieldAnnotationGenerator {
 		return "@Bag";
 	}
 
-	String generateCollectionIdAnnotation(FieldDetails field) {
+	public String generateCollectionIdAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		CollectionId cid = templateHelper.fieldGetAnnotation(field, CollectionId.class);
 		if (cid == null) {
 			return "";
@@ -438,7 +458,8 @@ class FieldAnnotationGenerator {
 		return result + ")";
 	}
 
-	String generateSortAnnotation(FieldDetails field) {
+	public String generateSortAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		if (templateHelper.fieldHasAnnotation(field, SortNatural.class)) {
 			importType("org.hibernate.annotations.SortNatural");
 			return "@SortNatural";
@@ -452,7 +473,8 @@ class FieldAnnotationGenerator {
 		return "";
 	}
 
-	String generateMapKeyAnnotation(FieldDetails field) {
+	public String generateMapKeyAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		MapKey mk = templateHelper.fieldGetAnnotation(field, MapKey.class);
 		if (mk == null) {
 			return "";
@@ -464,7 +486,8 @@ class FieldAnnotationGenerator {
 		return "@MapKey";
 	}
 
-	String generateMapKeyColumnAnnotation(FieldDetails field) {
+	public String generateMapKeyColumnAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		MapKeyColumn mkc = templateHelper.fieldGetAnnotation(field, MapKeyColumn.class);
 		if (mkc == null) {
 			return "";
@@ -476,7 +499,8 @@ class FieldAnnotationGenerator {
 		return "@MapKeyColumn";
 	}
 
-	String generateFetchAnnotation(FieldDetails field) {
+	public String generateFetchAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		Fetch fetch = templateHelper.fieldGetAnnotation(field, Fetch.class);
 		if (fetch == null) {
 			return "";
@@ -486,7 +510,8 @@ class FieldAnnotationGenerator {
 		return "@Fetch(FetchMode." + fetch.value().name() + ")";
 	}
 
-	String generateNotFoundAnnotation(FieldDetails field) {
+	public String generateNotFoundAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		NotFound nf = templateHelper.fieldGetAnnotation(field, NotFound.class);
 		if (nf == null || nf.action() == NotFoundAction.EXCEPTION) {
 			return "";
@@ -496,7 +521,8 @@ class FieldAnnotationGenerator {
 		return "@NotFound(action = NotFoundAction." + nf.action().name() + ")";
 	}
 
-	String generateAnyAnnotation(FieldDetails field) {
+	public String generateAnyAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		if (!templateHelper.fieldHasAnnotation(field, Any.class)) {
 			return "";
 		}
@@ -507,7 +533,8 @@ class FieldAnnotationGenerator {
 		return sb.toString().stripTrailing();
 	}
 
-	String generateManyToAnyAnnotation(FieldDetails field) {
+	public String generateManyToAnyAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		if (!templateHelper.fieldHasAnnotation(field, ManyToAny.class)) {
 			return "";
 		}

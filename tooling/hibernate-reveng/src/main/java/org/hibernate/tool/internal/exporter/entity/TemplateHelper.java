@@ -82,6 +82,14 @@ public class TemplateHelper {
 	// annotations live on methods rather than fields)
 	private final Map<String, MethodDetails> getterByFieldName;
 
+	// Cached delegate instances
+	private final ClassAnnotationGenerator classAnnotationGenerator;
+	private final FieldAnnotationGenerator fieldAnnotationGenerator;
+	private final RelationshipAnnotationGenerator relationshipAnnotationGenerator;
+	private final ConstructorHelper constructorHelper;
+	private final EqualsHashCodeHelper equalsHashCodeHelper;
+	private final QueryAndFilterHelper queryAndFilterHelper;
+
 	public TemplateHelper(ClassDetails classDetails, ModelsContext modelsContext,
 				   ImportContext importContext, boolean annotated) {
 		this(classDetails, modelsContext, importContext, annotated, true,
@@ -134,6 +142,43 @@ public class TemplateHelper {
 		}
 		// Build getter method map for property-access entities
 		this.getterByFieldName = buildGetterMap(classDetails);
+		// Initialize cached delegate instances
+		this.classAnnotationGenerator = new ClassAnnotationGenerator(classDetails, importContext, this);
+		this.fieldAnnotationGenerator = new FieldAnnotationGenerator(importContext, this);
+		this.relationshipAnnotationGenerator = new RelationshipAnnotationGenerator(importContext, this);
+		this.constructorHelper = new ConstructorHelper(this);
+		this.equalsHashCodeHelper = new EqualsHashCodeHelper(this, importContext);
+		this.queryAndFilterHelper = new QueryAndFilterHelper(classDetails);
+	}
+
+	// --- Delegate getters ---
+
+	public ClassAnnotationGenerator getClassAnnotationGenerator() {
+		return classAnnotationGenerator;
+	}
+
+	public FieldAnnotationGenerator getFieldAnnotationGenerator() {
+		return fieldAnnotationGenerator;
+	}
+
+	public RelationshipAnnotationGenerator getRelationshipAnnotationGenerator() {
+		return relationshipAnnotationGenerator;
+	}
+
+	public ConstructorHelper getConstructorHelper() {
+		return constructorHelper;
+	}
+
+	public EqualsHashCodeHelper getEqualsHashCodeHelper() {
+		return equalsHashCodeHelper;
+	}
+
+	public MetaAttributeSupport getMetaAttributeSupport() {
+		return metaSupport;
+	}
+
+	public QueryAndFilterHelper getQueryAndFilterHelper() {
+		return queryAndFilterHelper;
 	}
 
 	private static Map<String, MethodDetails> buildGetterMap(ClassDetails classDetails) {
@@ -460,55 +505,47 @@ public class TemplateHelper {
 		if (!annotated) {
 			return "";
 		}
-		return new ClassAnnotationGenerator(classDetails, importContext, this).generate();
+		return classAnnotationGenerator.generate();
 	}
 
 	public String generateIdAnnotations(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateIdAnnotations(field);
+		return fieldAnnotationGenerator.generateIdAnnotations(field);
 	}
 
 	public String generateVersionAnnotation() {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateVersionAnnotation();
+		return fieldAnnotationGenerator.generateVersionAnnotation();
 	}
 
 	public String generateBasicAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateBasicAnnotation(field);
+		return fieldAnnotationGenerator.generateBasicAnnotation(field);
 	}
 
 	public String generateOptimisticLockAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateOptimisticLockAnnotation(field);
+		return fieldAnnotationGenerator.generateOptimisticLockAnnotation(field);
 	}
 
 	public String generateAccessAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateAccessAnnotation(field);
+		return fieldAnnotationGenerator.generateAccessAnnotation(field);
 	}
 
 	public String generateTemporalAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateTemporalAnnotation(field);
+		return fieldAnnotationGenerator.generateTemporalAnnotation(field);
 	}
 
 	public String generateLobAnnotation() {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateLobAnnotation();
+		return fieldAnnotationGenerator.generateLobAnnotation();
 	}
 
 	public String generateFormulaAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateFormulaAnnotation(field);
+		return fieldAnnotationGenerator.generateFormulaAnnotation(field);
 	}
 
 	public boolean hasFormula(FieldDetails field) {
@@ -517,145 +554,121 @@ public class TemplateHelper {
 
 	public String generateElementCollectionAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateElementCollectionAnnotation(field);
+		return fieldAnnotationGenerator.generateElementCollectionAnnotation(field);
 	}
 
 	public String generateNaturalIdAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateNaturalIdAnnotation(field);
+		return fieldAnnotationGenerator.generateNaturalIdAnnotation(field);
 	}
 
 	public String generateOrderByAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateOrderByAnnotation(field);
+		return fieldAnnotationGenerator.generateOrderByAnnotation(field);
 	}
 
 	public String generateOrderColumnAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateOrderColumnAnnotation(field);
+		return fieldAnnotationGenerator.generateOrderColumnAnnotation(field);
 	}
 
 	public String generateFilterAnnotations(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateFilterAnnotations(field);
+		return fieldAnnotationGenerator.generateFilterAnnotations(field);
 	}
 
 	public List<FilterInfo> getFieldFilters(FieldDetails field) {
-		return new FieldAnnotationGenerator(importContext, this)
-				.getFieldFilters(field);
+		return fieldAnnotationGenerator.getFieldFilters(field);
 	}
 
 	public String generateBagAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateBagAnnotation(field);
+		return fieldAnnotationGenerator.generateBagAnnotation(field);
 	}
 
 	public String generateCollectionIdAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateCollectionIdAnnotation(field);
+		return fieldAnnotationGenerator.generateCollectionIdAnnotation(field);
 	}
 
 	public String generateSortAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateSortAnnotation(field);
+		return fieldAnnotationGenerator.generateSortAnnotation(field);
 	}
 
 	public String generateMapKeyAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateMapKeyAnnotation(field);
+		return fieldAnnotationGenerator.generateMapKeyAnnotation(field);
 	}
 
 	public String generateMapKeyColumnAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateMapKeyColumnAnnotation(field);
+		return fieldAnnotationGenerator.generateMapKeyColumnAnnotation(field);
 	}
 
 	public String generateFetchAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateFetchAnnotation(field);
+		return fieldAnnotationGenerator.generateFetchAnnotation(field);
 	}
 
 	public String generateNotFoundAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateNotFoundAnnotation(field);
+		return fieldAnnotationGenerator.generateNotFoundAnnotation(field);
 	}
 
 	public String generateAnyAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateAnyAnnotation(field);
+		return fieldAnnotationGenerator.generateAnyAnnotation(field);
 	}
 
 	public String generateManyToAnyAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateManyToAnyAnnotation(field);
+		return fieldAnnotationGenerator.generateManyToAnyAnnotation(field);
 	}
 
 	public String generateConvertAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateConvertAnnotation(field);
+		return fieldAnnotationGenerator.generateConvertAnnotation(field);
 	}
 
 	public String generateColumnAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateColumnAnnotation(field);
+		return fieldAnnotationGenerator.generateColumnAnnotation(field);
 	}
 
 	public String generateColumnTransformerAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new FieldAnnotationGenerator(importContext, this)
-				.generateColumnTransformerAnnotation(field);
+		return fieldAnnotationGenerator.generateColumnTransformerAnnotation(field);
 	}
 
 	public String generateManyToOneAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new RelationshipAnnotationGenerator(importContext, this)
-				.generateManyToOneAnnotation(field);
+		return relationshipAnnotationGenerator.generateManyToOneAnnotation(field);
 	}
 
 	public String generateOneToManyAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new RelationshipAnnotationGenerator(importContext, this)
-				.generateOneToManyAnnotation(field);
+		return relationshipAnnotationGenerator.generateOneToManyAnnotation(field);
 	}
 
 	public String generateOneToOneAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new RelationshipAnnotationGenerator(importContext, this)
-				.generateOneToOneAnnotation(field);
+		return relationshipAnnotationGenerator.generateOneToOneAnnotation(field);
 	}
 
 	public String generateManyToManyAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new RelationshipAnnotationGenerator(importContext, this)
-				.generateManyToManyAnnotation(field);
+		return relationshipAnnotationGenerator.generateManyToManyAnnotation(field);
 	}
 
 	public String generateEmbeddedIdAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new RelationshipAnnotationGenerator(importContext, this)
-				.generateEmbeddedIdAnnotation(field);
+		return relationshipAnnotationGenerator.generateEmbeddedIdAnnotation(field);
 	}
 
 	public String generateEmbeddedAnnotation(FieldDetails field) {
 		if (!annotated) return "";
-		return new RelationshipAnnotationGenerator(importContext, this)
-				.generateEmbeddedAnnotation(field);
+		return relationshipAnnotationGenerator.generateEmbeddedAnnotation(field);
 	}
 
 	// --- Subclass check ---
@@ -668,43 +681,43 @@ public class TemplateHelper {
 	// --- Constructor support ---
 
 	public boolean needsFullConstructor() {
-		return new ConstructorHelper(this).needsFullConstructor();
+		return constructorHelper.needsFullConstructor();
 	}
 
 	public List<FullConstructorProperty> getFullConstructorProperties() {
-		return new ConstructorHelper(this).getFullConstructorProperties();
+		return constructorHelper.getFullConstructorProperties();
 	}
 
 	public boolean needsMinimalConstructor() {
-		return new ConstructorHelper(this).needsMinimalConstructor();
+		return constructorHelper.needsMinimalConstructor();
 	}
 
 	public List<FullConstructorProperty> getMinimalConstructorProperties() {
-		return new ConstructorHelper(this).getMinimalConstructorProperties();
+		return constructorHelper.getMinimalConstructorProperties();
 	}
 
 	public String getMinimalConstructorParameterList() {
-		return new ConstructorHelper(this).getMinimalConstructorParameterList();
+		return constructorHelper.getMinimalConstructorParameterList();
 	}
 
 	public String getFullConstructorParameterList() {
-		return new ConstructorHelper(this).getFullConstructorParameterList();
+		return constructorHelper.getFullConstructorParameterList();
 	}
 
 	public List<FullConstructorProperty> getSuperclassFullConstructorProperties() {
-		return new ConstructorHelper(this).getSuperclassFullConstructorProperties();
+		return constructorHelper.getSuperclassFullConstructorProperties();
 	}
 
 	public String getSuperclassFullConstructorArgumentList() {
-		return new ConstructorHelper(this).getSuperclassFullConstructorArgumentList();
+		return constructorHelper.getSuperclassFullConstructorArgumentList();
 	}
 
 	public List<FullConstructorProperty> getSuperclassMinimalConstructorProperties() {
-		return new ConstructorHelper(this).getSuperclassMinimalConstructorProperties();
+		return constructorHelper.getSuperclassMinimalConstructorProperties();
 	}
 
 	public String getSuperclassMinimalConstructorArgumentList() {
-		return new ConstructorHelper(this).getSuperclassMinimalConstructorArgumentList();
+		return constructorHelper.getSuperclassMinimalConstructorArgumentList();
 	}
 
 	// --- toString support ---
@@ -737,61 +750,61 @@ public class TemplateHelper {
 	// --- equals/hashCode support ---
 
 	public boolean hasCompositeId() {
-		return new EqualsHashCodeHelper(this, importContext).hasCompositeId();
+		return equalsHashCodeHelper.hasCompositeId();
 	}
 
 	public boolean needsEqualsHashCode() {
-		return new EqualsHashCodeHelper(this, importContext).needsEqualsHashCode();
+		return equalsHashCodeHelper.needsEqualsHashCode();
 	}
 
 	public boolean hasNaturalId() {
-		return new EqualsHashCodeHelper(this, importContext).hasNaturalId();
+		return equalsHashCodeHelper.hasNaturalId();
 	}
 
 	public List<FieldDetails> getNaturalIdFields() {
-		return new EqualsHashCodeHelper(this, importContext).getNaturalIdFields();
+		return equalsHashCodeHelper.getNaturalIdFields();
 	}
 
 	// --- Named queries, filters, SQL DML, fetch profiles, secondary tables ---
 
 	public List<NamedQueryInfo> getNamedQueries() {
-		return new QueryAndFilterHelper(classDetails).getNamedQueries();
+		return queryAndFilterHelper.getNamedQueries();
 	}
 
 	public List<NamedNativeQueryInfo> getNamedNativeQueries() {
-		return new QueryAndFilterHelper(classDetails).getNamedNativeQueries();
+		return queryAndFilterHelper.getNamedNativeQueries();
 	}
 
 	public List<SqlResultSetMappingInfo> getSqlResultSetMappings() {
-		return new QueryAndFilterHelper(classDetails).getSqlResultSetMappings();
+		return queryAndFilterHelper.getSqlResultSetMappings();
 	}
 
 	public List<FilterInfo> getFilters() {
-		return new QueryAndFilterHelper(classDetails).getFilters();
+		return queryAndFilterHelper.getFilters();
 	}
 
 	public List<FilterDefInfo> getFilterDefs() {
-		return new QueryAndFilterHelper(classDetails).getFilterDefs();
+		return queryAndFilterHelper.getFilterDefs();
 	}
 
 	public List<SQLInsert> getSQLInserts() {
-		return new QueryAndFilterHelper(classDetails).getSQLInserts();
+		return queryAndFilterHelper.getSQLInserts();
 	}
 
 	public List<SQLUpdate> getSQLUpdates() {
-		return new QueryAndFilterHelper(classDetails).getSQLUpdates();
+		return queryAndFilterHelper.getSQLUpdates();
 	}
 
 	public List<SQLDelete> getSQLDeletes() {
-		return new QueryAndFilterHelper(classDetails).getSQLDeletes();
+		return queryAndFilterHelper.getSQLDeletes();
 	}
 
 	public List<FetchProfile> getFetchProfiles() {
-		return new QueryAndFilterHelper(classDetails).getFetchProfiles();
+		return queryAndFilterHelper.getFetchProfiles();
 	}
 
 	public List<SecondaryTableInfo> getSecondaryTables() {
-		return new QueryAndFilterHelper(classDetails).getSecondaryTables();
+		return queryAndFilterHelper.getSecondaryTables();
 	}
 
 	public record NamedQueryInfo(String name, String query) {}
@@ -816,23 +829,23 @@ public class TemplateHelper {
 	public record SecondaryTableInfo(String tableName, List<String> keyColumns) {}
 
 	public boolean hasExplicitEqualsColumns() {
-		return new EqualsHashCodeHelper(this, importContext).getEqualsFields().size() > 0;
+		return equalsHashCodeHelper.getEqualsFields().size() > 0;
 	}
 
 	public List<FieldDetails> getEqualsFields() {
-		return new EqualsHashCodeHelper(this, importContext).getEqualsFields();
+		return equalsHashCodeHelper.getEqualsFields();
 	}
 
 	public List<FieldDetails> getIdentifierFields() {
-		return new EqualsHashCodeHelper(this, importContext).getIdentifierFields();
+		return equalsHashCodeHelper.getIdentifierFields();
 	}
 
 	public String generateEqualsExpression(FieldDetails field) {
-		return new EqualsHashCodeHelper(this, importContext).generateEqualsExpression(field);
+		return equalsHashCodeHelper.generateEqualsExpression(field);
 	}
 
 	public String generateHashCodeExpression(FieldDetails field) {
-		return new EqualsHashCodeHelper(this, importContext).generateHashCodeExpression(field);
+		return equalsHashCodeHelper.generateHashCodeExpression(field);
 	}
 
 	// --- Meta-attribute support (delegated to MetaAttributeSupport) ---

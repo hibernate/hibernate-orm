@@ -23,7 +23,7 @@ import org.hibernate.tool.internal.util.TypeHelper;
 
 import org.hibernate.models.spi.FieldDetails;
 
-class EqualsHashCodeHelper {
+public class EqualsHashCodeHelper {
 
 	private final TemplateHelper templateHelper;
 	private final ImportContext importContext;
@@ -33,23 +33,23 @@ class EqualsHashCodeHelper {
 		this.importContext = importContext;
 	}
 
-	boolean hasCompositeId() {
+	public boolean hasCompositeId() {
 		return templateHelper.getCompositeIdField() != null;
 	}
 
-	boolean needsEqualsHashCode() {
+	public boolean needsEqualsHashCode() {
 		if (templateHelper.isEmbeddable()) return true;
 		if (hasNaturalId()) return true;
-		if (templateHelper.hasExplicitEqualsColumns()) return true;
+		if (hasExplicitEqualsColumns()) return true;
 		return hasCompositeId() || !getIdentifierFields().isEmpty();
 	}
 
-	boolean hasNaturalId() {
+	public boolean hasNaturalId() {
 		return templateHelper.getBasicFields().stream()
 				.anyMatch(f -> templateHelper.fieldHasAnnotation(f, NaturalId.class));
 	}
 
-	List<FieldDetails> getNaturalIdFields() {
+	public List<FieldDetails> getNaturalIdFields() {
 		List<FieldDetails> result = new ArrayList<>();
 		for (FieldDetails field : templateHelper.getBasicFields()) {
 			if (templateHelper.fieldHasAnnotation(field, NaturalId.class)) {
@@ -59,7 +59,11 @@ class EqualsHashCodeHelper {
 		return result;
 	}
 
-	List<FieldDetails> getEqualsFields() {
+	public boolean hasExplicitEqualsColumns() {
+		return getEqualsFields().size() > 0;
+	}
+
+	public List<FieldDetails> getEqualsFields() {
 		List<FieldDetails> result = new ArrayList<>();
 		for (FieldDetails field : templateHelper.getBasicFields()) {
 			if (templateHelper.getFieldMetaAsBool(field, "use-in-equals", false)) {
@@ -69,7 +73,7 @@ class EqualsHashCodeHelper {
 		return result;
 	}
 
-	List<FieldDetails> getIdentifierFields() {
+	public List<FieldDetails> getIdentifierFields() {
 		if (templateHelper.isEmbeddable()) {
 			return templateHelper.getBasicFields();
 		}
@@ -86,7 +90,7 @@ class EqualsHashCodeHelper {
 		return result;
 	}
 
-	String generateEqualsExpression(FieldDetails field) {
+	public String generateEqualsExpression(FieldDetails field) {
 		String getter = templateHelper.getGetterName(field) + "()";
 		String typeName = field.getType().determineRawClass().getClassName();
 		if (TypeHelper.isPrimitiveType(typeName)) {
@@ -97,7 +101,7 @@ class EqualsHashCodeHelper {
 				+ "this." + getter + ".equals(castOther." + getter + ")))";
 	}
 
-	String generateHashCodeExpression(FieldDetails field) {
+	public String generateHashCodeExpression(FieldDetails field) {
 		String getter = "this." + templateHelper.getGetterName(field) + "()";
 		String typeName = field.getType().determineRawClass().getClassName();
 		return switch (typeName) {

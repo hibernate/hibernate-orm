@@ -1,23 +1,23 @@
     public ${templateHelper.getDeclarationName()}() {
     }
-<#if templateHelper.needsMinimalConstructor()>
+<#if constructors.needsMinimalConstructor()>
 
-    public ${templateHelper.getDeclarationName()}(${templateHelper.getMinimalConstructorParameterList()}) {
-<#if (templateHelper.getSuperclassMinimalConstructorProperties()?size > 0)>
-        super(${templateHelper.getSuperclassMinimalConstructorArgumentList()});
+    public ${templateHelper.getDeclarationName()}(${constructors.getMinimalConstructorParameterList()}) {
+<#if (constructors.getSuperclassMinimalConstructorProperties()?size > 0)>
+        super(${constructors.getSuperclassMinimalConstructorArgumentList()});
 </#if>
-<#list templateHelper.getMinimalConstructorProperties() as prop>
+<#list constructors.getMinimalConstructorProperties() as prop>
         this.${prop.fieldName()} = ${prop.fieldName()};
 </#list>
     }
 </#if>
-<#if templateHelper.needsFullConstructor()>
+<#if constructors.needsFullConstructor()>
 
-    public ${templateHelper.getDeclarationName()}(${templateHelper.getFullConstructorParameterList()}) {
-<#if (templateHelper.getSuperclassFullConstructorProperties()?size > 0)>
-        super(${templateHelper.getSuperclassFullConstructorArgumentList()});
+    public ${templateHelper.getDeclarationName()}(${constructors.getFullConstructorParameterList()}) {
+<#if (constructors.getSuperclassFullConstructorProperties()?size > 0)>
+        super(${constructors.getSuperclassFullConstructorArgumentList()});
 </#if>
-<#list templateHelper.getFullConstructorProperties() as prop>
+<#list constructors.getFullConstructorProperties() as prop>
         this.${prop.fieldName()} = ${prop.fieldName()};
 </#list>
     }

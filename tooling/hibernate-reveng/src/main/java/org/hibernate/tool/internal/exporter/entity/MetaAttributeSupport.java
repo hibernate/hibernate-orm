@@ -21,7 +21,7 @@ import java.util.Map;
 
 import org.hibernate.models.spi.FieldDetails;
 
-class MetaAttributeSupport {
+public class MetaAttributeSupport {
 
 	private final Map<String, List<String>> classMetaAttributes;
 	private final Map<String, Map<String, List<String>>> fieldMetaAttributes;
@@ -37,27 +37,27 @@ class MetaAttributeSupport {
 
 	// --- Core lookups ---
 
-	boolean hasClassMetaAttribute(String name) {
+	public boolean hasClassMetaAttribute(String name) {
 		return classMetaAttributes.containsKey(name);
 	}
 
-	String getClassMetaAttribute(String name) {
+	public String getClassMetaAttribute(String name) {
 		List<String> values = classMetaAttributes.getOrDefault(
 				name, Collections.emptyList());
 		return values.isEmpty() ? "" : String.join("\n", values);
 	}
 
-	List<String> getClassMetaAttributeValues(String name) {
+	public List<String> getClassMetaAttributeValues(String name) {
 		return classMetaAttributes.getOrDefault(name, Collections.emptyList());
 	}
 
-	boolean hasFieldMetaAttribute(FieldDetails field, String name) {
+	public boolean hasFieldMetaAttribute(FieldDetails field, String name) {
 		Map<String, List<String>> attrs = fieldMetaAttributes.getOrDefault(
 				field.getName(), Collections.emptyMap());
 		return attrs.containsKey(name);
 	}
 
-	boolean getFieldMetaAsBool(
+	public boolean getFieldMetaAsBool(
 			FieldDetails field, String name, boolean defaultValue) {
 		Map<String, List<String>> attrs = fieldMetaAttributes.getOrDefault(
 				field.getName(), Collections.emptyMap());
@@ -68,7 +68,7 @@ class MetaAttributeSupport {
 		return Boolean.parseBoolean(values.get(0));
 	}
 
-	String getFieldMetaAttribute(FieldDetails field, String name) {
+	public String getFieldMetaAttribute(FieldDetails field, String name) {
 		Map<String, List<String>> attrs = fieldMetaAttributes.getOrDefault(
 				field.getName(), Collections.emptyMap());
 		List<String> values = attrs.getOrDefault(name, Collections.emptyList());
@@ -77,21 +77,21 @@ class MetaAttributeSupport {
 
 	// --- Field modifiers ---
 
-	String getFieldModifiers(FieldDetails field) {
+	public String getFieldModifiers(FieldDetails field) {
 		if (hasFieldMetaAttribute(field, "scope-field")) {
 			return getFieldMetaAttribute(field, "scope-field");
 		}
 		return "private";
 	}
 
-	String getPropertyGetModifiers(FieldDetails field) {
+	public String getPropertyGetModifiers(FieldDetails field) {
 		if (hasFieldMetaAttribute(field, "scope-get")) {
 			return getFieldMetaAttribute(field, "scope-get");
 		}
 		return "public";
 	}
 
-	String getPropertySetModifiers(FieldDetails field) {
+	public String getPropertySetModifiers(FieldDetails field) {
 		if (hasFieldMetaAttribute(field, "scope-set")) {
 			return getFieldMetaAttribute(field, "scope-set");
 		}
@@ -100,41 +100,41 @@ class MetaAttributeSupport {
 
 	// --- Class-level convenience ---
 
-	boolean hasClassDescription() {
+	public boolean hasClassDescription() {
 		return hasClassMetaAttribute("class-description");
 	}
 
-	String getClassDescription() {
+	public String getClassDescription() {
 		return getClassMetaAttribute("class-description");
 	}
 
-	boolean hasExtraClassCode() {
+	public boolean hasExtraClassCode() {
 		return hasClassMetaAttribute("class-code");
 	}
 
-	String getExtraClassCode() {
+	public String getExtraClassCode() {
 		return getClassMetaAttribute("class-code");
 	}
 
 	// --- Field-level convenience ---
 
-	boolean isGenProperty(FieldDetails field) {
+	public boolean isGenProperty(FieldDetails field) {
 		return getFieldMetaAsBool(field, "gen-property", true);
 	}
 
-	boolean hasFieldDescription(FieldDetails field) {
+	public boolean hasFieldDescription(FieldDetails field) {
 		return hasFieldMetaAttribute(field, "field-description");
 	}
 
-	String getFieldDescription(FieldDetails field) {
+	public String getFieldDescription(FieldDetails field) {
 		return getFieldMetaAttribute(field, "field-description");
 	}
 
-	boolean hasFieldDefaultValue(FieldDetails field) {
+	public boolean hasFieldDefaultValue(FieldDetails field) {
 		return hasFieldMetaAttribute(field, "default-value");
 	}
 
-	String getFieldDefaultValue(FieldDetails field) {
+	public String getFieldDefaultValue(FieldDetails field) {
 		return getFieldMetaAttribute(field, "default-value");
 	}
 }

@@ -61,11 +61,12 @@ import org.hibernate.tool.internal.exporter.entity.TemplateHelper.SqlResultSetMa
 import org.hibernate.tool.internal.exporter.entity.TemplateHelper.EntityResultInfo;
 import org.hibernate.tool.internal.exporter.entity.TemplateHelper.FieldResultInfo;
 
-class ClassAnnotationGenerator {
+public class ClassAnnotationGenerator {
 
 	private final ClassDetails classDetails;
 	private final ImportContext importContext;
 	private final TemplateHelper templateHelper;
+	private final boolean annotated;
 
 	ClassAnnotationGenerator(
 			ClassDetails classDetails,
@@ -74,9 +75,13 @@ class ClassAnnotationGenerator {
 		this.classDetails = classDetails;
 		this.importContext = importContext;
 		this.templateHelper = templateHelper;
+		this.annotated = templateHelper.isAnnotated();
 	}
 
-	String generate() {
+	public String generate() {
+		if (!annotated) {
+			return "";
+		}
 		StringBuilder sb = new StringBuilder();
 		if (classDetails.hasDirectAnnotationUsage(Embeddable.class)) {
 			return appendEmbeddable(sb);

@@ -59,7 +59,7 @@ import org.hibernate.tool.internal.exporter.entity.TemplateHelper.NamedQueryInfo
 import org.hibernate.tool.internal.exporter.entity.TemplateHelper.SecondaryTableInfo;
 import org.hibernate.tool.internal.exporter.entity.TemplateHelper.SqlResultSetMappingInfo;
 
-class QueryAndFilterHelper {
+public class QueryAndFilterHelper {
 
 	private final ClassDetails classDetails;
 
@@ -69,7 +69,7 @@ class QueryAndFilterHelper {
 
 	// --- Named queries ---
 
-	List<NamedQueryInfo> getNamedQueries() {
+	public List<NamedQueryInfo> getNamedQueries() {
 		List<NamedQueryInfo> result = new ArrayList<>();
 		NamedQuery single = classDetails.getDirectAnnotationUsage(NamedQuery.class);
 		if (single != null) {
@@ -84,7 +84,7 @@ class QueryAndFilterHelper {
 		return result;
 	}
 
-	List<NamedNativeQueryInfo> getNamedNativeQueries() {
+	public List<NamedNativeQueryInfo> getNamedNativeQueries() {
 		List<NamedNativeQueryInfo> result = new ArrayList<>();
 		NamedNativeQuery single = classDetails.getDirectAnnotationUsage(
 				NamedNativeQuery.class);
@@ -115,7 +115,7 @@ class QueryAndFilterHelper {
 
 	// --- SQL result set mappings ---
 
-	List<SqlResultSetMappingInfo> getSqlResultSetMappings() {
+	public List<SqlResultSetMappingInfo> getSqlResultSetMappings() {
 		List<SqlResultSetMappingInfo> result = new ArrayList<>();
 		SqlResultSetMapping single = classDetails.getDirectAnnotationUsage(
 				SqlResultSetMapping.class);
@@ -156,7 +156,7 @@ class QueryAndFilterHelper {
 
 	// --- Filters ---
 
-	List<FilterInfo> getFilters() {
+	public List<FilterInfo> getFilters() {
 		List<FilterInfo> result = new ArrayList<>();
 		Filter single = classDetails.getDirectAnnotationUsage(Filter.class);
 		if (single != null) {
@@ -171,7 +171,7 @@ class QueryAndFilterHelper {
 		return result;
 	}
 
-	List<FilterDefInfo> getFilterDefs() {
+	public List<FilterDefInfo> getFilterDefs() {
 		List<FilterDefInfo> result = new ArrayList<>();
 		FilterDef single = classDetails.getDirectAnnotationUsage(FilterDef.class);
 		if (single != null) {
@@ -198,7 +198,7 @@ class QueryAndFilterHelper {
 
 	// --- SQL DML ---
 
-	List<SQLInsert> getSQLInserts() {
+	public List<SQLInsert> getSQLInserts() {
 		List<SQLInsert> result = new ArrayList<>();
 		SQLInsert single = classDetails.getDirectAnnotationUsage(SQLInsert.class);
 		if (single != null) {
@@ -213,7 +213,7 @@ class QueryAndFilterHelper {
 		return result;
 	}
 
-	List<SQLUpdate> getSQLUpdates() {
+	public List<SQLUpdate> getSQLUpdates() {
 		List<SQLUpdate> result = new ArrayList<>();
 		SQLUpdate single = classDetails.getDirectAnnotationUsage(SQLUpdate.class);
 		if (single != null) {
@@ -228,7 +228,7 @@ class QueryAndFilterHelper {
 		return result;
 	}
 
-	List<SQLDelete> getSQLDeletes() {
+	public List<SQLDelete> getSQLDeletes() {
 		List<SQLDelete> result = new ArrayList<>();
 		SQLDelete single = classDetails.getDirectAnnotationUsage(SQLDelete.class);
 		if (single != null) {
@@ -245,7 +245,7 @@ class QueryAndFilterHelper {
 
 	// --- Fetch profiles ---
 
-	List<FetchProfile> getFetchProfiles() {
+	public List<FetchProfile> getFetchProfiles() {
 		List<FetchProfile> result = new ArrayList<>();
 		FetchProfile single = classDetails.getDirectAnnotationUsage(
 				FetchProfile.class);
@@ -264,7 +264,7 @@ class QueryAndFilterHelper {
 
 	// --- Secondary tables ---
 
-	List<SecondaryTableInfo> getSecondaryTables() {
+	public List<SecondaryTableInfo> getSecondaryTables() {
 		List<SecondaryTableInfo> result = new ArrayList<>();
 		SecondaryTable single = classDetails.getDirectAnnotationUsage(
 				SecondaryTable.class);

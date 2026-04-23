@@ -32,20 +32,23 @@ import jakarta.persistence.OneToOne;
 
 import org.hibernate.models.spi.FieldDetails;
 
-class RelationshipAnnotationGenerator {
+public class RelationshipAnnotationGenerator {
 
 	private final ImportContext importContext;
 	private final TemplateHelper templateHelper;
+	private final boolean annotated;
 
 	RelationshipAnnotationGenerator(
 			ImportContext importContext, TemplateHelper templateHelper) {
 		this.importContext = importContext;
 		this.templateHelper = templateHelper;
+		this.annotated = templateHelper.isAnnotated();
 	}
 
 	// --- @ManyToOne ---
 
-	String generateManyToOneAnnotation(FieldDetails field) {
+	public String generateManyToOneAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		ManyToOne m2o = templateHelper.fieldGetAnnotation(field, ManyToOne.class);
 		if (m2o == null) {
 			return "";
@@ -79,7 +82,8 @@ class RelationshipAnnotationGenerator {
 
 	// --- @OneToMany ---
 
-	String generateOneToManyAnnotation(FieldDetails field) {
+	public String generateOneToManyAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		OneToMany o2m = templateHelper.fieldGetAnnotation(field, OneToMany.class);
 		if (o2m == null) {
 			return "";
@@ -115,7 +119,8 @@ class RelationshipAnnotationGenerator {
 
 	// --- @OneToOne ---
 
-	String generateOneToOneAnnotation(FieldDetails field) {
+	public String generateOneToOneAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		OneToOne o2o = templateHelper.fieldGetAnnotation(field, OneToOne.class);
 		if (o2o == null) {
 			return "";
@@ -181,7 +186,8 @@ class RelationshipAnnotationGenerator {
 
 	// --- @ManyToMany ---
 
-	String generateManyToManyAnnotation(FieldDetails field) {
+	public String generateManyToManyAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		ManyToMany m2m = templateHelper.fieldGetAnnotation(field, ManyToMany.class);
 		if (m2m == null) {
 			return "";
@@ -244,7 +250,8 @@ class RelationshipAnnotationGenerator {
 
 	// --- @EmbeddedId ---
 
-	String generateEmbeddedIdAnnotation(FieldDetails field) {
+	public String generateEmbeddedIdAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		if (!templateHelper.fieldHasAnnotation(field, EmbeddedId.class)) {
 			return "";
 		}
@@ -257,7 +264,8 @@ class RelationshipAnnotationGenerator {
 
 	// --- @Embedded ---
 
-	String generateEmbeddedAnnotation(FieldDetails field) {
+	public String generateEmbeddedAnnotation(FieldDetails field) {
+		if (!annotated) return "";
 		if (!templateHelper.fieldHasAnnotation(field, Embedded.class)) {
 			return "";
 		}

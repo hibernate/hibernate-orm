@@ -199,6 +199,13 @@ public class EntityExporter implements Exporter {
 			}
 		}
 		model.put("templateHelper", templateHelper);
+		model.put("classInfo", templateHelper.getClassAnnotationGenerator());
+		model.put("fieldAnnotations", templateHelper.getFieldAnnotationGenerator());
+		model.put("relAnnotations", templateHelper.getRelationshipAnnotationGenerator());
+		model.put("constructors", templateHelper.getConstructorHelper());
+		model.put("equalsHashCode", templateHelper.getEqualsHashCodeHelper());
+		model.put("meta", templateHelper.getMetaAttributeSupport());
+		model.put("queries", templateHelper.getQueryAndFilterHelper());
 		model.put("date", new Date());
 		model.put("version", Version.versionString());
 		try {

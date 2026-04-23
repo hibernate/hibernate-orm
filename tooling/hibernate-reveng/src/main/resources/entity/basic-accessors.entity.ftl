@@ -1,76 +1,76 @@
 <#-- Composite ID accessor -->
 <#if templateHelper.getCompositeIdField()??>
 <#assign cid = templateHelper.getCompositeIdField()>
-<#assign ann = templateHelper.generateEmbeddedIdAnnotation(cid)>
+<#assign ann = relAnnotations.generateEmbeddedIdAnnotation(cid)>
 <#if ann?has_content>
     ${ann}
 </#if>
-    ${templateHelper.getPropertyGetModifiers(cid)} ${templateHelper.getJavaTypeName(cid)} ${templateHelper.getGetterName(cid.getName())}() {
+    ${meta.getPropertyGetModifiers(cid)} ${templateHelper.getJavaTypeName(cid)} ${templateHelper.getGetterName(cid.getName())}() {
         return this.${templateHelper.getFieldName(cid)};
     }
 
-    ${templateHelper.getPropertySetModifiers(cid)} void ${templateHelper.getSetterName(cid.getName())}(${templateHelper.getJavaTypeName(cid)} ${templateHelper.getFieldName(cid)}) {
+    ${meta.getPropertySetModifiers(cid)} void ${templateHelper.getSetterName(cid.getName())}(${templateHelper.getJavaTypeName(cid)} ${templateHelper.getFieldName(cid)}) {
         this.${templateHelper.getFieldName(cid)} = ${templateHelper.getFieldName(cid)};
     }
 
 </#if>
 <#-- Basic field accessors (respect gen-property) -->
 <#list templateHelper.getBasicFields() as field>
-<#if templateHelper.isGenProperty(field)>
-    <#assign idAnn = templateHelper.isPrimaryKey(field)?then(templateHelper.generateIdAnnotations(field), "")>
+<#if meta.isGenProperty(field)>
+    <#assign idAnn = templateHelper.isPrimaryKey(field)?then(fieldAnnotations.generateIdAnnotations(field), "")>
     <#if idAnn?has_content>
     ${idAnn}
     </#if>
-    <#assign versionAnn = templateHelper.isVersion(field)?then(templateHelper.generateVersionAnnotation(), "")>
+    <#assign versionAnn = templateHelper.isVersion(field)?then(fieldAnnotations.generateVersionAnnotation(), "")>
     <#if versionAnn?has_content>
     ${versionAnn}
     </#if>
-    <#assign basicAnn = templateHelper.generateBasicAnnotation(field)>
+    <#assign basicAnn = fieldAnnotations.generateBasicAnnotation(field)>
     <#if basicAnn?has_content>
     ${basicAnn}
     </#if>
-    <#assign temporalAnn = templateHelper.generateTemporalAnnotation(field)>
+    <#assign temporalAnn = fieldAnnotations.generateTemporalAnnotation(field)>
     <#if temporalAnn?has_content>
     ${temporalAnn}
     </#if>
-    <#assign lobAnn = templateHelper.isLob(field)?then(templateHelper.generateLobAnnotation(), "")>
+    <#assign lobAnn = templateHelper.isLob(field)?then(fieldAnnotations.generateLobAnnotation(), "")>
     <#if lobAnn?has_content>
     ${lobAnn}
     </#if>
-    <#assign convertAnn = templateHelper.generateConvertAnnotation(field)>
+    <#assign convertAnn = fieldAnnotations.generateConvertAnnotation(field)>
     <#if convertAnn?has_content>
     ${convertAnn}
     </#if>
-    <#assign naturalIdAnn = templateHelper.generateNaturalIdAnnotation(field)>
+    <#assign naturalIdAnn = fieldAnnotations.generateNaturalIdAnnotation(field)>
     <#if naturalIdAnn?has_content>
     ${naturalIdAnn}
     </#if>
-    <#assign olAnn = templateHelper.generateOptimisticLockAnnotation(field)>
+    <#assign olAnn = fieldAnnotations.generateOptimisticLockAnnotation(field)>
     <#if olAnn?has_content>
     ${olAnn}
     </#if>
-    <#assign accessAnn = templateHelper.generateAccessAnnotation(field)>
+    <#assign accessAnn = fieldAnnotations.generateAccessAnnotation(field)>
     <#if accessAnn?has_content>
     ${accessAnn}
     </#if>
-    <#assign formulaAnn = templateHelper.generateFormulaAnnotation(field)>
+    <#assign formulaAnn = fieldAnnotations.generateFormulaAnnotation(field)>
     <#if formulaAnn?has_content>
     ${formulaAnn}
     <#else>
-    <#assign colAnn = templateHelper.generateColumnAnnotation(field)>
+    <#assign colAnn = fieldAnnotations.generateColumnAnnotation(field)>
     <#if colAnn?has_content>
     ${colAnn}
     </#if>
     </#if>
-    <#assign ctAnn = templateHelper.generateColumnTransformerAnnotation(field)>
+    <#assign ctAnn = fieldAnnotations.generateColumnTransformerAnnotation(field)>
     <#if ctAnn?has_content>
     ${ctAnn}
     </#if>
-    ${templateHelper.getPropertyGetModifiers(field)} ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
+    ${meta.getPropertyGetModifiers(field)} ${templateHelper.getJavaTypeName(field)} ${templateHelper.getGetterName(field)}() {
         return this.${templateHelper.getFieldName(field)};
     }
 
-    ${templateHelper.getPropertySetModifiers(field)} void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getJavaTypeName(field)} ${templateHelper.getFieldName(field)}) {
+    ${meta.getPropertySetModifiers(field)} void ${templateHelper.getSetterName(field.getName())}(${templateHelper.getJavaTypeName(field)} ${templateHelper.getFieldName(field)}) {
         this.${templateHelper.getFieldName(field)} = ${templateHelper.getFieldName(field)};
     }
 

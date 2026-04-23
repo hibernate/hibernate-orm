@@ -11,6 +11,7 @@ import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
+import org.hibernate.models.spi.TypeDetails;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,6 +34,8 @@ public class DomainModelCategorizationCollector {
 	private final Set<ClassDetails> rootEntities = new HashSet<>();
 	private final Map<String,ClassDetails> mappedSuperclasses = new HashMap<>();
 	private final Map<String,ClassDetails> embeddables = new HashMap<>();
+	private final Set<String> enumTypes = new HashSet<>();
+	private final Set<String> javaTypes = new HashSet<>();
 
 	public DomainModelCategorizationCollector(
 			GlobalRegistrations globalRegistrations,
@@ -55,6 +58,14 @@ public class DomainModelCategorizationCollector {
 
 	public Map<String, ClassDetails> getEmbeddables() {
 		return embeddables;
+	}
+
+	public Set<String> getEnumTypes() {
+		return enumTypes;
+	}
+
+	public Set<String> getJavaTypes() {
+		return javaTypes;
 	}
 
 	public void apply(JaxbEntityMappingsImpl jaxbRoot, XmlDocumentContext xmlDocumentContext) {
@@ -109,16 +120,22 @@ public class DomainModelCategorizationCollector {
 			if ( classDetails.getClassName() != null ) {
 				mappedSuperclasses.put( classDetails.getClassName(), classDetails );
 			}
+			collectFieldEnumTypes( classDetails );
+			collectClassHierarchyJavaTypes( classDetails );
 		}
 		else if ( isEntity( classDetails ) ) {
 			if ( isRootEntity( classDetails ) ) {
 				rootEntities.add( classDetails );
 			}
+			collectFieldEnumTypes( classDetails );
+			collectClassHierarchyJavaTypes( classDetails );
 		}
 		else if ( isEmbeddable( classDetails ) ) {
 			if ( classDetails.getClassName() != null ) {
 				embeddables.put( classDetails.getClassName(), classDetails );
 			}
+			collectFieldEnumTypes( classDetails );
+			collectClassHierarchyJavaTypes( classDetails );
 		}
 
 		if ( isConverter( classDetails ) ) {
@@ -129,6 +146,44 @@ public class DomainModelCategorizationCollector {
 	private static boolean isConverter(ClassDetails classDetails) {
 		return classDetails.getClassName() != null && classDetails.isImplementor( AttributeConverter.class )
 			|| classDetails.getDirectAnnotationUsage( Converter.class ) != null;
+	}
+
+	private void collectFieldEnumTypes(ClassDetails classDetails) {
+		classDetails.forEachField( (index, fieldDetails) -> {
+			final TypeDetails type = fieldDetails.getType();
+			if ( type == null || type.getTypeKind() != TypeDetails.Kind.CLASS ) {
+				return;
+			}
+			final ClassDetails fieldTypeClass = type.determineRawClass();
+			if ( fieldTypeClass != null && fieldTypeClass.isEnum() ) {
+				enumTypes.add( fieldTypeClass.getClassName() );
+			}
+		} );
+	}
+
+	private void collectClassHierarchyJavaTypes(ClassDetails classDetails) {
+		collectClassHierarchyJavaTypes( classDetails, new HashSet<>() );
+	}
+
+	private void collectClassHierarchyJavaTypes(ClassDetails classDetails, Set<String> visited) {
+		if ( classDetails == null ) {
+			return;
+		}
+		final String className = classDetails.getClassName();
+		if ( className == null || !visited.add( className ) ) {
+			return;
+		}
+		if ( "java.lang.Object".equals( className ) ) {
+			return;
+		}
+		if ( className.startsWith( "java." ) ) {
+			javaTypes.add( className );
+			return;
+		}
+		collectClassHierarchyJavaTypes( classDetails.getSuperClass(), visited );
+		for ( TypeDetails iface : classDetails.getImplementedInterfaces() ) {
+			collectClassHierarchyJavaTypes( iface.determineRawClass(), visited );
+		}
 	}
 
 	public static boolean isRootEntity(ClassDetails classInfo) {

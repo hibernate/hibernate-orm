@@ -201,7 +201,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 							case VARBINARY:
 							case LONG32VARBINARY:
 								// We encode binary data as hex, so we have to decode here
-								if ( determineLength( column ) * 2 < 4000L ) {
+								if ( determineLength( column, typeConfiguration ) * 2 < 4000L ) {
 									return template.replace(
 											placeholder,
 											"hextoraw(json_value(" + parentPartExpression + columnExpression + "'))"
@@ -214,7 +214,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 										placeholder,
 										// returning binary data is not yet implemented in the json functions,
 										// so use the xml implementation
-										"xmlcast(xmlcdata(json_value(" + parentPartExpression + columnExpression + "' returning clob))) as " + column.getColumnDefinition() + ')'
+										"xmlcast(xmlcdata(json_value(" + parentPartExpression + columnExpression + "' returning clob)) as " + column.getColumnDefinition() + ')'
 								);
 							case ARRAY:
 								final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) column.getJdbcMapping();
@@ -380,26 +380,18 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 		return extractArguments;
 	}
 
-	private static long determineLength(SqlTypedMapping column) {
+	private static long determineLength(SqlTypedMapping column, TypeConfiguration typeConfiguration) {
 		final Long length = column.getLength();
 		if ( length != null ) {
 			return length;
 		}
 		else {
-			final String columnDefinition = column.getColumnDefinition();
-			assert columnDefinition != null;
-			final int parenthesisIndex = columnDefinition.indexOf( '(' );
-			if ( parenthesisIndex != -1 ) {
-				int end;
-				for ( end = parenthesisIndex + 1; end < columnDefinition.length(); end++ ) {
-					if ( !Character.isDigit( columnDefinition.charAt( end ) ) ) {
-						break;
-					}
-				}
-				return Long.parseLong( columnDefinition.substring( parenthesisIndex + 1, end ) );
-			}
-			// Default to the max varchar length
-			return 4000L;
+			final var jdbcMapping = column.getJdbcMapping();
+			return jdbcMapping.getMappedJavaType()
+					.getDefaultSqlLength(
+							typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect(),
+							jdbcMapping.getJdbcType()
+					);
 		}
 	}
 

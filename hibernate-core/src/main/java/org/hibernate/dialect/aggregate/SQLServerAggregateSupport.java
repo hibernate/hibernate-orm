@@ -84,7 +84,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 					case LONG32VARBINARY:
 					case BLOB:
 						// We encode binary data as hex, so we have to decode here
-						if ( determineLength( column ) * 2 > JSON_VALUE_MAX_LENGTH ) {
+						if ( determineLength( column, typeConfiguration ) * 2 > JSON_VALUE_MAX_LENGTH ) {
 							// Since data is HEX encoded, multiply the max length by 2 since we need 2 hex chars per byte
 							return template.replace(
 									placeholder,
@@ -105,7 +105,7 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 					case LONG32NVARCHAR:
 					case CLOB:
 					case NCLOB:
-						if ( determineLength( column ) > JSON_VALUE_MAX_LENGTH ) {
+						if ( determineLength( column, typeConfiguration ) > JSON_VALUE_MAX_LENGTH ) {
 							return template.replace(
 									placeholder,
 									"(select * from openjson(" + aggregateParentReadExpression + ") with (v " + column.getColumnDefinition() + " '$." + columnExpression + "'))"
@@ -184,26 +184,18 @@ public class SQLServerAggregateSupport extends AggregateSupportImpl {
 		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnTypeCode );
 	}
 
-	private static Long determineLength(SqlTypedMapping column) {
+	private static long determineLength(SqlTypedMapping column, TypeConfiguration typeConfiguration) {
 		final Long length = column.getLength();
 		if ( length != null ) {
 			return length;
 		}
 		else {
-			final String columnDefinition = column.getColumnDefinition();
-			assert columnDefinition != null;
-			final int parenthesisIndex = columnDefinition.indexOf( '(' );
-			if ( parenthesisIndex != -1 ) {
-				int end;
-				for ( end = parenthesisIndex + 1; end < columnDefinition.length(); end++ ) {
-					if ( !Character.isDigit( columnDefinition.charAt( end ) ) ) {
-						break;
-					}
-				}
-				return Long.parseLong( columnDefinition.substring( parenthesisIndex + 1, end ) );
-			}
-			// Default to the max varchar length
-			return 8000L;
+			final var jdbcMapping = column.getJdbcMapping();
+			return jdbcMapping.getMappedJavaType()
+					.getDefaultSqlLength(
+							typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect(),
+							jdbcMapping.getJdbcType()
+					);
 		}
 	}
 

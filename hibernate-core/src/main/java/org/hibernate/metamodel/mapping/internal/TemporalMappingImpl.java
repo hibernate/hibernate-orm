@@ -105,7 +105,6 @@ public class TemporalMappingImpl implements TemporalMapping {
 				false,
 				false,
 				dialect,
-				sqmFunctionRegistry,
 				creationContext
 		);
 		endingColumnMapping = SelectableMappingImpl.from(
@@ -120,7 +119,6 @@ public class TemporalMappingImpl implements TemporalMapping {
 				false,
 				false,
 				dialect,
-				sqmFunctionRegistry,
 				creationContext
 		);
 

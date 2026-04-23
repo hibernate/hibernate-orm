@@ -826,7 +826,6 @@ public class H2JsonTableFunction extends JsonTableFunction {
 					null,
 					null,
 					null,
-					null,
 					false,
 					false,
 					false,

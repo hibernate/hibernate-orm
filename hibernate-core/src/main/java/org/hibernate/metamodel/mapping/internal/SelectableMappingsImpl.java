@@ -139,7 +139,6 @@ public class SelectableMappingsImpl implements SelectableMappings {
 					false,
 					false,
 					dialect,
-					sqmFunctionRegistry,
 					creationContext
 			);
 		}

@@ -137,11 +137,6 @@ public interface SoftDeleteMapping extends AuxiliaryMapping, SelectableMapping, 
 	}
 
 	@Override
-	default @Nullable String getColumnDefinition() {
-		return null;
-	}
-
-	@Override
 	default @Nullable Long getLength() {
 		return null;
 	}

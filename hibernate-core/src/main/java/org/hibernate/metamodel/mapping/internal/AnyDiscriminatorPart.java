@@ -57,7 +57,6 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 	private final SelectablePath selectablePath;
 	private final @Nullable String customReadExpression;
 	private final @Nullable String customWriteExpression;
-	private final @Nullable String columnDefinition;
 	private final @Nullable Long length;
 	private final @Nullable Integer arrayLength;
 	private final @Nullable Integer precision;
@@ -79,7 +78,6 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			SelectablePath selectablePath,
 			String customReadExpression,
 			String customWriteExpression,
-			String columnDefinition,
 			Long length,
 			Integer precision,
 			Integer scale,
@@ -94,14 +92,13 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 				partRole,
 				declaringType,
 				table,
-				column,
-				selectablePath,
-				customReadExpression,
-				customWriteExpression,
-				columnDefinition,
-				length,
-				null,
-				precision,
+					column,
+					selectablePath,
+					customReadExpression,
+					customWriteExpression,
+					length,
+					null,
+					precision,
 				scale,
 				insertable,
 				updateable,
@@ -121,7 +118,6 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 			SelectablePath selectablePath,
 			@Nullable String customReadExpression,
 			@Nullable String customWriteExpression,
-			@Nullable String columnDefinition,
 			@Nullable Long length,
 			@Nullable Integer arrayLength,
 			@Nullable Integer precision,
@@ -140,7 +136,6 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 		this.selectablePath = selectablePath;
 		this.customReadExpression = customReadExpression;
 		this.customWriteExpression = customWriteExpression;
-		this.columnDefinition = columnDefinition;
 		this.length = length;
 		this.arrayLength = arrayLength;
 		this.precision = precision;
@@ -236,11 +231,6 @@ public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions 
 	@Override
 	public @Nullable String getCustomWriteExpression() {
 		return customWriteExpression;
-	}
-
-	@Override
-	public @Nullable String getColumnDefinition() {
-		return columnDefinition;
 	}
 
 	@Override

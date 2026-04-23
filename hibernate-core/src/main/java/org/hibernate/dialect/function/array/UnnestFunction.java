@@ -19,7 +19,6 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.SqlTypes;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -77,15 +76,7 @@ public class UnnestFunction extends AbstractSqmSelfRenderingSetReturningFunction
 	}
 
 	protected String getDdlType(SqlTypedMapping sqlTypedMapping, int containerSqlTypeCode, SqlAstTranslator<?> translator) {
-		final String columnDefinition = sqlTypedMapping.getColumnDefinition();
-		if ( columnDefinition != null ) {
-			return columnDefinition;
-		}
-		return translator.getSessionFactory().getTypeConfiguration().getDdlTypeRegistry().getTypeName(
-				sqlTypedMapping.getJdbcMapping().getJdbcType().getDdlTypeCode(),
-				sqlTypedMapping.toSize(),
-				(Type) sqlTypedMapping.getJdbcMapping()
-		);
+		return DdlTypeHelper.getTypeName( sqlTypedMapping, translator.getSessionFactory().getTypeConfiguration() );
 	}
 
 	protected void renderJsonTable(

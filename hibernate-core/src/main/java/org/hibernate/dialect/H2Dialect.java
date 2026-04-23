@@ -97,6 +97,7 @@ import static org.hibernate.internal.util.StringHelper.split;
 import static org.hibernate.query.common.TemporalUnit.SECOND;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.DOUBLE;
@@ -220,6 +221,18 @@ public class H2Dialect extends Dialect {
 			case VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR -> "varchar";
 			case BINARY, VARBINARY, LONG32VARBINARY -> "varbinary";
 			default -> super.castType( sqlTypeCode );
+		};
+	}
+
+	@Override
+	protected String narrowCastType(int sqlTypeCode) {
+		// H2 misbehaves when casting to clob/blob (in particular, array_agg
+		// on clob produces funky results), so use unsized varchar/varbinary
+		// in narrow cast positions instead — consistent with castType().
+		return switch (sqlTypeCode) {
+			case CLOB, NCLOB -> "varchar";
+			case BLOB -> "varbinary";
+			default -> super.narrowCastType( sqlTypeCode );
 		};
 	}
 

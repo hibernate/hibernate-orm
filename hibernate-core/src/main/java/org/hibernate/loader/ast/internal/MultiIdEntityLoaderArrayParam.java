@@ -63,8 +63,8 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 		final var idClass = identifierMapping.getJavaType().getJavaTypeClass();
 		idArray = (Object[]) Array.newInstance( idClass, 0 );
 		arraySqlTypedMapping = new SqlTypedMappingImpl(
-				selectable.getColumnDefinition(),
 				selectable.getLength(),
+				selectable.getArrayLength(),
 				selectable.getPrecision(),
 				selectable.getScale(),
 				selectable.getTemporalPrecision(),

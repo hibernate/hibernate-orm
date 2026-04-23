@@ -822,7 +822,6 @@ abstract public class DialectFeatureChecks {
 					"",
 					aggregateColumnTypeCode,
 					new SqlTypedMappingImpl(
-							"varchar",
 							null,
 							null,
 							null,

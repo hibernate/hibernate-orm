@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.hibernate.dialect.function.array.DdlTypeHelper.getNarrowCastTypeName;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
@@ -108,7 +109,7 @@ public class SybaseASEAggregateSupport extends AggregateSupportImpl {
 						// Cast from clob to varchar first
 						return template.replace(
 								placeholder,
-								"cast(str_replace(xmlextract(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression + "/text()" ) + " returns varchar(36)),'Z','') as " + column.getColumnDefinition() + ")"
+								"cast(str_replace(xmlextract(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression + "/text()" ) + " returns varchar(36)),'Z','') as " + getNarrowCastTypeName( column, typeConfiguration ) + ")"
 						);
 					case SQLXML:
 						return template.replace(
@@ -136,7 +137,7 @@ public class SybaseASEAggregateSupport extends AggregateSupportImpl {
 						// xmlextract() unfortunately does not resolve XML entities, so we use str_replace to do that
 						return template.replace(
 								placeholder,
-								"cast(str_replace(str_replace(str_replace(str_replace(xmlextract(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression + "/text()" ) + " returns varchar(16384)),'&lt;','<'),'&gt;','>'),'&quot;','\"'),'&amp;','&') as " + column.getColumnDefinition() + ")"
+								"cast(str_replace(str_replace(str_replace(str_replace(xmlextract(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression + "/text()" ) + " returns varchar(16384)),'&lt;','<'),'&gt;','>'),'&quot;','\"'),'&amp;','&') as " + getNarrowCastTypeName( column, typeConfiguration ) + ")"
 						);
 					case UUID:
 						if ( SqlTypes.isBinaryType( column.getJdbcMapping().getJdbcType().getDdlTypeCode() ) ) {
@@ -149,7 +150,7 @@ public class SybaseASEAggregateSupport extends AggregateSupportImpl {
 					default:
 						return template.replace(
 								placeholder,
-								"cast(xmlextract(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression + "/text()" ) + " returns varchar(16384)) as " + column.getColumnDefinition() + ")"
+								"cast(xmlextract(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression + "/text()" ) + " returns varchar(16384)) as " + getNarrowCastTypeName( column, typeConfiguration ) + ")"
 						);
 				}
 		}
@@ -308,12 +309,10 @@ public class SybaseASEAggregateSupport extends AggregateSupportImpl {
 	private static class AggregateXmlWriteExpression implements XmlWriteExpression {
 
 		private final SelectableMapping selectableMapping;
-		private final String columnDefinition;
 		private final LinkedHashMap<String, XmlWriteExpression> subExpressions = new LinkedHashMap<>();
 
-		private AggregateXmlWriteExpression(SelectableMapping selectableMapping, String columnDefinition) {
+		private AggregateXmlWriteExpression(SelectableMapping selectableMapping) {
 			this.selectableMapping = selectableMapping;
-			this.columnDefinition = columnDefinition;
 		}
 
 		@Override
@@ -332,7 +331,7 @@ public class SybaseASEAggregateSupport extends AggregateSupportImpl {
 					final int selectableIndex = embeddableMappingType.getSelectableIndex( parts[i].getSelectableName() );
 					currentAggregate = (AggregateXmlWriteExpression) currentAggregate.subExpressions.computeIfAbsent(
 							parts[i].getSelectableName(),
-							k -> new AggregateXmlWriteExpression( embeddableMappingType.getJdbcValueSelectable( selectableIndex ), columnDefinition )
+							k -> new AggregateXmlWriteExpression( embeddableMappingType.getJdbcValueSelectable( selectableIndex ) )
 					);
 				}
 				final String customWriteExpression = column.getWriteExpression();
@@ -406,7 +405,7 @@ public class SybaseASEAggregateSupport extends AggregateSupportImpl {
 		private final String path;
 
 		RootXmlWriteExpression(SelectableMapping aggregateColumn, SelectableMapping[] columns) {
-			super( aggregateColumn, aggregateColumn.getColumnDefinition() );
+			super( aggregateColumn );
 			path = aggregateColumn.getSelectionExpression();
 			initializeSubExpressions( aggregateColumn, columns );
 		}

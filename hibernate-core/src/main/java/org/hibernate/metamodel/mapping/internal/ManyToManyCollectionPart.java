@@ -507,7 +507,6 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 					false,
 					false,
 					creationProcess.getCreationContext().getDialect(),
-					creationProcess.getSqmFunctionRegistry(),
 					creationProcess.getCreationContext()
 			);
 
@@ -738,7 +737,6 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart
 				fkValue.isPartitionKey(),
 				false,
 				dialect,
-				creationProcess.getSqmFunctionRegistry(),
 				creationProcess.getCreationContext()
 		);
 

@@ -17,6 +17,8 @@ import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.dialect.function.array.DdlTypeHelper.getNarrowCastTypeName;
+
 /**
  * Sybase ASE unnest function.
  */
@@ -24,6 +26,16 @@ public class SybaseASEUnnestFunction extends UnnestFunction {
 
 	public SybaseASEUnnestFunction() {
 		super( "v", "i", false );
+	}
+
+	@Override
+	protected String getDdlType(SqlTypedMapping sqlTypedMapping, int containerSqlTypeCode, SqlAstTranslator<?> translator) {
+		// Sybase ASE refuses TEXT/UNITEXT/IMAGE in the columns clause of
+		// xmltable(), and also in ORDER BY / UNION select lists (which the
+		// xmltable result column may end up in); use the narrow-cast type
+		// name which maps LOB types to sized VARCHAR/NVARCHAR/VARBINARY.
+		return getNarrowCastTypeName( sqlTypedMapping,
+				translator.getSessionFactory().getTypeConfiguration() );
 	}
 
 	@Override

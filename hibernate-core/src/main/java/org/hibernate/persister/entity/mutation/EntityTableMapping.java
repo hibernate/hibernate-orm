@@ -398,8 +398,8 @@ public class EntityTableMapping implements TableMapping {
 					null, // Leads to construction of a fresh path based on selection expression
 					originalMapping.getCustomReadExpression(),
 					originalMapping.getCustomWriteExpression(),
-					originalMapping.getColumnDefinition(),
 					originalMapping.getLength(),
+					originalMapping.getArrayLength(),
 					originalMapping.getPrecision(),
 					originalMapping.getScale(),
 					originalMapping.getTemporalPrecision(),

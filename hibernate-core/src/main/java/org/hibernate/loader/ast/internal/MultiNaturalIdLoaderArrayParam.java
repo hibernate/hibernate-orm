@@ -54,8 +54,8 @@ public class MultiNaturalIdLoaderArrayParam<E> extends AbstractMultiNaturalIdLoa
 		final var selectable = getNaturalIdAttribute().getSelectable( 0 );
 		final JdbcMapping jdbcMapping = selectable.getJdbcMapping();
 		final SqlTypedMapping arraySqlTypedMapping = new SqlTypedMappingImpl(
-				selectable.getColumnDefinition(),
 				selectable.getLength(),
+				selectable.getArrayLength(),
 				selectable.getPrecision(),
 				selectable.getScale(),
 				selectable.getTemporalPrecision(),

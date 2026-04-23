@@ -649,11 +649,6 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public @Nullable String getColumnDefinition() {
-		return keySide.getModelPart().getColumnDefinition();
-	}
-
-	@Override
 	public @Nullable Long getLength() {
 		return keySide.getModelPart().getLength();
 	}

@@ -488,7 +488,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	private String getSelectClauseNullString(Column column, Dialect dialect) {
 		return dialect.getSelectClauseNullString(
 				new SqlTypedMappingImpl(
-						column.getTypeName(),
 						column.getLength(),
 						column.getArrayLength(),
 						column.getPrecision(),

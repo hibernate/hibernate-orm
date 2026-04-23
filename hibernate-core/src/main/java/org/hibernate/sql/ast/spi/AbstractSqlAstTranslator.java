@@ -5777,7 +5777,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			final SqlTypedMapping sqlTypedMapping = sqlTypedExpression.getSqlTypedMapping();
 			castTarget = new CastTarget(
 					sqlTypedMapping.getJdbcMapping(),
-					sqlTypedMapping.getColumnDefinition(),
 					sqlTypedMapping.getLength(),
 					sqlTypedMapping.getArrayLength(),
 					sqlTypedMapping.getTemporalPrecision() != null

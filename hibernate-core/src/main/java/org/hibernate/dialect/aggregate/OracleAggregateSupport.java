@@ -37,6 +37,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.StructuredJdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.LinkedHashMap;
@@ -44,6 +45,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import static org.hibernate.dialect.function.array.DdlTypeHelper.getNarrowCastTypeName;
+import static org.hibernate.dialect.function.array.DdlTypeHelper.getTypeName;
 import static org.hibernate.type.SqlTypes.*;
 
 public class OracleAggregateSupport extends AggregateSupportImpl {
@@ -139,9 +142,13 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 							case BIGINT:
 							case CLOB:
 							case NCLOB:
+								// use getTypeName (not getCastTypeName) so that CLOB/NCLOB
+								// columns render as 'returning clob/nclob' — Oracle accepts
+								// those here, unlike in cast() targets, and truncating to
+								// varchar2 would lose content for large strings
 								return template.replace(
 										placeholder,
-										"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getColumnDefinition() + ')'
+										"json_value(" + parentPartExpression + columnExpression + "' returning " + getTypeName( column, typeConfiguration ) + ')'
 								);
 
 							case DATE:
@@ -201,7 +208,10 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 							case VARBINARY:
 							case LONG32VARBINARY:
 								// We encode binary data as hex, so we have to decode here
-								if ( determineLength( column, typeConfiguration ) * 2 < 4000L ) {
+								final Long binaryLength = column.getLength();
+								if ( binaryLength != null
+										? binaryLength * 2 < 4000L
+										: !column.getJdbcMapping().getJdbcType().isLobOrLong() ) {
 									return template.replace(
 											placeholder,
 											"hextoraw(json_value(" + parentPartExpression + columnExpression + "'))"
@@ -214,7 +224,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 										placeholder,
 										// returning binary data is not yet implemented in the json functions,
 										// so use the xml implementation
-										"xmlcast(xmlcdata(json_value(" + parentPartExpression + columnExpression + "' returning clob)) as " + column.getColumnDefinition() + ')'
+										"xmlcast(xmlcdata(json_value(" + parentPartExpression + columnExpression + "' returning clob)) as " + getNarrowCastTypeName( column, typeConfiguration ) + ')'
 								);
 							case ARRAY:
 								final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) column.getJdbcMapping();
@@ -235,9 +245,11 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 												jdbcType.getSqlTypeName() + "_from_json(json_query(" + parentPartExpression + columnExpression + "' returning " + jsonTypeName + "))"
 										);
 									default:
+										// getTypeName (not getCastTypeName) for the same reason
+										// as the CLOB/NCLOB case above
 										return template.replace(
 												placeholder,
-												"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getColumnDefinition() + ')'
+												"json_value(" + parentPartExpression + columnExpression + "' returning " + getTypeName( column, typeConfiguration ) + ')'
 										);
 								}
 							case JSON:
@@ -249,7 +261,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 							default:
 								return template.replace(
 										placeholder,
-										"cast(json_value(" + parentPartExpression + columnExpression + "') as " + column.getColumnDefinition() + ')'
+										"cast(json_value(" + parentPartExpression + columnExpression + "') as " + getNarrowCastTypeName( column, typeConfiguration ) + ')'
 								);
 
 						}
@@ -279,7 +291,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 						// Unfortunately, the parsing is nationalized, so we need to replace the standard decimal separator dot with the nationalized one first
 						return template.replace(
 								placeholder,
-								"cast(replace(xmlcast(xmlquery(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression + "/text()" ) + ") as varchar2(255)),'.',substr(to_char(0.1),1,1)) as " + column.getColumnDefinition() + ")"
+								"cast(replace(xmlcast(xmlquery(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression + "/text()" ) + ") as varchar2(255)),'.',substr(to_char(0.1),1,1)) as " + getNarrowCastTypeName( column, typeConfiguration ) + ")"
 						);
 					case DATE:
 						return template.replace(
@@ -330,7 +342,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 					default:
 						return template.replace(
 								placeholder,
-								"xmlcast(xmlquery(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression + "/text()" ) + ") as " + column.getColumnDefinition() + ")"
+								"xmlcast(xmlquery(" + xmlExtractArguments( aggregateParentReadExpression, columnExpression + "/text()" ) + ") as " + getNarrowCastTypeName( column, typeConfiguration ) + ")"
 						);
 				}
 			case STRUCT:
@@ -357,7 +369,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 		if ( aggregateParentReadExpression.startsWith( XML_EXTRACT_START )
 			&& aggregateParentReadExpression.endsWith( XML_EXTRACT_END )
 			&& (separatorIndex = aggregateParentReadExpression.indexOf( XML_EXTRACT_SEPARATOR )) != -1 ) {
-			final var sb = new StringBuilder( aggregateParentReadExpression.length() - XML_EXTRACT_START.length() + xpathFragment.length() );
+			final StringBuilder sb = new StringBuilder( aggregateParentReadExpression.length() - XML_EXTRACT_START.length() + xpathFragment.length() );
 			sb.append( aggregateParentReadExpression, XML_EXTRACT_START.length(), separatorIndex );
 			sb.append( '/' );
 			sb.append( xpathFragment );
@@ -367,7 +379,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 		else if ( aggregateParentReadExpression.startsWith( XML_QUERY_START )
 				&& aggregateParentReadExpression.endsWith( XML_QUERY_END )
 				&& (separatorIndex = aggregateParentReadExpression.indexOf( XML_QUERY_SEPARATOR )) != -1 ) {
-			final var sb = new StringBuilder( aggregateParentReadExpression.length() - XML_QUERY_START.length() + xpathFragment.length() );
+			final StringBuilder sb = new StringBuilder( aggregateParentReadExpression.length() - XML_QUERY_START.length() + xpathFragment.length() );
 			sb.append( aggregateParentReadExpression, XML_QUERY_START.length(), separatorIndex );
 			sb.append( '/' );
 			sb.append( xpathFragment );
@@ -378,21 +390,6 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			extractArguments = "'/" + XmlHelper.ROOT_TAG + "/" + xpathFragment + "' passing " + aggregateParentReadExpression + " returning content";
 		}
 		return extractArguments;
-	}
-
-	private static long determineLength(SqlTypedMapping column, TypeConfiguration typeConfiguration) {
-		final Long length = column.getLength();
-		if ( length != null ) {
-			return length;
-		}
-		else {
-			final var jdbcMapping = column.getJdbcMapping();
-			return jdbcMapping.getMappedJavaType()
-					.getDefaultSqlLength(
-							typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect(),
-							jdbcMapping.getJdbcType()
-					);
-		}
 	}
 
 	@Override
@@ -502,7 +499,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			Size castTargetSize,
 			BasicPluralType<?, ?> pluralType,
 			TypeConfiguration typeConfiguration) {
-		final var ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+		final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
 		final BasicType<?> expressionType = pluralType.getElementType();
 		DdlType ddlType = ddlTypeRegistry.getDescriptor( expressionType.getJdbcType().getDdlTypeCode() );
 		if ( ddlType == null ) {
@@ -572,17 +569,19 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 		);
 	}
 
-	private String determineJsonTypeName(SelectableMapping aggregateColumn) {
-		final String columnDefinition = aggregateColumn.getColumnDefinition();
-		if ( columnDefinition == null ) {
-			assert aggregateColumn.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() == JSON;
+	private String determineJsonTypeName(SelectableMapping aggregateColumn, TypeConfiguration typeConfiguration) {
+		if ( aggregateColumn.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() == JSON) {
 			return switch ( jsonSupport ) {
 				case OSON -> "json";
 				case MERGEPATCH, QUERY_AND_PATH, QUERY -> "blob";
 				case NONE -> "clob";
 			};
 		}
-		return columnDefinition;
+		else {
+			// json_object(... returning <T>) accepts LOB types on Oracle,
+			// so use the DDL type name here, not a narrowed cast target
+			return getTypeName( aggregateColumn, typeConfiguration );
+		}
 	}
 
 	enum JsonSupport {
@@ -606,12 +605,15 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 		protected final EmbeddableMappingType embeddableMappingType;
 		protected final String ddlTypeName;
 
-		public AggregateJsonWriteExpression(SelectableMapping selectableMapping, OracleAggregateSupport aggregateSupport) {
+		public AggregateJsonWriteExpression(
+				SelectableMapping selectableMapping,
+				OracleAggregateSupport aggregateSupport,
+				TypeConfiguration typeConfiguration) {
 			this.colonSyntax = aggregateSupport.jsonSupport == JsonSupport.OSON
 					|| aggregateSupport.jsonSupport == JsonSupport.MERGEPATCH;
 			this.embeddableMappingType = ( (AggregateJdbcType) selectableMapping.getJdbcMapping().getJdbcType() )
 					.getEmbeddableMappingType();
-			this.ddlTypeName = aggregateSupport.determineJsonTypeName( selectableMapping );
+			this.ddlTypeName = aggregateSupport.determineJsonTypeName( selectableMapping, typeConfiguration );
 		}
 
 		protected void initializeSubExpressions(
@@ -629,7 +631,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 					);
 					currentAggregate = (AggregateJsonWriteExpression) currentAggregate.subExpressions.computeIfAbsent(
 							parts[i].getSelectableName(),
-							k -> new AggregateJsonWriteExpression( selectableMapping, aggregateSupport )
+							k -> new AggregateJsonWriteExpression( selectableMapping, aggregateSupport, typeConfiguration )
 					);
 					currentMappingType = currentAggregate.embeddableMappingType;
 				}
@@ -695,7 +697,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				SelectableMapping[] columns,
 				OracleAggregateSupport aggregateSupport,
 				TypeConfiguration typeConfiguration) {
-			super( aggregateColumn, aggregateSupport );
+			super( aggregateColumn, aggregateSupport, typeConfiguration );
 			this.nullable = aggregateColumn.isNullable();
 			this.path = aggregateColumn.getSelectionExpression();
 			initializeSubExpressions( columns, aggregateSupport, typeConfiguration );
@@ -795,12 +797,10 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 	private static class AggregateXmlWriteExpression implements XmlWriteExpression {
 
 		private final SelectableMapping selectableMapping;
-		private final String columnDefinition;
 		private final LinkedHashMap<String, XmlWriteExpression> subExpressions = new LinkedHashMap<>();
 
-		private AggregateXmlWriteExpression(SelectableMapping selectableMapping, String columnDefinition) {
+		private AggregateXmlWriteExpression(SelectableMapping selectableMapping) {
 			this.selectableMapping = selectableMapping;
-			this.columnDefinition = columnDefinition;
 		}
 
 		protected void initializeSubExpressions(SelectableMapping aggregateColumn, SelectableMapping[] columns, TypeConfiguration typeConfiguration) {
@@ -814,7 +814,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 					final int selectableIndex = embeddableMappingType.getSelectableIndex( parts[i].getSelectableName() );
 					currentAggregate = (AggregateXmlWriteExpression) currentAggregate.subExpressions.computeIfAbsent(
 							parts[i].getSelectableName(),
-							k -> new AggregateXmlWriteExpression( embeddableMappingType.getJdbcValueSelectable( selectableIndex ), columnDefinition )
+							k -> new AggregateXmlWriteExpression( embeddableMappingType.getJdbcValueSelectable( selectableIndex ) )
 					);
 				}
 				final String customWriteExpression = column.getWriteExpression();
@@ -885,7 +885,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 		private final String path;
 
 		RootXmlWriteExpression(SelectableMapping aggregateColumn, SelectableMapping[] columns, TypeConfiguration typeConfiguration) {
-			super( aggregateColumn, aggregateColumn.getColumnDefinition() );
+			super( aggregateColumn );
 			path = aggregateColumn.getSelectionExpression();
 			initializeSubExpressions( aggregateColumn, columns, typeConfiguration );
 		}

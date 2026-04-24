@@ -8,6 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.Map;
 
 import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbFilterImpl;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.annotations.spi.FilterDetails;
@@ -15,6 +16,7 @@ import org.hibernate.boot.models.xml.internal.FilterProcessing;
 import org.hibernate.boot.models.xml.spi.XmlDocumentContext;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.ModelsContext;
+import jakarta.persistence.JoinColumn;
 
 import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkValue;
 
@@ -24,7 +26,9 @@ public class FilterAnnotation implements Filter, FilterDetails {
 	private String name;
 	private String condition;
 	private boolean deduceAliasInjectionPoints;
-	private org.hibernate.annotations.SqlFragmentAlias[] aliases;
+	private SqlFragmentAlias[] aliases;
+	private String tableName;
+	private JoinColumn[] joinColumns;
 
 	/**
 	 * Used in creating dynamic annotation instances (e.g. from XML)
@@ -32,7 +36,9 @@ public class FilterAnnotation implements Filter, FilterDetails {
 	public FilterAnnotation(ModelsContext modelContext) {
 		this.condition = "";
 		this.deduceAliasInjectionPoints = true;
-		this.aliases = new org.hibernate.annotations.SqlFragmentAlias[0];
+		this.aliases = new SqlFragmentAlias[0];
+		this.tableName = "";
+		this.joinColumns = new JoinColumn[0];
 	}
 
 	/**
@@ -43,6 +49,8 @@ public class FilterAnnotation implements Filter, FilterDetails {
 		this.condition = annotation.condition();
 		this.deduceAliasInjectionPoints = annotation.deduceAliasInjectionPoints();
 		this.aliases = extractJdkValue( annotation, HibernateAnnotations.FILTER, "aliases", modelContext );
+		this.tableName = annotation.tableName();
+		this.joinColumns = extractJdkValue( annotation, HibernateAnnotations.FILTER, "joinColumns", modelContext );
 	}
 
 	/**
@@ -52,7 +60,9 @@ public class FilterAnnotation implements Filter, FilterDetails {
 		this.name = (String) attributeValues.get( "name" );
 		this.condition = (String) attributeValues.get( "condition" );
 		this.deduceAliasInjectionPoints = (boolean) attributeValues.get( "deduceAliasInjectionPoints" );
-		this.aliases = (org.hibernate.annotations.SqlFragmentAlias[]) attributeValues.get( "aliases" );
+		this.aliases = (SqlFragmentAlias[]) attributeValues.get( "aliases" );
+		this.tableName = (String) attributeValues.get( "tableName" );
+		this.joinColumns = (JoinColumn[]) attributeValues.get( "joinColumns" );
 	}
 
 
@@ -80,6 +90,23 @@ public class FilterAnnotation implements Filter, FilterDetails {
 		this.condition = value;
 	}
 
+	@Override
+	public String tableName() {
+		return tableName;
+	}
+
+	public void tableName(String tableName) {
+		this.tableName = tableName;
+	}
+
+	@Override
+	public JoinColumn[] joinColumns() {
+		return joinColumns;
+	}
+
+	public void joinColumns(JoinColumn[] joinColumns) {
+		this.joinColumns = joinColumns;
+	}
 
 	@Override
 	public boolean deduceAliasInjectionPoints() {
@@ -92,11 +119,11 @@ public class FilterAnnotation implements Filter, FilterDetails {
 
 
 	@Override
-	public org.hibernate.annotations.SqlFragmentAlias[] aliases() {
+	public SqlFragmentAlias[] aliases() {
 		return aliases;
 	}
 
-	public void aliases(org.hibernate.annotations.SqlFragmentAlias[] value) {
+	public void aliases(SqlFragmentAlias[] value) {
 		this.aliases = value;
 	}
 

@@ -1,0 +1,17 @@
+services:
+  informix:
+    image: ${INFORMIX_IMAGE:-icr.io/informix/informix-developer-edition-database:15.0.0.0@sha256:f27fa57739c1a0e36f070ce16c41435c51a75b27b72abe1ee432717f7beea609}
+    container_name: informix
+    privileged: true
+    ports:
+      - "9088:9088"
+    environment:
+      LICENSE: accept
+      GL_USEGLU: "1"
+    volumes:
+      - ../build-config/informix/onconfig.mod:/opt/ibm/config/onconfig.mod
+    healthcheck:
+      test: [ "CMD-SHELL", "export INFORMIXDIR=/opt/ibm/informix INFORMIXSERVER=informix PATH=/opt/ibm/informix/bin:$$PATH && echo 'SELECT FIRST 1 tk_id FROM ph_task;' | dbaccess sysadmin > /dev/null 2>&1" ]
+      interval: 10s
+      timeout: 10s
+      retries: 60

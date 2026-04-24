@@ -1,12 +1,12 @@
-FROM quay.io/enterprisedb/edb-postgres-advanced:16.1-3.4-postgis
+FROM --platform=linux/amd64 quay.io/enterprisedb/edb-postgres-advanced:15.4-3.3-postgis@sha256:eb89d5b09f45171c0b56951f0dd2c1da5241077c66a1d0442c17a69e3a15c2d4
 USER root
 # this 777 will be replaced by 700 at runtime (allows semi-arbitrary "--user" values)
 RUN chown -R postgres:postgres /var/lib/edb && chmod 777 /var/lib/edb && rm /docker-entrypoint-initdb.d/10_postgis.sh
 
 USER postgres
 ENV LANG en_US.utf8
-ENV PG_MAJOR 16
-ENV PG_VERSION 16
+ENV PG_MAJOR 15
+ENV PG_VERSION 15
 ENV PGPORT 5444
 ENV PGDATA /var/lib/edb/as$PG_MAJOR/data/
 VOLUME /var/lib/edb/as$PG_MAJOR/data/

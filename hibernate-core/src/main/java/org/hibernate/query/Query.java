@@ -29,6 +29,8 @@ import org.hibernate.SessionFactory;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.graph.GraphSemantic;
+import jakarta.persistence.QueryFlushMode;
+import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.query.spi.QueryOptions;
 
 import java.time.Instant;
@@ -912,7 +914,7 @@ public interface Query<T> extends CommonQueryContract {
 		if ( queryFlushMode == null ) {
 			return FlushModeType.AUTO;
 		}
-		return queryFlushMode.toJpaFlushMode();
+		return FlushModeTypeHelper.getFlushModeType( queryFlushMode );
 	}
 
 	/**
@@ -932,7 +934,7 @@ public interface Query<T> extends CommonQueryContract {
 	 */
 	@Override @Deprecated(since = "7")
 	default Query<T> setFlushMode(FlushModeType flushMode) {
-		setQueryFlushMode( QueryFlushMode.fromJpaMode( flushMode ) );
+		setQueryFlushMode( FlushModeTypeHelper.queryFlushModeFromFlushModeType( flushMode ) );
 		return this;
 	}
 

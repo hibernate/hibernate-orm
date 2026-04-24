@@ -22,7 +22,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.Page;
-import org.hibernate.query.QueryFlushMode;
+import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.SelectionQuery;

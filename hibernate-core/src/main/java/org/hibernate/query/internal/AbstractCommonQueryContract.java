@@ -36,7 +36,7 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.QueryArgumentException;
-import org.hibernate.query.QueryFlushMode;
+import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.TypedParameterValue;
 import org.hibernate.query.named.NamedQueryMemento;

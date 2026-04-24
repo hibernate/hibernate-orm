@@ -7,7 +7,7 @@ package org.hibernate;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 
 import jakarta.persistence.FlushModeType;
-import org.hibernate.query.QueryFlushMode;
+import jakarta.persistence.QueryFlushMode;
 
 import java.util.Locale;
 
@@ -24,11 +24,10 @@ import java.util.Locale;
  * {@linkplain Session#setHibernateFlushMode set at the session
  * level}, and competes with the JPA-defined enumeration
  * {@link jakarta.persistence.FlushModeType}. Alternatively, a
- * {@link org.hibernate.query.QueryFlushMode QueryFlushMode} may
- * be specified for a given query.
+ * {@link QueryFlushMode} may be specified for a given query.
  *
  * @see Session#setHibernateFlushMode
- * @see org.hibernate.query.QueryFlushMode
+ * @see QueryFlushMode
  *
  * @author Gavin King
  */

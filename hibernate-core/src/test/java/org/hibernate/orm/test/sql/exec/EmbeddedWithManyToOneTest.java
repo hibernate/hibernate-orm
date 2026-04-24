@@ -14,7 +14,7 @@ import jakarta.persistence.ManyToOne;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.jdbc.CollectingStatementObserver;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -22,6 +22,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -35,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 )
 @SessionFactory(
 		generateStatistics = true,
-		useCollectingStatementInspector = true)
+		useCollectingStatementObserver = true)
 public class EmbeddedWithManyToOneTest {
 
 	@BeforeEach
@@ -59,30 +60,30 @@ public class EmbeddedWithManyToOneTest {
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
-		statementInspector.clear();
+		CollectingStatementObserver sqlCollector = scope.getCollectingStatementObserver();
+		sqlCollector.clear();
 		scope.inTransaction(
 				session -> {
 					SystemUser systemUser = session.get( SystemUser.class, 1 );
 					assertTrue( Hibernate.isInitialized( systemUser.getPk() ) );
-					statementInspector.assertExecutedCount( 1 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
+					sqlCollector.assertStatements().hasSize( 1 );
+					sqlCollector.assertQuery( 0 ).containsToken( " join ", 1 );
 				}
 		);
 	}
 
 	@Test
 	public void testHqlSelect(SessionFactoryScope scope) {
-		SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
-		statementInspector.clear();
+		CollectingStatementObserver sqlCollector = scope.getCollectingStatementObserver();
+		sqlCollector.clear();
 		scope.inTransaction(
 				session -> {
 					SystemUser systemUser = session.createQuery( "from SystemUser", SystemUser.class )
 							.uniqueResult();
 					assertTrue( Hibernate.isInitialized( systemUser.getPk() ) );
-					statementInspector.assertExecutedCount( 2 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 0 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 0 );
+					assertThat( sqlCollector.getStatements() ).hasSize( 2 );
+					assertThat( sqlCollector.getSqlQueries().get( 0 ) ).doesNotContain( " join " );
+					assertThat( sqlCollector.getSqlQueries().get( 1 ) ).doesNotContain( " join " );
 				}
 		);
 	}

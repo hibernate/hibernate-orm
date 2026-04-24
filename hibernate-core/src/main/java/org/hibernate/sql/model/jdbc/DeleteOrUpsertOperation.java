@@ -119,6 +119,7 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 			final var upsertDeleteStatement = statementDetails.resolveStatement();
 			final String sql = statementDetails.getSqlString();
 			jdbcServices.getSqlStatementLogger().logStatement( sql );
+			session.getJdbcSessionContext().getStatementObserver().performingSql( sql, -1 );
 			bindDeleteKeyValues( jdbcValueBindings, statementDetails, session );
 			final int rowCount =
 					session.getJdbcCoordinator().getResultSetReturn()
@@ -196,6 +197,7 @@ public class DeleteOrUpsertOperation implements SelfExecutingUpdateOperation {
 			final var updateStatement = statementDetails.resolveStatement();
 			final var jdbcServices = session.getJdbcServices();
 			jdbcServices.getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
+			session.getJdbcSessionContext().getStatementObserver().performingSql( statementDetails.getSqlString(), -1 );
 			jdbcValueBindings.beforeStatement( statementDetails );
 			final int rowCount =
 					session.getJdbcCoordinator().getResultSetReturn()

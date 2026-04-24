@@ -51,7 +51,10 @@ public class MutationExecutorSingleSelfExecuting extends AbstractMutationExecuto
 	}
 
 	@Override
-	protected void performSelfExecutingOperations(ValuesAnalysis valuesAnalysis, TableInclusionChecker inclusionChecker, SharedSessionContractImplementor session) {
+	protected void performSelfExecutingOperations(
+			ValuesAnalysis valuesAnalysis,
+			TableInclusionChecker inclusionChecker,
+			SharedSessionContractImplementor session) {
 		if ( inclusionChecker.include( operation.getTableDetails() ) ) {
 			operation.performMutation( valueBindings, valuesAnalysis, session );
 		}

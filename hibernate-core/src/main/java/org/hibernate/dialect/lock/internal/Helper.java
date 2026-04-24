@@ -30,6 +30,7 @@ public class Helper {
 			SessionFactoryImplementor factory) {
 		try ( final var statement = connection.createStatement() ) {
 			factory.getJdbcServices().getSqlStatementLogger().logStatement( sql );
+			factory.getStatementObserver().performingSql( sql, -1 );
 			final var results = statement.executeQuery( sql );
 			if ( !results.next() ) {
 				throw new HibernateException( "Unable to query JDBC Connection for current lock-timeout setting (no result)" );
@@ -51,6 +52,7 @@ public class Helper {
 			SessionFactoryImplementor factory) {
 		try ( final var statement = connection.createStatement() ) {
 			factory.getJdbcServices().getSqlStatementLogger().logStatement( sql );
+			factory.getStatementObserver().performingSql( sql, -1 );
 			statement.execute( sql );
 		}
 		catch (SQLException sqle) {

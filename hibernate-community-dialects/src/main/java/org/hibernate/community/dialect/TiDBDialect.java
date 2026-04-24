@@ -9,6 +9,8 @@ import jakarta.persistence.Timeout;
 import org.hibernate.Timeouts;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorTiDBDatabaseImpl;
 import org.hibernate.community.dialect.sequence.TiDBSequenceSupport;
+import org.hibernate.community.dialect.temporal.TiDBTemporalTableSupport;
+import org.hibernate.dialect.temporal.TemporalTableSupport;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
@@ -249,5 +251,10 @@ public class TiDBDialect extends MySQLDialect {
 	@Override
 	public boolean supportsExceptAll() {
 		return false;
+	}
+
+	@Override
+	public TemporalTableSupport getTemporalTableSupport() {
+		return new TiDBTemporalTableSupport( this );
 	}
 }

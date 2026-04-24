@@ -4,17 +4,29 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.Function;
-
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.AbstractQuery;
+import jakarta.persistence.criteria.BooleanExpression;
+import jakarta.persistence.criteria.CollectionJoin;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.ListJoin;
+import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.NumericExpression;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.PluralJoin;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Selection;
+import jakarta.persistence.criteria.SetJoin;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.metamodel.EntityType;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.criteria.JpaCteContainer;
 import org.hibernate.query.criteria.JpaCteCriteria;
@@ -24,7 +36,6 @@ import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSubQuery;
-import org.hibernate.query.common.FetchClauseType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
@@ -58,23 +69,14 @@ import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import jakarta.persistence.Tuple;
-import jakarta.persistence.criteria.AbstractQuery;
-import jakarta.persistence.criteria.CollectionJoin;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.ListJoin;
-import jakarta.persistence.criteria.MapJoin;
-import jakarta.persistence.criteria.Order;
-import jakarta.persistence.criteria.ParameterExpression;
-import jakarta.persistence.criteria.PluralJoin;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Selection;
-import jakarta.persistence.criteria.SetJoin;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import jakarta.persistence.criteria.Subquery;
-import jakarta.persistence.metamodel.EntityType;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
 
 import static java.util.Collections.emptySet;
 
@@ -338,13 +340,19 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
+	public SqmSubQuery<T> where(BooleanExpression... restrictions) {
+		super.where( restrictions );
+		return this;
+	}
+
+	@Override
 	public SqmSubQuery<T> where(Predicate @Nullable... restrictions) {
 		super.where( restrictions );
 		return this;
 	}
 
 	@Override
-	public SqmSubQuery<T> where(List<Predicate> restrictions) {
+	public SqmSubQuery<T> where(List<? extends Expression<Boolean>> restrictions) {
 		super.where( restrictions );
 		return this;
 	}
@@ -374,7 +382,13 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public SqmSubQuery<T> having(List<Predicate> restrictions) {
+	public SqmSubQuery<T> having(BooleanExpression... restrictions) {
+		super.having( restrictions );
+		return this;
+	}
+
+	@Override
+	public SqmSubQuery<T> having(List<? extends Expression<Boolean>> restrictions) {
 		super.having( restrictions );
 		return this;
 	}
@@ -579,6 +593,26 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 		return correlatedJoins;
 	}
 
+	@Override
+	public Predicate exists() {
+		return nodeBuilder().exists( this );
+	}
+
+	@Override
+	public Expression<T> all() {
+		return nodeBuilder().all( this );
+	}
+
+	@Override
+	public Expression<T> some() {
+		return nodeBuilder().some( this );
+	}
+
+	@Override
+	public Expression<T> any() {
+		return nodeBuilder().any( this );
+	}
+
 //	@Override
 //	public Set<SqmJoin<?, ?>> getCorrelatedSqmJoins() {
 //		final Set<SqmJoin<?, ?>> correlatedJoins = new HashSet<>();
@@ -633,6 +667,56 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	@Override
 	public SqmInPredicate<?> in(Expression<Collection<?>> values) {
 		return nodeBuilder().in( this, values );
+	}
+
+	@Override
+	public SqmInPredicate<T> in(Subquery<T> subquery) {
+		return nodeBuilder().in( subquery );
+	}
+
+	@Override
+	public JpaExpression<T> coalesce(Expression<? extends T> y) {
+		return nodeBuilder().coalesce( this, y );
+	}
+
+	@Override
+	public JpaExpression<T> coalesce(T y) {
+		return nodeBuilder().coalesce( this, y );
+	}
+
+	@Override
+	public JpaExpression<T> nullif(Expression<? extends T> y) {
+		return nodeBuilder().nullif( this, y );
+	}
+
+	@Override
+	public JpaExpression<T> nullif(T y) {
+		return nodeBuilder().nullif( this, y );
+	}
+
+	@Override
+	public <R> CriteriaBuilder.SimpleCase<T, R> selectCase() {
+		return null;
+	}
+
+	@Override
+	public JpaPredicate isMember(Expression<? extends Collection<? super T>> collection) {
+		return null;
+	}
+
+	@Override
+	public JpaPredicate isNotMember(Expression<? extends Collection<? super T>> collection) {
+		return null;
+	}
+
+	@Override
+	public NumericExpression<Long> count() {
+		return null;
+	}
+
+	@Override
+	public NumericExpression<Long> countDistinct() {
+		return null;
 	}
 
 	@Override

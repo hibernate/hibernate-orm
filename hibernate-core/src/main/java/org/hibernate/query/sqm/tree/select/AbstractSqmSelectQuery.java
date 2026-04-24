@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 
+import jakarta.persistence.criteria.BooleanExpression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -380,14 +381,20 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	@Override
+	public SqmSelectQuery<T> where(BooleanExpression... restrictions) {
+		getQuerySpec().setRestriction( restrictions );
+		return this;
+	}
+
+	@Override
 	public SqmSelectQuery<T> where(Predicate @Nullable... restrictions) {
 		getQuerySpec().setRestriction( restrictions );
 		return this;
 	}
 
 	@Override
-	public SqmSelectQuery<T> where(List<Predicate> restrictions) {
-		getQuerySpec().setRestriction( restrictions );
+	public AbstractQuery<T> where(List<? extends Expression<Boolean>> restrictions) {
+		getQuerySpec().setRestriction( nodeBuilder().wrap(  restrictions ) );
 		return this;
 	}
 
@@ -430,8 +437,14 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public AbstractQuery<T> having(List<Predicate> restrictions) {
+	public AbstractQuery<T> having(BooleanExpression... restrictions) {
 		getQuerySpec().setGroupRestriction( restrictions );
+		return this;
+	}
+
+	@Override
+	public AbstractQuery<T> having(List<? extends Expression<Boolean>> restrictions) {
+		getQuerySpec().setGroupRestriction( nodeBuilder().wrap( restrictions ) );
 		return this;
 	}
 

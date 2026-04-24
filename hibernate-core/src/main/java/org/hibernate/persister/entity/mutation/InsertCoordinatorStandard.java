@@ -475,7 +475,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 	 * Transform the array of property indexes to an array of booleans,
 	 * true when the property is insertable and non-null
 	 */
-	static boolean[] getPropertiesToInsert(EntityPersister persister, Object[] fields) {
+	protected static boolean[] getPropertiesToInsert(EntityPersister persister, Object[] fields) {
 		final var notNull = new boolean[fields.length];
 		final var insertable = persister.getPropertyInsertability();
 		for ( int i = 0; i < fields.length; i++ ) {

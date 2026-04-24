@@ -18,6 +18,8 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.AdjustableJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -46,6 +48,7 @@ import static org.hamcrest.Matchers.is;
  * 	2.2.21. Duration
  * 		By default, Hibernate maps Duration to the NUMERIC SQL type.
  */
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIntervalSecondType.class)
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.PREFERRED_DURATION_JDBC_TYPE, value = "INTERVAL_SECOND"))
 public class DurationMappingTests {
 

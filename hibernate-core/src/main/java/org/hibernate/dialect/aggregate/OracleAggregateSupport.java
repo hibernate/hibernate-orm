@@ -62,6 +62,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 	private static final String JSON_QUERY_START = "json_query(";
 	private static final String JSON_QUERY_JSON_END = "' returning json)";
 	private static final String JSON_QUERY_BLOB_END = "' returning blob)";
+	private static final int JSON_VALUE_MAX_BINARY_HEX_LENGTH = 32767;
 	private static final String XML_EXTRACT_START = "xmlelement(\"" + XmlHelper.ROOT_TAG + "\",xmlquery(";
 	private static final String XML_EXTRACT_SEPARATOR = "/*' passing ";
 	private static final String XML_EXTRACT_END = " returning content))";
@@ -222,9 +223,11 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 								// We encode binary data as hex, so we have to decode here
 								return template.replace(
 										placeholder,
-										// returning binary data is not yet implemented in the json functions,
-										// so use the xml implementation
-										"xmlcast(xmlcdata(json_value(" + parentPartExpression + columnExpression + "' returning clob)) as " + getNarrowCastTypeName( column, typeConfiguration ) + ')'
+										// Oracle accepts large VARCHAR2 sizes in JSON_VALUE return clauses, even
+										// when general SQL VARCHAR2 casts are still capped lower, so decode the
+										// hex string through a wide scalar value and then materialize a BLOB.
+										"to_blob(hextoraw(json_value(" + parentPartExpression + columnExpression
+												+ "' returning varchar2(" + JSON_VALUE_MAX_BINARY_HEX_LENGTH + "))))"
 								);
 							case ARRAY:
 								final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) column.getJdbcMapping();

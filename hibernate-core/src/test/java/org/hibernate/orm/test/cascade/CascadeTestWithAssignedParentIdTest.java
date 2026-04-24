@@ -23,8 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/orm/test/cascade/ChildForParentWithAssignedId.hbm.xml",
-				"org/hibernate/orm/test/cascade/ParentWithAssignedId.hbm.xml"
+				"org/hibernate/orm/test/cascade/ChildForParentWithAssignedId.orm.xml",
+				"org/hibernate/orm/test/cascade/ParentWithAssignedId.orm.xml"
 		}
 )
 @SessionFactory

@@ -31,6 +31,7 @@ import org.hibernate.dialect.type.H2DurationIntervalSecondJdbcType;
 import org.hibernate.dialect.type.H2JsonArrayJdbcTypeConstructor;
 import org.hibernate.dialect.type.H2JsonJdbcType;
 import org.hibernate.dialect.type.PostgreSQLEnumJdbcType;
+import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -126,17 +127,17 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * Please refer to the
  * <a href="http://www.h2database.com/html/main.html">H2 documentation</a>.
  *
- *
  * @author Thomas Mueller
  * @author Jürgen Kreitler
  * @author Yoobin Yoon
  */
 public class H2Dialect extends Dialect {
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2, 1, 214 );
+	private static final DatabaseVersion VERSION_2_2_220 = DatabaseVersion.make( 2, 2, 220 );
 
 	private final SequenceInformationExtractor sequenceInformationExtractor;
 	private final String querySequenceString;
-	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
+	private final UniqueDelegate uniqueDelegate;
 
 	public H2Dialect(DialectResolutionInfo info) {
 		this( staticDetermineDatabaseVersion( info ) );
@@ -152,6 +153,9 @@ public class H2Dialect extends Dialect {
 
 		sequenceInformationExtractor = SequenceInformationExtractorLegacyImpl.INSTANCE;
 		querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
+		uniqueDelegate = version.isSameOrAfter( VERSION_2_2_220 )
+				? new AlterTableUniqueIndexDelegate( this )
+				: new CreateTableUniqueDelegate( this );
 	}
 
 	@Override
@@ -202,7 +206,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	protected String columnType(int sqlTypeCode) {
-		return switch (sqlTypeCode) {
+		return switch ( sqlTypeCode ) {
 			// h2 recognizes NCHAR and NCLOB as aliases
 			// but, according to the docs, not NVARCHAR
 			// so just normalize all these types
@@ -215,7 +219,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	protected String castType(int sqlTypeCode) {
-		return switch (sqlTypeCode) {
+		return switch ( sqlTypeCode ) {
 			case CHAR, NCHAR -> "char";
 			case VARCHAR, NVARCHAR, LONG32VARCHAR, LONG32NVARCHAR -> "varchar";
 			case BINARY, VARBINARY, LONG32VARBINARY -> "varbinary";
@@ -356,7 +360,7 @@ public class H2Dialect extends Dialect {
 
 		functionFactory.jsonObject();
 		functionFactory.jsonArray();
-		if ( getVersion().isSameOrAfter( 2, 2, 220 ) ) {
+		if ( getVersion().isSameOrAfter( VERSION_2_2_220 ) ) {
 			functionFactory.jsonValue_h2();
 			functionFactory.jsonQuery_h2();
 			functionFactory.jsonExists_h2();
@@ -413,7 +417,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	protected Integer resolveSqlTypeCode(String columnTypeName, TypeConfiguration typeConfiguration) {
-		return switch (columnTypeName) {
+		return switch ( columnTypeName ) {
 			// Use REAL instead of FLOAT to get Float as recommended Java type
 			case "FLOAT(24)" -> Types.REAL;
 			default -> super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
@@ -448,7 +452,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	protected Integer resolveSqlTypeCode(String typeName, String baseTypeName, TypeConfiguration typeConfiguration) {
-		return switch (baseTypeName) {
+		return switch ( baseTypeName ) {
 			case "CHARACTER VARYING" -> VARCHAR;
 			default -> super.resolveSqlTypeCode( typeName, baseTypeName, typeConfiguration );
 		};
@@ -461,7 +465,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public String currentTime() {
-		return  "localtime";
+		return "localtime";
 	}
 
 	@Override
@@ -494,8 +498,8 @@ public class H2Dialect extends Dialect {
 	@Override
 	public String extractPattern(TemporalUnit unit) {
 		return unit == SECOND
-				? "(" + super.extractPattern(unit) + "+extract(nanosecond from ?2)/1e9)"
-				: super.extractPattern(unit);
+				? "(" + super.extractPattern( unit ) + "+extract(nanosecond from ?2)/1e9)"
+				: super.extractPattern( unit );
 	}
 
 	@Override
@@ -508,7 +512,8 @@ public class H2Dialect extends Dialect {
 		}
 	}
 
-	@Override @SuppressWarnings("deprecation")
+	@Override
+	@SuppressWarnings("deprecation")
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		if ( intervalType != null ) {
 			return "(?2+?3)";
@@ -520,7 +525,8 @@ public class H2Dialect extends Dialect {
 				: "dateadd(?1,?2,?3)";
 	}
 
-	@Override @SuppressWarnings("deprecation")
+	@Override
+	@SuppressWarnings("deprecation")
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		if ( unit == null ) {
 			return "(?3-?2)";
@@ -542,7 +548,7 @@ public class H2Dialect extends Dialect {
 				appender.appendSql( '\'' );
 				break;
 			case TIME:
-				if ( supportsTimeLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS )  ) {
+				if ( supportsTimeLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
 					appender.appendSql( "time with time zone '" );
 					appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
 				}
@@ -668,7 +674,9 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public LockingSupport getLockingSupport() {
-		return getVersion().isSameOrAfter( 2, 2, 220 ) ? H2LockingSupport.INSTANCE : H2LockingSupport.LEGACY_INSTANCE;
+		return getVersion().isSameOrAfter( VERSION_2_2_220 )
+				? H2LockingSupport.INSTANCE
+				: H2LockingSupport.LEGACY_INSTANCE;
 	}
 
 	@Override
@@ -719,6 +727,18 @@ public class H2Dialect extends Dialect {
 	@Override
 	public boolean supportsIfExistsBeforeIndexName() {
 		return true;
+	}
+
+	@Override
+	public String getCreateIndexString(boolean unique) {
+		if ( unique && getVersion().isSameOrAfter( VERSION_2_2_220 ) ) {
+			// we only create unique indexes, as opposed to unique constraints,
+			// when the column is nullable, so safe to infer unique => nullable
+			return "create unique nulls distinct index";
+		}
+		else {
+			return super.getCreateIndexString( unique );
+		}
 	}
 
 	@Override
@@ -831,10 +851,10 @@ public class H2Dialect extends Dialect {
 				switch ( extractErrorCode( sqlException ) ) {
 					case 40001 ->
 						// DEADLOCK DETECTED
-							new LockAcquisitionException(message, sqlException, sql);
+							new LockAcquisitionException( message, sqlException, sql );
 					case 50200 ->
 						// LOCK NOT AVAILABLE
-							new LockTimeoutException(message, sqlException, sql);
+							new LockTimeoutException( message, sqlException, sql );
 					case 23505 ->
 						// Unique index or primary key violation
 							new ConstraintViolationException( message, sqlException, sql, ConstraintKind.UNIQUE,
@@ -979,16 +999,16 @@ public class H2Dialect extends Dialect {
 	public void appendDatetimeFormat(SqlAppender appender, String format) {
 		appender.appendSql(
 				new Replacer( format, "'", "''" )
-				.replace("e", "u")
-				.replace( "xxx", "XXX" )
-				.replace( "xx", "XX" )
-				.replace( "x", "X" )
-				.result()
+						.replace( "e", "u" )
+						.replace( "xxx", "XXX" )
+						.replace( "xx", "XX" )
+						.replace( "x", "X" )
+						.result()
 		);
 	}
 
 	public String translateExtractField(TemporalUnit unit) {
-		return switch (unit) {
+		return switch ( unit ) {
 			case DAY_OF_MONTH -> "day";
 			case WEEK -> "iso_week";
 			default -> unit.toString();
@@ -1016,7 +1036,7 @@ public class H2Dialect extends Dialect {
 		type.append( "enum (" );
 		String separator = "";
 		for ( String value : values ) {
-			type.append( separator ).append('\'').append( value ).append('\'');
+			type.append( separator ).append( '\'' ).append( value ).append( '\'' );
 			separator = ",";
 		}
 		return type.append( ')' ).toString();
@@ -1086,7 +1106,7 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsCaseInsensitiveLike(){
+	public boolean supportsCaseInsensitiveLike() {
 		return true;
 	}
 
@@ -1159,28 +1179,28 @@ public class H2Dialect extends Dialect {
 	@Override
 	public String[] getCreateEnumTypeCommand(String name, String[] values) {
 		final int maxLength =
-				Arrays.stream(values)
+				Arrays.stream( values )
 						.map( String::length )
 						.max( Integer::compareTo )
 						.orElseThrow();
 		final var domain = new StringBuilder();
 		domain.append( "create domain " )
 				.append( name )
-				.append( " as varchar(")
+				.append( " as varchar(" )
 				.append( maxLength )
 				.append( ") check (value in (" );
 		String separator = "";
 		for ( String value : values ) {
-			domain.append( separator ).append('\'').append( value ).append('\'');
+			domain.append( separator ).append( '\'' ).append( value ).append( '\'' );
 			separator = ",";
 		}
 		domain.append( "))" );
-		return new String[] { domain.toString() };
+		return new String[] {domain.toString()};
 	}
 
 	@Override
 	public String[] getDropEnumTypeCommand(String name) {
-		return new String[] { "drop domain if exists " + name };
+		return new String[] {"drop domain if exists " + name};
 	}
 
 }

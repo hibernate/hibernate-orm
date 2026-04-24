@@ -448,7 +448,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public boolean isPreferNativeEnumTypesEnabled() {
-		return MetadataBuildingContext.super.isPreferNativeEnumTypesEnabled();
+		return false;
 	}
 
 	@Override

@@ -996,6 +996,15 @@ public class PluralAttributeMappingImpl
 		return tableGroup;
 	}
 
+	private boolean useCollectionTableGroup(SqlAstCreationState creationState) {
+		// For temporal OTM @JoinColumn reads, use CollectionTableGroup with the middle
+		// audit table as primary (like M2M). The FK column isn't in the entity audit table,
+		// so the key must resolve from the middle audit table instead.
+		return !getCollectionDescriptor().isOneToMany()
+				|| auxiliaryMapping instanceof AuditMapping auditMapping
+				&& auditMapping.useAuxiliaryTable( creationState.getLoadQueryInfluencers() );
+	}
+
 	private TableGroup rootTableGroup(
 			NavigablePath navigablePath,
 			TableGroup lhs,
@@ -1005,8 +1014,8 @@ public class PluralAttributeMappingImpl
 			SqlAstCreationState creationState,
 			SqlAstJoinType joinType,
 			SqlAliasBase sqlAliasBase) {
-		return getCollectionDescriptor().isOneToMany()
-				? createOneToManyTableGroup(
+		return useCollectionTableGroup( creationState )
+				? createCollectionTableGroup(
 						lhs.canUseInnerJoins()
 						&& joinType == SqlAstJoinType.INNER,
 						joinType,
@@ -1017,7 +1026,7 @@ public class PluralAttributeMappingImpl
 						sqlAliasBase,
 						creationState
 				)
-				: createCollectionTableGroup(
+				: createOneToManyTableGroup(
 						lhs.canUseInnerJoins()
 						&& joinType == SqlAstJoinType.INNER,
 						joinType,
@@ -1103,7 +1112,6 @@ public class PluralAttributeMappingImpl
 			String sourceAlias,
 			SqlAliasBase explicitSqlAliasBase,
 			SqlAstCreationState creationState) {
-		assert !getCollectionDescriptor().isOneToMany();
 		final var sqlAliasBase = SqlAliasBase.from(
 				explicitSqlAliasBase,
 				sourceAlias,
@@ -1168,7 +1176,7 @@ public class PluralAttributeMappingImpl
 
 	private NamedTableReference collectionTableReference(SqlAstCreationState creationState, String tableName, String alias) {
 		return auxiliaryMapping != null && auxiliaryMapping.useAuxiliaryTable( creationState.getLoadQueryInfluencers() )
-				? new AuxiliaryTableReference( auxiliaryMapping.getTableName(), tableName, alias, true )
+				? new AuxiliaryTableReference( auxiliaryMapping.resolveTableName( tableName ), tableName, alias, true )
 				: new NamedTableReference( tableName, alias, true );
 	}
 
@@ -1180,7 +1188,7 @@ public class PluralAttributeMappingImpl
 			SqlAliasBase explicitSqlAliasBase,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationState creationState) {
-		if ( getCollectionDescriptor().isOneToMany() ) {
+		if ( !useCollectionTableGroup( creationState ) ) {
 			return createOneToManyTableGroup(
 					canUseInnerJoins,
 					SqlAstJoinType.INNER,

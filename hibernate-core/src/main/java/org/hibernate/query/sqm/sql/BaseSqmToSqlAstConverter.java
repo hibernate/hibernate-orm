@@ -440,6 +440,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
+import static org.hibernate.boot.model.internal.AuditHelper.isFetchableAuditExcluded;
 import static org.hibernate.boot.model.process.internal.InferredBasicValueResolver.resolveSqlTypeIndicators;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
@@ -8534,7 +8535,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private Fetch createFetch(FetchParent fetchParent, Fetchable fetchable, Boolean isKeyFetchable) {
-		if ( !fetchable.isSelectable() ) {
+		if ( !fetchable.isSelectable() || isFetchableAuditExcluded( fetchable, loadQueryInfluencers ) ) {
 			return null;
 		}
 		final NavigablePath resolvedNavigablePath = fetchParent.resolveNavigablePath( fetchable );

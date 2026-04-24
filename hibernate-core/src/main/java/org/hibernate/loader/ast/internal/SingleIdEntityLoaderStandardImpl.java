@@ -83,6 +83,12 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 			// precedence than even "internal" fetch profiles.
 			return loadPlanCreator.apply( lockOptions, influencers );
 		}
+		else if ( influencers.getTemporalIdentifier() != null
+				&& getLoadable().getEntityPersister().getAuditMapping() != null ) {
+			// Audit context requires a fresh plan that excludes @Audited.Excluded
+			// columns (which don't exist in the audit table)
+			return loadPlanCreator.apply( lockOptions, influencers );
+		}
 		else if ( influencers.hasEnabledCascadingFetchProfile()
 				// and if it's a non-exclusive (optimistic) lock
 				&& LockMode.PESSIMISTIC_READ.greaterThan( lockOptions.getLockMode() ) ) {

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import jakarta.persistence.criteria.BooleanExpression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -364,6 +365,16 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
+	public SqmQuerySpec<T> setRestriction(BooleanExpression... restrictions) {
+		SqmWhereClause whereClause = getWhereClause();
+		if ( whereClause == null ) {
+			setWhereClause( whereClause = new SqmWhereClause( nodeBuilder() ) );
+		}
+		whereClause.setPredicate( nodeBuilder().wrap( restrictions ) );
+
+		return this;
+	}
+
 	public SqmQuerySpec<T> setRestriction(Predicate @Nullable... restrictions) {
 		if ( restrictions == null ) {
 			throw new IllegalArgumentException( "The predicate array cannot be null" );
@@ -460,6 +471,12 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	@Override
 	public SqmQuerySpec<T> setGroupRestriction(Predicate @Nullable... restrictions) {
+		havingClausePredicate = restrictions == null ? null : nodeBuilder().wrap( restrictions );
+		return this;
+	}
+
+	@Override
+	public SqmQuerySpec<T> setGroupRestriction(BooleanExpression... restrictions) {
 		havingClausePredicate = restrictions == null ? null : nodeBuilder().wrap( restrictions );
 		return this;
 	}

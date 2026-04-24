@@ -1,6 +1,19 @@
 /*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
+ * Hibernate Tools, Tooling for your Hibernate Projects
+ *
+ * Copyright 2024-2025 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.hibernate.orm.tooling.gradle.reveng;
 
@@ -8,13 +21,11 @@ import java.io.File;
 
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.work.DisableCachingByDefault;
-import org.hibernate.tool.reveng.api.export.Exporter;
-import org.hibernate.tool.reveng.api.export.ExporterConstants;
-import org.hibernate.tool.reveng.api.export.ExporterFactory;
-import org.hibernate.tool.reveng.api.export.ExporterType;
+import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
+import org.hibernate.tool.reveng.internal.exporter.hbm.HbmXmlExporter;
 
 @Deprecated(forRemoval = true)
-@DisableCachingByDefault(because = "Reverse engineering tasks perform JDBC operations and are not cacheable")
+@DisableCachingByDefault(because = "Generates output from a live database connection")
 public class GenerateHbmTask extends RevengTask {
 
 	@TaskAction
@@ -26,17 +37,14 @@ public class GenerateHbmTask extends RevengTask {
 
 	void doWork() {
 		getLogger().lifecycle("Creating HBM exporter");
-		Exporter hbmExporter = ExporterFactory.createExporter(ExporterType.HBM);
-		File outputFolder = getOutputFolder();
-		hbmExporter.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, createJdbcDescriptor());
-		hbmExporter.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputFolder);
+		MetadataDescriptor md = createJdbcDescriptor();
 		String templatePath = getRevengSpec().templatePath;
-		if (templatePath != null) {
-			getLogger().lifecycle("Setting template path to: " + templatePath);
-			hbmExporter.getProperties().put(ExporterConstants.TEMPLATE_PATH, new String[] { templatePath });
-		}
+		String[] tPath = templatePath != null
+				? new String[] { templatePath } : new String[0];
+		File outputFolder = getOutputFolder();
 		getLogger().lifecycle("Starting HBM export to directory: " + outputFolder + "...");
-		hbmExporter.start();
+		HbmXmlExporter.create(md, tPath)
+				.exportAll(outputFolder);
 		getLogger().lifecycle("HBM export finished");
 	}
 

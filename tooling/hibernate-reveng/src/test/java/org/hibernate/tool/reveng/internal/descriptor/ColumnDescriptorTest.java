@@ -1,0 +1,217 @@
+/*
+ * Copyright 2010 - 2025 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.hibernate.tool.reveng.internal.descriptor;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.TemporalType;
+
+/**
+ * Tests for {@link ColumnDescriptor}.
+ *
+ * @author Koen Aers
+ */
+public class ColumnDescriptorTest {
+
+	@Test
+	public void testConstructorAndDefaults() {
+		ColumnDescriptor column = new ColumnDescriptor("USER_NAME", "userName", String.class);
+
+		assertEquals("USER_NAME", column.getColumnName());
+		assertEquals("userName", column.getFieldName());
+		assertEquals(String.class, column.getJavaType());
+		assertTrue(column.isNullable(), "Should default to nullable");
+		assertFalse(column.isPrimaryKey());
+		assertFalse(column.isAutoIncrement());
+		assertFalse(column.isVersion());
+		assertFalse(column.isLob());
+		assertEquals(0, column.getLength());
+		assertEquals(0, column.getPrecision());
+		assertEquals(0, column.getScale());
+		assertNull(column.getBasicFetchType());
+		assertNull(column.getTemporalType());
+		assertNull(column.getHibernateTypeName());
+		assertFalse(column.isBasicOptionalSet());
+		assertTrue(column.isBasicOptional(), "Should default to true when not set");
+	}
+
+	@Test
+	public void testPrimaryKeySetsNullableToFalse() {
+		ColumnDescriptor column = new ColumnDescriptor("ID", "id", Long.class)
+			.primaryKey(true);
+
+		assertTrue(column.isPrimaryKey());
+		assertFalse(column.isNullable(), "primaryKey(true) should set nullable to false");
+	}
+
+	@Test
+	public void testNullableCanBeOverriddenAfterPrimaryKey() {
+		ColumnDescriptor column = new ColumnDescriptor("ID", "id", Long.class)
+			.primaryKey(true)
+			.nullable(true);
+
+		assertTrue(column.isNullable());
+	}
+
+	@Test
+	public void testAutoIncrement() {
+		ColumnDescriptor column = new ColumnDescriptor("ID", "id", Long.class)
+			.autoIncrement(true);
+
+		assertTrue(column.isAutoIncrement());
+	}
+
+	@Test
+	public void testLengthPrecisionScale() {
+		ColumnDescriptor column = new ColumnDescriptor("AMOUNT", "amount", java.math.BigDecimal.class)
+			.length(255)
+			.precision(10)
+			.scale(2);
+
+		assertEquals(255, column.getLength());
+		assertEquals(10, column.getPrecision());
+		assertEquals(2, column.getScale());
+	}
+
+	@Test
+	public void testVersion() {
+		ColumnDescriptor column = new ColumnDescriptor("VERSION", "version", Long.class)
+			.version(true);
+
+		assertTrue(column.isVersion());
+	}
+
+	@Test
+	public void testBasicFetchType() {
+		ColumnDescriptor column = new ColumnDescriptor("DATA", "data", String.class)
+			.basicFetch(FetchType.LAZY);
+
+		assertEquals(FetchType.LAZY, column.getBasicFetchType());
+	}
+
+	@Test
+	public void testBasicOptionalExplicitlySet() {
+		ColumnDescriptor column = new ColumnDescriptor("STATUS", "status", String.class)
+			.basicOptional(false);
+
+		assertTrue(column.isBasicOptionalSet());
+		assertFalse(column.isBasicOptional());
+	}
+
+	@Test
+	public void testBasicOptionalNotSet() {
+		ColumnDescriptor column = new ColumnDescriptor("STATUS", "status", String.class);
+
+		assertFalse(column.isBasicOptionalSet());
+		assertTrue(column.isBasicOptional(), "Should default to true when not explicitly set");
+	}
+
+	@Test
+	public void testTemporalType() {
+		ColumnDescriptor column = new ColumnDescriptor("EVENT_DATE", "eventDate", java.util.Date.class)
+			.temporal(TemporalType.TIMESTAMP);
+
+		assertEquals(TemporalType.TIMESTAMP, column.getTemporalType());
+	}
+
+	@Test
+	public void testLob() {
+		ColumnDescriptor column = new ColumnDescriptor("CONTENT", "content", byte[].class)
+			.lob(true);
+
+		assertTrue(column.isLob());
+	}
+
+	@Test
+	public void testComment() {
+		ColumnDescriptor column = new ColumnDescriptor("NAME", "name", String.class)
+			.comment("The user name");
+
+		assertEquals("The user name", column.getComment());
+	}
+
+	@Test
+	public void testCommentDefaultsToNull() {
+		ColumnDescriptor column = new ColumnDescriptor("NAME", "name", String.class);
+
+		assertNull(column.getComment());
+	}
+
+	@Test
+	public void testGenerationType() {
+		ColumnDescriptor column = new ColumnDescriptor("ID", "id", Long.class)
+			.generationType(GenerationType.SEQUENCE);
+
+		assertEquals(GenerationType.SEQUENCE, column.getGenerationType());
+	}
+
+	@Test
+	public void testGenerationTypeDefaultsToNull() {
+		ColumnDescriptor column = new ColumnDescriptor("ID", "id", Long.class);
+
+		assertNull(column.getGenerationType());
+	}
+
+	@Test
+	public void testUnique() {
+		ColumnDescriptor column = new ColumnDescriptor("EMAIL", "email", String.class)
+			.unique(true);
+
+		assertTrue(column.isUnique());
+	}
+
+	@Test
+	public void testUniqueDefaultsToFalse() {
+		ColumnDescriptor column = new ColumnDescriptor("EMAIL", "email", String.class);
+
+		assertFalse(column.isUnique());
+	}
+
+	@Test
+	public void testHibernateTypeName() {
+		ColumnDescriptor column = new ColumnDescriptor("NAME", "name", String.class)
+			.hibernateTypeName("string");
+
+		assertEquals("string", column.getHibernateTypeName());
+	}
+
+	@Test
+	public void testHibernateTypeNameDefaultsToNull() {
+		ColumnDescriptor column = new ColumnDescriptor("NAME", "name", String.class);
+
+		assertNull(column.getHibernateTypeName());
+	}
+
+	@Test
+	public void testFluentChaining() {
+		ColumnDescriptor column = new ColumnDescriptor("ID", "id", Long.class)
+			.primaryKey(true)
+			.autoIncrement(true)
+			.length(10)
+			.precision(5)
+			.scale(2);
+
+		assertTrue(column.isPrimaryKey());
+		assertTrue(column.isAutoIncrement());
+		assertEquals(10, column.getLength());
+		assertEquals(5, column.getPrecision());
+		assertEquals(2, column.getScale());
+	}
+}

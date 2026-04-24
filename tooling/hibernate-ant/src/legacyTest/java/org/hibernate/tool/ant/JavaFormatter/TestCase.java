@@ -18,7 +18,7 @@
 
 package org.hibernate.tool.ant.JavaFormatter;
 
-import org.hibernate.tool.api.java.DefaultJavaPrettyPrinterStrategy;
+import org.hibernate.tool.reveng.api.java.DefaultJavaPrettyPrinterStrategy;
 import org.hibernate.tools.test.util.AntUtil;
 import org.hibernate.tools.test.util.FileUtil;
 import org.hibernate.tools.test.util.ResourceUtil;

@@ -1,6 +1,19 @@
 /*
- * SPDX-License-Identifier: Apache-2.0
- * Copyright Red Hat Inc. and Hibernate Authors
+ * Hibernate Tools, Tooling for your Hibernate Projects
+ *
+ * Copyright 2024-2025 Red Hat, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.hibernate.orm.tooling.gradle.reveng;
 
@@ -16,8 +29,8 @@ import java.util.Set;
 
 import org.apache.tools.ant.BuildException;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.work.DisableCachingByDefault;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedConfiguration;
@@ -28,43 +41,43 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.hibernate.tool.reveng.api.metadata.MetadataConstants;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptorFactory;
-import org.hibernate.tool.reveng.api.core.RevengSettings;
-import org.hibernate.tool.reveng.api.core.RevengStrategy;
-import org.hibernate.tool.reveng.api.core.RevengStrategyFactory;
+import org.hibernate.tool.reveng.api.reveng.RevengSettings;
+import org.hibernate.tool.reveng.api.reveng.RevengStrategy;
+import org.hibernate.tool.reveng.api.reveng.RevengStrategyFactory;
 
-@DisableCachingByDefault(because = "Reverse engineering tasks perform JDBC operations and are not cacheable")
+
+@DisableCachingByDefault(because = "Generates output from a live database connection")
 public abstract class RevengTask extends DefaultTask {
 
 	@Internal
 	private RevengSpec revengSpec = null;
-
+	
 	@Internal
 	private Properties hibernateProperties = null;
-
+	
 	public void initialize(RevengSpec revengSpec) {
 		this.revengSpec = revengSpec;
 	}
-
+	
 	RevengSpec getRevengSpec() {
 		return this.revengSpec;
 	}
-
+	
 	void perform() {
 		getLogger().lifecycle("Starting Task '" + getName() + "'");
 		ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
 		try {
 			Thread.currentThread().setContextClassLoader(
 					new URLClassLoader(
-							resolveProjectClassPath(),
+							resolveProjectClassPath(), 
 							oldLoader));
 			doWork();
-		}
-		finally {
+		} finally {
 			Thread.currentThread().setContextClassLoader(oldLoader);
 			getLogger().lifecycle("Ending Task '" + getName() + "'");
 		}
 	}
-
+	
 	URL[] resolveProjectClassPath() {
 		try {
 			ConfigurationContainer cc = getProject().getConfigurations();
@@ -77,24 +90,23 @@ public abstract class RevengTask extends DefaultTask {
 				urls[i] = resolvedArtifacts[i].getFile().toURI().toURL();
 			}
 			return urls;
-		}
-		catch (MalformedURLException e) {
+		} catch (MalformedURLException e) {
 			getLogger().error("MalformedURLException while compiling project classpath");
 			throw new BuildException(e);
 		}
 	}
-
+	
 	Properties getHibernateProperties() {
 		if (hibernateProperties == null) {
 			loadPropertiesFile(getPropertyFile());
 		}
 		return hibernateProperties;
 	}
-
+	
 	String getHibernateProperty(String name) {
 		return getHibernateProperties().getProperty(name);
 	}
-
+	
 	MetadataDescriptor createJdbcDescriptor() {
 		RevengStrategy strategy = setupReverseEngineeringStrategy();
 		Properties hibernateProperties = getHibernateProperties();
@@ -106,7 +118,7 @@ public abstract class RevengTask extends DefaultTask {
 	File getOutputFolder() {
 		return new File(getProject().getProjectDir(), getRevengSpec().outputFolder);
 	}
-
+	
 	RevengStrategy setupReverseEngineeringStrategy() {
 		File[] revengFiles = getRevengFiles();
 		RevengStrategy result = RevengStrategyFactory
@@ -148,15 +160,13 @@ public abstract class RevengTask extends DefaultTask {
 			hibernateProperties = new Properties();
 			hibernateProperties.load(is);
 			getLogger().lifecycle("Properties file is loaded");
-		}
-		catch (FileNotFoundException e) {
+		} catch (FileNotFoundException e) {
 			throw new BuildException(propertyFile + " not found.", e);
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			throw new BuildException("Problem while loading " + propertyFile, e);
 		}
 	}
-
+	
 	abstract void doWork();
 
 }

@@ -17,8 +17,8 @@
  */
 package org.hibernate.tool.ant.Cfg2HbmWithPackageNameAndReverseNamingStrategy;
 
-import org.hibernate.tool.api.reveng.TableIdentifier;
-import org.hibernate.tool.internal.strategy.AbstractStrategy;
+import org.hibernate.tool.reveng.api.reveng.TableIdentifier;
+import org.hibernate.tool.reveng.internal.strategy.AbstractStrategy;
 
 public class Strategy extends AbstractStrategy {
 

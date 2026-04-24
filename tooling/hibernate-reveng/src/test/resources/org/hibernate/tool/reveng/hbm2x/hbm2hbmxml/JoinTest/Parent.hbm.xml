@@ -28,7 +28,7 @@
 -->
 
 <hibernate-mapping 
-	package="org.hibernate.tool.hbm2x.hbm2hbmxml.JoinTest">
+	package="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.JoinTest">
 
 	<class name="Parent">
 		<id name="id" 

@@ -26,7 +26,7 @@ import org.junit.jupiter.api.io.TempDir;
 class GenericTemplateProcessorTest {
 
 	private static final String TEMPLATE_BASE =
-			"org/hibernate/tool/internal/reveng/models/exporter/generic/";
+			"org/hibernate/tool/reveng/internal/exporter/generic/";
 
 	@TempDir
 	Path tempDir;

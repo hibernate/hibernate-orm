@@ -27,7 +27,7 @@
      
 -->
 
-<hibernate-mapping package="org.hibernate.tool.hbm2x.Hbm2JavaEjb3Test">
+<hibernate-mapping package="org.hibernate.tool.reveng.hbm2x.Hbm2JavaEjb3Test">
 
     <class name="Author">
     

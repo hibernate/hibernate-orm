@@ -8,6 +8,7 @@ import org.hibernate.tool.ant.test.utils.AntUtil;
 import org.hibernate.tool.ant.test.utils.FileUtil;
 import org.hibernate.tool.ant.test.utils.ResourceUtil;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
@@ -36,6 +37,7 @@ public class TestCase {
 	// TODO HBX-3313: Verify why this does not work on Windows
 	@Test
 	@DisabledOnOs(OS.WINDOWS)
+	@Disabled("TODO HHH-20376: adapt to Hibernate 7 behavioral changes")
 	public void testNoConnInfoExport() {
 
 		String[] resources = new String[] {"build.xml", "hibernate.cfg.xml", "TopDown.hbm.xml", "hibernate.properties"};

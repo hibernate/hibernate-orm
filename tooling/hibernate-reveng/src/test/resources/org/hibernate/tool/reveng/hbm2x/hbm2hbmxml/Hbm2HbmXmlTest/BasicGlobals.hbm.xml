@@ -19,7 +19,7 @@
 	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping 
-	package="org.hibernate.tool.hbm2x.hbm2hbmxml.Hbm2HbmXmlTest"
+	package="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.Hbm2HbmXmlTest"
 >
 	<import class="testImport" rename="org.import.test.testImport" />
 <!-- 

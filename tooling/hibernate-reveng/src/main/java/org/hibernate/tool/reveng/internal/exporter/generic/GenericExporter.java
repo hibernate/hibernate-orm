@@ -216,6 +216,7 @@ public class GenericExporter implements Exporter {
 				entity, mc, importContext, false,
 				classMeta, fieldMeta);
 		model.put("templateHelper", templateHelper);
+		model.put("pojo", templateHelper);
 		model.put("classInfo", templateHelper.getClassAnnotationGenerator());
 		model.put("fieldAnnotations", templateHelper.getFieldAnnotationGenerator());
 		model.put("relAnnotations", templateHelper.getRelationshipAnnotationGenerator());

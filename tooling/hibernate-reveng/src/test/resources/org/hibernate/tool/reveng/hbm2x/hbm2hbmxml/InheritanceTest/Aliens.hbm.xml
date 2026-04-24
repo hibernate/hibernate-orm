@@ -27,7 +27,7 @@
 -->
 
 <hibernate-mapping 
-	package="org.hibernate.tool.hbm2x.hbm2hbmxml.InheritanceTest">
+	package="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.InheritanceTest">
 	
 	<class name="Animal">
 		<id name="id" type="long">

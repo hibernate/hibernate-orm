@@ -19,7 +19,7 @@
 	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping 
-	package="org.hibernate.tool.hbm2x.hbm2hbmxml.OneToOneTest">
+	package="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.OneToOneTest">
 <class name="Person">
     <id name="id" column="personId">
         <generator class="native"/>

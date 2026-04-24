@@ -26,7 +26,7 @@
      
 -->
 
-<hibernate-mapping package="org.hibernate.tool.hbm2x.hbm2hbmxml.IdBagTest">
+<hibernate-mapping package="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.IdBagTest">
 	
 	<class name="User" table="`Users`">
 		<id name="name"/>

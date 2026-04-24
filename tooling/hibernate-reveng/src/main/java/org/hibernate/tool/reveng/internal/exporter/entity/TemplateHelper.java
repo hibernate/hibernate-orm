@@ -247,6 +247,10 @@ public class TemplateHelper {
 		return lastDot > 0 ? className.substring(lastDot + 1) : className;
 	}
 
+	public String getShortName() {
+		return getDeclarationName();
+	}
+
 	public String getExtendsDeclaration() {
 		if (isInterface()) {
 			// Interfaces use extends for both superclass and extends meta

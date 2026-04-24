@@ -12,5 +12,6 @@ dependencies {
     implementation libs.freemarker
     implementation libs.antlrRuntime
     implementation jakartaLibs.jaxbApi
+    testImplementation project(':hibernate-ant')
     testRuntimeOnly jakartaLibs.ejb
 }

@@ -28,7 +28,7 @@
 
 -->
 
-<hibernate-mapping package="org.hibernate.tool.hbm2x.hbm2hbmxml.FormulaTest">
+<hibernate-mapping package="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.FormulaTest">
 
 	<class name="Customer" 
 			select-before-update="true" 

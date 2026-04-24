@@ -18,7 +18,7 @@
 	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping default-lazy="false" 
-	package="org.hibernate.tool.hbm2x.hbm2hbmxml.CompositeElementTest">
+	package="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.CompositeElementTest">
 
     <class name="Glarch"
     	table="`glarchez`"

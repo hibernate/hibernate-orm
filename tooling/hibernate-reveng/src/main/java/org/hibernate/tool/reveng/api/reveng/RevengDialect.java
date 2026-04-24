@@ -70,7 +70,7 @@ public interface RevengDialect {
 	 *
 	 * @param catalog name or null
 	 * @param schema name or null
-	 * @param table name or null
+	 * @param name name or null
 	 * @return iterator with map elements that has "TABLE_NAME", "TABLE_SCHEMA", "TABLE_CAT", "COLUMN_NAME", "KEY_SEQ", "PK_NAME",
 	 */
 	Iterator<Map<String, Object>> getPrimaryKeys(String catalog, String schema, String name);
@@ -104,7 +104,7 @@ public interface RevengDialect {
 	 *
 	 * @param catalog
 	 * @param schema
-	 * @param name
+	 * @param table
 	 * @return iterator with map elements that has "TABLE_NAME", "TABLE_SCHEMA", "TABLE_CAT", "HIBERNATE_STRATEGY" (null if no possible to determine strategy, otherwise return hibernate identifier strategy name/classname)
 	 */
 	public Iterator<Map<String, Object>> getSuggestedPrimaryKeyStrategyName(String catalog, String schema, String table);

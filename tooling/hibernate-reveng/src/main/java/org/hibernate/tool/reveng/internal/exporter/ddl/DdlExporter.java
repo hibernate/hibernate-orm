@@ -12,6 +12,7 @@ import java.io.Writer;
 import java.util.List;
 import java.util.Properties;
 
+import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.tool.reveng.api.export.Exporter;
 import org.hibernate.tool.reveng.api.export.ExporterConstants;
@@ -22,7 +23,7 @@ import org.hibernate.tool.reveng.internal.util.MetadataHelper;
  * Generates DDL (CREATE/DROP/UPDATE) statements from a list of
  * {@link ClassDetails} entities.
  * <p>
- * Builds Hibernate {@link Metadata} from the given {@code ClassDetails}
+ * Builds Hibernate Metadata from the given {@code ClassDetails}
  * by registering them in the bootstrap pipeline, then uses Hibernate's
  * schema management SPI to produce dialect-specific DDL output.
  * <p>
@@ -144,6 +145,7 @@ public class DdlExporter implements Exporter {
 	/**
 	 * Generates CREATE DDL statements and writes them to {@code System.out}.
 	 */
+	@AllowSysOut
 	public void exportCreateDdlToConsole() {
 		exportCreateDdl(new OutputStreamWriter(System.out));
 	}
@@ -151,6 +153,7 @@ public class DdlExporter implements Exporter {
 	/**
 	 * Generates DROP DDL statements and writes them to {@code System.out}.
 	 */
+	@AllowSysOut
 	public void exportDropDdlToConsole() {
 		exportDropDdl(new OutputStreamWriter(System.out));
 	}
@@ -159,6 +162,7 @@ public class DdlExporter implements Exporter {
 	 * Generates both DROP and CREATE DDL statements and writes them
 	 * to {@code System.out} (drop first, then create).
 	 */
+	@AllowSysOut
 	public void exportBothDdlToConsole() {
 		exportBothDdl(new OutputStreamWriter(System.out));
 	}
@@ -166,6 +170,7 @@ public class DdlExporter implements Exporter {
 	/**
 	 * Generates schema migration (ALTER) DDL and writes it to {@code System.out}.
 	 */
+	@AllowSysOut
 	public void exportUpdateDdlToConsole() {
 		exportUpdateDdl(new OutputStreamWriter(System.out));
 	}

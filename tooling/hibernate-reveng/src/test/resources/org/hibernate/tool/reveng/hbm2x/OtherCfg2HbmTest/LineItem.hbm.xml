@@ -31,7 +31,7 @@
      
 -->
 
-<hibernate-mapping package="org.hibernate.tool.hbm2x">
+<hibernate-mapping package="org.hibernate.tool.reveng.hbm2x">
 
     <class name="LineItem">
     	

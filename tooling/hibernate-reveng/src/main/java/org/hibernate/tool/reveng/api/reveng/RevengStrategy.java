@@ -128,7 +128,7 @@ public interface RevengStrategy {
 
 	/**
 	 * Return the list of metaattributes to assign to properties created based on the given column
-	 * @param tableIdentifier
+	 * @param identifier
 	 * @param column
 	 * @return a Map from String to {@link MetaAttribute}
 	 */
@@ -179,10 +179,10 @@ public interface RevengStrategy {
 
 	/**
 	 *
+	 * @param fromKey
 	 * @param middleTable
+	 * @param toKey
 	 * @param uniqueReference true if there is no other references to the same table
-	 * @param fromColumns list of Column instances on the fromTable. Only col.getName() should be assumed to be correct
-	 * @param referencedColumns list of Column instances on the referenced Table. Only col.getName() should be assumed to be correct
 	 * @return
 	 */
 	public String foreignKeyToManyToManyName(ForeignKey fromKey, TableIdentifier middleTable, ForeignKey toKey, boolean uniqueReference);

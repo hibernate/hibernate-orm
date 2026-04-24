@@ -27,7 +27,7 @@
       
 -->
 
-<hibernate-mapping package="org.hibernate.tool.hbm2x.hbm2hbmxml.Hbm2HbmXmlTest">
+<hibernate-mapping package="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.Hbm2HbmXmlTest">
 
     <class name="BasicCompositeId">
     	

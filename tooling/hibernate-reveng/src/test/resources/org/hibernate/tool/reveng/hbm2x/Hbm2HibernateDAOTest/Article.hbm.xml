@@ -27,7 +27,7 @@
      
 -->
 
-<hibernate-mapping package="org.hibernate.tool.hbm2x.Hbm2HibernateDAOTest">
+<hibernate-mapping package="org.hibernate.tool.reveng.hbm2x.Hbm2HibernateDAOTest">
 
     <class name="Article">
     

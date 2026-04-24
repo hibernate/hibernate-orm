@@ -22,7 +22,7 @@
   
 -->
 
-<hibernate-mapping package="org.hibernate.tool.hbm2x.hbm2hbmxml.SetElementTest">
+<hibernate-mapping package="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.SetElementTest">
 	
 	<class name="Search">
 		<id name="searchString"/>

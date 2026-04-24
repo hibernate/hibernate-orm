@@ -27,7 +27,7 @@
      
 -->
 
-<hibernate-mapping package="org.hibernate.tool.hbm2x.Hbm2JavaInitializationTest">
+<hibernate-mapping package="org.hibernate.tool.reveng.hbm2x.Hbm2JavaInitializationTest">
 
     <class name="Article">
     

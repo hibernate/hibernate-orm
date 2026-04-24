@@ -18,7 +18,7 @@
 	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 	"https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.hibernate.tool.hbm2x.Hbm2JavaInitializationTest">
+<hibernate-mapping package="org.hibernate.tool.reveng.hbm2x.Hbm2JavaInitializationTest">
 
     <class name="Passenger">
 

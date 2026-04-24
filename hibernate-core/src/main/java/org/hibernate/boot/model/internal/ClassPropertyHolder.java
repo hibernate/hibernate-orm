@@ -314,7 +314,9 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	static void addPropertyToMappedSuperclass(Property prop, XClass declaringClass, MetadataBuildingContext context) {
 		final Class<?> type = context.getBootstrapContext().getReflectionManager().toClass( declaringClass );
 		final MappedSuperclass superclass = context.getMetadataCollector().getMappedSuperclass( type );
-		prepareActualProperty( prop, type, true, context, superclass::addDeclaredProperty );
+		if ( superclass != null ) {
+			prepareActualProperty( prop, type, true, context, superclass::addDeclaredProperty );
+		}
 	}
 
 	static void prepareActualProperty(

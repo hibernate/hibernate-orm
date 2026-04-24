@@ -13,7 +13,7 @@ import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityManager;
 
 import org.hibernate.CacheMode;
-import org.hibernate.query.QueryFlushMode;
+import jakarta.persistence.QueryFlushMode;
 
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;

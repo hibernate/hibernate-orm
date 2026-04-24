@@ -12,6 +12,7 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;

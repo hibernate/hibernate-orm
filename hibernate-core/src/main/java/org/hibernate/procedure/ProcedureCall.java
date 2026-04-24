@@ -18,7 +18,7 @@ import jakarta.persistence.metamodel.Type;
 import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.query.CommonQueryContract;
-import org.hibernate.query.QueryFlushMode;
+import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.SynchronizeableQuery;
 
 import java.util.Calendar;

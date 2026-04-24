@@ -5,7 +5,7 @@
 package org.hibernate.annotations;
 
 import org.hibernate.FlushMode;
-import org.hibernate.query.QueryFlushMode;
+import jakarta.persistence.QueryFlushMode;
 
 /**
  * Enumeration extending the {@linkplain jakarta.persistence.FlushModeType JPA flush modes}

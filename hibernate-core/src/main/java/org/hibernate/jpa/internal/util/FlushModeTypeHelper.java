@@ -7,10 +7,11 @@ package org.hibernate.jpa.internal.util;
 
 import java.util.Locale;
 import jakarta.persistence.FlushModeType;
+import jakarta.persistence.QueryFlushMode;
 
 import org.hibernate.FlushMode;
-import org.hibernate.query.QueryFlushMode;
 import org.hibernate.MappingException;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import static org.hibernate.jpa.internal.JpaLogger.JPA_LOGGER;
 
@@ -107,6 +108,99 @@ public class FlushModeTypeHelper {
 		else {
 			throw new IllegalArgumentException( "Unknown FlushMode source : " + value );
 		}
+	}
+
+	public static QueryFlushMode queryFlushModeFromHint(Object value) {
+		if ( value == null ) {
+			return QueryFlushMode.DEFAULT;
+		}
+		else if ( value instanceof QueryFlushMode qfm ) {
+			return qfm;
+		}
+		else if ( value instanceof FlushMode fm ) {
+			return queryFlushModeFromFlushMode( fm );
+		}
+		else if ( value instanceof FlushModeType fmt ) {
+			return queryFlushModeFromFlushModeType( fmt );
+		}
+		else {
+			return interpretQueryFlushMode( value.toString() );
+		}
+	}
+
+	public static FlushMode toHibernateFlushMode(QueryFlushMode queryFlushMode, SharedSessionContractImplementor session) {
+		if ( queryFlushMode == QueryFlushMode.DEFAULT ) {
+			return session.getHibernateFlushMode();
+		}
+		else if ( queryFlushMode == QueryFlushMode.FLUSH ) {
+			return FlushMode.AUTO;
+		}
+		else {
+			return FlushMode.MANUAL;
+		}
+	}
+
+	public static FlushModeType getFlushModeType(QueryFlushMode queryFlushMode) {
+		if ( queryFlushMode == QueryFlushMode.DEFAULT ) {
+			return FlushModeType.AUTO;
+		}
+		else {
+			return FlushModeType.COMMIT;
+		}
+	}
+
+	public static QueryFlushMode queryFlushModeFromFlushModeType(FlushModeType jpaMode) {
+		if ( jpaMode == null ) {
+			return QueryFlushMode.DEFAULT;
+		}
+		else if ( jpaMode == FlushModeType.COMMIT ) {
+			return QueryFlushMode.NO_FLUSH;
+		}
+		else {
+			return QueryFlushMode.FLUSH;
+		}
+	}
+
+	public static QueryFlushMode queryFlushModeFromFlushMode(FlushMode hibernateMode) {
+		if ( hibernateMode == null ) {
+			return QueryFlushMode.DEFAULT;
+		}
+		else if ( hibernateMode == FlushMode.COMMIT || hibernateMode == FlushMode.MANUAL ) {
+			return QueryFlushMode.NO_FLUSH;
+		}
+		else {
+			return QueryFlushMode.FLUSH;
+		}
+	}
+
+	public static QueryFlushMode interpretQueryFlushMode(String value) {
+		if ( value == null ) {
+			return QueryFlushMode.DEFAULT;
+		}
+
+		final String capitalizedValue = value.toUpperCase( Locale.ROOT );
+		try {
+			return QueryFlushMode.valueOf( capitalizedValue );
+		}
+		catch (IllegalArgumentException iae) {
+			// fall through
+		}
+
+		try {
+			return queryFlushModeFromFlushMode( FlushMode.valueOf( capitalizedValue ) );
+		}
+		catch (IllegalArgumentException iae) {
+			// fall through
+		}
+
+		try {
+			return queryFlushModeFromFlushModeType( FlushModeType.valueOf( capitalizedValue ) );
+		}
+		catch (IllegalArgumentException iae) {
+			// fall through
+		}
+
+		throw new IllegalArgumentException( "Incoming value could not be interpreted as a QueryFlushMode : " + value );
 	}
 
 	public static FlushMode interpretExternalSetting(String externalName) {

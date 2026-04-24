@@ -12,7 +12,7 @@ import org.hibernate.CacheMode;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.query.QueryFlushMode;
+import jakarta.persistence.QueryFlushMode;
 
 /**
  * @author Steve Ebersole

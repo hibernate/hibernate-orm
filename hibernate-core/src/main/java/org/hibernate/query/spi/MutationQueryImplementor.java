@@ -18,7 +18,7 @@ import jakarta.persistence.metamodel.Type;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.ScrollMode;
 import org.hibernate.query.MutationQuery;
-import org.hibernate.query.QueryFlushMode;
+import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.named.StatementReferenceProducer;
 

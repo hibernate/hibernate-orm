@@ -7,6 +7,7 @@ package org.hibernate.query;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Parameter;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Statement;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;

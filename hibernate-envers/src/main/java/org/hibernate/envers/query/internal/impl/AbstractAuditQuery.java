@@ -26,7 +26,7 @@ import org.hibernate.envers.query.order.AuditOrder;
 import org.hibernate.envers.query.projection.AuditProjection;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.query.Query;
-import org.hibernate.query.QueryFlushMode;
+import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -298,7 +298,7 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 			query.setComment( comment );
 		}
 		if ( flushMode != null ) {
-			query.setQueryFlushMode( QueryFlushMode.fromHibernateMode( flushMode ) );
+			query.setQueryFlushMode( FlushModeTypeHelper.queryFlushModeFromFlushMode( flushMode ) );
 		}
 		if ( cacheMode != null ) {
 			query.setCacheMode( cacheMode );

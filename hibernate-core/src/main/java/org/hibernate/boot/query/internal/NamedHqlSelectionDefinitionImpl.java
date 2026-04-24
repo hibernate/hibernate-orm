@@ -20,7 +20,7 @@ import org.hibernate.boot.spi.NamedSelectionQueryDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.models.spi.AnnotationTarget;
-import org.hibernate.query.QueryFlushMode;
+import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.named.NamedSqmQueryMemento;
 import org.hibernate.query.named.internal.HqlSelectionMementoImpl;
 

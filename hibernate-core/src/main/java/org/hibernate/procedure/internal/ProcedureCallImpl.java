@@ -36,7 +36,7 @@ import org.hibernate.procedure.spi.NamedCallableQueryMemento.ParameterMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
-import org.hibernate.query.QueryFlushMode;
+import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.internal.AbstractQuery;
 import org.hibernate.query.internal.QueryOptionsImpl;

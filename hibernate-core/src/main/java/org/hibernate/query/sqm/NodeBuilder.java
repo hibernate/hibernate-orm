@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.criteria.BooleanExpression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -1044,6 +1045,9 @@ public interface NodeBuilder extends HibernateCriteriaBuilder, SqmCreationContex
 
 	@Override @SuppressWarnings("unchecked")
 	SqmPredicate wrap(Expression<Boolean>... expressions);
+
+	@Override
+	SqmPredicate wrap(BooleanExpression... expressions);
 
 	SqmPredicate wrap(List<? extends Expression<Boolean>> restrictions);
 

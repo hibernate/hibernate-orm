@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Subquery;
 
 /**
  * API extension to the JPA {@link Expression} contract
@@ -50,6 +51,27 @@ public interface JpaExpression<T> extends JpaSelection<T>, Expression<T> {
 
 	@Override
 	JpaPredicate in(Expression<Collection<?>> values);
+
+	@Override
+	JpaPredicate in(Subquery<T> subquery);
+
+	@Override
+	JpaExpression<T> coalesce(Expression<? extends T> y);
+
+	@Override
+	JpaExpression<T> coalesce(T y);
+
+	@Override
+	JpaExpression<T> nullif(Expression<? extends T> y);
+
+	@Override
+	JpaExpression<T> nullif(T y);
+
+	@Override
+	JpaPredicate isMember(Expression<? extends Collection<? super T>> collection);
+
+	@Override
+	JpaPredicate isNotMember(Expression<? extends Collection<? super T>> collection);
 
 	@Override
 	JpaPredicate equalTo(Expression<?> value);

@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import jakarta.persistence.criteria.Expression;
+import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaInPredicate;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 

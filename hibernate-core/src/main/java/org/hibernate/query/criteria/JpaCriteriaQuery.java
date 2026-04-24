@@ -7,6 +7,7 @@ package org.hibernate.query.criteria;
 import java.util.List;
 import java.util.Set;
 
+import jakarta.persistence.criteria.BooleanExpression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.query.common.FetchClauseType;
@@ -137,7 +138,10 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	JpaCriteriaQuery<T> where(Predicate @Nullable... restrictions);
 
 	@Override
-	JpaCriteriaQuery<T> where(List<Predicate> restrictions);
+	JpaCriteriaQuery<T> where(BooleanExpression... restrictions);
+
+	@Override
+	JpaCriteriaQuery<T> where(List<? extends Expression<Boolean>> restrictions);
 
 	@Override
 	JpaCriteriaQuery<T> groupBy(Expression<?>... grouping);
@@ -152,7 +156,10 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	JpaCriteriaQuery<T> having(Predicate @Nullable... restrictions);
 
 	@Override
-	JpaCriteriaQuery<T> having(List<Predicate> restrictions);
+	JpaCriteriaQuery<T> having(BooleanExpression... restrictions);
+
+	@Override
+	JpaCriteriaQuery<T> having(List<? extends Expression<Boolean>> restrictions);
 
 	@Override
 	JpaCriteriaQuery<T> orderBy(Order... o);

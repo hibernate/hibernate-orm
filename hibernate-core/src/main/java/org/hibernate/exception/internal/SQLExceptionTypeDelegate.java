@@ -48,8 +48,8 @@ public class SQLExceptionTypeDelegate extends AbstractSQLExceptionConversionDele
 				|| sqlException instanceof SQLTransientConnectionException ) {
 			return new JDBCConnectionException( message, sqlException, sql );
 		}
-		else if ( sqlException instanceof DataTruncation ||
-				sqlException instanceof SQLDataException ) {
+		else if ( sqlException instanceof DataTruncation
+				|| sqlException instanceof SQLDataException ) {
 			return new DataException( message, sqlException, sql );
 		}
 		else if ( sqlException instanceof SQLIntegrityConstraintViolationException ) {
@@ -57,7 +57,8 @@ public class SQLExceptionTypeDelegate extends AbstractSQLExceptionConversionDele
 					message,
 					sqlException,
 					sql,
-					getConversionContext().getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+					getConversionContext().getViolatedConstraintNameExtractor()
+							.extractConstraintName( sqlException )
 			);
 		}
 		else if ( sqlException instanceof SQLSyntaxErrorException ) {
@@ -67,11 +68,14 @@ public class SQLExceptionTypeDelegate extends AbstractSQLExceptionConversionDele
 			return new QueryTimeoutException( message, sqlException, sql );
 		}
 		else if ( sqlException instanceof SQLTransactionRollbackException ) {
-			// Not 100% sure this is completely accurate.  The JavaDocs for SQLTransactionRollbackException state that
-			// it indicates sql states starting with '40' and that those usually indicate that:
+			// Not 100% sure this is completely accurate.
+			// The Javadocs for SQLTransactionRollbackException state that it
+			// indicates SQL States starting with '40' and that those usually
+			// indicate that:
 			//		<quote>
-			//			the current statement was automatically rolled back by the database because of deadlock or
-			// 			other transaction serialization failures.
+			//			the current statement was automatically rolled back by
+			//			the database because of deadlock or other transaction
+			//			serialization failures.
 			//		</quote>
 			return new LockAcquisitionException( message, sqlException, sql );
 		}

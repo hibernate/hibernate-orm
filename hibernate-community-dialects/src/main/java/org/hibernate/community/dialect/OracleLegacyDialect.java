@@ -72,7 +72,6 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.CheckConstraint;
@@ -129,6 +128,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import static java.lang.String.join;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.HOUR;
@@ -1146,7 +1146,7 @@ public class OracleLegacyDialect extends Dialect {
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
+				switch ( extractErrorCode( sqle ) ) {
 					case 1:
 					case 2291:
 					case 2292:
@@ -1161,60 +1161,58 @@ public class OracleLegacyDialect extends Dialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return (sqlException, message, sql) -> {
-			final String constraintName;
-			// interpreting Oracle exceptions is much much more precise based on their specific vendor codes.
-			switch ( JdbcExceptionHelper.extractErrorCode( sqlException ) ) {
+		return (sqlException, message, sql) ->
+				// interpreting Oracle exceptions is much, much more
+				// precise based on their specific vendor codes.
+				switch ( extractErrorCode( sqlException ) ) {
 
-				// lock timeouts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+					// lock timeouts ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-				case 30006:
-					// ORA-30006: resource busy; acquire with WAIT timeout expired
-					return new LockTimeoutException(message, sqlException, sql);
-				case 54:
-					// ORA-00054: resource busy and acquire with NOWAIT specified or timeout expired
-					return new LockTimeoutException(message, sqlException, sql);
-				case 4021:
-					// ORA-04021 timeout occurred while waiting to lock object
-					return new LockTimeoutException(message, sqlException, sql);
+					case 30006 ->
+						// ORA-30006: resource busy; acquire with WAIT timeout expired
+							new LockTimeoutException( message, sqlException, sql );
+					case 54 ->
+						// ORA-00054: resource busy and acquire with NOWAIT specified or timeout expired
+							new LockTimeoutException( message, sqlException, sql );
+					case 4021 ->
+						// ORA-04021 timeout occurred while waiting to lock object
+							new LockTimeoutException( message, sqlException, sql );
 
-				// deadlocks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+					// deadlocks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-				case 60:
-					// ORA-00060: deadlock detected while waiting for resource
-					return new LockAcquisitionException( message, sqlException, sql );
-				case 4020:
-					// ORA-04020 deadlock detected while trying to lock object
-					return new LockAcquisitionException( message, sqlException, sql );
+					case 60 ->
+						// ORA-00060: deadlock detected while waiting for resource
+							new LockAcquisitionException( message, sqlException, sql );
+					case 4020 ->
+						// ORA-04020 deadlock detected while trying to lock object
+							new LockAcquisitionException( message, sqlException, sql );
 
-				// query cancelled ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+					// query cancelled ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-				case 1013:
-					// ORA-01013: user requested cancel of current operation
-					return new QueryTimeoutException(  message, sqlException, sql );
+					case 1013 ->
+						// ORA-01013: user requested cancel of current operation
+							new QueryTimeoutException( message, sqlException, sql );
 
-				// data integrity violation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+					// data integrity violation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-				case 1:
-					// ORA-00001: unique constraint violated
-					constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
-					return new ConstraintViolationException(
-							message,
-							sqlException,
-							sql,
-							ConstraintViolationException.ConstraintKind.UNIQUE,
-							constraintName
-					);
-				case 1407:
-					// ORA-01407: cannot update column to NULL
-					constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
-					return new ConstraintViolationException( message, sqlException, sql, constraintName );
-
-				default:
-					return null;
-			}
-		};
-	}
+					case 1 ->
+						// ORA-00001: unique constraint violated
+							new ConstraintViolationException(
+									message,
+									sqlException,
+									sql,
+									ConstraintViolationException.ConstraintKind.UNIQUE,
+									getViolatedConstraintNameExtractor()
+											.extractConstraintName( sqlException )
+							);
+					case 1407 ->
+						// ORA-01407: cannot update column to NULL
+							new ConstraintViolationException( message, sqlException, sql,
+									getViolatedConstraintNameExtractor()
+											.extractConstraintName( sqlException ) );
+					default -> null;
+				};
+		}
 
 	@Override
 	public int registerResultSetOutParameter(CallableStatement statement, int col) throws SQLException {

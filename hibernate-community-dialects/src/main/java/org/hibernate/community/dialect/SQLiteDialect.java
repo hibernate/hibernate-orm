@@ -33,7 +33,6 @@ import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.SemanticException;
@@ -66,6 +65,7 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.query.common.TemporalUnit.DAY;
 import static org.hibernate.query.common.TemporalUnit.EPOCH;
 import static org.hibernate.query.common.TemporalUnit.MONTH;
@@ -440,7 +440,7 @@ public class SQLiteDialect extends Dialect {
 
 	private static final ViolatedConstraintNameExtractor EXTRACTOR =
 			new TemplatedViolatedConstraintNameExtractor( sqle -> {
-				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqle ) & 0xFF;
+				final int errorCode = extractErrorCode( sqle ) & 0xFF;
 				if (errorCode == SQLITE_CONSTRAINT) {
 					return extractUsingTemplate( "constraint failed: ", "\n", sqle.getMessage() );
 				}
@@ -450,22 +450,15 @@ public class SQLiteDialect extends Dialect {
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-			switch ( errorCode ) {
-				case SQLITE_TOOBIG:
-				case SQLITE_MISMATCH:
-					return new DataException( message, sqlException, sql );
-				case SQLITE_BUSY:
-				case SQLITE_LOCKED:
-					return new LockAcquisitionException( message, sqlException, sql );
-				case SQLITE_NOTADB:
-					return new JDBCConnectionException( message, sqlException, sql );
-				default:
-					if ( errorCode >= SQLITE_IOERR && errorCode <= SQLITE_PROTOCOL ) {
-						return new JDBCConnectionException( message, sqlException, sql );
-					}
-					return null;
-			}
+			final int errorCode = extractErrorCode( sqlException );
+			return switch ( errorCode ) {
+				case SQLITE_TOOBIG, SQLITE_MISMATCH -> new DataException( message, sqlException, sql );
+				case SQLITE_BUSY, SQLITE_LOCKED -> new LockAcquisitionException( message, sqlException, sql );
+				case SQLITE_NOTADB -> new JDBCConnectionException( message, sqlException, sql );
+				default -> errorCode >= SQLITE_IOERR && errorCode <= SQLITE_PROTOCOL
+						? new JDBCConnectionException( message, sqlException, sql )
+						: null;
+			};
 		};
 	}
 

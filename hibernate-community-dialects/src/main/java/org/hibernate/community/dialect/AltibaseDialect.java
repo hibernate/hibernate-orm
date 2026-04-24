@@ -31,7 +31,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.query.common.TemporalUnit;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.IntervalType;
@@ -59,6 +58,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.Date;
 import java.util.TimeZone;
 
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractErrorCode;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BIT;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
@@ -647,29 +647,26 @@ public class AltibaseDialect extends Dialect {
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
-		return (sqlException, message, sql) -> {
-			final String constraintName;
-			switch ( JdbcExceptionHelper.extractErrorCode( sqlException ) ) {
-				case 334393:       // response timeout
-				case 4164:         // query timeout
-					return new LockTimeoutException(message, sqlException, sql );
-				case 69720:        // unique constraint violated
-					constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
-					return new ConstraintViolationException(
+		return (sqlException, message, sql) -> switch ( extractErrorCode( sqlException ) ) {
+			case 334393,  // response timeout
+				4164 ->  // query timeout
+					new LockTimeoutException( message, sqlException, sql );
+			case 69720 ->  // unique constraint violated
+					new ConstraintViolationException(
 							message,
 							sqlException,
 							sql,
 							ConstraintViolationException.ConstraintKind.UNIQUE,
-							constraintName
+							getViolatedConstraintNameExtractor()
+									.extractConstraintName( sqlException )
 					);
-				case 200820:        // Cannot insert NULL or update to NULL
-				case 200823:        // foreign key constraint violation
-				case 200822: 	    // failed on update or delete by foreign key constraint violation
-					constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
-					return new ConstraintViolationException( message, sqlException, sql, constraintName );
-				default:
-					return null;
-			}
+			case 200820,    // Cannot insert NULL or update to NULL
+				200823,    // foreign key constraint violation
+				200822 ->  // failed on update or delete by foreign key constraint violation
+					new ConstraintViolationException( message, sqlException, sql,
+							getViolatedConstraintNameExtractor()
+									.extractConstraintName( sqlException ) );
+			default -> null;
 		};
 	}
 

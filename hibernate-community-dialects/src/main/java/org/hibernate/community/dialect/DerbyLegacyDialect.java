@@ -46,7 +46,6 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.common.TemporalUnit;
@@ -88,6 +87,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Set;
 
+import static org.hibernate.internal.util.JdbcExceptionHelper.extractSqlState;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
@@ -686,14 +686,13 @@ public class DerbyLegacyDialect extends Dialect {
 	@Override
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return new TemplatedViolatedConstraintNameExtractor( sqle -> {
-			final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
+			final String sqlState = extractSqlState( sqle );
 			if ( sqlState != null ) {
-				switch ( sqlState ) {
-					case "23505":
-						return TemplatedViolatedConstraintNameExtractor.extractUsingTemplate(
-								"'", "'",
-								sqle.getMessage()
-						);
+				if ( sqlState.equals( "23505" ) ) {
+					return TemplatedViolatedConstraintNameExtractor.extractUsingTemplate(
+							"'", "'",
+							sqle.getMessage()
+					);
 				}
 			}
 			return null;
@@ -703,21 +702,18 @@ public class DerbyLegacyDialect extends Dialect {
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
-			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
-//				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-			final String constraintName;
-
+			final String sqlState = extractSqlState( sqlException );
 			if ( sqlState != null ) {
 				switch ( sqlState ) {
 					case "23505":
 						// Unique constraint violation
-						constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
 						return new ConstraintViolationException(
 								message,
 								sqlException,
 								sql,
 								ConstraintViolationException.ConstraintKind.UNIQUE,
-								constraintName
+								getViolatedConstraintNameExtractor()
+										.extractConstraintName( sqlException )
 						);
 					case "40XL1", "40XL2":
 						return new LockTimeoutException( message, sqlException, sql );

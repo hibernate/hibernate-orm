@@ -145,3 +145,14 @@ updates:
       # (see https://central.sonatype.com/artifact/org.apache.maven/maven-embedder/3.9.9/dependencies)
       - dependency-name: "org.slf4j:*"
         update-types: ["version-update:semver-major"]
+  # Monitor docker images in compose files for database version updates
+  - package-ecosystem: docker
+    directory: "/docker-compose/latest"
+    schedule:
+      interval: monthly
+      day: 1
+    open-pull-requests-limit: 10
+    groups:
+      database-images:
+        patterns:
+          - "*"

@@ -1,6 +1,10 @@
 #! /bin/bash
 
-# Detect container runtime
+###############################################################################
+# Detect container cli (Docker/Podman)
+# Docker has priority to make CI builds more stable/predictable
+# (Jenkins is currently better configured to deal with Docker)
+###############################################################################
 if command -v docker > /dev/null; then
   CONTAINER_CLI=$(command -v docker)
   if [[ "$(docker version | grep Podman)" == "" ]]; then
@@ -36,119 +40,82 @@ DB_COUNT=1
 if [[ "$(uname -s)" == "Darwin" ]]; then
   IS_OSX=true
   DB_COUNT=$(($(sysctl -n hw.physicalcpu)/2))
+  # PostGIS images only support amd64, so we force emulation on macOS
+  export POSTGRESQL_PLATFORM="linux/amd64"
 else
   IS_OSX=false
   DB_COUNT=$(($(nproc)/2))
 fi
+
+###############################################################################
+# Helper functions to start/stop a database using compose files
+###############################################################################
+compose_up() {
+    local compose_file="docker-compose/$1"
+
+    echo "Starting database using $compose_file"
+
+    $CONTAINER_CLI compose -f "$compose_file" up -d --wait $REMOVE_ORPHANS || {
+        echo "Error: Docker compose failed to start."
+        exit 1
+    }
+}
+
+compose_down() {
+    $CONTAINER_CLI compose -f "docker-compose/$1" down -v 2>/dev/null || true
+    $CONTAINER_CLI rm -f "$2" 2>/dev/null || true
+}
+
+###############################################################################
 
 mysql() {
     mysql_9_6
 }
 
 mysql_8_0() {
-    local skip="--skip-character-set-client-handshake"
-    mysql_setup "8.0" "$skip"
+    compose_down "versioned/mysql-8.0.yml" "mysql"
+    compose_up "versioned/mysql-8.0.yml"
+    mysql_post_setup
 }
 
 mysql_8_1() {
-    local skip="--skip-character-set-client-handshake"
-    mysql_setup "8.1" "$skip"
+    compose_down "versioned/mysql-8.1.yml" "mysql"
+    compose_up "versioned/mysql-8.1.yml"
+    mysql_post_setup
 }
 
 mysql_8_2() {
-    local skip="--skip-character-set-client-handshake"
-    mysql_setup "8.2" "$skip"
+    compose_down "versioned/mysql-8.2.yml" "mysql"
+    compose_up "versioned/mysql-8.2.yml"
+    mysql_post_setup
 }
 
 mysql_9_2() {
-    local init_connect="--init-connect=SET character_set_client='utf8mb4';SET character_set_results='utf8mb4';SET character_set_connection='utf8mb4';SET collation_connection='utf8mb4_0900_as_cs';"
-    mysql_setup "9.2" "$init_connect"
+    compose_down "versioned/mysql-9.2.yml" "mysql"
+    compose_up "versioned/mysql-9.2.yml"
+    mysql_post_setup
 }
 
 mysql_9_4() {
-    local init_connect="--init-connect=SET character_set_client='utf8mb4';SET character_set_results='utf8mb4';SET character_set_connection='utf8mb4';SET collation_connection='utf8mb4_0900_as_cs';"
-    mysql_setup "9.4" "$init_connect"
+    compose_down "versioned/mysql-9.4.yml" "mysql"
+    compose_up "versioned/mysql-9.4.yml"
+    mysql_post_setup
 }
 
 mysql_9_5() {
-    local init_connect="--init-connect=SET character_set_client='utf8mb4';SET character_set_results='utf8mb4';SET character_set_connection='utf8mb4';SET collation_connection='utf8mb4_0900_as_cs';"
-    mysql_setup "9.5" "$init_connect"
+    compose_down "versioned/mysql-9.5.yml" "mysql"
+    compose_up "versioned/mysql-9.5.yml"
+    mysql_post_setup
 }
 
 mysql_9_6() {
-    local init_connect="--init-connect=SET character_set_client='utf8mb4';SET character_set_results='utf8mb4';SET character_set_connection='utf8mb4';SET collation_connection='utf8mb4_0900_as_cs';"
-    mysql_setup "9.6" "$init_connect"
+    compose_down "latest/mysql.yml" "mysql"
+    compose_up "latest/mysql.yml"
+    mysql_post_setup
 }
 
-# Generic MySQL function that handles all versions
-mysql_setup() {
-    local version=$1
-    local extra_args=$2
-
-    echo "${extra_args}"
-
-    # Derive image_var and default_image from version
-    local version_underscore=$(echo "$version" | tr '.' '_')
-    local image_var="DB_IMAGE_MYSQL_${version_underscore}"
-    local default_image="docker.io/mysql:${version}"
-    local image_value
-    eval "image_value=\${${image_var}:-${default_image}}"
-
-    $CONTAINER_CLI rm -f mysql || true
-
-    $CONTAINER_CLI run --name mysql \
-        -e MYSQL_USER=hibernate_orm_test \
-        -e MYSQL_PASSWORD=hibernate_orm_test \
-        -e MYSQL_ROOT_PASSWORD=hibernate_orm_test \
-        -e MYSQL_DATABASE=hibernate_orm_test \
-        --tmpfs /var/lib/mysql \
-        -p3306:3306 -d "${image_value}" \
-        --character-set-server=utf8mb4 \
-        --collation-server=utf8mb4_0900_as_cs \
-        --log-bin-trust-function-creators=1 \
-        --lower_case_table_names=2 \
-        "${extra_args}"
-
-    # Wait for MySQL to start
-    OUTPUT=
-    n=0
-    until [ "$n" -gt 5 ]; do
-        { OUTPUT="$( { $CONTAINER_CLI logs mysql; } 2>&1 1>&3 3>&- )"; } 3>&1;
-        if [[ $OUTPUT == *"ready for connections"* ]]; then
-            break;
-        fi
-        n=$((n+1))
-        echo "Waiting for MySQL to start..."
-        sleep 5
-    done
-
-    if [ "$n" -gt 5 ]; then
-        echo "MySQL failed to start and configure after 30 seconds"
-        exit 1
-    else
-        echo "MySQL successfully started"
-    fi
-
-    # Wait for MySQL to become ready
-    OUTPUT=
-    n=0
-    until [ "$n" -gt 5 ]; do
-        OUTPUT="$( { $CONTAINER_CLI exec mysql bash -c "mysqladmin ping -u root -phibernate_orm_test"; } 2>/dev/null )"
-        if [[ $OUTPUT == *"alive"* ]]; then
-            break;
-        fi
-        n=$((n+1))
-        echo "Waiting for MySQL to be ready..."
-        sleep 2
-    done
-
-    if [ "$n" -gt 5 ]; then
-        echo "MySQL failed to become ready after 10 seconds"
-        exit 1
-    else
-        echo "MySQL is ready"
-    fi
-
+# MySQL post-setup: wait for ready state, install components, create test databases
+mysql_post_setup() {
     # Install components
     # file://component_classic_hashing - This is for legacy hashing algorithms on MySQL 9.6: SHA1 and MD5.
     $CONTAINER_CLI exec mysql bash -c "mysql -u root -phibernate_orm_test -e \"INSTALL COMPONENT 'file://component_classic_hashing'\"" 2>/dev/null
@@ -166,80 +133,61 @@ mysql_setup() {
     echo "MySQL databases were successfully setup"
 }
 
+###############################################################################
+
 mariadb() {
   mariadb_12_2
 }
 
-mariadb_wait_until_start()
-{
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        if $CONTAINER_CLI exec mariadb healthcheck.sh --connect --innodb_initialized; then
-          break;
-        fi
-        n=$((n+1))
-        echo "Waiting for MariaDB to start..."
-        sleep 3
-    done
-    if $CONTAINER_CLI exec mariadb healthcheck.sh --connect --innodb_initialized; then
-      echo "MariaDB successfully started"
-    else
-      echo "MariaDB failed to start and configure after 15 seconds"
-    fi
-}
-
 mariadb_10_6() {
-    $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 --tmpfs /var/lib/mysql -d ${DB_IMAGE_MARIADB_10_6:-docker.io/mariadb:10.6.23} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    mariadb_setup
+    compose_down "versioned/mariadb-10-6.yml" "mariadb"
+    compose_up "versioned/mariadb-10-6.yml"
+    mariadb_post_setup
 }
 
 mariadb_10_11() {
-    $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 --tmpfs /var/lib/mysql -d ${DB_IMAGE_MARIADB_10_11:-docker.io/mariadb:10.11.14} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    mariadb_setup
+    compose_down "versioned/mariadb-10-11.yml" "mariadb"
+    compose_up "versioned/mariadb-10-11.yml"
+    mariadb_post_setup
 }
 
 mariadb_11_4() {
-    $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 --tmpfs /var/lib/mysql -d ${DB_IMAGE_MARIADB_11_4:-docker.io/mariadb:11.4.8} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    mariadb_setup
+    compose_down "versioned/mariadb-11-4.yml" "mariadb"
+    compose_up "versioned/mariadb-11-4.yml"
+    mariadb_post_setup
 }
 
 mariadb_11_8() {
-    $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 --tmpfs /var/lib/mysql -d ${DB_IMAGE_MARIADB_11_8:-docker.io/mariadb:11.8.3} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    mariadb_setup
+    compose_down "versioned/mariadb-11-8.yml" "mariadb"
+    compose_up "versioned/mariadb-11-8.yml"
+    mariadb_post_setup
 }
 
 mariadb_12_0() {
-    $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 --tmpfs /var/lib/mysql -d ${DB_IMAGE_MARIADB_12_0:-docker.io/mariadb:12.0.2} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    mariadb_setup
+    compose_down "versioned/mariadb-12-0.yml" "mariadb"
+    compose_up "versioned/mariadb-12-0.yml"
+    mariadb_post_setup
 }
 
 mariadb_12_1() {
-    $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 --tmpfs /var/lib/mysql -d ${DB_IMAGE_MARIADB_12_1:-docker.io/mariadb:12.1.2} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    mariadb_setup
+    compose_down "versioned/mariadb-12-1.yml" "mariadb"
+    compose_up "versioned/mariadb-12-1.yml"
+    mariadb_post_setup
 }
 
 mariadb_12_2() {
-    $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 --tmpfs /var/lib/mysql -d ${DB_IMAGE_MARIADB_12_2:-docker.io/mariadb:12.2.2} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    mariadb_setup
+    compose_down "latest/mariadb.yml" "mariadb"
+    compose_up "latest/mariadb.yml"
+    mariadb_post_setup
 }
 
 mariadb_verylatest() {
-    $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MARIADB_USER=hibernate_orm_test -e MARIADB_PASSWORD=hibernate_orm_test -e MARIADB_DATABASE=hibernate_orm_test -e MARIADB_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 --tmpfs /var/lib/mysql -d ${DB_IMAGE_MARIADB_VERYLATEST:-quay.io/mariadb-foundation/mariadb-devel:verylatest} --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --lower_case_table_names=2
-    mariadb_setup
+    compose_down "versioned/mariadb-verylatest.yml" "mariadb"
+    compose_up "versioned/mariadb-verylatest.yml"
+    mariadb_post_setup
 }
 
-mariadb_setup() {
-    mariadb_wait_until_start
-
+mariadb_post_setup() {
     databases=()
     for n in $(seq 1 $DB_COUNT)
     do
@@ -253,159 +201,98 @@ mariadb_setup() {
     echo "MariaDB databases were successfully setup"
 }
 
-POSTGRESQL_PLATFORM_OPTION=""
-if [[ "$IS_OSX" == "true" ]]; then
-  # PostGIS images only support amd64, so we force emulation on macOS
-  POSTGRESQL_PLATFORM_OPTION="--platform linux/amd64"
-fi
+###############################################################################
 
 postgresql() {
   postgresql_18
 }
 
 postgresql_14() {
-    $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres ${POSTGRESQL_PLATFORM_OPTION} -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_14:-docker.io/postgis/postgis:14-3.3} \
-       -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
-    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-14-pgvector'
-    postgresql_setup
+    compose_down "versioned/postgresql-14.yml" "postgres"
+    compose_up "versioned/postgresql-14.yml"
+    postgresql_setup 14
 }
 
 postgresql_15() {
-    $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres ${POSTGRESQL_PLATFORM_OPTION} -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_15:-docker.io/postgis/postgis:15-3.3} \
-      -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
-    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-15-pgvector'
-    postgresql_setup
+    compose_down "versioned/postgresql-15.yml" "postgres"
+    compose_up "versioned/postgresql-15.yml"
+    postgresql_setup 15
 }
 
 postgresql_16() {
-    $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres ${POSTGRESQL_PLATFORM_OPTION} -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_16:-docker.io/postgis/postgis:16-3.4} \
-      -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
-    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-16-pgvector'
-    postgresql_setup
+    compose_down "versioned/postgresql-16.yml" "postgres"
+    compose_up "versioned/postgresql-16.yml"
+    postgresql_setup 16
 }
 
 postgresql_17() {
-    $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres ${POSTGRESQL_PLATFORM_OPTION} -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql/data -d ${DB_IMAGE_POSTGRESQL_17:-docker.io/postgis/postgis:17-3.5} \
-      -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
-    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-17-pgvector'
-    postgresql_setup
+    compose_down "versioned/postgresql-17.yml" "postgres"
+    compose_up "versioned/postgresql-17.yml"
+    postgresql_setup 17
 }
 
 postgresql_18() {
-    $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres ${POSTGRESQL_PLATFORM_OPTION} -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /var/lib/postgresql -d ${DB_IMAGE_POSTGRESQL_18:-docker.io/postgis/postgis:18-3.6} \
-      -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
-    $CONTAINER_CLI exec postgres bash -c '/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-18-pgvector'
-    postgresql_setup
+    compose_down "latest/postgresql.yml" "postgres"
+    compose_up "latest/postgresql.yml"
+    postgresql_setup 18
 }
 
 postgresql_setup() {
-  databases=()
-  for n in $(seq 1 $DB_COUNT)
-  do
-    databases+=("hibernate_orm_test_${n}")
-  done
-  create_cmd=
-  for i in "${!databases[@]}";do
-    create_cmd+="psql -U hibernate_orm_test -d postgres -c \"create database ${databases[i]};\";"
-  done
-  $CONTAINER_CLI exec postgres bash -c "until pg_isready -U hibernate_orm_test; do sleep 1; done"
-  $CONTAINER_CLI exec postgres bash -c "${create_cmd}"
-  $CONTAINER_CLI exec postgres bash -c 'psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
-  for i in "${!databases[@]}";do
-    $CONTAINER_CLI exec postgres bash -c "psql -U hibernate_orm_test -d ${databases[i]} -c \"create extension vector; create extension postgis;\""
-  done
+    local pg_version="$1"
+    $CONTAINER_CLI exec postgres bash -c "/usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y && apt install -y postgresql-${pg_version}-pgvector" 2>/dev/null || true
+
+    databases=()
+    for n in $(seq 1 $DB_COUNT)
+    do
+      databases+=("hibernate_orm_test_${n}")
+    done
+    create_cmd=
+    for i in "${!databases[@]}";do
+      create_cmd+="psql -U hibernate_orm_test -d postgres -c \"create database ${databases[i]};\";"
+    done
+    $CONTAINER_CLI exec postgres bash -c "until pg_isready -U hibernate_orm_test; do sleep 1; done"
+    $CONTAINER_CLI exec postgres bash -c "${create_cmd}"
+    $CONTAINER_CLI exec postgres bash -c 'psql -U hibernate_orm_test -d hibernate_orm_test -c "create extension vector;"'
+    for i in "${!databases[@]}";do
+      $CONTAINER_CLI exec postgres bash -c "psql -U hibernate_orm_test -d ${databases[i]} -c \"create extension vector; create extension postgis;\""
+    done
 }
+
+###############################################################################
 
 gaussdb() {
-    $CONTAINER_CLI rm -f opengauss || true
-
-    # config param
-    CONTAINER_NAME=opengauss
-    IMAGE=opengauss/opengauss:7.0.0-RC1.B023
-    PORT=8000
-    DB_USER=hibernate_orm_test
-    DB_PASSWORD=Hibernate_orm_test@1234
-    DB_NAME=hibernate_orm_test
-    PSQL_IMAGE=postgres:14
-
-    echo "start OpenGauss container..."
-    $CONTAINER_CLI run --name ${CONTAINER_NAME} \
-    --privileged=true \
-    -e GS_USERNAME=${DB_USER} \
-    -e GS_PASSWORD=${DB_PASSWORD} \
-    -e GS_PORT=${PORT} \
-    -p ${PORT}:8000 \
-    -d ${IMAGE}
-
-    echo "wait OpenGauss starting..."
-    sleep 30
-
-    echo " Initialize the database using the PostgreSQL client container..."
-
-    $CONTAINER_CLI run --rm --network=host ${PSQL_IMAGE} \
-      bash -c "
-        PGPASSWORD='${DB_PASSWORD}' psql -h localhost -p ${PORT} -U ${DB_USER} -d postgres -c \"CREATE DATABASE ${DB_NAME} OWNER ${DB_USER};\" &&
-        PGPASSWORD='${DB_PASSWORD}' psql -h localhost -p ${PORT} -U ${DB_USER} -d ${DB_NAME} -c \"CREATE SCHEMA test AUTHORIZATION ${DB_USER};\"
-      "
-
-    echo "Initialization completed"
-    echo "connection information"
-    echo "    Host:     localhost"
-    echo "    Port:     ${PORT}"
-    echo "    Database: ${DB_NAME}"
+    compose_down "latest/gaussdb.yml" "opengauss"
+    compose_up "latest/gaussdb.yml"
 }
+
+###############################################################################
 
 edb() {
     edb_17
 }
 
 edb_14() {
-    $CONTAINER_CLI rm -f edb || true
-    if [[ -z "${DB_IMAGE_EDB}" ]]; then
-      DB_IMAGE_EDB="edb-test:14"
-      # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
-      (cd edb; $CONTAINER_CLI build -t edb-test:14 -f edb14.Dockerfile .)
-    fi
-    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d $DB_IMAGE_EDB
-    edb_setup
+    compose_down "versioned/edb-14.yml" "edb"
+    compose_up "versioned/edb-14.yml"
+    edb_setup 14
 }
 
 edb_15() {
-    $CONTAINER_CLI rm -f edb || true
-    if [[ -z "${DB_IMAGE_EDB}" ]]; then
-      DB_IMAGE_EDB="edb-test:15"
-      # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
-      (cd edb; $CONTAINER_CLI build -t edb-test:15 -f edb15.Dockerfile .)
-    fi
-    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d $DB_IMAGE_EDB
-    edb_setup
+    compose_down "versioned/edb-15.yml" "edb"
+    compose_up "versioned/edb-15.yml"
+    edb_setup 15
 }
 
 edb_16() {
-    $CONTAINER_CLI rm -f edb || true
-    if [[ -z "${DB_IMAGE_EDB}" ]]; then
-      DB_IMAGE_EDB="edb-test:16"
-      # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
-      (cd edb; $CONTAINER_CLI build -t edb-test:16 -f edb16.Dockerfile .)
-    fi
-    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d $DB_IMAGE_EDB
-    edb_setup
+    compose_down "versioned/edb-16.yml" "edb"
+    compose_up "versioned/edb-16.yml"
+    edb_setup 16
 }
 
 edb_17() {
-    $CONTAINER_CLI rm -f edb || true
-    if [[ -z "${DB_IMAGE_EDB}" ]]; then
-      DB_IMAGE_EDB="edb-test:17"
-      # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
-      (cd edb; $CONTAINER_CLI build -t edb-test:17 -f edb17.Dockerfile .)
-    fi
-    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d $DB_IMAGE_EDB
-    edb_setup
+    compose_down "latest/edb.yml" "edb"
+    compose_up "latest/edb.yml"
+    edb_setup 17
 }
 
 edb_setup() {
@@ -429,64 +316,35 @@ edb_setup() {
   done
 }
 
+###############################################################################
+
 db2() {
   db2_12_1
 }
 
 db2_11_5() {
-    CONTAINER_OPTIONS=""
-    if [[ "$IS_OSX" == "true" ]]; then
-        # Thanks to Mohamed Asfour https://community.ibm.com/community/user/discussion/db2-luw-115xx-mac-m1-ready#bm017584d2-8d76-42a6-8f76-018dac8e78f2
-        # This SO post explains what goes wrong on OSX: https://stackoverflow.com/questions/70175677/ibmcom-db2-docker-image-fails-on-m1
-        # Also, use the $HOME directory as base directory to make volume mounts work on Colima on Mac
-        db2install=$HOME/db2install.sh
-        rm -f ${db2install} || true
-        cat <<'EOF' >${db2install}
-#!/bin/bash
-find /var/db2_setup -type f -not -path '*/\.*' -exec sed -i "s/su - db2inst1 -c '/su - db2inst1 -c '. .profile \&\& /g" {} +
-find /var/db2_setup -type f -not -path '*/\.*' -exec sed -i "s/su - db2inst1 -c \"/su - db2inst1 -c \". .profile \&\& /g" {} +
-find /var/db2_setup -type f -not -path '*/\.*' -exec sed -i "s/su - \${DB2INSTANCE?} -c '/su - \${DB2INSTANCE?} -c '. .profile \&\& /g" {} +
-find /var/db2_setup -type f -not -path '*/\.*' -exec sed -i "s/su - \${DB2INSTANCE?} -c \"/su - \${DB2INSTANCE?} -c \". .profile \&\& /g" {} +
-find /var/db2_setup -type f -not -path '*/\.*' -exec sed -i "s/su - \${instance?} -c '/su - \${instance?} -c '. .profile \&\& /g" {} +
-find /var/db2_setup -type f -not -path '*/\.*' -exec sed -i "s/su - \${instance?} -c \"/su - \${instance?} -c \". .profile \&\& /g" {} +
-find /var/db2_setup -type f -not -path '*/\.*' -exec sed -i "s/su - \${instance_name?} -c '/su - \${instance_name?} -c '. .profile \&\& /g" {} +
-find /var/db2_setup -type f -not -path '*/\.*' -exec sed -i "s/su - \${instance_name?} -c \"/su - \${instance_name?} -c \". .profile \&\& /g" {} +
-find /var/db2_setup -type f -not -path '*/\.*' -exec sed -i "s/su - db2inst1 -c \\\\\"/su - db2inst1 -c \\\". .profile \&\& /g" {} +
-. /var/db2_setup/lib/setup_db2_instance.sh
-EOF
-        chmod 777 ${db2install}
-        if [[ "$IS_PODMAN" == "true" ]]; then
-            CONTAINER_OPTIONS='--platform=linux/amd64 -e IS_OSXFS=true -v '${db2install}':/db2install.sh --entrypoint=["/bin/bash","-c","/db2install.sh"]'
-            CONTAINER_ARGS=
-        else
-            CONTAINER_OPTIONS='--platform=linux/amd64 -e IS_OSXFS=true -v '${db2install}':/db2install.sh --entrypoint=/bin/bash'
-            CONTAINER_ARGS=" -c /db2install.sh"
-        fi
-        if [[ "$IS_PODMAN" == "false" ]]; then
-            export DOCKER_DEFAULT_PLATFORM=linux/amd64
-        fi
-    fi
-    $CONTAINER_CLI rm -f db2 || true
-    $CONTAINER_CLI run --name db2 --privileged -e DB2INSTANCE=orm_test -e DB2INST1_PASSWORD=orm_test -e DBNAME=orm_test -e LICENSE=accept -e AUTOCONFIG=false -e ARCHIVE_LOGS=false -e TO_CREATE_SAMPLEDB=false -e REPODB=false -e BLU=false -e ENABLE_ORACLE_COMPATIBILITY=false -e UPDATEAVAIL=NO -e PERSISTENT_HOME=true -e HADR_ENABLED=false -p 50000:50000 $CONTAINER_OPTIONS -d ${DB_IMAGE_DB2_11_5:-icr.io/db2_community/db2:11.5.9.0} $CONTAINER_ARGS
-    # Give the container some time to start
-    OUTPUT=
-    while [[ $OUTPUT != *"INSTANCE"* ]]; do
-        echo "Waiting for DB2 to start..."
-        sleep 10
-        OUTPUT=$($CONTAINER_CLI logs db2 2>&1)
-    done
-    $CONTAINER_CLI exec -t db2 su - orm_test bash -c ". /database/config/orm_test/sqllib/db2profile; /database/config/orm_test/sqllib/bin/db2 'connect to orm_test'; /database/config/orm_test/sqllib/bin/db2 'CREATE USER TEMPORARY TABLESPACE usr_tbsp MANAGED BY AUTOMATIC STORAGE'"
+    compose_down "versioned/db2-11.5.yml" "db2"
+    db2_compose_up "versioned/db2-11.5.yml"
+    db2_post_setup
 }
 
 db2_12_1() {
-    CONTAINER_OPTIONS=""
-    if [[ "$IS_OSX" == "true" ]]; then
-        # Thanks to Mohamed Asfour https://community.ibm.com/community/user/discussion/db2-luw-115xx-mac-m1-ready#bm017584d2-8d76-42a6-8f76-018dac8e78f2
-        # This SO post explains what goes wrong on OSX: https://stackoverflow.com/questions/70175677/ibmcom-db2-docker-image-fails-on-m1
-        # Also, use the $HOME directory as base directory to make volume mounts work on Colima on Mac
-        db2install=$HOME/db2install.sh
-        rm -f ${db2install} || true
-        cat <<'EOF' >${db2install}
+    compose_down "latest/db2.yml" "db2"
+    db2_compose_up "latest/db2.yml"
+    db2_post_setup
+    db2_setup
+}
+
+# OSX/Mac M1 workaround for DB2 containers
+# See: https://community.ibm.com/community/user/discussion/db2-luw-115xx-mac-m1-ready#bm017584d2-8d76-42a6-8f76-018dac8e78f2
+# See: https://stackoverflow.com/questions/70175677/ibmcom-db2-docker-image-fails-on-m1
+db2_osx_setup() {
+    if [[ "$IS_OSX" != "true" ]]; then
+        return
+    fi
+    export db2_install_script=$HOME/db2install.sh
+    rm -f ${db2_install_script} || true
+    cat <<'EOF' >${db2_install_script}
 #!/bin/bash
 find /var/db2_setup -type f -not -path '*/\.*' -exec sed -i "s/su - db2inst1 -c '/su - db2inst1 -c '. .profile \&\& /g" {} +
 find /var/db2_setup -type f -not -path '*/\.*' -exec sed -i "s/su - db2inst1 -c \"/su - db2inst1 -c \". .profile \&\& /g" {} +
@@ -499,29 +357,26 @@ find /var/db2_setup -type f -not -path '*/\.*' -exec sed -i "s/su - \${instance_
 find /var/db2_setup -type f -not -path '*/\.*' -exec sed -i "s/su - db2inst1 -c \\\\\"/su - db2inst1 -c \\\". .profile \&\& /g" {} +
 . /var/db2_setup/lib/setup_db2_instance.sh
 EOF
-        chmod 777 ${db2install}
-        if [[ "$IS_PODMAN" == "true" ]]; then
-            CONTAINER_OPTIONS='--platform=linux/amd64 -e IS_OSXFS=true -v '${db2install}':/db2install.sh --entrypoint=["/bin/bash","-c","/db2install.sh"]'
-            CONTAINER_ARGS=
-        else
-            CONTAINER_OPTIONS='--platform=linux/amd64 -e IS_OSXFS=true -v '${db2install}':/db2install.sh --entrypoint=/bin/bash'
-            CONTAINER_ARGS=" -c /db2install.sh"
-        fi
-        if [[ "$IS_PODMAN" == "false" ]]; then
-            export DOCKER_DEFAULT_PLATFORM=linux/amd64
-        fi
+    chmod 777 ${db2_install_script}
+    if [[ "$IS_PODMAN" == "false" ]]; then
+        export DOCKER_DEFAULT_PLATFORM=linux/amd64
     fi
-    $CONTAINER_CLI rm -f db2 || true
-    $CONTAINER_CLI run --name db2 --privileged -e DB2INSTANCE=orm_test -e DB2INST1_PASSWORD=orm_test -e DBNAME=orm_test -e LICENSE=accept -e AUTOCONFIG=false -e ARCHIVE_LOGS=false -e TO_CREATE_SAMPLEDB=false -e REPODB=false -e BLU=false -e ENABLE_ORACLE_COMPATIBILITY=false -e UPDATEAVAIL=NO -e PERSISTENT_HOME=true -e HADR_ENABLED=false -p 50000:50000 $CONTAINER_OPTIONS -d ${DB_IMAGE_DB2_12_1:-icr.io/db2_community/db2:12.1.2.0} $CONTAINER_ARGS
-    # Give the container some time to start
-    OUTPUT=
-    while [[ $OUTPUT != *"INSTANCE"* ]]; do
-        echo "Waiting for DB2 to start..."
-        sleep 10
-        OUTPUT=$($CONTAINER_CLI logs db2 2>&1)
-    done
+}
+
+db2_compose_up() {
+    local compose_file="docker-compose/$1"
+    local osx_override="${2:-docker-compose/build-config/db2/osx-override.yml}"
+    db2_osx_setup
+    if [[ "$IS_OSX" == "true" ]]; then
+        echo "Starting database using $compose_file (with OSX override)"
+        $CONTAINER_CLI compose -f "$compose_file" -f "$osx_override" up -d --wait $REMOVE_ORPHANS
+    else
+        compose_up "$1"
+    fi
+}
+
+db2_post_setup() {
     $CONTAINER_CLI exec -t db2 su - orm_test bash -c ". /database/config/orm_test/sqllib/db2profile; /database/config/orm_test/sqllib/bin/db2 'connect to orm_test'; /database/config/orm_test/sqllib/bin/db2 'CREATE USER TEMPORARY TABLESPACE usr_tbsp MANAGED BY AUTOMATIC STORAGE'"
-    db2_setup
 }
 
 db2_setup() {
@@ -537,196 +392,62 @@ db2_setup() {
 }
 
 db2_spatial() {
-    $PRIVILEGED_CLI $CONTAINER_CLI rm -f db2spatial || true
-    temp_dir=$(mktemp -d)
-    cat <<EOF >${temp_dir}/ewkt.sql
-create or replace function db2gse.asewkt(geometry db2gse.st_geometry)
-returns clob(2G)
-specific db2gse.asewkt1
-language sql
-deterministic
-no external action
-reads sql data
-return 'srid=' || varchar(db2gse.st_srsid(geometry)) || ';' || db2gse.st_astext(geometry)
-;
+    compose_down "latest/db2_spatial.yml" "db2spatial"
+    db2_compose_up "latest/db2_spatial.yml" "docker-compose/build-config/db2_spatial/osx-override.yml"
+    db2_spatial_post_setup
+}
 
--- Create SQL function to create a geometry from EWKT format
-create or replace function db2gse.geomfromewkt(instring varchar(32000))
-returns db2gse.st_geometry
-specific db2gse.fromewkt1
-language sql
-deterministic
-no external action
-reads sql data
-return db2gse.st_geometry(
-substr(instring,posstr(instring,';')+1, length(instring) - posstr(instring,';')),
-integer(substr(instring,posstr(instring,'=')+1,posstr(instring,';')-(posstr(instring,'=')+1)))
-)
-;
--- Create a DB2 transform group to return and accept EWKT
-CREATE TRANSFORM FOR db2gse.ST_Geometry EWKT (
-       FROM SQL WITH FUNCTION db2gse.asewkt(db2gse.ST_Geometry),
-       TO   SQL WITH FUNCTION db2gse.geomfromewkt(varchar(32000)) )
-	;
-
--- Redefine the default DB2_PROGRAM to return and accept EWKT instead of WKT
-DROP TRANSFORM DB2_PROGRAM FOR db2gse.ST_Geometry;
-CREATE TRANSFORM FOR db2gse.ST_Geometry DB2_PROGRAM (
-       FROM SQL WITH FUNCTION db2gse.asewkt(db2gse.ST_Geometry),
-       TO   SQL WITH FUNCTION db2gse.geomfromewkt(varchar(32000)) )
-;
-EOF
-    $PRIVILEGED_CLI $CONTAINER_CLI run --name db2spatial --privileged -e DB2INSTANCE=orm_test -e DB2INST1_PASSWORD=orm_test -e DBNAME=orm_test -e LICENSE=accept -e AUTOCONFIG=false -e ARCHIVE_LOGS=false -e TO_CREATE_SAMPLEDB=false -e REPODB=false \
-        -v ${temp_dir}:/conf  \
-        -p 50000:50000 -d ${DB_IMAGE_DB2_SPATIAL:-docker.io/ibmcom/db2:11.5.5.0}
-
-    # Give the container some time to start
-    OUTPUT=
-    while [[ $OUTPUT != *"Setup has completed."* ]]; do
-        echo "Waiting for DB2 to start..."
-        sleep 10
-        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs db2spatial 2>&1)
-    done
-    sleep 10
+db2_spatial_post_setup() {
     echo "Enabling spatial extender"
     $PRIVILEGED_CLI $CONTAINER_CLI exec -t db2spatial su - orm_test bash -c "/database/config/orm_test/sqllib/db2profile && /database/config/orm_test/sqllib/bin/db2se enable_db orm_test"
     echo "Installing required transform group"
     $PRIVILEGED_CLI $CONTAINER_CLI exec -t db2spatial su - orm_test bash -c "/database/config/orm_test/sqllib/db2profile && /database/config/orm_test/sqllib/bin/db2 'connect to orm_test' && /database/config/orm_test/sqllib/bin/db2 -tvf /conf/ewkt.sql"
-
 }
+
+###############################################################################
 
 mssql() {
   mssql_2025
 }
 
 mssql_2017() {
-    $CONTAINER_CLI rm -f mssql || true
-    #This sha256 matches a specific tag of mcr.microsoft.com/mssql/server:2017-latest :
-    $CONTAINER_CLI run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Hibernate_orm_test" -e ACCEPT_EULA=Y ${DB_IMAGE_MSSQL_2017:-mcr.microsoft.com/mssql/server@sha256:7d194c54e34cb63bca083542369485c8f4141596805611e84d8c8bab2339eede}
-    sleep 5
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        # We need a database that uses a non-lock based MVCC approach
-        # https://github.com/microsoft/homebrew-mssql-release/issues/2#issuecomment-682285561
-        $CONTAINER_CLI exec mssql bash -c 'echo "select 1" | /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin' 2>&1 1>/dev/null && break
-        echo "Waiting for SQL Server to start..."
-        n=$((n+1))
-        sleep 5
-    done
-    if [ "$n" -ge 5 ]; then
-      echo "SQL Server failed to start and configure after 25 seconds"
-    else
-      echo "SQL Server successfully started"
-    fi
-    echo "Creating databases..."
-    for n in $(seq 1 $DB_COUNT)
-    do
-      $CONTAINER_CLI exec mssql bash -c "echo \"create database hibernate_orm_test_${n} collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test_${n} set READ_COMMITTED_SNAPSHOT ON\" | /opt/mssql-tools/bin/sqlcmd -C -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin"
-    done
-    echo "SQL Server is ready"
+    compose_down "versioned/mssql-2017.yml" "mssql"
+    compose_up "versioned/mssql-2017.yml"
+    mssql_post_setup
 }
 
 mssql_2022() {
-    $CONTAINER_CLI rm -f mssql || true
-    #This sha256 matches a specific tag of 2022-CU12-ubuntu-22.04 (https://mcr.microsoft.com/en-us/product/mssql/server/tags):
-    $CONTAINER_CLI run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Hibernate_orm_test" -e ACCEPT_EULA=Y ${DB_IMAGE_MSSQL_2022:-mcr.microsoft.com/mssql/server@sha256:b94071acd4612bfe60a73e265097c2b6388d14d9d493db8f37cf4479a4337480}
-    sleep 5
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        # We need a database that uses a non-lock based MVCC approach
-        # https://github.com/microsoft/homebrew-mssql-release/issues/2#issuecomment-682285561
-        $CONTAINER_CLI exec mssql bash -c 'echo "select 1" | /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin' 2>&1 1>/dev/null && break
-        echo "Waiting for SQL Server to start..."
-        n=$((n+1))
-        sleep 5
-    done
-    if [ "$n" -ge 5 ]; then
-      echo "SQL Server failed to start and configure after 25 seconds"
-    else
-      echo "SQL Server successfully started"
-    fi
-    echo "Creating databases..."
-    for n in $(seq 1 $DB_COUNT)
-    do
-      $CONTAINER_CLI exec mssql bash -c "echo \"create database hibernate_orm_test_${n} collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test_${n} set READ_COMMITTED_SNAPSHOT ON\" | /opt/mssql-tools/bin/sqlcmd -C -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin"
-    done
-    echo "SQL Server is ready"
+    compose_down "versioned/mssql-2022.yml" "mssql"
+    compose_up "versioned/mssql-2022.yml"
+    mssql_post_setup
 }
 
 mssql_2025() {
-    $CONTAINER_CLI rm -f mssql || true
-    #This sha256 matches a specific tag of 2025-latest (https://mcr.microsoft.com/en-us/product/mssql/server/tags):
-    $CONTAINER_CLI run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Hibernate_orm_test" -e ACCEPT_EULA=Y ${DB_IMAGE_MSSQL_2025:-mcr.microsoft.com/mssql/server@sha256:2fa59c23272a23dfd9600abf4ee52c0de6ae7ac640f14c617bc717ec139a5295}
-    sleep 5
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        # We need a database that uses a non-lock based MVCC approach
-        # https://github.com/microsoft/homebrew-mssql-release/issues/2#issuecomment-682285561
-        $CONTAINER_CLI exec mssql bash -c 'echo "select 1" | /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin' 2>&1 1>/dev/null && break
-        echo "Waiting for SQL Server to start..."
-        n=$((n+1))
-        sleep 5
-    done
-    if [ "$n" -ge 5 ]; then
-      echo "SQL Server failed to start and configure after 25 seconds"
-    else
-      echo "SQL Server successfully started"
-    fi
-    echo "Creating databases..."
-    for n in $(seq 1 $DB_COUNT)
-    do
-      $CONTAINER_CLI exec mssql bash -c "echo \"create database hibernate_orm_test_${n} collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test_${n} set READ_COMMITTED_SNAPSHOT ON\" | /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin"
-    done
-    echo "SQL Server is ready"
+    compose_down "latest/mssql.yml" "mssql"
+    compose_up "latest/mssql.yml"
+    mssql_post_setup
 }
+
+mssql_post_setup() {
+  echo "Creating MSSQL databases..."
+  for n in $(seq 1 $DB_COUNT)
+  do
+    # Determine which sqlcmd to use based on container
+    local sqlcmd_path="/opt/mssql-tools18/bin/sqlcmd"
+    if ! $CONTAINER_CLI exec mssql test -f "$sqlcmd_path" 2>/dev/null; then
+      sqlcmd_path="/opt/mssql-tools/bin/sqlcmd"
+    fi
+
+    $CONTAINER_CLI exec mssql bash -c "echo \"create database hibernate_orm_test_${n} collate SQL_Latin1_General_CP1_CS_AS; alter database hibernate_orm_test_${n} set READ_COMMITTED_SNAPSHOT ON\" | $sqlcmd_path -C -S localhost -U sa -P Hibernate_orm_test -i /dev/stdin"
+  done
+  echo "MSSQL databases successfully setup"
+}
+
+###############################################################################
 
 sybase() {
-    $CONTAINER_CLI rm -f sybase || true
-    # Yup, that sucks, but on ubuntu we need to use -T11889 as per: https://github.com/DataGrip/docker-env/issues/12
-    $CONTAINER_CLI run -d -p 9000:5000 -p 9001:5001 --name sybase --entrypoint /bin/bash ${DB_IMAGE_SYBASE:-docker.io/nguoianphu/docker-sybase} -c "source /opt/sybase/SYBASE.sh
-/opt/sybase/ASE-16_0/bin/dataserver \
--d/opt/sybase/data/master.dat \
--e/opt/sybase/ASE-16_0/install/MYSYBASE.log \
--c/opt/sybase/ASE-16_0/MYSYBASE.cfg \
--M/opt/sybase/ASE-16_0 \
--N/opt/sybase/ASE-16_0/sysam/MYSYBASE.properties \
--i/opt/sybase \
--sMYSYBASE \
--T11889
-RET=\$?
-exit 0
-"
-
-    sybase_check() {
-    $CONTAINER_CLI exec sybase bash -c "source /opt/sybase/SYBASE.sh;
-/opt/sybase/OCS-16_0/bin/isql -Usa -P myPassword -S MYSYBASE <<EOF
-Select name from sysdatabases where status2 & 48 > 0
-go
-quit
-EOF
-"
-}
-    START_STATUS=0
-    j=1
-    while (( $j < 30 )); do
-      echo "Waiting for Sybase to start..."
-      sleep 1
-      j=$((j+1))
-      START_STATUS=$(sybase_check | grep '(0 rows affected)' | wc -c)
-      if (( $START_STATUS > 0 )); then
-        break
-      fi
-    done
-    if (( $j == 30 )); then
-      echo "Failed starting Sybase"
-      $CONTAINER_CLI ps -a
-      $CONTAINER_CLI logs sybase
-      sybase_check
-      exit 1
-    fi
+    compose_down "latest/sybase.yml" "sybase"
+    compose_up "latest/sybase.yml"
 
     export SYBASE_DB=hibernate_orm_test
     export SYBASE_USER=hibernate_orm_test
@@ -809,23 +530,10 @@ EOSQL
     echo "Sybase successfully started"
 }
 
-oracle_setup() {
-    HEALTHSTATUS=
-    until [ "$HEALTHSTATUS" == "healthy" ];
-    do
-        echo "Waiting for Oracle to start..."
-        sleep 5;
-        # On WSL, health-checks intervals don't work for Podman, so run them manually
-        if ! command -v docker > /dev/null; then
-          $PRIVILEGED_CLI $CONTAINER_CLI healthcheck run oracle > /dev/null
-        fi
-        HEALTHSTATUS="`$PRIVILEGED_CLI $CONTAINER_CLI inspect -f $HEALTHCHECK_PATH oracle`"
-        HEALTHSTATUS=${HEALTHSTATUS##+( )} #Remove longest matching series of spaces from the front
-        HEALTHSTATUS=${HEALTHSTATUS%%+( )} #Remove longest matching series of spaces from the back
-    done
-    sleep 2;
-    echo "Oracle successfully started"
+###############################################################################
 
+oracle_setup() {
+    sleep 2;
     users=()
     for n in $(seq 1 $DB_COUNT)
     do
@@ -906,22 +614,7 @@ EOF\""
 }
 
 oracle_free_setup() {
-    HEALTHSTATUS=
-    until [ "$HEALTHSTATUS" == "healthy" ];
-    do
-        echo "Waiting for Oracle Free to start..."
-        sleep 5;
-        # On WSL, health-checks intervals don't work for Podman, so run them manually
-        if ! command -v docker > /dev/null; then
-          $PRIVILEGED_CLI $CONTAINER_CLI healthcheck run oracle > /dev/null
-        fi
-        HEALTHSTATUS="`$PRIVILEGED_CLI $CONTAINER_CLI inspect -f $HEALTHCHECK_PATH oracle`"
-        HEALTHSTATUS=${HEALTHSTATUS##+( )} #Remove longest matching series of spaces from the front
-        HEALTHSTATUS=${HEALTHSTATUS%%+( )} #Remove longest matching series of spaces from the back
-    done
     sleep 2;
-    echo "Oracle successfully started"
-
     users=()
     for n in $(seq 1 $DB_COUNT)
     do
@@ -937,7 +630,7 @@ grant all privileges on schema ${users[i]} to ${users[i]};"
     done
 
     # We increase file sizes to avoid online resizes as that requires lots of CPU which is restricted in XE
-    $PRIVILEGED_CLI $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
+    $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
 cat <<EOF | \$ORACLE_HOME/bin/sqlplus / as sysdba
 set timing on
 -- Remove DISABLE_OOB parameter from Listener configuration and restart it
@@ -1099,72 +792,31 @@ oracle() {
 }
 
 oracle_18() {
-    $PRIVILEGED_CLI $CONTAINER_CLI rm -f oracle || true
     disable_userland_proxy
-    # We need to use the defaults
-    # SYSTEM/Oracle18
-    $PRIVILEGED_CLI $CONTAINER_CLI run --name oracle -d -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
-       --cap-add cap_net_raw \
-       --health-cmd healthcheck.sh \
-       --health-interval 5s \
-       --health-timeout 5s \
-       --health-retries 10 \
-       ${DB_IMAGE_ORACLE_18:-docker.io/gvenzl/oracle-xe:18.4.0}
+    compose_down "versioned/oracle-18.yml" "oracle"
+    compose_up "versioned/oracle-18.yml"
     oracle_setup
 }
 
 oracle_21() {
-    $PRIVILEGED_CLI $CONTAINER_CLI rm -f oracle || true
     disable_userland_proxy
-    # We need to use the defaults
-    # SYSTEM/Oracle18
-    $PRIVILEGED_CLI $CONTAINER_CLI run --name oracle -d -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
-       --cap-add cap_net_raw \
-       --health-cmd healthcheck.sh \
-       --health-interval 5s \
-       --health-timeout 5s \
-       --health-retries 10 \
-       ${DB_IMAGE_ORACLE_21:-docker.io/gvenzl/oracle-xe:21.3.0}
+    compose_down "versioned/oracle-21.yml" "oracle"
+    compose_up "versioned/oracle-21.yml"
     oracle_setup
 }
 
 oracle_23() {
-    $PRIVILEGED_CLI $CONTAINER_CLI rm -f oracle || true
     disable_userland_proxy
-    # We need to use the defaults
-    # SYSTEM/Oracle18
-    $PRIVILEGED_CLI $CONTAINER_CLI run --name oracle -d -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
-       --health-cmd healthcheck.sh \
-       --health-interval 5s \
-       --health-timeout 5s \
-       --health-retries 10 \
-       ${DB_IMAGE_ORACLE_23:-docker.io/gvenzl/oracle-free:23}
+    compose_down "latest/oracle.yml" "oracle"
+    compose_up "latest/oracle.yml"
     oracle_free_setup
 }
 
+###############################################################################
+
 hana() {
-    temp_dir=$(mktemp -d)
-    echo '{"master_password" : "H1bernate_test"}' >$temp_dir/password.json
-    chmod -R 777 $temp_dir
-    $PRIVILEGED_CLI $CONTAINER_CLI rm -f hana || true
-    $PRIVILEGED_CLI $CONTAINER_CLI run -d --name hana -p 39013:39013 -p 39017:39017 -p 39041-39045:39041-39045 -p 1128-1129:1128-1129 -p 59013-59014:59013-59014 \
-      --memory=8g \
-      --ulimit nofile=1048576:1048576 \
-      --sysctl kernel.shmmax=1073741824 \
-      --sysctl net.ipv4.ip_local_port_range='40000 60999' \
-      --sysctl kernel.shmmni=4096 \
-      --sysctl kernel.shmall=8388608 \
-      -v $temp_dir:/config:Z \
-      ${DB_IMAGE_HANA:-docker.io/saplabs/hanaexpress:2.00.076.00.20240701.1} \
-      --passwords-url file:///config/password.json \
-      --agree-to-sap-license
-    # Give the container some time to start
-    OUTPUT=
-    while [[ $OUTPUT != *"Startup finished"* ]]; do
-        echo "Waiting for HANA to start..."
-        sleep 10
-        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs hana 2>&1)
-    done
+    compose_down "latest/hana.yml" "hana"
+    compose_up "latest/hana.yml"
     hana_setup
     echo "HANA successfully started"
 }
@@ -1190,107 +842,38 @@ EOF
 "
 }
 
+###############################################################################
+
 cockroachdb() {
   cockroachdb_25_4
 }
 
 cockroachdb_25_4() {
-  $CONTAINER_CLI rm -f cockroach || true
-  LOG_CONFIG="
-sinks:
-  stderr:
-    channels: all
-    filter: ERROR
-    redact: false
-    exit-on-error: true
-"
-  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 ${DB_IMAGE_COCKROACHDB_25_4:-cockroachdb/cockroach:v25.4.2} start-single-node \
-    --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
-  OUTPUT=
-  while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
-        echo "Waiting for CockroachDB to start..."
-        sleep 10
-        # Note we need to redirect stderr to stdout to capture the logs
-        OUTPUT=$($CONTAINER_CLI logs cockroach 2>&1)
-  done
-  echo "Enabling experimental box2d operators and some optimized settings for running the tests"
-  #settings documented in https://www.cockroachlabs.com/docs/v24.1/local-testing#use-a-local-single-node-cluster-with-in-memory-storage
-  $CONTAINER_CLI exec cockroach bash -c "cat <<EOF | ./cockroach sql --insecure
-SET CLUSTER SETTING sql.spatial.experimental_box2d_comparison_operators.enabled = on;
-SET CLUSTER SETTING kv.range_merge.queue_interval = '50ms';
-SET CLUSTER SETTING jobs.registry.interval.gc = '30s';
-SET CLUSTER SETTING jobs.registry.interval.cancel = '180s';
-SET CLUSTER SETTING jobs.retention_time = '5s';
-SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
-ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 300;
-ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 300;
-
-quit
-EOF
-"
-  cockroachdb_setup
-  echo "Cockroachdb successfully started"
+  compose_down "latest/cockroachdb.yml" "cockroach"
+  compose_up "latest/cockroachdb.yml"
+  cockroachdb_post_setup
 }
 
 cockroachdb_24_3() {
-  $CONTAINER_CLI rm -f cockroach || true
-  LOG_CONFIG="
-sinks:
-  stderr:
-    channels: all
-    filter: ERROR
-    redact: false
-    exit-on-error: true
-"
-  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 ${DB_IMAGE_COCKROACHDB_24_3:-cockroachdb/cockroach:v24.3.3} start-single-node \
-    --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
-  OUTPUT=
-  while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
-        echo "Waiting for CockroachDB to start..."
-        sleep 10
-        # Note we need to redirect stderr to stdout to capture the logs
-        OUTPUT=$($CONTAINER_CLI logs cockroach 2>&1)
-  done
-  echo "Enabling experimental box2d operators and some optimized settings for running the tests"
-  #settings documented in https://www.cockroachlabs.com/docs/v24.1/local-testing#use-a-local-single-node-cluster-with-in-memory-storage
-  $CONTAINER_CLI exec cockroach bash -c "cat <<EOF | ./cockroach sql --insecure
-SET CLUSTER SETTING sql.spatial.experimental_box2d_comparison_operators.enabled = on;
-SET CLUSTER SETTING kv.range_merge.queue_interval = '50ms';
-SET CLUSTER SETTING jobs.registry.interval.gc = '30s';
-SET CLUSTER SETTING jobs.registry.interval.cancel = '180s';
-SET CLUSTER SETTING jobs.retention_time = '5s';
-SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
-ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 300;
-ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 300;
-
-quit
-EOF
-"
-  cockroachdb_setup
-  echo "Cockroachdb successfully started"
+  compose_down "versioned/cockroachdb-24.3.yml" "cockroach"
+  compose_up "versioned/cockroachdb-24.3.yml"
+  cockroachdb_post_setup
 }
 
 cockroachdb_24_1() {
-  $CONTAINER_CLI rm -f cockroach || true
-  LOG_CONFIG="
-sinks:
-  stderr:
-    channels: all
-    filter: ERROR
-    redact: false
-    exit-on-error: true
-"
-  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 ${DB_IMAGE_COCKROACHDB_24_1:-cockroachdb/cockroach:v24.1.5} start-single-node \
-    --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
-  OUTPUT=
-  while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
-        echo "Waiting for CockroachDB to start..."
-        sleep 10
-        # Note we need to redirect stderr to stdout to capture the logs
-        OUTPUT=$($CONTAINER_CLI logs cockroach 2>&1)
-  done
-  echo "Enabling experimental box2d operators and some optimized settings for running the tests"
-  #settings documented in https://www.cockroachlabs.com/docs/v24.1/local-testing#use-a-local-single-node-cluster-with-in-memory-storage
+  compose_down "versioned/cockroachdb-24.1.yml" "cockroach"
+  compose_up "versioned/cockroachdb-24.1.yml"
+  cockroachdb_post_setup
+}
+
+cockroachdb_23_2() {
+  compose_down "versioned/cockroachdb-23.2.yml" "cockroach"
+  compose_up "versioned/cockroachdb-23.2.yml"
+  cockroachdb_post_setup_23_2
+}
+
+cockroachdb_post_setup() {
+  echo "Enabling experimental box2d operators and optimized settings for tests"
   $CONTAINER_CLI exec cockroach bash -c "cat <<EOF | ./cockroach sql --insecure
 SET CLUSTER SETTING sql.spatial.experimental_box2d_comparison_operators.enabled = on;
 SET CLUSTER SETTING kv.range_merge.queue_interval = '50ms';
@@ -1298,38 +881,17 @@ SET CLUSTER SETTING jobs.registry.interval.gc = '30s';
 SET CLUSTER SETTING jobs.registry.interval.cancel = '180s';
 SET CLUSTER SETTING jobs.retention_time = '5s';
 SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
-ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 300;
-ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 300;
-
+ALTER RANGE default CONFIGURE ZONE USING \"gc.ttlseconds\" = 300;
+ALTER DATABASE system CONFIGURE ZONE USING \"gc.ttlseconds\" = 300;
 quit
 EOF
 "
   cockroachdb_setup
-  echo "Cockroachdb successfully started"
+  echo "CockroachDB successfully started"
 }
 
-
-cockroachdb_23_2() {
-  $CONTAINER_CLI rm -f cockroach || true
-  LOG_CONFIG="
-sinks:
-  stderr:
-    channels: all
-    filter: ERROR
-    redact: false
-    exit-on-error: true
-"
-  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 ${DB_IMAGE_COCKROACHDB_23_2:-docker.io/cockroachdb/cockroach:v23.2.28} start-single-node \
-    --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
-  OUTPUT=
-  while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
-        echo "Waiting for CockroachDB to start..."
-        sleep 10
-        # Note we need to redirect stderr to stdout to capture the logs
-        OUTPUT=$($CONTAINER_CLI logs cockroach 2>&1)
-  done
-  echo "Enabling experimental box2d operators and some optimized settings for running the tests"
-  #settings documented in https://www.cockroachlabs.com/docs/v22.1/local-testing.html#use-a-local-single-node-cluster-with-in-memory-storage
+cockroachdb_post_setup_23_2() {
+  echo "Enabling experimental box2d operators and optimized settings for tests (v23.2 specific)"
   $CONTAINER_CLI exec cockroach bash -c "cat <<EOF | ./cockroach sql --insecure
 SET CLUSTER SETTING sql.spatial.experimental_box2d_comparison_operators.enabled = on;
 SET CLUSTER SETTING kv.raft_log.disable_synchronization_unsafe = true;
@@ -1340,15 +902,13 @@ SET CLUSTER SETTING jobs.retention_time = '5s';
 SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
 SET CLUSTER SETTING kv.range_split.by_load_merge_delay = '5s';
 SET CLUSTER SETTING sql.defaults.serial_normalization = 'sql_sequence_cached';
-ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 300;
-ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 300;
-
+ALTER RANGE default CONFIGURE ZONE USING \"gc.ttlseconds\" = 300;
+ALTER DATABASE system CONFIGURE ZONE USING \"gc.ttlseconds\" = 300;
 quit
 EOF
 "
   cockroachdb_setup
-  echo "Cockroachdb successfully started"
-
+  echo "CockroachDB successfully started"
 }
 
 cockroachdb_setup() {
@@ -1369,195 +929,75 @@ EOF
 "
 }
 
+###############################################################################
+
 tidb() {
   tidb_8_5
 }
 
 tidb_8_5() {
-    $CONTAINER_CLI rm -f tidb || true
-    $CONTAINER_CLI run --name tidb -p4000:4000 -d ${DB_IMAGE_TIDB_8_5:-docker.io/pingcap/tidb:v8.5.6}
+    tidb_prepare_setup
+    compose_down "latest/tidb.yml" "tidb"
+    compose_up "latest/tidb.yml"
+}
 
-    # Wait for TiDB to start
-    OUTPUT=
-    n=0
-    until [ "$n" -gt 15 ]; do
-        OUTPUT=$($CONTAINER_CLI logs tidb 2>&1)
-        if [[ $OUTPUT == *"server is running"* ]]; then
-            break;
-        fi
-        n=$((n+1))
-        echo "Waiting for TiDB to start..."
-        sleep 5
-    done
+tidb_5_4() {
+    tidb_prepare_setup_5_4
+    compose_down "versioned/tidb-5.4.yml" "tidb"
+    compose_up "versioned/tidb-5.4.yml"
+}
 
-    if [ "$n" -gt 15 ]; then
-        echo "TiDB failed to start after 75 seconds"
-        exit 1
-    else
-        echo "TiDB successfully started"
-    fi
-
-    # Wait for TiDB to accept connections
-    n=0
-    until [ "$n" -gt 10 ]; do
-        if $CONTAINER_CLI run --rm --network container:tidb docker.io/mysql:8.0 \
-            mysqladmin -h 127.0.0.1 -P 4000 -uroot ping >/dev/null 2>&1; then
-            break;
-        fi
-        n=$((n+1))
-        echo "Waiting for TiDB to be ready..."
-        sleep 3
-    done
-
-    if [ "$n" -gt 10 ]; then
-        echo "TiDB failed to become ready after 30 seconds"
-        exit 1
-    else
-        echo "TiDB is ready"
-    fi
-
-    # Create databases
+tidb_prepare_setup() {
+    # Create databases and configure settings
     databases=()
-    for n in $(seq 1 $DB_COUNT)
-    do
+    for n in $(seq 1 $DB_COUNT); do
       databases+=("hibernate_orm_test_${n}")
     done
-    create_cmd=
 
-    # Since v7.2
-    # https://docs.pingcap.com/tidb/stable/system-variables/#tidb_enable_check_constraint-new-in-v720
-    create_cmd+="SET GLOBAL tidb_enable_check_constraint=ON;"
-
-    # Since v8.3
-    # https://docs.pingcap.com/tidb/stable/system-variables/#tidb_enable_shared_lock_promotion-new-in-v830
+    create_cmd="SET GLOBAL tidb_enable_check_constraint=ON;"
     create_cmd+="SET GLOBAL tidb_enable_shared_lock_promotion=ON;"
-
     create_cmd+="CREATE DATABASE IF NOT EXISTS hibernate_orm_test;"
     create_cmd+="CREATE USER IF NOT EXISTS 'hibernate_orm_test'@'%' IDENTIFIED BY 'hibernate_orm_test';"
     create_cmd+="GRANT ALL ON hibernate_orm_test.* TO 'hibernate_orm_test'@'%';"
     for i in "${!databases[@]}";do
       create_cmd+="CREATE DATABASE IF NOT EXISTS ${databases[i]}; GRANT ALL ON ${databases[i]}.* TO 'hibernate_orm_test'@'%';"
     done
-    $CONTAINER_CLI run --rm --network container:tidb docker.io/mysql:8.0 \
-        mysql -h 127.0.0.1 -P 4000 -uroot -e "${create_cmd}" 2>/dev/null
-    echo "TiDB databases were successfully setup"
+    export TIDB_DB_SETUP=$create_cmd
 }
 
-tidb_5_4() {
-    $CONTAINER_CLI rm -f tidb || true
-    $CONTAINER_CLI network rm -f tidb_network || true
-    $CONTAINER_CLI network create tidb_network
-    $CONTAINER_CLI run --name tidb -p4000:4000 -d --network tidb_network ${DB_IMAGE_TIDB_5_4:-docker.io/pingcap/tidb:v5.4.3}
-    # Give the container some time to start
-    OUTPUT=
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        OUTPUT=$($CONTAINER_CLI logs tidb 2>&1)
-        if [[ $OUTPUT == *"server is running"* ]]; then
-          break;
-        fi
-        n=$((n+1))
-        echo "Waiting for TiDB to start..."
-        sleep 3
-    done
-    $CONTAINER_CLI run -it --rm --network tidb_network docker.io/mysql:8.2.0 mysql -htidb -P4000 -uroot -e "create database hibernate_orm_test; create user 'hibernate_orm_test' identified by 'hibernate_orm_test'; grant all on hibernate_orm_test.* to 'hibernate_orm_test';"
-    if [ "$n" -ge 5 ]; then
-      echo "TiDB failed to start and configure after 15 seconds"
-    else
-      echo "TiDB successfully started"
-    fi
+tidb_prepare_setup_5_4() {
+    export TIDB_DB_SETUP="create database hibernate_orm_test; create user 'hibernate_orm_test' identified by 'hibernate_orm_test'; grant all on hibernate_orm_test.* to 'hibernate_orm_test';"
 }
+
+###############################################################################
 
 informix() {
   informix_15
 }
 
 informix_15() {
-    temp_dir=$(mktemp -d)
-    echo "ALLOW_NEWLINE 1
-USEOSTIME 1" >$temp_dir/onconfig.mod
-    chmod 777 -R $temp_dir
-    $PRIVILEGED_CLI $CONTAINER_CLI rm -f informix || true
-    $PRIVILEGED_CLI $CONTAINER_CLI run --name informix --privileged -p 9088:9088 -v $temp_dir:/opt/ibm/config -e LICENSE=accept -e GL_USEGLU=1 -d ${DB_IMAGE_INFORMIX_15:-icr.io/informix/informix-developer-edition-database:15.0.0.0}
-    echo "Starting Informix. This can take a few minutes"
-    # Give the container some time to start
-    OUTPUT=
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs informix 2>&1)
-        if [[ $OUTPUT == *"Server Started"* ]]; then
-          sleep 15
-          $PRIVILEGED_CLI $CONTAINER_CLI exec informix bash -l -c "export DB_LOCALE=en_US.utf8;export CLIENT_LOCALE=en_US.utf8;echo \"execute function task('create dbspace from storagepool', 'datadbs', '100 MB', '4');execute function task('create sbspace from storagepool', 'sbspace', '20 M', '0');create database dev in datadbs with log;\" > post_init.sql;dbaccess sysadmin post_init.sql"
-          break;
-        fi
-        n=$((n+1))
-        echo "Waiting for Informix to start..."
-        sleep 30
-    done
-    if [ "$n" -ge 5 ]; then
-      echo "Informix failed to start and configure after 5 minutes"
-    else
-      echo "Informix successfully started"
-    fi
+    compose_down "latest/informix.yml" "informix"
+    compose_up "latest/informix.yml"
+    informix_post_setup
 }
 
 informix_14_10() {
-    temp_dir=$(mktemp -d)
-    echo "ALLOW_NEWLINE 1
-USEOSTIME 1" >$temp_dir/onconfig.mod
-    chmod 777 -R $temp_dir
-    $PRIVILEGED_CLI $CONTAINER_CLI rm -f informix || true
-    $PRIVILEGED_CLI $CONTAINER_CLI run --name informix --privileged -p 9088:9088 -v $temp_dir:/opt/ibm/config -e LICENSE=accept -e GL_USEGLU=1 -d ${DB_IMAGE_INFORMIX_14_10:-icr.io/informix/informix-developer-database:14.10.FC9W1DE}
-    echo "Starting Informix. This can take a few minutes"
-    # Give the container some time to start
-    OUTPUT=
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs informix 2>&1)
-        if [[ $OUTPUT == *"Server Started"* ]]; then
-          sleep 15
-          $PRIVILEGED_CLI $CONTAINER_CLI exec informix bash -l -c "export DB_LOCALE=en_US.utf8;export CLIENT_LOCALE=en_US.utf8;echo \"execute function task('create dbspace from storagepool', 'datadbs', '100 MB', '4');execute function task('create sbspace from storagepool', 'sbspace', '20 M', '0');create database dev in datadbs with log;\" > post_init.sql;dbaccess sysadmin post_init.sql"
-          break;
-        fi
-        n=$((n+1))
-        echo "Waiting for Informix to start..."
-        sleep 30
-    done
-    if [ "$n" -ge 5 ]; then
-      echo "Informix failed to start and configure after 5 minutes"
-    else
-      echo "Informix successfully started"
-    fi
+    compose_down "versioned/informix-14.10.yml" "informix"
+    compose_up "versioned/informix-14.10.yml"
+    informix_post_setup
 }
 
 informix_12_10() {
-    $PRIVILEGED_CLI $CONTAINER_CLI rm -f informix || true
-    $PRIVILEGED_CLI $CONTAINER_CLI run --name informix --privileged -p 9088:9088 -e LICENSE=accept -e GL_USEGLU=1 -d ${DB_IMAGE_INFORMIX_12_10:-ibmcom/informix-developer-database:12.10.FC12W1DE}
-    echo "Starting Informix. This can take a few minutes"
-    # Give the container some time to start
-    OUTPUT=
-    n=0
-    until [ "$n" -ge 5 ]
-    do
-        OUTPUT=$($PRIVILEGED_CLI $CONTAINER_CLI logs informix 2>&1)
-        if [[ $OUTPUT == *"login Information"* ]]; then
-          sleep 15
-          $PRIVILEGED_CLI $CONTAINER_CLI exec informix bash -l -c "export DB_LOCALE=en_US.utf8;export CLIENT_LOCALE=en_US.utf8;echo \"execute function task('create dbspace from storagepool', 'datadbs', '100 MB', '4');execute function task('create sbspace from storagepool', 'sbspace', '20 M', '0');create database dev in datadbs with log;\" > post_init.sql;dbaccess sysadmin post_init.sql"
-          break;
-        fi
-        n=$((n+1))
-        echo "Waiting for Informix to start..."
-        sleep 30
-    done
-    if [ "$n" -ge 5 ]; then
-      echo "Informix failed to start and configure after 5 minutes"
-    else
-      echo "Informix successfully started"
-    fi
+    compose_down "versioned/informix-12.10.yml" "informix"
+    compose_up "versioned/informix-12.10.yml"
+    informix_post_setup
 }
+
+informix_post_setup() {
+    $PRIVILEGED_CLI $CONTAINER_CLI exec informix bash -l -c "export DB_LOCALE=en_US.utf8;export CLIENT_LOCALE=en_US.utf8;echo \"execute function task('create dbspace from storagepool', 'datadbs', '100 MB', '4');execute function task('create sbspace from storagepool', 'sbspace', '20 M', '0');create database dev in datadbs with log;\" > post_init.sql;dbaccess sysadmin post_init.sql"
+}
+
+###############################################################################
 
 spanner() {
   spanner_emulator GOOGLE_STANDARD_SQL
@@ -1569,58 +1009,32 @@ spanner_pg() {
 
 spanner_emulator() {
   local dialect=${1:-GOOGLE_STANDARD_SQL}
-  local emulator_image=${SPANNER_EMULATOR:-gcr.io/cloud-spanner-emulator/emulator:1.5.52}
   if [[ $DB_COUNT -gt 8 ]]; then
     DB_COUNT=4
   else
     DB_COUNT=$(( DB_COUNT / 2 ))
   fi
-  # Start all emulator containers first
+
+  # Start all emulator containers using compose
   for n in $(seq 1 ${DB_COUNT}); do
     local container_name="spanner_${n}"
     local port=$((9010 + n))
     local rest_port=$((9020 + n))
 
     echo "Starting Spanner emulator instance ${n} on port ${port}..."
-    $CONTAINER_CLI rm -f ${container_name} || true
-
-    $CONTAINER_CLI run --name ${container_name} -d \
-      -p ${port}:9010 \
-      -p ${rest_port}:9020 \
-      ${emulator_image}
+    SPANNER_CONTAINER_NAME=${container_name} SPANNER_GRPC_PORT=${port} SPANNER_REST_PORT=${rest_port} \
+      compose_down "latest/spanner.yml" "${container_name}"
+    SPANNER_CONTAINER_NAME=${container_name} SPANNER_GRPC_PORT=${port} SPANNER_REST_PORT=${rest_port} \
+      $CONTAINER_CLI compose -p "spanner-${n}" -f "docker-compose/latest/spanner.yml" up -d --wait
   done
 
-  # Wait for all emulators to be ready
-  for n in $(seq 1 ${DB_COUNT}); do
-    local container_name="spanner_${n}"
-    local port=$((9010 + n))
-    
-    local retries=0
-    until [ "$retries" -ge 20 ]; do
-      local logs="$($CONTAINER_CLI logs ${container_name} 2>&1 || true)"
-      if [[ "$logs" == *"gRPC server listening"* ]] || [[ "$logs" == *"Cloud Spanner emulator running"* ]]; then
-        echo "Cloud Spanner emulator (${container_name}) started on port ${port}."
-        break
-      fi
-      echo "Waiting for Cloud Spanner emulator (${container_name}) to start..."
-      retries=$((retries+1))
-      sleep 3
-    done
-    
-    if [ "$retries" -ge 20 ]; then
-       echo "Cloud Spanner emulator (${container_name}) failed to start"
-       exit 1
-    fi
-  done
-
-  # Configure Instance
+  # Configure instances
   for n in $(seq 1 ${DB_COUNT}); do
     local rest_port=$((9020 + n))
     echo "Configuring Spanner emulator instance ${n} on port ${rest_port}..."
     local host="localhost:${rest_port}"
     local create_statement
-    
-    # Create Instance
+
     curl -s -X POST "http://${host}/v1/projects/orm-test-project/instances" \
       -H "Content-Type: application/json" \
       -d '{
@@ -1632,14 +1046,12 @@ spanner_emulator() {
             }
           }' >/dev/null || true
 
-    # Determine Create Database statement based on dialect
     if [[ "$dialect" == "POSTGRESQL" ]]; then
        create_statement="CREATE DATABASE \"orm-test-db\""
     else
        create_statement="CREATE DATABASE \`orm-test-db\`"
     fi
 
-    # Create Database
     curl -s -X POST "http://${host}/v1/projects/orm-test-project/instances/orm-test-instance/databases" \
       -H "Content-Type: application/json" \
       -d "{
@@ -1647,7 +1059,6 @@ spanner_emulator() {
             \"databaseDialect\": \"${dialect}\"
           }" >/dev/null
 
-    # Update DDL (for Timezone)
     local update_statements=""
     if [[ "$dialect" == "POSTGRESQL" ]]; then
       update_statements='"ALTER DATABASE \"orm-test-db\" SET \"spanner.default_time_zone\" = '"'UTC'"'", "ALTER DATABASE \"orm-test-db\" SET \"spanner.version_retention_period\" = '"'10s'"'"'
@@ -1664,6 +1075,23 @@ spanner_emulator() {
           }' >/dev/null || true
   done
 }
+
+###############################################################################
+# Script args handling:
+###############################################################################
+REMOVE_ORPHANS="--remove-orphans"
+while [[ "${1:-}" == -* ]]; do
+    case "$1" in
+        -k|--keep-orphans)
+            REMOVE_ORPHANS=""
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
 
 if [ -z ${1} ]; then
     echo "No db name provided"

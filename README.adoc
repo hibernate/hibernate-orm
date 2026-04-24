@@ -113,6 +113,13 @@ All you have to do is run the following command:
 
 omitting the argument will print a list of possible options.
 
+If you need to keep multiple databases started by the script running, start them with `-k/--keep-orphans` argument:
+
+----
+./docker_db.sh -k postgresql
+./docker_db.sh -k mysql
+----
+
 When the database is properly started, you can run tests with special profiles that are suffixed with `_ci`
 e.g. `pgsql_ci` for PostgreSQL. By using the system property `dbHost` you can configure the IP address of your docker host.
 

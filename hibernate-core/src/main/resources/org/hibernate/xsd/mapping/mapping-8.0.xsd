@@ -1160,13 +1160,19 @@
         </xsd:annotation>
         <xsd:sequence>
             <xsd:element name="description" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="pre-merge" type="orm:pre-remove" minOccurs="0"/>
             <xsd:element name="pre-persist" type="orm:pre-persist" minOccurs="0"/>
-            <xsd:element name="post-persist" type="orm:post-persist"
-                         minOccurs="0"/>
+            <xsd:element name="post-persist" type="orm:post-persist" minOccurs="0"/>
             <xsd:element name="pre-remove" type="orm:pre-remove" minOccurs="0"/>
             <xsd:element name="post-remove" type="orm:post-remove" minOccurs="0"/>
             <xsd:element name="pre-update" type="orm:pre-update" minOccurs="0"/>
             <xsd:element name="post-update" type="orm:post-update" minOccurs="0"/>
+            <xsd:element name="pre-upsert" type="orm:pre-update" minOccurs="0"/>
+            <xsd:element name="post-upsert" type="orm:post-update" minOccurs="0"/>
+            <xsd:element name="pre-insert" type="orm:pre-update" minOccurs="0"/>
+            <xsd:element name="post-insert" type="orm:post-update" minOccurs="0"/>
+            <xsd:element name="pre-delete" type="orm:pre-update" minOccurs="0"/>
+            <xsd:element name="post-delete" type="orm:post-update" minOccurs="0"/>
             <xsd:element name="post-load" type="orm:post-load" minOccurs="0"/>
         </xsd:sequence>
         <xsd:attribute name="class" type="xsd:string" use="required"/>

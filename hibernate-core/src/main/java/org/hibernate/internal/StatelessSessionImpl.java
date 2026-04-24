@@ -684,7 +684,7 @@ public class StatelessSessionImpl
 
 	// Hibernate Reactive may need to call this
 	protected boolean firePreInsert(Object entity, Object id, Object[] state, EntityPersister persister) {
-		persister.getEntityCallbacks().preCreate( entity );
+		persister.getEntityCallbacks().preInsert( entity );
 
 		if ( eventListenerGroups.eventListenerGroup_PRE_INSERT.isEmpty() ) {
 			return false;

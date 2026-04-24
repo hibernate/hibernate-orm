@@ -12,7 +12,7 @@ import jakarta.persistence.PersistenceException;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.query.QueryFlushMode;
+import jakarta.persistence.QueryFlushMode;
 
 /**
  * @author Emmanuel Bernard
@@ -37,13 +37,13 @@ public abstract class ConfigurationHelper {
 			return ref;
 		}
 		else if ( value instanceof FlushModeType jpaMode ) {
-			return QueryFlushMode.fromJpaMode( jpaMode );
+			return FlushModeTypeHelper.queryFlushModeFromFlushModeType( jpaMode );
 		}
 		else if ( value instanceof FlushMode hibernateMode ) {
-			return QueryFlushMode.fromHibernateMode( hibernateMode );
+			return FlushModeTypeHelper.queryFlushModeFromFlushMode( hibernateMode );
 		}
 		else {
-			return QueryFlushMode.interpretHint( value.toString() );
+			return FlushModeTypeHelper.interpretQueryFlushMode( value.toString() );
 		}
 	}
 

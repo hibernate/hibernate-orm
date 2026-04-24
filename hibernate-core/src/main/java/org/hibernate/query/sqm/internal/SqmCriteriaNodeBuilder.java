@@ -34,7 +34,13 @@ import java.util.ServiceLoader;
 import java.util.Set;
 
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.criteria.BooleanExpression;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.NumericExpression;
 import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.TemporalExpression;
+import jakarta.persistence.criteria.TextExpression;
 import org.hibernate.SessionFactory;
 import org.hibernate.dialect.function.AvgFunction;
 import org.hibernate.dialect.function.SumReturnTypeResolver;
@@ -363,6 +369,22 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
+	public CriteriaQuery<?> createQuery(String jpql) {
+		if ( queryEngine.getHqlTranslator().translate( jpql, null )
+				instanceof SqmSelectStatement<?> selectStatement ) {
+			return new SqmSelectStatement<>( selectStatement );
+		}
+		else {
+			throw new IllegalArgumentException("Not a 'select' statement");
+		}
+	}
+
+	@Override
+	public <T> CriteriaQuery<T> createQuery(Class<T> resultClass, String jpql) {
+		return createQuery( jpql, resultClass );
+	}
+
+	@Override
 	public SqmSelectStatement<Tuple> createTupleQuery() {
 		return new SqmSelectStatement<>( Tuple.class, this );
 	}
@@ -373,8 +395,52 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
+	public <T> CriteriaUpdate<T> createCriteriaUpdate(Class<T> targetEntity, String jpql) {
+		if ( queryEngine.getHqlTranslator().translate( jpql, targetEntity )
+				instanceof SqmUpdateStatement<?> updateStatement ) {
+			return new SqmUpdateStatement<>( updateStatement );
+		}
+		else {
+			throw new IllegalArgumentException("Not an 'update' statement");
+		}
+	}
+
+	@Override
+	public CriteriaUpdate<?> createCriteriaUpdate(String jpql) {
+		if ( queryEngine.getHqlTranslator().translate( jpql, null )
+				instanceof SqmUpdateStatement<?> updateStatement ) {
+			return new SqmUpdateStatement<>( updateStatement );
+		}
+		else {
+			throw new IllegalArgumentException("Not an 'update' statement");
+		}
+	}
+
+	@Override
 	public <T> SqmDeleteStatement<T> createCriteriaDelete(Class<T> targetEntity) {
 		return new SqmDeleteStatement<>( targetEntity, this );
+	}
+
+	@Override
+	public <T> CriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity, String jpql) {
+		if ( queryEngine.getHqlTranslator().translate( jpql, targetEntity )
+				instanceof SqmDeleteStatement<?> deleteStatement ) {
+			return new SqmDeleteStatement<>( deleteStatement );
+		}
+		else {
+			throw new IllegalArgumentException("Not a 'delete' statement");
+		}
+	}
+
+	@Override
+	public CriteriaDelete<?> createCriteriaDelete(String jpql) {
+		if ( queryEngine.getHqlTranslator().translate( jpql, null )
+				instanceof SqmDeleteStatement<?> deleteStatement ) {
+			return new SqmDeleteStatement<>( deleteStatement );
+		}
+		else {
+			throw new IllegalArgumentException("Not a 'delete' statement");
+		}
 	}
 
 	@Override
@@ -1639,6 +1705,26 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
+	public <N extends Number & Comparable<N>> NumericExpression<N> numericLiteral(N value) {
+		return null;
+	}
+
+	@Override
+	public TextExpression stringLiteral(String value) {
+		return null;
+	}
+
+	@Override
+	public <T extends Temporal & Comparable<? super T>> TemporalExpression<T> temporalLiteral(T value) {
+		return null;
+	}
+
+	@Override
+	public BooleanExpression booleanLiteral(boolean value) {
+		return null;
+	}
+
+	@Override
 	public MappingMetamodelImplementor getMappingMetamodel() {
 		return (MappingMetamodelImplementor) bindingContext.getMappingMetamodel();
 	}
@@ -2367,26 +2453,40 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public SqmPredicate and(Predicate... restrictions) {
+	public JpaPredicate and(BooleanExpression... restrictions) {
 		if ( restrictions == null || restrictions.length == 0 ) {
 			return conjunction();
 		}
 		else {
 			final List<SqmPredicate> predicates = new ArrayList<>( restrictions.length );
 			for ( var expression : restrictions ) {
-				predicates.add( (SqmPredicate) expression );
+				predicates.add( wrap( expression ) );
 			}
 			return new SqmJunctionPredicate( Predicate.BooleanOperator.AND, predicates, this );
 		}
 	}
 
 	@Override
-	public SqmPredicate and(List<Predicate> restrictions) {
+	public SqmPredicate and(List<? extends Expression<Boolean>> restrictions) {
 		if ( restrictions == null || restrictions.isEmpty() ) {
 			return conjunction();
 		}
 		else {
 			final List<SqmPredicate> predicates = new ArrayList<>( restrictions.size() );
+			for ( var expression : restrictions ) {
+				predicates.add( wrap( expression ) );
+			}
+			return new SqmJunctionPredicate( Predicate.BooleanOperator.AND, predicates, this );
+		}
+	}
+
+	@Override
+	public SqmPredicate and(Predicate... restrictions) {
+		if ( restrictions == null || restrictions.length == 0 ) {
+			return conjunction();
+		}
+		else {
+			final List<SqmPredicate> predicates = new ArrayList<>( restrictions.length );
 			for ( var expression : restrictions ) {
 				predicates.add( (SqmPredicate) expression );
 			}
@@ -2405,6 +2505,20 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
+	public JpaPredicate or(BooleanExpression... restrictions) {
+		if ( restrictions == null || restrictions.length == 0 ) {
+			return disjunction();
+		}
+		else {
+			final List<SqmPredicate> predicates = new ArrayList<>( restrictions.length );
+			for ( var expression : restrictions ) {
+				predicates.add( wrap( expression ) );
+			}
+			return new SqmJunctionPredicate( Predicate.BooleanOperator.OR, predicates, this );
+		}
+	}
+
+	@Override
 	public SqmPredicate or(Predicate... restrictions) {
 		if ( restrictions == null || restrictions.length == 0 ) {
 			return disjunction();
@@ -2419,14 +2533,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, Serializable {
 	}
 
 	@Override
-	public SqmPredicate or(List<Predicate> restrictions) {
+	public SqmPredicate or(List<? extends Expression<Boolean>> restrictions) {
 		if ( restrictions == null || restrictions.isEmpty() ) {
 			return disjunction();
 		}
 		else {
 			final List<SqmPredicate> predicates = new ArrayList<>( restrictions.size() );
 			for ( var expression : restrictions ) {
-				predicates.add( (SqmPredicate) expression );
+				predicates.add( wrap( expression ) );
 			}
 			return new SqmJunctionPredicate( Predicate.BooleanOperator.OR, predicates, this );
 		}

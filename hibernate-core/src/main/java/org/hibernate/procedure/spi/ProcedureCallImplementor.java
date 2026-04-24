@@ -17,7 +17,7 @@ import jakarta.persistence.metamodel.Type;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.NamedParametersNotSupportedException;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.query.QueryFlushMode;
+import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.named.NameableQuery;
 import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;

@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import jakarta.persistence.criteria.BooleanExpression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCriteriaBase;
@@ -30,7 +31,7 @@ import jakarta.persistence.metamodel.EntityType;
 public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDmlStatement<T>
 		implements JpaCriteriaBase {
 
-	private @Nullable SqmWhereClause whereClause;
+	protected @Nullable SqmWhereClause whereClause;
 
 	/**
 	 * Constructor for HQL statements.
@@ -112,6 +113,8 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 		initAndGetWhereClause().setPredicate( (SqmPredicate) restriction );
 	}
 
+
+
 	protected SqmWhereClause initAndGetWhereClause() {
 		if ( whereClause == null ) {
 			whereClause = new SqmWhereClause( nodeBuilder() );
@@ -126,6 +129,17 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 		if ( restrictions != null ) {
 			for ( var restriction : restrictions ) {
 				whereClause.applyPredicate( (SqmPredicate) restriction );
+			}
+		}
+	}
+
+	protected void setWhere(BooleanExpression... restrictions) {
+		final SqmWhereClause whereClause = initAndGetWhereClause();
+		// Clear the current predicate if one is present
+		whereClause.setPredicate( null );
+		if ( restrictions != null ) {
+			for ( var restriction : restrictions ) {
+				whereClause.applyPredicate( nodeBuilder().wrap( restriction ) );
 			}
 		}
 	}

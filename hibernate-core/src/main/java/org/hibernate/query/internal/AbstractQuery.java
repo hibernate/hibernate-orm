@@ -28,11 +28,11 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Timeouts;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
+import jakarta.persistence.QueryFlushMode;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Query;
-import org.hibernate.query.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.SelectionQuery;
@@ -301,7 +301,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 
 	@Override
 	public QueryFlushMode getQueryFlushMode() {
-		return QueryFlushMode.fromHibernateMode( getQueryOptions().getFlushMode() );
+		return FlushModeTypeHelper.queryFlushModeFromFlushMode( getQueryOptions().getFlushMode() );
 	}
 
 	@Override

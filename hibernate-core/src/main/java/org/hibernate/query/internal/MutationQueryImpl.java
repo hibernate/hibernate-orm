@@ -24,7 +24,7 @@ import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.Query;
-import org.hibernate.query.QueryFlushMode;
+import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.named.NamedMutationMemento;

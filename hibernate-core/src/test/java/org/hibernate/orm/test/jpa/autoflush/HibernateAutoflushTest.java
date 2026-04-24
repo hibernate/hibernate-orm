@@ -7,7 +7,7 @@ package org.hibernate.orm.test.jpa.autoflush;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Id;
-import org.hibernate.query.QueryFlushMode;
+import jakarta.persistence.QueryFlushMode;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;

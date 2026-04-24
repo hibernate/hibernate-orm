@@ -16,7 +16,7 @@ import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.CommonQueryContract;
-import org.hibernate.query.QueryFlushMode;
+import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 
 import java.time.Instant;

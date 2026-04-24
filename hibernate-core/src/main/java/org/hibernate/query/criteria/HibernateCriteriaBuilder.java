@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.criteria.BooleanExpression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.query.NullPrecedence;
@@ -109,6 +110,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@SuppressWarnings("unchecked")
 	JpaPredicate wrap(Expression<Boolean>... expressions);
+
+	JpaPredicate wrap(BooleanExpression... expressions);
 
 	<T extends HibernateCriteriaBuilder> T unwrap(Class<T> clazz);
 
@@ -808,12 +811,32 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaPredicate and(Expression<Boolean> x, Expression<Boolean> y);
 
 	@Override
+	JpaPredicate and(BooleanExpression... restrictions);
+
+	@Override
+	JpaPredicate and(List<? extends Expression<Boolean>> restrictions);
+
+	/**
+	 * @deprecated Prefer {@linkplain #and(BooleanExpression...)} instead.  This method used to be
+	 * defined as part of Jakarta Persistence, which removed it as of 4.0.
+	 */
+	@Deprecated
 	JpaPredicate and(Predicate... restrictions);
 
 	@Override
 	JpaPredicate or(Expression<Boolean> x, Expression<Boolean> y);
 
 	@Override
+	JpaPredicate or(BooleanExpression... restrictions);
+
+	@Override
+	JpaPredicate or(List<? extends Expression<Boolean>> restrictions);
+
+	/**
+	 * @deprecated Prefer {@linkplain #or(BooleanExpression...)} instead.  This method used to be
+	 * defined as part of Jakarta Persistence, which removed it as of 4.0.
+	 */
+	@Deprecated
 	JpaPredicate or(Predicate... restrictions);
 
 	@Override
@@ -4673,12 +4696,6 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 */
 	@Incubating
 	JpaXmlTableFunction xmlTable(Expression<String> xpath, Expression<?> xmlDocument);
-
-	@Override
-	JpaPredicate and(List<Predicate> restrictions);
-
-	@Override
-	JpaPredicate or(List<Predicate> restrictions);
 
 	@Override
 	JpaExpression<String> concat(List<Expression<String>> expressions);

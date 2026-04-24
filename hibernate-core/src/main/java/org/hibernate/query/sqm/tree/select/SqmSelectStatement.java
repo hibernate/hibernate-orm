@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import jakarta.persistence.criteria.BooleanExpression;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
@@ -410,7 +411,13 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public SqmSelectStatement<T> where(List<Predicate> restrictions) {
+	public SqmSelectStatement<T> where(BooleanExpression... restrictions) {
+		super.where( restrictions );
+		return this;
+	}
+
+	@Override
+	public SqmSelectStatement<T> where(List<? extends Expression<Boolean>> restrictions) {
 		super.where( restrictions );
 		return this;
 	}
@@ -440,7 +447,13 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public SqmSelectStatement<T> having(List<Predicate> restrictions) {
+	public SqmSelectStatement<T> having(BooleanExpression... restrictions) {
+		super.having( restrictions );
+		return this;
+	}
+
+	@Override
+	public SqmSelectStatement<T> having(List<? extends Expression<Boolean>> restrictions) {
 		super.having( restrictions );
 		return this;
 	}

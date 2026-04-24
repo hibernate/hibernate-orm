@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.criteria.BooleanExpression;
+import jakarta.persistence.criteria.CriteriaUpdate;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.persister.entity.EntityPersister;
@@ -18,6 +20,7 @@ import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.internal.SimpleSqmCopyContext;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmRestrictedDmlStatement;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -40,6 +43,7 @@ import jakarta.persistence.metamodel.SingularAttribute;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
+import static org.hibernate.query.sqm.SqmQuerySource.CRITERIA;
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertAssignable;
 
 /**
@@ -103,6 +107,24 @@ public class SqmUpdateStatement<T>
 			boolean versioned) {
 		super( builder, querySource, parameters, cteStatements, target );
 		this.versioned = versioned;
+	}
+
+	/**
+	 * @implNote This form is used when transforming HQL to criteria.
+	 *           All it does is change the SqmQuerySource to CRITERIA
+	 *           in order to allow correct parameter handing.
+	 */
+	public SqmUpdateStatement(SqmUpdateStatement<?> original) {
+		super(
+				original.nodeBuilder(),
+				CRITERIA,
+				original.getSqmParameters(),
+				original.copyCteStatements( new SimpleSqmCopyContext() ),
+				(SqmRoot<T>) original.getTarget()
+		);
+		setClause = original.getSetClause();
+		whereClause = original.copyWhereClause( new SimpleSqmCopyContext() );
+		versioned = original.isVersioned();
 	}
 
 	@Override
@@ -253,6 +275,12 @@ public class SqmUpdateStatement<T>
 	@Override
 	public SqmUpdateStatement<T> where(@Nullable Expression<Boolean> restriction) {
 		setWhere( restriction );
+		return this;
+	}
+
+	@Override
+	public CriteriaUpdate<T> where(BooleanExpression... restrictions) {
+		setWhere( restrictions );
 		return this;
 	}
 

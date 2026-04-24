@@ -7,8 +7,6 @@ package org.hibernate.orm.tooling.maven;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-import org.apache.maven.cli.MavenCli;
-import org.codehaus.plexus.classworlds.ClassWorld;
 import org.hibernate.bytecode.enhance.spi.EnhancementInfo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,28 +21,20 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.util.List;
 
-public class EnhancerMojoTestIT {
-
-	public static final String MVN_HOME = "maven.multiModuleProjectDirectory";
+public class EnhancerMojoTestIT extends AbstractMavenTestIT {
 
 	@TempDir
 	File projectDir;
 
-	private ClassWorld classWorld;
-	private MavenCli mavenCli;
 	private URLClassLoader testClassLoader;
 
 	@BeforeEach
 	public void beforeEach() throws Exception {
 		copyJavFiles();
-		System.setProperty(MVN_HOME, projectDir.getAbsolutePath());
-		classWorld = new ClassWorld( "plexus.core", Thread.currentThread().getContextClassLoader() );
-		mavenCli = new MavenCli( classWorld );
 	}
 
 	@AfterEach
 	public void afterEach() throws Exception {
-		classWorld.close();
 		destroyTestClassLoader();
 	}
 
@@ -225,11 +215,7 @@ public class EnhancerMojoTestIT {
 		assertFalse(fileExists("target/classes/Baz.class"));
 		assertFalse(fileExists("target/classes/Foo.class"));
 		// Execute the 'compile' target
-		mavenCli.doMain(
-				new String[]{"compile"},
-				projectDir.getAbsolutePath(),
-				null,
-				null);
+		runMaven( projectDir.getAbsolutePath(), "compile" );
 		// The class files should exist now
 		assertTrue( fileExists( "target/classes/Bar.class" ) );
 		assertTrue( fileExists( "target/classes/Baz.class" ) );
@@ -242,16 +228,8 @@ public class EnhancerMojoTestIT {
 		assertFalse( isEnhanced( "Baz" ));
 		assertFalse( isEnhanced( "Foo" ));
 		// Execute the 'enhance' target
-		mavenCli.doMain(
-				new String[]{"process-classes"},
-				projectDir.getAbsolutePath(),
-				null,
-				null);
-		mavenCli.doMain(
-				new String[]{"dependency:copy-dependencies"},
-				projectDir.getAbsolutePath(),
-				null,
-				null);
+		runMaven( projectDir.getAbsolutePath(), "process-classes" );
+		runMaven( projectDir.getAbsolutePath(), "dependency:copy-dependencies" );
 		// The results are verified in the respective tests
 	}
 

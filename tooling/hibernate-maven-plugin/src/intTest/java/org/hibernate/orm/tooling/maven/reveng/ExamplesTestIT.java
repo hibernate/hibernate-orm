@@ -4,7 +4,7 @@
  */
 package org.hibernate.orm.tooling.maven.reveng;
 
-import org.apache.maven.cli.MavenCli;
+import org.hibernate.orm.tooling.maven.AbstractMavenTestIT;
 import org.hibernate.tool.reveng.api.version.Version;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -22,9 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-	public class ExamplesTestIT {
+	public class ExamplesTestIT extends AbstractMavenTestIT {
 
-		public static final String MVN_HOME = "maven.multiModuleProjectDirectory";
 		private static File baseFolder;
 
 		private File projectFolder;
@@ -39,12 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 		@BeforeAll
 		public static void beforeAll() throws Exception {
-			// The needed resource for this test are put in place
-			// in the 'baseFolder' (normally 'target/test-classes')
-			// by the 'build-helper-maven-plugin' execution.
-			// See the 'pom.xml'
 			baseFolder = determineBaseFolder();
-//		localRepo = new File(baseFolder.getParentFile(), "local-repo");
 		}
 
 		@Test
@@ -130,7 +124,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 			projectFolder = new File(baseFolder, "hbm2orm/simple-default");
 			File ormXmlFile = new File(projectFolder, "src/main/resources/simple.mapping.xml");
 			assertFalse(ormXmlFile.exists());
-			runMavenCommand( "org.hibernate.orm:hibernate-maven-plugin:" + Version.versionString() + ":transformHbm");
+			runMaven( projectFolder.getAbsolutePath(), "org.hibernate.orm:hibernate-maven-plugin:" + Version.versionString() + ":transformHbm");
 			assertTrue(ormXmlFile.exists());
 			String ormXmlContents = Files.readString( ormXmlFile.toPath() );
 			assertTrue(ormXmlContents.contains("entity-mappings"));
@@ -139,7 +133,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		private void prepareProject(String projectName) throws Exception {
 			projectFolder = new File(baseFolder, projectName);
 			assertTrue(projectFolder.exists());
-			System.setProperty(MVN_HOME, projectFolder.getAbsolutePath());
 			editPomFile(projectFolder);
 			createHibernatePropertiesFile(projectFolder);
 			createDatabase();
@@ -160,19 +153,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 
 		private void runGenerateSources() {
-			new MavenCli().doMain(
-					new String[]{"generate-sources"},
-					projectFolder.getAbsolutePath(),
-					null,
-					null);
-		}
-
-		private void runMavenCommand(String command) {
-			new MavenCli().doMain(
-					new String[]{ command },
-					projectFolder.getAbsolutePath(),
-					null,
-					null);
+			runMaven( projectFolder.getAbsolutePath(), "generate-sources" );
 		}
 
 		private void assertNotGeneratedYet(String fileName) {

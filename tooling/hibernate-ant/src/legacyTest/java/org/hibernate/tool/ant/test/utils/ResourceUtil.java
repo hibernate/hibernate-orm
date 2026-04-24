@@ -23,7 +23,8 @@ public class ResourceUtil {
 				}
 				Files.copy(inputStream, resourceFile.toPath());
 			}
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -32,7 +33,8 @@ public class ResourceUtil {
 		InputStream result;
 		if (resourceName.startsWith("/")) {
 			result = testClass.getResourceAsStream(resourceName);
-		} else {
+		}
+		else {
 			result = resolveRelativeResourceLocation(testClass, resourceName);
 		}
 		return result;

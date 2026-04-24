@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.builder.hbm;
 
@@ -105,7 +92,7 @@ public class HbmBuildContext {
 	// --- ClassDetails registry helpers ---
 
 	public DynamicFieldDetails createField(DynamicClassDetails entityClass,
-										   String fieldName, String javaType) {
+										String fieldName, String javaType) {
 		// For array types like "byte[]", resolve the component type and
 		// use an ArrayTypeDetailsImpl to represent the array.
 		if (javaType.endsWith("[]")) {
@@ -127,7 +114,8 @@ public class HbmBuildContext {
 		TypeDetails fieldType;
 		if (isPrimitiveType(javaType)) {
 			fieldType = new PrimitiveTypeDetailsImpl(fieldTypeClass);
-		} else {
+		}
+		else {
 			fieldType = new ClassTypeDetailsImpl(
 					fieldTypeClass, TypeDetails.Kind.CLASS);
 		}
@@ -136,15 +124,15 @@ public class HbmBuildContext {
 	}
 
 	public DynamicFieldDetails createCollectionField(DynamicClassDetails entityClass,
-													 String fieldName,
-													 ClassDetails elementClass) {
+													String fieldName,
+													ClassDetails elementClass) {
 		return createCollectionField(entityClass, fieldName, elementClass, "java.util.Set");
 	}
 
 	public DynamicFieldDetails createCollectionField(DynamicClassDetails entityClass,
-													 String fieldName,
-													 ClassDetails elementClass,
-													 String collectionInterfaceName) {
+													String fieldName,
+													ClassDetails elementClass,
+													String collectionInterfaceName) {
 		ClassDetails collectionClass = modelsContext.getClassDetailsRegistry()
 				.resolveClassDetails(collectionInterfaceName);
 		TypeDetails elementType = new ClassTypeDetailsImpl(
@@ -215,7 +203,7 @@ public class HbmBuildContext {
 	}
 
 	public void addFieldMetaAttribute(String className, String fieldName,
-									  String name, String value) {
+									String name, String value) {
 		fieldMetaAttributes
 				.computeIfAbsent(className, k -> new HashMap<>())
 				.computeIfAbsent(fieldName, k -> new HashMap<>())
@@ -281,7 +269,7 @@ public class HbmBuildContext {
 	 * them as field-level meta attributes.
 	 */
 	public void extractFieldMetaAttributes(String className, String fieldName,
-										   ToolingHintContainer container) {
+										ToolingHintContainer container) {
 		if (container == null) return;
 		List<JaxbHbmToolingHintType> hints = container.getToolingHints();
 		if (hints == null) return;
@@ -392,8 +380,8 @@ public class HbmBuildContext {
 	}
 
 	private void applyColumnAnnotation(DynamicFieldDetails field, String columnName,
-									   boolean nullable, int length, int precision,
-									   int scale, boolean unique) {
+									boolean nullable, int length, int precision,
+									int scale, boolean unique) {
 		ColumnJpaAnnotation columnAnnotation = JpaAnnotations.COLUMN.createUsage(modelsContext);
 		columnAnnotation.name(columnName);
 		columnAnnotation.nullable(nullable);

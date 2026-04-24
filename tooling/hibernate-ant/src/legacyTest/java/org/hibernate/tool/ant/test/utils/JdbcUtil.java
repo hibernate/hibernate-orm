@@ -41,7 +41,8 @@ public class JdbcUtil {
 		}
 		try {
 			properties.load(inputStream);
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 		Properties connectionProperties = new Properties();
@@ -71,7 +72,8 @@ public class JdbcUtil {
 	public static void establishJdbcConnection(Object test) {
 		try {
 			CONNECTION_TABLE.put(test, createJdbcConnection(test));
-		} catch (SQLException e) {
+		}
+		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -81,7 +83,8 @@ public class JdbcUtil {
 		CONNECTION_TABLE.remove(test);
 		try {
 			connection.close();
-		} catch (SQLException e) {
+		}
+		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -89,7 +92,8 @@ public class JdbcUtil {
 	public static void executeSql(Object test, String[] sqls) {
 		try {
 			executeSql(CONNECTION_TABLE.get(test), sqls);
-		} catch (SQLException e) {
+		}
+		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -100,12 +104,15 @@ public class JdbcUtil {
 			DatabaseMetaData databaseMetaData = connection.getMetaData();
 			if (databaseMetaData.storesLowerCaseIdentifiers()) {
 				return string.toLowerCase();
-			} else if (databaseMetaData.storesUpperCaseIdentifiers()) {
+			}
+		else if (databaseMetaData.storesUpperCaseIdentifiers()) {
 				return string.toUpperCase();
-			} else {
+			}
+		else {
 				return string;
 			}
-		} catch (SQLException e) {
+		}
+		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
 	}
@@ -117,7 +124,8 @@ public class JdbcUtil {
 			result = connection.isValid(1);
 			connection.commit();
 			connection.close();
-		} catch (SQLException e) {
+		}
+		catch (SQLException e) {
 			// this will happen when the connection cannot be created
 		}
 		return result;
@@ -167,7 +175,8 @@ public class JdbcUtil {
 					}
 				}
 				result = lines.toArray(new String[0]);
-			} catch (IOException e) {
+			}
+		catch (IOException e) {
 				throw new RuntimeException(e);
 			}
 		}

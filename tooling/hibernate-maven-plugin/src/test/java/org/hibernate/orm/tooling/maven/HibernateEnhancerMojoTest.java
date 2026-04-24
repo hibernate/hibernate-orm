@@ -425,9 +425,11 @@ public class HibernateEnhancerMojoTest {
 						}
 						if (calls.get(0) == 1) {
 							return "foobar".getBytes();
-						} else if (calls.get(0) == 2) {
+						}
+		else if (calls.get(0) == 2) {
 							return null;
-						} else {
+						}
+		else {
 							throw new EnhancementException("foobar");
 						}
 					}
@@ -467,7 +469,8 @@ public class HibernateEnhancerMojoTest {
 		try {
 			enhanceClassMethod.invoke(enhanceMojo, barClassFile);
 			fail();
-		} catch (Throwable e) {
+		}
+		catch (Throwable e) {
 			long afterThirdRun = barClassFile.lastModified();
 			assertEquals(3, calls.get(0));
 			assertEquals(afterThirdRun, afterFirstRun);
@@ -581,7 +584,8 @@ public class HibernateEnhancerMojoTest {
 		try {
 			m = fooClass.getMethod("$$_hibernate_getEntityInstance", new Class[]{});
 			fail();
-		} catch (NoSuchMethodException e) {
+		}
+		catch (NoSuchMethodException e) {
 			assertEquals("org.foo.Foo.$$_hibernate_getEntityInstance()", e.getMessage());
 		}
 		classLoader.close();
@@ -634,11 +638,14 @@ public class HibernateEnhancerMojoTest {
 					public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 						if ("info".equals(method.getName())) {
 							logMessages.add(INFO + args[0]);
-						} else if ("warn".equals(method.getName())) {
+						}
+		else if ("warn".equals(method.getName())) {
 							logMessages.add(WARNING + args[0]);
-						} else if ("error".equals(method.getName())) {
+						}
+		else if ("error".equals(method.getName())) {
 							logMessages.add(ERROR + args[0]);
-						} else if ("debug".equals(method.getName())) {
+						}
+		else if ("debug".equals(method.getName())) {
 							logMessages.add(DEBUG + args[0]);
 						}
 						return null;

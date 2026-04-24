@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.jdbc2cfg.Versioning;
 
@@ -57,24 +44,24 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class TestCase extends TestTemplate {
 
-    private static String[] CREATE_SQLS = {
-            "CREATE TABLE WITH_VERSION (ONE INT, TWO INT, VERSION INT, NAME VARCHAR(256), PRIMARY KEY (ONE))",
-            "CREATE TABLE NO_VERSION (ONE INT, TWO INT, NAME VARCHAR(256), PRIMARY KEY (TWO))",
-            "CREATE TABLE WITH_REAL_TIMESTAMP (ONE INT, TWO INT, DBTIMESTAMP TIMESTAMP, NAME VARCHAR(256), PRIMARY KEY (ONE))",
-            "CREATE TABLE WITH_FAKE_TIMESTAMP (ONE INT, TWO INT, DBTIMESTAMP INT, NAME VARCHAR(256), PRIMARY KEY (ONE))"
-    };
+	private static String[] CREATE_SQLS = {
+			"CREATE TABLE WITH_VERSION (ONE INT, TWO INT, VERSION INT, NAME VARCHAR(256), PRIMARY KEY (ONE))",
+			"CREATE TABLE NO_VERSION (ONE INT, TWO INT, NAME VARCHAR(256), PRIMARY KEY (TWO))",
+			"CREATE TABLE WITH_REAL_TIMESTAMP (ONE INT, TWO INT, DBTIMESTAMP TIMESTAMP, NAME VARCHAR(256), PRIMARY KEY (ONE))",
+			"CREATE TABLE WITH_FAKE_TIMESTAMP (ONE INT, TWO INT, DBTIMESTAMP INT, NAME VARCHAR(256), PRIMARY KEY (ONE))"
+	};
 
-    private static String[] DROP_SQLS = {
-            "DROP TABLE WITH_VERSION",
-            "DROP TABLE NO_VERSION",
-            "DROP TABLE WITH_REAL_TIMESTAMP",
-            "DROP TABLE WITH_FAKE_TIMESTAMP"
-    };
+	private static String[] DROP_SQLS = {
+			"DROP TABLE WITH_VERSION",
+			"DROP TABLE NO_VERSION",
+			"DROP TABLE WITH_REAL_TIMESTAMP",
+			"DROP TABLE WITH_FAKE_TIMESTAMP"
+	};
 
-    private static String[] HIBERNATE_PROPERTIES = {
-            "hibernate.connection.url",
-            "hibernate.connection.username",
-    };
+	private static String[] HIBERNATE_PROPERTIES = {
+			"hibernate.connection.url",
+			"hibernate.connection.username",
+	};
 
 	private List<ClassDetails> entities = null;
 	private MetadataDescriptor metadataDescriptor = null;

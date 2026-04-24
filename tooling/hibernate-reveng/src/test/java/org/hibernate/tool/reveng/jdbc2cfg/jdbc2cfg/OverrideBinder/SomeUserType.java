@@ -1,3 +1,7 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
 package org.hibernate.tool.reveng.jdbc2cfg.OverrideBinder;
 
 import org.hibernate.usertype.UserType;

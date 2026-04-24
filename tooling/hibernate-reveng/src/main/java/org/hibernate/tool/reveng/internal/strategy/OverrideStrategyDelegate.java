@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.strategy;
 
@@ -99,7 +86,8 @@ class OverrideStrategyDelegate extends DelegatingStrategy {
 			location = TableNameQualifier.qualify(
 					table.getCatalog(), table.getSchema(), table.getName())
 					+ "." + columnName;
-		} else {
+		}
+		else {
 			location += " Column: " + columnName + info;
 		}
 		if (table != null && columnName != null) {
@@ -117,7 +105,8 @@ class OverrideStrategyDelegate extends DelegatingStrategy {
 			return super.columnToHibernateTypeName(
 					table, columnName, sqlType, length, precision,
 					scale, nullable, generatedIdentifier);
-		} else {
+		}
+		else {
 			log.debug("<type-mapping> found for ["
 					+ location + info + "] to [" + result + "]");
 			return result;
@@ -130,7 +119,8 @@ class OverrideStrategyDelegate extends DelegatingStrategy {
 		if (className != null) {
 			if (className.contains(".")) {
 				return className;
-			} else {
+			}
+		else {
 				String packageName = repository.getPackageName(tableIdentifier);
 				return packageName == null
 						? className
@@ -140,7 +130,8 @@ class OverrideStrategyDelegate extends DelegatingStrategy {
 		String packageName = repository.getPackageName(tableIdentifier);
 		if (packageName == null) {
 			return super.tableToClassName(tableIdentifier);
-		} else {
+		}
+		else {
 			String string = super.tableToClassName(tableIdentifier);
 			if (string == null) return null;
 			return StringHelper.qualify(packageName, StringHelper.unqualify(string));
@@ -173,7 +164,8 @@ class OverrideStrategyDelegate extends DelegatingStrategy {
 		String result = repository.identifierStrategyForTable.get(tableIdentifier);
 		if (result == null) {
 			return super.getTableIdentifierStrategyName(tableIdentifier);
-		} else {
+		}
+		else {
 			log.debug("tableIdentifierStrategy for "
 					+ tableIdentifier + " -> '" + result + "'");
 			return result;

@@ -1,17 +1,6 @@
 /*
- * Copyright 2010 - 2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.exporter.dao;
 
@@ -105,23 +94,23 @@ public class DaoExporter implements Exporter {
 	}
 
 	public static DaoExporter create(List<ClassDetails> entities, ModelsContext modelsContext,
-									 boolean ejb3) {
+									boolean ejb3) {
 		return new DaoExporter(entities, modelsContext, ejb3, "SessionFactory", new String[0]);
 	}
 
 	public static DaoExporter create(List<ClassDetails> entities, ModelsContext modelsContext,
-									 boolean ejb3, String sessionFactoryName) {
+									boolean ejb3, String sessionFactoryName) {
 		return new DaoExporter(entities, modelsContext, ejb3, sessionFactoryName, new String[0]);
 	}
 
 	public static DaoExporter create(List<ClassDetails> entities, ModelsContext modelsContext,
-									 boolean ejb3, String sessionFactoryName,
-									 String[] templatePath) {
+									boolean ejb3, String sessionFactoryName,
+									String[] templatePath) {
 		return new DaoExporter(entities, modelsContext, ejb3, sessionFactoryName, templatePath);
 	}
 
 	public static DaoExporter create(MetadataDescriptor md, boolean ejb3,
-									 String sessionFactoryName, String[] templatePath) {
+									String sessionFactoryName, String[] templatePath) {
 		MetadataHelper helper = MetadataHelper.from(md);
 		return new DaoExporter(helper.getEntityClassDetails(), helper.getModelsContext(),
 				ejb3, sessionFactoryName, templatePath);
@@ -144,7 +133,8 @@ public class DaoExporter implements Exporter {
 			Template template = freemarkerConfig.getTemplate(TEMPLATE_NAME);
 			template.process(model, output);
 			output.flush();
-		} catch (IOException | TemplateException e) {
+		}
+		catch (IOException | TemplateException e) {
 			throw new RuntimeException(
 					"Failed to export DAO for entity: " + entity.getClassName(), e);
 		}
@@ -169,7 +159,8 @@ public class DaoExporter implements Exporter {
 				if (dir.isDirectory()) {
 					try {
 						loaders.add(new FileTemplateLoader(dir));
-					} catch (IOException e) {
+					}
+		catch (IOException e) {
 						throw new RuntimeException(
 								"Failed to create template loader for: " + path, e);
 					}

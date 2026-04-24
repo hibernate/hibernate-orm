@@ -1,24 +1,10 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.jdbc2cfg.CompositeId;
 
 import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 
@@ -142,45 +128,47 @@ public class TestCase {
 					+ " should not be @ManyToOne");
 		}
 	}
-     
-    @Test
-    public void testGeneration() throws Exception {
-        EntityExporter.create(metadataDescriptor, true).exportAll(outputDir);
-        List<String> paths = new java.util.ArrayList<>();
-        paths.add(JavaUtil.resolvePathToJarFileFor(jakarta.persistence.Persistence.class));
-        paths.add(JavaUtil.resolvePathToJarFileFor(org.hibernate.Version.class));
-        JavaUtil.compile(outputDir, paths);
-        URL[] urls = new URL[] { outputDir.toURI().toURL() };
-        ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
-        URLClassLoader ucl = new URLClassLoader(urls, oldLoader);
-        try {
-            Thread.currentThread().setContextClassLoader(ucl);
-            org.hibernate.boot.registry.StandardServiceRegistryBuilder builder =
-                    new org.hibernate.boot.registry.StandardServiceRegistryBuilder();
-            org.hibernate.service.ServiceRegistry serviceRegistry = builder.build();
-            NativeMetadataDescriptor mds = new NativeMetadataDescriptor(null, null, null);
-            for (File f : outputDir.listFiles()) {
-                if (f.getName().endsWith(".class")) {
-                    String className = f.getName().replace(".class", "");
-                    HibernateUtil.addAnnotatedClass(mds, ucl.loadClass(className));
-                }
-            }
-            new org.hibernate.tool.hbm2ddl.SchemaValidator()
-                    .validate(mds.createMetadata(), serviceRegistry);
-            Class<?> productIdClass = ucl.loadClass("ProductId");
-            Constructor<?> productIdClassConstructor = productIdClass.getConstructor();
-            Object object = productIdClassConstructor.newInstance();
-            int hash = -1;
-            try {
-                hash = object.hashCode();
-            } catch (Throwable t) {
-                fail("Hashcode on new instance should not fail " + t);
-            }
-            assertNotEquals(hash, System.identityHashCode(object), "hashcode should be different from system");
-        } finally {
-            Thread.currentThread().setContextClassLoader(oldLoader);
-        }
-    }
+
+	@Test
+	public void testGeneration() throws Exception {
+		EntityExporter.create(metadataDescriptor, true).exportAll(outputDir);
+		List<String> paths = new java.util.ArrayList<>();
+		paths.add(JavaUtil.resolvePathToJarFileFor(jakarta.persistence.Persistence.class));
+		paths.add(JavaUtil.resolvePathToJarFileFor(org.hibernate.Version.class));
+		JavaUtil.compile(outputDir, paths);
+		URL[] urls = new URL[] { outputDir.toURI().toURL() };
+		ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
+		URLClassLoader ucl = new URLClassLoader(urls, oldLoader);
+		try {
+			Thread.currentThread().setContextClassLoader(ucl);
+			org.hibernate.boot.registry.StandardServiceRegistryBuilder builder =
+					new org.hibernate.boot.registry.StandardServiceRegistryBuilder();
+			org.hibernate.service.ServiceRegistry serviceRegistry = builder.build();
+			NativeMetadataDescriptor mds = new NativeMetadataDescriptor(null, null, null);
+			for (File f : outputDir.listFiles()) {
+				if (f.getName().endsWith(".class")) {
+					String className = f.getName().replace(".class", "");
+					HibernateUtil.addAnnotatedClass(mds, ucl.loadClass(className));
+				}
+			}
+			new org.hibernate.tool.hbm2ddl.SchemaValidator()
+					.validate(mds.createMetadata(), serviceRegistry);
+			Class<?> productIdClass = ucl.loadClass("ProductId");
+			Constructor<?> productIdClassConstructor = productIdClass.getConstructor();
+			Object object = productIdClassConstructor.newInstance();
+			int hash = -1;
+			try {
+				hash = object.hashCode();
+			}
+		catch (Throwable t) {
+				fail("Hashcode on new instance should not fail " + t);
+			}
+			assertNotEquals(hash, System.identityHashCode(object), "hashcode should be different from system");
+		}
+		finally {
+			Thread.currentThread().setContextClassLoader(oldLoader);
+		}
+	}
 
 	private ClassDetails findEntity(String name) {
 		return entities.stream()

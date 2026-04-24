@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.builder.hbm;
 
@@ -74,16 +61,16 @@ public class HbmClassDetailsBuilderTest {
 		File hbm = writeHbmFile("Employee.hbm.xml", """
 				<?xml version="1.0"?>
 				<!DOCTYPE hibernate-mapping PUBLIC
-				  "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-				  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+				"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+				"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 				<hibernate-mapping package="com.example">
-				  <class name="Employee" table="EMPLOYEES">
-				    <id name="id" type="long" column="EMP_ID">
-				      <generator class="identity"/>
-				    </id>
-				    <property name="name" type="string" column="EMP_NAME" not-null="true"/>
-				    <property name="salary" type="big_decimal" column="SALARY"/>
-				  </class>
+				<class name="Employee" table="EMPLOYEES">
+					<id name="id" type="long" column="EMP_ID">
+					<generator class="identity"/>
+					</id>
+					<property name="name" type="string" column="EMP_NAME" not-null="true"/>
+					<property name="salary" type="big_decimal" column="SALARY"/>
+				</class>
 				</hibernate-mapping>
 				""");
 
@@ -128,16 +115,16 @@ public class HbmClassDetailsBuilderTest {
 		File hbm = writeHbmFile("Versioned.hbm.xml", """
 				<?xml version="1.0"?>
 				<!DOCTYPE hibernate-mapping PUBLIC
-				  "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-				  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+				"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+				"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 				<hibernate-mapping package="com.example">
-				  <class name="Versioned" table="VERSIONED">
-				    <id name="id" type="long">
-				      <generator class="native"/>
-				    </id>
-				    <version name="version" column="OPT_LOCK"/>
-				    <property name="data" type="string"/>
-				  </class>
+				<class name="Versioned" table="VERSIONED">
+					<id name="id" type="long">
+					<generator class="native"/>
+					</id>
+					<version name="version" column="OPT_LOCK"/>
+					<property name="data" type="string"/>
+				</class>
 				</hibernate-mapping>
 				""");
 
@@ -154,16 +141,16 @@ public class HbmClassDetailsBuilderTest {
 		File hbm = writeHbmFile("Timestamped.hbm.xml", """
 				<?xml version="1.0"?>
 				<!DOCTYPE hibernate-mapping PUBLIC
-				  "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-				  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+				"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+				"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 				<hibernate-mapping package="com.example">
-				  <class name="Timestamped" table="TIMESTAMPED">
-				    <id name="id" type="long">
-				      <generator class="native"/>
-				    </id>
-				    <timestamp name="lastModified" column="LAST_MODIFIED"/>
-				    <property name="data" type="string"/>
-				  </class>
+				<class name="Timestamped" table="TIMESTAMPED">
+					<id name="id" type="long">
+					<generator class="native"/>
+					</id>
+					<timestamp name="lastModified" column="LAST_MODIFIED"/>
+					<property name="data" type="string"/>
+				</class>
 				</hibernate-mapping>
 				""");
 
@@ -181,15 +168,15 @@ public class HbmClassDetailsBuilderTest {
 		File hbm = writeHbmFile("Employee.hbm.xml", """
 				<?xml version="1.0"?>
 				<!DOCTYPE hibernate-mapping PUBLIC
-				  "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-				  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+				"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+				"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 				<hibernate-mapping package="com.example">
-				  <class name="Employee" table="EMPLOYEES">
-				    <id name="id" type="long">
-				      <generator class="identity"/>
-				    </id>
-				    <many-to-one name="department" class="Department" column="DEPT_ID"/>
-				  </class>
+				<class name="Employee" table="EMPLOYEES">
+					<id name="id" type="long">
+					<generator class="identity"/>
+					</id>
+					<many-to-one name="department" class="Department" column="DEPT_ID"/>
+				</class>
 				</hibernate-mapping>
 				""");
 
@@ -206,19 +193,19 @@ public class HbmClassDetailsBuilderTest {
 		File hbm = writeHbmFile("Department.hbm.xml", """
 				<?xml version="1.0"?>
 				<!DOCTYPE hibernate-mapping PUBLIC
-				  "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-				  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+				"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+				"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 				<hibernate-mapping package="com.example">
-				  <class name="Department" table="DEPARTMENTS">
-				    <id name="id" type="long">
-				      <generator class="identity"/>
-				    </id>
-				    <property name="name" type="string"/>
-				    <set name="employees">
-				      <key column="DEPT_ID"/>
-				      <one-to-many class="Employee"/>
-				    </set>
-				  </class>
+				<class name="Department" table="DEPARTMENTS">
+					<id name="id" type="long">
+					<generator class="identity"/>
+					</id>
+					<property name="name" type="string"/>
+					<set name="employees">
+					<key column="DEPT_ID"/>
+					<one-to-many class="Employee"/>
+					</set>
+				</class>
 				</hibernate-mapping>
 				""");
 
@@ -236,18 +223,18 @@ public class HbmClassDetailsBuilderTest {
 		File hbm = writeHbmFile("Person.hbm.xml", """
 				<?xml version="1.0"?>
 				<!DOCTYPE hibernate-mapping PUBLIC
-				  "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-				  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+				"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+				"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 				<hibernate-mapping package="com.example">
-				  <class name="Person" table="PERSONS">
-				    <id name="id" type="long">
-				      <generator class="identity"/>
-				    </id>
-				    <component name="address" class="Address">
-				      <property name="street" type="string"/>
-				      <property name="city" type="string"/>
-				    </component>
-				  </class>
+				<class name="Person" table="PERSONS">
+					<id name="id" type="long">
+					<generator class="identity"/>
+					</id>
+					<component name="address" class="Address">
+					<property name="street" type="string"/>
+					<property name="city" type="string"/>
+					</component>
+				</class>
 				</hibernate-mapping>
 				""");
 
@@ -271,22 +258,22 @@ public class HbmClassDetailsBuilderTest {
 		File hbm = writeHbmFile("Vehicle.hbm.xml", """
 				<?xml version="1.0"?>
 				<!DOCTYPE hibernate-mapping PUBLIC
-				  "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-				  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+				"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+				"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 				<hibernate-mapping package="com.example">
-				  <class name="Vehicle" table="VEHICLES" discriminator-value="VEHICLE">
-				    <id name="id" type="long">
-				      <generator class="identity"/>
-				    </id>
-				    <discriminator column="VEHICLE_TYPE" type="string"/>
-				    <property name="name" type="string"/>
-				    <subclass name="Car" discriminator-value="CAR">
-				      <property name="doorCount" type="int"/>
-				    </subclass>
-				    <subclass name="Truck" discriminator-value="TRUCK">
-				      <property name="payloadCapacity" type="double"/>
-				    </subclass>
-				  </class>
+				<class name="Vehicle" table="VEHICLES" discriminator-value="VEHICLE">
+					<id name="id" type="long">
+					<generator class="identity"/>
+					</id>
+					<discriminator column="VEHICLE_TYPE" type="string"/>
+					<property name="name" type="string"/>
+					<subclass name="Car" discriminator-value="CAR">
+					<property name="doorCount" type="int"/>
+					</subclass>
+					<subclass name="Truck" discriminator-value="TRUCK">
+					<property name="payloadCapacity" type="double"/>
+					</subclass>
+				</class>
 				</hibernate-mapping>
 				""");
 
@@ -328,30 +315,30 @@ public class HbmClassDetailsBuilderTest {
 		File hbm1 = writeHbmFile("Employee.hbm.xml", """
 				<?xml version="1.0"?>
 				<!DOCTYPE hibernate-mapping PUBLIC
-				  "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-				  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+				"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+				"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 				<hibernate-mapping package="com.example">
-				  <class name="Employee" table="EMPLOYEES">
-				    <id name="id" type="long">
-				      <generator class="identity"/>
-				    </id>
-				    <property name="name" type="string"/>
-				  </class>
+				<class name="Employee" table="EMPLOYEES">
+					<id name="id" type="long">
+					<generator class="identity"/>
+					</id>
+					<property name="name" type="string"/>
+				</class>
 				</hibernate-mapping>
 				""");
 
 		File hbm2 = writeHbmFile("Department.hbm.xml", """
 				<?xml version="1.0"?>
 				<!DOCTYPE hibernate-mapping PUBLIC
-				  "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
-				  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+				"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+				"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 				<hibernate-mapping package="com.example">
-				  <class name="Department" table="DEPARTMENTS">
-				    <id name="id" type="long">
-				      <generator class="identity"/>
-				    </id>
-				    <property name="name" type="string"/>
-				  </class>
+				<class name="Department" table="DEPARTMENTS">
+					<id name="id" type="long">
+					<generator class="identity"/>
+					</id>
+					<property name="name" type="string"/>
+				</class>
 				</hibernate-mapping>
 				""");
 

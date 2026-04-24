@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.api.export;
 
@@ -36,59 +23,59 @@ import org.hibernate.tool.reveng.api.xml.XMLPrettyPrinter;
  */
 public class DefaultArtifactCollector implements ArtifactCollector {
 
-    final protected Map<String, List<File>> files = new HashMap<>();
+	final protected Map<String, List<File>> files = new HashMap<>();
 
-    @Override
-    public void addFile(File file, String type) {
-        List<File> existing = files.computeIfAbsent( type, k -> new ArrayList<>() );
-        existing.add(file);
-    }
+	@Override
+	public void addFile(File file, String type) {
+		List<File> existing = files.computeIfAbsent( type, k -> new ArrayList<>() );
+		existing.add(file);
+	}
 
-    @Override
-    public int getFileCount(String type) {
-        List<File> existing = files.get(type);
+	@Override
+	public int getFileCount(String type) {
+		List<File> existing = files.get(type);
 
-        return (existing == null) ? 0 : existing.size();
-    }
+		return (existing == null) ? 0 : existing.size();
+	}
 
-    @Override
-    public File[] getFiles(String type) {
-        List<File> existing = files.get(type);
+	@Override
+	public File[] getFiles(String type) {
+		List<File> existing = files.get(type);
 
-        if (existing == null) {
-            return new File[0];
-        }
-        else {
-            return existing.toArray( new File[0] );
-        }
-    }
+		if (existing == null) {
+			return new File[0];
+		}
+		else {
+			return existing.toArray( new File[0] );
+		}
+	}
 
-    @Override
-    public Set<String> getFileTypes() {
-        return files.keySet();
-    }
+	@Override
+	public Set<String> getFileTypes() {
+		return files.keySet();
+	}
 
-    @Override
-    public void formatFiles() {
+	@Override
+	public void formatFiles() {
 
-        formatXml("xml");
-        formatXml("hbm.xml");
-        formatXml("cfg.xml");
+		formatXml("xml");
+		formatXml("hbm.xml");
+		formatXml("cfg.xml");
 
-    }
+	}
 
-    private void formatXml(String type) {
-        List<File> list = files.get(type);
-        if (list != null && !list.isEmpty()) {
-            for ( File xmlFile : list ) {
-                try {
-                    XMLPrettyPrinter.prettyPrintFile( xmlFile );
-                }
-                catch (IOException e) {
-                    throw new RuntimeException( "Could not format XML file: " + xmlFile, e );
-                }
-            }
-        }
-    }
+	private void formatXml(String type) {
+		List<File> list = files.get(type);
+		if (list != null && !list.isEmpty()) {
+			for ( File xmlFile : list ) {
+				try {
+					XMLPrettyPrinter.prettyPrintFile( xmlFile );
+				}
+				catch (IOException e) {
+					throw new RuntimeException( "Could not format XML file: " + xmlFile, e );
+				}
+			}
+		}
+	}
 
 }

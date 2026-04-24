@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.builder.hbm;
 
@@ -56,7 +43,6 @@ import org.hibernate.boot.models.annotations.internal.SQLRestrictionAnnotation;
 import org.hibernate.boot.models.annotations.internal.SQLUpdateAnnotation;
 import org.hibernate.boot.models.annotations.internal.SortComparatorAnnotation;
 import org.hibernate.boot.models.annotations.internal.SortNaturalAnnotation;
-import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.tool.reveng.internal.util.HbmEnumMapper;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
@@ -65,24 +51,24 @@ import org.hibernate.models.spi.ModelsContext;
 class HbmCollectionMetadataApplier {
 
 	static void applyCommonMetadata(DynamicFieldDetails field,
-									 String cascade,
-									 JaxbHbmFetchStyleWithSubselectEnum fetch,
-									 JaxbHbmLazyWithExtraEnum lazy,
-									 String where,
-									 int batchSize,
-									 JaxbHbmCacheType cache,
-									 List<JaxbHbmFilterType> filters,
-									 JaxbHbmCustomSqlDmlType sqlInsert,
-									 JaxbHbmCustomSqlDmlType sqlUpdate,
-									 JaxbHbmCustomSqlDmlType sqlDelete,
-									 JaxbHbmCustomSqlDmlType sqlDeleteAll,
-									 boolean mutable,
-									 boolean optimisticLock,
-									 String check,
-									 String table,
-									 String schema,
-									 String catalog,
-									 HbmBuildContext ctx) {
+									String cascade,
+									JaxbHbmFetchStyleWithSubselectEnum fetch,
+									JaxbHbmLazyWithExtraEnum lazy,
+									String where,
+									int batchSize,
+									JaxbHbmCacheType cache,
+									List<JaxbHbmFilterType> filters,
+									JaxbHbmCustomSqlDmlType sqlInsert,
+									JaxbHbmCustomSqlDmlType sqlUpdate,
+									JaxbHbmCustomSqlDmlType sqlDelete,
+									JaxbHbmCustomSqlDmlType sqlDeleteAll,
+									boolean mutable,
+									boolean optimisticLock,
+									String check,
+									String table,
+									String schema,
+									String catalog,
+									HbmBuildContext ctx) {
 		ModelsContext mc = ctx.getModelsContext();
 		applyCascade(field, cascade, ctx);
 		applyLazy(field, lazy, ctx);
@@ -99,8 +85,8 @@ class HbmCollectionMetadataApplier {
 	}
 
 	static void applyInverse(DynamicFieldDetails field, boolean inverse,
-							  DynamicClassDetails entityClass,
-							  HbmBuildContext ctx) {
+							DynamicClassDetails entityClass,
+							HbmBuildContext ctx) {
 		if (inverse) {
 			ctx.addFieldMetaAttribute(entityClass.getClassName(), field.getName(),
 					"hibernate.inverse", "true");
@@ -108,7 +94,7 @@ class HbmCollectionMetadataApplier {
 	}
 
 	static void applyCascade(DynamicFieldDetails field, String cascade,
-							  HbmBuildContext ctx) {
+							HbmBuildContext ctx) {
 		if (cascade != null && !cascade.isEmpty() && !"none".equals(cascade)) {
 			CascadeType[] cascadeTypes = parseCascade(cascade);
 			if (cascadeTypes.length > 0) {
@@ -124,8 +110,8 @@ class HbmCollectionMetadataApplier {
 	}
 
 	static void applyAccessAnnotation(DynamicFieldDetails field,
-									   String access,
-									   HbmBuildContext ctx) {
+									String access,
+									HbmBuildContext ctx) {
 		if (access == null || access.isEmpty()) {
 			return;
 		}
@@ -133,9 +119,11 @@ class HbmCollectionMetadataApplier {
 				JpaAnnotations.ACCESS.createUsage(ctx.getModelsContext());
 		if ("field".equals(access)) {
 			accessAnnotation.value(jakarta.persistence.AccessType.FIELD);
-		} else if ("property".equals(access)) {
+		}
+		else if ("property".equals(access)) {
 			accessAnnotation.value(jakarta.persistence.AccessType.PROPERTY);
-		} else {
+		}
+		else {
 			accessAnnotation.value(jakarta.persistence.AccessType.FIELD);
 		}
 		field.addAnnotationUsage(accessAnnotation);
@@ -152,7 +140,8 @@ class HbmCollectionMetadataApplier {
 					&& listIndex.getColumn() != null) {
 				columnName = listIndex.getColumn().getName();
 			}
-		} else if (index != null) {
+		}
+		else if (index != null) {
 			columnName = index.getColumnAttribute();
 		}
 		if (columnName != null && !columnName.isEmpty()) {
@@ -164,8 +153,8 @@ class HbmCollectionMetadataApplier {
 	}
 
 	static void applySortAnnotation(DynamicFieldDetails field,
-									 String sort,
-									 HbmBuildContext ctx) {
+									String sort,
+									HbmBuildContext ctx) {
 		if (sort == null || sort.isEmpty() || "unsorted".equals(sort)) {
 			return;
 		}
@@ -174,13 +163,15 @@ class HbmCollectionMetadataApplier {
 			SortNaturalAnnotation sortAnnotation =
 					HibernateAnnotations.SORT_NATURAL.createUsage(mc);
 			field.addAnnotationUsage(sortAnnotation);
-		} else {
+		}
+		else {
 			SortComparatorAnnotation sortAnnotation =
 					HibernateAnnotations.SORT_COMPARATOR.createUsage(mc);
 			try {
 				sortAnnotation.value(
 						(Class<? extends java.util.Comparator<?>>) Class.forName(sort));
-			} catch (ClassNotFoundException e) {
+			}
+		catch (ClassNotFoundException e) {
 				return;
 			}
 			field.addAnnotationUsage(sortAnnotation);
@@ -188,8 +179,8 @@ class HbmCollectionMetadataApplier {
 	}
 
 	static void applyOrderBy(DynamicFieldDetails field,
-							   String orderBy,
-							   HbmBuildContext ctx) {
+							String orderBy,
+							HbmBuildContext ctx) {
 		if (orderBy == null || orderBy.isEmpty()) {
 			return;
 		}
@@ -202,8 +193,8 @@ class HbmCollectionMetadataApplier {
 	// --- Join column helpers ---
 
 	static void addKeyJoinColumns(DynamicFieldDetails field,
-								   JaxbHbmKeyType key,
-								   HbmBuildContext ctx) {
+								JaxbHbmKeyType key,
+								HbmBuildContext ctx) {
 		if (key == null) {
 			return;
 		}
@@ -221,7 +212,8 @@ class HbmCollectionMetadataApplier {
 						JpaAnnotations.JOIN_COLUMN.createUsage(ctx.getModelsContext());
 				jc.name(columns.get(0).getName());
 				field.addAnnotationUsage(jc);
-			} else {
+			}
+		else {
 				jakarta.persistence.JoinColumn[] jcArray =
 						new jakarta.persistence.JoinColumn[columns.size()];
 				for (int i = 0; i < columns.size(); i++) {
@@ -254,7 +246,8 @@ class HbmCollectionMetadataApplier {
 					JpaAnnotations.JOIN_COLUMN.createUsage(ctx.getModelsContext());
 			jc.name(keyColumn);
 			jtAnnotation.joinColumns(new jakarta.persistence.JoinColumn[]{jc});
-		} else if (key.getColumn() != null && !key.getColumn().isEmpty()) {
+		}
+		else if (key.getColumn() != null && !key.getColumn().isEmpty()) {
 			List<JaxbHbmColumnType> keyCols = key.getColumn();
 			jakarta.persistence.JoinColumn[] jcArray =
 					new jakarta.persistence.JoinColumn[keyCols.size()];
@@ -273,13 +266,15 @@ class HbmCollectionMetadataApplier {
 					JpaAnnotations.JOIN_COLUMN.createUsage(ctx.getModelsContext());
 			ijc.name(m2mColumn);
 			jtAnnotation.inverseJoinColumns(new jakarta.persistence.JoinColumn[]{ijc});
-		} else {
+		}
+		else {
 			List<JaxbHbmColumnType> columns = new ArrayList<>();
 			List<String> formulas = new ArrayList<>();
 			for (Object item : manyToMany.getColumnOrFormula()) {
 				if (item instanceof JaxbHbmColumnType col) {
 					columns.add(col);
-				} else if (item instanceof String formula) {
+				}
+		else if (item instanceof String formula) {
 					formulas.add(formula);
 				}
 			}
@@ -305,8 +300,8 @@ class HbmCollectionMetadataApplier {
 	}
 
 	static void addCollectionTableFromKey(DynamicFieldDetails field,
-										   JaxbHbmKeyType key,
-										   HbmBuildContext ctx) {
+										JaxbHbmKeyType key,
+										HbmBuildContext ctx) {
 		if (key == null) {
 			return;
 		}
@@ -332,8 +327,8 @@ class HbmCollectionMetadataApplier {
 	// --- Private helpers for applyCommonMetadata ---
 
 	private static void applyLazy(DynamicFieldDetails field,
-								   JaxbHbmLazyWithExtraEnum lazy,
-								   HbmBuildContext ctx) {
+								JaxbHbmLazyWithExtraEnum lazy,
+								HbmBuildContext ctx) {
 		if (lazy == null) {
 			return;
 		}
@@ -348,7 +343,8 @@ class HbmCollectionMetadataApplier {
 			if (o2m != null) {
 				o2m.fetch(jakarta.persistence.FetchType.EAGER);
 			}
-		} else if (lazy == JaxbHbmLazyWithExtraEnum.EXTRA) {
+		}
+		else if (lazy == JaxbHbmLazyWithExtraEnum.EXTRA) {
 			DynamicClassDetails owner = (DynamicClassDetails) field.getDeclaringType();
 			ctx.addFieldMetaAttribute(owner.getClassName(), field.getName(),
 					"hibernate.lazy", "extra");
@@ -401,8 +397,8 @@ class HbmCollectionMetadataApplier {
 	}
 
 	private static void applyFilters(DynamicFieldDetails field,
-									  List<JaxbHbmFilterType> filters,
-									  ModelsContext mc) {
+									List<JaxbHbmFilterType> filters,
+									ModelsContext mc) {
 		if (filters == null || filters.isEmpty()) {
 			return;
 		}
@@ -410,7 +406,8 @@ class HbmCollectionMetadataApplier {
 			FilterAnnotation fa = HibernateAnnotations.FILTER.createUsage(mc);
 			applyFilter(fa, filters.get(0));
 			field.addAnnotationUsage(fa);
-		} else {
+		}
+		else {
 			FilterAnnotation[] filterAnnotations = new FilterAnnotation[filters.size()];
 			for (int i = 0; i < filters.size(); i++) {
 				FilterAnnotation fa = HibernateAnnotations.FILTER.createUsage(mc);
@@ -424,7 +421,7 @@ class HbmCollectionMetadataApplier {
 	}
 
 	private static void applyFilter(FilterAnnotation annotation,
-									  JaxbHbmFilterType filter) {
+									JaxbHbmFilterType filter) {
 		annotation.name(filter.getName());
 		String condition = filter.getCondition();
 		if (condition != null && !condition.isEmpty()) {
@@ -433,11 +430,11 @@ class HbmCollectionMetadataApplier {
 	}
 
 	private static void applySqlDml(DynamicFieldDetails field,
-									 JaxbHbmCustomSqlDmlType sqlInsert,
-									 JaxbHbmCustomSqlDmlType sqlUpdate,
-									 JaxbHbmCustomSqlDmlType sqlDelete,
-									 JaxbHbmCustomSqlDmlType sqlDeleteAll,
-									 ModelsContext mc) {
+									JaxbHbmCustomSqlDmlType sqlInsert,
+									JaxbHbmCustomSqlDmlType sqlUpdate,
+									JaxbHbmCustomSqlDmlType sqlDelete,
+									JaxbHbmCustomSqlDmlType sqlDeleteAll,
+									ModelsContext mc) {
 		if (sqlInsert != null) {
 			SQLInsertAnnotation annotation = HibernateAnnotations.SQL_INSERT.createUsage(mc);
 			annotation.sql(sqlInsert.getValue());
@@ -466,7 +463,7 @@ class HbmCollectionMetadataApplier {
 	}
 
 	private static void applyMutable(DynamicFieldDetails field,
-									  boolean mutable, ModelsContext mc) {
+									boolean mutable, ModelsContext mc) {
 		if (!mutable) {
 			field.addAnnotationUsage(
 					HibernateAnnotations.IMMUTABLE.createUsage(mc));
@@ -474,8 +471,8 @@ class HbmCollectionMetadataApplier {
 	}
 
 	private static void applyOptimisticLock(DynamicFieldDetails field,
-											 boolean optimisticLock,
-											 ModelsContext mc) {
+											boolean optimisticLock,
+											ModelsContext mc) {
 		if (!optimisticLock) {
 			OptimisticLockAnnotation olAnnotation =
 					HibernateAnnotations.OPTIMISTIC_LOCK.createUsage(mc);
@@ -495,8 +492,8 @@ class HbmCollectionMetadataApplier {
 	}
 
 	private static void applyCollectionTable(DynamicFieldDetails field,
-											  String table, String schema,
-											  String catalog, ModelsContext mc) {
+											String table, String schema,
+											String catalog, ModelsContext mc) {
 		if (table == null || table.isEmpty()) {
 			return;
 		}
@@ -504,7 +501,8 @@ class HbmCollectionMetadataApplier {
 				field.getDirectAnnotationUsage(jakarta.persistence.JoinTable.class);
 		if (jtAnnotation != null) {
 			jtAnnotation.name(table);
-		} else {
+		}
+		else {
 			jtAnnotation = JpaAnnotations.JOIN_TABLE.createUsage(mc);
 			jtAnnotation.name(table);
 			field.addAnnotationUsage(jtAnnotation);

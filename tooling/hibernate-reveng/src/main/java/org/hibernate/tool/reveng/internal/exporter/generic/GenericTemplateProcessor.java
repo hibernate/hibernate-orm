@@ -1,17 +1,6 @@
 /*
- * Copyright 2010 - 2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.exporter.generic;
 
@@ -68,7 +57,8 @@ class GenericTemplateProcessor {
 					freemarkerConfig.getTemplate(templateName);
 			template.process(model, output);
 			output.flush();
-		} catch (IOException | TemplateException e) {
+		}
+		catch (IOException | TemplateException e) {
 			throw new RuntimeException(
 					"Error processing template " + templateName, e);
 		}
@@ -104,11 +94,13 @@ class GenericTemplateProcessor {
 			outputFile.getParentFile().mkdirs();
 			try (Writer writer = new FileWriter(outputFile)) {
 				entityExporter.accept(writer, entity);
-			} catch (RuntimeException e) {
+			}
+		catch (RuntimeException e) {
 				throw new RuntimeException(
 						"Error while processing " + entityType
 						+ ": " + getSimpleName(entity), e);
-			} catch (IOException e) {
+			}
+		catch (IOException e) {
 				throw new RuntimeException(
 						"Error while processing " + entityType
 						+ ": " + getSimpleName(entity), e);
@@ -127,10 +119,12 @@ class GenericTemplateProcessor {
 		model.put("entities", entities);
 		try (Writer writer = new FileWriter(outputFile)) {
 			processTemplate(model, writer);
-		} catch (RuntimeException e) {
+		}
+		catch (RuntimeException e) {
 			throw new RuntimeException(
 					"Error while processing Configuration", e);
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			throw new RuntimeException(
 					"Error while processing Configuration", e);
 		}
@@ -143,10 +137,12 @@ class GenericTemplateProcessor {
 			if (filePattern.contains("{class-name}")) {
 				modes.add("entity");
 				modes.add("component");
-			} else {
+			}
+		else {
 				modes.add("configuration");
 			}
-		} else {
+		}
+		else {
 			StringTokenizer tokens =
 					new StringTokenizer(forEach, ",");
 			while (tokens.hasMoreTokens()) {
@@ -220,7 +216,8 @@ class GenericTemplateProcessor {
 			Class<?> toolClass = Class.forName(value.toString());
 			Constructor<?> ctor = toolClass.getConstructor();
 			model.put(toolKey, ctor.newInstance());
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			throw new RuntimeException(
 					"Exception when instantiating tool "
 					+ key + " with " + value, e);
@@ -258,7 +255,8 @@ class GenericTemplateProcessor {
 				if (dir.isDirectory()) {
 					try {
 						loaders.add(new FileTemplateLoader(dir));
-					} catch (IOException e) {
+					}
+		catch (IOException e) {
 						throw new RuntimeException(
 								"Failed to create template loader"
 								+ " for: " + path, e);

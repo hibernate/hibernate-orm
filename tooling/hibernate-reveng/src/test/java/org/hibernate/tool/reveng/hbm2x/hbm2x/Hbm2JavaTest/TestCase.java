@@ -1,21 +1,7 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.tool.reveng.hbm2x.Hbm2JavaTest;
 
 import org.hibernate.tool.reveng.api.export.Exporter;
@@ -60,13 +46,13 @@ public class TestCase {
 
 	private MetadataDescriptor metadataDescriptor = null;
 	private File srcDir = null;
-    private DefaultArtifactCollector artifactCollector = null;
+	private DefaultArtifactCollector artifactCollector = null;
 
 	@BeforeEach
 	public void setUp() throws Exception {
 		srcDir = new File(outputFolder, "src");
 		assertTrue(srcDir.mkdir());
-        File resourcesDir = new File(outputFolder, "resources");
+		File resourcesDir = new File(outputFolder, "resources");
 		assertTrue(resourcesDir.mkdir());
 		metadataDescriptor = HibernateUtil
 				.initializeMetadataDescriptor(this, HBM_XML_FILES, resourcesDir);
@@ -320,7 +306,7 @@ public class TestCase {
 		ImportContext ic = new ImportContext("foobar");
 		assertEquals("CascadeType", ic.importType("jakarta.persistence.CascadeType"));
 		assertEquals("org.hibernate.annotations.CascadeType", ic.importType("org.hibernate.annotations.CascadeType"));
-        assertFalse(ic.generateImports().contains("hibernate"), "The hibernate annotation should not be imported to avoid name clashes");
+		assertFalse(ic.generateImports().contains("hibernate"), "The hibernate annotation should not be imported to avoid name clashes");
 	}
 
 	@Test
@@ -337,9 +323,9 @@ public class TestCase {
 		assertEquals("Collection<org.marvel.Hulk>[]", context.importType("java.util.Collection<org.marvel.Hulk>[]"));
 		assertEquals("Map<java.lang.String, org.marvel.Hulk>", context.importType("java.util.Map<java.lang.String, org.marvel.Hulk>"));
 		String string = context.generateImports();
-        assertFalse(string.contains("import org.hibernate.Session;"));
+		assertFalse(string.contains("import org.hibernate.Session;"));
 		assertTrue(string.indexOf("import org.test.Entity;")>0);
-        assertFalse(string.contains("import org.other.test.Entity;"), "Entity can only be imported once");
+		assertFalse(string.contains("import org.other.test.Entity;"), "Entity can only be imported once");
 		assertFalse(string.contains("<"));
 		assertEquals("Outer.Entity", context.importType("org.test.Outer$Entity"));
 		assertEquals("org.other.test.Outer.Entity", context.importType("org.other.test.Outer$Entity"));
@@ -355,8 +341,8 @@ public class TestCase {
 		assertEquals("List<org.hibernate.Test.Entry>", context.importType( "java.util.List<org.hibernate.Test$Entry>" ));
 		string = context.generateImports();
 		assertTrue(string.contains("import java.util.Map"));
-        assertFalse(string.contains("import java.utilMap$"));
-        assertFalse(string.contains("$"));
+		assertFalse(string.contains("import java.utilMap$"));
+		assertFalse(string.contains("$"));
 	}
 
 	@Test

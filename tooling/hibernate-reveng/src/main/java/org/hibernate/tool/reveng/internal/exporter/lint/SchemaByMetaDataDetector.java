@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.exporter.lint;
 
@@ -86,7 +73,8 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 			connectionProvider =
 					serviceRegistry.getService(ConnectionProvider.class);
 			revengDialect.configure(connectionProvider);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			// Database not available — schema checks will be skipped
 			revengDialect = null;
 		}
@@ -103,7 +91,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
 	@Override
 	protected void visitTable(ClassDetails entity,
-							  IssueCollector collector) {
+							IssueCollector collector) {
 		String tableName = getTableName(entity);
 		String schema = getTableSchema(entity);
 		String catalog = getTableCatalog(entity);
@@ -131,10 +119,10 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 	}
 
 	private void visitColumn(ClassDetails entity,
-							 FieldDetails field,
-							 Column column,
-							 Map<String, Map<String, Object>> dbColumns,
-							 IssueCollector collector) {
+							FieldDetails field,
+							Column column,
+							Map<String, Map<String, Object>> dbColumns,
+							IssueCollector collector) {
 		String tableName = getTableName(entity);
 		String schema = getTableSchema(entity);
 		String catalog = getTableCatalog(entity);
@@ -177,9 +165,9 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 
 	@Override
 	protected void visitColumn(ClassDetails entity,
-							   FieldDetails field,
-							   Column column,
-							   IssueCollector collector) {
+							FieldDetails field,
+							Column column,
+							IssueCollector collector) {
 		// Not used — we override visitTable to pass dbColumns through
 	}
 
@@ -233,14 +221,15 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		GenerationType strategy = gv.strategy();
 		if (strategy == GenerationType.SEQUENCE) {
 			return resolveSequenceName(field, gv);
-		} else if (strategy == GenerationType.TABLE) {
+		}
+		else if (strategy == GenerationType.TABLE) {
 			return resolveGeneratorTableName(field, gv);
 		}
 		return null;
 	}
 
 	private String resolveSequenceName(FieldDetails field,
-									   GeneratedValue gv) {
+									GeneratedValue gv) {
 		String generatorName = gv.generator();
 		if (generatorName != null && !generatorName.isEmpty()) {
 			SequenceGenerator sg = field.getDirectAnnotationUsage(
@@ -256,7 +245,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 	}
 
 	private String resolveGeneratorTableName(FieldDetails field,
-											  GeneratedValue gv) {
+											GeneratedValue gv) {
 		String generatorName = gv.generator();
 		if (generatorName != null && !generatorName.isEmpty()) {
 			TableGenerator tg = field.getDirectAnnotationUsage(
@@ -281,7 +270,8 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 					return null;
 				}
 				tableIter.next();
-			} finally {
+			}
+		finally {
 				closeQuietly(tableIter);
 			}
 
@@ -297,11 +287,13 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 						result.put(colName.toUpperCase(), col);
 					}
 				}
-			} finally {
+			}
+		finally {
 				closeQuietly(columnIter);
 			}
 			return result;
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			// Database access failed — treat as missing table
 			return null;
 		}
@@ -310,7 +302,8 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 	private void closeQuietly(Iterator<?> iter) {
 		try {
 			revengDialect.close(iter);
-		} catch (Exception ignored) {
+		}
+		catch (Exception ignored) {
 			// Iterator may not have been fully initialized
 		}
 	}
@@ -333,7 +326,8 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		String[] parts = StringHelper.split(".", key);
 		if (parts.length == 3) {
 			return sequences.contains(parts[2].toLowerCase());
-		} else if (parts.length == 2) {
+		}
+		else if (parts.length == 2) {
 			return sequences.contains(parts[1].toLowerCase());
 		}
 		return false;
@@ -346,10 +340,12 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 			catalog = parts[0];
 			schema = parts[1];
 			table = parts[2];
-		} else if (parts.length == 2) {
+		}
+		else if (parts.length == 2) {
 			schema = parts[0];
 			table = parts[1];
-		} else {
+		}
+		else {
 			table = parts[0];
 		}
 		try {
@@ -357,10 +353,12 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 					revengDialect.getTables(catalog, schema, table);
 			try {
 				return iter.hasNext();
-			} finally {
+			}
+		finally {
 				closeQuietly(iter);
 			}
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			return false;
 		}
 	}

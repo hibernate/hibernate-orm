@@ -1,17 +1,6 @@
 /*
- * Copyright 2010 - 2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.exporter.entity;
 
@@ -55,7 +44,6 @@ import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
-import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.ParameterizedTypeDetails;
@@ -91,31 +79,31 @@ public class TemplateHelper {
 	private final QueryAndFilterHelper queryAndFilterHelper;
 
 	public TemplateHelper(ClassDetails classDetails, ModelsContext modelsContext,
-				   ImportContext importContext, boolean annotated) {
+				ImportContext importContext, boolean annotated) {
 		this(classDetails, modelsContext, importContext, annotated, true,
 				Collections.emptyMap(), Collections.emptyMap());
 	}
 
 	TemplateHelper(ClassDetails classDetails, ModelsContext modelsContext,
-				   ImportContext importContext, boolean annotated,
-				   boolean useGenerics) {
+				ImportContext importContext, boolean annotated,
+				boolean useGenerics) {
 		this(classDetails, modelsContext, importContext, annotated, useGenerics,
 				Collections.emptyMap(), Collections.emptyMap());
 	}
 
 	public TemplateHelper(ClassDetails classDetails, ModelsContext modelsContext,
-				   ImportContext importContext, boolean annotated,
-				   Map<String, List<String>> classMetaAttributes,
-				   Map<String, Map<String, List<String>>> fieldMetaAttributes) {
+				ImportContext importContext, boolean annotated,
+				Map<String, List<String>> classMetaAttributes,
+				Map<String, Map<String, List<String>>> fieldMetaAttributes) {
 		this(classDetails, modelsContext, importContext, annotated, true,
 				classMetaAttributes, fieldMetaAttributes);
 	}
 
 	TemplateHelper(ClassDetails classDetails, ModelsContext modelsContext,
-				   ImportContext importContext, boolean annotated,
-				   boolean useGenerics,
-				   Map<String, List<String>> classMetaAttributes,
-				   Map<String, Map<String, List<String>>> fieldMetaAttributes) {
+				ImportContext importContext, boolean annotated,
+				boolean useGenerics,
+				Map<String, List<String>> classMetaAttributes,
+				Map<String, Map<String, List<String>>> fieldMetaAttributes) {
 		this(classDetails, modelsContext, importContext, annotated, useGenerics,
 				classMetaAttributes, fieldMetaAttributes, Collections.emptyMap());
 	}
@@ -125,11 +113,11 @@ public class TemplateHelper {
 	}
 
 	TemplateHelper(ClassDetails classDetails, ModelsContext modelsContext,
-				   ImportContext importContext, boolean annotated,
-				   boolean useGenerics,
-				   Map<String, List<String>> classMetaAttributes,
-				   Map<String, Map<String, List<String>>> fieldMetaAttributes,
-				   Map<String, Map<String, List<String>>> allClassMetaAttributes) {
+				ImportContext importContext, boolean annotated,
+				boolean useGenerics,
+				Map<String, List<String>> classMetaAttributes,
+				Map<String, Map<String, List<String>>> fieldMetaAttributes,
+				Map<String, Map<String, List<String>>> allClassMetaAttributes) {
 		this.classDetails = classDetails;
 		this.modelsContext = modelsContext;
 		this.importContext = importContext;
@@ -442,7 +430,8 @@ public class TemplateHelper {
 				String keySimple = importType(boxPrimitive(args.get(0).determineRawClass().getClassName()));
 				String valueSimple = importType(boxPrimitive(args.get(1).determineRawClass().getClassName()));
 				return simpleName + "<" + keySimple + ", " + valueSimple + ">";
-			} else if (!args.isEmpty()) {
+			}
+		else if (!args.isEmpty()) {
 				String elementSimple = importType(boxPrimitive(
 						args.get(args.size() - 1).determineRawClass().getClassName()));
 				return simpleName + "<" + elementSimple + ">";
@@ -733,7 +722,8 @@ public class TemplateHelper {
 					props.add(new ToStringProperty(field.getName(), getGetterName(field)));
 				}
 			}
-		} else {
+		}
+		else {
 			FieldDetails cid = getCompositeIdField();
 			if (cid != null) {
 				props.add(new ToStringProperty(cid.getName(), getGetterName(cid)));
@@ -810,13 +800,13 @@ public class TemplateHelper {
 	public record NamedQueryInfo(String name, String query) {}
 
 	public record NamedNativeQueryInfo(String name, String query,
-									   String resultClass, String resultSetMapping) {}
+									String resultClass, String resultSetMapping) {}
 
 	public record SqlResultSetMappingInfo(String name, List<EntityResultInfo> entityResults,
-										  List<ColumnResultInfo> columnResults) {}
+										List<ColumnResultInfo> columnResults) {}
 
 	public record EntityResultInfo(String entityClass, String discriminatorColumn,
-								   List<FieldResultInfo> fieldResults) {}
+								List<FieldResultInfo> fieldResults) {}
 
 	public record FieldResultInfo(String name, String column) {}
 

@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.cfg.DriverMetaData;
 
@@ -60,32 +47,32 @@ public class TestCase {
 	}
 
 	@Test
-	public void testExportedKeys() {	
+	public void testExportedKeys() {
 		RevengDialect dialect = new JDBCRevengDialect();
 		StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
 		ServiceRegistry serviceRegistry = ssrb.build();
-		ConnectionProvider connectionProvider = 
-				serviceRegistry.getService(ConnectionProvider.class);			
+		ConnectionProvider connectionProvider =
+				serviceRegistry.getService(ConnectionProvider.class);
 		dialect.configure(connectionProvider);
 		String catalog = properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
-		String schema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);		
-		Iterator<Map<String,Object>> tables = 
+		String schema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
+		Iterator<Map<String,Object>> tables =
 				dialect.getTables(
-						catalog, 
-						schema, 
-						"TAB_MASTER"); 		
+						catalog,
+						schema,
+						"TAB_MASTER");
 		boolean foundMaster = false;
 		while(tables.hasNext()) {
 			Map<?,?> map = tables.next();
 			String tableName = (String) map.get("TABLE_NAME");
 			String schemaName = (String) map.get("TABLE_SCHEM");
-	        String catalogName = (String) map.get("TABLE_CAT");        
-	        if(tableName.equals("TAB_MASTER")) {
+			String catalogName = (String) map.get("TABLE_CAT");
+			if(tableName.equals("TAB_MASTER")) {
 				foundMaster = true;
-				Iterator<?> exportedKeys = 
+				Iterator<?> exportedKeys =
 						dialect.getExportedKeys(
-								catalogName, 
-								schemaName, 
+								catalogName,
+								schemaName,
 								tableName );
 				int cnt = 0;
 				while ( exportedKeys.hasNext() ) {
@@ -94,46 +81,46 @@ public class TestCase {
 				}
 				assertEquals(1,cnt);
 			}
-		}	
+		}
 		assertTrue(foundMaster);
 	}
 
 	@Test
-	public void testDataType() {	
+	public void testDataType() {
 		RevengDialect dialect = RevengDialectFactory
 				.fromDialectName(properties.getProperty(AvailableSettings.DIALECT));
-		ConnectionProvider connectionProvider = 
+		ConnectionProvider connectionProvider =
 				serviceRegistry.getService(ConnectionProvider.class);
-        assert dialect != null;
-        dialect.configure(connectionProvider);
+		assert dialect != null;
+		dialect.configure(connectionProvider);
 		String catalog = properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
-		String schema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);		
-		Iterator<?> tables = 
-				dialect.getColumns( 
-						catalog, 
-						schema, 
-						"test", 
-						null ); 
+		String schema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
+		Iterator<?> tables =
+				dialect.getColumns(
+						catalog,
+						schema,
+						"test",
+						null );
 		while(tables.hasNext()) {
-			Map<?,?> map = (Map<?,?>) tables.next();			
-			System.out.println(map);			
+			Map<?,?> map = (Map<?,?>) tables.next();
+			System.out.println(map);
 		}
 	}
-	
+
 	@Test
 	public void testCaseTest() {
 		RevengDialect dialect = new JDBCRevengDialect();
-		ConnectionProvider connectionProvider = 
+		ConnectionProvider connectionProvider =
 				serviceRegistry.getService(ConnectionProvider.class);
 		dialect.configure(connectionProvider);
 		String catalog = properties.getProperty(AvailableSettings.DEFAULT_CATALOG);
-		String schema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);		
-		Iterator<Map<String, Object>> tables = 
+		String schema = properties.getProperty(AvailableSettings.DEFAULT_SCHEMA);
+		Iterator<Map<String, Object>> tables =
 				dialect.getTables(
-						catalog, 
-						schema, 
-						"TAB_MASTER");	
-		
+						catalog,
+						schema,
+						"TAB_MASTER");
+
 		JUnitUtil.assertIteratorContainsExactly(null, tables, 1);
 	}
 

@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.builder.hbm;
 
@@ -46,7 +33,6 @@ import org.hibernate.boot.models.annotations.internal.SecondaryTableJpaAnnotatio
 import org.hibernate.boot.models.annotations.internal.SecondaryTablesJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.SubselectAnnotation;
 import org.hibernate.boot.models.annotations.internal.SynchronizeAnnotation;
-import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.spi.ModelsContext;
@@ -64,8 +50,8 @@ class HbmEntityBehaviorBuilder {
 	// --- SQL Insert / Update / Delete ---
 
 	static void processSqlStatements(DynamicClassDetails entityClass,
-									 JaxbHbmRootEntityType entityType,
-									 HbmBuildContext ctx) {
+									JaxbHbmRootEntityType entityType,
+									HbmBuildContext ctx) {
 		ModelsContext mc = ctx.getModelsContext();
 
 		JaxbHbmCustomSqlDmlType sqlInsert = entityType.getSqlInsert();
@@ -96,8 +82,8 @@ class HbmEntityBehaviorBuilder {
 	// --- Secondary Tables (<join>) ---
 
 	static void processSecondaryTables(DynamicClassDetails entityClass,
-									   List<JaxbHbmSecondaryTableType> joins,
-									   HbmBuildContext ctx) {
+									List<JaxbHbmSecondaryTableType> joins,
+									HbmBuildContext ctx) {
 		if (joins == null || joins.isEmpty()) {
 			return;
 		}
@@ -108,7 +94,8 @@ class HbmEntityBehaviorBuilder {
 			applySecondaryTable(stAnnotation, joins.get(0), mc);
 			entityClass.addAnnotationUsage(stAnnotation);
 			processJoinAttributes(entityClass, joins.get(0), ctx);
-		} else {
+		}
+		else {
 			SecondaryTableJpaAnnotation[] stAnnotations =
 					new SecondaryTableJpaAnnotation[joins.size()];
 			for (int i = 0; i < joins.size(); i++) {
@@ -126,8 +113,8 @@ class HbmEntityBehaviorBuilder {
 	}
 
 	private static void processJoinAttributes(DynamicClassDetails entityClass,
-											   JaxbHbmSecondaryTableType join,
-											   HbmBuildContext ctx) {
+											JaxbHbmSecondaryTableType join,
+											HbmBuildContext ctx) {
 		if (join.getAttributes() != null && !join.getAttributes().isEmpty()) {
 			HbmSubclassBuilder.processAttributes(entityClass,
 					join.getAttributes(), null, ctx);
@@ -135,8 +122,8 @@ class HbmEntityBehaviorBuilder {
 	}
 
 	private static void applySecondaryTable(SecondaryTableJpaAnnotation annotation,
-											 JaxbHbmSecondaryTableType join,
-											 ModelsContext mc) {
+											JaxbHbmSecondaryTableType join,
+											ModelsContext mc) {
 		annotation.name(join.getTable());
 		if (join.getSchema() != null && !join.getSchema().isEmpty()) {
 			annotation.schema(join.getSchema());
@@ -160,7 +147,8 @@ class HbmEntityBehaviorBuilder {
 					JpaAnnotations.PRIMARY_KEY_JOIN_COLUMN.createUsage(mc);
 			pkJoinCol.name(columnAttr);
 			annotation.pkJoinColumns(new PrimaryKeyJoinColumn[]{pkJoinCol});
-		} else if (columns != null && !columns.isEmpty()) {
+		}
+		else if (columns != null && !columns.isEmpty()) {
 			PrimaryKeyJoinColumn[] pkJoinCols =
 					new PrimaryKeyJoinColumn[columns.size()];
 			for (int i = 0; i < columns.size(); i++) {
@@ -176,8 +164,8 @@ class HbmEntityBehaviorBuilder {
 	// --- Entity behavioral attributes ---
 
 	static void processEntityBehavior(DynamicClassDetails entityClass,
-									  JaxbHbmRootEntityType entityType,
-									  HbmBuildContext ctx) {
+									JaxbHbmRootEntityType entityType,
+									HbmBuildContext ctx) {
 		ModelsContext mc = ctx.getModelsContext();
 		applyMutability(entityClass, entityType, mc);
 		applyDynamicInsertUpdate(entityClass, entityType, mc);
@@ -193,8 +181,8 @@ class HbmEntityBehaviorBuilder {
 	}
 
 	private static void applyMutability(DynamicClassDetails entityClass,
-										 JaxbHbmRootEntityType entityType,
-										 ModelsContext mc) {
+										JaxbHbmRootEntityType entityType,
+										ModelsContext mc) {
 		if (!entityType.isMutable()) {
 			entityClass.addAnnotationUsage(
 					HibernateAnnotations.IMMUTABLE.createUsage(mc));
@@ -202,8 +190,8 @@ class HbmEntityBehaviorBuilder {
 	}
 
 	private static void applyDynamicInsertUpdate(DynamicClassDetails entityClass,
-												  JaxbHbmRootEntityType entityType,
-												  ModelsContext mc) {
+												JaxbHbmRootEntityType entityType,
+												ModelsContext mc) {
 		if (entityType.isDynamicInsert()) {
 			entityClass.addAnnotationUsage(
 					HibernateAnnotations.DYNAMIC_INSERT.createUsage(mc));
@@ -306,8 +294,8 @@ class HbmEntityBehaviorBuilder {
 	}
 
 	private static void applyComment(DynamicClassDetails entityClass,
-									  JaxbHbmRootEntityType entityType,
-									  ModelsContext mc) {
+									JaxbHbmRootEntityType entityType,
+									ModelsContext mc) {
 		String comment = entityType.getComment();
 		if (comment != null && !comment.isEmpty()) {
 			CommentAnnotation commentAnnotation =
@@ -318,8 +306,8 @@ class HbmEntityBehaviorBuilder {
 	}
 
 	private static void applySynchronize(DynamicClassDetails entityClass,
-										  JaxbHbmRootEntityType entityType,
-										  ModelsContext mc) {
+										JaxbHbmRootEntityType entityType,
+										ModelsContext mc) {
 		List<JaxbHbmSynchronizeType> synchronize = entityType.getSynchronize();
 		if (synchronize != null && !synchronize.isEmpty()) {
 			String[] tables = synchronize.stream()
@@ -335,8 +323,8 @@ class HbmEntityBehaviorBuilder {
 	// --- Concrete Proxy (proxy/lazy) ---
 
 	static void processProxy(DynamicClassDetails entityClass,
-							 JaxbHbmRootEntityType entityType,
-							 HbmBuildContext ctx) {
+							JaxbHbmRootEntityType entityType,
+							HbmBuildContext ctx) {
 		String proxy = entityType.getProxy();
 		Boolean lazy = entityType.isLazy();
 		if (proxy != null && !proxy.isEmpty()) {
@@ -348,7 +336,8 @@ class HbmEntityBehaviorBuilder {
 				ctx.addClassMetaAttribute(entityClass.getClassName(), "implements", proxyFqn);
 				ctx.addClassMetaAttribute(entityClass.getClassName(), "hibernate.proxy", proxyFqn);
 			}
-		} else if (lazy != null && lazy) {
+		}
+		else if (lazy != null && lazy) {
 			entityClass.addAnnotationUsage(
 					HibernateAnnotations.CONCRETE_PROXY.createUsage(
 							ctx.getModelsContext()));
@@ -358,8 +347,8 @@ class HbmEntityBehaviorBuilder {
 	// --- Loader ---
 
 	static void processLoader(DynamicClassDetails entityClass,
-							  JaxbHbmLoaderType loader,
-							  HbmBuildContext ctx) {
+							JaxbHbmLoaderType loader,
+							HbmBuildContext ctx) {
 		if (loader == null) {
 			return;
 		}

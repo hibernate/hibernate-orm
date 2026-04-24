@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.builder.hbm;
 
@@ -48,8 +35,8 @@ import jakarta.persistence.GenerationType;
 public class HbmIdBuilder {
 
 	public static void processId(DynamicClassDetails entityClass,
-								  JaxbHbmSimpleIdType id,
-								  HbmBuildContext ctx) {
+								JaxbHbmSimpleIdType id,
+								HbmBuildContext ctx) {
 		if (id == null) {
 			return;
 		}
@@ -100,9 +87,9 @@ public class HbmIdBuilder {
 	}
 
 	public static void processCompositeId(DynamicClassDetails entityClass,
-										   JaxbHbmCompositeIdType compositeId,
-										   String defaultPackage,
-										   HbmBuildContext ctx) {
+										JaxbHbmCompositeIdType compositeId,
+										String defaultPackage,
+										HbmBuildContext ctx) {
 		if (compositeId == null) {
 			return;
 		}
@@ -112,16 +99,17 @@ public class HbmIdBuilder {
 			// Named composite-id class: create a separate @Embeddable class
 			// and add an @EmbeddedId field on the entity
 			processNamedCompositeId(entityClass, compositeId, defaultPackage, ctx);
-		} else {
+		}
+		else {
 			// Inline composite-id: put @Id on each key property directly
 			processInlineCompositeId(entityClass, compositeId, defaultPackage, ctx);
 		}
 	}
 
 	private static void processNamedCompositeId(DynamicClassDetails entityClass,
-												 JaxbHbmCompositeIdType compositeId,
-												 String defaultPackage,
-												 HbmBuildContext ctx) {
+												JaxbHbmCompositeIdType compositeId,
+												String defaultPackage,
+												HbmBuildContext ctx) {
 		String className = compositeId.getClazz();
 		String fullClassName = HbmTypeResolver.resolveClassName(className, defaultPackage);
 		String simpleName = HbmTypeResolver.simpleName(fullClassName);
@@ -144,7 +132,8 @@ public class HbmIdBuilder {
 				DynamicFieldDetails field = ctx.createField(embeddableClass, name, javaType);
 				ctx.addColumnAnnotation(field, keyAttr.getColumn(),
 						keyAttr.getColumnAttribute(), name);
-			} else if (keyProp instanceof JaxbHbmCompositeKeyManyToOneType keyM2o) {
+			}
+		else if (keyProp instanceof JaxbHbmCompositeKeyManyToOneType keyM2o) {
 				String name = keyM2o.getName();
 				String targetClassName = keyM2o.getClazz();
 				String fullTargetName = HbmTypeResolver.resolveClassName(
@@ -177,9 +166,9 @@ public class HbmIdBuilder {
 	}
 
 	private static void processInlineCompositeId(DynamicClassDetails entityClass,
-												  JaxbHbmCompositeIdType compositeId,
-												  String defaultPackage,
-												  HbmBuildContext ctx) {
+												JaxbHbmCompositeIdType compositeId,
+												String defaultPackage,
+												HbmBuildContext ctx) {
 		for (Object keyProp : compositeId.getKeyPropertyOrKeyManyToOne()) {
 			if (keyProp instanceof JaxbHbmCompositeKeyBasicAttributeType keyAttr) {
 				String name = keyAttr.getName();
@@ -190,7 +179,8 @@ public class HbmIdBuilder {
 				IdJpaAnnotation idAnnotation = JpaAnnotations.ID.createUsage(ctx.getModelsContext());
 				field.addAnnotationUsage(idAnnotation);
 				ctx.addColumnAnnotation(field, keyAttr.getColumn(), keyAttr.getColumnAttribute(), name);
-			} else if (keyProp instanceof JaxbHbmCompositeKeyManyToOneType keyM2o) {
+			}
+		else if (keyProp instanceof JaxbHbmCompositeKeyManyToOneType keyM2o) {
 				String name = keyM2o.getName();
 				String targetClassName = keyM2o.getClazz();
 				String fullTargetName = HbmTypeResolver.resolveClassName(targetClassName, defaultPackage);
@@ -240,7 +230,8 @@ public class HbmIdBuilder {
 			seqGen.name(generatorName);
 			seqGen.sequenceName(generatorName);
 			field.addAnnotationUsage(seqGen);
-		} else if (genType == GenerationType.TABLE) {
+		}
+		else if (genType == GenerationType.TABLE) {
 			TableGeneratorJpaAnnotation tableGen =
 					JpaAnnotations.TABLE_GENERATOR.createUsage(
 							ctx.getModelsContext());

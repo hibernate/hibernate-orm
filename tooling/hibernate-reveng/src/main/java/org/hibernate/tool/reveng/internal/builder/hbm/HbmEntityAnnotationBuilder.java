@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.builder.hbm;
 
@@ -40,20 +27,20 @@ import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 public class HbmEntityAnnotationBuilder {
 
 	public static void processFilters(DynamicClassDetails entityClass,
-									   List<JaxbHbmFilterType> filters,
-									   HbmBuildContext ctx) {
+									List<JaxbHbmFilterType> filters,
+									HbmBuildContext ctx) {
 		HbmFilterAndQueryBuilder.processFilters(entityClass, filters, ctx);
 	}
 
 	public static void processFilterDefs(DynamicClassDetails entityClass,
-										  List<JaxbHbmFilterDefinitionType> filterDefs,
-										  HbmBuildContext ctx) {
+										List<JaxbHbmFilterDefinitionType> filterDefs,
+										HbmBuildContext ctx) {
 		HbmFilterAndQueryBuilder.processFilterDefs(entityClass, filterDefs, ctx);
 	}
 
 	public static void processFetchProfiles(DynamicClassDetails entityClass,
-											 List<JaxbHbmFetchProfileType> fetchProfiles,
-											 HbmBuildContext ctx) {
+											List<JaxbHbmFetchProfileType> fetchProfiles,
+											HbmBuildContext ctx) {
 		HbmFilterAndQueryBuilder.processFetchProfiles(entityClass, fetchProfiles, ctx);
 	}
 
@@ -71,57 +58,57 @@ public class HbmEntityAnnotationBuilder {
 	}
 
 	public static void processNamedNativeQueries(DynamicClassDetails entityClass,
-												  List<JaxbHbmNamedNativeQueryType> queries,
-												  HbmBuildContext ctx) {
+												List<JaxbHbmNamedNativeQueryType> queries,
+												HbmBuildContext ctx) {
 		HbmFilterAndQueryBuilder.processNamedNativeQueries(entityClass, queries, ctx, false);
 	}
 
 	public static void processNamedNativeQueries(DynamicClassDetails entityClass,
-												  List<JaxbHbmNamedNativeQueryType> queries,
-												  HbmBuildContext ctx,
-												  boolean mappingLevel) {
+												List<JaxbHbmNamedNativeQueryType> queries,
+												HbmBuildContext ctx,
+												boolean mappingLevel) {
 		HbmFilterAndQueryBuilder.processNamedNativeQueries(entityClass, queries, ctx, mappingLevel);
 	}
 
 	public static void processResultSetMappings(DynamicClassDetails entityClass,
-												 List<JaxbHbmResultSetMappingType> resultsets,
-												 HbmBuildContext ctx) {
+												List<JaxbHbmResultSetMappingType> resultsets,
+												HbmBuildContext ctx) {
 		HbmFilterAndQueryBuilder.processResultSetMappings(entityClass, resultsets, ctx);
 	}
 
 	public static void processMappingLevelAnnotations(DynamicClassDetails entityClass,
-													   JaxbHbmHibernateMapping mapping,
-													   HbmBuildContext ctx) {
+													JaxbHbmHibernateMapping mapping,
+													HbmBuildContext ctx) {
 		HbmFilterAndQueryBuilder.processMappingLevelAnnotations(entityClass, mapping, ctx);
 	}
 
 	public static void processSqlStatements(DynamicClassDetails entityClass,
-											 JaxbHbmRootEntityType entityType,
-											 HbmBuildContext ctx) {
+											JaxbHbmRootEntityType entityType,
+											HbmBuildContext ctx) {
 		HbmEntityBehaviorBuilder.processSqlStatements(entityClass, entityType, ctx);
 	}
 
 	public static void processSecondaryTables(DynamicClassDetails entityClass,
-											   List<JaxbHbmSecondaryTableType> joins,
-											   HbmBuildContext ctx) {
+											List<JaxbHbmSecondaryTableType> joins,
+											HbmBuildContext ctx) {
 		HbmEntityBehaviorBuilder.processSecondaryTables(entityClass, joins, ctx);
 	}
 
 	public static void processEntityBehavior(DynamicClassDetails entityClass,
-											  JaxbHbmRootEntityType entityType,
-											  HbmBuildContext ctx) {
+											JaxbHbmRootEntityType entityType,
+											HbmBuildContext ctx) {
 		HbmEntityBehaviorBuilder.processEntityBehavior(entityClass, entityType, ctx);
 	}
 
 	public static void processProxy(DynamicClassDetails entityClass,
-									 JaxbHbmRootEntityType entityType,
-									 HbmBuildContext ctx) {
+									JaxbHbmRootEntityType entityType,
+									HbmBuildContext ctx) {
 		HbmEntityBehaviorBuilder.processProxy(entityClass, entityType, ctx);
 	}
 
 	public static void processLoader(DynamicClassDetails entityClass,
-									   JaxbHbmLoaderType loader,
-									   HbmBuildContext ctx) {
+									JaxbHbmLoaderType loader,
+									HbmBuildContext ctx) {
 		HbmEntityBehaviorBuilder.processLoader(entityClass, loader, ctx);
 	}
 }

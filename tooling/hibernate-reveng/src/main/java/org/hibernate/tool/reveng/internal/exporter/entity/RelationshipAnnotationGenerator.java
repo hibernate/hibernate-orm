@@ -1,17 +1,6 @@
 /*
- * Copyright 2010 - 2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.exporter.entity;
 
@@ -331,7 +320,8 @@ public class RelationshipAnnotationGenerator {
 			sb.append(",\n            ").append(attributeName)
 					.append(" = @JoinColumn(name = \"")
 					.append(columns[0].name()).append("\")");
-		} else {
+		}
+		else {
 			sb.append(",\n            ").append(attributeName).append(" = {\n");
 			for (int i = 0; i < columns.length; i++) {
 				if (i > 0) sb.append(",\n");
@@ -345,7 +335,8 @@ public class RelationshipAnnotationGenerator {
 	private void appendCascade(StringBuilder sb, CascadeType[] types) {
 		if (types.length == 1) {
 			sb.append("CascadeType.").append(types[0].name());
-		} else {
+		}
+		else {
 			sb.append("{ ");
 			for (int i = 0; i < types.length; i++) {
 				if (i > 0) sb.append(", ");

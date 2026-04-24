@@ -1,17 +1,6 @@
 /*
- * Copyright 2010 - 2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.exporter.hbm;
 
@@ -54,31 +43,31 @@ public class HbmTemplateHelper {
 	}
 
 	HbmTemplateHelper(ClassDetails classDetails, String comment,
-					   Map<String, List<String>> metaAttributes) {
+					Map<String, List<String>> metaAttributes) {
 		this(classDetails, comment, metaAttributes, Collections.emptyMap(),
 				Collections.emptyMap(), Collections.emptyMap());
 	}
 
 	HbmTemplateHelper(ClassDetails classDetails, String comment,
-					   Map<String, List<String>> metaAttributes,
-					   Map<String, String> imports) {
+					Map<String, List<String>> metaAttributes,
+					Map<String, String> imports) {
 		this(classDetails, comment, metaAttributes, imports,
 				Collections.emptyMap(), Collections.emptyMap());
 	}
 
 	HbmTemplateHelper(ClassDetails classDetails, String comment,
-					   Map<String, List<String>> metaAttributes,
-					   Map<String, String> imports,
-					   Map<String, Map<String, List<String>>> fieldMetaAttributes) {
+					Map<String, List<String>> metaAttributes,
+					Map<String, String> imports,
+					Map<String, Map<String, List<String>>> fieldMetaAttributes) {
 		this(classDetails, comment, metaAttributes, imports,
 				fieldMetaAttributes, Collections.emptyMap());
 	}
 
 	HbmTemplateHelper(ClassDetails classDetails, String comment,
-					   Map<String, List<String>> metaAttributes,
-					   Map<String, String> imports,
-					   Map<String, Map<String, List<String>>> fieldMetaAttributes,
-					   Map<String, Map<String, List<String>>> allClassMetaAttributes) {
+					Map<String, List<String>> metaAttributes,
+					Map<String, String> imports,
+					Map<String, Map<String, List<String>>> fieldMetaAttributes,
+					Map<String, Map<String, List<String>>> allClassMetaAttributes) {
 		this.classDetails = classDetails;
 		this.comment = comment;
 		this.metaAttributes = metaAttributes != null ? metaAttributes : Collections.emptyMap();
@@ -764,8 +753,8 @@ public class HbmTemplateHelper {
 	}
 
 	public record PropertiesGroupInfo(String name, boolean unique, boolean insert,
-									   boolean update, boolean optimisticLock,
-									   List<FieldDetails> fields) {}
+									boolean update, boolean optimisticLock,
+									List<FieldDetails> fields) {}
 
 	// --- Meta attributes ---
 
@@ -816,21 +805,21 @@ public class HbmTemplateHelper {
 	}
 
 	public record NamedQueryInfo(String name, String query, String flushMode,
-								 boolean cacheable, String cacheRegion, int fetchSize,
-								 int timeout, String comment, boolean readOnly) {}
+								boolean cacheable, String cacheRegion, int fetchSize,
+								int timeout, String comment, boolean readOnly) {}
 
 	public record NamedNativeQueryInfo(String name, String query, String flushMode,
-									   boolean cacheable, String cacheRegion, int fetchSize,
-									   int timeout, String comment, boolean readOnly,
-									   List<String> querySpaces,
-									   List<EntityReturnInfo> entityReturns,
-									   List<ScalarReturnInfo> scalarReturns,
-									   List<ReturnJoinInfo> returnJoins,
-									   List<LoadCollectionInfo> loadCollections) {}
+									boolean cacheable, String cacheRegion, int fetchSize,
+									int timeout, String comment, boolean readOnly,
+									List<String> querySpaces,
+									List<EntityReturnInfo> entityReturns,
+									List<ScalarReturnInfo> scalarReturns,
+									List<ReturnJoinInfo> returnJoins,
+									List<LoadCollectionInfo> loadCollections) {}
 
 	public record EntityReturnInfo(String alias, String entityClass,
-								   String discriminatorColumn,
-								   List<FieldMappingInfo> fieldMappings) {}
+								String discriminatorColumn,
+								List<FieldMappingInfo> fieldMappings) {}
 
 	public record FieldMappingInfo(String name, String column) {}
 

@@ -1,17 +1,6 @@
 /*
- * Copyright 2010 - 2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.exporter.cfg;
 
@@ -70,7 +59,8 @@ public class CfgXmlExporter implements Exporter {
 		try (java.io.FileWriter writer = new java.io.FileWriter(outputFile)) {
 			configured.export(writer, mergedProps);
 			ac.addFile(outputFile, "cfg.xml");
-		} catch (java.io.IOException e) {
+		}
+		catch (java.io.IOException e) {
 			throw new RuntimeException("Failed to write hibernate.cfg.xml", e);
 		}
 	}
@@ -135,7 +125,8 @@ public class CfgXmlExporter implements Exporter {
 		String qualifiedName = entity.getClassName();
 		if (useClass) {
 			pw.println("<mapping class=\"" + qualifiedName + "\"/>");
-		} else {
+		}
+		else {
 			pw.println("<mapping resource=\"" + qualifiedName.replace('.', '/') + ".hbm.xml\"/>");
 		}
 		for (ClassDetails child : entities) {
@@ -162,9 +153,11 @@ public class CfgXmlExporter implements Exporter {
 		for (char character : chars) {
 			if (character == '<') {
 				result.append("&lt;");
-			} else if (character == '>') {
+			}
+		else if (character == '>') {
 				result.append("&gt;");
-			} else {
+			}
+		else {
 				result.append(character);
 			}
 		}

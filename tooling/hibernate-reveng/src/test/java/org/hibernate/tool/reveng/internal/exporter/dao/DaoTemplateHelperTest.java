@@ -1,17 +1,6 @@
 /*
- * Copyright 2010 - 2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.exporter.dao;
 
@@ -19,14 +8,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.NamedQueryJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.NaturalIdAnnotation;
-import org.hibernate.models.internal.BasicModelsContextImpl;
-import org.hibernate.models.internal.SimpleClassLoading;
 import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
-import org.hibernate.models.internal.ClassTypeDetailsImpl;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.tool.reveng.internal.exporter.entity.ImportContext;
@@ -51,7 +36,7 @@ public class DaoTemplateHelperTest {
 	}
 
 	private DaoTemplateHelper create(TableDescriptor table, boolean ejb3,
-									 String sessionFactoryName) {
+									String sessionFactoryName) {
 		DynamicEntityBuilder builder = new DynamicEntityBuilder();
 		ClassDetails entity = builder.createEntityFromTable(table);
 		String pkg = table.getEntityPackage() != null ? table.getEntityPackage() : "";
@@ -60,7 +45,7 @@ public class DaoTemplateHelperTest {
 	}
 
 	private record TestContext(DaoTemplateHelper helper, ModelsContext modelsContext,
-							   ClassDetails classDetails) {}
+							ClassDetails classDetails) {}
 
 	private TestContext createWithContext(TableDescriptor table) {
 		return createWithContext(table, true);

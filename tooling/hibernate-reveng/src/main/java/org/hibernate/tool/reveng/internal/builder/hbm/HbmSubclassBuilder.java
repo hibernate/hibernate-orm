@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.builder.hbm;
 
@@ -55,9 +42,9 @@ public class HbmSubclassBuilder {
 	 * the root entity, then builds each subclass entity.
 	 */
 	public static void processSubclasses(DynamicClassDetails rootEntity,
-										  JaxbHbmRootEntityType entityType,
-										  String defaultPackage,
-										  HbmBuildContext ctx) {
+										JaxbHbmRootEntityType entityType,
+										String defaultPackage,
+										HbmBuildContext ctx) {
 		// Single-table inheritance: <subclass>
 		List<JaxbHbmDiscriminatorSubclassEntityType> subclasses = entityType.getSubclass();
 		if (subclasses != null && !subclasses.isEmpty()) {
@@ -145,8 +132,8 @@ public class HbmSubclassBuilder {
 	}
 
 	private static void addInheritanceAnnotation(DynamicClassDetails entityClass,
-												   InheritanceType strategy,
-												   HbmBuildContext ctx) {
+												InheritanceType strategy,
+												HbmBuildContext ctx) {
 		InheritanceJpaAnnotation inheritanceAnnotation =
 				JpaAnnotations.INHERITANCE.createUsage(ctx.getModelsContext());
 		inheritanceAnnotation.strategy(strategy);
@@ -158,8 +145,8 @@ public class HbmSubclassBuilder {
 	 * element is present and the annotation hasn't already been added.
 	 */
 	public static void addDiscriminatorColumnIfAbsent(DynamicClassDetails rootEntity,
-													   JaxbHbmRootEntityType entityType,
-													   HbmBuildContext ctx) {
+													JaxbHbmRootEntityType entityType,
+													HbmBuildContext ctx) {
 		if (!rootEntity.hasDirectAnnotationUsage(DiscriminatorColumn.class)) {
 			addDiscriminatorColumn(rootEntity, entityType, ctx);
 			addDiscriminatorValue(rootEntity, entityType.getDiscriminatorValue(), ctx);
@@ -206,8 +193,8 @@ public class HbmSubclassBuilder {
 	}
 
 	private static void addDiscriminatorValue(DynamicClassDetails entityClass,
-											   String discriminatorValue,
-											   HbmBuildContext ctx) {
+											String discriminatorValue,
+											HbmBuildContext ctx) {
 		if (discriminatorValue == null || discriminatorValue.isEmpty()) {
 			return;
 		}
@@ -263,9 +250,9 @@ public class HbmSubclassBuilder {
 	}
 
 	private static void buildJoinedSubclass(JaxbHbmJoinedSubclassEntityType subclass,
-											 DynamicClassDetails parentEntity,
-											 String defaultPackage,
-											 HbmBuildContext ctx) {
+											DynamicClassDetails parentEntity,
+											String defaultPackage,
+											HbmBuildContext ctx) {
 		String className = subclass.getName();
 		String fullName = HbmTypeResolver.resolveClassName(className, defaultPackage);
 		String simpleName = HbmTypeResolver.simpleName(fullName);
@@ -362,8 +349,8 @@ public class HbmSubclassBuilder {
 	}
 
 	private static void addEntityAnnotation(DynamicClassDetails entityClass,
-											  String entityName,
-											  HbmBuildContext ctx) {
+											String entityName,
+											HbmBuildContext ctx) {
 		EntityJpaAnnotation entityAnnotation =
 				JpaAnnotations.ENTITY.createUsage(ctx.getModelsContext());
 		entityAnnotation.name(entityName);
@@ -371,9 +358,9 @@ public class HbmSubclassBuilder {
 	}
 
 	static void processAttributes(DynamicClassDetails entityClass,
-								   List<Serializable> attributes,
-								   String defaultPackage,
-								   HbmBuildContext ctx) {
+								List<Serializable> attributes,
+								String defaultPackage,
+								HbmBuildContext ctx) {
 		HbmAttributeProcessor.processAttributes(entityClass, attributes, defaultPackage, ctx);
 	}
 

@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.jdbc2cfg.OverrideBinder;
 
@@ -141,19 +128,19 @@ public class TestCase {
 
 		SchemaSelection ss;
 		ss = (SchemaSelection) schemaSelectors.get(0);
-        assertNull(ss.getMatchCatalog());
-        assertNull(ss.getMatchSchema());
-        assertNull(ss.getMatchTable());
+		assertNull(ss.getMatchCatalog());
+		assertNull(ss.getMatchSchema());
+		assertNull(ss.getMatchTable());
 
 		ss = (SchemaSelection) schemaSelectors.get(1);
-        assertNull(ss.getMatchCatalog());
+		assertNull(ss.getMatchCatalog());
 		assertEquals("OVRTEST",ss.getMatchSchema());
-        assertNull(ss.getMatchTable());
+		assertNull(ss.getMatchTable());
 
 		ss = (SchemaSelection) schemaSelectors.get(2);
 		assertEquals("UBERCATALOG",ss.getMatchCatalog());
 		assertEquals("OVRTEST",ss.getMatchSchema());
-        assertNull(ss.getMatchTable());
+		assertNull(ss.getMatchTable());
 
 		ss = (SchemaSelection) schemaSelectors.get(3);
 		assertEquals("PUBLIC.*",ss.getMatchCatalog());
@@ -250,10 +237,10 @@ public class TestCase {
 		TableIdentifier ordersTable = TableIdentifier.create(null,null, "ORDERS");
 
 		assertEquals("customOrderId", repository.tableToIdentifierPropertyName(ordersTable));
-        assertNull(repository.tableToIdentifierPropertyName(TableIdentifier.create(null, null, "blah")));
+		assertNull(repository.tableToIdentifierPropertyName(TableIdentifier.create(null, null, "blah")));
 
 		assertEquals("CustomOID", repository.tableToCompositeIdName(ordersTable));
-        assertNull(repository.tableToCompositeIdName(TableIdentifier.create(null, null, "blah")));
+		assertNull(repository.tableToCompositeIdName(TableIdentifier.create(null, null, "blah")));
 
 		List<String> primaryKeyColumnNames = repository.getPrimaryKeyColumnNames(TableIdentifier.create(null, null, "blah"));
 		assertNull(primaryKeyColumnNames);
@@ -345,11 +332,11 @@ public class TestCase {
 		SQLTypeMapping morespecific = new SQLTypeMapping(Types.BIGINT, 2, 3, 4, Boolean.TRUE);
 		SQLTypeMapping equalmorespecific = new SQLTypeMapping(Types.BIGINT, 2, 3, 4, Boolean.TRUE);
 
-        assertNotEquals(one, two);
-        assertNotEquals(two, one);
-        assertEquals(two, two);
-        assertEquals(one, one);
-        assertEquals(morespecific, equalmorespecific);
+		assertNotEquals(one, two);
+		assertNotEquals(two, one);
+		assertEquals(two, two);
+		assertEquals(one, one);
+		assertEquals(morespecific, equalmorespecific);
 
 
 		assertEquals(-1, one.compareTo(two) );
@@ -385,7 +372,7 @@ public class TestCase {
 
 		RevengStrategy res = or.getReverseEngineeringStrategy(null);
 		assertEquals("boolean",res.columnToHibernateTypeName(null,null, Types.BINARY, 1, SQLTypeMapping.UNKNOWN_PRECISION, SQLTypeMapping.UNKNOWN_SCALE, false, false) );
-        assertNull(res.columnToHibernateTypeName(null, null, Types.LONGVARCHAR, 1, SQLTypeMapping.UNKNOWN_PRECISION, SQLTypeMapping.UNKNOWN_SCALE, false, false));
+		assertNull(res.columnToHibernateTypeName(null, null, Types.LONGVARCHAR, 1, SQLTypeMapping.UNKNOWN_PRECISION, SQLTypeMapping.UNKNOWN_SCALE, false, false));
 		assertEquals("yes_no",res.columnToHibernateTypeName(null,null, Types.BIT, SQLTypeMapping.UNKNOWN_LENGTH, SQLTypeMapping.UNKNOWN_PRECISION, SQLTypeMapping.UNKNOWN_SCALE, false, false) );
 	}
 
@@ -547,7 +534,7 @@ public class TestCase {
 		assertEquals("value three", ma.getValue());
 
 		tableIdentifier = TableIdentifier.create(null, null, "Nothing");
-        assertNull(res.tableToMetaAttributes(tableIdentifier));
+		assertNull(res.tableToMetaAttributes(tableIdentifier));
 
 		assertNull(res.columnToMetaAttributes(TableIdentifier.create(null, null, "Nothing"), "bogus"));
 		assertNull(res.columnToMetaAttributes( TableIdentifier.create(null, "Werd", "MetaTable"), "bogusColumn" ));

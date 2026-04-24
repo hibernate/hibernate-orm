@@ -1,21 +1,7 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.tool.reveng.hbm2x.GenericExporterTest;
 
 import org.hibernate.tool.reveng.api.export.Exporter;
@@ -43,25 +29,25 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author koen
  */
 public class TestCase {
-	
+
 	private static final String[] HBM_XML_FILES = new String[] {
-			"Author.hbm.xml", 
-			"Article.hbm.xml", 
+			"Author.hbm.xml",
+			"Article.hbm.xml",
 			"HelloWorld.hbm.xml"
 	};
-	
+
 	@TempDir
 	public File outputFolder = new File("output");
-	
+
 	private MetadataDescriptor metadataDescriptor = null;
 	private File outputDir = null;
-    private String resourcesLocation = null;
-	
+	private String resourcesLocation = null;
+
 	@BeforeEach
 	public void setUp() {
 		outputDir = new File(outputFolder, "src");
 		assertTrue(outputDir.mkdir());
-        File resourcesDir = new File(outputFolder, "resources");
+		File resourcesDir = new File(outputFolder, "resources");
 		assertTrue(resourcesDir.mkdir());
 		metadataDescriptor = HibernateUtil
 				.initializeMetadataDescriptor(this, HBM_XML_FILES, resourcesDir);
@@ -73,14 +59,14 @@ public class TestCase {
 		Exporter ge = ExporterFactory.createExporter(ExporterType.GENERIC);
 		ge.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		ge.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
-    	ge.getProperties().put(ExporterConstants.TEMPLATE_NAME, resourcesLocation + "generic-test.ftl");
-    	ge.getProperties().put(ExporterConstants.FILE_PATTERN, "generictest.txt");
+		ge.getProperties().put(ExporterConstants.TEMPLATE_NAME, resourcesLocation + "generic-test.ftl");
+		ge.getProperties().put(ExporterConstants.FILE_PATTERN, "generictest.txt");
 		ge.start();
 		JUnitUtil.assertIsNonEmptyFile(new File( outputDir,"artifacts.txt"));
 		JUnitUtil.assertIsNonEmptyFile(new File( outputDir, "templates.txt"));
-        assertNull(FileUtil.findFirstString("$", new File(outputDir, "artifacts.txt")));
+		assertNull(FileUtil.findFirstString("$", new File(outputDir, "artifacts.txt")));
 		assertEquals(
-				"File for artifacts in " + Version.versionString(), 
+				"File for artifacts in " + Version.versionString(),
 				FileUtil.findFirstString("artifacts", new File( outputDir, "artifacts.txt")));
 	}
 
@@ -90,12 +76,12 @@ public class TestCase {
 		Exporter ge = ExporterFactory.createExporter(ExporterType.GENERIC);
 		ge.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		ge.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
-    	ge.getProperties().put(ExporterConstants.TEMPLATE_NAME, resourcesLocation + "freemarker.ftl");
-    	ge.getProperties().put(ExporterConstants.FILE_PATTERN, "{class-name}.ftltest");
+		ge.getProperties().put(ExporterConstants.TEMPLATE_NAME, resourcesLocation + "freemarker.ftl");
+		ge.getProperties().put(ExporterConstants.FILE_PATTERN, "{class-name}.ftltest");
 		ge.start();
-		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "Author.ftltest" ) );	
+		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "Author.ftltest" ) );
 		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "Article.ftltest" ) );
-		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "BaseHelloWorld.ftltest" ) );	
+		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "BaseHelloWorld.ftltest" ) );
 		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "HelloUniverse.ftltest" ) );
 		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "UniversalAddress.ftltest" ) );
 	}
@@ -105,25 +91,25 @@ public class TestCase {
 		Exporter ge = ExporterFactory.createExporter(ExporterType.GENERIC);
 		ge.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		ge.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
-    	ge.getProperties().put(ExporterConstants.TEMPLATE_NAME, resourcesLocation + "generic-class.ftl");
-    	ge.getProperties().put(ExporterConstants.FILE_PATTERN, "generic{class-name}.txt");
+		ge.getProperties().put(ExporterConstants.TEMPLATE_NAME, resourcesLocation + "generic-class.ftl");
+		ge.getProperties().put(ExporterConstants.FILE_PATTERN, "generic{class-name}.txt");
 		ge.start();
-		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "genericAuthor.txt" ) );	
+		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "genericAuthor.txt" ) );
 		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "genericArticle.txt" ) );
-	}	
-	
+	}
+
 	@Test
 	public void testPackageFileGeneration() {
 		Exporter ge = ExporterFactory.createExporter(ExporterType.GENERIC);
 		ge.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		ge.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
-    	ge.getProperties().put(ExporterConstants.TEMPLATE_NAME, resourcesLocation + "generic-class.ftl");
-    	ge.getProperties().put(ExporterConstants.FILE_PATTERN, "{package-name}/generic{class-name}.txt");
+		ge.getProperties().put(ExporterConstants.TEMPLATE_NAME, resourcesLocation + "generic-class.ftl");
+		ge.getProperties().put(ExporterConstants.FILE_PATTERN, "{package-name}/generic{class-name}.txt");
 		ge.start();
-		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "org/hibernate/tool/hbm2x/genericAuthor.txt"));	
+		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "org/hibernate/tool/hbm2x/genericAuthor.txt"));
 		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "org/hibernate/tool/hbm2x/genericArticle.txt"));
-		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "org/hibernate/tool/hbm2x/genericArticle.txt"));				
-		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "genericUniversalAddress.txt"));	
+		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "org/hibernate/tool/hbm2x/genericArticle.txt"));
+		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "genericUniversalAddress.txt"));
 		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "genericHelloUniverse.txt"));
 	}
 
@@ -132,19 +118,19 @@ public class TestCase {
 		Exporter ge = ExporterFactory.createExporter(ExporterType.GENERIC);
 		ge.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		ge.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
-    	ge.getProperties().put(ExporterConstants.TEMPLATE_NAME, resourcesLocation + "generic-class.ftl");
-    	ge.getProperties().put(ExporterConstants.FILE_PATTERN, "{package-name}/generic{class-name}.txt");
-    	ge.getProperties().put(ExporterConstants.FOR_EACH, "entity");
+		ge.getProperties().put(ExporterConstants.TEMPLATE_NAME, resourcesLocation + "generic-class.ftl");
+		ge.getProperties().put(ExporterConstants.FILE_PATTERN, "{package-name}/generic{class-name}.txt");
+		ge.getProperties().put(ExporterConstants.FOR_EACH, "entity");
 		ge.start();
-		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "org/hibernate/tool/hbm2x/genericAuthor.txt"));	
+		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "org/hibernate/tool/hbm2x/genericAuthor.txt"));
 		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "org/hibernate/tool/hbm2x/genericArticle.txt"));
-		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "org/hibernate/tool/hbm2x/genericArticle.txt"));		
+		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "org/hibernate/tool/hbm2x/genericArticle.txt"));
 		assertFalse(
 				new File(outputDir, "genericUniversalAddress.txt" ).exists(),
 				"component file should not exist");
 		JUnitUtil.assertIsNonEmptyFile(new File(outputDir, "genericHelloUniverse.txt" ) );
 		try {
-	    	ge.getProperties().put(ExporterConstants.FOR_EACH, "does, not, exist");
+			ge.getProperties().put(ExporterConstants.FOR_EACH, "does, not, exist");
 			ge.start();
 			fail();
 		} catch(Exception e) {
@@ -158,24 +144,24 @@ public class TestCase {
 		Exporter ge = ExporterFactory.createExporter(ExporterType.GENERIC);
 		ge.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		ge.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
-    	ge.getProperties().put(ExporterConstants.TEMPLATE_NAME, resourcesLocation + "generic-exception.ftl");
-    	ge.getProperties().put(ExporterConstants.FILE_PATTERN, "{package-name}/generic{class-name}.txt");
+		ge.getProperties().put(ExporterConstants.TEMPLATE_NAME, resourcesLocation + "generic-exception.ftl");
+		ge.getProperties().put(ExporterConstants.FILE_PATTERN, "{package-name}/generic{class-name}.txt");
 		try {
-	    	ge.getProperties().put(ExporterConstants.FOR_EACH, "entity");
+			ge.getProperties().put(ExporterConstants.FOR_EACH, "entity");
 			ge.start();
 			fail();
 		} catch(RuntimeException e) {
-			assertTrue(e.getMessage().startsWith("Error while processing Entity:"));			
+			assertTrue(e.getMessage().startsWith("Error while processing Entity:"));
 		}
 		try {
-	    	ge.getProperties().put(ExporterConstants.FOR_EACH, "component");
+			ge.getProperties().put(ExporterConstants.FOR_EACH, "component");
 			ge.start();
 			fail();
 		} catch(RuntimeException e) {
 			assertTrue(e.getMessage().startsWith("Error while processing Component: UniversalAddress"));
-		}		
+		}
 		try {
-	    	ge.getProperties().put(ExporterConstants.FOR_EACH, "configuration");
+			ge.getProperties().put(ExporterConstants.FOR_EACH, "configuration");
 			ge.start();
 			fail();
 		} catch(RuntimeException e) {
@@ -194,13 +180,13 @@ public class TestCase {
 		ge.getProperties().putAll(p);
 		ge.getProperties().put(ExporterConstants.METADATA_DESCRIPTOR, metadataDescriptor);
 		ge.getProperties().put(ExporterConstants.DESTINATION_FOLDER, outputDir);
-    	ge.getProperties().put(ExporterConstants.TEMPLATE_NAME, resourcesLocation + "generic-class.ftl");
-    	ge.getProperties().put(ExporterConstants.FILE_PATTERN, "{package-name}/generic{class-name}.txt");
-		ge.start();		
+		ge.getProperties().put(ExporterConstants.TEMPLATE_NAME, resourcesLocation + "generic-class.ftl");
+		ge.getProperties().put(ExporterConstants.FILE_PATTERN, "{package-name}/generic{class-name}.txt");
+		ge.start();
 		Properties generated = new Properties();
-        try (FileInputStream is = new FileInputStream(new File(outputDir, "org/hibernate/tool/hbm2x/genericArticle.txt"))) {
-            generated.load(is);
-        }
+		try (FileInputStream is = new FileInputStream(new File(outputDir, "org/hibernate/tool/hbm2x/genericArticle.txt"))) {
+			generated.load(is);
+		}
 		assertEquals("true", generated.getProperty("booleanProperty"));
 		assertEquals("true", generated.getProperty("hibernatetool.booleanProperty"));
 		assertNull(generated.getProperty("booleanWasTrue"));

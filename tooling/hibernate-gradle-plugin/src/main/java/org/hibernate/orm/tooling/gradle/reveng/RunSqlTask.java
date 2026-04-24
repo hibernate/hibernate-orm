@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2024-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.orm.tooling.gradle.reveng;
 
@@ -32,17 +19,17 @@ import org.gradle.work.DisableCachingByDefault;
 
 @DisableCachingByDefault(because = "Executes SQL against a live database connection")
 public class RunSqlTask extends RevengTask {
-	
+
 	@TaskAction
 	public void performTask() {
 		super.perform();
 	}
-	
+
 	void doWork() {
 		registerDriver();
 		runSql();
 	}
-	
+
 	private void registerDriver() {
 		String driverClassName = getHibernateProperty("hibernate.connection.driver_class");
 		getLogger().lifecycle("Registering the database driver: " + driverClassName);
@@ -51,12 +38,13 @@ public class RunSqlTask extends RevengTask {
 			Constructor<?> constructor = driverClass.getDeclaredConstructor();
 			DriverManager.registerDriver(createDelegatingDriver((Driver)constructor.newInstance()));
 			getLogger().lifecycle("Database driver is registered");
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			getLogger().error("Exception while registering the database driver: " + e.getMessage());
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	private void runSql() {
 		try {
 			String databaseUrl = getHibernateProperty("hibernate.connection.url");
@@ -65,26 +53,27 @@ public class RunSqlTask extends RevengTask {
 			getLogger().lifecycle("Connecting to database: " + databaseUrl);
 			try (Connection connection = DriverManager
 					.getConnection(databaseUrl, username, password);
-				 Statement statement = connection.createStatement()) {
+				Statement statement = connection.createStatement()) {
 				getLogger().lifecycle("Running SQL: " + getRevengSpec().sqlToRun);
 				statement.execute(getRevengSpec().sqlToRun);
 			}
-		} catch (SQLException e) {
+		}
+		catch (SQLException e) {
 			getLogger().error("SQLException");
 			throw new RuntimeException(e);
 		}
 	}
-		
+
 	private Driver createDelegatingDriver(Driver driver) {
 		return (Driver)Proxy.newProxyInstance(
-				DriverManager.class.getClassLoader(), 
-				new Class[] { Driver.class}, 
-				new InvocationHandler() {					
+				DriverManager.class.getClassLoader(),
+				new Class[] { Driver.class},
+				new InvocationHandler() {
 					@Override
 					public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 						return method.invoke(driver, args);
 					}
 				});
 	}
-	
+
 }

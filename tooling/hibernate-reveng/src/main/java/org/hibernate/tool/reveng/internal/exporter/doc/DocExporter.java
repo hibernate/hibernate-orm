@@ -1,17 +1,6 @@
 /*
- * Copyright 2010 - 2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.exporter.doc;
 
@@ -129,27 +118,27 @@ public class DocExporter implements Exporter {
 	}
 
 	public static DocExporter create(List<ClassDetails> entities,
-									  String[] templatePath) {
+									String[] templatePath) {
 		return new DocExporter(entities, null, null, templatePath);
 	}
 
 	public static DocExporter create(List<ClassDetails> entities,
-									  Map<String, TableDescriptor> tableMetadataMap) {
+									Map<String, TableDescriptor> tableMetadataMap) {
 		return new DocExporter(entities, tableMetadataMap, null,
 				new String[0]);
 	}
 
 	public static DocExporter create(List<ClassDetails> entities,
-									  Map<String, TableDescriptor> tableMetadataMap,
-									  String[] templatePath) {
+									Map<String, TableDescriptor> tableMetadataMap,
+									String[] templatePath) {
 		return new DocExporter(entities, tableMetadataMap, null,
 				templatePath);
 	}
 
 	public static DocExporter create(List<ClassDetails> entities,
-									  Map<String, TableDescriptor> tableMetadataMap,
-									  String dotExecutable,
-									  String[] templatePath) {
+									Map<String, TableDescriptor> tableMetadataMap,
+									String dotExecutable,
+									String[] templatePath) {
 		return new DocExporter(entities, tableMetadataMap, dotExecutable,
 				templatePath);
 	}
@@ -230,9 +219,9 @@ public class DocExporter implements Exporter {
 	}
 
 	private void generatePackageSummary(EntityDocHelper docHelper,
-										 EntityDocFileManager docFileManager,
-										 boolean graphsGenerated,
-										 File outputDirectory) {
+										EntityDocFileManager docFileManager,
+										boolean graphsGenerated,
+										File outputDirectory) {
 		DocFile docFile = docFileManager.getClassSummaryFile();
 		Map<String, Object> params = new HashMap<>();
 		params.put("docFile", docFile);
@@ -253,7 +242,7 @@ public class DocExporter implements Exporter {
 	}
 
 	private void generateEntitiesDetails(EntityDocHelper docHelper,
-										  EntityDocFileManager docFileManager) {
+										EntityDocFileManager docFileManager) {
 		for (EntityDocInfo entity : docHelper.getClasses()) {
 			DocFile docFile = docFileManager.getEntityDocFile(entity);
 			Map<String, Object> params = new HashMap<>();
@@ -265,7 +254,7 @@ public class DocExporter implements Exporter {
 	}
 
 	private void generateAllPackagesList(EntityDocHelper docHelper,
-										  EntityDocFileManager docFileManager) {
+										EntityDocFileManager docFileManager) {
 		DocFile docFile = docFileManager.getAllPackagesDocFile();
 		Map<String, Object> params = new HashMap<>();
 		params.put("docFile", docFile);
@@ -280,7 +269,7 @@ public class DocExporter implements Exporter {
 	}
 
 	private void generateAllEntitiesList(EntityDocHelper docHelper,
-										  EntityDocFileManager docFileManager) {
+										EntityDocFileManager docFileManager) {
 		DocFile docFile = docFileManager.getAllEntitiesDocFile();
 		Map<String, Object> params = new HashMap<>();
 		params.put("docFile", docFile);
@@ -290,7 +279,7 @@ public class DocExporter implements Exporter {
 	}
 
 	private void generatePerPackageEntityList(EntityDocHelper docHelper,
-											   EntityDocFileManager docFileManager) {
+											EntityDocFileManager docFileManager) {
 		for (String packageName : docHelper.getPackages()) {
 			if (!packageName.equals(EntityDocHelper.DEFAULT_NO_PACKAGE)) {
 				DocFile docFile =
@@ -308,7 +297,7 @@ public class DocExporter implements Exporter {
 	}
 
 	private void generatePackageDetailedInfo(EntityDocHelper docHelper,
-											  EntityDocFileManager docFileManager) {
+											EntityDocFileManager docFileManager) {
 		List<String> packageList = docHelper.getPackages();
 		if (!packageList.isEmpty()) {
 			packageList = new ArrayList<>(packageList);
@@ -329,7 +318,7 @@ public class DocExporter implements Exporter {
 	// ---- Table generation methods ----
 
 	private void generateTablesIndex(EntityDocHelper docHelper,
-									  EntityDocFileManager docFileManager) {
+									EntityDocFileManager docFileManager) {
 		DocFile docFile = docFileManager.getTableIndexDocFile();
 		Map<String, Object> params = new HashMap<>();
 		params.put("docFile", docFile);
@@ -338,9 +327,9 @@ public class DocExporter implements Exporter {
 	}
 
 	private void generateTablesSummary(EntityDocHelper docHelper,
-										 EntityDocFileManager docFileManager,
-										 boolean graphsGenerated,
-										 File outputDirectory) {
+										EntityDocFileManager docFileManager,
+										boolean graphsGenerated,
+										File outputDirectory) {
 		DocFile docFile = docFileManager.getTableSummaryDocFile();
 		Map<String, Object> params = new HashMap<>();
 		params.put("docFile", docFile);
@@ -367,7 +356,7 @@ public class DocExporter implements Exporter {
 	}
 
 	private void generateAllSchemasList(EntityDocHelper docHelper,
-										  EntityDocFileManager docFileManager) {
+										EntityDocFileManager docFileManager) {
 		DocFile docFile = docFileManager.getAllSchemasDocFile();
 		Map<String, Object> params = new HashMap<>();
 		params.put("docFile", docFile);
@@ -377,7 +366,7 @@ public class DocExporter implements Exporter {
 	}
 
 	private void generateAllTablesList(EntityDocHelper docHelper,
-										 EntityDocFileManager docFileManager) {
+										EntityDocFileManager docFileManager) {
 		DocFile docFile = docFileManager.getAllTablesDocFile();
 		Map<String, Object> params = new HashMap<>();
 		params.put("docFile", docFile);
@@ -387,7 +376,7 @@ public class DocExporter implements Exporter {
 	}
 
 	private void generatePerSchemaTableList(EntityDocHelper docHelper,
-											  EntityDocFileManager docFileManager) {
+											EntityDocFileManager docFileManager) {
 		for (String schema : docHelper.getSchemas()) {
 			DocFile docFile =
 					docFileManager.getSchemaTableListDocFile(schema);
@@ -401,7 +390,7 @@ public class DocExporter implements Exporter {
 	}
 
 	private void generateSchemaDetailedInfo(EntityDocHelper docHelper,
-											  EntityDocFileManager docFileManager) {
+											EntityDocFileManager docFileManager) {
 		for (String schema : docHelper.getSchemas()) {
 			DocFile docFile =
 					docFileManager.getSchemaSummaryDocFile(schema);

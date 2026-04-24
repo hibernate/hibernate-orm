@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.builder.hbm;
 
@@ -45,9 +32,9 @@ import org.hibernate.models.internal.dynamic.DynamicFieldDetails;
 public class HbmCollectionBuilder {
 
 	public static void processSet(DynamicClassDetails entityClass,
-								   JaxbHbmSetType set,
-								   String defaultPackage,
-								   HbmBuildContext ctx) {
+								JaxbHbmSetType set,
+								String defaultPackage,
+								HbmBuildContext ctx) {
 		DynamicFieldDetails field = HbmCollectionFieldFactory.createCollectionField(
 				entityClass, set.getName(),
 				set.getOneToMany(), set.getManyToMany(), set.getElement(),
@@ -79,7 +66,8 @@ public class HbmCollectionBuilder {
 					entityClass, list.getName(),
 					list.getCompositeElement(), list.getKey(), "java.util.List",
 					defaultPackage, ctx);
-		} else {
+		}
+		else {
 			field = HbmCollectionFieldFactory.createCollectionField(
 					entityClass, list.getName(),
 					list.getOneToMany(), list.getManyToMany(), list.getElement(),
@@ -102,9 +90,9 @@ public class HbmCollectionBuilder {
 	}
 
 	public static void processBag(DynamicClassDetails entityClass,
-								   JaxbHbmBagCollectionType bag,
-								   String defaultPackage,
-								   HbmBuildContext ctx) {
+								JaxbHbmBagCollectionType bag,
+								String defaultPackage,
+								HbmBuildContext ctx) {
 		DynamicFieldDetails field = HbmCollectionFieldFactory.createCollectionField(
 				entityClass, bag.getName(),
 				bag.getOneToMany(), bag.getManyToMany(), bag.getElement(),
@@ -126,9 +114,9 @@ public class HbmCollectionBuilder {
 	}
 
 	public static void processMap(DynamicClassDetails entityClass,
-								   JaxbHbmMapType map,
-								   String defaultPackage,
-								   HbmBuildContext ctx) {
+								JaxbHbmMapType map,
+								String defaultPackage,
+								HbmBuildContext ctx) {
 		DynamicFieldDetails field = HbmCollectionFieldFactory.createMapCollectionField(
 				entityClass, map.getName(),
 				map.getOneToMany(), map.getManyToMany(), map.getManyToAny(),
@@ -151,9 +139,9 @@ public class HbmCollectionBuilder {
 	}
 
 	public static void processArray(DynamicClassDetails entityClass,
-									  JaxbHbmArrayType array,
-									  String defaultPackage,
-									  HbmBuildContext ctx) {
+									JaxbHbmArrayType array,
+									String defaultPackage,
+									HbmBuildContext ctx) {
 		DynamicFieldDetails field = HbmCollectionFieldFactory.createCollectionField(
 				entityClass, array.getName(),
 				array.getOneToMany(), array.getManyToMany(), array.getElement(),
@@ -183,9 +171,9 @@ public class HbmCollectionBuilder {
 	}
 
 	public static void processPrimitiveArray(DynamicClassDetails entityClass,
-											  JaxbHbmPrimitiveArrayType array,
-											  String defaultPackage,
-											  HbmBuildContext ctx) {
+											JaxbHbmPrimitiveArrayType array,
+											String defaultPackage,
+											HbmBuildContext ctx) {
 		JaxbHbmBasicCollectionElementType element = array.getElement();
 		if (element == null) {
 			return;
@@ -209,9 +197,9 @@ public class HbmCollectionBuilder {
 	}
 
 	public static void processIdBag(DynamicClassDetails entityClass,
-									 JaxbHbmIdBagCollectionType idBag,
-									 String defaultPackage,
-									 HbmBuildContext ctx) {
+									JaxbHbmIdBagCollectionType idBag,
+									String defaultPackage,
+									HbmBuildContext ctx) {
 		DynamicFieldDetails field = HbmCollectionFieldFactory.createCollectionField(
 				entityClass, idBag.getName(),
 				null, idBag.getManyToMany(), idBag.getElement(),

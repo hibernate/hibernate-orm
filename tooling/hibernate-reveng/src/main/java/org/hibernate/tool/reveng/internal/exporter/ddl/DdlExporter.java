@@ -1,17 +1,6 @@
 /*
- * Copyright 2010 - 2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.exporter.ddl;
 
@@ -99,17 +88,20 @@ public class DdlExporter implements Exporter {
 			if (exportToConsole) {
 				configured.exportUpdateDdlToConsole();
 			}
-		} else {
+		}
+		else {
 			File outputFile = outputFileName != null ? new File(destDir, outputFileName) : null;
 			if (drop && create) {
 				if (outputFile != null) configured.exportBothDdl(outputFile);
 				if (exportToDatabase) configured.executeBothDdl();
 				if (exportToConsole) configured.exportBothDdlToConsole();
-			} else if (drop) {
+			}
+		else if (drop) {
 				if (outputFile != null) configured.exportDropDdl(outputFile);
 				if (exportToDatabase) configured.executeDropDdl();
 				if (exportToConsole) configured.exportDropDdlToConsole();
-			} else if (create) {
+			}
+		else if (create) {
 				if (outputFile != null) configured.exportCreateDdl(outputFile);
 				if (exportToDatabase) configured.executeCreateDdl();
 				if (exportToConsole) configured.exportCreateDdlToConsole();
@@ -256,7 +248,8 @@ public class DdlExporter implements Exporter {
 			File file, java.util.function.Consumer<Writer> exporter) {
 		try (Writer writer = new FileWriter(file)) {
 			exporter.accept(writer);
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			throw new RuntimeException(
 					"Failed to write DDL to " + file, e);
 		}

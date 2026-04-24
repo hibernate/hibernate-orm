@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.builder.hbm;
 
@@ -75,8 +62,8 @@ class HbmFilterAndQueryBuilder {
 	// --- Filters ---
 
 	static void processFilters(DynamicClassDetails entityClass,
-							   List<JaxbHbmFilterType> filters,
-							   HbmBuildContext ctx) {
+							List<JaxbHbmFilterType> filters,
+							HbmBuildContext ctx) {
 		if (filters == null || filters.isEmpty()) {
 			return;
 		}
@@ -85,7 +72,8 @@ class HbmFilterAndQueryBuilder {
 			FilterAnnotation filterAnnotation = HibernateAnnotations.FILTER.createUsage(mc);
 			applyFilter(filterAnnotation, filters.get(0));
 			entityClass.addAnnotationUsage(filterAnnotation);
-		} else {
+		}
+		else {
 			FilterAnnotation[] filterAnnotations = new FilterAnnotation[filters.size()];
 			for (int i = 0; i < filters.size(); i++) {
 				FilterAnnotation fa = HibernateAnnotations.FILTER.createUsage(mc);
@@ -109,8 +97,8 @@ class HbmFilterAndQueryBuilder {
 	// --- Filter Definitions (mapping-level) ---
 
 	static void processFilterDefs(DynamicClassDetails entityClass,
-								  List<JaxbHbmFilterDefinitionType> filterDefs,
-								  HbmBuildContext ctx) {
+								List<JaxbHbmFilterDefinitionType> filterDefs,
+								HbmBuildContext ctx) {
 		if (filterDefs == null || filterDefs.isEmpty()) {
 			return;
 		}
@@ -119,7 +107,8 @@ class HbmFilterAndQueryBuilder {
 			FilterDefAnnotation fdAnnotation = HibernateAnnotations.FILTER_DEF.createUsage(mc);
 			applyFilterDef(fdAnnotation, filterDefs.get(0), mc);
 			entityClass.addAnnotationUsage(fdAnnotation);
-		} else {
+		}
+		else {
 			FilterDefAnnotation[] fdAnnotations = new FilterDefAnnotation[filterDefs.size()];
 			for (int i = 0; i < filterDefs.size(); i++) {
 				FilterDefAnnotation fda = HibernateAnnotations.FILTER_DEF.createUsage(mc);
@@ -156,7 +145,8 @@ class HbmFilterAndQueryBuilder {
 					if (typeName != null) {
 						try {
 							pda.type(Class.forName(resolveParamType(typeName)));
-						} catch (ClassNotFoundException e) {
+						}
+		catch (ClassNotFoundException e) {
 							pda.type(String.class);
 						}
 					}
@@ -182,8 +172,8 @@ class HbmFilterAndQueryBuilder {
 	// --- Fetch Profiles ---
 
 	static void processFetchProfiles(DynamicClassDetails entityClass,
-									 List<JaxbHbmFetchProfileType> fetchProfiles,
-									 HbmBuildContext ctx) {
+									List<JaxbHbmFetchProfileType> fetchProfiles,
+									HbmBuildContext ctx) {
 		if (fetchProfiles == null || fetchProfiles.isEmpty()) {
 			return;
 		}
@@ -193,7 +183,8 @@ class HbmFilterAndQueryBuilder {
 					HibernateAnnotations.FETCH_PROFILE.createUsage(mc);
 			fpAnnotation.name(fetchProfiles.get(0).getName());
 			entityClass.addAnnotationUsage(fpAnnotation);
-		} else {
+		}
+		else {
 			FetchProfileAnnotation[] fpAnnotations =
 					new FetchProfileAnnotation[fetchProfiles.size()];
 			for (int i = 0; i < fetchProfiles.size(); i++) {
@@ -225,7 +216,8 @@ class HbmFilterAndQueryBuilder {
 					HibernateAnnotations.NAMED_QUERY.createUsage(mc);
 			applyNamedQuery(nqAnnotation, queries.get(0), entityName, mappingLevel);
 			entityClass.addAnnotationUsage(nqAnnotation);
-		} else {
+		}
+		else {
 			NamedQueryAnnotation[] nqAnnotations =
 					new NamedQueryAnnotation[queries.size()];
 			for (int i = 0; i < queries.size(); i++) {
@@ -242,9 +234,9 @@ class HbmFilterAndQueryBuilder {
 	}
 
 	private static void applyNamedQuery(NamedQueryAnnotation annotation,
-										  JaxbHbmNamedQueryType query,
-										  String entityName,
-										  boolean mappingLevel) {
+										JaxbHbmNamedQueryType query,
+										String entityName,
+										boolean mappingLevel) {
 		String name = query.getName();
 		if (!mappingLevel && entityName != null && !name.contains(".")) {
 			name = entityName + "." + name;
@@ -264,7 +256,7 @@ class HbmFilterAndQueryBuilder {
 			annotation.fetchSize(query.getFetchSize());
 		}
 		if (query.getTimeout() != null) {
-			annotation.timeout(query.getTimeout().milliseconds() / 1000);
+			annotation.timeout(query.getTimeout());
 		}
 		if (query.getComment() != null && !query.getComment().isEmpty()) {
 			annotation.comment(query.getComment());
@@ -277,9 +269,9 @@ class HbmFilterAndQueryBuilder {
 	// --- Named Native Queries ---
 
 	static void processNamedNativeQueries(DynamicClassDetails entityClass,
-										  List<JaxbHbmNamedNativeQueryType> queries,
-										  HbmBuildContext ctx,
-										  boolean mappingLevel) {
+										List<JaxbHbmNamedNativeQueryType> queries,
+										HbmBuildContext ctx,
+										boolean mappingLevel) {
 		if (queries == null || queries.isEmpty()) {
 			return;
 		}
@@ -291,7 +283,8 @@ class HbmFilterAndQueryBuilder {
 			applyNamedNativeQuery(nqAnnotation, queries.get(0),
 					entityName, mappingLevel, entityClass, ctx);
 			entityClass.addAnnotationUsage(nqAnnotation);
-		} else {
+		}
+		else {
 			NamedNativeQueryAnnotation[] nqAnnotations =
 					new NamedNativeQueryAnnotation[queries.size()];
 			for (int i = 0; i < queries.size(); i++) {
@@ -309,11 +302,11 @@ class HbmFilterAndQueryBuilder {
 	}
 
 	private static void applyNamedNativeQuery(NamedNativeQueryAnnotation annotation,
-											   JaxbHbmNamedNativeQueryType query,
-											   String entityName,
-											   boolean mappingLevel,
-											   DynamicClassDetails entityClass,
-											   HbmBuildContext ctx) {
+											JaxbHbmNamedNativeQueryType query,
+											String entityName,
+											boolean mappingLevel,
+											DynamicClassDetails entityClass,
+											HbmBuildContext ctx) {
 		String name = query.getName();
 		if (!mappingLevel && entityName != null && !name.contains(".")) {
 			name = entityName + "." + name;
@@ -333,7 +326,7 @@ class HbmFilterAndQueryBuilder {
 			annotation.fetchSize(query.getFetchSize());
 		}
 		if (query.getTimeout() != null) {
-			annotation.timeout(query.getTimeout().milliseconds() / 1000);
+			annotation.timeout(query.getTimeout());
 		}
 		if (query.getComment() != null && !query.getComment().isEmpty()) {
 			annotation.comment(query.getComment());
@@ -349,25 +342,28 @@ class HbmFilterAndQueryBuilder {
 	}
 
 	private static void applyNativeQueryContent(NamedNativeQueryAnnotation annotation,
-												 List<Serializable> content,
-												 String name,
-												 DynamicClassDetails entityClass,
-												 HbmBuildContext ctx) {
+												List<Serializable> content,
+												String name,
+												DynamicClassDetails entityClass,
+												HbmBuildContext ctx) {
 		List<String> querySpaces = new ArrayList<>();
 		for (Serializable item : content) {
 			Object value = item instanceof JAXBElement<?> je ? je.getValue() : item;
 			if (value instanceof JaxbHbmSynchronizeType sync) {
 				querySpaces.add(sync.getTable());
-			} else if (value instanceof JaxbHbmNativeQueryReturnType returnType) {
+			}
+		else if (value instanceof JaxbHbmNativeQueryReturnType returnType) {
 				applyNativeQueryReturn(returnType, name, entityClass, ctx);
-			} else if (value instanceof JaxbHbmNativeQueryJoinReturnType joinReturn) {
+			}
+		else if (value instanceof JaxbHbmNativeQueryJoinReturnType joinReturn) {
 				ctx.addClassMetaAttribute(entityClass.getClassName(),
 						"hibernate.sql-query." + name + ".return-join.alias",
 						joinReturn.getAlias());
 				ctx.addClassMetaAttribute(entityClass.getClassName(),
 						"hibernate.sql-query." + name + ".return-join.property",
 						joinReturn.getProperty());
-			} else if (value instanceof JaxbHbmNativeQueryCollectionLoadReturnType loadCol) {
+			}
+		else if (value instanceof JaxbHbmNativeQueryCollectionLoadReturnType loadCol) {
 				applyNativeQueryLoadCollection(loadCol, name, entityClass, ctx);
 			}
 		}
@@ -442,8 +438,8 @@ class HbmFilterAndQueryBuilder {
 	// --- Result Set Mappings ---
 
 	static void processResultSetMappings(DynamicClassDetails entityClass,
-										 List<JaxbHbmResultSetMappingType> resultsets,
-										 HbmBuildContext ctx) {
+										List<JaxbHbmResultSetMappingType> resultsets,
+										HbmBuildContext ctx) {
 		if (resultsets == null || resultsets.isEmpty()) {
 			return;
 		}
@@ -453,7 +449,8 @@ class HbmFilterAndQueryBuilder {
 					JpaAnnotations.SQL_RESULT_SET_MAPPING.createUsage(mc);
 			applyResultSetMapping(annotation, resultsets.get(0), ctx);
 			entityClass.addAnnotationUsage(annotation);
-		} else {
+		}
+		else {
 			SqlResultSetMappingJpaAnnotation[] annotations =
 					new SqlResultSetMappingJpaAnnotation[resultsets.size()];
 			for (int i = 0; i < resultsets.size(); i++) {
@@ -470,8 +467,8 @@ class HbmFilterAndQueryBuilder {
 	}
 
 	private static void applyResultSetMapping(SqlResultSetMappingJpaAnnotation annotation,
-											   JaxbHbmResultSetMappingType resultset,
-											   HbmBuildContext ctx) {
+											JaxbHbmResultSetMappingType resultset,
+											HbmBuildContext ctx) {
 		ModelsContext mc = ctx.getModelsContext();
 		annotation.name(resultset.getName());
 
@@ -486,7 +483,8 @@ class HbmFilterAndQueryBuilder {
 		for (Serializable source : sources) {
 			if (source instanceof JaxbHbmNativeQueryReturnType returnType) {
 				entityResults.add(buildEntityResult(returnType, mc));
-			} else if (source instanceof JaxbHbmNativeQueryScalarReturnType scalarReturn) {
+			}
+		else if (source instanceof JaxbHbmNativeQueryScalarReturnType scalarReturn) {
 				columnResults.add(buildColumnResult(scalarReturn, mc, ctx));
 			}
 		}
@@ -500,13 +498,14 @@ class HbmFilterAndQueryBuilder {
 	}
 
 	private static EntityResult buildEntityResult(JaxbHbmNativeQueryReturnType returnType,
-												   ModelsContext mc) {
+												ModelsContext mc) {
 		EntityResultJpaAnnotation er = JpaAnnotations.ENTITY_RESULT.createUsage(mc);
 		String className = returnType.getClazz();
 		if (className != null) {
 			try {
 				er.entityClass(Class.forName(className));
-			} catch (ClassNotFoundException e) {
+			}
+		catch (ClassNotFoundException e) {
 				er.entityClass(Object.class);
 			}
 		}
@@ -528,15 +527,16 @@ class HbmFilterAndQueryBuilder {
 	}
 
 	private static ColumnResult buildColumnResult(JaxbHbmNativeQueryScalarReturnType scalarReturn,
-												   ModelsContext mc,
-												   HbmBuildContext ctx) {
+												ModelsContext mc,
+												HbmBuildContext ctx) {
 		ColumnResultJpaAnnotation cr = JpaAnnotations.COLUMN_RESULT.createUsage(mc);
 		cr.name(scalarReturn.getColumn());
 		String type = scalarReturn.getType();
 		if (type != null) {
 			try {
 				cr.type(Class.forName(ctx.resolveJavaType(type)));
-			} catch (ClassNotFoundException e) {
+			}
+		catch (ClassNotFoundException e) {
 				cr.type(Object.class);
 			}
 		}
@@ -546,8 +546,8 @@ class HbmFilterAndQueryBuilder {
 	// --- Mapping-level annotations ---
 
 	static void processMappingLevelAnnotations(DynamicClassDetails entityClass,
-											   JaxbHbmHibernateMapping mapping,
-											   HbmBuildContext ctx) {
+											JaxbHbmHibernateMapping mapping,
+											HbmBuildContext ctx) {
 		processFilterDefs(entityClass, mapping.getFilterDef(), ctx);
 		processFetchProfiles(entityClass, mapping.getFetchProfile(), ctx);
 		processNamedQueries(entityClass, mapping.getQuery(), ctx, true);

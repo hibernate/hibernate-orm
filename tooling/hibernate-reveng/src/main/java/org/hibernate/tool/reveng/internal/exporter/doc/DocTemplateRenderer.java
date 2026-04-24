@@ -1,17 +1,6 @@
 /*
- * Copyright 2010 - 2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.exporter.doc;
 
@@ -77,7 +66,8 @@ class DocTemplateRenderer {
 			Template template =
 					freemarkerConfig.getTemplate(templateName);
 			template.process(model, writer);
-		} catch (IOException | TemplateException e) {
+		}
+		catch (IOException | TemplateException e) {
 			throw new RuntimeException(
 					"Failed to process template " + templateName
 					+ " to " + outputFile, e);
@@ -112,7 +102,8 @@ class DocTemplateRenderer {
 			convertDotFiles(dotExecutable,
 					tableDotFile, outputDirectory + "/tables/tablegraph");
 			return true;
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			log.log(Level.WARNING,
 					"Skipping graph generation due to error", e);
 			return false;
@@ -155,7 +146,8 @@ class DocTemplateRenderer {
 				log.warning("dot exited with code " + exitCode
 						+ " for " + outFileName);
 			}
-		} catch (InterruptedException e) {
+		}
+		catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 			throw new IOException("Interrupted while running dot", e);
 		}
@@ -175,7 +167,8 @@ class DocTemplateRenderer {
 					out.write(buffer, 0, bytesRead);
 				}
 			}
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			throw new RuntimeException(
 					"Failed to copy resource " + resourceName
 					+ " to " + target, e);
@@ -190,7 +183,8 @@ class DocTemplateRenderer {
 			while ((line = in.readLine()) != null) {
 				sb.append(line).append(System.lineSeparator());
 			}
-		} catch (IOException ignored) {
+		}
+		catch (IOException ignored) {
 		}
 		return sb.toString();
 	}
@@ -210,7 +204,8 @@ class DocTemplateRenderer {
 				if (dir.isDirectory()) {
 					try {
 						loaders.add(new FileTemplateLoader(dir));
-					} catch (IOException e) {
+					}
+		catch (IOException e) {
 						throw new RuntimeException(
 								"Failed to create template loader for: "
 								+ path, e);

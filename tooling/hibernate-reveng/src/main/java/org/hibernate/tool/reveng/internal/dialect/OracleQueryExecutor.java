@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2010-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.dialect;
 
@@ -41,9 +28,9 @@ class OracleQueryExecutor {
 			"""
 					select a.table_name, a.owner, \
 					(SELECT b.comments
-					   FROM all_tab_comments b
-					  WHERE a.owner = b.owner
-					        AND a.table_name = b.table_name) AS comments, \
+					FROM all_tab_comments b
+					WHERE a.owner = b.owner
+							AND a.table_name = b.table_name) AS comments, \
 					'TABLE' \
 					from all_tables a\s""";
 
@@ -78,20 +65,20 @@ class OracleQueryExecutor {
 	private static final String SQL_INDEX_BASE =
 			"""
 					SELECT a.column_name
-					      ,decode((SELECT b.uniqueness
-					                FROM all_indexes b
-					               WHERE a.table_name = b.table_name
-					                     AND a.table_owner = b.table_owner
-					                     AND a.index_name = b.index_name
-					                     AND b.index_type NOT LIKE\
-					 'FUNCTION-BASED%'), 'UNIQUE', 'false', 'true')\
-					 AS uniqueness
-					      ,a.index_owner
-					      ,a.index_name
-					      ,a.table_name
-					  FROM all_ind_columns a
-					 \
-					 WHERE 1 = 1
+						,decode((SELECT b.uniqueness
+									FROM all_indexes b
+								WHERE a.table_name = b.table_name
+										AND a.table_owner = b.table_owner
+										AND a.index_name = b.index_name
+										AND b.index_type NOT LIKE\
+					'FUNCTION-BASED%'), 'UNIQUE', 'false', 'true')\
+					AS uniqueness
+						,a.index_owner
+						,a.index_name
+						,a.table_name
+					FROM all_ind_columns a
+					\
+					WHERE 1 = 1
 					\s""";
 
 	private static final String SQL_INDEX_ORDER =
@@ -122,41 +109,41 @@ class OracleQueryExecutor {
 	private static final String SQL_COLUMN_BASE =
 			"""
 					SELECT a.column_name AS COLUMN_NAME
-					      ,a.owner AS TABLE_SCHEM
-					      ,decode(a.nullable, 'N', 0, 1) AS NULLABLE
-					      ,decode(a.data_type, 'FLOAT',\
-					 decode(a.data_precision, NULL, a.data_length,\
-					 a.data_precision), 'NUMBER',
-					              decode(a.data_precision, NULL,\
-					 a.data_length, a.data_precision), 'VARCHAR2',\
-					 a.char_length, 'VARCHAR',
-					              a.char_length, 'NVARCHAR2',\
-					 a.char_length, 'CHAR', a.char_length, 'NCHAR',\
-					 a.char_length, a.data_length) AS COLUMN_SIZE
-					      ,CASE
-					         WHEN a.data_type LIKE 'TIMESTAMP%' THEN
-					          93
-					         ELSE
-					          decode(a.data_type, 'CHAR', 1, 'DATE',\
-					 91, 'FLOAT', 6, 'LONG', -1, 'NUMBER', 2,\
-					 'VARCHAR2', 12, 'BFILE', -13,
-					                 'BLOB', 2004, 'CLOB', 2005,\
-					 'MLSLABEL', 1111, 'NCHAR', 1, 'NCLOB', 2005,\
-					 'NVARCHAR2', 12, 'RAW', -3,
-					                 'ROWID', 1111, 'UROWID', 1111,\
-					 'LONG RAW', -4, 'XMLTYPE', 2005, 1111)
-					       END AS DATA_TYPE
-					      ,a.table_name AS TABLE_NAME
-					      ,a.data_type AS TYPE_NAME
-					      ,decode(a.data_scale, NULL, 0,\
-					 a.data_scale) AS DECIMAL_DIGITS
-					      ,(SELECT b.comments
-					          FROM all_col_comments b
-					         WHERE a.owner = b.owner
-					               AND a.table_name = b.table_name
-					               AND a.column_name = b.column_name)\
-					 AS COMMENTS
-					  FROM all_tab_columns a
+						,a.owner AS TABLE_SCHEM
+						,decode(a.nullable, 'N', 0, 1) AS NULLABLE
+						,decode(a.data_type, 'FLOAT',\
+					decode(a.data_precision, NULL, a.data_length,\
+					a.data_precision), 'NUMBER',
+								decode(a.data_precision, NULL,\
+					a.data_length, a.data_precision), 'VARCHAR2',\
+					a.char_length, 'VARCHAR',
+								a.char_length, 'NVARCHAR2',\
+					a.char_length, 'CHAR', a.char_length, 'NCHAR',\
+					a.char_length, a.data_length) AS COLUMN_SIZE
+						,CASE
+							WHEN a.data_type LIKE 'TIMESTAMP%' THEN
+							93
+							ELSE
+							decode(a.data_type, 'CHAR', 1, 'DATE',\
+					91, 'FLOAT', 6, 'LONG', -1, 'NUMBER', 2,\
+					'VARCHAR2', 12, 'BFILE', -13,
+									'BLOB', 2004, 'CLOB', 2005,\
+					'MLSLABEL', 1111, 'NCHAR', 1, 'NCLOB', 2005,\
+					'NVARCHAR2', 12, 'RAW', -3,
+									'ROWID', 1111, 'UROWID', 1111,\
+					'LONG RAW', -4, 'XMLTYPE', 2005, 1111)
+						END AS DATA_TYPE
+						,a.table_name AS TABLE_NAME
+						,a.data_type AS TYPE_NAME
+						,decode(a.data_scale, NULL, 0,\
+					a.data_scale) AS DECIMAL_DIGITS
+						,(SELECT b.comments
+							FROM all_col_comments b
+							WHERE a.owner = b.owner
+								AND a.table_name = b.table_name
+								AND a.column_name = b.column_name)\
+					AS COMMENTS
+					FROM all_tab_columns a
 					""";
 
 	private static final String SQL_COLUMN_ORDER =
@@ -247,39 +234,39 @@ class OracleQueryExecutor {
 	private static final String SQL_FK_BASE =
 			"""
 					SELECT p.table_name as p_table_name
-					      ,p.owner as p_owner
-					      ,f.owner as f_owner
-					      ,f.table_name as f_table_name
-					      ,(SELECT fc.column_name
-					          FROM all_cons_columns fc
-					         WHERE fc.owner = f.owner
-					               AND fc.constraint_name =\
-					 f.constraint_name
-					               AND fc.table_name = f.table_name
-					               AND fc.position = pc.position)\
-					 AS fc_column_name
-					      ,pc.column_name as pc_column_name
-					      ,f.constraint_name
-					      ,(SELECT fc.position
-					          FROM all_cons_columns fc
-					         WHERE fc.owner = f.owner
-					               AND fc.constraint_name =\
-					 f.constraint_name
-					               AND fc.table_name = f.table_name
-					               AND fc.position = pc.position)\
-					 AS fc_position
-					  FROM all_constraints p
-					  JOIN all_cons_columns pc
-					    ON pc.owner = p.owner
-					       AND pc.constraint_name =\
-					 p.constraint_name
-					       AND pc.table_name = p.table_name
-					  JOIN all_constraints f
-					    ON p.owner = f.r_owner
-					       AND p.constraint_name =\
-					 f.r_constraint_name
-					 WHERE f.constraint_type = 'R'
-					       AND p.constraint_type = 'P'
+						,p.owner as p_owner
+						,f.owner as f_owner
+						,f.table_name as f_table_name
+						,(SELECT fc.column_name
+							FROM all_cons_columns fc
+							WHERE fc.owner = f.owner
+								AND fc.constraint_name =\
+					f.constraint_name
+								AND fc.table_name = f.table_name
+								AND fc.position = pc.position)\
+					AS fc_column_name
+						,pc.column_name as pc_column_name
+						,f.constraint_name
+						,(SELECT fc.position
+							FROM all_cons_columns fc
+							WHERE fc.owner = f.owner
+								AND fc.constraint_name =\
+					f.constraint_name
+								AND fc.table_name = f.table_name
+								AND fc.position = pc.position)\
+					AS fc_position
+					FROM all_constraints p
+					JOIN all_cons_columns pc
+						ON pc.owner = p.owner
+						AND pc.constraint_name =\
+					p.constraint_name
+						AND pc.table_name = p.table_name
+					JOIN all_constraints f
+						ON p.owner = f.r_owner
+						AND p.constraint_name =\
+					f.r_constraint_name
+					WHERE f.constraint_type = 'R'
+						AND p.constraint_type = 'P'
 					""";
 
 	private static final String SQL_FK_ORDER =
@@ -329,19 +316,22 @@ class OracleQueryExecutor {
 		}
 		if (schema == null && table == null) {
 			return prepTableNone.executeQuery();
-		} else if (schema != null) {
+		}
+		else if (schema != null) {
 			if (table == null) {
 				prepTableSchema.setString(1, schema);
 				prepTableSchema.setString(2, schema);
 				return prepTableSchema.executeQuery();
-			} else {
+			}
+		else {
 				prepTableSchemaAndTable.setString(1, schema);
 				prepTableSchemaAndTable.setString(2, table);
 				prepTableSchemaAndTable.setString(3, schema);
 				prepTableSchemaAndTable.setString(4, table);
 				return prepTableSchemaAndTable.executeQuery();
 			}
-		} else {
+		}
+		else {
 			prepTableTable.setString(1, table);
 			prepTableTable.setString(2, table);
 			return prepTableTable.executeQuery();
@@ -364,16 +354,19 @@ class OracleQueryExecutor {
 		}
 		if (schema == null && table == null) {
 			return prepIndexNone.executeQuery();
-		} else if (schema != null) {
+		}
+		else if (schema != null) {
 			if (table == null) {
 				prepIndexSchema.setString(1, schema);
 				return prepIndexSchema.executeQuery();
-			} else {
+			}
+		else {
 				prepIndexSchemaAndTable.setString(1, schema);
 				prepIndexSchemaAndTable.setString(2, table);
 				return prepIndexSchemaAndTable.executeQuery();
 			}
-		} else {
+		}
+		else {
 			prepIndexTable.setString(1, table);
 			return prepIndexTable.executeQuery();
 		}
@@ -407,12 +400,14 @@ class OracleQueryExecutor {
 		}
 		if (schema == null && table == null && column == null) {
 			return prepColumnNone.executeQuery();
-		} else if (schema != null) {
+		}
+		else if (schema != null) {
 			if (table == null) {
 				if (column == null) {
 					prepColumnSchema.setString(1, schema);
 					return prepColumnSchema.executeQuery();
-				} else {
+				}
+		else {
 					prepColumnSchemaAndColumn.setString(
 							1, schema);
 					prepColumnSchemaAndColumn.setString(
@@ -420,7 +415,8 @@ class OracleQueryExecutor {
 					return prepColumnSchemaAndColumn
 							.executeQuery();
 				}
-			} else {
+			}
+		else {
 				if (column == null) {
 					prepColumnSchemaAndTable.setString(
 							1, schema);
@@ -428,7 +424,8 @@ class OracleQueryExecutor {
 							2, table);
 					return prepColumnSchemaAndTable
 							.executeQuery();
-				} else {
+				}
+		else {
 					prepColumnSchemaAndTableAndColumn
 							.setString(1, schema);
 					prepColumnSchemaAndTableAndColumn
@@ -439,15 +436,18 @@ class OracleQueryExecutor {
 							.executeQuery();
 				}
 			}
-		} else {
+		}
+		else {
 			if (table == null) {
 				prepColumnColumn.setString(1, column);
 				return prepColumnColumn.executeQuery();
-			} else {
+			}
+		else {
 				if (column == null) {
 					prepColumnTable.setString(1, table);
 					return prepColumnTable.executeQuery();
-				} else {
+				}
+		else {
 					prepColumnTableAndColumn.setString(
 							1, table);
 					prepColumnTableAndColumn.setString(
@@ -492,16 +492,19 @@ class OracleQueryExecutor {
 		}
 		if (schema == null && table == null) {
 			return prepFkNone.executeQuery();
-		} else if (schema != null) {
+		}
+		else if (schema != null) {
 			if (table == null) {
 				prepFkSchema.setString(1, schema);
 				return prepFkSchema.executeQuery();
-			} else {
+			}
+		else {
 				prepFkSchemaAndTable.setString(1, schema);
 				prepFkSchemaAndTable.setString(2, table);
 				return prepFkSchemaAndTable.executeQuery();
 			}
-		} else {
+		}
+		else {
 			prepFkTable.setString(1, table);
 			return prepFkTable.executeQuery();
 		}
@@ -548,7 +551,8 @@ class OracleQueryExecutor {
 		if (ps != null) {
 			try {
 				ps.close();
-			} catch (SQLException e) {
+			}
+		catch (SQLException e) {
 				throw new RuntimeException(
 						"Problem while closing prepared statement",
 						e);

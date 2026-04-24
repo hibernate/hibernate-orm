@@ -319,7 +319,8 @@ public class EnhancerMojoTestIT {
 		try {
 			Object m = classToCheck.getMethod( methodName, new Class[] {} );
 			return true;
-		} catch (NoSuchMethodException e) {
+		}
+		catch (NoSuchMethodException e) {
 			return false;
 		}
 		finally {

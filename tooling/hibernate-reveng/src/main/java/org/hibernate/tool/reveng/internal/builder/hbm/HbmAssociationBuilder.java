@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.builder.hbm;
 
@@ -54,9 +41,9 @@ import org.hibernate.tool.reveng.internal.util.HbmEnumMapper;
 public class HbmAssociationBuilder {
 
 	public static void processManyToOne(DynamicClassDetails entityClass,
-										 JaxbHbmManyToOneType m2o,
-										 String defaultPackage,
-										 HbmBuildContext ctx) {
+										JaxbHbmManyToOneType m2o,
+										String defaultPackage,
+										HbmBuildContext ctx) {
 		String name = m2o.getName();
 		String targetClassName = m2o.getClazz();
 		if (targetClassName == null || targetClassName.isEmpty()) {
@@ -103,14 +90,16 @@ public class HbmAssociationBuilder {
 			if (!updatable) jc.updatable(false);
 			if (notNull) jc.nullable(false);
 			field.addAnnotationUsage(jc);
-		} else {
+		}
+		else {
 			// Check nested <column> and <formula> elements from columnOrFormula
 			List<JaxbHbmColumnType> columns = new java.util.ArrayList<>();
 			List<String> formulas = new java.util.ArrayList<>();
 			for (Object item : m2o.getColumnOrFormula()) {
 				if (item instanceof JaxbHbmColumnType col) {
 					columns.add(col);
-				} else if (item instanceof String formula) {
+				}
+		else if (item instanceof String formula) {
 					formulas.add(formula);
 				}
 			}
@@ -123,7 +112,8 @@ public class HbmAssociationBuilder {
 					if (!updatable) jc.updatable(false);
 					if (notNull) jc.nullable(false);
 					field.addAnnotationUsage(jc);
-				} else {
+				}
+		else {
 					jakarta.persistence.JoinColumn[] jcArray =
 							new jakarta.persistence.JoinColumn[columns.size()];
 					for (int i = 0; i < columns.size(); i++) {
@@ -188,9 +178,9 @@ public class HbmAssociationBuilder {
 	}
 
 	public static void processAny(DynamicClassDetails entityClass,
-								   JaxbHbmAnyAssociationType any,
-								   String defaultPackage,
-								   HbmBuildContext ctx) {
+								JaxbHbmAnyAssociationType any,
+								String defaultPackage,
+								HbmBuildContext ctx) {
 		String name = any.getName();
 
 		// Create field typed as Object (any-typed associations are polymorphic)
@@ -262,10 +252,10 @@ public class HbmAssociationBuilder {
 	 * as field meta attributes for template rendering.
 	 */
 	static void applyAnyDiscriminatorValues(List<JaxbHbmAnyValueMappingType> metaValues,
-											 DynamicFieldDetails field,
-											 String ownerClassName,
-											 String defaultPackage,
-											 HbmBuildContext ctx) {
+											DynamicFieldDetails field,
+											String ownerClassName,
+											String defaultPackage,
+											HbmBuildContext ctx) {
 		AnyDiscriminatorValueAnnotation[] values =
 				new AnyDiscriminatorValueAnnotation[metaValues.size()];
 		for (int i = 0; i < metaValues.size(); i++) {
@@ -276,7 +266,8 @@ public class HbmAssociationBuilder {
 			String entityClassName = HbmTypeResolver.resolveClassName(mv.getClazz(), defaultPackage);
 			try {
 				dvAnnotation.entity(Class.forName(entityClassName));
-			} catch (ClassNotFoundException e) {
+			}
+		catch (ClassNotFoundException e) {
 				dvAnnotation.entity(Object.class);
 			}
 			values[i] = dvAnnotation;
@@ -303,7 +294,8 @@ public class HbmAssociationBuilder {
 			default -> {
 				try {
 					yield Class.forName(javaType);
-				} catch (ClassNotFoundException e) {
+				}
+		catch (ClassNotFoundException e) {
 					yield null;
 				}
 			}
@@ -327,7 +319,8 @@ public class HbmAssociationBuilder {
 			try {
 				java.lang.reflect.Method getter = ownerClass.getMethod(getterName);
 				return getter.getReturnType().getName();
-			} catch (NoSuchMethodException ignored) {}
+			}
+		catch (NoSuchMethodException ignored) {}
 			// Try "is" getter for booleans
 			String isName = "is"
 					+ propertyName.substring(0, 1).toUpperCase()
@@ -335,18 +328,22 @@ public class HbmAssociationBuilder {
 			try {
 				java.lang.reflect.Method getter = ownerClass.getMethod(isName);
 				return getter.getReturnType().getName();
-			} catch (NoSuchMethodException ignored) {}
+			}
+		catch (NoSuchMethodException ignored) {}
 			// Try field directly
 			try {
 				java.lang.reflect.Field f = ownerClass.getField(propertyName);
 				return f.getType().getName();
-			} catch (NoSuchFieldException ignored) {}
+			}
+		catch (NoSuchFieldException ignored) {}
 			// Try declared field
 			try {
 				java.lang.reflect.Field f = ownerClass.getDeclaredField(propertyName);
 				return f.getType().getName();
-			} catch (NoSuchFieldException ignored) {}
-		} catch (ClassNotFoundException ignored) {}
+			}
+		catch (NoSuchFieldException ignored) {}
+		}
+		catch (ClassNotFoundException ignored) {}
 		return null;
 	}
 

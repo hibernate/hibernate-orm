@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.builder.hbm;
 
@@ -31,7 +18,6 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOneToManyCollectionElementType;
 import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorAnnotation;
-import org.hibernate.boot.models.annotations.internal.AnyDiscriminatorValuesAnnotation;
 import org.hibernate.boot.models.annotations.internal.AnyKeyJavaClassAnnotation;
 import org.hibernate.boot.models.annotations.internal.ColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
@@ -58,10 +44,12 @@ class HbmCollectionFieldFactory {
 		if (oneToMany != null) {
 			return buildOneToManyField(entityClass, name, oneToMany,
 					key, collectionInterfaceName, defaultPackage, ctx);
-		} else if (manyToMany != null) {
+		}
+		else if (manyToMany != null) {
 			return buildManyToManyField(entityClass, name, manyToMany,
 					key, collectionInterfaceName, defaultPackage, ctx);
-		} else if (element != null) {
+		}
+		else if (element != null) {
 			return buildElementCollectionField(entityClass, name, element,
 					key, collectionInterfaceName, ctx);
 		}
@@ -86,7 +74,8 @@ class HbmCollectionFieldFactory {
 				keyTypeName = ctx.resolveJavaType(map.getMapKey().getTypeAttribute());
 			}
 			mapKeyColumnName = map.getMapKey().getColumnAttribute();
-		} else if (map.getIndex() != null && map.getIndex().getType() != null) {
+		}
+		else if (map.getIndex() != null && map.getIndex().getType() != null) {
 			keyTypeName = ctx.resolveJavaType(map.getIndex().getType());
 		}
 		ClassDetails keyClass = ctx.getModelsContext().getClassDetailsRegistry()
@@ -96,13 +85,16 @@ class HbmCollectionFieldFactory {
 		if (oneToMany != null) {
 			field = buildMapOneToManyField(entityClass, name, oneToMany,
 					key, keyClass, defaultPackage, ctx);
-		} else if (manyToMany != null) {
+		}
+		else if (manyToMany != null) {
 			field = buildMapManyToManyField(entityClass, name, manyToMany,
 					key, keyClass, defaultPackage, ctx);
-		} else if (manyToAny != null) {
+		}
+		else if (manyToAny != null) {
 			field = buildMapManyToAnyField(entityClass, name, manyToAny,
 					key, keyClass, defaultPackage, ctx);
-		} else if (element != null) {
+		}
+		else if (element != null) {
 			field = buildMapElementCollectionField(entityClass, name, element,
 					key, keyClass, ctx);
 		}

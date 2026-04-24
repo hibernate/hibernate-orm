@@ -1,17 +1,6 @@
 /*
- * Copyright 2010 - 2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.exporter.entity;
 
@@ -44,7 +33,6 @@ import org.hibernate.tool.reveng.api.export.ExporterConstants;
 import org.hibernate.tool.reveng.api.metadata.MetadataDescriptor;
 import org.hibernate.tool.reveng.internal.util.MetadataHelper;
 import org.hibernate.tool.reveng.api.version.Version;
-import org.hibernate.tool.reveng.internal.util.EntityFileWriter;
 
 /**
  * Generates JPA-annotated Java entity source files from {@link ClassDetails}
@@ -94,7 +82,7 @@ public class EntityExporter implements Exporter {
 	}
 
 	private EntityExporter(List<ClassDetails> entities, ModelsContext modelsContext,
-						   boolean annotated, boolean useGenerics, String[] templatePath) {
+						boolean annotated, boolean useGenerics, String[] templatePath) {
 		this.entities = entities;
 		this.modelsContext = modelsContext;
 		this.annotated = annotated;
@@ -158,7 +146,8 @@ public class EntityExporter implements Exporter {
 			outputFile.getParentFile().mkdirs();
 			try (Writer writer = new FileWriter(outputFile)) {
 				export(writer, entity, classMeta, fieldMeta);
-			} catch (Exception e) {
+			}
+		catch (Exception e) {
 				throw new RuntimeException(
 						"Failed to export " + entity.getClassName()
 						+ " to " + outputFile, e);
@@ -174,8 +163,8 @@ public class EntityExporter implements Exporter {
 	}
 
 	public void export(Writer output, ClassDetails entity,
-					   Map<String, List<String>> classMetaAttributes,
-					   Map<String, Map<String, List<String>>> fieldMetaAttributes) {
+					Map<String, List<String>> classMetaAttributes,
+					Map<String, Map<String, List<String>>> fieldMetaAttributes) {
 		String packageName = getPackageName(entity);
 		// For generated-class, the package may differ
 		List<String> generatedClass = classMetaAttributes.getOrDefault(
@@ -212,7 +201,8 @@ public class EntityExporter implements Exporter {
 			Template template = freemarkerConfig.getTemplate(templateName);
 			template.process(model, output);
 			output.flush();
-		} catch (IOException | TemplateException e) {
+		}
+		catch (IOException | TemplateException e) {
 			throw new RuntimeException(
 					"Failed to export entity: " + entity.getClassName(), e);
 		}
@@ -244,7 +234,7 @@ public class EntityExporter implements Exporter {
 	 * meta attribute which redirects output to a different file.
 	 */
 	private String resolveOutputClassName(ClassDetails entity,
-										  Map<String, List<String>> classMeta) {
+										Map<String, List<String>> classMeta) {
 		List<String> generatedClass = classMeta.getOrDefault(
 				"generated-class", Collections.emptyList());
 		if (!generatedClass.isEmpty()) {
@@ -261,7 +251,8 @@ public class EntityExporter implements Exporter {
 			simpleName = className.substring(lastDot + 1);
 			packagePath = className.substring(0, lastDot)
 					.replace('.', File.separatorChar);
-		} else {
+		}
+		else {
 			simpleName = className;
 			packagePath = null;
 		}
@@ -306,7 +297,8 @@ public class EntityExporter implements Exporter {
 				if (dir.isDirectory()) {
 					try {
 						loaders.add(new FileTemplateLoader(dir));
-					} catch (IOException e) {
+					}
+		catch (IOException e) {
 						throw new RuntimeException("Failed to create template loader for: " + path, e);
 					}
 				}

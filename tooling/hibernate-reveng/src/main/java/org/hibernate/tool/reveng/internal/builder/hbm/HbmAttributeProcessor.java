@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.builder.hbm;
 
@@ -47,9 +34,9 @@ import org.hibernate.models.internal.dynamic.DynamicClassDetails;
 class HbmAttributeProcessor {
 
 	static void processAttributes(DynamicClassDetails entityClass,
-								  List<Serializable> attributes,
-								  String defaultPackage,
-								  HbmBuildContext ctx) {
+								List<Serializable> attributes,
+								String defaultPackage,
+								HbmBuildContext ctx) {
 		if (attributes == null) {
 			return;
 		}
@@ -60,36 +47,49 @@ class HbmAttributeProcessor {
 	}
 
 	private static void processAttribute(DynamicClassDetails entityClass,
-										   Serializable attribute,
-										   String defaultPackage,
-										   HbmBuildContext ctx) {
+										Serializable attribute,
+										String defaultPackage,
+										HbmBuildContext ctx) {
 		if (attribute instanceof JaxbHbmBasicAttributeType basicAttr) {
 			HbmPropertyBuilder.processProperty(entityClass, basicAttr, ctx);
-		} else if (attribute instanceof JaxbHbmManyToOneType m2o) {
+		}
+		else if (attribute instanceof JaxbHbmManyToOneType m2o) {
 			HbmAssociationBuilder.processManyToOne(entityClass, m2o, defaultPackage, ctx);
-		} else if (attribute instanceof JaxbHbmOneToOneType o2o) {
+		}
+		else if (attribute instanceof JaxbHbmOneToOneType o2o) {
 			HbmAssociationBuilder.processOneToOne(entityClass, o2o, defaultPackage, ctx);
-		} else if (attribute instanceof JaxbHbmAnyAssociationType any) {
+		}
+		else if (attribute instanceof JaxbHbmAnyAssociationType any) {
 			HbmAssociationBuilder.processAny(entityClass, any, defaultPackage, ctx);
-		} else if (attribute instanceof JaxbHbmSetType set) {
+		}
+		else if (attribute instanceof JaxbHbmSetType set) {
 			HbmCollectionBuilder.processSet(entityClass, set, defaultPackage, ctx);
-		} else if (attribute instanceof JaxbHbmListType list) {
+		}
+		else if (attribute instanceof JaxbHbmListType list) {
 			HbmCollectionBuilder.processList(entityClass, list, defaultPackage, ctx);
-		} else if (attribute instanceof JaxbHbmBagCollectionType bag) {
+		}
+		else if (attribute instanceof JaxbHbmBagCollectionType bag) {
 			HbmCollectionBuilder.processBag(entityClass, bag, defaultPackage, ctx);
-		} else if (attribute instanceof JaxbHbmMapType map) {
+		}
+		else if (attribute instanceof JaxbHbmMapType map) {
 			HbmCollectionBuilder.processMap(entityClass, map, defaultPackage, ctx);
-		} else if (attribute instanceof JaxbHbmArrayType array) {
+		}
+		else if (attribute instanceof JaxbHbmArrayType array) {
 			HbmCollectionBuilder.processArray(entityClass, array, defaultPackage, ctx);
-		} else if (attribute instanceof JaxbHbmPrimitiveArrayType primArray) {
+		}
+		else if (attribute instanceof JaxbHbmPrimitiveArrayType primArray) {
 			HbmCollectionBuilder.processPrimitiveArray(entityClass, primArray, defaultPackage, ctx);
-		} else if (attribute instanceof JaxbHbmIdBagCollectionType idBag) {
+		}
+		else if (attribute instanceof JaxbHbmIdBagCollectionType idBag) {
 			HbmCollectionBuilder.processIdBag(entityClass, idBag, defaultPackage, ctx);
-		} else if (attribute instanceof JaxbHbmCompositeAttributeType component) {
+		}
+		else if (attribute instanceof JaxbHbmCompositeAttributeType component) {
 			HbmComponentBuilder.processComponent(entityClass, component, defaultPackage, ctx);
-		} else if (attribute instanceof JaxbHbmDynamicComponentType dynComponent) {
+		}
+		else if (attribute instanceof JaxbHbmDynamicComponentType dynComponent) {
 			HbmComponentBuilder.processDynamicComponent(entityClass, dynComponent, defaultPackage, ctx);
-		} else if (attribute instanceof JaxbHbmPropertiesType properties) {
+		}
+		else if (attribute instanceof JaxbHbmPropertiesType properties) {
 			processPropertiesGroup(entityClass, properties, defaultPackage, ctx);
 		}
 	}

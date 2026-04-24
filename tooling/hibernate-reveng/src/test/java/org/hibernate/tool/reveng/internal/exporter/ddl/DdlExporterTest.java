@@ -1,17 +1,6 @@
 /*
- * Copyright 2010 - 2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.exporter.ddl;
 
@@ -64,7 +53,7 @@ public class DdlExporterTest {
 	}
 
 	private ClassDetails buildEntity(DynamicEntityBuilder builder,
-									  String tableName, String className, String pkg) {
+									String tableName, String className, String pkg) {
 		TableDescriptor table = new TableDescriptor(tableName, className, pkg);
 		table.addColumn(new ColumnDescriptor("ID", "id", Long.class).primaryKey(true));
 		table.addColumn(new ColumnDescriptor("NAME", "name", String.class));
@@ -244,7 +233,7 @@ public class DdlExporterTest {
 		DdlExporter exporter = DdlExporter.create(List.of(entity), props);
 		exporter.executeCreateDdl();
 		try (Connection conn = openFileConnection();
-			 Statement stmt = conn.createStatement()) {
+			Statement stmt = conn.createStatement()) {
 			ResultSet rs = stmt.executeQuery(
 					"SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES "
 					+ "WHERE TABLE_NAME = 'EMP_CREATE'");
@@ -262,7 +251,7 @@ public class DdlExporterTest {
 		exporter.executeCreateDdl();
 		exporter.executeDropDdl();
 		try (Connection conn = openFileConnection();
-			 Statement stmt = conn.createStatement()) {
+			Statement stmt = conn.createStatement()) {
 			ResultSet rs = stmt.executeQuery(
 					"SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES "
 					+ "WHERE TABLE_NAME = 'EMP_DROP'");
@@ -280,7 +269,7 @@ public class DdlExporterTest {
 		exporter.executeCreateDdl();
 		exporter.executeBothDdl();
 		try (Connection conn = openFileConnection();
-			 Statement stmt = conn.createStatement()) {
+			Statement stmt = conn.createStatement()) {
 			ResultSet rs = stmt.executeQuery(
 					"SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES "
 					+ "WHERE TABLE_NAME = 'EMP_BOTH'");
@@ -297,7 +286,7 @@ public class DdlExporterTest {
 		Properties props = h2FileProperties();
 		// Create a table with only ID column
 		try (Connection conn = openFileConnection();
-			 Statement stmt = conn.createStatement()) {
+			Statement stmt = conn.createStatement()) {
 			stmt.execute("CREATE TABLE EMP_UPDATE (ID BIGINT PRIMARY KEY)");
 		}
 		// Build entity with ID + NAME — migration should add NAME
@@ -317,7 +306,7 @@ public class DdlExporterTest {
 		Properties props = h2FileProperties();
 		// Create a table with only ID column
 		try (Connection conn = openFileConnection();
-			 Statement stmt = conn.createStatement()) {
+			Statement stmt = conn.createStatement()) {
 			stmt.execute("CREATE TABLE EMP_MIGRATE (ID BIGINT PRIMARY KEY)");
 		}
 		// Build entity with ID + NAME
@@ -328,7 +317,7 @@ public class DdlExporterTest {
 		exporter.executeUpdateDdl();
 		// Verify the NAME column was added
 		try (Connection conn = openFileConnection();
-			 Statement stmt = conn.createStatement()) {
+			Statement stmt = conn.createStatement()) {
 			ResultSet rs = stmt.executeQuery(
 					"SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS "
 					+ "WHERE TABLE_NAME = 'EMP_MIGRATE' AND COLUMN_NAME = 'NAME'");

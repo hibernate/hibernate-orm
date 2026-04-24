@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.ant.fresh;
 
@@ -38,10 +25,10 @@ import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 public class MetadataTaskTest {
-	
+
 	@TempDir
 	Path tempDir;
-	
+
 	@Test
 	public void testSetPersistenceUnit() {
 		MetadataTask mdt = new MetadataTask();
@@ -49,7 +36,7 @@ public class MetadataTaskTest {
 		mdt.setPersistenceUnit("foobar");
 		assertEquals("foobar", mdt.persistenceUnit);
 	}
-	
+
 	@Test
 	public void testSetPropertyFile() {
 		MetadataTask mdt = new MetadataTask();
@@ -58,7 +45,7 @@ public class MetadataTaskTest {
 		mdt.setPropertyFile(f);
 		assertSame(f, mdt.propertyFile);
 	}
-	
+
 	@Test
 	public void testSetConfigFile() {
 		MetadataTask mdt = new MetadataTask();
@@ -67,7 +54,7 @@ public class MetadataTaskTest {
 		mdt.setConfigFile(f);
 		assertSame(f, mdt.configFile);
 	}
-	
+
 	@Test
 	public void testSetType() {
 		MetadataTask mdt = new MetadataTask();
@@ -75,7 +62,7 @@ public class MetadataTaskTest {
 		mdt.setType("jdbc");
 		assertSame(Type.JDBC, mdt.type);
 	}
-	
+
 	@Test
 	public void testAddConfiguredFileSet() {
 		MetadataTask mdt = new MetadataTask();
@@ -93,7 +80,7 @@ public class MetadataTaskTest {
 		String propertiesString = "hibernate.dialect=H2";
 		File propertiesFile = new File(tempDir.toFile(), "hibernate.properties");
 		Files.write(propertiesFile.toPath(), propertiesString.getBytes());
-		String cfgXmlString = 
+		String cfgXmlString =
 				"<hibernate-configuration>                " +
 				"  <session-factory>                      " +
 				"    <property name='foo2'>bar2</property>" +
@@ -101,7 +88,7 @@ public class MetadataTaskTest {
 				"</hibernate-configuration>               " ;
 		File cfgXmlFile = new File(tempDir.toFile(), "hibernate.cfg.xml");
 		Files.write(cfgXmlFile.toPath(), cfgXmlString.getBytes());
-		String hbmXmlString = 
+		String hbmXmlString =
 				"<hibernate-mapping>     " +
 				"  <class name='foobar'/>" +
 				"</hibernate-mapping>    " ;

@@ -1,19 +1,6 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.jdbc2cfg.ManyToMany;
 
@@ -66,13 +53,13 @@ public class TestCase {
 	@Test
 	public void testNoManyToManyBiDirectional() {
 
-        AbstractStrategy c = new DefaultStrategy();
-        c.setSettings(new RevengSettings(c).setDetectManyToMany(false));
-        List<ClassDetails> entities = ((RevengMetadataDescriptor) MetadataDescriptorFactory
-        		.createReverseEngineeringDescriptor(c, null))
-        		.getEntityClassDetails();
+		AbstractStrategy c = new DefaultStrategy();
+		c.setSettings(new RevengSettings(c).setDetectManyToMany(false));
+		List<ClassDetails> entities = ((RevengMetadataDescriptor) MetadataDescriptorFactory
+				.createReverseEngineeringDescriptor(c, null))
+				.getEntityClassDetails();
 
-        ClassDetails project = findEntity(entities, "Project");
+		ClassDetails project = findEntity(entities, "Project");
 		assertNotNull(project);
 		assertNotNull(findField(project, "worksOns"));
 		// Non-ID fields count: worksOns + 2 others = 3
@@ -114,12 +101,12 @@ public class TestCase {
 				.createReverseEngineeringDescriptor(null, null))
 				.getEntityClassDetails();
 
-        assertNull(findEntity(entities, "WorksOn"), "No middle class should be generated.");
+		assertNull(findEntity(entities, "WorksOn"), "No middle class should be generated.");
 
-        assertNotNull(findEntity(entities, "WorksOnContext"),
-        		"Should create worksontext since one of the foreign keys is not part of pk");
+		assertNotNull(findEntity(entities, "WorksOnContext"),
+				"Should create worksontext since one of the foreign keys is not part of pk");
 
-        ClassDetails projectClass = findEntity(entities, "Project");
+		ClassDetails projectClass = findEntity(entities, "Project");
 		assertNotNull(projectClass);
 
 		ClassDetails employeeClass = findEntity(entities, "Employee");
@@ -130,7 +117,7 @@ public class TestCase {
 		assertNull(findField(employeeClass, "worksOns"),
 				"property worksOns should not exist on Employee");
 
-        FieldDetails projects = findField(employeeClass, "projects");
+		FieldDetails projects = findField(employeeClass, "projects");
 		assertNotNull(projects);
 		assertTrue(projects.hasDirectAnnotationUsage(ManyToMany.class));
 		FieldDetails employees = findField(projectClass, "employees");
@@ -143,7 +130,7 @@ public class TestCase {
 		List<ClassDetails> entities = ((RevengMetadataDescriptor) MetadataDescriptorFactory
 				.createReverseEngineeringDescriptor(null, null))
 				.getEntityClassDetails();
-        assertNotNull(findEntity(entities, "NonMiddle"), "Middle class should be generated.");
+		assertNotNull(findEntity(entities, "NonMiddle"), "Middle class should be generated.");
 	}
 
 	@Test

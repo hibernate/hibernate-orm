@@ -1,21 +1,7 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.ManyToManyTest;
 
 import org.hibernate.tool.reveng.api.export.Exporter;
@@ -53,11 +39,11 @@ public class TestCase {
 	private Exporter hbmexporter = null;
 	private File srcDir = null;
 
-    @BeforeEach
+	@BeforeEach
 	public void setUp() throws Exception {
 		srcDir = new File(outputFolder, "output");
 		assertTrue(srcDir.mkdir());
-        File resourcesDir = new File(outputFolder, "resources");
+		File resourcesDir = new File(outputFolder, "resources");
 		assertTrue(resourcesDir.mkdir());
 		MetadataDescriptor metadataDescriptor = HibernateUtil
 				.initializeMetadataDescriptor(this, HBM_XML_FILES, resourcesDir);
@@ -96,7 +82,7 @@ public class TestCase {
 	@Test
 	public void testManyToMany() throws Exception {
 		File outputXml = new File(
-				srcDir,  
+				srcDir,
 				"org/hibernate/tool/hbm2x/hbm2hbmxml/ManyToManyTest/User.hbm.xml");
 		JUnitUtil.assertIsNonEmptyFile(outputXml);
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -120,7 +106,7 @@ public class TestCase {
 	@Test
 	public void testCompositeId() throws Exception {
 		File outputXml = new File(
-				srcDir, 
+				srcDir,
 				"org/hibernate/tool/hbm2x/hbm2hbmxml/ManyToManyTest/Group.hbm.xml");
 		JUnitUtil.assertIsNonEmptyFile(outputXml);
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -150,7 +136,7 @@ public class TestCase {
 	@Test
 	public void testSetAttributes() throws Exception {
 		File outputXml = new File(
-				srcDir, 
+				srcDir,
 				"org/hibernate/tool/hbm2x/hbm2hbmxml/ManyToManyTest/Group.hbm.xml");
 		JUnitUtil.assertIsNonEmptyFile(outputXml);
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();

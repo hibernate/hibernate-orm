@@ -1,21 +1,7 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.OneToOneTest;
 
 import org.hibernate.tool.reveng.api.export.ArtifactCollector;
@@ -48,10 +34,10 @@ public class TestCase {
 	private static final String[] HBM_XML_FILES = new String[] {
 			"PersonAddressOneToOnePrimaryKey.hbm.xml"
 	};
-	
+
 	@TempDir
 	public File outputFolder = new File("output");
-	
+
 	private File srcDir = null;
 	private ArtifactCollector artifactCollector = new DefaultArtifactCollector();
 
@@ -59,7 +45,7 @@ public class TestCase {
 	public void setUp() throws Exception {
 		srcDir = new File(outputFolder, "src");
 		assertTrue(srcDir.mkdir());
-        File resourcesDir = new File(outputFolder, "resources");
+		File resourcesDir = new File(outputFolder, "resources");
 		assertTrue(resourcesDir.mkdir());
 		MetadataDescriptor metadataDescriptor = HibernateUtil
 				.initializeMetadataDescriptor(this, HBM_XML_FILES, resourcesDir);
@@ -69,7 +55,7 @@ public class TestCase {
 		hbmexporter.getProperties().put(ExporterConstants.ARTIFACT_COLLECTOR, artifactCollector);
 		hbmexporter.start();
 	}
-	
+
 	@Test
 	public void testAllFilesExistence() {
 		assertFalse(new File(
@@ -81,17 +67,17 @@ public class TestCase {
 						"org/hibernate/tool/hbm2x/hbm2hbmxml/OneToOneTest/Person.hbm.xml"));
 		JUnitUtil.assertIsNonEmptyFile(
 				new File(
-						srcDir, 
-						"/org/hibernate/tool/hbm2x/hbm2hbmxml/OneToOneTest/Address.hbm.xml"));		
+						srcDir,
+						"/org/hibernate/tool/hbm2x/hbm2hbmxml/OneToOneTest/Address.hbm.xml"));
 	}
-	
+
 	@Test
 	public void testArtifactCollection() {
 		assertEquals(
 				2,
 				artifactCollector.getFileCount("hbm.xml"));
 	}
-	
+
 	@Test
 	public void testReadable() throws Exception {
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -103,12 +89,12 @@ public class TestCase {
 				srcDir,
 				"org/hibernate/tool/hbm2x/hbm2hbmxml/OneToOneTest/Address.hbm.xml")));
 	}
-	
+
 	@Test
 	public void testOneToOne() throws Exception {
 		File xmlFile = new File(
-        		srcDir, 
-        		"org/hibernate/tool/hbm2x/hbm2hbmxml/OneToOneTest/Person.hbm.xml");
+				srcDir,
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/OneToOneTest/Person.hbm.xml");
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		DocumentBuilder db = dbf.newDocumentBuilder();
 		Document document = db.parse(xmlFile);
@@ -121,8 +107,8 @@ public class TestCase {
 		assertEquals("address", node.getAttribute( "name" ));
 		assertEquals("false", node.getAttribute( "constrained" ));
 		xmlFile = new File(
-        		srcDir, 
-        		"org/hibernate/tool/hbm2x/hbm2hbmxml/OneToOneTest/Address.hbm.xml");
+				srcDir,
+				"org/hibernate/tool/hbm2x/hbm2hbmxml/OneToOneTest/Address.hbm.xml");
 		document = db.parse(xmlFile);
 		nodeList = (NodeList)xpath
 				.compile("//hibernate-mapping/class/one-to-one")

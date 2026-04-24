@@ -1,21 +1,7 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
-
 package org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.Hbm2HbmXmlTest;
 
 import org.hibernate.tool.reveng.api.export.ArtifactCollector;
@@ -46,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Initial implementation based on the Hbm2XTest class.
- * 
+ *
  * @author David Channon
  * @author koen
  */
@@ -55,10 +41,10 @@ public class TestCase {
 
 	/**
 	 * Testing class for cfg2hbm generating hbms.
-	 * Simulate a custom persister. 
+	 * Simulate a custom persister.
 	 * Note: Only needs to exist not work or be valid
 	 *       in any other way.
-	 * 
+	 *
 	 * @author David Channon
 	 */
 	public static class Persister {
@@ -71,10 +57,10 @@ public class TestCase {
 			"BasicGlobals.hbm.xml",
 			"ClassFullAttribute.hbm.xml"
 	};
-	
+
 	@TempDir
 	public File outputFolder = new File("output");
-	
+
 	private MetadataDescriptor metadataDescriptor = null;
 	private File srcDir = null;
 	private ArtifactCollector artifactCollector = new DefaultArtifactCollector();
@@ -83,7 +69,7 @@ public class TestCase {
 	public void setUp() throws Exception {
 		srcDir = new File(outputFolder, "src");
 		assertTrue(srcDir.mkdir());
-        File resourcesDir = new File(outputFolder, "resources");
+		File resourcesDir = new File(outputFolder, "resources");
 		assertTrue(resourcesDir.mkdir());
 		metadataDescriptor = HibernateUtil
 				.initializeMetadataDescriptor(this, HBM_XML_FILES, resourcesDir);
@@ -93,7 +79,7 @@ public class TestCase {
 		hbmexporter.getProperties().put(ExporterConstants.ARTIFACT_COLLECTOR, artifactCollector);
 		hbmexporter.start();
 	}
-	
+
 	@Test
 	public void testAllFilesExistence() {
 		JUnitUtil.assertIsNonEmptyFile(new File(
@@ -117,7 +103,7 @@ public class TestCase {
 				artifactCollector.getFileCount("hbm.xml"),
 				"4 entity mappings");
 	}
-	
+
 	@Test
 	public void testGlobalSettingsGeneratedDatabase() throws Exception {
 		HibernateMappingSettings settings = new HibernateMappingSettings(
@@ -205,7 +191,7 @@ public class TestCase {
 	@Test
 	public void testCollectionAttributes() throws Exception {
 		File outputXml = new File(
-				srcDir, 
+				srcDir,
 				"org/hibernate/tool/hbm2x/hbm2hbmxml/Hbm2HbmXmlTest/Basic.hbm.xml");
 		JUnitUtil.assertIsNonEmptyFile(outputXml);
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -217,13 +203,13 @@ public class TestCase {
 				.evaluate(document, XPathConstants.NODESET);
 		assertEquals(1, nodeList.getLength(), "Expected to get one set element");
 		Element node = (Element) nodeList.item(0);
-		assertEquals("delete, update", node.getAttribute("cascade"));	
+		assertEquals("delete, update", node.getAttribute("cascade"));
 	}
-	
+
 	@Test
 	public void testComments() throws Exception {
 		File outputXml = new File(
-				srcDir, 
+				srcDir,
 				"org/hibernate/tool/hbm2x/hbm2hbmxml/Hbm2HbmXmlTest/ClassFullAttribute.hbm.xml");
 		JUnitUtil.assertIsNonEmptyFile(outputXml);
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -261,7 +247,7 @@ public class TestCase {
 		nodeList = (NodeList)xpath
 				.compile("//hibernate-mapping/class/property/column/comment")
 				.evaluate(document, XPathConstants.NODESET);
-		assertEquals(0, nodeList.getLength(), "Expected to get no comment element");	
+		assertEquals(0, nodeList.getLength(), "Expected to get no comment element");
 	}
 
 	@Test
@@ -321,21 +307,21 @@ public class TestCase {
 		DocumentBuilder  db = dbf.newDocumentBuilder();
 		Document document = db.parse(outputXml);
 		XPath xpath = XPathFactory.newInstance().newXPath();
-		// Validate the Generator and it has no arguments 
+		// Validate the Generator and it has no arguments
 		NodeList nodeList = (NodeList)xpath
 				.compile("//hibernate-mapping/class/id/generator")
 				.evaluate(document, XPathConstants.NODESET);
-        assertEquals(1, nodeList.getLength(), "Expected to get one generator element");
+		assertEquals(1, nodeList.getLength(), "Expected to get one generator element");
 		Node genAtt = ( (Element)nodeList.item(0)).getAttributeNode("class");
 		assertEquals("assigned", genAtt.getTextContent(), "Unexpected generator class name" );
 		nodeList = (NodeList)xpath
 				.compile("//hibernate-mapping/class/id/generator/param")
 				.evaluate(document, XPathConstants.NODESET);
-        assertEquals(0, nodeList.getLength(), "Expected to get no generator param elements");
+		assertEquals(0, nodeList.getLength(), "Expected to get no generator param elements");
 	}
-    
+
 	@Test
-    public void testIdGeneratorHasArgumentParameters()  throws Exception {
+	public void testIdGeneratorHasArgumentParameters()  throws Exception {
 		File outputXml = new File(
 				srcDir,
 				"org/hibernate/tool/hbm2x/hbm2hbmxml/Hbm2HbmXmlTest/Basic.hbm.xml");
@@ -344,11 +330,11 @@ public class TestCase {
 		DocumentBuilder  db = dbf.newDocumentBuilder();
 		Document document = db.parse(outputXml);
 		XPath xpath = XPathFactory.newInstance().newXPath();
-		// Validate the Generator and that it does have arguments 
+		// Validate the Generator and that it does have arguments
 		NodeList nodeList = (NodeList)xpath
 				.compile("//hibernate-mapping/class/id/generator")
 				.evaluate(document, XPathConstants.NODESET);
-        assertEquals(1, nodeList.getLength(), "Expected to get one generator element");
+		assertEquals(1, nodeList.getLength(), "Expected to get one generator element");
 		Node genAtt = ( (Element)nodeList.item(0)).getAttributeNode("class");
 		assertEquals("org.hibernate.id.TableHiLoGenerator", genAtt.getTextContent(), "Unexpected generator class name" );
 		nodeList = (NodeList)xpath
@@ -362,7 +348,7 @@ public class TestCase {
 		if(paramTableAtt.getTextContent().equals("column")) {
 			// to make sure the order of the elements doesn't matter.
 			Element tempElement = tableElement;
-			Attr temp = paramTableAtt;	
+			Attr temp = paramTableAtt;
 			paramTableAtt = paramColumnAtt;
 			tableElement = columnElement;
 			paramColumnAtt = temp;
@@ -372,7 +358,7 @@ public class TestCase {
 		assertEquals("column", paramColumnAtt.getTextContent(), "Unexpected generator param name" );
 		assertEquals("uni_table", tableElement.getTextContent(), "Unexpected param value for table" );
 		assertEquals("next_hi_value", columnElement.getTextContent(), "Unexpected param value for column" );
-    }
+	}
 
 	@Test
 	public void testGeneralHbmSettingsQuery()  throws Exception {
@@ -384,7 +370,7 @@ public class TestCase {
 		DocumentBuilder  db = dbf.newDocumentBuilder();
 		Document document = db.parse(outputXml);
 		XPath xpath = XPathFactory.newInstance().newXPath();
-		// Validate the Generator and that it does have arguments 
+		// Validate the Generator and that it does have arguments
 		NodeList nodeList = (NodeList)xpath
 				.compile("//hibernate-mapping/query")
 				.evaluate(document, XPathConstants.NODESET);
@@ -417,7 +403,7 @@ public class TestCase {
 		DocumentBuilder  db = dbf.newDocumentBuilder();
 		Document document = db.parse(outputXml);
 		XPath xpath = XPathFactory.newInstance().newXPath();
-		// Validate the Generator and that it does have arguments 
+		// Validate the Generator and that it does have arguments
 		NodeList nodeList = (NodeList)xpath
 				.compile("//hibernate-mapping/sql-query")
 				.evaluate(document, XPathConstants.NODESET);
@@ -430,7 +416,7 @@ public class TestCase {
 		Attr genAtt = node.getAttributeNode("flush-mode");
 		assertNull(genAtt, "Expected flush-mode value to be null");
 	}
-	    
+
 	@Test
 	public void testGeneralHbmSettingsSQLQueryAllAttributes()  throws Exception {
 		File outputXml = new File(
@@ -441,7 +427,7 @@ public class TestCase {
 		DocumentBuilder  db = dbf.newDocumentBuilder();
 		Document document = db.parse(outputXml);
 		XPath xpath = XPathFactory.newInstance().newXPath();
-		// Validate the Generator and that it does have arguments 
+		// Validate the Generator and that it does have arguments
 		NodeList nodeList = (NodeList)xpath
 				.compile("//hibernate-mapping/sql-query[@name=\"test_sqlquery_2\"]")
 				.evaluate(document, XPathConstants.NODESET);
@@ -460,7 +446,7 @@ public class TestCase {
 		genAtt = node.getAttributeNode("timeout");
 		assertEquals("1000", genAtt.getTextContent(), "Unexpected timeout value" );
 		Element syncTable = (Element)node.getElementsByTagName("synchronize").item(0);
-		assertNull(syncTable, "Expected synchronize element to be null");	
+		assertNull(syncTable, "Expected synchronize element to be null");
 	}
 
 	@Test
@@ -473,7 +459,7 @@ public class TestCase {
 		DocumentBuilder  db = dbf.newDocumentBuilder();
 		Document document = db.parse(outputXml);
 		XPath xpath = XPathFactory.newInstance().newXPath();
-		// Validate the Generator and that it does have arguments 
+		// Validate the Generator and that it does have arguments
 		NodeList nodeList = (NodeList)xpath
 				.compile("//hibernate-mapping/sql-query[@name=\"test_sqlquery_3\"]")
 				.evaluate(document, XPathConstants.NODESET);
@@ -499,7 +485,7 @@ public class TestCase {
 		DocumentBuilder  db = dbf.newDocumentBuilder();
 		Document document = db.parse(outputXml);
 		XPath xpath = XPathFactory.newInstance().newXPath();
-		// Validate the Generator and that it does have arguments 
+		// Validate the Generator and that it does have arguments
 		NodeList nodeList = (NodeList)xpath
 				.compile("//hibernate-mapping/sql-query[@name=\"test_sqlquery_4\"]")
 				.evaluate(document, XPathConstants.NODESET);
@@ -525,7 +511,7 @@ public class TestCase {
 		DocumentBuilder  db = dbf.newDocumentBuilder();
 		Document document = db.parse(outputXml);
 		XPath xpath = XPathFactory.newInstance().newXPath();
-		// Validate the Generator and that it does have arguments 
+		// Validate the Generator and that it does have arguments
 		NodeList nodeList = (NodeList)xpath
 				.compile("//hibernate-mapping/sql-query[@name=\"test_sqlquery_5\"]")
 				.evaluate(document, XPathConstants.NODESET);
@@ -540,7 +526,7 @@ public class TestCase {
 		genAtt = returnEl.getAttributeNode("property");
 		assertEquals("e.age", genAtt.getTextContent(), "Unexpected property role value for return element");
 	}
-	    
+
 	@Test
 	public void testGeneralHbmSettingsSQLQueryWithReturnCollection()  throws Exception {
 		File outputXml = new File(
@@ -551,7 +537,7 @@ public class TestCase {
 		DocumentBuilder  db = dbf.newDocumentBuilder();
 		Document document = db.parse(outputXml);
 		XPath xpath = XPathFactory.newInstance().newXPath();
-		// Validate the Generator and that it does have arguments 
+		// Validate the Generator and that it does have arguments
 		NodeList nodeList = (NodeList)xpath
 				.compile("//hibernate-mapping/sql-query[@name=\"test_sqlquery_6\"]")
 				.evaluate(document, XPathConstants.NODESET);
@@ -568,5 +554,5 @@ public class TestCase {
 		genAtt = returnEl.getAttributeNode("lock-mode");
 		assertEquals("none", genAtt.getTextContent(), "Unexpected class lock-mode for return element");
 	}
-	
+
 }

@@ -1,17 +1,6 @@
 /*
- * Copyright 2010 - 2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.exporter.hbm;
 
@@ -163,7 +152,8 @@ public class HbmXmlExporter implements Exporter {
 						: Collections.emptyMap();
 				export(writer, cd, comment, classMeta, Collections.emptyMap(),
 						fieldMeta, allClassMeta);
-			} catch (Exception e) {
+			}
+		catch (Exception e) {
 				throw new RuntimeException(
 						"Failed to export hbm.xml for: " + cd.getClassName(), e);
 			}
@@ -181,29 +171,29 @@ public class HbmXmlExporter implements Exporter {
 	}
 
 	public void export(Writer output, ClassDetails entity, String comment,
-					   Map<String, List<String>> metaAttributes) {
+					Map<String, List<String>> metaAttributes) {
 		export(output, entity, comment, metaAttributes, Collections.emptyMap());
 	}
 
 	public void export(Writer output, ClassDetails entity, String comment,
-					   Map<String, List<String>> metaAttributes,
-					   Map<String, String> imports) {
+					Map<String, List<String>> metaAttributes,
+					Map<String, String> imports) {
 		export(output, entity, comment, metaAttributes, imports, Collections.emptyMap());
 	}
 
 	public void export(Writer output, ClassDetails entity, String comment,
-					   Map<String, List<String>> metaAttributes,
-					   Map<String, String> imports,
-					   Map<String, Map<String, List<String>>> fieldMetaAttributes) {
+					Map<String, List<String>> metaAttributes,
+					Map<String, String> imports,
+					Map<String, Map<String, List<String>>> fieldMetaAttributes) {
 		export(output, entity, comment, metaAttributes, imports,
 				fieldMetaAttributes, Collections.emptyMap());
 	}
 
 	public void export(Writer output, ClassDetails entity, String comment,
-					   Map<String, List<String>> metaAttributes,
-					   Map<String, String> imports,
-					   Map<String, Map<String, List<String>>> fieldMetaAttributes,
-					   Map<String, Map<String, List<String>>> allClassMetaAttributes) {
+					Map<String, List<String>> metaAttributes,
+					Map<String, String> imports,
+					Map<String, Map<String, List<String>>> fieldMetaAttributes,
+					Map<String, Map<String, List<String>>> allClassMetaAttributes) {
 		Map<String, Object> model = new HashMap<>();
 		model.put("classInfo", new HbmClassInfoHelper(entity, comment, metaAttributes, imports));
 		model.put("fields", new HbmFieldCategorizationHelper(entity, fieldMetaAttributes, metaAttributes));
@@ -218,7 +208,8 @@ public class HbmXmlExporter implements Exporter {
 			Template template = freemarkerConfig.getTemplate(TEMPLATE_NAME);
 			template.process(model, output);
 			output.flush();
-		} catch (IOException | TemplateException e) {
+		}
+		catch (IOException | TemplateException e) {
 			throw new RuntimeException(
 					"Failed to export hbm.xml for: " + entity.getClassName(), e);
 		}
@@ -232,7 +223,8 @@ public class HbmXmlExporter implements Exporter {
 				if (dir.isDirectory()) {
 					try {
 						loaders.add(new FileTemplateLoader(dir));
-					} catch (IOException e) {
+					}
+		catch (IOException e) {
 						throw new RuntimeException("Failed to create template loader for: " + path, e);
 					}
 				}

@@ -1,17 +1,6 @@
 /*
- * Copyright 2010 - 2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.internal.exporter.doc;
 
@@ -26,7 +15,6 @@ import java.util.Map;
 
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Table;
 
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
@@ -64,7 +52,7 @@ public class EntityDocHelper {
 	}
 
 	public EntityDocHelper(List<ClassDetails> entities,
-						   Map<String, TableDescriptor> tableMetadataMap) {
+						Map<String, TableDescriptor> tableMetadataMap) {
 		for (ClassDetails entity : entities) {
 			EntityDocInfo info = new EntityDocInfo(entity);
 			processClass(info);

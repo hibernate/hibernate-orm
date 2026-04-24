@@ -1,24 +1,10 @@
 /*
- * Hibernate Tools, Tooling for your Hibernate Projects
- *
- * Copyright 2004-2025 Red Hat, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.tool.reveng.jdbc2cfg.OneToOne;
 
 import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
@@ -184,26 +170,27 @@ public class TestCase {
 		EntityExporter.create(freshDescriptor, false).exportAll(outputDir);
 		JavaUtil.compile(outputDir);
 		URL[] urls = new URL[] { outputDir.toURI().toURL() };
-        ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
+		ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
 		URLClassLoader ucl = new URLClassLoader(urls, oldLoader );
 		try {
-	        Thread.currentThread().setContextClassLoader(ucl);
-	        StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
-	        ServiceRegistry serviceRegistry = builder.build();
-	        File[] files = new File[7];
-	        files[0] = new File(outputDir, "Person.mapping.xml");
-	        files[1] = new File(outputDir, "AddressPerson.mapping.xml");
-	        files[2] = new File(outputDir, "AddressMultiPerson.mapping.xml");
-	        files[3] = new File(outputDir, "MultiPerson.mapping.xml");
-	        files[4] = new File(outputDir, "MiddleTable.mapping.xml");
-	        files[5] = new File(outputDir, "LeftTable.mapping.xml");
-	        files[6] = new File(outputDir, "RightTable.mapping.xml");
-	        new SchemaValidator().validate(
-	        		MetadataDescriptorFactory
-	        			.createNativeDescriptor(null, files, null)
-	        			.createMetadata(),
-	        		serviceRegistry);
-		} finally {
+			Thread.currentThread().setContextClassLoader(ucl);
+			StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
+			ServiceRegistry serviceRegistry = builder.build();
+			File[] files = new File[7];
+			files[0] = new File(outputDir, "Person.mapping.xml");
+			files[1] = new File(outputDir, "AddressPerson.mapping.xml");
+			files[2] = new File(outputDir, "AddressMultiPerson.mapping.xml");
+			files[3] = new File(outputDir, "MultiPerson.mapping.xml");
+			files[4] = new File(outputDir, "MiddleTable.mapping.xml");
+			files[5] = new File(outputDir, "LeftTable.mapping.xml");
+			files[6] = new File(outputDir, "RightTable.mapping.xml");
+			new SchemaValidator().validate(
+					MetadataDescriptorFactory
+						.createNativeDescriptor(null, files, null)
+						.createMetadata(),
+					serviceRegistry);
+		}
+		finally {
 			Thread.currentThread().setContextClassLoader(oldLoader);
 		}
 	}
@@ -230,20 +217,20 @@ public class TestCase {
 		paths.add(JavaUtil.resolvePathToJarFileFor(Persistence.class)); // for jpa api
 		paths.add(JavaUtil.resolvePathToJarFileFor(Version.class)); // for hibernate core
 		JavaUtil.compile(outputDir, paths);
-        URL[] urls = new URL[] { outputDir.toURI().toURL() };
-        ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
+		URL[] urls = new URL[] { outputDir.toURI().toURL() };
+		ClassLoader oldLoader = Thread.currentThread().getContextClassLoader();
 		URLClassLoader ucl = new URLClassLoader(urls, oldLoader );
-        Class<?> personClass = ucl.loadClass("Person");
-        Class<?> multiPersonClass = ucl.loadClass("MultiPerson");
-        Class<?> addressMultiPerson = ucl.loadClass("AddressMultiPerson");
-        Class<?> addressMultiPersonId = ucl.loadClass("AddressMultiPersonId");
-        Class<?> addressPerson = ucl.loadClass("AddressPerson");
-        Class<?> multiPersonIdClass = ucl.loadClass("MultiPersonId");
-        Class<?> middleClass = ucl.loadClass("MiddleTable");
-        Class<?> rightClass = ucl.loadClass("LeftTable");
-        Class<?> leftClass = ucl.loadClass("RightTable");
-        try {
-	        Thread.currentThread().setContextClassLoader(ucl);
+		Class<?> personClass = ucl.loadClass("Person");
+		Class<?> multiPersonClass = ucl.loadClass("MultiPerson");
+		Class<?> addressMultiPerson = ucl.loadClass("AddressMultiPerson");
+		Class<?> addressMultiPersonId = ucl.loadClass("AddressMultiPersonId");
+		Class<?> addressPerson = ucl.loadClass("AddressPerson");
+		Class<?> multiPersonIdClass = ucl.loadClass("MultiPersonId");
+		Class<?> middleClass = ucl.loadClass("MiddleTable");
+		Class<?> rightClass = ucl.loadClass("LeftTable");
+		Class<?> leftClass = ucl.loadClass("RightTable");
+		try {
+			Thread.currentThread().setContextClassLoader(ucl);
 			StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();
 			ServiceRegistry serviceRegistry = builder.build();
 			NativeMetadataDescriptor mds = new NativeMetadataDescriptor(null, null, null);
@@ -258,9 +245,10 @@ public class TestCase {
 			HibernateUtil.addAnnotatedClass(mds, leftClass);
 			Metadata metadata = mds.createMetadata();
 			new SchemaValidator().validate(metadata, serviceRegistry);
-        } finally {
-        	Thread.currentThread().setContextClassLoader(oldLoader);
-        }
+		}
+		finally {
+			Thread.currentThread().setContextClassLoader(oldLoader);
+		}
 	}
 
 	private void assertFileAndExists(File file) {

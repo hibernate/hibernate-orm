@@ -21,7 +21,8 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.SpecHints;
-import org.hibernate.query.QueryFlushMode;
+import jakarta.persistence.QueryFlushMode;
+import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 
 import java.util.Map;
 
@@ -135,7 +136,7 @@ public class QueryHintDefinition {
 		try {
 			return value == null
 					? null
-					: QueryFlushMode.fromHint( value );
+					: FlushModeTypeHelper.queryFlushModeFromHint( value );
 		}
 		catch (MappingException e) {
 			throw new AnnotationException( "Unable to interpret FlushMode in named query hint: " + queryName, e );

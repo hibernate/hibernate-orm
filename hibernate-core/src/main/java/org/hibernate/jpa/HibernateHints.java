@@ -9,7 +9,7 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Timeout;
 import org.hibernate.FlushMode;
 import org.hibernate.Locking;
-import org.hibernate.query.QueryFlushMode;
+import jakarta.persistence.QueryFlushMode;
 
 /**
  * List of Hibernate-specific (extension) hints available to query,

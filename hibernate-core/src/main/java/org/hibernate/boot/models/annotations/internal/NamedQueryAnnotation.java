@@ -18,7 +18,7 @@ import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
-import org.hibernate.query.QueryFlushMode;
+import jakarta.persistence.QueryFlushMode;
 
 import static org.hibernate.boot.models.xml.internal.QueryProcessing.interpretFlushMode;
 

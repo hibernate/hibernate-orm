@@ -7,6 +7,7 @@ package org.hibernate.query;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.Parameter;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;

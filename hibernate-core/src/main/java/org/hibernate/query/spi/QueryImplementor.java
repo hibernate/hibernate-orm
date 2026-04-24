@@ -19,7 +19,7 @@ import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
 import org.hibernate.query.Query;
-import org.hibernate.query.QueryFlushMode;
+import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 
 import java.time.Instant;

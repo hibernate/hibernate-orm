@@ -7490,7 +7490,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public <N extends Number> void visitUnparsedNumericLiteral(UnparsedNumericLiteral<N> literal) {
-		appendSql( literal.getUnparsedLiteralValue() );
+		final String literalValue = literal.getUnparsedLiteralValue();
+		appendSql( literalValue );
+		switch ( literal.getTypeCategory() ) {
+			case FLOAT, DOUBLE:
+				// HQL literals like 1f should be rendered as 1.0
+				if ( literalValue.indexOf( '.' ) < 0
+					&& literalValue.indexOf( 'e' ) < 0
+					&& literalValue.indexOf( 'E' ) < 0 ) {
+					appendSql( ".0" );
+				}
+		}
 	}
 
 	private void visitLiteral(Literal literal) {

@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
@@ -37,6 +38,7 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.filter.internal.DynamicFilterAliasGenerator;
+import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -52,6 +54,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyMap;
+import static java.util.function.Function.identity;
 import static org.hibernate.internal.util.collections.ArrayHelper.contains;
 import static org.hibernate.internal.util.collections.ArrayHelper.join;
 import static org.hibernate.internal.util.collections.ArrayHelper.reverseFirst;
@@ -148,9 +151,17 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final PersistentClass persistentClass,
 			final EntityDataAccess cacheAccessStrategy,
 			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
-			final RuntimeModelCreationContext creationContext)
-					throws HibernateException {
-		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext );
+			final RuntimeModelCreationContext creationContext) throws HibernateException {
+		this( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, identity() );
+	}
+
+	protected JoinedSubclassEntityPersister(
+			final PersistentClass persistentClass,
+			final EntityDataAccess cacheAccessStrategy,
+			final NaturalIdDataAccess naturalIdRegionAccessStrategy,
+			final RuntimeModelCreationContext creationContext,
+			final Function<StateManagement, StateManagement> stateManagementConverter) throws HibernateException {
+		super( persistentClass, cacheAccessStrategy, naturalIdRegionAccessStrategy, creationContext, stateManagementConverter );
 
 		final var dialect = creationContext.getDialect();
 		final var typeConfiguration = creationContext.getTypeConfiguration();

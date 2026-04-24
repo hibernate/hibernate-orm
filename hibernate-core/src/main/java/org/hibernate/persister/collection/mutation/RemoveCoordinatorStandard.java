@@ -48,6 +48,11 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 		mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
+	// Used by Hibernate Reactive
+	protected BasicBatchKey getBatchKey() {
+		return batchKey;
+	}
+
 	@Override
 	public String toString() {
 		return "RemoveCoordinator(" + mutationTarget.getRolePath() + ")";
@@ -81,7 +86,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 		}
 
 		final var mutationExecutor = mutationExecutorService.createExecutor(
-				() -> batchKey,
+				this::getBatchKey,
 				operationGroup,
 				session
 		);
@@ -118,7 +123,8 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 		}
 	}
 
-	private MutationOperationGroup buildOperationGroup() {
+	// used by Hibernate Reactive
+	protected MutationOperationGroup buildOperationGroup() {
 		assert mutationTarget.getTargetPart() != null
 			&& mutationTarget.getTargetPart().getKeyDescriptor() != null;
 

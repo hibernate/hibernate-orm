@@ -124,9 +124,9 @@ public abstract class AbstractFlushingEventListener {
 		// safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
 		for ( var entry : persistenceContext.reentrantSafeEntityEntries() ) {
 //		for ( Map.Entry entry : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
-			final var entityEntry = entry.getValue();
+			final var entityEntry = entry.$$_hibernate_getEntityEntry();
 			if ( flushable( entityEntry ) ) {
-				cascadeOnFlush( session, entityEntry.getPersister(), entry.getKey(), context );
+				cascadeOnFlush( session, entityEntry.getPersister(), entry.$$_hibernate_getEntityInstance(), context );
 			}
 		}
 		checkForTransientReferences( session, persistenceContext );
@@ -138,14 +138,14 @@ public abstract class AbstractFlushingEventListener {
 		// persistent when we do the check (I wonder if we could move this
 		// into Nullability, instead of abusing the Cascade infrastructure)
 		for ( var entryEntry : persistenceContext.reentrantSafeEntityEntries() ) {
-			final var entry = entryEntry.getValue();
+			final var entry = entryEntry.$$_hibernate_getEntityEntry();
 			if ( checkable( entry ) ) {
 				Cascade.cascade(
 						CascadingActions.CHECK_ON_FLUSH,
 						CascadePoint.BEFORE_FLUSH,
 						session,
 						entry.getPersister(),
-						entryEntry.getKey(),
+						entryEntry.$$_hibernate_getEntityInstance(),
 						null
 				);
 			}
@@ -221,10 +221,15 @@ public abstract class AbstractFlushingEventListener {
 		int eventGenerationId = 0; //Used to double-check the instance reuse won't cause problems
 		for ( var me : entityEntries ) {
 			// Update the status of the object and if necessary, schedule an update
-			final var entry = me.getValue();
+			final var entry = me.$$_hibernate_getEntityEntry();
 			final var status = entry.getStatus();
 			if ( status != Status.LOADING && status != Status.GONE ) {
-				entityEvent = createOrReuseEventInstance( entityEvent, source, me.getKey(), entry );
+				entityEvent = createOrReuseEventInstance(
+						entityEvent,
+						source,
+						me.$$_hibernate_getEntityInstance(),
+						entry
+				);
 				entityEvent.setInstanceGenerationId( ++eventGenerationId );
 				flushListeners.fireEventOnEachListener( entityEvent, FlushEntityEventListener::onFlushEntity );
 				entityEvent.setAllowedToReuse( true );

@@ -172,6 +172,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private Nulls defaultNullPrecedence;
 	private boolean orderUpdatesEnabled;
 	private boolean orderInsertsEnabled;
+	private boolean batchIdentityInsertsEnabled;
 	private boolean collectionsInDefaultFetchGroupEnabled = true;
 	private final boolean unownedAssociationTransientCheck;
 	private final boolean passProcedureParameterNames;
@@ -395,6 +396,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		orderUpdatesEnabled = getBoolean( ORDER_UPDATES, settings );
 		orderInsertsEnabled = getBoolean( ORDER_INSERTS, settings );
+		batchIdentityInsertsEnabled = getBoolean( BATCH_IDENTITY_INSERTS, settings );
 
 		callbacksEnabled = getBoolean( JPA_CALLBACKS_ENABLED, settings, true );
 
@@ -1201,6 +1203,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isOrderInsertsEnabled() {
 		return orderInsertsEnabled;
+	}
+
+	@Override
+	public boolean isBatchIdentityInsertsEnabled() {
+		return batchIdentityInsertsEnabled;
 	}
 
 	@Override

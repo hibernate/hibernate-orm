@@ -4840,6 +4840,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this dialect support batching {@code insert} statements while still being
+	 * able to retrieve every generated identity value via
+	 * {@link PreparedStatement#getGeneratedKeys()}.
+	 *
+	 * @since 7.3
+	 */
+	public boolean supportsBatchInsertReturningGeneratedKeys() {
+		return false;
+	}
+
+	/**
 	 * Does this dialect require unquoting identifiers when passing them to the
 	 * {@link Connection#prepareStatement(String, String[])} JDBC method.
 	 *

@@ -2235,6 +2235,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			else if ( !hasPluralFetchOnSomeRoot( roots ) ) {
 				return false;
 			}
+			else if ( isPercentFetch( sqmQueryPart ) && !canRenderPercentFetchInSubquery() ) {
+				// "fetch first N percent rows" pushed into the inner derived table
+				// requires either native PERCENT support in a subquery (e.g. H2,
+				// Oracle, SQL Server) or window-function-based emulation
+				// (PostgreSQL/MySQL/etc. wrap the inner with row_number+count).
+				// Dialects with neither (HSQLDB) bail back to the in-memory
+				// fallback rather than emit unsupported SQL.
+				return false;
+			}
 			else if ( sqmQueryPart.getFetchExpression() != null
 					|| sqmQueryPart.getOffsetExpression() != null ) {
 				return true;
@@ -2244,6 +2253,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				return limit != null && !limit.isEmpty();
 			}
 		}
+	}
+
+	private static boolean isPercentFetch(SqmQueryPart<?> sqmQueryPart) {
+		final var fetchClauseType = sqmQueryPart.getFetchClauseType();
+		return fetchClauseType == FetchClauseType.PERCENT_ONLY
+			|| fetchClauseType == FetchClauseType.PERCENT_WITH_TIES;
+	}
+
+	private boolean canRenderPercentFetchInSubquery() {
+		final var dialect = getDialect();
+		return dialect.supportsFetchClause( FetchClauseType.PERCENT_ONLY )
+				|| dialect.supportsWindowFunctions();
 	}
 
 	private static boolean hasPluralFetchOnSomeRoot(List<TableGroup> roots) {

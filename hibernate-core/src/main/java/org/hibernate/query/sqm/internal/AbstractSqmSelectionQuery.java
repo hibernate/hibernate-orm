@@ -38,6 +38,7 @@ import jakarta.persistence.criteria.CompoundSelection;
 import static org.hibernate.cfg.QuerySettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
 import static org.hibernate.query.KeyedPage.KeyInterpretation.KEY_OF_FIRST_ON_NEXT_PAGE;
 import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
+import static org.hibernate.query.common.FetchClauseType.*;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectKeys;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectResults;
 import static org.hibernate.query.sqm.internal.SqmUtil.isHqlTuple;
@@ -120,6 +121,17 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		final var roots = spec.getFromClause().getRoots();
 		if ( roots.isEmpty() ) {
 			return false;
+		}
+		// "fetch first N percent rows" pushed into the inner derived table needs
+		// either native PERCENT support in a subquery or window-function-based
+		// emulation; HSQLDB has neither. Mirror the converter's bail.
+		final var fetchClauseType = spec.getFetchClauseType();
+		if ( fetchClauseType == PERCENT_ONLY || fetchClauseType == PERCENT_WITH_TIES ) {
+			final var dialect = sessionFactory.getJdbcServices().getDialect();
+			if ( !dialect.supportsFetchClause( PERCENT_ONLY )
+					&& !dialect.supportsWindowFunctions() ) {
+				return false;
+			}
 		}
 		final var metamodel = sessionFactory.getMappingMetamodel();
 		for ( var root : roots ) {

@@ -98,6 +98,15 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 		return omitLimit ? Limit.NONE : super.getLimit();
 	}
 
+	/**
+	 * The wrapped {@code Limit} value, ignoring the {@code omitLimit} flag.
+	 * Used by the SQM-to-SQL AST converter to push pagination into a derived
+	 * table when this wrapper has hidden the limit from the SQL translator.
+	 */
+	public Limit peekOriginalLimit() {
+		return super.getLimit();
+	}
+
 	@Override
 	public Integer getFirstRow() {
 		return omitLimit ? null : super.getFirstRow();

@@ -125,6 +125,7 @@ import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.sql.internal.AnyDiscriminatorPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.AsWrappedExpression;
 import org.hibernate.query.sqm.sql.internal.BasicValuedPathInterpretation;
+import org.hibernate.query.sqm.sql.internal.CollectionFetchPaginationQueryTransformer;
 import org.hibernate.query.sqm.sql.internal.DiscriminatedAssociationPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.DiscriminatorPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -377,6 +378,8 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.AbstractJdbcParameter;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.JdbcParametersImpl;
+import org.hibernate.sql.exec.internal.LimitJdbcParameter;
+import org.hibernate.sql.exec.internal.OffsetJdbcParameter;
 import org.hibernate.sql.exec.internal.SqlTypedMappingJdbcParameter;
 import org.hibernate.sql.exec.internal.VersionTypeSeedParameterSpecification;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -2182,24 +2185,115 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		if ( !containsCollectionFetches || !currentClauseStack.isEmpty() ) {
-			// Strip off the root offset and limit expressions in case the query contains collection fetches to retain
-			// the proper cardinality. We could implement pagination for single select statements differently in this
-			// case by using a subquery e.g. `... where alias in (select subAlias from ... limit ...)`
-			// or use window functions e.g. `select ... from (select ..., dense_rank() over(order by ..., id) rn from ...) tmp where tmp.rn between ...`
-			// but these transformations/translations are non-trivial and can be done later
-			inferrableTypeAccessStack.push( () -> getTypeConfiguration().getBasicTypeForJavaType( Integer.class ) );
-			sqlQueryPart.setOffsetClauseExpression( visitOffsetExpression( sqmQueryPart.getOffsetExpression() ) );
-			if ( sqmQueryPart.getFetchClauseType() == FetchClauseType.PERCENT_ONLY
-					|| sqmQueryPart.getFetchClauseType() == FetchClauseType.PERCENT_WITH_TIES ) {
-				inferrableTypeAccessStack.pop();
-				inferrableTypeAccessStack.push( () -> getTypeConfiguration().getBasicTypeForJavaType( Double.class ) );
-			}
-			sqlQueryPart.setFetchClauseExpression(
-					visitFetchExpression( sqmQueryPart.getFetchExpression() ),
-					sqmQueryPart.getFetchClauseType()
-			);
-			inferrableTypeAccessStack.pop();
+			applyOffsetAndFetch( sqmQueryPart, sqlQueryPart );
 		}
+		else if ( sqlQueryPart instanceof QuerySpec sqlQuerySpec
+				&& canPushPaginationDown( sqmQueryPart, sqlQuerySpec ) ) {
+			// Push the offset/fetch into a derived table over the root entity, leaving
+			// the plural fetch joins on an outer query. See CollectionFetchPaginationQueryTransformer.
+			applyOffsetAndFetch( sqmQueryPart, sqlQueryPart );
+			if ( sqlQueryPart.getOffsetClauseExpression() == null
+					&& sqlQueryPart.getFetchClauseExpression() == null ) {
+				applyQueryOptionsOffsetAndFetch( sqlQueryPart );
+			}
+			registerQueryTransformer( new CollectionFetchPaginationQueryTransformer() );
+		}
+		// else: strip the root offset/fetch (the in-memory fallback in
+		// AbstractSqmSelectionQuery slices the parent list after execution).
+	}
+
+	private void applyOffsetAndFetch(SqmQueryPart<?> sqmQueryPart, QueryPart sqlQueryPart) {
+		inferrableTypeAccessStack.push( () -> getTypeConfiguration().getBasicTypeForJavaType( Integer.class ) );
+		sqlQueryPart.setOffsetClauseExpression( visitOffsetExpression( sqmQueryPart.getOffsetExpression() ) );
+		if ( sqmQueryPart.getFetchClauseType() == FetchClauseType.PERCENT_ONLY
+				|| sqmQueryPart.getFetchClauseType() == FetchClauseType.PERCENT_WITH_TIES ) {
+			inferrableTypeAccessStack.pop();
+			inferrableTypeAccessStack.push( () -> getTypeConfiguration().getBasicTypeForJavaType( Double.class ) );
+		}
+		sqlQueryPart.setFetchClauseExpression(
+				visitFetchExpression( sqmQueryPart.getFetchExpression() ),
+				sqmQueryPart.getFetchClauseType()
+		);
+		inferrableTypeAccessStack.pop();
+	}
+
+	private boolean canPushPaginationDown(SqmQueryPart<?> sqmQueryPart, QuerySpec sqlQuerySpec) {
+		if ( !getDialect().supportsOffsetInSubquery() ) {
+			return false;
+		}
+		else {
+			// Every root must be a plain entity. Joined inheritance brings in secondary
+			// tables as TableReferenceJoins on the root, which the rewrite would have to
+			// project column-by-column to expose through the derived table — not yet
+			// implemented. At least one root must contribute a plural fetched join,
+			// otherwise the limit semantics are unaffected and the rewrite is pointless.
+			final var roots = sqlQuerySpec.getFromClause().getRoots();
+			if ( roots.isEmpty() ) {
+				return false;
+			}
+			else if ( !hasPluralFetchOnSomeRoot( roots ) ) {
+				return false;
+			}
+			else if ( sqmQueryPart.getFetchExpression() != null
+					|| sqmQueryPart.getOffsetExpression() != null ) {
+				return true;
+			}
+			else {
+				final var limit = peekOriginalLimit();
+				return limit != null && !limit.isEmpty();
+			}
+		}
+	}
+
+	private static boolean hasPluralFetchOnSomeRoot(List<TableGroup> roots) {
+		boolean hasPluralFetchOnSomeRoot = false;
+		for ( var root : roots ) {
+			if ( !( root.getModelPart() instanceof EntityMappingType )
+					|| !root.getTableReferenceJoins().isEmpty() ) {
+				return false;
+			}
+			if ( !hasPluralFetchOnSomeRoot ) {
+				for ( var join : root.getTableGroupJoins() ) {
+					final var joined = join.getJoinedGroup();
+					if ( joined.isFetched() && joined instanceof PluralTableGroup ) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	private void applyQueryOptionsOffsetAndFetch(QueryPart sqlQueryPart) {
+		final var limit = peekOriginalLimit();
+		if ( limit != null && !limit.isEmpty() ) {
+			final var integerType = getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
+			// Always emit both parameters so the cached plan works for any combination of
+			// setFirstResult/setMaxResults values; the parameter binders default firstRow
+			// to 0 and maxRows to Integer.MAX_VALUE when the corresponding option is not set.
+			sqlQueryPart.setOffsetClauseExpression(
+					new OffsetJdbcParameter( integerType )
+			);
+			sqlQueryPart.setFetchClauseExpression(
+					new LimitJdbcParameter( integerType ),
+					FetchClauseType.ROWS_ONLY
+			);
+		}
+	}
+
+	/**
+	 * The execution context wraps the {@code QueryOptions} with
+	 * {@link org.hibernate.query.spi.SqlOmittingQueryOptions} when there is a
+	 * collection fetch + limit, to suppress the outer LIMIT that the dialect
+	 * would otherwise append (the in-memory fallback uses this). Peek through
+	 * the wrapper here so the converter can still see the original limit values
+	 * and push them into the derived table.
+	 */
+	private org.hibernate.query.spi.Limit peekOriginalLimit() {
+		if ( queryOptions instanceof org.hibernate.query.spi.SqlOmittingQueryOptions wrapped ) {
+			return wrapped.peekOriginalLimit();
+		}
+		return queryOptions.getLimit();
 	}
 
 	private TableGroup findTableGroupByPath(NavigablePath navigablePath) {

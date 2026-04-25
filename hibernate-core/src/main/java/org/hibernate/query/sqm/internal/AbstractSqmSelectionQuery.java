@@ -25,6 +25,7 @@ import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.results.internal.TupleMetadata;
@@ -94,6 +95,45 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		else {
 			QUERY_MESSAGE_LOGGER.firstOrMaxResultsSpecifiedWithCollectionFetch();
 		}
+	}
+
+	/**
+	 * The pagination is pushed down into a derived table over the root entity by
+	 * {@code BaseSqmToSqlAstConverter}'s
+	 * {@code CollectionFetchPaginationQueryTransformer}, so the in-memory slice
+	 * after execution is unnecessary and no warning needs to be logged. These
+	 * conditions must stay in sync with the transformer's preconditions.
+	 */
+	protected boolean isPaginationPushedToDerivedTable() {
+		final var sessionFactory = getSessionFactory();
+		if ( !sessionFactory.getJdbcServices().getDialect().supportsOffsetInSubquery() ) {
+			return false;
+		}
+		final var stmt = getSqmStatement();
+		if ( !( stmt instanceof SqmSelectStatement<?> select ) ) {
+			return false;
+		}
+		final var queryPart = select.getQueryPart();
+		if ( !( queryPart instanceof SqmQuerySpec<?> spec ) ) {
+			return false;
+		}
+		final var roots = spec.getFromClause().getRoots();
+		if ( roots.isEmpty() ) {
+			return false;
+		}
+		// Every root must be an entity with no joined-inheritance secondary tables.
+		final var metamodel = sessionFactory.getMappingMetamodel();
+		for ( var root : roots ) {
+			final Class<?> javaType = root.getJavaType();
+			if ( javaType == null ) {
+				return false;
+			}
+			final var persister = metamodel.findEntityDescriptor( javaType );
+			if ( persister == null || persister.getSubclassTableSpan() != 1 ) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public abstract SqmStatement<R> getSqmStatement();

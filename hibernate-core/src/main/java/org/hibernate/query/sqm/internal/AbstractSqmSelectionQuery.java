@@ -121,15 +121,11 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		if ( roots.isEmpty() ) {
 			return false;
 		}
-		// Every root must be an entity with no joined-inheritance secondary tables.
 		final var metamodel = sessionFactory.getMappingMetamodel();
 		for ( var root : roots ) {
 			final Class<?> javaType = root.getJavaType();
-			if ( javaType == null ) {
-				return false;
-			}
-			final var persister = metamodel.findEntityDescriptor( javaType );
-			if ( persister == null || persister.getSubclassTableSpan() != 1 ) {
+			if ( javaType == null
+					|| metamodel.findEntityDescriptor( javaType ) == null ) {
 				return false;
 			}
 		}

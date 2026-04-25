@@ -2222,11 +2222,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return false;
 		}
 		else {
-			// Every root must be a plain entity. Joined inheritance brings in secondary
-			// tables as TableReferenceJoins on the root, which the rewrite would have to
-			// project column-by-column to expose through the derived table — not yet
-			// implemented. At least one root must contribute a plural fetched join,
-			// otherwise the limit semantics are unaffected and the rewrite is pointless.
+			// Every root must be an entity (so the rewrite knows how to project its
+			// primary-table columns). At least one root must contribute a plural
+			// fetched join, otherwise the limit semantics are unaffected and the
+			// rewrite is pointless. Secondary tables and joined-inheritance subtype
+			// tables come along inside the inner derived table; their columns get
+			// absorbed into the column-list and outer references rewritten.
 			final var roots = sqlQuerySpec.getFromClause().getRoots();
 			if ( roots.isEmpty() ) {
 				return false;
@@ -2246,23 +2247,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private static boolean hasPluralFetchOnSomeRoot(List<TableGroup> roots) {
-		boolean hasPluralFetchOnSomeRoot = false;
 		for ( var root : roots ) {
-			if ( !( root.getModelPart() instanceof EntityMappingType )
-					|| !root.getTableReferenceJoins().isEmpty() ) {
+			if ( !( root.getModelPart() instanceof EntityMappingType ) ) {
 				return false;
 			}
-			if ( !hasPluralFetchOnSomeRoot ) {
-				for ( var join : root.getTableGroupJoins() ) {
-					final var joined = join.getJoinedGroup();
-					if ( joined.isFetched() && joined instanceof PluralTableGroup ) {
-						return true;
-					}
+			for ( var join : root.getTableGroupJoins() ) {
+				final var joined = join.getJoinedGroup();
+				if ( joined.isFetched() && joined instanceof PluralTableGroup ) {
+					return true;
 				}
 			}
 		}
 		return false;
 	}
+
 
 	private void applyQueryOptionsOffsetAndFetch(QueryPart sqlQueryPart) {
 		final var limit = peekOriginalLimit();

@@ -17,12 +17,14 @@ import jakarta.persistence.OneToMany;
 
 import org.hibernate.cfg.QuerySettings;
 
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,6 +57,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		value = "true"
 ))
 @SessionFactory(useCollectingStatementInspector = true)
+@SkipForDialect( dialectClass = SybaseDialect.class )
 public class CollectionFetchPaginationTest {
 
 	@BeforeEach
@@ -72,6 +75,11 @@ public class CollectionFetchPaginationTest {
 				}
 				s.persist( b );
 			}
+			// Two extra books with no authors — used by innerFetchJoin* tests to
+			// verify that 'inner join fetch' filters them out even after pagination
+			// is pushed into the derived table.
+			s.persist( new Book( "no-authors-1", "Lonely 1" ) );
+			s.persist( new Book( "no-authors-2", "Lonely 2" ) );
 		} );
 	}
 
@@ -133,6 +141,44 @@ public class CollectionFetchPaginationTest {
 			for ( Book b : books ) {
 				assertThat( b.getAuthors().size(), is( 3 ) );
 			}
+		} );
+	}
+
+	/**
+	 * {@code inner join fetch} acts as a parent-row filter: only books that have
+	 * at least one author should appear. After the fetch join moves to the outer,
+	 * the rewrite preserves that filter by adding an {@code EXISTS} subquery to
+	 * the inner — otherwise the inner pagination could pick up books with no
+	 * authors and the outer inner-join would silently drop them, leaving fewer
+	 * than {@code maxResults} rows in the result.
+	 */
+	@Test
+	void innerFetchJoinWithMaxResults(SessionFactoryScope scope) {
+		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		scope.inTransaction( s -> {
+			sql.clear();
+
+			// "no-authors-1" and "no-authors-2" come first when ordered by isbn —
+			// without the EXISTS filter in the inner, they'd be picked up by the
+			// inner LIMIT and the outer inner-join would drop them, leaving 0
+			// results. With the filter, the inner skips them and we get isbn-0/1.
+			final List<Book> books = s.createSelectionQuery(
+					"from Book b inner join fetch b.authors order by b.isbn",
+					Book.class
+			).setMaxResults( 2 ).list();
+
+			assertThat( books.size(), is( 2 ) );
+			assertThat( books.get( 0 ).getIsbn(), is( "isbn-0" ) );
+			assertThat( books.get( 1 ).getIsbn(), is( "isbn-1" ) );
+			for ( Book b : books ) {
+				assertThat( b.getAuthors().size(), is( 3 ) );
+			}
+
+			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
+			assertThat( generated, containsString( "from (select" ) );
+			// The inner derived table carries an EXISTS predicate to mirror the
+			// inner-join filter that's now sitting on the outer.
+			assertThat( generated, containsString( "exists" ) );
 		} );
 	}
 

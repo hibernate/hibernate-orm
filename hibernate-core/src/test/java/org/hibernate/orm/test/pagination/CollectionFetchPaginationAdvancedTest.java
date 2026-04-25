@@ -21,7 +21,7 @@ import jakarta.persistence.SecondaryTable;
 
 import org.hibernate.cfg.QuerySettings;
 
-import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -59,7 +59,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		value = "true"
 ))
 @SessionFactory(useCollectingStatementInspector = true)
-@SkipForDialect( dialectClass = SybaseDialect.class )
+@SkipForDialect( dialectClass = SybaseASEDialect.class )
 public class CollectionFetchPaginationAdvancedTest {
 
 	@BeforeEach

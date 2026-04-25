@@ -279,6 +279,15 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 				SqlAppender sqlAppender,
 				SqlAstTranslator<?> walker,
 				SessionFactoryImplementor sessionFactory) {
+			buildCaseExpression().accept( walker );
+		}
+
+		/**
+		 * Builds (lazily, once) the underlying {@link CaseSearchedExpression}
+		 * and returns it. Exposed so transformations can access the case
+		 * expression's column references before SQL rendering.
+		 */
+		public CaseSearchedExpression buildCaseExpression() {
 			if ( caseSearchedExpression == null ) {
 				// todo (6.0): possible optimization is to omit cases for table reference joins, that touch a super class, where a subclass is inner joined due to pruning
 				caseSearchedExpression =
@@ -314,7 +323,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 						}
 				);
 			}
-			caseSearchedExpression.accept( walker );
+			return caseSearchedExpression;
 		}
 
 		@Override

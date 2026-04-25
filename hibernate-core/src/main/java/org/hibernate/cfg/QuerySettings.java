@@ -217,16 +217,17 @@ public interface QuerySettings {
 	/**
 	 * When {@linkplain org.hibernate.query.Query#setMaxResults(int) pagination} is used
 	 * in combination with a {@code fetch join} applied to a collection or many-valued
-	 * association, the limit must be applied in-memory instead of on the database. This
-	 * typically has terrible performance characteristics, and should be avoided.
+	 * association, and the database does not support {@code LIMIT} inside a subquery,
+	 * the limit must be applied in-memory instead of on the database. This typically
+	 * has terrible performance characteristics and should be avoided.
 	 * <p>
 	 * When enabled, this setting specifies that an exception should be thrown for any
 	 * query which would result in the limit being applied in-memory.
 	 *
-	 * @settingDefault {@code false} (disabled) - no exception is thrown and the
+	 * @settingDefault {@code false} (disabled) - no exception is thrown, and the
 	 * possibility of terrible performance is left as a problem for the client to avoid.
 	 *
-	 * @since 5.2.13
+	 * @since 5.2
 	 */
 	String FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH = "hibernate.query.fail_on_pagination_over_collection_fetch";
 
@@ -266,7 +267,7 @@ public interface QuerySettings {
 	 * to a parameter, a SQL statement with 8 bind parameters in the {@code IN} clause
 	 * will be used, and null will be bound to the left-over parameters.
 	 *
-	 * @since 5.2.17
+	 * @since 5.2
 	 */
 	String IN_CLAUSE_PARAMETER_PADDING = "hibernate.query.in_clause_parameter_padding";
 

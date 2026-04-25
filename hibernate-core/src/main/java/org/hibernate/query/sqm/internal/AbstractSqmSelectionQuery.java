@@ -7,6 +7,10 @@ package org.hibernate.query.sqm.internal;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
+import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -25,6 +29,10 @@ import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.results.internal.TupleMetadata;
@@ -37,6 +45,8 @@ import jakarta.persistence.criteria.CompoundSelection;
 import static org.hibernate.cfg.QuerySettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
 import static org.hibernate.query.KeyedPage.KeyInterpretation.KEY_OF_FIRST_ON_NEXT_PAGE;
 import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
+import static org.hibernate.query.common.FetchClauseType.*;
+import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectKeys;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectResults;
 import static org.hibernate.query.sqm.internal.SqmUtil.isHqlTuple;
@@ -94,6 +104,79 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		else {
 			QUERY_MESSAGE_LOGGER.firstOrMaxResultsSpecifiedWithCollectionFetch();
 		}
+	}
+
+	/**
+	 * The pagination is pushed down into a derived table over the root entity by
+	 * {@code BaseSqmToSqlAstConverter}'s
+	 * {@code CollectionFetchPaginationQueryTransformer}, so the in-memory slice
+	 * after execution is unnecessary and no warning needs to be logged. These
+	 * conditions must stay in sync with the transformer's preconditions.
+	 */
+	protected boolean isPaginationPushedToDerivedTable() {
+		final var sessionFactory = getSessionFactory();
+		if ( !sessionFactory.getJdbcServices().getDialect().supportsOffsetInSubquery() ) {
+			return false;
+		}
+		final var stmt = getSqmStatement();
+		if ( !( stmt instanceof SqmSelectStatement<?> select ) ) {
+			return false;
+		}
+		final var queryPart = select.getQueryPart();
+		if ( !( queryPart instanceof SqmQuerySpec<?> spec ) ) {
+			return false;
+		}
+		final var roots = spec.getFromClause().getRoots();
+		if ( roots.isEmpty() ) {
+			return false;
+		}
+		// "fetch first N percent rows" pushed into the inner derived table needs
+		// either native PERCENT support in a subquery or window-function-based
+		// emulation; HSQLDB has neither. Mirror the converter's bail.
+		final var fetchClauseType = spec.getFetchClauseType();
+		if ( fetchClauseType == PERCENT_ONLY || fetchClauseType == PERCENT_WITH_TIES ) {
+			final var dialect = sessionFactory.getJdbcServices().getDialect();
+			if ( !dialect.supportsFetchClause( PERCENT_ONLY )
+					&& !dialect.supportsWindowFunctions() ) {
+				return false;
+			}
+		}
+		// The transformer only rewrites when at least one root contributes a
+		// fetched plural join (directly, or through a chain of fetched
+		// singulars). Without that, the converter leaves the limit on the
+		// original query spec; if the runtime suppresses the in-memory fallback
+		// here too, the query silently returns unpaginated results. Match the
+		// converter's preconditions.
+		return hasAnyReachableFetchedPlural( roots, sessionFactory.getMappingMetamodel() );
+	}
+
+	private static boolean hasAnyReachableFetchedPlural(
+			List<SqmRoot<?>> roots, MappingMetamodelImplementor metamodel) {
+		boolean anyReachable = false;
+		for ( var root : roots ) {
+			final var javaType = root.getJavaType();
+			if ( javaType == null || metamodel.findEntityDescriptor( javaType ) == null ) {
+				return false;
+			}
+			if ( !anyReachable && hasReachableFetchedPluralJoin( root ) ) {
+				anyReachable = true;
+			}
+		}
+		return anyReachable;
+	}
+
+	private static boolean hasReachableFetchedPluralJoin(SqmFrom<?, ?> from) {
+		for ( var join : from.getSqmJoins() ) {
+			if ( join instanceof SqmAttributeJoin<?, ?> attributeJoin
+					&& attributeJoin.isFetched() ) {
+				if ( attributeJoin.getReferencedPathSource() instanceof PluralPersistentAttribute
+						// Walk through fetched singulars looking for a nested fetched plural.
+						|| hasReachableFetchedPluralJoin( attributeJoin ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	public abstract SqmStatement<R> getSqmStatement();
@@ -418,5 +501,30 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		return queryEngine.getInterpretationCache()
 				.resolveHqlInterpretation( memento.getHqlString(), expectedResultType,
 						queryEngine.getHqlTranslator() );
+	}
+
+	/**
+	 * When pagination has been pushed down into a derived table, the outer
+	 * {@code QueryOptions} limit must be suppressed&mdash;otherwise the
+	 * dialect would reapply it on the cartesian result of the outer fetch
+	 * joins, truncating rows mid-parent.
+	 */
+	DomainQueryExecutionContext scrollExecutionContext(SqmSelectStatement<?> statement) {
+		if ( hasLimit( statement, getQueryOptions() )
+				&& statement.containsCollectionFetches()
+				&& isPaginationPushedToDerivedTable() ) {
+			final var originalQueryOptions = getQueryOptions();
+			final var normalizedQueryOptions =
+					omitSqlQueryOptions( originalQueryOptions, true, false );
+			if ( originalQueryOptions != normalizedQueryOptions ) {
+				return new DelegatingDomainQueryExecutionContext( this ) {
+					@Override
+					public QueryOptions getQueryOptions() {
+						return normalizedQueryOptions;
+					}
+				};
+			}
+		}
+		return this;
 	}
 }

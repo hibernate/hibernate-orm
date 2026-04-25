@@ -402,10 +402,11 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 				statement.containsCollectionFetches();
 		final boolean hasLimit = hasLimit( statement, getQueryOptions() );
 		final boolean needsDistinct = needsDistinct( containsCollectionFetches, hasLimit, statement );
+		final boolean paginationInSql = hasLimit && containsCollectionFetches && isPaginationPushedToDerivedTable();
 		final var list =
 				resolveQueryPlan()
 						.performList( executionContext( hasLimit, containsCollectionFetches ) );
-		return needsDistinct ? handleDistinct( hasLimit, statement, list ) : list;
+		return needsDistinct ? handleDistinct( hasLimit && !paginationInSql, statement, list ) : list;
 	}
 
 	private List<R> handleDistinct(boolean hasLimit, SqmSelectStatement<?> statement, List<R> list) {
@@ -433,7 +434,9 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	// TODO: very similar to QuerySqmImpl.executionContextForDoList()
 	private DomainQueryExecutionContext executionContext(boolean hasLimit, boolean containsCollectionFetches) {
 		if ( hasLimit && containsCollectionFetches ) {
-			errorOrLogForPaginationWithCollectionFetch();
+			if ( !isPaginationPushedToDerivedTable() ) {
+				errorOrLogForPaginationWithCollectionFetch();
+			}
 			final var originalQueryOptions = getQueryOptions();
 			final var normalizedQueryOptions = omitSqlQueryOptions( originalQueryOptions, true, false );
 			if ( originalQueryOptions == normalizedQueryOptions ) {
@@ -455,7 +458,9 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 
 	@Override
 	protected ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
-		return resolveQueryPlan().performScroll( scrollMode, this );
+		return resolveQueryPlan()
+				.performScroll( scrollMode,
+						scrollExecutionContext( getSqmStatement() ) );
 	}
 
 	@Override

@@ -33,7 +33,7 @@ else
 fi
 
 mysql() {
-    mysql_9_6
+    mysql_9_7
 }
 
 mysql_8_0() {
@@ -71,6 +71,11 @@ mysql_9_6() {
     mysql_setup "9.6" "$init_connect"
 }
 
+mysql_9_7() {
+    local init_connect="--init-connect=SET character_set_client='utf8mb4';SET character_set_results='utf8mb4';SET character_set_connection='utf8mb4';SET collation_connection='utf8mb4_0900_as_cs';"
+    mysql_setup "9.7" "$init_connect"
+}
+
 # Generic MySQL function that handles all versions
 mysql_setup() {
     local version=$1
@@ -98,6 +103,7 @@ mysql_setup() {
         --collation-server=utf8mb4_0900_as_cs \
         --log-bin-trust-function-creators=1 \
         --lower_case_table_names=2 \
+        --loose_innodb_native_foreign_keys \
         "${extra_args}"
 
     # Wait for MySQL to start
@@ -1688,6 +1694,7 @@ if [ -z ${1} ]; then
     echo -e "\tmssql_2022"
     echo -e "\tmssql_2017"
     echo -e "\tmysql"
+    echo -e "\tmysql_9_7"
     echo -e "\tmysql_9_6"
     echo -e "\tmysql_9_5"
     echo -e "\tmysql_9_4"

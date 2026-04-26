@@ -121,6 +121,11 @@ public abstract class DelegatingTableGroup implements TableGroup {
 	}
 
 	@Override
+	public void removeTableGroupJoin(TableGroupJoin join) {
+		getTableGroup().removeTableGroupJoin( join );
+	}
+
+	@Override
 	public void prependTableGroupJoin(NavigablePath navigablePath, TableGroupJoin join) {
 		getTableGroup().prependTableGroupJoin( navigablePath, join );
 	}

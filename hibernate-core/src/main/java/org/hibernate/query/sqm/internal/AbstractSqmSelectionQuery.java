@@ -139,34 +139,38 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 			}
 		}
 		// The transformer only rewrites when at least one root contributes a
-		// direct plural fetched join. Without that, the converter leaves the
-		// limit on the original query spec; if the runtime suppresses the
-		// in-memory fallback here too, the query silently returns unpaginated
-		// results. Match the converter's preconditions.
-		return hasAnyDirectPluralFetch( roots, sessionFactory.getMappingMetamodel() );
+		// fetched plural join (directly, or through a chain of fetched
+		// singulars). Without that, the converter leaves the limit on the
+		// original query spec; if the runtime suppresses the in-memory fallback
+		// here too, the query silently returns unpaginated results. Match the
+		// converter's preconditions.
+		return hasAnyReachableFetchedPlural( roots, sessionFactory.getMappingMetamodel() );
 	}
 
-	private static boolean hasAnyDirectPluralFetch(
+	private static boolean hasAnyReachableFetchedPlural(
 			List<SqmRoot<?>> roots, MappingMetamodelImplementor metamodel) {
-		boolean anyDirectPluralFetch = false;
+		boolean anyReachable = false;
 		for ( var root : roots ) {
 			final var javaType = root.getJavaType();
 			if ( javaType == null || metamodel.findEntityDescriptor( javaType ) == null ) {
 				return false;
 			}
-			if ( !anyDirectPluralFetch && hasDirectPluralFetchedJoin( root ) ) {
-				anyDirectPluralFetch = true;
+			if ( !anyReachable && hasReachableFetchedPluralJoin( root ) ) {
+				anyReachable = true;
 			}
 		}
-		return anyDirectPluralFetch;
+		return anyReachable;
 	}
 
-	private static boolean hasDirectPluralFetchedJoin(SqmFrom<?, ?> from) {
+	private static boolean hasReachableFetchedPluralJoin(SqmFrom<?, ?> from) {
 		for ( var join : from.getSqmJoins() ) {
 			if ( join instanceof SqmAttributeJoin<?, ?> attributeJoin
-					&& attributeJoin.isFetched()
-					&& attributeJoin.getReferencedPathSource() instanceof PluralPersistentAttribute ) {
-				return true;
+					&& attributeJoin.isFetched() ) {
+				if ( attributeJoin.getReferencedPathSource() instanceof PluralPersistentAttribute
+						// Walk through fetched singulars looking for a nested fetched plural.
+						|| hasReachableFetchedPluralJoin( attributeJoin ) ) {
+					return true;
+				}
 			}
 		}
 		return false;

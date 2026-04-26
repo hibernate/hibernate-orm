@@ -2272,9 +2272,24 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( !( root.getModelPart() instanceof EntityMappingType ) ) {
 				return false;
 			}
-			for ( var join : root.getTableGroupJoins() ) {
-				final var joined = join.getJoinedGroup();
-				if ( joined.isFetched() && joined instanceof PluralTableGroup ) {
+			else if ( hasFetchedPluralReachable( root ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * True when a fetched plural join is reachable from {@code group} either
+	 * directly or through a chain of fetched singular joins. The transformer's
+	 * move pass mirrors this walk.
+	 */
+	private static boolean hasFetchedPluralReachable(TableGroup group) {
+		for ( var join : group.getTableGroupJoins() ) {
+			final var joined = join.getJoinedGroup();
+			if ( joined.isFetched() ) {
+				if ( joined instanceof PluralTableGroup
+						|| hasFetchedPluralReachable( joined ) ) {
 					return true;
 				}
 			}

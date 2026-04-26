@@ -28,6 +28,7 @@ import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryTransformer;
+import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.from.AbstractTableGroup;
@@ -94,7 +95,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 			return querySpec;
 		}
 
-		if ( !( primaryRoot instanceof AbstractTableGroup primaryRootMutable )
+		if ( !( primaryRoot instanceof AbstractTableGroup )
 				|| !( primaryRoot.getModelPart() instanceof EntityMappingType primaryEntity )
 				|| !( primaryRoot.getPrimaryTableReference() instanceof NamedTableReference primaryNamed ) ) {
 			return querySpec;
@@ -102,27 +103,23 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		final String primaryAlias = primaryNamed.getIdentificationVariable();
 		final String primaryTableExpr = primaryNamed.getTableExpression();
 
-		// Only plural fetched joins on the primary root move to the outer — they
-		// are the cartesian-product source we're trying to escape. Fetched
-		// singular joins stay inside the inner so their columns can drive the
+		// Only plural fetched joins move to the outer — they are the
+		// cartesian-product source we're trying to escape. Fetched singular
+		// joins stay inside the inner so their columns can drive the
 		// pagination's ORDER BY (e.g. {@code order by p.name} where {@code p}
-		// is a fetched {@code @ManyToOne}). Their columns get absorbed into the
-		// derived table for the outer SELECT to reach.
-		final List<TableGroupJoin> movedJoins = new ArrayList<>();
-		for ( var join : primaryRoot.getTableGroupJoins() ) {
-			final var joined = join.getJoinedGroup();
-			if ( joined.isFetched()
-					&& joined instanceof PluralTableGroup
-					&& !( joined instanceof org.hibernate.sql.ast.tree.from.VirtualTableGroup ) ) {
-				movedJoins.add( join );
-			}
-		}
+		// is a fetched {@code @ManyToOne}); their columns get absorbed into
+		// the derived table for the outer SELECT to reach. Plural fetches
+		// nested under fetched singulars are also moved out — the parent
+		// singular's table reference stays inner and the plural's join
+		// predicate gets absorbed-rewritten through the derived alias.
+		final List<MovedJoin> movedJoins = new ArrayList<>();
+		collectMovedPluralFetches( primaryRoot, movedJoins );
 
 		// The aliases that will sit directly in the outer FROM after the move.
 		final Set<String> outerAliases = new HashSet<>();
 		outerAliases.add( primaryAlias );
 		for ( var moved : movedJoins ) {
-			collectAliases( moved.getJoinedGroup(), outerAliases );
+			collectAliases( moved.join().getJoinedGroup(), outerAliases );
 		}
 
 
@@ -140,12 +137,15 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 				sort.getSortExpression().accept( collector );
 			}
 		}
-		// Moved fetch joins' predicates typically reference only the primary alias
-		// (the join target) plus the moved alias itself, so they don't need
-		// rewriting. Walk them anyway for the absorbed-alias safety check.
+		// Moved fetch joins' predicates reference the join target (the parent
+		// alias) plus the moved alias itself. For direct moves the parent is
+		// the primary alias and no rewriting is needed; for nested moves the
+		// parent is a fetched singular's alias which is inner-only and gets
+		// absorbed into the derived table here.
 		for ( var moved : movedJoins ) {
-			if ( moved.getPredicate() != null ) {
-				moved.getPredicate().accept( collector );
+			final var predicate = moved.join().getPredicate();
+			if ( predicate != null ) {
+				predicate.accept( collector );
 			}
 		}
 
@@ -168,10 +168,11 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		// that would have matched the inner join.
 		final var sessionFactory = converter.getCreationContext().getSessionFactory();
 		for ( var moved : movedJoins ) {
-			if ( moved.getJoinType() == org.hibernate.sql.ast.SqlAstJoinType.INNER
-					&& moved.getPredicate() != null ) {
+			final var join = moved.join();
+			if ( join.getJoinType() == org.hibernate.sql.ast.SqlAstJoinType.INNER
+					&& join.getPredicate() != null ) {
 				final var existsSpec = new QuerySpec( false, 1 );
-				existsSpec.getFromClause().addRoot( moved.getJoinedGroup() );
+				existsSpec.getFromClause().addRoot( join.getJoinedGroup() );
 				existsSpec.getSelectClause().addSqlSelection(
 						new ResolvedSqlSelection(
 								0,
@@ -185,7 +186,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 												.getBasicTypeForJavaType( Integer.class )
 						)
 				);
-				existsSpec.applyPredicate( moved.getPredicate() );
+				existsSpec.applyPredicate( join.getPredicate() );
 				querySpec.applyPredicate(
 						new ExistsPredicate(
 								new SelectStatement( existsSpec ),
@@ -261,9 +262,11 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 			info.exposedName = exposedName;
 		}
 
-		// Detach the moved (fetched) joins from the inner primary root.
-		for ( var join : movedJoins ) {
-			primaryRootMutable.removeTableGroupJoin( join );
+		// Detach the moved (fetched) plural joins from whichever group they were
+		// attached to in the inner — the primary root for direct fetches, or a
+		// fetched-singular's group for nested fetches.
+		for ( var moved : movedJoins ) {
+			moved.parent().removeTableGroupJoin( moved.join() );
 		}
 
 		// Split sort specs: those that reference an alias that's now in the outer
@@ -308,7 +311,8 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		// Add outer SELECT items and reattach moved fetch joins, rewriting any
 		// absorbed-alias ColumnReferences.
 		final var rewriter = new ColumnReferenceRewriter( absorption, primaryAlias );
-		for ( var join : movedJoins ) {
+		for ( var moved : movedJoins ) {
+			final var join = moved.join();
 			final Predicate originalPredicate = join.getPredicate();
 			if ( originalPredicate == null ) {
 				derivedRoot.addTableGroupJoin( join );
@@ -323,7 +327,8 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 					// rebuild the join with the rewritten predicate so the outer's
 					// JOIN ON addresses derived-alias columns (e.g. for subclass
 					// roots where the parent FK references a now-absorbed super
-					// table's PK).
+					// table's PK, or for nested fetches where the predicate
+					// references the parent fetched singular's alias).
 					derivedRoot.addTableGroupJoin( new TableGroupJoin(
 							join.getNavigablePath(),
 							join.getJoinType(),
@@ -367,14 +372,49 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 
 	private static @Nullable TableGroup primaryRoot(List<TableGroup> roots) {
 		for ( var root : roots ) {
-			for ( var join : root.getTableGroupJoins() ) {
-				final var joined = join.getJoinedGroup();
-				if ( joined instanceof PluralTableGroup && joined.isFetched() ) {
-					return root;
-				}
+			if ( hasFetchedPluralReachable( root ) ) {
+				return root;
 			}
 		}
 		return null;
+	}
+
+	private static boolean hasFetchedPluralReachable(TableGroup group) {
+		for ( var join : group.getTableGroupJoins() ) {
+			final var joined = join.getJoinedGroup();
+			if ( joined.isFetched() ) {
+				if ( joined instanceof PluralTableGroup
+						|| hasFetchedPluralReachable( joined ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Collect every fetched plural {@code TableGroupJoin} reachable from
+	 * {@code group} either directly or through a chain of fetched singulars,
+	 * pairing each with its parent {@code TableGroup} so the rewrite can
+	 * detach it from the right place.
+	 */
+	private static void collectMovedPluralFetches(TableGroup group, List<MovedJoin> out) {
+		for ( var join : group.getTableGroupJoins() ) {
+			final var joined = join.getJoinedGroup();
+			if ( joined.isFetched()
+					&& !(joined instanceof VirtualTableGroup) ) {
+				if ( joined instanceof PluralTableGroup ) {
+					out.add( new MovedJoin( group, join ) );
+				}
+				else {
+					// Walk through fetched singulars looking for nested plural fetches.
+					collectMovedPluralFetches( joined, out );
+				}
+			}
+		}
+	}
+
+	private record MovedJoin(TableGroup parent, TableGroupJoin join) {
 	}
 
 	private static boolean expressionReferencesAnyAlias(

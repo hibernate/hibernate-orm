@@ -17,7 +17,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 
-import org.hibernate.HibernateException;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.cfg.QuerySettings;
 
@@ -36,7 +35,6 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Pagination + collection-fetch edge cases:
@@ -173,28 +171,41 @@ public class CollectionFetchPaginationEdgeCasesTest {
 
 	/**
 	 * The plural fetch hangs off a fetched <em>singular</em> association, not off
-	 * the root: {@code from Episode e join fetch e.show s join fetch s.episodes}.
-	 * The converter only pushes pagination down when at least one root has a
-	 * <em>direct</em> plural fetched join, so this shape is not rewritten and the
-	 * limit gets stripped from the SQL. The runtime check must agree and let the
-	 * in-memory fallback fire — otherwise the query would silently return
-	 * un-paginated results. With {@code FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH}
-	 * on, the fallback throws, which is what we assert here.
+	 * the root: {@code from Episode e join fetch e.show sh join fetch sh.episodes}.
+	 * The rewrite must walk down through fetched singulars to find the nested
+	 * plural and move it to the outer, while pulling the singular's table into
+	 * the inner derived table (its FK from the root, plus the join row, must be
+	 * reachable from the outer so the plural can join through it).
 	 */
 	@Test
-	void nestedPluralUnderSingularFetchFallsBack(SessionFactoryScope scope) {
+	void nestedPluralUnderSingularFetchPaginates(SessionFactoryScope scope) {
+		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
 		scope.inTransaction( s -> {
-			final var query = s.createSelectionQuery(
+			sql.clear();
+
+			// Episode ids in order: 0, 1, 10, 11, 20, 21, 30, 31.
+			// First page (max=3): 0, 1, 10. Episodes 0 and 1 share Show 0,
+			// episode 10 sits under Show 1.
+			final List<Episode> episodes = s.createSelectionQuery(
 					"from Episode e left join fetch e.show sh left join fetch sh.episodes "
 							+ "order by e.id",
 					Episode.class
-			).setMaxResults( 2 );
-			final HibernateException ex = assertThrows(
-					HibernateException.class,
-					query::list
-			);
-			assertThat( ex.getMessage(),
-					containsString( "fail_on_pagination_over_collection_fetch" ) );
+			).setMaxResults( 3 ).list();
+
+			assertThat( episodes.size(), is( 3 ) );
+			assertThat( episodes.get( 0 ).getId(), is( 0L ) );
+			assertThat( episodes.get( 1 ).getId(), is( 1L ) );
+			assertThat( episodes.get( 2 ).getId(), is( 10L ) );
+
+			for ( Episode ep : episodes ) {
+				assertThat( ep.getShow(), org.hamcrest.CoreMatchers.notNullValue() );
+				// each fetched Show has its full collection of 2 episodes
+				assertThat( ep.getShow().getEpisodes().size(), is( 2 ) );
+			}
+
+			// pagination must be in the SQL, not in memory
+			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
+			assertThat( generated, containsString( "from (select" ) );
 		} );
 	}
 

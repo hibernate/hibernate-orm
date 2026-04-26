@@ -36,9 +36,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Same alternating insert pattern as the ordered variant, but without an
  * explicit collection {@code order by}. The important part here is that
- * scroll-style execution still stabilises the outer query by owner id, making
- * the stream deterministic even when the database would otherwise be free to
- * choose the join row order.
+ * scroll-style execution still stabilises the outer query by owner id, so each
+ * owner is materialised exactly once with its full collection. The relative row
+ * order of elements inside each collection remains unspecified.
  */
 @DomainModel(annotatedClasses = {
 		CollectionFetchPaginationStreamInterleavingTest.Cart.class,
@@ -125,8 +125,12 @@ public class CollectionFetchPaginationStreamInterleavingTest {
 		carts.sort( Comparator.comparing( Cart::getId ) );
 		assertEquals( 1L, carts.get( 0 ).getId() );
 		assertEquals( 2L, carts.get( 1 ).getId() );
-		assertEquals( List.of( 1L, 3L, 5L ), carts.get( 0 ).getLineItems().stream().map( LineItem::getId ).toList() );
-		assertEquals( List.of( 2L, 4L, 6L ), carts.get( 1 ).getLineItems().stream().map( LineItem::getId ).toList() );
+		assertEquals( List.of( 1L, 3L, 5L ), sortedLineItemIds( carts.get( 0 ) ) );
+		assertEquals( List.of( 2L, 4L, 6L ), sortedLineItemIds( carts.get( 1 ) ) );
+	}
+
+	private static List<Long> sortedLineItemIds(Cart cart) {
+		return cart.getLineItems().stream().map( LineItem::getId ).sorted().toList();
 	}
 
 	private static void assertOwnerGroupingOrder(SQLStatementInspector sql) {

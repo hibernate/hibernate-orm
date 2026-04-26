@@ -113,6 +113,28 @@ public class CollectionFetchPaginationTest {
 	}
 
 	@Test
+	void fetchJoinWithExplicitLimitClause(SessionFactoryScope scope) {
+		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		scope.inTransaction( s -> {
+			sql.clear();
+
+			final List<Book> books = s.createSelectionQuery(
+					"from Book b left join fetch b.authors order by b.isbn limit 2",
+					Book.class
+			).list();
+
+			assertEquals( 2, books.size() );
+			assertEquals( "isbn-0", books.get( 0 ).getIsbn() );
+			assertEquals( "isbn-1", books.get( 1 ).getIsbn() );
+			assertEquals( 3, books.get( 0 ).getAuthors().size() );
+			assertEquals( 3, books.get( 1 ).getAuthors().size() );
+
+			assertEquals( 1, sql.getSqlQueries().size() );
+			assertTrue( sql.getSqlQueries().get( 0 ).toLowerCase().contains( "from (select" ) );
+		} );
+	}
+
+	@Test
 	void entityGraphWithCollectionFetchAndMaxResults(SessionFactoryScope scope) {
 		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
 		scope.inTransaction( s -> {

@@ -16,6 +16,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.query.SortDirection;
 import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.spi.AbstractSqlAstWalker;
@@ -76,6 +77,11 @@ import org.hibernate.type.BasicType;
  * elements (an HQL constraint we depend on here).
  */
 public class CollectionFetchPaginationQueryTransformer implements QueryTransformer {
+	private final boolean groupRowsByOwnerForScroll;
+
+	public CollectionFetchPaginationQueryTransformer(boolean groupRowsByOwnerForScroll) {
+		this.groupRowsByOwnerForScroll = groupRowsByOwnerForScroll;
+	}
 
 	@Override
 	public QuerySpec transform(
@@ -275,19 +281,33 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		// We keep all original sort specs to apply on the outer; only the
 		// inner-resolvable ones stay in the inner for deterministic LIMIT.
 		final List<SortSpecification> originalSortSpecs;
+		final List<SortSpecification> rootSortSpecs;
+		final List<SortSpecification> movedAliasSortSpecs;
 		if ( querySpec.hasSortSpecifications() ) {
-			originalSortSpecs = new ArrayList<>( querySpec.getSortSpecifications() );
+			final var sortSpecifications = querySpec.getSortSpecifications();
+			originalSortSpecs = new ArrayList<>( sortSpecifications );
 			final var innerKeep = new ArrayList<SortSpecification>( originalSortSpecs.size() );
+			rootSortSpecs = new ArrayList<>( originalSortSpecs.size() );
+			movedAliasSortSpecs = new ArrayList<>( originalSortSpecs.size() );
 			for ( var sort : originalSortSpecs ) {
-				if ( !expressionReferencesAnyAlias( sort.getSortExpression(), outerAliases, primaryAlias ) ) {
+				final boolean referencesMovedAlias =
+						expressionReferencesAnyAlias( sort.getSortExpression(),
+								outerAliases, primaryAlias );
+				if ( !referencesMovedAlias ) {
 					innerKeep.add( sort );
+					rootSortSpecs.add( sort );
+				}
+				else {
+					movedAliasSortSpecs.add( sort );
 				}
 			}
-			querySpec.getSortSpecifications().clear();
-			querySpec.getSortSpecifications().addAll( innerKeep );
+			sortSpecifications.clear();
+			sortSpecifications.addAll( innerKeep );
 		}
 		else {
 			originalSortSpecs = List.of();
+			rootSortSpecs = List.of();
+			movedAliasSortSpecs = List.of();
 		}
 
 		// Demote the original spec to a sub-query (offset/fetch/order-by stay on it).
@@ -352,22 +372,55 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 			}
 		}
 
-		// Outer ORDER BY mirrors the original (full) sort specs, with absorbed
-		// column references rewritten through the derived alias.
-		for ( var sort : originalSortSpecs ) {
-			final var rewritten = rewriter.rewrite( sort.getSortExpression() );
-			outer.addSortSpecification(
-					rewritten == sort.getSortExpression()
-							? sort
-							: new SortSpecification(
-									rewritten,
-									sort.getSortOrder(),
-									sort.getNullPrecedence()
+		// Scroll()/getResultStream() groups fetched rows into a logical result only
+		// while the root entity key stays consecutive. When collection ordering
+		// moved to the outer query (for example via @OrderBy on the fetched
+		// collection), sorting only by child columns can interleave rows from
+		// different parents. Stabilize the outer row order by inserting the root
+		// identifier between the root-level ordering and the moved collection
+		// ordering. List execution does not need this.
+		if ( groupRowsByOwnerForScroll ) {
+			for ( var sort : rootSortSpecs ) {
+				addOuterSortSpecification( outer, sort, rewriter );
+			}
+			primaryEntity.getIdentifierMapping().forEachSelectable( (selectionIndex, selectableMapping) ->
+					outer.addSortSpecification(
+							new SortSpecification(
+									new ColumnReference( primaryAlias, selectableMapping ),
+									SortDirection.ASCENDING
 							)
+					)
 			);
+			for ( var sort : movedAliasSortSpecs ) {
+				addOuterSortSpecification( outer, sort, rewriter );
+			}
+		}
+		else {
+			// Outer ORDER BY mirrors the original (full) sort specs, with absorbed
+			// column references rewritten through the derived alias.
+			for ( var sort : originalSortSpecs ) {
+				addOuterSortSpecification( outer, sort, rewriter );
+			}
 		}
 
 		return outer;
+	}
+
+	private static void addOuterSortSpecification(
+			QuerySpec outer,
+			SortSpecification sort,
+			ColumnReferenceRewriter rewriter) {
+		final var rewritten = rewriter.rewrite( sort.getSortExpression() );
+		outer.addSortSpecification(
+				rewritten == sort.getSortExpression()
+						? sort
+						: new SortSpecification(
+								rewritten,
+								sort.getSortOrder(),
+								sort.getNullPrecedence(),
+								sort.isIgnoreCase()
+						)
+		);
 	}
 
 	private static @Nullable TableGroup primaryRoot(List<TableGroup> roots) {

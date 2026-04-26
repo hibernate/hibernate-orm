@@ -206,6 +206,15 @@ public interface QueryOptions {
 	}
 
 	/**
+	 * Whether this execution goes through {@code scroll()} /
+	 * {@code getResultStream()} and therefore needs SQL row ordering stable
+	 * enough for scroll-style result grouping.
+	 */
+	default boolean isScrollExecution() {
+		return false;
+	}
+
+	/**
 	 * Provide singleton access for frequently needed options:
 	 */
 	QueryOptions NONE = new QueryOptionsAdapter() {

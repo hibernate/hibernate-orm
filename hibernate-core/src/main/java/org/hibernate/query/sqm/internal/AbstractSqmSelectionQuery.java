@@ -21,6 +21,7 @@ import org.hibernate.query.Page;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.spi.AbstractSelectionQuery;
+import org.hibernate.query.spi.DelegatingQueryOptions;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryOptions;
@@ -532,21 +533,27 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	 * joins, truncating rows mid-parent.
 	 */
 	DomainQueryExecutionContext scrollExecutionContext(SqmSelectStatement<?> statement) {
-		if ( hasLimit( statement, getQueryOptions() )
-				&& statement.containsCollectionFetches()
-				&& isPaginationPushedToDerivedTable() ) {
-			final var originalQueryOptions = getQueryOptions();
-			final var normalizedQueryOptions =
-					omitSqlQueryOptions( originalQueryOptions, true, false );
-			if ( originalQueryOptions != normalizedQueryOptions ) {
-				return new DelegatingDomainQueryExecutionContext( this ) {
-					@Override
-					public QueryOptions getQueryOptions() {
-						return normalizedQueryOptions;
-					}
-				};
+		final var queryOptions = getQueryOptions();
+		final var normalizedQueryOptions =
+				hasLimit( statement, queryOptions )
+					&& statement.containsCollectionFetches()
+					&& isPaginationPushedToDerivedTable()
+						? omitSqlQueryOptions( queryOptions, true, false )
+						: queryOptions;
+		final var scrollQueryOptions =
+				normalizedQueryOptions.isScrollExecution()
+						? normalizedQueryOptions
+						: new DelegatingQueryOptions( normalizedQueryOptions ) {
+							@Override
+							public boolean isScrollExecution() {
+								return true;
+							}
+						};
+		return new DelegatingDomainQueryExecutionContext( this ) {
+			@Override
+			public QueryOptions getQueryOptions() {
+				return scrollQueryOptions;
 			}
-		}
-		return this;
+		};
 	}
 }

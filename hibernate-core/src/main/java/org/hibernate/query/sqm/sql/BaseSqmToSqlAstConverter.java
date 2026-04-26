@@ -2196,7 +2196,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					&& sqlQueryPart.getFetchClauseExpression() == null ) {
 				applyQueryOptionsOffsetAndFetch( sqlQueryPart );
 			}
-			registerQueryTransformer( new CollectionFetchPaginationQueryTransformer() );
+			registerQueryTransformer(
+					new CollectionFetchPaginationQueryTransformer( queryOptions.isScrollExecution() )
+			);
 		}
 		// else: strip the root offset/fetch (the in-memory fallback in
 		// AbstractSqmSelectionQuery slices the parent list after execution).
@@ -2249,7 +2251,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				return true;
 			}
 			else {
-				final var limit = peekOriginalLimit();
+				final var limit = queryOptions.peekOriginalLimit();
 				return limit != null && !limit.isEmpty();
 			}
 		}
@@ -2299,7 +2301,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 
 	private void applyQueryOptionsOffsetAndFetch(QueryPart sqlQueryPart) {
-		final var limit = peekOriginalLimit();
+		final var limit = queryOptions.peekOriginalLimit();
 		if ( limit != null && !limit.isEmpty() ) {
 			final var integerType = getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
 			// Always emit both parameters so the cached plan works for any combination of
@@ -2313,21 +2315,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					FetchClauseType.ROWS_ONLY
 			);
 		}
-	}
-
-	/**
-	 * The execution context wraps the {@code QueryOptions} with
-	 * {@link org.hibernate.query.spi.SqlOmittingQueryOptions} when there is a
-	 * collection fetch + limit, to suppress the outer LIMIT that the dialect
-	 * would otherwise append (the in-memory fallback uses this). Peek through
-	 * the wrapper here so the converter can still see the original limit values
-	 * and push them into the derived table.
-	 */
-	private org.hibernate.query.spi.Limit peekOriginalLimit() {
-		if ( queryOptions instanceof org.hibernate.query.spi.SqlOmittingQueryOptions wrapped ) {
-			return wrapped.peekOriginalLimit();
-		}
-		return queryOptions.getLimit();
 	}
 
 	private TableGroup findTableGroupByPath(NavigablePath navigablePath) {

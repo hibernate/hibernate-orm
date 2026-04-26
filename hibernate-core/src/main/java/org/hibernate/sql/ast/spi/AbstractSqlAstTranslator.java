@@ -317,6 +317,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private QuerySpec lockingTarget;
 	private LockingClauseStrategy lockingClauseStrategy;
 	private LockOptions lockOptions;
+	private boolean scrollExecution;
 
 	private final Dialect dialect;
 	private final Set<String> affectedTableNames = new HashSet<>();
@@ -440,6 +441,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		this.jdbcParameterBindings = null;
 		this.lockOptions = null;
 		this.limit = null;
+		this.scrollExecution = false;
 		setLockingTarget( null );
 		setOffsetParameter( null );
 		setLimitParameter( null );
@@ -785,6 +787,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			else {
 				this.lockOptions = queryOptions.getLockOptions().makeCopy();
 				this.limit = queryOptions.getLimit() == null ? null : queryOptions.getLimit().makeCopy();
+				this.scrollExecution = queryOptions.isScrollExecution();
 				final JdbcOperation jdbcOperation = getJdbcOperation( statement );
 				//noinspection unchecked
 				return (T) jdbcOperation;
@@ -880,7 +883,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				getAppliedParameterBindings(),
 				getJdbcLockStrategy(),
 				getOffsetParameter(),
-				getLimitParameter()
+				getLimitParameter(),
+				scrollExecution
 		);
 
 		if ( lockOptions == null || !lockOptions.getLockMode().isPessimistic() ) {

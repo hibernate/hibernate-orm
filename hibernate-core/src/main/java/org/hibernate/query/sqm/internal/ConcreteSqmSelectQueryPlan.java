@@ -401,6 +401,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 
 	private <T, X> T withCacheableSqmInterpretation(DomainQueryExecutionContext executionContext, X context, SqmInterpreter<T, X> interpreter) {
 		final var session = executionContext.getSession();
+		final var queryOptions = executionContext.getQueryOptions();
 
 		final boolean preFlushed = session.autoPreFlushIfRequired( executionContext.getQueryParameterBindings() );
 
@@ -431,7 +432,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 					}
 					// If the translation depends on the limit or lock options, we have to rebuild the JdbcSelect
 					// We could avoid this by putting the lock options into the cache key
-					if ( !jdbcSelect.isCompatibleWith( jdbcParameterBindings, executionContext.getQueryOptions() ) ) {
+					if ( !jdbcSelect.isCompatibleWith( jdbcParameterBindings, queryOptions ) ) {
 						final MutableObject<JdbcParameterBindings> mutableValue = new MutableObject<>();
 						localCopy = buildInterpretation( sqm, domainParameterXref, executionContext, mutableValue );
 						jdbcParameterBindings = mutableValue.get();
@@ -449,7 +450,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			}
 			// If the translation depends on the limit or lock options, we have to rebuild the JdbcSelect
 			// We could avoid this by putting the lock options into the cache key
-			if ( !jdbcSelect.isCompatibleWith( jdbcParameterBindings, executionContext.getQueryOptions() ) ) {
+			if ( !jdbcSelect.isCompatibleWith( jdbcParameterBindings, queryOptions ) ) {
 				final MutableObject<JdbcParameterBindings> mutableValue = new MutableObject<>();
 				localCopy = buildInterpretation( sqm, domainParameterXref, executionContext, mutableValue );
 				jdbcParameterBindings = mutableValue.get();
@@ -491,12 +492,13 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			MutableObject<JdbcParameterBindings> firstJdbcParameterBindingsConsumer) {
 		final var session = executionContext.getSession();
 		final var sessionFactory = session.getFactory();
+		final var queryOptions = executionContext.getQueryOptions();
 
 		final var sqmTranslator =
 				sessionFactory.getQueryEngine().getSqmTranslatorFactory()
 						.createSelectTranslator(
 								sqm,
-								executionContext.getQueryOptions(),
+								queryOptions,
 								domainParameterXref,
 								executionContext.getQueryParameterBindings(),
 								executionContext.getSession().getLoadQueryInfluencers(),
@@ -529,7 +531,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		firstJdbcParameterBindingsConsumer.set( jdbcParameterBindings );
 		return new CacheableSqmInterpretation<>(
 				sqmInterpretation.getSqlAst(),
-				selectTranslator.translate( jdbcParameterBindings, executionContext.getQueryOptions() ),
+				selectTranslator.translate( jdbcParameterBindings, queryOptions ),
 				jdbcParamsXref,
 				sqmInterpretation.getSqmParameterMappingModelTypeResolutions()
 		);

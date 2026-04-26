@@ -440,9 +440,10 @@ public class SqmQueryImpl<R>
 
 	@Override
 	protected ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
-		return resolveSelectQueryPlan().performScroll( scrollMode, this );
+		return resolveSelectQueryPlan()
+				.performScroll( scrollMode,
+						scrollExecutionContext( (SqmSelectStatement<?>) getSqmStatement() ) );
 	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Select query plan

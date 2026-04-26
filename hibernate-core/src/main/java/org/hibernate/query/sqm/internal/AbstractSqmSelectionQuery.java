@@ -9,6 +9,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
+import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -44,6 +46,7 @@ import static org.hibernate.cfg.QuerySettings.FAIL_ON_PAGINATION_OVER_COLLECTION
 import static org.hibernate.query.KeyedPage.KeyInterpretation.KEY_OF_FIRST_ON_NEXT_PAGE;
 import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
 import static org.hibernate.query.common.FetchClauseType.*;
+import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectKeys;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectResults;
 import static org.hibernate.query.sqm.internal.SqmUtil.isHqlTuple;
@@ -498,5 +501,30 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		return queryEngine.getInterpretationCache()
 				.resolveHqlInterpretation( memento.getHqlString(), expectedResultType,
 						queryEngine.getHqlTranslator() );
+	}
+
+	/**
+	 * When pagination has been pushed down into a derived table, the outer
+	 * {@code QueryOptions} limit must be suppressed&mdash;otherwise the
+	 * dialect would reapply it on the cartesian result of the outer fetch
+	 * joins, truncating rows mid-parent.
+	 */
+	DomainQueryExecutionContext scrollExecutionContext(SqmSelectStatement<?> statement) {
+		if ( hasLimit( statement, getQueryOptions() )
+				&& statement.containsCollectionFetches()
+				&& isPaginationPushedToDerivedTable() ) {
+			final var originalQueryOptions = getQueryOptions();
+			final var normalizedQueryOptions =
+					omitSqlQueryOptions( originalQueryOptions, true, false );
+			if ( originalQueryOptions != normalizedQueryOptions ) {
+				return new DelegatingDomainQueryExecutionContext( this ) {
+					@Override
+					public QueryOptions getQueryOptions() {
+						return normalizedQueryOptions;
+					}
+				};
+			}
+		}
+		return this;
 	}
 }

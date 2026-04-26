@@ -144,9 +144,21 @@ public interface QueryOptions {
 
 	/**
 	 * The limit to the query results.  May also be accessed via
-	 * {@link #getFirstRow} and {@link #getMaxRows}
+	 * {@link #getFirstRow} and {@link #getMaxRows}.
 	 */
 	Limit getLimit();
+
+	/**
+	 * The original {@link Limit} as set by the application, before any wrapper
+	 * (e.g. {@link org.hibernate.query.spi.SqlOmittingQueryOptions} or the
+	 * scroll execution context) hid it from {@link #getLimit()}. Used by
+	 * runtime parameter binders that the SQM-to-SQL converter pushed into the
+	 * SQL AST so they can bind the original value even when {@link #getLimit()}
+	 * has been intentionally suppressed for SQL rendering.
+	 */
+	default Limit peekOriginalLimit() {
+		return getLimit();
+	}
 
 	/**
 	 * The first row from the results to return

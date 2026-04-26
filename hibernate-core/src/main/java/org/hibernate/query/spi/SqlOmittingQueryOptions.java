@@ -22,12 +22,18 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 	private final boolean omitLimit;
 	private final boolean omitLocks;
 	private final ListResultsConsumer.UniqueSemantic uniqueSemantic;
+	// Captured at construction so that {@link #peekOriginalLimit()} returns the
+	// original even when this instance wraps another already-omitting one (which
+	// happens, for example, when scroll's adapter rewraps an already-omitted
+	// context to suppress the outer LIMIT).
+	private final Limit originalLimit;
 
 	public SqlOmittingQueryOptions(QueryOptions queryOptions, boolean omitLimit, boolean omitLocks) {
 		super( queryOptions );
 		this.omitLimit = omitLimit;
 		this.omitLocks = omitLocks;
 		uniqueSemantic = null;
+		this.originalLimit = unwrappedLimit( queryOptions );
 	}
 
 	public SqlOmittingQueryOptions(QueryOptions queryOptions, boolean omitLimit, boolean omitLocks, ListResultsConsumer.UniqueSemantic semantic) {
@@ -35,6 +41,13 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 		this.omitLimit = omitLimit;
 		this.omitLocks = omitLocks;
 		this.uniqueSemantic = semantic;
+		this.originalLimit = unwrappedLimit( queryOptions );
+	}
+
+	private static Limit unwrappedLimit(QueryOptions queryOptions) {
+		return queryOptions instanceof SqlOmittingQueryOptions wrapped
+				? wrapped.peekOriginalLimit()
+				: queryOptions.getLimit();
 	}
 
 	public static QueryOptions omitSqlQueryOptions(QueryOptions originalOptions) {
@@ -99,12 +112,13 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 	}
 
 	/**
-	 * The wrapped {@code Limit} value, ignoring the {@code omitLimit} flag.
-	 * Used by the SQM-to-SQL AST converter to push pagination into a derived
-	 * table when this wrapper has hidden the limit from the SQL translator.
+	 * The original {@code Limit} as it was before any {@code SqlOmittingQueryOptions}
+	 * wrapping. Used by the SQM-to-SQL AST converter to push pagination into a derived
+	 * table when this wrapper has hidden the limit from the SQL translator. Walks
+	 * through chained wraps (the scroll path can wrap an already-wrapped context).
 	 */
 	public Limit peekOriginalLimit() {
-		return super.getLimit();
+		return originalLimit;
 	}
 
 	@Override

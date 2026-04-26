@@ -458,7 +458,9 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 
 	@Override
 	protected ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
-		return resolveQueryPlan().performScroll( scrollMode, this );
+		return resolveQueryPlan()
+				.performScroll( scrollMode,
+						scrollExecutionContext( getSqmStatement() ) );
 	}
 
 	@Override

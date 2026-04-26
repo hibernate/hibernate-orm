@@ -7,7 +7,6 @@ package org.hibernate.sql.exec.internal;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.type.BasicType;
@@ -29,10 +28,10 @@ public class LimitJdbcParameter extends AbstractJdbcParameter {
 			int startPosition,
 			JdbcParameterBindings jdbcParamBindings,
 			ExecutionContext executionContext) throws SQLException {
-		final var qo = executionContext.getQueryOptions();
-		final var limit = qo instanceof SqlOmittingQueryOptions wrapped
-				? wrapped.peekOriginalLimit()
-				: qo.getLimit();
+		// Peek through any wrapper (e.g. SqlOmittingQueryOptions, the scroll
+		// execution context) so we get the application-set limit even if
+		// getLimit() has been suppressed for SQL rendering.
+		final var limit = executionContext.getQueryOptions().peekOriginalLimit();
 		final Integer maxRows = limit == null ? null : limit.getMaxRows();
 		//noinspection unchecked
 		getJdbcMapping().getJdbcValueBinder().bind(

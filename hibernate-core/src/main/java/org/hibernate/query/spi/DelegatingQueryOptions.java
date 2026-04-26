@@ -125,6 +125,11 @@ public class DelegatingQueryOptions implements QueryOptions {
 	}
 
 	@Override
+	public Limit peekOriginalLimit() {
+		return queryOptions.peekOriginalLimit();
+	}
+
+	@Override
 	public Integer getFirstRow() {
 		return queryOptions.getFirstRow();
 	}
@@ -147,5 +152,10 @@ public class DelegatingQueryOptions implements QueryOptions {
 	@Override
 	public ListResultsConsumer.UniqueSemantic getUniqueSemantic() {
 		return queryOptions.getUniqueSemantic();
+	}
+
+	@Override
+	public boolean isScrollExecution() {
+		return queryOptions.isScrollExecution();
 	}
 }

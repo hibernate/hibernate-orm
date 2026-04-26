@@ -38,6 +38,7 @@ public class JdbcOperationQuerySelect
 	private final JdbcParameter offsetParameter;
 	private final JdbcParameter limitParameter;
 	private final JdbcLockStrategy jdbcLockStrategy;
+	private final boolean scrollExecution;
 
 	public JdbcOperationQuerySelect(
 			String sql,
@@ -54,7 +55,8 @@ public class JdbcOperationQuerySelect
 				Collections.emptyMap(),
 				JdbcLockStrategy.AUTO,
 				null,
-				null
+				null,
+				false
 		);
 	}
 
@@ -68,7 +70,8 @@ public class JdbcOperationQuerySelect
 			Map<JdbcParameter, JdbcParameterBinding> appliedParameters,
 			JdbcLockStrategy jdbcLockStrategy,
 			JdbcParameter offsetParameter,
-			JdbcParameter limitParameter) {
+			JdbcParameter limitParameter,
+			boolean scrollExecution) {
 		super( sql, parameterBinders, affectedTableNames, appliedParameters );
 		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;
 		this.rowsToSkip = rowsToSkip;
@@ -76,6 +79,33 @@ public class JdbcOperationQuerySelect
 		this.jdbcLockStrategy = jdbcLockStrategy;
 		this.offsetParameter = offsetParameter;
 		this.limitParameter = limitParameter;
+		this.scrollExecution = scrollExecution;
+	}
+
+	public JdbcOperationQuerySelect(
+			String sql,
+			List<JdbcParameterBinder> parameterBinders,
+			JdbcValuesMappingProducer jdbcValuesMappingProducer,
+			Set<String> affectedTableNames,
+			int rowsToSkip,
+			int maxRows,
+			Map<JdbcParameter, JdbcParameterBinding> appliedParameters,
+			JdbcLockStrategy jdbcLockStrategy,
+			JdbcParameter offsetParameter,
+			JdbcParameter limitParameter) {
+		this(
+				sql,
+				parameterBinders,
+				jdbcValuesMappingProducer,
+				affectedTableNames,
+				rowsToSkip,
+				maxRows,
+				appliedParameters,
+				jdbcLockStrategy,
+				offsetParameter,
+				limitParameter,
+				false
+		);
 	}
 
 	@Override
@@ -127,6 +157,9 @@ public class JdbcOperationQuerySelect
 
 	@Override
 	public boolean isCompatibleWith(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions) {
+		if ( scrollExecution != queryOptions.isScrollExecution() ) {
+			return false;
+		}
 		final var limit = queryOptions.getLimit();
 		if ( !appliedParameters.isEmpty() ) {
 			if ( jdbcParameterBindings == null ) {

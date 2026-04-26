@@ -71,6 +71,7 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 import static org.hibernate.query.KeyedPage.KeyInterpretation.KEY_OF_FIRST_ON_NEXT_PAGE;
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
+import static org.hibernate.query.sqm.internal.AppliedGraphs.containsCollectionFetches;
 import static org.hibernate.query.sqm.internal.KeyBasedPagination.paginate;
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.createInterpretationsKey;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelectionAssignableToResultType;
@@ -397,10 +398,11 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 
 	protected List<R> doList() {
 		final var statement = getSqmStatement();
+		final var queryOptions = getQueryOptions();
 		final boolean containsCollectionFetches =
-				//TODO: why is this different from QuerySqmImpl.doList()?
-				statement.containsCollectionFetches();
-		final boolean hasLimit = hasLimit( statement, getQueryOptions() );
+				statement.containsCollectionFetches()
+						|| containsCollectionFetches( queryOptions );
+		final boolean hasLimit = hasLimit( statement, queryOptions );
 		final boolean needsDistinct = needsDistinct( containsCollectionFetches, hasLimit, statement );
 		final boolean paginationInSql = hasLimit && containsCollectionFetches && isPaginationPushedToDerivedTable();
 		final var list =

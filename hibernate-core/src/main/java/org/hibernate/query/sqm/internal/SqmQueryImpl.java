@@ -364,10 +364,11 @@ public class SqmQueryImpl<R>
 	protected List<R> doList() {
 		verifySelect();
 		final var statement = (SqmSelectStatement<?>) getSqmStatement();
+		final var queryOptions = getQueryOptions();
 		final boolean containsCollectionFetches =
 				statement.containsCollectionFetches()
-						|| containsCollectionFetches( getQueryOptions() );
-		final boolean hasLimit = hasLimit( statement, getQueryOptions() );
+						|| containsCollectionFetches( queryOptions );
+		final boolean hasLimit = hasLimit( statement, queryOptions );
 		final boolean needsDistinct = needsDistinct( containsCollectionFetches, hasLimit, statement );
 		final boolean paginationInSql = hasLimit && containsCollectionFetches && isPaginationPushedToDerivedTable();
 		final var list =

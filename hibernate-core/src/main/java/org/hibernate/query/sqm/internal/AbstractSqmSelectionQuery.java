@@ -7,6 +7,8 @@ package org.hibernate.query.sqm.internal;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -25,6 +27,9 @@ import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
@@ -133,15 +138,38 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 				return false;
 			}
 		}
-		final var metamodel = sessionFactory.getMappingMetamodel();
+		// The transformer only rewrites when at least one root contributes a
+		// direct plural fetched join. Without that, the converter leaves the
+		// limit on the original query spec; if the runtime suppresses the
+		// in-memory fallback here too, the query silently returns unpaginated
+		// results. Match the converter's preconditions.
+		return hasAnyDirectPluralFetch( roots, sessionFactory.getMappingMetamodel() );
+	}
+
+	private static boolean hasAnyDirectPluralFetch(
+			List<SqmRoot<?>> roots, MappingMetamodelImplementor metamodel) {
+		boolean anyDirectPluralFetch = false;
 		for ( var root : roots ) {
-			final Class<?> javaType = root.getJavaType();
-			if ( javaType == null
-					|| metamodel.findEntityDescriptor( javaType ) == null ) {
+			final var javaType = root.getJavaType();
+			if ( javaType == null || metamodel.findEntityDescriptor( javaType ) == null ) {
 				return false;
 			}
+			if ( !anyDirectPluralFetch && hasDirectPluralFetchedJoin( root ) ) {
+				anyDirectPluralFetch = true;
+			}
 		}
-		return true;
+		return anyDirectPluralFetch;
+	}
+
+	private static boolean hasDirectPluralFetchedJoin(SqmFrom<?, ?> from) {
+		for ( var join : from.getSqmJoins() ) {
+			if ( join instanceof SqmAttributeJoin<?, ?> attributeJoin
+					&& attributeJoin.isFetched()
+					&& attributeJoin.getReferencedPathSource() instanceof PluralPersistentAttribute ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public abstract SqmStatement<R> getSqmStatement();

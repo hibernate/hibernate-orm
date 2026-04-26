@@ -102,15 +102,18 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		final String primaryAlias = primaryNamed.getIdentificationVariable();
 		final String primaryTableExpr = primaryNamed.getTableExpression();
 
-		// All fetched joins on the primary root move to the outer query —
-		// plural to escape the cartesian-product limit, singular so the columns
-		// they project (referenced from the outer) end up reachable. Virtual
-		// table groups (e.g. treat() handles) wrap the primary root rather than
-		// adding a real join, so leave them in place.
+		// Only plural fetched joins on the primary root move to the outer — they
+		// are the cartesian-product source we're trying to escape. Fetched
+		// singular joins stay inside the inner so their columns can drive the
+		// pagination's ORDER BY (e.g. {@code order by p.name} where {@code p}
+		// is a fetched {@code @ManyToOne}). Their columns get absorbed into the
+		// derived table for the outer SELECT to reach.
 		final List<TableGroupJoin> movedJoins = new ArrayList<>();
 		for ( var join : primaryRoot.getTableGroupJoins() ) {
 			final var joined = join.getJoinedGroup();
-			if ( joined.isFetched() && !( joined instanceof org.hibernate.sql.ast.tree.from.VirtualTableGroup ) ) {
+			if ( joined.isFetched()
+					&& joined instanceof PluralTableGroup
+					&& !( joined instanceof org.hibernate.sql.ast.tree.from.VirtualTableGroup ) ) {
 				movedJoins.add( join );
 			}
 		}
@@ -301,12 +304,35 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 				sessionFactory
 		);
 		outer.getFromClause().addRoot( derivedRoot );
-		for ( var join : movedJoins ) {
-			derivedRoot.addTableGroupJoin( join );
-		}
 
-		// Add outer SELECT items, rewriting any absorbed-alias ColumnReferences.
+		// Add outer SELECT items and reattach moved fetch joins, rewriting any
+		// absorbed-alias ColumnReferences.
 		final var rewriter = new ColumnReferenceRewriter( absorption, primaryAlias );
+		for ( var join : movedJoins ) {
+			final Predicate originalPredicate = join.getPredicate();
+			if ( originalPredicate == null ) {
+				derivedRoot.addTableGroupJoin( join );
+			}
+			else {
+				final Predicate rewrittenPredicate = rewriter.replaceExpressions( originalPredicate );
+				if ( rewrittenPredicate == originalPredicate ) {
+					derivedRoot.addTableGroupJoin( join );
+				}
+				else {
+					// Predicates carry a TableGroup reference at construction time —
+					// rebuild the join with the rewritten predicate so the outer's
+					// JOIN ON addresses derived-alias columns (e.g. for subclass
+					// roots where the parent FK references a now-absorbed super
+					// table's PK).
+					derivedRoot.addTableGroupJoin( new TableGroupJoin(
+							join.getNavigablePath(),
+							join.getJoinType(),
+							join.getJoinedGroup(),
+							rewrittenPredicate
+					) );
+				}
+			}
+		}
 		for ( var sel : originalSelections ) {
 			final Expression rewritten = rewriter.rewrite( sel.getExpression() );
 			if ( rewritten == sel.getExpression() ) {

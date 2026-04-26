@@ -170,6 +170,37 @@ public class CollectionFetchPaginationAdvancedTest {
 		} );
 	}
 
+	/**
+	 * Joined-inheritance query whose root is the {@code Car} <em>subclass</em>
+	 * rather than the {@code Vehicle} root. The TableGroup has a primary table
+	 * for Car and joins to the super-table {@code Vehicle}; the rewrite needs to
+	 * absorb whichever side ends up as a {@code TableReferenceJoin}.
+	 */
+	@Test
+	void fetchJoinWithPolymorphicSubclassRoot(SessionFactoryScope scope) {
+		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		scope.inTransaction( s -> {
+			sql.clear();
+
+			final List<Car> cars = s.createSelectionQuery(
+					"from Car c left join fetch c.parts order by c.id",
+					Car.class
+			).setMaxResults( 2 ).list();
+
+			assertThat( cars.size(), is( 2 ) );
+			assertThat( cars.get( 0 ).getId(), is( 0L ) );
+			assertThat( cars.get( 1 ).getId(), is( 2L ) );
+			for ( Car c : cars ) {
+				assertThat( c.getSeats(), is( 5 ) );
+				assertThat( c.getMake(), org.hamcrest.CoreMatchers.notNullValue() );
+				assertThat( c.getParts().size(), is( 3 ) );
+			}
+
+			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
+			assertThat( generated, containsString( "from (select" ) );
+		} );
+	}
+
 	@Entity(name = "Album")
 	@SecondaryTable(
 			name = "AlbumDetails",

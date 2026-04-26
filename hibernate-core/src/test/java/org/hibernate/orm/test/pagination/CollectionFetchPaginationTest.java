@@ -183,6 +183,61 @@ public class CollectionFetchPaginationTest {
 	}
 
 	/**
+	 * Pagination ordered by a column on a fetched {@code @ManyToOne} target. The
+	 * fetched singular join must stay inside the inner derived table so the
+	 * inner ORDER BY can drive page membership — moving the join to the outer
+	 * would force the inner to ORDER BY only the root and silently change which
+	 * rows fall in each page.
+	 */
+	@Test
+	void pageOrderedByFetchedSingularAttribute(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
+			// Acme = {isbn-0, isbn-2, isbn-4}, Zenith = {isbn-1, isbn-3}.
+			// Ordered by publisher name then isbn: Acme/0, Acme/2, Acme/4, Zenith/1, Zenith/3.
+			// First page (max=2): Acme/0, Acme/2.
+			final List<Book> books = s.createSelectionQuery(
+					"from Book b left join fetch b.publisher p left join fetch b.authors "
+							+ "where b.isbn like 'isbn-%' order by p.name, b.isbn",
+					Book.class
+			).setMaxResults( 2 ).list();
+
+			assertThat( books.size(), is( 2 ) );
+			assertThat( books.get( 0 ).getIsbn(), is( "isbn-0" ) );
+			assertThat( books.get( 1 ).getIsbn(), is( "isbn-2" ) );
+			assertThat( books.get( 0 ).getPublisher().getName(), is( "Acme" ) );
+			assertThat( books.get( 1 ).getPublisher().getName(), is( "Acme" ) );
+		} );
+	}
+
+	/**
+	 * {@code select distinct b} together with a fetch + limit. {@code usesDistinct}
+	 * sets {@code needsDistinct=true} via a different path than the implicit
+	 * "limit + collection fetch" needs-dedup path; this test makes sure the
+	 * rewrite still produces N distinct parents.
+	 */
+	@Test
+	void selectDistinctWithFetchAndLimit(SessionFactoryScope scope) {
+		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		scope.inTransaction( s -> {
+			sql.clear();
+
+			final List<Book> books = s.createSelectionQuery(
+					"select distinct b from Book b left join fetch b.authors order by b.isbn",
+					Book.class
+			).setMaxResults( 2 ).list();
+
+			assertThat( books.size(), is( 2 ) );
+			assertThat( books.get( 0 ).getIsbn(), is( "isbn-0" ) );
+			assertThat( books.get( 1 ).getIsbn(), is( "isbn-1" ) );
+			for ( Book b : books ) {
+				assertThat( b.getAuthors().size(), is( 3 ) );
+			}
+
+			assertThat( sql.getSqlQueries().get( 0 ).toLowerCase(), containsString( "from (select" ) );
+		} );
+	}
+
+	/**
 	 * A plural fetch alongside a singular {@code @ManyToOne} fetch. The
 	 * singular fetch is also moved to the outer query (it would otherwise leave
 	 * dangling references in the outer SELECT, since the inner only projects

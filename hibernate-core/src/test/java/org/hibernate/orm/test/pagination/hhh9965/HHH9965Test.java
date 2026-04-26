@@ -6,8 +6,10 @@ package org.hibernate.orm.test.pagination.hhh9965;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -18,8 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
- * Created on 17/12/17.
- *
  * @author Reda.Housni-Alaoui
  */
 @JiraKey(value = "HHH-9965")
@@ -33,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		settings = @Setting(name = Environment.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH, value = "true")
 )
 @SessionFactory
+@RequiresDialect(SybaseASEDialect.class)
 public class HHH9965Test {
 
 	@Test

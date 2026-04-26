@@ -5,12 +5,14 @@
 package org.hibernate.orm.test.pagination.hhh9965;
 
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -36,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 		settings = @Setting(name = Environment.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH, value = "true")
 )
 @SessionFactory
+@SkipForDialect(dialectClass = SybaseASEDialect.class)
 public class HHH9965Test {
 
 	@Test

@@ -45,7 +45,9 @@ import jakarta.persistence.criteria.CompoundSelection;
 import static org.hibernate.cfg.QuerySettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
 import static org.hibernate.query.KeyedPage.KeyInterpretation.KEY_OF_FIRST_ON_NEXT_PAGE;
 import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
-import static org.hibernate.query.common.FetchClauseType.*;
+import static org.hibernate.query.common.FetchClauseType.PERCENT_ONLY;
+import static org.hibernate.query.common.FetchClauseType.PERCENT_WITH_TIES;
+import static org.hibernate.query.sqm.internal.AppliedGraphs.containsCollectionFetches;
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectKeys;
 import static org.hibernate.query.sqm.internal.KeyedResult.collectResults;
@@ -147,15 +149,21 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		// original query spec; if the runtime suppresses the in-memory fallback
 		// here too, the query silently returns unpaginated results. Match the
 		// converter's preconditions.
-		return hasAnyReachableFetchedPlural( roots, sessionFactory.getMappingMetamodel() );
+		return hasAnyReachableFetchedPlural( roots, sessionFactory.getMappingMetamodel() )
+			|| hasCollectionFetchesOnlyViaAppliedGraph( roots, sessionFactory.getMappingMetamodel() );
+	}
+
+	private boolean hasCollectionFetchesOnlyViaAppliedGraph(
+			List<SqmRoot<?>> roots, MappingMetamodelImplementor metamodel) {
+		return containsCollectionFetches( getQueryOptions() )
+			&& allRootsAreEntities( roots, metamodel );
 	}
 
 	private static boolean hasAnyReachableFetchedPlural(
 			List<SqmRoot<?>> roots, MappingMetamodelImplementor metamodel) {
 		boolean anyReachable = false;
 		for ( var root : roots ) {
-			final var javaType = root.getJavaType();
-			if ( javaType == null || metamodel.findEntityDescriptor( javaType ) == null ) {
+			if ( !isEntityRoot( root, metamodel ) ) {
 				return false;
 			}
 			if ( !anyReachable && hasReachableFetchedPluralJoin( root ) ) {
@@ -163,6 +171,20 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 			}
 		}
 		return anyReachable;
+	}
+
+	private static boolean allRootsAreEntities(List<SqmRoot<?>> roots, MappingMetamodelImplementor metamodel) {
+		for ( var root : roots ) {
+			if ( !isEntityRoot( root, metamodel ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static boolean isEntityRoot(SqmRoot<?> root, MappingMetamodelImplementor metamodel) {
+		final var javaType = root.getJavaType();
+		return javaType != null && metamodel.findEntityDescriptor( javaType ) != null;
 	}
 
 	private static boolean hasReachableFetchedPluralJoin(SqmFrom<?, ?> from) {

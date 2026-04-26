@@ -8843,6 +8843,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			if ( fetch != null && fetch.getTiming() == FetchTiming.IMMEDIATE ) {
 				if ( fetchable instanceof TableGroupJoinProducer ) {
+					if ( joined && fetchable instanceof PluralAttributeMapping ) {
+						containsCollectionFetches = true;
+					}
 					if ( joinedTableGroup != null ) {
 						final TableGroup actualTableGroup =
 								joinedTableGroup instanceof PluralTableGroup pluralTableGroup

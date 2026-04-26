@@ -3280,17 +3280,6 @@ A query may have more than one fetch join, but be aware that:
 HQL doesn't disallow it, but it's usually a bad idea to apply a restriction to a ``join fetch``ed entity, since the elements of the fetched collection would be incomplete.
 Indeed, it's best to avoid even assigning an identification variable to a fetched joined entity except for the purpose of specifying a nested fetch join.
 
-[IMPORTANT]
-====
-Fetch joins should usually be avoided in limited or paged queries.
-This includes:
-
-- queries executed using `setFirstResult()` or `setMaxResults()`, as in <<jpql-pagination>>, or
-- queries with a limit or offset declared in HQL, described below in <<hql-limit-offset>>.
-
-Nor should they be used with the `scroll()` and `stream()` methods described in <<hql-api-incremental>>.
-====
-
 Fetch joins are disallowed in subqueries, where they would make no sense.
 
 [[hql-join-treat]]
@@ -4014,54 +4003,13 @@ include::{example-dir-hql}/HQLTest.java[tags=hql-limit-example]
 These are well-defined limits: the number of results returned by the database will be limited to 50, as promised.
 But not every query is quite so well-behaved.
 
-[NOTE]
+[CAUTION]
 ====
-_Limiting_ certainly _isn't_ a well-defined relational operation, and must be used with care.
-
-In particular, limits don't play well with <<hql-explicit-fetch-join,fetch joins>>.
-====
-
-This next query is accepted by HQL, and no more than 50 results are returned by `getResultList()`, just as expected:
-
-[[hql-bad-limit-example]]
-//.Order by example
-====
-[source, java, indent=0]
-----
-include::{example-dir-hql}/HQLTest.java[tags=hql-bad-limit-example]
-----
-====
-
-However, if you log the SQL executed by Hibernate, you'll notice something wrong:
-
-[source, sql, indent=0]
-----
-    select
-        p1_0.id,
-        c1_0.phone_id,
-        c1_0.calls_ORDER,
-        c1_0.id,
-        c1_0.duration,
-        c1_0.payment_id,
-        c1_0.call_timestamp,
-        p1_0.phone_number,
-        p1_0.person_id,
-        p1_0.phone_type
-    from
-        Phone p1_0
-    join
-        phone_call c1_0
-            on p1_0.id=c1_0.phone_id
-    order by 1
-----
-
-What happened to the `limit` clause?
-
-[IMPORTANT]
-====
-When limits or pagination are combined with a fetch join, Hibernate must retrieve all matching results from the database and _apply the limit in memory_!
-
-This _almost certainly_ isn't the behavior you were hoping for, and in general will exhibit _terrible_ performance characteristics.
+Limiting isn't a well-defined relational operation, and must be used with care.
+Prior to Hibernate 7.4, limits didn't play well with many-valued <<explicit-fetch-join,fetch joins>>.
+This problem is now fixed on any database that supports limits and offsets in subqueries.
+But when a limit or pagination is combined with a fetch join to a collection on a database which _doesn't_ support this (notably, Sybase ASE), Hibernate must retrieve all matching results from the database and _apply the limit in memory_!
+This probably isn't the behavior you intended, and in general exhibits terrible performance characteristics.
 ====
 
 In the next chapter we'll see a completely different way to write queries in Hibernate.

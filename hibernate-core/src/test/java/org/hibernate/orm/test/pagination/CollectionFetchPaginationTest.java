@@ -210,6 +210,41 @@ public class CollectionFetchPaginationTest {
 	}
 
 	/**
+	 * {@code getResultStream} bypasses {@code doList} entirely, going through
+	 * {@code scroll} instead. The SQL-level pushdown still applies (the converter
+	 * does that before execution), so streaming N parents must yield exactly the
+	 * first N distinct parents with their full collections — not the cartesian
+	 * product of every parent and every child.
+	 */
+	@Test
+	void fetchJoinWithMaxResultsAsStream(SessionFactoryScope scope) {
+		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		scope.inTransaction( s -> {
+			sql.clear();
+
+			final List<Book> books;
+			try ( var stream = s.createSelectionQuery(
+					"from Book b left join fetch b.authors where b.isbn like 'isbn-%' "
+							+ "order by b.isbn",
+					Book.class
+			).setMaxResults( 2 ).getResultStream() ) {
+				books = stream.distinct().toList();
+			}
+
+			assertEquals( 2, books.size() );
+			assertEquals( "isbn-0", books.get( 0 ).getIsbn() );
+			assertEquals( "isbn-1", books.get( 1 ).getIsbn() );
+			for ( Book b : books ) {
+				assertEquals( 3, b.getAuthors().size() );
+			}
+
+			// limit must be inside a derived table — otherwise the stream would
+			// pull every cartesian row before the LIMIT applied
+			assertTrue( sql.getSqlQueries().get( 0 ).toLowerCase().contains( "from (select" ) );
+		} );
+	}
+
+	/**
 	 * {@code select distinct b} together with a fetch + limit. {@code usesDistinct}
 	 * sets {@code needsDistinct=true} via a different path than the implicit
 	 * "limit + collection fetch" needs-dedup path; this test makes sure the

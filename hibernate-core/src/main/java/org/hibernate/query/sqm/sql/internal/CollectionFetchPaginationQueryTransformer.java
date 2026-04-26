@@ -379,22 +379,25 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		// different parents. Stabilize the outer row order by inserting the root
 		// identifier between the root-level ordering and the moved collection
 		// ordering. List execution does not need this.
-		if ( groupRowsByOwnerForScroll ) {
-			for ( var sort : rootSortSpecs ) {
-				addOuterSortSpecification( outer, sort, rewriter );
+			if ( groupRowsByOwnerForScroll ) {
+				for ( var sort : rootSortSpecs ) {
+					addOuterSortSpecification( outer, sort, rewriter );
+				}
+				primaryEntity.getIdentifierMapping().forEachSelectable( (selectionIndex, selectableMapping) -> {
+					final var identifierColumn = new ColumnReference( primaryAlias, selectableMapping );
+					if ( !hasSortExpression( outer.getSortSpecifications(), identifierColumn ) ) {
+						outer.addSortSpecification(
+								new SortSpecification(
+										identifierColumn,
+										SortDirection.ASCENDING
+								)
+						);
+					}
+				} );
+				for ( var sort : movedAliasSortSpecs ) {
+					addOuterSortSpecification( outer, sort, rewriter );
+				}
 			}
-			primaryEntity.getIdentifierMapping().forEachSelectable( (selectionIndex, selectableMapping) ->
-					outer.addSortSpecification(
-							new SortSpecification(
-									new ColumnReference( primaryAlias, selectableMapping ),
-									SortDirection.ASCENDING
-							)
-					)
-			);
-			for ( var sort : movedAliasSortSpecs ) {
-				addOuterSortSpecification( outer, sort, rewriter );
-			}
-		}
 		else {
 			// Outer ORDER BY mirrors the original (full) sort specs, with absorbed
 			// column references rewritten through the derived alias.
@@ -419,8 +422,20 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 								sort.getSortOrder(),
 								sort.getNullPrecedence(),
 								sort.isIgnoreCase()
-						)
+					)
 		);
+	}
+
+	private static boolean hasSortExpression(List<SortSpecification> sortSpecifications, Expression expression) {
+		if ( sortSpecifications == null ) {
+			return false;
+		}
+		for ( var sortSpecification : sortSpecifications ) {
+			if ( expression.equals( sortSpecification.getSortExpression() ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static @Nullable TableGroup primaryRoot(List<TableGroup> roots) {

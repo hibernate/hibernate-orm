@@ -29,9 +29,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Pagination of a fetch join over a many-valued association must apply the
@@ -99,15 +99,15 @@ public class CollectionFetchPaginationTest {
 					Book.class
 			).setMaxResults( 2 ).list();
 
-			assertThat( books.size(), is( 2 ) );
-			assertThat( books.get( 0 ).getIsbn(), is( "isbn-0" ) );
-			assertThat( books.get( 1 ).getIsbn(), is( "isbn-1" ) );
-			assertThat( books.get( 0 ).getAuthors().size(), is( 3 ) );
-			assertThat( books.get( 1 ).getAuthors().size(), is( 3 ) );
+			assertEquals( 2, books.size() );
+			assertEquals( "isbn-0", books.get( 0 ).getIsbn() );
+			assertEquals( "isbn-1", books.get( 1 ).getIsbn() );
+			assertEquals( 3, books.get( 0 ).getAuthors().size() );
+			assertEquals( 3, books.get( 1 ).getAuthors().size() );
 
-			assertThat( sql.getSqlQueries().size(), is( 1 ) );
+			assertEquals( 1, sql.getSqlQueries().size() );
 			// limit must be inside a derived table, not on the outer fetch join
-			assertThat( sql.getSqlQueries().get( 0 ).toLowerCase(), containsString( "from (select" ) );
+			assertTrue( sql.getSqlQueries().get( 0 ).toLowerCase().contains( "from (select" ) );
 		} );
 	}
 
@@ -119,11 +119,11 @@ public class CollectionFetchPaginationTest {
 					Book.class
 			).setFirstResult( 1 ).setMaxResults( 2 ).list();
 
-			assertThat( books.size(), is( 2 ) );
-			assertThat( books.get( 0 ).getIsbn(), is( "isbn-1" ) );
-			assertThat( books.get( 1 ).getIsbn(), is( "isbn-2" ) );
-			assertThat( books.get( 0 ).getAuthors().size(), is( 3 ) );
-			assertThat( books.get( 1 ).getAuthors().size(), is( 3 ) );
+			assertEquals( 2, books.size() );
+			assertEquals( "isbn-1", books.get( 0 ).getIsbn() );
+			assertEquals( "isbn-2", books.get( 1 ).getIsbn() );
+			assertEquals( 3, books.get( 0 ).getAuthors().size() );
+			assertEquals( 3, books.get( 1 ).getAuthors().size() );
 		} );
 	}
 
@@ -135,11 +135,11 @@ public class CollectionFetchPaginationTest {
 					Book.class
 			).setMaxResults( 3 ).list();
 
-			assertThat( books.size(), is( 3 ) );
-			assertThat( books.get( 0 ).getIsbn(), is( "isbn-0" ) );
-			assertThat( books.get( 2 ).getIsbn(), is( "isbn-2" ) );
+			assertEquals( 3, books.size() );
+			assertEquals( "isbn-0", books.get( 0 ).getIsbn() );
+			assertEquals( "isbn-2", books.get( 2 ).getIsbn() );
 			for ( Book b : books ) {
-				assertThat( b.getAuthors().size(), is( 3 ) );
+				assertEquals( 3, b.getAuthors().size() );
 			}
 		} );
 	}
@@ -167,18 +167,18 @@ public class CollectionFetchPaginationTest {
 					Book.class
 			).setMaxResults( 2 ).list();
 
-			assertThat( books.size(), is( 2 ) );
-			assertThat( books.get( 0 ).getIsbn(), is( "isbn-0" ) );
-			assertThat( books.get( 1 ).getIsbn(), is( "isbn-1" ) );
+			assertEquals( 2, books.size() );
+			assertEquals( "isbn-0", books.get( 0 ).getIsbn() );
+			assertEquals( "isbn-1", books.get( 1 ).getIsbn() );
 			for ( Book b : books ) {
-				assertThat( b.getAuthors().size(), is( 3 ) );
+				assertEquals( 3, b.getAuthors().size() );
 			}
 
 			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
-			assertThat( generated, containsString( "from (select" ) );
+			assertTrue( generated.contains( "from (select" ) );
 			// The inner derived table carries an EXISTS predicate to mirror the
 			// inner-join filter that's now sitting on the outer.
-			assertThat( generated, containsString( "exists" ) );
+			assertTrue( generated.contains( "exists" ) );
 		} );
 	}
 
@@ -201,11 +201,11 @@ public class CollectionFetchPaginationTest {
 					Book.class
 			).setMaxResults( 2 ).list();
 
-			assertThat( books.size(), is( 2 ) );
-			assertThat( books.get( 0 ).getIsbn(), is( "isbn-0" ) );
-			assertThat( books.get( 1 ).getIsbn(), is( "isbn-2" ) );
-			assertThat( books.get( 0 ).getPublisher().getName(), is( "Acme" ) );
-			assertThat( books.get( 1 ).getPublisher().getName(), is( "Acme" ) );
+			assertEquals( 2, books.size() );
+			assertEquals( "isbn-0", books.get( 0 ).getIsbn() );
+			assertEquals( "isbn-2", books.get( 1 ).getIsbn() );
+			assertEquals( "Acme", books.get( 0 ).getPublisher().getName() );
+			assertEquals( "Acme", books.get( 1 ).getPublisher().getName() );
 		} );
 	}
 
@@ -226,14 +226,14 @@ public class CollectionFetchPaginationTest {
 					Book.class
 			).setMaxResults( 2 ).list();
 
-			assertThat( books.size(), is( 2 ) );
-			assertThat( books.get( 0 ).getIsbn(), is( "isbn-0" ) );
-			assertThat( books.get( 1 ).getIsbn(), is( "isbn-1" ) );
+			assertEquals( 2, books.size() );
+			assertEquals( "isbn-0", books.get( 0 ).getIsbn() );
+			assertEquals( "isbn-1", books.get( 1 ).getIsbn() );
 			for ( Book b : books ) {
-				assertThat( b.getAuthors().size(), is( 3 ) );
+				assertEquals( 3, b.getAuthors().size() );
 			}
 
-			assertThat( sql.getSqlQueries().get( 0 ).toLowerCase(), containsString( "from (select" ) );
+			assertTrue( sql.getSqlQueries().get( 0 ).toLowerCase().contains( "from (select" ) );
 		} );
 	}
 
@@ -255,21 +255,23 @@ public class CollectionFetchPaginationTest {
 					Book.class
 			).setMaxResults( 2 ).list();
 
-			assertThat( books.size(), is( 2 ) );
-			assertThat( books.get( 0 ).getIsbn(), is( "isbn-0" ) );
-			assertThat( books.get( 1 ).getIsbn(), is( "isbn-1" ) );
+			assertEquals( 2, books.size() );
+			assertEquals( "isbn-0", books.get( 0 ).getIsbn() );
+			assertEquals( "isbn-1", books.get( 1 ).getIsbn() );
 			for ( Book b : books ) {
-				assertThat( b.getAuthors().size(), is( 3 ) );
-				assertThat( b.getPublisher(), org.hamcrest.CoreMatchers.notNullValue() );
-				assertThat( b.getPublisher().getName(),
-						is( b == books.get( 0 ) ? "Acme" : "Zenith" ) );
+				assertEquals( 3, b.getAuthors().size() );
+				assertNotNull( b.getPublisher() );
+				assertEquals(
+						b == books.get( 0 ) ? "Acme" : "Zenith",
+						b.getPublisher().getName()
+				);
 			}
 
 			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
-			assertThat( generated, containsString( "from (select" ) );
+			assertTrue( generated.contains( "from (select" ) );
 			// publisher stays in the inner derived table; author moves to the outer
-			assertThat( generated, containsString( "publisher" ) );
-			assertThat( generated, containsString( "author" ) );
+			assertTrue( generated.contains( "publisher" ) );
+			assertTrue( generated.contains( "author" ) );
 		} );
 	}
 
@@ -294,14 +296,14 @@ public class CollectionFetchPaginationTest {
 			).setMaxResults( 2 ).list()
 					.stream().distinct().toList();
 
-			assertThat( rows.size(), is( 2 ) );
-			assertThat( rows.get( 0 ).book().getIsbn(), is( "isbn-0" ) );
-			assertThat( rows.get( 1 ).book().getIsbn(), is( "isbn-1" ) );
-			assertThat( rows.get( 0 ).publisher().getName(), is( "Acme" ) );
-			assertThat( rows.get( 1 ).publisher().getName(), is( "Zenith" ) );
+			assertEquals( 2, rows.size() );
+			assertEquals( "isbn-0", rows.get( 0 ).book().getIsbn() );
+			assertEquals( "isbn-1", rows.get( 1 ).book().getIsbn() );
+			assertEquals( "Acme", rows.get( 0 ).publisher().getName() );
+			assertEquals( "Zenith", rows.get( 1 ).publisher().getName() );
 
 			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
-			assertThat( generated, containsString( "from (select" ) );
+			assertTrue( generated.contains( "from (select" ) );
 		} );
 	}
 
@@ -322,23 +324,23 @@ public class CollectionFetchPaginationTest {
 					Book.class
 			).setMaxResults( 2 ).list();
 
-			assertThat( books.size(), is( 2 ) );
-			assertThat( books.get( 0 ).getIsbn(), is( "isbn-0" ) );
-			assertThat( books.get( 1 ).getIsbn(), is( "isbn-2" ) );
+			assertEquals( 2, books.size() );
+			assertEquals( "isbn-0", books.get( 0 ).getIsbn() );
+			assertEquals( "isbn-2", books.get( 1 ).getIsbn() );
 			for ( Book b : books ) {
-				assertThat( b.getAuthors().size(), is( 3 ) );
+				assertEquals( 3, b.getAuthors().size() );
 			}
 
 			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
-			assertThat( generated, containsString( "from (select" ) );
+			assertTrue( generated.contains( "from (select" ) );
 			// The non-fetch publisher join must remain inside the derived table —
 			// the outer query refers to it only via the WHERE predicate which moved
 			// down to the inner.
 			final int derivedClose = generated.indexOf( ')' );
 			final String inner = generated.substring( 0, derivedClose );
 			final String outer = generated.substring( derivedClose );
-			assertThat( inner, containsString( "publisher" ) );
-			assertThat( outer, containsString( "author" ) );
+			assertTrue( inner.contains( "publisher" ) );
+			assertTrue( outer.contains( "author" ) );
 		} );
 	}
 
@@ -362,25 +364,25 @@ public class CollectionFetchPaginationTest {
 			).setMaxResults( 2 ).list()
 					.stream().distinct().toList();
 
-			assertThat( books.size(), is( 2 ) );
-			assertThat( books.get( 0 ).book().getIsbn(), is( "isbn-0" ) );
-			assertThat( books.get( 1 ).book().getIsbn(), is( "isbn-2" ) );
+			assertEquals( 2, books.size() );
+			assertEquals( "isbn-0", books.get( 0 ).book().getIsbn() );
+			assertEquals( "isbn-2", books.get( 1 ).book().getIsbn() );
 			for ( var b : books ) {
-				assertThat( b.book().getAuthors().size(), is( 3 ) );
+				assertEquals( 3, b.book().getAuthors().size() );
 			}
-			assertThat( books.get( 0 ).publisher().getName(), is( "Acme" ) );
-			assertThat( books.get( 1 ).publisher().getName(), is( "Acme" ) );
+			assertEquals( "Acme", books.get( 0 ).publisher().getName() );
+			assertEquals( "Acme", books.get( 1 ).publisher().getName() );
 
 			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
-			assertThat( generated, containsString( "from (select" ) );
+			assertTrue( generated.contains( "from (select" ) );
 			// The non-fetch publisher join must remain inside the derived table —
 			// the outer query refers to it only via the WHERE predicate which moved
 			// down to the inner.
 			final int derivedClose = generated.indexOf( ')' );
 			final String inner = generated.substring( 0, derivedClose );
 			final String outer = generated.substring( derivedClose );
-			assertThat( inner, containsString( "publisher" ) );
-			assertThat( outer, containsString( "author" ) );
+			assertTrue( inner.contains( "publisher" ) );
+			assertTrue( outer.contains( "author" ) );
 		} );
 	}
 

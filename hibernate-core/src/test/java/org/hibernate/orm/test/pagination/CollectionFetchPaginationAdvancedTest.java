@@ -33,9 +33,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Pagination-with-collection-fetch where the root entity uses
@@ -111,21 +112,21 @@ public class CollectionFetchPaginationAdvancedTest {
 					Album.class
 			).setMaxResults( 2 ).list();
 
-			assertThat( albums.size(), is( 2 ) );
-			assertThat( albums.get( 0 ).getId(), is( 0L ) );
-			assertThat( albums.get( 1 ).getId(), is( 1L ) );
-			assertThat( albums.get( 0 ).getReview(), is( "Review 0" ) );
-			assertThat( albums.get( 1 ).getReview(), is( "Review 1" ) );
+			assertEquals( 2, albums.size() );
+			assertEquals( 0L, albums.get( 0 ).getId() );
+			assertEquals( 1L, albums.get( 1 ).getId() );
+			assertEquals( "Review 0", albums.get( 0 ).getReview() );
+			assertEquals( "Review 1", albums.get( 1 ).getReview() );
 			for ( var a : albums ) {
-				assertThat( a.getTracks().size(), is( 3 ) );
+				assertEquals( 3, a.getTracks().size() );
 			}
 
 			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
-			assertThat( generated, containsString( "from (select" ) );
+			assertTrue( generated.contains( "from (select" ) );
 			// secondary table join must be inside the inner derived table
 			final int derivedClose = generated.indexOf( ')' );
 			final String inner = generated.substring( 0, derivedClose );
-			assertThat( inner, containsString( "albumdetails" ) );
+			assertTrue( inner.contains( "albumdetails" ) );
 		} );
 	}
 
@@ -146,27 +147,27 @@ public class CollectionFetchPaginationAdvancedTest {
 					Vehicle.class
 			).setMaxResults( 2 ).list();
 
-			assertThat( vehicles.size(), is( 2 ) );
-			assertThat( vehicles.get( 0 ).getId(), is( 0L ) );
-			assertThat( vehicles.get( 1 ).getId(), is( 1L ) );
+			assertEquals( 2, vehicles.size() );
+			assertEquals( 0L, vehicles.get( 0 ).getId() );
+			assertEquals( 1L, vehicles.get( 1 ).getId() );
 			// runtime types must come back via the discriminator
-			assertThat( vehicles.get( 0 ) instanceof Car, is( true ) );
-			assertThat( vehicles.get( 1 ) instanceof Truck, is( true ) );
-			assertThat( ( (Car) vehicles.get( 0 ) ).getSeats(), is( 5 ) );
-			assertThat( ( (Truck) vehicles.get( 1 ) ).getPayload(), is( 1000 ) );
+			final Car car = assertInstanceOf( Car.class, vehicles.get( 0 ) );
+			final Truck truck = assertInstanceOf( Truck.class, vehicles.get( 1 ) );
+			assertEquals( 5, car.getSeats() );
+			assertEquals( 1000, truck.getPayload() );
 			for ( var v : vehicles ) {
-				assertThat( v.getParts().size(), is( 3 ) );
+				assertEquals( 3, v.getParts().size() );
 			}
 
 			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
-			assertThat( generated, containsString( "from (select" ) );
+			assertTrue( generated.contains( "from (select" ) );
 			// subtype tables must be inside the derived table; parts join outside
 			final int derivedClose = generated.indexOf( ')' );
 			final String inner = generated.substring( 0, derivedClose );
 			final String outer = generated.substring( derivedClose );
-			assertThat( inner, containsString( "car" ) );
-			assertThat( inner, containsString( "truck" ) );
-			assertThat( outer, containsString( "part" ) );
+			assertTrue( inner.contains( "car" ) );
+			assertTrue( inner.contains( "truck" ) );
+			assertTrue( outer.contains( "part" ) );
 		} );
 	}
 
@@ -187,17 +188,17 @@ public class CollectionFetchPaginationAdvancedTest {
 					Car.class
 			).setMaxResults( 2 ).list();
 
-			assertThat( cars.size(), is( 2 ) );
-			assertThat( cars.get( 0 ).getId(), is( 0L ) );
-			assertThat( cars.get( 1 ).getId(), is( 2L ) );
+			assertEquals( 2, cars.size() );
+			assertEquals( 0L, cars.get( 0 ).getId() );
+			assertEquals( 2L, cars.get( 1 ).getId() );
 			for ( Car c : cars ) {
-				assertThat( c.getSeats(), is( 5 ) );
-				assertThat( c.getMake(), org.hamcrest.CoreMatchers.notNullValue() );
-				assertThat( c.getParts().size(), is( 3 ) );
+				assertEquals( 5, c.getSeats() );
+				assertNotNull( c.getMake() );
+				assertEquals( 3, c.getParts().size() );
 			}
 
 			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
-			assertThat( generated, containsString( "from (select" ) );
+			assertTrue( generated.contains( "from (select" ) );
 		} );
 	}
 

@@ -37,9 +37,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Pagination over fetch joins of collection shapes other than the basic
@@ -122,18 +122,18 @@ public class CollectionFetchPaginationCollectionShapesTest {
 					Document.class
 			).setMaxResults( 2 ).list();
 
-			assertThat( docs.size(), is( 2 ) );
-			assertThat( docs.get( 0 ).getId(), is( 0L ) );
-			assertThat( docs.get( 1 ).getId(), is( 1L ) );
+			assertEquals( 2, docs.size() );
+			assertEquals( 0L, docs.get( 0 ).getId() );
+			assertEquals( 1L, docs.get( 1 ).getId() );
 			for ( Document d : docs ) {
-				assertThat( d.getTags().size(), is( 3 ) );
+				assertEquals( 3, d.getTags().size() );
 			}
 
 			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
-			assertThat( generated, containsString( "from (select" ) );
+			assertTrue( generated.contains( "from (select" ) );
 			final int derivedClose = generated.indexOf( ')' );
 			final String outer = generated.substring( derivedClose );
-			assertThat( outer, containsString( "tags" ) );
+			assertTrue( outer.contains( "tags" ) );
 		} );
 	}
 
@@ -153,15 +153,15 @@ public class CollectionFetchPaginationCollectionShapesTest {
 					Document.class
 			).setMaxResults( 2 ).list();
 
-			assertThat( docs.size(), is( 2 ) );
-			assertThat( docs.get( 0 ).getId(), is( 0L ) );
-			assertThat( docs.get( 1 ).getId(), is( 1L ) );
+			assertEquals( 2, docs.size() );
+			assertEquals( 0L, docs.get( 0 ).getId() );
+			assertEquals( 1L, docs.get( 1 ).getId() );
 			for ( Document d : docs ) {
-				assertThat( d.getComments().size(), is( 2 ) );
+				assertEquals( 2, d.getComments().size() );
 			}
 
 			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
-			assertThat( generated, containsString( "from (select" ) );
+			assertTrue( generated.contains( "from (select" ) );
 		} );
 	}
 
@@ -182,18 +182,18 @@ public class CollectionFetchPaginationCollectionShapesTest {
 					Library.class
 			).setMaxResults( 2 ).list();
 
-			assertThat( libs.size(), is( 2 ) );
-			assertThat( libs.get( 0 ).getId(), is( 0L ) );
-			assertThat( libs.get( 1 ).getId(), is( 1L ) );
+			assertEquals( 2, libs.size() );
+			assertEquals( 0L, libs.get( 0 ).getId() );
+			assertEquals( 1L, libs.get( 1 ).getId() );
 			for ( Library lib : libs ) {
-				assertThat( lib.getBooksByCategory().size(), is( 3 ) );
-				assertThat( lib.getBooksByCategory().get( "category-0" ), org.hamcrest.CoreMatchers.notNullValue() );
-				assertThat( lib.getBooksByCategory().get( "category-1" ), org.hamcrest.CoreMatchers.notNullValue() );
-				assertThat( lib.getBooksByCategory().get( "category-2" ), org.hamcrest.CoreMatchers.notNullValue() );
+				assertEquals( 3, lib.getBooksByCategory().size() );
+				assertNotNull( lib.getBooksByCategory().get( "category-0" ) );
+				assertNotNull( lib.getBooksByCategory().get( "category-1" ) );
+				assertNotNull( lib.getBooksByCategory().get( "category-2" ) );
 			}
 
 			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
-			assertThat( generated, containsString( "from (select" ) );
+			assertTrue( generated.contains( "from (select" ) );
 		} );
 	}
 
@@ -215,21 +215,21 @@ public class CollectionFetchPaginationCollectionShapesTest {
 					Tournament.class
 			).setMaxResults( 2 ).list();
 
-			assertThat( tournaments.size(), is( 2 ) );
-			assertThat( tournaments.get( 0 ).getId(), is( 0L ) );
-			assertThat( tournaments.get( 1 ).getId(), is( 1L ) );
+			assertEquals( 2, tournaments.size() );
+			assertEquals( 0L, tournaments.get( 0 ).getId() );
+			assertEquals( 1L, tournaments.get( 1 ).getId() );
 			for ( Tournament t : tournaments ) {
-				assertThat( t.getMatches().size(), is( 2 ) );
-				assertThat( t.getPlayers().size(), is( 3 ) );
+				assertEquals( 2, t.getMatches().size() );
+				assertEquals( 3, t.getPlayers().size() );
 			}
 
 			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
-			assertThat( generated, containsString( "from (select" ) );
+			assertTrue( generated.contains( "from (select" ) );
 			final int derivedClose = generated.indexOf( ')' );
 			final String outer = generated.substring( derivedClose );
 			// both fetched collections joined on the outer
-			assertThat( outer, containsString( "match" ) );
-			assertThat( outer, containsString( "player" ) );
+			assertTrue( outer.contains( "match" ) );
+			assertTrue( outer.contains( "player" ) );
 		} );
 	}
 

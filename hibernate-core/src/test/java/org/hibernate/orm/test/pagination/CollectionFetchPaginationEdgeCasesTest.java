@@ -32,9 +32,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Pagination + collection-fetch edge cases:
@@ -120,18 +120,18 @@ public class CollectionFetchPaginationEdgeCasesTest {
 					Show.class
 			).setMaxResults( 2 ).list();
 
-			assertThat( shows.size(), is( 2 ) );
-			assertThat( shows.get( 0 ).getId(), is( 0L ) );
-			assertThat( shows.get( 1 ).getId(), is( 1L ) );
+			assertEquals( 2, shows.size() );
+			assertEquals( 0L, shows.get( 0 ).getId() );
+			assertEquals( 1L, shows.get( 1 ).getId() );
 			for ( Show show : shows ) {
-				assertThat( show.getEpisodes().size(), is( 2 ) );
+				assertEquals( 2, show.getEpisodes().size() );
 				for ( Episode ep : show.getEpisodes() ) {
-					assertThat( ep.getScenes().size(), is( 2 ) );
+					assertEquals( 2, ep.getScenes().size() );
 				}
 			}
 
 			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
-			assertThat( generated, containsString( "from (select" ) );
+			assertTrue( generated.contains( "from (select" ) );
 		} );
 	}
 
@@ -153,19 +153,19 @@ public class CollectionFetchPaginationEdgeCasesTest {
 					Playlist.class
 			).setMaxResults( 2 ).list();
 
-			assertThat( playlists.size(), is( 2 ) );
+			assertEquals( 2, playlists.size() );
 			for ( Playlist pl : playlists ) {
 				final List<Song> songs = pl.getSongs();
-				assertThat( songs.size(), is( 3 ) );
+				assertEquals( 3, songs.size() );
 				// order must be the insertion order Charlie / Alpha / Bravo,
 				// preserved by the @OrderColumn-driven sort
-				assertThat( songs.get( 0 ).getTitle(), containsString( "Charlie" ) );
-				assertThat( songs.get( 1 ).getTitle(), containsString( "Alpha" ) );
-				assertThat( songs.get( 2 ).getTitle(), containsString( "Bravo" ) );
+				assertTrue( songs.get( 0 ).getTitle().contains( "Charlie" ) );
+				assertTrue( songs.get( 1 ).getTitle().contains( "Alpha" ) );
+				assertTrue( songs.get( 2 ).getTitle().contains( "Bravo" ) );
 			}
 
 			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
-			assertThat( generated, containsString( "from (select" ) );
+			assertTrue( generated.contains( "from (select" ) );
 		} );
 	}
 
@@ -192,20 +192,20 @@ public class CollectionFetchPaginationEdgeCasesTest {
 					Episode.class
 			).setMaxResults( 3 ).list();
 
-			assertThat( episodes.size(), is( 3 ) );
-			assertThat( episodes.get( 0 ).getId(), is( 0L ) );
-			assertThat( episodes.get( 1 ).getId(), is( 1L ) );
-			assertThat( episodes.get( 2 ).getId(), is( 10L ) );
+			assertEquals( 3, episodes.size() );
+			assertEquals( 0L, episodes.get( 0 ).getId() );
+			assertEquals( 1L, episodes.get( 1 ).getId() );
+			assertEquals( 10L, episodes.get( 2 ).getId() );
 
 			for ( Episode ep : episodes ) {
-				assertThat( ep.getShow(), org.hamcrest.CoreMatchers.notNullValue() );
+				assertNotNull( ep.getShow() );
 				// each fetched Show has its full collection of 2 episodes
-				assertThat( ep.getShow().getEpisodes().size(), is( 2 ) );
+				assertEquals( 2, ep.getShow().getEpisodes().size() );
 			}
 
 			// pagination must be in the SQL, not in memory
 			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
-			assertThat( generated, containsString( "from (select" ) );
+			assertTrue( generated.contains( "from (select" ) );
 		} );
 	}
 
@@ -226,23 +226,23 @@ public class CollectionFetchPaginationEdgeCasesTest {
 					Article.class
 			).setMaxResults( 2 ).list();
 
-			assertThat( articles.size(), is( 2 ) );
-			assertThat( articles.get( 0 ).getId(), is( 0L ) );
-			assertThat( articles.get( 1 ).getId(), is( 1L ) );
+			assertEquals( 2, articles.size() );
+			assertEquals( 0L, articles.get( 0 ).getId() );
+			assertEquals( 1L, articles.get( 1 ).getId() );
 			for ( Article art : articles ) {
 				// REJECTED comments are filtered by @SQLRestriction("approved=true")
-				assertThat( art.getComments().size(), is( 2 ) );
+				assertEquals( 2, art.getComments().size() );
 				for ( ArticleComment c : art.getComments() ) {
-					assertThat( c.isApproved(), is( true ) );
+					assertTrue( c.isApproved() );
 				}
 			}
 
 			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
-			assertThat( generated, containsString( "from (select" ) );
+			assertTrue( generated.contains( "from (select" ) );
 			final int derivedClose = generated.indexOf( ')' );
 			final String outer = generated.substring( derivedClose );
 			// the @SQLRestriction predicate moves with the join to the outer
-			assertThat( outer, containsString( "approved" ) );
+			assertTrue( outer.contains( "approved" ) );
 		} );
 	}
 

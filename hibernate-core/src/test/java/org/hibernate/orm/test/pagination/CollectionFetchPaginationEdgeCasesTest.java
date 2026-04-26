@@ -16,6 +16,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Table;
 
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.cfg.QuerySettings;
@@ -246,7 +247,9 @@ public class CollectionFetchPaginationEdgeCasesTest {
 		} );
 	}
 
+	// "Show" is reserved in MySQL (SHOW DATABASES, etc.); override the table name.
 	@Entity(name = "Show")
+	@Table(name = "show_entity")
 	public static class Show {
 		@Id
 		private Long id;

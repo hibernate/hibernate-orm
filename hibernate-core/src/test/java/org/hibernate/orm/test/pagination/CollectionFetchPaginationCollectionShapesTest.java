@@ -22,6 +22,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapKey;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 import org.hibernate.cfg.QuerySettings;
 
@@ -295,7 +296,9 @@ public class CollectionFetchPaginationCollectionShapesTest {
 		}
 	}
 
+	// "Library" is a reserved word in recent MySQL; override the table name.
 	@Entity(name = "Library")
+	@Table(name = "library_entity")
 	public static class Library {
 		@Id
 		private Long id;
@@ -416,7 +419,9 @@ public class CollectionFetchPaginationCollectionShapesTest {
 		}
 	}
 
+	// "Match" is reserved in MySQL (MATCH...AGAINST full-text search); override the table name.
 	@Entity(name = "Match")
+	@Table(name = "match_entity")
 	public static class Match {
 		@Id
 		private Long id;

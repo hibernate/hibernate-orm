@@ -238,10 +238,11 @@ public class CollectionFetchPaginationTest {
 	}
 
 	/**
-	 * A plural fetch alongside a singular {@code @ManyToOne} fetch. The
-	 * singular fetch is also moved to the outer query (it would otherwise leave
-	 * dangling references in the outer SELECT, since the inner only projects
-	 * the root's primary-table columns).
+	 * A plural fetch alongside a singular {@code @ManyToOne} fetch. Only the
+	 * plural fetch moves to the outer query; the fetched publisher stays in the
+	 * inner derived table so its columns can still participate in pagination
+	 * ordering, and those columns are absorbed into the derived table for the
+	 * outer SELECT to reach.
 	 */
 	@Test
 	void fetchJoinWithSingularFetchToo(SessionFactoryScope scope) {
@@ -266,7 +267,7 @@ public class CollectionFetchPaginationTest {
 
 			final String generated = sql.getSqlQueries().get( 0 ).toLowerCase();
 			assertThat( generated, containsString( "from (select" ) );
-			// publisher and author joins both attached to the outer derived table
+			// publisher stays in the inner derived table; author moves to the outer
 			assertThat( generated, containsString( "publisher" ) );
 			assertThat( generated, containsString( "author" ) );
 		} );

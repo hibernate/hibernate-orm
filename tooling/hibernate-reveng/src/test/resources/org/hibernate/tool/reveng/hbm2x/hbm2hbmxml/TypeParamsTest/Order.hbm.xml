@@ -18,7 +18,7 @@
                                    "https://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <!-- Generated 17.04.2009 10:41:19 by Hibernate Tools 3.2.4.GA -->
 <hibernate-mapping>
- <class name="org.hibernate.tool.hbm2x.hbm2hbmxml.TypeParamsTest.Order" table="ORDERS">
+ <class name="org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.TypeParamsTest.Order" table="ORDERS">
   <id name="orderId" type="long">
    <column name="ORDERID"/>
    <generator class="native"/>
@@ -30,7 +30,7 @@
     <param name="column">STATUS</param>
     <param name="table">ORDERS</param>
     <param name="schema"/>
-    <param name="enumClass">org.hibernate.tool.hbm2x.hbm2hbmxml.TypeParamsTest.TestCase$Status</param>
+    <param name="enumClass">org.hibernate.tool.reveng.hbm2x.hbm2hbmxml.TypeParamsTest.TestCase$Status</param>
    </type>
   </property>
   <property name="name" type="string"/>

@@ -45,7 +45,7 @@
 
 		<many-to-one
 		    name="author"
-            class="org.hibernate.tool.hbm2x.Hbm2JavaEjb3Test.Author"
+            class="org.hibernate.tool.reveng.hbm2x.Hbm2JavaEjb3Test.Author"
             cascade="none"
             outer-join="auto"
             update="true"

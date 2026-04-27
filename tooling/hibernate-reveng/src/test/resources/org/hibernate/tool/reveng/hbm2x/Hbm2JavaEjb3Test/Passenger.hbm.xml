@@ -33,7 +33,7 @@
 
 		<many-to-one
 		    name="currentTrain"
-            class="org.hibernate.tool.hbm2x.Hbm2JavaEjb3Test.Train"
+            class="org.hibernate.tool.reveng.hbm2x.Hbm2JavaEjb3Test.Train"
             cascade="all, replicate"
             fetch="join"
             lazy="false"

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Generated ${date?datetime} by Hibernate Tools ${version} -->
 <entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
-                 version="8.0">
+                 version="7.0">
 <#if entityInfo.getPackageName()??>
     <package>${entityInfo.getPackageName()}</package>
 </#if>

@@ -70,7 +70,7 @@ public class MappingXmlExporterTest {
 		String xml = export(table);
 		assertTrue(xml.contains("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"), xml);
 		assertTrue(xml.contains("<entity-mappings"), xml);
-		assertTrue(xml.contains("version=\"8.0\""), xml);
+		assertTrue(xml.contains("version=\"7.0\""), xml);
 		assertTrue(xml.contains("</entity-mappings>"), xml);
 	}
 

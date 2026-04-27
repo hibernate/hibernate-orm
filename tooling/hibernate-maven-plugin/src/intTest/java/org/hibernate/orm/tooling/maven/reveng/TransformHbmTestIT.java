@@ -4,9 +4,10 @@
  */
 package org.hibernate.orm.tooling.maven.reveng;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.apache.maven.cli.MavenCli;
+import org.hibernate.tool.reveng.api.version.Version;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 import java.net.URL;
@@ -15,24 +16,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 
-import org.apache.maven.cli.MavenCli;
-import org.hibernate.tool.reveng.api.version.Version;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TransformHbmTestIT {
 
 	public static final String MVN_HOME = "maven.multiModuleProjectDirectory";
-	private static File localRepo;
 
 	@TempDir
 	private Path projectPath;
 
-	@BeforeAll
-	public static void beforeAll() throws Exception {
-		localRepo = new File(determineBaseFolder().getParentFile(), "local-repo");
-	}
 	@Test
 	public void testSimpleHbmTransformation() throws Exception {
 		System.setProperty(MVN_HOME, projectPath.toAbsolutePath().toString());
@@ -67,9 +61,8 @@ public class TransformHbmTestIT {
 		assertFalse(ormXmlFile.exists());
 		new MavenCli().doMain(
 				new String[] {
-						"-Dmaven.repo.local=" + localRepo.getAbsolutePath(),
 						"compile",
-						"org.hibernate.tool:hibernate-tools-maven:" + Version.versionString() + ":hbm2orm"
+						"org.hibernate.orm:hibernate-maven-plugin:" + Version.versionString() + ":transformHbm"
 				},
 				projectPath.toAbsolutePath().toString(),
 				null,
@@ -77,28 +70,14 @@ public class TransformHbmTestIT {
 		// Check the existence of the transformed file
 		assertTrue(ormXmlFile.exists());
 		// Check if it's pretty printed
-		assertTrue(Files.readString(ormXmlFile.toPath()).contains(
-				System.lineSeparator() +
-				"        <table name=\"Foo\"/>" +
-				System.lineSeparator()));
-	}
-
-	private static File determineBaseFolder() throws Exception {
-		Class<?> thisClass = TransformHbmTestIT.class;
-		URL classUrl = thisClass.getResource("/" + thisClass.getName().replace(".", "/") + ".class");
-		assert classUrl != null;
-		File result = new File(classUrl.toURI());
-		for (int i = 0; i < thisClass.getName().chars().filter(ch -> ch == '.').count() + 1; i++) {
-			result = result.getParentFile();
-		}
-		return result;
+		assertTrue(Files.readString(ormXmlFile.toPath()).contains("\n        <table name=\"Foo\"/>\n"));
 	}
 
 	private static final String simplePomContents =
 			"""
 				<project>
 					<modelVersion>4.0.0</modelVersion>
-					<groupId>org.hibernate.orm.tooling.maven.reveng.test</groupId>
+					<groupId>org.hibernate.tool.maven.test</groupId>
 					<artifactId>simplest</artifactId>
 					<version>0.1-SNAPSHOT</version>
 				</project>

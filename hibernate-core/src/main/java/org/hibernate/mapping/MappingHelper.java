@@ -115,7 +115,32 @@ public final class MappingHelper {
 	}
 
 	static Class<?> classForName(String typeName, BootstrapContext bootstrapContext) {
+		if ( typeName.endsWith( "[]" ) ) {
+			return arrayClassForName( typeName );
+		}
 		return bootstrapContext.getClassLoaderAccess().classForName( typeName );
+	}
+
+	private static Class<?> arrayClassForName(String typeName) {
+		final String componentName = typeName.substring( 0, typeName.length() - 2 );
+		return switch ( componentName ) {
+			case "boolean" -> boolean[].class;
+			case "byte" -> byte[].class;
+			case "char" -> char[].class;
+			case "short" -> short[].class;
+			case "int" -> int[].class;
+			case "long" -> long[].class;
+			case "float" -> float[].class;
+			case "double" -> double[].class;
+			default -> {
+				try {
+					yield Class.forName( "[L" + componentName + ";" );
+				}
+				catch (ClassNotFoundException e) {
+					throw new MappingException( "Could not load array type: " + typeName );
+				}
+			}
+		};
 	}
 
 	static <T> Class<? extends T> classForName(Class<T> supertype, String typeName, BootstrapContext bootstrapContext) {

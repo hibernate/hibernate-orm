@@ -34,17 +34,12 @@
 		<meta attribute="use-in-equals">true</meta>
 		<id name="id" type="string"/>
 		
-<!--  TODO: HBX-2054: Hibernate ORM cannot resolve named type 'java.lang.String[]' -->
-<!-- 		<property name="name" type="java.lang.String[]"/>  -->
+		<property name="name" type="java.lang.String[]"/>
        <property name="byteArray" type="byte[]"/>
-<!--  TODO: HBX-2054: Hibernate ORM cannot resolve named type 'float[]' -->
-<!--        <property name="floatArray" type="float[]"/> -->
-<!--  TODO: HBX-2054: Hibernate ORM cannot resolve named type 'int[]' -->
-<!--        <property name="intArray" type="int[]"/> -->
-<!--  TODO: HBX-2054: Hibernate ORM cannot resolve named type 'int[]' -->
-<!--        <property name="shortArray" type="int[]"/> -->
-<!--  TODO: HBX-2054: Hibernate ORM cannot resolve named type 'boolean[]' -->
-<!--        <property name="booleanArray" type="boolean[]"/> -->
+        <property name="floatArray" type="float[]"/>
+        <property name="intArray" type="int[]"/>
+        <property name="shortArray" type="int[]"/>
+        <property name="booleanArray" type="boolean[]"/>
         
 		<component name="addressComponent" class="Address">
 			<property name="streetAddress1" type="string"
@@ -59,9 +54,8 @@
 				<meta attribute="use-in-equals">true</meta>
 				<meta attribute="property-type">short</meta>
 			</property>
-<!--  TODO: HBX-2054: Hibernate ORM cannot resolve named type 'java.lang.String[]' -->
-<!-- 			<property name="postcode" type="java.lang.String[]" column="postcode"
-				not-null="true" /> -->
+			<property name="postcode" type="java.lang.String[]" column="postcode"
+				not-null="true" />
 			<!--    <many-to-one name="state" class="au.com.groupware.model.State" column="StateId" 
 				foreign-key="FK_Address_State" not-null="true" />  -->
 			<property name="verified" type="boolean">

@@ -6,8 +6,9 @@ package org.hibernate.orm.test.query;
 
 import java.time.LocalDate;
 
-import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.IllegalMutationQueryException;
 
+import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.contacts.Contact;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -28,48 +29,38 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class QueryApiTests {
 
 	@Test
-	public void testInvalidExecuteUpdateCall(SessionFactoryScope scope) {
+	public void testInvalidMutationQuery(SessionFactoryScope scope) {
 		final String hql = "select c from Contact c";
 		try {
 			scope.inTransaction( (session) -> {
-				session.createQuery( hql ).executeUpdate();
+				session.createStatement( hql ).executeUpdate();
 			} );
 			fail( "Expecting failure" );
 		}
-		catch (IllegalStateException ise) {
-			assertThat( ise.getCause() ).isNotNull();
-			assertThat( ise.getCause() ).isInstanceOf( IllegalQueryOperationException.class );
-			assertThat( ise.getCause().getMessage() ).endsWith( "[" + hql + "]" );
+		catch (IllegalArgumentException iae) {
+			assertThat( iae.getCause() ).isNull();
+			assertThat( iae.getSuppressed() ).hasSize( 1 );
+			assertThat( iae.getSuppressed()[0] ).isInstanceOf( IllegalMutationQueryException.class );
+			assertThat( iae.getSuppressed()[0].getMessage() ).endsWith( "[" + hql + "]" );
 		}
 	}
 
 	@Test
-	public void testInvalidSelectQueryCall(SessionFactoryScope scope) {
+	public void testInvalidSelectionQuery(SessionFactoryScope scope) {
 		final String hql = "delete Contact";
 
 		scope.inTransaction( (session) -> {
 			try {
-				session.createQuery( hql ).list();
+				session.createQuery( hql, Contact.class );
 				fail( "Expecting failure" );
 			}
-			catch (IllegalStateException ise) {
-				assertThat( ise.getCause() ).isNotNull();
-				assertThat( ise.getCause() ).isInstanceOf( IllegalQueryOperationException.class );
-				assertThat( ise.getCause().getMessage() ).endsWith( "[" + hql + "]" );
+			catch (IllegalArgumentException iae) {
+				assertThat( iae.getCause() ).isNull();
+				assertThat( iae.getSuppressed() ).hasSize( 1 );
+				assertThat( iae.getSuppressed()[0] ).isInstanceOf( IllegalSelectQueryException.class );
+				assertThat( iae.getSuppressed()[0].getMessage() ).endsWith( "[" + hql + "]" );
 			}
 		} );
-
-		try {
-			scope.inTransaction( (session) -> {
-				session.createQuery( hql ).uniqueResult();
-			} );
-			fail( "Expecting failure" );
-		}
-		catch (IllegalStateException ise) {
-			assertThat( ise.getCause() ).isNotNull();
-			assertThat( ise.getCause() ).isInstanceOf( IllegalQueryOperationException.class );
-			assertThat( ise.getCause().getMessage() ).endsWith( "[" + hql + "]" );
-		}
 	}
 
 	@BeforeEach

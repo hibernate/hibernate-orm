@@ -541,7 +541,7 @@ public class SessionLazyDelegator implements Session {
 
 	@Override
 	@Deprecated
-	public Query createQuery(String queryString) {
+	public Query<?> createQuery(String queryString) {
 		return this.lazySession.get().createQuery( queryString );
 	}
 
@@ -574,11 +574,6 @@ public class SessionLazyDelegator implements Session {
 	@Deprecated
 	public Query createNamedQuery(String name) {
 		return this.lazySession.get().createNamedQuery( name );
-	}
-
-	@Override
-	public <R> SelectionQuery<R> createQuery(CriteriaQuery<R> criteriaQuery) {
-		return this.lazySession.get().createQuery( criteriaQuery );
 	}
 
 	@Override
@@ -737,7 +732,7 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	@Deprecated
 	public NativeQuery createNativeQuery(String sqlString, String resultSetMappingName) {
-		return this.lazySession.get().createNativeQuery( sqlString, resultSetMappingName, Object.class );
+		return this.lazySession.get().createNativeQuery( sqlString, resultSetMappingName );
 	}
 
 	@Override

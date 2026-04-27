@@ -165,7 +165,7 @@ public class BatchSubselectCollection2Test {
 		scope.inTransaction(
 				session -> {
 					List<EntityD> entityDs = session.createQuery(
-							"from EntityD d  left join fetch d.openingB left join fetch d.closingB order by d.id" ).list();
+							"from EntityD d  left join fetch d.openingB left join fetch d.closingB order by d.id", EntityD.class ).list();
 					assertThat( entityDs.size() ).isEqualTo( 2 );
 					EntityD entityD = entityDs.get( 0 );
 					assertThat( entityD ).isNotNull();

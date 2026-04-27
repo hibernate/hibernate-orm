@@ -328,7 +328,7 @@ public abstract class ConnectionManagementTestCase {
 		assertThat( s.toString() ).isNotNull();
 
 		try {
-			s.createQuery( "from Silly" ).list();
+			s.createQuery( "from Silly", Silly.class ).list();
 			fail( "allowed to create query on closed session" );
 		}
 		catch (AssertionError testFailed) {

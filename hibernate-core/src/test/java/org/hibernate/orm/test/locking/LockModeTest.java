@@ -149,7 +149,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	public void testQuery() {
 		// open a session, begin a transaction and lock row
 		doInHibernate( this::sessionFactory, session -> {
-			A it = (A) session.createQuery( "from A a" )
+			A it = (A) session.createQuery( A.class, "from A a" )
 					.setLockMode( PESSIMISTIC_WRITE )
 					.uniqueResult();
 			// make sure we got it
@@ -165,10 +165,10 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	public void testQueryUsingLockOptions() {
 		// todo : need an association here to make sure the alias-specific lock modes are applied correctly
 		doInHibernate( this::sessionFactory, session -> {
-			session.createQuery( "from A a" )
+			session.createQuery( A.class, "from A a" )
 					.setLockMode( PESSIMISTIC_WRITE )
 					.uniqueResult();
-			session.createQuery( "from A a" )
+			session.createQuery( A.class, "from A a" )
 					.setLockMode( PESSIMISTIC_WRITE )
 					.uniqueResult();
 		} );
@@ -179,7 +179,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	public void testQueryLockModeNoneWithAlias() {
 		doInHibernate( this::sessionFactory, session -> {
 			// shouldn't throw an exception
-			session.createQuery( "SELECT a.value FROM A a where a.id = :id" )
+			session.createQuery( Object.class, "SELECT a.value FROM A a where a.id = :id" )
 					.setLockMode( NONE )
 					.setParameter( "id", id )
 					.list();
@@ -191,7 +191,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	public void testQueryLockModePessimisticWriteWithAlias() {
 		doInHibernate( this::sessionFactory, session -> {
 			// shouldn't throw an exception
-			session.createQuery( "SELECT a.id+1 FROM A a where a.value = :value" )
+			session.createQuery( Object.class, "SELECT a.id+1 FROM A a where a.value = :value" )
 					.setLockMode( PESSIMISTIC_WRITE )
 					.setParameter( "value", "it" )
 					.list();

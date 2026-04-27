@@ -58,13 +58,13 @@ public class DynamicMapOneToOneTest {
 					EntityStatistics aStats = scope.getSessionFactory().getStatistics()
 							.getEntityStatistics( "Address" );
 
-					Map person = (Map) session.createQuery( "from Person p join fetch p.address" ).uniqueResult();
+					Map person = session.createQuery( "from Person p join fetch p.address", Map.class ).uniqueResult();
 					assertNotNull( person, "could not locate person" );
 					assertNotNull( person.get( "address" ), "could not locate persons address" );
 					session.clear();
 
-					Object[] tuple = (Object[]) session.createQuery(
-							"select p.name, p from Person p join fetch p.address" ).uniqueResult();
+					Object[] tuple = session.createQuery(
+							"select p.name, p from Person p join fetch p.address", Object[].class ).uniqueResult();
 					assertEquals( tuple.length, 2 );
 					person = (Map) tuple[1];
 					assertNotNull( person, "could not locate person" );

@@ -52,7 +52,7 @@ public class EvictionTest {
 		scope.inTransaction( s -> {
 
 			// Delete the Parent
-			Parent loadedParent = (Parent) s.createQuery( "SELECT p FROM Parent p WHERE name=:name" )
+			Parent loadedParent = s.createQuery( "SELECT p FROM Parent p WHERE name=:name", Parent.class )
 					.setParameter( "name", "PARENT" )
 					.uniqueResult();
 			assertTyping( ManagedEntity.class, loadedParent );

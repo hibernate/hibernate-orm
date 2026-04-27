@@ -4,12 +4,9 @@
  */
 package org.hibernate.orm.test.annotations.tableperclass;
 
-import java.util.List;
 import jakarta.persistence.PersistenceException;
 
 import org.hibernate.JDBCException;
-import org.hibernate.query.Query;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -54,9 +51,9 @@ public class TablePerClassTest {
 
 		scope.inTransaction(
 				session -> {
-					Query q = session.createQuery( "from Machine m where m.weight >= :weight" );
-					q.setParameter( "weight", new Double( 10 ) );
-					List result = q.list();
+					var result = session.createQuery( "from Machine m where m.weight >= :weight", Machine.class )
+							.setParameter( "weight", new Double( 10 ) )
+							.list();
 					assertEquals( 2, result.size() );
 				}
 		);

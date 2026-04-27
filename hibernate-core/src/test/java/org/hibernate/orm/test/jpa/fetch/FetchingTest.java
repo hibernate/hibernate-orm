@@ -35,7 +35,7 @@ public class FetchingTest extends AbstractJPATest {
 					session.getTransaction().commit();
 					session.clear();
 					session.beginTransaction();
-					p = (Person) session.createQuery( "select p from Person p where p.firstName = :name" )
+					p = session.createQuery( Person.class, "select p from Person p where p.firstName = :name" )
 							.setParameter( "name", "Gavin" ).uniqueResult();
 					assertFalse( Hibernate.isInitialized( p.getStays() ) );
 					session.remove( p );
@@ -62,7 +62,7 @@ public class FetchingTest extends AbstractJPATest {
 
 					session.clear();
 					session.beginTransaction();
-					p = (Person) session.createQuery( "select p from Person p where p.firstName = :name" )
+					p = session.createQuery( Person.class,"select p from Person p where p.firstName = :name" )
 							.setParameter( "name", "Gavin" ).uniqueResult();
 					assertFalse( Hibernate.isInitialized( p.getOldStays() ) );
 					assertEquals( 1, p.getOldStays().size() );
@@ -70,7 +70,7 @@ public class FetchingTest extends AbstractJPATest {
 					session.clear();
 					stay = session.get( Stay.class, stay.getId() );
 
-					assertTrue( !Hibernate.isInitialized( stay.getOldPerson() ) );
+					assertFalse( Hibernate.isInitialized( stay.getOldPerson() ) );
 					session.clear();
 					stay3 = session.get( Stay.class, stay3.getId() );
 					assertTrue(

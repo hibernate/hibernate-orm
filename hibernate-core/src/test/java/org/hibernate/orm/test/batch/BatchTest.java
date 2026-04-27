@@ -84,10 +84,10 @@ public class BatchTest {
 		factoryScope.inTransaction( (session) -> {
 			session.setCacheMode( CacheMode.IGNORE );
 			int i = 0;
-			try (ScrollableResults sr = session.createQuery( "from DataPoint dp order by dp.x asc" )
+			try (ScrollableResults<DataPoint> sr = session.createQuery( "from DataPoint dp order by dp.x asc", DataPoint.class )
 					.scroll( ScrollMode.FORWARD_ONLY )) {
 				while ( sr.next() ) {
-					DataPoint dp = (DataPoint) sr.get();
+					DataPoint dp = sr.get();
 					dp.setDescription( "done!" );
 					if ( ++i % nBeforeFlush == 0 ) {
 						session.flush();
@@ -101,10 +101,10 @@ public class BatchTest {
 			session.setCacheMode( CacheMode.IGNORE );
 			int i = 0;
 
-			try (ScrollableResults sr = session.createQuery( "from DataPoint dp order by dp.x asc" )
+			try (ScrollableResults<DataPoint> sr = session.createQuery( "from DataPoint dp order by dp.x asc", DataPoint.class )
 					.scroll( ScrollMode.FORWARD_ONLY )) {
 				while ( sr.next() ) {
-					DataPoint dp = (DataPoint) sr.get();
+					DataPoint dp = sr.get();
 					session.remove( dp );
 					if ( ++i % nBeforeFlush == 0 ) {
 						session.flush();

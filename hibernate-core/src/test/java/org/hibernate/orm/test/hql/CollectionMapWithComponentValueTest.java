@@ -11,8 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.query.Query;
-
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -87,21 +85,21 @@ public class CollectionMapWithComponentValueTest {
 	public void testMapKeyExpressionInWhere(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			// JPA form
-			Query query = s.createQuery( "select te from TestEntity te join te.values v where ?1 in (key(v)) " );
+			var query = s.createQuery( "select te from TestEntity te join te.values v where ?1 in (key(v)) ", TestEntity.class );
 			query.setParameter( 1, keyValue );
 
 			assertThat( query.list().size() ).isEqualTo( 1 );
 
 			// Hibernate additional form
-			query = s.createQuery( "select te from TestEntity te where ?1 in (key(te.values))" );
-			query.setParameter( 1, keyValue );
+			var query2 = s.createQuery( "select te from TestEntity te where ?1 in (key(te.values))", TestEntity.class );
+			query2.setParameter( 1, keyValue );
 
-			assertThat( query.list().size() ).isEqualTo( 1 );
+			assertThat( query2.list().size() ).isEqualTo( 1 );
 
 			// Test key property dereference
-			query = s.createQuery( "select te from TestEntity te join te.values v where key(v).name in :names" );
-			query.setParameterList( "names", Arrays.asList( keyValue.name ) );
-			assertThat( query.list().size() ).isEqualTo( 1 );
+			var query3 = s.createQuery( "select te from TestEntity te join te.values v where key(v).name in :names", TestEntity.class );
+			query3.setParameterList( "names", Arrays.asList( keyValue.name ) );
+			assertThat( query3.list().size() ).isEqualTo( 1 );
 		} );
 	}
 
@@ -111,7 +109,7 @@ public class CollectionMapWithComponentValueTest {
 		scope.inTransaction( s -> {
 			// JPA form
 			try {
-				Query query = s.createQuery( "select te from TestEntity te join te.values v where ? in (value(v))" );
+				var query = s.createQuery( "select te from TestEntity te join te.values v where ? in (value(v))", TestEntity.class );
 				query.setParameter( 0, new EmbeddableValue( 3 ) );
 				assertThat( query.list().size() ).isEqualTo( 2 );
 				fail( "HibernateException expected - Could not determine type for EmbeddableValue" );
@@ -122,7 +120,7 @@ public class CollectionMapWithComponentValueTest {
 
 			// Hibernate additional form
 			try {
-				Query query = s.createQuery( "select te from TestEntity te where ? in (value(te.values))" );
+				var query = s.createQuery( "select te from TestEntity te where ? in (value(te.values))", TestEntity.class );
 				query.setParameter( 0, new EmbeddableValue( 3 ) );
 				assertThat( query.list().size() ).isEqualTo( 2 );
 				fail( "HibernateException expected - Could not determine type for EmbeddableValue" );
@@ -132,7 +130,7 @@ public class CollectionMapWithComponentValueTest {
 			}
 
 			// Test value property dereference
-			Query query = s.createQuery( "select te from TestEntity te join te.values v where value(v).value in :values" );
+			var query = s.createQuery( "select te from TestEntity te join te.values v where value(v).value in :values", TestEntity.class );
 			query.setParameterList( "values", Arrays.asList( 3 ) );
 			assertThat( query.list().size() ).isEqualTo( 2 );
 		} );
@@ -142,12 +140,12 @@ public class CollectionMapWithComponentValueTest {
 	public void testMapKeyExpressionInSelect(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			// JPA form
-			List results = s.createQuery( "select key(v) from TestEntity te join te.values v" ).list();
+			List<KeyValue> results = s.createQuery( "select key(v) from TestEntity te join te.values v", KeyValue.class ).list();
 			assertThat( results.size() ).isEqualTo( 2 );
 			assertTyping( KeyValue.class, results.get( 0 ) );
 
 			// Hibernate additional form
-			results = s.createQuery( "select key(te.values) from TestEntity te" ).list();
+			results = s.createQuery( "select key(te.values) from TestEntity te", KeyValue.class ).list();
 			assertThat( results.size() ).isEqualTo( 2 );
 			assertTyping( KeyValue.class, results.get( 0 ) );
 		} );
@@ -156,11 +154,11 @@ public class CollectionMapWithComponentValueTest {
 	@Test
 	public void testMapValueExpressionInSelect(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
-			List addresses = s.createQuery( "select value(v) from TestEntity te join te.values v" ).list();
+			List<EmbeddableValue> addresses = s.createQuery( "select value(v) from TestEntity te join te.values v", EmbeddableValue.class ).list();
 			assertThat( addresses.size() ).isEqualTo( 2 );
 			assertTyping( EmbeddableValue.class, addresses.get( 0 ) );
 
-			addresses = s.createQuery( "select value(te.values) from TestEntity te" ).list();
+			addresses = s.createQuery( "select value(te.values) from TestEntity te", EmbeddableValue.class ).list();
 			assertThat( addresses.size() ).isEqualTo( 2 );
 			assertTyping( EmbeddableValue.class, addresses.get( 0 ) );
 		} );
@@ -169,11 +167,11 @@ public class CollectionMapWithComponentValueTest {
 	@Test
 	public void testMapEntryExpressionInSelect(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
-			List addresses = s.createQuery( "select entry(v) from TestEntity te join te.values v" ).list();
+			List<?> addresses = s.createQuery( "select entry(v) from TestEntity te join te.values v", Map.Entry.class ).list();
 			assertThat( addresses.size() ).isEqualTo( 2 );
 			assertTyping( Map.Entry.class, addresses.get( 0 ) );
 
-			addresses = s.createQuery( "select entry(te.values) from TestEntity te" ).list();
+			addresses = s.createQuery( "select entry(te.values) from TestEntity te", Map.Entry.class ).list();
 			assertThat( addresses.size() ).isEqualTo( 2 );
 			assertTyping( Map.Entry.class, addresses.get( 0 ) );
 		} );
@@ -198,8 +196,8 @@ public class CollectionMapWithComponentValueTest {
 	public void testLeftJoinMapAndUseKeyExpression(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			// Assert that a left join is used for joining the map key entity table
-			List keyValues = s.createQuery(
-					"select key(v) from BaseTestEntity bte left join bte.entities te left join te.values v" ).list();
+			List<KeyValue> keyValues = s.createQuery(
+					"select key(v) from BaseTestEntity bte left join bte.entities te left join te.values v", KeyValue.class ).list();
 			System.out.println( keyValues );
 			assertThat( keyValues.size() ).isEqualTo( 2 );
 		} );
@@ -210,8 +208,8 @@ public class CollectionMapWithComponentValueTest {
 	public void testJoinMapValue(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			// Assert that a left join is used for joining the map key entity table
-			List keyValues = s.createQuery(
-					"select v from BaseTestEntity bte left join bte.entities te left join te.values v" ).list();
+			List<EmbeddableValue> keyValues = s.createQuery(
+					"select v from BaseTestEntity bte left join bte.entities te left join te.values v", EmbeddableValue.class ).list();
 			System.out.println( keyValues );
 			assertThat( keyValues.size() ).isEqualTo( 2 );
 		} );
@@ -222,8 +220,8 @@ public class CollectionMapWithComponentValueTest {
 	public void testJoinMapKey(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
 			// Assert that a left join is used for joining the map key entity table
-			List keyValues = s.createQuery(
-							"select k from BaseTestEntity bte left join bte.entities te left join te.values v left join key(v) k" )
+			List<KeyValue> keyValues = s.createQuery(
+							"select k from BaseTestEntity bte left join bte.entities te left join te.values v left join key(v) k", KeyValue.class )
 					.list();
 			System.out.println( keyValues );
 			assertThat( keyValues.size() ).isEqualTo( 2 );
@@ -234,8 +232,8 @@ public class CollectionMapWithComponentValueTest {
 	@JiraKey(value = "HHH-11433")
 	public void testJoinMapKeyAssociation(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
-			List keyValues = s.createQuery(
-							"select b from BaseTestEntity bte left join bte.entities te left join te.values v left join key(v) k join k.base b" )
+			List<BaseTestEntity> keyValues = s.createQuery(
+							"select b from BaseTestEntity bte left join bte.entities te left join te.values v left join key(v) k join k.base b", BaseTestEntity.class )
 					.list();
 			System.out.println( keyValues );
 			assertThat( keyValues.size() ).isEqualTo( 1 );
@@ -246,8 +244,8 @@ public class CollectionMapWithComponentValueTest {
 	@JiraKey(value = "HHH-11433")
 	public void testJoinMapKeyAssociationImplicit(SessionFactoryScope scope) {
 		scope.inTransaction( s -> {
-			List keyValues = s.createQuery(
-							"select b from BaseTestEntity bte left join bte.entities te left join te.values v join key(v).base b" )
+			List<BaseTestEntity> keyValues = s.createQuery(
+							"select b from BaseTestEntity bte left join bte.entities te left join te.values v join key(v).base b", BaseTestEntity.class )
 					.list();
 			System.out.println( keyValues );
 			assertThat( keyValues.size() ).isEqualTo( 1 );

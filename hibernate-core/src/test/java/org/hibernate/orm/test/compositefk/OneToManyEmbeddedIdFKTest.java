@@ -79,7 +79,7 @@ public class OneToManyEmbeddedIdFKTest {
 	public void testHqlQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					System system = (System) session.createQuery( "from System e where e.id = :id" )
+					System system = session.createQuery( System.class, "from System e where e.id = :id" )
 							.setParameter( "id", 1 ).uniqueResult();
 					assertThat( system, is( notNullValue() ) );
 					assertThat( system.getUsers().size(), is( 2 ) );

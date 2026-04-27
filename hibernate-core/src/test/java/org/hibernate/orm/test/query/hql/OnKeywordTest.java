@@ -20,7 +20,7 @@ public class OnKeywordTest extends AbstractJPATest {
 	@Test
 	public void basicTest() {
 		try (Session s = sessionFactory().openSession()) {
-			s.createQuery( "select i from Item i join i.parts p on p.unitPrice > :filterPrice" )
+			s.createQuery( "select i from Item i join i.parts p on p.unitPrice > :filterPrice", Object.class )
 					.setParameter( "filterPrice", new BigDecimal( 100 ) )
 					.list();
 		}

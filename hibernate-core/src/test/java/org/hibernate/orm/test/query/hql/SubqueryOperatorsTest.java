@@ -60,23 +60,23 @@ public class SubqueryOperatorsTest {
 		scope.inTransaction(
 				session -> {
 					List res0 = session.createQuery(
-							"select (select cast(1 as Integer)) as one, (select cast('foo' as String)) as foo order by one, foo, (select 2)" )
+							"select (select cast(1 as Integer)) as one, (select cast('foo' as String)) as foo order by one, foo, (select 2)", Object[].class )
 							.list();
 					assertThat( res0.size(), is( 1 ) );
 					List res1 = session.createQuery(
-							"select (select cast(1 as Integer)) as one, (select cast('foo' as String)) as foo from SimpleEntity o order by one, foo, (select 2)" )
+							"select (select cast(1 as Integer)) as one, (select cast('foo' as String)) as foo from SimpleEntity o order by one, foo, (select 2)", Object[].class )
 							.list();
 					assertThat( res1.size(), is( 2 ) );
 					List res2 = session.createQuery(
-							"select (select x.id from SimpleEntity x where x.id = o.id) as xid from SimpleEntity o order by xid" )
+							"select (select x.id from SimpleEntity x where x.id = o.id) as xid from SimpleEntity o order by xid", Object.class )
 							.list();
 					assertThat( res2.size(), is( 2 ) );
 					List res3 = session.createQuery(
-							"from SimpleEntity o where o.someString = (select cast('aaa' as String)) and o.id >= (select cast(0 as Integer))" )
+							"from SimpleEntity o where o.someString = (select cast('aaa' as String)) and o.id >= (select cast(0 as Integer))", SimpleEntity.class )
 							.list();
 					assertThat( res3.size(), is( 1 ) );
 					List res4 = session.createQuery(
-							"from SimpleEntity o where o.id = (select y.id from SimpleEntity y where y.id = o.id)" )
+							"from SimpleEntity o where o.id = (select y.id from SimpleEntity y where y.id = o.id)", SimpleEntity.class )
 							.list();
 					assertThat( res4.size(), is( 2 ) );
 				}

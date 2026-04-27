@@ -54,7 +54,7 @@ public class FilterWithILikeTest {
 				session -> {
 					session.enableFilter( "nameFilter" ).setParameter( "name", "not_filtered" );
 					//noinspection deprecation
-					session.createQuery( "from TestEntity " ).list();
+					session.createQuery( "from TestEntity ", TestEntity.class ).list();
 				}
 		);
 	}

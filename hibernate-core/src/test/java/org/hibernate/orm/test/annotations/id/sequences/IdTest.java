@@ -100,7 +100,7 @@ public class IdTest {
 
 		scope.inTransaction(
 				session ->
-						session.createQuery( "delete from Monkey" ).executeUpdate()
+						session.createMutationQuery( "delete from Monkey" ).executeUpdate()
 		);
 	}
 
@@ -257,7 +257,7 @@ public class IdTest {
 					assertEquals( "Arsenal", fb.getClub() );
 					assertEquals(
 							1,
-							session.createQuery( "from Footballer f where f.firstname = 'David'" )
+							session.createQuery( "from Footballer f where f.firstname = 'David'", Footballer.class )
 									.list().size()
 					);
 					session.getTransaction().commit();
@@ -303,8 +303,8 @@ public class IdTest {
 
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "delete from DedicatedSequenceEntity1" ).executeUpdate();
-					session.createQuery( "delete from " + DedicatedSequenceEntity2.ENTITY_NAME ).executeUpdate();
+					session.createMutationQuery( "delete from DedicatedSequenceEntity1" ).executeUpdate();
+					session.createMutationQuery( "delete from " + DedicatedSequenceEntity2.ENTITY_NAME ).executeUpdate();
 				}
 		);
 	}
@@ -334,7 +334,7 @@ public class IdTest {
 		);
 		scope.inTransaction(
 				session ->
-						session.createQuery( "delete from BreakDance" ).executeUpdate()
+						session.createMutationQuery( "delete from BreakDance" ).executeUpdate()
 		);
 	}
 

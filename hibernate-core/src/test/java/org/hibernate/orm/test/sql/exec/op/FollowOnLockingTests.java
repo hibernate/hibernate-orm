@@ -114,8 +114,7 @@ public class FollowOnLockingTests {
 		// 	with ROOT_ONLY
 		sqlCollector.clear();
 		factoryScope.inTransaction( (session) -> {
-			session.createQuery( "from Person" )
-					.asSelectionQuery(Person.class)
+			session.createQuery( "from Person", Person.class )
 					.setLockMode( PESSIMISTIC_WRITE )
 					.setLockScope( NORMAL )
 					.setFollowOnStrategy( FORCE )

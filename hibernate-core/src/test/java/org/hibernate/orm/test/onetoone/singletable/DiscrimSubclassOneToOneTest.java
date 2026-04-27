@@ -66,8 +66,8 @@ public class DiscrimSubclassOneToOneTest {
 					EntityStatistics mailingAddressStats = sessionFactory.getStatistics().getEntityStatistics(
 							"MailingAddress" );
 
-					Person p = (Person) session.createQuery(
-							"from Person p join fetch p.address left join fetch p.mailingAddress" ).uniqueResult();
+					Person p = session.createQuery(
+							"from Person p join fetch p.address left join fetch p.mailingAddress", Person.class ).uniqueResult();
 					assertNotNull( p.address );
 					assertNull( p.mailingAddress );
 					session.clear();
@@ -75,7 +75,7 @@ public class DiscrimSubclassOneToOneTest {
 					assertEquals( 0, addressStats.getFetchCount() );
 					assertEquals( 0, mailingAddressStats.getFetchCount() );
 
-					p = (Person) session.createQuery( "from Person p join fetch p.address" ).uniqueResult();
+					p = session.createQuery( "from Person p join fetch p.address", Person.class ).uniqueResult();
 					assertNotNull( p.address );
 					assertNull( p.mailingAddress );
 					session.clear();
@@ -83,7 +83,7 @@ public class DiscrimSubclassOneToOneTest {
 					assertEquals( 0, addressStats.getFetchCount() );
 					assertEquals( 1, mailingAddressStats.getFetchCount() );
 
-					p = (Person) session.createQuery( "from Person" ).uniqueResult();
+					p = session.createQuery( "from Person", Person.class ).uniqueResult();
 					assertNotNull( p.address );
 					assertNull( p.mailingAddress );
 					session.clear();
@@ -91,7 +91,7 @@ public class DiscrimSubclassOneToOneTest {
 					assertEquals( 1, addressStats.getFetchCount() );
 					assertEquals( 2, mailingAddressStats.getFetchCount() );
 
-					p = (Person) session.createQuery( "from Entity" ).uniqueResult();
+					p = (Person) session.createQuery( "from Entity", Entity.class ).uniqueResult();
 					assertNotNull( p.address );
 					assertNull( p.mailingAddress );
 					session.clear();
@@ -138,7 +138,7 @@ public class DiscrimSubclassOneToOneTest {
 					session.get( Entity.class, "IFA" );
 					session.clear();
 
-					List list = session.createQuery( "from Entity e order by e.name" ).list();
+					List<Entity> list = session.createQuery( "from Entity e order by e.name", Entity.class ).list();
 					Person p = (Person) list.get( 0 );
 					assertNotNull( p.address );
 					assertNull( p.mailingAddress );
@@ -147,7 +147,7 @@ public class DiscrimSubclassOneToOneTest {
 					session.clear();
 
 					list = session.createQuery(
-							"from Entity e left join fetch e.address left join fetch e.mailingAddress order by e.name" )
+							"from Entity e left join fetch e.address left join fetch e.mailingAddress order by e.name", Entity.class )
 							.list();
 					p = (Person) list.get( 0 );
 					org = (Org) list.get( 1 );

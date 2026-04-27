@@ -12,6 +12,7 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.StatementOrTypedQuery;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
@@ -36,7 +37,7 @@ import java.util.stream.Stream;
  *
  * @author Steve Ebersole
  */
-public interface MutationQueryImplementor<T> extends MutationQuery, QueryImplementor<T>, StatementReferenceProducer {
+public interface MutationQueryImplementor<T> extends MutationQuery, QueryImplementor<T>, StatementReferenceProducer, StatementOrTypedQuery {
 	@Override
 	default String getMutationString() {
 		return getQueryString();

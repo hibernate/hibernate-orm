@@ -215,7 +215,7 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTests<OffsetDateTime
 				session.persist( new EntityWithOffsetDateTime( 1, getOriginalOffsetDateTime() ) );
 			} );
 			Consumer<OffsetDateTime> checkOneMatch = expected -> factoryScope.inSession( s -> {
-				var list = s.createQuery( "from EntityWithOffsetDateTime o where o.value = :date" )
+				var list = s.createQuery( "from EntityWithOffsetDateTime o where o.value = :date", EntityWithOffsetDateTime.class )
 						.setParameter( "date", expected, StandardBasicTypes.OFFSET_DATE_TIME )
 						.list();
 				MatcherAssert.assertThat( list.size(), is( 1 ) );

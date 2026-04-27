@@ -210,7 +210,7 @@ public class JoinFetchProfileTest {
 		sessions.inTransaction( (session) -> {
 			session.enableFetchProfile( "offering.details" );
 			session.enableFetchProfile( "enrollment.details" );
-			List<?> sections = session.createQuery( "from CourseOffering" ).list();
+			List<?> sections = session.createQuery( "from CourseOffering", CourseOffering.class ).list();
 			int sectionCount = sections.size();
 			Assertions.assertEquals( 1, sectionCount, "unexpected CourseOffering count" );
 			Assertions.assertEquals( 4, statistics.getEntityLoadCount() );

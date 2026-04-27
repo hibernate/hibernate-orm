@@ -18,6 +18,8 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
+
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -56,9 +58,9 @@ public class SimpleDynamicXmlTests {
 	@Test
 	public void testUsage(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			session.createQuery( "from SimpleDynamicEntity" ).list();
-			session.createQuery( "select e from SimpleDynamicEntity e" ).list();
-			session.createQuery( "select e from SimpleDynamicEntity e where e.name = 'abc'" ).list();
+			session.createQuery( Map.class,"from SimpleDynamicEntity" ).list();
+			session.createQuery( Map.class,"select e from SimpleDynamicEntity e" ).list();
+			session.createQuery( Map.class,"select e from SimpleDynamicEntity e where e.name = 'abc'" ).list();
 		} );
 	}
 }

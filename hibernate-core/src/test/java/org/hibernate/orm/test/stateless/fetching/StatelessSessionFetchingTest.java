@@ -11,8 +11,6 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.MappingSettings;
-import org.hibernate.query.Query;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -61,7 +59,7 @@ public class StatelessSessionFetchingTest {
 
 		scope.inStatelessTransaction(
 				session -> {
-					Task taskRef = (Task) session.createQuery( "from Task t join fetch t.resource join fetch t.user" )
+					Task taskRef = session.createQuery( "from Task t join fetch t.resource join fetch t.user", Task.class )
 							.uniqueResult();
 					assertNotNull( taskRef );
 					assertTrue( Hibernate.isInitialized( taskRef ) );
@@ -103,10 +101,10 @@ public class StatelessSessionFetchingTest {
 
 		scope.inStatelessTransaction(
 				session -> {
-					final Query query = session.createQuery( "from Task t join fetch t.resource join fetch t.user" );
-					try (ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY )) {
+					var query = session.createQuery( "from Task t join fetch t.resource join fetch t.user", Task.class );
+					try (ScrollableResults<Task> scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY )) {
 						while ( scrollableResults.next() ) {
-							Task taskRef = (Task) scrollableResults.get();
+							Task taskRef = scrollableResults.get();
 							assertTrue( Hibernate.isInitialized( taskRef ) );
 							assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
 							assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
@@ -147,10 +145,10 @@ public class StatelessSessionFetchingTest {
 
 		scope.inStatelessTransaction(
 				session -> {
-					final Query query = session.createQuery( "from Task t join fetch t.resource join fetch t.user" );
-					try (ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY )) {
+					var query = session.createQuery( "from Task t join fetch t.resource join fetch t.user", Task.class );
+					try (ScrollableResults<Task> scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY )) {
 						while ( scrollableResults.next() ) {
-							Task taskRef = (Task) scrollableResults.get();
+							Task taskRef = scrollableResults.get();
 							assertTrue( Hibernate.isInitialized( taskRef ) );
 							assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
 							assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
@@ -189,11 +187,11 @@ public class StatelessSessionFetchingTest {
 
 		scope.inStatelessTransaction(
 				session -> {
-					final Query query = session.createQuery( "select p from Producer p join fetch p.products" );
-					try (ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY )) {
+					var query = session.createQuery( "select p from Producer p join fetch p.products", Producer.class );
+					try (ScrollableResults<Producer> scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY )) {
 
 						while ( scrollableResults.next() ) {
-							Producer producer = (Producer) scrollableResults.get();
+							Producer producer = scrollableResults.get();
 							assertTrue( Hibernate.isInitialized( producer ) );
 							assertTrue( Hibernate.isInitialized( producer.getProducts() ) );
 

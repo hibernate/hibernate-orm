@@ -7,7 +7,7 @@ package org.hibernate.orm.test.jpa.ql;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.query.Query;
+import org.hibernate.orm.test.jpa.model.MyEntity;
 import org.hibernate.query.SemanticException;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -31,8 +31,8 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	public void testAliasNameSameAsUnqualifiedEntityName() {
 		inTransaction(
 				session -> {
-					session.createQuery( "select item from Item item" ).list();
-					session.createQuery( "select item from Item item where item.name = 'a'" ).list();
+					session.createQuery( Item.class, "select item from Item item" ).list();
+					session.createQuery( Item.class, "select item from Item item where item.name = 'a'" ).list();
 
 				}
 		);
@@ -48,7 +48,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 					session.createQuery( "select e from MyEntity e where e.other.class = MySubclassEntity" );
 					session.createQuery( "select e from MyEntity E where e.class = MySubclassEntity" );
 
-					session.createQuery( "select object(I) from Item i" ).list();
+					session.createQuery( Object.class, "select object(I) from Item i" ).list();
 				}
 		);
 	}
@@ -66,7 +66,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	public void testGeneratedSubquery() {
 		inSession(
 				session ->
-						session.createQuery( "select c FROM Item c WHERE c.parts IS EMPTY" ).list()
+						session.createQuery( Item.class, "select c FROM Item c WHERE c.parts IS EMPTY" ).list()
 
 		);
 	}
@@ -75,8 +75,8 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	public void testOrderByAlias() {
 		inSession(
 				session -> {
-					session.createQuery( "select c.name as myname FROM Item c ORDER BY myname" ).list();
-					session.createQuery(
+					session.createQuery( String.class, "select c.name as myname FROM Item c ORDER BY myname" ).list();
+					session.createQuery( Object[].class,
 									"select p.name as name, p.stockNumber as stockNo, p.unitPrice as uPrice FROM Part p ORDER BY name, abs( p.unitPrice ), stockNo" )
 							.list();
 				} );
@@ -88,7 +88,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 		inTransaction(
 				s -> {
 					try {
-						s.createQuery( "select item from Item item where item.id = ?1 and item.name = :name" ).list();
+						s.createQuery( Item.class, "select item from Item item where item.id = ?1 and item.name = :name" ).list();
 						fail( "Expecting QuerySyntaxException because of named and positional parameters mixture" );
 					}
 					catch (IllegalArgumentException e) {
@@ -105,7 +105,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 		inTransaction(
 				s -> {
 					try {
-						s.createQuery( "select item from Item item where item.id = :id and item.name = ?1" ).list();
+						s.createQuery( Item.class, "select item from Item item where item.id = :id and item.name = ?1" ).list();
 						fail( "Expecting QuerySyntaxException because of named and positional parameters mixture" );
 					}
 					catch (IllegalArgumentException e) {
@@ -121,7 +121,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	public void testReusedNamedCollectionParam() {
 		inTransaction(
 				session -> {
-					Query q = session.createQuery(
+					var q = session.createQuery(MyEntity.class,
 							"select e from MyEntity e where e.surname in (:values) or e.name in (:values)" );
 					List<String> params = new ArrayList<>();
 					params.add( "name" );
@@ -137,7 +137,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 	public void testReusedPositionalCollectionParam() {
 		inTransaction(
 				session -> {
-					Query q = session.createQuery( "select e from MyEntity e where e.name in (?1) or e.surname in (?1)" );
+					var q = session.createQuery( MyEntity.class, "select e from MyEntity e where e.name in (?1) or e.surname in (?1)" );
 					List<String> params = new ArrayList<>();
 					params.add( "name" );
 					params.add( "other" );
@@ -157,7 +157,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 		inTransaction(
 				s -> {
 					try {
-						Query q = s.createQuery(
+						var q = s.createQuery(Item.class,
 								"select item from Item item where item.id in (?1) and item.name = :name" );
 						List<Long> params = new ArrayList<>();
 						params.add( 0L );
@@ -190,7 +190,7 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 
 		inTransaction(
 				s -> {
-					Query q = s.createQuery(
+					var q = s.createQuery(Item.class,
 							"select item from Item item where item.id in(?1) and item.name in (?2) and item.id in(?1)" );
 
 					List<Long> idParams = new ArrayList<>();
@@ -203,14 +203,16 @@ public class JPAQLComplianceTest extends AbstractJPATest {
 					nameParams.add( item2.getName() );
 					q.setParameter( 2, nameParams );
 
-					List result = q.getResultList();
+					var result = q.getResultList();
 					assertNotNull( result );
 					assertEquals( 2, result.size() );
 				}
 		);
 
-		inTransaction(
-				s -> s.createQuery( "select i from Item i" ).list().forEach( result -> s.remove( result ) )
+		inTransaction(s ->
+				s.createQuery( Item.class, "select i from Item i" )
+						.list()
+						.forEach( s::remove )
 		);
 
 	}

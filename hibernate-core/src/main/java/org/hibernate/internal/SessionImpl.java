@@ -59,7 +59,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.UnknownSqlResultSetMappingException;
-import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
@@ -2704,14 +2703,15 @@ public class SessionImpl
 	@SuppressWarnings("rawtypes")
 	@Override
 	public NativeQueryImplementor getNamedNativeQuery(String name) {
-		final QueryImplementor<?> query = createNamedQuery( name );
-		if ( !(query instanceof NativeQueryImplementor) ) {
+		final var query = createNamedQuery( name );
+		if ( query instanceof NativeQueryImplementor nativeQueryImplementor ) {
+			return nativeQueryImplementor;
+		}
+		else {
 			throw new IllegalStateException( String.format( Locale.ROOT,
 					"Named query (%s) was not a native-query",
 					name
 			) );
 		}
-		//noinspection unchecked
-		return (NativeQueryImplementor) query;
 	}
 }

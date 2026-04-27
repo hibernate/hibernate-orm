@@ -140,14 +140,14 @@ public class ASTParserLoadingTest {
 	public void testSubSelectAsArithmeticOperand(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(s) -> {
-					s.createQuery( "from Zoo z where ( select count(*) from Zoo ) = 0" ).list();
+					s.createQuery( "from Zoo z where ( select count(*) from Zoo ) = 0", Zoo.class ).list();
 
 					// now as operands singly:
-					s.createQuery( "from Zoo z where ( select count(*) from Zoo ) + 0 = 0" ).list();
-					s.createQuery( "from Zoo z where 0 + ( select count(*) from Zoo ) = 0" ).list();
+					s.createQuery( "from Zoo z where ( select count(*) from Zoo ) + 0 = 0", Zoo.class ).list();
+					s.createQuery( "from Zoo z where 0 + ( select count(*) from Zoo ) = 0", Zoo.class ).list();
 
 					// and doubly:
-					s.createQuery( "from Zoo z where ( select count(*) from Zoo ) + ( select count(*) from Zoo ) = 0" )
+					s.createQuery( "from Zoo z where ( select count(*) from Zoo ) + ( select count(*) from Zoo ) = 0", Zoo.class )
 							.list();
 				}
 		);
@@ -234,7 +234,7 @@ public class ASTParserLoadingTest {
 					// select clause
 
 					// control
-					Query<?> query = session.createQuery( "select a.class from Animal a where a.class = Dog" );
+					var query = session.createQuery( "select a.class from Animal a where a.class = Dog", Class.class );
 					query.list();
 					SqmSelectStatement<?> sqmStatement =
 							(SqmSelectStatement<?>) query.unwrap( SqmStatementAccess.class ).getSqmStatement();
@@ -245,9 +245,9 @@ public class ASTParserLoadingTest {
 					assertThat( typeSelection.getNodeJavaType().getJavaTypeClass() ).isEqualTo( Class.class );
 
 					// test
-					query = session.createQuery( "select type(a) from Animal a where type(a) = Dog" );
-					query.list();
-					sqmStatement = (SqmSelectStatement<?>) query.unwrap( SqmStatementAccess.class ).getSqmStatement();
+					var query2 = session.createQuery( "select type(a) from Animal a where type(a) = Dog", Class.class );
+					query2.list();
+					sqmStatement = (SqmSelectStatement<?>) query2.unwrap( SqmStatementAccess.class ).getSqmStatement();
 					selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
 					assertThat( selections.size() ).isEqualTo( 1 );
 					typeSelection = selections.get( 0 );
@@ -274,22 +274,22 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				(s) -> {
-					List result = s.createQuery( "select a from ComponentContainer c join c.address a" ).list();
+					var result = s.createQuery( "select a from ComponentContainer c join c.address a", ComponentContainer.Address.class ).list();
 					assertThat( result.size() ).isEqualTo( 1 );
 					assertThat( result.get( 0 ) ).isInstanceOf( ComponentContainer.Address.class );
 
-					result = s.createQuery( "select a.zip from ComponentContainer c join c.address a" ).list();
-					assertThat( result.size() ).isEqualTo( 1 );
-					assertThat( result.get( 0 ) ).isInstanceOf( ComponentContainer.Address.Zip.class );
+					var result2 = s.createQuery( "select a.zip from ComponentContainer c join c.address a", ComponentContainer.Address.Zip.class ).list();
+					assertThat( result2.size() ).isEqualTo( 1 );
+					assertThat( result2.get( 0 ) ).isInstanceOf( ComponentContainer.Address.Zip.class );
 
-					result = s.createQuery( "select z from ComponentContainer c join c.address a join a.zip z" ).list();
-					assertThat( result.size() ).isEqualTo( 1 );
-					assertThat( result.get( 0 ) ).isInstanceOf( ComponentContainer.Address.Zip.class );
+					var result3 = s.createQuery( "select z from ComponentContainer c join c.address a join a.zip z", ComponentContainer.Address.Zip.class ).list();
+					assertThat( result3.size() ).isEqualTo( 1 );
+					assertThat( result3.get( 0 ) ).isInstanceOf( ComponentContainer.Address.Zip.class );
 
-					result = s.createQuery( "select z.code from ComponentContainer c join c.address a join a.zip z" )
+					var result4 = s.createQuery( "select z.code from ComponentContainer c join c.address a join a.zip z", Integer.class )
 							.list();
-					assertThat( result.size() ).isEqualTo( 1 );
-					assertThat( result.get( 0 ) ).isInstanceOf( Integer.class );
+					assertThat( result4.size() ).isEqualTo( 1 );
+					assertThat( result4.get( 0 ) ).isInstanceOf( Integer.class );
 				}
 		);
 	}
@@ -353,15 +353,15 @@ public class ASTParserLoadingTest {
 		// just checking syntax here...
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from VariousKeywordPropertyEntity where type = 'something'" ).list();
-					session.createQuery( "from VariousKeywordPropertyEntity where value = 'something'" ).list();
-					session.createQuery( "from VariousKeywordPropertyEntity where key = 'something'" ).list();
-					session.createQuery( "from VariousKeywordPropertyEntity where entry = 'something'" ).list();
+					session.createQuery( "from VariousKeywordPropertyEntity where type = 'something'", VariousKeywordPropertyEntity.class ).list();
+					session.createQuery( "from VariousKeywordPropertyEntity where value = 'something'", VariousKeywordPropertyEntity.class ).list();
+					session.createQuery( "from VariousKeywordPropertyEntity where key = 'something'", VariousKeywordPropertyEntity.class ).list();
+					session.createQuery( "from VariousKeywordPropertyEntity where entry = 'something'", VariousKeywordPropertyEntity.class ).list();
 
-					session.createQuery( "from VariousKeywordPropertyEntity e where e.type = 'something'" ).list();
-					session.createQuery( "from VariousKeywordPropertyEntity e where e.value = 'something'" ).list();
-					session.createQuery( "from VariousKeywordPropertyEntity e where e.key = 'something'" ).list();
-					session.createQuery( "from VariousKeywordPropertyEntity e where e.entry = 'something'" ).list();
+					session.createQuery( "from VariousKeywordPropertyEntity e where e.type = 'something'", VariousKeywordPropertyEntity.class ).list();
+					session.createQuery( "from VariousKeywordPropertyEntity e where e.value = 'something'", VariousKeywordPropertyEntity.class ).list();
+					session.createQuery( "from VariousKeywordPropertyEntity e where e.key = 'something'", VariousKeywordPropertyEntity.class ).list();
+					session.createQuery( "from VariousKeywordPropertyEntity e where e.entry = 'something'", VariousKeywordPropertyEntity.class ).list();
 				}
 		);
 	}
@@ -387,7 +387,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					// hibernate-only form
-					List results = session.createQuery( "select distinct key(h.family) from Human h" ).list();
+					List<String> results = session.createQuery( "select distinct key(h.family) from Human h", String.class ).list();
 					assertThat( results.size() ).isEqualTo( 1 );
 					Object key = results.get( 0 );
 					assertThat( String.class.isAssignableFrom( key.getClass() ) ).isTrue();
@@ -397,7 +397,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					// jpa form
-					List results = session.createQuery( "select distinct KEY(f) from Human h join h.family f" ).list();
+					List<String> results = session.createQuery( "select distinct KEY(f) from Human h join h.family f", String.class ).list();
 					assertThat( results.size() ).isEqualTo( 1 );
 					Object key = results.get( 0 );
 					assertThat( String.class.isAssignableFrom( key.getClass() ) ).isTrue();
@@ -447,7 +447,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					// hibernate-only form
-					List results = session.createQuery( "select entry(h.family) from Human h" ).list();
+					List results = session.createQuery( "select entry(h.family) from Human h", Object.class ).list();
 					assertThat( results.size() ).isEqualTo( 1 );
 					Object result = results.get( 0 );
 					assertThat( Map.Entry.class.isAssignableFrom( result.getClass() ) ).isTrue();
@@ -461,7 +461,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					// jpa form
-					List results = session.createQuery( "select ENTRY(f) from Human h join h.family f" ).list();
+					List results = session.createQuery( "select ENTRY(f) from Human h join h.family f", Object.class ).list();
 					assertThat( results.size() ).isEqualTo( 1 );
 					Object result = results.get( 0 );
 					assertThat( Map.Entry.class.isAssignableFrom( result.getClass() ) ).isTrue();
@@ -492,7 +492,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					// hibernate-only form
-					List results = session.createQuery( "select value(h.family) from Human h" ).list();
+					List<Human> results = session.createQuery( "select value(h.family) from Human h", Human.class ).list();
 					assertThat( results.size() ).isEqualTo( 1 );
 					Object result = results.get( 0 );
 					assertThat( Human.class.isAssignableFrom( result.getClass() ) ).isTrue();
@@ -502,7 +502,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					// jpa form
-					List results = session.createQuery( "select VALUE(f) from Human h join h.family f" ).list();
+					List<Human> results = session.createQuery( "select VALUE(f) from Human h join h.family f", Human.class ).list();
 					assertThat( results.size() ).isEqualTo( 1 );
 					Object result = results.get( 0 );
 					assertThat( Human.class.isAssignableFrom( result.getClass() ) ).isTrue();
@@ -547,7 +547,7 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "from java.lang.Object" ).setMaxResults( 2 ).list();
+					List results = session.createQuery( "from java.lang.Object", Object.class ).setMaxResults( 2 ).list();
 					assertThat( results.size() ).isEqualTo( 1 );
 				}
 		);
@@ -568,7 +568,7 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "from Human h where h.nickName in ()" ).list();
+					List results = session.createQuery( "from Human h where h.nickName in ()", Human.class ).list();
 					assertThat( results.size() ).isEqualTo( 0 );
 				}
 		);
@@ -588,7 +588,7 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "from Human h where h.nickName in (:nickNames)" )
+					List results = session.createQuery( "from Human h where h.nickName in (:nickNames)", Human.class )
 							.setParameter( "nickNames", Collections.emptySet() )
 							.list();
 					assertThat( results.size() ).isEqualTo( 0 );
@@ -622,48 +622,48 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "from Human where name.first = :name or name.last=:name" )
+					List results = session.createQuery( "from Human where name.first = :name or name.last=:name", Human.class )
 							.setParameter( "name", "Johnny" )
 							.list();
 					assertThat( results.size() ).isEqualTo( 2 );
 
-					results = session.createQuery( "from Human where name.last = :name or :name is null" )
+					results = session.createQuery( "from Human where name.last = :name or :name is null", Human.class )
 							.setParameter( "name", "Goode" )
 							.list();
 					assertThat( results.size() ).isEqualTo( 1 );
-					results = session.createQuery( "from Human where :name is null or name.last = :name" )
+					results = session.createQuery( "from Human where :name is null or name.last = :name", Human.class )
 							.setParameter( "name", "Goode" )
 							.list();
 					assertThat( results.size() ).isEqualTo( 1 );
 
 					results = session.createQuery(
-									"from Human where name.first = :firstName and (name.last = :name or :name is null)" )
+									"from Human where name.first = :firstName and (name.last = :name or :name is null)", Human.class )
 							.setParameter( "firstName", "Bono" )
 							.setParameter( "name", null )
 							.list();
 					assertThat( results.size() ).isEqualTo( 1 );
 					results = session.createQuery(
-									"from Human where name.first = :firstName and ( :name is null  or name.last = cast(:name as string) )" )
+									"from Human where name.first = :firstName and ( :name is null  or name.last = cast(:name as string) )", Human.class )
 							.setParameter( "firstName", "Bono" )
 							.setParameter( "name", null )
 							.list();
 					assertThat( results.size() ).isEqualTo( 1 );
 
-					results = session.createQuery( "from Human where intValue = :intVal or :intVal is null" )
+					results = session.createQuery( "from Human where intValue = :intVal or :intVal is null", Human.class )
 							.setParameter( "intVal", 1 )
 							.list();
 					assertThat( results.size() ).isEqualTo( 1 );
-					results = session.createQuery( "from Human where :intVal is null or intValue = :intVal" )
+					results = session.createQuery( "from Human where :intVal is null or intValue = :intVal", Human.class )
 							.setParameter( "intVal", 1 )
 							.list();
 					assertThat( results.size() ).isEqualTo( 1 );
 
 
-					results = session.createQuery( "from Human where intValue = :intVal or :intVal is null" )
+					results = session.createQuery( "from Human where intValue = :intVal or :intVal is null", Human.class )
 							.setParameter( "intVal", null )
 							.list();
 					assertThat( results.size() ).isEqualTo( 5 );
-					results = session.createQuery( "from Human where :intVal is null or intValue is null" )
+					results = session.createQuery( "from Human where :intVal is null or intValue is null", Human.class )
 							.setParameter( "intVal", null )
 							.list();
 					assertThat( results.size() ).isEqualTo( 5 );
@@ -692,9 +692,9 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "from Human where name is null" ).list();
+					List results = session.createQuery( "from Human where name is null", Human.class ).list();
 					assertThat( results.size() ).isEqualTo( 1 );
-					results = session.createQuery( "from Human where name is not null" ).list();
+					results = session.createQuery( "from Human where name is not null", Human.class ).list();
 					assertThat( results.size() ).isEqualTo( 3 );
 					Dialect dialect = session.getDialect();
 					String query =
@@ -702,10 +702,10 @@ public class ASTParserLoadingTest {
 									"from Human where cast(?1 as string) is null" :
 									"from Human where ?1 is null";
 					if ( dialect instanceof DerbyDialect ) {
-						session.createQuery( query ).setParameter( 1, "null" ).list();
+						session.createQuery( query, Human.class ).setParameter( 1, "null" ).list();
 					}
 					else {
-						session.createQuery( query ).setParameter( 1, null ).list();
+						session.createQuery( query, Human.class ).setParameter( 1, null ).list();
 					}
 				}
 		);
@@ -733,11 +733,11 @@ public class ASTParserLoadingTest {
 
 					session.flush();
 
-					Number count = (Number) session.createQuery(
-							"select sum(case when bodyWeight > 100 then 1 else 0 end) from Human" ).uniqueResult();
+					Number count = session.createQuery(
+							"select sum(case when bodyWeight > 100 then 1 else 0 end) from Human", Number.class ).uniqueResult();
 					assertThat( count.intValue() ).isEqualTo( 2 );
-					count = (Number) session.createQuery(
-									"select sum(case when bodyWeight > 100 then bodyWeight else 0 end) from Human" )
+					count = session.createQuery(
+									"select sum(case when bodyWeight > 100 then bodyWeight else 0 end) from Human", Number.class )
 							.uniqueResult();
 					assertThat( count.floatValue() ).isEqualTo( h2.getBodyWeight() + h3.getBodyWeight(),
 							Offset.offset( 0.001F ) );
@@ -771,16 +771,16 @@ public class ASTParserLoadingTest {
 
 					session.flush();
 
-					Number count = (Number) session.createQuery(
-									"select count(distinct case when bodyWeight > 100 then description else null end) from Human" )
+					Number count = session.createQuery(
+									"select count(distinct case when bodyWeight > 100 then description else null end) from Human", Number.class )
 							.uniqueResult();
 					assertThat( count.intValue() ).isEqualTo( 1 );
-					count = (Number) session.createQuery(
-									"select count(case when bodyWeight > 100 then description else null end) from Human" )
+					count = session.createQuery(
+									"select count(case when bodyWeight > 100 then description else null end) from Human", Number.class )
 							.uniqueResult();
 					assertThat( count.intValue() ).isEqualTo( 2 );
-					count = (Number) session.createQuery(
-									"select count(distinct case when bodyWeight > 100 then nickName else null end) from Human" )
+					count = session.createQuery(
+									"select count(distinct case when bodyWeight > 100 then nickName else null end) from Human", Number.class )
 							.uniqueResult();
 					assertThat( count.intValue() ).isEqualTo( 2 );
 				}
@@ -812,7 +812,7 @@ public class ASTParserLoadingTest {
 							s,
 							session -> {
 								try {
-									s.createQuery( "from Animal a where a.offspring.description = 'xyz'" ).list();
+									s.createQuery( "from Animal a where a.offspring.description = 'xyz'", Animal.class ).list();
 									fail( "illegal collection dereference semantic did not cause failure" );
 								}
 								catch (IllegalArgumentException e) {
@@ -828,7 +828,7 @@ public class ASTParserLoadingTest {
 							s,
 							session -> {
 								try {
-									s.createQuery( "from Animal a where a.offspring.father.description = 'xyz'" )
+									s.createQuery( "from Animal a where a.offspring.father.description = 'xyz'", Animal.class )
 											.list();
 									fail( "illegal collection dereference semantic did not cause failure" );
 								}
@@ -845,7 +845,7 @@ public class ASTParserLoadingTest {
 							s,
 							session -> {
 								try {
-									s.createQuery( "from Animal a order by a.offspring.description" ).list();
+									s.createQuery( "from Animal a order by a.offspring.description", Animal.class ).list();
 									fail( "illegal collection dereference semantic did not cause failure" );
 								}
 								catch (IllegalArgumentException e) {
@@ -861,7 +861,7 @@ public class ASTParserLoadingTest {
 							s,
 							session -> {
 								try {
-									s.createQuery( "from Animal a order by a.offspring.father.description" ).list();
+									s.createQuery( "from Animal a order by a.offspring.father.description", Animal.class ).list();
 									fail( "illegal collection dereference semantic did not cause failure" );
 								}
 								catch (IllegalArgumentException e) {
@@ -881,7 +881,7 @@ public class ASTParserLoadingTest {
 		// simple syntax checking...
 		scope.inTransaction(
 				session ->
-						session.createQuery( "from Human h where h.nickName = '1' || 'ov' || 'tha' || 'few'" ).list()
+						session.createQuery( "from Human h where h.nickName = '1' || 'ov' || 'tha' || 'few'", Human.class ).list()
 		);
 	}
 
@@ -892,57 +892,57 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					Dialect dialect = session.getDialect();
-					session.createQuery( "from Animal a where abs(a.bodyWeight-:param) < 2.0" )
+					session.createQuery( "from Animal a where abs(a.bodyWeight-:param) < 2.0", Animal.class )
 							.setParameter( "param", 1 ).list();
-					session.createQuery( "from Animal a where abs(:param - a.bodyWeight) < 2.0" )
+					session.createQuery( "from Animal a where abs(:param - a.bodyWeight) < 2.0", Animal.class )
 							.setParameter( "param", 1 ).list();
 					if ( dialect instanceof HSQLDialect || dialect instanceof DB2Dialect || dialect instanceof DerbyDialect ) {
 						// HSQLDB and DB2 don't like the abs(? - ?) syntax. bit work if at least one parameter is typed...
-						session.createQuery( "from Animal where abs(cast(:x as long) - :y) < 2.0" )
+						session.createQuery( "from Animal where abs(cast(:x as long) - :y) < 2.0", Animal.class )
 								.setParameter( "x", 1 )
 								.setParameter( "y", 1 ).list();
-						session.createQuery( "from Animal where abs(:x - cast(:y as long)) < 2.0" )
+						session.createQuery( "from Animal where abs(:x - cast(:y as long)) < 2.0", Animal.class )
 								.setParameter( "x", 1 )
 								.setParameter( "y", 1 ).list();
-						session.createQuery( "from Animal where abs(cast(:x as long) - cast(:y as long)) < 2.0" )
+						session.createQuery( "from Animal where abs(cast(:x as long) - cast(:y as long)) < 2.0", Animal.class )
 								.setParameter( "x", 1 )
 								.setParameter( "y", 1 ).list();
 					}
 					else {
-						session.createQuery( "from Animal where abs(:x - :y) < 2.0" ).setParameter( "x", 1 )
+						session.createQuery( "from Animal where abs(:x - :y) < 2.0", Animal.class ).setParameter( "x", 1 )
 								.setParameter( "y", 1 )
 								.list();
 					}
 
 					if ( dialect instanceof DB2Dialect ) {
-						session.createQuery( "from Animal where lower(upper(cast(:foo as string))) like 'f%'" )
+						session.createQuery( "from Animal where lower(upper(cast(:foo as string))) like 'f%'", Animal.class )
 								.setParameter( "foo", "foo" ).list();
 					}
 					else {
-						session.createQuery( "from Animal where lower(upper(:foo)) like 'f%'" )
+						session.createQuery( "from Animal where lower(upper(:foo)) like 'f%'", Animal.class )
 								.setParameter( "foo", "foo" ).list();
 					}
 
 					session.createQuery(
-									"from Animal a where abs(abs(a.bodyWeight - 1.0 + :param) * abs(length('ffobar')-3)) = 3.0" )
+									"from Animal a where abs(abs(a.bodyWeight - 1.0 + :param) * abs(length('ffobar')-3)) = 3.0", Animal.class )
 							.setParameter( "param", 1 ).list();
 
 					if ( dialect instanceof DB2Dialect ) {
 						session.createQuery(
-										"from Animal where lower(upper('foo') || upper(cast(:bar as string))) like 'f%'" )
+										"from Animal where lower(upper('foo') || upper(cast(:bar as string))) like 'f%'", Animal.class )
 								.setParameter( "bar", "xyz" ).list();
 					}
 					else {
-						session.createQuery( "from Animal where lower(upper('foo') || upper(:bar)) like 'f%'" )
+						session.createQuery( "from Animal where lower(upper('foo') || upper(:bar)) like 'f%'", Animal.class )
 								.setParameter( "bar", "xyz" ).list();
 					}
 
 					if ( dialect instanceof HANADialect ) {
-						session.createQuery( "from Animal where abs(cast(1 as double) - cast(:param as double)) = 1.0" )
+						session.createQuery( "from Animal where abs(cast(1 as double) - cast(:param as double)) = 1.0", Animal.class )
 								.setParameter( "param", 1 ).list();
 					}
 					else if ( !(dialect instanceof PostgreSQLDialect || dialect instanceof MySQLDialect) ) {
-						session.createQuery( "from Animal where abs(cast(1 as float) - cast(:param as float)) = 1.0" )
+						session.createQuery( "from Animal where abs(cast(1 as float) - cast(:param as float)) = 1.0", Animal.class )
 								.setParameter( "param", 1 ).list();
 					}
 				}
@@ -964,25 +964,25 @@ public class ASTParserLoadingTest {
 					session.flush();
 
 					List results = session.createQuery(
-									"select e.heresAnotherCrazyIdFieldName from MoreCrazyIdFieldNameStuffEntity e where e.heresAnotherCrazyIdFieldName is not null" )
+									"select e.heresAnotherCrazyIdFieldName from MoreCrazyIdFieldNameStuffEntity e where e.heresAnotherCrazyIdFieldName is not null", HeresAnotherCrazyIdFieldName.class )
 							.list();
 					assertThat( results.size() ).isEqualTo( 1 );
 					Object result = results.get( 0 );
 					assertClassAssignability( HeresAnotherCrazyIdFieldName.class, result.getClass() );
 					assertThat( result ).isSameAs( next );
 
-					results = session.createQuery(
-									"select e.heresAnotherCrazyIdFieldName.heresAnotherCrazyIdFieldName from MoreCrazyIdFieldNameStuffEntity e where e.heresAnotherCrazyIdFieldName is not null" )
+					var results2 = session.createQuery(
+									"select e.heresAnotherCrazyIdFieldName.heresAnotherCrazyIdFieldName from MoreCrazyIdFieldNameStuffEntity e where e.heresAnotherCrazyIdFieldName is not null", Long.class )
 							.list();
-					assertThat( results.size() ).isEqualTo( 1 );
-					result = results.get( 0 );
-					assertClassAssignability( Long.class, result.getClass() );
-					assertThat( result ).isEqualTo( next.getHeresAnotherCrazyIdFieldName() );
+					assertThat( results2.size() ).isEqualTo( 1 );
+					Object result2 = results2.get( 0 );
+					assertClassAssignability( Long.class, result2.getClass() );
+					assertThat( result2 ).isEqualTo( next.getHeresAnotherCrazyIdFieldName() );
 
-					results = session.createQuery(
-									"select e.heresAnotherCrazyIdFieldName from MoreCrazyIdFieldNameStuffEntity e" )
+					var results3 = session.createQuery(
+									"select e.heresAnotherCrazyIdFieldName from MoreCrazyIdFieldNameStuffEntity e", HeresAnotherCrazyIdFieldName.class )
 							.list();
-					assertThat( results.size() ).isEqualTo( 1 );
+					assertThat( results3.size() ).isEqualTo( 1 );
 				}
 		);
 	}
@@ -1066,14 +1066,14 @@ public class ASTParserLoadingTest {
 
 					session.flush();
 
-					Query query = session.createQuery( "from LineItem l where l.id in (:idList)" );
+					var query = session.createQuery( "from LineItem l where l.id in (:idList)", LineItem.class );
 					List<Id> list = new ArrayList<Id>();
 					list.add( new Id( "123456789", order.getId().getOrderNumber(), "4321" ) );
 					list.add( new Id( "123456789", order.getId().getOrderNumber(), "1234" ) );
 					query.setParameterList( "idList", list );
 					assertThat( query.list().size() ).isEqualTo( 2 );
 
-					query = session.createQuery( "from LineItem l where l.id in :idList" );
+					query = session.createQuery( "from LineItem l where l.id in :idList", LineItem.class );
 					query.setParameterList( "idList", list );
 					assertThat( query.list().size() ).isEqualTo( 2 );
 				}
@@ -1083,7 +1083,7 @@ public class ASTParserLoadingTest {
 	private void checkCounts(String hql, int expected, String testCondition, SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					int count = determineCount( session.createQuery( hql ).list().iterator() );
+					int count = determineCount( session.createQuery( hql, Object.class ).list().iterator() );
 					assertThat( count ).as( "list() [" + testCondition + "]" ).isEqualTo( expected );
 				}
 		);
@@ -1110,7 +1110,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					int count = determineCount(
-							session.createQuery( "select e.id, e.owner from SimpleAssociatedEntity e" ).list()
+							session.createQuery( "select e.id, e.owner from SimpleAssociatedEntity e", Object[].class ).list()
 									.iterator() );
 					// thing two would be removed from the result due to the inner join
 					assertThat( count ).isEqualTo( 1 );
@@ -1141,7 +1141,7 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					List list = session.createQuery( "from Human h where -(h.intValue - 100)=74" ).list();
+					List list = session.createQuery( "from Human h where -(h.intValue - 100)=74", Human.class ).list();
 					assertThat( list.size() ).isEqualTo( 1 );
 				}
 		);
@@ -1245,15 +1245,15 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					List list = session.createQuery( "select e.department from Employee e left join e.department" )
+					List<Department> list = session.createQuery( "select e.department from Employee e left join e.department", Department.class )
 							.list();
 					assertThat( list.size() ).isEqualTo( 2 );
 					final Department dept;
 					if ( list.get( 0 ) == null ) {
-						dept = (Department) list.get( 1 );
+						dept = list.get( 1 );
 					}
 					else {
-						dept = (Department) list.get( 0 );
+						dept = list.get( 0 );
 						assertThat( list.get( 1 ) ).isNull();
 					}
 					assertThat( dept.getDeptName() ).isEqualTo( dept1.getDeptName() );
@@ -1292,8 +1292,8 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					Object[] result = (Object[]) session.createQuery(
-							"select e.firstName, e.lastName, e.title.description, e.department from Employee e inner join e.department"
+					Object[] result = session.createQuery(
+							"select e.firstName, e.lastName, e.title.description, e.department from Employee e inner join e.department", Object[].class
 					).uniqueResult();
 					assertThat( result[0] ).isEqualTo( employee1.getFirstName() );
 					assertThat( result[1] ).isEqualTo( employee1.getLastName() );
@@ -1398,7 +1398,7 @@ public class ASTParserLoadingTest {
 		// just checking correctness of param binding code...
 		scope.inTransaction(
 				session ->
-						session.createQuery( "from Animal" )
+						session.createQuery( "from Animal", Animal.class )
 								.setFirstResult( 2 )
 								.setMaxResults( 1 )
 								.list()
@@ -1412,33 +1412,33 @@ public class ASTParserLoadingTest {
 					ArrayList<String> params = new ArrayList<>();
 					params.add( "Doe" );
 					params.add( "Public" );
-					session.createQuery( "from Human where name.last in (?1)" )
+					session.createQuery( "from Human where name.last in (?1)", Human.class )
 							.setParameterList( 1, params )
 							.list();
 
-					session.createQuery( "from Human where name.last in ?1" )
+					session.createQuery( "from Human where name.last in ?1", Human.class )
 							.setParameterList( 1, params )
 							.list();
 
-					session.createQuery( "from Human where nickName = ?1 and ( name.first = ?2 or name.last in (?3) )" )
+					session.createQuery( "from Human where nickName = ?1 and ( name.first = ?2 or name.last in (?3) )", Human.class )
 							.setParameter( 1, "Yogster" )
 							.setParameter( 2, "Yogi" )
 							.setParameterList( 3, params )
 							.list();
 
-					session.createQuery( "from Human where nickName = ?1 and ( name.first = ?2 or name.last in ?3 )" )
+					session.createQuery( "from Human where nickName = ?1 and ( name.first = ?2 or name.last in ?3 )", Human.class )
 							.setParameter( 1, "Yogster" )
 							.setParameter( 2, "Yogi" )
 							.setParameterList( 3, params )
 							.list();
 
-					session.createQuery( "from Human where nickName = ?1 or ( name.first = ?2 and name.last in (?3) )" )
+					session.createQuery( "from Human where nickName = ?1 or ( name.first = ?2 and name.last in (?3) )", Human.class )
 							.setParameter( 1, "Yogster" )
 							.setParameter( 2, "Yogi" )
 							.setParameterList( 3, params )
 							.list();
 
-					session.createQuery( "from Human where nickName = ?1 or ( name.first = ?2 and name.last in ?3 )" )
+					session.createQuery( "from Human where nickName = ?1 or ( name.first = ?2 and name.last in ?3 )", Human.class )
 							.setParameter( 1, "Yogster" )
 							.setParameter( 2, "Yogi" )
 							.setParameterList( 3, params )
@@ -1451,7 +1451,7 @@ public class ASTParserLoadingTest {
 	public void testComponentQueries(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final Query<?> query = session.createQuery( "select h.name from Human h" );
+					final var query = session.createQuery( "select h.name from Human h", Name.class );
 					final SqmSelectStatement<?> sqmStatement =
 							(SqmSelectStatement<?>) query.unwrap( SqmStatementAccess.class ).getSqmStatement();
 					assertThat( sqmStatement.getQuerySpec().getSelectClause().getSelections().size() ).isEqualTo( 1 );
@@ -1463,21 +1463,21 @@ public class ASTParserLoadingTest {
 
 
 					// Test the ability to perform comparisons between component values
-					session.createQuery( "from Human h where h.name = h.name" ).list();
-					session.createQuery( "from Human h where h.name = :name" ).setParameter( "name", new Name() )
+					session.createQuery( "from Human h where h.name = h.name", Human.class ).list();
+					session.createQuery( "from Human h where h.name = :name", Human.class ).setParameter( "name", new Name() )
 							.list();
-					session.createQuery( "from Human where name = :name" ).setParameter( "name", new Name() ).list();
-					session.createQuery( "from Human h where :name = h.name" ).setParameter( "name", new Name() )
+					session.createQuery( "from Human where name = :name", Human.class ).setParameter( "name", new Name() ).list();
+					session.createQuery( "from Human h where :name = h.name", Human.class ).setParameter( "name", new Name() )
 							.list();
-					session.createQuery( "from Human h where :name <> h.name" ).setParameter( "name", new Name() )
+					session.createQuery( "from Human h where :name <> h.name", Human.class ).setParameter( "name", new Name() )
 							.list();
 
 					// Test the ability to perform comparisons between a component and an explicit row-value
-					session.createQuery( "from Human h where h.name = ('John', 'X', 'Doe')" ).list();
-					session.createQuery( "from Human h where ('John', 'X', 'Doe') = h.name" ).list();
-					session.createQuery( "from Human h where ('John', 'X', 'Doe') <> h.name" ).list();
+					session.createQuery( "from Human h where h.name = ('John', 'X', 'Doe')", Human.class ).list();
+					session.createQuery( "from Human h where ('John', 'X', 'Doe') = h.name", Human.class ).list();
+					session.createQuery( "from Human h where ('John', 'X', 'Doe') <> h.name", Human.class ).list();
 
-					session.createQuery( "from Human h order by h.name" ).list();
+					session.createQuery( "from Human h order by h.name", Human.class ).list();
 				}
 		);
 	}
@@ -1491,13 +1491,13 @@ public class ASTParserLoadingTest {
 					Order.Id oId = new Order.Id( "1234", 1 );
 
 					// control
-					session.createQuery( "from Order o where o.customer.name =:name and o.id = :id" )
+					session.createQuery( "from Order o where o.customer.name =:name and o.id = :id", Order.class )
 							.setParameter( "name", "oracle" )
 							.setParameter( "id", oId )
 							.list();
 
 					// this is the form that caused problems in the original case...
-					session.createQuery( "from Order o where o.id = :id and o.customer.name =:name " )
+					session.createQuery( "from Order o where o.id = :id and o.customer.name =:name ", Order.class )
 							.setParameter( "id", oId )
 							.setParameter( "name", "oracle" )
 							.list();
@@ -1548,7 +1548,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session ->
 						session.createQuery(
-										"from Zoo z where z.classification = org.hibernate.orm.test.hql.Classification.LAME" )
+										"from Zoo z where z.classification = org.hibernate.orm.test.hql.Classification.LAME", Zoo.class )
 								.list()
 
 		);
@@ -1560,7 +1560,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					try {
-						session.createQuery( "from Animal a where a.description = :nonstring" )
+						session.createQuery( "from Animal a where a.description = :nonstring", Animal.class )
 								.setParameter( "nonstring", Integer.valueOf( 1 ) )
 								.list();
 						fail( "query execution should have failed" );
@@ -1582,7 +1582,7 @@ public class ASTParserLoadingTest {
 					scope.inTransaction(
 							session -> {
 								try {
-									s.createQuery( "from Human h join fetch h.friends f join fetch f.friends fof" )
+									s.createQuery( "from Human h join fetch h.friends f join fetch f.friends fof", Human.class )
 											.list();
 									fail( "failure expected" );
 								}
@@ -1619,7 +1619,7 @@ public class ASTParserLoadingTest {
 							"           left join a1.offspring o" +
 							"       where a1.id=1" +
 							")";
-					session.createQuery( qryString ).list();
+					session.createQuery( qryString, Object[].class ).list();
 					qryString =
 							"select h.id, h.description" +
 							" from Human h" +
@@ -1630,7 +1630,7 @@ public class ASTParserLoadingTest {
 							"          left join h1.friends f" +
 							"      where h1.id=1" +
 							")";
-					session.createQuery( qryString ).list();
+					session.createQuery( qryString, Object[].class ).list();
 					qryString =
 							"select h.id, h.description" +
 							" from Human h" +
@@ -1641,7 +1641,7 @@ public class ASTParserLoadingTest {
 							"          left join h1.friends f1" +
 							"      where h = f1" +
 							")";
-					session.createQuery( qryString ).list();
+					session.createQuery( qryString, Object[].class ).list();
 				}
 		);
 	}
@@ -1672,17 +1672,17 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					// Test simple distinction
-					List results;
-					results = session.createQuery( "select distinct p from Animal p inner join fetch p.offspring" )
+					List<Animal> results;
+					results = session.createQuery( "select distinct p from Animal p inner join fetch p.offspring", Animal.class )
 							.list();
 					assertThat( results.size() ).as( "duplicate list() returns" ).isEqualTo( 30 );
 					// Test first/max
-					results = session.createQuery( "select p from Animal p inner join fetch p.offspring order by p.id" )
+					results = session.createQuery( "select p from Animal p inner join fetch p.offspring order by p.id", Animal.class )
 							.setFirstResult( 5 )
 							.setMaxResults( 20 )
 							.list();
 					assertThat( results.size() ).as( "duplicate returns" ).isEqualTo( 20 );
-					Animal firstReturn = (Animal) results.get( 0 );
+					Animal firstReturn = results.get( 0 );
 					assertThat( firstReturn.getSerialNumber() ).as( "firstResult not applied correctly" )
 							.isEqualTo( "123-5" );
 
@@ -1696,7 +1696,7 @@ public class ASTParserLoadingTest {
 				session -> {
 					try {
 						session.createQuery(
-										"from Animal a where a.mother in (select m from Animal a1 inner join a1.mother as m join fetch m.mother)" )
+										"from Animal a where a.mother in (select m from Animal a1 inner join a1.mother as m join fetch m.mother)", Animal.class )
 								.list();
 						fail( "fetch join allowed in subquery" );
 					}
@@ -1721,7 +1721,7 @@ public class ASTParserLoadingTest {
 									"select p.id, size( descendants ) " +
 									"from Animal p " +
 									"left outer join p.offspring descendants " +
-									"group by p.id" )
+									"group by p.id", Object[].class )
 							.list();
 				}
 		);
@@ -1775,54 +1775,54 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery(
+					List<Object> results = session.createQuery(
 									"select distinct p.id " +
 									"from Animal p " +
 									"left outer join p.offspring descendants " +
-									"group by p.id" )
+									"group by p.id", Object.class )
 							.list();
 					assertThat( results.size() ).isEqualTo( 14 );
 
-					results = session.createQuery(
+					List<Object[]> results2 = session.createQuery(
 									"select p.id, size( descendants ) " +
 									"from Animal p " +
 									"left outer join p.offspring descendants " +
-									"group by p.id order by p.id" )
+									"group by p.id order by p.id", Object[].class )
 							.list();
 
-					assertThat( results.size() ).isEqualTo( 14 );
-					assertThat( ((Object[]) results.get( 0 ))[1] ).isEqualTo( 0 ); // id 1
-					assertThat( ((Object[]) results.get( 1 ))[1] ).isEqualTo( 1 ); // id 2
-					assertThat( ((Object[]) results.get( 2 ))[1] ).isEqualTo( 0 ); // id 3
-					assertThat( ((Object[]) results.get( 3 ))[1] ).isEqualTo( 2 ); // id 4
-					assertThat( ((Object[]) results.get( 4 ))[1] ).isEqualTo( 0 ); // id 5
-					assertThat( ((Object[]) results.get( 5 ))[1] ).isEqualTo( 1 ); // id 6
-					assertThat( ((Object[]) results.get( 6 ))[1] ).isEqualTo( 0 ); // id 7
-					assertThat( ((Object[]) results.get( 7 ))[1] ).isEqualTo( 3 ); // id 8
-					assertThat( ((Object[]) results.get( 8 ))[1] ).isEqualTo( 0 ); // id 9
-					assertThat( ((Object[]) results.get( 9 ))[1] ).isEqualTo( 1 ); // id 10
-					assertThat( ((Object[]) results.get( 10 ))[1] ).isEqualTo( 0 ); // id 11
-					assertThat( ((Object[]) results.get( 11 ))[1] ).isEqualTo( 2 ); // id 12
-					assertThat( ((Object[]) results.get( 12 ))[1] ).isEqualTo( 0 ); // id 13
-					assertThat( ((Object[]) results.get( 13 ))[1] ).isEqualTo( 0 ); // id 14
+					assertThat( results2.size() ).isEqualTo( 14 );
+					assertThat( results2.get( 0 )[1] ).isEqualTo( 0 ); // id 1
+					assertThat( results2.get( 1 )[1] ).isEqualTo( 1 ); // id 2
+					assertThat( results2.get( 2 )[1] ).isEqualTo( 0 ); // id 3
+					assertThat( results2.get( 3 )[1] ).isEqualTo( 2 ); // id 4
+					assertThat( results2.get( 4 )[1] ).isEqualTo( 0 ); // id 5
+					assertThat( results2.get( 5 )[1] ).isEqualTo( 1 ); // id 6
+					assertThat( results2.get( 6 )[1] ).isEqualTo( 0 ); // id 7
+					assertThat( results2.get( 7 )[1] ).isEqualTo( 3 ); // id 8
+					assertThat( results2.get( 8 )[1] ).isEqualTo( 0 ); // id 9
+					assertThat( results2.get( 9 )[1] ).isEqualTo( 1 ); // id 10
+					assertThat( results2.get( 10 )[1] ).isEqualTo( 0 ); // id 11
+					assertThat( results2.get( 11 )[1] ).isEqualTo( 2 ); // id 12
+					assertThat( results2.get( 12 )[1] ).isEqualTo( 0 ); // id 13
+					assertThat( results2.get( 13 )[1] ).isEqualTo( 0 ); // id 14
 
 					// The following query results will depend on #intValue
-					results = session.createQuery(
+					results2 = session.createQuery(
 									"select p.id, size( descendants ) " +
 									"from Animal p " +
 									"left outer join p.offspring descendants " +
 									"where descendants.intValue > 1 " +
-									"group by p.id order by p.id" )
+									"group by p.id order by p.id", Object[].class )
 							.list();
 
 					// Expect results for ids:        				4, 6, 8, 10, 12
 					// Expected size(descendants.initValue > 1):    1, 1, 2,  1,  2
-					assertThat( results.size() ).isEqualTo( 5 );
-					assertThat( ((Object[]) results.get( 0 ))[1] ).isEqualTo( 1 );
-					assertThat( ((Object[]) results.get( 1 ))[1] ).isEqualTo( 1 );
-					assertThat( ((Object[]) results.get( 2 ))[1] ).isEqualTo( 2 );
-					assertThat( ((Object[]) results.get( 3 ))[1] ).isEqualTo( 1 );
-					assertThat( ((Object[]) results.get( 4 ))[1] ).isEqualTo( 2 );
+					assertThat( results2.size() ).isEqualTo( 5 );
+					assertThat( results2.get( 0 )[1] ).isEqualTo( 1 );
+					assertThat( results2.get( 1 )[1] ).isEqualTo( 1 );
+					assertThat( results2.get( 2 )[1] ).isEqualTo( 2 );
+					assertThat( results2.get( 3 )[1] ).isEqualTo( 1 );
+					assertThat( results2.get( 4 )[1] ).isEqualTo( 2 );
 				}
 		);
 	}
@@ -1834,7 +1834,7 @@ public class ASTParserLoadingTest {
 		// the shallow version of the query plan to get the metadata.
 		scope.inSession(
 				session -> {
-					final Query query = session.createQuery( "from Animal a inner join fetch a.mother" );
+					final var query = session.createQuery( "from Animal a inner join fetch a.mother", Animal.class );
 					final SqmSelectStatement<?> sqmStatement =
 							(SqmSelectStatement<?>) query.unwrap( SqmStatementAccess.class ).getSqmStatement();
 					assertThat( sqmStatement.getQuerySpec().getSelectClause().getSelections().size() ).isEqualTo( 1 );
@@ -1873,7 +1873,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					List results = session.createQuery(
-							"from Zoo zoo where zoo.mammals['tiger'].mother.bodyWeight > 3.0f" ).list();
+							"from Zoo zoo where zoo.mammals['tiger'].mother.bodyWeight > 3.0f", Zoo.class ).list();
 					assertThat( results.size() ).isEqualTo( 1 );
 				}
 		);
@@ -1884,7 +1884,7 @@ public class ASTParserLoadingTest {
 		// note: simply performing syntax checking in the db
 		scope.inTransaction(
 				session ->
-						session.createQuery( "select h from Human as h join fetch h.nickNames" ).list()
+						session.createQuery( "select h from Human as h join fetch h.nickNames", Human.class ).list()
 		);
 	}
 
@@ -1893,13 +1893,13 @@ public class ASTParserLoadingTest {
 		// note: simply performing syntax checking in the db
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Foo where long = 1" ).list();
-					session.createQuery( "from Foo where long = " + Integer.MIN_VALUE ).list();
-					session.createQuery( "from Foo where long = " + Integer.MAX_VALUE ).list();
-					session.createQuery( "from Foo where long = 1L" ).list();
-					session.createQuery( "from Foo where long = " + (Long.MIN_VALUE + 1) + "L" ).list();
-					session.createQuery( "from Foo where long = " + Long.MAX_VALUE + "L" ).list();
-					session.createQuery( "from Foo where integer = " + (Long.MIN_VALUE + 1) ).list();
+					session.createQuery( "from Foo where long = 1", Object.class ).list();
+					session.createQuery( "from Foo where long = " + Integer.MIN_VALUE, Object.class ).list();
+					session.createQuery( "from Foo where long = " + Integer.MAX_VALUE, Object.class ).list();
+					session.createQuery( "from Foo where long = 1L", Object.class ).list();
+					session.createQuery( "from Foo where long = " + (Long.MIN_VALUE + 1) + "L", Object.class ).list();
+					session.createQuery( "from Foo where long = " + Long.MAX_VALUE + "L", Object.class ).list();
+					session.createQuery( "from Foo where integer = " + (Long.MIN_VALUE + 1), Object.class ).list();
 				}
 		);
 	}
@@ -1909,16 +1909,16 @@ public class ASTParserLoadingTest {
 		// note: simply performing syntax checking in the db
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Animal where bodyWeight > 100.0e-10" ).list();
-					session.createQuery( "from Animal where bodyWeight > 100.0E-10" ).list();
-					session.createQuery( "from Animal where bodyWeight > 100.001f" ).list();
-					session.createQuery( "from Animal where bodyWeight > 100.001F" ).list();
-					session.createQuery( "from Animal where bodyWeight > 100.001d" ).list();
-					session.createQuery( "from Animal where bodyWeight > 100.001D" ).list();
-					session.createQuery( "from Animal where bodyWeight > .001f" ).list();
-					session.createQuery( "from Animal where bodyWeight > 100e-10" ).list();
-					session.createQuery( "from Animal where bodyWeight > .01E-10" ).list();
-					session.createQuery( "from Animal where bodyWeight > 1e-38" ).list();
+					session.createQuery( "from Animal where bodyWeight > 100.0e-10", Animal.class ).list();
+					session.createQuery( "from Animal where bodyWeight > 100.0E-10", Animal.class ).list();
+					session.createQuery( "from Animal where bodyWeight > 100.001f", Animal.class ).list();
+					session.createQuery( "from Animal where bodyWeight > 100.001F", Animal.class ).list();
+					session.createQuery( "from Animal where bodyWeight > 100.001d", Animal.class ).list();
+					session.createQuery( "from Animal where bodyWeight > 100.001D", Animal.class ).list();
+					session.createQuery( "from Animal where bodyWeight > .001f", Animal.class ).list();
+					session.createQuery( "from Animal where bodyWeight > 100e-10", Animal.class ).list();
+					session.createQuery( "from Animal where bodyWeight > .01E-10", Animal.class ).list();
+					session.createQuery( "from Animal where bodyWeight > 1e-38", Animal.class ).list();
 				}
 		);
 	}
@@ -1928,9 +1928,9 @@ public class ASTParserLoadingTest {
 		// note: simply performing syntax and column/table resolution checking in the db
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Animal where bodyWeight = bodyWeight" ).list();
-					session.createQuery( "select bodyWeight from Animal" ).list();
-					session.createQuery( "select max(bodyWeight) from Animal" ).list();
+					session.createQuery( "from Animal where bodyWeight = bodyWeight", Animal.class ).list();
+					session.createQuery( "select bodyWeight from Animal", Object.class ).list();
+					session.createQuery( "select max(bodyWeight) from Animal", Object.class ).list();
 				}
 		);
 	}
@@ -1940,10 +1940,10 @@ public class ASTParserLoadingTest {
 		// note: simply performing syntax and column/table resolution checking in the db
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Human where name.first = 'Gavin'" ).list();
-					session.createQuery( "select name from Human" ).list();
-					session.createQuery( "select upper(h.name.first) from Human as h" ).list();
-					session.createQuery( "select upper(name.first) from Human" ).list();
+					session.createQuery( "from Human where name.first = 'Gavin'", Human.class ).list();
+					session.createQuery( "select name from Human", Object.class ).list();
+					session.createQuery( "select upper(h.name.first) from Human as h", String.class ).list();
+					session.createQuery( "select upper(name.first) from Human", String.class ).list();
 				}
 		);
 	}
@@ -1953,7 +1953,7 @@ public class ASTParserLoadingTest {
 		// note: simply performing syntax and column/table resolution checking in the db
 		scope.inTransaction(
 				session ->
-						session.createQuery( "from Animal where mother.father.id = 1" ).list()
+						session.createQuery( "from Animal where mother.father.id = 1", Animal.class ).list()
 		);
 	}
 
@@ -1963,10 +1963,10 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					if ( session.getDialect() instanceof HANADialect ) {
-						session.createQuery( "from Animal where mother is null" ).list();
+						session.createQuery( "from Animal where mother is null", Animal.class ).list();
 					}
 					else {
-						session.createQuery( "from Animal where mother = :mother" ).setParameter( "mother", null )
+						session.createQuery( "from Animal where mother = :mother", Animal.class ).setParameter( "mother", null )
 								.list();
 					}
 				}
@@ -1978,7 +1978,7 @@ public class ASTParserLoadingTest {
 		// note: simply performing syntax and column/table resolution checking in the db
 		scope.inTransaction(
 				session ->
-						session.createQuery( "from Zoo where mammals['dog'].description like '%black%'" ).list()
+						session.createQuery( "from Zoo where mammals['dog'].description like '%black%'", Zoo.class ).list()
 
 		);
 	}
@@ -1991,7 +1991,7 @@ public class ASTParserLoadingTest {
 							s,
 							session -> {
 								try {
-									s.createQuery( "select mother from Human a left join fetch a.mother mother" )
+									s.createQuery( "select mother from Human a left join fetch a.mother mother", Human.class )
 											.list();
 									fail( "invalid fetch semantic allowed!" );
 								}
@@ -2007,7 +2007,7 @@ public class ASTParserLoadingTest {
 							s,
 							session -> {
 								try {
-									s.createQuery( "select mother from Human a left join fetch a.mother mother" )
+									s.createQuery( "select mother from Human a left join fetch a.mother mother", Human.class )
 											.list();
 									fail( "invalid fetch semantic allowed!" );
 								}
@@ -2029,8 +2029,8 @@ public class ASTParserLoadingTest {
 					Zoo zoo = new Zoo();
 					zoo.setName( "Melbourne Zoo" );
 					session.persist( zoo );
-					session.createQuery( "select 2*2*2*2*(2*2) from Zoo" ).uniqueResult();
-					session.createQuery( "select 2 / (1+1) from Zoo" ).uniqueResult();
+					session.createQuery( "select 2*2*2*2*(2*2) from Zoo", Object.class ).uniqueResult();
+					session.createQuery( "select 2 / (1+1) from Zoo", Object.class ).uniqueResult();
 					int result0 = session.createQuery( "select 2 - (1+1) from Zoo", Integer.class ).uniqueResult();
 					int result1 = session.createQuery( "select 2 - 1 + 1 from Zoo", Integer.class ).uniqueResult();
 					int result2 = session.createQuery( "select 2 * (1-1) from Zoo", Integer.class ).uniqueResult();
@@ -2054,13 +2054,13 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					session.createQuery(
-									"from Animal a left join fetch a.offspring o left join fetch o.offspring where a.mother.id = 1 order by a.description" )
+									"from Animal a left join fetch a.offspring o left join fetch o.offspring where a.mother.id = 1 order by a.description", Animal.class )
 							.list();
 					session.createQuery(
-									"from Zoo z left join fetch z.animals a left join fetch a.offspring where z.name ='MZ' order by a.description" )
+									"from Zoo z left join fetch z.animals a left join fetch a.offspring where z.name ='MZ' order by a.description", Zoo.class )
 							.list();
 					session.createQuery(
-									"from Human h left join fetch h.pets a left join fetch a.offspring where h.name.first ='Gavin' order by a.description" )
+									"from Human h left join fetch h.pets a left join fetch a.offspring where h.name.first ='Gavin' order by a.description", Human.class )
 							.list();
 				}
 		);
@@ -2086,8 +2086,8 @@ public class ASTParserLoadingTest {
 					session.persist( plat );
 					session.persist( zoo );
 
-					session.createQuery( "select (select max(z.id) from a.zoo z) from Animal a" ).list();
-					session.createQuery( "select (select max(z.id) from a.zoo z where z.name=:name) from Animal a" )
+					session.createQuery( "select (select max(z.id) from a.zoo z) from Animal a", Object.class ).list();
+					session.createQuery( "select (select max(z.id) from a.zoo z where z.name=:name) from Animal a", Object.class )
 							.setParameter( "name", "Melbourne Zoo" ).list();
 
 					session.remove( plat );
@@ -2108,7 +2108,7 @@ public class ASTParserLoadingTest {
 					session.clear();
 					plat = session.getReference( Mammal.class, plat.getId() );
 					assertThat( Hibernate.isInitialized( plat ) ).isFalse();
-					Object plat2 = session.createQuery( "from Animal a" ).uniqueResult();
+					Object plat2 = session.createQuery( "from Animal a", Animal.class ).uniqueResult();
 					assertThat( plat2 ).isSameAs( plat );
 					assertThat( Hibernate.isInitialized( plat ) ).isTrue();
 				}
@@ -2136,11 +2136,11 @@ public class ASTParserLoadingTest {
 					session.flush();
 					session.clear();
 
-					Query q = session.createQuery( "select distinct a.zoo from Animal a where a.zoo is not null" );
+					var q = session.createQuery( "select distinct a.zoo from Animal a where a.zoo is not null", Zoo.class );
 
 					verifyAnimalZooSelection( q );
 
-					zoo = (Zoo) q.list().get( 0 );
+					zoo = q.list().get( 0 );
 					assertThat( zoo.getMammals().size() ).isEqualTo( 1 );
 					assertThat( zoo.getAnimals().size() ).isEqualTo( 1 );
 				}
@@ -2203,12 +2203,12 @@ public class ASTParserLoadingTest {
 					session.flush();
 					session.clear();
 
-					Query q = session.createQuery(
-							"select a.zoo from Animal a where a.zoo is not null order by a.zoo.name" );
+					var q = session.createQuery(
+							"select a.zoo from Animal a where a.zoo is not null order by a.zoo.name", Zoo.class );
 
 					verifyAnimalZooSelection( q );
 
-					List<Zoo> zoos = (List<Zoo>) q.list();
+					List<Zoo> zoos = q.list();
 					assertThat( zoos.size() ).isEqualTo( 2 );
 					assertThat( zoos.get( 0 ).getName() ).isEqualTo( otherZoo.getName() );
 					assertThat( zoos.get( 0 ).getMammals().size() ).isEqualTo( 2 );
@@ -2262,12 +2262,12 @@ public class ASTParserLoadingTest {
 					session.flush();
 					session.clear();
 
-					Query q = session.createQuery(
-							"select distinct a.zoo from Animal a where a.zoo is not null order by a.zoo.name" );
+					var q = session.createQuery(
+							"select distinct a.zoo from Animal a where a.zoo is not null order by a.zoo.name", Zoo.class );
 
 					verifyAnimalZooSelection( q );
 
-					List<Zoo> zoos = (List<Zoo>) q.list();
+					List<Zoo> zoos = q.list();
 					assertThat( zoos.size() ).isEqualTo( 2 );
 					assertThat( zoos.get( 0 ).getName() ).isEqualTo( otherZoo.getName() );
 					assertThat( zoos.get( 0 ).getMammals().size() ).isEqualTo( 2 );
@@ -2300,11 +2300,11 @@ public class ASTParserLoadingTest {
 					session.flush();
 					session.clear();
 
-					Query q = session.createQuery( "select distinct a.zoo from Animal a where a.zoo is not null" );
+					var q = session.createQuery( "select distinct a.zoo from Animal a where a.zoo is not null", Zoo.class );
 
 					verifyAnimalZooSelection( q );
 
-					zoo = (Zoo) q.list().iterator().next();
+					zoo = q.list().iterator().next();
 					assertThat( zoo.getMammals().size() ).isEqualTo( 1 );
 					assertThat( zoo.getAnimals().size() ).isEqualTo( 1 );
 				}
@@ -2325,7 +2325,7 @@ public class ASTParserLoadingTest {
 					session.flush();
 
 					// the component is defined with the firstName column first...
-					List results = session.createQuery( "from Human as h order by h.name" ).list();
+					List results = session.createQuery( "from Human as h order by h.name", Human.class ).list();
 					assertThat( results.size() ).as( "Incorrect return count" ).isEqualTo( 2 );
 
 					Human h1 = (Human) results.get( 0 );
@@ -2350,14 +2350,14 @@ public class ASTParserLoadingTest {
 					session.flush();
 
 					// Check order via SQL. Numbers are negated in the DB, so second comes first.
-					List listViaSql = session.createNativeQuery( "select ID from SIMPLE_1 order by negated_num" )
+					List listViaSql = session.createNativeQuery( "select ID from SIMPLE_1 order by negated_num", Object.class )
 							.list();
 					assertThat( listViaSql.size() ).isEqualTo( 2 );
 					assertThat( ((Number) listViaSql.get( 0 )).longValue() ).isEqualTo( second.getId().longValue() );
 					assertThat( ((Number) listViaSql.get( 1 )).longValue() ).isEqualTo( first.getId().longValue() );
 
 					// Check order via HQL. Now first comes first b/c the read negates the DB negation.
-					List listViaHql = session.createQuery( "from SimpleEntityWithAssociation order by negatedNumber" )
+					List listViaHql = session.createQuery( "from SimpleEntityWithAssociation order by negatedNumber", SimpleEntityWithAssociation.class )
 							.list();
 					assertThat( listViaHql.size() ).isEqualTo( 2 );
 					assertThat( ((SimpleEntityWithAssociation) listViaHql.get( 0 )).getId() )
@@ -2387,9 +2387,9 @@ public class ASTParserLoadingTest {
 					session.flush();
 
 					// Check order via HQL. Now first comes first b/c the read negates the DB negation.
-					Number r = (Number) session.createQuery(
+					Number r = session.createQuery(
 							"select sum(negatedNumber) from SimpleEntityWithAssociation " +
-							"group by name having sum(negatedNumber) < 20" ).uniqueResult();
+							"group by name having sum(negatedNumber) < 20", Number.class ).uniqueResult();
 					assertThat( r.intValue() ).isEqualTo( 15 );
 				}
 		);
@@ -2411,7 +2411,7 @@ public class ASTParserLoadingTest {
 
 					// Value returned by Oracle is a Types.NUMERIC, which is mapped to a BigDecimalType;
 					// Cast returned value to Number then call Number.doubleValue() so it works on all dialects.
-					Double sizeViaSql = ((Number) session.createNativeQuery( "select size_mb from image" )
+					Double sizeViaSql = ((Number) session.createNativeQuery( "select size_mb from image", Object.class )
 							.uniqueResult()).doubleValue();
 					assertThat( sizeViaSql ).isEqualTo( SIZE_IN_MB, Offset.offset( 0.01d ) );
 				}
@@ -2425,7 +2425,7 @@ public class ASTParserLoadingTest {
 					session.merge( image );
 					session.flush();
 
-					Double sizeViaSql = ((Number) session.createNativeQuery( "select size_mb from image" )
+					Double sizeViaSql = ((Number) session.createNativeQuery( "select size_mb from image", Object.class )
 							.uniqueResult()).doubleValue();
 					assertThat( sizeViaSql ).isEqualTo( NEW_SIZE_IN_MB, Offset.offset( 0.01d ) );
 				}
@@ -2446,18 +2446,18 @@ public class ASTParserLoadingTest {
 					a.setBodyWeight( 12.4f );
 					a.setDescription( "an animal" );
 					session.persist( a );
-					Object bodyWeight = session.createQuery( "select cast(bodyWeight as integer) from Animal" )
+					Object bodyWeight = session.createQuery( "select cast(bodyWeight as integer) from Animal", Integer.class )
 							.uniqueResult();
 					assertThat( bodyWeight ).isInstanceOf( Integer.class );
 					assertThat( bodyWeight ).isEqualTo( 12 );
 
-					bodyWeight = session.createQuery( "select cast(bodyWeight as big_decimal) from Animal" )
+					bodyWeight = session.createQuery( "select cast(bodyWeight as big_decimal) from Animal", BigDecimal.class )
 							.uniqueResult();
 					assertThat( bodyWeight ).isInstanceOf( BigDecimal.class );
 					assertThat( ((BigDecimal) bodyWeight).floatValue() )
 							.isEqualTo( a.getBodyWeight(), Offset.offset( .01F ) );
 
-					Object literal = session.createQuery( "select cast(10000000 as big_integer) from Animal" )
+					Object literal = session.createQuery( "select cast(10000000 as big_integer) from Animal", BigInteger.class )
 							.uniqueResult();
 					assertThat( literal ).isInstanceOf( BigInteger.class );
 					assertThat( literal ).isEqualTo( BigInteger.valueOf( 10000000 ) );
@@ -2477,94 +2477,94 @@ public class ASTParserLoadingTest {
 					Object result;
 
 					// addition ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-					result = session.createQuery( "select 1 + 1 from Animal as a" ).uniqueResult();
+					result = session.createQuery( "select 1 + 1 from Animal as a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( Integer.class );
 					assertThat( result ).isEqualTo( 2 );
 
-					result = session.createQuery( "select 1 + 1L from Animal a" ).uniqueResult();
+					result = session.createQuery( "select 1 + 1L from Animal a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( Long.class );
 					assertThat( result ).isEqualTo( 2L );
 
-					result = session.createQuery( "select 1 + 1BI from Animal a" ).uniqueResult();
+					result = session.createQuery( "select 1 + 1BI from Animal a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( BigInteger.class );
 					assertThat( result ).isEqualTo( BigInteger.valueOf( 2 ) );
 
-					result = session.createQuery( "select 1 + 1F from Animal a" ).uniqueResult();
+					result = session.createQuery( "select 1 + 1F from Animal a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( Float.class );
 					assertThat( result ).isEqualTo( 2F );
 
-					result = session.createQuery( "select 1 + 1D from Animal a" ).uniqueResult();
+					result = session.createQuery( "select 1 + 1D from Animal a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( Double.class );
 					assertThat( result ).isEqualTo( 2D );
 
-					result = session.createQuery( "select 1 + 1BD from Animal a" ).uniqueResult();
+					result = session.createQuery( "select 1 + 1BD from Animal a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( BigDecimal.class );
 					assertThat( result ).isEqualTo( BigDecimal.valueOf( 2 ) );
 
-					result = session.createQuery( "select 1F + 1D from Animal a" ).uniqueResult();
+					result = session.createQuery( "select 1F + 1D from Animal a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( Double.class );
 					assertThat( result ).isEqualTo( 2D );
 
-					result = session.createQuery( "select 1F + 1BD from Animal a" ).uniqueResult();
+					result = session.createQuery( "select 1F + 1BD from Animal a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( Float.class );
 					assertThat( result ).isEqualTo( 2F );
 
 					// subtraction ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-					result = session.createQuery( "select 1 - 1 from Animal as a" ).uniqueResult();
+					result = session.createQuery( "select 1 - 1 from Animal as a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( Integer.class );
 					assertThat( result ).isEqualTo( 0 );
 
-					result = session.createQuery( "select 1 - 1L from Animal a" ).uniqueResult();
+					result = session.createQuery( "select 1 - 1L from Animal a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( Long.class );
 					assertThat( result ).isEqualTo( 0L );
 
-					result = session.createQuery( "select 1 - 1BI from Animal a" ).uniqueResult();
+					result = session.createQuery( "select 1 - 1BI from Animal a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( BigInteger.class );
 					assertThat( result ).isEqualTo( BigInteger.valueOf( 0 ) );
 
-					result = session.createQuery( "select 1 - 1F from Animal a" ).uniqueResult();
+					result = session.createQuery( "select 1 - 1F from Animal a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( Float.class );
 					assertThat( result ).isEqualTo( 0F );
 
-					result = session.createQuery( "select 1 - 1D from Animal a" ).uniqueResult();
+					result = session.createQuery( "select 1 - 1D from Animal a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( Double.class );
 					assertThat( result ).isEqualTo( 0D );
 
-					result = session.createQuery( "select 1 - 1BD from Animal a" ).uniqueResult();
+					result = session.createQuery( "select 1 - 1BD from Animal a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( BigDecimal.class );
 					assertThat( result ).isEqualTo( BigDecimal.valueOf( 0 ) );
 
-					result = session.createQuery( "select 1F - 1D from Animal a" ).uniqueResult();
+					result = session.createQuery( "select 1F - 1D from Animal a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( Double.class );
 					assertThat( result ).isEqualTo( 0D );
 
-					result = session.createQuery( "select 1F - 1BD from Animal a" ).uniqueResult();
+					result = session.createQuery( "select 1F - 1BD from Animal a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( Float.class );
 					assertThat( result ).isEqualTo( 0F );
 
 					// multiplication ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-					result = session.createQuery( "select 1 * 1 from Animal as a" ).uniqueResult();
+					result = session.createQuery( "select 1 * 1 from Animal as a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( Integer.class );
 					assertThat( result ).isEqualTo( 1 );
 
-					result = session.createQuery( "select 1 * 1L from Animal a" ).uniqueResult();
+					result = session.createQuery( "select 1 * 1L from Animal a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( Long.class );
 					assertThat( result ).isEqualTo( 1L );
 
-					result = session.createQuery( "select 1 * 1BI from Animal a" ).uniqueResult();
+					result = session.createQuery( "select 1 * 1BI from Animal a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( BigInteger.class );
 					;
 					assertThat( result ).isEqualTo( BigInteger.valueOf( 1 ) );
 
-					result = session.createQuery( "select 1 * 1F from Animal a" ).uniqueResult();
+					result = session.createQuery( "select 1 * 1F from Animal a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( Float.class );
 					assertThat( result ).isEqualTo( 1F );
 
-					result = session.createQuery( "select 1 * 1D from Animal a" ).uniqueResult();
+					result = session.createQuery( "select 1 * 1D from Animal a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( Double.class );
 					assertThat( result ).isEqualTo( 1D );
 
-					result = session.createQuery( "select 1 * 1BD from Animal a" ).uniqueResult();
+					result = session.createQuery( "select 1 * 1BD from Animal a", Object.class ).uniqueResult();
 					assertThat( result ).isInstanceOf( BigDecimal.class );
 					assertThat( result ).isEqualTo( BigDecimal.valueOf( 1 ) );
 				}
@@ -2580,7 +2580,7 @@ public class ASTParserLoadingTest {
 					a.setDescription( "an animal" );
 					session.persist( a );
 
-					Query<?> q = session.createQuery( "select a.bodyWeight as abw, a.description from Animal a" );
+					Query<?> q = session.createQuery( "select a.bodyWeight as abw, a.description from Animal a", Object[].class );
 					SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) q.unwrap( SqmStatementAccess.class )
 							.getSqmStatement();
 					List<SqmSelection<?>> selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
@@ -2588,7 +2588,7 @@ public class ASTParserLoadingTest {
 					assertThat( selections.get( 0 ).getAlias() ).isEqualTo( "abw" );
 					assertThat( selections.get( 1 ).getAlias() ).isNull();
 
-					q = session.createQuery( "select count(*), avg(a.bodyWeight) as avg from Animal a" );
+					q = session.createQuery( "select count(*), avg(a.bodyWeight) as avg from Animal a", Object[].class );
 					sqmStatement = (SqmSelectStatement<?>) q.unwrap( SqmStatementAccess.class ).getSqmStatement();
 					selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
 					assertThat( selections.size() ).isEqualTo( 2 );
@@ -2616,7 +2616,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session ->
 						session.createQuery(
-										"from Animal a where a.description = ?1 and a.bodyWeight = ?2 or a.bodyWeight = :bw" )
+										"from Animal a where a.description = ?1 and a.bodyWeight = ?2 or a.bodyWeight = :bw", Animal.class )
 								.setParameter( 1, "something" )
 								.setParameter( 2, 12345f )
 								.setParameter( "bw", 123f )
@@ -2629,11 +2629,11 @@ public class ASTParserLoadingTest {
 	public void testOrdinalParameters(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Animal a where a.description = ?1 and a.bodyWeight = ?2" )
+					session.createQuery( "from Animal a where a.description = ?1 and a.bodyWeight = ?2", Animal.class )
 							.setParameter( 1, "something" )
 							.setParameter( 2, 123f )
 							.list();
-					session.createQuery( "from Animal a where a.bodyWeight in (?1, ?2)" )
+					session.createQuery( "from Animal a where a.bodyWeight in (?1, ?2)", Animal.class )
 							.setParameter( 1, 999f )
 							.setParameter( 2, 123f )
 							.list();
@@ -2645,15 +2645,15 @@ public class ASTParserLoadingTest {
 	public void testIndexParams(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Zoo zoo where zoo.mammals[:name].id = :id" )
+					session.createQuery( "from Zoo zoo where zoo.mammals[:name].id = :id", Zoo.class )
 							.setParameter( "name", "Walrus" )
 							.setParameter( "id", Long.valueOf( 123 ) )
 							.list();
-					session.createQuery( "from Zoo zoo where zoo.mammals[:name].bodyWeight > :w" )
+					session.createQuery( "from Zoo zoo where zoo.mammals[:name].bodyWeight > :w", Zoo.class )
 							.setParameter( "name", "Walrus" )
 							.setParameter( "w", new Float( 123.32 ) )
 							.list();
-					session.createQuery( "from Zoo zoo where zoo.animals[:sn].mother.bodyWeight < :mw" )
+					session.createQuery( "from Zoo zoo where zoo.animals[:sn].mother.bodyWeight < :mw", Zoo.class )
 							.setParameter( "sn", "ant-123" )
 							.setParameter( "mw", new Float( 23.32 ) )
 							.list();
@@ -2683,12 +2683,12 @@ public class ASTParserLoadingTest {
 					h.setName( new Name( "Gavin", 'A', "King" ) );
 					h.setNickName( "Oney" );
 					session.persist( h );
-					Double sum = (Double) session.createQuery( "select sum(h.bodyWeight) from Human h" ).uniqueResult();
-					Double avg = (Double) session.createQuery( "select avg(h.heightInches) from Human h" )
+					Double sum = session.createQuery( "select sum(h.bodyWeight) from Human h", Double.class ).uniqueResult();
+					Double avg = session.createQuery( "select avg(h.heightInches) from Human h", Double.class )
 							.uniqueResult();    // uses custom read and write for column
 					assertThat( sum.floatValue() ).isEqualTo( 74.0F, Offset.offset( 0.01F ) );
 					assertThat( avg.doubleValue() ).isEqualTo( 120.5D, Offset.offset( 0.01D ) );
-					Long id = (Long) session.createQuery( "select max(a.id) from Animal a" ).uniqueResult();
+					Long id = session.createQuery( "select max(a.id) from Animal a", Long.class ).uniqueResult();
 					assertThat( id ).isNotNull();
 					session.remove( h );
 				}
@@ -2705,8 +2705,8 @@ public class ASTParserLoadingTest {
 					h2.setFloatValue( 2.5F );
 					h2.setIntValue( 2 );
 					session.persist( h2 );
-					Object[] results = (Object[]) session.createQuery(
-									"select sum(h.floatValue), avg(h.floatValue), sum(h.intValue), avg(h.intValue) from Human h" )
+					Object[] results = session.createQuery(
+									"select sum(h.floatValue), avg(h.floatValue), sum(h.intValue), avg(h.intValue) from Human h", Object[].class )
 							.uniqueResult();
 					// spec says sum() on a float or double value should result in double
 					assertThat( results[0] ).isInstanceOf( Double.class );
@@ -2735,12 +2735,12 @@ public class ASTParserLoadingTest {
 					h.setName( new Name( "Gavin", 'A', "King" ) );
 					h.setNickName( "Oney" );
 					session.persist( h );
-					String name = (String) session.createQuery(
-									"select case nickName when 'Oney' then 'gavin' when 'Turin' then 'christian' else nickName end from Human" )
+					String name = session.createQuery(
+									"select case nickName when 'Oney' then 'gavin' when 'Turin' then 'christian' else nickName end from Human", String.class )
 							.uniqueResult();
 					assertThat( name ).isEqualTo( "gavin" );
-					String result = (String) session.createQuery(
-									"select case when bodyWeight > 100 then 'fat' else 'skinny' end from Human" )
+					String result = session.createQuery(
+									"select case when bodyWeight > 100 then 'fat' else 'skinny' end from Human", String.class )
 							.uniqueResult();
 					assertThat( result ).isEqualTo( "skinny" );
 				}
@@ -2759,12 +2759,12 @@ public class ASTParserLoadingTest {
 					product.setProductId( "4321" );
 					session.persist( product );
 
-					List list = session.createQuery( "from java.lang.Object" ).list();
+					List list = session.createQuery( "from java.lang.Object", Object.class ).list();
 					assertThat( list.size() ).isEqualTo( 1 );
 
 					session.remove( product );
 
-					list = session.createQuery( "from java.lang.Object" ).list();
+					list = session.createQuery( "from java.lang.Object", Object.class ).list();
 					assertThat( list.size() ).isEqualTo( 0 );
 				}
 		);
@@ -2774,9 +2774,9 @@ public class ASTParserLoadingTest {
 	public void testCoalesce(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Human h where coalesce(h.nickName, h.name.first, h.name.last) = 'max'" )
+					session.createQuery( "from Human h where coalesce(h.nickName, h.name.first, h.name.last) = 'max'", Human.class )
 							.list();
-					session.createQuery( "select nullif(nickName, '1e1') from Human" ).list();
+					session.createQuery( "select nullif(nickName, '1e1') from Human", Object.class ).list();
 				}
 		);
 	}
@@ -2788,16 +2788,16 @@ public class ASTParserLoadingTest {
 					Animal an = new Animal();
 					an.setBodyWeight( 123.45f );
 					session.persist( an );
-					String str = (String) session.createQuery(
-									"select str(an.bodyWeight) from Animal an where str(an.bodyWeight) like '%1%'" )
+					String str = session.createQuery(
+									"select str(an.bodyWeight) from Animal an where str(an.bodyWeight) like '%1%'", String.class )
 							.uniqueResult();
 					BigDecimal value = new BigDecimal( str, new MathContext( 4, RoundingMode.DOWN ) );
 					assertEquals( new BigDecimal( "123.4" ), value );
 
-					String dateStr1 = (String) session.createQuery( "select str(current_date) from Animal" )
+					String dateStr1 = session.createQuery( "select str(current_date) from Animal", String.class )
 							.uniqueResult();
-					String dateStr2 = (String) session.createQuery(
-									"select str(year(current_date))||'-'||str(month(current_date))||'-'||str(day(current_date)) from Animal" )
+					String dateStr2 = session.createQuery(
+									"select str(year(current_date))||'-'||str(month(current_date))||'-'||str(day(current_date)) from Animal", String.class )
 							.uniqueResult();
 					String[] dp1 = StringHelper.split( "-", dateStr1 );
 					String[] dp2 = StringHelper.split( "-", dateStr2 );
@@ -2817,9 +2817,9 @@ public class ASTParserLoadingTest {
 	public void testCast(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Human h where h.nickName like 'G%'" ).list();
-					session.createQuery( "from Animal a where cast(a.bodyWeight as string) like '1.%'" ).list();
-					session.createQuery( "from Animal a where cast(a.bodyWeight as integer) = 1" ).list();
+					session.createQuery( "from Human h where h.nickName like 'G%'", Human.class ).list();
+					session.createQuery( "from Animal a where cast(a.bodyWeight as string) like '1.%'", Animal.class ).list();
+					session.createQuery( "from Animal a where cast(a.bodyWeight as integer) = 1", Animal.class ).list();
 				}
 		);
 	}
@@ -2829,16 +2829,16 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					session.createQuery(
-									"select second(current_timestamp()), minute(current_timestamp()), hour(current_timestamp()) from Mammal m" )
+									"select second(current_timestamp()), minute(current_timestamp()), hour(current_timestamp()) from Mammal m", Object[].class )
 							.list();
 					session.createQuery(
-							"select day(m.birthdate), month(m.birthdate), year(m.birthdate) from Mammal m" ).list();
+							"select day(m.birthdate), month(m.birthdate), year(m.birthdate) from Mammal m", Object[].class ).list();
 					if ( !(session.getDialect() instanceof DB2Dialect) ) { //no ANSI extract
 						session.createQuery(
-										"select extract(second from current_timestamp()), extract(minute from current_timestamp()), extract(hour from current_timestamp()) from Mammal m" )
+										"select extract(second from current_timestamp()), extract(minute from current_timestamp()), extract(hour from current_timestamp()) from Mammal m", Object[].class )
 								.list();
 						session.createQuery(
-										"select extract(day from m.birthdate), extract(month from m.birthdate), extract(year from m.birthdate) from Mammal m" )
+										"select extract(day from m.birthdate), extract(month from m.birthdate), extract(year from m.birthdate) from Mammal m", Object[].class )
 								.list();
 					}
 				}
@@ -2858,38 +2858,38 @@ public class ASTParserLoadingTest {
 					h.setBodyWeight( 1.0f );
 					session.persist( h );
 					List results = session.createQuery(
-									"select 'found', lower(h.name.first) from Human h where lower(h.name.first) = 'gavin'" )
+									"select 'found', lower(h.name.first) from Human h where lower(h.name.first) = 'gavin'", Object[].class )
 							.list();
 					results = session.createQuery(
-									"select 'found', lower(h.name.first) from Human h where concat(h.name.first, ' ', h.name.initial, ' ', h.name.last) = 'Gavin A King'" )
+									"select 'found', lower(h.name.first) from Human h where concat(h.name.first, ' ', h.name.initial, ' ', h.name.last) = 'Gavin A King'", Object[].class )
 							.list();
 					results = session.createQuery(
-									"select 'found', lower(h.name.first) from Human h where h.name.first||' '||h.name.initial||' '||h.name.last = 'Gavin A King'" )
+									"select 'found', lower(h.name.first) from Human h where h.name.first||' '||h.name.initial||' '||h.name.last = 'Gavin A King'", Object[].class )
 							.list();
-					results = session.createQuery( "select a.bodyWeight + m.bodyWeight from Animal a join a.mother m" )
+					results = session.createQuery( "select a.bodyWeight + m.bodyWeight from Animal a join a.mother m", Object.class )
 							.list();
 					results = session.createQuery(
-							"select 2.0 * (a.bodyWeight + m.bodyWeight) from Animal a join a.mother m" ).list();
+							"select 2.0 * (a.bodyWeight + m.bodyWeight) from Animal a join a.mother m", Object.class ).list();
 					results = session.createQuery(
-							"select sum(a.bodyWeight + m.bodyWeight) from Animal a join a.mother m" ).list();
-					results = session.createQuery( "select sum(a.mother.bodyWeight * 2.0) from Animal a" ).list();
+							"select sum(a.bodyWeight + m.bodyWeight) from Animal a join a.mother m", Object.class ).list();
+					results = session.createQuery( "select sum(a.mother.bodyWeight * 2.0) from Animal a", Object.class ).list();
 					results = session.createQuery(
-							"select concat(h.name.first, ' ', h.name.initial, ' ', h.name.last) from Human h" ).list();
+							"select concat(h.name.first, ' ', h.name.initial, ' ', h.name.last) from Human h", String.class ).list();
 					results = session.createQuery(
-							"select h.name.first||' '||h.name.initial||' '||h.name.last from Human h" ).list();
-					results = session.createQuery( "select nickName from Human" ).list();
-					results = session.createQuery( "select lower(nickName) from Human" ).list();
-					results = session.createQuery( "select abs(bodyWeight*-1) from Human" ).list();
-					results = session.createQuery( "select upper(h.name.first||' ('||h.nickName||')') from Human h" )
+							"select h.name.first||' '||h.name.initial||' '||h.name.last from Human h", String.class ).list();
+					results = session.createQuery( "select nickName from Human", String.class ).list();
+					results = session.createQuery( "select lower(nickName) from Human", String.class ).list();
+					results = session.createQuery( "select abs(bodyWeight*-1) from Human", Object.class ).list();
+					results = session.createQuery( "select upper(h.name.first||' ('||h.nickName||')') from Human h", String.class )
 							.list();
-					results = session.createQuery( "select abs(a.bodyWeight-:param) from Animal a" )
+					results = session.createQuery( "select abs(a.bodyWeight-:param) from Animal a", Object.class )
 							.setParameter( "param", new Float( 2.0 ) ).list();
-					results = session.createQuery( "select abs(:param - a.bodyWeight) from Animal a" )
+					results = session.createQuery( "select abs(:param - a.bodyWeight) from Animal a", Object.class )
 							.setParameter( "param", new Float( 2.0 ) ).list();
-					results = session.createQuery( "select lower(upper('foo')) from Animal" ).list();
-					results = session.createQuery( "select lower(upper('foo') || upper('bar')) from Animal" ).list();
+					results = session.createQuery( "select lower(upper('foo')) from Animal", String.class ).list();
+					results = session.createQuery( "select lower(upper('foo') || upper('bar')) from Animal", String.class ).list();
 					results = session.createQuery(
-							"select sum(abs(bodyWeight - 1.0) * abs(length('ffobar')-3)) from Animal" ).list();
+							"select sum(abs(bodyWeight - 1.0) * abs(length('ffobar')-3)) from Animal", Object.class ).list();
 					session.remove( h );
 				}
 		);
@@ -2945,10 +2945,10 @@ public class ASTParserLoadingTest {
 					session.persist( b );
 					session.persist( mother );
 					List list = session.createQuery(
-							"from Animal a where a.mother.bodyWeight < 2.0 or a.mother.bodyWeight > 9.0" ).list();
+							"from Animal a where a.mother.bodyWeight < 2.0 or a.mother.bodyWeight > 9.0", Animal.class ).list();
 					assertThat( list.size() ).isEqualTo( 2 );
 					list = session.createQuery(
-							"from Animal a where a.mother.bodyWeight > 2.0 and a.mother.bodyWeight > 9.0" ).list();
+							"from Animal a where a.mother.bodyWeight > 2.0 and a.mother.bodyWeight > 9.0", Animal.class ).list();
 					assertThat( list.size() ).isEqualTo( 2 );
 					session.remove( b );
 					session.remove( a );
@@ -2962,7 +2962,7 @@ public class ASTParserLoadingTest {
 		createTestBaseData( scope );
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "from Animal" ).list();
+					List results = session.createQuery( "from Animal", Animal.class ).list();
 					assertThat( results.size() ).isEqualTo( 2 );
 					assertThat( results.get( 0 ) ).isInstanceOf( Animal.class );
 
@@ -2976,7 +2976,7 @@ public class ASTParserLoadingTest {
 		createTestBaseData( scope );
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "select a from Animal as a" ).list();
+					List results = session.createQuery( "select a from Animal as a", Animal.class ).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
 					assertThat( results.get( 0 ) ).as( "Incorrect result type" ).isInstanceOf( Animal.class );
 				}
@@ -2989,7 +2989,7 @@ public class ASTParserLoadingTest {
 		createTestBaseData( scope );
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "select a.mother from Animal as a" ).list();
+					List results = session.createQuery( "select a.mother from Animal as a", Animal.class ).list();
 					assertThat( results.get( 0 ) ).as( "Incorrect result return type" ).isInstanceOf( Animal.class );
 				}
 		);
@@ -3002,23 +3002,23 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "from Animal an where an.bodyWeight > 10" ).list();
+					List results = session.createQuery( "from Animal an where an.bodyWeight > 10", Animal.class ).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 1 );
 
-					results = session.createQuery( "from Animal an where not an.bodyWeight > 10" ).list();
+					results = session.createQuery( "from Animal an where not an.bodyWeight > 10", Animal.class ).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 1 );
 
-					results = session.createQuery( "from Animal an where an.bodyWeight between 0 and 10" ).list();
+					results = session.createQuery( "from Animal an where an.bodyWeight between 0 and 10", Animal.class ).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 1 );
 
-					results = session.createQuery( "from Animal an where an.bodyWeight not between 0 and 10" ).list();
+					results = session.createQuery( "from Animal an where an.bodyWeight not between 0 and 10", Animal.class ).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 1 );
 
-					results = session.createQuery( "from Animal an where sqrt(an.bodyWeight)/2 > 10" ).list();
+					results = session.createQuery( "from Animal an where sqrt(an.bodyWeight)/2 > 10", Animal.class ).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 0 );
 
 					results = session.createQuery(
-									"from Animal an where (an.bodyWeight > 10 and an.bodyWeight < 100) or an.bodyWeight is null" )
+									"from Animal an where (an.bodyWeight > 10 and an.bodyWeight < 100) or an.bodyWeight is null", Animal.class )
 							.list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 1 );
 				}
@@ -3032,14 +3032,14 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "from Animal an join fetch an.mother" ).list();
+					List results = session.createQuery( "from Animal an join fetch an.mother", Animal.class ).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 1 );
 					assertThat( results.get( 0 ) ).as( "Incorrect result return type" ).isInstanceOf( Animal.class );
 					Animal mother = ((Animal) results.get( 0 )).getMother();
 					assertThat( mother != null && Hibernate.isInitialized( mother ) ).as( "fetch uninitialized" )
 							.isTrue();
 
-					results = session.createQuery( "select an from Animal an join fetch an.mother" ).list();
+					results = session.createQuery( "select an from Animal an join fetch an.mother", Animal.class ).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 1 );
 					assertThat( results.get( 0 ) ).as( "Incorrect result return type" ).isInstanceOf( Animal.class );
 					mother = ((Animal) results.get( 0 )).getMother();
@@ -3057,14 +3057,14 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "from Animal an join fetch an.offspring" ).list();
+					List results = session.createQuery( "from Animal an join fetch an.offspring", Animal.class ).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 1 );
 					assertThat( results.get( 0 ) ).as( "Incorrect result return type" ).isInstanceOf( Animal.class );
 					Collection os = ((Animal) results.get( 0 )).getOffspring();
 					assertThat( os != null && Hibernate.isInitialized( os ) && os.size() == 1 )
 							.as( "fetch uninitialized" ).isTrue();
 
-					results = session.createQuery( "select an from Animal an join fetch an.offspring" ).list();
+					results = session.createQuery( "select an from Animal an join fetch an.offspring", Animal.class ).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 1 );
 					assertThat( results.get( 0 ) ).as( "Incorrect result return type" ).isInstanceOf( Animal.class );
 					os = ((Animal) results.get( 0 )).getOffspring();
@@ -3095,7 +3095,7 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "from Zoo z join fetch z.mammals" ).list();
+					List results = session.createQuery( "from Zoo z join fetch z.mammals", Zoo.class ).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 1 );
 					assertThat( results.get( 0 ) ).as( "Incorrect result return type" ).isInstanceOf( Zoo.class );
 					Zoo zooRead = (Zoo) results.get( 0 );
@@ -3126,7 +3126,7 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "select z, m from Zoo z join z.mammals m" ).list();
+					List results = session.createQuery( "select z, m from Zoo z join z.mammals m", Object[].class ).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 1 );
 					assertThat( results.get( 0 ) ).as( "Incorrect result return type" ).isInstanceOf( Object[].class );
 
@@ -3158,7 +3158,7 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "select z, m from Zoo z join z.mammals m" ).list();
+					List results = session.createQuery( "select z, m from Zoo z join z.mammals m", Object[].class ).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 1 );
 					assertThat( results.get( 0 ) ).as( "Incorrect result return type" ).isInstanceOf( Object[].class );
 					Object[] resultObjects = (Object[]) results.get( 0 );
@@ -3177,7 +3177,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					List results = session.createQuery(
-							"select an.mother.id, max(an.bodyWeight) from Animal an group by an.mother.id" ).list();
+							"select an.mother.id, max(an.bodyWeight) from Animal an group by an.mother.id", Object[].class ).list();
 					// mysql returns nulls in this group by
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
 					assertThat( results.get( 0 ) ).as( "Incorrect result return type" ).isInstanceOf( Object[].class );
@@ -3199,8 +3199,8 @@ public class ASTParserLoadingTest {
 					p.setPrice( new BigDecimal( 1.0 ) );
 					p.setProductId( "abc123" );
 					session.persist( p );
-					Object[] result = (Object[]) session
-							.createQuery( "select current_time(), current_date(), current_timestamp() from Product" )
+					Object[] result = session
+							.createQuery( "select current_time(), current_date(), current_timestamp() from Product", Object[].class )
 							.uniqueResult();
 					assertThat( result[0] ).isInstanceOf( Time.class );
 					assertThat( result[1] ).isInstanceOf( Date.class );
@@ -3219,17 +3219,17 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					List results = session.createQuery(
-							"select new Animal(an.description, an.bodyWeight) from Animal an" ).list();
+							"select new Animal(an.description, an.bodyWeight) from Animal an", Animal.class ).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
 					assertClassAssignability( results.get( 0 ).getClass(), Animal.class );
 
-					results = session.createQuery( "select new list(an.description, an.bodyWeight) from Animal an" )
+					results = session.createQuery( "select new list(an.description, an.bodyWeight) from Animal an", List.class )
 							.list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
 					assertThat( results.get( 0 ) ).as( "Incorrect return type" ).isInstanceOf( List.class );
 					assertThat( ((List) results.get( 0 )).size() ).as( "Incorrect result size" ).isEqualTo( 2 );
 
-					results = session.createQuery( "select new list(an.description, an.bodyWeight) from Animal an" )
+					results = session.createQuery( "select new list(an.description, an.bodyWeight) from Animal an", List.class )
 							.list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
 					assertThat( results.get( 0 ) ).as( "Incorrect return type" ).isInstanceOf( List.class );
@@ -3237,7 +3237,7 @@ public class ASTParserLoadingTest {
 
 					Object obj;
 
-					results = session.createQuery( "select new map(an.description, an.bodyWeight) from Animal an" )
+					results = session.createQuery( "select new map(an.description, an.bodyWeight) from Animal an", Map.class )
 							.list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
 					assertThat( results.get( 0 ) ).as( "Incorrect return type" ).isInstanceOf( Map.class );
@@ -3247,7 +3247,7 @@ public class ASTParserLoadingTest {
 					assertThat( ((Map) results.get( 0 )).containsKey( "1" ) ).isTrue();
 
 					results = session.createQuery(
-									"select new map(an.description as descr, an.bodyWeight as bw) from Animal an" )
+									"select new map(an.description as descr, an.bodyWeight as bw) from Animal an", Map.class )
 							.list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
 					assertThat( results.get( 0 ) ).as( "Incorrect return type" ).isInstanceOf( Map.class );
@@ -3256,7 +3256,7 @@ public class ASTParserLoadingTest {
 					assertThat( ((Map) results.get( 0 )).containsKey( "bw" ) ).isTrue();
 
 					try (ScrollableResults sr = session.createQuery(
-							"select new map(an.description, an.bodyWeight) from Animal an" ).scroll()) {
+							"select new map(an.description, an.bodyWeight) from Animal an", Map.class ).scroll()) {
 						assertThat( sr.next() ).as( "Incorrect result size" ).isTrue();
 						obj = sr.get();
 						assertThat( obj ).as( "Incorrect return type" ).isInstanceOf( Map.class );
@@ -3264,7 +3264,7 @@ public class ASTParserLoadingTest {
 					}
 
 					try (ScrollableResults sr = session.createQuery(
-							"select new Animal(an.description, an.bodyWeight) from Animal an" ).scroll()) {
+							"select new Animal(an.description, an.bodyWeight) from Animal an", Animal.class ).scroll()) {
 						assertThat( sr.next() ).as( "Incorrect result size" ).isTrue();
 						assertThat( sr.get() ).as( "Incorrect return type" ).isInstanceOf( Animal.class );
 					}
@@ -3272,13 +3272,13 @@ public class ASTParserLoadingTest {
 					// caching...
 					QueryStatistics stats = scope.getSessionFactory().getStatistics()
 							.getQueryStatistics( "select new Animal(an.description, an.bodyWeight) from Animal an" );
-					results = session.createQuery( "select new Animal(an.description, an.bodyWeight) from Animal an" )
+					results = session.createQuery( "select new Animal(an.description, an.bodyWeight) from Animal an", Animal.class )
 							.setCacheable( true )
 							.list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
 					assertClassAssignability( Animal.class, results.get( 0 ).getClass() );
 					long initCacheHits = stats.getCacheHitCount();
-					results = session.createQuery( "select new Animal(an.description, an.bodyWeight) from Animal an" )
+					results = session.createQuery( "select new Animal(an.description, an.bodyWeight) from Animal an", Animal.class )
 							.setCacheable( true )
 							.list();
 					assertThat( stats.getCacheHitCount() ).as( "dynamic intantiation query not served from cache" )
@@ -3329,62 +3329,74 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					List results = session.createQuery(
-							"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e inner join e.title"
+							"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e inner join e.title",
+							Employee.class
 					).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 1 );
 					assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
 					results = session.createQuery(
-							"select new Employee(e.id, e.lastName, t.id, t.description, e.department, e.firstName) from Employee e inner join e.title t"
+							"select new Employee(e.id, e.lastName, t.id, t.description, e.department, e.firstName) from Employee e inner join e.title t",
+							Employee.class
 					).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 1 );
 					assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
 					results = session.createQuery(
-							"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e inner join e.department"
+							"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e inner join e.department",
+							Employee.class
 					).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 1 );
 					assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
 					results = session.createQuery(
-							"select new Employee(e.id, e.lastName, e.title.id, e.title.description, d, e.firstName) from Employee e inner join e.department d"
+							"select new Employee(e.id, e.lastName, e.title.id, e.title.description, d, e.firstName) from Employee e inner join e.department d",
+							Employee.class
 					).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 1 );
 					assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
 					results = session.createQuery(
-							"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e left outer join e.department"
+							"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e left outer join e.department",
+							Employee.class
 					).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
 					assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
 					results = session.createQuery(
-							"select new Employee(e.id, e.lastName, e.title.id, e.title.description, d, e.firstName) from Employee e left outer join e.department d"
+							"select new Employee(e.id, e.lastName, e.title.id, e.title.description, d, e.firstName) from Employee e left outer join e.department d",
+							Employee.class
 					).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
 					assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
 					results = session.createQuery(
-							"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e left outer join e.department inner join e.title"
+							"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e left outer join e.department inner join e.title",
+							Employee.class
 					).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
 					assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
 					results = session.createQuery(
-							"select new Employee(e.id, e.lastName, t.id, t.description, d, e.firstName) from Employee e left outer join e.department d inner join e.title t"
+							"select new Employee(e.id, e.lastName, t.id, t.description, d, e.firstName) from Employee e left outer join e.department d inner join e.title t",
+							Employee.class
 					).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
 					assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
 					results = session.createQuery(
-							"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e left outer join e.department left outer join e.title"
+							"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e left outer join e.department left outer join e.title",
+							Employee.class
 					).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
 					assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
 					results = session.createQuery(
-							"select new Employee(e.id, e.lastName, t.id, t.description, d, e.firstName) from Employee e left outer join e.department d left outer join e.title t"
+							"select new Employee(e.id, e.lastName, t.id, t.description, d, e.firstName) from Employee e left outer join e.department d left outer join e.title t",
+							Employee.class
 					).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
 					assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
 					results = session.createQuery(
-							"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e left outer join e.department order by e.title.description"
+							"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e left outer join e.department order by e.title.description",
+							Employee.class
 					).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
 					assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
 					results = session.createQuery(
-							"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e left outer join e.department d order by e.title.description"
+							"select new Employee(e.id, e.lastName, e.title.id, e.title.description, e.department, e.firstName) from Employee e left outer join e.department d order by e.title.description",
+							Employee.class
 					).list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
 					assertClassAssignability( results.get( 0 ).getClass(), Employee.class );
@@ -3430,15 +3442,15 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 
-					List list = session.createQuery( "from Animal a left join fetch a.mother" ).setCacheable( true )
+					List list = session.createQuery( "from Animal a left join fetch a.mother", Animal.class ).setCacheable( true )
 							.list();
 					assertThat( sessionFactory.getStatistics().getQueryCacheHitCount() ).isEqualTo( 0 );
 					assertThat( sessionFactory.getStatistics().getQueryCachePutCount() ).isEqualTo( 1 );
-					list = session.createQuery( "select a from Animal a left join fetch a.mother" ).setCacheable( true )
+					list = session.createQuery( "select a from Animal a left join fetch a.mother", Animal.class ).setCacheable( true )
 							.list();
 					assertThat( sessionFactory.getStatistics().getQueryCacheHitCount() ).isEqualTo( 1 );
 					assertThat( sessionFactory.getStatistics().getQueryCachePutCount() ).isEqualTo( 1 );
-					list = session.createQuery( "select a, m from Animal a left join a.mother m" ).setCacheable( true )
+					list = session.createQuery( "select a, m from Animal a left join a.mother m", Object[].class ).setCacheable( true )
 							.list();
 					assertThat( sessionFactory.getStatistics().getQueryCacheHitCount() ).isEqualTo( 1 );
 					assertThat( sessionFactory.getStatistics().getQueryCachePutCount() ).isEqualTo( 2 );
@@ -3479,15 +3491,15 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					List list = session.createQuery( "from Animal a left join fetch a.offspring" ).setCacheable( true )
+					List list = session.createQuery( "from Animal a left join fetch a.offspring", Animal.class ).setCacheable( true )
 							.list();
 					assertThat( sessionFactory.getStatistics().getQueryCacheHitCount() ).isEqualTo( 0 );
 					assertThat( sessionFactory.getStatistics().getQueryCachePutCount() ).isEqualTo( 1 );
-					list = session.createQuery( "select a from Animal a left join fetch a.offspring" )
+					list = session.createQuery( "select a from Animal a left join fetch a.offspring", Animal.class )
 							.setCacheable( true ).list();
 					assertThat( sessionFactory.getStatistics().getQueryCacheHitCount() ).isEqualTo( 1 );
 					assertThat( sessionFactory.getStatistics().getQueryCachePutCount() ).isEqualTo( 1 );
-					list = session.createQuery( "select a, o from Animal a left join a.offspring o" )
+					list = session.createQuery( "select a, o from Animal a left join a.offspring o", Object[].class )
 							.setCacheable( true ).list();
 					assertThat( sessionFactory.getStatistics().getQueryCacheHitCount() ).isEqualTo( 1 );
 					assertThat( sessionFactory.getStatistics().getQueryCachePutCount() ).isEqualTo( 2 );
@@ -3501,7 +3513,7 @@ public class ASTParserLoadingTest {
 		scope.inTransaction(
 				session -> {
 					List list = session.createQuery(
-									"select new Animal(an.description, an.bodyWeight) as animal from Animal an order by an.description" )
+									"select new Animal(an.description, an.bodyWeight) as animal from Animal an order by an.description", Animal.class )
 							.setTupleTransformer( Transformers.mapTransformer() )
 							.list();
 					assertThat( list.size() ).isEqualTo( 2 );
@@ -3524,7 +3536,7 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( query )
+					List results = session.createQuery( query, Object[].class )
 							.setTupleTransformer( Transformers.beanTransformer( Animal.class ) ).list();
 
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
@@ -3539,7 +3551,7 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					try (ScrollableResults sr = session.createQuery( query )
+					try (ScrollableResults sr = session.createQuery( query, Object[].class )
 							.setTupleTransformer( Transformers.beanTransformer( Animal.class ) ).scroll()) {
 						assertThat( sr.next() ).as( "Incorrect result size" ).isTrue();
 						assertThat( sr.get() ).as( "Incorrect return type" ).isInstanceOf( Animal.class );
@@ -3550,7 +3562,7 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "select a from Animal a, Animal b order by a.id" )
+					List results = session.createQuery( "select a from Animal a, Animal b order by a.id", Animal.class )
 							.setTupleTransformer( (tuple, aliases) -> tuple[0] )
 							.list();
 					assertThat( results.size() ).as( "Incorrect result size" ).isEqualTo( 2 );
@@ -3573,7 +3585,7 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( query )
+					List results = session.createQuery( query, Animal.class )
 							.setTupleTransformer( Transformers.mapTransformer() ).list();
 					assertThat( results.size() ).isEqualTo( 2 );
 					assertThat( results.get( 0 ) ).isInstanceOf( Map.class );
@@ -3592,7 +3604,7 @@ public class ASTParserLoadingTest {
 
 		scope.inTransaction(
 				session -> {
-					try (ScrollableResults sr = session.createQuery( query )
+					try (ScrollableResults sr = session.createQuery( query, Animal.class )
 							.setTupleTransformer( Transformers.mapTransformer() ).scroll()) {
 						assertThat( sr.next() ).as( "Incorrect result size" ).isTrue();
 						assertThat( sr.get() ).isInstanceOf( Map.class );
@@ -3607,77 +3619,56 @@ public class ASTParserLoadingTest {
 	public void testEJBQLFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					String hql = "from Animal a where a.description = concat('1', concat('2','3'), '4'||'5')||'0'";
-					session.createQuery( hql ).list();
+					session.createQuery( "from Animal a where a.description = concat('1', concat('2','3'), '4'||'5')||'0'", Animal.class ).list();
 
-					hql = "from Animal a where substring(a.description, 1, 3) = 'cat'";
-					session.createQuery( hql ).list();
+					session.createQuery( "from Animal a where substring(a.description, 1, 3) = 'cat'", Animal.class ).list();
 
-					hql = "select substring(a.description, 1, 3) from Animal a";
-					session.createQuery( hql ).list();
+					session.createQuery( "select substring(a.description, 1, 3) from Animal a", Object.class ).list();
 
-					hql = "from Animal a where lower(a.description) = 'cat'";
-					session.createQuery( hql ).list();
+					session.createQuery( "from Animal a where lower(a.description) = 'cat'", Animal.class ).list();
 
-					hql = "select lower(a.description) from Animal a";
-					session.createQuery( hql ).list();
+					session.createQuery( "select lower(a.description) from Animal a", Object.class ).list();
 
-					hql = "from Animal a where upper(a.description) = 'CAT'";
-					session.createQuery( hql ).list();
+					session.createQuery( "from Animal a where upper(a.description) = 'CAT'", Animal.class ).list();
 
-					hql = "select upper(a.description) from Animal a";
-					session.createQuery( hql ).list();
+					session.createQuery( "select upper(a.description) from Animal a", Object.class ).list();
 
-					hql = "from Animal a where length(a.description) = 5";
-					session.createQuery( hql ).list();
+					session.createQuery( "from Animal a where length(a.description) = 5", Animal.class ).list();
 
-					hql = "select length(a.description) from Animal a";
-					session.createQuery( hql ).list();
+					session.createQuery( "select length(a.description) from Animal a", Object.class ).list();
 
 					Dialect dialect = session.getDialect();
 					// Informix before version 12 didn't support finding the index of substrings
 					if ( !(dialect instanceof InformixDialect && dialect.getVersion().isBefore( 12 )) ) {
 						//note: postgres and db2 don't have a 3-arg form, it gets transformed to 2-args
-						hql = "from Animal a where locate('abc', a.description, 2) = 2";
-						session.createQuery( hql ).list();
+						session.createQuery( "from Animal a where locate('abc', a.description, 2) = 2", Animal.class ).list();
 
-						hql = "from Animal a where locate('abc', a.description) = 2";
-						session.createQuery( hql ).list();
+						session.createQuery( "from Animal a where locate('abc', a.description) = 2", Animal.class ).list();
 
-						hql = "select locate('cat', a.description, 2) from Animal a";
-						session.createQuery( hql ).list();
+						session.createQuery( "select locate('cat', a.description, 2) from Animal a", Object.class ).list();
 					}
 
 					if ( !(dialect instanceof DB2Dialect) ) {
-						hql = "from Animal a where trim(trailing '_' from a.description) = 'cat'";
-						session.createQuery( hql ).list();
+						session.createQuery( "from Animal a where trim(trailing '_' from a.description) = 'cat'", Animal.class ).list();
 
-						hql = "select trim(trailing '_' from a.description) from Animal a";
-						session.createQuery( hql ).list();
+						session.createQuery( "select trim(trailing '_' from a.description) from Animal a", Object.class ).list();
 
-						hql = "from Animal a where trim(leading '_' from a.description) = 'cat'";
-						session.createQuery( hql ).list();
+						session.createQuery( "from Animal a where trim(leading '_' from a.description) = 'cat'", Animal.class ).list();
 
-						hql = "from Animal a where trim(both from a.description) = 'cat'";
-						session.createQuery( hql ).list();
+						session.createQuery( "from Animal a where trim(both from a.description) = 'cat'", Animal.class ).list();
 					}
 
 					if ( !(dialect instanceof HSQLDialect) ) { //HSQL doesn't like trim() without specification
-						hql = "from Animal a where trim(a.description) = 'cat'";
-						session.createQuery( hql ).list();
+						session.createQuery( "from Animal a where trim(a.description) = 'cat'", Animal.class ).list();
 					}
 
-					hql = "from Animal a where abs(a.bodyWeight) = sqrt(a.bodyWeight)";
-					session.createQuery( hql ).list();
+					session.createQuery( "from Animal a where abs(a.bodyWeight) = sqrt(a.bodyWeight)", Animal.class ).list();
 
-					hql = "from Animal a where mod(16, 4) = 4";
-					session.createQuery( hql ).list();
+					session.createQuery( "from Animal a where mod(16, 4) = 4", Animal.class ).list();
 
-					hql = "from Animal a where bit_length(str(a.bodyWeight)) = 24";
-					session.createQuery( hql ).list();
+					session.createQuery( "from Animal a where bit_length(str(a.bodyWeight)) = 24", Animal.class ).list();
 
-					hql = "select bit_length(str(a.bodyWeight)) from Animal a";
-					session.createQuery( hql ).list();
+					session.createQuery( "select bit_length(str(a.bodyWeight)) from Animal a", Object.class ).list();
 
 					/*hql = "select object(a) from Animal a where CURRENT_DATE = :p1 or CURRENT_TIME = :p2 or CURRENT_TIMESTAMP = :p3";
 					session.createQuery(hql).list();*/
@@ -3687,14 +3678,11 @@ public class ASTParserLoadingTest {
 					//parse(hql, true);
 					//System.out.println("sql: " + toSql(hql));
 
-					hql = "from Animal a where a.description like '%a%'";
-					session.createQuery( hql ).list();
+					session.createQuery( "from Animal a where a.description like '%a%'", Animal.class ).list();
 
-					hql = "from Animal a where a.description not like '%a%'";
-					session.createQuery( hql ).list();
+					session.createQuery( "from Animal a where a.description not like '%a%'", Animal.class ).list();
 
-					hql = "from Animal a where a.description like 'x%ax%' escape 'x'";
-					session.createQuery( hql ).list();
+					session.createQuery( "from Animal a where a.description like 'x%ax%' escape 'x'", Animal.class ).list();
 				}
 		);
 	}
@@ -3740,7 +3728,7 @@ public class ASTParserLoadingTest {
 	private void assertResultSize(String hql, int size, SessionFactoryScope scope) {
 		scope.inTransaction(
 				session ->
-						assertThat( session.createQuery( hql ).list().size() ).isEqualTo( size )
+						assertThat( session.createQuery( hql, Object.class ).list().size() ).isEqualTo( size )
 
 		);
 	}

@@ -4,6 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import jakarta.persistence.criteria.BooleanExpression;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.JoinType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -20,10 +23,6 @@ import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicateCollection;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.spi.NavigablePath;
-
-import jakarta.persistence.criteria.From;
-import jakarta.persistence.criteria.JoinType;
-
 
 import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildRootNavigablePath;
 
@@ -156,8 +155,6 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
 
-
-
 	@Override
 	public @Nullable PersistentAttribute<? super T, ?> getAttribute() {
 		return null;
@@ -171,6 +168,12 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 	@Override
 	public void setJoinPredicate(@Nullable SqmPredicate predicate) {
 		sqmJoinPredicates.setPredicate( predicate );
+	}
+
+	@Override
+	public SqmCrossJoin<T> on(BooleanExpression... restrictions) {
+		sqmJoinPredicates.setPredicate( nodeBuilder().wrap( restrictions ) );
+		return this;
 	}
 
 	@Override

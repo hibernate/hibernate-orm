@@ -11,7 +11,6 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PersistenceException;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.query.Query;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -80,7 +79,7 @@ public class ImmutableEntityUpdateQueryHandlingModeExceptionTest {
 			String statement = "Update MutableEntity e set e.changeable = :changeable where e.trouble.id in " +
 							"(select i.id from ImmutableEntity i where i.selector = :selector)";
 
-			Query query = session.createQuery( statement );
+			var query = session.createQuery( statement );
 			query.setParameter( "changeable", "end" );
 			query.setParameter( "selector", "foo" );
 			query.executeUpdate();

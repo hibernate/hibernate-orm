@@ -202,11 +202,11 @@ public class ManyToOneTest {
 
 		factoryScope.inTransaction( (session) -> {
 			//FIXME: fix this when the small parser bug will be fixed
-			var result  = session.createQuery( "from Child c where c.parent.id.lastName = :lastName" )
+			var result  = session.createQuery( "from Child c where c.parent.id.lastName = :lastName", Child.class )
 					.setParameter( "lastName", "Doe")
 					.list();
 			assertEquals( 1, result.size() );
-			Child c2 = (Child) result.get( 0 );
+			Child c2 = result.get( 0 );
 			assertEquals( 1, c2.id );
 		} );
 	}

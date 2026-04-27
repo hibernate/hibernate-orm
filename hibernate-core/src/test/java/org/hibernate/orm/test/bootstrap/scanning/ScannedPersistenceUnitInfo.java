@@ -142,7 +142,7 @@ public class ScannedPersistenceUnitInfo implements PersistenceUnitInfo {
 	}
 
 	@Override
-	public List<String> getAllManagedClassNames() {
+	public List<String> getAllClassNames() {
 		return combine( getManagedClassNames(), discoveredClasses );
 	}
 

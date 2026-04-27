@@ -287,7 +287,7 @@ public class InterceptorTest {
 		s = factoryScope.getSessionFactory().withOptions().statementInspector( statementInspector ).openSession();
 		t = s.beginTransaction();
 		s.get( User.class, "Lukasz" );
-		s.createQuery( "from User u" ).list();
+		s.createQuery( "from User u", User.class ).list();
 		t.commit();
 		s.close();
 

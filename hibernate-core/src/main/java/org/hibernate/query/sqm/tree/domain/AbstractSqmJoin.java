@@ -4,8 +4,13 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.persistence.criteria.BooleanExpression;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.JoinType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCacheable;
@@ -16,8 +21,6 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.spi.NavigablePath;
-
-import jakarta.persistence.criteria.JoinType;
 
 import java.util.Objects;
 
@@ -69,6 +72,27 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 				onClausePredicate == null
 						? restriction
 						: combinePredicates( onClausePredicate, restriction );
+	}
+
+	@Override
+	public SqmJoin<L, R> on(BooleanExpression... restrictions) {
+		setJoinPredicate( nodeBuilder().wrap( restrictions ) );
+		return this;
+	}
+
+	@Override
+	public SqmJoin<L, R> on(@Nullable JpaExpression<Boolean> restriction) {
+		return SqmJoin.super.on( restriction );
+	}
+
+	@Override
+	public SqmJoin<L, R> on(@Nullable Expression<Boolean> restriction) {
+		return SqmJoin.super.on( restriction );
+	}
+
+	@Override
+	public SqmJoin<L, R> on(JpaPredicate @Nullable ... restrictions) {
+		return SqmJoin.super.on( restrictions );
 	}
 
 	protected void copyTo(AbstractSqmJoin<L, R> target, SqmCopyContext context) {

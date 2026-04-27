@@ -4,18 +4,21 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
-import java.util.Collection;
-
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Subquery;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.query.criteria.JpaNumericExpression;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmBindableType;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
+import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
-import jakarta.persistence.criteria.Expression;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.util.Collection;
 
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType2;
 
@@ -93,6 +96,11 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	}
 
 	@Override
+	public <R> SqmCaseSimple<T, R> selectCase() {
+		return nodeBuilder().selectCase( this );
+	}
+
+	@Override
 	public SqmPredicate in(Object... values) {
 		return nodeBuilder().in( this, values );
 	}
@@ -111,6 +119,53 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	@Override
 	public SqmPredicate in(Expression<Collection<?>> values) {
 		return nodeBuilder().in( this, values );
+	}
+
+	@Override
+	public SqmInPredicate<T> in(Subquery<T> subquery) {
+		return nodeBuilder().in( this, (SqmSubQuery<T>) subquery );
+	}
+
+	@Override
+	public SqmExpression<T> coalesce(Expression<? extends T> y) {
+		return nodeBuilder().coalesce( this, y );
+	}
+
+	@Override
+	public SqmExpression<T> coalesce(T y) {
+		return nodeBuilder().coalesce( this, y );
+	}
+
+	@Override
+	public SqmExpression<T> nullif(Expression<? extends T> y) {
+		return nodeBuilder().nullif( this, y );
+	}
+
+	@Override
+	public SqmExpression<T> nullif(T y) {
+		return nodeBuilder().nullif( this, y );
+	}
+
+	@Override
+	public SqmPredicate isMember(Expression<? extends Collection<? super T>> collection) {
+		//noinspection unchecked
+		return nodeBuilder().isMember( this, (Expression<? extends Collection<T>>) collection );
+	}
+
+	@Override
+	public SqmPredicate isNotMember(Expression<? extends Collection<? super T>> collection) {
+		//noinspection unchecked
+		return nodeBuilder().isNotMember( this, (Expression<? extends Collection<T>>) collection );
+	}
+
+	@Override
+	public JpaNumericExpression<Long> count() {
+		return new SqmNumericExpressionWrapper<>( nodeBuilder().count( this ) );
+	}
+
+	@Override
+	public JpaNumericExpression<Long> countDistinct() {
+		return new SqmNumericExpressionWrapper<>( nodeBuilder().countDistinct( this ) );
 	}
 
 	@Override

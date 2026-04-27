@@ -21,7 +21,6 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.Session;
 import org.hibernate.TransientObjectException;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
-import org.hibernate.query.Query;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -94,7 +93,7 @@ public class ParameterTests extends BaseSqmUnitTest {
 	@Test
 	public void testWideningTemporalPrecision() {
 		try (Session session = sessionFactory().openSession()) {
-			final Query query = session.createQuery( "select p.id from Person p where p.anniversary between :start and :end" );
+			final var query = session.createQuery( "select p.id from Person p where p.anniversary between :start and :end", Integer.class );
 
 			query.setParameter( "start", Date.from( Instant.now().minus( 7, ChronoUnit.DAYS ) ), TemporalType.TIMESTAMP );
 			query.setParameter( "end", Date.from( Instant.now().plus( 7, ChronoUnit.DAYS ) ), TemporalType.TIMESTAMP );
@@ -112,7 +111,7 @@ public class ParameterTests extends BaseSqmUnitTest {
 	@Test
 	public void testNarrowingTemporalPrecision() {
 		try (Session session = sessionFactory().openSession()) {
-			final Query query = session.createQuery( "select p.id from Person p where p.dob between :start and :end" );
+			final var query = session.createQuery( "select p.id from Person p where p.dob between :start and :end", Integer.class );
 
 			query.setParameter( "start", Instant.now().minus( 7, ChronoUnit.DAYS ), TemporalType.DATE );
 			query.setParameter( "end", Instant.now().plus( 7, ChronoUnit.DAYS ), TemporalType.DATE );
@@ -149,9 +148,9 @@ public class ParameterTests extends BaseSqmUnitTest {
 	public void testNullParamValues() {
 		inTransaction(
 				session -> {
-					session.createQuery( "from Person p where p.name.firstName = :p" ).setParameter( "p", null ).list();
-					session.createQuery( "from Person p where p.name = :p" ).setParameter( "p", null ).list();
-					session.createQuery( "from Person p where p.pk = :p" ).setParameter( "p", null ).list();
+					session.createQuery( "from Person p where p.name.firstName = :p", Person.class ).setParameter( "p", null ).list();
+					session.createQuery( "from Person p where p.name = :p", Person.class ).setParameter( "p", null ).list();
+					session.createQuery( "from Person p where p.pk = :p", Person.class ).setParameter( "p", null ).list();
 				}
 		);
 	}
@@ -185,7 +184,7 @@ public class ParameterTests extends BaseSqmUnitTest {
 		inTransaction(
 				session -> {
 					try {
-						session.createQuery( "from Person p where p.mate = :p" )
+						session.createQuery( "from Person p where p.mate = :p", Person.class )
 								.setParameter( "p", new Person())
 								.list();
 						Assertions.fail( "Expected TransientObjectException" );

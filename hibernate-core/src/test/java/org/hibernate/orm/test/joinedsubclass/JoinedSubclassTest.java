@@ -4,19 +4,17 @@
  */
 package org.hibernate.orm.test.joinedsubclass;
 
-import java.math.BigDecimal;
-import java.util.List;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
-
 import org.hibernate.LockMode;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -87,12 +85,12 @@ public class JoinedSubclassTest {
 			q.setSalary( new BigDecimal( 1000 ) );
 			s.persist( q );
 
-			List result = s.createQuery( "from Person where salary > 100" ).list();
-			assertEquals( result.size(), 1 );
+			var result = s.createQuery( Person.class,"from Person where salary > 100" ).list();
+			assertEquals( 1, result.size() );
 			assertSame( result.get( 0 ), q );
 
-			result = s.createQuery( "from Person where salary > 100 or name like 'E%'" ).list();
-			assertEquals( result.size(), 2 );
+			result = s.createQuery( Person.class, "from Person where salary > 100 or name like 'E%'" ).list();
+			assertEquals( 2, result.size() );
 
 			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 			CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
@@ -102,16 +100,8 @@ public class JoinedSubclassTest {
 			criteria.where( criteriaBuilder.gt( criteriaBuilder.treat( root, Employee.class ).get( "salary" ), new BigDecimal( 100 ) ) );
 
 			result = s.createQuery( criteria ).list();
-//			result = s.createCriteria( Person.class )
-//					.add( Property.forName( "salary" ).gt( new BigDecimal( 100 ) ) )
-//					.list();
-			assertEquals( result.size(), 1 );
+			assertEquals( 1, result.size() );
 			assertSame( result.get( 0 ), q );
-
-			//TODO: make this work:
-		/*result = s.createQuery("select salary from Person where salary > 100").list();
-		assertEquals( result.size(), 1 );
-		assertEquals( result.get(0), new BigDecimal(1000) );*/
 
 			s.remove( p );
 			s.remove( q );

@@ -69,7 +69,7 @@ public class OrderedManyToManyTest {
 		// HQL (non eager)
 		scope.inTransaction(
 				s -> {
-					Group h = (Group) s.createQuery( "from Group" ).uniqueResult();
+					Group h = (Group) s.createQuery( Group.class, "from Group" ).uniqueResult();
 					assertFalse( Hibernate.isInitialized( h.getUsers() ) );
 					assertEquals( 4, h.getUsers().size() );
 					assertOrdering( h.getUsers() );
@@ -80,7 +80,7 @@ public class OrderedManyToManyTest {
 		// HQL (eager)
 		scope.inTransaction(
 				s -> {
-					Group h = (Group) s.createQuery( "from Group g inner join fetch g.users" ).uniqueResult();
+					Group h = (Group) s.createQuery( Group.class, "from Group g inner join fetch g.users" ).uniqueResult();
 					assertTrue( Hibernate.isInitialized( h.getUsers() ) );
 					assertEquals( 4, h.getUsers().size() );
 					assertOrdering( h.getUsers() );

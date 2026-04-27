@@ -55,12 +55,12 @@ public class LazyOneToOneTest {
 
 		scope.inTransaction(
 				session -> {
-					Person p = (Person) session.createQuery( "from Person where name='Gavin'" ).uniqueResult();
+					Person p = (Person) session.createQuery( Person.class, "from Person where name='Gavin'" ).uniqueResult();
 					//assertFalse( Hibernate.isPropertyInitialized(p, "employee") );
 					assertSame( p ,p.getEmployee().getPerson() );
 					assertTrue( Hibernate.isInitialized( p.getEmployee().getEmployments() ) );
 					assertEquals( 1, p.getEmployee().getEmployments().size() );
-					Person p2 = (Person) session.createQuery( "from Person where name='Emmanuel'" ).uniqueResult();
+					Person p2 = (Person) session.createQuery( Person.class, "from Person where name='Emmanuel'" ).uniqueResult();
 					assertNull( p2.getEmployee() );
 				}
 		);

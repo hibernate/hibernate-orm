@@ -66,22 +66,22 @@ public class JoinedSubclassOneToOneTest {
 					EntityStatistics mailingAddressStats = sessionFactory.getStatistics().getEntityStatistics(
 							"MailingAddress" );
 
-					Person p = (Person) session.createQuery(
-							"from Person p join fetch p.address left join fetch p.mailingAddress" )
+					Person p = session.createQuery(
+							"from Person p join fetch p.address left join fetch p.mailingAddress", Person.class )
 							.uniqueResult();
 					assertNotNull( p.address );
 					assertNull( p.mailingAddress );
 					session.clear();
 
-					p = (Person) session.createQuery(
-							"select p from Person p join fetch p.address left join fetch p.mailingAddress" )
+					p = session.createQuery(
+							"select p from Person p join fetch p.address left join fetch p.mailingAddress", Person.class )
 							.uniqueResult();
 					assertNotNull( p.address );
 					assertNull( p.mailingAddress );
 					session.clear();
 
-					Object[] stuff = (Object[]) session.createQuery(
-							"select p.name, p from Person p join fetch p.address left join fetch p.mailingAddress" )
+					Object[] stuff = session.createQuery(
+							"select p.name, p from Person p join fetch p.address left join fetch p.mailingAddress", Object[].class )
 							.uniqueResult();
 					assertEquals( 2, stuff.length );
 					p = (Person) stuff[1];
@@ -92,7 +92,7 @@ public class JoinedSubclassOneToOneTest {
 					assertEquals( 0, addressStats.getFetchCount() );
 					assertEquals( 0, mailingAddressStats.getFetchCount() );
 
-					p = (Person) session.createQuery( "from Person p join fetch p.address" ).uniqueResult();
+					p = session.createQuery( "from Person p join fetch p.address", Person.class ).uniqueResult();
 					assertNotNull( p.address );
 					assertNull( p.mailingAddress );
 					session.clear();
@@ -100,7 +100,7 @@ public class JoinedSubclassOneToOneTest {
 					assertEquals( 0, addressStats.getFetchCount() );
 					assertEquals( 1, mailingAddressStats.getFetchCount() );
 
-					p = (Person) session.createQuery( "from Person" ).uniqueResult();
+					p = session.createQuery( "from Person", Person.class ).uniqueResult();
 					assertNotNull( p.address );
 					assertNull( p.mailingAddress );
 					session.clear();
@@ -108,7 +108,7 @@ public class JoinedSubclassOneToOneTest {
 					assertEquals( 0, addressStats.getFetchCount() );
 					assertEquals( 2, mailingAddressStats.getFetchCount() );
 
-					p = (Person) session.createQuery( "from Entity" ).uniqueResult();
+					p = (Person) session.createQuery( "from Entity", Entity.class ).uniqueResult();
 					assertNotNull( p.address );
 					assertNull( p.mailingAddress );
 					session.clear();
@@ -155,7 +155,7 @@ public class JoinedSubclassOneToOneTest {
 					session.get( Entity.class, "IFA" );
 					session.clear();
 
-					List list = session.createQuery( "from Entity e order by e.name" ).list();
+					List<Entity> list = session.createQuery( "from Entity e order by e.name", Entity.class ).list();
 					Person p = (Person) list.get( 0 );
 					assertNotNull( p.address );
 					assertNull( p.mailingAddress );
@@ -163,7 +163,7 @@ public class JoinedSubclassOneToOneTest {
 					session.clear();
 
 					list = session.createQuery(
-							"from Entity e left join fetch e.address left join fetch e.mailingAddress order by e.name" )
+							"from Entity e left join fetch e.address left join fetch e.mailingAddress order by e.name", Entity.class )
 							.list();
 					p = (Person) list.get( 0 );
 					Org org = (Org) list.get( 1 );

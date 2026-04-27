@@ -65,10 +65,10 @@ public class ReferenceCacheTest {
 		assertSame( myReferenceData, loaded, "The two instances were different references" );
 
 		// now try query caching
-		MyReferenceData queried = scope.fromTransaction( s -> {
-			return (MyReferenceData) s.createQuery( "from MyReferenceData" ).setCacheable( true )
-					.list().get( 0 );
-		} );
+		MyReferenceData queried = scope.fromTransaction( s -> s
+				.createQuery( MyReferenceData.class, "from MyReferenceData" )
+				.setCacheable( true )
+				.list().get( 0 ) );
 
 		// the 2 instances should be the same (==)
 		assertSame( myReferenceData, queried, "The two instances were different references" );

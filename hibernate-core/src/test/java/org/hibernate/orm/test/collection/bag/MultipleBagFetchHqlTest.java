@@ -28,7 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_LIST_SEMANTICS;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @ServiceRegistry(
@@ -70,40 +70,29 @@ public class MultipleBagFetchHqlTest {
 
 	@Test
 	public void testMultipleBagFetchHql(SessionFactoryScope scope) {
-		scope.inSession(
-				session -> {
-					try {
-						session.createQuery(
-								"select p " +
-										"from Post p " +
-										"join fetch p.tags " +
-										"join fetch p.comments " +
-										"where p.id = :id"
-						).setParameter( "id", 1L ).uniqueResult();
-						fail( "Should throw org.hibernate.loader.MultipleBagFetchException: cannot simultaneously fetch multiple bags" );
-					}
-					catch (IllegalArgumentException expected) {
-						session.getTransaction().rollback();
-						// MultipleBagFetchException was converted to IllegalArgumentException
-						assertTrue( MultipleBagFetchException.class.isInstance( expected.getCause() ) );
-					}
-				}
-		);
+		scope.inSession(session -> {
+			try {
+				session.createQuery(Post.class, "select p from Post p join fetch p.tags join fetch p.comments where p.id = :id" )
+						.setParameter( "id", 1L )
+						.uniqueResult();
+				fail( "Should throw org.hibernate.loader.MultipleBagFetchException: cannot simultaneously fetch multiple bags" );
+			}
+			catch (IllegalArgumentException expected) {
+				session.getTransaction().rollback();
+				// MultipleBagFetchException was converted to IllegalArgumentException
+				assertInstanceOf( MultipleBagFetchException.class, expected.getCause() );
+			}
+		} );
 	}
 
 	@Test
 	public void testSingleBagFetchHql(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery(
-							"select p " +
-									"from Post p " +
-									"join fetch p.tags " +
-									"join p.comments " +
-									"where p.id = :id"
-					).setParameter( "id", 1L ).uniqueResult();
-				}
-		);
+		scope.inTransaction(session -> {
+			session.createQuery(Post.class,
+							"select p from Post p join fetch p.tags join p.comments where p.id = :id")
+					.setParameter( "id", 1L )
+					.uniqueResult();
+		} );
 	}
 
 	@Entity(name = "Post")

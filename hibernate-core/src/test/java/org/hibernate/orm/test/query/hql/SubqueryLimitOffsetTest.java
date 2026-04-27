@@ -32,7 +32,7 @@ public class SubqueryLimitOffsetTest {
 		scope.inTransaction(
 				session -> {
 					List results = session.createQuery(
-							"select o from SimpleEntity o where o.someString = ( select oSub.someString from SimpleEntity oSub order by oSub.someString limit 1 )" )
+							"select o from SimpleEntity o where o.someString = ( select oSub.someString from SimpleEntity oSub order by oSub.someString limit 1 )", SimpleEntity.class )
 							.list();
 					assertThat( results.size(), is( 2 ) );
 				} );

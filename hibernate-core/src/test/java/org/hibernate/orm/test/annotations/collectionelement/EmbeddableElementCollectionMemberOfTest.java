@@ -15,8 +15,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.query.Query;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -38,7 +36,7 @@ public class EmbeddableElementCollectionMemberOfTest {
 				session -> {
 					Address a = new Address();
 					a.setStreet( "Lollard Street" );
-					Query query = session.createQuery( "from Person p where :address member of p.addresses" );
+					var query = session.createQuery( "from Person p where :address member of p.addresses", Person.class );
 					query.setParameter( "address", a );
 					query.list();
 				}

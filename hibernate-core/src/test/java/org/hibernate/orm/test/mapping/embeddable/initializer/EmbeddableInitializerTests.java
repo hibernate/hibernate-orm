@@ -37,7 +37,7 @@ public class EmbeddableInitializerTests {
 	@Test
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.createQuery( "from Order o where o.orderNumber = 123" ).list();
+			session.createQuery(Order.class, "from Order o where o.orderNumber = 123" ).list();
 		} );
 	}
 

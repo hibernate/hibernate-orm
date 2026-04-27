@@ -14,21 +14,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
- * The bug fixed by HHH-7545 showed showed different results depending on the order
+ * The bug fixed by HHH-7545 showed different results depending on the order
  * in which entity mappings were processed.
  *
- * This mappings are in the opposite order here than in CollectionAliasTest.
+ * This mapping are in the opposite order here than in CollectionAliasTest.
  *
- * @Author Gail Badner
+ * @author Gail Badner
  */
-@DomainModel(
-		annotatedClasses = {
-				ATable.class,
-				TableA.class,
-				TableB.class,
-				TableBId.class,
-		}
-)
+@DomainModel(annotatedClasses = {ATable.class, TableA.class, TableB.class, TableBId.class})
 @SessionFactory
 public class ReorderedMappingsCollectionAliasTest {
 
@@ -49,14 +42,14 @@ public class ReorderedMappingsCollectionAliasTest {
 
 		scope.inSession(
 				session -> {
-					ATable aTable = (ATable) session.createQuery(
+					var aTable = session.createQuery(ATable.class,
 							"select distinct	tablea from ATable tablea LEFT JOIN FETCH tablea.tablebs " )
 							.uniqueResult();
-					assertEquals( new Integer( 1 ), aTable.getFirstId() );
+					assertEquals( Integer.valueOf( 1 ), aTable.getFirstId() );
 					assertEquals( 1, aTable.getTablebs().size() );
 					TableB tableB = aTable.getTablebs().get( 0 );
 					assertSame( aTable, tableB.getTablea() );
-					assertEquals( new Integer( 1 ), tableB.getId().getFirstId() );
+					assertEquals( Integer.valueOf( 1 ), tableB.getId().getFirstId() );
 					assertEquals( "a", tableB.getId().getSecondId() );
 					assertEquals( "b", tableB.getId().getThirdId() );
 				}

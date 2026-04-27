@@ -52,7 +52,7 @@ public class NonTransactionalDataAccessTest {
 	@SessionFactory
 	public void testFlushAllowingOutOfTransactionUpdateOperations(SessionFactoryScope factoryScope) {
 		factoryScope.inSession( (session) -> {
-			final MyEntity entity = (MyEntity) session.createQuery( "from MyEntity e where e.name = :n" )
+			final MyEntity entity = (MyEntity) session.createQuery( MyEntity.class, "from MyEntity e where e.name = :n" )
 					.setParameter( "n", "entity" )
 					.uniqueResult();
 			MatcherAssert.assertThat( entity, not( nullValue() ) );
@@ -89,7 +89,7 @@ public class NonTransactionalDataAccessTest {
 	@SessionFactory
 	public void testFlushDisallowingOutOfTransactionUpdateOperations(SessionFactoryScope factoryScope) {
 		factoryScope.inSession( (session) -> {
-			final MyEntity entity = (MyEntity) session.createQuery( "from MyEntity e where e.name = :n" )
+			final MyEntity entity = (MyEntity) session.createQuery( MyEntity.class, "from MyEntity e where e.name = :n" )
 					.setParameter( "n", "entity" )
 					.uniqueResult();
 			MatcherAssert.assertThat( entity, not( nullValue() ) );
@@ -105,7 +105,7 @@ public class NonTransactionalDataAccessTest {
 	@SessionFactory
 	public void testFlushOutOfTransaction(SessionFactoryScope factoryScope) {
 		factoryScope.inSession( (session) -> {
-			final MyEntity entity = (MyEntity) session.createQuery( "from MyEntity e where e.name = :n" )
+			final MyEntity entity = (MyEntity) session.createQuery( MyEntity.class, "from MyEntity e where e.name = :n" )
 					.setParameter( "n", "entity" )
 					.uniqueResult();
 			MatcherAssert.assertThat( entity, not( nullValue() ) );

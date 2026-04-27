@@ -4,15 +4,13 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import jakarta.persistence.criteria.Expression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedJoin;
-
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 
 /**
  * @author Steve Ebersole
@@ -38,9 +36,6 @@ public interface SqmTreatedAttributeJoin<L,R,R1 extends R> extends SqmAttributeJ
 
 	@Override
 	SqmTreatedAttributeJoin<L,R,R1> on(JpaPredicate @Nullable... restrictions);
-
-	@Override
-	SqmTreatedAttributeJoin<L,R,R1> on(Predicate @Nullable... restrictions);
 
 	@Override
 	SqmTreatedAttributeJoin<L,R,R1> copy(SqmCopyContext context);

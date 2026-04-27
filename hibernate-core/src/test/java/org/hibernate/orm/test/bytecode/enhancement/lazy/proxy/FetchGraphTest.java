@@ -17,7 +17,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.query.Query;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
@@ -160,10 +159,10 @@ public class FetchGraphTest {
 				session -> {
 					final String qry = "select d from D d";
 
-					final Query query = session.createQuery( qry );
-					try (ScrollableResults scrollableResults = query.scroll()) {
+					var query = session.createQuery( qry, DEntity.class );
+					try (ScrollableResults<DEntity> scrollableResults = query.scroll()) {
 						while ( scrollableResults.next() ) {
-							final DEntity dEntity = (DEntity) scrollableResults.get();
+							final DEntity dEntity = scrollableResults.get();
 							assertFalse( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
 							assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyString" ) );
 							assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyStringBlobGroup" ) );
@@ -212,7 +211,7 @@ public class FetchGraphTest {
 				session -> {
 					final String qry = "select e from E e join fetch e.d";
 
-					final Query query = session.createQuery( qry );
+					var query = session.createQuery( qry, EEntity.class );
 					final List<EEntity> results = query.list();
 					results.forEach(
 							eEntity -> {
@@ -254,10 +253,10 @@ public class FetchGraphTest {
 				session -> {
 					final String qry = "select e from E e join fetch e.d";
 
-					final Query query = session.createQuery( qry );
-					try (ScrollableResults scrollableResults = query.scroll()) {
+					var query = session.createQuery( qry, EEntity.class );
+					try (ScrollableResults<EEntity> scrollableResults = query.scroll()) {
 						while ( scrollableResults.next() ) {
-							final EEntity eEntity = (EEntity) scrollableResults.get();
+							final EEntity eEntity = scrollableResults.get();
 							final DEntity dEntity = eEntity.getD();
 							assertFalse( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
 							assertTrue( Hibernate.isPropertyInitialized( dEntity, "nonLazyString" ) );
@@ -275,12 +274,12 @@ public class FetchGraphTest {
 							"join fetch d.e " +
 							"join fetch d.g";
 
-					final Query query = session.createQuery( qry );
-					try (ScrollableResults scrollableResults = query.scroll()) {
+					var query = session.createQuery( qry, DEntity.class );
+					try (ScrollableResults<DEntity> scrollableResults = query.scroll()) {
 						int i = 0;
 						while ( scrollableResults.next() ) {
 							i++;
-							final DEntity dEntity = (DEntity) scrollableResults.get();
+							final DEntity dEntity = scrollableResults.get();
 							assertThat( dEntity.getBs().size(), is( 2 ) );
 						}
 						assertThat( i, is( 1 ) );
@@ -292,8 +291,8 @@ public class FetchGraphTest {
 				session -> {
 					final String qry = "select g from G g join fetch g.dEntities";
 
-					final Query query = session.createQuery( qry );
-					try (ScrollableResults scrollableResults = query.scroll()) {
+					var query = session.createQuery( qry, GEntity.class );
+					try (ScrollableResults<GEntity> scrollableResults = query.scroll()) {
 						while ( scrollableResults.next() ) {
 							final Object o = scrollableResults.get();
 						}
@@ -322,12 +321,12 @@ public class FetchGraphTest {
 							"join fetch d.e " +
 							"join fetch d.g";
 
-					final Query query = session.createQuery( qry );
-					try (ScrollableResults scrollableResults = query.scroll()) {
+					var query = session.createQuery( qry, Object[].class );
+					try (ScrollableResults<Object[]> scrollableResults = query.scroll()) {
 						int i = 0;
 						while ( scrollableResults.next() ) {
 							i++;
-							final Object[] result = (Object[]) scrollableResults.get();
+							final Object[] result = scrollableResults.get();
 							final DEntity dEntity = (DEntity) result[0];
 							assertThat( dEntity.getBs().size(), is( 2 ) );
 							assertThat( result[1], is( "bla" ) );
@@ -338,7 +337,7 @@ public class FetchGraphTest {
 		);
 	}
 
-	private ScrollableResults getScrollableResults(Query query) {
+	private <T> ScrollableResults<T> getScrollableResults(org.hibernate.query.Query<T> query) {
 		return query.scroll();
 	}
 

@@ -79,7 +79,7 @@ public class BadMergeHandlingTest {
 
 		// now try to read them back (I guess)
 		scope.inTransaction( s -> {
-			List results = s.createQuery( "select c from Character c join c.aliases a where a.alias = :aParam" )
+			List<Character> results = s.createQuery( "select c from Character c join c.aliases a where a.alias = :aParam", Character.class )
 					.setParameter( "aParam", "Usul" )
 					.list();
 			assertEquals( 2, results.size() );

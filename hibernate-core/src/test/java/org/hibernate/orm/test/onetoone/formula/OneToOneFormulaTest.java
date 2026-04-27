@@ -102,7 +102,7 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 	public void testOneToOneFormula() {
 
 		inTransaction( session -> {
-			Person p = (Person) session.createQuery( "from Person" ).uniqueResult();
+			Person p = session.createQuery( "from Person", Person.class ).uniqueResult();
 
 			assertNotNull( p.getAddress() );
 			assertTrue( Hibernate.isInitialized( p.getAddress() ) );
@@ -110,8 +110,8 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 		} );
 
 		inTransaction( session -> {
-			Person p = (Person) session.createQuery(
-					"from Person p left join fetch p.mailingAddress left join fetch p.address" ).uniqueResult();
+			Person p = session.createQuery(
+					"from Person p left join fetch p.mailingAddress left join fetch p.address", Person.class ).uniqueResult();
 
 			assertNotNull( p.getAddress() );
 			assertTrue( Hibernate.isInitialized( p.getAddress() ) );
@@ -119,7 +119,7 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 		} );
 
 		inTransaction( session -> {
-			Person p = (Person) session.createQuery( "from Person p left join fetch p.address" ).uniqueResult();
+			Person p = session.createQuery( "from Person p left join fetch p.address", Person.class ).uniqueResult();
 
 			assertNotNull( p.getAddress() );
 			assertTrue( Hibernate.isInitialized( p.getAddress() ) );
@@ -163,7 +163,7 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 		} );
 
 		inTransaction( session -> {
-			Address a = (Address) session.createQuery( "from Address" ).uniqueResult();
+			Address a = session.createQuery( "from Address", Address.class ).uniqueResult();
 
 			Person person = a.getPerson();
 			assertNotNull( person );
@@ -178,7 +178,7 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 	@JiraKey(value = "HHH-5757")
 	public void testQuery() {
 		inTransaction( session -> {
-			Person p = (Person) session.createQuery( "from Person p where p.address = :address" ).setParameter(
+			Person p = session.createQuery( "from Person p where p.address = :address", Person.class ).setParameter(
 					"address",
 					address
 			).uniqueResult();
@@ -186,7 +186,7 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 		} );
 
 		inTransaction( session -> {
-			Address a = (Address) session.createQuery( "from Address a where a.person = :person" ).setParameter(
+			Address a = session.createQuery( "from Address a where a.person = :person", Address.class ).setParameter(
 					"person",
 					person
 			).uniqueResult();

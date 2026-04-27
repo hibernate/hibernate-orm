@@ -287,7 +287,7 @@ public class IdTest {
 					assertEquals( "Beckam", fb.getLastname() );
 					assertEquals( "Arsenal", fb.getClub() );
 					assertEquals( 1, session.createQuery(
-							"from Footballer f where f.firstname = 'David'" ).list().size() );
+							"from Footballer f where f.firstname = 'David'", Footballer.class ).list().size() );
 					session.getTransaction().commit();
 
 					// reattach by merge
@@ -342,7 +342,7 @@ public class IdTest {
 		);
 		scope.inTransaction(
 				session ->
-						session.createQuery( "delete from BreakDance" ).executeUpdate()
+						session.createMutationQuery( "delete from BreakDance" ).executeUpdate()
 		);
 
 	}

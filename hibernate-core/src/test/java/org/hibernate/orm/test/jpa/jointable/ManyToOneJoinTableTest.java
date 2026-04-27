@@ -52,7 +52,7 @@ public class ManyToOneJoinTableTest {
 				session -> {
 					final List<String> sqlQueries = sqlStatementInspector.getSqlQueries();
 					sqlQueries.clear();
-					session.createQuery( queryString ).list();
+					session.createQuery( Long.class, queryString ).list();
 					assertThat( sqlQueries.size(), is( 1 ) );
 					// Ideally, we could detect that *ToOne join tables aren't used, but that requires tracking the uses of properties
 					// Since *ToOne join tables are treated like secondary or subclass/superclass tables, the proper fix will allow many more optimizations

@@ -66,13 +66,13 @@ public class KeyManyToOneCascadeDeleteTest {
 					try {
 						assertEquals(
 								"0",
-								session.createQuery( "select count(*) from Customer" )
+								session.createQuery( "select count(*) from Customer", Long.class )
 										.uniqueResult()
 										.toString()
 						);
 						assertEquals(
 								"0",
-								session.createQuery( "select count(*) from Order" ).uniqueResult().toString()
+								session.createQuery( "select count(*) from Order", Long.class ).uniqueResult().toString()
 						);
 						session.getTransaction().commit();
 					}

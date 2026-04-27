@@ -107,7 +107,7 @@ public class JoinedInheritanceEagerTest {
 	@JiraKey(value = "HHH-12375")
 	public void selectBaseType(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			List result = session.createQuery( "from BaseEntity" ).list();
+			List result = session.createQuery( "from BaseEntity", BaseEntity.class ).list();
 			assertThat( result.size(), is( 2 ) );
 		} );
 	}

@@ -42,7 +42,7 @@ public class ResultsShapeTests {
 	@Test
 	public void testSimpleEntitySelection(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final List<?> orders = session.createQuery( "select o from Order o" ).list();
+			final List<?> orders = session.createQuery( "select o from Order o", Order.class ).list();
 			// only 2 orders
 			assertThat( orders ).hasSize( 2 );
 			assertThat( orders.get( 0 ) ).isInstanceOf( Order.class );
@@ -134,8 +134,8 @@ public class ResultsShapeTests {
 
 		scope.inTransaction( (session) -> {
 			final String hql = "select o from Order o";
-			final List<Order> orders = session.createQuery( hql )
-					.setTupleTransformer( (tuple, aliases) -> tuple[ 0 ] )
+			final List<Order> orders = session.createQuery( hql, Order.class )
+					.setTupleTransformer( (tuple, aliases) -> (Order) tuple[ 0 ] )
 					.list();
 			// only 2 orders
 			assertThat( orders ).hasSize( 2 );
@@ -159,8 +159,8 @@ public class ResultsShapeTests {
 
 		scope.inTransaction( (session) -> {
 			final String hql = "select o from LineItem i join i.order o";
-			final List<Order> orders = session.createQuery( hql )
-					.setTupleTransformer( (tuple, aliases) -> tuple[ 0 ] )
+			final List<Order> orders = session.createQuery( hql, Order.class )
+					.setTupleTransformer( (tuple, aliases) -> (Order) tuple[ 0 ] )
 					.list();
 			// only 2 orders
 			assertThat( orders ).hasSize( 2 );
@@ -196,7 +196,7 @@ public class ResultsShapeTests {
 
 		scope.inTransaction( (session) -> {
 			final String hql = "select o from Order o";
-			final List<Order> orders = session.createQuery( hql )
+			final List<Order> orders = session.createQuery( hql, Order.class )
 					.setTupleTransformer( ORDER_TUPLE_TRANSFORMER )
 					.list();
 			assertThat( orders ).hasSize( 2 );
@@ -219,8 +219,8 @@ public class ResultsShapeTests {
 		} );
 
 		scope.inTransaction( (session) -> {
-			final List<Order> orders = session.createQuery( hql )
-					.setTupleTransformer( (tuple, aliases) -> tuple[ 0 ] )
+			final List<Order> orders = session.createQuery( hql, Order.class )
+					.setTupleTransformer( (tuple, aliases) -> (Order) tuple[ 0 ] )
 					.list();
 			assertThat( orders ).hasSize( 2 );
 			assertThat( orders.get( 0 ) ).isInstanceOf( Order.class );

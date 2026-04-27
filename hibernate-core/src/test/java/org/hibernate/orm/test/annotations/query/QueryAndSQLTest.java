@@ -102,14 +102,13 @@ public class QueryAndSQLTest {
 				dateFunctionRendered
 		);
 
-
 		scope.inTransaction(
 				session -> {
-					session.createNativeQuery( sql ).addEntity( "t", AllTables.class ).list();
+					session.createNativeQuery(AllTables.class, sql ).addEntity( "t", AllTables.class ).list();
 					List<AllTables> allTables = session.createNativeQuery( sql, AllTables.class, "t" ).list();
-					session.createNativeQuery( sql2, "all" ).list();
+					session.createNativeQuery( sql2, "all", AllTables.class ).list();
 					List<String> allTableNames = session.createNativeQuery( sql2, String.class ).list();
-					NativeQuery q = session.createNativeQuery( sql2 );
+					NativeQuery q = (NativeQuery) session.createNativeQuery( sql2 );
 					q.addRoot( "t", AllTables.class ).addProperty( "tableName", "t_name" ).addProperty(
 							"daysOld",
 							"t_time"
@@ -126,7 +125,7 @@ public class QueryAndSQLTest {
 				session -> {
 					String sql = "select table_name , " + scope.getSessionFactory().getJdbcServices().getDialect()
 							.currentDate() + " as days_old from ALL_TABLES  where table_name = 'AUDIT_ACTIONS' ";
-					session.createNativeQuery( sql ).addEntity( "t", AllTables.class ).list();
+					session.createNativeQuery( sql, AllTables.class ).addEntity( "t", AllTables.class ).list();
 				}
 		);
 	}
@@ -156,12 +155,12 @@ public class QueryAndSQLTest {
 					session.flush();
 					session.clear();
 
-					List chaoses = session.createQuery( "from Chaos where size is null or size = :size" )
+					List chaoses = session.createQuery( Chaos.class,"from Chaos where size is null or size = :size" )
 							.setParameter( "size", null )
 							.list();
 					assertEquals( 1, chaoses.size() );
 
-					chaoses = session.createQuery( "from Chaos where size = :size" )
+					chaoses = session.createQuery( Chaos.class, "from Chaos where size = :size" )
 							.setParameter( "size", null )
 							.list();
 					// should be no results because null != null
@@ -169,10 +168,7 @@ public class QueryAndSQLTest {
 				}
 		);
 
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from Chaos" ).executeUpdate()
-		);
+		scope.dropData();
 	}
 
 	@Test
@@ -200,12 +196,12 @@ public class QueryAndSQLTest {
 					session.flush();
 					session.clear();
 
-					List chaoses = session.createQuery( "from Chaos where size is null or size = :size" )
+					List chaoses = session.createQuery( Chaos.class, "from Chaos where size is null or size = :size" )
 							.setParameter( "size", null, StandardBasicTypes.LONG )
 							.list();
 					assertEquals( 1, chaoses.size() );
 
-					chaoses = session.createQuery( "from Chaos where size = :size" )
+					chaoses = session.createQuery( Chaos.class, "from Chaos where size = :size" )
 							.setParameter( "size", null, StandardBasicTypes.LONG )
 							.list();
 					// should be no results because null != null
@@ -213,10 +209,7 @@ public class QueryAndSQLTest {
 				}
 		);
 
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from Chaos" ).executeUpdate()
-		);
+		scope.dropData();
 	}
 
 	@Test
@@ -244,13 +237,14 @@ public class QueryAndSQLTest {
 					session.flush();
 					session.clear();
 
-					List chaoses = session.createNativeQuery(
+					List chaoses = session.createNativeQuery( Chaos.class,
 									"select * from CHAOS where chaos_size is null or chaos_size = :chaos_size" )
 							.setParameter( "chaos_size", null )
 							.list();
 					assertEquals( 1, chaoses.size() );
 
-					chaoses = session.createNativeQuery( "select * from CHAOS where chaos_size = :chaos_size" )
+					chaoses = session.createNativeQuery( Chaos.class,
+									"select * from CHAOS where chaos_size = :chaos_size" )
 							.setParameter( "chaos_size", null )
 							.list();
 					// should be no results because null != null
@@ -258,10 +252,7 @@ public class QueryAndSQLTest {
 				}
 		);
 
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from Chaos" ).executeUpdate()
-		);
+		scope.dropData();
 	}
 
 	@Test
@@ -289,13 +280,14 @@ public class QueryAndSQLTest {
 					session.flush();
 					session.clear();
 
-					List chaoses = session.createNativeQuery(
+					List chaoses = session.createNativeQuery(Chaos.class,
 									"select * from CHAOS where chaos_size is null or chaos_size = :chaos_size" )
 							.setParameter( "chaos_size", null, StandardBasicTypes.LONG )
 							.list();
 					assertEquals( 1, chaoses.size() );
 
-					chaoses = session.createNativeQuery( "select * from CHAOS where chaos_size = :chaos_size" )
+					chaoses = session.createNativeQuery( Chaos.class,
+									"select * from CHAOS where chaos_size = :chaos_size" )
 							.setParameter( "chaos_size", null, StandardBasicTypes.LONG )
 							.list();
 					// should be no results because null != null
@@ -303,10 +295,7 @@ public class QueryAndSQLTest {
 				}
 		);
 
-		scope.inTransaction(
-				session ->
-						session.createQuery( "delete from Chaos" ).executeUpdate()
-		);
+		scope.dropData();
 	}
 
 	@Test
@@ -315,7 +304,7 @@ public class QueryAndSQLTest {
 				session -> {
 					Plane p = new Plane();
 					session.persist( p );
-					Query q = session.createNamedQuery( "plane.getAll" );
+					Query q = session.createNamedQuery( "plane.getAll", Plane.class );
 					assertEquals( 1, q.list().size() );
 					session.remove( q.list().get( 0 ) );
 				}
@@ -343,25 +332,27 @@ public class QueryAndSQLTest {
 
 		scope.inTransaction(
 				session -> {
-					Query q = session.createNamedQuery( "night.moreRecentThan" );
+					var q = session.createNamedQuery( "night.moreRecentThan", Night.class );
 					q.setParameter( "date", aMonthAgo, StandardBasicTypes.DATE );
 					assertEquals( 1, q.list().size() );
-					q = session.createNamedQuery( "night.moreRecentThan" );
+					q = session.createNamedQuery( "night.moreRecentThan", Night.class );
 					q.setParameter( "date", inAMonth, StandardBasicTypes.DATE );
 					assertEquals( 0, q.list().size() );
 					Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.setStatisticsEnabled( true );
 					stats.clear();
-					q = session.createNamedQuery( "night.duration" );
+					q = session.createNamedQuery( "night.duration", Night.class );
 					q.setParameter( "duration", 14l );
 					assertEquals( 1, q.list().size() );
 					assertEquals( 1, stats.getQueryCachePutCount() );
-					q = session.createNamedQuery( "night.duration" );
+					q = session.createNamedQuery( "night.duration", Night.class );
 					q.setParameter( "duration", 14l );
 					session.remove( q.list().get( 0 ) );
 					assertEquals( 1, stats.getQueryCacheHitCount() );
 				}
 		);
+
+		scope.dropData();
 	}
 
 	@Test
@@ -389,13 +380,13 @@ public class QueryAndSQLTest {
 						tx.commit();
 						session.clear();
 						tx = session.beginTransaction();
-						Query q = session.createNamedQuery( "night.getAll.bySQL" );
+						var q = session.createNamedQuery( "night.getAll.bySQL", Night.class );
 						q.setParameter( 1, 9990 );
 						List result = q.list();
 						assertEquals( 1, result.size() );
 						Night n2 = (Night) result.get( 0 );
 						assertEquals( n2.getDuration(), n.getDuration() );
-						List areas = session.createNamedQuery( "getAreaByNative" ).list();
+						List areas = session.createNamedQuery( "getAreaByNative", Area.class ).list();
 						assertTrue( 1 == areas.size() );
 						assertEquals( area.getName(), ( (Area) areas.get( 0 ) ).getName() );
 						session.remove( areas.get( 0 ) );
@@ -463,7 +454,7 @@ public class QueryAndSQLTest {
 					Statistics stats = scope.getSessionFactory().getStatistics();
 					stats.setStatisticsEnabled( true );
 					stats.clear();
-					Query q = session.createNamedQuery( "night&areaCached" );
+					Query q = session.createNamedQuery( "night&areaCached", Object.class );
 					q.setCacheable( true );
 					List result = q.list();
 					assertEquals( 1, result.size() );
@@ -496,10 +487,10 @@ public class QueryAndSQLTest {
 						tx.commit();
 						session.clear();
 						tx = session.beginTransaction();
-						Query q = session.createNamedQuery( "implicitSample" );
-						List result = q.list();
+						var q = session.createNamedQuery( "implicitSample", SpaceShip.class );
+						var result = q.list();
 						assertEquals( 1, result.size() );
-						assertEquals( ship.getModel(), ( (SpaceShip) result.get( 0 ) ).getModel() );
+						assertEquals( ship.getModel(), result.get( 0 ).getModel() );
 						session.remove( result.get( 0 ) );
 						tx.commit();
 					}
@@ -534,18 +525,15 @@ public class QueryAndSQLTest {
 						tx.commit();
 						session.clear();
 						tx = session.beginTransaction();
-						Query q = session.createNamedQuery( "compositekey" );
-						List result = q.list();
+						var q = session.createNamedQuery( "compositekey", Object[].class );
+						var result = q.list();
 						assertEquals( 1, result.size() );
-						Object[] row = (Object[]) result.get( 0 );
+						Object[] row = result.get( 0 );
 						SpaceShip spaceShip = (SpaceShip) row[0];
 						assertEquals( ship.getModel(), spaceShip.getModel() );
 						assertNotNull( spaceShip.getDimensions() );
 						assertEquals( ship.getDimensions().getWidth(), spaceShip.getDimensions().getWidth() );
 						assertEquals( ship.getDimensions().getLength(), spaceShip.getDimensions().getLength() );
-						assertEquals( ship.getCaptain().getFirstname(), ship.getCaptain().getFirstname() );
-						assertEquals( ship.getCaptain().getLastname(), ship.getCaptain().getLastname() );
-						//FIXME vary depending on databases
 						assertTrue( row[1].toString().startsWith( "50" ) );
 						assertTrue( row[2].toString().startsWith( "500" ) );
 						session.remove( spaceShip.getCaptain() );
@@ -578,7 +566,7 @@ public class QueryAndSQLTest {
 						tx.commit();
 						session.clear();
 						tx = session.beginTransaction();
-						List results = session.createNamedQuery( "all.dictionaries" ).list();
+						var results = session.createNamedQuery( "all.dictionaries", Dictionary.class ).list();
 						assertEquals( 2, results.size() );
 						assertTrue(
 								results.get( 0 ) instanceof SynonymousDictionary
@@ -613,19 +601,19 @@ public class QueryAndSQLTest {
 
 		scope.inTransaction(
 				session -> {
-					Query query = session.createNamedQuery( "plane.byId" ).setParameter( "id", plane.getId() );
+					Query query = session
+							.createNamedQuery( "plane.byId", Plane.class )
+							.setParameter( "id", plane.getId() );
 					query.uniqueResult();
 					assertEquals( 1, sessionFactory.getStatistics().getQueryCachePutCount() );
-					session.createNamedQuery( "plane.byId" ).setParameter( "id", plane.getId() ).uniqueResult();
+					session.createNamedQuery( "plane.byId", Plane.class )
+							.setParameter( "id", plane.getId() )
+							.uniqueResult();
 					assertEquals( 1, sessionFactory.getStatistics().getQueryCacheHitCount() );
 				}
 		);
 
-
-		scope.inTransaction(
-				session ->
-						session.remove( session.get( Plane.class, plane.getId() ) )
-		);
+		scope.dropData();
 	}
 
 	@Test

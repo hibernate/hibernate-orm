@@ -5,8 +5,6 @@
 package org.hibernate.orm.test.annotations.idclass;
 
 
-import org.hibernate.query.Query;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -31,7 +29,7 @@ public class IdClassCompositePKTest {
 					da.setDomainName( "org" );
 
 					session.persist( da );
-					Query q = session.createNamedQuery( "DomainAdmin.testQuery" );
+					var q = session.createNamedQuery( "DomainAdmin.testQuery", DomainAdmin.class );
 					assertEquals( 1, q.list().size() );
 				}
 		);

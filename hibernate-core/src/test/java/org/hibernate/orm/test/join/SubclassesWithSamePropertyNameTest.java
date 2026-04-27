@@ -69,9 +69,8 @@ public class SubclassesWithSamePropertyNameTest {
 	public void testQuerySuperclass(SessionFactoryScope scope) {
 		scope.inTransaction(
 				s -> {
-					Reportable reportable = (Reportable) s.createQuery(
-							"from Reportable where reportedBy='John Doe'"
-					).uniqueResult();
+					var reportable = s.createQuery(Reportable.class,"from Reportable where reportedBy='John Doe'")
+							.uniqueResult();
 					assertEquals( "John Doe", reportable.getReportedBy() );
 					assertEquals( "detail", ( (BlogEntry) reportable ).getDetail() );
 
@@ -89,10 +88,6 @@ public class SubclassesWithSamePropertyNameTest {
 					Root<Reportable> root = criteria.from( Reportable.class );
 					criteria.where( criteriaBuilder.equal( root.get( "reportedBy" ), "John Doe" ) );
 					Reportable reportable = s.createQuery( criteria ).uniqueResult();
-//					Reportable reportable =
-//							(Reportable) s.createCriteria( Reportable.class, "r" )
-//									.add( Restrictions.eq( "r.reportedBy", "John Doe" ) )
-//									.uniqueResult();
 					assertEquals( "John Doe", reportable.getReportedBy() );
 					assertEquals( "detail", ( (BlogEntry) reportable ).getDetail() );
 
@@ -105,9 +100,8 @@ public class SubclassesWithSamePropertyNameTest {
 	public void testQuerySubclass(SessionFactoryScope scope) {
 		scope.inTransaction(
 				s -> {
-					BlogEntry blogEntry = (BlogEntry) s.createQuery(
-							"from BlogEntry where reportedBy='John Doe'"
-					).uniqueResult();
+					var blogEntry = s.createQuery(BlogEntry.class,"from BlogEntry where reportedBy='John Doe'").
+							uniqueResult();
 					assertEquals( "John Doe", blogEntry.getReportedBy() );
 					assertEquals( "detail", ( blogEntry ).getDetail() );
 
@@ -125,10 +119,6 @@ public class SubclassesWithSamePropertyNameTest {
 					Root<BlogEntry> root = criteria.from( BlogEntry.class );
 					criteria.where( criteriaBuilder.equal( root.get( "reportedBy" ), "John Doe" ) );
 					BlogEntry blogEntry = s.createQuery( criteria ).uniqueResult();
-//					BlogEntry blogEntry =
-//							(BlogEntry) s.createCriteria( BlogEntry.class, "r" )
-//									.add( Restrictions.eq( "r.reportedBy", "John Doe" ) )
-//									.uniqueResult();
 					assertEquals( "John Doe", blogEntry.getReportedBy() );
 					assertEquals( "detail", ( blogEntry ).getDetail() );
 

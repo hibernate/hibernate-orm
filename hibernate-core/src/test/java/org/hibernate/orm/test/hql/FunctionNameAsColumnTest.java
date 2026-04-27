@@ -57,8 +57,8 @@ public class FunctionNameAsColumnTest {
 		} );
 
 		sessionFactory.inTransaction(s -> {
-			EntityWithArgFunctionAsColumn e = (EntityWithArgFunctionAsColumn) s.createQuery(
-					"from EntityWithArgFunctionAsColumn" ).uniqueResult();
+			var e = s.createQuery(
+					"from EntityWithArgFunctionAsColumn", EntityWithArgFunctionAsColumn.class ).uniqueResult();
 			assertEquals( 3, e.getLower() );
 			assertEquals( " abc ", e.getUpper() );
 		} );
@@ -104,10 +104,10 @@ public class FunctionNameAsColumnTest {
 		} );
 
 		sessionFactory.inTransaction(s -> {
-			EntityWithFunctionAsColumnHolder holder1 = (EntityWithFunctionAsColumnHolder) s.createQuery(
+			EntityWithFunctionAsColumnHolder holder1 = s.createQuery(
 					"from EntityWithFunctionAsColumnHolder h left join fetch h.entityWithArgFunctionAsColumns " +
 							"left join fetch h.nextHolder left join fetch h.nextHolder.entityWithArgFunctionAsColumns " +
-							"where h.nextHolder is not null" )
+							"where h.nextHolder is not null", EntityWithFunctionAsColumnHolder.class )
 					.uniqueResult();
 			assertTrue( Hibernate.isInitialized( holder1.getEntityWithArgFunctionAsColumns() ) );
 			assertTrue( Hibernate.isInitialized( holder1.getNextHolder() ) );
@@ -288,16 +288,16 @@ public class FunctionNameAsColumnTest {
 
 		factoryScope.inTransaction(s -> {
 			var hql = "select str(current_date), currentDate from EntityWithNoArgFunctionAsColumn";
-			var results = s.createQuery( hql ).list();
+			var results = s.createQuery( hql, Object[].class ).list();
 			assertEquals( 2, results.size() );
-			assertEquals( ( (Object[]) results.get( 0 ) )[0], ( (Object[]) results.get( 1 ) )[0] );
-			assertNotEquals( ((Object[]) results.get( 0 ))[0], ((Object[]) results.get( 0 ))[1] );
-			assertNotEquals( ((Object[]) results.get( 1 ))[0], ((Object[]) results.get( 1 ))[1] );
-			assertTrue( ( (Object[]) results.get( 0 ) )[1].equals( e1Ref.get().getCurrentDate() ) ||
-								( (Object[]) results.get( 0 ) )[1].equals( e2Ref.get().getCurrentDate() ) );
-			assertTrue( ( (Object[]) results.get( 1 ) )[1].equals( e1Ref.get().getCurrentDate() ) ||
-								( (Object[]) results.get( 1 ) )[1].equals( e2Ref.get().getCurrentDate() ) );
-			assertNotEquals( ((Object[]) results.get( 0 ))[1], ((Object[]) results.get( 1 ))[1] );
+			assertEquals( results.get( 0 )[0], results.get( 1 )[0] );
+			assertNotEquals( results.get( 0 )[0], results.get( 0 )[1] );
+			assertNotEquals( results.get( 1 )[0], results.get( 1 )[1] );
+			assertTrue( results.get( 0 )[1].equals( e1Ref.get().getCurrentDate() ) ||
+								results.get( 0 )[1].equals( e2Ref.get().getCurrentDate() ) );
+			assertTrue( results.get( 1 )[1].equals( e1Ref.get().getCurrentDate() ) ||
+								results.get( 1 )[1].equals( e2Ref.get().getCurrentDate() ) );
+			assertNotEquals( results.get( 0 )[1], results.get( 1 )[1] );
 		} );
 	}
 

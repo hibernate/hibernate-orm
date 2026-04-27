@@ -41,7 +41,7 @@ public class SmokeTests {
 	public void simpleTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "select i from LineItem i" ).list();
+					session.createQuery(LineItem.class, "select i from LineItem i" ).list();
 				}
 		);
 	}

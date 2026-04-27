@@ -100,7 +100,14 @@ public interface Restriction<X> {
 		if ( !(query instanceof JpaCriteriaQuery<?> criteriaQuery) ) {
 			throw new IllegalArgumentException( "Not a JpaCriteriaQuery" );
 		}
-		query.where( query.getRestriction(), toPredicate( root, criteriaQuery.getCriteriaBuilder() ) );
+
+		Predicate predicate = toPredicate( root, criteriaQuery.getCriteriaBuilder() );
+		if ( query.getRestriction() == null ) {
+			query.where( predicate );
+		}
+		else {
+			query.where( query.getRestriction(), predicate );
+		}
 	}
 
 	/**

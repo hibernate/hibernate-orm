@@ -27,9 +27,4 @@
 			<union-subclass name="Pickup"/>
 		</union-subclass>
 	</class>
-
-	<sql-query name="native-delete-car">
-	    <synchronize table="Car"/>
-		delete from Car where owner = ?
-	</sql-query>
 </hibernate-mapping>

@@ -31,6 +31,6 @@ public class JakartaSchemaToolingSettingPrecedenceTests {
 	@Test
 	public void verifySchemaCreated(SessionFactoryScope scope) {
 		// the query would fail if the schema were not exported - just a smoke test
-		scope.inTransaction( (s) -> s.createQuery( "from SimpleEntity" ).list() );
+		scope.inTransaction( (s) -> s.createQuery( SimpleEntity.class,"from SimpleEntity" ).list() );
 	}
 }

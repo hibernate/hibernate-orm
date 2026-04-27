@@ -137,7 +137,7 @@ public class CriteriaParameterTests {
 	public void testMultiValuedParameterBaseline3HQL(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final Query query = session.createQuery( "from BasicEntity where data in (:p)" );
+					var query = session.createQuery( "from BasicEntity where data in (:p)", BasicEntity.class );
 					query.setParameter( "p", "fe" );
 					query.list();
 				}

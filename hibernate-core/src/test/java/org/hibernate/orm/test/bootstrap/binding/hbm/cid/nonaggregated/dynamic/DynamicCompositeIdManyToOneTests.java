@@ -19,6 +19,8 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
+
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -68,9 +70,9 @@ public class DynamicCompositeIdManyToOneTests {
 	public void testFullQueryReference(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					session.createQuery( "select e from DynamicCompositeIdManyToOne e" ).list();
-					session.createQuery( "select e from DynamicCompositeIdManyToOne e where e.id.key1 = 1" ).list();
-					session.createQuery( "select e from DynamicCompositeIdManyToOne e where e.id.key2.name = 'abc'" ).list();
+					session.createQuery( Map.class, "select e from DynamicCompositeIdManyToOne e" ).list();
+					session.createQuery( Map.class, "select e from DynamicCompositeIdManyToOne e where e.id.key1 = 1" ).list();
+					session.createQuery( Map.class, "select e from DynamicCompositeIdManyToOne e where e.id.key2.name = 'abc'" ).list();
 				}
 		);
 	}
@@ -79,9 +81,9 @@ public class DynamicCompositeIdManyToOneTests {
 	public void testEmbeddedQueryReference(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					session.createQuery( "select e from DynamicCompositeIdManyToOne e" ).list();
-					session.createQuery( "select e from DynamicCompositeIdManyToOne e where e.key1 = 1" ).list();
-					session.createQuery( "select e from DynamicCompositeIdManyToOne e where e.key2.name = 'abc'" ).list();
+					session.createQuery( Map.class, "select e from DynamicCompositeIdManyToOne e" ).list();
+					session.createQuery( Map.class, "select e from DynamicCompositeIdManyToOne e where e.key1 = 1" ).list();
+					session.createQuery( Map.class, "select e from DynamicCompositeIdManyToOne e where e.key2.name = 'abc'" ).list();
 				}
 		);
 	}

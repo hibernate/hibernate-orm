@@ -111,9 +111,9 @@ public class SetElementNullBasicTest {
 
 	private List<?> getCollectionElementRows(int id, SessionFactoryScope scope) {
 		return scope.fromSession( session ->
-				session.createNativeQuery(
-						"SELECT aCollection FROM AnEntity_aCollection where AnEntity_id = " + id
-				).list()
+				session.createNativeQuery(Object.class,
+						"SELECT aCollection FROM AnEntity_aCollection where AnEntity_id = " + id)
+						.list()
 		);
 	}
 

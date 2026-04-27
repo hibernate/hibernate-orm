@@ -70,7 +70,7 @@ public class DerivedIdentitySimpleParentIdClassDepTest {
 					session.persist( e );
 
 					// find the entity added above
-					Query query = session.createQuery(
+					Query query = session.createQuery( Dependent.class,
 							"Select d from Dependent d where d.name='LittleP' and d.emp.empName='Paula'" );
 					List depList = query.list();
 					assertEquals( 1, depList.size() );

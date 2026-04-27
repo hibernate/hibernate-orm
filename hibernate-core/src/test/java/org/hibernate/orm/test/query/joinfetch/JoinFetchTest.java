@@ -48,9 +48,9 @@ public class JoinFetchTest {
 	@Test
 	public void testJoinFetch(SessionFactoryScope scope) {
 		scope.inTransaction( (s) -> {
-			s.createQuery( "delete from Bid" ).executeUpdate();
-			s.createQuery( "delete from Comment" ).executeUpdate();
-			s.createQuery( "delete from Item" ).executeUpdate();
+			s.createMutationQuery( "delete from Bid" ).executeUpdate();
+			s.createMutationQuery( "delete from Comment" ).executeUpdate();
+			s.createMutationQuery( "delete from Item" ).executeUpdate();
 		} );
 
 		Category cat = new Category( "Photography" );
@@ -109,7 +109,7 @@ public class JoinFetchTest {
 
 
 		scope.inTransaction( (s) -> {
-			Item i1 = (Item) s.createQuery( "from Item i left join fetch i.bids left join fetch i.comments" )
+			Item i1 = s.createQuery( "from Item i left join fetch i.bids left join fetch i.comments", Item.class )
 					.uniqueResult();
 			assertTrue( Hibernate.isInitialized( i1.getBids() ) );
 			assertTrue( Hibernate.isInitialized( i1.getComments() ) );
@@ -119,7 +119,7 @@ public class JoinFetchTest {
 
 
 		scope.inTransaction( (s) -> {
-			Item i1 = (Item) s.createNamedQuery( Item.class.getName() + ".all" ).list().get( 0 );
+			Item i1 = (Item) s.createNamedQuery( Item.class.getName() + ".all", Item.class ).list().get( 0 );
 			assertTrue( Hibernate.isInitialized( i1.getBids() ) );
 			assertTrue( Hibernate.isInitialized( i1.getComments() ) );
 			assertEquals( 3, i1.getComments().size() );
@@ -138,7 +138,7 @@ public class JoinFetchTest {
 		} );
 
 		scope.inTransaction( (s) -> {
-			List bids = s.createQuery( "select b from Bid b left join fetch b.item i left join fetch i.category" )
+			List bids = s.createQuery( "select b from Bid b left join fetch b.item i left join fetch i.category", Bid.class )
 					.list();
 			Bid bid = (Bid) bids.get( 0 );
 			assertTrue( Hibernate.isInitialized( bid.getItem() ) );
@@ -146,41 +146,41 @@ public class JoinFetchTest {
 		} );
 
 		scope.inTransaction( (s) -> {
-			List pairs = s.createQuery( "select i from Item i left join i.bids b left join fetch i.category" ).list();
+			List pairs = s.createQuery( "select i from Item i left join i.bids b left join fetch i.category", Item.class ).list();
 			Item item = (Item) pairs.get( 0 );
 			assertFalse( Hibernate.isInitialized( item.getBids() ) );
 			assertTrue( Hibernate.isInitialized( item.getCategory() ) );
 			s.clear();
-			pairs = s.createQuery( "select i, b from Item i left join i.bids b left join i.category" ).list();
+			pairs = s.createQuery( "select i, b from Item i left join i.bids b left join i.category", Object[].class ).list();
 			item = (Item) ( (Object[]) pairs.get( 0 ) )[0];
 			assertFalse( Hibernate.isInitialized( item.getBids() ) );
 			assertFalse( Hibernate.isInitialized( item.getCategory() ) );
 			s.clear();
-			pairs = s.createQuery( "select i from Item i left join i.bids b left join i.category" ).list();
+			pairs = s.createQuery( "select i from Item i left join i.bids b left join i.category", Item.class ).list();
 			item = (Item) pairs.get( 0 );
 			assertFalse( Hibernate.isInitialized( item.getBids() ) );
 			assertFalse( Hibernate.isInitialized( item.getCategory() ) );
 			s.clear();
-			pairs = s.createQuery( "select b, i from Bid b left join b.item i left join fetch i.category" ).list();
+			pairs = s.createQuery( "select b, i from Bid b left join b.item i left join fetch i.category", Object[].class ).list();
 			Bid bid = (Bid) ( (Object[]) pairs.get( 0 ) )[0];
 			assertTrue( Hibernate.isInitialized( bid.getItem() ) );
 			assertTrue( Hibernate.isInitialized( bid.getItem().getCategory() ) );
 			s.clear();
-			pairs = s.createQuery( "select b, i from Bid b left join b.item i left join i.category" ).list();
+			pairs = s.createQuery( "select b, i from Bid b left join b.item i left join i.category", Object[].class ).list();
 			bid = (Bid) ( (Object[]) pairs.get( 0 ) )[0];
 			assertTrue( Hibernate.isInitialized( bid.getItem() ) );
 			assertFalse( Hibernate.isInitialized( bid.getItem().getCategory() ) );
-			pairs = s.createQuery( "select b from Bid b left join b.item i left join i.category" ).list();
+			pairs = s.createQuery( "select b from Bid b left join b.item i left join i.category", Bid.class ).list();
 			bid = (Bid) pairs.get( 0 );
 			assertTrue( Hibernate.isInitialized( bid.getItem() ) );
 			assertFalse( Hibernate.isInitialized( bid.getItem().getCategory() ) );
 		} );
 
 		scope.inTransaction( (s) -> {
-			s.createQuery( "delete from Bid" ).executeUpdate();
-			s.createQuery( "delete from Comment" ).executeUpdate();
-			s.createQuery( "delete from Item" ).executeUpdate();
-			s.createQuery( "delete from Category" ).executeUpdate();
+			s.createMutationQuery( "delete from Bid" ).executeUpdate();
+			s.createMutationQuery( "delete from Comment" ).executeUpdate();
+			s.createMutationQuery( "delete from Item" ).executeUpdate();
+			s.createMutationQuery( "delete from Category" ).executeUpdate();
 		} );
 	}
 

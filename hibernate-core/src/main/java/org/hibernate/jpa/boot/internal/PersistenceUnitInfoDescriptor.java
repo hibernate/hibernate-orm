@@ -119,7 +119,7 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 
 	@Override
 	public List<String> getAllClassNames() {
-		return persistenceUnitInfo.getAllManagedClassNames();
+		return persistenceUnitInfo.getAllClassNames();
 	}
 
 	@Override

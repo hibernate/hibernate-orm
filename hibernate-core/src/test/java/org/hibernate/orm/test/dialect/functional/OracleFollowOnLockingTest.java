@@ -395,7 +395,7 @@ public class OracleFollowOnLockingTest {
 		factoryScope.inTransaction( (session) -> {
 			sqlCollector.clear();
 
-			List<Product> products = session.createQuery( "select distinct p from Product p where p.id > 40" )
+			List<Product> products = session.createQuery( "select distinct p from Product p where p.id > 40", Product.class )
 					.setLockMode( LockModeType.PESSIMISTIC_WRITE )
 					.setFollowOnStrategy( Locking.FollowOn.FORCE )
 					.setMaxResults( 10 )

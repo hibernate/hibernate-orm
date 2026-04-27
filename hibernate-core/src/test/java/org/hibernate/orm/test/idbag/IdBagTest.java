@@ -88,7 +88,7 @@ public class IdBagTest {
 
 					session.clear();
 
-					gavin = (User) session.createQuery( "from User u join fetch u.groups" ).uniqueResult();
+					gavin = session.createQuery( "from User u join fetch u.groups", User.class ).uniqueResult();
 					assertTrue( Hibernate.isInitialized( gavin.getGroups() ) );
 					assertEquals( 2, gavin.getGroups().size() );
 					assertEquals( "admins", ( (Group) gavin.getGroups().get( 0 ) ).getName() );

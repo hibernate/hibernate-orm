@@ -129,7 +129,8 @@ public class QueryLiteralTest {
 
 		scope.inTransaction(
 				(session) -> {
-					String value = (String) session.createNativeQuery( "select e.same_type_converter from entity_converter e where e.id=:id" )
+					String value = session.createNativeQuery(String.class,
+									"select e.same_type_converter from entity_converter e where e.id=:id" )
 							.setParameter( "id", loaded.getId() )
 							.uniqueResult();
 					assertEquals( "VALUE_HUNDRED", value );

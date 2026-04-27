@@ -6,11 +6,11 @@ package org.hibernate.query.criteria;
 
 import java.util.Set;
 
+import jakarta.persistence.criteria.BooleanExpression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.SetJoin;
 
 /**
@@ -29,7 +29,7 @@ public interface JpaSetJoin<O, T> extends JpaPluralJoin<O, Set<T>, T>, SetJoin<O
 	JpaSetJoin<O, T> on(JpaPredicate @Nullable... restrictions);
 
 	@Override
-	JpaSetJoin<O, T> on(Predicate @Nullable... restrictions);
+	JpaSetJoin<O, T> on(BooleanExpression... restrictions);
 
 	@Override
 	<S extends T> JpaTreatedJoin<O,T,S> treatAs(Class<S> treatAsType);

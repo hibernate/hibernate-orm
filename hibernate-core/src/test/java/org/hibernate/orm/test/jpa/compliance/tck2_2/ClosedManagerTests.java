@@ -32,7 +32,7 @@ public class ClosedManagerTests extends AbstractJPATest {
 		final Session session = sessionFactory().openSession();
 		final Query qry;
 		try {
-			qry = session.createQuery( "select i from Item i" );
+			qry = session.createQuery( Object.class, "select i from Item i" );
 		}
 		finally {
 			session.close();
@@ -52,7 +52,7 @@ public class ClosedManagerTests extends AbstractJPATest {
 		final Session session = sessionFactory().openSession();
 		final Query qry;
 		try {
-			qry = session.createQuery( "select i from Item i" );
+			qry = session.createQuery( Object.class, "select i from Item i" );
 		}
 		finally {
 			session.close();
@@ -72,7 +72,7 @@ public class ClosedManagerTests extends AbstractJPATest {
 		final Session session = sessionFactory().openSession();
 		final Query qry;
 		try {
-			qry = session.createQuery( "select i from Item i where i.id = ?1" );
+			qry = session.createQuery( Object.class, "select i from Item i where i.id = ?1" );
 		}
 		finally {
 			session.close();
@@ -94,7 +94,7 @@ public class ClosedManagerTests extends AbstractJPATest {
 
 		final Query qry;
 		try {
-			qry = session.createQuery( "select i from Item i where i.id = :id" );
+			qry = session.createQuery( Object.class, "select i from Item i where i.id = :id" );
 		}
 		finally {
 			session.close();
@@ -115,7 +115,7 @@ public class ClosedManagerTests extends AbstractJPATest {
 
 		final Query qry;
 		try {
-			qry = session.createQuery( "select i from Item i where i.id = ?1" );
+			qry = session.createQuery( Object.class, "select i from Item i where i.id = ?1" );
 			qry.setParameter( 1, 1 );
 		}
 		finally {
@@ -144,7 +144,7 @@ public class ClosedManagerTests extends AbstractJPATest {
 
 		final Query qry;
 		try {
-			qry = session.createQuery( "select i from Item i where i.id = :id" );
+			qry = session.createQuery( Object.class, "select i from Item i where i.id = :id" );
 			qry.setParameter( "id", 1 );
 		}
 		finally {

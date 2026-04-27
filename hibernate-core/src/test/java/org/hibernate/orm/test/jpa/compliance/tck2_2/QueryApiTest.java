@@ -77,8 +77,8 @@ public class QueryApiTest {
 				session -> {
 					try {
 						// Query
-						final Query query1 = session.createQuery( "select p from Person p where name = :name1" );
-						final Query query2 = session.createQuery( "select p from Person p where name = :name2" );
+						final Query query1 = session.createQuery( Person.class, "select p from Person p where name = :name1" );
+						final Query query2 = session.createQuery( Person.class, "select p from Person p where name = :name2" );
 
 						final Parameter<?> name1 = query1.getParameter( "name1" );
 						query2.getParameterValue( name1 );
@@ -107,7 +107,7 @@ public class QueryApiTest {
 				session -> {
 					try {
 						// Query
-						final Query query1 = session.createQuery( "select p from Person p where name = :name1" );
+						final Query query1 = session.createQuery( Person.class, "select p from Person p where name = :name1" );
 
 						query1.getParameterValue( "name2" );
 						fail( "expecting failure" );
@@ -125,7 +125,7 @@ public class QueryApiTest {
 				session -> {
 					try {
 						// Query
-						final Query query1 = session.createQuery( "select p from Person p" );
+						final Query query1 = session.createQuery( Person.class,"select p from Person p" );
 
 						query1.getParameterValue( 2 );
 						fail( "expecting failure" );
@@ -143,8 +143,8 @@ public class QueryApiTest {
 				session -> {
 					try {
 						// Query
-						final Query query1 = session.createQuery( "select p from Person p where p.dob < :date1" );
-						final Query query2 = session.createQuery( "select p from Person p where p.dob < :date2" );
+						Query query1 = session.createQuery( Person.class, "select p from Person p where p.dob < :date1" );
+						Query query2 = session.createQuery( Person.class, "select p from Person p where p.dob < :date2" );
 
 						final Parameter<?> date2 = query2.getParameter( "date2" );
 						query1.setParameter( date2, new Date() );
@@ -216,7 +216,7 @@ public class QueryApiTest {
 						session.getTransaction().begin();
 
 						// Query
-						session.createQuery( "invalid" ).list();
+						session.createQuery( "invalid" ).getResultList();
 						fail( "expecting failure" );
 					}
 					catch (IllegalArgumentException expected) {

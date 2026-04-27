@@ -83,10 +83,9 @@ public class ByteCodeEnhancedImmutableReferenceCacheTest {
 		// now try query caching
 		s = scope.getSessionFactory().openSession();
 		s.beginTransaction();
-		MyEnhancedReferenceData queried = (MyEnhancedReferenceData)
-				s.createQuery( "from MyEnhancedReferenceData" )
-						.setCacheable( true )
-						.list().get( 0 );
+		var queried = s.createQuery( MyEnhancedReferenceData.class, "from MyEnhancedReferenceData" )
+				.setCacheable( true )
+				.list().get( 0 );
 		s.getTransaction().commit();
 		s.close();
 

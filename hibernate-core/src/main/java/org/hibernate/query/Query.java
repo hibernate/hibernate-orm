@@ -12,10 +12,13 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.QueryFlushMode;
+import jakarta.persistence.StatementOrTypedQuery;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.Type;
+import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -26,10 +29,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.SharedSessionContract;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.graph.GraphSemantic;
-import jakarta.persistence.QueryFlushMode;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.query.spi.QueryOptions;
 
@@ -64,7 +64,7 @@ import java.util.stream.Stream;
  * <ul>
  * <li>{@link org.hibernate.SharedSessionContract#createQuery(String, Class)}, passing the HQL as a
  *     string,
- * <li>{@link org.hibernate.SharedSessionContract#createQuery(jakarta.persistence.criteria.CriteriaQuery)},
+ * <li>{@link org.hibernate.SharedSessionContract#createQuery(jakarta.persistence.criteria.CriteriaSelect)},
  *     passing a {@linkplain jakarta.persistence.criteria.CriteriaQuery<T> criteria
  *     object}, or
  * <li>{@link org.hibernate.SharedSessionContract#createNamedQuery(String, Class)} passing the name
@@ -99,7 +99,7 @@ import java.util.stream.Stream;
  * @author Steve Ebersole
  */
 @Incubating
-public interface Query<T> extends CommonQueryContract {
+public interface Query<T> extends CommonQueryContract, StatementOrTypedQuery {
 
 	/**
 	 * The {@code Query<T>} as a string, or {@code null} in the case of a criteria query.
@@ -113,45 +113,17 @@ public interface Query<T> extends CommonQueryContract {
 	@Override
 	SelectionQuery<T> asSelectionQuery();
 
-	/**
-	 * Covariant override of {@linkplain jakarta.persistence.Query#ofType}.
-	 *
-	 * @apiNote Jakarta Persistence declares that the generic {@linkplain IllegalStateException}
-	 * exception be thrown, as opposed to something more meaningful like Hibernate's
-	 * {@linkplain IllegalSelectQueryException}.
-	 *
-	 * @see #asSelectionQuery(Class)
-	 */
 	@Override
-	<R> SelectionQuery<R> ofType(Class<R> type);
+	<R> SelectionQuery<R> ofType(Class<R> resultType);
 
-	/**
-	 * Covariant override of {@linkplain jakarta.persistence.Query#withEntityGraph}.
-	 *
-	 * @apiNote Jakarta Persistence declares that the generic {@linkplain IllegalStateException}
-	 * exception be thrown, as opposed to something more meaningful like Hibernate's
-	 * {@linkplain IllegalSelectQueryException}.
-	 *
-	 * @see #asSelectionQuery(EntityGraph, GraphSemantic)
-	 * @see SharedSessionContract#createSelectionQuery(String, EntityGraph)
-	 * @see SharedSessionContract#createQuery(String, EntityGraph)
-	 * @see #asSelectionQuery(Class)
-	 */
 	@Override
-	<R> SelectionQuery<R> withEntityGraph(EntityGraph<R> entityGraph);
+	<R> SelectionQuery<R> withEntityGraph(EntityGraph<R> graph);
 
-	/**
-	 * Covariant override of {@linkplain jakarta.persistence.Query#asStatement}.
-	 *
-	 * @apiNote Jakarta Persistence declares that the generic {@linkplain IllegalStateException}
-	 * exception be thrown, as opposed to something more meaningful like Hibernate's
-	 * {@linkplain IllegalMutationQueryException}.
-	 *
-	 * @see #asMutationQuery()
-	 */
+	@Override
+	<R> SelectionQuery<R> withResultSetMapping(ResultSetMapping<R> mapping);
+
 	@Override
 	MutationQuery asStatement();
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options

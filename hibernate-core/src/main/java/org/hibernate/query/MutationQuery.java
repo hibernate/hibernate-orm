@@ -9,6 +9,7 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.Statement;
+import jakarta.persistence.StatementOrTypedQuery;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.criteria.CriteriaStatement;
@@ -59,7 +60,7 @@ import java.util.Map;
  * @author Steve Ebersole
  */
 @Incubating
-public interface MutationQuery extends CommonQueryContract, Statement {
+public interface MutationQuery extends CommonQueryContract, Statement, StatementOrTypedQuery {
 	/**
 	 * The HQL or native-SQL string, or {@code null} in the case of a criteria query.
 	 */

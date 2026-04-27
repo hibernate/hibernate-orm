@@ -171,8 +171,8 @@ public class ColumnTransformerTest {
 	public void testHqlProjection(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Double sizeInInchesViaHql = (Double) session
-							.createQuery( "select s.sizeInInches from Staff s where s.id = :id" )
+					Double sizeInInchesViaHql = session
+							.createQuery( Double.class, "select s.sizeInInches from Staff s where s.id = :id" )
 							.setParameter( "id", 4 )
 							.uniqueResult();
 					assertThat( sizeInInchesViaHql, notNullValue() );

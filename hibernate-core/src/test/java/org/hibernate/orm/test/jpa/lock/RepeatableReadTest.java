@@ -90,7 +90,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 					// at this point, s1 now contains stale data, so try an hql query which
 					// returns said item and make sure we get the previously associated state
 					// (i.e., the old name and the old version)
-					Item item2 = (Item) s1.createQuery( "select i from Item i" ).list().get( 0 );
+					Item item2 = (Item) s1.createQuery( Item.class, "select i from Item i" ).list().get( 0 );
 					assertSame( item, item2 );
 					assertEquals( check, item2.getName(), "encountered non-repeatable read" );
 					assertEquals( initialVersion, item2.getVersion(), "encountered non-repeatable read" );
@@ -210,7 +210,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 					// at this point, s1 now contains stale data, so try an hql query which
 					// returns said part and make sure we get the previously associated state
 					// (i.e., the old name)
-					Part part2 = (Part) s1.createQuery( "select p from Part p" ).list().get( 0 );
+					Part part2 = (Part) s1.createQuery( Part.class, "select p from Part p" ).list().get( 0 );
 					assertSame( part, part2 );
 					assertEquals( check, part2.getName(), "encountered non-repeatable read" );
 				}
@@ -219,7 +219,7 @@ public class RepeatableReadTest extends AbstractJPATest {
 		// clean up
 		inTransaction(
 				session -> {
-					Part part = (Part) session.createQuery( "select p from Part p" ).list().get( 0 );
+					Part part = (Part) session.createQuery( Part.class, "select p from Part p" ).list().get( 0 );
 
 					session.remove( part );
 					session.remove( part.getItem() );

@@ -4,10 +4,6 @@
  */
 package org.hibernate.orm.test.collection.map;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,20 +15,23 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-
 import org.hibernate.collection.spi.PersistentMap;
-import org.hibernate.query.Query;
-
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -70,22 +69,22 @@ public class PersistentMapTest {
 					session.persist( parent );
 					session.flush();
 					// at this point, the map on parent has now been replaced with a PersistentMap...
-					PersistentMap children = (PersistentMap) parent.getChildren();
+					var children = (PersistentMap<String,Child>) parent.getChildren();
 
-					Object old = children.put( child.getName(), child );
-					assertTrue( old == child );
+					var old = children.put( child.getName(), child );
+					assertSame( old, child );
 					assertFalse( children.isDirty() );
 
 					old = children.remove( otherChild.getName() );
 					assertNull( old );
 					assertFalse( children.isDirty() );
 
-					HashMap otherMap = new HashMap();
+					var otherMap = new HashMap<String,Child>();
 					otherMap.put( child.getName(), child );
 					children.putAll( otherMap );
 					assertFalse( children.isDirty() );
 
-					otherMap = new HashMap();
+					otherMap = new HashMap<>();
 					otherMap.put( otherChild.getName(), otherChild );
 					children.putAll( otherMap );
 					assertTrue( children.isDirty() );
@@ -181,7 +180,7 @@ public class PersistentMapTest {
 
 		scope.inTransaction(
 				session -> {
-					Query q = session.createQuery( "SELECT d.user FROM " + UserData.class.getName() + " d " );
+					var q = session.createQuery(User.class, "select d.user from UserData d" );
 					List<User> list = q.list();
 
 					assertEquals( 1, list.size() );
@@ -212,9 +211,9 @@ public class PersistentMapTest {
 						user.userDatas.clear();
 						session.merge( user );
 
-						Query<UserData> q = session.createQuery( "DELETE FROM " + UserData.class.getName() + " d WHERE d.user = :user" );
-						q.setParameter( "user", user );
-						q.executeUpdate();
+						session.createMutationQuery( "delete from UserData d WHERE d.user = :user" )
+								.setParameter( "user", user )
+								.executeUpdate();
 
 						session.getTransaction().commit();
 
@@ -232,9 +231,8 @@ select
 		userdatas0_.userId=1
  */
 						assertEquals( 0, session.get( User.class, user.id ).userDatas.size() );
-						assertEquals( 0, session.createQuery( "FROM " + UserData.class.getName() ).list().size() );
-						session.createQuery( "delete " + User.class.getName() )
-								.executeUpdate();
+						assertEquals( 0, session.createQuery(UserData.class, "from UserData" ).list().size() );
+						session.createMutationQuery( "delete " + User.class.getName() ).executeUpdate();
 						session.getTransaction().commit();
 					}
 					catch (Exception e) {

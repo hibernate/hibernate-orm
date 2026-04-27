@@ -47,7 +47,7 @@ public class CompleteComponentPropertyRefTest {
 
 		scope.inTransaction(
 				session -> {
-					Account a = (Account) session.createQuery( "from Account a left join fetch a.owner" )
+					Account a = session.createQuery( Account.class,"from Account a left join fetch a.owner" )
 							.uniqueResult();
 					assertTrue( Hibernate.isInitialized( a.getOwner() ) );
 					assertNotNull( a.getOwner() );

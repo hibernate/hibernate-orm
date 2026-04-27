@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -12,6 +13,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import jakarta.persistence.criteria.ComparableExpression;
+import jakarta.persistence.criteria.TemporalExpression;
+import jakarta.persistence.metamodel.BooleanAttribute;
+import jakarta.persistence.metamodel.ComparableAttribute;
+import jakarta.persistence.metamodel.NumericAttribute;
+import jakarta.persistence.metamodel.TemporalAttribute;
+import jakarta.persistence.metamodel.TextAttribute;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
@@ -257,7 +265,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 			return treatedPath;
 		}
 		else {
-			//TODO: check this cast
+			//noinspection unchecked
 			return (SqmTreatedPath<T, S>) path;
 		}
 	}
@@ -356,15 +364,45 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	public <E, C extends Collection<E>> SqmExpression<C> get(PluralAttribute<? super T, C, E> attribute) {
+	public <E, C extends Collection<E>> SqmPluralPath<C,E> get(PluralAttribute<? super T, C, E> attribute) {
 		//noinspection unchecked
-		return resolvePath( (PersistentAttribute<T, C>) attribute );
+		return (SqmPluralPath<C, E>) resolvePath( (PersistentAttribute<T, C>) attribute );
 	}
 
 	@Override
-	public <K, V, M extends Map<K, V>> SqmExpression<M> get(MapAttribute<? super T, K, V> attribute) {
+	public <K, V, M extends Map<K, V>> SqmPluralPath<M,V> get(MapAttribute<? super T, K, V> attribute) {
 		//noinspection unchecked
-		return resolvePath( (PersistentAttribute<T, M>) attribute );
+		return (SqmPluralPath<M, V>) resolvePath( (PersistentAttribute<T, M>) attribute );
+	}
+
+	@Override
+	public <C extends Comparable<? super C>> ComparableExpression<C> get(ComparableAttribute<? super T, C> attribute) {
+		//noinspection unchecked
+		return (ComparableExpression<C>) resolvePath( (PersistentAttribute<T, C>) attribute );
+	}
+
+	@Override
+	public SqmBooleanPath get(BooleanAttribute<? super T> attribute) {
+		//noinspection unchecked
+		return (SqmBooleanPath) resolvePath( (PersistentAttribute<?, Boolean>) attribute );
+	}
+
+	@Override
+	public <T1 extends Temporal & Comparable<? super T1>> TemporalExpression<T1> get(TemporalAttribute<? super T, T1> attribute) {
+		//noinspection unchecked
+		return (SqmTemporalPath<T1>) resolvePath( (PersistentAttribute<?, T1>) attribute );
+	}
+
+	@Override
+	public <N extends Number & Comparable<N>> SqmNumericPath<N> get(NumericAttribute<? super T, N> attribute) {
+		//noinspection unchecked
+		return (SqmNumericPath<N>) resolvePath( (PersistentAttribute<?, N>) attribute );
+	}
+
+	@Override
+	public SqmTextPath get(TextAttribute<? super T> attribute) {
+		//noinspection unchecked
+		return (SqmTextPath) resolvePath( (PersistentAttribute<? super T, String>) attribute );
 	}
 
 	// The equals/hashCode and isCompatible/cacheHashCode implementations are based on NavigablePath to match paths

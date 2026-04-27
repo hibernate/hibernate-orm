@@ -12,6 +12,11 @@ sourceSets {
         compileClasspath += sourceSets.main.output
         runtimeClasspath += sourceSets.main.output
     }
+    test {
+        resources {
+            srcDir 'docs/examples'
+        }
+    }
 }
 
 configurations {

@@ -1,0 +1,33 @@
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<project name="templatepath" default="reveng">
+
+  <!-- Include the 'hibernatetool' task definition from the file '../common/included.xml' -->
+  <include file="../common/included.xml"/>
+
+  <target name="reveng" depends="common.clean">
+    <!-- Hibernate Tools will look for templates to use in the 'templates' folder -->
+    <hibernatetool 
+          destdir="generated"
+          templatepath="templates">
+      <jdbcconfiguration propertyfile="../common/hibernate.properties" />
+      <!-- The main template file used by the Java exporter is to be found in the location 'main.entity.ftl' -->
+      <hbm2java/>
+    </hibernatetool>
+  </target>
+
+</project>
+

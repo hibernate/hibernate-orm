@@ -9,7 +9,6 @@ import org.apache.tools.ant.MagicNames;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.ProjectHelper;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -24,18 +23,14 @@ import java.util.Objects;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-@Disabled("TODO HHH-20376: restore examples infrastructure removed in bfaccf6676")
 public class ExamplesTestIT {
 
 	private static File baseFolder;
 
 	@BeforeAll
 	public static void beforeAll() throws Exception {
-		// The needed resource for this test are put in place
-		// in the 'baseFolder' (normally 'target/test-classes')
-		// by the 'build-helper-maven-plugin' execution.
-		// See the 'pom.xml'
 		baseFolder = determineBaseFolder();
+		cleanGeneratedOutput();
 		editIncludedXml();
 		overwriteHibernateProperties();
 		createDatabase();
@@ -184,17 +179,55 @@ public class ExamplesTestIT {
 		return consoleLogger;
 	}
 
+	private static void cleanGeneratedOutput() {
+		for (String dir : new String[] {
+				"5-minute-tutorial/generated",
+				"cfgxml/generated",
+				"configuration/default/generated",
+				"configuration/fileset/generated",
+				"jpa/generated",
+				"native/generated",
+				"templatepath/generated" }) {
+			File genDir = new File(baseFolder, dir);
+			if (genDir.exists()) {
+				deleteRecursively(genDir);
+			}
+		}
+	}
+
+	private static void deleteRecursively(File file) {
+		if (file.isDirectory()) {
+			for (File child : file.listFiles()) {
+				deleteRecursively(child);
+			}
+		}
+		file.delete();
+	}
+
 	private static void editIncludedXml() throws Exception {
 		File xmlFile = new File(baseFolder, "common/included.xml");
-		StringBuilder xmlFileContents = new StringBuilder(
-				new String(Files.readAllBytes(xmlFile.toPath())));
-		int start = xmlFileContents.indexOf("<ivy:cachepath");
-		int end = xmlFileContents.indexOf("<ivy:cachepath", start + 1);
-		xmlFileContents.replace(start, end, "");
-		start = xmlFileContents.indexOf("<path refid=\"hibernate-tools.path\"/>");
-		end = xmlFileContents.indexOf("<path refid=", start + 1);
-		xmlFileContents.replace(start, end, "");
-		Files.writeString(xmlFile.toPath(), xmlFileContents.toString());
+		String simplified = """
+				<project name="common">
+					<path id="classpath">
+						<pathelement path="${java.class.path}"/>
+						<path location="."/>
+					</path>
+					<taskdef
+							name="hibernatetool"
+							classname="org.hibernate.tool.ant.HibernateToolTask"/>
+					<target name="clean">
+						<delete dir="generated"/>
+						<delete>
+							<fileset dir="." includes="**/*.class"/>
+						</delete>
+					</target>
+					<target name="compile" depends="clean">
+						<javac srcdir="." destdir="."
+								classpathref="classpath"/>
+					</target>
+				</project>
+				""";
+		Files.writeString(xmlFile.toPath(), simplified);
 	}
 
 	private static void overwriteHibernateProperties() throws Exception {
@@ -210,6 +243,13 @@ public class ExamplesTestIT {
 	}
 
 	private static void createDatabase() throws Exception {
+		File databaseDir = new File(baseFolder, "database");
+		if (databaseDir.exists()) {
+			for (File f : databaseDir.listFiles()) {
+				f.delete();
+			}
+			databaseDir.delete();
+		}
 		File databaseFile = new File(baseFolder, "database/test.mv.db");
 		assertFalse(databaseFile.exists());
 		assertFalse(databaseFile.isFile());

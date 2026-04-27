@@ -1,0 +1,62 @@
+<!--
+  ~ Copyright 2004 - 2025 Red Hat, Inc.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<project name="properties" default="reveng">
+
+  <!-- Include the 'hibernatetool' task definition from the file '../common/included.xml' -->
+  <include file="../common/included.xml"/>
+
+  <target name="reveng" depends="common.compile">
+    <!-- Property to use in the propertySet case -->
+    <property name="thingOne" value="Bar"/>
+    <echo message="First try without any property set"/>
+    <hibernatetool destdir="dummy">
+      <!-- The classpath to be used by the 'hibernatetool' task to look up additional classes or resources -->
+      <classpath location="."/>
+      <!-- Dummy configuration, as it is needed for any 'hibernatetool' task -->
+      <configuration />
+      <!-- Custom exporter 'HelloExporter' will say 'Hello, World!' -->
+      <hbmtemplate exporterclass="HelloExporter"/>
+    </hibernatetool>
+    <echo message="Now try with a property element: 'greetedOne' is set to 'Foo'"/>
+    <hibernatetool destdir="dummy">
+      <!-- The classpath to be used by the 'hibernatetool' task to look up additional classes or resources -->
+      <classpath location="."/>
+      <!-- <property> element to be used by the HelloExporter below -->
+      <property key="greetedOne" value="Foo"/>
+      <!-- Dummy configuration, as it is needed for any 'hibernatetool' task -->
+      <configuration />
+      <!-- Custom exporter of class 'HelloExporter' to be found on the specified classpath -->
+      <hbmtemplate exporterclass="HelloExporter"/>
+    </hibernatetool>
+    <echo message="Lastly try with a propertySet element: 'greetedOne' is set to 'Bar'"/>
+    <hibernatetool destdir="dummy">
+      <!-- The classpath to be used by the 'hibernatetool' task to look up additional classes or resources -->
+      <classpath location="."/>
+      <!-- <propertySet> element to be used by the HelloExporter below -->
+      <!-- The property 'thingOne' defined above is mapped to 'greetedOne' and subsequently used -->
+      <propertySet>
+        <propertyref prefix="thing"/>
+        <mapper type="glob" from="thing*" to="greeted*"/>
+      </propertySet>
+      <!-- Dummy configuration, as it is needed for any 'hibernatetool' task -->
+      <configuration />
+      <!-- Custom exporter of class 'HelloExporter' to be found on the specified classpath -->
+      <hbmtemplate exporterclass="HelloExporter"/>
+    </hibernatetool>
+  </target>
+
+</project>
+

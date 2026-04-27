@@ -1,0 +1,6 @@
+<hibernate-mapping>
+    <class name="Foo">
+        <id name="id"/>
+        <property name="bar" type="string"/>
+    </class>
+</hibernate-mapping>

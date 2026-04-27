@@ -50,7 +50,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 	@Test
 	void testJoining() {
 		sessionFactory().inTransaction( (session) -> {
-			session.createQuery( "select u from User u join u.person p" ).list();
+			session.createQuery( User.class, "select u from User u join u.person p" ).list();
 		} );
 	}
 
@@ -165,9 +165,9 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 					emp.getPerson().setDob( new Date() );
 					s.persist( emp );
 
-					s.createQuery( "from Employee e where e.person = :p and 1 = 1 and 2=2" ).setParameter( "p", emp.getPerson() ).list();
-					s.createQuery( "from Employee e where :p = e.person" ).setParameter( "p", emp.getPerson() ).list();
-					s.createQuery( "from Employee e where e.person = ('', '', current_timestamp, 0.0, 'steve', '', 0)" ).list();
+					s.createQuery( Employee.class, "from Employee e where e.person = :p and 1 = 1 and 2=2" ).setParameter( "p", emp.getPerson() ).list();
+					s.createQuery( Employee.class, "from Employee e where :p = e.person" ).setParameter( "p", emp.getPerson() ).list();
+					s.createQuery( Employee.class, "from Employee e where e.person = ('', '', current_timestamp, 0.0, 'steve', '', 0)" ).list();
 
 					s.remove( emp );
 				}
@@ -190,7 +190,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 					emp.getPerson().setName( "steve" );
 					emp.getPerson().setDob( new Date() );
 					s.persist( emp );
-					s.createQuery( "from Employee e where e.person = (current_timestamp, 'steve')" ).list();
+					s.createQuery( Employee.class, "from Employee e where e.person = (current_timestamp, 'steve')" ).list();
 					s.remove( emp );
 				}
 		);
@@ -200,7 +200,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 	public void testComponentFormulaQuery() {
 		inTransaction(
 				s -> {
-					s.createQuery("from User u where u.person.yob = 1999").list();
+					s.createQuery(User.class, "from User u where u.person.yob = 1999").list();
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<User> criteria = criteriaBuilder.createQuery( User.class );
 					Root<User> root = criteria.from( User.class );
@@ -212,9 +212,9 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 //			.add( Property.forName("person.yob").between( new Integer(1999), new Integer(2002) ) )
 //			.list();
 
-					s.createQuery("from User u where u.person = ('Peachtree Rd', 'Peachtree Rd', :dob, 34, 'gavin', 'Karbarook Ave', 1974)")
+					s.createQuery( User.class,"from User u where u.person = ('Peachtree Rd', 'Peachtree Rd', :dob, 34, 'gavin', 'Karbarook Ave', 1974)")
 							.setParameter("dob", new Date("March 25, 1974")).list();
-					s.createQuery("from User where person = ('Peachtree Rd', 'Peachtree Rd', :dob, 34, 'gavin', 'Karbarook Ave', 1974)")
+					s.createQuery(User.class, "from User where person = ('Peachtree Rd', 'Peachtree Rd', :dob, 34, 'gavin', 'Karbarook Ave', 1974)")
 							.setParameter("dob", new Date("March 25, 1974")).list();
 				}
 		);
@@ -234,13 +234,13 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 					// Test value conversion during insert
 					// Value returned by Oracle native query is a Types.NUMERIC, which is mapped to a BigDecimalType;
 					// Cast returned value to Number then call Number.doubleValue() so it works on all dialects.
-					Double heightViaSql =
-							( (Number)s.createNativeQuery("select height_centimeters from T_USER where T_USER.userName='steve'").uniqueResult())
-									.doubleValue();
+					double heightViaSql = s.createNativeQuery(Double.class,
+									"select height_centimeters from T_USER where T_USER.userName='steve'")
+							.uniqueResult();
 					assertEquals(HEIGHT_CENTIMETERS, heightViaSql, 0.01d);
 
 					// Test projection
-					Double heightViaHql = (Double)s.createQuery("select u.person.heightInches from User u where u.id = 'steve'").uniqueResult();
+					Double heightViaHql = s.createQuery( Double.class,"select u.person.heightInches from User u where u.id = 'steve'").uniqueResult();
 					assertEquals(HEIGHT_INCHES, heightViaHql, 0.01d);
 
 					// Test restriction and entity load via criteria
@@ -250,13 +250,10 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 					Join<User, Object> person = root.join( "person", JoinType.INNER );
 					criteria.where( criteriaBuilder.between( person.get( "heightInches" ), HEIGHT_INCHES - 0.01d, HEIGHT_INCHES + 0.01d) );
 					u = s.createQuery( criteria ).uniqueResult();
-//		u = (User)s.createCriteria(User.class)
-//			.add(Restrictions.between("person.heightInches", HEIGHT_INCHES - 0.01d, HEIGHT_INCHES + 0.01d))
-//			.uniqueResult();
 					assertEquals(HEIGHT_INCHES, u.getPerson().getHeightInches(), 0.01d);
 
 					// Test predicate and entity load via HQL
-					u = (User)s.createQuery("from User u where u.person.heightInches between ?1 and ?2")
+					u = s.createQuery(User.class, "from User u where u.person.heightInches between ?1 and ?2")
 							.setParameter(1, HEIGHT_INCHES - 0.01d)
 							.setParameter(2, HEIGHT_INCHES + 0.01d)
 							.uniqueResult();
@@ -265,9 +262,9 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 					// Test update
 					u.getPerson().setHeightInches(1);
 					s.flush();
-					heightViaSql =
-							( (Number)s.createNativeQuery("select height_centimeters from T_USER where T_USER.userName='steve'").uniqueResult() )
-									.doubleValue();
+					heightViaSql = s.createNativeQuery(Double.class,
+									"select height_centimeters from T_USER where T_USER.userName='steve'")
+							.uniqueResult();
 					assertEquals(2.54d, heightViaSql, 0.01d);
 					s.remove(u);
 				}
@@ -277,7 +274,7 @@ public class ComponentTest extends BaseSessionFactoryFunctionalTest {
 	@Test
 	public void testNamedQuery() {
 		inTransaction(
-				s -> s.createNamedQuery( "userNameIn")
+				s -> s.createNamedQuery( "userNameIn", Object[].class )
 						.setParameterList( "nameList", new Object[] {"1ovthafew", "turin", "xam"} )
 						.list()
 		);

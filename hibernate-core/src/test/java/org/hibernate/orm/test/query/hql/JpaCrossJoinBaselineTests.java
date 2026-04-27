@@ -22,7 +22,7 @@ public class JpaCrossJoinBaselineTests {
 	@Test
 	public void testCrossJoin(SessionFactoryScope scope) {
 		final String qry = "from LineItem i cross join Order o join o.salesAssociate a on i.product.vendor.name = a.name.familyName";
-		scope.inTransaction( (session) -> session.createQuery( qry ).list() );
+		scope.inTransaction( (session) -> session.createQuery( qry, Object[].class ).list() );
 	}
 
 	@Test
@@ -30,7 +30,7 @@ public class JpaCrossJoinBaselineTests {
 		final String qry = "select i from LineItem i, Order o join o.salesAssociate a on i.quantity = a.id";
 
 		try {
-			scope.inTransaction( (session) -> session.createQuery( qry ).list() );
+			scope.inTransaction( (session) -> session.createQuery( qry, Object[].class ).list() );
 			fail( "Expecting a failure" );
 		}
 		catch (Exception expected) {
@@ -42,7 +42,7 @@ public class JpaCrossJoinBaselineTests {
 		final String qry = "from LineItem i, Order o join o.salesAssociate a on i.product.vendor.name = a.name.familyName";
 
 		try {
-			scope.inTransaction( (session) -> session.createQuery( qry ).list() );
+			scope.inTransaction( (session) -> session.createQuery( qry, Object[].class ).list() );
 			fail( "Expecting a failure" );
 		}
 		catch (Exception expected) {

@@ -27,8 +27,8 @@ public class QueryPlanCachingTest {
 	public void testHqlTranslationCaching(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "select e from SimpleEntity e" ).list();
-					session.createQuery( "select e from SimpleEntity e" ).list();
+					session.createQuery( "select e from SimpleEntity e", SmokeTests.SimpleEntity.class ).list();
+					session.createQuery( "select e from SimpleEntity e", SmokeTests.SimpleEntity.class ).list();
 				}
 		);
 	}

@@ -83,7 +83,7 @@ public class JakartaSchemaToolingTests {
 	private void tryQuery(SessionFactoryImplementor sessionFactory) {
 		TransactionUtil2.inTransaction( sessionFactory, (session) -> {
 			// the query would fail if the schema were not exported - just a smoke test
-			session.createQuery( "from SimpleEntity" ).list();
+			session.createQuery( SimpleEntity.class, "from SimpleEntity" ).list();
 		});
 	}
 

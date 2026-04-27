@@ -93,9 +93,11 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
 import org.hibernate.query.internal.MutationQueryImpl;
 import org.hibernate.query.internal.SelectionQueryImpl;
+import org.hibernate.query.named.NamedNativeQueryMemento;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
+import org.hibernate.query.named.NamedSqmQueryMemento;
 import org.hibernate.query.specification.MutationSpecification;
 import org.hibernate.query.specification.internal.SelectionSpecificationImpl;
 import org.hibernate.query.spi.HqlInterpretation;
@@ -103,9 +105,7 @@ import org.hibernate.query.spi.MutationQueryImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.query.sql.internal.NativeQueryImpl;
-import org.hibernate.query.named.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
-import org.hibernate.query.named.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
@@ -570,11 +570,6 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 				throw new RuntimeException( e );
 			}
 		} );
-	}
-
-	@Override
-	public <T> SelectionQueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery) {
-		return createQuery( (CriteriaQuery<T>) selectQuery );
 	}
 
 	@Override
@@ -1383,6 +1378,12 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		try {
 			return createSelectionQuery( queryString, expectedResultType );
 		}
+		catch (IllegalSelectQueryException e) {
+			// JPA requires IllegalArgumentException
+			var iae = new IllegalArgumentException( e.getMessage() );
+			iae.addSuppressed( e );
+			throw iae;
+		}
 		catch (RuntimeException e) {
 			throw getExceptionConverter().convert( e );
 		}
@@ -1444,9 +1445,15 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 			return createMutationQuery( hqlString );
 		}
 		catch (IllegalMutationQueryException e) {
+			markForRollbackOnly();
+			// JPA requires IllegalArgumentException
 			var iae = new IllegalArgumentException( e.getMessage() );
 			iae.addSuppressed( e );
 			throw iae;
+		}
+		catch (RuntimeException e) {
+			markForRollbackOnly();
+			throw getExceptionConverter().convert( e );
 		}
 	}
 
@@ -2041,7 +2048,12 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	}
 
 	@Override
-	public <T> SelectionQueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery) {
+	public <T> SelectionQueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery) {
+		return createSelectionQuery( selectQuery );
+	}
+
+	@Override
+	public <T> SelectionQueryImplementor<T> createSelectionQuery(CriteriaSelect<T> criteriaQuery) {
 		checkOpen();
 		if ( criteriaQuery instanceof CriteriaDefinition<T> criteriaDefinition ) {
 			final SelectionQueryImplementor<T> selectionQuery
@@ -2072,35 +2084,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		}
 	}
 
-	@Override
-	public <R> SelectionQueryImplementor<R> createSelectionQuery(CriteriaSelect<R> criteria) {
-		return createSelectionQuery( (CriteriaQuery<R>) criteria );
-	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	@Override
+@Override
 	public <T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType) {
 		checkOpen();
 		return new RootGraphImpl<>( null, getFactory().getJpaMetamodel().entity( rootType ) );

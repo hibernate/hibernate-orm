@@ -335,7 +335,7 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 
 			// NOTE : the ClassTransformer method is called discoverType, but in reality it
 			// pre-enhances the classes...
-			persistenceUnit.getAllManagedClassNames().forEach( (className) -> {
+			persistenceUnit.getAllClassNames().forEach( (className) -> {
 				classTransformer.discoverTypes( classLoader, className );
 			} );
 
@@ -376,13 +376,13 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 		return new DefaultEnhancementContext() {
 			@Override
 			public boolean isEntityClass(UnloadedClass classDescriptor) {
-				return persistenceUnit.getAllManagedClassNames().contains( classDescriptor.getName() )
+				return persistenceUnit.getAllClassNames().contains( classDescriptor.getName() )
 					&& super.isEntityClass( classDescriptor );
 			}
 
 			@Override
 			public boolean isCompositeClass(UnloadedClass classDescriptor) {
-				return persistenceUnit.getAllManagedClassNames().contains( classDescriptor.getName() )
+				return persistenceUnit.getAllClassNames().contains( classDescriptor.getName() )
 					&& super.isCompositeClass( classDescriptor );
 			}
 

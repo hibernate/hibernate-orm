@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.query.options;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
+import org.hibernate.testing.orm.domain.contacts.Contact;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -20,7 +21,7 @@ public class CacheModeTests {
 	public void testNullCacheMode(SessionFactoryScope scope) {
 		// tests passing null as CacheMode
 		scope.inTransaction( (session) -> {
-			session.createQuery( "select c from Contact c" )
+			session.createQuery( "select c from Contact c", Contact.class )
 					.setCacheMode( null )
 					.list();
 		});

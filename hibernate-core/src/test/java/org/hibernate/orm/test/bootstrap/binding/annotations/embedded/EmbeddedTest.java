@@ -16,7 +16,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 import org.hibernate.orm.test.bootstrap.binding.annotations.embedded.FloatLeg.RateIndex;
 import org.hibernate.orm.test.bootstrap.binding.annotations.embedded.Leg.Frequency;
-import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -121,7 +120,7 @@ public class EmbeddedTest {
 		scope.inTransaction( session -> session.persist( person ) );
 
 		scope.inTransaction( session -> {
-			Person p = (Person) session.createQuery( "from Person p where p.bornIn is null" ).uniqueResult();
+			Person p = session.createQuery(Person.class, "from Person p where p.bornIn is null" ).uniqueResult();
 			assertNotNull( p );
 			assertNotNull( p.address );
 			assertEquals( "Springfield", p.address.city );
@@ -153,7 +152,7 @@ public class EmbeddedTest {
 		scope.inTransaction( session -> session.persist( person ) );
 
 		scope.inTransaction( session -> {
-			Person p = (Person) session.createQuery( "from Person p where p.bornIn is not distinct from :b" )
+			Person p = session.createQuery(Person.class, "from Person p where p.bornIn is not distinct from :b" )
 					.setParameter( "b", person.bornIn )
 					.uniqueResult();
 			assertNotNull( p );
@@ -187,7 +186,7 @@ public class EmbeddedTest {
 		scope.inTransaction( session -> session.persist( person ) );
 
 		scope.inTransaction( session -> {
-			Person p = (Person) session.createQuery( "from Person p where p.bornIn is not distinct from :b" )
+			var p = session.createQuery(Person.class, "from Person p where p.bornIn is not distinct from :b" )
 					.setParameter( "b", person.bornIn )
 					.uniqueResult();
 			assertNotNull( p );
@@ -222,13 +221,13 @@ public class EmbeddedTest {
 		scope.inTransaction( session -> session.persist( person ) );
 
 		scope.inTransaction( session -> {
-			Query query = session.createQuery( "from Person p " +
-																"where ( p.bornIn.iso2 is null or p.bornIn.iso2 = :i ) and " +
-																"( p.bornIn.name is null or p.bornIn.name = :n )"
+			var query = session.createQuery( Person.class, "from Person p " +
+														"where ( p.bornIn.iso2 is null or p.bornIn.iso2 = :i ) and " +
+														"( p.bornIn.name is null or p.bornIn.name = :n )"
 			);
 			query.setParameter( "i", person.bornIn.getIso2() );
 			query.setParameter( "n", person.bornIn.getName() );
-			Person p = (Person) query.uniqueResult();
+			Person p = query.uniqueResult();
 			assertNotNull( p );
 			assertNotNull( p.address );
 			assertEquals( "Springfield", p.address.city );
@@ -295,16 +294,14 @@ public class EmbeddedTest {
 				}
 		);
 
-		scope.inTransaction(
-				session -> {
-					Query q = session.createQuery( "select p from Person p where p.address.city = :city" );
-					q.setParameter( "city", add.city );
-					List<Person> result = q.list();
-					Person samePerson = result.get( 0 );
-					assertNotNull( samePerson.address.type );
-					assertEquals( type.getName(), samePerson.address.type.getName() );
-				}
-		);
+		scope.inTransaction(session -> {
+			var q = session.createQuery( Person.class, "select p from Person p where p.address.city = :city" );
+			q.setParameter( "city", add.city );
+			List<Person> result = q.list();
+			Person samePerson = result.get( 0 );
+			assertNotNull( samePerson.address.type );
+			assertEquals( type.getName(), samePerson.address.type.getName() );
+		} );
 	}
 
 	@Test
@@ -614,25 +611,13 @@ public class EmbeddedTest {
 				}
 		);
 
-		InternetProvider provider = scope.fromTransaction(
-				session -> {
-					InternetProvider internetProviderQueried =
-							(InternetProvider) session.createQuery(
-									"from InternetProvider i join fetch i.owner o join fetch o.topManagement" )
-									.uniqueResult();
-					assertTrue( Hibernate.isInitialized( internetProviderQueried.getOwner().getTopManagement() ) );
-					return internetProviderQueried;
-				}
-		);
-
-		scope.inTransaction(
-				session -> {
-					InternetProvider internetProvider = session.get( InternetProvider.class, provider.getId() );
-					Manager manager = internetProvider.getOwner().getTopManagement().iterator().next();
-					session.remove( manager );
-					session.remove( internetProvider );
-				}
-		);
+		var provider = scope.fromTransaction(session -> {
+			var fromQuery = session.createQuery(InternetProvider.class,
+							"from InternetProvider i join fetch i.owner o join fetch o.topManagement" )
+					.uniqueResult();
+			assertTrue( Hibernate.isInitialized( fromQuery.getOwner().getTopManagement() ) );
+			return fromQuery;
+		} );
 	}
 
 

@@ -7,7 +7,6 @@ package org.hibernate.orm.test.hql;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import org.hibernate.query.Query;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -49,7 +48,7 @@ public class ParameterCollectionTest {
 	public void testReusingQueryWithNewParameterValues(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			Collection<Long> ids = new ArrayList<>();
-			Query q = session.createQuery( "select id from Person where id in (:ids) order by id" );
+			var q = session.createQuery( "select id from Person where id in (:ids) order by id", Long.class );
 			for ( int i = 0; i < 10; i++ ) {
 				ids.add( Long.valueOf( i ) );
 			}

@@ -62,18 +62,18 @@ public class NativeQueryAndFlushSessionTest {
 		scope.inTransaction(
 				session -> {
 					List<String> resultList = session
-							.createNativeQuery( "select name from Person where name ='John Doe'" )
+							.createNativeQuery( String.class, "select name from Person where name ='John Doe'" )
 							.getResultList();
 					assertThat( resultList.size() ).isEqualTo( 0 );
 
-					Person person = new Person( 1l, "John Doe" );
+					Person person = new Person( 1L, "John Doe" );
 					session.persist( person );
 
-					try (Stream<String> resultStream = session
-							.createNativeQuery( "select name from Person where name ='John Doe'" )
+					try (var resultStream = session
+							.createNativeQuery( String.class, "select name from Person where name ='John Doe'" )
 							.addSynchronizedEntityClass( Person.class )
 							.getResultStream()) {
-						List<String> results = resultStream.collect( Collectors.toList() );
+						List<String> results = resultStream.toList();
 
 						assertThat( results.size() ).isEqualTo( 1 );
 					}

@@ -67,11 +67,11 @@ public class OneToManyTest {
 		scope.inTransaction(
 				session -> {
 					@SuppressWarnings("unused")
-					Child child = (Child) session.createQuery( "from Child" ).uniqueResult();
-					session.createQuery( "from Child c left join fetch c.parent" ).list();
-					session.createQuery( "from Child c inner join fetch c.parent" ).list();
+					var child = session.createQuery( Child.class,"from Child" ).uniqueResult();
+					session.createQuery( Child.class,  "from Child c left join fetch c.parent" ).list();
+					session.createQuery( Child.class, "from Child c inner join fetch c.parent" ).list();
 					session.clear();
-					session.createQuery( "from Parent p left join fetch p.children" )
+					session.createQuery( Parent.class, "from Parent p left join fetch p.children" )
 							.uniqueResult();
 				}
 		);
@@ -91,7 +91,7 @@ public class OneToManyTest {
 				session ->
 						assertEquals(
 								0,
-								session.createQuery( "from Parent p where size(p.children) = 0" ).list().size()
+								session.createQuery( Parent.class, "from Parent p where size(p.children) = 0" ).list().size()
 						)
 		);
 	}

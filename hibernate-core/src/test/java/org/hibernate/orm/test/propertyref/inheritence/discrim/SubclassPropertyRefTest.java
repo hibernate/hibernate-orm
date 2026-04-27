@@ -53,14 +53,14 @@ public class SubclassPropertyRefTest {
 	public void testOneToOnePropertyRef(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Account a = (Account) session.createQuery(
+					var a = session.createQuery( Account.class,
 									"from Account acc join fetch acc.customer join fetch acc.person" )
 							.uniqueResult();
 					assertNotNull( a.getCustomer() );
 					assertTrue( Hibernate.isInitialized( a.getCustomer() ) );
 					assertNotNull( a.getPerson() );
 					assertTrue( Hibernate.isInitialized( a.getPerson() ) );
-					Customer c = (Customer) session.createQuery( "from Customer" ).uniqueResult();
+					var c = session.createQuery( Customer.class, "from Customer" ).uniqueResult();
 					assertSame(  a.getCustomer(), c );
 					assertSame(  a.getPerson(), c );
 					session.remove( a );

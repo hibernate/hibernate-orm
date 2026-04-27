@@ -157,27 +157,27 @@ public class UnionSubclassTest implements ServiceRegistryProducer {
 		} );
 
 		factoryScope.inTransaction( (s) -> {
-			var hive = (Hive) s.createQuery( "from Hive h" ).uniqueResult();
+			var hive = s.createQuery( "from Hive h", Hive.class ).uniqueResult();
 			assertFalse( Hibernate.isInitialized( hive.getMembers() ) );
 			assertEquals( 2, hive.getMembers().size() );
 
 			s.clear();
 
-			hive = (Hive) s.createQuery( "from Hive h left join fetch h.location left join fetch h.members" )
+			hive = s.createQuery( "from Hive h left join fetch h.location left join fetch h.members", Hive.class )
 					.uniqueResult();
 			assertTrue( Hibernate.isInitialized( hive.getMembers() ) );
 			assertEquals( 2, hive.getMembers().size() );
 
 			s.clear();
 
-			var x23y4 = (Alien) s.createQuery( "from Alien a left join fetch a.hivemates where a.identity like 'x%'" )
+			var x23y4 = s.createQuery( "from Alien a left join fetch a.hivemates where a.identity like 'x%'", Alien.class )
 					.uniqueResult();
 			assertTrue( Hibernate.isInitialized( x23y4.getHivemates() ) );
 			assertEquals( 1, x23y4.getHivemates().size() );
 
 			s.clear();
 
-			x23y4 = (Alien) s.createQuery( "from Alien a where a.identity like 'x%'" ).uniqueResult();
+			x23y4 = s.createQuery( "from Alien a where a.identity like 'x%'", Alien.class ).uniqueResult();
 			assertFalse( Hibernate.isInitialized( x23y4.getHivemates() ) );
 			assertEquals( 1, x23y4.getHivemates().size() );
 		} );
@@ -218,40 +218,40 @@ public class UnionSubclassTest implements ServiceRegistryProducer {
 
 			s.clear();
 
-			thing = (Thing) s.createQuery( "from Thing t left join fetch t.owner" ).uniqueResult();
+			thing = s.createQuery( "from Thing t left join fetch t.owner", Thing.class ).uniqueResult();
 			assertTrue( Hibernate.isInitialized( thing.getOwner() ) );
 			assertEquals( "gavin", thing.getOwner().getIdentity() );
 			s.clear();
 
-			thing = (Thing) s.createQuery(
-							"select t from Thing t left join t.owner where t.owner.identity='gavin'" )
+			thing = s.createQuery(
+							"select t from Thing t left join t.owner where t.owner.identity='gavin'", Thing.class )
 					.uniqueResult();
 			assertFalse( Hibernate.isInitialized( thing.getOwner() ) );
 			assertEquals( "gavin", thing.getOwner().getIdentity() );
 			s.clear();
 
-			gavin = (Human) s.createQuery( "from Human h left join fetch h.things" ).uniqueResult();
+			gavin = s.createQuery( "from Human h left join fetch h.things", Human.class ).uniqueResult();
 			assertTrue( Hibernate.isInitialized( gavin.getThings() ) );
 			assertEquals( "some thing", ( (Thing) gavin.getThings().get( 0 ) ).getDescription() );
 			s.clear();
 
-			assertEquals( 2, s.createQuery( "from Being b left join fetch b.things" ).list().size() );
+			assertEquals( 2, s.createQuery( "from Being b left join fetch b.things", Being.class ).list().size() );
 			s.clear();
 
-			gavin = (Human) s.createQuery( "from Being b join fetch b.things" ).uniqueResult();
+			gavin = (Human) s.createQuery( "from Being b join fetch b.things", Being.class ).uniqueResult();
 			assertTrue( Hibernate.isInitialized( gavin.getThings() ) );
 			assertEquals( "some thing", ( (Thing) gavin.getThings().get( 0 ) ).getDescription() );
 			s.clear();
 
-			gavin = (Human) s.createQuery(
-							"select h from Human h join h.things t where t.description='some thing'" )
+			gavin = s.createQuery(
+							"select h from Human h join h.things t where t.description='some thing'", Human.class )
 					.uniqueResult();
 			assertFalse( Hibernate.isInitialized( gavin.getThings() ) );
 			assertEquals( "some thing", ( (Thing) gavin.getThings().get( 0 ) ).getDescription() );
 			s.clear();
 
 			gavin = (Human) s.createQuery(
-							"select b from Being b join b.things t where t.description='some thing'" )
+							"select b from Being b join b.things t where t.description='some thing'", Being.class )
 					.uniqueResult();
 			assertFalse( Hibernate.isInitialized( gavin.getThings() ) );
 			assertEquals( "some thing", ( (Thing) gavin.getThings().get( 0 ) ).getDescription() );
@@ -282,7 +282,7 @@ public class UnionSubclassTest implements ServiceRegistryProducer {
 			s.remove( x23y4.getHive() );
 			s.remove( s.find( Location.class, mel.getId() ) );
 			s.remove( s.find( Location.class, mars.getId() ) );
-			assertTrue( s.createQuery( "from Being" ).list().isEmpty() );
+			assertTrue( s.createQuery( "from Being", Being.class ).list().isEmpty() );
 
 		} );
 	}
@@ -315,23 +315,23 @@ public class UnionSubclassTest implements ServiceRegistryProducer {
 			x23y4.setHive( hive );
 			s.persist( hive );
 
-			assertEquals( 2, s.createQuery( "from Being" ).list().size() );
-			assertEquals( 1, s.createQuery( "from Being b where b.class = Alien" ).list().size() );
-			assertEquals( 1, s.createQuery( "from Being b where type(b) = :what" ).setParameter(
+			assertEquals( 2, s.createQuery( "from Being", Being.class ).list().size() );
+			assertEquals( 1, s.createQuery( "from Being b where b.class = Alien", Being.class ).list().size() );
+			assertEquals( 1, s.createQuery( "from Being b where type(b) = :what", Being.class ).setParameter(
 					"what",
 					Alien.class
 			).list().size() );
-			assertEquals( 2, s.createQuery( "from Being b where type(b) in :what" ).setParameterList(
+			assertEquals( 2, s.createQuery( "from Being b where type(b) in :what", Being.class ).setParameterList(
 					"what",
 					new Class[] {
 							Alien.class,
 							Human.class
 					}
 			).list().size() );
-			assertEquals( 1, s.createQuery( "from Alien" ).list().size() );
+			assertEquals( 1, s.createQuery( "from Alien", Alien.class ).list().size() );
 			s.clear();
 
-			List<?> beings = s.createQuery( "from Being b left join fetch b.location" ).list();
+			List<?> beings = s.createQuery( "from Being b left join fetch b.location", Being.class ).list();
 			for ( Object being : beings ) {
 				Being b = (Being) being;
 				assertTrue( Hibernate.isInitialized( b.getLocation() ) );
@@ -342,7 +342,7 @@ public class UnionSubclassTest implements ServiceRegistryProducer {
 			assertEquals( 2, beings.size() );
 			s.clear();
 
-			beings = s.createQuery( "from Being" ).list();
+			beings = s.createQuery( "from Being", Being.class ).list();
 			for ( Object being : beings ) {
 				Being b = (Being) being;
 				assertFalse( Hibernate.isInitialized( b.getLocation() ) );
@@ -353,7 +353,7 @@ public class UnionSubclassTest implements ServiceRegistryProducer {
 			assertEquals( 2, beings.size() );
 			s.clear();
 
-			List<?> locations = s.createQuery( "from Location" ).list();
+			List<?> locations = s.createQuery( "from Location", Location.class ).list();
 			int count = 0;
 			for ( Object location : locations ) {
 				Location l = (Location) location;
@@ -367,7 +367,7 @@ public class UnionSubclassTest implements ServiceRegistryProducer {
 			assertEquals( 3, locations.size() );
 			s.clear();
 
-			locations = s.createQuery( "from Location loc left join fetch loc.beings" ).list();
+			locations = s.createQuery( "from Location loc left join fetch loc.beings", Location.class ).list();
 			count = 0;
 			for ( Object location : locations ) {
 				Location l = (Location) location;
@@ -385,7 +385,7 @@ public class UnionSubclassTest implements ServiceRegistryProducer {
 			atl = s.find( Location.class, atl.getId() );
 
 			atl.addBeing( gavin );
-			assertEquals( 1, s.createQuery( "from Human h where h.location.name like '%GA'" ).list().size() );
+			assertEquals( 1, s.createQuery( "from Human h where h.location.name like '%GA'", Human.class ).list().size() );
 			s.remove( gavin );
 
 			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
@@ -394,9 +394,9 @@ public class UnionSubclassTest implements ServiceRegistryProducer {
 
 			x23y4 = s.createQuery( criteria ).uniqueResult();
 			s.remove( x23y4.getHive() );
-			assertTrue( s.createQuery( "from Being" ).list().isEmpty() );
+			assertTrue( s.createQuery( "from Being", Being.class ).list().isEmpty() );
 
-			s.createQuery( "delete from Location" ).executeUpdate();
+			s.createMutationQuery( "delete from Location" ).executeUpdate();
 
 		} );
 	}
@@ -492,7 +492,7 @@ public class UnionSubclassTest implements ServiceRegistryProducer {
 							// Execute a bulk operation on s2 (using connection2)
 							assertEquals(
 									1,
-									s2.createQuery( "delete from Being where species = 'Martian'" ).executeUpdate()
+									s2.createMutationQuery( "delete from Being where species = 'Martian'" ).executeUpdate()
 							);
 
 							// Assert the Connection has not changed
@@ -506,7 +506,7 @@ public class UnionSubclassTest implements ServiceRegistryProducer {
 			// Execute a bulk operation on s1 (using connection1)
 			assertEquals(
 					1,
-					s1.createQuery( "update Being set identity = 'John Doe' where identity = 'Jane Doe'" )
+					s1.createMutationQuery( "update Being set identity = 'John Doe' where identity = 'Jane Doe'" )
 							.executeUpdate()
 			);
 

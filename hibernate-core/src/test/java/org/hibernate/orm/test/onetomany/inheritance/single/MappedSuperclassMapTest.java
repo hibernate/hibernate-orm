@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.onetomany.inheritance.single;
 
-import java.util.List;
 import java.util.Map.Entry;
 
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -47,7 +46,7 @@ public class MappedSuperclassMapTest {
 	@Test
 	public void lookupEntities(SessionFactoryScope scope) {
 		scope.inTransaction( sess -> {
-			List<Library> libraries = sess.createQuery( "FROM Library" ).list();
+			var libraries = sess.createQuery( Library.class, "FROM Library" ).list();
 			assertEquals( 1, libraries.size() );
 			Library library = libraries.get( 0 );
 			assertNotNull( library );
@@ -56,8 +55,7 @@ public class MappedSuperclassMapTest {
 
 			Book book = library.getBooksOnInventory().get( SKU001 );
 			assertNotNull( book );
-			Library Library = library;
-			Library.getBooksOnIsbn().get( WAR_AND_PEACE );
+			library.getBooksOnIsbn().get( WAR_AND_PEACE );
 			assertEquals( WAR_AND_PEACE, book.getIsbn() );
 
 			book = library.getBooksOnInventory().get( SKU002 );
@@ -69,7 +67,7 @@ public class MappedSuperclassMapTest {
 	@Test
 	public void lookupEntities_entrySet(SessionFactoryScope scope) {
 		scope.inTransaction( sess -> {
-			List<Library> libraries = sess.createQuery( "FROM Library" ).list();
+			var libraries = sess.createQuery( Library.class, "FROM Library" ).list();
 			assertEquals( 1, libraries.size() );
 			Library library = libraries.get( 0 );
 			assertNotNull( library );
@@ -86,7 +84,7 @@ public class MappedSuperclassMapTest {
 	@Test
 	public void breakReferences(SessionFactoryScope scope) {
 		scope.inTransaction( sess -> {
-			List<Book> books = sess.createQuery( "FROM Book" ).list();
+			var books = sess.createQuery( Book.class,"FROM Book" ).list();
 			assertEquals( 2, books.size() );
 
 			for ( Book book : books ) {
@@ -101,7 +99,7 @@ public class MappedSuperclassMapTest {
 		} );
 
 		scope.inTransaction( sess -> {
-			List<Book> books = sess.createQuery( "FROM Book" ).list();
+			var books = sess.createQuery( Book.class, "FROM Book" ).list();
 			assertEquals( 2, books.size() );
 
 			for ( Book book : books ) {
@@ -110,7 +108,7 @@ public class MappedSuperclassMapTest {
 				}
 			}
 
-			List<Library> libraries = sess.createQuery( "FROM Library" ).list();
+			var libraries = sess.createQuery( Library.class, "FROM Library" ).list();
 			assertEquals( 1, libraries.size() );
 			Library library = libraries.get( 0 );
 			assertNotNull( library );

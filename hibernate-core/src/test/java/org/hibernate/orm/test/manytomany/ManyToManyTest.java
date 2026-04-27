@@ -101,17 +101,15 @@ public class ManyToManyTest {
 				}
 		);
 
-		scope.inTransaction(
-				s -> {
-					User gavin = (User) s.createQuery( "from User u join fetch u.groups g join fetch g.users" )
-							.uniqueResult();
-					assertTrue( Hibernate.isInitialized( gavin.getGroups() ) );
-					assertEquals( 2, gavin.getGroups().size() );
-					Group group = (Group) gavin.getGroups().iterator().next();
-					assertTrue( Hibernate.isInitialized( group.getUsers() ) );
-					assertEquals( 1, group.getUsers().size() );
-				}
-		);
+		scope.inTransaction(s -> {
+			var gavin = s.createQuery( User.class,"from User u join fetch u.groups g join fetch g.users" )
+					.uniqueResult();
+			assertTrue( Hibernate.isInitialized( gavin.getGroups() ) );
+			assertEquals( 2, gavin.getGroups().size() );
+			Group group = (Group) gavin.getGroups().iterator().next();
+			assertTrue( Hibernate.isInitialized( group.getUsers() ) );
+			assertEquals( 1, group.getUsers().size() );
+		} );
 
 		scope.inTransaction(
 				s -> {

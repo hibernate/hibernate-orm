@@ -54,14 +54,14 @@ public class OneToOneLinkTest {
 
 		scope.inTransaction(
 				session -> {
-					Employee e = (Employee) session.createQuery( "from Employee e where e.person.name like 'Gavin%'" )
+					Employee e = session.createQuery( "from Employee e where e.person.name like 'Gavin%'", Employee.class )
 							.uniqueResult();
 					assertEquals( e.getPerson().getName(), "Gavin King" );
 					assertFalse( Hibernate.isInitialized( e.getPerson() ) );
 					assertNull( e.getPerson().getCustomer() );
 					session.clear();
 
-					e = (Employee) session.createQuery( "from Employee e where e.person.dob = :date" )
+					e = session.createQuery( "from Employee e where e.person.dob = :date", Employee.class )
 							.setParameter( "date", new Date(), StandardBasicTypes.DATE )
 							.uniqueResult();
 					assertEquals( e.getPerson().getName(), "Gavin King" );
@@ -74,8 +74,8 @@ public class OneToOneLinkTest {
 
 		scope.inTransaction(
 				session -> {
-					Employee e = (Employee) session.createQuery(
-							"from Employee e join fetch e.person p left join fetch p.customer" )
+					Employee e = session.createQuery(
+							"from Employee e join fetch e.person p left join fetch p.customer", Employee.class )
 							.uniqueResult();
 					assertTrue( Hibernate.isInitialized( e.getPerson() ) );
 					assertNull( e.getPerson().getCustomer() );
@@ -87,8 +87,8 @@ public class OneToOneLinkTest {
 
 		scope.inTransaction(
 				session -> {
-					Employee e = (Employee) session.createQuery(
-							"from Employee e join fetch e.person p left join fetch p.customer" )
+					Employee e = session.createQuery(
+							"from Employee e join fetch e.person p left join fetch p.customer", Employee.class )
 							.uniqueResult();
 					assertTrue( Hibernate.isInitialized( e.getPerson() ) );
 					assertTrue( Hibernate.isInitialized( e.getPerson().getCustomer() ) );

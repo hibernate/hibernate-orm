@@ -4,10 +4,10 @@
  */
 package org.hibernate.orm.test.query.sqm.exec;
 
-import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
+import org.hibernate.testing.orm.domain.retail.SalesAssociate;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -24,7 +24,7 @@ public class ParameterTest {
 	public void testReusedNamedParam(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from SalesAssociate p where p.name.familiarName = :name or p.name.familyName = :name" )
+					session.createQuery( "from SalesAssociate p where p.name.familiarName = :name or p.name.familyName = :name", SalesAssociate.class )
 							.setParameter( "name", "a name" )
 							.list();
 				}
@@ -35,7 +35,7 @@ public class ParameterTest {
 	public void testReusedOrdinalParam(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from SalesAssociate p where p.name.familiarName = ?1 or p.name.familyName = ?1" )
+					session.createQuery( "from SalesAssociate p where p.name.familiarName = ?1 or p.name.familyName = ?1", SalesAssociate.class )
 							.setParameter( 1, "a name" )
 							.list();
 				}
@@ -47,7 +47,7 @@ public class ParameterTest {
 		String query = "from SalesAssociate p where p.name.familiarName in :names";
 		scope.inTransaction(
 				session -> {
-					Query q = session.createQuery( query );
+					var q = session.createQuery( query, SalesAssociate.class );
 					DomainParameterXref xref = q.unwrap( DomainParameterXref.class );
 					for ( QueryParameterImplementor<?> p : xref.getQueryParameters().keySet() ) {
 						Assertions.assertTrue( q.getParameterMetadata().containsReference( p ) );
@@ -56,7 +56,7 @@ public class ParameterTest {
 		);
 		scope.inTransaction(
 				session -> {
-					Query q = session.createQuery( query );
+					var q = session.createQuery( query, SalesAssociate.class );
 					DomainParameterXref xref = q.unwrap( DomainParameterXref.class );
 					for ( QueryParameterImplementor<?> p : xref.getQueryParameters().keySet() ) {
 						Assertions.assertTrue( q.getParameterMetadata().containsReference( p ) );

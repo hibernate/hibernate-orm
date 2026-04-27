@@ -50,12 +50,12 @@ public class ElementCollectionSortingTest {
 	public void testSortingElementCollectionSyntax(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Person p join fetch p.nickNamesAscendingNaturalSort" ).list();
-					session.createQuery( "from Person p join fetch p.nickNamesDescendingNaturalSort" ).list();
-					session.createQuery( "from Person p join fetch p.addressesAscendingNaturalSort" ).list();
-					session.createQuery( "from Person p join fetch p.addressesDescendingNaturalSort" ).list();
-					session.createQuery( "from Person p join fetch p.addressesCityAscendingSort" ).list();
-					session.createQuery( "from Person p join fetch p.addressesCityDescendingSort" ).list();
+					session.createQuery( "from Person p join fetch p.nickNamesAscendingNaturalSort", Person.class ).list();
+					session.createQuery( "from Person p join fetch p.nickNamesDescendingNaturalSort", Person.class ).list();
+					session.createQuery( "from Person p join fetch p.addressesAscendingNaturalSort", Person.class ).list();
+					session.createQuery( "from Person p join fetch p.addressesDescendingNaturalSort", Person.class ).list();
+					session.createQuery( "from Person p join fetch p.addressesCityAscendingSort", Person.class ).list();
+					session.createQuery( "from Person p join fetch p.addressesCityDescendingSort", Person.class ).list();
 				}
 		);
 	}
@@ -106,7 +106,8 @@ public class ElementCollectionSortingTest {
 
 					// Testing HQL query. Eagerly fetching nicknames.
 					final List<Person> result = session.createQuery(
-							"select distinct p from Person p join fetch p.nickNamesAscendingNaturalSort join fetch p.nickNamesDescendingNaturalSort order by p.name"
+							"select distinct p from Person p join fetch p.nickNamesAscendingNaturalSort join fetch p.nickNamesDescendingNaturalSort order by p.name",
+							Person.class
 					).list();
 					assertEquals( 2, result.size() );
 					checkPersonNickNames( lukaszNamesAsc, lukaszNamesDesc, result.get( 0 ) );

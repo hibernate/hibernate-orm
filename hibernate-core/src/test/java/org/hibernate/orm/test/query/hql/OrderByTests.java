@@ -152,7 +152,7 @@ public class OrderByTests {
 		// this is simply a syntax check
 		scope.inTransaction(
 				session ->
-						session.createQuery( "from Human h order by h.bodyWeight" ).list()
+						session.createQuery( "from Human h order by h.bodyWeight", Human.class ).list()
 		);
 	}
 

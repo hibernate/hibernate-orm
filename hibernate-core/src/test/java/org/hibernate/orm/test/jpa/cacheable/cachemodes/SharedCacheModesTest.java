@@ -8,7 +8,6 @@ import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.CacheMode;
-import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 
@@ -68,7 +67,7 @@ public class SharedCacheModesTest {
 				entityManager -> {
 					Session session = entityManager.unwrap( Session.class );
 
-					Query query = session.createQuery( "from SimpleEntity" );
+					var query = session.createQuery( SimpleEntity.class, "from SimpleEntity" );
 
 					query.setHint( AvailableSettings.JPA_SHARED_CACHE_STORE_MODE, CacheStoreMode.USE );
 					assertEquals( CacheStoreMode.USE, query.getHints().get( AvailableSettings.JPA_SHARED_CACHE_STORE_MODE ) );

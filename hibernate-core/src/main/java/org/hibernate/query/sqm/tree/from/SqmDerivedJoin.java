@@ -4,6 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import jakarta.persistence.criteria.BooleanExpression;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.JoinType;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
@@ -12,22 +15,18 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.criteria.JpaDerivedJoin;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.sqm.tree.domain.SqmCorrelatedDerivedJoin;
-import org.hibernate.query.sqm.tree.domain.SqmSingularValuedJoin;
-import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedDerivedJoin;
+import org.hibernate.query.sqm.tree.domain.SqmSingularValuedJoin;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedJoin;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
+import org.hibernate.query.sqm.tuple.internal.AnonymousTupleType;
 import org.hibernate.spi.NavigablePath;
-
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Predicate;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
@@ -159,7 +158,7 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 	}
 
 	@Override
-	public SqmDerivedJoin<T> on(Predicate @Nullable... restrictions) {
+	public SqmDerivedJoin<T> on(BooleanExpression... restrictions) {
 		return (SqmDerivedJoin<T>) super.on( restrictions );
 	}
 

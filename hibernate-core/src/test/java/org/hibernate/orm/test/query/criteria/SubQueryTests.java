@@ -75,7 +75,7 @@ public class SubQueryTests {
 
 		scope.inTransaction( (session) -> {
 			final String qry = "select e.id from BasicEntity e where e.id > all (select s.id from BasicEntity s where s.id > 1)";
-			session.createQuery( qry ).list();
+			session.createQuery( qry, Integer.class ).list();
 		} );
 	}
 

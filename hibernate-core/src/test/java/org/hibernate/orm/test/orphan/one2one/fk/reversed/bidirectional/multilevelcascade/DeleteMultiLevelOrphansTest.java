@@ -71,11 +71,10 @@ public class DeleteMultiLevelOrphansTest {
 
 		Preisregelung p = scope.fromTransaction(
 				session -> {
-					List results = session.createQuery( "from Tranchenmodell" ).list();
-					assertEquals( 1, results.size() );
-					results = session.createQuery( "from Preisregelung" ).list();
-					assertEquals( 1, results.size() );
-					Preisregelung preisregelung = (Preisregelung) results.get( 0 );
+					assertEquals( 1, session.createQuery( "from Tranchenmodell", Tranchenmodell.class ).list().size() );
+					List<Preisregelung> preisregelungen = session.createQuery( "from Preisregelung", Preisregelung.class ).list();
+					assertEquals( 1, preisregelungen.size() );
+					Preisregelung preisregelung = preisregelungen.get( 0 );
 					assertNotNull( preisregelung.getTranchenmodell() );
 					preisregelung.setTranchenmodell( null );
 					return preisregelung;
@@ -86,10 +85,8 @@ public class DeleteMultiLevelOrphansTest {
 				session -> {
 					Preisregelung preisregelung = session.get( Preisregelung.class, p.getId() );
 					assertNull( preisregelung.getTranchenmodell() );
-					List results = session.createQuery( "from Tranchenmodell" ).list();
-					assertEquals( 0, results.size() );
-					results = session.createQuery( "from Preisregelung" ).list();
-					assertEquals( 1, results.size() );
+					assertEquals( 0, session.createQuery( "from Tranchenmodell", Tranchenmodell.class ).list().size() );
+					assertEquals( 1, session.createQuery( "from Preisregelung", Preisregelung.class ).list().size() );
 				}
 		);
 	}
@@ -100,11 +97,10 @@ public class DeleteMultiLevelOrphansTest {
 
 		Tranchenmodell t = scope.fromTransaction(
 				session -> {
-					List results = session.createQuery( "from Tranchenmodell" ).list();
-					assertEquals( 1, results.size() );
-					results = session.createQuery( "from Preisregelung" ).list();
-					assertEquals( 1, results.size() );
-					Preisregelung preisregelung = (Preisregelung) results.get( 0 );
+					assertEquals( 1, session.createQuery( "from Tranchenmodell", Tranchenmodell.class ).list().size() );
+					List<Preisregelung> preisregelungen = session.createQuery( "from Preisregelung", Preisregelung.class ).list();
+					assertEquals( 1, preisregelungen.size() );
+					Preisregelung preisregelung = preisregelungen.get( 0 );
 					assertNotNull( preisregelung.getTranchenmodell() );
 
 					// Replace with a new Tranchenmodell instance
@@ -118,16 +114,15 @@ public class DeleteMultiLevelOrphansTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "from Tranchenmodell" ).list();
-					assertEquals( 1, results.size() );
-					Tranchenmodell tranchenmodellQueried = (Tranchenmodell) results.get( 0 );
+					List<Tranchenmodell> tranchenmodelle = session.createQuery( "from Tranchenmodell", Tranchenmodell.class ).list();
+					assertEquals( 1, tranchenmodelle.size() );
+					Tranchenmodell tranchenmodellQueried = tranchenmodelle.get( 0 );
 					assertEquals( t.getId(), tranchenmodellQueried.getId() );
-					results = session.createQuery( "from Preisregelung" ).list();
-					assertEquals( 1, results.size() );
-					Preisregelung preisregelung1Queried = (Preisregelung) results.get( 0 );
+					List<Preisregelung> preisregelungen = session.createQuery( "from Preisregelung", Preisregelung.class ).list();
+					assertEquals( 1, preisregelungen.size() );
+					Preisregelung preisregelung1Queried = preisregelungen.get( 0 );
 					assertEquals( preisregelung1Queried.getTranchenmodell(), tranchenmodellQueried );
-					results = session.createQuery( "from Tranche" ).list();
-					assertEquals( 0, results.size() );
+					assertEquals( 0, session.createQuery( "from Tranche", Tranche.class ).list().size() );
 				}
 		);
 	}

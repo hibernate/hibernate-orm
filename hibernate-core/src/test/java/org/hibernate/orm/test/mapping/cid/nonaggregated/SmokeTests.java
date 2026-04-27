@@ -35,14 +35,14 @@ public class SmokeTests {
 	@Test
 	public void simpleTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.createQuery( "select a from SystemAccess a" ).list();
+			session.createQuery(SystemAccess.class, "select a from SystemAccess a" ).list();
 		} );
 	}
 
 	@Test
 	public void keyManyToOneTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.createQuery( "select i from LineItem i" ).list();
+			session.createQuery(LineItem.class, "select i from LineItem i" ).list();
 		} );
 	}
 

@@ -73,7 +73,7 @@ public class JoinedInheritanceEagerTest {
 					session.getTransaction().begin();
 
 					try {
-						session.createQuery( "from BaseEntity b join b.attributes" ).list();
+						session.createQuery( BaseEntity.class, "from BaseEntity b join b.attributes" ).list();
 						fail( "Expected a resolution exception for property 'attributes'!" );
 					}
 					catch (IllegalArgumentException ex) {

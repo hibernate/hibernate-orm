@@ -47,7 +47,7 @@ public class OptionalJoinTest {
 
 		scope.inTransaction(
 				session -> {
-					List<Thing> things = session.createQuery( "from Thing" ).list();
+					List<Thing> things = session.createQuery( Thing.class, "from Thing" ).list();
 					assertEquals( 1, things.size() );
 					Thing thing = things.get( 0 );
 					assertEquals( "one", thing.getName() );
@@ -59,7 +59,7 @@ public class OptionalJoinTest {
 
 		scope.inTransaction(
 				session -> {
-					List<Thing> things = session.createQuery( "from Thing" ).list();
+					List<Thing> things = session.createQuery( Thing.class, "from Thing" ).list();
 					assertEquals( 1, things.size() );
 					Thing thing = things.get( 0 );
 					assertEquals( "one_changed", thing.getName() );
@@ -83,7 +83,7 @@ public class OptionalJoinTest {
 
 		Thing aThing = scope.fromTransaction(
 				session -> {
-					List<Thing> things = session.createQuery( "from Thing" ).list();
+					List<Thing> things = session.createQuery( Thing.class, "from Thing" ).list();
 					assertEquals( 1, things.size() );
 					Thing thing = things.get( 0 );
 					assertEquals( "one", thing.getName() );
@@ -103,7 +103,7 @@ public class OptionalJoinTest {
 
 		scope.inTransaction(
 				session -> {
-					List<Thing> things = session.createQuery( "from Thing" ).list();
+					List<Thing> things = session.createQuery( Thing.class, "from Thing" ).list();
 					assertEquals( 1, things.size() );
 					Thing thing = things.get( 0 );
 					assertEquals( "one_changed", thing.getName() );
@@ -127,7 +127,7 @@ public class OptionalJoinTest {
 
 		Thing aThing = scope.fromTransaction(
 				session -> {
-					List<Thing> things = session.createQuery( "from Thing" ).list();
+					List<Thing> things = session.createQuery( Thing.class, "from Thing" ).list();
 					assertEquals( 1, things.size() );
 					Thing thing = things.get( 0 );
 					assertEquals( "one", thing.getName() );
@@ -146,7 +146,7 @@ public class OptionalJoinTest {
 
 		scope.inTransaction(
 				session -> {
-					List<Thing> things = session.createQuery( "from Thing" ).list();
+					List<Thing> things = session.createQuery( Thing.class, "from Thing" ).list();
 					assertEquals( 1, things.size() );
 					Thing thing = things.get( 0 );
 					assertNull( thing.getName() );
@@ -170,7 +170,7 @@ public class OptionalJoinTest {
 
 		scope.inTransaction(
 				session -> {
-					List<Thing> things = session.createQuery( "from Thing" ).list();
+					List<Thing> things = session.createQuery( Thing.class, "from Thing" ).list();
 					assertEquals( 1, things.size() );
 					Thing thing = things.get( 0 );
 					assertNull( thing.getName() );
@@ -181,7 +181,7 @@ public class OptionalJoinTest {
 
 		scope.inTransaction(
 				session -> {
-					List<Thing> things = session.createQuery( "from Thing" ).list();
+					List<Thing> things = session.createQuery(Thing.class,  "from Thing" ).list();
 					assertEquals( 1, things.size() );
 					Thing thing = things.get( 0 );
 					assertEquals( "two", thing.getName() );
@@ -204,7 +204,7 @@ public class OptionalJoinTest {
 
 		Thing aThing = scope.fromTransaction(
 				session -> {
-					List<Thing> things = session.createQuery( "from Thing" ).list();
+					List<Thing> things = session.createQuery( Thing.class, "from Thing" ).list();
 					assertEquals( 1, things.size() );
 					Thing thing = things.get( 0 );
 					assertNull( thing.getName() );
@@ -224,7 +224,7 @@ public class OptionalJoinTest {
 
 		scope.inTransaction(
 				session -> {
-					List<Thing> things = session.createQuery( "from Thing" ).list();
+					List<Thing> things = session.createQuery( Thing.class, "from Thing" ).list();
 					assertEquals( 1, things.size() );
 					Thing thing = things.get( 0 );
 					assertEquals( "two", thing.getName() );

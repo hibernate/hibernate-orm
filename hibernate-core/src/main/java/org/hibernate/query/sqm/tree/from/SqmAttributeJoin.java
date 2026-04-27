@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import jakarta.persistence.criteria.Expression;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Internal;
@@ -17,9 +18,6 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.JavaType;
-
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 
 /**
  * Models a join based on a mapped attribute reference.
@@ -74,11 +72,6 @@ public interface SqmAttributeJoin<O,T> extends SqmJoin<O,T>, JpaFetch<O,T>, JpaJ
 
 	@Override
 	default SqmJoin<O, T> on(JpaPredicate @Nullable... restrictions) {
-		return SqmJoin.super.on( restrictions );
-	}
-
-	@Override
-	default SqmJoin<O, T> on(Predicate @Nullable... restrictions) {
 		return SqmJoin.super.on( restrictions );
 	}
 

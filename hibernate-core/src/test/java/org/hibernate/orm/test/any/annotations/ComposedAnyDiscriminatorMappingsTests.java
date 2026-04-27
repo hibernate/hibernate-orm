@@ -30,8 +30,8 @@ public class ComposedAnyDiscriminatorMappingsTests {
 	public void testUsage(SessionFactoryScope scope) {
 		// atm this will blow up because the mapping will fail
 		scope.inTransaction( (session) -> {
-			session.createQuery( "select s from StringProperty s" ).list();
-			session.createQuery( "select ph from PropertyHolder ph" ).list();
+			session.createQuery( "select s from StringProperty s", StringProperty.class ).list();
+			session.createQuery( "select ph from PropertyHolder ph", EntityWithComposedAnyDiscriminatorMappings.class ).list();
 		} );
 	}
 

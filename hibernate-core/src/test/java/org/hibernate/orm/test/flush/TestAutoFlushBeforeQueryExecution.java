@@ -72,7 +72,7 @@ public class TestAutoFlushBeforeQueryExecution implements BootstrapServiceRegist
 			author1.setPublisher( publisher );
 			publisher.getAuthors().add( author1 );
 			Assertions.assertTrue(
-					session.createQuery( "select a from Publisher p join p.authors a" ).list().size() == 1,
+					session.createQuery( Author.class, "select a from Publisher p join p.authors a" ).list().size() == 1,
 					"autoflush collection update" );
 			Assertions.assertEquals( 2, persistenceContext.getCollectionEntriesSize() );
 			Assertions.assertEquals( 2, persistenceContext.getCollectionsByKey().size() );
@@ -88,7 +88,7 @@ public class TestAutoFlushBeforeQueryExecution implements BootstrapServiceRegist
 			publisher.getAuthors().clear();
 			Assertions.assertEquals( 0, actionQueue.numberOfCollectionRemovals() );
 			Assertions.assertEquals( 0,
-					session.createQuery( "select a from Publisher p join p.authors a" ).list().size(),
+					session.createQuery( Author.class, "select a from Publisher p join p.authors a" ).list().size(),
 					"autoflush collection update" );
 			Assertions.assertEquals( 1, persistenceContext.getCollectionEntriesSize() );
 			Assertions.assertEquals( 1, persistenceContext.getCollectionsByKey().size() );
@@ -103,7 +103,7 @@ public class TestAutoFlushBeforeQueryExecution implements BootstrapServiceRegist
 			author2.setName( "author2" );
 			author2.setPublisher( publisher );
 			publisher.getAuthors().add( author2 );
-			List<Publisher> results = session.createQuery( "select a from Publisher p join p.authors a" ).list();
+			List<Author> results = session.createQuery( Author.class, "select a from Publisher p join p.authors a" ).list();
 			Assertions.assertEquals( 1, results.size() );
 			Assertions.assertEquals( 2, persistenceContext.getCollectionEntriesSize() );
 			Assertions.assertEquals( 2, persistenceContext.getCollectionsByKey().size() );
@@ -115,7 +115,7 @@ public class TestAutoFlushBeforeQueryExecution implements BootstrapServiceRegist
 			Assertions.assertEquals( 0, actionQueue.numberOfCollectionRemovals() );
 
 			session.remove(publisher);
-			Assertions.assertEquals( 0, session.createQuery( "from Publisher p" ).list().size(), "autoflush delete" );
+			Assertions.assertEquals( 0, session.createQuery( Publisher.class, "from Publisher p" ).list().size(), "autoflush delete" );
 		} );
 	}
 
@@ -128,10 +128,10 @@ public class TestAutoFlushBeforeQueryExecution implements BootstrapServiceRegist
 			Publisher publisher = new Publisher();
 			publisher.setName( "name" );
 			session.persist( publisher );
-			Assertions.assertEquals( 1, session.createQuery( "from Publisher p" ).list().size(),
+			Assertions.assertEquals( 1, session.createQuery( Publisher.class, "from Publisher p" ).list().size(),
 					"autoflush entity create" );
 			publisher.setName( "name" );
-			Assertions.assertEquals( 1, session.createQuery( "from Publisher p where p.name='name'" ).list().size(),
+			Assertions.assertEquals( 1, session.createQuery( Publisher.class, "from Publisher p where p.name='name'" ).list().size(),
 					"autoflush entity update" );
 			UnrelatedEntity unrelatedEntity = new UnrelatedEntity( );
 			session.persist( unrelatedEntity );
@@ -157,7 +157,7 @@ public class TestAutoFlushBeforeQueryExecution implements BootstrapServiceRegist
 			Author author1 = new Author( );
 			author1.setPublisher( publisher );
 			publisher.getAuthors().add( author1 );
-			Assertions.assertEquals( 1, s.createQuery( "from UnrelatedEntity" ).list().size() );
+			Assertions.assertEquals( 1, s.createQuery( UnrelatedEntity.class, "from UnrelatedEntity" ).list().size() );
 			Assertions.assertEquals( 2, persistenceContext.getCollectionEntriesSize() );
 			Assertions.assertEquals( 1, persistenceContext.getCollectionsByKey().size() );
 			Assertions.assertTrue( persistenceContext.getCollectionEntries().containsKey( publisher.getAuthors() ) );
@@ -170,7 +170,7 @@ public class TestAutoFlushBeforeQueryExecution implements BootstrapServiceRegist
 			s.remove( author1 );
 			publisher.getAuthors().clear();
 			Assertions.assertEquals( 0, actionQueue.numberOfCollectionRemovals() );
-			Assertions.assertEquals( 1, s.createQuery( "from UnrelatedEntity" ).list().size() );
+			Assertions.assertEquals( 1, s.createQuery( UnrelatedEntity.class, "from UnrelatedEntity" ).list().size() );
 			Assertions.assertEquals( 2, persistenceContext.getCollectionEntriesSize() );
 			Assertions.assertEquals( 1, persistenceContext.getCollectionsByKey().size() );
 			Assertions.assertTrue( persistenceContext.getCollectionEntries().containsKey( publisher.getAuthors() ) );
@@ -185,7 +185,7 @@ public class TestAutoFlushBeforeQueryExecution implements BootstrapServiceRegist
 			author2.setName( "author2" );
 			author2.setPublisher( publisher );
 			publisher.getAuthors().add( author2 );
-			List<UnrelatedEntity> results = s.createQuery( "from UnrelatedEntity" ).list();
+			List<UnrelatedEntity> results = s.createQuery( UnrelatedEntity.class, "from UnrelatedEntity" ).list();
 			Assertions.assertEquals( 1, results.size() );
 			Assertions.assertEquals( 4, persistenceContext.getCollectionEntriesSize() );
 			Assertions.assertEquals( 1, persistenceContext.getCollectionsByKey().size() );
@@ -207,7 +207,9 @@ public class TestAutoFlushBeforeQueryExecution implements BootstrapServiceRegist
 			Assertions.assertEquals( 0, actionQueue.numberOfCollectionRemovals() );
 
 			s.remove(publisher);
-			Assertions.assertEquals( 1, s.createQuery( "from UnrelatedEntity" ).list().size(), "autoflush delete" );
+			Assertions.assertEquals( 1,
+					s.createQuery(UnrelatedEntity.class, "from UnrelatedEntity" ).list().size(),
+					"autoflush delete" );
 			s.remove( unrelatedEntity );
 		} );
 	}

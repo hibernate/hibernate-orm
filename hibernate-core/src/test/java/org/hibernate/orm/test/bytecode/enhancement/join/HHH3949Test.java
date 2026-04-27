@@ -136,11 +136,10 @@ public class HHH3949Test {
 
 	// --- //
 
-	@SuppressWarnings( "unchecked" )
 	private void performQueryAndVerifyPersonResults(SessionFactoryScope scope, String query) {
 		List<Person> persons;
 		try ( Session s = scope.getSessionFactory().openSession() ) {
-			persons = (List<Person>) s.createQuery( query ).list();
+			persons = s.createQuery( query, Person.class ).list();
 		}
 		for ( Person person : persons ) {
 			assertTrue( isInitialized( person ) );
@@ -157,11 +156,10 @@ public class HHH3949Test {
 		}
 	}
 
-	@SuppressWarnings( "unchecked" )
 	private void performQueryAndVerifyVehicleResults(SessionFactoryScope scope, String query) {
 		List<Vehicle> vehicles;
 		try ( Session s = scope.getSessionFactory().openSession() ) {
-			vehicles = (List<Vehicle>) s.createQuery( query ).list();
+			vehicles = s.createQuery( query, Vehicle.class ).list();
 		}
 		for ( Vehicle vehicle : vehicles ) {
 			if ( shouldHaveDriver( vehicle ) ) {

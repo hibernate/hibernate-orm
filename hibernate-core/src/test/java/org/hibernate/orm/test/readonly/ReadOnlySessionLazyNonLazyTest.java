@@ -4,21 +4,19 @@
  */
 package org.hibernate.orm.test.readonly;
 
-import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -54,10 +52,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 
 	@Test
-	@SuppressWarnings( {"unchecked"})
 	public void testExistingModifiableAfterSetSessionReadOnly(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
-		Set expectedInitializedObjects = new HashSet(
+		var expectedInitializedObjects = new HashSet<>(
 				Arrays.asList(
 						cOrig,
 						cOrig.getNoProxyInfo(),
@@ -71,7 +68,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 						cOrig.getNonLazySelectDataPoints().iterator().next()
 				)
 		);
-		Set expectedReadOnlyObjects = new HashSet();
+		var expectedReadOnlyObjects = new HashSet<>();
 
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
@@ -98,31 +95,27 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		s.evict( cOrig );
 		c = s.get( Container.class, cOrig.getId()  );
 		assertNotSame( cOrig, c );
-		expectedInitializedObjects = new HashSet(
-				Arrays.asList(
-						c,
-						c.getNonLazyInfo(),
-						c.getNoProxyOwner(),
-						c.getProxyOwner(),
-						c.getNonLazyOwner(),
-						c.getNonLazyJoinDataPoints().iterator().next(),
-						c.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
-		expectedReadOnlyObjects = new HashSet(
-				Arrays.asList(
-						c,
-						c.getNoProxyInfo(),
-						c.getProxyInfo(),
-						c.getNonLazyInfo(),
-						c.getNoProxyOwner(),
-						c.getProxyOwner(),
-						c.getNonLazyOwner(),
-						//c.getLazyDataPoints(),
-						c.getNonLazyJoinDataPoints().iterator().next(),
-						c.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
+		expectedInitializedObjects = new HashSet<>( Arrays.asList(
+				c,
+				c.getNonLazyInfo(),
+				c.getNoProxyOwner(),
+				c.getProxyOwner(),
+				c.getNonLazyOwner(),
+				c.getNonLazyJoinDataPoints().iterator().next(),
+				c.getNonLazySelectDataPoints().iterator().next()
+		) );
+		expectedReadOnlyObjects = new HashSet<>( Arrays.asList(
+				c,
+				c.getNoProxyInfo(),
+				c.getProxyInfo(),
+				c.getNonLazyInfo(),
+				c.getNoProxyOwner(),
+				c.getProxyOwner(),
+				c.getNonLazyOwner(),
+				//c.getLazyDataPoints(),
+				c.getNonLazyJoinDataPoints().iterator().next(),
+				c.getNonLazySelectDataPoints().iterator().next()
+		) );
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		assertFalse( Hibernate.isInitialized( c.getNoProxyInfo() ) );
 		Hibernate.initialize( c.getNoProxyInfo() );
@@ -139,37 +132,28 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		t.commit();
 		s.close();
-		s = openSession(scope);
-		t = s.beginTransaction();
-		s.createQuery("delete from DataPoint").executeUpdate();
-		s.createQuery("delete from Container").executeUpdate();
-		s.createQuery("delete from Info").executeUpdate();
-		s.createQuery("delete from Owner").executeUpdate();
-		t.commit();
-		s.close();
+
+		scope.dropData();
 
 	}
 
 	@Test
-	@SuppressWarnings( {"unchecked"})
 	public void testExistingReadOnlyAfterSetSessionModifiable(SessionFactoryScope scope) {
 
 		Container cOrig = createContainer();
-		Set expectedInitializedObjects = new HashSet(
-				Arrays.asList(
-						cOrig,
-						cOrig.getNoProxyInfo(),
-						cOrig.getProxyInfo(),
-						cOrig.getNonLazyInfo(),
-						cOrig.getNoProxyOwner(),
-						cOrig.getProxyOwner(),
-						cOrig.getNonLazyOwner(),
-						cOrig.getLazyDataPoints().iterator().next(),
-						cOrig.getNonLazyJoinDataPoints().iterator().next(),
-						cOrig.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
-		Set expectedReadOnlyObjects = new HashSet();
+		var expectedInitializedObjects = new HashSet<>(	Arrays.asList(
+				cOrig,
+				cOrig.getNoProxyInfo(),
+				cOrig.getProxyInfo(),
+				cOrig.getNonLazyInfo(),
+				cOrig.getNoProxyOwner(),
+				cOrig.getProxyOwner(),
+				cOrig.getNonLazyOwner(),
+				cOrig.getLazyDataPoints().iterator().next(),
+				cOrig.getNonLazyJoinDataPoints().iterator().next(),
+				cOrig.getNonLazySelectDataPoints().iterator().next()
+		) );
+		var expectedReadOnlyObjects = new HashSet<>();
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
 		Transaction t = s.beginTransaction();
@@ -187,31 +171,27 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		Container c = s.get( Container.class, cOrig.getId()  );
 		Hibernate.initialize( c );
 		assertNotSame( cOrig, c );
-		expectedInitializedObjects = new HashSet(
-				Arrays.asList(
-						c,
-						c.getNonLazyInfo(),
-						c.getNoProxyOwner(),
-						c.getProxyOwner(),
-						c.getNonLazyOwner(),
-						c.getNonLazyJoinDataPoints().iterator().next(),
-						c.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
-		expectedReadOnlyObjects = new HashSet(
-				Arrays.asList(
-						c,
-						c.getNoProxyInfo(),
-						c.getProxyInfo(),
-						c.getNonLazyInfo(),
-						c.getNoProxyOwner(),
-						c.getProxyOwner(),
-						c.getNonLazyOwner(),
-						//c.getLazyDataPoints(),
-						c.getNonLazyJoinDataPoints().iterator().next(),
-						c.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
+		expectedInitializedObjects = new HashSet<>( Arrays.asList(
+				c,
+				c.getNonLazyInfo(),
+				c.getNoProxyOwner(),
+				c.getProxyOwner(),
+				c.getNonLazyOwner(),
+				c.getNonLazyJoinDataPoints().iterator().next(),
+				c.getNonLazySelectDataPoints().iterator().next()
+		) );
+		expectedReadOnlyObjects = new HashSet<>( Arrays.asList(
+				c,
+				c.getNoProxyInfo(),
+				c.getProxyInfo(),
+				c.getNonLazyInfo(),
+				c.getNoProxyOwner(),
+				c.getProxyOwner(),
+				c.getNonLazyOwner(),
+				//c.getLazyDataPoints(),
+				c.getNonLazyJoinDataPoints().iterator().next(),
+				c.getNonLazySelectDataPoints().iterator().next()
+		) );
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		s.setDefaultReadOnly( false );
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
@@ -230,36 +210,27 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		t.commit();
 		s.close();
-		s = openSession(scope);
-		t = s.beginTransaction();
-		s.createQuery("delete from DataPoint").executeUpdate();
-		s.createQuery("delete from Container").executeUpdate();
-		s.createQuery("delete from Info").executeUpdate();
-		s.createQuery("delete from Owner").executeUpdate();
-		t.commit();
-		s.close();
+
+		scope.dropData();
 
 	}
 
 	@Test
-	@SuppressWarnings( {"unchecked"})
 	public void testExistingReadOnlyAfterSetSessionModifiableExisting(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
-		Set expectedInitializedObjects = new HashSet(
-				Arrays.asList(
-						cOrig,
-						cOrig.getNoProxyInfo(),
-						cOrig.getProxyInfo(),
-						cOrig.getNonLazyInfo(),
-						cOrig.getNoProxyOwner(),
-						cOrig.getProxyOwner(),
-						cOrig.getNonLazyOwner(),
-						cOrig.getLazyDataPoints().iterator().next(),
-						cOrig.getNonLazyJoinDataPoints().iterator().next(),
-						cOrig.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
-		Set expectedReadOnlyObjects = new HashSet();
+		var expectedInitializedObjects = new HashSet<>( Arrays.asList(
+				cOrig,
+				cOrig.getNoProxyInfo(),
+				cOrig.getProxyInfo(),
+				cOrig.getNonLazyInfo(),
+				cOrig.getNoProxyOwner(),
+				cOrig.getProxyOwner(),
+				cOrig.getNonLazyOwner(),
+				cOrig.getLazyDataPoints().iterator().next(),
+				cOrig.getNonLazyJoinDataPoints().iterator().next(),
+				cOrig.getNonLazySelectDataPoints().iterator().next()
+		) );
+		var expectedReadOnlyObjects = new HashSet<>();
 		DataPoint lazyDataPointOrig = ( DataPoint ) cOrig.getLazyDataPoints().iterator().next();
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
@@ -277,31 +248,27 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		s.setDefaultReadOnly( true );
 		Container c = ( Container ) s.get( Container.class, cOrig.getId()  );
 		assertNotSame( cOrig, c );
-		expectedInitializedObjects = new HashSet(
-				Arrays.asList(
-						c,
-						c.getNonLazyInfo(),
-						c.getNoProxyOwner(),
-						c.getProxyOwner(),
-						c.getNonLazyOwner(),
-						c.getNonLazyJoinDataPoints().iterator().next(),
-						c.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
-		expectedReadOnlyObjects = new HashSet(
-				Arrays.asList(
-						c,
-						c.getNoProxyInfo(),
-						c.getProxyInfo(),
-						c.getNonLazyInfo(),
-						c.getNoProxyOwner(),
-						c.getProxyOwner(),
-						c.getNonLazyOwner(),
-						//c.getLazyDataPoints(),
-						c.getNonLazyJoinDataPoints().iterator().next(),
-						c.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
+		expectedInitializedObjects = new HashSet<>(Arrays.asList(
+				c,
+				c.getNonLazyInfo(),
+				c.getNoProxyOwner(),
+				c.getProxyOwner(),
+				c.getNonLazyOwner(),
+				c.getNonLazyJoinDataPoints().iterator().next(),
+				c.getNonLazySelectDataPoints().iterator().next()
+		) );
+		expectedReadOnlyObjects = new HashSet<>( Arrays.asList(
+				c,
+				c.getNoProxyInfo(),
+				c.getProxyInfo(),
+				c.getNonLazyInfo(),
+				c.getNoProxyOwner(),
+				c.getProxyOwner(),
+				c.getNonLazyOwner(),
+				//c.getLazyDataPoints(),
+				c.getNonLazyJoinDataPoints().iterator().next(),
+				c.getNonLazySelectDataPoints().iterator().next()
+		) );
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		s.setDefaultReadOnly( false );
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
@@ -313,7 +280,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		Hibernate.initialize( c.getProxyInfo() );
 		expectedInitializedObjects.add( c.getProxyInfo() );
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
-		DataPoint lazyDataPoint = ( DataPoint ) s.get( DataPoint.class, lazyDataPointOrig.getId() );
+		DataPoint lazyDataPoint = s.get( DataPoint.class, lazyDataPointOrig.getId() );
 		assertFalse( Hibernate.isInitialized( c.getLazyDataPoints() ) );
 		Hibernate.initialize( c.getLazyDataPoints() );
 		assertSame( lazyDataPoint, c.getLazyDataPoints().iterator().next() );
@@ -321,36 +288,27 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		t.commit();
 		s.close();
-		s = openSession(scope);
-		t = s.beginTransaction();
-		s.createQuery("delete from DataPoint").executeUpdate();
-		s.createQuery("delete from Container").executeUpdate();
-		s.createQuery("delete from Info").executeUpdate();
-		s.createQuery("delete from Owner").executeUpdate();
-		t.commit();
-		s.close();
+
+		scope.dropData();
 
 	}
 
-	@SuppressWarnings( {"unchecked"})
 	@Test
 	public void testExistingReadOnlyAfterSetSessionModifiableExistingEntityReadOnly(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
-		Set expectedInitializedObjects = new HashSet(
-				Arrays.asList(
-						cOrig,
-						cOrig.getNoProxyInfo(),
-						cOrig.getProxyInfo(),
-						cOrig.getNonLazyInfo(),
-						cOrig.getNoProxyOwner(),
-						cOrig.getProxyOwner(),
-						cOrig.getNonLazyOwner(),
-						cOrig.getLazyDataPoints().iterator().next(),
-						cOrig.getNonLazyJoinDataPoints().iterator().next(),
-						cOrig.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
-		Set expectedReadOnlyObjects = new HashSet();
+		var expectedInitializedObjects = new HashSet<>( Arrays.asList(
+				cOrig,
+				cOrig.getNoProxyInfo(),
+				cOrig.getProxyInfo(),
+				cOrig.getNonLazyInfo(),
+				cOrig.getNoProxyOwner(),
+				cOrig.getProxyOwner(),
+				cOrig.getNonLazyOwner(),
+				cOrig.getLazyDataPoints().iterator().next(),
+				cOrig.getNonLazyJoinDataPoints().iterator().next(),
+				cOrig.getNonLazySelectDataPoints().iterator().next()
+		) );
+		var expectedReadOnlyObjects = new HashSet<>();
 		DataPoint lazyDataPointOrig = ( DataPoint ) cOrig.getLazyDataPoints().iterator().next();
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
@@ -368,31 +326,27 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		s.setDefaultReadOnly( true );
 		Container c = ( Container ) s.get( Container.class, cOrig.getId()  );
 		assertNotSame( cOrig, c );
-		expectedInitializedObjects = new HashSet(
-				Arrays.asList(
-						c,
-						c.getNonLazyInfo(),
-						c.getNoProxyOwner(),
-						c.getProxyOwner(),
-						c.getNonLazyOwner(),
-						c.getNonLazyJoinDataPoints().iterator().next(),
-						c.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
-		expectedReadOnlyObjects = new HashSet(
-				Arrays.asList(
-						c,
-						c.getNoProxyInfo(),
-						c.getProxyInfo(),
-						c.getNonLazyInfo(),
-						c.getNoProxyOwner(),
-						c.getProxyOwner(),
-						c.getNonLazyOwner(),
-						//c.getLazyDataPoints(),
-						c.getNonLazyJoinDataPoints().iterator().next(),
-						c.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
+		expectedInitializedObjects = new HashSet<>( Arrays.asList(
+				c,
+				c.getNonLazyInfo(),
+				c.getNoProxyOwner(),
+				c.getProxyOwner(),
+				c.getNonLazyOwner(),
+				c.getNonLazyJoinDataPoints().iterator().next(),
+				c.getNonLazySelectDataPoints().iterator().next()
+		) );
+		expectedReadOnlyObjects = new HashSet<>( Arrays.asList(
+				c,
+				c.getNoProxyInfo(),
+				c.getProxyInfo(),
+				c.getNonLazyInfo(),
+				c.getNoProxyOwner(),
+				c.getProxyOwner(),
+				c.getNonLazyOwner(),
+				//c.getLazyDataPoints(),
+				c.getNonLazyJoinDataPoints().iterator().next(),
+				c.getNonLazySelectDataPoints().iterator().next()
+		) );
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		s.setDefaultReadOnly( false );
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
@@ -405,7 +359,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		expectedInitializedObjects.add( c.getProxyInfo() );
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		s.setDefaultReadOnly( true );
-		DataPoint lazyDataPoint = ( DataPoint ) s.get( DataPoint.class, lazyDataPointOrig.getId() );
+		DataPoint lazyDataPoint = s.get( DataPoint.class, lazyDataPointOrig.getId() );
 		s.setDefaultReadOnly( false );
 		assertFalse( Hibernate.isInitialized( c.getLazyDataPoints() ) );
 		Hibernate.initialize( c.getLazyDataPoints() );
@@ -415,36 +369,27 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		t.commit();
 		s.close();
-		s = openSession(scope);
-		t = s.beginTransaction();
-		s.createQuery("delete from DataPoint").executeUpdate();
-		s.createQuery("delete from Container").executeUpdate();
-		s.createQuery("delete from Info").executeUpdate();
-		s.createQuery("delete from Owner").executeUpdate();
-		t.commit();
-		s.close();
+
+		scope.dropData();
 	}
 
 
-	@SuppressWarnings( {"unchecked"})
 	@Test
 	public void testExistingReadOnlyAfterSetSessionModifiableProxyExisting(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
-		Set expectedInitializedObjects = new HashSet(
-				Arrays.asList(
-						cOrig,
-						cOrig.getNoProxyInfo(),
-						cOrig.getProxyInfo(),
-						cOrig.getNonLazyInfo(),
-						cOrig.getNoProxyOwner(),
-						cOrig.getProxyOwner(),
-						cOrig.getNonLazyOwner(),
-						cOrig.getLazyDataPoints().iterator().next(),
-						cOrig.getNonLazyJoinDataPoints().iterator().next(),
-						cOrig.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
-		Set expectedReadOnlyObjects = new HashSet();
+		var expectedInitializedObjects = new HashSet<>( Arrays.asList(
+				cOrig,
+				cOrig.getNoProxyInfo(),
+				cOrig.getProxyInfo(),
+				cOrig.getNonLazyInfo(),
+				cOrig.getNoProxyOwner(),
+				cOrig.getProxyOwner(),
+				cOrig.getNonLazyOwner(),
+				cOrig.getLazyDataPoints().iterator().next(),
+				cOrig.getNonLazyJoinDataPoints().iterator().next(),
+				cOrig.getNonLazySelectDataPoints().iterator().next()
+		) );
+		var expectedReadOnlyObjects = new HashSet<>();
 		DataPoint lazyDataPointOrig = ( DataPoint ) cOrig.getLazyDataPoints().iterator().next();
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
@@ -462,31 +407,27 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		s.setDefaultReadOnly( true );
 		Container c = ( Container ) s.get( Container.class, cOrig.getId()  );
 		assertNotSame( cOrig, c );
-		expectedInitializedObjects = new HashSet(
-				Arrays.asList(
-						c,
-						c.getNonLazyInfo(),
-						c.getNoProxyOwner(),
-						c.getProxyOwner(),
-						c.getNonLazyOwner(),
-						c.getNonLazyJoinDataPoints().iterator().next(),
-						c.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
-		expectedReadOnlyObjects = new HashSet(
-				Arrays.asList(
-						c,
-						c.getNoProxyInfo(),
-						c.getProxyInfo(),
-						c.getNonLazyInfo(),
-						c.getNoProxyOwner(),
-						c.getProxyOwner(),
-						c.getNonLazyOwner(),
-						//c.getLazyDataPoints(),
-						c.getNonLazyJoinDataPoints().iterator().next(),
-						c.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
+		expectedInitializedObjects = new HashSet<>(Arrays.asList(
+				c,
+				c.getNonLazyInfo(),
+				c.getNoProxyOwner(),
+				c.getProxyOwner(),
+				c.getNonLazyOwner(),
+				c.getNonLazyJoinDataPoints().iterator().next(),
+				c.getNonLazySelectDataPoints().iterator().next()
+		) );
+		expectedReadOnlyObjects = new HashSet<>( Arrays.asList(
+				c,
+				c.getNoProxyInfo(),
+				c.getProxyInfo(),
+				c.getNonLazyInfo(),
+				c.getNoProxyOwner(),
+				c.getProxyOwner(),
+				c.getNonLazyOwner(),
+				//c.getLazyDataPoints(),
+				c.getNonLazyJoinDataPoints().iterator().next(),
+				c.getNonLazySelectDataPoints().iterator().next()
+		) );
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		s.setDefaultReadOnly( false );
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
@@ -498,7 +439,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		Hibernate.initialize( c.getProxyInfo() );
 		expectedInitializedObjects.add( c.getProxyInfo() );
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
-		DataPoint lazyDataPoint = ( DataPoint ) s.getReference( DataPoint.class, lazyDataPointOrig.getId() );
+		DataPoint lazyDataPoint = s.getReference( DataPoint.class, lazyDataPointOrig.getId() );
 		assertFalse( Hibernate.isInitialized( c.getLazyDataPoints() ) );
 		Hibernate.initialize( c.getLazyDataPoints() );
 		assertSame( lazyDataPoint, c.getLazyDataPoints().iterator().next() );
@@ -506,36 +447,27 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		t.commit();
 		s.close();
-		s = openSession(scope);
-		t = s.beginTransaction();
-		s.createQuery("delete from DataPoint").executeUpdate();
-		s.createQuery("delete from Container").executeUpdate();
-		s.createQuery("delete from Info").executeUpdate();
-		s.createQuery("delete from Owner").executeUpdate();
-		t.commit();
-		s.close();
+
+		scope.dropData();
 
 	}
 
-	@SuppressWarnings( {"unchecked"})
 	@Test
 	public void testExistingReadOnlyAfterSetSessionModifiableExistingProxyReadOnly(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
-		Set expectedInitializedObjects = new HashSet(
-				Arrays.asList(
-						cOrig,
-						cOrig.getNoProxyInfo(),
-						cOrig.getProxyInfo(),
-						cOrig.getNonLazyInfo(),
-						cOrig.getNoProxyOwner(),
-						cOrig.getProxyOwner(),
-						cOrig.getNonLazyOwner(),
-						cOrig.getLazyDataPoints().iterator().next(),
-						cOrig.getNonLazyJoinDataPoints().iterator().next(),
-						cOrig.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
-		Set expectedReadOnlyObjects = new HashSet();
+		var expectedInitializedObjects = new HashSet<>(Arrays.asList(
+				cOrig,
+				cOrig.getNoProxyInfo(),
+				cOrig.getProxyInfo(),
+				cOrig.getNonLazyInfo(),
+				cOrig.getNoProxyOwner(),
+				cOrig.getProxyOwner(),
+				cOrig.getNonLazyOwner(),
+				cOrig.getLazyDataPoints().iterator().next(),
+				cOrig.getNonLazyJoinDataPoints().iterator().next(),
+				cOrig.getNonLazySelectDataPoints().iterator().next()
+		) );
+		var expectedReadOnlyObjects = new HashSet<>();
 		DataPoint lazyDataPointOrig = ( DataPoint ) cOrig.getLazyDataPoints().iterator().next();
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
@@ -551,33 +483,29 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		s = openSession(scope);
 		t = s.beginTransaction();
 		s.setDefaultReadOnly( true );
-		Container c = ( Container ) s.get( Container.class, cOrig.getId()  );
+		Container c = s.get( Container.class, cOrig.getId()  );
 		assertNotSame( cOrig, c );
-		expectedInitializedObjects = new HashSet(
-				Arrays.asList(
-						c,
-						c.getNonLazyInfo(),
-						c.getNoProxyOwner(),
-						c.getProxyOwner(),
-						c.getNonLazyOwner(),
-						c.getNonLazyJoinDataPoints().iterator().next(),
-						c.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
-		expectedReadOnlyObjects = new HashSet(
-				Arrays.asList(
-						c,
-						c.getNoProxyInfo(),
-						c.getProxyInfo(),
-						c.getNonLazyInfo(),
-						c.getNoProxyOwner(),
-						c.getProxyOwner(),
-						c.getNonLazyOwner(),
-						//c.getLazyDataPoints(),
-						c.getNonLazyJoinDataPoints().iterator().next(),
-						c.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
+		expectedInitializedObjects = new HashSet<>(Arrays.asList(
+				c,
+				c.getNonLazyInfo(),
+				c.getNoProxyOwner(),
+				c.getProxyOwner(),
+				c.getNonLazyOwner(),
+				c.getNonLazyJoinDataPoints().iterator().next(),
+				c.getNonLazySelectDataPoints().iterator().next()
+		) );
+		expectedReadOnlyObjects = new HashSet<>(Arrays.asList(
+				c,
+				c.getNoProxyInfo(),
+				c.getProxyInfo(),
+				c.getNonLazyInfo(),
+				c.getNoProxyOwner(),
+				c.getProxyOwner(),
+				c.getNonLazyOwner(),
+				//c.getLazyDataPoints(),
+				c.getNonLazyJoinDataPoints().iterator().next(),
+				c.getNonLazySelectDataPoints().iterator().next()
+		) );
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		s.setDefaultReadOnly( false );
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
@@ -590,7 +518,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		expectedInitializedObjects.add( c.getProxyInfo() );
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		s.setDefaultReadOnly( true );
-		DataPoint lazyDataPoint = ( DataPoint ) s.getReference( DataPoint.class, lazyDataPointOrig.getId() );
+		DataPoint lazyDataPoint = s.getReference( DataPoint.class, lazyDataPointOrig.getId() );
 		s.setDefaultReadOnly( false );
 		assertFalse( Hibernate.isInitialized( c.getLazyDataPoints() ) );
 		Hibernate.initialize( c.getLazyDataPoints() );
@@ -600,35 +528,26 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		t.commit();
 		s.close();
-		s = openSession(scope);
-		t = s.beginTransaction();
-		s.createQuery("delete from DataPoint").executeUpdate();
-		s.createQuery("delete from Container").executeUpdate();
-		s.createQuery("delete from Info").executeUpdate();
-		s.createQuery("delete from Owner").executeUpdate();
-		t.commit();
-		s.close();
+
+		scope.dropData();
 	}
 
-	@SuppressWarnings( {"unchecked"})
 	@Test
 	public void testDefaultModifiableWithReadOnlyQueryForEntity(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
-		Set expectedInitializedObjects = new HashSet(
-				Arrays.asList(
-						cOrig,
-						cOrig.getNoProxyInfo(),
-						cOrig.getProxyInfo(),
-						cOrig.getNonLazyInfo(),
-						cOrig.getNoProxyOwner(),
-						cOrig.getProxyOwner(),
-						cOrig.getNonLazyOwner(),
-						cOrig.getLazyDataPoints().iterator().next(),
-						cOrig.getNonLazyJoinDataPoints().iterator().next(),
-						cOrig.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
-		Set expectedReadOnlyObjects = new HashSet();
+		var expectedInitializedObjects = new HashSet<>(Arrays.asList(
+				cOrig,
+				cOrig.getNoProxyInfo(),
+				cOrig.getProxyInfo(),
+				cOrig.getNonLazyInfo(),
+				cOrig.getNoProxyOwner(),
+				cOrig.getProxyOwner(),
+				cOrig.getNonLazyOwner(),
+				cOrig.getLazyDataPoints().iterator().next(),
+				cOrig.getNonLazyJoinDataPoints().iterator().next(),
+				cOrig.getNonLazySelectDataPoints().iterator().next()
+		) );
+		var expectedReadOnlyObjects = new HashSet<>();
 
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
@@ -644,33 +563,30 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		s = openSession(scope);
 		t = s.beginTransaction();
 		assertFalse( s.isDefaultReadOnly() );
-		Container c = ( Container ) s.createQuery( "from Container where id=" + cOrig.getId() )
-				.setReadOnly( true ).uniqueResult();
-		expectedInitializedObjects = new HashSet(
-				Arrays.asList(
-						c,
-						c.getNonLazyInfo(),
-						c.getNoProxyOwner(),
-						c.getProxyOwner(),
-						c.getNonLazyOwner(),
-						c.getNonLazyJoinDataPoints().iterator().next(),
-						c.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
-		expectedReadOnlyObjects = new HashSet(
-				Arrays.asList(
-						c,
-						c.getNoProxyInfo(),
-						c.getProxyInfo(),
-						c.getNonLazyInfo(),
-						c.getNoProxyOwner(),
-						c.getProxyOwner(),
-						c.getNonLazyOwner(),
-						//c.getLazyDataPoints(),
-						c.getNonLazyJoinDataPoints().iterator().next(),
-						c.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
+		var c = s.createQuery(Container.class, "from Container where id=" + cOrig.getId() )
+				.setReadOnly( true )
+				.uniqueResult();
+		expectedInitializedObjects = new HashSet<>( Arrays.asList(
+				c,
+				c.getNonLazyInfo(),
+				c.getNoProxyOwner(),
+				c.getProxyOwner(),
+				c.getNonLazyOwner(),
+				c.getNonLazyJoinDataPoints().iterator().next(),
+				c.getNonLazySelectDataPoints().iterator().next()
+		) );
+		expectedReadOnlyObjects = new HashSet<>( Arrays.asList(
+				c,
+				c.getNoProxyInfo(),
+				c.getProxyInfo(),
+				c.getNonLazyInfo(),
+				c.getNoProxyOwner(),
+				c.getProxyOwner(),
+				c.getNonLazyOwner(),
+				//c.getLazyDataPoints(),
+				c.getNonLazyJoinDataPoints().iterator().next(),
+				c.getNonLazySelectDataPoints().iterator().next()
+		) );
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		assertFalse( Hibernate.isInitialized( c.getNoProxyInfo() ) );
 		Hibernate.initialize( c.getNoProxyInfo() );
@@ -687,35 +603,26 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		t.commit();
 		s.close();
-		s = openSession(scope);
-		t = s.beginTransaction();
-		s.createQuery("delete from DataPoint").executeUpdate();
-		s.createQuery("delete from Container").executeUpdate();
-		s.createQuery("delete from Info").executeUpdate();
-		s.createQuery("delete from Owner").executeUpdate();
-		t.commit();
-		s.close();
+
+		scope.dropData();
 	}
 
-	@SuppressWarnings( {"unchecked"})
 	@Test
 	public void testDefaultReadOnlyWithModifiableQueryForEntity(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
-		Set expectedInitializedObjects = new HashSet(
-				Arrays.asList(
-						cOrig,
-						cOrig.getNoProxyInfo(),
-						cOrig.getProxyInfo(),
-						cOrig.getNonLazyInfo(),
-						cOrig.getNoProxyOwner(),
-						cOrig.getProxyOwner(),
-						cOrig.getNonLazyOwner(),
-						cOrig.getLazyDataPoints().iterator().next(),
-						cOrig.getNonLazyJoinDataPoints().iterator().next(),
-						cOrig.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
-		Set expectedReadOnlyObjects = new HashSet();
+		Set<Object> expectedInitializedObjects = new HashSet<>( Arrays.asList(
+				cOrig,
+				cOrig.getNoProxyInfo(),
+				cOrig.getProxyInfo(),
+				cOrig.getNonLazyInfo(),
+				cOrig.getNoProxyOwner(),
+				cOrig.getProxyOwner(),
+				cOrig.getNonLazyOwner(),
+				cOrig.getLazyDataPoints().iterator().next(),
+				cOrig.getNonLazyJoinDataPoints().iterator().next(),
+				cOrig.getNonLazySelectDataPoints().iterator().next()
+		) );
+		Set<Object> expectedReadOnlyObjects = new HashSet<>();
 
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
@@ -732,20 +639,18 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		t = s.beginTransaction();
 		s.setDefaultReadOnly( true );
 		assertTrue( s.isDefaultReadOnly() );
-		Container c = ( Container ) s.createQuery( "from Container where id=" + cOrig.getId() )
+		var c = s.createQuery(Container.class, "from Container where id=" + cOrig.getId() )
 				.setReadOnly( false ).uniqueResult();
-		expectedInitializedObjects = new HashSet(
-				Arrays.asList(
-						c,
-						c.getNonLazyInfo(),
-						c.getNoProxyOwner(),
-						c.getProxyOwner(),
-						c.getNonLazyOwner(),
-						c.getNonLazyJoinDataPoints().iterator().next(),
-						c.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
-		expectedReadOnlyObjects = new HashSet();
+		expectedInitializedObjects = new HashSet<>( Arrays.asList(
+				c,
+				c.getNonLazyInfo(),
+				c.getNoProxyOwner(),
+				c.getProxyOwner(),
+				c.getNonLazyOwner(),
+				c.getNonLazyJoinDataPoints().iterator().next(),
+				c.getNonLazySelectDataPoints().iterator().next()
+		) );
+		expectedReadOnlyObjects = new HashSet<>();
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		assertFalse( Hibernate.isInitialized( c.getNoProxyInfo() ) );
 		Hibernate.initialize( c.getNoProxyInfo() );
@@ -762,35 +667,26 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		t.commit();
 		s.close();
-		s = openSession(scope);
-		t = s.beginTransaction();
-		s.createQuery("delete from DataPoint").executeUpdate();
-		s.createQuery("delete from Container").executeUpdate();
-		s.createQuery("delete from Info").executeUpdate();
-		s.createQuery("delete from Owner").executeUpdate();
-		t.commit();
-		s.close();
+
+		scope.dropData();
 	}
 
-	@SuppressWarnings( {"unchecked"})
 	@Test
 	public void testDefaultReadOnlyWithQueryForEntity(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
-		Set expectedInitializedObjects = new HashSet(
-				Arrays.asList(
-						cOrig,
-						cOrig.getNoProxyInfo(),
-						cOrig.getProxyInfo(),
-						cOrig.getNonLazyInfo(),
-						cOrig.getNoProxyOwner(),
-						cOrig.getProxyOwner(),
-						cOrig.getNonLazyOwner(),
-						cOrig.getLazyDataPoints().iterator().next(),
-						cOrig.getNonLazyJoinDataPoints().iterator().next(),
-						cOrig.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
-		Set expectedReadOnlyObjects = new HashSet();
+		Set<Object> expectedInitializedObjects = new HashSet<>(Arrays.asList(
+				cOrig,
+				cOrig.getNoProxyInfo(),
+				cOrig.getProxyInfo(),
+				cOrig.getNonLazyInfo(),
+				cOrig.getNoProxyOwner(),
+				cOrig.getProxyOwner(),
+				cOrig.getNonLazyOwner(),
+				cOrig.getLazyDataPoints().iterator().next(),
+				cOrig.getNonLazyJoinDataPoints().iterator().next(),
+				cOrig.getNonLazySelectDataPoints().iterator().next()
+		) );
+		Set<Object> expectedReadOnlyObjects = new HashSet<>();
 
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
@@ -807,9 +703,9 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		t = s.beginTransaction();
 		s.setDefaultReadOnly( true );
 		assertTrue( s.isDefaultReadOnly() );
-		Container c = ( Container ) s.createQuery( "from Container where id=" + cOrig.getId() )
+		var c = s.createQuery(Container.class, "from Container where id=" + cOrig.getId() )
 				.uniqueResult();
-		expectedInitializedObjects = new HashSet(
+		expectedInitializedObjects = new HashSet<>(
 				Arrays.asList(
 						c,
 						c.getNonLazyInfo(),
@@ -820,7 +716,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 						c.getNonLazySelectDataPoints().iterator().next()
 				)
 		);
-		expectedReadOnlyObjects = new HashSet(
+		expectedReadOnlyObjects = new HashSet<>(
 				Arrays.asList(
 						c,
 						c.getNoProxyInfo(),
@@ -850,35 +746,26 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		t.commit();
 		s.close();
-		s = openSession(scope);
-		t = s.beginTransaction();
-		s.createQuery("delete from DataPoint").executeUpdate();
-		s.createQuery("delete from Container").executeUpdate();
-		s.createQuery("delete from Info").executeUpdate();
-		s.createQuery("delete from Owner").executeUpdate();
-		t.commit();
-		s.close();
+
+		scope.dropData();
 	}
 
-	@SuppressWarnings( {"unchecked"})
 	@Test
 	public void testDefaultModifiableWithQueryForEntity(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
-		Set expectedInitializedObjects = new HashSet(
-				Arrays.asList(
-						cOrig,
-						cOrig.getNoProxyInfo(),
-						cOrig.getProxyInfo(),
-						cOrig.getNonLazyInfo(),
-						cOrig.getNoProxyOwner(),
-						cOrig.getProxyOwner(),
-						cOrig.getNonLazyOwner(),
-						cOrig.getLazyDataPoints().iterator().next(),
-						cOrig.getNonLazyJoinDataPoints().iterator().next(),
-						cOrig.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
-		Set expectedReadOnlyObjects = new HashSet();
+		var expectedInitializedObjects = new HashSet<>(	Arrays.asList(
+				cOrig,
+				cOrig.getNoProxyInfo(),
+				cOrig.getProxyInfo(),
+				cOrig.getNonLazyInfo(),
+				cOrig.getNoProxyOwner(),
+				cOrig.getProxyOwner(),
+				cOrig.getNonLazyOwner(),
+				cOrig.getLazyDataPoints().iterator().next(),
+				cOrig.getNonLazyJoinDataPoints().iterator().next(),
+				cOrig.getNonLazySelectDataPoints().iterator().next()
+		) );
+		var expectedReadOnlyObjects = new HashSet<>();
 
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
@@ -894,20 +781,18 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		s = openSession(scope);
 		t = s.beginTransaction();
 		assertFalse( s.isDefaultReadOnly() );
-		Container c = ( Container ) s.createQuery( "from Container where id=" + cOrig.getId() )
+		var c = s.createQuery(Container.class, "from Container where id=" + cOrig.getId() )
 				.uniqueResult();
-		expectedInitializedObjects = new HashSet(
-				Arrays.asList(
-						c,
-						c.getNonLazyInfo(),
-						c.getNoProxyOwner(),
-						c.getProxyOwner(),
-						c.getNonLazyOwner(),
-						c.getNonLazyJoinDataPoints().iterator().next(),
-						c.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
-		expectedReadOnlyObjects = new HashSet();
+		expectedInitializedObjects = new HashSet<>(Arrays.asList(
+				c,
+				c.getNonLazyInfo(),
+				c.getNoProxyOwner(),
+				c.getProxyOwner(),
+				c.getNonLazyOwner(),
+				c.getNonLazyJoinDataPoints().iterator().next(),
+				c.getNonLazySelectDataPoints().iterator().next()
+		) );
+		expectedReadOnlyObjects = new HashSet<>();
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		assertFalse( Hibernate.isInitialized( c.getNoProxyInfo() ) );
 		Hibernate.initialize( c.getNoProxyInfo() );
@@ -924,35 +809,26 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkContainer( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		t.commit();
 		s.close();
-		s = openSession(scope);
-		t = s.beginTransaction();
-		s.createQuery("delete from DataPoint").executeUpdate();
-		s.createQuery("delete from Container").executeUpdate();
-		s.createQuery("delete from Info").executeUpdate();
-		s.createQuery("delete from Owner").executeUpdate();
-		t.commit();
-		s.close();
+
+		scope.dropData();
 	}
 
-	@SuppressWarnings( {"unchecked"})
 	@Test
 	public void testDefaultModifiableWithReadOnlyQueryForCollectionEntities(SessionFactoryScope scope) {
 		Container cOrig = createContainer();
-		Set expectedInitializedObjects = new HashSet(
-				Arrays.asList(
-						cOrig,
-						cOrig.getNoProxyInfo(),
-						cOrig.getProxyInfo(),
-						cOrig.getNonLazyInfo(),
-						cOrig.getNoProxyOwner(),
-						cOrig.getProxyOwner(),
-						cOrig.getNonLazyOwner(),
-						cOrig.getLazyDataPoints().iterator().next(),
-						cOrig.getNonLazyJoinDataPoints().iterator().next(),
-						cOrig.getNonLazySelectDataPoints().iterator().next()
-				)
-		);
-		Set expectedReadOnlyObjects = new HashSet();
+		var expectedInitializedObjects = new HashSet<>(Arrays.asList(
+				cOrig,
+				cOrig.getNoProxyInfo(),
+				cOrig.getProxyInfo(),
+				cOrig.getNonLazyInfo(),
+				cOrig.getNoProxyOwner(),
+				cOrig.getProxyOwner(),
+				cOrig.getNonLazyOwner(),
+				cOrig.getLazyDataPoints().iterator().next(),
+				cOrig.getNonLazyJoinDataPoints().iterator().next(),
+				cOrig.getNonLazySelectDataPoints().iterator().next()
+		) );
+		var expectedReadOnlyObjects = new HashSet<>();
 
 		Session s = openSession(scope);
 		assertFalse( s.isDefaultReadOnly() );
@@ -968,21 +844,16 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		s = openSession(scope);
 		t = s.beginTransaction();
 		assertFalse( s.isDefaultReadOnly() );
-		DataPoint dp = ( DataPoint ) s.createQuery( "select c.lazyDataPoints from Container c join c.lazyDataPoints where c.id=" + cOrig.getId() )
+		var dp = s.createQuery(DataPoint.class, "select c.lazyDataPoints from Container c join c.lazyDataPoints where c.id=" + cOrig.getId() )
 				.setReadOnly( true ).uniqueResult();
 		assertTrue( s.isReadOnly( dp ) );
 		t.commit();
 		s.close();
-		s = openSession(scope);
-		t = s.beginTransaction();
-		s.createQuery("delete from DataPoint").executeUpdate();
-		s.createQuery("delete from Container").executeUpdate();
-		s.createQuery("delete from Info").executeUpdate();
-		s.createQuery("delete from Owner").executeUpdate();
-		t.commit();
-		s.close();
+
+		scope.dropData();
 	}
 
+	@SuppressWarnings("unchecked")
 	private Container createContainer() {
 		Container c = new Container( "container" );
 		c.setNoProxyInfo( new Info( "no-proxy info" ) );
@@ -997,7 +868,7 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		return c;
 	}
 
-	private void checkContainer(Container c, Set expectedInitializedObjects, Set expectedReadOnlyObjects, Session s) {
+	private void checkContainer(Container c, Set<?> expectedInitializedObjects, Set<?> expectedReadOnlyObjects, Session s) {
 		checkObject( c, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		if ( ! expectedInitializedObjects.contains( c ) ) {
 			return;
@@ -1009,19 +880,19 @@ public class ReadOnlySessionLazyNonLazyTest extends AbstractReadOnlyTest {
 		checkObject( c.getProxyOwner(), expectedInitializedObjects, expectedReadOnlyObjects, s );
 		checkObject( c.getNonLazyOwner(), expectedInitializedObjects, expectedReadOnlyObjects, s );
 		if ( Hibernate.isInitialized( c.getLazyDataPoints() ) ) {
-			for ( Iterator it=c.getLazyDataPoints().iterator(); it.hasNext(); ) {
-				checkObject( it.next(), expectedInitializedObjects, expectedReadOnlyObjects, s );
+			for ( var o : c.getLazyDataPoints() ) {
+				checkObject( o, expectedInitializedObjects, expectedReadOnlyObjects, s );
 			}
 		}
-		for ( Iterator it=c.getNonLazyJoinDataPoints().iterator(); it.hasNext(); ) {
-			checkObject( it.next(), expectedInitializedObjects, expectedReadOnlyObjects, s );
+		for ( var o : c.getNonLazyJoinDataPoints() ) {
+			checkObject( o, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		}
-		for ( Iterator it=c.getNonLazySelectDataPoints().iterator(); it.hasNext(); ) {
-			checkObject( it.next(), expectedInitializedObjects, expectedReadOnlyObjects, s );
+		for ( var o : c.getNonLazySelectDataPoints() ) {
+			checkObject( o, expectedInitializedObjects, expectedReadOnlyObjects, s );
 		}
 	}
 
-	private void checkObject(Object entityOrProxy, Set expectedInitializedObjects, Set expectedReadOnlyObjects, Session s) {
+	private void checkObject(Object entityOrProxy, Set<?> expectedInitializedObjects, Set<?> expectedReadOnlyObjects, Session s) {
 		boolean isExpectedToBeInitialized = expectedInitializedObjects.contains( entityOrProxy );
 		boolean isExpectedToBeReadOnly = expectedReadOnlyObjects.contains( entityOrProxy );
 		SessionImplementor si = (SessionImplementor) s;

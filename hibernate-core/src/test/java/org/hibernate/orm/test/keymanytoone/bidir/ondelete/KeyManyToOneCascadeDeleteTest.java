@@ -55,11 +55,11 @@ public class KeyManyToOneCascadeDeleteTest {
 					session.getTransaction().begin();
 
 					assertThat(
-							session.createQuery( "select count(*) from Customer" ).uniqueResult(),
+							session.createQuery( "select count(*) from Customer", Long.class ).uniqueResult(),
 							is( 0L )
 					);
 					assertThat(
-							session.createQuery( "select count(*) from Order" ).uniqueResult(),
+							session.createQuery( "select count(*) from Order", Long.class ).uniqueResult(),
 							is( 0L )
 					);
 				}

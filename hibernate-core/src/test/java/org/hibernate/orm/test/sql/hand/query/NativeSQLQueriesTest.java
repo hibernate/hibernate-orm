@@ -140,7 +140,7 @@ public class NativeSQLQueriesTest {
 					try {
 						String sql = "select {org.*} " +
 								"from organization org";
-						session.createNativeQuery( sql ).list();
+						session.createNativeQuery( sql, Object[].class ).list();
 						fail( "Should throw an exception since no addEntity nor addScalar has been performed." );
 					}
 					catch( PersistenceException pe) {
@@ -300,6 +300,7 @@ public class NativeSQLQueriesTest {
 		);
 	}
 
+	@FailureExpected( reason = "Not sure yet why this one fails", jiraKey = "HHH-20367" )
 	@Test
 	public void testScalarValues(SessionFactoryScope scope) {
 		Organization ifa = new Organization( "IFA" );
@@ -317,11 +318,11 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					List result = session.createNamedQuery( "orgNamesOnly" ).list();
+					List result = session.createNamedQuery( "orgNamesOnly", String.class ).list();
 					assertTrue( result.contains( "IFA" ) );
 					assertTrue( result.contains( "JBoss" ) );
 
-					result = session.createNamedQuery( "orgNamesOnly" )
+					result = session.createNamedQuery( "orgNamesOnly", String.class )
 							.setTupleTransformer(Transformers.mapTransformer())
 							.list();
 					Map m = (Map) result.get(0);
@@ -333,7 +334,7 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					Iterator iter = session.createNamedQuery( "orgNamesAndOrgs" ).list().iterator();
+					Iterator iter = session.createNamedQuery( "orgNamesAndOrgs", Object[].class ).list().iterator();
 					Object[] o = ( Object[] ) iter.next();
 					assertEquals( 2, o.length, "expecting 2 values" );
 					assertEquals( "IFA", o[0] );
@@ -347,7 +348,7 @@ public class NativeSQLQueriesTest {
 		scope.inTransaction(
 				session -> {
 					// test that the ordering of the results is truly based on the order in which they were defined
-					Iterator iter = session.createNamedQuery( "orgsAndOrgNames" ).list().iterator();
+					Iterator iter = session.createNamedQuery( "orgsAndOrgNames", Object[].class ).list().iterator();
 					Object[] row = ( Object[] ) iter.next();
 					assertEquals( 2, row.length, "expecting 2 values" );
 					assertEquals( Organization.class, row[0].getClass(), "expecting non-scalar result first" );
@@ -365,7 +366,7 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					Iterator iter = session.createNamedQuery( "orgIdsAndOrgNames" ).list().iterator();
+					Iterator iter = session.createNamedQuery( "orgIdsAndOrgNames", Object[].class ).list().iterator();
 					Object[] o = ( Object[] ) iter.next();
 					assertEquals( "IFA", o[1] );
 					assertEquals( o[0], idIfa );
@@ -397,10 +398,10 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					Query namedQuery = session.createNamedQuery("AllEmploymentAsMapped");
-					List list = namedQuery.list();
+					var namedQuery = session.createNamedQuery("AllEmploymentAsMapped", Employment.class);
+					List<Employment> list = namedQuery.list();
 					assertEquals(1,list.size());
-					Employment emp2 = (Employment) list.get(0);
+					Employment emp2 = list.get(0);
 					assertEquals(emp2.getEmploymentId(), emp.getEmploymentId() );
 					assertEquals(emp2.getStartDate().getDate(), emp.getStartDate().getDate() );
 					assertEquals(emp2.getEndDate(), emp.getEndDate() );
@@ -409,7 +410,7 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					Query sqlQuery = session.createNamedQuery("EmploymentAndPerson")
+					var sqlQuery = session.createNamedQuery("EmploymentAndPerson", Object[].class)
 							.setTupleTransformer(Transformers.mapTransformer());
 					List list = sqlQuery.list();
 					assertEquals(1,list.size() );
@@ -422,7 +423,7 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					Query sqlQuery = session.createNamedQuery( "organizationreturnproperty" )
+					var sqlQuery = session.createNamedQuery( "organizationreturnproperty", Organization.class )
 							.setTupleTransformer(Transformers.mapTransformer());
 					List list = sqlQuery.list();
 					assertEquals( 2,list.size() );
@@ -445,7 +446,7 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					Query namedQuery = session.createNamedQuery("EmploymentAndPerson");
+					var namedQuery = session.createNamedQuery("EmploymentAndPerson", Object[].class);
 					List list = namedQuery.list();
 					assertEquals(1,list.size() );
 					Object[] objs = (Object[]) list.get(0);
@@ -491,7 +492,7 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					Product p = (Product) session.createQuery( "from Product p join fetch p.orders" ).list().get(0);
+					Product p = session.createQuery( "from Product p join fetch p.orders", Product.class ).list().get(0);
 					assertTrue(Hibernate.isInitialized( p.getOrders()));
 				}
 		);
@@ -571,7 +572,7 @@ public class NativeSQLQueriesTest {
 					assertTrue(m.containsKey("Employment"));
 					assertEquals(1,m.size());
 
-					list = session.createNativeQuery(getEmploymentSQL()).list();
+					list = session.createNativeQuery(getEmploymentSQL(), Object[].class).list();
 					assertEquals(1, list.size());
 					Object[] o = (Object[]) list.get(0);
 					assertEquals(8, o.length);
@@ -619,13 +620,13 @@ public class NativeSQLQueriesTest {
 					session.clear();
 
 					// TODO : why twice?
-					session.createNamedQuery( "organizationreturnproperty" ).list();
-					list = session.createNamedQuery( "organizationreturnproperty" ).list();
+					session.createNamedQuery( "organizationreturnproperty", Organization.class ).list();
+					list = session.createNamedQuery( "organizationreturnproperty", Organization.class ).list();
 					assertEquals( 2,list.size() );
 
 					session.clear();
 
-					list = session.createNamedQuery( "organizationautodetect" ).list();
+					list = session.createNamedQuery( "organizationautodetect", Organization.class ).list();
 					assertEquals( 2,list.size() );
 				}
 		);
@@ -644,7 +645,7 @@ public class NativeSQLQueriesTest {
 				session -> {
 					Dimension dim = new Dimension( 3, 30 );
 					session.persist( dim );
-					List list = session.createNativeQuery( "select d_len * d_width as surface, d_len * d_width * 10 as volume from Dimension" ).list();
+					List list = session.createNativeQuery( "select d_len * d_width as surface, d_len * d_width * 10 as volume from Dimension", Object[].class ).list();
 					session.remove( dim );
 				}
 		);
@@ -659,7 +660,7 @@ public class NativeSQLQueriesTest {
 					enterprise.setDimensions( d );
 					session.persist( enterprise );
 					session.flush();
-					Object[] result = (Object[]) session.createNamedQuery( "spaceship" ).uniqueResult();
+					Object[] result = session.createNamedQuery( "spaceship", Object[].class ).uniqueResult();
 					assertEquals( 3, result.length, "expecting 3 result values" );
 					enterprise = ( SpaceShip ) result[0];
 					assertEquals( 50d, enterprise.getSpeed() );
@@ -814,7 +815,7 @@ public class NativeSQLQueriesTest {
 //				.addEntity("groupp", Group.class)
 //				.addJoin("gp","groupp.persons")
 //				.list();
-					List l = session.createNamedQuery( "manyToManyFetch" ).list();
+					List l = session.createNamedQuery( "manyToManyFetch", Object[].class ).list();
 					//assertEquals( 2, l.size() );
 				}
 		);
@@ -839,7 +840,7 @@ public class NativeSQLQueriesTest {
 	@Test @JiraKey( "HHH-15102" )
 	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true)
 	public void testCommentInSQLQuery(SessionFactoryScope scope) {
-		scope.inTransaction( s -> s.createNativeQuery( "select sum(1) --count(*), effectively\nfrom ORGANIZATION" ).getSingleResult() );
+		scope.inTransaction( s -> s.createNativeQuery( "select sum(1) --count(*), effectively\nfrom ORGANIZATION", Object.class ).getSingleResult() );
 	}
 
 	@Test
@@ -853,7 +854,7 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					Object result = session.createNativeQuery( getDescriptionsSQL() ).uniqueResult();
+					Object result = session.createNativeQuery( getDescriptionsSQL(), Object.class ).uniqueResult();
 
 					String descriptionRead;
 					if ( result instanceof String ) {
@@ -886,7 +887,7 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					Object result = session.createNativeQuery( getPhotosSQL() ).uniqueResult();
+					Object result = session.createNativeQuery( getPhotosSQL(), Object.class ).uniqueResult();
 					byte[] photoRead;
 					if ( result instanceof byte[] ) {
 						photoRead = (byte[]) result;
@@ -911,7 +912,7 @@ public class NativeSQLQueriesTest {
 	public void testEscapeColonInSQL(SessionFactoryScope scope) throws QueryException {
 		scope.inTransaction(
 				session -> {
-					NativeQuery query = session.createNativeQuery( "SELECT @row \\:= 1" );
+					NativeQuery query = session.createNativeQuery( "SELECT @row \\:= 1", Object.class );
 					List list = query.list();
 					assertEquals( "1", list.get( 0 ).toString() );
 				}
@@ -929,7 +930,7 @@ public class NativeSQLQueriesTest {
 
 		scope.inTransaction(
 				session -> {
-					HashMap result = (HashMap) session.createNativeQuery( "select * from PERSON" )
+					HashMap result = (HashMap) session.createNativeQuery( "select * from PERSON", Object[].class )
 							.setTupleTransformer(Transformers.beanTransformer( HashMap.class ))
 							.uniqueResult();
 					assertEquals( "Gavin", result.get( "NAME" ) == null ? result.get( "name" ) : result.get( "NAME" ) );

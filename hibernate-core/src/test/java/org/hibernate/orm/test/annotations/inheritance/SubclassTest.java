@@ -13,8 +13,6 @@ import org.hibernate.orm.test.annotations.inheritance.singletable.Funk;
 import org.hibernate.orm.test.annotations.inheritance.singletable.Music;
 import org.hibernate.orm.test.annotations.inheritance.singletable.Noise;
 import org.hibernate.orm.test.annotations.inheritance.singletable.Rock;
-import org.hibernate.query.Query;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -64,14 +62,12 @@ public class SubclassTest {
 
 		scope.inTransaction(
 				s -> {
-					Query q = s.createQuery( "from " + A320.class.getName() );
-					List a320s = q.list();
+					var a320s = s.createQuery( "from " + A320.class.getName(), A320.class ).list();
 					assertNotNull( a320s );
 					assertEquals( 1, a320s.size() );
 					assertTrue( a320s.get( 0 ) instanceof A320 );
-					assertEquals( "5.0", ( (A320) a320s.get( 0 ) ).getJavaEmbeddedVersion() );
-					q = s.createQuery( "from " + Plane.class.getName() );
-					List planes = q.list();
+					assertEquals( "5.0", a320s.get( 0 ).getJavaEmbeddedVersion() );
+					var planes = s.createQuery( "from " + Plane.class.getName(), Plane.class ).list();
 					assertNotNull( planes );
 					assertEquals( 2, planes.size() );
 				}
@@ -91,9 +87,9 @@ public class SubclassTest {
 
 		scope.inTransaction(
 				s -> {
-					Query q = s.createQuery( "from " + A320.class.getName() + " as a where a.javaEmbeddedVersion = :version" );
-					q.setParameter( "version", "Elephant" );
-					List a320s = q.list();
+					var a320s = s.createQuery( "from " + A320.class.getName() + " as a where a.javaEmbeddedVersion = :version", A320.class )
+							.setParameter( "version", "Elephant" )
+							.list();
 					assertNotNull( a320s );
 					assertEquals( 1, a320s.size() );
 
@@ -163,9 +159,9 @@ public class SubclassTest {
 		);
 	}
 
-	private Query createQueryForClass(SessionImplementor session, Class clazz) {
+	private <T> org.hibernate.query.SelectionQuery<T> createQueryForClass(SessionImplementor session, Class<T> clazz) {
 		CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
-		CriteriaQuery criteria = criteriaBuilder.createQuery( clazz );
+		CriteriaQuery<T> criteria = criteriaBuilder.createQuery( clazz );
 		criteria.from( clazz );
 		return session.createQuery( criteria );
 	}

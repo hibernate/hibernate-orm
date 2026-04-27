@@ -18,6 +18,8 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -138,9 +140,9 @@ public class EmbeddedCompositeIdTest {
 
 		List<Course> courses = scope.fromTransaction(
 				session -> {
-					List<Course> list = session.createQuery( "from Course order by courseCode" ).list();
-					assertTrue( list.get( 0 ) instanceof Course );
-					assertTrue( list.get( 1 ) instanceof UniversityCourse );
+					List<Course> list = session.createQuery( Course.class, "from Course order by courseCode" ).list();
+					assertNotNull( list.get( 0 ) );
+					assertInstanceOf( UniversityCourse.class, list.get( 1 ) );
 					assertEquals( "eng5000", list.get( 0 ).getCourseCode() );
 					assertEquals( "mat2000", list.get( 1 ).getCourseCode() );
 					return list;

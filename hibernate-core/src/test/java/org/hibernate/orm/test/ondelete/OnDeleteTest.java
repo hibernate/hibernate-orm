@@ -84,7 +84,7 @@ public class OnDeleteTest {
 					}
 
 					session.beginTransaction();
-					List names = session.createQuery( "select name from Person" ).list();
+					List<String> names = session.createQuery( "select name from Person", String.class ).list();
 					assertTrue( names.isEmpty() );
 				}
 		);

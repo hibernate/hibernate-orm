@@ -4,13 +4,12 @@
  */
 package org.hibernate.query.sqm.tree.update;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import jakarta.persistence.criteria.BooleanExpression;
-import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.SingularAttribute;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.persister.entity.EntityPersister;
@@ -35,12 +34,10 @@ import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.metamodel.EntityType;
-import jakarta.persistence.metamodel.SingularAttribute;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.hibernate.internal.CoreMessageLogger.CORE_LOGGER;
 import static org.hibernate.query.sqm.SqmQuerySource.CRITERIA;
@@ -279,13 +276,7 @@ public class SqmUpdateStatement<T>
 	}
 
 	@Override
-	public CriteriaUpdate<T> where(BooleanExpression... restrictions) {
-		setWhere( restrictions );
-		return this;
-	}
-
-	@Override
-	public SqmUpdateStatement<T> where(Predicate @Nullable... restrictions) {
+	public SqmUpdateStatement<T> where(BooleanExpression... restrictions) {
 		setWhere( restrictions );
 		return this;
 	}

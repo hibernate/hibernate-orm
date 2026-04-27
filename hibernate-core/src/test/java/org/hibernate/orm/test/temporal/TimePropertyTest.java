@@ -4,25 +4,22 @@
  */
 package org.hibernate.orm.test.temporal;
 
-import java.sql.Time;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.query.Query;
-import org.hibernate.type.StandardBasicTypes;
-
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.type.StandardBasicTypes;
+import org.junit.jupiter.api.Test;
+
+import java.sql.Time;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -74,31 +71,21 @@ public class TimePropertyTest {
 			queryString = "from TimePropertyTest$Entity where tAsDate = ?1";
 		}
 
-		scope.inTransaction(
-				session -> {
-
-					final Query queryWithParameter = session.createQuery( queryString ).setParameter(
-							1,
-							eGotten.tAsDate
-					);
-					final Entity eQueriedWithParameter = (Entity) queryWithParameter.uniqueResult();
-					assertNotNull( eQueriedWithParameter );
-				}
-		);
+		scope.inTransaction((session) -> {
+			var queryWithParameter = session.createQuery(Entity.class, queryString)
+					.setParameter(1, eGotten.tAsDate );
+			final Entity eQueriedWithParameter = queryWithParameter.uniqueResult();
+			assertNotNull( eQueriedWithParameter );
+		} );
 
 
-		final Entity eQueried = scope.fromTransaction(
-				session -> {
-					final Query query = session.createQuery( queryString ).setParameter(
-							1,
-							eGotten.tAsDate,
-							StandardBasicTypes.TIME
-					);
-					final Entity queryResult = (Entity) query.uniqueResult();
-					assertNotNull( queryResult );
-					return queryResult;
-				}
-		);
+		final Entity eQueried = scope.fromTransaction(session -> {
+			var query = session.createQuery(Entity.class, queryString)
+					.setParameter(1, eGotten.tAsDate, StandardBasicTypes.TIME);
+			final Entity queryResult = query.uniqueResult();
+			assertNotNull( queryResult );
+			return queryResult;
+		} );
 
 		scope.inTransaction(
 				session ->

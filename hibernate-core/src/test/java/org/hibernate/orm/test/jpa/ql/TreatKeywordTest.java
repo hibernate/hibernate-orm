@@ -16,19 +16,19 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.util.List;
-import java.util.Set;
-
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -103,13 +103,13 @@ public class TreatKeywordTest {
 		scope.inSession( s -> {
 			// in the select clause which causes an implicit inclusion of subclass joins, the test here makes sure that
 			// the TREAT-AS effects the join-type used.
-			List result = s.createQuery( "select e from JoinedEntity e" ).list();
+			var result = s.createQuery( JoinedEntity.class, "select e from JoinedEntity e" ).list();
 			assertEquals( 2, result.size() );
-			result = s.createQuery( "select treat (e as JoinedEntitySubclass) from JoinedEntity e" ).list();
+			result = s.createQuery( JoinedEntity.class,"select treat (e as JoinedEntitySubclass) from JoinedEntity e" ).list();
 			assertEquals( 1, result.size() );
-			result = s.createQuery( "select e from JoinedEntity e where treat (e as JoinedEntitySubclass) is not null" ).list();
+			result = s.createQuery( JoinedEntity.class,"select e from JoinedEntity e where treat (e as JoinedEntitySubclass) is not null" ).list();
 			assertEquals( 1, result.size() );
-			result = s.createQuery( "select treat (e as JoinedEntitySubSubclass) from JoinedEntity e" ).list();
+			result = s.createQuery( JoinedEntity.class,"select treat (e as JoinedEntitySubSubclass) from JoinedEntity e" ).list();
 			assertEquals( 0, result.size() );
 
 			// in join
@@ -135,18 +135,26 @@ public class TreatKeywordTest {
 		} );
 
 		scope.inSession( s -> {
-			List result = s.createQuery( "select e from JoinedEntity e where treat (e as JoinedEntitySubclass ).name = 'child1'" ).list();
+			var result = s.createQuery( JoinedEntity.class,
+							"select e from JoinedEntity e where treat (e as JoinedEntitySubclass ).name = 'child1'" )
+					.list();
 			assertEquals( 1, result.size() );
-			assertTrue( JoinedEntitySubclass.class.isInstance( result.get( 0 ) ) );
+			assertInstanceOf( JoinedEntitySubclass.class, result.get( 0 ) );
 
-			result = s.createQuery( "select e from JoinedEntity e where treat (e as JoinedEntitySubclass2 ).name = 'child1'" ).list();
+			result = s.createQuery( JoinedEntity.class,
+					"select e from JoinedEntity e where treat (e as JoinedEntitySubclass2 ).name = 'child1'" )
+					.list();
 			assertEquals( 0, result.size() );
 
-			result = s.createQuery( "select e from JoinedEntity e where treat (e as JoinedEntitySubclass2 ).name = 'child2'" ).list();
+			result = s.createQuery( JoinedEntity.class,
+					"select e from JoinedEntity e where treat (e as JoinedEntitySubclass2 ).name = 'child2'" )
+					.list();
 			assertEquals( 1, result.size() );
-			assertTrue( JoinedEntitySubclass2.class.isInstance( result.get( 0 ) ) );
+			assertInstanceOf( JoinedEntitySubclass2.class, result.get( 0 ) );
 
-			result = s.createQuery( "select e from JoinedEntity e where treat (e as JoinedEntitySubclass ).name = 'child1' or treat (e as JoinedEntitySubclass2 ).name = 'child2'" ).list();
+			result = s.createQuery( JoinedEntity.class,
+							"select e from JoinedEntity e where treat (e as JoinedEntitySubclass ).name = 'child1' or treat (e as JoinedEntitySubclass2 ).name = 'child2'" )
+					.list();
 			assertEquals( 2, result.size() );
 		} );
 	}
@@ -161,7 +169,7 @@ public class TreatKeywordTest {
 					s.persist( greyhound );
 					s.persist( dachshund );
 
-					List results = s.createQuery( "select treat (a as Dog) from Animal a where a.fast = TRUE" ).list();
+					var results = s.createQuery( Dog.class, "select treat (a as Dog) from Animal a where a.fast = TRUE" ).list();
 
 					assertEquals( List.of( greyhound ), results );
 					s.remove( greyhound );

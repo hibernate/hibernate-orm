@@ -49,7 +49,7 @@ public class IdClassGeneratedValueTest {
 
 		scope.inTransaction(
 				session -> {
-					List<Simple> simpleList = session.createQuery( "select s from Simple s" ).list();
+					List<Simple> simpleList = session.createQuery( "select s from Simple s", Simple.class ).list();
 					assertEquals( 2, simpleList.size() );
 					Simple s1 = session.getReference( Simple.class, new SimplePK( 1L, 2L ) );
 					assertEquals( s1.getQuantity(), 10 );
@@ -70,7 +70,7 @@ public class IdClassGeneratedValueTest {
 
 		scope.inTransaction(
 				session -> {
-					List<Simple> simpleList = session.createQuery( "select s from Simple s" ).list();
+					List<Simple> simpleList = session.createQuery( "select s from Simple s", Simple.class ).list();
 					assertEquals( 1, simpleList.size() );
 					Simple s1 = session.getReference( Simple.class, new SimplePK( 1L, 2L ) );
 					assertEquals( s1.getQuantity(), 10 );
@@ -93,7 +93,7 @@ public class IdClassGeneratedValueTest {
 
 		scope.inTransaction(
 				session -> {
-					List<Simple2> simpleList = session.createQuery( "select s from Simple2 s" ).list();
+					List<Simple2> simpleList = session.createQuery( "select s from Simple2 s", Simple2.class ).list();
 					assertEquals( simpleList.size(), 2 );
 					Simple2 s1 = session.getReference( Simple2.class, new SimplePK( s1Id1, 200L ) );
 					assertEquals( s1.getQuantity(), 10 );
@@ -120,7 +120,7 @@ public class IdClassGeneratedValueTest {
 
 		scope.inTransaction(
 				session -> {
-					List<Multiple> simpleList = session.createQuery( "select m from Multiple m" ).list();
+					List<Multiple> simpleList = session.createQuery( "select m from Multiple m", Multiple.class ).list();
 					assertEquals( simpleList.size(), 2 );
 					Multiple m1 = session.getReference(
 							Multiple.class,

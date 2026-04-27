@@ -54,14 +54,14 @@ public class EmbeddableWithMany2OneTest {
 
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Person p where p.address.country.iso2 = 'US'" )
+					session.createQuery( "from Person p where p.address.country.iso2 = 'US'", Person.class )
 							.list();
 					// same query!
-					session.createQuery( "from Person p where p.address.country.id = 'US'" )
+					session.createQuery( "from Person p where p.address.country.id = 'US'", Person.class )
 							.list();
 					Person p = session.getReference( Person.class, person.getId() );
 					session.remove( p );
-					List countries = session.createQuery( "from Country" ).list();
+					List<Country> countries = session.createQuery( "from Country", Country.class ).list();
 					assertEquals( 1, countries.size() );
 					session.remove( countries.get( 0 ) );
 				}

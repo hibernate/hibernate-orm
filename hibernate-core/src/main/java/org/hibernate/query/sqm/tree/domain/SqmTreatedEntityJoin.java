@@ -4,8 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -127,8 +127,8 @@ public class SqmTreatedEntityJoin<L,R,S extends R> extends SqmEntityJoin<L,S> im
 	}
 
 	@Override
-	public SqmTreatedEntityJoin<L,R,S> on(Predicate @Nullable ... restrictions) {
-		return (SqmTreatedEntityJoin<L, R, S>) super.on( restrictions );
+	public SqmTreatedEntityJoin<L,R,S> on(BooleanExpression... restrictions) {
+		return (SqmTreatedEntityJoin<L,R,S>) super.on( restrictions );
 	}
 
 	@Override

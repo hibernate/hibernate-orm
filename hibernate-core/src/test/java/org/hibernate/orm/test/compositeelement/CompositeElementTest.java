@@ -88,9 +88,9 @@ public class CompositeElementTest {
 
 			// Oracle returns BigDecimaal while other dialects return Integer;
 			// casting to Number so it works on all dialects
-			Number sqlValue = ((Number) s.createNativeQuery(
+			Number sqlValue = (Number) s.createNativeQuery(
 							"select child_position from ParentChild c where c.name='Child One'" )
-					.uniqueResult());
+					.uniqueResult();
 			assertThat( sqlValue.intValue() ).isEqualTo( 0 );
 
 			Integer hqlValue = s.createQuery(
@@ -116,9 +116,9 @@ public class CompositeElementTest {
 
 			c.setPosition( 2 );
 			s.flush();
-			sqlValue = ((Number) s.createNativeQuery(
+			sqlValue = (Number) s.createNativeQuery(
 							"select child_position from ParentChild c where c.name='Child One'" )
-					.uniqueResult());
+					.uniqueResult();
 			assertThat( sqlValue.intValue() ).isEqualTo( 1 );
 			s.remove( p );
 		} );

@@ -46,11 +46,11 @@ public class DynamicBatchFetchTest {
 
 		scope.inTransaction(
 				session -> {
-					List resultList = session.createQuery( "from A where id in (" + aId1 + "," + aId2 + ") order by id" )
+					List<A> resultList = session.createQuery( "from A where id in (" + aId1 + "," + aId2 + ") order by id", A.class )
 							.list();
 					assertThat( resultList ).isNotEmpty();
-					A a1 = (A) resultList.get( 0 );
-					A a2 = (A) resultList.get( 1 );
+					A a1 = resultList.get( 0 );
+					A a2 = resultList.get( 1 );
 					assertEquals( aId1, a1.getId() );
 					assertEquals( aId2, a2.getId() );
 					assertFalse( Hibernate.isInitialized( a1.getB() ) );

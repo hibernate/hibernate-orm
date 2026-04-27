@@ -8,12 +8,10 @@ import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.CollectionJoin;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.MapJoin;
-import jakarta.persistence.criteria.NumericExpression;
 import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.PluralJoin;
@@ -39,6 +37,7 @@ import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmBindableType;
+import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmQuery;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
@@ -59,7 +58,10 @@ import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularValuedJoin;
+import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmNumericExpression;
+import org.hibernate.query.sqm.tree.expression.SqmNumericExpressionWrapper;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
@@ -346,12 +348,6 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public SqmSubQuery<T> where(Predicate @Nullable... restrictions) {
-		super.where( restrictions );
-		return this;
-	}
-
-	@Override
 	public SqmSubQuery<T> where(List<? extends Expression<Boolean>> restrictions) {
 		super.where( restrictions );
 		return this;
@@ -372,12 +368,6 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	@Override
 	public SqmSubQuery<T> having(@Nullable Expression<Boolean> booleanExpression) {
 		super.having( booleanExpression );
-		return this;
-	}
-
-	@Override
-	public SqmSubQuery<T> having(Predicate @Nullable... predicates) {
-		super.having( predicates );
 		return this;
 	}
 
@@ -695,28 +685,33 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public <R> CriteriaBuilder.SimpleCase<T, R> selectCase() {
-		return null;
+	public SqmCriteriaNodeBuilder nodeBuilder() {
+		return (SqmCriteriaNodeBuilder) super.nodeBuilder();
 	}
 
 	@Override
-	public JpaPredicate isMember(Expression<? extends Collection<? super T>> collection) {
-		return null;
+	public <R> SqmCaseSimple<T, R> selectCase() {
+		return nodeBuilder().selectCase( this );
+	}
+
+	@Override
+	public SqmPredicate isMember(Expression<? extends Collection<? super T>> collection) {
+		throw new UnsupportedOperationException( "isMember() is not supported for SqmSubQuery" );
 	}
 
 	@Override
 	public JpaPredicate isNotMember(Expression<? extends Collection<? super T>> collection) {
-		return null;
+		throw new UnsupportedOperationException( "isNotMember() is not supported for SqmSubQuery" );
 	}
 
 	@Override
-	public NumericExpression<Long> count() {
-		return null;
+	public SqmNumericExpression<Long> count() {
+		return new SqmNumericExpressionWrapper<>( nodeBuilder().count( this ) );
 	}
 
 	@Override
-	public NumericExpression<Long> countDistinct() {
-		return null;
+	public SqmNumericExpression<Long> countDistinct() {
+		return new SqmNumericExpressionWrapper<>( nodeBuilder().countDistinct( this ) );
 	}
 
 	@Override

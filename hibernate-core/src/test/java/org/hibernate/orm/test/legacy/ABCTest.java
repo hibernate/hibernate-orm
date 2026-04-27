@@ -102,7 +102,7 @@ public class ABCTest {
 					d.setId( c.getId() );
 					session.persist( d );
 
-					assertThat( session.createQuery( "from C2 c where 1=1 or 1=1" ).list().size(), is( 0 ) );
+					assertThat( session.createQuery( C2.class, "from C2 c where 1=1 or 1=1" ).list().size(), is( 0 ) );
 				}
 		);
 
@@ -150,7 +150,7 @@ public class ABCTest {
 
 		scope.inTransaction(
 				session -> {
-					List<C1> bs = session.createQuery( "from B" ).list();
+					List<C1> bs = session.createQuery( "from B" ).ofType( C1.class ).getResultList();
 					for ( C1 b : bs ) {
 						session.remove( b );
 						session.remove( b.getD() );

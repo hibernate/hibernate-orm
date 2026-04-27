@@ -123,9 +123,9 @@ public class DeleteTransientEntityTest {
 		scope.inTransaction(session -> {
 			Person person = session.find( p.getClass(), p.getId() );
 			assertEquals( 0, person.getAddresses().size(), "persistent collection not cleared" );
-			Long count = (Long) session.createQuery( "select count(*) from Address" ).list().get( 0 );
+			Long count = session.createQuery( "select count(*) from Address", Long.class ).list().get( 0 );
 			assertEquals( 1, count.longValue() );
-			count = (Long) session.createQuery( "select count(*) from Suite" ).list().get( 0 );
+			count = session.createQuery( "select count(*) from Suite", Long.class ).list().get( 0 );
 			assertEquals( 0, count.longValue() );
 		} );
 	}
@@ -149,13 +149,13 @@ public class DeleteTransientEntityTest {
 		} );
 
 		scope.inTransaction(session -> {
-			Long count = (Long) session.createQuery( "select count(*) from Suite" ).list().get( 0 );
+			Long count = session.createQuery( "select count(*) from Suite", Long.class ).list().get( 0 );
 			assertEquals(
 					0,
 					count.longValue(),
 					"all-delete-orphan not cascaded properly to cleared persistent collection entities"
 			);
-			count = (Long) session.createQuery( "select count(*) from Note" ).list().get( 0 );
+			count = session.createQuery( "select count(*) from Note", Long.class ).list().get( 0 );
 			assertEquals( 0, count.longValue() );
 		} );
 	}

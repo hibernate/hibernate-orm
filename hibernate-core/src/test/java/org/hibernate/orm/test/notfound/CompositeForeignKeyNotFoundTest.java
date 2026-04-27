@@ -14,7 +14,6 @@ import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.query.Query;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -38,9 +37,7 @@ public class CompositeForeignKeyNotFoundTest {
 
 		// prepare document
 		scope.inTransaction( session -> {
-			Query nativeQuery = session.createNativeQuery(
-					"insert into DocumentIgnore (id,owner) values (123,42)" );
-			nativeQuery.executeUpdate();
+			session.createNativeMutationQuery("insert into DocumentIgnore (id,owner) values (123,42)" ).executeUpdate();
 		} );
 
 		// assert document
@@ -57,9 +54,7 @@ public class CompositeForeignKeyNotFoundTest {
 
 		// prepare document
 		scope.inTransaction( session -> {
-			Query nativeQuery = session.createNativeQuery(
-					"insert into DocumentException (id,owner) values (123,42)" );
-			nativeQuery.executeUpdate();
+			session.createNativeMutationQuery("insert into DocumentException (id,owner) values (123,42)" ).executeUpdate();
 		} );
 
 		// assert document
@@ -74,9 +69,7 @@ public class CompositeForeignKeyNotFoundTest {
 
 		// prepare document
 		scope.inTransaction( session -> {
-			Query nativeQuery = session.createNativeQuery(
-					"insert into Document (id,owner) values (123,42)" );
-			nativeQuery.executeUpdate();
+			session.createNativeMutationQuery("insert into Document (id,owner) values (123,42)" ).executeUpdate();
 		} );
 
 		// assert document

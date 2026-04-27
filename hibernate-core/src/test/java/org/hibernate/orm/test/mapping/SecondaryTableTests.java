@@ -32,7 +32,7 @@ public class SecondaryTableTests {
 	public void simpleTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "select e from SimpleEntityWithSecondaryTables e" ).list();
+					session.createQuery( "select e from SimpleEntityWithSecondaryTables e", SimpleEntityWithSecondaryTables.class ).list();
 				}
 		);
 	}

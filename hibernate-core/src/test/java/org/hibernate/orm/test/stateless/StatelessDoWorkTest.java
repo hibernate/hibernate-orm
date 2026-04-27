@@ -123,7 +123,7 @@ public class StatelessDoWorkTest {
 
 	private void assertThatAllTestEntitiesHaveBeenDeleted(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			List results = session.createQuery( "from TestEntity" ).list();
+			List results = session.createQuery( "from TestEntity", TestEntity.class ).list();
 			assertThat( results.size(), is( 0 ) );
 		} );
 	}

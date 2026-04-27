@@ -123,9 +123,9 @@ public class BasicGetLoadAccessTest {
 	public void testNullQueryResult(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					assertNull( session.createQuery( "select u from User u where u.id = -1" ).uniqueResult() );
+					assertNull( session.createQuery( "select u from User u where u.id = -1", User.class ).uniqueResult() );
 
-					Optional<User> user = session.createQuery( "select u from User u where u.id = -1" ).uniqueResultOptional();
+					Optional<User> user = session.createQuery( "select u from User u where u.id = -1", User.class ).uniqueResultOptional();
 					assertNotNull( user );
 					assertFalse( user.isPresent() );
 					try {

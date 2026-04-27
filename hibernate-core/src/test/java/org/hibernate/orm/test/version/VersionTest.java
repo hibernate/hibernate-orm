@@ -41,9 +41,9 @@ public class VersionTest {
 		var passp = factoryScope.fromTransaction( (session) -> {
 			Thing loaded = session.find( Thing.class, "Passport" );
 			loaded.setLongDescription("blah blah blah");
-			session.createQuery("from Person").list();
-			session.createQuery("from Person").list();
-			session.createQuery("from Person").list();
+			session.createQuery("from Person", Person.class).list();
+			session.createQuery("from Person", Person.class).list();
+			session.createQuery("from Person", Person.class).list();
 			return loaded;
 		} );
 

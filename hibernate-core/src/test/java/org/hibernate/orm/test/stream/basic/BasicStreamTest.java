@@ -123,7 +123,7 @@ public class BasicStreamTest {
 	public void testQueryStreamTyping(SessionFactoryScope scope) {
 		// Test untyped query stream
 		scope.inTransaction( (session) -> {
-			try (Stream stream = session.createQuery( "from MyEntity" ).stream()) {
+			try (Stream stream = session.createQuery( MyEntity.class, "from MyEntity" ).stream()) {
 				Object result = stream.findFirst().orElse( null );
 				assertTyping( MyEntity.class, result );
 			}
@@ -147,7 +147,7 @@ public class BasicStreamTest {
 
 		// Test stream query with Object[] result
 		scope.inTransaction( (session) -> {
-			try (Stream<Object[]> stream = session.createQuery( "SELECT me.id, me.name from MyEntity me" ).stream()) {
+			try (Stream<Object[]> stream = session.createQuery( Object[].class, "SELECT me.id, me.name from MyEntity me" ).stream()) {
 				stream.forEach( i -> {
 					assertTyping( Integer.class, i[0] );
 					assertTyping( String.class, i[1] );

@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.persistence.criteria.BooleanExpression;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -18,7 +19,6 @@ import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
 import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 
 /**
  * @author Steve Ebersole
@@ -165,7 +165,7 @@ public class SqmTreatedSingularJoin<O,T, S extends T>
 	}
 
 	@Override
-	public SqmTreatedSingularJoin<O,T,S> on(Predicate @Nullable... restrictions) {
-		return (SqmTreatedSingularJoin<O, T, S>) super.on( restrictions );
+	public SqmTreatedSingularJoin<O,T,S> on(BooleanExpression... restrictions) {
+		return (SqmTreatedSingularJoin<O,T,S>) super.on( restrictions );
 	}
 }

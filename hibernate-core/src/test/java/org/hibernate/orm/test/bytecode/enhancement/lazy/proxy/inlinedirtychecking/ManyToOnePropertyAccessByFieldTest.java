@@ -170,11 +170,11 @@ public class ManyToOnePropertyAccessByFieldTest {
 
 		scope.inTransaction(
 				session -> {
-					List<Office> offices = session.createQuery( "from Office" ).list();
+					List<Office> offices = session.createQuery( "from Office", Office.class ).list();
 					assertThat( offices.size(), is( 1 ) );
 					assertThat( offices.get( 0 ).getId(), is( officeId ) );
 
-					List<Phone> phones = session.createQuery( "from Phone" ).list();
+					List<Phone> phones = session.createQuery( "from Phone", Phone.class ).list();
 					assertThat( phones.size(), is( 0 ) );
 				}
 		);

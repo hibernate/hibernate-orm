@@ -71,13 +71,13 @@ public class NamedQueryTest {
 	@Test
 	public void testNamedQueryOrdinalParametersConflict(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-					Query query = entityManager.createNamedQuery( "NamedQuery" );
+					var query = entityManager.createNamedQuery( "NamedQuery", Object[].class );
 					query.setParameter( 1, GAME_TITLES[0] );
-					List list = query.getResultList();
+					var list = query.getResultList();
 					assertEquals( 1, list.size() );
 
-					final Session session = entityManager.unwrap( Session.class );
-					final org.hibernate.query.Query sessionQuery = session.createQuery( "select g from Game g where title = ?1" );
+					Session session = entityManager.unwrap( Session.class );
+					var sessionQuery = session.createQuery( "select g from Game g where title = ?1", Object[].class );
 					sessionQuery.setParameter( 1, GAME_TITLES[0] );
 					list = sessionQuery.getResultList();
 
@@ -90,13 +90,13 @@ public class NamedQueryTest {
 	@Test
 	public void testNamedQueryOrdinalParametersConflict2(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-					Query query = entityManager.createNamedQuery( "NamedQuery" );
+					var query = entityManager.createNamedQuery( "NamedQuery", Object[].class );
 					query.setParameter( 1, GAME_TITLES[0] );
-					List list = query.getResultList();
+					var list = query.getResultList();
 					assertEquals( 1, list.size() );
 
-					final Session session = entityManager.unwrap( Session.class );
-					final org.hibernate.query.Query sessionQuery = session.createNamedQuery( "NamedQuery" );
+					Session session = entityManager.unwrap( Session.class );
+					var sessionQuery = session.createNamedQuery( "NamedQuery", Object[].class );
 					sessionQuery.setParameter( 1, GAME_TITLES[0] );
 					list = sessionQuery.getResultList();
 
@@ -120,35 +120,32 @@ public class NamedQueryTest {
 	@Test
 	public void testNativeNamedQueriesOrdinalParametersConflict(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-					Query query = entityManager.createNamedQuery( "NamedNativeQuery" );
-					query.setParameter( 1, GAME_TITLES[0] );
-					List list = query.getResultList();
-					assertEquals( 1, list.size() );
+			var query = entityManager.createNamedQuery( "NamedNativeQuery", Object[].class );
+			query.setParameter( 1, GAME_TITLES[0] );
+			var list = query.getResultList();
+			assertEquals( 1, list.size() );
 
-					final Session session = entityManager.unwrap( Session.class );
-					final org.hibernate.query.Query sessionQuery = session.createNativeQuery(
-							"select * from Game g where title = ?" );
-					sessionQuery.setParameter( 1, GAME_TITLES[0] );
-					list = sessionQuery.getResultList();
+			final Session session = entityManager.unwrap( Session.class );
+			var sessionQuery = session.createNativeQuery(
+					"select * from Game g where title = ?", Object[].class );
+			sessionQuery.setParameter( 1, GAME_TITLES[0] );
+			list = sessionQuery.getResultList();
 
-					query.setParameter( 1, GAME_TITLES[0] );
-					assertEquals( 1, list.size() );
-				}
-		);
+			query.setParameter( 1, GAME_TITLES[0] );
+			assertEquals( 1, list.size() );
+		} );
 	}
 
 	@Test
 	public void testNativeNamedQueriesOrdinalParametersConflict2(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
-					Query query = entityManager.createNamedQuery( "NamedNativeQuery" );
+					var query = entityManager.createNamedQuery( "NamedNativeQuery", Object[].class );
 					query.setParameter( 1, GAME_TITLES[0] );
-					List list = query.getResultList();
+					var list = query.getResultList();
 					assertEquals( 1, list.size() );
 
 					final Session session = entityManager.unwrap( Session.class );
-					final org.hibernate.query.Query sessionQuery = session.createNamedQuery(
-							"NamedNativeQuery"
-					);
+					var sessionQuery = session.createNamedQuery("NamedNativeQuery",Object[].class);
 					sessionQuery.setParameter( 1, GAME_TITLES[0] );
 					list = sessionQuery.getResultList();
 

@@ -48,7 +48,7 @@ public class SelectNullQueryTest {
 	public void testSelectNull(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					List result = session.createQuery( "select null from Person p" ).list();
+					List result = session.createQuery( "select null from Person p", Object.class ).list();
 					assertThat( result.size(), is( 1 ) );
 					assertNull( result.get( 0 ) );
 				}

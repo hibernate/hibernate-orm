@@ -258,17 +258,17 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	public <R> SelectionQueryImplementor<R> withResultSetMapping(jakarta.persistence.sql.ResultSetMapping<R> mapping) {
+		throw new IllegalArgumentException( "ProcedureCall cannot be treated as SelectionQuery" );
+	}
+
+	@Override
 	public MutationQueryImplementor<R> asMutationQuery() {
 		throw new IllegalArgumentException( "ProcedureCall cannot be treated as MutationQuery" );
 	}
 
-	/**
-	 * The Jakarta Persistence defined form of {@link #asMutationQuery()}
-	 *
-	 * @see jakarta.persistence.Query#asStatement
-	 */
 	@Override
-	public MutationQueryImplementor<R> asStatement() {
+	public MutationQueryImplementor asStatement() {
 		throw new IllegalArgumentException( "ProcedureCall cannot be treated as MutationQuery" );
 	}
 

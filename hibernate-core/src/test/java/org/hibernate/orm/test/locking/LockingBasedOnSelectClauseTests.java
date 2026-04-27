@@ -69,7 +69,7 @@ public class LockingBasedOnSelectClauseTests {
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSelectLocking.class )
 	void testBasicHqlUsage(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			session.createQuery( "select b.author from Book b" )
+			session.createQuery( Author.class, "select b.author from Book b" )
 					.setLockMode( LockModeType.PESSIMISTIC_WRITE )
 					.list();
 			// The correct outcome here is for the authors table to be locked as the root selection.
@@ -87,7 +87,7 @@ public class LockingBasedOnSelectClauseTests {
 	@Test
 	void testSubQueryHqlTranslation(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			session.createQuery( "from Book b where b.id in (select id from Book)" ).list();
+			session.createQuery( Book.class, "from Book b where b.id in (select id from Book)" ).list();
 		} );
 	}
 

@@ -4,21 +4,21 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.Function;
-
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.BooleanExpression;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Selection;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.metamodel.EntityType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaFunctionRoot;
 import org.hibernate.query.criteria.JpaRoot;
+import org.hibernate.query.criteria.JpaSelectCriteria;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSetReturningFunction;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -35,14 +35,13 @@ import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
-import jakarta.persistence.Tuple;
-import jakarta.persistence.criteria.AbstractQuery;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-import jakarta.persistence.criteria.Selection;
-import jakarta.persistence.criteria.Subquery;
-import jakarta.persistence.metamodel.EntityType;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Function;
 
 import static java.lang.Character.isAlphabetic;
 import static java.util.Collections.unmodifiableList;
@@ -387,17 +386,10 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public SqmSelectQuery<T> where(Predicate @Nullable... restrictions) {
-		getQuerySpec().setRestriction( restrictions );
+	public JpaSelectCriteria<T> where(List<? extends Expression<Boolean>> restrictions) {
+		getQuerySpec().setRestriction( nodeBuilder().wrap( restrictions ) );
 		return this;
 	}
-
-	@Override
-	public AbstractQuery<T> where(List<? extends Expression<Boolean>> restrictions) {
-		getQuerySpec().setRestriction( nodeBuilder().wrap(  restrictions ) );
-		return this;
-	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Grouping
@@ -431,19 +423,13 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public SqmSelectQuery<T> having(Predicate @Nullable... predicates) {
-		getQuerySpec().setGroupRestriction( predicates );
-		return this;
-	}
-
-	@Override
-	public AbstractQuery<T> having(BooleanExpression... restrictions) {
+	public JpaSelectCriteria<T> having(BooleanExpression... restrictions) {
 		getQuerySpec().setGroupRestriction( restrictions );
 		return this;
 	}
 
 	@Override
-	public AbstractQuery<T> having(List<? extends Expression<Boolean>> restrictions) {
+	public JpaSelectCriteria<T> having(List<? extends Expression<Boolean>> restrictions) {
 		getQuerySpec().setGroupRestriction( nodeBuilder().wrap( restrictions ) );
 		return this;
 	}

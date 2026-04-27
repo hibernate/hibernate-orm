@@ -188,11 +188,12 @@ public class DetachedEntityWithNullVersionTest {
 		);
 	}
 
+	@SuppressWarnings("unchecked")
 	private static void assertItemHasNotBeenUpdated(ItemInterface item, SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					List<ItemInterface> items = session.createQuery( "select it from " + item.getClass()
-							.getName() + " it" ).list();
+					List<ItemInterface> items = (List<ItemInterface>) (List<?>) session.createQuery( "select it from " + item.getClass()
+							.getName() + " it", item.getClass() ).list();
 					assertThat( items.size() ).isEqualTo( 1 );
 					assertThat( items.get( 0 ).getName() ).isEqualTo( ITEM_INITIAL_NAME );
 				}
@@ -208,11 +209,12 @@ public class DetachedEntityWithNullVersionTest {
 		);
 	}
 
+	@SuppressWarnings("unchecked")
 	private static void assertItemHasBeenUpdated(ItemInterface item, SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					List<ItemInterface> items = session.createQuery( "select it from " + item.getClass()
-									.getName() + " it" )
+					List<ItemInterface> items = (List<ItemInterface>) (List<?>) session.createQuery( "select it from " + item.getClass()
+									.getName() + " it", item.getClass() )
 							.list();
 					assertThat( items.size() ).isEqualTo( 1 );
 					assertThat( items.get( 0 ).getName() ).isEqualTo( ITEM_UPDATED_NAME );

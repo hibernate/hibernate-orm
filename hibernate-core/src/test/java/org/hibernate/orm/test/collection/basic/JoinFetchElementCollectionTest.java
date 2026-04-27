@@ -61,7 +61,7 @@ public class JoinFetchElementCollectionTest {
 							+ "LEFT OUTER JOIN FETCH user.contact "
 							+ "LEFT OUTER JOIN FETCH user.contact.emailAddresses2 "
 							+ "LEFT OUTER JOIN FETCH user.contact.emailAddresses";
-					User user = (User) session.createQuery( qry ).uniqueResult();
+					var user = session.createQuery( User.class, qry ).uniqueResult();
 					assertEquals( emailAddresses, user.getContact().getEmailAddresses() );
 					assertTrue( user.getContact().getEmailAddresses2().isEmpty() );
 				}
@@ -79,7 +79,7 @@ public class JoinFetchElementCollectionTest {
 							+ "LEFT OUTER JOIN FETCH user.contact c "
 							+ "LEFT OUTER JOIN FETCH c.emailAddresses2 "
 							+ "LEFT OUTER JOIN FETCH c.emailAddresses";
-					User user = (User) session.createQuery( qry ).uniqueResult();
+					var user = session.createQuery( User.class, qry ).uniqueResult();
 					assertEquals( emailAddresses, user.getContact().getEmailAddresses() );
 					assertTrue( user.getContact().getEmailAddresses2().isEmpty() );
 				}

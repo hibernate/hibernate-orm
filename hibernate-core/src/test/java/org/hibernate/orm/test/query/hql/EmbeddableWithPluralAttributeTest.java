@@ -56,7 +56,7 @@ public class EmbeddableWithPluralAttributeTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "select a from A a where a.b = :b" ).
+					List results = session.createQuery( "select a from A a where a.b = :b", A.class ).
 							setParameter( "b", new B() ).list();
 					assertThat( results.size(), is( 0 ) );
 				}
@@ -68,7 +68,7 @@ public class EmbeddableWithPluralAttributeTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "select a from A a where a.b = :b" ).
+					List results = session.createQuery( "select a from A a where a.b = :b", A.class ).
 							setParameter( "b", B.buildB() ).list();
 					assertThat( results.size(), is( 1 ) );
 				}

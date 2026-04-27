@@ -4,6 +4,9 @@
  */
 package org.hibernate.graph.internal;
 
+import jakarta.persistence.AttributeNode;
+import jakarta.persistence.FetchOption;
+import jakarta.persistence.Subgraph;
 import jakarta.persistence.metamodel.Attribute;
 import org.hibernate.AssertionFailure;
 import org.hibernate.graph.CannotContainSubGraphException;
@@ -18,7 +21,9 @@ import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import static jakarta.persistence.metamodel.Attribute.PersistentAttributeType.EMBEDDED;
 import static jakarta.persistence.metamodel.Attribute.PersistentAttributeType.MANY_TO_MANY;
@@ -49,6 +54,8 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 	protected SubGraphImplementor<E> valueSubgraph;
 	protected SubGraphImplementor<K> keySubgraph;
 
+	protected final Set<FetchOption> options = new HashSet<>();
+
 	@Override
 	public Attribute<?, J> getAttribute() {
 		return attribute;
@@ -63,6 +70,27 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 	public AttributeNodeImplementor<J, E, K> markRemoved(boolean removed) {
 		this.removed = removed;
 		return this;
+	}
+
+	@Override
+	public Subgraph<J> addSubgraph() {
+		throw new AssertionFailure( "Not yet implemented" );
+	}
+
+	@Override
+	public <S extends J> Subgraph<S> addTreatedSubgraph(Class<S> type) {
+		throw new AssertionFailure( "Not yet implemented" );
+	}
+
+	@Override
+	public AttributeNode<J> addOption(FetchOption option) {
+		options.add(option);
+		return this;
+	}
+
+	@Override
+	public Set<FetchOption> getOptions() {
+		return options;
 	}
 
 	static <J> AttributeNodeImpl<J,?,?> create(
@@ -118,101 +146,6 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 		keyGraphType = that.keyGraphType;
 		valueSubgraph = that.valueSubgraph == null ? null : that.valueSubgraph.makeCopy( mutable );
 		keySubgraph = that.keySubgraph == null ? null : that.keySubgraph.makeCopy( mutable );
-	}
-
-	static final class SingularAttributeNodeImpl<J> extends AttributeNodeImpl<J, J, Void> {
-		private SingularAttributeNodeImpl(
-				SingularPersistentAttribute<?,J> attribute,
-				boolean mutable,
-				DomainType<J> valueGraphType) {
-			super( attribute, mutable, valueGraphType, null );
-		}
-
-		private SingularAttributeNodeImpl(AttributeNodeImpl<J, J, Void> that, boolean mutable) {
-			super( that, mutable );
-		}
-
-		@Override
-		public SubGraphImplementor<J> addSingularSubgraph() {
-			checkToOne();
-			verifyMutability();
-			if ( valueSubgraph == null ) {
-				valueSubgraph = new SubGraphImpl<>( asManagedType( valueGraphType ), true );
-			}
-			return valueSubgraph;
-		}
-
-		@Override
-		public AttributeNodeImplementor<J, J, Void> makeCopy(boolean mutable) {
-			return !mutable && !isMutable() ? this : new SingularAttributeNodeImpl<>( this, mutable );
-		}
-	}
-
-	static final class PluralAttributeNodeImpl<J,E> extends AttributeNodeImpl<J, E, Void> {
-		private PluralAttributeNodeImpl(
-				PluralPersistentAttribute<?,J,E> attribute,
-				boolean mutable,
-				DomainType<E> valueGraphType) {
-			super( attribute, mutable, valueGraphType, null );
-		}
-
-		private PluralAttributeNodeImpl(AttributeNodeImpl<J, E, Void> that, boolean mutable) {
-			super( that, mutable );
-		}
-
-		@Override
-		public SubGraphImplementor<E> addElementSubgraph() {
-			checkToMany();
-			verifyMutability();
-			if ( valueSubgraph == null ) {
-				valueSubgraph = new SubGraphImpl<>( asManagedType( valueGraphType ), true );
-			}
-			return valueSubgraph;
-		}
-
-		@Override
-		public AttributeNodeImplementor<J, E, Void> makeCopy(boolean mutable) {
-			return !mutable && !isMutable() ? this : new PluralAttributeNodeImpl<>( this, mutable );
-		}
-	}
-
-	static final class MapAttributeNodeImpl<J,K,V> extends AttributeNodeImpl<J, V, K> {
-		private MapAttributeNodeImpl(
-				PluralPersistentAttribute<?,J,V> pluralAttribute,
-				@SuppressWarnings("unused") // a "witness" that this is really a Map
-				MapPersistentAttribute<?,K,?> attribute,
-				boolean mutable,
-				DomainType<V> valueGraphType, SimpleDomainType<K> keyGraphType) {
-			super( pluralAttribute, mutable, valueGraphType, keyGraphType );
-		}
-
-		private MapAttributeNodeImpl(AttributeNodeImpl<J, V, K> that, boolean mutable) {
-			super( that, mutable );
-		}
-
-		@Override
-		public SubGraphImplementor<K> addKeySubgraph() {
-			verifyMutability();
-			if ( keySubgraph == null ) {
-				keySubgraph = new SubGraphImpl<>( asManagedType( keyGraphType ), true );
-			}
-			return keySubgraph;
-		}
-
-		@Override
-		public SubGraphImplementor<V> addElementSubgraph() {
-			checkToMany();
-			verifyMutability();
-			if ( valueSubgraph == null ) {
-				valueSubgraph = new SubGraphImpl<>( asManagedType( valueGraphType ), true );
-			}
-			return valueSubgraph;
-		}
-
-		@Override
-		public AttributeNodeImplementor<J, V, K> makeCopy(boolean mutable) {
-			return !mutable && !isMutable() ? this : new MapAttributeNodeImpl<>( this, mutable );
-		}
 	}
 
 	@Override
@@ -396,5 +329,100 @@ public abstract sealed class AttributeNodeImpl<J, E, K>
 	@Override
 	public SubGraphImplementor<K> getKeySubgraph() {
 		return keySubgraph;
+	}
+
+	static final class SingularAttributeNodeImpl<J> extends AttributeNodeImpl<J, J, Void> {
+		private SingularAttributeNodeImpl(
+				SingularPersistentAttribute<?,J> attribute,
+				boolean mutable,
+				DomainType<J> valueGraphType) {
+			super( attribute, mutable, valueGraphType, null );
+		}
+
+		private SingularAttributeNodeImpl(AttributeNodeImpl<J, J, Void> that, boolean mutable) {
+			super( that, mutable );
+		}
+
+		@Override
+		public SubGraphImplementor<J> addSingularSubgraph() {
+			checkToOne();
+			verifyMutability();
+			if ( valueSubgraph == null ) {
+				valueSubgraph = new SubGraphImpl<>( asManagedType( valueGraphType ), true );
+			}
+			return valueSubgraph;
+		}
+
+		@Override
+		public AttributeNodeImplementor<J, J, Void> makeCopy(boolean mutable) {
+			return !mutable && !isMutable() ? this : new SingularAttributeNodeImpl<>( this, mutable );
+		}
+	}
+
+	static final class PluralAttributeNodeImpl<J,E> extends AttributeNodeImpl<J, E, Void> {
+		private PluralAttributeNodeImpl(
+				PluralPersistentAttribute<?,J,E> attribute,
+				boolean mutable,
+				DomainType<E> valueGraphType) {
+			super( attribute, mutable, valueGraphType, null );
+		}
+
+		private PluralAttributeNodeImpl(AttributeNodeImpl<J, E, Void> that, boolean mutable) {
+			super( that, mutable );
+		}
+
+		@Override
+		public SubGraphImplementor<E> addElementSubgraph() {
+			checkToMany();
+			verifyMutability();
+			if ( valueSubgraph == null ) {
+				valueSubgraph = new SubGraphImpl<>( asManagedType( valueGraphType ), true );
+			}
+			return valueSubgraph;
+		}
+
+		@Override
+		public AttributeNodeImplementor<J, E, Void> makeCopy(boolean mutable) {
+			return !mutable && !isMutable() ? this : new PluralAttributeNodeImpl<>( this, mutable );
+		}
+	}
+
+	static final class MapAttributeNodeImpl<J,K,V> extends AttributeNodeImpl<J, V, K> {
+		private MapAttributeNodeImpl(
+				PluralPersistentAttribute<?,J,V> pluralAttribute,
+				@SuppressWarnings("unused") // a "witness" that this is really a Map
+				MapPersistentAttribute<?,K,?> attribute,
+				boolean mutable,
+				DomainType<V> valueGraphType, SimpleDomainType<K> keyGraphType) {
+			super( pluralAttribute, mutable, valueGraphType, keyGraphType );
+		}
+
+		private MapAttributeNodeImpl(AttributeNodeImpl<J, V, K> that, boolean mutable) {
+			super( that, mutable );
+		}
+
+		@Override
+		public SubGraphImplementor<K> addKeySubgraph() {
+			verifyMutability();
+			if ( keySubgraph == null ) {
+				keySubgraph = new SubGraphImpl<>( asManagedType( keyGraphType ), true );
+			}
+			return keySubgraph;
+		}
+
+		@Override
+		public SubGraphImplementor<V> addElementSubgraph() {
+			checkToMany();
+			verifyMutability();
+			if ( valueSubgraph == null ) {
+				valueSubgraph = new SubGraphImpl<>( asManagedType( valueGraphType ), true );
+			}
+			return valueSubgraph;
+		}
+
+		@Override
+		public AttributeNodeImplementor<J, V, K> makeCopy(boolean mutable) {
+			return !mutable && !isMutable() ? this : new MapAttributeNodeImpl<>( this, mutable );
+		}
 	}
 }

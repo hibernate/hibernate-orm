@@ -47,7 +47,7 @@ public class SelectCaseWhenNullLiteralTest {
 	public void testSelectCaseWhenNullLiteral(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					List result = session.createQuery( "select case when 1=1 then 1 else null end from Person p" ).list();
+					List result = session.createQuery( "select case when 1=1 then 1 else null end from Person p", Object.class ).list();
 					assertThat( result.size(), is( 1 ) );
 					assertThat( result.get( 0 ), is( 1 ) );
 				}
@@ -59,7 +59,7 @@ public class SelectCaseWhenNullLiteralTest {
 	public void testSelectCaseWhenNullLiteralWithParameters(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					List result = session.createQuery( "select case when 1=1 then ?1 else null end from Person p" )
+					List result = session.createQuery( "select case when 1=1 then ?1 else null end from Person p", Object.class )
 							.setParameter( 1, 2 )
 							.list();
 					assertThat( result.size(), is( 1 ) );
@@ -69,7 +69,7 @@ public class SelectCaseWhenNullLiteralTest {
 
 		scope.inTransaction(
 				session -> {
-					List result = session.createQuery( "select count(case when 1=1 then ?1 else null end) from Person p" )
+					List result = session.createQuery( "select count(case when 1=1 then ?1 else null end) from Person p", Object.class )
 							.setParameter( 1, 2 )
 							.list();
 					assertThat( result.size(), is( 1 ) );
@@ -83,7 +83,7 @@ public class SelectCaseWhenNullLiteralTest {
 	public void testSelectCaseWhenNullLiteralWithParametersWithNamedParameters(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					List result = session.createQuery( "select case when 1=1 then :value else null end from Person p" )
+					List result = session.createQuery( "select case when 1=1 then :value else null end from Person p", Object.class )
 							.setParameter( "value", 2 )
 							.list();
 					assertThat( result.size(), is( 1 ) );
@@ -93,7 +93,7 @@ public class SelectCaseWhenNullLiteralTest {
 
 		scope.inTransaction(
 				session -> {
-					List result = session.createQuery( "select count(case when 1=1 then :value else null end) from Person p" )
+					List result = session.createQuery( "select count(case when 1=1 then :value else null end) from Person p", Object.class )
 							.setParameter( "value", 2 )
 							.list();
 					assertThat( result.size(), is( 1 ) );

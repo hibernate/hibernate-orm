@@ -50,7 +50,7 @@ public class JoinedSubclassSubQueryTest {
 							+ "(select employee "
 							+ "from investmentCompany.employees as employee "
 							+ "  where employee.firstName = 'Joe')";
-					session.createQuery( queryHQL ).uniqueResult();
+					session.createQuery( queryHQL, InvestmentCompany.class ).uniqueResult();
 				}
 		);
 	}
@@ -66,7 +66,7 @@ public class JoinedSubclassSubQueryTest {
 							+ "(select employee "
 							+ "from investmentCompany.employees as employee "
 							+ "  where employee.employeeNumber = 666 )";
-					session.createQuery( queryHQL ).uniqueResult();
+					session.createQuery( queryHQL, InvestmentCompany.class ).uniqueResult();
 				}
 		);
 	}

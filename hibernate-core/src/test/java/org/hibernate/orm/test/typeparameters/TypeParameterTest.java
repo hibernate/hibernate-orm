@@ -96,7 +96,7 @@ public class TypeParameterTest {
 		initData( scope );
 		scope.inTransaction(
 				session -> {
-					Widget obj = (Widget) session.createQuery( "from Widget o where o.string = :string" ).setParameter(
+					Widget obj = session.createQuery( "from Widget o where o.string = :string", Widget.class ).setParameter(
 							"string",
 							"all-normal"
 					).uniqueResult();
@@ -105,7 +105,7 @@ public class TypeParameterTest {
 					assertEquals( "Non-Default value incorrectly loaded", obj.getValueThree(), 9 );
 					assertEquals( "Non-Default value incorrectly loaded", obj.getValueFour(), 10 );
 
-					obj = (Widget) session.createQuery( "from Widget o where o.string = :string" )
+					obj = session.createQuery( "from Widget o where o.string = :string", Widget.class )
 							.setParameter( "string", "all-default" )
 							.uniqueResult();
 					assertEquals( "Default value incorrectly loaded", obj.getValueOne(), 1 );

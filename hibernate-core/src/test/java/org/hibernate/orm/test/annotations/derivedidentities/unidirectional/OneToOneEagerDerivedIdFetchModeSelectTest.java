@@ -41,7 +41,7 @@ public class OneToOneEagerDerivedIdFetchModeSelectTest {
 	@JiraKey(value = "HHH-14390")
 	public void testQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			Bar newBar = (Bar) session.createQuery( "SELECT b FROM Bar b WHERE b.foo.id = :id" )
+			Bar newBar = session.createQuery( "SELECT b FROM Bar b WHERE b.foo.id = :id", Bar.class )
 					.setParameter( "id", foo.getId() )
 					.uniqueResult();
 			assertNotNull( newBar );
@@ -55,7 +55,7 @@ public class OneToOneEagerDerivedIdFetchModeSelectTest {
 	@JiraKey(value = "HHH-14390")
 	public void testQueryById(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			Bar newBar = (Bar) session.createQuery( "SELECT b FROM Bar b WHERE b.foo = :foo" )
+			Bar newBar = session.createQuery( "SELECT b FROM Bar b WHERE b.foo = :foo", Bar.class )
 					.setParameter( "foo", foo )
 					.uniqueResult();
 			assertNotNull( newBar );

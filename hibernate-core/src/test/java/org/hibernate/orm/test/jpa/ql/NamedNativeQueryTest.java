@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.query.Query;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 
@@ -66,9 +65,9 @@ public class NamedNativeQueryTest {
 		final DestinationEntity destination = createDestination( scope, createFrom( scope, name, lastName ), fullName );
 
 		scope.inSession( session -> {
-			Query select = session.createNamedQuery( "DestinationEntity.selectIds" );
+			var select = session.createNamedQuery( "DestinationEntity.selectIds", Object[].class );
 			select.setParameterList( "ids", Collections.singletonList( destination.id ) );
-			Object[] unique = (Object[]) select.uniqueResult();
+			Object[] unique = select.uniqueResult();
 			// Compare the Strings, not the actual IDs.  Can come back as, for ex,
 			// a BigDecimal in Oracle.
 			assertEquals( destination.id + "", unique[0] + "" );
@@ -92,13 +91,13 @@ public class NamedNativeQueryTest {
 		}
 
 		scope.inSession( session -> {
-			Query select = session.createNamedQuery( "DestinationEntity.selectIds" );
+			var select = session.createNamedQuery( "DestinationEntity.selectIds", Object[].class );
 			select.setParameterList( "ids", ids );
-			List list = select.list();
+			List<Object[]> list = select.list();
 
 			assertEquals( quantity, list.size() );
 			for ( int i = 0; i < list.size(); i++ ) {
-				Object[] object = (Object[]) list.get( i );
+				Object[] object = list.get( i );
 				DestinationEntity destination = destinations.get( i );
 				// Compare the Strings, not the actual IDs.  Can come back as, for ex,
 				// a BigDecimal in Oracle.
@@ -118,7 +117,7 @@ public class NamedNativeQueryTest {
 		final int id = 10000;// id fake
 
 		scope.inTransaction( session -> {
-			Query insert = session.createNamedQuery( "DestinationEntity.insert" );
+			var insert = session.createNamedQuery( "DestinationEntity.insert" );
 			insert.setParameter( "generatedId", id );
 			insert.setParameter( "fromId", fromEntity.id );
 			insert.setParameter( "fullName", fullName );
@@ -150,7 +149,7 @@ public class NamedNativeQueryTest {
 		}
 
 		scope.inTransaction( session -> {
-			Query insertSelect = session.createNamedQuery( "DestinationEntity.insertSelect" );
+			var insertSelect = session.createNamedMutationQuery( "DestinationEntity.insertSelect" );
 			insertSelect.setParameterList( "ids", ids );
 			int executeUpdate = insertSelect.executeUpdate();
 			assertEquals( quantity, executeUpdate );
@@ -180,7 +179,7 @@ public class NamedNativeQueryTest {
 		final FromEntity anotherFrom = createFrom( scope, lastName, name );
 
 		scope.inTransaction( session -> {
-			Query update = session.createNamedQuery( "DestinationEntity.update" );
+			var update = session.createNamedMutationQuery( "DestinationEntity.update" );
 			update.setParameter( "idFrom", anotherFrom.id );
 			update.setParameter( "fullName", inverseFullName );
 			update.setParameterList( "ids", Collections.singletonList( destinationEntity.id ) );
@@ -213,7 +212,7 @@ public class NamedNativeQueryTest {
 		final FromEntity anotherFrom = createFrom( scope, lastName, name );
 
 		scope.inTransaction( session -> {
-			Query update = session.createNamedQuery( "DestinationEntity.update" );
+			var update = session.createNamedMutationQuery( "DestinationEntity.update" );
 			update.setParameter( "idFrom", anotherFrom.id );
 			update.setParameter( "fullName", inverseFullName );
 			update.setParameterList( "ids", ids );
@@ -243,7 +242,7 @@ public class NamedNativeQueryTest {
 		final DestinationEntity destinationEntity = createDestination( scope, fromEntity, fullName );
 
 		scope.inTransaction( session -> {
-			Query delete = session.createNamedQuery( "DestinationEntity.delete" );
+			var delete = session.createNamedMutationQuery( "DestinationEntity.delete" );
 			delete.setParameterList( "ids", Collections.singletonList( destinationEntity.id ) );
 
 			int executeUpdate = delete.executeUpdate();
@@ -269,10 +268,11 @@ public class NamedNativeQueryTest {
 		}
 
 		scope.inTransaction( session -> {
-			Query delete = session.createNamedQuery( "DestinationEntity.delete" );
-			delete.setParameterList( "ids", ids );
+			int executeUpdate =session.createNamedQuery( "DestinationEntity.delete" )
+					.asStatement()
+					.setParameter( "ids", ids )
+					.executeUpdate();
 
-			int executeUpdate = delete.executeUpdate();
 			assertEquals( quantity, executeUpdate );
 		} );
 

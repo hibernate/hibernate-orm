@@ -24,7 +24,7 @@ public class IdClassCtorTests {
 	void testIdClassRecordUsage(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			session.find( SystemUser.class, new SystemUserId( "payroll", "admin" ) );
-			session.createQuery( "from SystemUser u where u.privileges % 2 = 0" ).list();
+			session.createQuery( "from SystemUser u where u.privileges % 2 = 0", SystemUser.class ).list();
 		} );
 	}
 

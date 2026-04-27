@@ -30,7 +30,7 @@ public class CaseStatementTest {
 	public void testSimpleCaseStatementFixture(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(s) -> {
-					s.createQuery( "select case p.name when 'Steve' then 'x' else 'y' end from Person p" )
+					s.createQuery( "select case p.name when 'Steve' then 'x' else 'y' end from Person p", Object.class )
 							.list();
 				}
 		);
@@ -41,7 +41,7 @@ public class CaseStatementTest {
 		scope.inTransaction(
 				(s) -> {
 
-					s.createQuery( "select case p.name when 'Steve' then :opt1 else p.name end from Person p" )
+					s.createQuery( "select case p.name when 'Steve' then :opt1 else p.name end from Person p", Object.class )
 							.setParameter( "opt1", "x" )
 							.list();
 				}
@@ -52,17 +52,17 @@ public class CaseStatementTest {
 	public void testSimpleCaseStatementWithParamAllResults(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					session.createQuery( "select case p.name when 'Steve' then :opt1 else :opt2 end from Person p" )
+					session.createQuery( "select case p.name when 'Steve' then :opt1 else :opt2 end from Person p", Object.class )
 							.setParameter( "opt1", "x" )
 							.setParameter( "opt2", "y" )
 							.list();
 
-					session.createQuery( "select case p.name when 'Steve' then cast( :opt1 as string ) else cast( :opt2 as string) end from Person p" )
+					session.createQuery( "select case p.name when 'Steve' then cast( :opt1 as string ) else cast( :opt2 as string) end from Person p", Object.class )
 							.setParameter( "opt1", "x" )
 							.setParameter( "opt2", "y" )
 							.list();
 
-					session.createQuery( "select case p.name when 'Steve' then :opt1 else :opt2 end from Person p" )
+					session.createQuery( "select case p.name when 'Steve' then :opt1 else :opt2 end from Person p", Object.class )
 							.setParameter( "opt1", "x" )
 							.setParameter( "opt2", "y" )
 							.list();
@@ -74,7 +74,7 @@ public class CaseStatementTest {
 	public void testSearchedCaseStatementFixture(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(s) -> {
-					s.createQuery( "select case when p.name = 'Steve' then 'x' else 'y' end from Person p" )
+					s.createQuery( "select case when p.name = 'Steve' then 'x' else 'y' end from Person p", Object.class )
 							.list();
 				}
 		);
@@ -96,7 +96,7 @@ public class CaseStatementTest {
 					session.persist( brian );
 
 					List<Integer> values = session.createQuery(
-							"select case when p.name = 'Steve' then (p.id * 10) else p.id end from Person p order by p.id" )
+							"select case when p.name = 'Steve' then (p.id * 10) else p.id end from Person p order by p.id", Integer.class )
 							.getResultList();
 
 					assertEquals( 10, (int) values.get( 0 ) );
@@ -109,7 +109,7 @@ public class CaseStatementTest {
 	public void testSearchedCaseStatementWithParamResult(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(s) -> {
-					s.createQuery( "select case when p.name = 'Steve' then :opt1 else p.name end from Person p" )
+					s.createQuery( "select case when p.name = 'Steve' then :opt1 else p.name end from Person p", Object.class )
 							.setParameter( "opt1", "x" )
 							.list();
 				}
@@ -124,7 +124,7 @@ public class CaseStatementTest {
 
 		scope.inTransaction(
 				(session) -> {
-					final List list = session.createQuery( "select case when p.name = 'Steve' then :opt1 else :opt2 end from Person p" )
+					final List list = session.createQuery( "select case when p.name = 'Steve' then :opt1 else :opt2 end from Person p", Object.class )
 							.setParameter( "opt1", "x" )
 							.setParameter( "opt2", "y" )
 							.list();
@@ -135,7 +135,7 @@ public class CaseStatementTest {
 
 		scope.inTransaction(
 				(session) -> {
-					final List list = session.createQuery( "select case when p.name = 'Steve' then cast( :opt1 as string) else :opt2 end from Person p" )
+					final List list = session.createQuery( "select case when p.name = 'Steve' then cast( :opt1 as string) else :opt2 end from Person p", Object.class )
 							.setParameter( "opt1", "x" )
 							.setParameter( "opt2", "y" )
 							.list();

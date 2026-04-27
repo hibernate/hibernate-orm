@@ -23,7 +23,13 @@ import java.util.Map;
 import java.util.Set;
 
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.criteria.BooleanExpression;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.NumericExpression;
 import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.TemporalExpression;
+import jakarta.persistence.criteria.TextExpression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.query.NullPrecedence;
@@ -101,6 +107,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public JpaPredicate wrap(BooleanExpression... expressions) {
+		return criteriaBuilder.wrap( expressions );
+	}
+
+	@Override
 	public <T extends HibernateCriteriaBuilder> T unwrap(Class<T> clazz) {
 		return criteriaBuilder.unwrap( clazz );
 	}
@@ -121,6 +132,16 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public <T> CriteriaQuery<T> createQuery(Class<T> resultClass, String jpql) {
+		return criteriaBuilder.createQuery( resultClass, jpql );
+	}
+
+	@Override
+	public CriteriaQuery<?> createQuery(String jpql) {
+		return criteriaBuilder.createQuery( jpql );
+	}
+
+	@Override
 	public JpaCriteriaQuery<Tuple> createTupleQuery() {
 		return criteriaBuilder.createTupleQuery();
 	}
@@ -131,8 +152,28 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public <T> CriteriaUpdate<T> createCriteriaUpdate(Class<T> targetEntity, String jpql) {
+		return criteriaBuilder.createCriteriaUpdate( targetEntity, jpql );
+	}
+
+	@Override
+	public CriteriaUpdate<?> createCriteriaUpdate(String jpql) {
+		return criteriaBuilder.createCriteriaUpdate( jpql );
+	}
+
+	@Override
 	public <T> JpaCriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity) {
 		return criteriaBuilder.createCriteriaDelete( targetEntity );
+	}
+
+	@Override
+	public <T> CriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity, String jpql) {
+		return criteriaBuilder.createCriteriaDelete( targetEntity, jpql );
+	}
+
+	@Override
+	public CriteriaDelete<?> createCriteriaDelete(String jpql) {
+		return criteriaBuilder.createCriteriaDelete( jpql );
 	}
 
 	@Override
@@ -642,6 +683,26 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.literal( value );
 	}
 
+	@Override
+	public <N extends Number & Comparable<N>> NumericExpression<N> numericLiteral(N value) {
+		return criteriaBuilder.numericLiteral( value );
+	}
+
+	@Override
+	public TextExpression stringLiteral(String value) {
+		return criteriaBuilder.stringLiteral( value );
+	}
+
+	@Override
+	public <T extends Temporal & Comparable<? super T>> TemporalExpression<T> temporalLiteral(T value) {
+		return criteriaBuilder.temporalLiteral( value );
+	}
+
+	@Override
+	public BooleanExpression booleanLiteral(boolean value) {
+		return criteriaBuilder.booleanLiteral( value );
+	}
+
 	@Override @SafeVarargs
 	public final <T> List<? extends JpaExpression<T>> literals(T... values) {
 		return criteriaBuilder.literals( values );
@@ -913,7 +974,12 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public JpaPredicate and(List<Predicate> restrictions) {
+	public JpaPredicate and(BooleanExpression... restrictions) {
+		return criteriaBuilder.and( restrictions );
+	}
+
+	@Override
+	public JpaPredicate and(List<? extends Expression<Boolean>> restrictions) {
 		return criteriaBuilder.and( restrictions );
 	}
 
@@ -928,7 +994,12 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public JpaPredicate or(List<Predicate> restrictions) {
+	public JpaPredicate or(BooleanExpression... restrictions) {
+		return criteriaBuilder.or( restrictions );
+	}
+
+	@Override
+	public JpaPredicate or(List<? extends Expression<Boolean>> restrictions) {
 		return criteriaBuilder.or( restrictions );
 	}
 

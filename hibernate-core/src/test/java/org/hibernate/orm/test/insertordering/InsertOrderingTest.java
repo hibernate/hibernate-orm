@@ -67,7 +67,7 @@ public class InsertOrderingTest {
 		scope.inTransaction(
 				session -> {
 					Iterator users = session.createQuery(
-							"from User u left join fetch u.memberships m left join fetch m.group" ).list().iterator();
+							"from User u left join fetch u.memberships m left join fetch m.group", User.class ).list().iterator();
 					while ( users.hasNext() ) {
 						session.remove( users.next() );
 					}

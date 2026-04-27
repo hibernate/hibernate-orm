@@ -8,8 +8,6 @@ import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.query.Query;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -78,8 +76,8 @@ public class QueryHintSQLServer2012Test {
 
 						// test Query w/ a simple SQLServer2012 optimizer hint
 						session.getTransaction().begin();
-						Query query = session.createQuery(
-										"FROM QueryHintSQLServer2012Test$Employee e WHERE e.department.name = :departmentName" )
+						var query = session.createQuery(
+										"FROM QueryHintSQLServer2012Test$Employee e WHERE e.department.name = :departmentName", Employee.class )
 								.addQueryHint(
 										"MAXDOP 2" )
 								.setParameter( "departmentName", "Sales" );
@@ -96,7 +94,7 @@ public class QueryHintSQLServer2012Test {
 						// test multiple hints
 						session.getTransaction().begin();
 						query = session.createQuery(
-										"FROM QueryHintSQLServer2012Test$Employee e WHERE e.department.name = :departmentName" )
+										"FROM QueryHintSQLServer2012Test$Employee e WHERE e.department.name = :departmentName", Employee.class )
 								.addQueryHint( "MAXDOP 2" )
 								.addQueryHint( "CONCAT UNION" )
 								.setParameter( "departmentName", "Sales" );
@@ -113,7 +111,7 @@ public class QueryHintSQLServer2012Test {
 						// ensure the insertion logic can handle a comment appended to the front
 						session.getTransaction().begin();
 						query = session.createQuery(
-										"FROM QueryHintSQLServer2012Test$Employee e WHERE e.department.name = :departmentName" )
+										"FROM QueryHintSQLServer2012Test$Employee e WHERE e.department.name = :departmentName", Employee.class )
 								.setComment( "this is a test" )
 								.addQueryHint( "MAXDOP 2" )
 								.setParameter( "departmentName", "Sales" );
@@ -138,7 +136,7 @@ public class QueryHintSQLServer2012Test {
 //		Criteria criteria = s.createCriteria( Employee.class ).addQueryHint( "MAXDOP 2" ).createCriteria( "department" )
 //				.add( Restrictions.eq( "name", "Sales" ) );
 //		results = criteria.list();
-						Query<Employee> criteriaQuery = session.createQuery( criteria );
+						var criteriaQuery = session.createQuery( criteria );
 						criteriaQuery.addQueryHint( "MAXDOP 2" );
 						results = criteriaQuery.list();
 						session.getTransaction().commit();

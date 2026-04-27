@@ -55,7 +55,7 @@ public class SubQueryImplicitJoinReferenceTest {
 			session.createQuery( "select e__ FROM TheEntity e__ "
 										+ "WHERE e__.originalId.rev.id = (select max(e2__.originalId.rev.id) FROM "
 										+ "TheEntity e2__ WHERE " +
-										"e2__.originalId.rev.id <= 2 and e__.originalId.id = e2__.originalId.id)" ).list();
+										"e2__.originalId.rev.id <= 2 and e__.originalId.id = e2__.originalId.id)", TheEntity.class ).list();
 		} );
 	}
 
@@ -66,7 +66,7 @@ public class SubQueryImplicitJoinReferenceTest {
 			session.createQuery( "select e__ FROM TheEntity e__ "
 										+ "WHERE e__.originalId.rev.id = (select max(e2__.originalId.rev.id) FROM "
 										+ "TheEntity e2__ WHERE " +
-										"e2__.originalId.rev is null)" ).list();
+										"e2__.originalId.rev is null)", TheEntity.class ).list();
 		} );
 	}
 
@@ -77,7 +77,7 @@ public class SubQueryImplicitJoinReferenceTest {
 			session.createQuery( "select e__ FROM TheEntity e__ "
 										+ "WHERE e__.originalId.id = (select max(e2__.originalId.id) FROM "
 										+ "TheEntity e2__ WHERE " +
-										"e__.originalId.id = e2__.originalId.id and e2__.originalId.rev.id <= 2)" ).list();
+										"e__.originalId.id = e2__.originalId.id and e2__.originalId.rev.id <= 2)", TheEntity.class ).list();
 		} );
 	}
 
@@ -87,7 +87,7 @@ public class SubQueryImplicitJoinReferenceTest {
 		scope.inSession( session -> {
 			session.createQuery( "select e2__.originalId.id, e2__.originalId.rev.id  FROM "
 										+ "TheEntity e2__ WHERE " +
-										" e2__.originalId.rev.id <= 2" ).list();
+										" e2__.originalId.rev.id <= 2", Object[].class ).list();
 		} );
 	}
 

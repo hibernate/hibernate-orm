@@ -157,7 +157,7 @@ public class IdBagElementNullBasicTest {
 	private List getCollectionElementRows(int id, SessionFactoryScope scope) {
 		return scope.fromTransaction(
 				session -> {
-					return session.createNativeQuery(
+					return session.createNativeQuery(Object.class,
 							"SELECT element_value FROM collection_table where entity_fk = " + id
 					).list();
 				}

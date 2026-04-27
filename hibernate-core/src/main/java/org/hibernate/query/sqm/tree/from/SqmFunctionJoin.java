@@ -4,6 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import jakarta.persistence.criteria.BooleanExpression;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.JoinType;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
@@ -24,10 +27,6 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedJoin;
 import org.hibernate.query.sqm.tree.expression.SqmSetReturningFunction;
 import org.hibernate.spi.NavigablePath;
-
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Predicate;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
@@ -166,7 +165,7 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 	}
 
 	@Override
-	public SqmFunctionJoin<E> on(Predicate @Nullable... restrictions) {
+	public SqmFunctionJoin<E> on(BooleanExpression... restrictions) {
 		return (SqmFunctionJoin<E>) super.on( restrictions );
 	}
 
@@ -174,6 +173,7 @@ public class SqmFunctionJoin<E> extends AbstractSqmJoin<Object, E> implements Jp
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitQualifiedFunctionJoin( this );
 	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA

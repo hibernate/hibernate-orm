@@ -544,7 +544,7 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select round(cast(e.theDouble as BigDecimal), 3) from EntityOfBasics e", BigDecimal.class)
 							.list();
-					assertThat( session.createQuery("select round(1.2345bd, 2)").getSingleResult(),
+					assertThat( session.createQuery("select round(1.2345bd, 2)", BigDecimal.class).getSingleResult(),
 							isOneOf(BigDecimal.valueOf(1.23), BigDecimal.valueOf(12300,4)) );
 					assertThat( session.createQuery("select abs(-2)", Integer.class).getSingleResult(), is(2) );
 					assertThat( session.createQuery("select sign(-2)", Integer.class).getSingleResult(), is(-1) );
@@ -1326,7 +1326,7 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select any(e.theInt > 0), every(e.theInt > 0) from EntityOfBasics e", Object[].class)
 							.list();
-					session.createQuery("select any(e.theBoolean), every(e.theBoolean) from EntityOfBasics e")
+					session.createQuery("select any(e.theBoolean), every(e.theBoolean) from EntityOfBasics e", Object[].class)
 							.list();
 					session.createQuery("select some(e.theInt > 0), all(e.theInt > 0) from EntityOfBasics e", Object[].class)
 							.list();
@@ -1644,16 +1644,16 @@ public class FunctionTests {
 	public void testAddDurationWithParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select 2 * cast(?1 as BigDecimal)")
+					session.createQuery("select 2 * cast(?1 as BigDecimal)", BigDecimal.class)
 							.setParameter(1, BigDecimal.valueOf(123.446))
 							.getSingleResult();
-					session.createQuery("select 2 * cast(?1 as BigDecimal(7,4))")
+					session.createQuery("select 2 * cast(?1 as BigDecimal(7,4))", BigDecimal.class)
 							.setParameter(1, BigDecimal.valueOf(123.446))
 							.getSingleResult();
-					session.createQuery("select cast(2 as BigDecimal) * ?1")
+					session.createQuery("select cast(2 as BigDecimal) * ?1", BigDecimal.class)
 							.setParameter(1, BigDecimal.valueOf(123.446))
 							.getSingleResult();
-					session.createQuery("select cast(:dt as LocalDateTime) + 1 day")
+					session.createQuery("select cast(:dt as LocalDateTime) + 1 day", LocalDateTime.class)
 							.setParameter("dt", LocalDateTime.now())
 							.getSingleResult();
 				}
@@ -1844,7 +1844,7 @@ public class FunctionTests {
 	public void testDurationArithmeticOverflowing(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select e.theTimestamp + 2 * e.theDuration from EntityOfBasics e")
+					session.createQuery("select e.theTimestamp + 2 * e.theDuration from EntityOfBasics e", Date.class)
 							.list();
 				}
 		);
@@ -1854,25 +1854,25 @@ public class FunctionTests {
 	public void testParameterArithmetic(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "select :dt + 1 day" )
+					session.createQuery( "select :dt + 1 day", LocalDateTime.class )
 							.setParameter( "dt", LocalDateTime.now() )
 							.getSingleResult();
 					assertEquals( 2,
-							session.createQuery( "select :i + 1" )
+							session.createQuery( "select :i + 1", Integer.class )
 									.setParameter( "i", 1)
 									.getSingleResult() );
 					assertEquals( 3,
-							session.createQuery( "select 1 + :i" )
+							session.createQuery( "select 1 + :i", Integer.class )
 									.setParameter( "i", 2)
 									.getSingleResult() );
 					// informix pads with a lot of spaces
 					if ( !(scope.getSessionFactory().getJdbcServices().getDialect() instanceof InformixDialect)) {
 						assertEquals( "hello world",
-								session.createQuery( "select :greet || ' world'" )
+								session.createQuery( "select :greet || ' world'", String.class )
 										.setParameter( "greet", "hello")
 										.getSingleResult() );
 						assertEquals( "hello world",
-								session.createQuery( "select 'hello ' || :name" )
+								session.createQuery( "select 'hello ' || :name", String.class )
 										.setParameter( "name", "world" )
 										.getSingleResult() );
 					}
@@ -1933,25 +1933,25 @@ public class FunctionTests {
 				session -> {
 					// timestampadd() might not work for time on at least some dbs:
 					assertEquals( LocalTime.of(5,30,25),
-							session.createQuery("select time 5:30:46 - 21 second")
+							session.createQuery("select time 5:30:46 - 21 second", LocalTime.class)
 									.getSingleResult() );
 					assertEquals( LocalTime.of(5,31,7),
-							session.createQuery("select time 5:30:46 + 21 second")
+							session.createQuery("select time 5:30:46 + 21 second", LocalTime.class)
 									.getSingleResult() );
 					assertEquals( LocalTime.of(5,15,30),
-							session.createQuery("select time 5:30:30 - 15 minute")
+							session.createQuery("select time 5:30:30 - 15 minute", LocalTime.class)
 									.getSingleResult() );
 					assertEquals( LocalTime.of(4,45,30),
-							session.createQuery("select time 5:30:30 - 45 minute")
+							session.createQuery("select time 5:30:30 - 45 minute", LocalTime.class)
 									.getSingleResult() );
 					assertEquals( LocalTime.of(6,00,30),
-							session.createQuery("select time 5:15:30 + 45 minute")
+							session.createQuery("select time 5:15:30 + 45 minute", LocalTime.class)
 									.getSingleResult() );
 					assertEquals( LocalTime.of(3,30,30),
-							session.createQuery("select time 5:30:30 - 2 hour")
+							session.createQuery("select time 5:30:30 - 2 hour", LocalTime.class)
 									.getSingleResult() );
 					assertEquals( LocalTime.of(11,30,30),
-							session.createQuery("select time 5:30:30 + 6 hour")
+							session.createQuery("select time 5:30:30 + 6 hour", LocalTime.class)
 									.getSingleResult() );
 				}
 		);
@@ -1964,16 +1964,16 @@ public class FunctionTests {
 		scope.inTransaction(
 				session -> {
 					assertEquals( Duration.ofSeconds(21),
-							session.createQuery("select time 5:30:46 - time 5:30:25")
+							session.createQuery("select time 5:30:46 - time 5:30:25", Duration.class)
 									.getSingleResult() );
 					assertEquals( Duration.ofMinutes(10),
-							session.createQuery("select time 5:30:30 - time 5:20:30")
+							session.createQuery("select time 5:30:30 - time 5:20:30", Duration.class)
 									.getSingleResult() );
 					assertEquals( Duration.ofHours(2),
-							session.createQuery("select time 5:30:30 - time 3:30:30")
+							session.createQuery("select time 5:30:30 - time 3:30:30", Duration.class)
 									.getSingleResult() );
 					assertEquals( Duration.ofHours(1).plus(Duration.ofMinutes(10).plus(Duration.ofSeconds(20))),
-							session.createQuery("select time 5:30:30 - time 4:20:10")
+							session.createQuery("select time 5:30:30 - time 4:20:10", Duration.class)
 									.getSingleResult() );
 				}
 		);
@@ -1991,13 +1991,13 @@ public class FunctionTests {
 		scope.inTransaction(
 				session -> {
 					assertEquals( Duration.ofDays(35),
-							session.createQuery("select local date 1990-2-5 - local date 1990-1-1")
+							session.createQuery("select local date 1990-2-5 - local date 1990-1-1", Duration.class)
 									.getSingleResult() );
 					assertEquals( Duration.ofDays(35).plus(Duration.ofHours(1).plus(Duration.ofMinutes(10).plus(Duration.ofSeconds(20)))),
-							session.createQuery("select local datetime 1990-2-5 5:30:30 - local datetime 1990-1-1 4:20:10")
+							session.createQuery("select local datetime 1990-2-5 5:30:30 - local datetime 1990-1-1 4:20:10", Duration.class)
 									.getSingleResult() );
 					assertEquals( Duration.ofDays(28).plus(Duration.ofHours(2).plus(Duration.ofMinutes(20).plus(Duration.ofSeconds(10)))),
-							session.createQuery("select (local datetime 1990-2-5 5:30:30 - local datetime 1990-1-1 4:20:10) - 7 day + 10 minute - 10 second + 1 hour")
+							session.createQuery("select (local datetime 1990-2-5 5:30:30 - local datetime 1990-1-1 4:20:10) - 7 day + 10 minute - 10 second + 1 hour", Duration.class)
 									.getSingleResult() );
 				}
 		);
@@ -2012,10 +2012,10 @@ public class FunctionTests {
 		scope.inTransaction(
 				session -> {
 					assertEquals( LocalTime.of(23,30,30),
-							session.createQuery("select time 5:30:30 - 6 hour")
+							session.createQuery("select time 5:30:30 - 6 hour", LocalTime.class)
 									.getSingleResult() );
 					assertEquals( LocalTime.of(5,30,30),
-							session.createQuery("select time 5:30:30 + 24 hour")
+							session.createQuery("select time 5:30:30 + 24 hour", LocalTime.class)
 									.getSingleResult() );
 				}
 		);
@@ -2028,28 +2028,28 @@ public class FunctionTests {
 		scope.inTransaction(
 				session -> {
 					assertEquals( LocalDate.of(1991,7,25),
-							session.createQuery("select local date 1991-7-20 + 5 day")
+							session.createQuery("select local date 1991-7-20 + 5 day", LocalDate.class)
 									.getSingleResult() );
 					assertEquals( LocalDate.of(1991,7,5),
-							session.createQuery("select local date 1991-7-20 - 15 day")
+							session.createQuery("select local date 1991-7-20 - 15 day", LocalDate.class)
 									.getSingleResult() );
 					assertEquals( LocalDate.of(1991,7,27),
-							session.createQuery("select local date 1991-7-20 + 1 week")
+							session.createQuery("select local date 1991-7-20 + 1 week", LocalDate.class)
 									.getSingleResult() );
 					assertEquals( LocalDate.of(1991,4,5),
-							session.createQuery("select local date 1991-7-5 - 3 month")
+							session.createQuery("select local date 1991-7-5 - 3 month", LocalDate.class)
 									.getSingleResult() );
 					assertEquals( LocalDate.of(2001,7,5),
-							session.createQuery("select local date 1991-7-5 + 10 year")
+							session.createQuery("select local date 1991-7-5 + 10 year", LocalDate.class)
 									.getSingleResult() );
 					assertEquals( LocalDate.of(1990,4,5),
-							session.createQuery("select local date 1991-7-5 - 15 month")
+							session.createQuery("select local date 1991-7-5 - 15 month", LocalDate.class)
 									.getSingleResult() );
 					assertEquals( LocalDate.of(1990,8,5),
-							session.createQuery("select local date 1990-2-5 + 2 quarter")
+							session.createQuery("select local date 1990-2-5 + 2 quarter", LocalDate.class)
 									.getSingleResult() );
 					assertEquals( LocalDate.of(1990,12,31),
-							session.createQuery("select local date 1991-1-1 - 1 day")
+							session.createQuery("select local date 1991-1-1 - 1 day", LocalDate.class)
 									.getSingleResult() );
 				}
 		);
@@ -2064,7 +2064,7 @@ public class FunctionTests {
 				session -> {
 					assertEquals(
 							1,
-							session.createQuery( "from EntityOfBasics e where (:date - e.theTimestamp) by day > 1" )
+							session.createQuery( "from EntityOfBasics e where (:date - e.theTimestamp) by day > 1", EntityOfBasics.class )
 									.setParameter( "date", Timestamp.valueOf( "2022-01-01 00:00:00" ) )
 									.getResultList()
 									.size()
@@ -2125,9 +2125,9 @@ public class FunctionTests {
 	public void testIntervalDiffExpressionsWithAssertions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					assertThat( session.createQuery("select (local datetime + 2 day) - local datetime").getSingleResult(),
+					assertThat( session.createQuery("select (local datetime + 2 day) - local datetime", Duration.class).getSingleResult(),
 							is( Duration.ofDays( 2 ) ) );
-					assertThat( session.createQuery("select (local datetime - 12 hour) - local datetime").getSingleResult(),
+					assertThat( session.createQuery("select (local datetime - 12 hour) - local datetime", Duration.class).getSingleResult(),
 							is( Duration.ofHours( -12 ) ) );
 				}
 		);
@@ -2145,12 +2145,12 @@ public class FunctionTests {
 	public void testMoreIntervalDiffExpressions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select current_timestamp - e.theTimestamp from EntityOfBasics e")
+					session.createQuery("select current_timestamp - e.theTimestamp from EntityOfBasics e", Duration.class)
 							.list();
-					session.createQuery("select current_timestamp - (current_timestamp - e.theTimestamp) from EntityOfBasics e")
+					session.createQuery("select current_timestamp - (current_timestamp - e.theTimestamp) from EntityOfBasics e", Date.class)
 							.list();
 					assertEquals(LocalDateTime.of(1990, 1, 1, 12, 30, 0),
-							session.createQuery("select local datetime - (local datetime - local datetime 1990-1-1 12:30:00)")
+							session.createQuery("select local datetime - (local datetime - local datetime 1990-1-1 12:30:00)", LocalDateTime.class)
 									.getSingleResult());
 				}
 		);
@@ -2575,7 +2575,7 @@ public class FunctionTests {
 									.setParameterList("list",List.of())
 									.list().size() );
 					assertEquals( 0,
-							session.createQuery( "select e from EntityWithOneToOne e where e.other in (:list)" )
+							session.createQuery( "select e from EntityWithOneToOne e where e.other in (:list)", Object.class )
 									.setParameter( "list", null )
 									.list().size() );
 				}

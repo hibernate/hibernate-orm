@@ -9,8 +9,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.annotations.Formula;
-import org.hibernate.query.NativeQuery;
+import org.hibernate.orm.test.mapping.formula.FormulaNativeQueryTest_.Foo_;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -86,7 +87,7 @@ public class FormulaNativeQueryTest {
 	public void testNativeQueryWithAliasProperties(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					NativeQuery query = session.createNativeQuery(
+					var query = session.createNativeQuery(Foo.class,
 							"SELECT ft.*, abs(ft.location_end - location_start) as d FROM foo_table ft" );
 					query.addRoot( "ft", Foo.class )
 							.addProperty( "id", "id" )
@@ -100,10 +101,28 @@ public class FormulaNativeQueryTest {
 	}
 
 	@Test
+	public void testNativeQueryWithAliasPropertiesJpa4(SessionFactoryScope scope) {
+		scope.inTransaction(session -> {
+			var mapping = ResultSetMapping.entity( Foo.class,
+					ResultSetMapping.field( Foo_.id, "id" ),
+					ResultSetMapping.field( Foo_.locationStart, "location_start" ),
+					ResultSetMapping.field( Foo_.locationEnd, "location_end" ),
+					ResultSetMapping.field( Foo_.distance, "d" )
+			).withAlias( "ft" );
+			var query = session.createNativeQuery(
+					"SELECT ft.*, abs(ft.location_end - location_start) as d FROM foo_table ft",
+					mapping
+			);
+			List<Foo> list = query.getResultList();
+			assertThat( list, hasSize( 3 ) );
+		} );
+	}
+
+	@Test
 	public void testNativeQueryWithAliasSyntax(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					NativeQuery query = session.createNativeQuery(
+					var query = session.createNativeQuery(Foo.class,
 							"SELECT ft.id as {ft.id}, ft.location_start as {ft.locationStart}, ft.location_end as {ft.locationEnd}, abs(ft.location_end - location_start) as {ft.distance} FROM foo_table ft" )
 							.addEntity( "ft", Foo.class );
 					query.setProperties( Collections.singletonMap( "distance", "distance" ) );

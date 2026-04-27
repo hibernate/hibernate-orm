@@ -64,7 +64,7 @@ public class SimpleSoftDeleteTests {
 	void testSelectionQuery(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			// should not return #1
-			assertThat( session.createQuery( "from SimpleEntity" ).list() ).hasSize( 2 );
+			assertThat( session.createQuery( "from SimpleEntity", SimpleEntity.class ).list() ).hasSize( 2 );
 		} );
 	}
 

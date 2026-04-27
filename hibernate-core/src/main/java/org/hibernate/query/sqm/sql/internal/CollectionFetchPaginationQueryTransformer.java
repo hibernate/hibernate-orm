@@ -615,17 +615,14 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 	}
 
 	private static boolean hasSortExpression(List<SortSpecification> sortSpecifications, Expression expression) {
-		if ( sortSpecifications == null ) {
-			return false;
-		}
-		else {
+		if ( sortSpecifications != null ) {
 			for ( var sortSpecification : sortSpecifications ) {
 				if ( expression.equals( sortSpecification.getSortExpression() ) ) {
 					return true;
 				}
 			}
-			return false;
 		}
+		return false;
 	}
 
 	private static @Nullable TableGroup primaryRoot(List<TableGroup> roots) {
@@ -717,7 +714,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 	private static class AbsorbedColumn {
 		final JdbcMapping jdbcMapping;
 		String exposedName;
-		AbsorbedColumn(JdbcMapping jdbcMapping) {
+		private AbsorbedColumn(JdbcMapping jdbcMapping) {
 			this.jdbcMapping = jdbcMapping;
 		}
 	}

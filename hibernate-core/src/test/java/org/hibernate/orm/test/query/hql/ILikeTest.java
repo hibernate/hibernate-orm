@@ -6,8 +6,6 @@ package org.hibernate.orm.test.query.hql;
 
 import java.util.List;
 
-import org.hibernate.query.Query;
-
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -66,7 +64,7 @@ public class ILikeTest {
 	public void testLike(SessionFactoryScope scope) {
 		scope.inTransaction(
 		session -> {
-				Query q = session.createQuery( "from BasicEntity be where be.data like 'Prod%'" );
+				var q = session.createQuery( "from BasicEntity be where be.data like 'Prod%'", BasicEntity.class );
 				List l = q.getResultList();
 				assertEquals( 5, l.size() );
 			}
@@ -77,7 +75,7 @@ public class ILikeTest {
 	public void testNotLike(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query q = session.createQuery( "from BasicEntity be where be.data not like 'Prod%'" );
+					var q = session.createQuery( "from BasicEntity be where be.data not like 'Prod%'", BasicEntity.class );
 					List l = q.getResultList();
 					assertEquals( 4, l.size() );
 				}
@@ -88,7 +86,7 @@ public class ILikeTest {
 	public void testLikeEscape(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query q = session.createQuery( "from BasicEntity be where be.data like 'Pr%$_%' escape '$'" );
+					var q = session.createQuery( "from BasicEntity be where be.data like 'Pr%$_%' escape '$'", BasicEntity.class );
 					List l = q.getResultList();
 					assertEquals( 2, l.size() );
 				}
@@ -99,7 +97,7 @@ public class ILikeTest {
 	public void testLikeEscapeParam(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query q = session.createQuery( "from BasicEntity be where be.data like 'Pr%$_%' escape :esc" )
+					var q = session.createQuery( "from BasicEntity be where be.data like 'Pr%$_%' escape :esc", BasicEntity.class )
 							.setParameter("esc", '$');
 					List l = q.getResultList();
 					assertEquals( 2, l.size() );
@@ -111,7 +109,7 @@ public class ILikeTest {
 	public void testNotLikeEscape(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query q = session.createQuery( "from BasicEntity be where be.data not like 'Pr%$_%' escape '$'" );
+					var q = session.createQuery( "from BasicEntity be where be.data not like 'Pr%$_%' escape '$'", BasicEntity.class );
 					List l = q.getResultList();
 					assertEquals( 7, l.size() );
 				}
@@ -122,7 +120,7 @@ public class ILikeTest {
 	public void testIlike(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query q = session.createQuery( "from BasicEntity be where be.data ilike 'Produ%'" );
+					var q = session.createQuery( "from BasicEntity be where be.data ilike 'Produ%'", BasicEntity.class );
 					List l = q.getResultList();
 					assertEquals( 5, l.size() );
 				}
@@ -133,7 +131,7 @@ public class ILikeTest {
 	public void testNotIlike(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query q = session.createQuery( "from BasicEntity be where be.data not ilike 'Produ%'" );
+					var q = session.createQuery( "from BasicEntity be where be.data not ilike 'Produ%'", BasicEntity.class );
 					List l = q.getResultList();
 					assertEquals( 4, l.size() );
 				}
@@ -144,7 +142,7 @@ public class ILikeTest {
 	public void testIlikeEscape(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query q = session.createQuery( "from BasicEntity be where be.data ilike 'Pr%$_%' escape '$'" );
+					var q = session.createQuery( "from BasicEntity be where be.data ilike 'Pr%$_%' escape '$'", BasicEntity.class );
 					List l = q.getResultList();
 					assertEquals( 3, l.size() );
 				}
@@ -155,7 +153,7 @@ public class ILikeTest {
 	public void testNotIlikeEscape(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query q = session.createQuery( "from BasicEntity be where be.data not ilike 'Pr%$_%' escape '$'" );
+					var q = session.createQuery( "from BasicEntity be where be.data not ilike 'Pr%$_%' escape '$'", BasicEntity.class );
 					List l = q.getResultList();
 					assertEquals( 6, l.size() );
 				}

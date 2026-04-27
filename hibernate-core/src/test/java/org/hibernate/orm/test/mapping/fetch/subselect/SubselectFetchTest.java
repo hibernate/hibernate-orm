@@ -150,7 +150,7 @@ public class SubselectFetchTest {
 				s -> {
 					scope.getSessionFactory().getStatistics().clear();
 
-					List parents = s.createQuery( "from Parent where name between :bar and :foo order by name desc" )
+					List parents = s.createQuery( "from Parent where name between :bar and :foo order by name desc",  Parent.class )
 							.setParameter( "bar", "bar" )
 							.setParameter( "foo", "foo" )
 							.list();
@@ -195,7 +195,7 @@ public class SubselectFetchTest {
 				s -> {
 					scope.getSessionFactory().getStatistics().clear();
 
-					List parents = s.createQuery( "from Parent where name between ?1 and ?2 order by name desc" )
+					List parents = s.createQuery( "from Parent where name between ?1 and ?2 order by name desc", Parent.class )
 							.setParameter( 1, "bar" )
 							.setParameter( 2, "foo" )
 							.list();
@@ -247,7 +247,7 @@ public class SubselectFetchTest {
 					s -> {
 						scope.getSessionFactory().getStatistics().clear();
 
-						List parents = s.createQuery( "from Parent order by name desc" )
+						List parents = s.createQuery( "from Parent order by name desc", Parent.class )
 								.setMaxResults( 2 )
 								.list();
 						Parent p = (Parent) parents.get( 0 );

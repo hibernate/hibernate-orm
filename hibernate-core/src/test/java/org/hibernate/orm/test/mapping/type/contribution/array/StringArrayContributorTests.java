@@ -52,7 +52,7 @@ public class StringArrayContributorTests {
 		} );
 
 		scope.inTransaction( (session) -> {
-			session.createQuery( "select p.tags from Post p" ).list();
+			session.createQuery( "select p.tags from Post p", String.class ).list();
 		} );
 	}
 
@@ -63,7 +63,7 @@ public class StringArrayContributorTests {
 				.registerNamed("array_contains",
 						scope.getSessionFactory().getTypeConfiguration().standardBasicTypeForJavaType(Boolean.class));
 		scope.inTransaction( (session) -> {
-			session.createQuery( "select p from Post p where array_contains(:arr, p.title) = true" )
+			session.createQuery( "select p from Post p where array_contains(:arr, p.title) = true", Post.class )
 					.setParameter( "arr", Arrays.array( "a", "b" ) )
 					.list();
 		} );

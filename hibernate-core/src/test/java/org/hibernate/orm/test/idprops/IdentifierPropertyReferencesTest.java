@@ -56,7 +56,7 @@ public class IdentifierPropertyReferencesTest {
 					count = extractCount( s, "select count(*) from LineItem l where l.id = '456'" );
 					assertEquals( 1, count, "LineItem by id prop (non-identifier" );
 
-					Query q = s.createQuery( "select count(*) from LineItem l where l.pk = (:order, :product)" )
+					var q = s.createQuery( Long.class, "select count(*) from LineItem l where l.pk = (:order, :product)" )
 							.setParameter( "order", o )
 							.setParameter( "product", "my-product" );
 					count = extractCount( q );
@@ -83,7 +83,7 @@ public class IdentifierPropertyReferencesTest {
 	}
 
 	private long extractCount(Session s, String hql) {
-		return extractCount( s.createQuery( hql ) );
+		return extractCount( s.createQuery( Long.class, hql ) );
 	}
 
 	private long extractCount(Query query) {

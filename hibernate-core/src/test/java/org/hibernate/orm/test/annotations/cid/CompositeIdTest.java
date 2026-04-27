@@ -12,8 +12,6 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.Session;
-import org.hibernate.query.Query;
-
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -87,7 +85,7 @@ public class CompositeIdTest {
 	public void testUpdateCompositeIdFkAssociation(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "update Child c set c.parent1 = null" ).executeUpdate();
+					session.createMutationQuery( "update Child c set c.parent1 = null" ).executeUpdate();
 				}
 		);
 	}
@@ -118,11 +116,11 @@ public class CompositeIdTest {
 
 		scope.inTransaction(
 				session -> {
-					Query q = session.createQuery( "select c from Child c where c.id.nthChild = :nth" );
+					var q = session.createQuery( "select c from Child c where c.id.nthChild = :nth", Child.class );
 					q.setParameter( "nth", 1 );
-					List results = q.list();
+					List<Child> results = q.list();
 					assertEquals( 1, results.size() );
-					Child c = (Child) results.get( 0 );
+					Child c = results.get( 0 );
 					assertNotNull( c );
 					assertNotNull( c.id.parent );
 					//FIXME mke it work in unambigious cases
@@ -201,11 +199,11 @@ public class CompositeIdTest {
 
 		scope.inTransaction(
 				session -> {
-					Query q = session.createQuery( "select c from Child c where c.id.nthChild = :nth" );
+					var q = session.createQuery( "select c from Child c where c.id.nthChild = :nth", Child.class );
 					q.setParameter( "nth", 1 );
-					List results = q.list();
+					List<Child> results = q.list();
 					assertEquals( 1, results.size() );
-					Child c = (LittleGenius) results.get( 0 );
+					Child c = results.get( 0 );
 					assertNotNull( c );
 					assertNotNull( c.id.parent );
 					//FIXME mke it work in unambigious cases
@@ -236,7 +234,7 @@ public class CompositeIdTest {
 					session.getTransaction().commit();
 					session.clear();
 					session.beginTransaction();
-					mag = (TvMagazin) session.createQuery( "from TvMagazin mag" ).uniqueResult();
+					mag = session.createQuery( "from TvMagazin mag", TvMagazin.class ).uniqueResult();
 					assertNotNull( mag.id );
 					assertNotNull( mag.id.channel );
 					assertEquals( channel.id, mag.id.channel.id );
@@ -265,7 +263,7 @@ public class CompositeIdTest {
 					session.flush();
 					session.clear();
 
-					orderLine = (OrderLine) session.createQuery( "select ol from OrderLine ol" ).uniqueResult();
+					orderLine = session.createQuery( "select ol from OrderLine ol", OrderLine.class ).uniqueResult();
 					assertNotNull( orderLine.order );
 					assertEquals( order.id, orderLine.order.id );
 					assertNotNull( orderLine.product );
@@ -396,7 +394,7 @@ public class CompositeIdTest {
 					session.getTransaction().commit();
 					session.clear();
 					session.beginTransaction();
-					program = (TvProgram) session.createQuery( "from TvProgram pr" ).uniqueResult();
+					program = session.createQuery( "from TvProgram pr", TvProgram.class ).uniqueResult();
 					assertNotNull( program.id );
 					assertNotNull( program.id.channel );
 					assertEquals( channel.id, program.id.channel.id );
@@ -428,7 +426,7 @@ public class CompositeIdTest {
 					session.getTransaction().commit();
 					session.clear();
 					session.beginTransaction();
-					program = (TvProgramIdClass) session.createQuery( "from TvProgramIdClass pr" ).uniqueResult();
+					program = session.createQuery( "from TvProgramIdClass pr", TvProgramIdClass.class ).uniqueResult();
 					assertNotNull( program.channel );
 					assertEquals( channel.id, program.channel.id );
 					assertNotNull( program.presenter );
@@ -481,9 +479,9 @@ public class CompositeIdTest {
 					ids.add( new SomeEntityId( 1, 12 ) );
 					ids.add( new SomeEntityId( 10, 23 ) );
 					ids.add( new SomeEntityId( 10, 22 ) );
-					Query query = session.createQuery( "from SomeEntity e where e.id in (:idList)" );
+					var query = session.createQuery( "from SomeEntity e where e.id in (:idList)", SomeEntity.class );
 					query.setParameterList( "idList", ids );
-					List list = query.list();
+					List<SomeEntity> list = query.list();
 					assertEquals( 3, list.size() );
 				}
 		);

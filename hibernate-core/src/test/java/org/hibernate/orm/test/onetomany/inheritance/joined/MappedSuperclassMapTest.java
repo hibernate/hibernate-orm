@@ -53,7 +53,7 @@ public class MappedSuperclassMapTest {
 	@Test
 	public void lookupEntities(SessionFactoryScope scope) {
 		scope.inTransaction( sess -> {
-			List<Library> libraries = sess.createQuery( "FROM Library" ).list();
+			List<Library> libraries = sess.createQuery( Library.class, "FROM Library" ).list();
 			assertEquals( 1, libraries.size() );
 			Library library = libraries.get( 0 );
 			assertNotNull( library );
@@ -75,7 +75,7 @@ public class MappedSuperclassMapTest {
 	@Test
 	public void lookupEntities_entrySet(SessionFactoryScope scope) {
 		scope.inTransaction( sess -> {
-			List<Library> libraries = sess.createQuery( "FROM Library" ).list();
+			List<Library> libraries = sess.createQuery( Library.class, "FROM Library" ).list();
 			assertEquals( 1, libraries.size() );
 			Library library = libraries.get( 0 );
 			assertNotNull( library );
@@ -90,7 +90,7 @@ public class MappedSuperclassMapTest {
 	@Test
 	public void breakReferences(SessionFactoryScope scope) {
 		scope.inTransaction( sess -> {
-			List<Book> books = sess.createQuery( "FROM Book" ).list();
+			List<Book> books = sess.createQuery( Book.class, "FROM Book" ).list();
 			assertEquals( 2, books.size() );
 
 			for ( Book book : books ) {
@@ -104,7 +104,7 @@ public class MappedSuperclassMapTest {
 		} );
 
 		scope.inTransaction( sess -> {
-			List<Book> books = sess.createQuery( "FROM Book" ).list();
+			List<Book> books = sess.createQuery( Book.class, "FROM Book" ).list();
 			assertEquals( 2, books.size() );
 
 			for ( Book book : books ) {
@@ -113,7 +113,7 @@ public class MappedSuperclassMapTest {
 				}
 			}
 
-			List<Library> libraries = sess.createQuery( "FROM Library" ).list();
+			List<Library> libraries = sess.createQuery( Library.class,"FROM Library" ).list();
 			assertEquals( 1, libraries.size() );
 			Library library = libraries.get( 0 );
 			assertNotNull( library );

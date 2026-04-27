@@ -80,7 +80,7 @@ public interface PersistenceUnitDescriptor {
 	///
 	/// @apiNote This is not supported for all implementors / scenarios.  In such cases, it simply returns {@link #getManagedClassNames()}.
 	///
-	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getAllManagedClassNames()
+	/// @see jakarta.persistence.spi.PersistenceUnitInfo#getAllClassNames()
 	List<String> getAllClassNames();
 
 	/// Names of mapping-files explicitly listed in the persistence-unit.

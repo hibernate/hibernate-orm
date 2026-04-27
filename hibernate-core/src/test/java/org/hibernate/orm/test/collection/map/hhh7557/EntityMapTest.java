@@ -4,15 +4,13 @@
  */
 package org.hibernate.orm.test.collection.map.hhh7557;
 
-import java.util.HashMap;
-import java.util.List;
-
 import org.hibernate.Session;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+
+import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -79,8 +77,8 @@ public class EntityMapTest {
 	}
 
 	private MapHolder getMapHolder(Session session) {
-		List mapHolders = session.createQuery( "select distinct mh from MapHolder mh" ).list();
+		var mapHolders = session.createQuery( MapHolder.class,"select distinct mh from MapHolder mh" ).list();
 		assertEquals( 1, mapHolders.size() );
-		return (MapHolder) mapHolders.get( 0 );
+		return mapHolders.get( 0 );
 	}
 }

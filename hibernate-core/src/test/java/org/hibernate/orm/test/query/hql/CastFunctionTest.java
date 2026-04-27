@@ -24,11 +24,11 @@ public class CastFunctionTest {
 		scope.inTransaction(
 				(session) -> {
 					// using the short name
-					session.createQuery( "select cast(e.theLostNumber as string) from MyEntity e" ).list();
+					session.createQuery( "select cast(e.theLostNumber as string) from MyEntity e", String.class ).list();
 					// using the java class name
-					session.createQuery( "select cast(e.theLostNumber as java.lang.String) from MyEntity e" ).list();
+					session.createQuery( "select cast(e.theLostNumber as java.lang.String) from MyEntity e", String.class ).list();
 					// using the fqn Hibernate Type name
-					session.createQuery( "select cast(e.theLostNumber as org.hibernate.type.StringType) from MyEntity e" )
+					session.createQuery( "select cast(e.theLostNumber as org.hibernate.type.StringType) from MyEntity e", String.class )
 							.list();
 				}
 		);
@@ -39,13 +39,13 @@ public class CastFunctionTest {
 		scope.inTransaction(
 				(session) -> {
 					// using the short name
-					session.createQuery( "select cast(e.theLostNumber as integer) from MyEntity e" ).list();
+					session.createQuery( "select cast(e.theLostNumber as integer) from MyEntity e", Integer.class ).list();
 					// using the java class name (primitive)
-					session.createQuery( "select cast(e.theLostNumber as int) from MyEntity e" ).list();
+					session.createQuery( "select cast(e.theLostNumber as int) from MyEntity e", Integer.class ).list();
 					// using the java class name
-					session.createQuery( "select cast(e.theLostNumber as java.lang.Integer) from MyEntity e" ).list();
+					session.createQuery( "select cast(e.theLostNumber as java.lang.Integer) from MyEntity e", Integer.class ).list();
 					// using the fqn Hibernate Type name
-					session.createQuery( "select cast(e.theLostNumber as org.hibernate.type.IntegerType) from MyEntity e" ).list();
+					session.createQuery( "select cast(e.theLostNumber as org.hibernate.type.IntegerType) from MyEntity e", Integer.class ).list();
 				}
 		);
 	}
@@ -55,11 +55,11 @@ public class CastFunctionTest {
 		scope.inTransaction(
 				(session) -> {
 					// using the short name (also the primitive name)
-					session.createQuery( "select cast(e.theLostNumber as long) from MyEntity e" ).list();
+					session.createQuery( "select cast(e.theLostNumber as long) from MyEntity e", Long.class ).list();
 					// using the java class name
-					session.createQuery( "select cast(e.theLostNumber as java.lang.Long) from MyEntity e" ).list();
+					session.createQuery( "select cast(e.theLostNumber as java.lang.Long) from MyEntity e", Long.class ).list();
 					// using the fqn Hibernate Type name
-					session.createQuery( "select cast(e.theLostNumber as org.hibernate.type.LongType) from MyEntity e" ).list();
+					session.createQuery( "select cast(e.theLostNumber as org.hibernate.type.LongType) from MyEntity e", Long.class ).list();
 				}
 		);
 	}
@@ -69,11 +69,11 @@ public class CastFunctionTest {
 		scope.inTransaction(
 				(session) -> {
 					// using the short name (also the primitive name)
-					session.createQuery( "select cast(e.theLostNumber as float) from MyEntity e" ).list();
+					session.createQuery( "select cast(e.theLostNumber as float) from MyEntity e", Float.class ).list();
 					// using the java class name
-					session.createQuery( "select cast(e.theLostNumber as java.lang.Float) from MyEntity e" ).list();
+					session.createQuery( "select cast(e.theLostNumber as java.lang.Float) from MyEntity e", Float.class ).list();
 					// using the fqn Hibernate Type name
-					session.createQuery( "select cast(e.theLostNumber as org.hibernate.type.FloatType) from MyEntity e" ).list();
+					session.createQuery( "select cast(e.theLostNumber as org.hibernate.type.FloatType) from MyEntity e", Float.class ).list();
 
 				}
 		);

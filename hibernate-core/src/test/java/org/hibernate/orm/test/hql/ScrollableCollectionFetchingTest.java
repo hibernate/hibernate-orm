@@ -51,7 +51,7 @@ public class ScrollableCollectionFetchingTest {
 				session -> {
 					session.createMutationQuery("insert Mammal (description, bodyWeight, pregnant) values ('Human', 80.0, false)").executeUpdate();
 					assertEquals( 1L, session.createSelectionQuery("select count(*) from Mammal", Long.class).getSingleResult() );
-					try (ScrollableResults results = session.createQuery("select a, a.bodyWeight from Animal a left join fetch a.offspring").scroll()) {
+					try (ScrollableResults results = session.createQuery("select a, a.bodyWeight from Animal a left join fetch a.offspring", Object[].class).scroll()) {
 						assertTrue( results.next() );
 						Object[] result = (Object[]) results.get();
 						assertTrue( Hibernate.isInitialized( ( (Animal) result[0] ).getOffspring() ) );
@@ -66,7 +66,7 @@ public class ScrollableCollectionFetchingTest {
 		scope.inTransaction(
 				session -> {
 					try (ScrollableResults<?> sr = session.createQuery(
-									"select a.description, a.bodyWeight from Animal a inner join fetch a.offspring" )
+									"select a.description, a.bodyWeight from Animal a inner join fetch a.offspring", Object[].class )
 							.scroll()) {
 						fail( "scroll allowed with fetch and projection result" );
 					}
@@ -83,7 +83,7 @@ public class ScrollableCollectionFetchingTest {
 		scope.inTransaction(
 				session -> {
 					try (ScrollableResults<?> sr = session.createQuery(
-							"select a, a.weight from Animal a inner join fetch a.offspring" ).scroll()) {
+							"select a, a.weight from Animal a inner join fetch a.offspring", Object[].class ).scroll()) {
 						fail( "scroll allowed with unknown path" );
 					}
 					catch (IllegalArgumentException e) {
@@ -102,11 +102,11 @@ public class ScrollableCollectionFetchingTest {
 					final String query = "from Animal a left join fetch a.offspring where a.description like :desc order by a.id";
 
 					// first, as a control, make sure there are no results
-					int size = s.createQuery( query ).setParameter( "desc", "root%" ).list().size();
+					int size = s.createQuery( query, Animal.class ).setParameter( "desc", "root%" ).list().size();
 					assertEquals( 0, size );
 
 					// now get the scrollable results
-					try (ScrollableResults results = s.createQuery( query ).setParameter( "desc", "root%" ).scroll()) {
+					try (ScrollableResults results = s.createQuery( query, Animal.class ).setParameter( "desc", "root%" ).scroll()) {
 
 						assertFalse( results.isFirst() );
 						assertFalse( results.isLast() );
@@ -187,13 +187,13 @@ public class ScrollableCollectionFetchingTest {
 					assertNotNull(
 							session
 									.createQuery(
-											"from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
+											"from Animal a left join fetch a.offspring where a.description like :desc order by a.id", Animal.class )
 									.setParameter( "desc", "root%" )
 									.uniqueResult() );
 
 					try (ScrollableResults results = session
 							.createQuery(
-									"from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
+									"from Animal a left join fetch a.offspring where a.description like :desc order by a.id", Animal.class )
 							.setParameter( "desc", "root%" ).scroll()) {
 
 						assertFalse( results.isFirst() );
@@ -277,8 +277,8 @@ public class ScrollableCollectionFetchingTest {
 
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "delete Animal where not description like 'root%'" ).executeUpdate();
-					session.createQuery( "delete Animal" ).executeUpdate();
+					session.createMutationQuery( "delete Animal where not description like 'root%'" ).executeUpdate();
+					session.createMutationQuery( "delete Animal" ).executeUpdate();
 				}
 		);
 	}
@@ -296,7 +296,7 @@ public class ScrollableCollectionFetchingTest {
 				s -> {
 					try (ScrollableResults results = s
 							.createQuery(
-									"from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
+									"from Animal a left join fetch a.offspring where a.description like :desc order by a.id", Animal.class )
 							.setParameter( "desc", "root%" )
 							.scroll( ScrollMode.FORWARD_ONLY )) {
 
@@ -323,7 +323,7 @@ public class ScrollableCollectionFetchingTest {
 				s -> {
 					try (ScrollableResults results = s
 							.createQuery(
-									"from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
+									"from Animal a left join fetch a.offspring where a.description like :desc order by a.id", Animal.class )
 							.setParameter( "desc", "root%" ).scroll()) {
 
 						results.afterLast();
@@ -350,7 +350,7 @@ public class ScrollableCollectionFetchingTest {
 		scope.inTransaction(
 				session -> {
 					try (ScrollableResults results = session
-							.createQuery("from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
+							.createQuery("from Animal a left join fetch a.offspring where a.description like :desc order by a.id", Animal.class )
 							.setParameter( "desc", "root%" )
 							.scroll()) {
 
@@ -382,7 +382,7 @@ public class ScrollableCollectionFetchingTest {
 		scope.inTransaction(
 				session -> {
 					try (ScrollableResults results = session
-							.createQuery("from Animal a where a.description like :desc order by a.id" )
+							.createQuery("from Animal a where a.description like :desc order by a.id", Animal.class )
 							.setParameter( "desc", "root%" )
 							.scroll()) {
 
@@ -414,7 +414,7 @@ public class ScrollableCollectionFetchingTest {
 		scope.inTransaction(
 				session -> {
 					try (ScrollableResults results = session
-							.createQuery("from Animal a left join fetch a.offspring where a.description like :desc order by a.id" )
+							.createQuery("from Animal a left join fetch a.offspring where a.description like :desc order by a.id", Animal.class )
 							.setParameter( "desc", "root%" )
 							.scroll()) {
 
@@ -482,7 +482,7 @@ public class ScrollableCollectionFetchingTest {
 		scope.inTransaction(
 				session -> {
 					try (ScrollableResults results = session
-							.createQuery("from Animal a where a.description like :desc order by a.id" )
+							.createQuery("from Animal a where a.description like :desc order by a.id", Animal.class )
 							.setParameter( "desc", "root%" )
 							.scroll()) {
 
@@ -608,9 +608,9 @@ public class ScrollableCollectionFetchingTest {
 		public static void cleanup(SessionFactoryScope scope) {
 			scope.inTransaction(
 					session -> {
-						session.createQuery( "delete Animal where description like 'grand%'" ).executeUpdate();
-						session.createQuery( "delete Animal where not description like 'root%'" ).executeUpdate();
-						session.createQuery( "delete Animal" ).executeUpdate();
+						session.createMutationQuery( "delete Animal where description like 'grand%'" ).executeUpdate();
+						session.createMutationQuery( "delete Animal where not description like 'root%'" ).executeUpdate();
+						session.createMutationQuery( "delete Animal" ).executeUpdate();
 					}
 			);
 		}

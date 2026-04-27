@@ -4,10 +4,10 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -51,5 +51,5 @@ public interface JpaCriteriaUpdate<T> extends JpaManipulationCriteria<T>, Criter
 	JpaCriteriaUpdate<T> where(@Nullable Expression<Boolean> restriction);
 
 	@Override
-	JpaCriteriaUpdate<T> where(Predicate @Nullable... restrictions);
+	JpaCriteriaUpdate<T> where(BooleanExpression... restrictions);
 }

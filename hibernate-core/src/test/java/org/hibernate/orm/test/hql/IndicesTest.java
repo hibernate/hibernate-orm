@@ -57,7 +57,7 @@ public class IndicesTest {
 	@Test
 	public void testSelectIndices(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			List<?> result = session.createQuery("select indices(p.roles) from Person p" ).list();
+			List<?> result = session.createQuery("select indices(p.roles) from Person p", Project.class ).list();
 			assertThat( result ).hasSize( 1 );
 		} );
 	}

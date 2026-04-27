@@ -55,7 +55,7 @@ public class PropertyNamedIdOutOfIdClassTest {
 					2,
 					session.createQuery( "from Person p where p.id is not null", Person.class ).list().size()
 			);
-			assertEquals( 3L, session.createQuery( "select count( p ) from Person p" ).uniqueResult() );
+			assertEquals( 3L, session.createQuery( Long.class, "select count( p ) from Person p" ).uniqueResult() );
 		} );
 	}
 

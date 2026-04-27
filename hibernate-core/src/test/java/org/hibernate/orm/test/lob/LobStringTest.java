@@ -9,12 +9,16 @@ import java.sql.Clob;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.hibernate.dialect.SpannerPostgreSQLDialect;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.query.Query;
-
-import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -22,13 +26,6 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
-import jakarta.persistence.Table;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -77,7 +74,7 @@ public class LobStringTest {
 	@JiraKey(value = "HHH-11477")
 	public void testHqlQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final Query query = session.createQuery( "from TestEntity" );
+			var query = session.createQuery(TestEntity.class, "from TestEntity" );
 
 			final List<TestEntity> results = query.list();
 
@@ -133,7 +130,7 @@ public class LobStringTest {
 	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support lo_get function")
 	public void testSelectStringLobAnnotatedInNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final List<String> results = session.createNativeQuery(
+			var results = session.createNativeQuery(String.class,
 							"select convert_from(lo_get(cast(te.secondLobField as oid)), 'UTF8') " +
 									"from test_entity te " +
 									"where lower(convert_from(lo_get(cast(te.firstLobField as oid)), 'UTF8')) LIKE :value" )
@@ -152,7 +149,7 @@ public class LobStringTest {
 	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support lo_get function")
 	public void testUsingLobPropertyInNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final List<String> results = session.createNativeQuery(
+			var results = session.createNativeQuery(String.class,
 							"select convert_from(lo_get(cast(te.secondLobField as oid)), 'UTF8') " +
 									"from test_entity te " +
 									"where lower(convert_from(lo_get(cast(te.clobField as oid)), 'UTF8')) LIKE :value" )
@@ -171,7 +168,7 @@ public class LobStringTest {
 	@SkipForDialect( dialectClass = SpannerPostgreSQLDialect.class, reason = "Spanner doesn't support lo_get function")
 	public void testSelectClobPropertyInNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final List<byte[]> results = session.createNativeQuery(
+			var results = session.createNativeQuery(byte[].class,
 							"select lo_get(cast(te.clobField as oid)) " +
 									"from test_entity te " +
 									"where lower(convert_from(lo_get(cast(te.clobField as oid)), 'UTF8')) LIKE :value" )

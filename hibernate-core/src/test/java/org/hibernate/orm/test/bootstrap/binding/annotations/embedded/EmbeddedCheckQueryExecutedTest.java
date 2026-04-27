@@ -46,7 +46,7 @@ public class EmbeddedCheckQueryExecutedTest {
 
 	@AfterEach
 	public void cleanup(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 	@Test
@@ -69,30 +69,18 @@ public class EmbeddedCheckQueryExecutedTest {
 				}
 		);
 
-		scope.inTransaction(
-				session -> {
-					statistics.clear();
-					InternetProvider internetProviderQueried =
-							(InternetProvider) session.createQuery(
-									"from InternetProvider i join fetch i.owner o join fetch o.topManagement" )
-									.uniqueResult();
-					assertTrue( Hibernate.isInitialized( internetProviderQueried.getOwner().getTopManagement() ) );
-					assertThat(
-							internetProviderQueried.getOwner().getTopManagement().iterator().next().getEmployer(),
-							is( internetProviderQueried )
-					);
-					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
-				}
-		);
-
-		scope.inTransaction(
-				session -> {
-					InternetProvider internetProvider = session.get( InternetProvider.class, provider.getId() );
-					Manager manager = internetProvider.getOwner().getTopManagement().iterator().next();
-					session.remove( manager );
-					session.remove( internetProvider );
-				}
-		);
+		scope.inTransaction(session -> {
+			statistics.clear();
+			var fromQuery = session.createQuery(InternetProvider.class,
+							"from InternetProvider i join fetch i.owner o join fetch o.topManagement" )
+					.uniqueResult();
+			assertTrue( Hibernate.isInitialized( fromQuery.getOwner().getTopManagement() ) );
+			assertThat(
+					fromQuery.getOwner().getTopManagement().iterator().next().getEmployer(),
+					is( fromQuery )
+			);
+			assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+		} );
 	}
 
 	@Test
@@ -100,45 +88,31 @@ public class EmbeddedCheckQueryExecutedTest {
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 
 		InternetProvider provider = new InternetProvider();
-		scope.inTransaction(
-				session -> {
-					LegalStructure structure = new LegalStructure();
-					structure.setName( "Rogers" );
-					provider.setOwner( structure );
-					session.persist( provider );
-					Manager manager = new Manager();
-					manager.setName( "Bill" );
-					manager.setEmployer( provider );
-					structure.getTopManagement().add( manager );
-					session.persist( manager );
-				}
-		);
+		scope.inTransaction(session -> {
+			LegalStructure structure = new LegalStructure();
+			structure.setName( "Rogers" );
+			provider.setOwner( structure );
+			session.persist( provider );
+			Manager manager = new Manager();
+			manager.setName( "Bill" );
+			manager.setEmployer( provider );
+			structure.getTopManagement().add( manager );
+			session.persist( manager );
+		} );
 
-		scope.inTransaction(
-				session -> {
-					statistics.clear();
+		scope.inTransaction(session -> {
+			statistics.clear();
 
-					InternetProvider internetProviderQueried =
-							(InternetProvider) session.createQuery(
-									"from InternetProvider i join fetch i.owner.topManagement" )
-									.uniqueResult();
-					assertTrue( Hibernate.isInitialized( internetProviderQueried.getOwner().getTopManagement() ) );
-					assertThat(
-							internetProviderQueried.getOwner().getTopManagement().iterator().next().getEmployer(),
-							is( internetProviderQueried )
-					);
-					assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
-				}
-		);
-
-		scope.inTransaction(
-				session -> {
-					InternetProvider internetProvider = session.get( InternetProvider.class, provider.getId() );
-					Manager manager = internetProvider.getOwner().getTopManagement().iterator().next();
-					session.remove( manager );
-					session.remove( internetProvider );
-				}
-		);
+			var fromQuery =  session.createQuery(InternetProvider.class,
+							"from InternetProvider i join fetch i.owner.topManagement" )
+					.uniqueResult();
+			assertTrue( Hibernate.isInitialized( fromQuery.getOwner().getTopManagement() ) );
+			assertThat(
+					fromQuery.getOwner().getTopManagement().iterator().next().getEmployer(),
+					is( fromQuery )
+			);
+			assertThat( statistics.getPrepareStatementCount(), is( 1L ) );
+		} );
 	}
 
 	@Entity(name = "InternetProvider")

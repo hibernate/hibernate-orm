@@ -147,10 +147,10 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	<Y> SqmPath<Y> get(SingularAttribute<? super T, Y> attribute);
 
 	@Override
-	<E, C extends Collection<E>> SqmExpression<C> get(PluralAttribute<? super T, C, E> collection);
+	<E, C extends Collection<E>> SqmPluralPath<C,E> get(PluralAttribute<? super T, C, E> collection);
 
 	@Override
-	<K, V, M extends Map<K, V>> SqmExpression<M> get(MapAttribute<? super T, K, V> map);
+	<K, V, M extends Map<K, V>> SqmPluralPath<M,V> get(MapAttribute<? super T, K, V> map);
 
 	@Override
 	SqmExpression<Class<? extends T>> type();

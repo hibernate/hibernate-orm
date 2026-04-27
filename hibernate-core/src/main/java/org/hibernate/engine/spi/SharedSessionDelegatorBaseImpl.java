@@ -49,6 +49,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.query.MutationQuery;
+import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
@@ -238,17 +239,12 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public <T> SelectionQueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery) {
-		return queryDelegate().createQuery( criteriaQuery );
-	}
-
-	@Override
 	public <T> SelectionQueryImplementor<T> createQuery(CriteriaSelect<T> criteriaQuery) {
 		return queryDelegate().createQuery( criteriaQuery );
 	}
 
 	@Override
-	public @SuppressWarnings("rawtypes") QueryImplementor createQuery(String queryString) {
+	public Query<?> createQuery(String queryString) {
 		return queryDelegate().createQuery( queryString );
 	}
 
@@ -342,7 +338,7 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 
 	@Override
 	public @SuppressWarnings("rawtypes") NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
-		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName, Object.class );
+		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName );
 	}
 
 	@Override

@@ -8,8 +8,6 @@ import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.query.Query;
-
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -70,7 +68,7 @@ public class OracleQueryHintTest {
 
 		// test Query w/ a simple Oracle optimizer hint
 		scope.inTransaction( s -> {
-			Query query = s.createQuery( "FROM Employee e WHERE e.department.name = :departmentName" )
+			var query = s.createQuery( "FROM Employee e WHERE e.department.name = :departmentName", Employee.class )
 					.addQueryHint( "ALL_ROWS" )
 					.setParameter( "departmentName", "Sales" );
 			List results = query.list();
@@ -84,7 +82,7 @@ public class OracleQueryHintTest {
 
 		// test multiple hints
 		scope.inTransaction( s -> {
-			Query query = s.createQuery( "FROM Employee e WHERE e.department.name = :departmentName" )
+			var query = s.createQuery( "FROM Employee e WHERE e.department.name = :departmentName", Employee.class )
 					.addQueryHint( "ALL_ROWS" )
 					.addQueryHint( "USE_CONCAT" )
 					.setParameter( "departmentName", "Sales" );
@@ -99,7 +97,7 @@ public class OracleQueryHintTest {
 
 		// ensure the insertion logic can handle a comment appended to the front
 		scope.inTransaction( s -> {
-			Query query = s.createQuery( "FROM Employee e WHERE e.department.name = :departmentName" )
+			var query = s.createQuery( "FROM Employee e WHERE e.department.name = :departmentName", Employee.class )
 					.setComment( "this is a test" )
 					.addQueryHint( "ALL_ROWS" )
 					.setParameter( "departmentName", "Sales" );
@@ -123,7 +121,7 @@ public class OracleQueryHintTest {
 //			Criteria criteria = s.createCriteria( Employee.class )
 //					.addQueryHint( "ALL_ROWS" )
 //					.createCriteria( "department" ).add( Restrictions.eq( "name", "Sales" ) );
-			Query<Employee> query = s.createQuery( criteria );
+			var query = s.createQuery( criteria );
 			query.addQueryHint( "ALL_ROWS" );
 			List results = query.list();
 
@@ -143,7 +141,7 @@ public class OracleQueryHintTest {
 		statementInspector.clear();
 
 		scope.inTransaction( s -> {
-			Query query = s.createQuery( "FROM Employee e WHERE e.department.name = :departmentName" )
+			var query = s.createQuery( "FROM Employee e WHERE e.department.name = :departmentName", Employee.class )
 					.addQueryHint( "ALL_ROWS" )
 					.setComment( "My_Query" )
 					.setParameter( "departmentName", "Sales" );
@@ -171,7 +169,7 @@ public class OracleQueryHintTest {
 							"SELECT e.id as id " +
 									"FROM Employee e " +
 									"JOIN Department d ON e.department_id = d.id " +
-									"WHERE d.name = :departmentName" )
+									"WHERE d.name = :departmentName", Object.class )
 					.addQueryHint( "ALL_ROWS" )
 					.setComment( "My_Query" )
 					.setParameter( "departmentName", "Sales" )

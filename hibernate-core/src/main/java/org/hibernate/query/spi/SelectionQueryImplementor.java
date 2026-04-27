@@ -12,6 +12,7 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.StatementOrTypedQuery;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
@@ -41,7 +42,7 @@ import java.util.Map;
  * @author Steve Ebersole
  */
 public interface SelectionQueryImplementor<R>
-		extends SelectionQuery<R>, QueryImplementor<R>, TypedQueryReferenceProducer {
+		extends SelectionQuery<R>, QueryImplementor<R>, TypedQueryReferenceProducer, StatementOrTypedQuery {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Execution

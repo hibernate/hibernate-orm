@@ -12,6 +12,7 @@ import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
+import jakarta.persistence.sql.ResultSetMapping;
 import org.hibernate.LockMode;
 import org.hibernate.Locking;
 import org.hibernate.ScrollMode;
@@ -38,6 +39,7 @@ import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.query.sqm.internal.AggregatedNonSelectQueryPlanImpl;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.MultiTableDeleteQueryPlan;
@@ -98,6 +100,11 @@ public class MutationQueryImpl<T>
 		this.parameterBindings = parameterMetadata.createBindings( session.getFactory() );
 
 		validateQuery( targetType, sqm, hql );
+	}
+
+	@Override
+	public <R> SelectionQueryImplementor<R> withResultSetMapping(ResultSetMapping<R> mapping) {
+		throw new IllegalSelectQueryException( "MutationQuery cannot be treated as SelectionQuery", hql );
 	}
 
 	private static <R> void validateQuery(Class<R> expectedResultType, SqmDmlStatement<R> sqm, String hql) {

@@ -13,7 +13,6 @@ import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.query.Query;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaParameterExpression;
@@ -33,7 +32,7 @@ public class CompositeParameterTests {
 	@Test
 	public void testSimplePredicateHql(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.createQuery( "from SimpleEntity where composite = :param" )
+			session.createQuery( "from SimpleEntity where composite = :param", SimpleEntity.class )
 					.setParameter( "param", new SimpleComposite() )
 					.list();
 		});
@@ -42,7 +41,7 @@ public class CompositeParameterTests {
 	@Test
 	public void testInPredicateHql(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.createQuery( "from SimpleEntity where composite in (:param)" )
+			session.createQuery( "from SimpleEntity where composite in (:param)", SimpleEntity.class )
 					.setParameter( "param", new SimpleComposite() )
 					.list();
 		});
@@ -66,7 +65,7 @@ public class CompositeParameterTests {
 		});
 
 		scope.inTransaction( (session) -> {
-			session.createQuery( "from SimpleEntity where composite = :param" )
+			session.createQuery( "from SimpleEntity where composite = :param", SimpleEntity.class )
 					.setParameter( "param", new SimpleComposite() )
 					.list();
 		});
@@ -90,7 +89,7 @@ public class CompositeParameterTests {
 		});
 
 		scope.inTransaction( (session) -> {
-			session.createQuery( "from SimpleEntity where composite = :param" )
+			session.createQuery( "from SimpleEntity where composite = :param", SimpleEntity.class )
 					.setParameter( "param", new SimpleComposite() )
 					.list();
 		});
@@ -110,7 +109,7 @@ public class CompositeParameterTests {
 			final JpaParameterExpression parameter = builder.parameter( SimpleComposite.class );
 			criteria.where( builder.in( attrPath, parameter ) );
 
-			final Query query = session.createQuery( criteria );
+			var query = session.createQuery( criteria );
 			query.setParameter( parameter, new SimpleComposite() );
 			query.list();
 		});

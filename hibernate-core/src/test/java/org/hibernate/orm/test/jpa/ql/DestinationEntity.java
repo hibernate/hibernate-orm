@@ -10,8 +10,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.NamedNativeStatement;
 import jakarta.persistence.Table;
 
 /**
@@ -19,15 +19,14 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(name = "destination_entity")
-@NamedNativeQueries({
-		@NamedNativeQuery(name = "DestinationEntity.insertSelect", query = "insert into destination_entity(id, from_id, fullNameFrom) "
-				+ " select fe.id, fe.id, fe.name||fe.lastName from from_entity fe where fe.id in (:ids)"),
-		@NamedNativeQuery(name = "DestinationEntity.insert", query = "insert into destination_entity(id, from_id, fullNameFrom) "
-				+ "values (:generatedId, :fromId, :fullName)"),
-		@NamedNativeQuery(name = "DestinationEntity.update", query = "update destination_entity set from_id=:idFrom, fullNameFrom=:fullName"
-				+ " where id in (:ids)"),
-		@NamedNativeQuery(name = "DestinationEntity.delete", query = "delete from destination_entity where id in (:ids)"),
-		@NamedNativeQuery(name = "DestinationEntity.selectIds", query = "select id, from_id, fullNameFrom from destination_entity where id in (:ids) order by id") })
+@NamedNativeStatement(name = "DestinationEntity.insert",
+		statement = "insert into destination_entity(id, from_id, fullNameFrom) values (:generatedId, :fromId, :fullName)")
+@NamedNativeStatement(name = "DestinationEntity.insertSelect",
+		statement = "insert into destination_entity(id, from_id, fullNameFrom) select fe.id, fe.id, fe.name||fe.lastName from from_entity fe where fe.id in (:ids)")
+@NamedNativeStatement( name = "DestinationEntity.update",
+		statement = "update destination_entity set from_id=:idFrom, fullNameFrom=:fullName where id in (:ids)")
+@NamedNativeStatement(name = "DestinationEntity.delete", statement = "delete from destination_entity where id in (:ids)")
+@NamedNativeQuery(name = "DestinationEntity.selectIds", query = "select id, from_id, fullNameFrom from destination_entity where id in (:ids) order by id")
 public class DestinationEntity {
 
 	@Id

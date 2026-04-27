@@ -41,16 +41,16 @@ public interface HibernateHints {
 	 *             </li>
 	 *             <li>
 	 *                 A Hibernate {@linkplain org.hibernate.FlushMode}, converted
-	 *                 via {@linkplain QueryFlushMode#fromHibernateMode(FlushMode)}.
+	 *                 via {@linkplain org.hibernate.jpa.internal.util.FlushModeTypeHelper#queryFlushModeFromFlushMode}.
 	 *             </li>
 	 *             <li>
-	 *                 A string, converted via {@linkplain QueryFlushMode#interpretHint(String)}.
+	 *                 A string, converted via {@linkplain org.hibernate.jpa.internal.util.FlushModeTypeHelper#queryFlushModeFromHint}.
 	 *             </li>
 	 *             <li>
 	 *                 A JPA {@linkplain FlushModeType} may be passed, but JPA already provides
 	 *                 a method for this - {@linkplain jakarta.persistence.Query#setFlushMode(FlushModeType)}
 	 *                 which should be used instead.  If a {@linkplain FlushModeType} is used,
-	 *                 it is converted using {@linkplain QueryFlushMode#fromJpaMode(FlushModeType)}
+	 *                 it is converted using {@linkplain org.hibernate.jpa.internal.util.FlushModeTypeHelper#queryFlushModeFromFlushModeType(FlushModeType)}
 	 *             </li>
 	 *         </ul>
 	 *     </li>

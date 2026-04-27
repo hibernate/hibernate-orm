@@ -6,8 +6,6 @@ package org.hibernate.orm.test.annotations.derivedidentities.bidirectional;
 
 import java.util.List;
 
-import org.hibernate.query.Query;
-
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -56,7 +54,7 @@ public class OneToOneWithDerivedIdentityTest {
 
 					session.clear();
 
-					Bar newBar = (Bar) session.createQuery( "SELECT b FROM Bar b WHERE b.foo.id = :id" )
+					Bar newBar = session.createQuery( "SELECT b FROM Bar b WHERE b.foo.id = :id", Bar.class )
 							.setParameter( "id", foo.getId() )
 							.uniqueResult();
 
@@ -86,7 +84,7 @@ public class OneToOneWithDerivedIdentityTest {
 
 					session.clear();
 
-					Bar newBar = (Bar) session.createQuery( "SELECT b FROM Bar b WHERE b.foo = :foo" )
+					Bar newBar = session.createQuery( "SELECT b FROM Bar b WHERE b.foo = :foo", Bar.class )
 							.setParameter( "foo", foo )
 							.uniqueResult();
 
@@ -202,7 +200,7 @@ public class OneToOneWithDerivedIdentityTest {
 
 					session.clear();
 
-					Foo newFoo = (Foo) session.createQuery( "SELECT f FROM Foo f" ).uniqueResult();
+					Foo newFoo = session.createQuery( "SELECT f FROM Foo f", Foo.class ).uniqueResult();
 
 					assertNotNull( newFoo );
 					assertNotNull( newFoo.getBar() );
@@ -231,7 +229,7 @@ public class OneToOneWithDerivedIdentityTest {
 
 					session.getTransaction().begin();
 
-					Query q = session.createNamedQuery( "PersonQuery" );
+					var q = session.createNamedQuery( "PersonQuery", Person.class );
 					List<Person> persons = q.list();
 					assertEquals( persons.size(), 1 );
 					assertEquals( persons.get( 0 ).getName(), "Alfio" );

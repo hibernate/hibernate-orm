@@ -45,7 +45,7 @@ public class JoinTableOptimizationTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
-					s.createQuery( "select p.id from Document d left join d.people p where p.id is not null" ).list();
+					s.createQuery( Object.class, "select p.id from Document d left join d.people p where p.id is not null" ).list();
 					statementInspector.assertExecutedCount( 1 );
 					// Assert only the collection table is joined
 					statementInspector.assertNumberOfJoins( 0, 1 );
@@ -60,7 +60,7 @@ public class JoinTableOptimizationTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
-					s.createQuery( "select p.name from Document d join d.people p" ).list();
+					s.createQuery( String.class, "select p.name from Document d join d.people p" ).list();
 					statementInspector.assertExecutedCount( 1 );
 					Assertions.assertEquals(
 							"select p1_1.name " +
@@ -81,7 +81,7 @@ public class JoinTableOptimizationTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
-					s.createQuery( "select p.name from Document d left join d.people p" ).list();
+					s.createQuery( String.class, "select p.name from Document d left join d.people p" ).list();
 					statementInspector.assertExecutedCount( 1 );
 					Assertions.assertEquals(
 							"select p1_1.name " +
@@ -102,7 +102,7 @@ public class JoinTableOptimizationTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
-					s.createQuery( "select p.name from Document d join d.people p on p.id > 1" ).list();
+					s.createQuery( String.class,"select p.name from Document d join d.people p on p.id > 1" ).list();
 					statementInspector.assertExecutedCount( 1 );
 					Assertions.assertEquals(
 							"select p1_1.name " +
@@ -123,7 +123,7 @@ public class JoinTableOptimizationTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
-					s.createQuery( "select p.name from Document d left join d.people p on p.id > 1" ).list();
+					s.createQuery( String.class, "select p.name from Document d left join d.people p on p.id > 1" ).list();
 					statementInspector.assertExecutedCount( 1 );
 					Assertions.assertEquals(
 							"select p1_1.name " +
@@ -144,7 +144,7 @@ public class JoinTableOptimizationTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
-					s.createQuery( "select p.text from Document d join d.pages p on p.text is not null" ).list();
+					s.createQuery( String.class, "select p.text from Document d join d.pages p on p.text is not null" ).list();
 					statementInspector.assertExecutedCount( 1 );
 					Assertions.assertEquals(
 							"select p1_0.text " +
@@ -164,7 +164,7 @@ public class JoinTableOptimizationTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
-					s.createQuery( "select d from Document d left join fetch d.people" ).list();
+					s.createQuery( Document.class, "select d from Document d left join fetch d.people" ).list();
 					statementInspector.assertExecutedCount( 1 );
 					Assertions.assertEquals(
 							"select d1_0.id,d1_0.name,p1_0.Document_id,p1_1.id,p1_1.name " +
@@ -185,7 +185,7 @@ public class JoinTableOptimizationTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
-					s.createQuery( "select f from Document d join d.manyFiles f" ).list();
+					s.createQuery( File.class, "select f from Document d join d.manyFiles f" ).list();
 					statementInspector.assertExecutedCount( 1 );
 					Assertions.assertEquals(
 							"select mf1_1.id,case when mf1_2.id is not null then 1 when mf1_1.id is not null then 0 end,mf1_1.document_id,mf1_1.name,mf1_2.extension " +
@@ -207,7 +207,7 @@ public class JoinTableOptimizationTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
-					s.createQuery( "select f from Document d left join d.manyFiles f" ).list();
+					s.createQuery( File.class, "select f from Document d left join d.manyFiles f" ).list();
 					statementInspector.assertExecutedCount( 1 );
 					Assertions.assertEquals(
 							"select mf1_1.id,case when mf1_2.id is not null then 1 when mf1_1.id is not null then 0 end,mf1_1.document_id,mf1_1.name,mf1_2.extension " +
@@ -229,7 +229,7 @@ public class JoinTableOptimizationTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
-					s.createQuery( "select f from Document d join d.files f" ).list();
+					s.createQuery( File.class, "select f from Document d join d.files f" ).list();
 					statementInspector.assertExecutedCount( 1 );
 					Assertions.assertEquals(
 							"select f1_0.id,case when f1_1.id is not null then 1 when f1_0.id is not null then 0 end,d1_0.id,d1_0.name,f1_0.name,f1_1.extension " +
@@ -250,7 +250,7 @@ public class JoinTableOptimizationTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
-					s.createQuery( "select f from Document d left join d.files f" ).list();
+					s.createQuery( File.class, "select f from Document d left join d.files f" ).list();
 					statementInspector.assertExecutedCount( 1 );
 					Assertions.assertEquals(
 							"select f1_0.id,case when f1_1.id is not null then 1 when f1_0.id is not null then 0 end,d1_0.id,d1_0.name,f1_0.name,f1_1.extension " +
@@ -271,7 +271,7 @@ public class JoinTableOptimizationTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
-					s.createQuery( "select f from Document d join d.manyPictures f" ).list();
+					s.createQuery( Picture.class, "select f from Document d join d.manyPictures f" ).list();
 					statementInspector.assertExecutedCount( 1 );
 					Assertions.assertEquals(
 							"select mp1_1.id,mp1_2.document_id,mp1_2.name,mp1_1.extension " +
@@ -293,7 +293,7 @@ public class JoinTableOptimizationTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
-					s.createQuery( "select f from Document d left join d.manyPictures f" ).list();
+					s.createQuery( Picture.class, "select f from Document d left join d.manyPictures f" ).list();
 					statementInspector.assertExecutedCount( 1 );
 					Assertions.assertEquals(
 							"select mp1_1.id,mp1_2.document_id,mp1_2.name,mp1_1.extension " +
@@ -315,7 +315,7 @@ public class JoinTableOptimizationTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
-					s.createQuery( "select f from Document d join d.pictures f" ).list();
+					s.createQuery( Picture.class, "select f from Document d join d.pictures f" ).list();
 					statementInspector.assertExecutedCount( 1 );
 					Assertions.assertEquals(
 							"select p1_0.id,p1_1.document_id,p1_1.name,p1_0.extension " +
@@ -336,7 +336,7 @@ public class JoinTableOptimizationTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
-					s.createQuery( "select f from Document d left join d.pictures f" ).list();
+					s.createQuery( Picture.class, "select f from Document d left join d.pictures f" ).list();
 					statementInspector.assertExecutedCount( 1 );
 					Assertions.assertEquals(
 							"select p1_0.id,p1_1.document_id,p1_1.name,p1_0.extension " +

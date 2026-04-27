@@ -35,7 +35,7 @@ public class StatsTest {
 	public void testQueryStatGathering(SessionFactoryScope scope) {
 		scope.inTransaction(session -> {
 			final String continents = "from Continent";
-			int results = session.createQuery( continents ).list().size();
+			int results = session.createQuery( continents, Continent.class ).list().size();
 			final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 			QueryStatistics continentStats = statistics.getQueryStatistics( continents );
 			assertNotNull( continentStats, "stats were null" );
@@ -44,12 +44,12 @@ public class StatsTest {
 			long maxTime = continentStats.getExecutionMaxTime();
 			assertEquals( maxTime, statistics.getQueryExecutionMaxTime() );
 
-			session.createQuery( continents ).list().iterator();
+			session.createQuery( continents, Continent.class ).list().iterator();
 			assertEquals( 2, continentStats.getExecutionCount(), "unexpected execution count" );
 			assertEquals( 2, continentStats.getExecutionRowCount(), "unexpected row count" );
 
 
-			try (ScrollableResults scrollableResults = session.createQuery( continents ).scroll()) {
+			try (ScrollableResults scrollableResults = session.createQuery( continents, Continent.class ).scroll()) {
 				// same deal with scroll()...
 				assertEquals( 2, continentStats.getExecutionCount(), "unexpected execution count" );
 				assertEquals( 2, continentStats.getExecutionRowCount(), "unexpected row count" );
@@ -67,7 +67,7 @@ public class StatsTest {
 
 		scope.inTransaction(session -> {
 			final String localities = "from Locality";
-			int results = session.createQuery( localities ).list().size();
+			int results = session.createQuery( localities, Locality.class ).list().size();
 			final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 			QueryStatistics localityStats = statistics.getQueryStatistics( localities );
 			assertNotNull( localityStats, "stats were null" );
@@ -83,7 +83,7 @@ public class StatsTest {
 
 		scope.inTransaction( session -> {
 			final String sql = "select id, name from Country";
-			int results = session.createNativeQuery( sql ).addEntity( Country.class ).list().size();
+			int results = session.createNativeQuery( sql, Country.class ).list().size();
 			final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 			QueryStatistics sqlStats = statistics.getQueryStatistics( sql );
 			assertNotNull( sqlStats, "sql stats were null" );

@@ -56,9 +56,9 @@ public class SimplePojoXmlTests {
 	@Test
 	void testUsage(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			session.createQuery( "from SimpleEntity" ).list();
-			session.createQuery( "select e from SimpleEntity e" ).list();
-			session.createQuery( "select e from SimpleEntity e where e.name = 'abc'" ).list();
+			session.createQuery( SimpleEntity.class, "from SimpleEntity" ).list();
+			session.createQuery( SimpleEntity.class, "select e from SimpleEntity e" ).list();
+			session.createQuery( SimpleEntity.class, "select e from SimpleEntity e where e.name = 'abc'" ).list();
 		} );
 	}
 }

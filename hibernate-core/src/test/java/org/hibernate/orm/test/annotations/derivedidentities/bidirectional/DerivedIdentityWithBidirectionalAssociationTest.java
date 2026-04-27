@@ -54,7 +54,7 @@ public class DerivedIdentityWithBidirectionalAssociationTest {
 	}
 
 	private <T> T getDerivedClassById(Employee e, Session s, Class<T> clazz) {
-		return clazz.cast( s.createQuery( "from " + clazz.getName() + " d where d.emp.empId = :empId" )
-								.setParameter( "empId", e.empId ).uniqueResult() );
+		return s.createQuery( "from " + clazz.getName() + " d where d.emp.empId = :empId", clazz )
+								.setParameter( "empId", e.empId ).uniqueResult();
 	}
 }

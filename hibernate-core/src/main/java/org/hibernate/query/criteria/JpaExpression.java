@@ -7,6 +7,7 @@ package org.hibernate.query.criteria;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
+
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Subquery;
 
@@ -60,6 +61,15 @@ public interface JpaExpression<T> extends JpaSelection<T>, Expression<T> {
 
 	@Override
 	JpaExpression<T> coalesce(T y);
+
+	@Override
+	<R> JpaSimpleCase<T, R> selectCase();
+
+	@Override
+	JpaNumericExpression<Long> count();
+
+	@Override
+	JpaNumericExpression<Long> countDistinct();
 
 	@Override
 	JpaExpression<T> nullif(Expression<? extends T> y);

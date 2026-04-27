@@ -66,6 +66,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
@@ -645,11 +646,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> SelectionQueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery) {
-		return delegate.createQuery( criteriaQuery );
-	}
-
-	@Override
 	public <T> SelectionQueryImplementor<T> createQuery(CriteriaSelect<T> criteriaQuery) {
 		return delegate.createQuery( criteriaQuery );
 	}
@@ -660,7 +656,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public @SuppressWarnings("rawtypes") QueryImplementor createQuery(String queryString) {
+	public Query<?> createQuery(String queryString) {
 		//noinspection resource
 		return queryDelegate().createQuery( queryString );
 	}
@@ -784,7 +780,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public @SuppressWarnings("rawtypes") NativeQueryImplementor createNativeQuery(String sqlString, String resultSetMappingName) {
 		//noinspection resource
-		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName, Object.class );
+		return queryDelegate().createNativeQuery( sqlString, resultSetMappingName );
 	}
 
 	@Override

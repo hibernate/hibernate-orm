@@ -229,7 +229,7 @@ public class OneToManySizeTest2 {
 		scope.inTransaction(
 				(session) -> {
 
-					final List list = session.createQuery( "from Teacher t join fetch t.students" ).list();
+					final List list = session.createQuery( "from Teacher t join fetch t.students", Teacher.class ).list();
 					assertThat( list.size(), is( 2 ) );
 				}
 		);

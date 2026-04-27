@@ -98,7 +98,7 @@ public class CompositeIdTest {
 		scope.inTransaction(
 				session -> {
 					session.createQuery(
-							"from Customer c left join fetch c.orders o left join fetch o.lineItems li left join fetch li.product p" )
+							"from Customer c left join fetch c.orders o left join fetch o.lineItems li left join fetch li.product p", Customer.class )
 							.list();
 					statementInspector.assertExecutedCount( 1 );
 				}
@@ -107,7 +107,7 @@ public class CompositeIdTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Order o left join fetch o.lineItems li left join fetch li.product p" )
+					session.createQuery( "from Order o left join fetch o.lineItems li left join fetch li.product p", Order.class )
 							.list();
 					statementInspector.assertExecutedCount( 1 );
 				}
@@ -116,7 +116,7 @@ public class CompositeIdTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
-					Iterator iter = session.createQuery( "select o.id, li.id from Order o join o.lineItems li" )
+					Iterator iter = session.createQuery( "select o.id, li.id from Order o join o.lineItems li", Object[].class )
 							.list()
 							.iterator();
 					statementInspector.assertExecutedCount( 1 );
@@ -160,7 +160,7 @@ public class CompositeIdTest {
 					LineItem li2 = new LineItem( o2, p2 );
 					li2.setQuantity( 5 );
 
-					List bigOrders = session.createQuery( "from Order o where o.total>10.0" ).list();
+					List bigOrders = session.createQuery( "from Order o where o.total>10.0", Order.class ).list();
 					statementInspector.assertExecutedCount( 2 );
 					statementInspector.assertIsInsert( 0 );
 					statementInspector.assertIsSelect( 1 );
@@ -212,8 +212,8 @@ public class CompositeIdTest {
 
 		scope.inTransaction(
 				session -> {
-					Order o = (Order) session.createQuery(
-							"from Order o left join fetch o.lineItems li left join fetch li.product p" )
+					Order o = session.createQuery(
+							"from Order o left join fetch o.lineItems li left join fetch li.product p", Order.class )
 							.uniqueResult();
 					assertTrue( Hibernate.isInitialized( o.getLineItems() ) );
 					LineItem li = (LineItem) o.getLineItems().iterator().next();
@@ -275,8 +275,8 @@ public class CompositeIdTest {
 
 		scope.inTransaction(
 				session -> {
-					Customer c = (Customer) session.createQuery(
-							"from Customer c left join fetch c.orders o left join fetch o.lineItems li left join fetch li.product p" )
+					Customer c = session.createQuery(
+							"from Customer c left join fetch c.orders o left join fetch o.lineItems li left join fetch li.product p", Customer.class )
 							.uniqueResult();
 					assertTrue( Hibernate.isInitialized( c.getOrders() ) );
 					assertEquals( c.getOrders().size(), 2 );

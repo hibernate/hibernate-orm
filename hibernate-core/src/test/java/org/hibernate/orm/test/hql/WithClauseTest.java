@@ -11,8 +11,6 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
 import org.hibernate.community.dialect.DerbyDialect;
-import org.hibernate.query.Query;
-
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -58,7 +56,7 @@ public class WithClauseTest {
 		scope.inTransaction(
 				(session) -> {
 					try {
-						session.createQuery( "from Animal a inner join fetch a.offspring as o with o.bodyWeight = :someLimit" )
+						session.createQuery( "from Animal a inner join fetch a.offspring as o with o.bodyWeight = :someLimit", Animal.class )
 								.setParameter( "someLimit", 1 )
 								.list();
 						fail( "ad-hoc on clause allowed with fetched association" );
@@ -145,12 +143,12 @@ public class WithClauseTest {
 
 		scope.inTransaction(
 				(session) -> {
-					Query query = session.createQuery( "select a from SimpleEntityWithAssociation as e INNER JOIN e.associatedEntities as a WITH e.name=?1" );
+					var query = session.createQuery( "select a from SimpleEntityWithAssociation as e INNER JOIN e.associatedEntities as a WITH e.name=?1", SimpleAssociatedEntity.class );
 					query.setParameter( 1, "entity1" );
-					List list = query.list();
+					List<SimpleAssociatedEntity> list = query.list();
 					assertEquals( list.size(), 1 );
 
-					SimpleAssociatedEntity associatedEntity = (SimpleAssociatedEntity) query.list().get( 0 );
+					SimpleAssociatedEntity associatedEntity = query.list().get( 0 );
 					assertNotNull( associatedEntity );
 					assertEquals( associatedEntity.getName(), "associatedEntity1" );
 					assertEquals( associatedEntity.getOwner().getName(), "entity1" );
@@ -206,7 +204,7 @@ public class WithClauseTest {
 		scope.inTransaction(
 				(s) -> {
 					// Just a stupid example that makes use of a column that isn't from the collection table or the target entity table
-					List list = s.createQuery( "select 1 from Human h join h.friends as friend left join h.family as f with key(f) = concat('son', cast(friend.intValue as string)) where h.description = 'father'" )
+					List list = s.createQuery( "select 1 from Human h join h.friends as friend left join h.family as f with key(f) = concat('son', cast(friend.intValue as string)) where h.description = 'father'", Integer.class )
 							.list();
 					assertEquals( 2, list.size(), "subquery rewriting of join table did not take effect" );
 				}
@@ -274,21 +272,21 @@ public class WithClauseTest {
 		public void cleanup(SessionFactoryScope scope) {
 			scope.inTransaction(
 					(session) -> {
-						Human father = (Human) session.createQuery( "from Human where description = 'father'" ).uniqueResult();
+						Human father = session.createQuery( "from Human where description = 'father'", Human.class ).uniqueResult();
 						if ( father != null ) {
 							father.getFriends().clear();
 							father.getFamily().clear();
 							session.flush();
 						}
-						session.remove( session.createQuery( "from Human where description = 'friend2'" ).uniqueResult() );
-						session.remove( session.createQuery( "from Human where description = 'friend'" ).uniqueResult() );
-						session.remove( session.createQuery( "from Human where description = 'child1'" ).uniqueResult() );
-						session.remove( session.createQuery( "from Human where description = 'child2'" ).uniqueResult() );
-						session.remove( session.createQuery( "from Human where description = 'mother'" ).uniqueResult() );
+						session.remove( session.createQuery( "from Human where description = 'friend2'", Human.class ).uniqueResult() );
+						session.remove( session.createQuery( "from Human where description = 'friend'", Human.class ).uniqueResult() );
+						session.remove( session.createQuery( "from Human where description = 'child1'", Human.class ).uniqueResult() );
+						session.remove( session.createQuery( "from Human where description = 'child2'", Human.class ).uniqueResult() );
+						session.remove( session.createQuery( "from Human where description = 'mother'", Human.class ).uniqueResult() );
 						session.remove( father );
-						session.createQuery( "delete Animal" ).executeUpdate();
-						session.createQuery( "delete SimpleAssociatedEntity" ).executeUpdate();
-						session.createQuery( "delete SimpleEntityWithAssociation" ).executeUpdate();
+						session.createMutationQuery( "delete Animal" ).executeUpdate();
+						session.createMutationQuery( "delete SimpleAssociatedEntity" ).executeUpdate();
+						session.createMutationQuery( "delete SimpleEntityWithAssociation" ).executeUpdate();
 					}
 			);
 		}

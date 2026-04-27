@@ -126,23 +126,26 @@ public class ResultMementoEntityJpa implements ResultMementoEntity, FetchMemento
 				(Class<R>) getResultJavaType(),
 				lockMode.toJpaLockMode(),
 				entityDescriptor.getDiscriminatorMapping() == null ? null : entityDescriptor.getDiscriminatorMapping().getSelectableName(),
-				toJpaFieldMappings( sessionFactory )
+				toJpaFieldMappings( sessionFactory ),
+				null
 		);
 	}
 
 	private static final MemberMapping<?>[] NO_MEMBERS = new MemberMapping<?>[0];
 
-	private MemberMapping<?>[] toJpaFieldMappings(SessionFactory sessionFactory) {
+	private <T> MemberMapping<T>[] toJpaFieldMappings(SessionFactory sessionFactory) {
 		if ( CollectionHelper.isEmpty( explicitFetchMementoMap ) ) {
-			return NO_MEMBERS;
+			//noinspection unchecked
+			return (MemberMapping<T>[]) NO_MEMBERS;
 		}
 
-		var memberMappings = new MemberMapping<?>[ explicitFetchMementoMap.size() ];
+		var memberMappings = new MemberMapping[ explicitFetchMementoMap.size() ];
 		int index = 0;
 		for ( Map.Entry<String, FetchMemento> entry : explicitFetchMementoMap.entrySet() ) {
 			memberMappings[index++] = entry.getValue().toJpaMemberMapping( this, sessionFactory );
 		}
-		return memberMappings;
+		//noinspection unchecked
+		return (MemberMapping<T>[]) memberMappings;
 	}
 
 	private FetchBuilderBasicValued discriminatorFetchBuilder(

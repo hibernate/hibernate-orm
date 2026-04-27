@@ -19,8 +19,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.StatelessSession;
-import org.hibernate.query.Query;
-
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -51,13 +49,13 @@ public class StatelessQueryScrollingTest {
 
 	@Test
 	public void testDynamicFetchScMapsIdProxyBidirectionalTestroll(SessionFactoryScope scope) {
-		ScrollableResults scrollableResults = null;
+		ScrollableResults<Task> scrollableResults = null;
 		final StatelessSession statelessSession = scope.getSessionFactory().openStatelessSession();
 		try {
-			final Query query = statelessSession.createQuery( "from Task t join fetch t.resource join fetch t.user" );
+			var query = statelessSession.createQuery( "from Task t join fetch t.resource join fetch t.user", Task.class );
 			scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
 			while ( scrollableResults.next() ) {
-				Task taskRef = (Task) scrollableResults.get();
+				Task taskRef = scrollableResults.get();
 				assertTrue( Hibernate.isInitialized( taskRef ) );
 				assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
 				assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
@@ -74,15 +72,15 @@ public class StatelessQueryScrollingTest {
 
 	@Test
 	public void testDynamicFetchCollectionScroll(SessionFactoryScope scope) {
-		ScrollableResults scrollableResults = null;
+		ScrollableResults<Producer> scrollableResults = null;
 		StatelessSession statelessSession = scope.getSessionFactory().openStatelessSession();
 		statelessSession.beginTransaction();
 
 		try {
-			final Query query = statelessSession.createQuery( "select p from Producer p join fetch p.products" );
+			var query = statelessSession.createQuery( "select p from Producer p join fetch p.products", Producer.class );
 			scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
 			while ( scrollableResults.next() ) {
-				Producer producer = (Producer) scrollableResults.get();
+				Producer producer = scrollableResults.get();
 				assertTrue( Hibernate.isInitialized( producer ) );
 				assertTrue( Hibernate.isPropertyInitialized( producer, "products" ) );
 				assertTrue( Hibernate.isInitialized( producer.getProducts() ) );

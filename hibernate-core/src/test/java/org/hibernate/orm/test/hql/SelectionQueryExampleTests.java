@@ -10,7 +10,6 @@ import org.hibernate.testing.orm.domain.userguide.CreditCardPayment;
 import org.hibernate.testing.orm.domain.userguide.Person;
 import org.hibernate.testing.orm.domain.userguide.Phone;
 import org.hibernate.testing.orm.domain.userguide.WireTransferPayment;
-import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -52,7 +51,7 @@ public class SelectionQueryExampleTests {
 		scope.inTransaction( (session) -> {
 			//tag::example-hql-selection-query-query[]
 			// cannot be validated until execution
-			Query query = session.createQuery( "delete Person", Person.class );
+			var query = session.createQuery( "delete Person", Person.class );
 			query.getResultList();
 			//end::example-hql-selection-query-query[]
 		} );
@@ -64,7 +63,7 @@ public class SelectionQueryExampleTests {
 		scope.inTransaction( (session) -> {
 			//tag::example-hql-named-selection-query[]
 			// can be validated while creating the SelectionQuery
-			SelectionQuery<?> badQuery = session.createNamedQuery( "delete_Person" ).asSelectionQuery();
+			SelectionQuery<?> badQuery = session.createNamedSelectionQuery( "delete_Person", Person.class );
 			//end::example-hql-named-selection-query[]
 		} );
 	}
@@ -75,7 +74,7 @@ public class SelectionQueryExampleTests {
 		scope.inTransaction( (session) -> {
 			//tag::example-hql-named-selection-query-query[]
 			// cannot be validated until execution
-			Query query = session.createNamedQuery( "delete_Person" );
+			var query = session.createNamedQuery( "delete_Person", Person.class );
 			query.getResultList();
 			//end::example-hql-named-selection-query-query[]
 		} );

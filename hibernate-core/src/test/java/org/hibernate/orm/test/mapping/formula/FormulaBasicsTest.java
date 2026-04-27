@@ -64,7 +64,7 @@ public class FormulaBasicsTest {
 	@Test
 	void testHqlAmbiguous(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			session.createQuery( "select a, b from Account a, Account b" ).list();
+			session.createQuery( Object[].class,"select a, b from Account a, Account b" ).list();
 		} );
 	}
 

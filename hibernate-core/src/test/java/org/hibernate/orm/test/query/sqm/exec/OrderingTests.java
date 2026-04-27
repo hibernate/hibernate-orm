@@ -4,6 +4,7 @@
  */
 package org.hibernate.orm.test.query.sqm.exec;
 
+import org.hibernate.testing.orm.domain.retail.SalesAssociate;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -21,7 +22,7 @@ public class OrderingTests {
 	public void testBasicOrdering(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from SalesAssociate p order by p.name.familiarName" )
+					session.createQuery( "from SalesAssociate p order by p.name.familiarName", SalesAssociate.class )
 							.list();
 				}
 		);
@@ -32,7 +33,7 @@ public class OrderingTests {
 	public void testFunctionBasedOrdering(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from SalesAssociate p order by upper( p.name.familiarName )" )
+					session.createQuery( "from SalesAssociate p order by upper( p.name.familiarName )", SalesAssociate.class )
 							.list();
 				}
 		);
@@ -43,7 +44,7 @@ public class OrderingTests {
 	public void testSelectAliasOrdering(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "select v.name as n from Vendor v order by n" )
+					session.createQuery( "select v.name as n from Vendor v order by n", String.class )
 							.list();
 				}
 		);
@@ -54,7 +55,7 @@ public class OrderingTests {
 	public void testSelectPositionOrdering(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "select v.name as n from Vendor v order by 1" )
+					session.createQuery( "select v.name as n from Vendor v order by 1", String.class )
 							.list();
 				}
 		);

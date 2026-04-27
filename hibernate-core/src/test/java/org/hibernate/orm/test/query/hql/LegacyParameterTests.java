@@ -41,10 +41,10 @@ public class LegacyParameterTests {
 	public void testClassAsParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(s) -> {
-					s.createQuery( "from Human h where h.name = :class" ).setParameter( "class", new Name() ).list();
-					s.createQuery( "from Human where name = :class" ).setParameter( "class", new Name() ).list();
-					s.createQuery( "from Human h where :class = h.name" ).setParameter( "class", new Name() ).list();
-					s.createQuery( "from Human h where :class <> h.name" ).setParameter( "class", new Name() ).list();
+					s.createQuery( "from Human h where h.name = :class", Human.class ).setParameter( "class", new Name() ).list();
+					s.createQuery( "from Human where name = :class", Human.class ).setParameter( "class", new Name() ).list();
+					s.createQuery( "from Human h where :class = h.name", Human.class ).setParameter( "class", new Name() ).list();
+					s.createQuery( "from Human h where :class <> h.name", Human.class ).setParameter( "class", new Name() ).list();
 				}
 		);
 	}
@@ -90,9 +90,9 @@ public class LegacyParameterTests {
 				(s) -> {
 					List<Integer> intValues = new ArrayList<>();
 					intValues.add( 1 );
-					//noinspection unchecked
-					Query<Human> q = s.createQuery(
-							"from Human h where h.nickName in (:nickNames) and h.intValue in (:intValues)"
+					var q = s.createQuery(
+							"from Human h where h.nickName in (:nickNames) and h.intValue in (:intValues)",
+							Human.class
 					);
 					q.setParameterList( "intValues" , intValues);
 					q.setProperties( Map.of( "nickNames", "nick" ) );
@@ -106,10 +106,10 @@ public class LegacyParameterTests {
 	public void testObjectAsParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(s) -> {
-					s.createQuery( "from Human h where h.name = :OBJECT" ).setParameter( "OBJECT", new Name() ).list();
-					s.createQuery( "from Human where name = :OBJECT" ).setParameter( "OBJECT", new Name() ).list();
-					s.createQuery( "from Human h where :OBJECT = h.name" ).setParameter( "OBJECT", new Name() ).list();
-					s.createQuery( "from Human h where :OBJECT <> h.name" ).setParameter( "OBJECT", new Name() ).list();
+					s.createQuery( "from Human h where h.name = :OBJECT", Human.class ).setParameter( "OBJECT", new Name() ).list();
+					s.createQuery( "from Human where name = :OBJECT", Human.class ).setParameter( "OBJECT", new Name() ).list();
+					s.createQuery( "from Human h where :OBJECT = h.name", Human.class ).setParameter( "OBJECT", new Name() ).list();
+					s.createQuery( "from Human h where :OBJECT <> h.name", Human.class ).setParameter( "OBJECT", new Name() ).list();
 				}
 		);
 	}

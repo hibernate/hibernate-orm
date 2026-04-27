@@ -72,32 +72,30 @@ public class DiscriminatorTest {
 					s.persist( joe );
 
 					try {
-						s.createQuery( "from java.io.Serializable" ).list();
+						s.createQuery( "from java.io.Serializable", Object.class ).list();
 						fail( "Expected IllegalAccessException" );
 					}
 					catch (Exception e) {
 						assertThat( e, instanceOf( IllegalArgumentException.class ) );
 					}
 
-					assertThat( s.createQuery( "from Person" ).list().size(), is( 3 ) );
-					assertThat( s.createQuery( "from Person p where p.class = Person" ).list().size(), is( 1 ) );
-					assertThat( s.createQuery( "from Person p where p.class = Customer" ).list().size(), is( 1 ) );
+					assertThat( s.createQuery( "from Person", Person.class ).list().size(), is( 3 ) );
+					assertThat( s.createQuery( "from Person p where p.class = Person", Person.class ).list().size(), is( 1 ) );
+					assertThat( s.createQuery( "from Person p where p.class = Customer", Person.class ).list().size(), is( 1 ) );
 					s.clear();
 
-					var customers = s.createQuery( "from Customer c left join fetch c.salesperson" ).list();
+					var customers = s.createQuery( "from Customer c left join fetch c.salesperson", Customer.class ).list();
 					for ( var customer : customers ) {
-						var c = (Customer) customer;
-						assertTrue( Hibernate.isInitialized( c.getSalesperson() ) );
-						assertThat( c.getSalesperson().getName(), is( "Mark" ) );
+						assertTrue( Hibernate.isInitialized( customer.getSalesperson() ) );
+						assertThat( customer.getSalesperson().getName(), is( "Mark" ) );
 					}
 					assertThat( customers.size(), is( 1 ) );
 					s.clear();
 
-					customers = s.createQuery( "from Customer" ).list();
+					customers = s.createQuery( "from Customer", Customer.class ).list();
 					for ( var customer : customers ) {
-						var c = (Customer) customer;
-						assertFalse( Hibernate.isInitialized( c.getSalesperson() ) );
-						assertThat( c.getSalesperson().getName(), is( "Mark" ) );
+						assertFalse( Hibernate.isInitialized( customer.getSalesperson() ) );
+						assertThat( customer.getSalesperson().getName(), is( "Mark" ) );
 					}
 					assertThat( customers.size(), is( 1 ) );
 					s.clear();
@@ -107,11 +105,12 @@ public class DiscriminatorTest {
 					joe = s.find( Customer.class, joe.getId() );
 
 					mark.setZip( "30306" );
-					assertThat( s.createQuery( "from Person p where p.address.zip = '30306'" ).list().size(), is( 1 ) );
+					assertThat(
+							s.createQuery( "from Person p where p.address.zip = '30306'", Person.class ).list().size(), is( 1 ) );
 					s.remove( mark );
 					s.remove( joe );
 					s.remove( yomomma );
-					assertTrue( s.createQuery( "from Person" ).list().isEmpty() );
+					assertTrue( s.createQuery( "from Person", Person.class ).list().isEmpty() );
 				}
 		);
 	}
@@ -163,11 +162,11 @@ public class DiscriminatorTest {
 					q.setSalary( new BigDecimal( 1000 ) );
 					s.persist( q );
 
-					var result = s.createQuery( "from Person where salary > 100" ).list();
+					var result = s.createQuery( "from Person where salary > 100", Person.class ).list();
 					assertEquals( 1, result.size() );
 					assertSame( result.get( 0 ), q );
 
-					result = s.createQuery( "from Person where salary > 100 or name like 'E%'" ).list();
+					result = s.createQuery( "from Person where salary > 100 or name like 'E%'", Person.class ).list();
 					assertEquals( 2, result.size() );
 
 					var criteriaBuilder = s.getCriteriaBuilder();
@@ -211,7 +210,7 @@ public class DiscriminatorTest {
 					Person pLoad = s.getReference( Person.class, e.getId() );
 					assertInstanceOf( HibernateProxy.class, pLoad );
 					Person pGet = s.find( Person.class, e.getId() );
-					Person pQuery = (Person) s.createQuery( "from Person where id = :id" )
+					Person pQuery = s.createQuery( "from Person where id = :id", Person.class )
 							.setParameter( "id", e.getId() )
 							.uniqueResult();
 					var criteriaBuilder = s.getCriteriaBuilder();
@@ -238,7 +237,7 @@ public class DiscriminatorTest {
 					Person pLoad = s.getReference( Person.class, e.getId() );
 					assertInstanceOf( HibernateProxy.class, pLoad );
 					Person pGet = s.find( Person.class, e.getId() );
-					Person pQuery = (Person) s.createQuery( "from Person where id = :id" )
+					Person pQuery = s.createQuery( "from Person where id = :id", Person.class )
 							.setParameter( "id", e.getId() )
 							.uniqueResult();
 					var criteriaBuilder = s.getCriteriaBuilder();

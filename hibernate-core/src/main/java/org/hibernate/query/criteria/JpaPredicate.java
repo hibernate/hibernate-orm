@@ -9,7 +9,7 @@ import jakarta.persistence.criteria.Predicate;
 /**
  * @author Steve Ebersole
  */
-public interface JpaPredicate extends JpaExpression<Boolean>, Predicate {
+public interface JpaPredicate extends JpaBooleanExpression, Predicate {
 	@Override
 	JpaPredicate not();
 }

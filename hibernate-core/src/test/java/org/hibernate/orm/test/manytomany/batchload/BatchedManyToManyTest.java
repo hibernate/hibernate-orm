@@ -4,9 +4,6 @@
  */
 package org.hibernate.orm.test.manytomany.batchload;
 
-import java.util.List;
-import java.util.Locale;
-
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
@@ -14,7 +11,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.resource.jdbc.internal.EmptyStatementInspector;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.stat.CollectionStatistics;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -23,6 +19,8 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -106,21 +104,17 @@ public class BatchedManyToManyTest {
 				.openSession()) {
 			session.getTransaction().begin();
 			try {
-				List users = session.createQuery( "from User u" ).list();
-				User user = (User) users.get( 0 );
+				var users = session.createQuery( User.class, "from User u" ).list();
+				User user = users.get( 0 );
 				assertTrue( Hibernate.isInitialized( user ) );
 				assertTrue( Hibernate.isInitialized( user.getGroups() ) );
-				user = (User) users.get( 1 );
+				user = users.get( 1 );
 				assertTrue( Hibernate.isInitialized( user ) );
 				assertTrue( Hibernate.isInitialized( user.getGroups() ) );
-				assertEquals(
-						1,
-						userGroupStats.getFetchCount()
-				); // should have been just one fetch (the batch fetch)
-				assertEquals(
-						1,
-						groupUserStats.getFetchCount()
-				); // should have been just one fetch (the batch fetch)
+				// should have been just one fetch (the batch fetch)
+				assertEquals(1, userGroupStats.getFetchCount() );
+				// should have been just one fetch (the batch fetch)
+				assertEquals(1, groupUserStats.getFetchCount() );
 				session.getTransaction().commit();
 			}
 			finally {

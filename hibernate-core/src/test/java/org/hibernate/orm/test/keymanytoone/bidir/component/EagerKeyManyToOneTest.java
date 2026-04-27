@@ -97,15 +97,15 @@ public class EagerKeyManyToOneTest {
 
 		scope.inTransaction(
 				s -> {
-					Customer cust = (Customer) s.createQuery( "from Customer" ).uniqueResult();
+					Customer cust = s.createQuery( "from Customer", Customer.class ).uniqueResult();
 					assertEquals( 1, cust.getOrders().size() );
 					s.clear();
 
-					cust = (Customer) s.createQuery( "from Customer c join fetch c.orders" ).uniqueResult();
+					cust = s.createQuery( "from Customer c join fetch c.orders", Customer.class ).uniqueResult();
 					assertEquals( 1, cust.getOrders().size() );
 					s.clear();
 
-					cust = (Customer) s.createQuery( "from Customer c join fetch c.orders as o join fetch o.id.customer" )
+					cust = s.createQuery( "from Customer c join fetch c.orders as o join fetch o.id.customer", Customer.class )
 							.uniqueResult();
 					assertEquals( 1, cust.getOrders().size() );
 					s.clear();

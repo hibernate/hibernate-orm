@@ -33,7 +33,7 @@ public class EmbeddableAndGenericExtendingSerializableMappedSuperclassTest {
 	public void testQueryEmbeddableFields(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "select m.embedded.text, m.embedded.name from MyEntity m" ).list();
+					session.createQuery( Object.class, "select m.embedded.text, m.embedded.name from MyEntity m" ).list();
 				}
 		);
 	}

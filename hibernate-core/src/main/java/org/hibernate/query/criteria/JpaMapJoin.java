@@ -6,12 +6,12 @@ package org.hibernate.query.criteria;
 
 import java.util.Map;
 
+import jakarta.persistence.criteria.BooleanExpression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.MapJoin;
-import jakarta.persistence.criteria.Predicate;
 
 /**
  * Specialization of {@link JpaJoin} for {@link java.util.Map} typed attribute joins
@@ -29,7 +29,7 @@ public interface JpaMapJoin<O,K,V> extends JpaPluralJoin<O, Map<K, V>, V>, MapJo
 	JpaMapJoin<O, K, V> on(JpaPredicate @Nullable... restrictions);
 
 	@Override
-	JpaMapJoin<O, K, V> on(Predicate @Nullable... restrictions);
+	JpaMapJoin<O, K, V> on(BooleanExpression... restrictions);
 
 	@Override
 	<S extends V> JpaTreatedJoin<O, V, S> treatAs(Class<S> treatAsType);

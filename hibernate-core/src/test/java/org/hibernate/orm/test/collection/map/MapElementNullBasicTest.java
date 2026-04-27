@@ -153,7 +153,7 @@ public class MapElementNullBasicTest {
 	private List<?> getCollectionElementRows(int id, SessionFactoryScope scope) {
 		return scope.fromTransaction(
 				session -> {
-					return session.createNativeQuery(
+					return session.createNativeQuery(Object.class,
 							"SELECT aCollection FROM AnEntity_aCollection where AnEntity_id = " + id
 					).list();
 				}

@@ -337,7 +337,7 @@ public class EntityTest {
 
 		sessionFactoryScope.inTransaction(
 				session -> {
-					var result = session.createQuery( "from Corporation" ).list();
+					var result = session.createQuery( "from Corporation", Company.class ).list();
 					assertNotNull( result );
 					assertEquals( 1, result.size() );
 				}
@@ -390,9 +390,9 @@ public class EntityTest {
 
 		scope.inTransaction(
 				session -> {
-					var q = session.createQuery( "from Flight f where f.departureDate = :departureDate" );
+					var q = session.createQuery( "from Flight f where f.departureDate = :departureDate", Flight.class );
 					q.setParameter( "departureDate", airFrance.getDepartureDate(), StandardBasicTypes.DATE );
-					Flight copyAirFrance = (Flight) q.uniqueResult();
+					Flight copyAirFrance = q.uniqueResult();
 					assertNotNull( copyAirFrance );
 					assertEquals(
 							Date.from(LocalDate.of( 2005, 6, 21 ).atStartOfDay(zoneId).toInstant()),

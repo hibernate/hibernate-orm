@@ -87,7 +87,7 @@ public class BasicHqlResultTests {
 	public void testBasicAndCompositeArray(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final String qry = "select id, composite from SimpleEntity order by name";
-			final List<Object[]> list = session.createQuery( qry ).list();
+			final List<Object[]> list = session.createQuery( qry, Object[].class ).list();
 			assertThat( list ).hasSize( 1 );
 
 			final Object[] result = list.get( 0 );
@@ -100,7 +100,7 @@ public class BasicHqlResultTests {
 	public void testSelectingSamePathDifferentAliasOrder1(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final String qry = "select id as id1, id as id2 from SimpleEntity order by id1";
-			final List<Object[]> list = session.createQuery( qry ).list();
+			final List<Object[]> list = session.createQuery( qry, Object[].class ).list();
 			assertThat( list ).hasSize( 1 );
 
 			final Object[] result = list.get( 0 );
@@ -113,7 +113,7 @@ public class BasicHqlResultTests {
 	public void testSelectingSamePathDifferentAliasOrder2(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final String qry = "select id as id1, id as id2 from SimpleEntity order by id2";
-			final List<Object[]> list = session.createQuery( qry ).list();
+			final List<Object[]> list = session.createQuery( qry, Object[].class ).list();
 			assertThat( list ).hasSize( 1 );
 
 			final Object[] result = list.get( 0 );

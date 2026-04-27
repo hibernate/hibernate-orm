@@ -287,18 +287,16 @@ public class MutableNaturalIdTest {
 
 	@Test
 	public void testQuerying(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.persist( new User( "steve", "hb", "superSecret" ) )
-		);
+		scope.inTransaction( (session) -> {
+			session.persist( new User( "steve", "hb", "superSecret" ) );
+		} );
 
-		scope.inTransaction(
-				(session) -> {
-					final User user = (User) session.createQuery( "from User u where u.name = :name" )
-							.setParameter( "name", "steve" ).uniqueResult();
-					assertNotNull( user );
-					assertEquals( "steve", user.getName() );
-				}
-		);
+		scope.inTransaction( (session) -> {
+			final User user = session.createQuery(User.class, "from User u where u.name = :name" )
+					.setParameter( "name", "steve" ).uniqueResult();
+			assertNotNull( user );
+			assertEquals( "steve", user.getName() );
+		} );
 	}
 
 	@Test

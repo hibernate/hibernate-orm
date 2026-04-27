@@ -16,6 +16,8 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
+
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -56,15 +58,15 @@ public class DynamicCompositeIdBasicTests {
 
 	@Test
 	public void testFullQueryReference(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> session.createQuery( "from DynamicCompositeIdBasic e where e.id.key1 = 1" ).list()
-		);
+		scope.inTransaction(session -> {
+			session.createQuery( Map.class,"from DynamicCompositeIdBasic e where e.id.key1 = 1" ).list();
+		} );
 	}
 
 	@Test
 	public void testEmbeddedQueryReference(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> session.createQuery( "from DynamicCompositeIdBasic e where e.key1 = 1" ).list()
-		);
+		scope.inTransaction(session -> {
+			session.createQuery(Map.class, "from DynamicCompositeIdBasic e where e.key1 = 1" ).list();
+		} );
 	}
 }

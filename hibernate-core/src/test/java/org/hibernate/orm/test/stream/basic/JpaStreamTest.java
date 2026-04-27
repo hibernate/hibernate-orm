@@ -78,7 +78,7 @@ public class JpaStreamTest {
 				} );
 			}
 
-			try (Stream<Object[]> data = session.createQuery( "SELECT me.id, me.name FROM MyEntity me" )
+			try (Stream<Object[]> data = session.createQuery( "SELECT me.id, me.name FROM MyEntity me", Object[].class )
 					.getResultStream()) {
 				data.forEach( i -> {
 					assertTyping( Integer.class, i[0] );

@@ -4,18 +4,16 @@
  */
 package org.hibernate.query.criteria;
 
-import java.util.Collection;
-import java.util.Map;
-
-import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.spi.NavigablePath;
+
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * API extension to the JPA {@link Path} contract
@@ -55,10 +53,10 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	<Y> JpaPath<Y> get(SingularAttribute<? super T, Y> attribute);
 
 	@Override
-	<E, C extends Collection<E>> Expression<C> get(PluralAttribute<? super T, C, E> collection);
+	<E, C extends Collection<E>> JpaPluralExpression<C,E> get(PluralAttribute<? super T, C, E> collection);
 
 	@Override
-	<K, V, M extends Map<K, V>> Expression<M> get(MapAttribute<? super T, K, V> map);
+	<K, V, M extends Map<K, V>> JpaPluralExpression<M,V> get(MapAttribute<? super T, K, V> map);
 
 	@Override
 	JpaExpression<Class<? extends T>> type();

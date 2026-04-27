@@ -70,16 +70,7 @@ public interface CommonQueryContractImplementor extends CommonQueryContract {
 	<X> SelectionQueryImplementor<X> asSelectionQuery(EntityGraph<X> entityGraph);
 
 	@Override
-	<X> SelectionQueryImplementor<X> ofType(Class<X> type);
-
-	@Override
-	<X> SelectionQueryImplementor<X> withEntityGraph(EntityGraph<X> entityGraph);
-
-	@Override
 	MutationQueryImplementor<?> asMutationQuery();
-
-	@Override
-	MutationQueryImplementor<?> asStatement();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

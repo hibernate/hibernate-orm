@@ -215,9 +215,9 @@ public class NonRootTablePolymorphicTests {
 
 		scope.inTransaction(
 				(session) -> {
-					session.createQuery( "from SubParent p join fetch p.sub" ).list();
-					session.createQuery( "from SubGroup p join fetch p.manyToManySubs" ).list();
-					session.createQuery( "from SubGroup p join fetch p.oneToManySubs" ).list();
+					session.createQuery( "from SubParent p join fetch p.sub", SubParent.class ).list();
+					session.createQuery( "from SubGroup p join fetch p.manyToManySubs", SubGroup.class ).list();
+					session.createQuery( "from SubGroup p join fetch p.oneToManySubs", SubGroup.class ).list();
 				}
 		);
 

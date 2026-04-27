@@ -4,8 +4,11 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.NumericExpression;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Subquery;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -177,6 +180,7 @@ public class SqmMapEntryReference<K,V>
 		return result;
 	}
 
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA (ugh)
 
@@ -237,6 +241,56 @@ public class SqmMapEntryReference<K,V>
 
 	@Override
 	public <X> Expression<X> cast(Class<X> type) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Predicate in(Subquery<Map.Entry<K, V>> subquery) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Expression<Map.Entry<K, V>> coalesce(Expression<? extends Map.Entry<K, V>> y) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Expression<Map.Entry<K, V>> coalesce(Map.Entry<K, V> y) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Expression<Map.Entry<K, V>> nullif(Expression<? extends Map.Entry<K, V>> y) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Expression<Map.Entry<K, V>> nullif(Map.Entry<K, V> y) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public <R> CriteriaBuilder.SimpleCase<Map.Entry<K, V>, R> selectCase() {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Predicate isMember(Expression<? extends Collection<? super Map.Entry<K, V>>> collection) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Predicate isNotMember(Expression<? extends Collection<? super Map.Entry<K, V>>> collection) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public NumericExpression<Long> count() {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public NumericExpression<Long> countDistinct() {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 }

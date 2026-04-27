@@ -38,23 +38,24 @@ public class OneToManySizeTest {
 	public void testSizeAsSelectExpression(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					final List results = session.createQuery(
+					final List<CompanyDto> results = session.createQuery(
 							"select new org.hibernate.orm.test.query.hql.size.OneToManySizeTest$CompanyDto(" +
 									" c.id, c.name, size( c.customers ) )" +
 									" from Company c" +
 									" group by c.id, c.name" +
-									" order by c.id"
+									" order by c.id",
+							CompanyDto.class
 					).list();
 					assertThat( results.size(), is( 3 ) );
-					final CompanyDto companyDto0 = (CompanyDto) results.get( 0 );
+					final CompanyDto companyDto0 = results.get( 0 );
 					assertThat( companyDto0.getId(), is( 0 ) );
 					assertThat( companyDto0.getName(), is( "Company 0") );
 					assertThat( companyDto0.getSizeCustomer(), is( 0 ) );
-					final CompanyDto companyDto1 = (CompanyDto) results.get( 1 );
+					final CompanyDto companyDto1 = results.get( 1 );
 					assertThat( companyDto1.getId(), is( 1 ) );
 					assertThat( companyDto1.getName(), is( "Company 1") );
 					assertThat( companyDto1.getSizeCustomer(), is( 1 ) );
-					final CompanyDto companyDto2 = (CompanyDto) results.get( 2 );
+					final CompanyDto companyDto2 = results.get( 2 );
 					assertThat( companyDto2.getId(), is( 2 ) );
 					assertThat( companyDto2.getName(), is( "Company 2") );
 					assertThat( companyDto2.getSizeCustomer(), is( 2 ) );
@@ -67,23 +68,24 @@ public class OneToManySizeTest {
 	public void testSizeAsSelectExpressionWithLeftJoin(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					final List results = session.createQuery(
+					final List<CompanyDto> results = session.createQuery(
 							"select new org.hibernate.orm.test.query.hql.size.OneToManySizeTest$CompanyDto(" +
 									" c.id, c.name, size( c.customers ) )" +
 									" from Company c left join c.customers cu" +
 									" group by c.id, c.name" +
-									" order by c.id"
+									" order by c.id",
+							CompanyDto.class
 					).list();
 					assertThat( results.size(), is( 3 ) );
-					final CompanyDto companyDto0 = (CompanyDto) results.get( 0 );
+					final CompanyDto companyDto0 = results.get( 0 );
 					assertThat( companyDto0.getId(), is( 0 ) );
 					assertThat( companyDto0.getName(), is( "Company 0") );
 					assertThat( companyDto0.getSizeCustomer(), is( 0 ) );
-					final CompanyDto companyDto1 = (CompanyDto) results.get( 1 );
+					final CompanyDto companyDto1 = results.get( 1 );
 					assertThat( companyDto1.getId(), is( 1 ) );
 					assertThat( companyDto1.getName(), is( "Company 1") );
 					assertThat( companyDto1.getSizeCustomer(), is( 1 ) );
-					final CompanyDto companyDto2 = (CompanyDto) results.get( 2 );
+					final CompanyDto companyDto2 = results.get( 2 );
 					assertThat( companyDto2.getId(), is( 2 ) );
 					assertThat( companyDto2.getName(), is( "Company 2") );
 					assertThat( companyDto2.getSizeCustomer(), is( 2 ) );
@@ -96,19 +98,20 @@ public class OneToManySizeTest {
 	public void testSizeAsSelectExpressionWithInnerJoin(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					final List results = session.createQuery(
+					final List<CompanyDto> results = session.createQuery(
 							"select new org.hibernate.orm.test.query.hql.size.OneToManySizeTest$CompanyDto(" +
 									" c.id, c.name, size( c.customers ) )" +
 									" from Company c inner join c.customers cu" +
 									" group by c.id, c.name" +
-									" order by c.id"
+									" order by c.id",
+							CompanyDto.class
 					).list();
 					assertThat( results.size(), is( 2 ) );
-					final CompanyDto companyDto1 = (CompanyDto) results.get( 0 );
+					final CompanyDto companyDto1 = results.get( 0 );
 					assertThat( companyDto1.getId(), is( 1 ) );
 					assertThat( companyDto1.getName(), is( "Company 1") );
 					assertThat( companyDto1.getSizeCustomer(), is( 1 ) );
-					final CompanyDto companyDto2 = (CompanyDto) results.get( 1 );
+					final CompanyDto companyDto2 = results.get( 1 );
 					assertThat( companyDto2.getId(), is( 2 ) );
 					assertThat( companyDto2.getName(), is( "Company 2") );
 					assertThat( companyDto2.getSizeCustomer(), is( 2 ) );
@@ -121,19 +124,20 @@ public class OneToManySizeTest {
 	public void testSizeAsSelectExpressionOfAliasWithInnerJoin(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					final List results = session.createQuery(
+					final List<CompanyDto> results = session.createQuery(
 							"select new org.hibernate.orm.test.query.hql.size.OneToManySizeTest$CompanyDto(" +
 									" c.id, c.name, size( cu ) )" +
 									" from Company c inner join c.customers cu" +
 									" group by c.id, c.name" +
-									" order by c.id"
+									" order by c.id",
+							CompanyDto.class
 					).list();
 					assertThat( results.size(), is( 2 ) );
-					final CompanyDto companyDto1 = (CompanyDto) results.get( 0 );
+					final CompanyDto companyDto1 = results.get( 0 );
 					assertThat( companyDto1.getId(), is( 1 ) );
 					assertThat( companyDto1.getName(), is( "Company 1") );
 					assertThat( companyDto1.getSizeCustomer(), is( 1 ) );
-					final CompanyDto companyDto2 = (CompanyDto) results.get( 1 );
+					final CompanyDto companyDto2 = results.get( 1 );
 					assertThat( companyDto2.getId(), is( 2 ) );
 					assertThat( companyDto2.getName(), is( "Company 2") );
 					assertThat( companyDto2.getSizeCustomer(), is( 2 ) );
@@ -146,19 +150,20 @@ public class OneToManySizeTest {
 	public void testSizeAsSelectExpressionExcludeEmptyCollection(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					final List results = session.createQuery(
+					final List<CompanyDto> results = session.createQuery(
 							"select new org.hibernate.orm.test.query.hql.size.OneToManySizeTest$CompanyDto(" +
 									" c.id, c.name, size( c.customers ) )" +
 									" from Company c" +
 									" where c.id != 0" +
-									" group by c.id, c.name order by c.id"
+									" group by c.id, c.name order by c.id",
+							CompanyDto.class
 					).list();
 					assertThat( results.size(), is( 2 ) );
-					final CompanyDto companyDto1 = (CompanyDto) results.get( 0 );
+					final CompanyDto companyDto1 = results.get( 0 );
 					assertThat( companyDto1.getId(), is( 1 ) );
 					assertThat( companyDto1.getName(), is( "Company 1") );
 					assertThat( companyDto1.getSizeCustomer(), is( 1 ) );
-					final CompanyDto companyDto2 = (CompanyDto) results.get( 1 );
+					final CompanyDto companyDto2 = results.get( 1 );
 					assertThat( companyDto2.getId(), is( 2 ) );
 					assertThat( companyDto2.getName(), is( "Company 2") );
 					assertThat( companyDto2.getSizeCustomer(), is( 2 ) );

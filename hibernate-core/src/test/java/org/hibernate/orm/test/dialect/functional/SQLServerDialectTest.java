@@ -23,7 +23,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.lock.PessimisticEntityLockException;
 import org.hibernate.exception.LockTimeoutException;
-import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -68,8 +67,8 @@ public class SQLServerDialectTest {
 			session.flush();
 			session.clear();
 
-			List results = session
-					.createNativeQuery( "WITH a AS (SELECT description FROM Product2) SELECT description FROM a" )
+			List<String> results = session
+					.createNativeQuery( "WITH a AS (SELECT description FROM Product2) SELECT description FROM a", String.class )
 					.setMaxResults( 10 )
 					.getResultList();
 
@@ -89,13 +88,13 @@ public class SQLServerDialectTest {
 			session.flush();
 			session.clear();
 
-			List results = session
+			List<String> results = session
 					.createNativeQuery(
 						"WITH a AS (\n" +
 						"\tSELECT description \n" +
 						"\tFROM Product2\n" +
 						") \n" +
-						"SELECT description FROM a" )
+						"SELECT description FROM a", String.class )
 					.setMaxResults( 10 )
 					.getResultList();
 
@@ -115,14 +114,14 @@ public class SQLServerDialectTest {
 			session.flush();
 			session.clear();
 
-			List results = session
-					.createNativeQuery( "WITH a AS (SELECT id, description FROM Product2) SELECT id, description FROM a ORDER BY id DESC" )
+			List<Object[]> results = session
+					.createNativeQuery( "WITH a AS (SELECT id, description FROM Product2) SELECT id, description FROM a ORDER BY id DESC", Object[].class )
 					.setFirstResult( 5 )
 					.setMaxResults( 10 )
 					.getResultList();
 			assertEquals( 10, results.size() );
 
-			final Object[] row = (Object[]) results.get( 0 );
+			final Object[] row = results.get( 0 );
 			assertEquals( 2, row.length );
 			assertEquals( Integer.class, row[ 0 ].getClass() );
 			assertEquals( String.class, row[ 1 ].getClass() );
@@ -142,15 +141,15 @@ public class SQLServerDialectTest {
 			session.flush();
 			session.clear();
 
-			List results = session
-					.createNativeQuery( "WITH a AS (SELECT id, description FROM Product2) SELECT id, description FROM a" )
+			List<Object[]> results = session
+					.createNativeQuery( "WITH a AS (SELECT id, description FROM Product2) SELECT id, description FROM a", Object[].class )
 					.setFirstResult( 5 )
 					.setMaxResults( 10 )
 					.getResultList();
 
 			assertEquals( 10, results.size() );
 
-			final Object[] row = (Object[]) results.get( 0 );
+			final Object[] row = results.get( 0 );
 			assertEquals( 2, row.length );
 			assertEquals( Integer.class, row[ 0 ].getClass() );
 			assertEquals( String.class, row[ 1 ].getClass() );
@@ -167,14 +166,14 @@ public class SQLServerDialectTest {
 			session.flush();
 			session.clear();
 
-			List list = session.createNativeQuery( "select id from Product2 where description like 'Kit%' order by id" ).list();
+			List<Integer> list = session.createNativeQuery( "select id from Product2 where description like 'Kit%' order by id", Integer.class ).list();
 			assertEquals(Integer.class, list.get(0).getClass()); // scalar result is an Integer
 
-			list = session.createNativeQuery( "select id from Product2 where description like 'Kit%' order by id" ).setFirstResult( 2 ).setMaxResults( 2 ).list();
+			list = session.createNativeQuery( "select id from Product2 where description like 'Kit%' order by id", Integer.class ).setFirstResult( 2 ).setMaxResults( 2 ).list();
 			assertEquals(Integer.class, list.get(0).getClass()); // this fails without patch, as result suddenly has become an array
 
 			// same once again with alias
-			list = session.createNativeQuery( "select id as myint from Product2 where description like 'Kit%' order by id asc" ).setFirstResult( 2 ).setMaxResults( 2 ).list();
+			list = session.createNativeQuery( "select id as myint from Product2 where description like 'Kit%' order by id asc", Integer.class ).setFirstResult( 2 ).setMaxResults( 2 ).list();
 			assertEquals(Integer.class, list.get(0).getClass());
 		} );
 	}
@@ -183,7 +182,7 @@ public class SQLServerDialectTest {
 	@JiraKey(value = "HHH-7368")
 	public void testPaginationWithTrailingSemicolon(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			session.createNativeQuery( "select id from Product2 where description like 'Kit%' order by id;" )
+			session.createNativeQuery( "select id from Product2 where description like 'Kit%' order by id;", Integer.class )
 					.setFirstResult( 2 ).setMaxResults( 2 ).list();
 		} );
 	}
@@ -197,16 +196,16 @@ public class SQLServerDialectTest {
 			session.flush();
 			session.clear();
 
-			List list = session.createQuery(
-					"select id, description as descr, (select max(id) from Product2) as maximum from Product2"
+			List<Object[]> list = session.createQuery(
+					"select id, description as descr, (select max(id) from Product2) as maximum from Product2", Object[].class
 			).setFirstResult( 2 ).setMaxResults( 2 ).list();
-			assertEquals( 19, ( (Object[]) list.get( 1 ) )[2] );
+			assertEquals( 19, list.get( 1 )[2] );
 
-			list = session.createQuery( "select id, description, (select max(id) from Product2) from Product2 order by id" )
+			list = session.createQuery( "select id, description, (select max(id) from Product2) from Product2 order by id", Object[].class )
 					.setFirstResult( 2 ).setMaxResults( 2 ).list();
 			assertEquals( 2, list.size() );
-			assertArrayEquals( new Object[] {12, "Kit12", 19}, (Object[]) list.get( 0 ));
-			assertArrayEquals( new Object[] {13, "Kit13", 19}, (Object[]) list.get( 1 ));
+			assertArrayEquals( new Object[] {12, "Kit12", 19}, list.get( 0 ));
+			assertArrayEquals( new Object[] {13, "Kit13", 19}, list.get( 1 ));
 		} );
 	}
 
@@ -219,7 +218,7 @@ public class SQLServerDialectTest {
 			session.flush();
 			session.clear();
 
-			List list = session.createQuery( "from Product2 order by id" ).setFirstResult( 3 ).setMaxResults( 2 ).list();
+			List<Product2> list = session.createQuery( "from Product2 order by id", Product2.class ).setFirstResult( 3 ).setMaxResults( 2 ).list();
 			assertEquals( Arrays.asList( new Product2( 23, "Kit23" ), new Product2( 24, "Kit24" ) ), list );
 		} );
 	}
@@ -234,10 +233,10 @@ public class SQLServerDialectTest {
 			session.flush();
 			session.clear();
 
-			List list = session.createQuery( "from Product2 order by id" ).setFirstResult( 0 ).setMaxResults( 2 ).list();
+			List<Product2> list = session.createQuery( "from Product2 order by id", Product2.class ).setFirstResult( 0 ).setMaxResults( 2 ).list();
 			assertEquals( Arrays.asList( new Product2( 30, "Kit30" ), new Product2( 31, "Kit31" ) ), list );
 
-			list = session.createQuery( "select distinct p from Product2 p order by p.id" ).setMaxResults( 1 ).list();
+			list = session.createQuery( "select distinct p from Product2 p order by p.id", Product2.class ).setMaxResults( 1 ).list();
 			assertEquals( Collections.singletonList( new Product2( 30, "Kit30" ) ), list );
 		} );
 	}
@@ -270,7 +269,7 @@ public class SQLServerDialectTest {
 			criteria.multiselect( root.get( "id" ), criteriaBuilder.countDistinct( products.get( "id" ) ) );
 			criteria.groupBy( root.get( "id" ) );
 			criteria.orderBy( criteriaBuilder.asc( root.get( "id" ) ) );
-			Query<Object[]> query = session.createQuery( criteria );
+			var query = session.createQuery( criteria );
 
 			List<Object[]> result = query.setFirstResult( 1 ).setMaxResults( 3 ).list();
 
@@ -299,10 +298,10 @@ public class SQLServerDialectTest {
 			session.refresh( folder2 );
 			session.clear();
 
-			List<Long> folderCount = session.createQuery( "select count(distinct f) from Folder f" ).setMaxResults( 1 ).list();
+			List<Long> folderCount = session.createQuery( "select count(distinct f) from Folder f", Long.class ).setMaxResults( 1 ).list();
 			assertEquals( Arrays.asList( 3L ), folderCount );
 
-			List<Folder> distinctFolders = session.createQuery( "select distinct f from Folder f order by f.id desc" )
+			List<Folder> distinctFolders = session.createQuery( "select distinct f from Folder f order by f.id desc", Folder.class )
 					.setFirstResult( 1 ).setMaxResults( 2 ).list();
 			assertEquals( Arrays.asList( folder2, folder1 ), distinctFolders );
 		} );
@@ -318,7 +317,7 @@ public class SQLServerDialectTest {
 			session.flush();
 			session.clear();
 
-			List<Object[]> list = session.createQuery( "select p.id, cast(p.id as string) as string_id from Product2 p order by p.id" )
+			List<Object[]> list = session.createQuery( "select p.id, cast(p.id as string) as string_id from Product2 p order by p.id", Object[].class )
 					.setFirstResult( 1 ).setMaxResults( 2 ).list();
 			assertEquals( 2, list.size() );
 			assertArrayEquals( new Object[] { 41, "41" }, list.get( 0 ) );

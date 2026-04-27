@@ -35,11 +35,11 @@ public class JoinedSubclassFilterTest {
 		factoryScope.inTransaction( (s) -> {
 			s.enableFilter( "region" ).setParameter( "userRegion", "US" );
 
-			List<?> results = s.createQuery( "from Person" ).list();
+			List<?> results = s.createQuery( "from Person", Person.class ).list();
 			Assertions.assertEquals( 4, results.size(), "Incorrect qry result count" );
 			s.clear();
 
-			results = s.createQuery( "from Employee" ).list();
+			results = s.createQuery( "from Employee", Employee.class ).list();
 			Assertions.assertEquals( 2, results.size(), "Incorrect qry result count" );
 			Iterator<?> itr = results.iterator();
 			while ( itr.hasNext() ) {
@@ -57,7 +57,7 @@ public class JoinedSubclassFilterTest {
 			// this is consistent with the behaviour of a collection-level where.
 			// this might be one argument for "pulling" the attached class-level filters into collection assocations,
 			// although we'd need some way to apply the appropriate alias in that scenario.
-			results = new ArrayList( new HashSet( s.createQuery( "from Person as p left join fetch p.minions" ).list() ) );
+			results = new ArrayList( new HashSet( s.createQuery( "from Person as p left join fetch p.minions", Person.class ).list() ) );
 			Assertions.assertEquals( 4, results.size(), "Incorrect qry result count" );
 			itr = results.iterator();
 			while ( itr.hasNext() ) {
@@ -71,7 +71,7 @@ public class JoinedSubclassFilterTest {
 			}
 			s.clear();
 
-			results = new ArrayList( new HashSet( s.createQuery( "from Employee as p left join fetch p.minions" ).list() ) );
+			results = new ArrayList( new HashSet( s.createQuery( "from Employee as p left join fetch p.minions", Employee.class ).list() ) );
 			Assertions.assertEquals( 2, results.size(), "Incorrect qry result count" );
 			itr = results.iterator();
 			while ( itr.hasNext() ) {

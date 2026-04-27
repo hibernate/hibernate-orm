@@ -4,6 +4,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import jakarta.persistence.criteria.BooleanExpression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -24,7 +25,6 @@ import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.metamodel.EntityType;
 
 
@@ -148,7 +148,7 @@ public class SqmEntityJoin<L,R>
 	}
 
 	@Override
-	public SqmEntityJoin<L,R> on(Predicate @Nullable... restrictions) {
+	public SqmEntityJoin<L, R> on(BooleanExpression... restrictions) {
 		return (SqmEntityJoin<L,R>) super.on( restrictions );
 	}
 

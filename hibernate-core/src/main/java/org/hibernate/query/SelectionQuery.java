@@ -13,6 +13,7 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.QueryFlushMode;
+import jakarta.persistence.StatementOrTypedQuery;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TypedQuery;
@@ -122,7 +123,7 @@ import java.util.stream.Stream;
  * @author Steve Ebersole
  */
 @Incubating
-public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
+public interface SelectionQuery<R> extends TypedQuery<R>, Query<R>, StatementOrTypedQuery {
 	/**
 	 * The type of things returned from the query.
 	 */
@@ -293,17 +294,19 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 
 	/**
 	 * Apply an {@link EntityGraph} to the query using {@linkplain GraphSemantic#LOAD load graph} semantics.
-	 * Covariant override of {@linkplain jakarta.persistence.TypedQuery#setEntityGraph(EntityGraph)}
 	 * <p>
-	 * {@inheritDoc}
 	 * This is an alternative way to specify the associations which
 	 * should be fetched as part of the initial query.
 	 *
 	 * @since 6.3
 	 *
 	 * @see org.hibernate.SharedSessionContract#createSelectionQuery(String, EntityGraph)
+	 * @see jakarta.persistence.StatementOrTypedQuery#withEntityGraph(EntityGraph)
+	 *
+	 * @deprecated Prefer passing the entity-graph while creating the query -
+	 * {@linkplain org.hibernate.SharedSessionContract#createSelectionQuery(String, EntityGraph)}
 	 */
-	@Override
+	@Deprecated(since = "8.0", forRemoval = true)
 	default SelectionQuery<R> setEntityGraph(EntityGraph<? super R> entityGraph) {
 		return setEntityGraph( entityGraph, GraphSemantic.LOAD );
 	}
@@ -319,8 +322,12 @@ public interface SelectionQuery<R> extends TypedQuery<R>, Query<R> {
 	 * @see org.hibernate.SharedSessionContract#createSelectionQuery(String, EntityGraph)
 	 * @see Query#asSelectionQuery(EntityGraph)
 	 * @see Query#asSelectionQuery(EntityGraph,GraphSemantic)
-	 * @see jakarta.persistence.Query#withEntityGraph(EntityGraph)
+	 * @see jakarta.persistence.StatementOrTypedQuery#withEntityGraph(EntityGraph)
+	 *
+	 * @deprecated Prefer passing the entity-graph while creating the query -
+	 * {@linkplain org.hibernate.SharedSessionContract#createSelectionQuery(String, EntityGraph)}
 	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	SelectionQuery<R> setEntityGraph(EntityGraph<? super R> graph, GraphSemantic semantic);
 
 	/**

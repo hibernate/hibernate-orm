@@ -77,6 +77,7 @@ public abstract class ConfigurationHelper {
 		return switch ( flushMode ) {
 			case AUTO -> FlushMode.AUTO;
 			case COMMIT -> FlushMode.COMMIT;
+			case EXPLICIT ->  FlushMode.MANUAL;
 		};
 	}
 

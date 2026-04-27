@@ -4,21 +4,18 @@
  */
 package org.hibernate.orm.test.temporal;
 
-import java.sql.Time;
-import java.sql.Timestamp;
-
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.query.Query;
-
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-
 import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
 import org.junit.jupiter.api.Test;
+
+import java.sql.Time;
+import java.sql.Timestamp;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -43,10 +40,10 @@ public class MySQLTimestampFspFunctionTest {
 		// value returned for sysdate() should be different.
 		scope.inSession(
 				s -> {
-					Query q = s.createQuery(
+					var q = s.createQuery( Object[].class,
 							"select now(), current_timestamp(), localtime(), localtimestamp(), sysdate()"
 					);
-					Object[] oArray = (Object[]) q.uniqueResult();
+					Object[] oArray = q.uniqueResult();
 					for ( Object o : oArray ) {
 						if ( o instanceof Timestamp ts ) {
 							ts.setNanos( 0 );

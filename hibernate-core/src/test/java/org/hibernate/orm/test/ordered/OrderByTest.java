@@ -78,7 +78,7 @@ public class OrderByTest {
 					assertFalse( iter.hasNext() );
 
 					sess.clear();
-					s = (Search) sess.createQuery( "from Search s left join fetch s.searchResults" )
+					s = sess.createQuery( "from Search s left join fetch s.searchResults", Search.class )
 							.uniqueResult();
 					assertTrue( Hibernate.isInitialized( s.getSearchResults() ) );
 					iter = s.getSearchResults().iterator();

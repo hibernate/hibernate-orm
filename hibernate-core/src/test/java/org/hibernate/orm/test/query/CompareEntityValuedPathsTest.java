@@ -38,7 +38,7 @@ public class CompareEntityValuedPathsTest {
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
-					session.createQuery( "select 1 from Person p where p in (select c from p.childrenUk c)" ).list();
+					session.createQuery( "select 1 from Person p where p in (select c from p.childrenUk c)", Integer.class ).list();
 
 					// Ensure that there are no joins and we compare by UK
 					assertEquals(
@@ -62,7 +62,7 @@ public class CompareEntityValuedPathsTest {
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
-					session.createQuery( "select 1 from Person p where p in (select c from p.children c)" ).list();
+					session.createQuery( "select 1 from Person p where p in (select c from p.children c)", Integer.class ).list();
 
 					// Ensure that there are no joins and we compare by PK
 					assertEquals(
@@ -86,7 +86,7 @@ public class CompareEntityValuedPathsTest {
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
-					session.createQuery( "select 1 from Person p where p.parent is null" ).list();
+					session.createQuery( "select 1 from Person p where p.parent is null", Integer.class ).list();
 
 					// Comparing a PK-ManyToOne against a UK-CollectionPart will force comparing by PK
 					assertEquals(
@@ -106,7 +106,7 @@ public class CompareEntityValuedPathsTest {
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
-					session.createQuery( "select 1 from Person p where p.parent in (select c from p.childrenUk c)" ).list();
+					session.createQuery( "select 1 from Person p where p.parent in (select c from p.childrenUk c)", Integer.class ).list();
 
 					// Comparing a PK-ManyToOne against a UK-CollectionPart will force comparing by PK
 					assertEquals(
@@ -131,7 +131,7 @@ public class CompareEntityValuedPathsTest {
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
-					session.createQuery( "select 1 from Person p where p.parentUk in (select c from p.children c)" ).list();
+					session.createQuery( "select 1 from Person p where p.parentUk in (select c from p.children c)", Integer.class ).list();
 
 					// Comparing a UK-ManyToOne against a PK-CollectionPart will force comparing by PK
 					assertEquals(
@@ -156,7 +156,7 @@ public class CompareEntityValuedPathsTest {
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
-					session.createQuery( "select 1 from Person p where p in (select c from p.employees c)" ).list();
+					session.createQuery( "select 1 from Person p where p in (select c from p.employees c)", Integer.class ).list();
 
 					// Comparing a root against a PK-one-to-many CollectionPart allows comparing by FK
 					assertEquals(
@@ -180,7 +180,7 @@ public class CompareEntityValuedPathsTest {
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
-					session.createQuery( "select 1 from Person p where p in (select c from p.employeesUk c)" ).list();
+					session.createQuery( "select 1 from Person p where p in (select c from p.employeesUk c)", Integer.class ).list();
 
 					// Comparing a root against a UK-one-to-many CollectionPart forces comparing by PK
 					assertEquals(
@@ -204,7 +204,7 @@ public class CompareEntityValuedPathsTest {
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
-					session.createQuery( "select 1 from Person p join p.childrenUk c where c is not null" ).list();
+					session.createQuery( "select 1 from Person p join p.childrenUk c where c is not null", Integer.class ).list();
 
 					// Assert that we don't join the childrenUk target table, only the join table
 					assertEquals(
@@ -225,7 +225,7 @@ public class CompareEntityValuedPathsTest {
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
-					session.createQuery( "select 1 from Person p join p.children c where c is not null" ).list();
+					session.createQuery( "select 1 from Person p join p.children c where c is not null", Integer.class ).list();
 
 					// Assert that we don't join the children target table, only the join table
 					assertEquals(
@@ -246,7 +246,7 @@ public class CompareEntityValuedPathsTest {
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
-					session.createQuery( "select 1 from Person p join p.childrenUk c join p.children c2 where c = c2" ).list();
+					session.createQuery( "select 1 from Person p join p.childrenUk c join p.children c2 where c = c2", Integer.class ).list();
 
 					// Assert that we don't join the childrenUk target table, only the join table
 					assertEquals(
@@ -268,7 +268,7 @@ public class CompareEntityValuedPathsTest {
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
-					session.createQuery( "select 1 from Person p join p.children c join p.childrenUk c2 where c = c2" ).list();
+					session.createQuery( "select 1 from Person p join p.children c join p.childrenUk c2 where c = c2", Integer.class ).list();
 
 					// Assert that we don't join the children target table, only the join table
 					assertEquals(
@@ -290,7 +290,7 @@ public class CompareEntityValuedPathsTest {
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
-					session.createQuery( "select 1 from Person p join p.childrenUk c where c in (select c2 from p.children c2)" ).list();
+					session.createQuery( "select 1 from Person p join p.childrenUk c where c in (select c2 from p.children c2)", Integer.class ).list();
 
 					// Assert that we don't join the childrenUk target table, only the join table
 					assertEquals(
@@ -311,7 +311,7 @@ public class CompareEntityValuedPathsTest {
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
-					session.createQuery( "select 1 from Person p join p.children c where c in (select c2 from p.childrenUk c2)" ).list();
+					session.createQuery( "select 1 from Person p join p.children c where c in (select c2 from p.childrenUk c2)", Integer.class ).list();
 
 					// Assert that we don't join the children target table, only the join table
 					assertEquals(
@@ -332,7 +332,7 @@ public class CompareEntityValuedPathsTest {
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
-					session.createQuery( "select 1 from Person p where p in (select p2.parentUk from Person p2)" ).list();
+					session.createQuery( "select 1 from Person p where p in (select p2.parentUk from Person p2)", Integer.class ).list();
 
 					// Ensure that there are no joins and we compare by UK
 					assertEquals(
@@ -355,7 +355,7 @@ public class CompareEntityValuedPathsTest {
 		scope.inTransaction(
 				session -> {
 					statementInspector.clear();
-					session.createQuery( "select 1 from Person p where p in (select p2.parent from Person p2)" ).list();
+					session.createQuery( "select 1 from Person p where p in (select p2.parent from Person p2)", Integer.class ).list();
 
 					// Ensure that there are no joins and we compare by PK
 					assertEquals(

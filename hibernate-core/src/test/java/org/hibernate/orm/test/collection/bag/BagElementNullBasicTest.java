@@ -172,12 +172,9 @@ public class BagElementNullBasicTest {
 	}
 
 	private List getCollectionElementRows(int id, SessionFactoryScope scope) {
-		return scope.fromTransaction(
-				session ->
-						session.createNativeQuery(
-								"SELECT aCollection FROM AnEntity_aCollection where AnEntity_id = " + id
-						).list()
-		);
+		return scope.fromTransaction(session -> session.createNativeQuery(Object.class,
+						"SELECT aCollection FROM AnEntity_aCollection where AnEntity_id = " + id)
+				.list() );
 	}
 
 	@Entity( name = "AnEntity" )

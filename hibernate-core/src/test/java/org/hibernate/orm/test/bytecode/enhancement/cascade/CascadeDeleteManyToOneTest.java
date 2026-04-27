@@ -72,7 +72,7 @@ public class CascadeDeleteManyToOneTest {
 					final SQLStatementInspector statementInspector = extractFromSession( s );
 					statementInspector.clear();
 
-					final Child managedChild = (Child) s.createQuery( "SELECT c FROM Child c WHERE name=:name" )
+					final Child managedChild = s.createQuery( "SELECT c FROM Child c WHERE name=:name", Child.class )
 							.setParameter( "name", "CHILD" )
 							.uniqueResult();
 
@@ -89,8 +89,8 @@ public class CascadeDeleteManyToOneTest {
 
 		// Explicitly check that both got deleted
 		scope.inTransaction( s -> {
-					assertNull( s.createQuery( "FROM Child c" ).uniqueResult() );
-					assertNull( s.createQuery( "FROM Parent p" ).uniqueResult() );
+					assertNull( s.createQuery( "FROM Child c", Child.class ).uniqueResult() );
+					assertNull( s.createQuery( "FROM Parent p", Parent.class ).uniqueResult() );
 				}
 		);
 	}
@@ -126,8 +126,8 @@ public class CascadeDeleteManyToOneTest {
 		// Explicitly check that both got deleted
 		scope.inTransaction(
 				(s) -> {
-					assertNull( s.createQuery( "FROM Child c" ).uniqueResult() );
-					assertNull( s.createQuery( "FROM Parent p" ).uniqueResult() );
+					assertNull( s.createQuery( "FROM Child c", Child.class ).uniqueResult() );
+					assertNull( s.createQuery( "FROM Parent p", Parent.class ).uniqueResult() );
 				}
 		);
 	}
@@ -147,8 +147,8 @@ public class CascadeDeleteManyToOneTest {
 		);
 		// Explicitly check that both got deleted
 		scope.inTransaction( s -> {
-					assertNull( s.createQuery( "FROM Child c" ).uniqueResult() );
-					assertNull( s.createQuery( "FROM Parent p" ).uniqueResult() );
+					assertNull( s.createQuery( "FROM Child c", Child.class ).uniqueResult() );
+					assertNull( s.createQuery( "FROM Parent p", Parent.class ).uniqueResult() );
 				}
 		);
 	}

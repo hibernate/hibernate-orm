@@ -66,22 +66,18 @@ public class DetachedProxyAsQueryParameterTest {
 					query.list();
 				}
 		);
-		scope.inSession(
-				session -> {
-					session.createQuery(
-							"select d from Department d where d = :department" )
-							.setParameter( "department", employee.getDepartment() ).list();
-				}
-		);
+		scope.inSession(session -> {
+			session.createQuery( Department.class,
+					"select d from Department d where d = :department" )
+					.setParameter( "department", employee.getDepartment() ).list();
+		} );
 
 
-		scope.inSession(
-				session -> {
-					session.createQuery(
-							"select d from SpecialDepartment d where d = :department" )
-							.setParameter( "department", employee.getDepartment() ).list();
-				}
-		);
+		scope.inSession(session -> {
+			session.createQuery(
+					SpecialDepartment.class, "select d from SpecialDepartment d where d = :department" )
+					.setParameter( "department", employee.getDepartment() ).list();
+		} );
 	}
 
 	@Entity(name = "Department")

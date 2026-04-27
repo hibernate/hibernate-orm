@@ -73,7 +73,7 @@ public class JoinedSubclassWithExplicitDiscriminatorTest {
 
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Animal" ).list();
+					session.createQuery( Animal.class, "from Animal" ).list();
 					Cat cat = session.get( Cat.class, 1 );
 					assertNotNull( cat );
 					session.remove( cat );

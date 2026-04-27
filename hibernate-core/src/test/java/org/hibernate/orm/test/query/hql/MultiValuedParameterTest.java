@@ -70,7 +70,7 @@ public class MultiValuedParameterTest extends BaseSessionFactoryFunctionalTest {
 	public void testParameterListIn() {
 		inTransaction(
 				session -> {
-					var q = session.createQuery( "select id from Contact where id in (:ids) order by id" );
+					var q = session.createQuery( "select id from Contact where id in (:ids) order by id", Integer.class );
 					Collection<Integer> ids = new ArrayList<>();
 					for ( int i = 0; i < 10; i++ ) {
 						ids.add( i );
@@ -84,7 +84,7 @@ public class MultiValuedParameterTest extends BaseSessionFactoryFunctionalTest {
 					}
 					// reuse the same query, but set new collection parameter
 					q.setParameterList( "ids", ids );
-					List<Long> foundIds = q.list();
+					List<Integer> foundIds = q.list();
 
 					assertThat( "Wrong number of results", foundIds.size(), is( ids.size() ) );
 					assertThat( foundIds, is( ids ) );

@@ -43,9 +43,6 @@ public interface QueryImplementor<T> extends Query<T>, CommonQueryContractImplem
 	@Override
 	MutationQueryImplementor<T> asMutationQuery();
 
-	@Override
-	MutationQueryImplementor<T> asStatement();
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options

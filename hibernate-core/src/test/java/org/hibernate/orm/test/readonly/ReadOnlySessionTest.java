@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.readonly;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Hibernate;
@@ -14,7 +13,6 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.proxy.HibernateProxy;
-import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -76,7 +74,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 
 		s = openSession( scope );
 		s.beginTransaction();
-		List list = s.createQuery( "from DataPoint where description = 'changed'" ).list();
+		var list = s.createQuery(DataPoint.class, "from DataPoint where description = 'changed'" ).list();
 		assertEquals(  0, list.size() , "change written to database");
 		s.createQuery( "delete from DataPoint" ).executeUpdate();
 		s.getTransaction().commit();
@@ -102,11 +100,11 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		t = s.beginTransaction();
 		s.setDefaultReadOnly( true );
 		int i = 0;
-		try (ScrollableResults sr = s.createQuery( "from DataPoint dp order by dp.x asc" )
+		try (var sr = s.createQuery(DataPoint.class, "from DataPoint dp order by dp.x asc" )
 				.scroll( ScrollMode.FORWARD_ONLY )) {
 			s.setDefaultReadOnly( false );
 			while ( sr.next() ) {
-				DataPoint dp = (DataPoint) sr.get();
+				DataPoint dp = sr.get();
 				if ( ++i == 50 ) {
 					s.setReadOnly( dp, false );
 				}
@@ -116,7 +114,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.clear();
 		t = s.beginTransaction();
-		List single = s.createQuery( "from DataPoint where description='done!'" ).list();
+		var single = s.createQuery(DataPoint.class, "from DataPoint where description='done!'" ).list();
 		assertEquals( 1, single.size() );
 		s.createQuery( "delete from DataPoint" ).executeUpdate();
 		t.commit();
@@ -142,11 +140,11 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		t = s.beginTransaction();
 		s.setDefaultReadOnly( true );
 		int i = 0;
-		try (ScrollableResults sr = s.createQuery( "from DataPoint dp order by dp.x asc" )
+		try (var sr = s.createQuery(DataPoint.class, "from DataPoint dp order by dp.x asc" )
 				.setReadOnly( false )
 				.scroll( ScrollMode.FORWARD_ONLY )) {
 			while ( sr.next() ) {
-				DataPoint dp = (DataPoint) sr.get();
+				DataPoint dp = sr.get();
 				if ( ++i == 50 ) {
 					s.setReadOnly( dp, true );
 				}
@@ -156,7 +154,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.clear();
 		t = s.beginTransaction();
-		List list = s.createQuery( "from DataPoint where description='done!'" ).list();
+		var list = s.createQuery( DataPoint.class, "from DataPoint where description='done!'" ).list();
 		assertEquals( 99, list.size() );
 		s.createQuery( "delete from DataPoint" ).executeUpdate();
 		t.commit();
@@ -182,7 +180,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		t = s.beginTransaction();
 		assertFalse( s.isDefaultReadOnly() );
 		int i = 0;
-		try (ScrollableResults sr = s.createQuery( "from DataPoint dp order by dp.x asc" )
+		try (var sr = s.createQuery(DataPoint.class, "from DataPoint dp order by dp.x asc" )
 				.setReadOnly( true )
 				.scroll( ScrollMode.FORWARD_ONLY )) {
 			while ( sr.next() ) {
@@ -196,7 +194,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.clear();
 		t = s.beginTransaction();
-		List single = s.createQuery( "from DataPoint where description='done!'" ).list();
+		var single = s.createQuery(DataPoint.class, "from DataPoint where description='done!'" ).list();
 		assertEquals( 1, single.size() );
 		s.createQuery( "delete from DataPoint" ).executeUpdate();
 		t.commit();
@@ -222,12 +220,12 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		t = s.beginTransaction();
 		s.setDefaultReadOnly( false );
 		int i = 0;
-		Query query = s.createQuery( "from DataPoint dp order by dp.x asc" );
+		var query = s.createQuery(DataPoint.class, "from DataPoint dp order by dp.x asc" );
 		s.setDefaultReadOnly( true );
-		try (ScrollableResults sr = query.scroll( ScrollMode.FORWARD_ONLY )) {
+		try (var sr = query.scroll( ScrollMode.FORWARD_ONLY )) {
 			s.setDefaultReadOnly( false );
 			while ( sr.next() ) {
-				DataPoint dp = (DataPoint) sr.get();
+				var dp = sr.get();
 				if ( ++i == 50 ) {
 					s.setReadOnly( dp, false );
 				}
@@ -237,7 +235,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.clear();
 		t = s.beginTransaction();
-		List single = s.createQuery( "from DataPoint where description='done!'" ).list();
+		var single = s.createQuery(DataPoint.class, "from DataPoint where description='done!'" ).list();
 		assertEquals( 1, single.size() );
 		s.createQuery( "delete from DataPoint" ).executeUpdate();
 		t.commit();
@@ -264,7 +262,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		t = s.beginTransaction();
 		s.setDefaultReadOnly( false );
 		int i = 0;
-		Query query = s.createQuery( "from DataPoint dp order by dp.x asc" );
+		var query = s.createQuery(DataPoint.class, "from DataPoint dp order by dp.x asc" );
 		assertFalse( query.isReadOnly() );
 		s.setDefaultReadOnly( true );
 		assertTrue( query.isReadOnly() );
@@ -314,7 +312,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.clear();
 		t = s.beginTransaction();
-		List list = s.createQuery( "from DataPoint where description='done!'" ).list();
+		var list = s.createQuery(DataPoint.class, "from DataPoint where description='done!'" ).list();
 		assertEquals( nExpectedChanges, list.size() );
 		s.createQuery( "delete from DataPoint" ).executeUpdate();
 		t.commit();
@@ -341,7 +339,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		t = s.beginTransaction();
 		s.setDefaultReadOnly( true );
 		int i = 0;
-		Query query = s.createQuery( "from DataPoint dp order by dp.x asc" );
+		var query = s.createQuery(DataPoint.class, "from DataPoint dp order by dp.x asc" );
 		assertTrue( query.isReadOnly() );
 		s.setDefaultReadOnly( false );
 		assertFalse( query.isReadOnly() );
@@ -390,7 +388,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.clear();
 		t = s.beginTransaction();
-		List list = s.createQuery( "from DataPoint where description='done!'" ).list();
+		var list = s.createQuery(DataPoint.class, "from DataPoint where description='done!'" ).list();
 		assertEquals( nExpectedChanges, list.size() );
 		s.createQuery( "delete from DataPoint" ).executeUpdate();
 		t.commit();
@@ -523,7 +521,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 
 		s = openSession( scope );
 		t = s.beginTransaction();
-		List list = s.createQuery( "from DataPoint where id=" + dp.getId() ).list();
+		var list = s.createQuery(DataPoint.class, "from DataPoint where id=" + dp.getId() ).list();
 		assertTrue( list.isEmpty() );
 		t.commit();
 		s.close();
@@ -555,7 +553,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 
 		s = openSession( scope );
 		t = s.beginTransaction();
-		List list = s.createQuery( "from DataPoint where id=" + dp.getId() ).list();
+		var list = s.createQuery(DataPoint.class, "from DataPoint where id=" + dp.getId() ).list();
 		assertTrue( list.isEmpty() );
 		t.commit();
 		s.close();
@@ -584,11 +582,11 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		s.setDefaultReadOnly( true );
 		int i = 0;
 		int nExpectedChanges = 0;
-		try (ScrollableResults sr = s.createQuery( "from DataPoint dp order by dp.x asc" )
+		try (var sr = s.createQuery(DataPoint.class, "from DataPoint dp order by dp.x asc" )
 				.scroll( ScrollMode.FORWARD_ONLY )) {
 			s.setDefaultReadOnly( false );
 			while ( sr.next() ) {
-				dp = (DataPoint) sr.get();
+				dp = sr.get();
 				if ( dp.getId() == dpLast.getId() ) {
 					//dpLast existed in the session before executing the read-only query
 					assertFalse( s.isReadOnly( dp ) );
@@ -606,7 +604,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.clear();
 		t = s.beginTransaction();
-		List list = s.createQuery( "from DataPoint where description='done!'" ).list();
+		var list = s.createQuery(DataPoint.class, "from DataPoint where description='done!'" ).list();
 		assertEquals( nExpectedChanges, list.size() );
 		s.createQuery( "delete from DataPoint" ).executeUpdate();
 		t.commit();
@@ -636,11 +634,11 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		assertTrue( s.isReadOnly( dpLast ) );
 		int i = 0;
 		int nExpectedChanges = 0;
-		try (ScrollableResults sr = s.createQuery( "from DataPoint dp order by dp.x asc" )
+		try (var sr = s.createQuery(DataPoint.class, "from DataPoint dp order by dp.x asc" )
 				.setReadOnly( false )
 				.scroll( ScrollMode.FORWARD_ONLY )) {
 			while ( sr.next() ) {
-				dp = (DataPoint) sr.get();
+				dp = sr.get();
 				if ( dp.getId() == dpLast.getId() ) {
 					//dpLast existed in the session before executing the read-only query
 					assertTrue( s.isReadOnly( dp ) );
@@ -658,7 +656,7 @@ public class ReadOnlySessionTest extends AbstractReadOnlyTest {
 		t.commit();
 		s.clear();
 		t = s.beginTransaction();
-		List list = s.createQuery( "from DataPoint where description='done!'" ).list();
+		var list = s.createQuery( DataPoint.class, "from DataPoint where description='done!'" ).list();
 		assertEquals( nExpectedChanges, list.size() );
 		s.createQuery( "delete from DataPoint" ).executeUpdate();
 		t.commit();

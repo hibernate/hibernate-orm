@@ -4,22 +4,20 @@
  */
 package org.hibernate.query.criteria;
 
-import java.util.List;
-import java.util.Set;
-
 import jakarta.persistence.criteria.BooleanExpression;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.Incubating;
-import org.hibernate.query.common.FetchClauseType;
-
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.ParameterExpression;
-import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.metamodel.EntityType;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.Incubating;
+import org.hibernate.query.common.FetchClauseType;
+
+import java.util.List;
+import java.util.Set;
 
 /**
  * Extension of the JPA {@link CriteriaQuery}
@@ -135,9 +133,6 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	JpaCriteriaQuery<T> where(@Nullable Expression<Boolean> restriction);
 
 	@Override
-	JpaCriteriaQuery<T> where(Predicate @Nullable... restrictions);
-
-	@Override
 	JpaCriteriaQuery<T> where(BooleanExpression... restrictions);
 
 	@Override
@@ -151,9 +146,6 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 
 	@Override
 	JpaCriteriaQuery<T> having(@Nullable Expression<Boolean> restriction);
-
-	@Override
-	JpaCriteriaQuery<T> having(Predicate @Nullable... restrictions);
 
 	@Override
 	JpaCriteriaQuery<T> having(BooleanExpression... restrictions);

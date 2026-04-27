@@ -13,7 +13,6 @@ import java.util.Calendar;
 import java.util.Date;
 
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.query.Query;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -33,7 +32,6 @@ import org.junit.jupiter.api.Test;
 )
 @SessionFactory
 @RequiresDialect(value = SybaseASEDialect.class)
-@SuppressWarnings("rawtypes")
 public class SybaseASEFunctionTest {
 
 	@BeforeAll
@@ -51,7 +49,7 @@ public class SybaseASEFunctionTest {
 	@AfterAll
 	protected void cleanupTest(SessionFactoryScope scope) throws Exception {
 		scope.inTransaction(
-				session -> session.createQuery( "delete from Product" ).executeUpdate()
+				session -> session.createMutationQuery( "delete from Product" ).executeUpdate()
 		);
 	}
 
@@ -59,8 +57,8 @@ public class SybaseASEFunctionTest {
 	public void testCharLengthFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery( "select char_length('123456') from Product" );
-					assertEquals(6, ((Number) query.uniqueResult()).intValue());
+					var query = session.createQuery( "select char_length('123456') from Product", Number.class );
+					assertEquals(6, query.uniqueResult().intValue());
 				}
 		);
 	}
@@ -70,8 +68,8 @@ public class SybaseASEFunctionTest {
 	public void testDateaddFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery( "select dateadd(day, 1, p.date) from Product p" );
-					assertTrue(Calendar.getInstance().getTime().before((Date) query.uniqueResult()));
+					var query = session.createQuery( "select dateadd(day, 1, p.date) from Product p", Date.class );
+					assertTrue(Calendar.getInstance().getTime().before(query.uniqueResult()));
 				}
 		);
 	}
@@ -81,8 +79,8 @@ public class SybaseASEFunctionTest {
 	public void testDatepartFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery( "select datepart(month, p.date) from Product p" );
-					assertEquals(Calendar.getInstance().get(MONTH) + 1, ((Number) query.uniqueResult()).intValue());
+					var query = session.createQuery( "select datepart(month, p.date) from Product p", Number.class );
+					assertEquals(Calendar.getInstance().get(MONTH) + 1, query.uniqueResult().intValue());
 				}
 		);
 	}
@@ -92,8 +90,8 @@ public class SybaseASEFunctionTest {
 	public void testDatediffFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery( "select datediff(day, datetime 1999-07-19 00:00, datetime 1999-07-23 23:59) from Product" );
-					assertEquals(4, ((Number) query.uniqueResult()).intValue());
+					var query = session.createQuery( "select datediff(day, datetime 1999-07-19 00:00, datetime 1999-07-23 23:59) from Product", Number.class );
+					assertEquals(4, query.uniqueResult().intValue());
 				}
 		);
 	}
@@ -103,8 +101,8 @@ public class SybaseASEFunctionTest {
 	public void testAtn2Function(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery("select atn2(p.price, .48) from Product p");
-					assertEquals(0.805803, ((Number) query.uniqueResult()).doubleValue(), 0.000001 );
+					var query = session.createQuery("select atn2(p.price, .48) from Product p", Number.class);
+					assertEquals(0.805803, query.uniqueResult().doubleValue(), 0.000001 );
 				}
 		);
 	}

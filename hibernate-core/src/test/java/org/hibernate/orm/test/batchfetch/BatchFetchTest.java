@@ -54,7 +54,7 @@ public class BatchFetchTest {
 		} );
 
 		scope.inTransaction( (session) -> {
-			List<ProductLine> list = session.createQuery( "from ProductLine pl order by pl.description" ).list();
+			List<ProductLine> list = session.createQuery( "from ProductLine pl order by pl.description", ProductLine.class ).list();
 			ProductLine cars = list.get( 0 );
 			ProductLine oss = list.get( 1 );
 			assertFalse( Hibernate.isInitialized( cars.getModels() ) );
@@ -65,7 +65,7 @@ public class BatchFetchTest {
 		} );
 
 		scope.inTransaction( (session) -> {
-			List<Model> models = session.createQuery( "from Model m" ).list();
+			List<Model> models = session.createQuery( "from Model m", Model.class ).list();
 			Model hibernate = session.find( Model.class, hibernateModel.getId() );
 			hibernate.getProductLine().getId();
 			for ( Model aList : models ) {
@@ -76,7 +76,7 @@ public class BatchFetchTest {
 		} );
 
 		scope.inTransaction( (session) -> {
-			Iterator<Model> iter = session.createQuery( "from Model" ).list().iterator();
+			Iterator<Model> iter = session.createQuery( "from Model", Model.class ).list().iterator();
 			ArrayList<Model> models = new ArrayList<>();
 			while ( iter.hasNext() ) {
 				models.add( iter.next() );
@@ -86,7 +86,7 @@ public class BatchFetchTest {
 
 			session.clear();
 
-			List<ProductLine> list = session.createQuery( "from ProductLine" ).list();
+			List<ProductLine> list = session.createQuery( "from ProductLine", ProductLine.class ).list();
 			ProductLine pl = list.get( 0 );
 			ProductLine pl2 = list.get( 1 );
 			session.evict( pl2 );
@@ -94,7 +94,7 @@ public class BatchFetchTest {
 		} );
 
 		scope.inTransaction( (session) -> {
-			List<ProductLine> list = session.createQuery( "from ProductLine pl order by pl.description" ).list();
+			List<ProductLine> list = session.createQuery( "from ProductLine pl order by pl.description", ProductLine.class ).list();
 			ProductLine cars = list.get( 0 );
 			ProductLine oss = list.get( 1 );
 			assertThat( cars.getModels().size() ).isEqualTo( 2 );

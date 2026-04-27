@@ -12,6 +12,7 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.Tuple;
@@ -41,13 +42,13 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Page;
 import org.hibernate.query.PathException;
-import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
@@ -79,6 +80,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.query.spi.SelectionQueryImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sql.spi.NativeSelectQueryDefinition;
 import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
@@ -546,9 +548,21 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
+	/**
+	 * The Jakarta Persistence defined form of {@link #asMutationQuery()}
+	 *
+	 * @see jakarta.persistence.StatementOrTypedQuery#asStatement
+	 */
 	@Override
 	public NativeQueryImplementor<R> asStatement() {
-		return asMutationQuery();
+		try {
+			return asMutationQuery();
+		}
+		catch (IllegalMutationQueryException e) {
+			final IllegalArgumentException wrapped = new IllegalArgumentException( e.getMessage() );
+			wrapped.addSuppressed( e );
+			throw wrapped;
+		}
 	}
 
 	private ParameterInterpretation resolveParameterInterpretation(
@@ -752,13 +766,13 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public EntityGraph<? super R> getEntityGraph() {
+	public <X> NativeQueryImplementor<X> withEntityGraph(EntityGraph<X> entityGraph) {
 		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
 	}
 
 	@Override
-	public <X> NativeQueryImplementor<X> withEntityGraph(EntityGraph<X> entityGraph) {
-		throw new HibernateException( "A native SQL query cannot use EntityGraphs" );
+	public <R> SelectionQueryImplementor<R> withResultSetMapping(jakarta.persistence.sql.ResultSetMapping<R> mapping) {
+		throw new HibernateException( "Not implemented yet" );
 	}
 
 	@Override

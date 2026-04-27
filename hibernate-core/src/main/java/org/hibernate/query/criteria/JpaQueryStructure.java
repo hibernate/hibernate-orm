@@ -13,7 +13,6 @@ import jakarta.persistence.criteria.Predicate;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.common.FetchClauseType;
-import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 
 /**
  * Models a {@code SELECT} query.  Used as a delegate in

@@ -68,7 +68,7 @@ public class IdPropertyInSubclassIdInMappedSuperclassTest {
 							.size()
 			);
 
-			assertEquals( 3L, session.createQuery( "select count( g ) from Genius g" ).uniqueResult() );
+			assertEquals( 3L, session.createQuery( Long.class, "select count( g ) from Genius g" ).uniqueResult() );
 
 			assertEquals(
 					2,
@@ -93,7 +93,7 @@ public class IdPropertyInSubclassIdInMappedSuperclassTest {
 							.size()
 			);
 
-			assertEquals( 3L, session.createQuery( "select count( h ) from Human h" ).uniqueResult() );
+			assertEquals( 3L, session.createQuery( Long.class, "select count( h ) from Human h" ).uniqueResult() );
 
 		} );
 	}

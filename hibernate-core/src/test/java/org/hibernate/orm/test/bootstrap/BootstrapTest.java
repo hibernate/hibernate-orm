@@ -684,7 +684,7 @@ public class BootstrapTest {
 		}
 
 		@Override
-		public List<String> getAllManagedClassNames() {
+		public List<String> getAllClassNames() {
 			return managedClassNames;
 		}
 

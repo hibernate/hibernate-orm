@@ -4,9 +4,9 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.metamodel.EntityType;
 
 /**
@@ -27,5 +27,5 @@ public interface JpaCriteriaDelete<T> extends JpaManipulationCriteria<T>, Criter
 	JpaCriteriaDelete<T> where(Expression<Boolean> restriction);
 
 	@Override
-	JpaCriteriaDelete<T> where(Predicate... restrictions);
+	JpaCriteriaDelete<T> where(BooleanExpression... restrictions);
 }

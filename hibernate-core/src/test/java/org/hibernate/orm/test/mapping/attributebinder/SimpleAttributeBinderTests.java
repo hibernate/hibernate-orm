@@ -45,7 +45,7 @@ public class SimpleAttributeBinderTests {
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.createQuery( "from System" ).list();
+			session.createQuery(System.class, "from System" ).list();
 		} );
 	}
 }

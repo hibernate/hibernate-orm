@@ -61,7 +61,7 @@ public class QueryResultCacheTests {
 					session -> {
 						resultsLogger.debug( "First query ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
 
-						final List values = session.createQuery( hql )
+						final List values = session.createQuery( hql, Object[].class )
 								.setCacheable( true )
 								.setCacheMode( CacheMode.NORMAL )
 								.setCacheRegion( "scalar-region" )
@@ -77,7 +77,7 @@ public class QueryResultCacheTests {
 					session -> {
 						resultsLogger.debug( "Second query ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" );
 
-						final List values = session.createQuery( hql )
+						final List values = session.createQuery( hql, Object[].class )
 								.setCacheable( true )
 								.setCacheMode( CacheMode.NORMAL )
 								.setCacheRegion( "scalar-region" )

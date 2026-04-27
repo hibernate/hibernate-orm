@@ -4,6 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.persistence.criteria.BooleanExpression;
+import jakarta.persistence.criteria.Expression;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -17,9 +19,6 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmRenderContext;
 import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
 import org.hibernate.spi.NavigablePath;
-
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 
 /**
  * @author Steve Ebersole
@@ -151,8 +150,9 @@ public class SqmTreatedBagJoin<L, R, S extends R> extends SqmBagJoin<L, S> imple
 	}
 
 	@Override
-	public SqmTreatedBagJoin<L,R, S> on(Predicate @Nullable... restrictions) {
-		return (SqmTreatedBagJoin<L, R, S>) super.on( restrictions );
+	public SqmTreatedBagJoin<L, R, S> on(BooleanExpression... restrictions) {
+		super.on( restrictions );
+		return this;
 	}
 
 	@Override

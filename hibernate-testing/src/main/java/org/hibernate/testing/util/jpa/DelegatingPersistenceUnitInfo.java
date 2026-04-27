@@ -78,8 +78,8 @@ public class DelegatingPersistenceUnitInfo implements PersistenceUnitInfo {
 	}
 
 	@Override
-	public List<String> getAllManagedClassNames() {
-		return delegate.getAllManagedClassNames();
+	public List<String> getAllClassNames() {
+		return delegate.getAllClassNames();
 	}
 
 	@Override

@@ -22,15 +22,15 @@ public class IdClassQueryRefTests {
 	@Test
 	public void testHqlVirtualIdReferences(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.createQuery( "from Order o where o.orderNumber = 123" ).list();
-			session.createQuery( "from Order o where o.customer.id = 1" ).list();
+			session.createQuery(Order.class, "from Order o where o.orderNumber = 123" ).list();
+			session.createQuery(Order.class, "from Order o where o.customer.id = 1" ).list();
 		} );
 	}
 
 	@Test
 	public void testHqlIdClassReferences(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.createQuery( "from Order o where o.id.orderNumber = 123" ).list();
+			session.createQuery(Order.class, "from Order o where o.id.orderNumber = 123" ).list();
 		} );
 	}
 
@@ -41,7 +41,7 @@ public class IdClassQueryRefTests {
 	)
 	public void testHqlIdClassReferencesBug(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.createQuery( "from Order o where o.id.customer = 1" ).list();
+			session.createQuery(Order.class, "from Order o where o.id.customer = 1" ).list();
 		} );
 	}
 
@@ -49,7 +49,7 @@ public class IdClassQueryRefTests {
 	@FailureExpected( reason = "This is an invalid query" )
 	public void testHqlInvalidIdClassReferences(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.createQuery( "from Order o where o.id.customer.id = 1" ).list();
+			session.createQuery(Order.class, "from Order o where o.id.customer.id = 1").list();
 		} );
 	}
 

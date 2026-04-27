@@ -53,7 +53,7 @@ public class QueryTest {
 		scope.inSession(
 				session -> {
 					List<EntityWithAnElementCollection> list = session.createQuery(
-							"from EntityWithAnElementCollection e where 'abc' member of e.someStrings" )
+							"from EntityWithAnElementCollection e where 'abc' member of e.someStrings", EntityWithAnElementCollection.class )
 							.list();
 					assertThat( list.size(), is( 1 ) );
 				}

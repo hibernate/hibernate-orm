@@ -8,7 +8,6 @@ import jakarta.persistence.EntityGraph;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.TransactionRequiredException;
 import jakarta.persistence.TypedQueryReference;
-import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.CriteriaStatement;
 import jakarta.persistence.sql.ResultSetMapping;
@@ -701,20 +700,22 @@ public interface SharedSessionContractImplementor
 	// Query-related covariance
 
 	@Override
-	@SuppressWarnings("rawtypes")
-	QueryImplementor createQuery(String queryString);
-
-	@Override
 	<R> SelectionQueryImplementor<R> createQuery(String queryString, Class<R> resultClass);
+
+	default <R> SelectionQueryImplementor<R> createQuery(Class<R> resultClass, String queryString) {
+		return createQuery( queryString, resultClass );
+	}
 
 	@Override
 	<R> SelectionQueryImplementor<R> createQuery(TypedQueryReference<R> typedQueryReference);
 
 	@Override
-	<R> SelectionQueryImplementor<R> createQuery(CriteriaQuery<R> criteriaQuery);
+	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, Class<R> resultClass);
 
 	@Override
-	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, Class<R> resultClass);
+	default <R> NativeQueryImplementor<R> createNativeQuery(Class<R> resultClass, String sqlString) {
+		return createNativeQuery( sqlString, resultClass );
+	}
 
 	@Override
 	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, Class<R> resultClass, String tableAlias);

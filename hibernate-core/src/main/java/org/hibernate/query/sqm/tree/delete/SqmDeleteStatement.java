@@ -4,11 +4,11 @@
  */
 package org.hibernate.query.sqm.tree.delete;
 
-import java.util.Map;
-import java.util.Set;
-
 import jakarta.persistence.criteria.BooleanExpression;
-import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.metamodel.EntityType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.criteria.JpaCriteriaDelete;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -24,11 +24,8 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import jakarta.persistence.criteria.Subquery;
-import jakarta.persistence.metamodel.EntityType;
+import java.util.Map;
+import java.util.Set;
 
 import static org.hibernate.query.sqm.SqmQuerySource.CRITERIA;
 
@@ -116,13 +113,7 @@ public class SqmDeleteStatement<T>
 	}
 
 	@Override
-	public CriteriaDelete<T> where(BooleanExpression... restrictions) {
-		setWhere( restrictions );
-		return this;
-	}
-
-	@Override
-	public SqmDeleteStatement<T> where(Predicate @Nullable... restrictions) {
+	public SqmDeleteStatement<T> where(BooleanExpression... restrictions) {
 		setWhere( restrictions );
 		return this;
 	}

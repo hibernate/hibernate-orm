@@ -41,7 +41,7 @@ public class ImmutableCompositeUserTypeTest {
 					session.merge( wallet );
 
 					List<Wallet> wallets = session.createQuery(
-							"from Wallet w where w.amount.amount > 1.0 and w.amount.currency = 'USD'" ).list();
+							"from Wallet w where w.amount.amount > 1.0 and w.amount.currency = 'USD'", Wallet.class ).list();
 					assertThat( wallets.size() ).isEqualTo( 1 );
 				}
 		);

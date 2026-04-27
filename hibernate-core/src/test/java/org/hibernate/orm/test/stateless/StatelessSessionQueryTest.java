@@ -10,7 +10,6 @@ import java.util.List;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.HANADialect;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -43,7 +42,7 @@ public class StatelessSessionQueryTest {
 		scope.inStatelessSession(
 				session ->
 						assertEquals( 1, session.createQuery(
-								"from Contact c join fetch c.org o join fetch c.org.country" )
+								"from Contact c join fetch c.org o join fetch c.org.country", Contact.class )
 								.list().size() )
 
 		);
@@ -58,13 +57,13 @@ public class StatelessSessionQueryTest {
 
 		scope.inStatelessSession(
 				session -> {
-					Query query = session.createQuery( queryString );
+					var query = session.createQuery( queryString, Contact.class );
 					assertEquals( 1, query.getResultList().size() );
 
-					query = session.createNamedQuery( Contact.class.getName() + ".contacts" );
-					assertEquals( 1, query.getResultList().size() );
+					var query2 = session.createNamedQuery( Contact.class.getName() + ".contacts", Contact.class );
+					assertEquals( 1, query2.getResultList().size() );
 
-					NativeQuery sqlQuery = session.createNativeQuery( "select id from Contact" );
+					NativeQuery sqlQuery = session.createNativeQuery( "select id from Contact", Object.class );
 					assertEquals( 1, sqlQuery.getResultList().size() );
 				}
 		);

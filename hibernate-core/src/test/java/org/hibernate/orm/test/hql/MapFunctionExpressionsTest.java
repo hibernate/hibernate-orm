@@ -66,12 +66,12 @@ public class MapFunctionExpressionsTest {
 			// 		Hibernate allows path or alias.
 
 			// JPA form
-			var results = s.createQuery( "select c from Contact c join c.addresses a where key(a) is not null" ).list();
+			var results = s.createQuery( "select c from Contact c join c.addresses a where key(a) is not null", Contact.class ).list();
 			assertEquals( 1, results.size() );
 			assertThat( results.get(0) ).isInstanceOf( Contact.class );
 
 			// Hibernate additional form
-			results = s.createQuery( "select c from Contact c where key(c.addresses) is not null" ).list();
+			results = s.createQuery( "select c from Contact c where key(c.addresses) is not null", Contact.class ).list();
 			assertEquals( 1, results.size() );
 			assertThat( results.get(0) ).isInstanceOf( Contact.class );
 		} );
@@ -84,12 +84,12 @@ public class MapFunctionExpressionsTest {
 			// 		Hibernate allows path or alias.
 
 			// JPA form
-			var results = s.createQuery( "select key(a) from Contact c join c.addresses a" ).list();
+			var results = s.createQuery( "select key(a) from Contact c join c.addresses a", AddressType.class ).list();
 			assertEquals( 1, results.size() );
 			assertThat( results.get(0) ).isInstanceOf( AddressType.class );
 
 			// Hibernate additional form
-			results = s.createQuery( "select key(c.addresses) from Contact c" ).list();
+			results = s.createQuery( "select key(c.addresses) from Contact c", AddressType.class ).list();
 			assertEquals( 1, results.size() );
 			assertThat( results.get(0) ).isInstanceOf( AddressType.class );
 		} );
@@ -98,11 +98,11 @@ public class MapFunctionExpressionsTest {
 	@Test
 	public void testMapValueExpressionInSelect(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (s) -> {
-			var results = s.createQuery( "select value(a) from Contact c join c.addresses a" ).list();
+			var results = s.createQuery( "select value(a) from Contact c join c.addresses a", Address.class ).list();
 			assertEquals( 1, results.size() );
 			assertThat( results.get(0) ).isInstanceOf( Address.class );
 
-			results = s.createQuery( "select value(c.addresses) from Contact c" ).list();
+			results = s.createQuery( "select value(c.addresses) from Contact c", Address.class ).list();
 			assertEquals( 1, results.size() );
 			assertThat( results.get(0) ).isInstanceOf( Address.class );
 		} );
@@ -111,11 +111,11 @@ public class MapFunctionExpressionsTest {
 	@Test
 	public void testMapEntryExpressionInSelect(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (s) -> {
-			var results = s.createQuery( "select entry(a) from Contact c join c.addresses a" ).list();
+			var results = s.createQuery( "select entry(a) from Contact c join c.addresses a", Map.Entry.class ).list();
 			assertEquals( 1, results.size() );
 			assertThat( results.get(0) ).isInstanceOf( Map.Entry.class );
 
-			results = s.createQuery( "select entry(c.addresses) from Contact c" ).list();
+			results = s.createQuery( "select entry(c.addresses) from Contact c", Map.Entry.class ).list();
 			assertEquals( 1, results.size() );
 			assertThat( results.get(0) ).isInstanceOf( Map.Entry.class );
 		} );

@@ -4,25 +4,24 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import java.util.Set;
-
+import jakarta.persistence.criteria.BooleanExpression;
+import jakarta.persistence.criteria.Expression;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
-import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSetJoin;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.spi.NavigablePath;
 
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
+import java.util.Set;
 
 /**
  * @author Steve Ebersole
@@ -106,7 +105,7 @@ public class SqmSetJoin<O, E>
 	}
 
 	@Override
-	public SqmSetJoin<O, E> on(Predicate @Nullable... restrictions) {
+	public SqmSetJoin<O, E> on(BooleanExpression... restrictions) {
 		return (SqmSetJoin<O, E>) super.on( restrictions );
 	}
 

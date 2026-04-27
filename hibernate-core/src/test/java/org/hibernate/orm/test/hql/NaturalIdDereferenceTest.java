@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.hql;
 
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -75,8 +74,8 @@ public class NaturalIdDereferenceTest {
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery( "SELECT r.normalBook.isbn FROM BookRef r" );
-					List resultList = query.getResultList();
+					var query = session.createQuery( "SELECT r.normalBook.isbn FROM BookRef r", String.class );
+					List<String> resultList = query.getResultList();
 					assertFalse( resultList.isEmpty() );
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals( 1, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
@@ -90,8 +89,8 @@ public class NaturalIdDereferenceTest {
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery( "SELECT r.normalBook.id FROM BookRef r" );
-					List resultList = query.getResultList();
+					var query = session.createQuery( "SELECT r.normalBook.id FROM BookRef r", Long.class );
+					List<Long> resultList = query.getResultList();
 					assertFalse( resultList.isEmpty() );
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals( 0, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
@@ -105,8 +104,8 @@ public class NaturalIdDereferenceTest {
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery( "SELECT r.naturalBook.isbn FROM BookRef r" );
-					List resultList = query.getResultList();
+					var query = session.createQuery( "SELECT r.naturalBook.isbn FROM BookRef r", String.class );
+					List<String> resultList = query.getResultList();
 					assertFalse( resultList.isEmpty() );
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals( 0, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
@@ -120,7 +119,7 @@ public class NaturalIdDereferenceTest {
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery( "SELECT r2.normalBookRef.normalBook.id FROM BookRefRef r2" );
+					var query = session.createQuery( "SELECT r2.normalBookRef.normalBook.id FROM BookRefRef r2", Long.class );
 					query.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals( 1, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
@@ -134,7 +133,7 @@ public class NaturalIdDereferenceTest {
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery( "SELECT r2.normalBookRef.naturalBook.isbn FROM BookRefRef r2" );
+					var query = session.createQuery( "SELECT r2.normalBookRef.naturalBook.isbn FROM BookRefRef r2", String.class );
 					query.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals( 1, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
@@ -153,7 +152,7 @@ public class NaturalIdDereferenceTest {
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery( "SELECT r2.naturalBookRef.naturalBook.isbn FROM BookRefRef r2" );
+					var query = session.createQuery( "SELECT r2.naturalBookRef.naturalBook.isbn FROM BookRefRef r2", String.class );
 					query.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals( 0, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
@@ -171,7 +170,7 @@ public class NaturalIdDereferenceTest {
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery( "SELECT r2.naturalBookRef.naturalBook.id FROM BookRefRef r2" );
+					var query = session.createQuery( "SELECT r2.naturalBookRef.naturalBook.id FROM BookRefRef r2", Long.class );
 					query.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals( 1, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
@@ -185,7 +184,7 @@ public class NaturalIdDereferenceTest {
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery( "SELECT r2.normalBookRef.normalBook.isbn FROM BookRefRef r2" );
+					var query = session.createQuery( "SELECT r2.normalBookRef.normalBook.isbn FROM BookRefRef r2", String.class );
 					query.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals( 2, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
@@ -199,7 +198,7 @@ public class NaturalIdDereferenceTest {
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery( "SELECT r2.normalBookRef.normalBook FROM BookRefRef r2" );
+					var query = session.createQuery( "SELECT r2.normalBookRef.normalBook FROM BookRefRef r2", Book.class );
 					query.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals( 2, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
@@ -224,7 +223,7 @@ public class NaturalIdDereferenceTest {
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery( "SELECT r2.naturalBookRef.naturalBook FROM BookRefRef r2" );
+					var query = session.createQuery( "SELECT r2.naturalBookRef.naturalBook FROM BookRefRef r2", Book.class );
 					query.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals( 1, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
@@ -244,9 +243,9 @@ public class NaturalIdDereferenceTest {
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery(
+					var query = session.createQuery(
 							"SELECT r2.normalBookRef.normalBook.id, r3.naturalBookRef.naturalBook.isbn " +
-									"FROM BookRefRef r2 JOIN BookRefRef r3 ON r2.normalBookRef.normalBook.isbn = r3.naturalBookRef.naturalBook.isbn" );
+									"FROM BookRefRef r2 JOIN BookRefRef r3 ON r2.normalBookRef.normalBook.isbn = r3.naturalBookRef.naturalBook.isbn", Object[].class );
 					query.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					// r2.normalBookRef.normalBook.id requires
@@ -268,8 +267,8 @@ public class NaturalIdDereferenceTest {
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery( "SELECT b.normalBook FROM BookRefRef a " +
-															"JOIN BookRef b ON b.naturalBook.isbn = a.naturalBookRef.naturalBook.isbn" );
+					var query = session.createQuery( "SELECT b.normalBook FROM BookRefRef a " +
+															"JOIN BookRef b ON b.naturalBook.isbn = a.naturalBookRef.naturalBook.isbn", Book.class );
 					query.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals( 2, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
@@ -289,8 +288,8 @@ public class NaturalIdDereferenceTest {
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery(
-							"SELECT r.normalBook.isbn FROM BookRef r JOIN r.normalBook b ON b.isbn = r.normalBook.isbn" );
+					var query = session.createQuery(
+							"SELECT r.normalBook.isbn FROM BookRef r JOIN r.normalBook b ON b.isbn = r.normalBook.isbn", String.class );
 					query.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals( 1, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
@@ -311,8 +310,8 @@ public class NaturalIdDereferenceTest {
 		sqlStatementInterceptor.clear();
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery(
-							"SELECT r.normalBook.isbn FROM BookRef r JOIN Book b ON b.isbn = r.normalBook.isbn" );
+					var query = session.createQuery(
+							"SELECT r.normalBook.isbn FROM BookRef r JOIN Book b ON b.isbn = r.normalBook.isbn", String.class );
 					query.getResultList();
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals( 2, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
@@ -325,7 +324,7 @@ public class NaturalIdDereferenceTest {
 	public void deleteWithNaturalIdBasedJoinTable(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery(
+					var query = session.createMutationQuery(
 							"DELETE FROM Book b WHERE 1=0" );
 					query.executeUpdate();
 				}

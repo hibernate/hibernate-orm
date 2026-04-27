@@ -65,7 +65,8 @@ public class ResultMementoInstantiationStandard implements ResultMementoInstanti
 		//noinspection unchecked
 		return new ConstructorMapping<>(
 				(Class<R>) instantiatedJtd.getJavaTypeClass(),
-				convertArguments( sessionFactory )
+				convertArguments( sessionFactory ),
+				null
 		);
 	}
 

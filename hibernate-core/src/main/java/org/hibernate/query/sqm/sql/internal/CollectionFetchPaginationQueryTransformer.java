@@ -16,8 +16,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl.CaseStatementDiscriminatorExpression;
 import org.hibernate.query.SortDirection;
-import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.spi.AbstractSqlAstWalker;
 import org.hibernate.sql.ast.spi.ExpressionReplacementWalker;
@@ -28,10 +29,11 @@ import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.QueryTransformer;
+import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.from.AbstractTableGroup;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
@@ -44,7 +46,13 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.results.internal.ResolvedSqlSelection;
 import org.hibernate.type.BasicType;
 
+import static java.util.Collections.emptyList;
+import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
+import static org.hibernate.sql.ast.SqlAstJoinType.*;
+
 /**
+ * Deals with many-valued join fetches in a query with pagaination or a limit.
+ * <p>
  * Pushes the offset/fetch of a top-level {@code QuerySpec} down into a derived
  * table over the root entity, leaving fetch joins of plural attributes on the
  * outer query so the limit applies to parent rows rather than to the cartesian
@@ -75,6 +83,8 @@ import org.hibernate.type.BasicType;
  * <p>
  * Predicates and order-by elements may not reference fetched collection
  * elements (an HQL constraint we depend on here).
+ *
+ * @author Gavin King
  */
 public class CollectionFetchPaginationQueryTransformer implements QueryTransformer {
 	private final boolean groupRowsByOwnerForScroll;
@@ -88,27 +98,83 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 			CteContainer cteContainer,
 			QuerySpec querySpec,
 			SqmToSqlAstConverter converter) {
-
-		final List<TableGroup> roots = querySpec.getFromClause().getRoots();
+		final var roots = querySpec.getFromClause().getRoots();
 		if ( roots.isEmpty() ) {
 			return querySpec;
 		}
+		else {
+			final var primaryRoot = primaryRoot( roots );
+			if ( primaryRoot instanceof AbstractTableGroup
+					&& primaryRoot.getModelPart() instanceof EntityMappingType primaryEntity
+					&& primaryRoot.getPrimaryTableReference() instanceof NamedTableReference primaryNamed ) {
+				return transform( querySpec, converter, primaryEntity, primaryNamed, primaryRoot );
+			}
+			else {
+				return querySpec;
+			}
+		}
+	}
 
-		// Pick the first root that has at least one plural fetched join — that's the
-		// "primary" root whose alias becomes the derived-table identification variable.
-		final var primaryRoot = primaryRoot( roots );
-		if ( primaryRoot == null ) {
+	private QuerySpec transform(
+			QuerySpec querySpec,
+			SqmToSqlAstConverter converter,
+			EntityMappingType primaryEntity,
+			NamedTableReference primaryTableReference,
+			TableGroup primaryRoot) {
+		final String primaryAlias = primaryTableReference.getIdentificationVariable();
+		final String primaryTableExpr = primaryTableReference.getTableExpression();
+
+		final var roots = querySpec.getFromClause().getRoots();
+		final var movedJoins = collectMovedJoins( primaryRoot );
+		// Aliases that will still be directly reachable from the outer query after
+		// the plural fetch joins are moved there. Anything else referenced by the
+		// outer query has to be projected through the derived table first.
+		final var outerAliases = collectOuterAliases( primaryAlias, movedJoins );
+		final var absorption = collectAbsorption( querySpec, roots, movedJoins, outerAliases );
+		if ( absorption == null ) {
+			// If we discovered a column reference that does not belong to either the
+			// future outer query or the remaining inner query, this transformer can't
+			// safely rewrite the shape. Leave the query unchanged in that case.
 			return querySpec;
 		}
-
-		if ( !( primaryRoot instanceof AbstractTableGroup )
-				|| !( primaryRoot.getModelPart() instanceof EntityMappingType primaryEntity )
-				|| !( primaryRoot.getPrimaryTableReference() instanceof NamedTableReference primaryNamed ) ) {
-			return querySpec;
+		else {
+			applyInnerJoinFetchPredicates( querySpec, movedJoins, converter );
+			// The inner SELECT is rebuilt from scratch, but the outer query still has to
+			// project the original domain results. Capture them before the inner rewrite.
+			final var originalSelections =
+					new ArrayList<>( querySpec.getSelectClause().getSqlSelections() );
+			final var columnNames =
+					rebuildInnerSelect( querySpec, primaryEntity, primaryTableExpr, primaryAlias, absorption );
+			detachMovedJoins( movedJoins );
+			final var originalSortSpecifications =
+					prepareInnerSortSpecifications( querySpec, outerAliases, primaryAlias );
+			final var inner = querySpec.asSubQuery();
+			final var outer = new QuerySpec( querySpec.isRoot(), 1 );
+			final var derivedRoot = createDerivedRoot(
+					converter,
+					primaryRoot,
+					primaryAlias,
+					primaryTableExpr,
+					columnNames,
+					inner
+			);
+			outer.getFromClause().addRoot( derivedRoot );
+			final var rewriter = new ColumnReferenceRewriter( absorption, primaryAlias );
+			reattachMovedJoins( derivedRoot, movedJoins, rewriter );
+			addOuterSelections( outer, originalSelections, rewriter );
+			addOuterSortSpecifications(
+					outer,
+					originalSortSpecifications,
+					outerAliases,
+					primaryAlias,
+					primaryEntity,
+					rewriter
+			);
+			return outer;
 		}
-		final String primaryAlias = primaryNamed.getIdentificationVariable();
-		final String primaryTableExpr = primaryNamed.getTableExpression();
+	}
 
+	private static List<MovedJoin> collectMovedJoins(TableGroup primaryRoot) {
 		// Only plural fetched joins move to the outer — they are the
 		// cartesian-product source we're trying to escape. Fetched singular
 		// joins stay inside the inner so their columns can drive the
@@ -116,25 +182,41 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		// is a fetched {@code @ManyToOne}); their columns get absorbed into
 		// the derived table for the outer SELECT to reach. Plural fetches
 		// nested under fetched singulars are also moved out — the parent
-		// singular's table reference stays inner and the plural's join
+		// singular's table reference stays inner, and the plural's join
 		// predicate gets absorbed-rewritten through the derived alias.
 		final List<MovedJoin> movedJoins = new ArrayList<>();
 		collectMovedPluralFetches( primaryRoot, movedJoins );
+		return movedJoins;
+	}
 
-		// The aliases that will sit directly in the outer FROM after the move.
+	private static Set<String> collectOuterAliases(String primaryAlias, List<MovedJoin> movedJoins) {
 		final Set<String> outerAliases = new HashSet<>();
 		outerAliases.add( primaryAlias );
 		for ( var moved : movedJoins ) {
 			collectAliases( moved.join().getJoinedGroup(), outerAliases );
 		}
+		return outerAliases;
+	}
 
+	private static @Nullable Map<AbsorbedKey, AbsorbedColumn> collectAbsorption(
+			QuerySpec querySpec,
+			List<TableGroup> roots,
+			List<MovedJoin> movedJoins,
+			Set<String> outerAliases) {
+		final Map<AbsorbedKey, AbsorbedColumn> absorption = new LinkedHashMap<>();
+		final var collector = new AbsorbedColumnCollector( outerAliases, absorption );
+		collectAbsorbedReferences( querySpec, movedJoins, collector );
+		return allAbsorbedAliasesRemainInner( roots, absorption ) ? absorption : null;
+	}
 
+	private static void collectAbsorbedReferences(
+			QuerySpec querySpec,
+			List<MovedJoin> movedJoins,
+			AbsorbedColumnCollector collector) {
 		// Walk the original outer content for any ColumnReference whose qualifier
 		// is neither the primary alias nor inside a moved-out join. Those qualifiers
 		// belong to TableGroups that stay in the inner — they need to be "absorbed"
 		// into the derived table.
-		final Map<AbsorbedKey, AbsorbedColumn> absorption = new LinkedHashMap<>();
-		final var collector = new AbsorbedColumnCollector( outerAliases, absorption );
 		for ( var selection : querySpec.getSelectClause().getSqlSelections() ) {
 			selection.getExpression().accept( collector );
 		}
@@ -145,8 +227,8 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		}
 		// Moved fetch joins' predicates reference the join target (the parent
 		// alias) plus the moved alias itself. For direct moves the parent is
-		// the primary alias and no rewriting is needed; for nested moves the
-		// parent is a fetched singular's alias which is inner-only and gets
+		// the primary alias, and no rewriting is needed; for nested moves the
+		// parent is a fetched singular's alias that is inner-only and gets
 		// absorbed into the derived table here.
 		for ( var moved : movedJoins ) {
 			final var predicate = moved.join().getPredicate();
@@ -154,42 +236,50 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 				predicate.accept( collector );
 			}
 		}
+	}
 
-		// Sanity: every absorbed qualifier must correspond to a TableGroup in the inner.
+	private static boolean allAbsorbedAliasesRemainInner(
+			List<TableGroup> roots,
+			Map<AbsorbedKey, AbsorbedColumn> absorption) {
 		final Set<String> innerAliases = new HashSet<>();
 		for ( var root : roots ) {
 			collectAliases( root, innerAliases );
 		}
-		// (the primary alias is in both — that's fine)
+		// the primary alias is in both - that's fine
 		for ( var key : absorption.keySet() ) {
 			if ( !innerAliases.contains( key.qualifier() ) ) {
-				return querySpec;
+				// The rewriter only knows how to remap inner-only aliases through the
+				// derived table. If an absorbed qualifier is not even part of the inner
+				// query tree, this query shape is outside what this transformer supports.
+				return false;
 			}
 		}
+		return true;
+	}
 
-		// Inner-join fetches act as a filter on the parent rows (only parents that
+	private static void applyInnerJoinFetchPredicates(
+			QuerySpec querySpec,
+			List<MovedJoin> movedJoins,
+			SqmToSqlAstConverter converter) {
+		// Inner join fetches act as a filter on the parent rows (only parents that
 		// have at least one matching child appear). To keep that semantics when the
 		// fetch join moves to the outer, add an EXISTS predicate to the inner
 		// referencing the joined group, so the inner pagination only sees parents
 		// that would have matched the inner join.
-		final var sessionFactory = converter.getCreationContext().getSessionFactory();
+		final var typeConfiguration = converter.getCreationContext().getTypeConfiguration();
+		final var integerType = typeConfiguration.getBasicTypeForJavaType( Integer.class );
+		final var booleanType = typeConfiguration.getBasicTypeForJavaType( Boolean.class );
+		assert integerType != null;
 		for ( var moved : movedJoins ) {
 			final var join = moved.join();
-			if ( join.getJoinType() == org.hibernate.sql.ast.SqlAstJoinType.INNER
-					&& join.getPredicate() != null ) {
+			if ( join.getJoinType() == INNER && join.getPredicate() != null ) {
 				final var existsSpec = new QuerySpec( false, 1 );
 				existsSpec.getFromClause().addRoot( join.getJoinedGroup() );
 				existsSpec.getSelectClause().addSqlSelection(
 						new ResolvedSqlSelection(
 								0,
-								new org.hibernate.sql.ast.tree.expression.QueryLiteral<>(
-										1,
-										sessionFactory.getTypeConfiguration()
-												.getBasicTypeForJavaType( Integer.class )
-								),
-								(BasicType<Object>) (BasicType<?>)
-										sessionFactory.getTypeConfiguration()
-												.getBasicTypeForJavaType( Integer.class )
+								new QueryLiteral<>( 1, integerType ),
+								integerType
 						)
 				);
 				existsSpec.applyPredicate( join.getPredicate() );
@@ -197,46 +287,66 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 						new ExistsPredicate(
 								new SelectStatement( existsSpec ),
 								false,
-								sessionFactory.getTypeConfiguration()
-										.getBasicTypeForJavaType( Boolean.class )
+								booleanType
 						)
 				);
 			}
 		}
+	}
 
-		// Capture original outer SELECT items before we rebuild the inner SELECT.
-		final List<SqlSelection> originalSelections =
-				new ArrayList<>( querySpec.getSelectClause().getSqlSelections() );
-
-		// Rebuild inner SELECT: primary entity's primary-table columns (kept under their
-		// original names so outer refs to the primary alias resolve naturally) +
+	private static List<String> rebuildInnerSelect(
+			QuerySpec querySpec,
+			EntityMappingType primaryEntity,
+			String primaryTableExpr,
+			String primaryAlias,
+			Map<AbsorbedKey, AbsorbedColumn> absorption) {
+		// Rebuild inner SELECT: primary entity's primary table columns (kept under their
+		// original names so outer refs to the primary alias resolve naturally) and
 		// absorbed columns (renamed to <alias>_<col> in the derived column list).
+		// The returned columnNames list must stay in lockstep with the inner SELECT
+		// projection order because QueryPartTableGroup uses it as the derived table's
+		// explicit column list.
 		final List<String> columnNames = new ArrayList<>();
-		final Set<String> seen = new HashSet<>();
 		querySpec.getSelectClause().getSqlSelections().clear();
-		final int[] position = { 0 };
-		final SelectableConsumer projector = (idx, selectable) -> {
-			if ( primaryTableExpr.equals( selectable.getContainingTableExpression() ) ) {
-				final String columnName = selectable.getSelectionExpression();
-				// Joined-inheritance with no @DiscriminatorColumn synthesises a CASE
-				// expression on the subtype tables and exposes it through a placeholder
-				// selectable like "{discriminator}". The CASE itself is in the outer
-				// SELECT and AbsorbedColumnCollector picks up its component column refs,
-				// so the inner doesn't need (and can't render) this placeholder.
-				if ( columnName.indexOf( '{' ) >= 0 ) {
-					return;
-				}
-				if ( seen.add( columnName ) ) {
-					final var ref = new ColumnReference( primaryAlias, selectable );
-					//noinspection unchecked
-					final var type = (BasicType<Object>) selectable.getJdbcMapping();
-					querySpec.getSelectClause().addSqlSelection(
-							new ResolvedSqlSelection( position[0]++, ref, type )
-					);
-					columnNames.add( columnName );
+		final int nextPosition =
+				addPrimaryTableSelections( querySpec, primaryEntity, primaryTableExpr, primaryAlias, columnNames );
+		addAbsorbedSelections( querySpec, absorption, columnNames, nextPosition );
+		return columnNames;
+	}
+
+	private static int addPrimaryTableSelections(
+			QuerySpec querySpec,
+			EntityMappingType primaryEntity,
+			String primaryTableExpr,
+			String primaryAlias,
+			List<String> columnNames) {
+		final Set<String> seen = new HashSet<>();
+		// Joined inheritance with no @DiscriminatorColumn synthesizes a CASE
+		// expression on the subtype tables and exposes it through a placeholder
+		// selectable DISCRIMINATOR_ROLE_NAME. The CASE itself is in the outer
+		// SELECT and AbsorbedColumnCollector picks up its component column refs,
+		// so the inner doesn't need (and can't render) this placeholder.
+		seen.add( DISCRIMINATOR_ROLE_NAME );
+		class Projector implements SelectableConsumer {
+			int position;
+			@Override
+			public void accept(int idx, SelectableMapping selectable) {
+				if ( primaryTableExpr.equals( selectable.getContainingTableExpression() ) ) {
+					final String columnName = selectable.getSelectionExpression();
+					if ( seen.add( columnName ) ) {
+						querySpec.getSelectClause().addSqlSelection(
+								new ResolvedSqlSelection(
+										position++,
+										new ColumnReference( primaryAlias, selectable ),
+										(BasicType<?>) selectable.getJdbcMapping()
+								)
+						);
+						columnNames.add( columnName );
+					}
 				}
 			}
-		};
+		}
+		final var projector = new Projector();
 		primaryEntity.getIdentifierMapping().forEachSelectable( projector );
 		final var discriminatorMapping = primaryEntity.getDiscriminatorMapping();
 		if ( discriminatorMapping != null ) {
@@ -247,75 +357,86 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 			versionMapping.forEachSelectable( projector );
 		}
 		primaryEntity.forEachSelectable( projector );
+		return projector.position;
+	}
 
+	private static void addAbsorbedSelections(
+			QuerySpec querySpec,
+			Map<AbsorbedKey, AbsorbedColumn> absorption,
+			List<String> columnNames,
+			int startPosition) {
+		int position = startPosition;
 		for ( var entry : absorption.entrySet() ) {
-			final var key = entry.getKey();
-			final var info = entry.getValue();
-			final String exposedName = key.qualifier() + "_" + key.columnName();
-			final var ref = new ColumnReference(
-					key.qualifier(),
-					key.columnName(),
-					false,
-					null,
-					info.jdbcMapping
-			);
-			//noinspection unchecked
-			final var type = (BasicType<Object>) info.jdbcMapping;
+			final var absorbedKey = entry.getKey();
+			final var absorbedColumn = entry.getValue();
+			final String exposedName = absorbedKey.qualifier() + "_" + absorbedKey.columnName();
+			// Expose the absorbed column under a stable derived-table column name and
+			// remember that name so outer ColumnReferences can be rewritten to it.
 			querySpec.getSelectClause().addSqlSelection(
-					new ResolvedSqlSelection( position[0]++, ref, type )
+					new ResolvedSqlSelection(
+							position++,
+							new ColumnReference(
+									absorbedKey.qualifier(),
+									absorbedKey.columnName(),
+									false,
+									null,
+									absorbedColumn.jdbcMapping
+							),
+							(BasicType<?>) absorbedColumn.jdbcMapping
+					)
 			);
 			columnNames.add( exposedName );
-			info.exposedName = exposedName;
+			absorbedColumn.exposedName = exposedName;
 		}
+	}
 
+	private static void detachMovedJoins(List<MovedJoin> movedJoins) {
 		// Detach the moved (fetched) plural joins from whichever group they were
 		// attached to in the inner — the primary root for direct fetches, or a
 		// fetched-singular's group for nested fetches.
 		for ( var moved : movedJoins ) {
 			moved.parent().removeTableGroupJoin( moved.join() );
 		}
+	}
 
+	private static List<SortSpecification> prepareInnerSortSpecifications(
+			QuerySpec querySpec,
+			Set<String> outerAliases,
+			String primaryAlias) {
 		// Split sort specs: those that reference an alias that's now in the outer
 		// (e.g. the synthetic ORDER BY Hibernate adds on a fetched collection's FK)
 		// can't stay on the inner — they'd reference a TableGroup we just removed.
 		// We keep all original sort specs to apply on the outer; only the
 		// inner-resolvable ones stay in the inner for deterministic LIMIT.
-		final List<SortSpecification> originalSortSpecs;
-		final List<SortSpecification> rootSortSpecs;
-		final List<SortSpecification> movedAliasSortSpecs;
-		if ( querySpec.hasSortSpecifications() ) {
+		if ( !querySpec.hasSortSpecifications() ) {
+			return emptyList();
+		}
+		else {
 			final var sortSpecifications = querySpec.getSortSpecifications();
-			originalSortSpecs = new ArrayList<>( sortSpecifications );
-			final var innerKeep = new ArrayList<SortSpecification>( originalSortSpecs.size() );
-			rootSortSpecs = new ArrayList<>( originalSortSpecs.size() );
-			movedAliasSortSpecs = new ArrayList<>( originalSortSpecs.size() );
-			for ( var sort : originalSortSpecs ) {
-				final boolean referencesMovedAlias =
-						expressionReferencesAnyAlias( sort.getSortExpression(),
-								outerAliases, primaryAlias );
-				if ( !referencesMovedAlias ) {
-					innerKeep.add( sort );
-					rootSortSpecs.add( sort );
-				}
-				else {
-					movedAliasSortSpecs.add( sort );
+			final var originalSortSpecifications = new ArrayList<>( sortSpecifications );
+			final List<SortSpecification> innerSortSpecifications =
+					new ArrayList<>( originalSortSpecifications.size() );
+			for ( var sort : originalSortSpecifications ) {
+				if ( !referencesMovedAlias( sort, outerAliases, primaryAlias ) ) {
+					innerSortSpecifications.add( sort );
 				}
 			}
 			sortSpecifications.clear();
-			sortSpecifications.addAll( innerKeep );
+			sortSpecifications.addAll( innerSortSpecifications );
+			return originalSortSpecifications;
 		}
-		else {
-			originalSortSpecs = List.of();
-			rootSortSpecs = List.of();
-			movedAliasSortSpecs = List.of();
-		}
+	}
 
-		// Demote the original spec to a sub-query (offset/fetch/order-by stay on it).
-		final var inner = querySpec.asSubQuery();
-
-		// Build the outer query.
-		final var outer = new QuerySpec( querySpec.isRoot(), 1 );
-		final var derivedRoot = new QueryPartTableGroup(
+	private static QueryPartTableGroup createDerivedRoot(
+			SqmToSqlAstConverter converter,
+			TableGroup primaryRoot,
+			String primaryAlias,
+			String primaryTableExpr,
+			List<String> columnNames,
+			QuerySpec inner) {
+		// Reuse the original root alias as the derived-table alias so existing outer
+		// references to the root can keep using that qualifier unchanged.
+		return new QueryPartTableGroup(
 				primaryRoot.getNavigablePath(),
 				null,
 				new SelectStatement( inner ),
@@ -324,27 +445,30 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 				new HashSet<>( Set.of( primaryTableExpr ) ),
 				false,
 				true,
-				sessionFactory
+				converter.getLoadQueryInfluencers().getSessionFactory()
 		);
-		outer.getFromClause().addRoot( derivedRoot );
+	}
 
+	private static void reattachMovedJoins(
+			QueryPartTableGroup derivedRoot,
+			List<MovedJoin> movedJoins,
+			ColumnReferenceRewriter rewriter) {
 		// Add outer SELECT items and reattach moved fetch joins, rewriting any
 		// absorbed-alias ColumnReferences.
-		final var rewriter = new ColumnReferenceRewriter( absorption, primaryAlias );
 		for ( var moved : movedJoins ) {
 			final var join = moved.join();
-			final Predicate originalPredicate = join.getPredicate();
+			final var originalPredicate = join.getPredicate();
 			if ( originalPredicate == null ) {
 				derivedRoot.addTableGroupJoin( join );
 			}
 			else {
-				final Predicate rewrittenPredicate = rewriter.replaceExpressions( originalPredicate );
+				final var rewrittenPredicate = rewriter.replaceExpressions( originalPredicate );
 				if ( rewrittenPredicate == originalPredicate ) {
 					derivedRoot.addTableGroupJoin( join );
 				}
 				else {
-					// Predicates carry a TableGroup reference at construction time —
-					// rebuild the join with the rewritten predicate so the outer's
+					// Predicates carry a TableGroup reference at construction time.
+					// Rebuild the join with the rewritten predicate so the outer's
 					// JOIN ON addresses derived-alias columns (e.g. for subclass
 					// roots where the parent FK references a now-absorbed super
 					// table's PK, or for nested fetches where the predicate
@@ -358,71 +482,135 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 				}
 			}
 		}
-		for ( var sel : originalSelections ) {
-			final Expression rewritten = rewriter.rewrite( sel.getExpression() );
-			if ( rewritten == sel.getExpression() ) {
-				outer.getSelectClause().addSqlSelection( sel );
-			}
-			else {
-				//noinspection unchecked
-				final var type = (BasicType<Object>) rewritten.getExpressionType().getSingleJdbcMapping();
-				outer.getSelectClause().addSqlSelection(
-						new ResolvedSqlSelection( sel.getValuesArrayPosition(), rewritten, type )
-				);
-			}
-		}
+	}
 
+	private static void addOuterSelections(
+			QuerySpec outer,
+			List<SqlSelection> originalSelections,
+			ColumnReferenceRewriter rewriter) {
+		for ( var selection : originalSelections ) {
+			final var expression = selection.getExpression();
+			final var rewritten = rewriter.rewrite( expression );
+			// Most original select expressions can be reused as-is because the derived
+			// table keeps the root alias. Only expressions that touched absorbed aliases
+			// need to be rebuilt against the derived-table column names.
+			outer.getSelectClause()
+					.addSqlSelection( rewritten == expression
+							? selection
+							: new ResolvedSqlSelection(
+									selection.getValuesArrayPosition(),
+									rewritten,
+									(BasicType<?>)
+											rewritten.getExpressionType()
+												.getSingleJdbcMapping()
+							)
+					);
+		}
+	}
+
+	private void addOuterSortSpecifications(
+			QuerySpec outer,
+			List<SortSpecification> originalSortSpecifications,
+			Set<String> outerAliases,
+			String primaryAlias,
+			EntityMappingType primaryEntity,
+			ColumnReferenceRewriter rewriter) {
 		// Scroll()/getResultStream() groups fetched rows into a logical result only
 		// while the root entity key stays consecutive. When collection ordering
-		// moved to the outer query (for example via @OrderBy on the fetched
+		// moved to the outer query (for example, via @OrderBy on the fetched
 		// collection), sorting only by child columns can interleave rows from
 		// different parents. Stabilize the outer row order by inserting the root
 		// identifier between the root-level ordering and the moved collection
 		// ordering. List execution does not need this.
-			if ( groupRowsByOwnerForScroll ) {
-				for ( var sort : rootSortSpecs ) {
-					addOuterSortSpecification( outer, sort, rewriter );
-				}
-				primaryEntity.getIdentifierMapping().forEachSelectable( (selectionIndex, selectableMapping) -> {
-					final var identifierColumn = new ColumnReference( primaryAlias, selectableMapping );
-					if ( !hasSortExpression( outer.getSortSpecifications(), identifierColumn ) ) {
-						outer.addSortSpecification(
-								new SortSpecification(
-										identifierColumn,
-										SortDirection.ASCENDING
-								)
-						);
-					}
-				} );
-				for ( var sort : movedAliasSortSpecs ) {
-					addOuterSortSpecification( outer, sort, rewriter );
-				}
-			}
+		if ( groupRowsByOwnerForScroll ) {
+			addRootOuterSortSpecifications(
+					outer,
+					originalSortSpecifications,
+					outerAliases,
+					primaryAlias,
+					rewriter
+			);
+			addOwnerIdentifierSortSpecifications( outer, primaryAlias, primaryEntity );
+			addMovedAliasOuterSortSpecifications(
+					outer,
+					originalSortSpecifications,
+					outerAliases,
+					primaryAlias,
+					rewriter
+			);
+		}
 		else {
 			// Outer ORDER BY mirrors the original (full) sort specs, with absorbed
 			// column references rewritten through the derived alias.
-			for ( var sort : originalSortSpecs ) {
+			for ( var sort : originalSortSpecifications ) {
 				addOuterSortSpecification( outer, sort, rewriter );
 			}
 		}
+	}
 
-		return outer;
+	private static void addRootOuterSortSpecifications(
+			QuerySpec outer,
+			List<SortSpecification> originalSortSpecifications,
+			Set<String> outerAliases,
+			String primaryAlias,
+			ColumnReferenceRewriter rewriter) {
+		for ( var sort : originalSortSpecifications ) {
+			if ( !referencesMovedAlias( sort, outerAliases, primaryAlias ) ) {
+				addOuterSortSpecification( outer, sort, rewriter );
+			}
+		}
+	}
+
+	private static void addOwnerIdentifierSortSpecifications(
+			QuerySpec outer,
+			String primaryAlias,
+			EntityMappingType primaryEntity) {
+		primaryEntity.getIdentifierMapping().forEachSelectable( (selectionIndex, selectableMapping) -> {
+			final var identifierColumn = new ColumnReference( primaryAlias, selectableMapping );
+			if ( !hasSortExpression( outer.getSortSpecifications(), identifierColumn ) ) {
+				outer.addSortSpecification( new SortSpecification( identifierColumn, SortDirection.ASCENDING ) );
+			}
+		} );
+	}
+
+	private static void addMovedAliasOuterSortSpecifications(
+			QuerySpec outer,
+			List<SortSpecification> originalSortSpecifications,
+			Set<String> outerAliases,
+			String primaryAlias,
+			ColumnReferenceRewriter rewriter) {
+		for ( var sort : originalSortSpecifications ) {
+			if ( referencesMovedAlias( sort, outerAliases, primaryAlias ) ) {
+				addOuterSortSpecification( outer, sort, rewriter );
+			}
+		}
+	}
+
+	private static boolean referencesMovedAlias(
+			SortSpecification sortSpecification,
+			Set<String> outerAliases,
+			String primaryAlias) {
+		// outerAliases contains the aliases introduced by moved fetch joins. If a sort
+		// expression touches one of them, it cannot stay on the inner query after the
+		// join is detached there.
+		return expressionReferencesAnyAlias( sortSpecification.getSortExpression(), outerAliases, primaryAlias );
 	}
 
 	private static void addOuterSortSpecification(
 			QuerySpec outer,
 			SortSpecification sort,
 			ColumnReferenceRewriter rewriter) {
-		final var rewritten = rewriter.rewrite( sort.getSortExpression() );
+		final var sortExpression = sort.getSortExpression();
+		final var rewritten = rewriter.rewrite( sortExpression );
 		outer.addSortSpecification(
-				rewritten == sort.getSortExpression()
+				rewritten == sortExpression
 						? sort
 						: new SortSpecification(
 								rewritten,
 								sort.getSortOrder(),
 								sort.getNullPrecedence(),
 								sort.isIgnoreCase()
-					)
+						)
 		);
 	}
 
@@ -430,12 +618,14 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		if ( sortSpecifications == null ) {
 			return false;
 		}
-		for ( var sortSpecification : sortSpecifications ) {
-			if ( expression.equals( sortSpecification.getSortExpression() ) ) {
-				return true;
+		else {
+			for ( var sortSpecification : sortSpecifications ) {
+				if ( expression.equals( sortSpecification.getSortExpression() ) ) {
+					return true;
+				}
 			}
+			return false;
 		}
-		return false;
 	}
 
 	private static @Nullable TableGroup primaryRoot(List<TableGroup> roots) {
@@ -469,8 +659,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 	private static void collectMovedPluralFetches(TableGroup group, List<MovedJoin> out) {
 		for ( var join : group.getTableGroupJoins() ) {
 			final var joined = join.getJoinedGroup();
-			if ( joined.isFetched()
-					&& !(joined instanceof VirtualTableGroup) ) {
+			if ( joined.isFetched() && !(joined instanceof VirtualTableGroup) ) {
 				if ( joined instanceof PluralTableGroup ) {
 					out.add( new MovedJoin( group, join ) );
 				}
@@ -489,19 +678,21 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 			Expression expression,
 			Set<String> aliases,
 			String except) {
-		final boolean[] found = { false };
-		expression.accept( new AbstractSqlAstWalker() {
+		class Walker extends AbstractSqlAstWalker {
+			boolean found = false;
 			@Override
 			public void visitColumnReference(ColumnReference columnReference) {
 				final String qualifier = columnReference.getQualifier();
 				if ( qualifier != null
 						&& !qualifier.equals( except )
 						&& aliases.contains( qualifier ) ) {
-					found[0] = true;
+					found = true;
 				}
 			}
-		} );
-		return found[0];
+		}
+		final var walker = new Walker();
+		expression.accept( walker );
+		return walker.found;
 	}
 
 	private static void collectAliases(TableGroup group, Set<String> aliases) {
@@ -509,14 +700,14 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		if ( primary != null ) {
 			aliases.add( primary.getIdentificationVariable() );
 		}
-		for ( var refJoin : group.getTableReferenceJoins() ) {
-			aliases.add( refJoin.getJoinedTableReference().getIdentificationVariable() );
+		for ( var referenceJoin : group.getTableReferenceJoins() ) {
+			aliases.add( referenceJoin.getJoinedTableReference().getIdentificationVariable() );
 		}
-		for ( var tgj : group.getTableGroupJoins() ) {
-			collectAliases( tgj.getJoinedGroup(), aliases );
+		for ( var tableGroupJoin : group.getTableGroupJoins() ) {
+			collectAliases( tableGroupJoin.getJoinedGroup(), aliases );
 		}
-		for ( var tgj : group.getNestedTableGroupJoins() ) {
-			collectAliases( tgj.getJoinedGroup(), aliases );
+		for ( var tableGroupJoin : group.getNestedTableGroupJoins() ) {
+			collectAliases( tableGroupJoin.getJoinedGroup(), aliases );
 		}
 	}
 
@@ -526,7 +717,6 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 	private static class AbsorbedColumn {
 		final JdbcMapping jdbcMapping;
 		String exposedName;
-
 		AbsorbedColumn(JdbcMapping jdbcMapping) {
 			this.jdbcMapping = jdbcMapping;
 		}
@@ -558,14 +748,13 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		}
 
 		@Override
-		public void visitSelfRenderingExpression(
-				org.hibernate.sql.ast.tree.expression.SelfRenderingExpression expression) {
-			// Joined-inheritance synthesises a CaseStatementDiscriminatorExpression
+		public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
+			// Joined-inheritance synthesizes a CaseStatementDiscriminatorExpression
 			// whose inner CaseSearchedExpression is built lazily at SQL render time;
 			// trigger the build so the column references it will use are visible to
 			// the absorption pass.
-			if ( expression instanceof CaseStatementDiscriminatorMappingImpl.CaseStatementDiscriminatorExpression cdsExpr ) {
-				cdsExpr.buildCaseExpression().accept( this );
+			if ( expression instanceof CaseStatementDiscriminatorExpression discriminatorExpression ) {
+				discriminatorExpression.buildCaseExpression().accept( this );
 			}
 		}
 	}
@@ -577,7 +766,8 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 	private static class ColumnReferenceRewriter extends ExpressionReplacementWalker {
 		private final Map<AbsorbedKey, AbsorbedColumn> absorption;
 		private final String primaryAlias;
-		// Cache replacements for identity preservation across repeated visits.
+		// Reuse rewritten ColumnReference instances so repeated visits to the same
+		// expression tree keep object identity where possible.
 		private final Map<ColumnReference, ColumnReference> cache = new HashMap<>();
 
 		private ColumnReferenceRewriter(Map<AbsorbedKey, AbsorbedColumn> absorption, String primaryAlias) {
@@ -595,15 +785,15 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 			if ( expression instanceof ColumnReference columnReference ) {
 				final String qualifier = columnReference.getQualifier();
 				if ( qualifier != null ) {
-					final var info =
+					final var absorbedColumn =
 							absorption.get( new AbsorbedKey( qualifier,
 									columnReference.getColumnExpression() ) );
-					if ( info != null ) {
+					if ( absorbedColumn != null ) {
 						return (X) cache.computeIfAbsent(
 								columnReference,
 								original -> new ColumnReference(
 										primaryAlias,
-										info.exposedName,
+										absorbedColumn.exposedName,
 										false,
 										null,
 										original.getJdbcMapping()
@@ -612,77 +802,84 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 					}
 				}
 			}
-			else if ( expression instanceof CaseSearchedExpression cse ) {
-				return (X) rewriteCaseSearched( cse );
+			else if ( expression instanceof CaseSearchedExpression caseSearchedExpression ) {
+				return (X) rewriteCaseSearched( caseSearchedExpression );
 			}
-			else if ( expression instanceof CaseSimpleExpression cse ) {
-				return (X) rewriteCaseSimple( cse );
+			else if ( expression instanceof CaseSimpleExpression caseSimpleExpression ) {
+				return (X) rewriteCaseSimple( caseSimpleExpression );
 			}
-			else if ( expression instanceof CaseStatementDiscriminatorMappingImpl.CaseStatementDiscriminatorExpression cdsExpr ) {
+			else if ( expression instanceof CaseStatementDiscriminatorExpression discriminatorExpression ) {
 				// Replace the lazy self-rendering wrapper with the rewritten inner
 				// CASE, so the outer renders against the derived alias.
-				return (X) rewriteCaseSearched( cdsExpr.buildCaseExpression() );
+				return (X) rewriteCaseSearched( discriminatorExpression.buildCaseExpression() );
 			}
 			return expression;
 		}
 
-		private CaseSearchedExpression rewriteCaseSearched(CaseSearchedExpression cse) {
-			final var fragments = cse.getWhenFragments();
+		private CaseSearchedExpression rewriteCaseSearched(CaseSearchedExpression caseSearchedExpression) {
+			final var fragments = caseSearchedExpression.getWhenFragments();
 			List<CaseSearchedExpression.WhenFragment> newFragments = null;
 			for ( int i = 0; i < fragments.size(); i++ ) {
 				final var fragment = fragments.get( i );
-				final Predicate newPred = replaceExpressions( fragment.getPredicate() );
-				final Expression newResult = replaceExpressions( fragment.getResult() );
-				if ( newPred != fragment.getPredicate() || newResult != fragment.getResult() ) {
+				final var predicate = fragment.getPredicate();
+				final var result = fragment.getResult();
+				final var newPred = replaceExpressions( predicate );
+				final var newResult = replaceExpressions( result );
+				if ( newPred != predicate || newResult != result ) {
 					if ( newFragments == null ) {
 						newFragments = new ArrayList<>( fragments );
 					}
 					newFragments.set( i, new CaseSearchedExpression.WhenFragment( newPred, newResult ) );
 				}
 			}
-			final Expression originalOtherwise = cse.getOtherwise();
-			final Expression newOtherwise = originalOtherwise == null
-					? null
-					: replaceExpressions( originalOtherwise );
+			final var originalOtherwise = caseSearchedExpression.getOtherwise();
+			final var newOtherwise =
+					originalOtherwise == null
+							? null
+							: replaceExpressions( originalOtherwise );
 			if ( newFragments != null || newOtherwise != originalOtherwise ) {
 				return new CaseSearchedExpression(
-						cse.getExpressionType(),
+						caseSearchedExpression.getExpressionType(),
 						newFragments != null ? newFragments : fragments,
 						newOtherwise
 				);
 			}
-			return cse;
+			return caseSearchedExpression;
 		}
 
-		private CaseSimpleExpression rewriteCaseSimple(CaseSimpleExpression cse) {
-			final Expression newFixture = replaceExpressions( cse.getFixture() );
-			final var fragments = cse.getWhenFragments();
+		private CaseSimpleExpression rewriteCaseSimple(CaseSimpleExpression caseSimpleExpression) {
+			final var newFixture = replaceExpressions( caseSimpleExpression.getFixture() );
+			final var fragments = caseSimpleExpression.getWhenFragments();
 			List<CaseSimpleExpression.WhenFragment> newFragments = null;
 			for ( int i = 0; i < fragments.size(); i++ ) {
 				final var fragment = fragments.get( i );
-				final Expression newCheck = replaceExpressions( fragment.getCheckValue() );
-				final Expression newResult = replaceExpressions( fragment.getResult() );
-				if ( newCheck != fragment.getCheckValue() || newResult != fragment.getResult() ) {
+				final var checkValue = fragment.getCheckValue();
+				final var result = fragment.getResult();
+				final var newCheck = replaceExpressions( checkValue );
+				final var newResult = replaceExpressions( result );
+				if ( newCheck != checkValue || newResult != result ) {
 					if ( newFragments == null ) {
 						newFragments = new ArrayList<>( fragments );
 					}
 					newFragments.set( i, new CaseSimpleExpression.WhenFragment( newCheck, newResult ) );
 				}
 			}
-			final Expression originalOtherwise = cse.getOtherwise();
-			final Expression newOtherwise = originalOtherwise == null
-					? null
-					: replaceExpressions( originalOtherwise );
-			if ( newFixture != cse.getFixture() || newFragments != null
+			final var originalOtherwise = caseSimpleExpression.getOtherwise();
+			final var newOtherwise =
+					originalOtherwise == null
+							? null
+							: replaceExpressions( originalOtherwise );
+			if ( newFixture != caseSimpleExpression.getFixture()
+					|| newFragments != null
 					|| newOtherwise != originalOtherwise ) {
 				return new CaseSimpleExpression(
-						cse.getExpressionType(),
+						caseSimpleExpression.getExpressionType(),
 						newFixture,
 						newFragments != null ? newFragments : fragments,
 						newOtherwise
 				);
 			}
-			return cse;
+			return caseSimpleExpression;
 		}
 	}
 }

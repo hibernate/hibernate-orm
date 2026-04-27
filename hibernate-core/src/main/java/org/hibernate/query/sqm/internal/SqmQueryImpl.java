@@ -565,8 +565,7 @@ public class SqmQueryImpl<R>
 	}
 
 	private NonSelectQueryPlan buildConcreteDeleteQueryPlan(SqmDeleteStatement<?> deleteStatement) {
-		final var entityDomainType = deleteStatement.getTarget().getModel();
-		final String entityName = entityDomainType.getHibernateEntityName();
+		final String entityName = deleteStatement.getTarget().getModel().getHibernateEntityName();
 		final var persister = getMappingMetamodel().getEntityDescriptor( entityName );
 		final var multiTableStrategy = persister.getSqmMultiTableMutationStrategy();
 		return multiTableStrategy != null
@@ -627,15 +626,15 @@ public class SqmQueryImpl<R>
 	}
 
 	private boolean useMultiTableInsert(EntityPersister persister, SqmInsertStatement<R> sqmInsert) {
-		boolean useMultiTableInsert = persister.hasMultipleTables();
+		final boolean useMultiTableInsert = persister.hasMultipleTables();
 		if ( !useMultiTableInsert && !isSimpleValuesInsert( sqmInsert, persister ) ) {
 			final var identifierGenerator = persister.getGenerator();
 			if ( identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator bulkInsertionCapableGenerator
 					&& identifierGenerator instanceof OptimizableGenerator optimizableGenerator ) {
 				final var optimizer = optimizableGenerator.getOptimizer();
 				if ( optimizer != null && optimizer.getIncrementSize() > 1
-					|| !bulkInsertionCapableGenerator.supportsBulkInsertionIdentifierGeneration() ) {
-					useMultiTableInsert = !hasIdentifierAssigned( sqmInsert, persister );
+						|| !bulkInsertionCapableGenerator.supportsBulkInsertionIdentifierGeneration() ) {
+					return !hasIdentifierAssigned( sqmInsert, persister );
 				}
 			}
 		}
@@ -655,7 +654,6 @@ public class SqmQueryImpl<R>
 				}
 			}
 		}
-
 		return false;
 	}
 

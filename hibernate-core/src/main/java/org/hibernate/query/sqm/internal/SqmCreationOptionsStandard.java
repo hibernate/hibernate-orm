@@ -36,4 +36,7 @@ public class SqmCreationOptionsStandard implements SqmCreationOptions {
 	public boolean isPortableIntegerDivisionEnabled() {
 		return queryEngineOptions.isPortableIntegerDivisionEnabled();
 	}
+
+	@Override
+	public boolean isSafeModeEnabled() { return queryEngineOptions.isSafeModeEnabled(); }
 }

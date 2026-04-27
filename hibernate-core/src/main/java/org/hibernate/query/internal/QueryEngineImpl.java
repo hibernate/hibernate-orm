@@ -131,6 +131,8 @@ public class QueryEngineImpl implements QueryEngine {
 			Dialect dialect) {
 		final var sqmFunctionRegistry = metadata.getFunctionRegistry();
 
+		sqmFunctionRegistry.setSafeModeEnabled( queryEngineOptions.isSafeModeEnabled() );
+
 		queryEngineOptions.getCustomSqlFunctionMap().forEach( sqmFunctionRegistry::register );
 
 		final var customSqmFunctionRegistry = queryEngineOptions.getCustomSqmFunctionRegistry();

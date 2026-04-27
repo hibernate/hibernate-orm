@@ -71,6 +71,9 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isSafeModeEnabled() { return delegate.isSafeModeEnabled(); }
+
+	@Override
 	public String getUuid() {
 		return delegate().getUuid();
 	}

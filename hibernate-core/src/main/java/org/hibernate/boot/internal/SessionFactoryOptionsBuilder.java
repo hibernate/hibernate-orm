@@ -135,6 +135,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private FormatMapper jsonFormatMapper;
 	private FormatMapper xmlFormatMapper;
 	private final boolean xmlFormatMapperLegacyFormatEnabled;
+	private final boolean safeModeEnabled;
 
 	// SessionFactory behavior
 	private final boolean jpaBootstrap;
@@ -545,6 +546,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 		jsonFunctionsEnabled = getBoolean( JSON_FUNCTIONS_ENABLED, settings );
 		xmlFunctionsEnabled = getBoolean( XML_FUNCTIONS_ENABLED, settings );
+		safeModeEnabled = getBoolean( SAFE_MODE_ENABLED, settings, false );
 
 		queryStatisticsMaxSize =
 				getInt( QUERY_STATISTICS_MAX_SIZE, settings, DEFAULT_QUERY_STATISTICS_MAX_SIZE );
@@ -978,6 +980,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SessionFactoryOptionsState
+	@Override
+	public boolean isSafeModeEnabled() { return safeModeEnabled; }
 
 	@Override
 	public String getUuid() {

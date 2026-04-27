@@ -136,6 +136,11 @@ public interface QueryEngineOptions {
 	 */
 	boolean isPortableIntegerDivisionEnabled();
 
+	/**
+	 *@see org.hibernate.cfg.AvailableSettings#SAFE_MODE_ENABLED
+	 */
+	boolean isSafeModeEnabled();
+
 	String getSessionFactoryName();
 
 	String getUuid();

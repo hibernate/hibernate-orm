@@ -20,6 +20,21 @@ import jakarta.persistence.criteria.CriteriaUpdate;
  */
 public interface QuerySettings {
 	/**
+	 * Boolean setting to control whether SafeMode validation for HQL and Criteria queries is enabled.
+	 *
+	 * When enabled, additional validation is applied during query construction to ensure
+	 * safer and stricter handling of query semantics.
+	 *
+	 * @settingDefault {@code false} (disabled)
+	 *
+	 * @see org.hibernate.query.spi.QueryEngineOptions#isSafeModeEnabled
+	 *
+	 * @since 7.0
+	 */
+	@Incubating
+	String SAFE_MODE_ENABLED = "hibernate.query.safe_mode_enabled";
+
+	/**
 	 * Boolean setting to control if the use of tech preview JSON functions in HQL is enabled.
 	 *
 	 * @settingDefault {@code false} (disabled) since the functions are still incubating.

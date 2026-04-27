@@ -423,7 +423,6 @@ import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -440,6 +439,7 @@ import java.util.function.Supplier;
 
 import static jakarta.persistence.metamodel.Type.PersistenceType.ENTITY;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
@@ -496,7 +496,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private boolean deduplicateSelectionItems;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
 	private SqmStatement<?> currentSqmStatement;
-	private final Stack<SqmQueryPart> sqmQueryPartStack = new StandardStack<>();
+	private final Stack<SqmQueryPart<?>> sqmQueryPartStack = new StandardStack<>();
 	private CteContainer cteContainer;
 	/**
 	 * A map from {@link SqmCteTable#getCteName()} to the final SQL name.
@@ -509,7 +509,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	// Captures the list of SqlSelection for a navigable path.
 	// The map will only contain entries for order by elements of a QueryGroup, that refer to an attribute name
 	// i.e. `(select e from Entity e union all ...) order by name` where `name` is an attribute of the type `Entity`
-	private Map<NavigablePath, Map.Entry<Integer, List<SqlSelection>>> trackedFetchSelectionsForGroup = Collections.emptyMap();
+	private Map<NavigablePath, Map.Entry<Integer, List<SqlSelection>>> trackedFetchSelectionsForGroup = emptyMap();
 
 	private List<Map.Entry<OrderByFragment, TableGroup>> orderByFragments;
 
@@ -530,8 +530,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	protected Predicate additionalRestrictions;
 
 	private final Stack<Clause> currentClauseStack = new StandardStack<>();
-	private final Stack<Supplier> inferrableTypeAccessStack = new StandardStack<>();
-	private final Stack<List> queryTransformers = new StandardStack<>();
+	private final Stack<Supplier<MappingModelExpressible<?>>> inferrableTypeAccessStack = new StandardStack<>();
+	private final Stack<List<QueryTransformer>> queryTransformers = new StandardStack<>();
 	private boolean inTypeInference;
 	private boolean inImpliedResultTypeInference;
 	private boolean inNestedContext;
@@ -803,9 +803,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return currentClauseStack;
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Stack<SqmQueryPart> getSqmQueryPartStack() {
+	public Stack<SqmQueryPart<?>> getSqmQueryPartStack() {
 		return sqmQueryPartStack;
 	}
 
@@ -1927,13 +1926,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public CteContainer visitCteContainer(SqmCteContainer consumer) {
-		final Collection<SqmCteStatement<?>> sqmCteStatements = consumer.getCteStatements();
+		final var sqmCteStatements = consumer.getCteStatements();
 		cteContainer = new CteContainerImpl( cteContainer );
 		if ( !sqmCteStatements.isEmpty() ) {
 			final boolean originalDeduplicateSelectionItems = deduplicateSelectionItems;
 			deduplicateSelectionItems = false;
 			currentClauseStack.push( Clause.WITH );
-			for ( SqmCteStatement<?> sqmCteStatement : sqmCteStatements ) {
+			for ( var sqmCteStatement : sqmCteStatements ) {
 				visitCteStatement( sqmCteStatement );
 			}
 			currentClauseStack.pop();
@@ -1952,7 +1951,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public QueryGroup visitQueryGroup(SqmQueryGroup<?> queryGroup) {
-		final List<? extends SqmQueryPart<?>> queryParts = queryGroup.getQueryParts();
+		final var queryParts = queryGroup.getQueryParts();
 		final int size = queryParts.size();
 		final List<QueryPart> newQueryParts = new ArrayList<>( size );
 		final QueryGroup group = new QueryGroup(
@@ -1961,29 +1960,33 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				newQueryParts
 		);
 
-		final Map<NavigablePath, Map.Entry<Integer, List<SqlSelection>>> originalTrackedFetchSelectionsForGroup = this.trackedFetchSelectionsForGroup;
-		if ( queryGroup.getOrderByClause() != null && queryGroup.getOrderByClause().hasPositionalSortItem() ) {
+		final var originalTrackedFetchSelectionsForGroup = trackedFetchSelectionsForGroup;
+		final var orderByClause = queryGroup.getOrderByClause();
+		if ( orderByClause != null && orderByClause.hasPositionalSortItem() ) {
 			trackSelectionsForGroup = true;
 			// Find the order by elements which refer to attributes of the selections
 			// and register the navigable paths so that a list of SqlSelection is tracked for the fetch
 			Map<NavigablePath, Map.Entry<Integer, List<SqlSelection>>> trackedFetchSelectionsForGroup = null;
-			for ( SqmSortSpecification sortSpecification : queryGroup.getOrderByClause().getSortSpecifications() ) {
+			for ( var sortSpecification : orderByClause.getSortSpecifications() ) {
 				if ( sortSpecification.getExpression() instanceof SqmAliasedNodeRef nodeRef ) {
-					if ( nodeRef.getNavigablePath() != null ) {
+					final var navigablePath = nodeRef.getNavigablePath();
+					if ( navigablePath != null ) {
 						if ( trackedFetchSelectionsForGroup == null ) {
 							trackedFetchSelectionsForGroup = new HashMap<>();
 						}
-						trackedFetchSelectionsForGroup.put( nodeRef.getNavigablePath(), new AbstractMap.SimpleEntry<>( nodeRef.getPosition() - 1, new ArrayList<>() ) );
+						trackedFetchSelectionsForGroup.put( navigablePath,
+								new AbstractMap.SimpleEntry<>( nodeRef.getPosition() - 1, new ArrayList<>() ) );
 					}
 				}
 			}
 
-			this.trackedFetchSelectionsForGroup = trackedFetchSelectionsForGroup == null
-					? Collections.emptyMap()
-					: trackedFetchSelectionsForGroup;
+			this.trackedFetchSelectionsForGroup =
+					trackedFetchSelectionsForGroup == null
+							? emptyMap()
+							: trackedFetchSelectionsForGroup;
 		}
 
-		final SqlAstQueryPartProcessingStateImpl processingState = new SqlAstQueryPartProcessingStateImpl(
+		final var processingState = new SqlAstQueryPartProcessingStateImpl(
 				group,
 				getCurrentProcessingState(),
 				this,
@@ -1991,8 +1994,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				currentClauseStack::getCurrent,
 				deduplicateSelectionItems
 		);
-		final DelegatingSqmAliasedNodeCollector collector = (DelegatingSqmAliasedNodeCollector) processingState
-				.getSqlExpressionResolver();
+		final var collector =
+				(DelegatingSqmAliasedNodeCollector)
+						processingState.getSqlExpressionResolver();
 		sqmQueryPartStack.push( queryGroup );
 		pushProcessingState( processingState );
 
@@ -2028,7 +2032,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public QuerySpec visitQuerySpec(SqmQuerySpec<?> sqmQuerySpec) {
 		final boolean topLevel = getProcessingStateStack().isEmpty();
-		final QuerySpec sqlQuerySpec = new QuerySpec( topLevel, sqmQuerySpec.getFromClause().getNumberOfRoots() );
+		final var sqlQuerySpec = new QuerySpec( topLevel, sqmQuerySpec.getFromClause().getNumberOfRoots() );
 
 		final Predicate originalAdditionalRestrictions = additionalRestrictions;
 		additionalRestrictions = null;
@@ -2089,14 +2093,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		visitSelectClause( sqmQuerySpec.getSelectClause() );
 
-		final SqmWhereClause whereClause = sqmQuerySpec.getWhereClause();
+		final var whereClause = sqmQuerySpec.getWhereClause();
 		if ( whereClause != null ) {
 			sqlQuerySpec.applyPredicate( visitWhereClause( whereClause.getPredicate() ) );
 		}
 
 		sqlQuerySpec.setGroupByClauseExpressions( visitGroupByClause( sqmQuerySpec.getGroupByClauseExpressions() ) );
 
-		final SqmPredicate havingClausePredicate = sqmQuerySpec.getHavingClausePredicate();
+		final var havingClausePredicate = sqmQuerySpec.getHavingClausePredicate();
 		if ( havingClausePredicate != null ) {
 			sqlQuerySpec.setHavingClauseRestrictions( visitHavingClause( havingClausePredicate ) );
 		}
@@ -2135,9 +2139,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private QuerySpec applyTransformers(QuerySpec sqlQuerySpec) {
 		QuerySpec finalQuerySpec = sqlQuerySpec;
-		@SuppressWarnings("unchecked")
-		final List<QueryTransformer> transformers = queryTransformers.getCurrent();
-		for ( QueryTransformer transformer : transformers ) {
+		final var transformers = queryTransformers.getCurrent();
+		for ( var transformer : transformers ) {
 			finalQuerySpec = transformer.transform( cteContainer, finalQuerySpec, this );
 		}
 		return finalQuerySpec;
@@ -2155,9 +2158,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private void downgradeTreatUses(TableGroup tableGroup) {
-		final Map<String, EntityNameUse> entityNameUses = tableGroupEntityNameUses.get( tableGroup );
+		final var entityNameUses = tableGroupEntityNameUses.get( tableGroup );
 		if ( entityNameUses != null ) {
-			for ( Map.Entry<String, EntityNameUse> entry : entityNameUses.entrySet() ) {
+			for ( var entry : entityNameUses.entrySet() ) {
 				if ( entry.getValue().getKind() == EntityNameUse.UseKind.TREAT ) {
 					entry.setValue( EntityNameUse.EXPRESSION );
 				}
@@ -2170,9 +2173,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			currentClauseStack.push( Clause.ORDER );
 			inferrableTypeAccessStack.push( () -> null );
 			try {
-				for ( SqmSortSpecification sortSpecification :
-						sqmQueryPart.getOrderByClause().getSortSpecifications() ) {
-					final SortSpecification specification = visitSortSpecification( sortSpecification );
+				for ( var sortSpecification : sqmQueryPart.getOrderByClause().getSortSpecifications() ) {
+					final var specification = visitSortSpecification( sortSpecification );
 					if ( specification != null ) {
 						sqlQueryPart.addSortSpecification( specification );
 					}
@@ -2207,14 +2209,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private void applyOffsetAndFetch(SqmQueryPart<?> sqmQueryPart, QueryPart sqlQueryPart) {
 		inferrableTypeAccessStack.push( () -> getTypeConfiguration().getBasicTypeForJavaType( Integer.class ) );
 		sqlQueryPart.setOffsetClauseExpression( visitOffsetExpression( sqmQueryPart.getOffsetExpression() ) );
-		if ( sqmQueryPart.getFetchClauseType() == FetchClauseType.PERCENT_ONLY
-				|| sqmQueryPart.getFetchClauseType() == FetchClauseType.PERCENT_WITH_TIES ) {
+		final var fetchClauseType = sqmQueryPart.getFetchClauseType();
+		if ( fetchClauseType == FetchClauseType.PERCENT_ONLY
+			|| fetchClauseType == FetchClauseType.PERCENT_WITH_TIES ) {
 			inferrableTypeAccessStack.pop();
 			inferrableTypeAccessStack.push( () -> getTypeConfiguration().getBasicTypeForJavaType( Double.class ) );
 		}
 		sqlQueryPart.setFetchClauseExpression(
 				visitFetchExpression( sqmQueryPart.getFetchExpression() ),
-				sqmQueryPart.getFetchClauseType()
+				fetchClauseType
 		);
 		inferrableTypeAccessStack.pop();
 	}
@@ -2266,7 +2269,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private boolean canRenderPercentFetchInSubquery() {
 		final var dialect = getDialect();
 		return dialect.supportsFetchClause( FetchClauseType.PERCENT_ONLY )
-				|| dialect.supportsWindowFunctions();
+			|| dialect.supportsWindowFunctions();
 	}
 
 	private static boolean hasPluralFetchOnSomeRoot(List<TableGroup> roots) {
@@ -2486,18 +2489,19 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private List<Map.Entry<String, DomainResultProducer<?>>> resultProducers(SqmSelection<?> sqmSelection) {
-		final SqmSelectableNode<?> selectionNode = sqmSelection.getSelectableNode();
+		final var selectionNode = sqmSelection.getSelectableNode();
 		if ( selectionNode instanceof SqmJpaCompoundSelection<?> selectableNode ) {
 			final List<Map.Entry<String, DomainResultProducer<?>>> resultProducers =
 					new ArrayList<>( selectableNode.getSelectionItems().size() );
-			for ( SqmSelectableNode<?> selectionItem : selectableNode.getSelectionItems() ) {
+			for ( var selectionItem : selectableNode.getSelectionItems() ) {
 				if ( selectionItem instanceof SqmPath<?> path ) {
 					prepareForSelection( path );
 				}
 				resultProducers.add(
 						new AbstractMap.SimpleEntry<>(
 								selectionItem.getAlias(),
-								(DomainResultProducer<?>) selectionItem.accept( this )
+								(DomainResultProducer<?>)
+										selectionItem.accept( this )
 						)
 				);
 			}
@@ -3060,7 +3064,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		final boolean oldInNestedContext = inNestedContext;
 		inNestedContext = true;
-		final Supplier<MappingModelExpressible<?>> oldFunctionImpliedResultTypeAccess = functionImpliedResultTypeAccess;
+		final var oldFunctionImpliedResultTypeAccess = functionImpliedResultTypeAccess;
 		functionImpliedResultTypeAccess = inferrableTypeAccessStack.getCurrent();
 		inferrableTypeAccessStack.push( () -> null );
 		try {
@@ -6071,8 +6075,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			@SuppressWarnings("unchecked")
-			final DiscriminatorConverter<?, E> valueConverter =
-					(DiscriminatorConverter<?, E>) inferableExpressible.getValueConverter();
+			final var valueConverter =
+					(DiscriminatorConverter<?, E>)
+							inferableExpressible.getValueConverter();
 			entityDescriptor =
 					discriminatorValueDetails( valueConverter, literalValue )
 							.getIndicatedEntity().getEntityPersister();

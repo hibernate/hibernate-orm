@@ -25,7 +25,6 @@ import org.hibernate.query.MutationQuery;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
-import org.hibernate.query.SemanticException;
 import org.hibernate.query.UnknownNamedQueryException;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
@@ -294,6 +293,25 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	@Override
 	<R> SelectionQuery<R> createQuery(String queryString, Class<R> resultClass);
 
+	/// Synonym for {@linkplain #createQuery(String,Class)}, offering generally easier
+	/// readability for use code.  For example
+	///
+	/// ```java
+	/// var peeps = session.createQuery(Person.class, "some really long query string" )
+	/// 		...
+	/// 		.list();
+	/// ```
+	/// as opposed to
+	///
+	/// ```java
+	/// var peeps = session.createQuery("some really long query string", Person.class)
+	/// 		...
+	/// 		.list();
+	/// ```
+	default <R> SelectionQuery<R> createQuery(Class<R> resultClass, String queryString) {
+		return createQuery( queryString, resultClass );
+	}
+
 	/**
 	 * @see jakarta.persistence.EntityHandler#createQuery(String,EntityGraph)
 	 */
@@ -427,12 +445,6 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	<R> SelectionQuery<R> createQuery(TypedQueryReference<R> typedQueryReference);
 
 	/**
-	 * Create a {@link Query} for the given JPA {@link CriteriaQuery}.
-	 */
-	@Override
-	<R> SelectionQuery<R> createQuery(CriteriaQuery<R> criteriaQuery);
-
-	/**
 	 * {@inheritDoc}
 	 *
 	 * @see #createSelectionQuery(CriteriaSelect)
@@ -462,7 +474,7 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 * Create a {@link SelectionQuery} reference for the given
 	 * {@link CriteriaQuery}.
 	 *
-	 * @see jakarta.persistence.EntityManager#createQuery(CriteriaQuery)
+	 * @see jakarta.persistence.EntityManager#createQuery(CriteriaSelect)
 	 */
 	<R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria);
 
@@ -514,6 +526,25 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	 */
 	@Override
 	<R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass);
+
+	/// Synonym for {@linkplain #createNativeQuery(String,Class)}, offering generally easier
+	/// readability for use code.  For example
+	///
+	/// ```java
+	/// var peeps = session.createNativeQuery(Person.class, "some really long query string" )
+	/// 		...
+	/// 		.list();
+	/// ```
+	/// as opposed to
+	///
+	/// ```java
+	/// var peeps = session.createNativeQuery("some really long query string", Person.class)
+	/// 		...
+	/// 		.list();
+	/// ```
+	default <R> NativeQuery<R> createNativeQuery(Class<R> resultClass, String queryString) {
+		return createNativeQuery( queryString, resultClass );
+	}
 
 	/**
 	 * Create a {@link NativeQuery} instance for the given native SQL query
@@ -579,9 +610,6 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 
 	@Override
 	MutationQuery createNamedStatement(String name);
-
-	@Override
-	Query createNamedQuery(String s);
 
 	<R> NativeQuery<R> createNamedQuery(String name, String resultSetMappingName);
 	<R> NativeQuery<R> createNamedQuery(String name, String resultSetMappingName, Class<R> resultClass);
@@ -972,51 +1000,28 @@ public interface SharedSessionContract extends EntityHandler, AutoCloseable, Ser
 	}
 
 
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Deprecations
 
+	/**
+	 * @deprecated Remains deprecated from 6.0 version, but we should really think about
+	 * a specialized StatementOrTypedQuery which returns our hierarchy (SelectionQuery, etc).
+	 * For now, just treat Query that way.
+	 */
+	@Deprecated(since = "6.0", forRemoval = true)
+	@Override
+	Query createQuery(String queryString);
 
 	/**
-	 * Create a {@link Query} instance for the given HQL query, or
-	 * HQL insert, update, or delete statement.
-	 * <p>
-	 * If a query has no explicit {@code select} list, the select list
-	 * is inferred:
-	 * <ul>
-	 * <li>if there is exactly one root entity in the {@code from}
-	 *     clause, and it has no non-{@code fetch} joins, then that
-	 *     root entity is the only element of the select list, or
-	 * <li>if there is an entity with the alias {@code this}, then
-	 *     that entity is the only element of the select list, or
-	 * <li>otherwise, the query is considered ambiguous, and this
-	 *     method throws a {@link SemanticException}.
-	 * </ul>
-	 * <p>
-	 * The query must have an explicit {@code from} clause, which
-	 * can never be inferred.
-	 *
-	 * @deprecated The overloaded form
-	 * {@link #createQuery(String, Class)} which takes a result type
-	 * is strongly recommended in preference to this method, since it
-	 * returns a typed {@code Query} object, and because it is able to
-	 * use the given result type to infer the {@code select} list, and
-	 * even sometimes the {@code from} clause. Alternatively,
-	 * {@link #createSelectionQuery(String, Class)} is preferred for
-	 * queries, and {@link #createMutationQuery(String)} for insert,
-	 * update, and delete statements.
-	 *
-	 * @apiNote Returns a raw {@code Query} type instead of a wildcard
-	 * type {@code Query<?>}, to match the signature of the JPA method
-	 * {@link jakarta.persistence.EntityManager#createQuery(String)}.
-	 *
-	 * @param queryString The HQL query
-	 *
-	 * @return The {@link Query} instance for manipulation and execution
-	 *
-	 * @see jakarta.persistence.EntityManager#createQuery(String)
+	 * @deprecated Creation of named queries without indication of whether they are a
+	 * {@linkplain SelectionQuery selection} or {@linkplain MutationQuery mutation} is
+	 * no longer supported and will be removed in later versions.  Instead, use one of the
+	 * forms explicitly indicating the intent - e.g., {@linkplain #createNamedSelectionQuery}
+	 * or {@linkplain #createNamedMutationQuery}.
 	 */
+	@Deprecated(since = "8.0", forRemoval = true)
 	@Override
-	@Deprecated
-	@SuppressWarnings("rawtypes")
-	Query createQuery(String queryString);
+	Query createNamedQuery(String name);
+
 }

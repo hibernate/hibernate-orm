@@ -4,6 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.NumericExpression;
+import jakarta.persistence.criteria.Predicate;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -34,7 +37,7 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  *
  * @author Steve Ebersole
  */
-public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> {
+public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> implements SqmPluralPath<C,Object> {
 	public SqmPluralValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPluralPersistentAttribute<?, C, ?> referencedNavigable,
@@ -185,5 +188,40 @@ public class SqmPluralValuedSimplePath<C> extends AbstractSqmSimplePath<C> {
 	@Override
 	public <S extends C> SqmTreatedEntityValuedSimplePath<C, S> treatAs(EntityDomainType<S> treatTarget) {
 		throw new UnsupportedOperationException( "Cannot treat plural valued simple paths" );
+	}
+
+	@Override
+	public Predicate isEmpty() {
+		throw new UnsupportedOperationException( "Not implemented yet" );
+	}
+
+	@Override
+	public Predicate isNotEmpty() {
+		throw new UnsupportedOperationException( "Not implemented yet" );
+	}
+
+	@Override
+	public NumericExpression<Integer> size() {
+		throw new UnsupportedOperationException( "Not implemented yet" );
+	}
+
+	@Override
+	public Predicate notContains(Object elem) {
+		throw new UnsupportedOperationException( "Not implemented yet" );
+	}
+
+	@Override
+	public Predicate notContains(Expression elem) {
+		throw new UnsupportedOperationException( "Not implemented yet" );
+	}
+
+	@Override
+	public Predicate contains(Object elem) {
+		throw new UnsupportedOperationException( "Not implemented yet" );
+	}
+
+	@Override
+	public Predicate contains(Expression elem) {
+		throw new UnsupportedOperationException( "Not implemented yet" );
 	}
 }

@@ -122,7 +122,7 @@ public class BasicAttributesLazyGroupTest {
 	@Test
 	public void testHql(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final List<Review> reviews = session.createQuery( "select r from Review r" ).list();
+			final List<Review> reviews = session.createQuery( "select r from Review r", Review.class ).list();
 			assertThat( reviews.size(), is( 1 ) );
 
 			final Review review = reviews.get( 0 );

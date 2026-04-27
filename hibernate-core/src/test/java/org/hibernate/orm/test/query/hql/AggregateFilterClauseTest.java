@@ -6,7 +6,6 @@ package org.hibernate.orm.test.query.hql;
 
 import java.util.Date;
 
-import org.hibernate.query.Query;
 import org.hibernate.query.SyntaxException;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -93,7 +92,7 @@ public class AggregateFilterClauseTest {
 		scope.inTransaction(
 				session -> {
 					Long expected = 31L;
-					Query q = session.createQuery( "select sum(eob.theInt) from EntityOfBasics eob" );
+					var q = session.createQuery( "select sum(eob.theInt) from EntityOfBasics eob", Long.class );
 					assertEquals( expected, q.getSingleResult(), "expected " + expected + ", got " + q.getSingleResult() );
 				}
 		);
@@ -104,7 +103,7 @@ public class AggregateFilterClauseTest {
 		scope.inTransaction(
 				session -> {
 					Long expected = 11L;
-					Query q = session.createQuery( "select sum(eob.theInt) filter(where eob.theBoolean = true) from EntityOfBasics eob" );
+					var q = session.createQuery( "select sum(eob.theInt) filter(where eob.theBoolean = true) from EntityOfBasics eob", Long.class );
 					assertEquals( expected, q.getSingleResult(), "expected " + expected + ", got " + q.getSingleResult() );
 				}
 		);
@@ -115,7 +114,7 @@ public class AggregateFilterClauseTest {
 		scope.inTransaction(
 				session -> {
 					Double expected = 8.0D;
-					Query q = session.createQuery( "select avg(eob.theDouble) from EntityOfBasics eob" );
+					var q = session.createQuery( "select avg(eob.theDouble) from EntityOfBasics eob", Double.class );
 					assertEquals( expected, q.getSingleResult(), "expected " + expected + ", got " + q.getSingleResult() );
 				}
 		);
@@ -126,7 +125,7 @@ public class AggregateFilterClauseTest {
 		scope.inTransaction(
 				session -> {
 					Double expected = 5.5D;
-					Query q = session.createQuery( "select avg(eob.theDouble) filter(where eob.theBoolean = true) from EntityOfBasics eob" );
+					var q = session.createQuery( "select avg(eob.theDouble) filter(where eob.theBoolean = true) from EntityOfBasics eob", Double.class );
 					assertEquals( expected, q.getSingleResult(), "expected " + expected + ", got " + q.getSingleResult() );
 				}
 		);
@@ -137,7 +136,7 @@ public class AggregateFilterClauseTest {
 		scope.inTransaction(
 				session -> {
 					Double expected = 5D;
-					Query q = session.createQuery( "select min(eob.theDouble) from EntityOfBasics eob" );
+					var q = session.createQuery( "select min(eob.theDouble) from EntityOfBasics eob", Double.class );
 					assertEquals( expected, q.getSingleResult(), "expected " + expected + ", got " + q.getSingleResult() );
 				}
 		);
@@ -148,7 +147,7 @@ public class AggregateFilterClauseTest {
 		scope.inTransaction(
 				session -> {
 					Double expected = 7D;
-					Query q = session.createQuery( "select min(eob.theDouble) filter(where eob.theBoolean = false) from EntityOfBasics eob" );
+					var q = session.createQuery( "select min(eob.theDouble) filter(where eob.theBoolean = false) from EntityOfBasics eob", Double.class );
 					assertEquals( expected, q.getSingleResult(), "expected " + expected + ", got " + q.getSingleResult() );
 				}
 		);
@@ -159,7 +158,7 @@ public class AggregateFilterClauseTest {
 		scope.inTransaction(
 				session -> {
 					Double expected = 13D;
-					Query q = session.createQuery( "select max(eob.theDouble) from EntityOfBasics eob" );
+					var q = session.createQuery( "select max(eob.theDouble) from EntityOfBasics eob", Double.class );
 					assertEquals( expected, q.getSingleResult(), "expected " + expected + ", got " + q.getSingleResult() );
 				}
 		);
@@ -170,7 +169,7 @@ public class AggregateFilterClauseTest {
 		scope.inTransaction(
 				session -> {
 					Double expected = 6D;
-					Query q = session.createQuery( "select max(eob.theDouble) filter(where eob.theBoolean = true) from EntityOfBasics eob" );
+					var q = session.createQuery( "select max(eob.theDouble) filter(where eob.theBoolean = true) from EntityOfBasics eob", Double.class );
 					assertEquals( expected, q.getSingleResult(), "expected " + expected + ", got " + q.getSingleResult() );
 				}
 		);
@@ -181,11 +180,11 @@ public class AggregateFilterClauseTest {
 		scope.inTransaction(
 				session -> {
 					Long expected = 5L;
-					Query q = session.createQuery( "select count(*) from EntityOfBasics eob" );
+					var q = session.createQuery( "select count(*) from EntityOfBasics eob", Long.class );
 					assertEquals( expected, q.getSingleResult(), "expected " + expected + ", got " + q.getSingleResult() );
 
 					expected = 3L;
-					q = session.createQuery( "select count(eob.theDate) from EntityOfBasics eob" );
+					q = session.createQuery( "select count(eob.theDate) from EntityOfBasics eob", Long.class );
 					assertEquals( expected, q.getSingleResult(), "expected " + expected + ", got " + q.getSingleResult() );
 				}
 		);
@@ -196,11 +195,11 @@ public class AggregateFilterClauseTest {
 		scope.inTransaction(
 				session -> {
 					Long expected = 3L;
-					Query q = session.createQuery( "select count(*) filter(where eob.theBoolean = false) from EntityOfBasics eob" );
+					var q = session.createQuery( "select count(*) filter(where eob.theBoolean = false) from EntityOfBasics eob", Long.class );
 					assertEquals( expected, q.getSingleResult(), "expected " + expected + ", got " + q.getSingleResult() );
 
 					expected = 2L;
-					q = session.createQuery( "select count(eob.theDate) filter(where eob.theBoolean = false) from EntityOfBasics eob" );
+					q = session.createQuery( "select count(eob.theDate) filter(where eob.theBoolean = false) from EntityOfBasics eob", Long.class );
 					assertEquals( expected, q.getSingleResult(), "expected " + expected + ", got " + q.getSingleResult() );
 				}
 		);
@@ -211,11 +210,11 @@ public class AggregateFilterClauseTest {
 	public void testSimpleEveryAll(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query q = session.createQuery( "select every( eob.theInteger > 0 ) from EntityOfBasics eob" );
-					assertFalse( (Boolean) q.getSingleResult() );
+					var q = session.createQuery( "select every( eob.theInteger > 0 ) from EntityOfBasics eob", Boolean.class );
+					assertFalse( q.getSingleResult() );
 
-					q = session.createQuery( "select any( eob.theInteger < 0 ) from EntityOfBasics eob" );
-					assertTrue( (Boolean) q.getSingleResult() );
+					q = session.createQuery( "select any( eob.theInteger < 0 ) from EntityOfBasics eob", Boolean.class );
+					assertTrue( q.getSingleResult() );
 				}
 		);
 	}
@@ -225,11 +224,11 @@ public class AggregateFilterClauseTest {
 	public void testEveryAllWithFilterClause(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query q = session.createQuery( "select every( eob.theInteger > 0 ) filter ( where eob.theBoolean = false ) from EntityOfBasics eob" );
-					assertTrue( (Boolean) q.getSingleResult() );
+					var q = session.createQuery( "select every( eob.theInteger > 0 ) filter ( where eob.theBoolean = false ) from EntityOfBasics eob", Boolean.class );
+					assertTrue( q.getSingleResult() );
 
-					q = session.createQuery( "select any( eob.theInteger < 0 ) filter ( where eob.theBoolean = false ) from EntityOfBasics eob" );
-					assertFalse( (Boolean) q.getSingleResult() );
+					q = session.createQuery( "select any( eob.theInteger < 0 ) filter ( where eob.theBoolean = false ) from EntityOfBasics eob", Boolean.class );
+					assertFalse( q.getSingleResult() );
 				}
 		);
 	}

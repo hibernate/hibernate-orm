@@ -357,12 +357,12 @@ public class PersistentSetTest {
 					assertTrue( child.getParent().getChildren().contains( otherChild ) );
 					session.clear();
 
-					child = (Child) session.createQuery( "from Child where name = 'c1'" )
+					child = session.createQuery( Child.class,"from Child where name = 'c1'" )
 							.setCacheable( true )
 							.uniqueResult();
 					assertTrue( child.getParent().getChildren().contains( child ) );
 
-					child = (Child) session.createQuery( "from Child where name = 'c1'" )
+					child = session.createQuery(Child.class, "from Child where name = 'c1'" )
 							.setCacheable( true )
 							.uniqueResult();
 					assertTrue( child.getParent().getChildren().contains( child ) );
@@ -416,7 +416,7 @@ public class PersistentSetTest {
 					assertTrue( child.getParent().getChildren().contains( otherChild ) );
 					session.clear();
 
-					child = (Child) session.createQuery( "from Child where name = 'c1'" ).uniqueResult();
+					child = session.createQuery(Child.class, "from Child where name = 'c1'" ).uniqueResult();
 					assertTrue( child.getParent().getChildren().contains( child ) );
 
 					session.remove( child.getParent() );

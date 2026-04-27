@@ -54,7 +54,7 @@ public class SecondaryTableTest extends AbstractStatefulStatelessFilterTest {
 			session.enableFilter( "ageFilter" ).setParameter( "age", 24 );
 			//noinspection deprecation
 			assertThat(
-					session.createQuery( "select count(u) from User u" ).uniqueResult()
+					session.createQuery( "select count(u) from User u", Long.class ).uniqueResult()
 			).isEqualTo( 2L );
 		} );
 	}

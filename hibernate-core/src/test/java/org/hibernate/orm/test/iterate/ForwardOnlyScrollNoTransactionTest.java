@@ -4,14 +4,14 @@
  */
 package org.hibernate.orm.test.iterate;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
-import org.hibernate.query.Query;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -19,12 +19,8 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
+import java.util.ArrayList;
+import java.util.List;
 
 @DomainModel(
 		annotatedClasses = {
@@ -57,9 +53,9 @@ public class ForwardOnlyScrollNoTransactionTest {
 	public void testScroll(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {
-					Query query = session.createQuery( "select f from Father f" );
+					var query = session.createQuery( Father.class,"select f from Father f" );
 
-					try (ScrollableResults result = query.scroll( ScrollMode.FORWARD_ONLY )) {
+					try (var result = query.scroll( ScrollMode.FORWARD_ONLY )) {
 						while ( result.next() ) {
 							result.get();
 						}

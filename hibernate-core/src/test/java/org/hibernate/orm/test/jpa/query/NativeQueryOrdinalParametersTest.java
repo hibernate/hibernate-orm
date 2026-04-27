@@ -99,18 +99,18 @@ public class NativeQueryOrdinalParametersTest {
 
 		scope.inTransaction(
 				entityManager -> {
-					NativeQuery sqlQuery = entityManager.unwrap( Session.class ).createNativeQuery( sqlString );
+					var sqlQuery = entityManager.unwrap( Session.class ).createNativeQuery( Object[].class, sqlString );
 					sqlQuery.setParameter( 1, "Super Mario Brothers" ).setCacheable( true );
 
-					List results = sqlQuery.list();
+					var results = sqlQuery.list();
 					assertEquals( 1, results.size() );
 
-					NativeQuery query = (NativeQuery) entityManager.createNativeQuery( sqlString );
+					var query = (NativeQuery) entityManager.createNativeQuery( sqlString );
 					query.setParameter( 1, "Super Mario Brothers" );
-					List list = query.list();
+					var list = query.list();
 					assertEquals( 1, list.size() );
 
-					sqlQuery = entityManager.unwrap( Session.class ).createNativeQuery( sqlString );
+					sqlQuery = entityManager.unwrap( Session.class ).createNativeQuery( Object[].class, sqlString );
 					sqlQuery.setParameter( 1, "Super Mario Brothers" ).setCacheable( true );
 
 					results = sqlQuery.list();

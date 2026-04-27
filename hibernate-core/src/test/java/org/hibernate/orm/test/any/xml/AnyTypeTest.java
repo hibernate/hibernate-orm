@@ -68,7 +68,7 @@ public class AnyTypeTest {
 		scope.inTransaction(
 				session -> {
 					try {
-						session.createQuery( "select p from Person p join fetch p.data" ).list();
+						session.createQuery( "select p from Person p join fetch p.data", Person.class ).list();
 					}
 					catch (SemanticException e) {
 						// expected

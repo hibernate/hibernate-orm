@@ -7,7 +7,9 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.QueryFlushMode;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedHqlQueryImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.QueryProcessing;
@@ -27,8 +29,9 @@ public class NamedQueryJpaAnnotation implements NamedQuery {
 	private String query;
 	private java.lang.Class<?> resultClass;
 	private String entityGraph;
-	private jakarta.persistence.LockModeType lockMode;
-	private jakarta.persistence.PessimisticLockScope lockScope;
+	private LockModeType lockMode;
+	private PessimisticLockScope lockScope;
+	private QueryFlushMode flush;
 	private jakarta.persistence.QueryHint[] hints;
 
 	/**
@@ -37,8 +40,9 @@ public class NamedQueryJpaAnnotation implements NamedQuery {
 	public NamedQueryJpaAnnotation(ModelsContext modelContext) {
 		this.resultClass = void.class;
 		this.entityGraph = "";
-		this.lockMode = jakarta.persistence.LockModeType.NONE;
+		this.lockMode = LockModeType.NONE;
 		this.lockScope = PessimisticLockScope.NORMAL;
+		this.flush = QueryFlushMode.DEFAULT;
 		this.hints = new jakarta.persistence.QueryHint[0];
 	}
 
@@ -52,6 +56,7 @@ public class NamedQueryJpaAnnotation implements NamedQuery {
 		this.entityGraph = annotation.entityGraph();
 		this.lockMode = annotation.lockMode();
 		this.lockScope = annotation.lockScope();
+		this.flush = annotation.flush();
 		this.hints = extractJdkValue( annotation, JpaAnnotations.NAMED_QUERY, "hints", modelContext );
 	}
 
@@ -63,8 +68,9 @@ public class NamedQueryJpaAnnotation implements NamedQuery {
 		this.query = (String) attributeValues.get( "query" );
 		this.resultClass = (Class<?>) attributeValues.get( "resultClass" );
 		this.entityGraph = (String) attributeValues.get( "entityGraph" );
-		this.lockMode = (jakarta.persistence.LockModeType) attributeValues.get( "lockMode" );
+		this.lockMode = (LockModeType) attributeValues.get( "lockMode" );
 		this.lockScope = (PessimisticLockScope) attributeValues.get( "lockScope" );
+		this.flush = (QueryFlushMode) attributeValues.get( "flush" );
 		this.hints = (jakarta.persistence.QueryHint[]) attributeValues.get( "hints" );
 	}
 
@@ -104,8 +110,12 @@ public class NamedQueryJpaAnnotation implements NamedQuery {
 
 
 	@Override
-	public jakarta.persistence.LockModeType lockMode() {
+	public LockModeType lockMode() {
 		return lockMode;
+	}
+
+	public void lockMode(LockModeType value) {
+		this.lockMode = value;
 	}
 
 
@@ -118,10 +128,14 @@ public class NamedQueryJpaAnnotation implements NamedQuery {
 		this.lockScope = lockScope;
 	}
 
-	public void lockMode(jakarta.persistence.LockModeType value) {
-		this.lockMode = value;
+	@Override
+	public QueryFlushMode flush() {
+		return flush;
 	}
 
+	public void flush(QueryFlushMode value) {
+		this.flush = value;
+	}
 
 	@Override
 	public String entityGraph() {
@@ -150,7 +164,7 @@ public class NamedQueryJpaAnnotation implements NamedQuery {
 		resultClass( TypeHelper.resolveClassReference( jaxbNamedQuery.getResultClass(), xmlDocumentContext, void.class ) );
 		entityGraph( jaxbNamedQuery.getEntityGraph() );
 
-		lockMode( coalesce( jaxbNamedQuery.getLockMode(), jakarta.persistence.LockModeType.NONE ) );
+		lockMode( coalesce( jaxbNamedQuery.getLockMode(), LockModeType.NONE ) );
 		lockScope( coalesce( jaxbNamedQuery.getLockScope(), PessimisticLockScope.NORMAL ) );
 
 		hints( QueryProcessing.collectQueryHints( jaxbNamedQuery.getHints(), xmlDocumentContext ) );

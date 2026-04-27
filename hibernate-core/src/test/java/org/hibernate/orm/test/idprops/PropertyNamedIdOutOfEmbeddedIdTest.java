@@ -18,7 +18,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Gail Badner
@@ -55,7 +55,7 @@ public class PropertyNamedIdOutOfEmbeddedIdTest {
 							.size()
 			);
 
-			assertEquals( 3L, session.createQuery( "select count( p ) from Person p" ).uniqueResult() );
+			assertEquals( 3L, session.createQuery( Long.class, "select count( p ) from Person p" ).uniqueResult() );
 
 		} );
 	}

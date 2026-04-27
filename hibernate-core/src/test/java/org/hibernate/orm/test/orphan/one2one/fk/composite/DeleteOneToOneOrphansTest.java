@@ -48,11 +48,10 @@ public class DeleteOneToOneOrphansTest {
 
 		Employee e = scope.fromTransaction(
 				session -> {
-					List results = session.createQuery( "from EmployeeInfo" ).list();
-					assertEquals( 1, results.size() );
-					results = session.createQuery( "from Employee" ).list();
-					assertEquals( 1, results.size() );
-					Employee emp = (Employee) results.get( 0 );
+					assertEquals( 1, session.createQuery( "from EmployeeInfo", EmployeeInfo.class ).list().size() );
+					List<Employee> employees = session.createQuery( "from Employee", Employee.class ).list();
+					assertEquals( 1, employees.size() );
+					Employee emp = employees.get( 0 );
 					assertNotNull( emp.getInfo() );
 					emp.setInfo( null );
 					return emp;
@@ -63,10 +62,8 @@ public class DeleteOneToOneOrphansTest {
 				session -> {
 					Employee emp = session.get( Employee.class, e.getId() );
 					assertNull( emp.getInfo() );
-					List results = session.createQuery( "from EmployeeInfo" ).list();
-					assertEquals( 0, results.size() );
-					results = session.createQuery( "from Employee" ).list();
-					assertEquals( 1, results.size() );
+					assertEquals( 0, session.createQuery( "from EmployeeInfo", EmployeeInfo.class ).list().size() );
+					assertEquals( 1, session.createQuery( "from Employee", Employee.class ).list().size() );
 				}
 		);
 	}
@@ -77,11 +74,10 @@ public class DeleteOneToOneOrphansTest {
 
 		Employee e = scope.fromTransaction(
 				session -> {
-					List results = session.createQuery( "from EmployeeInfo" ).list();
-					assertEquals( 1, results.size() );
-					results = session.createQuery( "from Employee" ).list();
-					assertEquals( 1, results.size() );
-					Employee emp = (Employee) results.get( 0 );
+					assertEquals( 1, session.createQuery( "from EmployeeInfo", EmployeeInfo.class ).list().size() );
+					List<Employee> employees = session.createQuery( "from Employee", Employee.class ).list();
+					assertEquals( 1, employees.size() );
+					Employee emp = employees.get( 0 );
 					assertNotNull( emp.getInfo() );
 
 					// Replace with a new EmployeeInfo instance
@@ -94,10 +90,8 @@ public class DeleteOneToOneOrphansTest {
 				session -> {
 					Employee emp = session.get( Employee.class, e.getId() );
 					assertNotNull( emp.getInfo() );
-					List results = session.createQuery( "from EmployeeInfo" ).list();
-					assertEquals( 1, results.size() );
-					results = session.createQuery( "from Employee" ).list();
-					assertEquals( 1, results.size() );
+					assertEquals( 1, session.createQuery( "from EmployeeInfo", EmployeeInfo.class ).list().size() );
+					assertEquals( 1, session.createQuery( "from Employee", Employee.class ).list().size() );
 				}
 		);
 	}

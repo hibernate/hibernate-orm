@@ -64,7 +64,7 @@ public abstract class SubClassTest extends AbstractStatefulStatelessFilterTest {
 	}
 
 	private void assertCount(SharedSessionContract session, long expected) {
-		long count = (Long) session.createQuery( "select count(h) from Human h" ).uniqueResult();
+		long count = session.createQuery( "select count(h) from Human h", Long.class ).uniqueResult();
 		assertEquals( expected, count );
 	}
 }

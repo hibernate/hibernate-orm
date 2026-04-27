@@ -36,10 +36,10 @@ public class SingleLineImportFileTest {
 	@Test
 	public void testImportFile(SessionFactoryScope factoryScope) throws Exception {
 		factoryScope.inTransaction( (session) -> {
-			final List<?> humans = session.createQuery( "from " + Human.class.getName() ).list();
+			final List<?> humans = session.createQuery( "from " + Human.class.getName(), Human.class ).list();
 			Assertions.assertEquals( 3, humans.size(), "humans.sql not imported" );
 
-			final List<?> dogs = session.createQuery( "from " + Dog.class.getName() ).list();
+			final List<?> dogs = session.createQuery( "from " + Dog.class.getName(), Dog.class ).list();
 			Assertions.assertEquals( 3, dogs.size(), "dogs.sql not imported" );
 		} );
 	}

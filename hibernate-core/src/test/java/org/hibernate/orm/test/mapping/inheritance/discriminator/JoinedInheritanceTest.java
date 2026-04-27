@@ -46,7 +46,7 @@ public class JoinedInheritanceTest {
 	@Test
 	public void simpleSelectTest(SessionFactoryScope scope) {
 		scope.inTransaction( (s) -> {
-			s.createQuery( "from Polygon" ).list();
+			s.createQuery( "from Polygon", Polygon.class ).list();
 		} );
 	}
 
@@ -54,7 +54,7 @@ public class JoinedInheritanceTest {
 	@JiraKey( "HHH-9357" )
 	public void selectWhereTypeEqual(SessionFactoryScope scope) {
 		scope.inTransaction( (s) -> {
-			s.createQuery( "from Polygon p where type(p) = Quadrilateral" ).list();
+			s.createQuery( "from Polygon p where type(p) = Quadrilateral", Polygon.class ).list();
 		} );
 	}
 
@@ -68,7 +68,7 @@ public class JoinedInheritanceTest {
 	public void joinUnrelatedCollectionOnBaseType(SessionFactoryScope scope) {
 		scope.inTransaction( (s) -> {
 			try {
-				s.createQuery("from BaseEntity b join b.attributes").list();
+				s.createQuery("from BaseEntity b join b.attributes", BaseEntity.class).list();
 				fail( "Expected a resolution exception for property 'attributes'!" );
 			}
 			catch (IllegalArgumentException ex) {

@@ -42,7 +42,7 @@ public class JpaCrossJoinTests {
 	public void testCrossJoin(SessionFactoryScope scope) {
 		final String qry = "select i from LineItem i cross join Order o join o.salesAssociate a on i.quantity = a.id";
 
-		scope.inTransaction( (session) -> session.createQuery( qry ).list() );
+		scope.inTransaction( (session) -> session.createQuery( qry, Object.class ).list() );
 	}
 
 	@Test
@@ -53,7 +53,7 @@ public class JpaCrossJoinTests {
 		statementInspector.clear();
 
 		final String qry = "select i from LineItem i, Order o join o.salesAssociate a on i.quantity = a.id";
-		scope.inTransaction( (session) -> session.createQuery( qry ).list() );
+		scope.inTransaction( (session) -> session.createQuery( qry, Object.class ).list() );
 
 		assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 		assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsIgnoringCase( " cross join orders " );
@@ -67,7 +67,7 @@ public class JpaCrossJoinTests {
 		statementInspector.clear();
 
 		final String qry = "select i from LineItem i, Order o join o.salesAssociate a on i.product.vendor.name = a.name.familyName";
-		scope.inTransaction( (session) -> session.createQuery( qry ).list() );
+		scope.inTransaction( (session) -> session.createQuery( qry, Object.class ).list() );
 
 		assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 		assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsIgnoringCase( " cross join orders " );

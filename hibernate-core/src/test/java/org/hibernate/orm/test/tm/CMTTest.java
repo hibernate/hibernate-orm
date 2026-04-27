@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
@@ -138,14 +137,14 @@ public class CMTTest {
 
 			transactionManager.begin();
 			s1 = sessionFactory.openSession();
-			s1.createQuery( "from Item" ).list();
+			s1.createQuery( Object.class,"from Item" ).list();
 			//foo.put("description", "a big red foo");
 			//s1.flush();
 			tx = transactionManager.suspend();
 
 			transactionManager.begin();
 			s2 = sessionFactory.openSession();
-			s2.createQuery( "from Item" ).list();
+			s2.createQuery( Object.class,"from Item" ).list();
 			transactionManager.commit();
 
 			transactionManager.resume( tx );
@@ -153,7 +152,7 @@ public class CMTTest {
 
 			transactionManager.begin();
 			s2 = sessionFactory.openSession();
-			s2.createQuery( "from Item" ).list();
+			s2.createQuery( Object.class,"from Item" ).list();
 			transactionManager.commit();
 
 			assertEquals( 7, sessionFactory.getStatistics().getEntityLoadCount() );
@@ -204,13 +203,13 @@ public class CMTTest {
 
 			transactionManager.begin();
 			Session s1 = sessionFactory.openSession();
-			List r1 = s1.createQuery( "from Item order by description" ).setCacheable( true ).list();
+			List r1 = s1.createQuery( Object.class,"from Item order by description" ).setCacheable( true ).list();
 			assertEquals( r1.size(), 2 );
 			Transaction tx1 = transactionManager.suspend();
 
 			transactionManager.begin();
 			Session s2 = sessionFactory.openSession();
-			List r2 = s2.createQuery( "from Item order by description" ).setCacheable( true ).list();
+			List r2 = s2.createQuery( Object.class,"from Item order by description" ).setCacheable( true ).list();
 			assertEquals( r2.size(), 2 );
 			transactionManager.commit();
 
@@ -231,7 +230,7 @@ public class CMTTest {
 
 			transactionManager.begin();
 			Session s3 = sessionFactory.openSession();
-			s3.createQuery( "from Item order by description" ).setCacheable( true ).list();
+			s3.createQuery( Object.class, "from Item order by description" ).setCacheable( true ).list();
 			transactionManager.commit();
 
 //		assertEquals( 4, sessionFactory().getStatistics().getSecondLevelCacheHitCount() );
@@ -248,7 +247,7 @@ public class CMTTest {
 			assertEquals( 0, sessionFactory.getStatistics().getUpdateTimestampsCacheMissCount() );
 
 			transactionManager.resume( tx4 );
-			List r4 = s4.createQuery( "from Item order by description" ).setCacheable( true ).list();
+			List r4 = s4.createQuery(Object.class, "from Item order by description" ).setCacheable( true ).list();
 			assertEquals( r4.size(), 2 );
 			transactionManager.commit();
 
@@ -310,7 +309,7 @@ public class CMTTest {
 			// open a new TX and execute a query, this would fill the query cache.
 			transactionManager.begin();
 			Session s1 = sessionFactory.openSession();
-			List r1 = s1.createQuery( "from Item order by description" ).setCacheable( true ).list();
+			List r1 = s1.createQuery( Object.class,"from Item order by description" ).setCacheable( true ).list();
 			assertEquals( r1.size(), 2 );
 			foo = (Map) r1.get( 0 );
 			// update data and make query cache stale, but TX is suspended
@@ -322,7 +321,7 @@ public class CMTTest {
 			// this TX is committed after query
 			transactionManager.begin();
 			Session s2 = sessionFactory.openSession();
-			List r2 = s2.createQuery( "from Item order by description" ).setCacheable( true ).list();
+			List r2 = s2.createQuery( Object.class,"from Item order by description" ).setCacheable( true ).list();
 			assertEquals( r2.size(), 2 );
 
 			transactionManager.commit();
@@ -357,7 +356,7 @@ public class CMTTest {
 
 			transactionManager.begin();
 			Session s3 = sessionFactory.openSession();
-			s3.createQuery( "from Item order by description" ).setCacheable( true ).list();
+			s3.createQuery( Object.class,"from Item order by description" ).setCacheable( true ).list();
 			transactionManager.commit();
 
 			assertEquals( 0, sessionFactory.getStatistics().getSecondLevelCacheHitCount() );
@@ -372,7 +371,7 @@ public class CMTTest {
 			assertEquals( 2, sessionFactory.getStatistics().getUpdateTimestampsCacheHitCount() );
 
 			transactionManager.resume( tx4 );
-			List r4 = s4.createQuery( "from Item order by description" ).setCacheable( true ).list();
+			List r4 = s4.createQuery( Object.class,"from Item order by description" ).setCacheable( true ).list();
 			assertEquals( r4.size(), 2 );
 			transactionManager.commit();
 
@@ -429,7 +428,7 @@ public class CMTTest {
 
 			transactionManager.begin();
 			s = sessionFactory.openSession();
-			item = (Map) s.createQuery( "from Item" ).uniqueResult();
+			item = s.createQuery( Map.class, "from Item" ).uniqueResult();
 			assertNotNull( item );
 			s.remove( item );
 			transactionManager.commit();
@@ -498,14 +497,14 @@ public class CMTTest {
 			// First, test partially scrolling the result with out closing
 			transactionManager.begin();
 			s = sessionFactory.getCurrentSession();
-			ScrollableResults results = s.createQuery( "from Item" ).scroll();
+			var results = s.createQuery( Map.class,"from Item" ).scroll();
 			results.next();
 			transactionManager.commit();
 
 			// Next, test partially scrolling the result with closing
 			transactionManager.begin();
 			s = sessionFactory.getCurrentSession();
-			results = s.createQuery( "from Item" ).scroll();
+			results = s.createQuery( Map.class, "from Item" ).scroll();
 			results.next();
 			results.close();
 			transactionManager.commit();
@@ -513,7 +512,7 @@ public class CMTTest {
 			// Next, scroll the entire result (w/o closing)
 			transactionManager.begin();
 			s = sessionFactory.getCurrentSession();
-			results = s.createQuery( "from Item" ).scroll();
+			results = s.createQuery( Map.class, "from Item" ).scroll();
 			while ( results.next() ) {
 				// do nothing
 			}
@@ -522,7 +521,7 @@ public class CMTTest {
 			// Next, scroll the entire result (closing)
 			transactionManager.begin();
 			s = sessionFactory.getCurrentSession();
-			results = s.createQuery( "from Item" ).scroll();
+			results = s.createQuery( Map.class, "from Item" ).scroll();
 			while ( results.next() ) {
 				// do nothing
 			}

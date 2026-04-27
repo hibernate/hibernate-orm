@@ -243,8 +243,9 @@ public class SetOperationTests {
 				notNullValue()
 		);
 
-		scope.inTransaction(
-				session -> session.createQuery( "from EntityOfSets e join fetch e.orderedSetOfBasics" ).list()
+		scope.inTransaction(session -> session
+				.createQuery( EntityOfSets.class, "from EntityOfSets e join fetch e.orderedSetOfBasics" )
+				.list()
 		);
 	}
 }

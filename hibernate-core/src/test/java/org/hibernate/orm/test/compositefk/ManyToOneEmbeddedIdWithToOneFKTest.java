@@ -79,7 +79,7 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 				session -> {
 					// this HQL should load the System with id = 1
 
-					System system = (System) session.createQuery( "from System e where e.id = :id" )
+					System system = session.createQuery( System.class, "from System e where e.id = :id" )
 							.setParameter( "id", 1 ).uniqueResult();
 
 					assertThat( system, is( notNullValue() ) );
@@ -170,7 +170,7 @@ public class ManyToOneEmbeddedIdWithToOneFKTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
-					DataCenterUser system = (DataCenterUser) session.createQuery( "from DataCenterUser " )
+					DataCenterUser system = session.createQuery( DataCenterUser.class, "from DataCenterUser " )
 							.uniqueResult();
 					assertThat( system, is( notNullValue() ) );
 

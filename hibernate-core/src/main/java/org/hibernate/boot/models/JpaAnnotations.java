@@ -282,14 +282,14 @@ public interface JpaAnnotations {
 	OrmAnnotationDescriptor<ColumnResult,ColumnResultJpaAnnotation> COLUMN_RESULT = new OrmAnnotationDescriptor<>(
 			ColumnResult.class,
 			ColumnResultJpaAnnotation.class,
-			EnumSet.noneOf( Kind.class ),
+			EnumSet.of( Kind.METHOD ),
 			false
 	);
 
 	OrmAnnotationDescriptor<ConstructorResult,ConstructorResultJpaAnnotation> CONSTRUCTOR_RESULT = new OrmAnnotationDescriptor<>(
 			ConstructorResult.class,
 			ConstructorResultJpaAnnotation.class,
-			EnumSet.noneOf( Kind.class ),
+			EnumSet.of( Kind.METHOD ),
 			false
 	);
 
@@ -374,7 +374,7 @@ public interface JpaAnnotations {
 	OrmAnnotationDescriptor<EntityResult,EntityResultJpaAnnotation> ENTITY_RESULT = new OrmAnnotationDescriptor<>(
 			EntityResult.class,
 			EntityResultJpaAnnotation.class,
-			EnumSet.noneOf( Kind.class ),
+			EnumSet.of( Kind.METHOD ),
 			false
 	);
 
@@ -590,14 +590,14 @@ public interface JpaAnnotations {
 	OrmAnnotationDescriptor<NamedNativeQueries,NamedNativeQueriesJpaAnnotation> NAMED_NATIVE_QUERIES = new OrmAnnotationDescriptor<>(
 			NamedNativeQueries.class,
 			NamedNativeQueriesJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
+			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
 			false
 	);
 
 	OrmAnnotationDescriptor<NamedNativeQuery,NamedNativeQueryJpaAnnotation> NAMED_NATIVE_QUERY = new OrmAnnotationDescriptor<>(
 			NamedNativeQuery.class,
 			NamedNativeQueryJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
+			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
 			false,
 			NAMED_NATIVE_QUERIES
 	);
@@ -605,14 +605,14 @@ public interface JpaAnnotations {
 	OrmAnnotationDescriptor<NamedQueries,NamedQueriesJpaAnnotation> NAMED_QUERIES = new OrmAnnotationDescriptor<>(
 			NamedQueries.class,
 			NamedQueriesJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
+			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
 			false
 	);
 
 	OrmAnnotationDescriptor<NamedQuery,NamedQueryJpaAnnotation> NAMED_QUERY = new OrmAnnotationDescriptor<>(
 			NamedQuery.class,
 			NamedQueryJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
+			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
 			false,
 			NAMED_QUERIES
 	);
@@ -637,14 +637,14 @@ public interface JpaAnnotations {
 	OrmAnnotationDescriptor<NamedStoredProcedureQueries,NamedStoredProcedureQueriesJpaAnnotation> NAMED_STORED_PROCEDURE_QUERIES = new OrmAnnotationDescriptor<>(
 			NamedStoredProcedureQueries.class,
 			NamedStoredProcedureQueriesJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
+			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
 			false
 	);
 
 	OrmAnnotationDescriptor<NamedStoredProcedureQuery,NamedStoredProcedureQueryJpaAnnotation> NAMED_STORED_PROCEDURE_QUERY = new OrmAnnotationDescriptor<>(
 			NamedStoredProcedureQuery.class,
 			NamedStoredProcedureQueryJpaAnnotation.class,
-			EnumSet.of( Kind.CLASS ),
+			EnumSet.of( Kind.CLASS, Kind.PACKAGE ),
 			false,
 			NAMED_STORED_PROCEDURE_QUERIES
 	);

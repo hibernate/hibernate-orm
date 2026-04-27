@@ -112,7 +112,7 @@ public class LazyManyToOneEmbeddedIdWithToOneFKTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				session -> {
-					System system = (System) session.createQuery( "from System e where e.id = :id" )
+					System system = session.createQuery( System.class, "from System e where e.id = :id" )
 							.setParameter( "id", 1 ).uniqueResult();
 
 					assertThat( system, is( notNullValue() ) );

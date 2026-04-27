@@ -183,12 +183,12 @@ public class SortTest {
 	void testSortByHQL(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					final Search search = (Search) session.createQuery(
+					final Search search = session.createQuery(
 							"select s from Search s " +
 									" join fetch s.searchResults " +
 									" join fetch s.searchResultsCaseInsensitive " +
 									" join fetch s.tokens " +
-									" join fetch s.tokensCaseInsensitive " )
+									" join fetch s.tokensCaseInsensitive ", Search.class )
 							.uniqueResult();
 
 					assertThat( search.searchResults, isInitialized() );

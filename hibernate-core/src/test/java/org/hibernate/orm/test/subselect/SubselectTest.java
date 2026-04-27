@@ -49,7 +49,7 @@ public class SubselectTest {
 			s.persist( gavin );
 			s.persist( x23y4 );
 			s.flush();
-			List<Being> beings = (List<Being>) s.createQuery( "from Being" ).list();
+			List<Being> beings = s.createQuery( "from Being", Being.class ).list();
 			for ( Being being : beings ) {
 				assertNotNull( being.getLocation() );
 				assertNotNull( being.getIdentity() );
@@ -65,11 +65,11 @@ public class SubselectTest {
 			//test the <synchronized> tag:
 			gavin = s.find( Human.class, gavin.getId() );
 			gavin.setAddress( "Atlanta, GA" );
-			gav = (Being) s.createQuery( "from Being b where b.location like '%GA%'" ).uniqueResult();
+			gav = s.createQuery( "from Being b where b.location like '%GA%'", Being.class ).uniqueResult();
 			assertEquals( gav.getLocation(), gavin.getAddress() );
 			s.remove( gavin );
 			s.remove( x23y4 );
-			assertTrue( s.createQuery( "from Being" ).list().isEmpty() );
+			assertTrue( s.createQuery( "from Being", Being.class ).list().isEmpty() );
 		} );
 	}
 
@@ -97,19 +97,17 @@ public class SubselectTest {
 			// Test value conversion during insert
 			// Value returned by Oracle native query is a Types.NUMERIC, which is mapped to a BigDecimalType;
 			// Cast returned value to Number then call Number.doubleValue() so it works on all dialects.
-			double humanHeightViaSql =
-					( (Number) s.createNativeQuery( "select height_centimeters from humans" )
-							.uniqueResult() ).doubleValue();
+			double humanHeightViaSql = s.createNativeQuery( "select height_centimeters from humans", Double.class )
+							.uniqueResult();
 			assertEquals( HUMAN_CENTIMETERS, humanHeightViaSql, 0.01d );
-			double alienHeightViaSql =
-					( (Number) s.createNativeQuery( "select height_centimeters from aliens" )
-							.uniqueResult() ).doubleValue();
+			double alienHeightViaSql = s.createNativeQuery( "select height_centimeters from aliens", Double.class )
+							.uniqueResult();
 			assertEquals( ALIEN_CENTIMETERS, alienHeightViaSql, 0.01d );
 			s.clear();
 
 			// Test projection
-			Double heightViaHql = (Double) s.createQuery(
-					"select heightInches from Being b where b.identity = 'gavin'" ).uniqueResult();
+			Double heightViaHql = s.createQuery(
+					"select heightInches from Being b where b.identity = 'gavin'", Double.class ).uniqueResult();
 			assertEquals( HUMAN_INCHES, heightViaHql, 0.01d );
 
 			// Test restriction and entity load via criteria
@@ -124,7 +122,7 @@ public class SubselectTest {
 			assertEquals( HUMAN_INCHES, b.getHeightInches(), 0.01d );
 
 			// Test predicate and entity load via HQL
-			b = (Being) s.createQuery( "from Being b where b.heightInches between ?1 and ?2" )
+			b = s.createQuery( "from Being b where b.heightInches between ?1 and ?2", Being.class )
 					.setParameter( 1, ALIEN_INCHES - 0.01d )
 					.setParameter( 2, ALIEN_INCHES + 0.01d )
 					.uniqueResult();

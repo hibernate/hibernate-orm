@@ -44,7 +44,7 @@ public class EagerCollectionLazyKeyManyToOneTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "from Order o where o.id.customer.name = :name" )
+					List<Order> results = session.createQuery( "from Order o where o.id.customer.name = :name", Order.class )
 							.setParameter( "name", cust.getName() )
 							.list();
 					assertEquals( 1, results.size() );
@@ -89,11 +89,11 @@ public class EagerCollectionLazyKeyManyToOneTest {
 					assertEquals( 1, cust.getOrders().size() );
 					session.clear();
 
-					cust = (Customer) session.createQuery( "from Customer" ).uniqueResult();
+					cust = session.createQuery( "from Customer", Customer.class ).uniqueResult();
 					assertEquals( 1, cust.getOrders().size() );
 					session.clear();
 
-					cust = (Customer) session.createQuery( "from Customer c join fetch c.orders" ).uniqueResult();
+					cust = session.createQuery( "from Customer c join fetch c.orders", Customer.class ).uniqueResult();
 					assertEquals( 1, cust.getOrders().size() );
 					session.clear();
 				}

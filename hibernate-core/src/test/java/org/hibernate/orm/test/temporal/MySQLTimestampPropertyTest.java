@@ -4,28 +4,25 @@
  */
 package org.hibernate.orm.test.temporal;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Generated;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.query.Query;
-import org.hibernate.type.StandardBasicTypes;
-
-import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.Generated;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.type.StandardBasicTypes;
+import org.junit.jupiter.api.Test;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -63,20 +60,18 @@ public class MySQLTimestampPropertyTest {
 
 		scope.inTransaction(
 				session -> {
-					final Query queryWithParameter = session.createQuery( "from Entity where ts= ?1" ).setParameter(
-							1,
-							eOrig.ts
-					);
-					final Entity eQueriedWithParameter = (Entity) queryWithParameter.uniqueResult();
+					var queryWithParameter = session.createQuery(Entity.class, "from Entity where ts= ?1" )
+							.setParameter(1, eOrig.ts );
+					final Entity eQueriedWithParameter = queryWithParameter.uniqueResult();
 					assertNotNull( eQueriedWithParameter );
 				}
 		);
 
 		final Entity eQueriedWithTimestamp = scope.fromTransaction(
 				session -> {
-					final Query queryWithTimestamp = session.createQuery( "from Entity where ts= ?1" )
+					var queryWithTimestamp = session.createQuery(Entity.class,"from Entity where ts= ?1" )
 							.setParameter( 1, eOrig.ts, StandardBasicTypes.TIMESTAMP );
-					final Entity queryResult = (Entity) queryWithTimestamp.uniqueResult();
+					final Entity queryResult = queryWithTimestamp.uniqueResult();
 					assertNotNull( queryResult );
 					return queryResult;
 				}
@@ -110,20 +105,18 @@ public class MySQLTimestampPropertyTest {
 
 		scope.inTransaction(
 				session -> {
-					final Query queryWithParameter =
-							session.createQuery( "from Entity where tsColumnDefault= ?1" )
-									.setParameter( 1, eOrig.tsColumnDefault );
-					final Entity eQueriedWithParameter = (Entity) queryWithParameter.uniqueResult();
+					var queryWithParameter = session.createQuery(Entity.class, "from Entity where tsColumnDefault= ?1")
+							.setParameter( 1, eOrig.tsColumnDefault );
+					final Entity eQueriedWithParameter = queryWithParameter.uniqueResult();
 					assertNotNull( eQueriedWithParameter );
 				}
 		);
 
 		final Entity eQueriedWithTimestamp = scope.fromTransaction(
 				session -> {
-					final Query queryWithTimestamp =
-							session.createQuery( "from Entity where tsColumnDefault= ?1" )
-									.setParameter( 1, eOrig.tsColumnDefault, StandardBasicTypes.TIMESTAMP );
-					final Entity queryResult = (Entity) queryWithTimestamp.uniqueResult();
+					var queryWithTimestamp = session.createQuery(Entity.class,"from Entity where tsColumnDefault= ?1" )
+							.setParameter( 1, eOrig.tsColumnDefault, StandardBasicTypes.TIMESTAMP );
+					final Entity queryResult = queryWithTimestamp.uniqueResult();
 					assertNotNull( queryResult );
 					return queryResult;
 				}
@@ -155,26 +148,20 @@ public class MySQLTimestampPropertyTest {
 				}
 		);
 
-		scope.inTransaction(
-				session -> {
-					final Query queryWithParameter =
-							session.createQuery( "from Entity where tsColumnDefinition= ?1" )
-									.setParameter( 1, eOrig.tsColumnDefinition );
-					final Entity eQueriedWithParameter = (Entity) queryWithParameter.uniqueResult();
-					assertNotNull( eQueriedWithParameter );
-				}
-		);
+		scope.inTransaction( session -> {
+			var queryWithParameter = session.createQuery(Entity.class,  "from Entity where tsColumnDefinition= ?1" )
+					.setParameter( 1, eOrig.tsColumnDefinition );
+			final Entity eQueriedWithParameter = queryWithParameter.uniqueResult();
+			assertNotNull( eQueriedWithParameter );
+		} );
 
-		final Entity eQueriedWithTimestamp = scope.fromTransaction(
-				session -> {
-					final Query queryWithTimestamp =
-							session.createQuery( "from Entity where tsColumnDefinition= ?1" )
-									.setParameter( 1, eOrig.tsColumnDefinition, StandardBasicTypes.TIMESTAMP );
-					final Entity queryResult = (Entity) queryWithTimestamp.uniqueResult();
-					assertNotNull( queryResult );
-					return queryResult;
-				}
-		);
+		final Entity eQueriedWithTimestamp = scope.fromTransaction(session -> {
+			var queryWithTimestamp = session.createQuery(Entity.class, "from Entity where tsColumnDefinition= ?1" )
+					.setParameter( 1, eOrig.tsColumnDefinition, StandardBasicTypes.TIMESTAMP );
+			final Entity queryResult = queryWithTimestamp.uniqueResult();
+			assertNotNull( queryResult );
+			return queryResult;
+		} );
 
 		scope.inTransaction(
 				session ->

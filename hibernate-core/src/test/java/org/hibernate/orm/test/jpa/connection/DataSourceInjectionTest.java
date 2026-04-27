@@ -52,7 +52,7 @@ public class DataSourceInjectionTest {
 					).unwrap( SessionFactoryImplementor.class ) ) {
 
 						try ( final SessionImplementor session = sf.openSession().unwrap( SessionImplementor.class ) ) {
-							session.createQuery( "select i from Item i" ).list();
+							session.createQuery( Item.class, "select i from Item i" ).list();
 							Assertions.fail( "Expecting FakeDataSourceException" );
 						}
 						catch (PersistenceException pe) {

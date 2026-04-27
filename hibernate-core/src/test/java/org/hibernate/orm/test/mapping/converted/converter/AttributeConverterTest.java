@@ -437,7 +437,11 @@ public class AttributeConverterTest {
 
 				s = sf.openSession();
 				s.beginTransaction();
-				s.createQuery( "FROM EntityWithConvertibleField e where e.convertibleEnum = org.hibernate.orm.test.mapping.converted.converter.AttributeConverterTest$ConvertibleEnum.VALUE" )
+				s.createQuery( EntityWithConvertibleField.class,
+								"""
+								from EntityWithConvertibleField e
+								where e.convertibleEnum = org.hibernate.orm.test.mapping.converted.converter.AttributeConverterTest$ConvertibleEnum.VALUE
+								""")
 						.list();
 				s.getTransaction().commit();
 				s.close();

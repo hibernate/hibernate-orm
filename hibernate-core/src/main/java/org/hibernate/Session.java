@@ -14,7 +14,6 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.LockOption;
 import jakarta.persistence.RefreshOption;
 import jakarta.persistence.TypedQueryReference;
-import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaStatement;
 import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.graph.RootGraph;
@@ -76,7 +75,7 @@ import java.util.List;
 /// [#setReadOnly(Object,boolean)] or simply by [evicting][#detach(Object)]
 /// it from the persistence context. A session may be set to load entities as read-only
 /// [by default][#setDefaultReadOnly(boolean)], or this may be controlled at the
-/// [query level][Query#setReadOnly(boolean)].
+/// [query level][org.hibernate.query.Query#setReadOnly(boolean)].
 ///
 /// The state of a transient or detached instance may be made persistent by copying it to
 /// a persistent instance using [#merge(Object)]. Since version 7, all older operations
@@ -386,7 +385,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// To override the default read-only mode of the current session for
 	/// all entities and proxies returned by a given `Query`, use
-	/// [Query#setReadOnly(boolean)].
+	/// [org.hibernate.query.Query#setReadOnly(boolean)].
 	///
 	/// Every instance of an [immutable][org.hibernate.annotations.Immutable]
 	/// entity is loaded in read-only mode.
@@ -1131,7 +1130,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	///
 	/// To override the default read-only mode of the current session for
 	/// all entities and proxies returned by a given `Query`, use
-	/// [Query#setReadOnly(boolean)].
+	/// [org.hibernate.query.Query#setReadOnly(boolean)].
 	///
 	/// Every instance of an [immutable][org.hibernate.annotations.Immutable]
 	/// entity is loaded in read-only mode. An immutable entity may
@@ -1313,18 +1312,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	/**
 	 * {@inheritDoc}
 	 */
-	@Override @Deprecated @SuppressWarnings("rawtypes")
-	Query createQuery(String queryString);
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override @Deprecated @SuppressWarnings("rawtypes")
-	NativeQuery createNativeQuery(String queryString);
-
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
 	<R> SelectionQuery<R> createNamedQuery(String name, Class<R> resultClass);
 
@@ -1333,12 +1320,6 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 */
 	@Override @Deprecated @SuppressWarnings("rawtypes")
 	Query createNamedQuery(String name);
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	<R> SelectionQuery<R> createQuery(CriteriaQuery<R> criteriaQuery);
 
 	/**
 	 * {@inheritDoc}

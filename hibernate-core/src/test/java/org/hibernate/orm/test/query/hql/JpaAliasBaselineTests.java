@@ -25,7 +25,7 @@ public class JpaAliasBaselineTests {
 	public void testRootEntityAlias(SessionFactoryScope scope) {
 		try {
 			scope.inTransaction( (session) -> {
-				session.createQuery( "select o from Order O where o.id = 1" ).list();
+				session.createQuery( "select o from Order O where o.id = 1", Object.class ).list();
 			} );
 
 			fail( "Expecting exception" );
@@ -39,7 +39,7 @@ public class JpaAliasBaselineTests {
 	public void testEntityJoinAlias(SessionFactoryScope scope) {
 		try {
 			scope.inTransaction( (session) -> {
-				session.createQuery( "select o from LineItem i, Order O where i.order.id = o.id" ).list();
+				session.createQuery( "select o from LineItem i, Order O where i.order.id = o.id", Object.class ).list();
 			} );
 
 			fail( "Expecting exception" );
@@ -53,7 +53,7 @@ public class JpaAliasBaselineTests {
 	public void testJoinAlias(SessionFactoryScope scope) {
 		try {
 			scope.inTransaction( (session) -> {
-				session.createQuery( "select a from Order O join o.salesAssociate A" ).list();
+				session.createQuery( "select a from Order O join o.salesAssociate A", Object.class ).list();
 			} );
 
 			fail( "Expecting exception" );
@@ -67,7 +67,7 @@ public class JpaAliasBaselineTests {
 	public void testSelectionAlias(SessionFactoryScope scope) {
 		try {
 			scope.inTransaction( (session) -> {
-				session.createQuery( "select i.quantity as QTY from LineItem I where i.product.id = 1 order by qty" ).list();
+				session.createQuery( "select i.quantity as QTY from LineItem I where i.product.id = 1 order by qty", Object.class ).list();
 			} );
 
 			fail( "Expecting exception" );

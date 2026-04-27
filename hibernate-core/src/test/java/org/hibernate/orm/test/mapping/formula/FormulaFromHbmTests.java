@@ -75,7 +75,7 @@ public class FormulaFromHbmTests {
 			reason = "The Informix JDBC driver doesn't support the JDBC escape for the concat function which is used in the mapping")
 	public void testBasicHqlUse(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery( "from EntityOfFormulas" ).list()
+				(session) -> session.createQuery(EntityOfFormulas.class, "from EntityOfFormulas" ).list()
 		);
 	}
 }

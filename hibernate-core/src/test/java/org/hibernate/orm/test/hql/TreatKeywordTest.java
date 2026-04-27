@@ -58,7 +58,7 @@ public class TreatKeywordTest {
 					from Animal pet, Animal owner
 					where pet member of treat (owner as Human).pets
 					""";
-			var results = s.createQuery( hql ).list();
+			var results = s.createQuery( hql, Animal.class ).list();
 			assertEquals( 2, results.size() );
 		} );
 	}

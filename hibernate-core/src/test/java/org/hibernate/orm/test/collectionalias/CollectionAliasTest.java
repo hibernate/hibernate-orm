@@ -46,14 +46,14 @@ public class CollectionAliasTest {
 
 		scope.inSession(
 				session -> {
-					ATable aTable = (ATable) session.createQuery(
+					var aTable = session.createQuery( ATable.class,
 							"select distinct	tablea from ATable tablea LEFT JOIN FETCH tablea.tablebs " )
 							.uniqueResult();
-					assertEquals( new Integer( 1 ), aTable.getFirstId() );
+					assertEquals( Integer.valueOf( 1 ), aTable.getFirstId() );
 					assertEquals( 1, aTable.getTablebs().size() );
 					TableB tableB = aTable.getTablebs().get( 0 );
 					assertSame( aTable, tableB.getTablea() );
-					assertEquals( new Integer( 1 ), tableB.getId().getFirstId() );
+					assertEquals( Integer.valueOf( 1 ), tableB.getId().getFirstId() );
 					assertEquals( "a", tableB.getId().getSecondId() );
 					assertEquals( "b", tableB.getId().getThirdId() );
 				}

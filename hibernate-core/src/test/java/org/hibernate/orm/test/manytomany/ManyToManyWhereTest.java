@@ -4,16 +4,15 @@
  */
 package org.hibernate.orm.test.manytomany;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-
-import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -62,7 +61,7 @@ public class ManyToManyWhereTest {
 		scope.inTransaction(
 				session -> {
 					// create page advertisement relationships with advertisements
-					List<Advertisement> advertisements = (List<Advertisement>) session.createQuery( "FROM Advertisement" )
+					var advertisements = session.createQuery( Advertisement.class, "FROM Advertisement" )
 							.list();
 					assertEquals( 2, advertisements.size() );
 					for ( Advertisement advertisement : advertisements ) {
@@ -77,8 +76,7 @@ public class ManyToManyWhereTest {
 				session -> {
 					// query relationships and verify @Where condition fragment applies correctly.
 
-					List<PageAdvertisement> ads = (List<PageAdvertisement>) session.createQuery(
-							"FROM PageAdvertisement" ).list();
+					var ads = session.createQuery(PageAdvertisement.class, "FROM PageAdvertisement" ).list();
 					assertEquals( 2, ads.size() );
 					for ( PageAdvertisement ad : ads ) {
 						// there is only 1 not deleted attachment

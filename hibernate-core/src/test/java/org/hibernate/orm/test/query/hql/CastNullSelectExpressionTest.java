@@ -32,8 +32,8 @@ public class CastNullSelectExpressionTest {
 	public void testSelectCastNull(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					Object[] result = (Object[]) session.createQuery(
-							"select firstName, cast( null as string ), lastName from Person where lastName='Munster'"
+					Object[] result = session.createQuery(
+							"select firstName, cast( null as string ), lastName from Person where lastName='Munster'", Object[].class
 					).uniqueResult();
 
 					assertEquals( 3, result.length );
@@ -49,8 +49,8 @@ public class CastNullSelectExpressionTest {
 	public void testSelectNewCastNull(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					Person result = (Person) session.createQuery(
-							"select new Person( id, firstName, cast( null as string ), lastName ) from Person where lastName='Munster'"
+					Person result = session.createQuery(
+							"select new Person( id, firstName, cast( null as string ), lastName ) from Person where lastName='Munster'", Person.class
 					).uniqueResult();
 					assertEquals( "Herman", result.firstName );
 					assertNull( result.middleName );
@@ -64,8 +64,8 @@ public class CastNullSelectExpressionTest {
 	public void testSelectNewNull(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					Person result = (Person) session.createQuery(
-							"select new Person( id, firstName, null, lastName ) from Person where lastName='Munster'"
+					Person result = session.createQuery(
+							"select new Person( id, firstName, null, lastName ) from Person where lastName='Munster'", Person.class
 					).uniqueResult();
 					assertEquals( "Herman", result.firstName );
 					assertNull( result.middleName );
@@ -79,8 +79,8 @@ public class CastNullSelectExpressionTest {
 	public void testSelectNull(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
-					Object[] result = (Object[]) session.createQuery(
-							"select id, firstName, null, lastName from Person where lastName='Munster'"
+					Object[] result = session.createQuery(
+							"select id, firstName, null, lastName from Person where lastName='Munster'", Object[].class
 					).uniqueResult();
 					assertEquals( "Herman", result[1] );
 					assertNull( result[2] );

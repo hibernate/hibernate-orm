@@ -39,7 +39,7 @@ public class HQLScrollFetchTest {
 	public void testNoScroll(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					List list = session.createQuery( QUERY )
+					List list = session.createQuery( QUERY, Parent.class )
 							.setTupleTransformer( (tuple, aliases) -> tuple[0] )
 							.setResultListTransformer( resultList -> Arrays.asList( new HashSet(resultList).toArray() ) )
 							.list();
@@ -52,7 +52,7 @@ public class HQLScrollFetchTest {
 	public void testScroll(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name asc, c.name asc" )
+					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name asc, c.name asc", Parent.class )
 							.scroll()) {
 						List list = new ArrayList();
 						while ( results.next() ) {
@@ -68,7 +68,7 @@ public class HQLScrollFetchTest {
 	public void testIncompleteScrollFirstResult(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name asc" ).scroll()) {
+					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name asc", Parent.class ).scroll()) {
 						results.next();
 						Parent p = (Parent) results.get();
 						assertResultFromOneUser( p );
@@ -82,7 +82,7 @@ public class HQLScrollFetchTest {
 	public void testIncompleteScrollSecondResult(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name asc" ).scroll()) {
+					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name asc", Parent.class ).scroll()) {
 						results.next();
 						Parent p = (Parent) results.get();
 						assertResultFromOneUser( p );
@@ -98,7 +98,7 @@ public class HQLScrollFetchTest {
 	public void testIncompleteScrollFirstResultInTransaction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name asc" ).scroll()) {
+					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name asc", Parent.class ).scroll()) {
 						results.next();
 						Parent p = (Parent) results.get();
 						assertResultFromOneUser( p );
@@ -112,7 +112,7 @@ public class HQLScrollFetchTest {
 	public void testIncompleteScrollSecondResultInTransaction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name asc" ).scroll()) {
+					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name asc", Parent.class ).scroll()) {
 						results.next();
 						Parent p = (Parent) results.get();
 						assertResultFromOneUser( p );
@@ -129,7 +129,7 @@ public class HQLScrollFetchTest {
 	public void testIncompleteScroll(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name asc" ).scroll()) {
+					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name asc", Parent.class ).scroll()) {
 						results.next();
 						Parent p = (Parent) results.get();
 						assertResultFromOneUser( p );
@@ -171,7 +171,7 @@ public class HQLScrollFetchTest {
 	public void testIncompleteScrollLast(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name asc" ).scroll()) {
+					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name asc", Parent.class ).scroll()) {
 						results.next();
 						Parent p = (Parent) results.get();
 						assertResultFromOneUser( p );
@@ -217,7 +217,7 @@ public class HQLScrollFetchTest {
 	public void testScrollOrderParentAsc(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name asc" ).scroll()) {
+					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name asc", Parent.class ).scroll()) {
 						List list = new ArrayList();
 						while ( results.next() ) {
 							list.add( results.get() );
@@ -233,7 +233,7 @@ public class HQLScrollFetchTest {
 	public void testScrollOrderParentDesc(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name desc" ).scroll()) {
+					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name desc", Parent.class ).scroll()) {
 						List list = new ArrayList();
 						while ( results.next() ) {
 							list.add( results.get() );
@@ -249,7 +249,7 @@ public class HQLScrollFetchTest {
 	public void testScrollOrderParentAscChildrenAsc(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name asc, c.name asc" )
+					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name asc, c.name asc", Parent.class )
 							.scroll()) {
 						List list = new ArrayList();
 						while ( results.next() ) {
@@ -266,7 +266,7 @@ public class HQLScrollFetchTest {
 	public void testScrollOrderParentAscChildrenDesc(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name asc, c.name desc" )
+					try (ScrollableResults results = session.createQuery( QUERY + " order by p.name asc, c.name desc", Parent.class )
 							.scroll()) {
 						List list = new ArrayList();
 						while ( results.next() ) {
@@ -291,7 +291,7 @@ public class HQLScrollFetchTest {
 
 		scope.inSession(
 				session -> {
-					try (ScrollableResults results = session.createQuery( QUERY + " order by c.name desc" ).scroll()) {
+					try (ScrollableResults results = session.createQuery( QUERY + " order by c.name desc", Parent.class ).scroll()) {
 						List list = new ArrayList();
 						while ( results.next() ) {
 							list.add( results.get() );
@@ -323,7 +323,7 @@ public class HQLScrollFetchTest {
 
 		scope.inSession(
 				session -> {
-					List results = session.createQuery( QUERY + " order by c.name desc" ).list();
+					List results = session.createQuery( QUERY + " order by c.name desc", Parent.class ).list();
 //					try {
 						assertResultFromAllUsers( results );
 //						fail( errMsg );

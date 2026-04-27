@@ -4,6 +4,7 @@
  */
 package org.hibernate.cfg;
 
+import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.CriteriaStatement;
 import org.hibernate.Incubating;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -150,7 +151,7 @@ public interface QuerySettings {
 
 	/**
 	 * When enabled, specifies that {@linkplain org.hibernate.query.Query queries}
-	 * created via {@link jakarta.persistence.EntityManager#createQuery(CriteriaQuery)} or
+	 * created via {@link jakarta.persistence.EntityManager#createQuery(CriteriaSelect)} or
 	 * {@link jakarta.persistence.EntityManager#createStatement(CriteriaStatement)} must
 	 * create a copy of the passed criteria query object such that the resulting
 	 * {@link jakarta.persistence.Query} object is not affected by mutation of the
@@ -174,7 +175,7 @@ public interface QuerySettings {
 
 	/**
 	 * When enabled, specifies that {@linkplain org.hibernate.query.Query queries}
-	 * created via {@link jakarta.persistence.EntityManager#createQuery(CriteriaQuery)} or
+	 * created via {@link jakarta.persistence.EntityManager#createQuery(CriteriaSelect)} or
 	 * {@link jakarta.persistence.EntityManager#createStatement(CriteriaStatement)} cache
 	 * their interpretations in the query plan cache.
 	 * <p>

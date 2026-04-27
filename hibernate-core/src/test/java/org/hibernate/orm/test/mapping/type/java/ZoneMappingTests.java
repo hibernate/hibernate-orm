@@ -74,7 +74,9 @@ public class ZoneMappingTests {
 			session.persist( entity3 );
 		} );
 
-		scope.inTransaction( (session) -> session.createQuery( "from ZoneMappingTestEntity" ).list() );
+		scope.inTransaction( (session) -> {
+			session.createQuery( "from ZoneMappingTestEntity", ZoneMappingTestEntity.class ).list();
+		} );
 	}
 
 	@Test

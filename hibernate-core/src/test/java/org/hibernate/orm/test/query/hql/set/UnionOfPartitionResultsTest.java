@@ -6,8 +6,6 @@ package org.hibernate.orm.test.query.hql.set;
 
 import java.time.LocalDate;
 
-import org.hibernate.query.Query;
-
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -51,7 +49,7 @@ public class UnionOfPartitionResultsTest {
 							)
 							""";
 
-					Query query = session.createQuery( q );
+					var query = session.createQuery( q, Object.class );
 
 					query.list();
 				}
@@ -71,7 +69,7 @@ public class UnionOfPartitionResultsTest {
 							)
 							""";
 
-					Query query = session.createQuery( q );
+					var query = session.createQuery( q, Object.class );
 
 					query.list();
 				}
@@ -93,7 +91,7 @@ public class UnionOfPartitionResultsTest {
 								)
 							""";
 
-					Query query = session.createQuery( q );
+					var query = session.createQuery( q, Object[].class );
 
 					query.list();
 				}
@@ -122,7 +120,7 @@ public class UnionOfPartitionResultsTest {
 							") " +
 							"WHERE bakedOn = mbo ORDER BY dir";
 
-					Query<CurrentApple> query = session.createQuery( q, CurrentApple.class );
+					var query = session.createQuery( q, CurrentApple.class );
 					query.setParameter( "now", LocalDate.now());
 
 					query.list();

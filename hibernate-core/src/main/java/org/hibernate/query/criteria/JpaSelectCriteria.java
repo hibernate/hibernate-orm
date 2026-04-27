@@ -4,13 +4,14 @@
  */
 package org.hibernate.query.criteria;
 
-import java.util.List;
 import jakarta.persistence.criteria.AbstractQuery;
+import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.EntityType;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.util.List;
 
 /**
  * Commonality between a JPA {@link JpaCriteriaQuery} and {@link JpaSubQuery},
@@ -74,7 +75,10 @@ public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase 
 	JpaSelectCriteria<T> where(@Nullable Expression<Boolean> restriction);
 
 	@Override
-	JpaSelectCriteria<T> where(Predicate @Nullable... restrictions);
+	JpaSelectCriteria<T> where(BooleanExpression... restrictions);
+
+	@Override
+	JpaSelectCriteria<T> where(List<? extends Expression<Boolean>> restrictions);
 
 	@Override
 	JpaSelectCriteria<T> groupBy(Expression<?>... grouping);
@@ -89,5 +93,8 @@ public interface JpaSelectCriteria<T> extends AbstractQuery<T>, JpaCriteriaBase 
 	JpaSelectCriteria<T> having(@Nullable Expression<Boolean> restriction);
 
 	@Override
-	JpaSelectCriteria<T> having(Predicate @Nullable... restrictions);
+	JpaSelectCriteria<T> having(BooleanExpression... restrictions);
+
+	@Override
+	JpaSelectCriteria<T> having(List<? extends Expression<Boolean>> restrictions);
 }

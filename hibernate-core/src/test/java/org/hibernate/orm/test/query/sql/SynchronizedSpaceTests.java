@@ -97,7 +97,7 @@ public class SynchronizedSpaceTests {
 		checkUseCase(
 				scope,
 				(session) -> {
-					final Query nativeQuery = session.createNativeQuery( "update " + table + " set name = 'updated' where 1=1" );
+					final Query nativeQuery = session.createNativeQuery( "update " + table + " set name = 'updated' where 1=1", Object.class );
 					updateQueryConfigurer.accept( nativeQuery );
 					return nativeQuery;
 				},
@@ -285,7 +285,7 @@ public class SynchronizedSpaceTests {
 	public void testSyncedNonCachedScenarioUsingAnnotationWithReturnClass(SessionFactoryScope scope) {
 		checkUseCase(
 				scope,
-				(session) -> session.createNamedQuery( "NonCachedEntity_return_class" ),
+				(session) -> session.createNamedQuery( "NonCachedEntity_return_class", NonCachedEntity.class ),
 				Query::getResultList,
 				true
 		);
@@ -295,7 +295,7 @@ public class SynchronizedSpaceTests {
 	public void testSyncedNonCachedScenarioUsingAnnotationWithResultSetMapping(SessionFactoryScope scope) {
 		checkUseCase(
 				scope,
-				(session) -> session.createNamedQuery( "NonCachedEntity_resultset_mapping" ),
+				(session) -> session.createNamedQuery( "NonCachedEntity_resultset_mapping", NonCachedEntity.class ),
 				Query::getResultList,
 				true
 		);
@@ -334,11 +334,11 @@ public class SynchronizedSpaceTests {
 	private void loadAll(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from CachedEntity" ).list();
+					session.createQuery( "from CachedEntity", CachedEntity.class ).list();
 
 					// this one is not strictly needed since this entity is not cached.
 					// but it helps my OCD feel better to have it ;)
-					session.createQuery( "from NonCachedEntity" ).list();
+					session.createQuery( "from NonCachedEntity", NonCachedEntity.class ).list();
 				}
 		);
 	}

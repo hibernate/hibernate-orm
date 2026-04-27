@@ -200,8 +200,9 @@ public class MapOperationTests {
 				notNullValue()
 		);
 
-		scope.inTransaction(
-				session -> session.createQuery( "from EntityOfMaps e join fetch e.componentByBasicOrdered" ).list()
+		scope.inTransaction(session -> session
+				.createQuery( EntityOfMaps.class,"from EntityOfMaps e join fetch e.componentByBasicOrdered" )
+				.list()
 		);
 	}
 }

@@ -12,9 +12,11 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PessimisticLockScope;
+import jakarta.persistence.QueryFlushMode;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Timeout;
 import jakarta.persistence.metamodel.Type;
+import jakarta.persistence.sql.ResultSetMapping;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
@@ -33,7 +35,6 @@ import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
-import jakarta.persistence.QueryFlushMode;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.SelectionQuery;
@@ -335,6 +336,12 @@ public class SelectionQueryImpl<R>
 		return (SelectionQueryImplementor<X>) asSelectionQuery( entityGraph, GraphSemantic.LOAD );
 	}
 
+	@Override
+	public <R> SelectionQueryImplementor<R> withResultSetMapping(ResultSetMapping<R> mapping) {
+		// todo (jpa4) : type validation
+		return (SelectionQueryImplementor<R>) this;
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options
@@ -515,12 +522,6 @@ public class SelectionQueryImpl<R>
 	@Override
 	public SelectionQueryImplementor<R> setHint(String hintName, Object value) {
 		return (SelectionQueryImplementor<R>) super.setHint( hintName, value );
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public EntityGraph<? super R> getEntityGraph() {
-		return (EntityGraph<? super R>) getQueryOptions().getAppliedGraph().getGraph();
 	}
 
 	@Override
@@ -904,6 +905,11 @@ public class SelectionQueryImpl<R>
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// TypedQueryReferenceProducer
+
+	@SuppressWarnings("unchecked")
+	public EntityGraph<? super R> getEntityGraph() {
+		return (EntityGraph<? super R>) getQueryOptions().getAppliedGraph().getGraph();
+	}
 
 	public SqmSelectionMemento<R> toSelectionMemento(String name) {
 		// todo (jpa4) : simply pass QueryOptions to the memento constructors?

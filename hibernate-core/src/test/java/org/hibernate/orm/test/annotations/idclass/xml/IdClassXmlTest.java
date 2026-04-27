@@ -8,8 +8,6 @@ package org.hibernate.orm.test.annotations.idclass.xml;
 import java.util.List;
 
 import org.hibernate.community.dialect.AltibaseDialect;
-import org.hibernate.query.Query;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -40,7 +38,7 @@ public class IdClassXmlTest {
 					link.setSpeciesId( 1L );
 					session.persist( link );
 
-					Query q = session.createNamedQuery( "testQuery" );
+					var q = session.createNamedQuery( "testQuery", HabitatSpeciesLink.class );
 					final List<HabitatSpeciesLink> list = q.list();
 					assertEquals( 1, list.size() );
 				}

@@ -11,8 +11,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.query.Query;
-
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -66,8 +64,8 @@ public class PrimitiveCharacterArrayIdTest {
 	public void testMultipleDeletions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery( "SELECT s FROM PrimitiveCharacterArrayIdTest$DemoEntity s" );
-					List results = query.list();
+					var query = session.createQuery( "SELECT s FROM PrimitiveCharacterArrayIdTest$DemoEntity s", DemoEntity.class );
+					List<DemoEntity> results = query.list();
 					session.remove( results.get( 0 ) );
 					session.remove( results.get( 1 ) );
 				}
@@ -75,7 +73,7 @@ public class PrimitiveCharacterArrayIdTest {
 
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery( "SELECT s FROM PrimitiveCharacterArrayIdTest$DemoEntity s" );
+					var query = session.createQuery( "SELECT s FROM PrimitiveCharacterArrayIdTest$DemoEntity s", DemoEntity.class );
 					assertEquals( 1, query.list().size() );
 				}
 		);
@@ -89,8 +87,8 @@ public class PrimitiveCharacterArrayIdTest {
 	public void testMultipleUpdates(SessionFactoryScope scope) {
 		final String lastResultName = scope.fromTransaction(
 				session -> {
-					Query query = session.createQuery( "SELECT s FROM PrimitiveCharacterArrayIdTest$DemoEntity s" );
-					List<DemoEntity> results = (List<DemoEntity>) query.list();
+					var query = session.createQuery( "SELECT s FROM PrimitiveCharacterArrayIdTest$DemoEntity s", DemoEntity.class );
+					List<DemoEntity> results = query.list();
 					results.get( 0 ).name = "Different 0";
 					results.get( 1 ).name = "Different 1";
 					return results.get( 0 ).name;
@@ -99,8 +97,8 @@ public class PrimitiveCharacterArrayIdTest {
 
 		scope.inTransaction(
 				session -> {
-					Query query = session.createQuery( "SELECT s FROM PrimitiveCharacterArrayIdTest$DemoEntity s" );
-					List<DemoEntity> results = (List<DemoEntity>) query.list();
+					var query = session.createQuery( "SELECT s FROM PrimitiveCharacterArrayIdTest$DemoEntity s", DemoEntity.class );
+					List<DemoEntity> results = query.list();
 					final Set<String> names = new HashSet<String>();
 					for ( DemoEntity entity : results ) {
 						names.add( entity.name );

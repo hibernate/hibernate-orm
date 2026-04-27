@@ -71,7 +71,7 @@ public class IdClassGeneratedValueManyToOneTest {
 					session.flush();
 					session.clear();
 
-					Customer c12 = (Customer) session.createQuery( "select c from Customer c" ).uniqueResult();
+					Customer c12 = session.createQuery( "select c from Customer c", Customer.class ).uniqueResult();
 
 					List<CustomerInventory> inventory = c12.getInventories();
 

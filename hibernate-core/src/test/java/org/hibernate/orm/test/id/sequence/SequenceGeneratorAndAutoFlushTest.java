@@ -82,7 +82,7 @@ public class SequenceGeneratorAndAutoFlushTest {
 					final Person person = new Person( account );
 					account.addChild( person );
 
-					(entityManager.unwrap( Session.class )).createQuery( "select t from Ticket t where t.owner in (:owners)" ).setParameter( "owners", List.of( person ) ).scroll();
+					(entityManager.unwrap( Session.class )).createQuery( "select t from Ticket t where t.owner in (:owners)", Ticket.class ).setParameter( "owners", List.of( person ) ).scroll();
 				}
 		);
 	}
@@ -97,7 +97,7 @@ public class SequenceGeneratorAndAutoFlushTest {
 					final Person person = new Person( account );
 					account.addChild( person );
 
-					(entityManager.unwrap( Session.class )).createQuery( "select t from Ticket t where t.owner in (:owners)" ).setParameter( "owners", List.of( person ) ).stream();
+					(entityManager.unwrap( Session.class )).createQuery( "select t from Ticket t where t.owner in (:owners)", Ticket.class ).setParameter( "owners", List.of( person ) ).stream();
 				}
 		);
 	}

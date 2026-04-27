@@ -6,7 +6,6 @@ package org.hibernate.orm.test.query.hql.mutation;
 
 import from.In;
 import in.from.Any;
-import org.hibernate.query.Query;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -43,14 +42,14 @@ public class UpdateEntitiesWithPackageNamesStartingWithKeywordsTest {
 
 		scope.inTransaction(
 				session -> {
-					final Query query = session.createQuery( "UPDATE Any set prop = :prop WHERE id = :id " );
+					var query = session.createMutationQuery( "UPDATE Any set prop = :prop WHERE id = :id " );
 					query.setParameter( "prop", "1" );
 					query.setParameter( "id", entity.getId() );
 					query.executeUpdate();
 				}
 		);
 		scope.inTransaction(
-				session -> session.createQuery( "DELETE FROM Any" ).executeUpdate()
+				session -> session.createMutationQuery( "DELETE FROM Any" ).executeUpdate()
 		);
 	}
 
@@ -63,7 +62,7 @@ public class UpdateEntitiesWithPackageNamesStartingWithKeywordsTest {
 		);
 		scope.inTransaction(
 				session -> {
-					final Query query = session.createQuery( "UPDATE In set prop = :prop WHERE id = :id " );
+					var query = session.createMutationQuery( "UPDATE In set prop = :prop WHERE id = :id " );
 					query.setParameter( "prop", "1" );
 					query.setParameter( "id", entity.getId() );
 					query.executeUpdate();
@@ -71,7 +70,7 @@ public class UpdateEntitiesWithPackageNamesStartingWithKeywordsTest {
 		);
 
 		scope.inTransaction(
-				session -> session.createQuery( "DELETE FROM In" ).executeUpdate()
+				session -> session.createMutationQuery( "DELETE FROM In" ).executeUpdate()
 		);
 	}
 }

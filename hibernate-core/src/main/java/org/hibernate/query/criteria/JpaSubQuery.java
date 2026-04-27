@@ -4,22 +4,21 @@
  */
 package org.hibernate.query.criteria;
 
-import java.util.List;
-
+import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.MapJoin;
 import jakarta.persistence.criteria.Order;
-import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.query.common.FetchClauseType;
+
+import java.util.List;
 
 /**
  * @author Steve Ebersole
@@ -80,7 +79,10 @@ public interface JpaSubQuery<T> extends Subquery<T>, JpaSelectCriteria<T>, JpaCr
 	JpaSubQuery<T> where(Expression<Boolean> restriction);
 
 	@Override
-	JpaSubQuery<T> where(Predicate... restrictions);
+	JpaSubQuery<T> where(BooleanExpression... restrictions);
+
+	@Override
+	JpaSubQuery<T> where(List<? extends Expression<Boolean>> restrictions);
 
 	@Override
 	JpaSubQuery<T> groupBy(Expression<?>... grouping);
@@ -92,7 +94,10 @@ public interface JpaSubQuery<T> extends Subquery<T>, JpaSelectCriteria<T>, JpaCr
 	JpaSubQuery<T> having(Expression<Boolean> restriction);
 
 	@Override
-	JpaSubQuery<T> having(Predicate... restrictions);
+	JpaSubQuery<T> having(BooleanExpression... restrictions);
+
+	@Override
+	JpaSubQuery<T> having(List<? extends Expression<Boolean>> restrictions);
 
 	@Override
 	<Y> JpaRoot<Y> correlate(Root<Y> parentRoot);

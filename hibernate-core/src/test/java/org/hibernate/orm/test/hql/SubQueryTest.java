@@ -93,7 +93,7 @@ public class SubQueryTest {
 					where r.branch.branchName = 'branch'
 					and exists( from r.branch.leaves as s where s.leafName = 'leaf3')
 					""";
-			Assertions.assertNull( session.createQuery( qry ).uniqueResult() );
+			Assertions.assertNull( session.createQuery( qry, Root.class ).uniqueResult() );
 		} );
 
 		sessions.inTransaction( (session) -> {
@@ -137,7 +137,7 @@ public class SubQueryTest {
 				FROM Leaf l
 				""";
 			// simple syntax check
-			session.createQuery( query ).list();
+			session.createQuery( query, Object.class ).list();
 		} );
 	}
 
@@ -154,7 +154,7 @@ public class SubQueryTest {
 				FROM Leaf l
 				""";
 			// simple syntax check
-			session.createQuery( query ).list();
+			session.createQuery( query, Object.class ).list();
 		} );
 	}
 
@@ -169,7 +169,7 @@ public class SubQueryTest {
 					END FROM Leaf l
 					""";
 			// simple syntax check
-			session.createQuery( query ).list();
+			session.createQuery( query, Object.class ).list();
 		} );
 	}
 
@@ -186,7 +186,7 @@ public class SubQueryTest {
 					FROM Leaf l
 					""";
 			// simple syntax check
-			session.createQuery( query ).list();
+			session.createQuery( query, Object.class ).list();
 		} );
 	}
 
@@ -203,7 +203,7 @@ public class SubQueryTest {
 					FROM Leaf l
 					""";
 			// simple syntax check
-			session.createQuery( query ).list();
+			session.createQuery( query, Object.class ).list();
 		} );
 	}
 

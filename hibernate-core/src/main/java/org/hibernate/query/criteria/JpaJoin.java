@@ -4,10 +4,10 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Fetch;
 import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Predicate;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -31,7 +31,7 @@ public interface JpaJoin<L, R> extends JpaFrom<L,R>, Join<L,R> {
 	JpaJoin<L, R> on(JpaPredicate @Nullable... restrictions);
 
 	@Override
-	JpaJoin<L, R> on(Predicate @Nullable... restrictions);
+	JpaJoin<L, R> on(BooleanExpression... restrictions);
 
 	@Override
 	<S extends R> JpaTreatedJoin<L,R,S> treatAs(Class<S> treatAsType);

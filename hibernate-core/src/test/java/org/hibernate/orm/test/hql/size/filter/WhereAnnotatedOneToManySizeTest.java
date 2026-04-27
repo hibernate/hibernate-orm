@@ -13,8 +13,6 @@ import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.community.dialect.TiDBDialect;
-import org.hibernate.query.Query;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -100,8 +98,8 @@ public class WhereAnnotatedOneToManySizeTest {
 			reason = "Informix does not support correlated subqueries in the ORDER BY clause")
 	public void orderBy_sizeOf(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			Query<Object[]> query = session.createQuery(
-					"select r, size(r.cities) from Region r order by size(r.cities) desc" );
+			var query = session.createQuery(
+					"select r, size(r.cities) from Region r order by size(r.cities) desc", Object[].class );
 			List<Object[]> result = query.getResultList();
 			assertThat( result ).extracting( f -> f[0] ).extracting( "name" ).containsExactly( "Lombardy", "Lazio" );
 			assertThat( result ).extracting( f -> f[1] ).containsExactly( 2, 1 );
@@ -111,7 +109,7 @@ public class WhereAnnotatedOneToManySizeTest {
 	@Test
 	public void project_sizeOf(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			Query<Integer> query = session.createQuery(
+			var query = session.createQuery(
 					"SELECT size(r.cities) FROM Region r", Integer.class );
 			List<Integer> cityCounts = query.getResultList();
 			assertThat( cityCounts ).containsExactlyInAnyOrder( 1, 2 );

@@ -58,8 +58,8 @@ class DynamicClassTest {
 		} );
 
 		scope.inTransaction( s -> {
-			Map<String, Object> cars = (Map<String, Object>) s.createQuery(
-					"from ProductLine pl order by pl.description" ).uniqueResult();
+			var cars = (Map<String, Object>) s.createQuery(
+					"from ProductLine pl order by pl.description", Map.class ).uniqueResult();
 			List<Map<String, Object>> models = (List<Map<String, Object>>) cars.get( "models" );
 			assertFalse( Hibernate.isInitialized( models ) );
 			assertEquals( 2, models.size() );
@@ -67,7 +67,7 @@ class DynamicClassTest {
 
 			s.clear();
 
-			List<?> list = s.createQuery( "from Model m" ).list();
+			List<?> list = s.createQuery( "from Model m", Map.class ).list();
 			for ( Iterator<?> i = list.iterator(); i.hasNext(); ) {
 				assertFalse( Hibernate.isInitialized( ((Map<String, Object>) i.next()).get( "productLine" ) ) );
 			}
@@ -79,8 +79,8 @@ class DynamicClassTest {
 		} );
 
 		scope.inTransaction( s -> {
-			Map<String, Object> cars = (Map<String, Object>) s.createQuery(
-					"from ProductLine pl order by pl.description" ).uniqueResult();
+			var cars = (Map<String, Object>) s.createQuery(
+					"from ProductLine pl order by pl.description", Map.class ).uniqueResult();
 			s.remove( cars );
 		} );
 	}

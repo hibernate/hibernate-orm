@@ -521,9 +521,9 @@ public class MergeTest extends AbstractOperationTestCase {
 
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "delete from NumberedNode where name like 'grand%'" ).executeUpdate();
-					session.createQuery( "delete from NumberedNode where name like 'child%'" ).executeUpdate();
-					session.createQuery( "delete from NumberedNode" ).executeUpdate();
+					session.createMutationQuery( "delete from NumberedNode where name like 'grand%'" ).executeUpdate();
+					session.createMutationQuery( "delete from NumberedNode where name like 'child%'" ).executeUpdate();
+					session.createMutationQuery( "delete from NumberedNode" ).executeUpdate();
 				}
 		);
 	}
@@ -744,7 +744,7 @@ public class MergeTest extends AbstractOperationTestCase {
 					jboss.getEmployees().add( gavin );
 					session.merge( jboss );
 					session.flush();
-					jboss = (Employer) session.createQuery( "from Employer e join fetch e.employees" ).uniqueResult();
+					jboss = session.createQuery( "from Employer e join fetch e.employees", Employer.class ).uniqueResult();
 					assertTrue( Hibernate.isInitialized( jboss.getEmployees() ) );
 					assertThat( jboss.getEmployees().size(), is( 1 ) );
 					session.clear();

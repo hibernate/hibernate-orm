@@ -35,7 +35,6 @@ import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.ParameterExpression;
-import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.metamodel.EntityType;
 
@@ -405,12 +404,6 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 	}
 
 	@Override
-	public SqmSelectStatement<T> where(Predicate @Nullable... restrictions) {
-		super.where( restrictions );
-		return this;
-	}
-
-	@Override
 	public SqmSelectStatement<T> where(BooleanExpression... restrictions) {
 		super.where( restrictions );
 		return this;
@@ -437,12 +430,6 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T>
 	@Override
 	public SqmSelectStatement<T> having(@Nullable Expression<Boolean> booleanExpression) {
 		super.having( booleanExpression );
-		return this;
-	}
-
-	@Override
-	public SqmSelectStatement<T> having(Predicate @Nullable... predicates) {
-		super.having( predicates );
 		return this;
 	}
 

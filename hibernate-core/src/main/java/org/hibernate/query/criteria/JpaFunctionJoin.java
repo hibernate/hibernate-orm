@@ -4,11 +4,11 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.persistence.criteria.BooleanExpression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 
 /**
  * @since 7.0
@@ -33,6 +33,5 @@ public interface JpaFunctionJoin<E> extends JpaFunctionFrom<Object, E>, JpaJoin<
 	JpaFunctionJoin<E> on(JpaPredicate @Nullable... restrictions);
 
 	@Override
-	JpaFunctionJoin<E> on(Predicate @Nullable... restrictions);
-
+	JpaFunctionJoin<E> on(BooleanExpression... restrictions);
 }

@@ -4,12 +4,8 @@
  */
 package org.hibernate.orm.test.cuk;
 
-import java.util.List;
-import java.util.Set;
-
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.Environment;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -17,6 +13,8 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -69,55 +67,55 @@ public class CompositePropertyRefTest {
 					p2 = session.get( Person.class, p2.getId() ); //get null address reference by outer join
 					assertNull( p2.getAddress() );
 					assertNotNull( p.getAddress() );
-					List l = session.createQuery( "from Person" ).list(); //pull address references for cache
+					var l = session.createQuery( Person.class, "from Person" ).list(); //pull address references for cache
 					assertEquals( 2, l.size() );
 					assertTrue( l.contains( p ) && l.contains( p2 ) );
 					session.clear();
 
-					l = session.createQuery( "from Person p order by p.name" )
+					l = session.createQuery(Person.class, "from Person p order by p.name" )
 							.list(); //get address references by sequential selects
 					assertEquals( 2, l.size() );
-					assertNull( ( (Person) l.get( 0 ) ).getAddress() );
-					assertNotNull( ( (Person) l.get( 1 ) ).getAddress() );
+					assertNull( l.get( 0 ).getAddress() );
+					assertNotNull( l.get( 1 ).getAddress() );
 					session.clear();
 
-					l = session.createQuery( "from Person p left join fetch p.address a order by a.country" )
+					l = session.createQuery( Person.class, "from Person p left join fetch p.address a order by a.country" )
 							.list(); //get em by outer join
 					assertEquals( 2, l.size() );
-					if ( ( (Person) l.get( 0 ) ).getName().equals( "Max" ) ) {
-						assertNull( ( (Person) l.get( 0 ) ).getAddress() );
-						assertNotNull( ( (Person) l.get( 1 ) ).getAddress() );
+					if ( l.get( 0 ).getName().equals( "Max" ) ) {
+						assertNull( l.get( 0 ).getAddress() );
+						assertNotNull( l.get( 1 ).getAddress() );
 					}
 					else {
-						assertNull( ( (Person) l.get( 1 ) ).getAddress() );
-						assertNotNull( ( (Person) l.get( 0 ) ).getAddress() );
+						assertNull( l.get( 1 ).getAddress() );
+						assertNotNull( l.get( 0 ).getAddress() );
 					}
 					session.clear();
 
 					l = session.createQuery( "from Person p left join p.accounts", Person.class ).list();
 					for ( int i = 0; i < 2; i++ ) {
-						Person px = (Person) l.get( i );
-						Set accounts = px.getAccounts();
+						Person px = l.get( i );
+						Set<?> accounts = px.getAccounts();
 						assertFalse( Hibernate.isInitialized( accounts ) );
 //			assertTrue( px.getAccounts().size()>0 || row[1]==null );
 					}
 					session.clear();
 
-					l = session.createQuery( "from Person p left join fetch p.accounts a order by p.name" ).list();
-					Person p0 = (Person) l.get( 0 );
+					l = session.createQuery( Person.class, "from Person p left join fetch p.accounts a order by p.name" ).list();
+					Person p0 = l.get( 0 );
 					assertTrue( Hibernate.isInitialized( p0.getAccounts() ) );
 					assertEquals( 1, p0.getAccounts().size() );
 					assertSame( ( (Account) p0.getAccounts().iterator().next() ).getUser(), p0 );
-					Person p1 = (Person) l.get( 1 );
+					Person p1 = l.get( 1 );
 					assertTrue( Hibernate.isInitialized( p1.getAccounts() ) );
 					assertEquals( 0, p1.getAccounts().size() );
 					session.clear();
 
-					l = session.createQuery( "from Account a join fetch a.user" ).list();
+					session.createQuery( Account.class, "from Account a join fetch a.user" ).list();
 
 					session.clear();
 
-					l = session.createQuery( "from Person p left join fetch p.address" ).list();
+					session.createQuery(Person.class, "from Person p left join fetch p.address" ).list();
 
 					session.clear();
 				}
@@ -126,7 +124,7 @@ public class CompositePropertyRefTest {
 
 	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.getSessionFactory().getSchemaManager().truncate();
+		scope.dropData();
 	}
 
 }

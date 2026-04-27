@@ -293,7 +293,7 @@ public class SmokeTests {
 	public void testSelectManyToOne(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "select e.simpleEntity from OtherEntity e" ).list();
+					session.createQuery( "select e.simpleEntity from OtherEntity e", SimpleEntity.class ).list();
 				}
 		);
 	}

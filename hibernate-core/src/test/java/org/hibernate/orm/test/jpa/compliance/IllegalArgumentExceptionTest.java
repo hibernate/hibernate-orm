@@ -208,7 +208,7 @@ public class IllegalArgumentExceptionTest {
 							IllegalArgumentException.class,
 							() -> {
 								CriteriaBuilder criteriaBuilder = scope.getEntityManagerFactory().getCriteriaBuilder();
-								CriteriaQuery criteriaQuery = criteriaBuilder.createQuery( null );
+								CriteriaQuery criteriaQuery = criteriaBuilder.createQuery( (Class) null );
 								entityManager.createQuery( criteriaQuery ).getResultList();
 							}
 					);

@@ -68,22 +68,20 @@ public class StatelessSessionTest {
 						assertEquals( "Blahs", doc2.getName() );
 						assertEquals( doc.getText(), doc2.getText() );
 
-						doc2 = (Document) statelessSession.createQuery( "from Document where text is not null" )
+						doc2 = statelessSession.createQuery( "from Document where text is not null", Document.class )
 								.uniqueResult();
 						assertEquals( "Blahs", doc2.getName() );
 						assertEquals( doc.getText(), doc2.getText() );
 
-						try (var sr = statelessSession.createQuery( "from Document where text is not null" )
+						try (var sr = statelessSession.createQuery( "from Document where text is not null", Document.class )
 								.scroll( ScrollMode.FORWARD_ONLY )) {
 							sr.next();
-							doc2 = (Document) sr.get();
+							doc2 = sr.get();
 						}
 						assertEquals( "Blahs", doc2.getName() );
 						assertEquals( doc.getText(), doc2.getText() );
 
-						doc2 = (Document) statelessSession.createNativeQuery( "select * from Document" )
-								.addEntity( Document.class )
-								.uniqueResult();
+						doc2 = statelessSession.createNativeQuery( "select * from Document", Document.class ).uniqueResult();
 						assertEquals( "Blahs", doc2.getName() );
 						assertEquals( doc.getText(), doc2.getText() );
 
@@ -147,22 +145,22 @@ public class StatelessSessionTest {
 						tx.commit();
 
 						tx = statelessSession.beginTransaction();
-						int count = statelessSession.createQuery(
+						int count = statelessSession.createMutationQuery(
 								"update Document set name = :newName where name = :oldName" )
 								.setParameter( "newName", "Foos" )
 								.setParameter( "oldName", "Blahs" )
 								.executeUpdate();
 						assertEquals( 1, count, "hql-update on stateless session" );
-						count = statelessSession.createQuery( "update Paper set color = :newColor" )
+						count = statelessSession.createMutationQuery( "update Paper set color = :newColor" )
 								.setParameter( "newColor", "Goldenrod" )
 								.executeUpdate();
 						assertEquals( 1, count, "hql-update on stateless session" );
 						tx.commit();
 
 						tx = statelessSession.beginTransaction();
-						count = statelessSession.createQuery( "delete Document" ).executeUpdate();
+						count = statelessSession.createMutationQuery( "delete Document" ).executeUpdate();
 						assertEquals( 1, count, "hql-delete on stateless session" );
-						count = statelessSession.createQuery( "delete Paper" ).executeUpdate();
+						count = statelessSession.createMutationQuery( "delete Paper" ).executeUpdate();
 						assertEquals( 1, count, "hql-delete on stateless session" );
 						tx.commit();
 					}

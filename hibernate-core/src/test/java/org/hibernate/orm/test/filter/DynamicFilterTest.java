@@ -95,7 +95,7 @@ public class DynamicFilterTest {
 		factoryScope.inTransaction( (session) -> {
 			session.enableFilter( "unioned" );
 			//noinspection deprecation
-			session.createQuery( "from Category" ).list();
+			session.createQuery( "from Category", Category.class ).list();
 		} );
 	}
 
@@ -130,7 +130,7 @@ public class DynamicFilterTest {
 		factoryScope.inSession(session -> {
 			session.enableFilter( "fulfilledOrders" ).setParameter( "asOfDate", testData.lastMonth.getTime() );
 			//noinspection deprecation
-			var sp = (Salesperson) session.createQuery( "from Salesperson as s where s.id = :id" )
+			var sp = session.createQuery( "from Salesperson as s where s.id = :id", Salesperson.class )
 					.setParameter( "id", testData.steveId )
 					.uniqueResult();
 			assertEquals( 1, sp.getOrders().size(), "Filtered-collection not bypassing 2L-cache" );
@@ -221,19 +221,19 @@ public class DynamicFilterTest {
 
 			log.info( "HQL against Salesperson..." );
 			//noinspection deprecation
-			var results = session.createQuery( "select s from Salesperson as s left join fetch s.orders" )
+			var results = session.createQuery( "select s from Salesperson as s left join fetch s.orders", Salesperson.class )
 					.list();
 			assertEquals( 1, results.size(),
 					"Incorrect filtered HQL result count [" + results.size() + "]" );
-			var result = (Salesperson) results.get( 0 );
+			var result = results.get( 0 );
 			assertEquals( 1, result.getOrders().size(), "Incorrect collectionfilter count" );
 
 			log.info( "HQL against Product..." );
 			//noinspection deprecation
-			results = session.createQuery( "from Product as p where p.stockNumber = ?1" )
+			var productResults = session.createQuery( "from Product as p where p.stockNumber = ?1", Product.class )
 					.setParameter( 1, 124 )
 					.list();
-			assertEquals( 1, results.size() );
+			assertEquals( 1, productResults.size() );
 		} );
 	}
 
@@ -468,7 +468,7 @@ public class DynamicFilterTest {
 
 			//noinspection deprecation
 			var departments = session.createQuery(
-					"select d from Department as d where d in (select s.department from Salesperson s where s.name = ?1)"
+					"select d from Department as d where d in (select s.department from Salesperson s where s.name = ?1)", Department.class
 			).setParameter( 1, "steve" ).list();
 			assertEquals( 1, departments.size(), "Incorrect department count" );
 
@@ -477,7 +477,7 @@ public class DynamicFilterTest {
 			session.enableFilter( "region" ).setParameter( "region", "Foobar" );
 			//noinspection deprecation
 			departments = session.createQuery(
-					"select d from Department as d where d in (select s.department from Salesperson s where s.name = ?1)" )
+					"select d from Department as d where d in (select s.department from Salesperson s where s.name = ?1)", Department.class )
 					.setParameter( 1, "steve" )
 					.list();
 
@@ -489,7 +489,7 @@ public class DynamicFilterTest {
 
 			//noinspection deprecation
 			var orders = session.createQuery(
-					"select o from Order as o where exists (select li.id from LineItem li, Product as p where p.id = li.product.id and li.quantity >= ?1 and p.name = ?2) and o.buyer = ?3" )
+					"select o from Order as o where exists (select li.id from LineItem li, Product as p where p.id = li.product.id and li.quantity >= ?1 and p.name = ?2) and o.buyer = ?3", Order.class )
 					.setParameter( 1, 1L ).setParameter( 2, "Acme Hair Gel" ).setParameter( 3, "gavin" ).list();
 			assertEquals( 1, orders.size(), "Incorrect orders count" );
 
@@ -501,7 +501,7 @@ public class DynamicFilterTest {
 
 			//noinspection deprecation
 			orders = session.createQuery(
-					"select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product.id in (select p.id from Product p where p.name = ?2)) and o.buyer = ?3" )
+					"select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product.id in (select p.id from Product p where p.name = ?2)) and o.buyer = ?3", Order.class )
 					.setParameter( 1, 1L ).setParameter( 2, "Acme Hair Gel" ).setParameter( 3, "gavin" ).list();
 			assertEquals( 1, orders.size(), "Incorrect orders count" );
 
@@ -518,7 +518,7 @@ public class DynamicFilterTest {
 
 			//noinspection deprecation
 			orders = session.createQuery(
-					"select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p from Product p where p.name = ?2)) and o.buyer = ?3" )
+					"select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p from Product p where p.name = ?2)) and o.buyer = ?3", Order.class )
 					.setParameter( 1, 1L ).setParameter( 2, "Acme Hair Gel" ).setParameter( 3, "gavin" ).list();
 
 			assertEquals( 0, orders.size(), "Incorrect orders count" );
@@ -531,7 +531,7 @@ public class DynamicFilterTest {
 
 			//noinspection deprecation
 			orders = session.createQuery(
-					"select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p from Product p where p.name = ?2)) and o.buyer = ?3" )
+					"select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p from Product p where p.name = ?2)) and o.buyer = ?3", Order.class )
 					.setParameter( 1, 1L ).setParameter( 2, "Acme Hair Gel" ).setParameter( 3, "gavin" ).list();
 
 			assertEquals( 1, orders.size(), "Incorrect orders count" );
@@ -544,7 +544,7 @@ public class DynamicFilterTest {
 
 			//noinspection deprecation
 			orders = session.createQuery(
-					"select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p from Product p where p.name = ?2)) and o.buyer = ?3" )
+					"select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p from Product p where p.name = ?2)) and o.buyer = ?3", Order.class )
 					.setParameter( 1, 1L ).setParameter( 2, "Acme Hair Gel" ).setParameter( 3, "gavin" ).list();
 
 			assertEquals( 1, orders.size(), "Incorrect orders count" );
@@ -557,7 +557,7 @@ public class DynamicFilterTest {
 		factoryScope.inSession(session -> {
 			session.enableFilter( "region" ).setParameter( "region", "PACA" );
 			//noinspection deprecation
-			session.createQuery( "from Salesperson p where p.name = ':hibernate'" ).list();
+			session.createQuery( "from Salesperson p where p.name = ':hibernate'", Salesperson.class ).list();
 		} );
 	}
 
@@ -568,19 +568,19 @@ public class DynamicFilterTest {
 
 			// first a control-group query
 			//noinspection deprecation
-			var result = session.createQuery( queryString ).setParameter( 1, "steve" ).list();
+			var result = session.createQuery( queryString, Order.class ).setParameter( 1, "steve" ).list();
 			assertEquals( 2, result.size() );
 
 			// now lets enable filters on Order...
 			session.enableFilter( "fulfilledOrders" ).setParameter( "asOfDate", testData.lastMonth.getTime() );
 			//noinspection deprecation
-			result = session.createQuery( queryString ).setParameter( 1, "steve" ).list();
+			result = session.createQuery( queryString, Order.class ).setParameter( 1, "steve" ).list();
 			assertEquals( 1, result.size() );
 
 			// now, lets additionally enable filter on Salesperson.  First a valid one...
 			session.enableFilter( "regionlist" ).setParameterList( "regions", new String[] { "APAC" } );
 			//noinspection deprecation
-			result = session.createQuery( queryString ).setParameter( 1, "steve" ).list();
+			result = session.createQuery( queryString, Order.class ).setParameter( 1, "steve" ).list();
 			assertEquals( 1, result.size() );
 
 			// ... then a silly one...
@@ -589,7 +589,7 @@ public class DynamicFilterTest {
 					new String[] { "gamma quadrant" }
 			);
 			//noinspection deprecation
-			result = session.createQuery( queryString ).setParameter( 1, "steve" ).list();
+			result = session.createQuery( queryString, Order.class ).setParameter( 1, "steve" ).list();
 			assertEquals( 0, result.size() );
 		} );
 	}
@@ -601,19 +601,19 @@ public class DynamicFilterTest {
 
 			// first a control-group query
 			//noinspection deprecation
-			var result = session.createQuery( queryString ).setParameter( "salesPersonName", "steve" ).list();
+			var result = session.createQuery( queryString, Order.class ).setParameter( "salesPersonName", "steve" ).list();
 			assertEquals( 2, result.size() );
 
 			// now lets enable filters on Order...
 			session.enableFilter( "fulfilledOrders" ).setParameter( "asOfDate", testData.lastMonth.getTime() );
 			//noinspection deprecation
-			result = session.createQuery( queryString ).setParameter( "salesPersonName", "steve" ).list();
+			result = session.createQuery( queryString, Order.class ).setParameter( "salesPersonName", "steve" ).list();
 			assertEquals( 1, result.size() );
 
 			// now, lets additionally enable filter on Salesperson.  First a valid one...
 			session.enableFilter( "regionlist" ).setParameterList( "regions", new String[] { "APAC" } );
 			//noinspection deprecation
-			result = session.createQuery( queryString ).setParameter( "salesPersonName", "steve" ).list();
+			result = session.createQuery( queryString, Order.class ).setParameter( "salesPersonName", "steve" ).list();
 			assertEquals( 1, result.size() );
 
 			// ... then a silly one...
@@ -622,7 +622,7 @@ public class DynamicFilterTest {
 					new String[] { "gamma quadrant" }
 			);
 			//noinspection deprecation
-			result = session.createQuery( queryString ).setParameter( "salesPersonName", "steve" ).list();
+			result = session.createQuery( queryString, Order.class ).setParameter( "salesPersonName", "steve" ).list();
 			assertEquals( 0, result.size() );
 		} );
 	}
@@ -645,7 +645,7 @@ public class DynamicFilterTest {
 		factoryScope.inTransaction(session -> {
 			session.enableFilter( "region" ).setParameter( "region", "NA" );
 			//noinspection deprecation
-			int count = session.createQuery( "delete from Salesperson" ).executeUpdate();
+			int count = session.createMutationQuery( "delete from Salesperson" ).executeUpdate();
 			assertEquals( 1, count );
 			session.remove( sp2 );
 		} );
@@ -669,7 +669,7 @@ public class DynamicFilterTest {
 		factoryScope.inTransaction(session -> {
 			session.enableFilter( "region" ).setParameter( "region", "NA" );
 			//noinspection deprecation
-			int count = session.createQuery( "delete from Salesperson" ).executeUpdate();
+			int count = session.createMutationQuery( "delete from Salesperson" ).executeUpdate();
 			assertEquals( 1, count );
 			session.remove( sp2 );
 		} );
@@ -722,7 +722,7 @@ public class DynamicFilterTest {
 
 			log.debug( "Performing query of Salespersons" );
 			//noinspection deprecation
-			var salespersons = session.createQuery( "from Salesperson" ).list();
+			var salespersons = session.createQuery( "from Salesperson", Salesperson.class ).list();
 			assertEquals( 1, salespersons.size(), "Incorrect salesperson count" );
 		} );
 	}

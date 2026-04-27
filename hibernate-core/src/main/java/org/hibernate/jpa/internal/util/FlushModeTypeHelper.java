@@ -63,6 +63,7 @@ public class FlushModeTypeHelper {
 		return switch (flushModeType) {
 			case AUTO -> FlushMode.AUTO;
 			case COMMIT -> FlushMode.COMMIT;
+			case EXPLICIT ->  FlushMode.MANUAL;
 		};
 	}
 

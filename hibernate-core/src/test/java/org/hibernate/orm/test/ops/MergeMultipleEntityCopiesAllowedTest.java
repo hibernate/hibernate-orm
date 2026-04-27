@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.ops;
 
-import java.util.List;
 import jakarta.persistence.PersistenceException;
 
 import org.hibernate.Hibernate;
@@ -175,8 +174,8 @@ public class MergeMultipleEntityCopiesAllowedTest {
 					assertThat( item.getCategory().getName(), is( category.getName() ) );
 					assertSame( item, item.getCategory().getExampleItem() );
 					// make sure new category got persisted
-					Category categoryQueried = (Category) session.createQuery(
-							"from Category c where c.name='new category'" )
+					Category categoryQueried = session.createQuery(
+							"from Category c where c.name='new category'", Category.class )
 							.uniqueResult();
 					assertNotNull( categoryQueried );
 				}
@@ -229,7 +228,7 @@ public class MergeMultipleEntityCopiesAllowedTest {
 					assertThat( item.getCategory().getName(), is( categoryNewer.getName() ) );
 					assertSame( item, item.getCategory().getExampleItem() );
 					// make sure original category is still there
-					Category categoryQueried = (Category) session.createQuery( "from Category c where c.name='category'" )
+					Category categoryQueried = session.createQuery( "from Category c where c.name='category'", Category.class )
 							.uniqueResult();
 					assertNotNull( categoryQueried );
 					// make sure original category has the same item.
@@ -1160,17 +1159,16 @@ public class MergeMultipleEntityCopiesAllowedTest {
 		cleanup( scope );
 	}
 
-	@SuppressWarnings("unchecked")
 	private void cleanup(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "delete from SubItem" ).executeUpdate();
-					for ( Hoarder hoarder : (List<Hoarder>) session.createQuery( "from Hoarder" ).list() ) {
+					session.createMutationQuery( "delete from SubItem" ).executeUpdate();
+					for ( Hoarder hoarder : session.createQuery( "from Hoarder", Hoarder.class ).list() ) {
 						hoarder.getItems().clear();
 						session.remove( hoarder );
 					}
 
-					for ( Category category : (List<Category>) session.createQuery( "from Category" ).list() ) {
+					for ( Category category : session.createQuery( "from Category", Category.class ).list() ) {
 						Item exampleItem = category.getExampleItem();
 						if ( exampleItem != null ) {
 							category.setExampleItem( null );
@@ -1180,7 +1178,7 @@ public class MergeMultipleEntityCopiesAllowedTest {
 						}
 					}
 
-					for ( Item item : (List<Item>) session.createQuery( "from Item" ).list() ) {
+					for ( Item item : session.createQuery( "from Item", Item.class ).list() ) {
 						Category category = item.getCategory();
 						item.setCategory( null );
 						if ( category != null ) {
@@ -1189,7 +1187,7 @@ public class MergeMultipleEntityCopiesAllowedTest {
 						session.remove( item );
 					}
 
-					session.createQuery( "delete from Item" ).executeUpdate();
+					session.createMutationQuery( "delete from Item" ).executeUpdate();
 				}
 		);
 	}

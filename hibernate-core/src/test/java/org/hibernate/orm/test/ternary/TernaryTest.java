@@ -113,11 +113,11 @@ public class TernaryTest {
 	@Test
 	public void testIndexRelatedFunctions(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
-			session.createQuery( "from Employee e join e.managerBySite as m where index(m) is not null", Object[].class )
+			session.createQuery(Object[].class, "from Employee e join e.managerBySite as m where index(m) is not null" )
 					.list();
-			session.createQuery( "from Employee e where minIndex(e.managerBySite) is not null" )
+			session.createQuery(Employee.class, "from Employee e where minIndex(e.managerBySite) is not null" )
 					.list();
-			session.createQuery( "from Employee e where maxIndex(e.managerBySite) is not null" )
+			session.createQuery(Employee.class, "from Employee e where maxIndex(e.managerBySite) is not null" )
 					.list();
 		} );
 	}

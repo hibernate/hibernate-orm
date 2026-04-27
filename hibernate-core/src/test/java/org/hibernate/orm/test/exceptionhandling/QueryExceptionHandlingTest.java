@@ -54,8 +54,7 @@ public class QueryExceptionHandlingTest extends BaseExceptionHandlingTest {
 	public void testInvalidQuery() {
 		TransactionUtil.inTransaction( sessionFactory(), (s) -> {
 			try {
-				//noinspection deprecation
-				s.createQuery( "from A a where" ).list();
+				s.createQuery( "from A a where", A.class ).list();
 				fail( "should have thrown an exception" );
 			}
 			catch (RuntimeException expected) {
@@ -68,8 +67,7 @@ public class QueryExceptionHandlingTest extends BaseExceptionHandlingTest {
 	public void testUniqueResultWithMultipleResults() {
 		TransactionUtil.inTransaction( sessionFactory(), (s) -> {
 			try {
-				//noinspection deprecation
-				s.createQuery( "from A where id in (1, 2)" ).uniqueResult();
+				s.createQuery( "from A where id in (1, 2)", A.class ).uniqueResult();
 				fail( "should have thrown an exception" );
 			}
 			catch (RuntimeException expected) {
@@ -83,8 +81,7 @@ public class QueryExceptionHandlingTest extends BaseExceptionHandlingTest {
 	public void testGetSingleResultWithMultipleResults() {
 		TransactionUtil.inTransaction( sessionFactory(), (s) -> {
 			try {
-				//noinspection deprecation
-				s.createQuery( "from A where id in (1, 2)" ).getSingleResult();
+				s.createQuery( "from A where id in (1, 2)", A.class ).getSingleResult();
 				fail( "should have thrown an exception" );
 			}
 			catch (RuntimeException expected) {
@@ -98,8 +95,7 @@ public class QueryExceptionHandlingTest extends BaseExceptionHandlingTest {
 	public void testGetSingleResultWithNoResults() {
 		TransactionUtil.inTransaction( sessionFactory(), (s) -> {
 			try {
-				//noinspection deprecation
-				s.createQuery( "from A where id = 3" ).getSingleResult();
+				s.createQuery( "from A where id = 3", A.class ).getSingleResult();
 				fail( "should have thrown an exception" );
 			}
 			catch (RuntimeException expected) {
@@ -113,8 +109,7 @@ public class QueryExceptionHandlingTest extends BaseExceptionHandlingTest {
 	public void testExecuteUpdateWithConstraintViolation() {
 		TransactionUtil.inTransaction( sessionFactory(), (s) -> {
 			try {
-				//noinspection deprecation
-				s.createQuery( "update A set id = 1 where id = 2" ).executeUpdate();
+				s.createMutationQuery( "update A set id = 1 where id = 2" ).executeUpdate();
 				fail( "should have thrown an exception" );
 			}
 			catch (RuntimeException expected) {

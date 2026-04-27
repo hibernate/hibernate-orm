@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.hql;
 
 import org.hibernate.Session;
-import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -58,7 +57,7 @@ public class DeleteWhereFunctionCallTest {
 			assertThat( count( s, SubType.class ) ).isEqualTo( 1 );
 		} );
 		scope.inTransaction( s -> {
-			Query<?> query = s.createQuery( "delete from " + SuperType.class.getName() + " e"
+			var query = s.createMutationQuery( "delete from " + SuperType.class.getName() + " e"
 					+ " where type( e ) = :type" );
 			query.setParameter( "type", SuperType.class );
 			query.executeUpdate();
@@ -77,7 +76,7 @@ public class DeleteWhereFunctionCallTest {
 			assertThat( count( s, TablePerClassSubType.class ) ).isEqualTo( 1 );
 		} );
 		scope.inTransaction( s -> {
-			Query<?> query = s.createQuery( "delete from " + TablePerClassSuperType.class.getName() + " e"
+			var query = s.createMutationQuery( "delete from " + TablePerClassSuperType.class.getName() + " e"
 					+ " where type( e ) = :type" );
 			query.setParameter( "type", TablePerClassSuperType.class );
 			query.executeUpdate();
@@ -95,7 +94,7 @@ public class DeleteWhereFunctionCallTest {
 			assertThat( count( s, SubType.class ) ).isEqualTo( 1 );
 		} );
 		scope.inTransaction( s -> {
-			Query<?> query = s.createQuery( "delete from " + SuperType.class.getName() + " e"
+			var query = s.createMutationQuery( "delete from " + SuperType.class.getName() + " e"
 													+ " where abs( e.someNumber ) = :number" );
 			query.setParameter( "number", 2 );
 			query.executeUpdate();

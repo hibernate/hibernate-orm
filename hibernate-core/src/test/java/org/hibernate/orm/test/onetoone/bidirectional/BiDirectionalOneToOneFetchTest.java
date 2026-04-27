@@ -99,7 +99,7 @@ public class BiDirectionalOneToOneFetchTest {
 			} );
 
 			List<EntityA> list = session.createQuery(
-					"from EntityA a join fetch a.b"
+					"from EntityA a join fetch a.b", EntityA.class
 			).list();
 
 			EntityA entityA = list.get( 0 );
@@ -135,7 +135,7 @@ public class BiDirectionalOneToOneFetchTest {
 			} );
 
 			session.createQuery(
-					"from EntityA a join fetch a.b b join fetch b.a"
+					"from EntityA a join fetch a.b b join fetch b.a", EntityA.class
 			).list();
 
 			assertEquals(

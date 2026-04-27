@@ -64,7 +64,7 @@ public class StructComponentArrayTest {
 	public void testGet(SessionFactoryScope scope){
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Book" ).list();
+					session.createQuery( Book.class, "from Book" ).list();
 				}
 		);
 	}

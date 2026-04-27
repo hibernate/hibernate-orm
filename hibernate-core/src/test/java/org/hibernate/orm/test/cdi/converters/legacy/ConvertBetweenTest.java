@@ -7,8 +7,6 @@ package org.hibernate.orm.test.cdi.converters.legacy;
 import java.math.BigDecimal;
 import java.util.List;
 
-import org.hibernate.query.Query;
-
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.junit.jupiter.api.AfterEach;
@@ -66,8 +64,8 @@ public class ConvertBetweenTest extends AbstractJPATest {
 	public void testBetweenLiteral() {
 		inTransaction(
 				session -> {
-					@SuppressWarnings("unchecked") final List<Item> result = session.createQuery(
-							"select i from Item i where quantity between 9 and 11" ).list();
+					final List<Item> result = session.createQuery(
+							"select i from Item i where quantity between 9 and 11", Item.class ).list();
 					assertEquals( 1, result.size() );
 					assertEquals( 10, result.get( 0 ).getQuantity().intValue() );
 				}
@@ -78,11 +76,11 @@ public class ConvertBetweenTest extends AbstractJPATest {
 	public void testBetweenParameters() {
 		inTransaction(
 				session -> {
-					final Query query = session.createQuery(
-							"select i from Item i where quantity between :low and :high" );
+					var query = session.createQuery(
+							"select i from Item i where quantity between :low and :high", Item.class );
 					query.setParameter( "low", 9 );
 					query.setParameter( "high", 11 );
-					@SuppressWarnings("unchecked") final List<Item> result = query.list();
+					final List<Item> result = query.list();
 					assertEquals( 1, result.size() );
 					assertEquals( 10, result.get( 0 ).getQuantity().intValue() );
 				}

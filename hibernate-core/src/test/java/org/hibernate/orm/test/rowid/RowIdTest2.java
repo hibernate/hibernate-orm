@@ -77,7 +77,7 @@ public class RowIdTest2 {
 						s.clear();
 
 						t = s.beginTransaction();
-						p = (Point) s.createQuery( "from Point" ).uniqueResult();
+						p = (Point) s.createQuery(Point.class, "from Point" ).uniqueResult();
 						p.setDescription( "new new desc" );
 						t.commit();
 						s.clear();

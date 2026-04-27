@@ -52,14 +52,14 @@ public class ExplicitSqlResultSetMappingTest {
 	@Test
 	public void testCompleteScalarAutoDiscovery(SessionFactoryScope scope) {
 		scope.inTransaction(
-				s -> s.createNativeQuery( queryString ).list()
+				s -> s.createNativeQuery( queryString, Object[].class ).list()
 		);
 	}
 
 	@Test
 	public void testPartialScalarAutoDiscovery(SessionFactoryScope scope) {
 		scope.inTransaction(
-				s -> s.createNativeQuery( queryString, "explicitScalarResultSetMapping" ).list()
+				s -> s.createNativeQuery( queryString, "explicitScalarResultSetMapping", Object[].class ).list()
 		);
 	}
 }

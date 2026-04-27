@@ -63,7 +63,7 @@ public class OrderByMappingComplianceTest {
 			try {
 				TransactionUtil2.inTransaction(
 						(SessionFactoryImplementor) sf,
-						session -> session.createQuery( "from Order" ).list()
+						session -> session.createQuery( Order.class, "from Order" ).list()
 				);
 			}
 			finally {

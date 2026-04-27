@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.jpa.compliance.tck2_2;
 
-import org.hibernate.query.Query;
 
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.junit.jupiter.api.Test;
@@ -25,7 +24,7 @@ public class JpaPositionalParameterTest extends AbstractJPATest {
 	public void testPositionalParameters() {
 		inTransaction(
 				session -> {
-					Query query = session.createQuery( "select i from Item i where name = ?1 or name = ?2" );
+					var query = session.createQuery( Object.class, "select i from Item i where name = ?1 or name = ?2" );
 					for ( Parameter<?> parameter : query.getParameters() ) {
 						assertThat( parameter.getPosition(), notNullValue() );
 						assertThat( parameter.getPosition(), either( is( 1 ) ).or( is( 2 ) ) );

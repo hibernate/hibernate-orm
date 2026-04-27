@@ -4,8 +4,8 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import java.util.Map;
-
+import jakarta.persistence.criteria.BooleanExpression;
+import jakarta.persistence.criteria.Expression;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -23,8 +23,7 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.spi.NavigablePath;
 
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
+import java.util.Map;
 
 /**
  * @author Steve Ebersole
@@ -127,7 +126,7 @@ public class SqmMapJoin<L, K, V>
 	}
 
 	@Override
-	public SqmMapJoin<L, K, V> on(Predicate @Nullable... restrictions) {
+	public SqmMapJoin<L, K, V> on(BooleanExpression... restrictions) {
 		return (SqmMapJoin<L, K, V>) super.on( restrictions );
 	}
 

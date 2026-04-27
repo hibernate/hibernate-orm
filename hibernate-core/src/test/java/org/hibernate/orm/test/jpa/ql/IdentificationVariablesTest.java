@@ -27,35 +27,32 @@ public class IdentificationVariablesTest extends AbstractJPATest {
 
 	@Test
 	public void testUsageInSelect() {
-		inSession(
-				session ->
-						session.createQuery( "select I from Item i" ).list()
+		inSession(session ->
+				session.createQuery( Object.class, "select I from Item i" ).list()
 		);
 	}
 
 	@Test
 	public void testUsageInPath() {
-		inSession(
-				session ->
-						session.createQuery( "select I from Item i where I.name = 'widget'" ).list()
+		inSession(session ->
+				session.createQuery( Object.class,"select I from Item i where I.name = 'widget'" ).list()
 		);
 	}
 
 	@Test
 	public void testMixedTckUsage() {
-		inSession(
-				session ->
-						session.createQuery( "Select DISTINCT OBJECT(P) from Product p where P.quantity < 10" ).list()
+		inSession(session ->
+				session.createQuery( Object.class, "Select DISTINCT OBJECT(P) from Product p where P.quantity < 10" )
+						.list()
 		);
 	}
 
 	@Test
 	public void testUsageInJpaInCollectionSyntax() {
-		inSession(
-				session ->
-						session.createQuery(
-										"SELECT DISTINCT object(i) FROM Item I, IN(i.parts) ip where ip.stockNumber = '123'" )
-								.list()
+		inSession(session ->
+			session.createQuery( Object.class,
+							"SELECT DISTINCT object(i) FROM Item I, IN(i.parts) ip where ip.stockNumber = '123'" )
+					.list()
 		);
 	}
 
@@ -63,7 +60,7 @@ public class IdentificationVariablesTest extends AbstractJPATest {
 	public void testUsageInDistinct() {
 		inSession(
 				session ->
-						session.createQuery( "select distinct(I) from Item i" ).list()
+						session.createQuery( Object.class,"select distinct(I) from Item i" ).list()
 		);
 	}
 
@@ -71,7 +68,7 @@ public class IdentificationVariablesTest extends AbstractJPATest {
 	public void testUsageInSelectObject() {
 		inSession(
 				session ->
-						session.createQuery( "select OBJECT(I) from Item i" ).list()
+						session.createQuery( Object.class,"select OBJECT(I) from Item i" ).list()
 		);
 	}
 

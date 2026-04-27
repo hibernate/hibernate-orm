@@ -4,7 +4,6 @@
  */
 package org.hibernate.orm.test.ops;
 
-import java.util.List;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -114,29 +113,28 @@ public class MergeMultipleEntityCopiesDisallowedByDefaultTest {
 		cleanup( scope );
 	}
 
-	@SuppressWarnings("unchecked")
 	private void cleanup(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "delete from SubItem" ).executeUpdate();
-					for ( Hoarder hoarder : (List<Hoarder>) session.createQuery( "from Hoarder" ).list() ) {
+					session.createMutationQuery( "delete from SubItem" ).executeUpdate();
+					for ( Hoarder hoarder : session.createQuery( "from Hoarder", Hoarder.class ).list() ) {
 						hoarder.getItems().clear();
 						session.remove( hoarder );
 					}
 
-					for ( Category category : (List<Category>) session.createQuery( "from Category" ).list() ) {
+					for ( Category category : session.createQuery( "from Category", Category.class ).list() ) {
 						if ( category.getExampleItem() != null ) {
 							category.setExampleItem( null );
 							session.remove( category );
 						}
 					}
 
-					for ( Item item : (List<Item>) session.createQuery( "from Item" ).list() ) {
+					for ( Item item : session.createQuery( "from Item", Item.class ).list() ) {
 						item.setCategory( null );
 						session.remove( item );
 					}
 
-					session.createQuery( "delete from Item" ).executeUpdate();
+					session.createMutationQuery( "delete from Item" ).executeUpdate();
 				}
 		);
 	}

@@ -61,9 +61,9 @@ public class PropertyRefTest {
 
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "from Person" ).list();
+					session.createQuery( Person.class,"from Person" ).list();
 					session.clear();
-					session.createNativeQuery( "select {p.*} from PROPREF_PERS {p}" )
+					session.createNativeQuery( Person.class, "select {p.*} from PROPREF_PERS {p}" )
 							.addEntity( "p", Person.class.getName() )
 							.list();
 				}
@@ -71,7 +71,7 @@ public class PropertyRefTest {
 
 		scope.inTransaction(
 				session -> {
-					var results = session.createQuery( "from Person" ).list();
+					var results = session.createQuery( Person.class,"from Person" ).list();
 					for ( Object result : results ) {
 						session.remove( result );
 					}
@@ -109,11 +109,12 @@ public class PropertyRefTest {
 		// test retrieval of the group
 		scope.inTransaction(
 				session -> {
-					Group group = (Group) session.createQuery( "from Group g left join fetch g.users" ).uniqueResult();
+					var group = session.createQuery( Group.class,"from Group g left join fetch g.users" )
+							.uniqueResult();
 					assertTrue( Hibernate.isInitialized( group.getUsers() ) );
 					assertEquals( 2, group.getUsers().size() );
 					session.remove( group );
-					session.createQuery( "delete Person" ).executeUpdate();
+					session.createMutationQuery( "delete Person" ).executeUpdate();
 				}
 		);
 	}
@@ -147,34 +148,34 @@ public class PropertyRefTest {
 					p2 = session.get( Person.class, p2.getId() ); //get null address reference by outer join
 					assertNull( p2.getAddress() );
 					assertNotNull( p.getAddress() );
-					var l = session.createQuery( "from Person" ).list(); //pull address references for cache
+					var l = session.createQuery( Person.class, "from Person" ).list(); //pull address references for cache
 					assertEquals( 2, l.size() );
 					assertTrue( l.contains( p ) && l.contains( p2 ) );
 					session.clear();
 
-					l = session.createQuery( "from Person p order by p.name" )
+					l = session.createQuery( Person.class, "from Person p order by p.name" )
 							.list(); //get address references by sequential selects
 					assertEquals( 2, l.size() );
-					assertNull( ( (Person) l.get( 0 ) ).getAddress() );
-					assertNotNull( ( (Person) l.get( 1 ) ).getAddress() );
+					assertNull( l.get( 0 ).getAddress() );
+					assertNotNull( l.get( 1 ).getAddress() );
 					session.clear();
 
-					l = session.createQuery( "from Person p left join fetch p.address a order by a.country" )
+					l = session.createQuery( Person.class, "from Person p left join fetch p.address a order by a.country" )
 							.list(); //get em by outer join
 					assertEquals( 2, l.size() );
-					if ( ( (Person) l.get( 0 ) ).getName().equals( "Max" ) ) {
-						assertNull( ( (Person) l.get( 0 ) ).getAddress() );
-						assertNotNull( ( (Person) l.get( 1 ) ).getAddress() );
+					if ( l.get( 0 ).getName().equals( "Max" ) ) {
+						assertNull( l.get( 0 ).getAddress() );
+						assertNotNull( l.get( 1 ).getAddress() );
 					}
 					else {
-						assertNull( ( (Person) l.get( 1 ) ).getAddress() );
-						assertNotNull( ( (Person) l.get( 0 ) ).getAddress() );
+						assertNull( l.get( 1 ).getAddress() );
+						assertNotNull( l.get( 0 ).getAddress() );
 					}
 					session.clear();
 
 					l = session.createQuery( "from Person p left join p.accounts a", Person.class ).list();
 					for ( int i = 0; i < 2; i++ ) {
-						Person px = (Person) l.get( i );
+						Person px = l.get( i );
 						assertFalse( Hibernate.isInitialized( px.getAccounts() ) );
 						if ( px.getName().equals( "Max" ) ) {
 							assertEquals( 1, px.getAccounts().size() );
@@ -186,24 +187,27 @@ public class PropertyRefTest {
 					}
 					session.clear();
 
-					l = session.createQuery( "from Person p left join fetch p.accounts a order by p.name" ).list();
-					Person p0 = (Person) l.get( 0 );
+					l = session.createQuery( Person.class,
+							"from Person p left join fetch p.accounts a order by p.name" )
+							.list();
+					Person p0 = l.get( 0 );
 					assertTrue( Hibernate.isInitialized( p0.getAccounts() ) );
 					assertEquals( 1, p0.getAccounts().size() );
 					assertSame( p0, ( (Account) p0.getAccounts().iterator().next() ).getUser() );
-					Person p1 = (Person) l.get( 1 );
+					Person p1 = l.get( 1 );
 					assertTrue( Hibernate.isInitialized( p1.getAccounts() ) );
 					assertEquals( 0, p1.getAccounts().size() );
 					session.clear();
-					Account acc = (Account) session.createQuery( "from Account a left join fetch a.user" ).uniqueResult();
+					var acc = session.createQuery( Account.class,"from Account a left join fetch a.user" )
+							.uniqueResult();
 					assertTrue( Hibernate.isInitialized( acc.getUser() ) );
 					assertNotNull( acc.getUser() );
 					assertTrue( acc.getUser().getAccounts().contains( acc ) );
 
-					session.createQuery( "delete from Address" ).executeUpdate();
-					session.createQuery( "delete from Account" )
+					session.createMutationQuery( "delete from Address" ).executeUpdate();
+					session.createMutationQuery( "delete from Account" )
 							.executeUpdate(); // to not break constraint violation between Person and Account
-					session.createQuery( "delete from Person" ).executeUpdate();
+					session.createMutationQuery( "delete from Person" ).executeUpdate();
 				}
 		);
 	}

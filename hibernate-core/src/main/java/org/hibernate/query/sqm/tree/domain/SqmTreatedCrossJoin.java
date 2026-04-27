@@ -5,7 +5,6 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -122,11 +121,6 @@ public class SqmTreatedCrossJoin extends SqmCrossJoin implements SqmTreatedJoin 
 		hql.append( " as " );
 		hql.append( treatTarget.getName() );
 		hql.append( ')' );
-	}
-
-	@Override
-	public SqmTreatedCrossJoin on(Predicate @Nullable ... restrictions) {
-		return (SqmTreatedCrossJoin) super.on( restrictions );
 	}
 
 	@Override

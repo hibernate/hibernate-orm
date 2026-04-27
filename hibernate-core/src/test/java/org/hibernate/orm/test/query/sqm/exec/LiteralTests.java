@@ -5,6 +5,7 @@
 package org.hibernate.orm.test.query.sqm.exec;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
+import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -18,7 +19,7 @@ public class LiteralTests {
 	public void testTimestampLiteral(SessionFactoryScope scope) {
 		final String queryString = "from EntityOfBasics e1 where e1.theTimestamp = {ts '2018-01-01T12:30:00'}";
 		scope.inTransaction(
-				session -> session.createQuery( queryString ).list()
+				session -> session.createQuery( queryString, EntityOfBasics.class ).list()
 		);
 	}
 
@@ -27,7 +28,7 @@ public class LiteralTests {
 		scope.inTransaction(
 				session -> {
 					final String queryString = "from EntityOfBasics e1 where e1.theDate = {d '2018-01-01'}";
-					session.createQuery( queryString ).list();
+					session.createQuery( queryString, EntityOfBasics.class ).list();
 				}
 		);
 	}
@@ -37,7 +38,7 @@ public class LiteralTests {
 		scope.inTransaction(
 				session -> {
 					final String queryString = "from EntityOfBasics e1 where e1.theTime = {t '12:30:00'}";
-					session.createQuery( queryString ).list();
+					session.createQuery( queryString, EntityOfBasics.class ).list();
 				}
 		);
 	}

@@ -103,7 +103,7 @@ public class DefaultNamingCollectionElementTest {
 					assertEquals( FavoriteFood.KUNGPAOCHICKEN, boy.getFavoriteFood().get( "lunch" ) );
 					assertEquals( FavoriteFood.PIZZA, boy.getFavoriteFood().get( "breakfast" ) );
 					var result = session.createQuery(
-							"select boy from Boy boy join boy.nickNames names where names = :name" )
+							"select boy from Boy boy join boy.nickNames names where names = :name", Boy.class )
 							.setParameter( "name", "Thing" ).list();
 					assertEquals( 1, result.size() );
 					session.remove( boy );
@@ -212,7 +212,7 @@ public class DefaultNamingCollectionElementTest {
 					assertEquals( 3, boy.getFavoriteNumbers()[1] );
 					assertTrue( boy.getCharacters().contains( CharacterTrait.CRAFTY ) );
 					var result = session.createQuery(
-							"select boy from Boy boy join boy.nickNames names where names = :name" )
+							"select boy from Boy boy join boy.nickNames names where names = :name", Boy.class )
 							.setParameter( "name", "Thing" ).list();
 					assertEquals( 1, result.size() );
 					session.remove( boy );
@@ -238,7 +238,7 @@ public class DefaultNamingCollectionElementTest {
 					filter.setParameter( "param", "fr" );
 
 					assertEquals( 1,
-							session.createQuery( "from TestCourse t" ).list().size() );
+							session.createQuery( "from TestCourse t", TestCourse.class ).list().size() );
 
 					TestCourse t = session.get( TestCourse.class, test.getTestCourseId() );
 					assertEquals( 1, t.getTitle().getVariations().size() );

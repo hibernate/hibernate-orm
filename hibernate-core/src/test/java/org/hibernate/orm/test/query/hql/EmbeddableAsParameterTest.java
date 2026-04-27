@@ -37,7 +37,7 @@ public class EmbeddableAsParameterTest {
 	public void testAsParameterInWhereClause(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "select p from Person p where p.name = :name" ).
+					List results = session.createQuery( "select p from Person p where p.name = :name", Person.class ).
 							setParameter( "name", new Name( "Fab", "Fab" ) ).list();
 					assertThat( results.size(), is( 1 ) );
 				}
@@ -48,7 +48,7 @@ public class EmbeddableAsParameterTest {
 	public void testAsParameterReuseInWhereClause(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "select p from Person p where p.name = :name or p.name = :name " )
+					List results = session.createQuery( "select p from Person p where p.name = :name or p.name = :name ", Person.class )
 							.
 									setParameter( "name", new Name( "Fab", "Fab" ) )
 							.list();
@@ -61,7 +61,7 @@ public class EmbeddableAsParameterTest {
 	public void testAsParameterReuseInWhereClause2(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "select p from Person p where p.embeddableTest = :embeddable" ).
+					List results = session.createQuery( "select p from Person p where p.embeddableTest = :embeddable", Person.class ).
 							setParameter( "embeddable", new EmbeddableTest() ).list();
 					assertThat( results.size(), is( 0 ) );
 				}

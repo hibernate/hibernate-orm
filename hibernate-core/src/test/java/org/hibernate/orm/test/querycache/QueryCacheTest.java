@@ -20,7 +20,6 @@ import org.hibernate.SessionBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.query.Query;
 import org.hibernate.stat.EntityStatistics;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -111,20 +110,20 @@ public class QueryCacheTest {
 		scope.inTransaction(
 				session -> {
 					// this query will hit the database and create the cache
-					Long result = (Long) session.createQuery( queryString ).setCacheable( true ).uniqueResult();
+					Long result = session.createQuery( queryString, Long.class ).setCacheable( true ).uniqueResult();
 					assertEquals( 3, result.intValue() );
 				}
 		);
 
 		scope.inTransaction(
 				session ->
-						session.createQuery( "delete from Item" ).executeUpdate()
+						session.createMutationQuery( "delete from Item" ).executeUpdate()
 		);
 
 		scope.inTransaction(
 				session -> {
 					// and this one SHOULD not be served by the cache
-					Number result2 = (Number) session.createQuery( queryString ).setCacheable( true ).uniqueResult();
+					Number result2 = session.createQuery( queryString, Long.class ).setCacheable( true ).uniqueResult();
 					assertEquals( 0, result2.intValue() );
 				}
 		);
@@ -156,12 +155,12 @@ public class QueryCacheTest {
 						session.beginTransaction();
 						String queryString = "from Item";
 						// this query will hit the database and create the cache
-						session.createQuery( queryString ).setCacheable( true ).list();
+						session.createQuery( queryString, Item.class ).setCacheable( true ).list();
 						session.getTransaction().commit();
 
 						session.beginTransaction();
 						//and this one SHOULD served by the cache
-						session.createQuery( queryString ).setCacheable( true ).list();
+						session.createQuery( queryString, Item.class ).setCacheable( true ).list();
 						session.getTransaction().commit();
 						QueryStatistics qs = session.getSessionFactory()
 								.getStatistics()
@@ -201,7 +200,7 @@ public class QueryCacheTest {
 
 		scope.inTransaction(
 				session -> {
-					session.createQuery( queryString ).setCacheable( true ).list();
+					session.createQuery( queryString, Item.class ).setCacheable( true ).list();
 					Item i = new Item();
 					i.setName( "widget" );
 					i.setDescription( "A really top-quality, full-featured widget." );
@@ -233,7 +232,7 @@ public class QueryCacheTest {
 
 		scope.inTransaction(
 				session -> {
-					List<Item> result = session.createQuery( queryString ).setCacheable( true ).list();
+					List<Item> result = session.createQuery( queryString, Item.class ).setCacheable( true ).list();
 					assertEquals( 1, result.size() );
 				}
 		);
@@ -261,7 +260,7 @@ public class QueryCacheTest {
 
 		scope.inTransaction(
 				session -> {
-					List result = session.createQuery( queryString ).setCacheable( true ).list();
+					List<Item> result = session.createQuery( queryString, Item.class ).setCacheable( true ).list();
 					assertEquals( 1, result.size() );
 				}
 		);
@@ -292,7 +291,7 @@ public class QueryCacheTest {
 
 		Item item = scope.fromTransaction(
 				session -> {
-					List<Item> result = session.createQuery( queryString ).setCacheable( true ).list();
+					List<Item> result = session.createQuery( queryString, Item.class ).setCacheable( true ).list();
 					assertEquals( 1, result.size() );
 					Item i = result.get( 0 );
 					assertTrue( Hibernate.isInitialized( i ) );
@@ -331,7 +330,7 @@ public class QueryCacheTest {
 
 		scope.inTransaction(
 				session -> {
-					session.createQuery( queryString ).setCacheable( true ).list();
+					session.createQuery( queryString, Item.class ).setCacheable( true ).list();
 					Item i = session.get( Item.class, item.getId() );
 
 					session.remove( i );
@@ -381,7 +380,7 @@ public class QueryCacheTest {
 
 		scope.inTransaction(
 				session -> {
-					List result = session.createQuery( queryString ).list();
+					List<Item> result = session.createQuery( queryString, Item.class ).list();
 					assertEquals( 1, result.size() );
 					Item i = session.get( Item.class, item.getId() );
 					assertEquals( "widget", i.getName() );
@@ -401,7 +400,7 @@ public class QueryCacheTest {
 		Item item = new Item();
 		scope.inTransaction(
 				session -> {
-					session.createQuery( queryString ).setCacheable( true ).list();
+					session.createQuery( queryString, String.class ).setCacheable( true ).list();
 					item.setName( "widget" );
 					item.setDescription( "A really top-quality, full-featured widget." );
 					session.persist( item );
@@ -419,7 +418,7 @@ public class QueryCacheTest {
 
 		scope.inTransaction(
 				session -> {
-					List result = session.createQuery( queryString ).setCacheable( true ).list();
+					List<String> result = session.createQuery( queryString, String.class ).setCacheable( true ).list();
 					assertEquals( 1, result.size() );
 					assertEquals( item.getDescription(), result.get( 0 ) );
 				}
@@ -432,7 +431,7 @@ public class QueryCacheTest {
 
 		scope.inTransaction(
 				session -> {
-					List result = session.createQuery( queryString ).setCacheable( true ).list();
+					List<String> result = session.createQuery( queryString, String.class ).setCacheable( true ).list();
 					assertEquals( 1, result.size() );
 					assertEquals( item.getDescription(), result.get( 0 ) );
 				}
@@ -444,7 +443,7 @@ public class QueryCacheTest {
 
 		scope.inTransaction(
 				session -> {
-					List result = session.createQuery( queryString )
+					List result = session.createQuery( queryString, String.class )
 							.setCacheable( true )
 							.setTupleTransformer( Transformers.mapTransformer() )
 							.list();
@@ -465,7 +464,7 @@ public class QueryCacheTest {
 
 		scope.inTransaction(
 				session -> {
-					List result = session.createQuery( queryString )
+					List result = session.createQuery( queryString, String.class )
 							.setCacheable( true )
 							.setTupleTransformer( Transformers.mapTransformer() )
 							.list();
@@ -486,7 +485,7 @@ public class QueryCacheTest {
 
 		scope.inTransaction(
 				session -> {
-					List result = session.createQuery( queryString ).setCacheable( true ).list();
+					List<String> result = session.createQuery( queryString, String.class ).setCacheable( true ).list();
 					assertEquals( 1, result.size() );
 					assertTrue( Hibernate.isInitialized( result.get( 0 ) ) );
 					Item i = session.get( Item.class, item.getId() );
@@ -503,7 +502,7 @@ public class QueryCacheTest {
 
 		scope.inTransaction(
 				session -> {
-					List result = session.createQuery( queryString ).setCacheable( true ).list();
+					List<String> result = session.createQuery( queryString, String.class ).setCacheable( true ).list();
 					assertEquals( 1, result.size() );
 					Item i = session.get( Item.class, item.getId() );
 					assertEquals( "A middle-quality widget.", result.get( 0 ) );
@@ -532,7 +531,7 @@ public class QueryCacheTest {
 					session.beginTransaction();
 					try {
 						session.persist( new EntityWithCompositeKey( PK ) );
-						Query query = session.createQuery( "FROM EntityWithCompositeKey e WHERE e.pk = :pk" );
+						var query = session.createQuery( "FROM EntityWithCompositeKey e WHERE e.pk = :pk", EntityWithCompositeKey.class );
 						query.setCacheable( true );
 						query.setParameter( "pk", PK );
 						assertEquals( 1, query.list().size() );
@@ -597,21 +596,21 @@ public class QueryCacheTest {
 					// 1 and 2+ scalars.
 
 					String sqlQuery = "select name, description from Items";
-					NativeQuery query = session.createNativeQuery( sqlQuery );
+					NativeQuery<Object[]> query = session.createNativeQuery( sqlQuery, Object[].class );
 					query.setCacheable( true );
 					query.addScalar( "name" );
 					query.addScalar( "description" );
-					Object[] result1 = (Object[]) query.uniqueResult();
+					Object[] result1 = query.uniqueResult();
 					assertNotNull( result1 );
 					assertEquals( 2, result1.length );
 					assertEquals( "fooName", result1[0] );
 					assertEquals( "fooDescription", result1[1] );
 
 					sqlQuery = "select name from Items";
-					query = session.createNativeQuery( sqlQuery );
-					query.setCacheable( true );
-					query.addScalar( "name" );
-					String result2 = (String) query.uniqueResult();
+					NativeQuery<String> query2 = session.createNativeQuery( sqlQuery, String.class );
+					query2.setCacheable( true );
+					query2.addScalar( "name" );
+					String result2 = query2.uniqueResult();
 					assertNotNull( result2 );
 					assertEquals( "fooName", result2 );
 				}

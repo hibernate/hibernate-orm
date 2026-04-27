@@ -110,24 +110,24 @@ public class IdentityJoinedSubclassBatchingTest {
 		} );
 
 		scope.inTransaction( s -> {
-			try (ScrollableResults sr = s.createQuery(
-							"select e from Employee e" )
+			try (ScrollableResults<Employee> sr = s.createQuery(
+							"select e from Employee e", Employee.class )
 					.scroll( ScrollMode.FORWARD_ONLY )) {
 
 				while ( sr.next() ) {
-					Employee e = (Employee) sr.get();
+					Employee e = sr.get();
 					e.setTitle( "Unknown" );
 				}
 			}
 		} );
 
 		scope.inTransaction( s -> {
-			try (ScrollableResults sr = s.createQuery(
-							"select e from Employee e" )
+			try (ScrollableResults<Employee> sr = s.createQuery(
+							"select e from Employee e", Employee.class )
 					.scroll( ScrollMode.FORWARD_ONLY )) {
 
 				while ( sr.next() ) {
-					Employee e = (Employee) sr.get();
+					Employee e = sr.get();
 					s.remove( e );
 				}
 			}

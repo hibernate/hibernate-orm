@@ -39,7 +39,7 @@ public class MultiValuedParameterInFunctionTest {
 	@JiraKey( "HHH-16787" )
 	public void testAsQueryParameter(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.createQuery( "from Post p where my_function((select p2.id from Post p2 where p2.title in (:name)))=1" )
+			session.createQuery( "from Post p where my_function((select p2.id from Post p2 where p2.title in (:name)))=1", Post.class )
 					.setParameter( "name", Collections.singletonList( "1" ) )
 					.list();
 		} );

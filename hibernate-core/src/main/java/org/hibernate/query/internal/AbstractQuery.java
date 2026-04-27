@@ -138,7 +138,6 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 		throw new IllegalSelectQueryException( "Not a select query", getQueryString() );
 	}
 
-	@Override
 	public <X> SelectionQueryImplementor<X> ofType(Class<X> type) {
 		try {
 			return asSelectionQuery( type );
@@ -149,7 +148,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 			throw wrapped;
 		}
 	}
-	@Override
+
 	public <X> SelectionQueryImplementor<X> withEntityGraph(EntityGraph<X> entityGraph) {
 		try {
 			return asSelectionQuery( entityGraph );
@@ -166,22 +165,7 @@ public abstract class AbstractQuery<T> extends AbstractCommonQueryContract imple
 		throw new IllegalMutationQueryException( "Not a mutation query", getQueryString() );
 	}
 
-	/**
-	 * The Jakarta Persistence defined form of {@link #asMutationQuery()}
-	 *
-	 * @see jakarta.persistence.Query#asStatement
-	 */
-	@Override
-	public MutationQueryImplementor<T> asStatement() {
-		try {
-			return asMutationQuery();
-		}
-		catch (IllegalMutationQueryException e) {
-			final IllegalArgumentException wrapped = new IllegalArgumentException( e.getMessage() );
-			wrapped.addSuppressed( e );
-			throw wrapped;
-		}
-	}
+
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

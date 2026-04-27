@@ -139,7 +139,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 	}
 
 	@Override
-	public List<String> getAllManagedClassNames() {
+	public List<String> getAllClassNames() {
 		return getManagedClassNames();
 	}
 

@@ -79,8 +79,8 @@ public class StatelessSessionPersistentContextTest {
 		consumeAndCheckPersistenceContextIsClosed(
 				scope,
 				statelessSession -> {
-					TestEntity testEntity1 = (TestEntity) statelessSession.createQuery(
-							"select p from TestEntity p where id = :id" )
+					TestEntity testEntity1 = statelessSession.createQuery(
+							"select p from TestEntity p where id = :id", TestEntity.class )
 							.setParameter( "id", testEntity.getId() )
 							.uniqueResult();
 					testEntity1.getOtherEntity();

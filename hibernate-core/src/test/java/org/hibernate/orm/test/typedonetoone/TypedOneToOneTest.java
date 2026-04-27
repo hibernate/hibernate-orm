@@ -60,7 +60,7 @@ public class TypedOneToOneTest {
 
 		scope.inTransaction(
 				session -> {
-					List<Customer> results = session.createQuery(
+					List<Customer> results = session.createQuery( Customer.class,
 									"from Customer cust left join fetch cust.billingAddress where cust.customerId='abc123'" )
 							.list();
 					//List results = s.createQuery("from Customer cust left join fetch cust.billingAddress left join fetch cust.shippingAddress").list();
@@ -92,7 +92,7 @@ public class TypedOneToOneTest {
 
 		scope.inTransaction(
 				session -> {
-					List<Customer> results = session.createQuery(
+					List<Customer> results = session.createQuery( Customer.class,
 									"from Customer cust left join fetch cust.billingAddress where cust.customerId='xyz123'" )
 							.list();
 					//List results = s.createQuery("from Customer cust left join fetch cust.billingAddress left join fetch cust.shippingAddress").list();

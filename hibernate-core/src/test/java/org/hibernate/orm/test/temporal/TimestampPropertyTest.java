@@ -4,29 +4,27 @@
  */
 package org.hibernate.orm.test.temporal;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Generated;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
-import org.hibernate.query.Query;
-import org.hibernate.testing.orm.junit.SkipForDialect;
-import org.hibernate.type.StandardBasicTypes;
-
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.Test;
-
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.Generated;
+import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.type.StandardBasicTypes;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -51,15 +49,17 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class TimestampPropertyTest {
 	private final DateFormat timestampFormat = new SimpleDateFormat( "HH:mm:ss.SSS" );
 
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
+	}
+
 	@Test
 	public void testTime(SessionFactoryScope scope) {
 		final Entity eOrig = new Entity();
 		eOrig.ts = new Date();
 
-		scope.inTransaction(
-				session ->
-						session.persist( eOrig )
-		);
+		scope.inTransaction(session -> session.persist( eOrig ) );
 
 		scope.inTransaction(
 				session -> {
@@ -70,38 +70,22 @@ public class TimestampPropertyTest {
 				}
 		);
 
-		scope.inTransaction(
-				session -> {
-					final Query<Entity> queryWithParameter = session.createQuery(
-									"from TimestampPropertyTest$Entity where ts=?1" )
-							.setParameter(
-									1,
-									eOrig.ts
-							);
-					final Entity eQueriedWithParameter = queryWithParameter.uniqueResult();
-					assertNotNull( eQueriedWithParameter );
-				}
-		);
+		scope.inTransaction(session -> {
+			var queryWithParameter = session.createQuery(Entity.class,
+							"from TimestampPropertyTest$Entity where ts=?1" )
+					.setParameter(1, eOrig.ts );
+			final Entity eQueriedWithParameter = queryWithParameter.uniqueResult();
+			assertNotNull( eQueriedWithParameter );
+		} );
 
-		final Entity eQueriedWithTimestamp = scope.fromTransaction(
-				session -> {
-					final Query<Entity> queryWithTimestamp = session.createQuery(
-									"from TimestampPropertyTest$Entity where ts=?1" )
-							.setParameter(
-									1,
-									eOrig.ts,
-									StandardBasicTypes.TIMESTAMP
-							);
-					final Entity queryResult = queryWithTimestamp.uniqueResult();
-					assertNotNull( queryResult );
-					return queryResult;
-				}
-		);
-
-		scope.inTransaction(
-				session ->
-						session.remove( eQueriedWithTimestamp )
-		);
+		var eQueriedWithTimestamp = scope.fromTransaction(session -> {
+			var queryWithTimestamp = session.createQuery(Entity.class, "from TimestampPropertyTest$Entity where ts=?1" )
+					.setParameter(1, eOrig.ts, StandardBasicTypes.TIMESTAMP );
+			final Entity queryResult = queryWithTimestamp.uniqueResult();
+			assertNotNull( queryResult );
+			return queryResult;
+		} );
+		assertNotNull( eQueriedWithTimestamp );
 	}
 
 	// TODO(spanner): Reenable this test once Spanner bug is fixed
@@ -110,47 +94,31 @@ public class TimestampPropertyTest {
 	public void testTimeGeneratedByColumnDefault(SessionFactoryScope scope) {
 		final Entity eOrig = new Entity();
 
-		scope.inTransaction(
-				session ->
-						session.persist( eOrig )
-		);
+		scope.inTransaction(session -> session.persist( eOrig ) );
 
 		assertNotNull( eOrig.tsColumnDefault );
 
-		scope.inTransaction(
-				session -> {
-					final Entity eGotten = session.get( Entity.class, eOrig.id );
-					final String tsColumnDefaultOrigFormatted = timestampFormat.format( eOrig.tsColumnDefault );
-					final String tsColumnDefaultGottenFormatted = timestampFormat.format( eGotten.tsColumnDefault );
-					assertEquals( tsColumnDefaultOrigFormatted, tsColumnDefaultGottenFormatted );
-				}
-		);
+		scope.inTransaction(session -> {
+			final Entity eGotten = session.get( Entity.class, eOrig.id );
+			final String tsColumnDefaultOrigFormatted = timestampFormat.format( eOrig.tsColumnDefault );
+			final String tsColumnDefaultGottenFormatted = timestampFormat.format( eGotten.tsColumnDefault );
+			assertEquals( tsColumnDefaultOrigFormatted, tsColumnDefaultGottenFormatted );
+		} );
 
-		scope.inTransaction(
-				session -> {
-					final Query<Entity> queryWithParameter =
-							session.createQuery( "from TimestampPropertyTest$Entity where tsColumnDefault=?1" )
-									.setParameter( 1, eOrig.tsColumnDefault );
-					final Entity eQueriedWithParameter = queryWithParameter.uniqueResult();
-					assertNotNull( eQueriedWithParameter );
-				}
-		);
+		scope.inTransaction(session -> {
+			var queryWithParameter = session.createQuery(Entity.class, "from TimestampPropertyTest$Entity where tsColumnDefault=?1" )
+					.setParameter( 1, eOrig.tsColumnDefault );
+			final Entity eQueriedWithParameter = queryWithParameter.uniqueResult();
+			assertNotNull( eQueriedWithParameter );
+		} );
 
-		final Entity eQueriedWithTimestamp = scope.fromTransaction(
-				session -> {
-					final Query<Entity> queryWithTimestamp =
-							session.createQuery( "from TimestampPropertyTest$Entity where tsColumnDefault=?1" )
-									.setParameter( 1, eOrig.tsColumnDefault, StandardBasicTypes.TIMESTAMP );
-					final Entity queryResult = queryWithTimestamp.uniqueResult();
-					assertNotNull( queryResult );
-					return queryResult;
-				}
-		);
-
-		scope.inTransaction(
-				session ->
-						session.remove( eQueriedWithTimestamp )
-		);
+		final Entity eQueriedWithTimestamp = scope.fromTransaction(session -> {
+			var queryWithTimestamp = session.createQuery(Entity.class, "from TimestampPropertyTest$Entity where tsColumnDefault=?1" )
+					.setParameter( 1, eOrig.tsColumnDefault, StandardBasicTypes.TIMESTAMP );
+			final Entity queryResult = queryWithTimestamp.uniqueResult();
+			assertNotNull( queryResult );
+			return queryResult;
+		} );
 	}
 
 	@jakarta.persistence.Entity

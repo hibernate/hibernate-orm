@@ -4,9 +4,9 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import jakarta.persistence.criteria.BooleanExpression;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.CollectionAttribute;
 import jakarta.persistence.metamodel.EntityType;
@@ -14,7 +14,6 @@ import jakarta.persistence.metamodel.ListAttribute;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.SetAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCrossJoin;
@@ -108,10 +107,7 @@ public interface SqmJoin<L, R> extends SqmFrom<L, R>, JpaJoin<L,R> {
 	}
 
 	@Override
-	default SqmJoin<L, R> on(Predicate @Nullable... restrictions) {
-		setJoinPredicate( restrictions == null ? null : nodeBuilder().wrap( restrictions ) );
-		return this;
-	}
+	SqmJoin<L, R> on(BooleanExpression... restrictions);
 
 	@Override
 	default <X> JpaEntityJoin<R, X> join(Class<X> entityJavaType, SqmJoinType joinType) {

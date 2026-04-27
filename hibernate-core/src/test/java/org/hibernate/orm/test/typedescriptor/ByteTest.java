@@ -48,9 +48,10 @@ public class ByteTest {
 
 		scope.inTransaction(
 				session -> {
-					VariousTypesEntity entity = (VariousTypesEntity) session.createQuery(
+					VariousTypesEntity entity = session.createQuery(
 							" from VariousTypesEntity " +
-									" where byteData = org.hibernate.orm.test.typedescriptor.ByteTest.TEST_VALUE "
+									" where byteData = org.hibernate.orm.test.typedescriptor.ByteTest.TEST_VALUE ",
+							VariousTypesEntity.class
 					).uniqueResult();
 
 					assertNotNull( entity );
@@ -63,9 +64,10 @@ public class ByteTest {
 		// Testing minimal value.
 		scope.inTransaction(
 				session -> {
-					VariousTypesEntity entity = (VariousTypesEntity) session.createQuery(
+					VariousTypesEntity entity = session.createQuery(
 							" from VariousTypesEntity " +
-									" where byteData = java.lang.Byte.MIN_VALUE "
+									" where byteData = java.lang.Byte.MIN_VALUE ",
+							VariousTypesEntity.class
 					).uniqueResult();
 					assertNotNull( entity );
 					assertEquals( Byte.MIN_VALUE, entity.getByteData() );
@@ -77,9 +79,10 @@ public class ByteTest {
 		// Testing maximal value.
 		scope.inTransaction(
 				session -> {
-					VariousTypesEntity entity = (VariousTypesEntity) session.createQuery(
+					VariousTypesEntity entity = session.createQuery(
 							" from VariousTypesEntity " +
-									" where byteData = java.lang.Byte.MAX_VALUE "
+									" where byteData = java.lang.Byte.MAX_VALUE ",
+							VariousTypesEntity.class
 					).uniqueResult();
 					assertNotNull( entity );
 					assertEquals( Byte.MAX_VALUE, entity.getByteData() );

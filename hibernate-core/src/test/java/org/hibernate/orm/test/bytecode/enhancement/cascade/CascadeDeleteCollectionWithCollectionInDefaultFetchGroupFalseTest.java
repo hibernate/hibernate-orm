@@ -77,7 +77,7 @@ public class CascadeDeleteCollectionWithCollectionInDefaultFetchGroupFalseTest {
 	public void testManagedWithUninitializedAssociation(SessionFactoryScope scope) {
 		// Delete the Parent
 		scope.inTransaction( s -> {
-			Parent loadedParent = (Parent) s.createQuery( "SELECT p FROM Parent p WHERE name=:name" )
+			Parent loadedParent = s.createQuery( "SELECT p FROM Parent p WHERE name=:name", Parent.class )
 					.setParameter( "name", "PARENT" )
 					.uniqueResult();
 			checkInterceptor( scope, loadedParent, false );
@@ -92,7 +92,7 @@ public class CascadeDeleteCollectionWithCollectionInDefaultFetchGroupFalseTest {
 	public void testManagedWithInitializedAssociation(SessionFactoryScope scope) {
 		// Delete the Parent
 		scope.inTransaction( s -> {
-			Parent loadedParent = (Parent) s.createQuery( "SELECT p FROM Parent p WHERE name=:name" )
+			Parent loadedParent = s.createQuery( "SELECT p FROM Parent p WHERE name=:name", Parent.class )
 					.setParameter( "name", "PARENT" )
 					.uniqueResult();
 			checkInterceptor( scope, loadedParent, false );

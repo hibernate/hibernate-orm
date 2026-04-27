@@ -15,7 +15,6 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -64,34 +63,29 @@ public class JoinedSubclassTest {
 			s.persist( mark );
 			s.persist( joe );
 
-			assertEquals( 3, s.createQuery( "from Person" ).list().size() );
-			assertEquals( 1, s.createQuery( "from Person p where p.class = Customer" ).list().size() );
-			assertEquals( 1, s.createQuery( "from Person p where p.class = Person" ).list().size() );
-			assertEquals( 1, s.createQuery( "from Person p where type(p) in :who" )
-								.setParameter( "who", Customer.class )
-								.list()
-								.size() );
-			assertEquals( 2, s.createQuery( "from Person p where type(p) in :who" ).setParameterList(
-					"who",
-					new Class[] {
-							Customer.class,
-							Person.class
-					}
-			).list().size() );
+			assertEquals( 3, s.createQuery( Person.class, "from Person" ).list().size() );
+			assertEquals( 1, s.createQuery( Person.class, "from Person p where p.class = Customer" ).list().size() );
+			assertEquals( 1, s.createQuery( Person.class, "from Person p where p.class = Person" ).list().size() );
+			assertEquals( 1, s.createQuery( Person.class, "from Person p where type(p) in :who" )
+					.setParameter( "who", Customer.class )
+					.list()
+					.size() );
+			assertEquals( 2, s.createQuery( Person.class, "from Person p where type(p) in :who" )
+					.setParameterList("who", new Class[] { Customer.class, Person.class } )
+					.list()
+					.size() );
 			s.clear();
 
-			List customers = s.createQuery( "from Customer c left join fetch c.salesperson" ).list();
-			for ( Object o : customers ) {
-				Customer c = (Customer) o;
+			var customers = s.createQuery( Customer.class, "from Customer c left join fetch c.salesperson" ).list();
+			for ( Customer c : customers ) {
 				assertTrue( Hibernate.isInitialized( c.getSalesperson() ) );
 				assertEquals( "Mark", c.getSalesperson().getName() );
 			}
 			assertEquals( 1, customers.size() );
 			s.clear();
 
-			customers = s.createQuery( "from Customer" ).list();
-			for ( Object customer : customers ) {
-				Customer c = (Customer) customer;
+			customers = s.createQuery( Customer.class, "from Customer" ).list();
+			for ( Customer c : customers ) {
 				assertFalse( Hibernate.isInitialized( c.getSalesperson() ) );
 				assertEquals( "Mark", c.getSalesperson().getName() );
 			}
@@ -103,7 +97,7 @@ public class JoinedSubclassTest {
 			joe = s.find( Customer.class, joe.getId() );
 
 			mark.setZip( "30306" );
-			assertEquals( 1, s.createQuery( "from Person p where p.address.zip = '30306'" ).list().size() );
+			assertEquals( 1, s.createQuery( Person.class, "from Person p where p.address.zip = '30306'" ).list().size() );
 
 			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 			CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
@@ -121,7 +115,7 @@ public class JoinedSubclassTest {
 			s.remove( mark );
 			s.remove( joe );
 			s.remove( yomomma );
-			assertTrue( s.createQuery( "from Person" ).list().isEmpty() );
+			assertTrue( s.createQuery( Person.class, "from Person" ).list().isEmpty() );
 		} );
 	}
 
@@ -149,26 +143,22 @@ public class JoinedSubclassTest {
 					// Test value conversion during insert
 					// Value returned by Oracle native query is a Types.NUMERIC, which is mapped to a BigDecimalType;
 					// Cast returned value to Number then call Number.doubleValue() so it works on all dialects.
-					Double heightViaSql =
-							( (Number) session.createNativeQuery(
+					double heightViaSql = session.createNativeQuery(Double.class,
 									"select height_centimeters from JPerson where name='Emmanuel'" )
-									.uniqueResult() )
-									.doubleValue();
+							.uniqueResult();
 					assertEquals( HEIGHT_CENTIMETERS, heightViaSql, 0.01d );
-					Double expiryViaSql =
-							( (Number) session.createNativeQuery(
+					double expiryViaSql = session.createNativeQuery(Double.class,
 									"select pwd_expiry_weeks from JEmployee where person_id=?" )
-									.setParameter( 1, e.getId() )
-									.uniqueResult()
-							).doubleValue();
+							.setParameter( 1, e.getId() )
+							.uniqueResult();
 					assertEquals( PASSWORD_EXPIRY_WEEKS, expiryViaSql, 0.01d );
 
 					// Test projection
-					Double heightViaHql = (Double) session.createQuery(
+					Double heightViaHql = session.createQuery(Double.class,
 							"select p.heightInches from Person p where p.name = 'Emmanuel'" )
 							.uniqueResult();
 					assertEquals( HEIGHT_INCHES, heightViaHql, 0.01d );
-					Double expiryViaHql = (Double) session.createQuery(
+					Double expiryViaHql = session.createQuery(Double.class,
 							"select e.passwordExpiryDays from Employee e where e.name = 'Steve'" ).uniqueResult();
 					assertEquals( PASSWORD_EXPIRY_DAYS, expiryViaHql, 0.01d );
 
@@ -195,22 +185,15 @@ public class JoinedSubclassTest {
 							PASSWORD_EXPIRY_DAYS + 0.01d
 					) );
 					e = session.createQuery( employeeCriteriaQuery ).uniqueResult();
-//		e = (Employee) s.createCriteria( Employee.class )
-//				.add( Restrictions.between(
-//						"passwordExpiryDays",
-//						PASSWORD_EXPIRY_DAYS - 0.01d,
-//						PASSWORD_EXPIRY_DAYS + 0.01d
-//				) )
-//				.uniqueResult();
 					assertEquals( PASSWORD_EXPIRY_DAYS, e.getPasswordExpiryDays(), 0.01d );
 
 					// Test predicate and entity load via HQL
-					p = (Person) session.createQuery( "from Person p where p.heightInches between ?1 and ?2" )
+					p = session.createQuery( Person.class,"from Person p where p.heightInches between ?1 and ?2" )
 							.setParameter( 1, HEIGHT_INCHES - 0.01d )
 							.setParameter( 2, HEIGHT_INCHES + 0.01d )
 							.uniqueResult();
 					assertEquals( HEIGHT_INCHES, p.getHeightInches(), 0.01d );
-					e = (Employee) session.createQuery( "from Employee e where e.passwordExpiryDays between ?1 and ?2" )
+					e = session.createQuery(Employee.class, "from Employee e where e.passwordExpiryDays between ?1 and ?2" )
 							.setParameter( 1, PASSWORD_EXPIRY_DAYS - 0.01d )
 							.setParameter( 2, PASSWORD_EXPIRY_DAYS + 0.01d )
 							.uniqueResult();
@@ -220,18 +203,14 @@ public class JoinedSubclassTest {
 					p.setHeightInches( 1 );
 					e.setPasswordExpiryDays( 7 );
 					session.flush();
-					heightViaSql =
-							( (Number) session.createNativeQuery(
+					heightViaSql = session.createNativeQuery(Double.class,
 									"select height_centimeters from JPerson where name='Emmanuel'" )
-									.uniqueResult() )
-									.doubleValue();
+							.uniqueResult();
 					assertEquals( 2.54d, heightViaSql, 0.01d );
-					expiryViaSql =
-							( (Number) session.createNativeQuery(
+					expiryViaSql = session.createNativeQuery(Double.class,
 									"select pwd_expiry_weeks from JEmployee where person_id=?" )
-									.setParameter( 1, e.getId() )
-									.uniqueResult()
-							).doubleValue();
+							.setParameter( 1, e.getId() )
+							.uniqueResult();
 					assertEquals( 1d, expiryViaSql, 0.01d );
 					session.remove( p );
 					session.remove( e );

@@ -70,13 +70,13 @@ public class JoinTest {
 
 //					assertEquals( s.createQuery("from java.io.Serializable").list().size(), 0 );
 
-					assertEquals( 3, s.createQuery( "from Person" ).list().size() );
-					assertEquals( 1, s.createQuery( "from Person p where p.class is null" ).list().size() );
-					assertEquals( 1, s.createQuery( "from Person p where p.class = Customer" ).list().size() );
-					assertEquals( 1, s.createQuery( "from Customer c" ).list().size() );
+					assertEquals( 3, s.createQuery( Person.class, "from Person" ).list().size() );
+					assertEquals( 1, s.createQuery( Person.class, "from Person p where p.class is null" ).list().size() );
+					assertEquals( 1, s.createQuery( Person.class, "from Person p where p.class = Customer" ).list().size() );
+					assertEquals( 1, s.createQuery( Person.class, "from Customer c" ).list().size() );
 					s.clear();
 
-					List customers = s.createQuery( "from Customer c left join fetch c.salesperson" ).list();
+					List customers = s.createQuery( Customer.class, "from Customer c left join fetch c.salesperson" ).list();
 					for ( Iterator iter = customers.iterator(); iter.hasNext(); ) {
 						Customer c = (Customer) iter.next();
 						assertTrue( Hibernate.isInitialized( c.getSalesperson() ) );
@@ -85,7 +85,7 @@ public class JoinTest {
 					assertEquals( 1, customers.size() );
 					s.clear();
 
-					customers = s.createQuery( "from Customer" ).list();
+					customers = s.createQuery( Customer.class, "from Customer" ).list();
 					for ( Iterator iter = customers.iterator(); iter.hasNext(); ) {
 						Customer c = (Customer) iter.next();
 						assertFalse( Hibernate.isInitialized( c.getSalesperson() ) );
@@ -99,11 +99,11 @@ public class JoinTest {
 					joe = s.get( Customer.class, new Long( joe.getId() ) );
 
 					mark.setZip( "30306" );
-					assertEquals( 1, s.createQuery( "from Person p where p.zip = '30306'" ).list().size() );
+					assertEquals( 1, s.createQuery( Person.class, "from Person p where p.zip = '30306'" ).list().size() );
 					s.remove( mark );
 					s.remove( joe );
 					s.remove( yomomma );
-					assertTrue( s.createQuery( "from Person" ).list().isEmpty() );
+					assertTrue( s.createQuery( Person.class, "from Person" ).list().isEmpty() );
 				}
 		);
 	}
@@ -120,10 +120,10 @@ public class JoinTest {
 
 //					assertEquals( 0, s.createQuery("from java.io.Serializable").list().size() );
 
-					assertEquals( 1, s.createQuery( "from Person" ).list().size() );
-					assertEquals( 0, s.createQuery( "from Person p where p.class is null" ).list().size() );
-					assertEquals( 1, s.createQuery( "from Person p where p.class = User" ).list().size() );
-					assertTrue( s.createQuery( "from User u" ).list().size() == 1 );
+					assertEquals( 1, s.createQuery( Person.class, "from Person" ).list().size() );
+					assertEquals( 0, s.createQuery( Person.class, "from Person p where p.class is null" ).list().size() );
+					assertEquals( 1, s.createQuery( Person.class, "from Person p where p.class = User" ).list().size() );
+					assertEquals( 1, s.createQuery( User.class, "from User u" ).list().size() );
 					s.clear();
 
 					// Remove the optional row from the join table and requery the User obj
@@ -136,7 +136,7 @@ public class JoinTest {
 					// Cleanup the test data
 					s.remove( jesus );
 
-					assertTrue( s.createQuery( "from Person" ).list().isEmpty() );
+					assertTrue( s.createQuery( Person.class, "from Person" ).list().isEmpty() );
 
 				}
 		);
@@ -205,9 +205,6 @@ public class JoinTest {
 							HEIGHT_INCHES + 0.01d
 					) );
 					p = s.createQuery( personCriteria ).uniqueResult();
-//					p = (Person)s.createCriteria(Person.class)
-//							.add(Restrictions.between("heightInches", HEIGHT_INCHES - 0.01d, HEIGHT_INCHES + 0.01d))
-//							.uniqueResult();
 					assertEquals( HEIGHT_INCHES, p.getHeightInches(), 0.01d );
 					CriteriaQuery<User> userCriteria = criteriaBuilder.createQuery( User.class );
 					Root<User> userRoot = userCriteria.from( User.class );
@@ -217,19 +214,16 @@ public class JoinTest {
 							PASSWORD_EXPIRY_DAYS + 0.01d
 					) );
 					u = s.createQuery( userCriteria ).uniqueResult();
-//					u = (User)s.createCriteria(User.class)
-//							.add(Restrictions.between("passwordExpiryDays", PASSWORD_EXPIRY_DAYS - 0.01d, PASSWORD_EXPIRY_DAYS + 0.01d))
-//							.uniqueResult();
 					assertEquals( PASSWORD_EXPIRY_DAYS, u.getPasswordExpiryDays(), 0.01d );
 
 					// Test predicate and entity load via HQL
-					p = (Person) s.createQuery( "from Person p where p.heightInches between ?1 and ?2" )
+					p = s.createQuery( Person.class,"from Person p where p.heightInches between ?1 and ?2" )
 							.setParameter( 1, HEIGHT_INCHES - 0.01d )
 							.setParameter( 2, HEIGHT_INCHES + 0.01d )
 							.uniqueResult();
 					assertNotNull( p );
 					assertEquals( 0.01d, HEIGHT_INCHES, p.getHeightInches() );
-					u = (User) s.createQuery( "from User u where u.passwordExpiryDays between ?1 and ?2" )
+					u = s.createQuery( User.class,"from User u where u.passwordExpiryDays between ?1 and ?2" )
 							.setParameter( 1, PASSWORD_EXPIRY_DAYS - 0.01d )
 							.setParameter( 2, PASSWORD_EXPIRY_DAYS + 0.01d )
 							.uniqueResult();
@@ -249,7 +243,7 @@ public class JoinTest {
 
 					s.remove( p );
 					s.remove( u );
-					assertTrue( s.createQuery( "from Person" ).list().isEmpty() );
+					assertTrue( s.createQuery( Person.class,"from Person" ).list().isEmpty() );
 
 				}
 		);

@@ -108,8 +108,8 @@ public class JoinedSubclassTest {
 	public void shouldRetrieveSubSubEntityWithHQL(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {
-					SubSubEntity loaded = (SubSubEntity) session.createQuery(
-							"select se from SubSubEntity se where se.id = :id" )
+					SubSubEntity loaded = session.createQuery(
+							"select se from SubSubEntity se where se.id = :id", SubSubEntity.class )
 							.setParameter( "id", subSubEntityId )
 							.uniqueResult();
 					assertNotNull( loaded );
@@ -121,8 +121,8 @@ public class JoinedSubclassTest {
 	public void shouldNotRetrieveSubSubSubEntityWithHQL(SessionFactoryScope scope) {
 		scope.inSession(
 				session -> {
-					SubSubSubEntity loaded = (SubSubSubEntity) session.createQuery(
-							"select se from SubSubSubEntity se where se.id = :id" )
+					SubSubSubEntity loaded = session.createQuery(
+							"select se from SubSubSubEntity se where se.id = :id", SubSubSubEntity.class )
 							.setParameter( "id", subSubEntityId )
 							.uniqueResult();
 					assertNull( loaded );

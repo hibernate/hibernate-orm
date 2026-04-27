@@ -55,11 +55,10 @@ public class DeleteOneToManyOrphansTest {
 
 		Product p = scope.fromTransaction(
 				session -> {
-					List results = session.createQuery( "from Feature" ).list();
-					assertEquals( 1, results.size() );
-					results = session.createQuery( "from Product" ).list();
-					assertEquals( 1, results.size() );
-					Product product = (Product) results.get( 0 );
+					assertEquals( 1, session.createQuery( "from Feature", Feature.class ).list().size() );
+					List<Product> products = session.createQuery( "from Product", Product.class ).list();
+					assertEquals( 1, products.size() );
+					Product product = products.get( 0 );
 					assertEquals( 1, product.getFeatures().size() );
 					product.getFeatures().clear();
 					return product;
@@ -70,10 +69,8 @@ public class DeleteOneToManyOrphansTest {
 				session -> {
 					Product product = session.get( Product.class, p.getId() );
 					assertEquals( 0, product.getFeatures().size() );
-					List results = session.createQuery( "from Feature" ).list();
-					assertEquals( 0, results.size() );
-					results = session.createQuery( "from Product" ).list();
-					assertEquals( 1, results.size() );
+					assertEquals( 0, session.createQuery( "from Feature", Feature.class ).list().size() );
+					assertEquals( 1, session.createQuery( "from Product", Product.class ).list().size() );
 				}
 		);
 	}
@@ -84,11 +81,10 @@ public class DeleteOneToManyOrphansTest {
 
 		Product p = scope.fromTransaction(
 				session -> {
-					List results = session.createQuery( "from Feature" ).list();
-					assertEquals( 1, results.size() );
-					results = session.createQuery( "from Product" ).list();
-					assertEquals( 1, results.size() );
-					Product product = (Product) results.get( 0 );
+					assertEquals( 1, session.createQuery( "from Feature", Feature.class ).list().size() );
+					List<Product> products = session.createQuery( "from Product", Product.class ).list();
+					assertEquals( 1, products.size() );
+					Product product = products.get( 0 );
 					assertEquals( 1, product.getFeatures().size() );
 					product.getFeatures().clear();
 					session.merge( product );
@@ -100,10 +96,8 @@ public class DeleteOneToManyOrphansTest {
 				session -> {
 					Product product = session.get( Product.class, p.getId() );
 					assertEquals( 0, product.getFeatures().size() );
-					List results = session.createQuery( "from Feature" ).list();
-					assertEquals( 0, results.size() );
-					results = session.createQuery( "from Product" ).list();
-					assertEquals( 1, results.size() );
+					assertEquals( 0, session.createQuery( "from Feature", Feature.class ).list().size() );
+					assertEquals( 1, session.createQuery( "from Product", Product.class ).list().size() );
 				}
 		);
 
@@ -115,11 +109,10 @@ public class DeleteOneToManyOrphansTest {
 
 		Feature f = scope.fromTransaction(
 				session -> {
-					List results = session.createQuery( "from Feature" ).list();
-					assertEquals( 1, results.size() );
-					results = session.createQuery( "from Product" ).list();
-					assertEquals( 1, results.size() );
-					Product product = (Product) results.get( 0 );
+					assertEquals( 1, session.createQuery( "from Feature", Feature.class ).list().size() );
+					List<Product> products = session.createQuery( "from Product", Product.class ).list();
+					assertEquals( 1, products.size() );
+					Product product = products.get( 0 );
 					assertEquals( 1, product.getFeatures().size() );
 
 					// Replace with a new Feature instance
@@ -135,13 +128,13 @@ public class DeleteOneToManyOrphansTest {
 
 		scope.inTransaction(
 				session -> {
-					List results = session.createQuery( "from Feature" ).list();
-					assertEquals( 1, results.size() );
-					Feature featureQueried = (Feature) results.get( 0 );
+					List<Feature> features = session.createQuery( "from Feature", Feature.class ).list();
+					assertEquals( 1, features.size() );
+					Feature featureQueried = features.get( 0 );
 					assertEquals( f.getId(), featureQueried.getId() );
-					results = session.createQuery( "from Product" ).list();
-					assertEquals( 1, results.size() );
-					Product productQueried = (Product) results.get( 0 );
+					List<Product> products = session.createQuery( "from Product", Product.class ).list();
+					assertEquals( 1, products.size() );
+					Product productQueried = products.get( 0 );
 					assertEquals( 1, productQueried.getFeatures().size() );
 					assertEquals( featureQueried, productQueried.getFeatures().get( 0 ) );
 				}

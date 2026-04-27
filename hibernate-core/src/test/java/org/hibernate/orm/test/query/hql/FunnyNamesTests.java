@@ -20,8 +20,8 @@ public class FunnyNamesTests {
 	@Test
 	public void basicTest(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.createQuery( "from Any" ).list();
-			session.createQuery( "from in.from.Any" ).list();
+			session.createQuery( "from Any", Any.class ).list();
+			session.createQuery( "from in.from.Any", Any.class ).list();
 		} );
 	}
 }

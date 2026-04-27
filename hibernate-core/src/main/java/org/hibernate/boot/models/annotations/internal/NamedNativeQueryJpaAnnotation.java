@@ -7,6 +7,7 @@ package org.hibernate.boot.models.annotations.internal;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 
+import jakarta.persistence.QueryFlushMode;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbNamedNativeQueryImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.xml.internal.QueryProcessing;
@@ -24,6 +25,7 @@ import static org.hibernate.boot.models.internal.OrmAnnotationHelper.extractJdkV
 public class NamedNativeQueryJpaAnnotation implements NamedNativeQuery {
 	private String name;
 	private String query;
+	private QueryFlushMode flush;
 	private jakarta.persistence.QueryHint[] hints;
 	private java.lang.Class<?> resultClass;
 	private String resultSetMapping;
@@ -35,6 +37,7 @@ public class NamedNativeQueryJpaAnnotation implements NamedNativeQuery {
 	 * Used in creating dynamic annotation instances (e.g. from XML)
 	 */
 	public NamedNativeQueryJpaAnnotation(ModelsContext modelContext) {
+		this.flush = QueryFlushMode.DEFAULT;
 		this.hints = new jakarta.persistence.QueryHint[0];
 		this.resultClass = void.class;
 		this.resultSetMapping = "";
@@ -49,6 +52,7 @@ public class NamedNativeQueryJpaAnnotation implements NamedNativeQuery {
 	public NamedNativeQueryJpaAnnotation(NamedNativeQuery annotation, ModelsContext modelContext) {
 		this.name = annotation.name();
 		this.query = annotation.query();
+		this.flush = annotation.flush();
 		this.hints = extractJdkValue( annotation, JpaAnnotations.NAMED_NATIVE_QUERY, "hints", modelContext );
 		this.resultClass = annotation.resultClass();
 		this.resultSetMapping = annotation.resultSetMapping();
@@ -63,6 +67,7 @@ public class NamedNativeQueryJpaAnnotation implements NamedNativeQuery {
 	public NamedNativeQueryJpaAnnotation(Map<String, Object> attributeValues, ModelsContext modelContext) {
 		this.name = (String) attributeValues.get( "name" );
 		this.query = (String) attributeValues.get( "query" );
+		this.flush = (QueryFlushMode) attributeValues.get( "flush" );
 		this.hints = (jakarta.persistence.QueryHint[]) attributeValues.get( "hints" );
 		this.resultClass = (Class<?>) attributeValues.get( "resultClass" );
 		this.resultSetMapping = (String) attributeValues.get( "resultSetMapping" );
@@ -95,6 +100,14 @@ public class NamedNativeQueryJpaAnnotation implements NamedNativeQuery {
 		this.query = value;
 	}
 
+	@Override
+	public QueryFlushMode flush() {
+		return flush;
+	}
+
+	public void flush(QueryFlushMode flush) {
+		this.flush = flush;
+	}
 
 	@Override
 	public jakarta.persistence.QueryHint[] hints() {

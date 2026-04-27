@@ -253,7 +253,7 @@ public interface CommonQueryContract extends jakarta.persistence.Query {
 	<X> SelectionQuery<X> asSelectionQuery(EntityGraph<X> entityGraph);
 
 	/**
-	 * Overload of {@linkplain #withEntityGraph(EntityGraph)} allowing a specific semantic
+	 * Overload of {@linkplain #asSelectionQuery(EntityGraph)} allowing a specific semantic
 	 * (load/fetch) for the graph.
 	 *
 	 * @param entityGraph The entity graph.

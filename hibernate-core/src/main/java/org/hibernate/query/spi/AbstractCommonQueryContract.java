@@ -542,10 +542,12 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Options
 
+	@Override
 	public String getComment() {
 		return getQueryOptions().getComment();
 	}
 
+	@Override
 	public CommonQueryContract setComment(String comment) {
 		getQueryOptions().setComment( comment );
 		return this;

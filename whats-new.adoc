@@ -33,7 +33,7 @@ Historical temporal data may be queried at a given effective data/time.
 Audited data is mapped to a regular table along with an audit log which is backward compatible with Hibernate Envers.
 
 [[limit-fetch-join]]
-== Limits and fetch joins
+== Limits and Fetch Joins
 
 It is now perfectly safe to combine a HQL `limit` or pagination using `setMaxResults()` with a single collection `join fetch`, on any database which supports limits and offsets inside subqueries (which includes all the supported databases except Sybase ASE).
 Similarly, it's now safe to use a collection `join fetch` with `getResultStream()` or `scroll()`.
@@ -71,7 +71,7 @@ The Maven plugin now includes a `transformHbm` goal that transforms legacy `hbm.
 See the link:{userGuideBase}#tooling-maven-transformhbm[HBM XML Transformation] section in the User Guide for details.
 
 [[any-join]]
-== Joins and join fetching for `@Any` and `@ManyToAny`
+== Joins and Join Fetching for `@Any` and `@ManyToAny`
 
 Discriminated association mappings may now:
 
@@ -90,6 +90,16 @@ Also, the `cascade` member was added to `@Any` and `@ManyToAny` as a replacement
 Mappings combining `@OneToMany` and `@JoinFormula` now function correctly.
 
 [[post-insert-generated-pk]]
-== Database-generated columns within primary keys
+== Database-generated Columns within Primary Keys
 
 A database-generated column (for example, an identity column) may now form part of a composite primary key.
+
+[[package-level-nationalized]]
+== Package-level `@Nationalized`
+
+The `@Nationalized` annotation may now be placed on a package descriptor, acting as a default for every character-typed attribute of every entity or embeddable belonging to the package.
+
+[[java-services]]
+== New Services
+
+The SPI interfaces `BatchBuilder`, `StatisticsFactory`, `MutationExecutorService`, and `SchemaManagementTool` are now Java services, allowing customization via the service loader mechanism.

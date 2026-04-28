@@ -82,6 +82,11 @@ Previously, such eager `@Any` associations were always fetched using a separate
 `SELECT` statement, which was inefficient. Eager `@Any` associations are now
 join fetched by default when an entity is loaded by id.
 
+=== Limits and fetch joins
+
+When pagination or a limit is used with a query which fetches a collection, the limit is now processed as part of the SQL query.
+To recover the previous behavior, set the query hint `org.hibernate.limitInMemory`.
+
 === Schema actions now executed even without mapped entities
 
 Previously, if a persistence unit had no `@Entity` classes, all schema management

@@ -19,6 +19,7 @@ import org.hibernate.cfg.QuerySettings;
 
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -129,7 +130,7 @@ public class CollectionFetchPaginationManyToManyTest {
 			assertTrue( generated.contains( "author_book_link" ) );
 			assertTrue( generated.contains( "book_entity" ) );
 			var dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-			if ( !(dialect instanceof HSQLDialect ) && !(dialect instanceof MariaDBDialect) ) {
+			if ( !(dialect instanceof HSQLDialect ) && !(dialect instanceof MariaDBDialect) && !(dialect instanceof OracleDialect) ) {
 				final int existsStart = generated.indexOf( "exists(select 1 from author_book_link" );
 				final int existsWhere = generated.indexOf( " where", existsStart );
 				assertTrue( existsStart >= 0 );
@@ -161,6 +162,33 @@ public class CollectionFetchPaginationManyToManyTest {
 			assertTrue( generated.contains( "from (select" ) );
 			assertTrue( generated.contains( "author_book_link" ) );
 			assertTrue( generated.contains( "book_entity" ) );
+		} );
+	}
+
+	@Test
+	void doubleFetchJoinWithMaxResults(SessionFactoryScope scope) {
+		final var sql = scope.getCollectingStatementInspector();
+		scope.inTransaction( session -> {
+			sql.clear();
+
+			final var authors = session.createSelectionQuery(
+					"from Author a join fetch a.books b join fetch b.authors order by a.authorId",
+					Author.class
+			).setMaxResults( 3 ).list();
+
+			assertEquals( 3, authors.size() );
+
+			assertEquals( 0L, authors.get( 0 ).getAuthorId() );
+			assertEquals( 1L, authors.get( 1 ).getAuthorId() );
+			assertEquals( 2L, authors.get( 2 ).getAuthorId() );
+			assertEquals( 3, authors.get( 0 ).getBooks().size() );
+			assertEquals( 3, authors.get( 1 ).getBooks().size() );
+			assertEquals( 3, authors.get( 2 ).getBooks().size() );
+			assertFalse( authors.get( 0 ).getBooks().iterator().next().getAuthors().isEmpty() );
+			assertFalse( authors.get( 1 ).getBooks().iterator().next().getAuthors().isEmpty() );
+			assertFalse( authors.get( 2 ).getBooks().iterator().next().getAuthors().isEmpty() );
+
+			assertEquals( 1, sql.getSqlQueries().size() );
 		} );
 	}
 
@@ -218,6 +246,10 @@ public class CollectionFetchPaginationManyToManyTest {
 				inverseJoinColumns = @JoinColumn(name = "author_id")
 		)
 		private Set<Author> authors = new HashSet<>();
+
+		public Set<Author> getAuthors() {
+			return authors;
+		}
 
 		public Book() {
 		}

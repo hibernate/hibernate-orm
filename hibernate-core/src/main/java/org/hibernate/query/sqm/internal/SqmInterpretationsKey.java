@@ -63,6 +63,7 @@ public final class SqmInterpretationsKey implements QueryInterpretationCache.Key
 		// - especially wrt parameters atm; this works with HQL because the
 		// parameters are part of the query string; with Criteria, they're not.
 		return keySource.isQueryPlanCacheable()
+			&& keySource.getQueryOptions().isLimitInMemoryEnabled() != Boolean.TRUE
 				// At the moment we cannot cache query plan if there is filter enabled.
 			&& !keySource.getLoadQueryInfluencers().hasEnabledFilters()
 				// At the moment we cannot cache query plan if it has an entity graph

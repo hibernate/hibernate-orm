@@ -416,6 +416,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static jakarta.persistence.metamodel.Type.PersistenceType.ENTITY;
+import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
@@ -2192,7 +2193,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 
-		if ( !containsCollectionFetches || !currentClauseStack.isEmpty() ) {
+		if ( sqlQueryPart.isRoot() && queryOptions.isLimitInMemoryEnabled() == TRUE ) {
+			// Suppress SQL-level pagination for the top-level query so the runtime
+			// can apply the requested slice in memory instead.
+		}
+		else if ( !containsCollectionFetches || !currentClauseStack.isEmpty() ) {
 			applyOffsetAndFetch( sqmQueryPart, sqlQueryPart );
 		}
 		else if ( sqlQueryPart instanceof QuerySpec sqlQuerySpec
@@ -2229,7 +2234,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private boolean canPushPaginationDown(SqmQueryPart<?> sqmQueryPart, QuerySpec sqlQuerySpec) {
-		if ( !getDialect().supportsOffsetInSubquery() ) {
+		if ( queryOptions.isLimitInMemoryEnabled() == TRUE ) {
+			return false;
+		}
+		else if ( !getDialect().supportsOffsetInSubquery() ) {
 			return false;
 		}
 		else {
@@ -3095,7 +3103,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		final var cteQueryPart = ( (SelectStatement) cteStatement.getCteDefinition() ).getQueryPart();
 		// If the query part of the CTE is one which we are currently processing, then this is a recursive CTE
-		if ( cteQueryPart instanceof QueryGroup && Boolean.TRUE == processingStateStack.findCurrentFirstWithParameter( cteQueryPart, BaseSqmToSqlAstConverter::matchSqlAstWithQueryPart ) ) {
+		if ( cteQueryPart instanceof QueryGroup && TRUE == processingStateStack.findCurrentFirstWithParameter( cteQueryPart, BaseSqmToSqlAstConverter::matchSqlAstWithQueryPart ) ) {
 			cteStatement.setRecursive();
 		}
 		final var tableGroupProducer = cteStatement.getCteTable().getTableGroupProducer();

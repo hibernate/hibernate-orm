@@ -64,6 +64,11 @@ public interface MutableQueryOptions extends QueryOptions {
 	void setQueryPlanCachingEnabled(Boolean queryPlanCachingEnabled);
 
 	/**
+	 * Corollary to {@link #isLimitInMemoryEnabled()}
+	 */
+	void setLimitInMemory(boolean limitInMemory);
+
+	/**
 	 * Corollary to {@link #getTimeout()}
 	 */
 	void setTimeout(int timeout);

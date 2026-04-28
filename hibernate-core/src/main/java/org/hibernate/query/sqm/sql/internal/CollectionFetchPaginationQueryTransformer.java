@@ -15,6 +15,7 @@ import java.util.Set;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl.CaseStatementDiscriminatorExpression;
@@ -35,11 +36,13 @@ import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.from.AbstractTableGroup;
+import org.hibernate.sql.ast.tree.from.CollectionTableGroup;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.QueryPartTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
@@ -274,7 +277,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 			final var join = moved.join();
 			if ( join.getJoinType() == INNER && join.getPredicate() != null ) {
 				final var existsSpec = new QuerySpec( false, 1 );
-				existsSpec.getFromClause().addRoot( join.getJoinedGroup() );
+				existsSpec.getFromClause().addRoot( existsRootTableGroup( join ) );
 				existsSpec.getSelectClause().addSqlSelection(
 						new ResolvedSqlSelection(
 								0,
@@ -292,6 +295,85 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 				);
 			}
 		}
+	}
+
+	private static TableGroup existsRootTableGroup(TableGroupJoin join) {
+		final var joinedGroup = join.getJoinedGroup();
+		if ( joinedGroup instanceof CollectionTableGroup collectionTableGroup
+				&& canUseCollectionTableOnlyExists( collectionTableGroup, join.getPredicate() ) ) {
+			return createCollectionTableOnlyGroup( collectionTableGroup );
+		}
+		return joinedGroup;
+	}
+
+	private static boolean canUseCollectionTableOnlyExists(
+			CollectionTableGroup collectionTableGroup,
+			org.hibernate.sql.ast.tree.predicate.Predicate joinPredicate) {
+		final PluralAttributeMapping pluralAttribute = collectionTableGroup.getModelPart();
+		if ( !pluralAttribute.getCollectionDescriptor().isManyToMany() ) {
+			return false;
+		}
+
+		final Set<String> nestedAliases = new HashSet<>();
+		collectJoinedAliases( collectionTableGroup, nestedAliases );
+		return !sqlAstReferencesAnyAlias( joinPredicate, nestedAliases, null )
+				&& hasOnlySimpleJoinPredicates( collectionTableGroup );
+	}
+
+	private static void collectJoinedAliases(TableGroup group, Set<String> aliases) {
+		for ( var tableGroupJoin : group.getTableGroupJoins() ) {
+			collectAliases( tableGroupJoin.getJoinedGroup(), aliases );
+		}
+		for ( var tableGroupJoin : group.getNestedTableGroupJoins() ) {
+			collectAliases( tableGroupJoin.getJoinedGroup(), aliases );
+		}
+	}
+
+	private static boolean hasOnlySimpleJoinPredicates(TableGroup group) {
+		for ( var join : group.getTableGroupJoins() ) {
+			if ( !hasOnlySimpleJoinPredicates( join ) ) {
+				return false;
+			}
+		}
+		for ( var join : group.getNestedTableGroupJoins() ) {
+			if ( !hasOnlySimpleJoinPredicates( join ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static boolean hasOnlySimpleJoinPredicates(TableGroupJoin join) {
+		final var predicate = join.getPredicate();
+		if ( predicate != null ) {
+			final var modelPart = join.getJoinedGroup().getModelPart();
+			if ( !(modelPart instanceof TableGroupJoinProducer joinProducer)
+					|| !joinProducer.isSimpleJoinPredicate( predicate ) ) {
+				return false;
+			}
+		}
+		return hasOnlySimpleJoinPredicates( join.getJoinedGroup() );
+	}
+
+	private static CollectionTableGroup createCollectionTableOnlyGroup(CollectionTableGroup collectionTableGroup) {
+		final var sqlAliasBase = ( (AbstractTableGroup) collectionTableGroup ).getSqlAliasBase();
+		final var strippedGroup = new CollectionTableGroup(
+				collectionTableGroup.canUseInnerJoins(),
+				collectionTableGroup.getNavigablePath(),
+				collectionTableGroup.getModelPart(),
+				collectionTableGroup.isFetched(),
+				collectionTableGroup.getSourceAlias(),
+				collectionTableGroup.getPrimaryTableReference(),
+				true,
+				sqlAliasBase,
+				s -> false,
+				null,
+				collectionTableGroup.getModelPart().getCollectionDescriptor().getFactory()
+		);
+		for ( var tableReferenceJoin : collectionTableGroup.getTableReferenceJoins() ) {
+			strippedGroup.addTableReferenceJoin( tableReferenceJoin );
+		}
+		return strippedGroup;
 	}
 
 	private static List<String> rebuildInnerSelect(
@@ -593,7 +675,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		// outerAliases contains the aliases introduced by moved fetch joins. If a sort
 		// expression touches one of them, it cannot stay on the inner query after the
 		// join is detached there.
-		return expressionReferencesAnyAlias( sortSpecification.getSortExpression(), outerAliases, primaryAlias );
+		return sqlAstReferencesAnyAlias( sortSpecification.getSortExpression(), outerAliases, primaryAlias );
 	}
 
 	private static void addOuterSortSpecification(
@@ -671,8 +753,8 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 	private record MovedJoin(TableGroup parent, TableGroupJoin join) {
 	}
 
-	private static boolean expressionReferencesAnyAlias(
-			Expression expression,
+	private static boolean sqlAstReferencesAnyAlias(
+			SqlAstNode node,
 			Set<String> aliases,
 			String except) {
 		class Walker extends AbstractSqlAstWalker {
@@ -688,7 +770,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 			}
 		}
 		final var walker = new Walker();
-		expression.accept( walker );
+		node.accept( walker );
 		return walker.found;
 	}
 

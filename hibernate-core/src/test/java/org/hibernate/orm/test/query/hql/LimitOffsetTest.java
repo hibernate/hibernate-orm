@@ -7,6 +7,8 @@ package org.hibernate.orm.test.query.hql;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+
+import org.hibernate.jpa.HibernateHints;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -29,6 +31,29 @@ class LimitOffsetTest {
 			assertEquals( 2, session.createQuery( "from Sortable limit 2" ).getResultList().size() );
 			assertEquals( 2, session.createQuery( "from Sortable offset 2" ).getResultList().size() );
 			assertEquals( 1, session.createQuery( "from Sortable limit 1 offset 1" ).getResultList().size() );
+			assertEquals(
+					2,
+					session.createQuery( "from Sortable order by uuid" )
+							.setHint( HibernateHints.HINT_LIMIT_IN_MEMORY, true )
+							.setFirstResult( 1 )
+							.setMaxResults( 2 )
+							.getResultList()
+							.size()
+			);
+			assertEquals(
+					1,
+					session.createQuery( "from Sortable order by uuid limit 1 offset 1" )
+							.setHint( HibernateHints.HINT_LIMIT_IN_MEMORY, true )
+							.getResultList()
+							.size()
+			);
+			try ( var stream = session.createQuery( "from Sortable order by uuid" )
+					.setHint( HibernateHints.HINT_LIMIT_IN_MEMORY, true )
+					.setFirstResult( 1 )
+					.setMaxResults( 2 )
+					.getResultStream() ) {
+				assertEquals( 2L, stream.count() );
+			}
 		} );
 	}
 	@Entity(name = "Sortable")

@@ -44,6 +44,7 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	private String resultCacheRegionName;
 	private Boolean readOnlyEnabled;
 	private Boolean queryPlanCachingEnabled;
+	private Boolean limitInMemoryEnabled;
 
 	private TupleTransformer<?> tupleTransformer;
 	private ResultListTransformer<?> resultListTransformer;
@@ -165,6 +166,11 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	}
 
 	@Override
+	public Boolean isLimitInMemoryEnabled() {
+		return limitInMemoryEnabled;
+	}
+
+	@Override
 	public void setQueryPlanCachingEnabled(Boolean queryPlanCachingEnabled) {
 		this.queryPlanCachingEnabled = queryPlanCachingEnabled;
 	}
@@ -192,6 +198,11 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	@Override
 	public void setFetchSize(int fetchSize) {
 		this.fetchSize = fetchSize;
+	}
+
+	@Override
+	public void setLimitInMemory(boolean limitInMemory) {
+		this.limitInMemoryEnabled = limitInMemory;
 	}
 
 	@Override

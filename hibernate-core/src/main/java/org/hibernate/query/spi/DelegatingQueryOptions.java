@@ -80,6 +80,11 @@ public class DelegatingQueryOptions implements QueryOptions {
 	}
 
 	@Override
+	public Boolean isLimitInMemoryEnabled() {
+		return queryOptions.isLimitInMemoryEnabled();
+	}
+
+	@Override
 	public CacheMode getCacheMode() {
 		return queryOptions.getCacheMode();
 	}

@@ -68,6 +68,7 @@ import static org.hibernate.jpa.HibernateHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_LOCKING;
 import static org.hibernate.jpa.HibernateHints.HINT_FOLLOW_ON_STRATEGY;
+import static org.hibernate.jpa.HibernateHints.HINT_LIMIT_IN_MEMORY;
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_SPACES;
 import static org.hibernate.jpa.HibernateHints.HINT_QUERY_DATABASE;
 import static org.hibernate.jpa.HibernateHints.HINT_QUERY_PLAN_CACHEABLE;
@@ -216,6 +217,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		putIfNotNull( hints, HINT_CACHE_REGION, queryOptions.getResultCacheRegionName() );
 		putIfNotNull( hints, HINT_CACHE_MODE, queryOptions.getCacheMode() );
 		putIfNotNull( hints, HINT_QUERY_PLAN_CACHEABLE, queryOptions.getQueryPlanCachingEnabled() );
+		putIfNotNull( hints, HINT_LIMIT_IN_MEMORY, queryOptions.isLimitInMemoryEnabled() );
 
 		putIfNotNull( hints, HINT_SPEC_CACHE_RETRIEVE_MODE, queryOptions.getCacheRetrieveMode() );
 		putIfNotNull( hints, HINT_JAVAEE_CACHE_RETRIEVE_MODE, queryOptions.getCacheRetrieveMode() );
@@ -328,6 +330,9 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 					return true;
 				case HINT_QUERY_PLAN_CACHEABLE:
 					queryOptions.setQueryPlanCachingEnabled( getBoolean( value ) );
+					return true;
+				case HINT_LIMIT_IN_MEMORY:
+					queryOptions.setLimitInMemory( getBoolean( value ) );
 					return true;
 				case HINT_CACHEABLE:
 					if ( isHistorical() ) {

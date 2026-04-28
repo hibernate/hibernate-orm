@@ -106,6 +106,14 @@ public interface QueryOptions {
 	Boolean getQueryPlanCachingEnabled();
 
 	/**
+	 * Whether top-level HQL/criteria pagination should be applied in memory
+	 * instead of by SQL.
+	 */
+	default Boolean isLimitInMemoryEnabled() {
+		return null;
+	}
+
+	/**
 	 * The explicitly enabled profiles for this query
 	 */
 	Set<String> getEnabledFetchProfiles();

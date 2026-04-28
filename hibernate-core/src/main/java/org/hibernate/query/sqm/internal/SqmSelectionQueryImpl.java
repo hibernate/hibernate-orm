@@ -403,15 +403,23 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 				statement.containsCollectionFetches()
 						|| containsCollectionFetches( queryOptions );
 		final boolean hasLimit = hasLimit( statement, queryOptions );
+		final boolean limitInMemory = shouldApplyLimitInMemory( statement, queryOptions );
 		final boolean needsDistinct = needsDistinct( containsCollectionFetches, hasLimit, statement );
-		final boolean paginationInSql = hasLimit && containsCollectionFetches && isPaginationPushedToDerivedTable();
+		final boolean paginationInSql =
+				hasLimit && containsCollectionFetches && !limitInMemory && isPaginationPushedToDerivedTable();
+		final boolean applyLimitInMemory =
+				limitInMemory
+					|| hasLimit && containsCollectionFetches && !paginationInSql;
 		final var list =
 				resolveQueryPlan()
-						.performList( executionContext( hasLimit, containsCollectionFetches ) );
-		return needsDistinct ? handleDistinct( hasLimit && !paginationInSql, statement, list ) : list;
+						.performList( executionContext( hasLimit, containsCollectionFetches, limitInMemory ) );
+		return needsDistinct
+				? handleDistinct( applyLimitInMemory, statement, list )
+				: applyLimitInMemory ? this.handleDistinct( true, statement, list ) : list;
 	}
 
-	private List<R> handleDistinct(boolean hasLimit, SqmSelectStatement<?> statement, List<R> list) {
+	@Override
+	List<R> handleDistinct(boolean hasLimit, SqmSelectStatement<?> statement, List<R> list) {
 		int includedCount = -1;
 		// NOTE: 'firstRow' is zero-based
 		final int first = first( hasLimit, statement );
@@ -434,27 +442,38 @@ public class SqmSelectionQueryImpl<R> extends AbstractSqmSelectionQuery<R>
 	}
 
 	// TODO: very similar to QuerySqmImpl.executionContextForDoList()
-	private DomainQueryExecutionContext executionContext(boolean hasLimit, boolean containsCollectionFetches) {
-		if ( hasLimit && containsCollectionFetches ) {
+	private DomainQueryExecutionContext executionContext(
+			boolean hasLimit,
+			boolean containsCollectionFetches,
+			boolean limitInMemory) {
+		if ( limitInMemory ) {
+			return executionContext();
+		}
+		else if ( hasLimit && containsCollectionFetches ) {
 			if ( !isPaginationPushedToDerivedTable() ) {
 				errorOrLogForPaginationWithCollectionFetch();
 			}
-			final var originalQueryOptions = getQueryOptions();
-			final var normalizedQueryOptions = omitSqlQueryOptions( originalQueryOptions, true, false );
-			if ( originalQueryOptions == normalizedQueryOptions ) {
-				return this;
-			}
-			else {
-				return new DelegatingDomainQueryExecutionContext( this ) {
-					@Override
-					public QueryOptions getQueryOptions() {
-						return normalizedQueryOptions;
-					}
-				};
-			}
+			return executionContext();
 		}
 		else {
 			return this;
+		}
+	}
+
+	private DomainQueryExecutionContext executionContext() {
+		final var originalQueryOptions = getQueryOptions();
+		final var normalizedQueryOptions =
+				omitSqlQueryOptions( originalQueryOptions, true, false );
+		if ( originalQueryOptions == normalizedQueryOptions ) {
+			return this;
+		}
+		else {
+			return new DelegatingDomainQueryExecutionContext( this ) {
+				@Override
+				public QueryOptions getQueryOptions() {
+					return normalizedQueryOptions;
+				}
+			};
 		}
 	}
 

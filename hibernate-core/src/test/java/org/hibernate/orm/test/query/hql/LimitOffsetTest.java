@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
+import org.hibernate.ScrollMode;
 import org.hibernate.jpa.HibernateHints;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -53,6 +54,18 @@ class LimitOffsetTest {
 					.setMaxResults( 2 )
 					.getResultStream() ) {
 				assertEquals( 2L, stream.count() );
+			}
+			try ( var scroll = session.unwrap( org.hibernate.Session.class )
+					.createQuery( "from Sortable order by uuid", Sortable.class )
+					.setHint( HibernateHints.HINT_LIMIT_IN_MEMORY, true )
+					.setFirstResult( 1 )
+					.setMaxResults( 2 )
+					.scroll( ScrollMode.FORWARD_ONLY ) ) {
+				long count = 0;
+				while ( scroll.next() ) {
+					count++;
+				}
+				assertEquals( 2L, count );
 			}
 		} );
 	}

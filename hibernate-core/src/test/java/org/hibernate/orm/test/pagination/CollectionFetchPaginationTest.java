@@ -15,6 +15,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
+import org.hibernate.ScrollMode;
 import org.hibernate.cfg.QuerySettings;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.jpa.HibernateHints;
@@ -131,6 +132,37 @@ public class CollectionFetchPaginationTest {
 			assertEquals( 2, books.size() );
 			assertEquals( "isbn-0", books.get( 0 ).getIsbn() );
 			assertEquals( "isbn-1", books.get( 1 ).getIsbn() );
+			assertEquals( 3, books.get( 0 ).getAuthors().size() );
+			assertEquals( 3, books.get( 1 ).getAuthors().size() );
+
+			assertEquals( 1, sql.getSqlQueries().size() );
+			assertFalse( sql.getSqlQueries().get( 0 ).toLowerCase().contains( "from (select" ) );
+		} );
+	}
+
+	@Test
+	void fetchJoinWithInMemoryLimitHintAsScroll(SessionFactoryScope scope) {
+		final SQLStatementInspector sql = scope.getCollectingStatementInspector();
+		scope.inTransaction( s -> {
+			sql.clear();
+
+			final List<Book> books = new ArrayList<>();
+			try ( var scroll = s.createSelectionQuery(
+					"from Book b left join fetch b.authors order by b.isbn",
+					Book.class
+			)
+					.setHint( HibernateHints.HINT_LIMIT_IN_MEMORY, true )
+					.setFirstResult( 1 )
+					.setMaxResults( 2 )
+					.scroll( ScrollMode.FORWARD_ONLY ) ) {
+				while ( scroll.next() ) {
+					books.add( scroll.get() );
+				}
+			}
+
+			assertEquals( 2, books.size() );
+			assertEquals( "isbn-1", books.get( 0 ).getIsbn() );
+			assertEquals( "isbn-2", books.get( 1 ).getIsbn() );
 			assertEquals( 3, books.get( 0 ).getAuthors().size() );
 			assertEquals( 3, books.get( 1 ).getAuthors().size() );
 

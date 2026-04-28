@@ -6,13 +6,11 @@ package org.hibernate.internal.scrollable;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
-import org.hibernate.sql.results.spi.LoadContexts;
 import org.hibernate.sql.results.spi.RowReader;
 
 /**
@@ -44,7 +42,11 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 				persistenceContext
 		);
 
-		maxPosition = jdbcValuesSourceProcessingState.getQueryOptions().getEffectiveLimit().getMaxRows();
+		final var queryOptions = jdbcValuesSourceProcessingState.getQueryOptions();
+		maxPosition =
+				queryOptions.isLimitInMemoryEnabled() == Boolean.TRUE
+						? null
+						: queryOptions.getEffectiveLimit().getMaxRows();
 		beforeFirst = true;
 	}
 
@@ -130,7 +132,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 				// the last physical sequential row for the logical row in which
 				// we are interested in processing
 				boolean firstPass = true;
-				final EntityKey lastKey = getEntityKey();
+				final var lastKey = getEntityKey();
 				while ( getRowProcessingState().previous() ) {
 					final EntityKey checkKey = getEntityKey();
 					if ( firstPass ) {
@@ -146,7 +148,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 			// Read backwards until we read past the first physical sequential
 			// row with the key we are interested in loading
 			while ( getRowProcessingState().previous() ) {
-				final EntityKey checkKey = getEntityKey();
+				final var checkKey = getEntityKey();
 				if ( !keyToRead.equals( checkKey ) ) {
 					break;
 				}
@@ -297,15 +299,15 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 	}
 
 	private boolean prepareCurrentRow() {
-		final RowProcessingStateStandardImpl rowProcessingState = getRowProcessingState();
-		final RowReader<R> rowReader = getRowReader();
+		final var rowProcessingState = getRowProcessingState();
+		final var rowReader = getRowReader();
 
 		boolean last = false;
 		boolean resultProcessed = false;
 
-		final EntityKey entityKey = getEntityKey();
-		final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContext();
-		final LoadContexts loadContexts = persistenceContext.getLoadContexts();
+		final var entityKey = getEntityKey();
+		final var persistenceContext = rowProcessingState.getSession().getPersistenceContext();
+		final var loadContexts = persistenceContext.getLoadContexts();
 
 		loadContexts.register( getJdbcValuesSourceProcessingState() );
 		persistenceContext.beforeLoad();

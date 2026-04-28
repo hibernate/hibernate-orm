@@ -47,7 +47,13 @@ public class SqmJdbcExecutionContextAdapter extends BaseExecutionContext {
 	public SqmJdbcExecutionContextAdapter(
 			DomainQueryExecutionContext sqmExecutionContext,
 			JdbcSelect jdbcSelect) {
-		this( sqmExecutionContext, omitSqlQueryOptions( sqmExecutionContext.getQueryOptions(), jdbcSelect ) );
+		this( sqmExecutionContext, getQueryOptions( sqmExecutionContext, jdbcSelect ) );
+	}
+
+	private static QueryOptions getQueryOptions(DomainQueryExecutionContext sqmExecutionContext, JdbcSelect jdbcSelect) {
+		return sqmExecutionContext.getQueryOptions().isLimitInMemoryEnabled() == Boolean.TRUE
+				? omitSqlQueryOptions( sqmExecutionContext.getQueryOptions(), true, false )
+				: omitSqlQueryOptions( sqmExecutionContext.getQueryOptions(), jdbcSelect );
 	}
 
 	@Override

@@ -11,13 +11,9 @@ import jakarta.persistence.TupleElement;
 import jakarta.persistence.criteria.CompoundSelection;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
-import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.scrollable.EmptyScrollableResults;
-import org.hibernate.internal.scrollable.ListBackedScrollableResults;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
-import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.KeyedPage;
 import org.hibernate.query.KeyedResultList;
 import org.hibernate.query.Page;
@@ -32,7 +28,6 @@ import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -231,33 +226,6 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 			}
 		}
 		return false;
-	}
-
-	@Override
-	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
-		final var sqmStatement = getSqmStatement();
-		if ( sqmStatement instanceof SqmSelectStatement<?> select
-				&& shouldApplyLimitInMemory( select, getQueryOptions() ) ) {
-			final var fetchProfiles = beforeQueryHandlingFetchProfiles();
-			boolean success = false;
-			try {
-				final List<R> results = doList();
-				success = true;
-				return results.isEmpty()
-						? EmptyScrollableResults.instance()
-						: new ListBackedScrollableResults<>( results );
-			}
-			catch ( IllegalQueryOperationException e ) {
-				throw new IllegalStateException( e );
-			}
-			catch ( HibernateException he ) {
-				throw getExceptionConverter().convert( he, getQueryOptions().getLockOptions() );
-			}
-			finally {
-				afterQueryHandlingFetchProfiles( success, fetchProfiles );
-			}
-		}
-		return super.scroll( scrollMode );
 	}
 
 	public abstract SqmStatement<R> getSqmStatement();
@@ -592,21 +560,32 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 	 */
 	DomainQueryExecutionContext scrollExecutionContext(SqmSelectStatement<?> statement) {
 		final var queryOptions = getQueryOptions();
-		final var normalizedQueryOptions =
+		final boolean pushedDown =
 				hasLimit( statement, queryOptions )
-					&& statement.containsCollectionFetches()
-					&& isPaginationPushedToDerivedTable()
+						&& statement.containsCollectionFetches()
+						&& isPaginationPushedToDerivedTable();
+		final boolean applyLimitInScrollableResults =
+				shouldApplyLimitInMemory( statement, queryOptions )
+						|| hasLimit( statement, queryOptions )
+								&& statement.containsCollectionFetches()
+								&& !pushedDown;
+		final var normalizedQueryOptions =
+				applyLimitInScrollableResults || pushedDown
 						? omitSqlQueryOptions( queryOptions, true, false )
 						: queryOptions;
-		final var scrollQueryOptions =
-				normalizedQueryOptions.isScrollExecution()
-						? normalizedQueryOptions
-						: new DelegatingQueryOptions( normalizedQueryOptions ) {
-							@Override
-							public boolean isScrollExecution() {
-								return true;
-							}
-						};
+		final var scrollQueryOptions = new DelegatingQueryOptions( normalizedQueryOptions ) {
+			@Override
+			public boolean isScrollExecution() {
+				return true;
+			}
+
+			@Override
+			public Boolean isLimitInMemoryEnabled() {
+				return applyLimitInScrollableResults
+						? Boolean.TRUE
+						: super.isLimitInMemoryEnabled();
+			}
+		};
 		return new DelegatingDomainQueryExecutionContext( this ) {
 			@Override
 			public QueryOptions getQueryOptions() {

@@ -16,6 +16,8 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.BitSet;
 
 import static org.hibernate.query.hql.internal.StandardHqlTranslator.prettifyAntlrError;
@@ -61,9 +63,23 @@ class ErrorHandler implements Validation.Handler {
 	@Override
 	public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String message, RecognitionException e) {
 		errorCount++;
-		String prettyMessage = "illegal HQL syntax - "
-				+ prettifyAntlrError( offendingSymbol, line, charPositionInLine, message, e, queryString, true );
-		context.message( element, mirror, value, prettyMessage, Diagnostic.Kind.ERROR );
+		String unprettyMessage = null;
+		String prettyMessage = "illegal HQL syntax - ";
+		try {
+			prettyMessage += prettifyAntlrError( offendingSymbol, line, charPositionInLine, message, e, queryString, true );
+		}
+		catch (Exception e1) {
+			StringWriter sw = new StringWriter();
+			e1.printStackTrace(new PrintWriter(sw));
+			unprettyMessage = prettyMessage + message;
+			prettyMessage = sw.toString();
+		}
+		finally {
+			if (unprettyMessage != null) {
+				context.message( element, mirror, value, unprettyMessage, Diagnostic.Kind.ERROR );
+			}
+			context.message( element, mirror, value, prettyMessage, Diagnostic.Kind.ERROR );
+		}
 	}
 
 	@Override

@@ -34,6 +34,7 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.orm.test.annotations.A320;
 import org.hibernate.orm.test.annotations.A320b;
 import org.hibernate.orm.test.annotations.Plane;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -685,6 +686,11 @@ public class QueryAndSQLTest {
 				session ->
 						session.createQuery( "delete from Chaos" ).executeUpdate()
 		);
+	}
+
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	protected void cleanupCache(SessionFactoryScope scope) {

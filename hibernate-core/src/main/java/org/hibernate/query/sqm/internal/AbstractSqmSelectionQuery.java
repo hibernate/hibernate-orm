@@ -319,16 +319,19 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 		if ( jpaCriteriaParamResolutions.isEmpty() ) {
 			return null;
 		}
-		int maxId = 0;
-		for ( var criteriaWrapper : jpaCriteriaParamResolutions.values() ) {
-			maxId = Math.max( maxId, criteriaWrapper.getCriteriaParameterId() );
+		else {
+			int maxId = 0;
+			for ( var criteriaWrapper : jpaCriteriaParamResolutions.values() ) {
+				maxId = Math.max( maxId, criteriaWrapper.getCriteriaParameterId() );
+			}
+			final var unnamedParameterIndices = new int[maxId + 1];
+			for ( var entry : jpaCriteriaParamResolutions.entrySet() ) {
+				final var value = entry.getValue();
+				unnamedParameterIndices[value.getCriteriaParameterId()] =
+						value.getUnnamedParameterId();
+			}
+			return unnamedParameterIndices;
 		}
-		final var unnamedParameterIndices = new int[maxId + 1];
-		for ( var entry : jpaCriteriaParamResolutions.entrySet() ) {
-			unnamedParameterIndices[entry.getValue().getCriteriaParameterId()] =
-					entry.getValue().getUnnamedParameterId();
-		}
-		return unnamedParameterIndices;
 	}
 
 	@Override

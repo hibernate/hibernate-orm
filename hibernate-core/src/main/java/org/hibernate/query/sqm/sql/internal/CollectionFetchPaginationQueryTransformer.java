@@ -15,7 +15,6 @@ import java.util.Set;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl.CaseStatementDiscriminatorExpression;
@@ -303,21 +302,24 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 				&& canUseCollectionTableOnlyExists( collectionTableGroup, join.getPredicate() ) ) {
 			return createCollectionTableOnlyGroup( collectionTableGroup );
 		}
-		return joinedGroup;
+		else {
+			return joinedGroup;
+		}
 	}
 
 	private static boolean canUseCollectionTableOnlyExists(
 			CollectionTableGroup collectionTableGroup,
 			org.hibernate.sql.ast.tree.predicate.Predicate joinPredicate) {
-		final PluralAttributeMapping pluralAttribute = collectionTableGroup.getModelPart();
+		final var pluralAttribute = collectionTableGroup.getModelPart();
 		if ( !pluralAttribute.getCollectionDescriptor().isManyToMany() ) {
 			return false;
 		}
-
-		final Set<String> nestedAliases = new HashSet<>();
-		collectJoinedAliases( collectionTableGroup, nestedAliases );
-		return !sqlAstReferencesAnyAlias( joinPredicate, nestedAliases, null )
+		else {
+			final Set<String> nestedAliases = new HashSet<>();
+			collectJoinedAliases( collectionTableGroup, nestedAliases );
+			return !sqlAstReferencesAnyAlias( joinPredicate, nestedAliases, null )
 				&& hasOnlySimpleJoinPredicates( collectionTableGroup );
+		}
 	}
 
 	private static void collectJoinedAliases(TableGroup group, Set<String> aliases) {
@@ -356,7 +358,6 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 	}
 
 	private static CollectionTableGroup createCollectionTableOnlyGroup(CollectionTableGroup collectionTableGroup) {
-		final var sqlAliasBase = ( (AbstractTableGroup) collectionTableGroup ).getSqlAliasBase();
 		final var strippedGroup = new CollectionTableGroup(
 				collectionTableGroup.canUseInnerJoins(),
 				collectionTableGroup.getNavigablePath(),
@@ -365,7 +366,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 				collectionTableGroup.getSourceAlias(),
 				collectionTableGroup.getPrimaryTableReference(),
 				true,
-				sqlAliasBase,
+				collectionTableGroup.getSqlAliasBase(),
 				s -> false,
 				null,
 				collectionTableGroup.getModelPart().getCollectionDescriptor().getFactory()

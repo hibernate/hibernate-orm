@@ -13,8 +13,11 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import jakarta.persistence.Entity;
+
+import org.jboss.logging.Logger;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.internal.MetadataImpl;
@@ -42,6 +45,8 @@ import org.w3c.dom.NodeList;
  * @author Koen Aers
  */
 public class MetadataHelper {
+
+	private static final Logger log = Logger.getLogger(MetadataHelper.class);
 
 	private final List<ClassDetails> entityClassDetails;
 	private final ModelsContext modelsContext;
@@ -138,21 +143,36 @@ public class MetadataHelper {
 		return allFieldMetaAttributes.getOrDefault(className, Collections.emptyMap());
 	}
 
+	private static final DocumentBuilderFactory DOCUMENT_BUILDER_FACTORY =
+			createDocumentBuilderFactory();
+
+	private static DocumentBuilderFactory createDocumentBuilderFactory() {
+		try {
+			DocumentBuilderFactory factory =
+					DocumentBuilderFactory.newInstance(
+							"com.sun.org.apache.xerces.internal"
+							+ ".jaxp.DocumentBuilderFactoryImpl",
+							null);
+			factory.setFeature(
+					"http://apache.org/xml/features/"
+					+ "nonvalidating/load-external-dtd", false);
+			return factory;
+		}
+		catch (ParserConfigurationException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	/**
 	 * Parses a hibernate.cfg.xml file and extracts classpath resource
 	 * paths from {@code <mapping resource="..."/>} elements.
 	 */
 	private static String[] extractCfgXmlMappingResources(File cfgXml) {
 		try {
-			DocumentBuilderFactory factory =
-					DocumentBuilderFactory.newInstance();
-			factory.setValidating(false);
-			factory.setFeature(
-					"http://apache.org/xml/features/"
-					+ "nonvalidating/load-external-dtd", false);
 			Document doc;
 			try (FileInputStream fis = new FileInputStream(cfgXml)) {
-				doc = factory.newDocumentBuilder().parse(fis);
+				doc = DOCUMENT_BUILDER_FACTORY
+						.newDocumentBuilder().parse(fis);
 			}
 			NodeList mappings = doc.getElementsByTagName("mapping");
 			List<String> resources = new ArrayList<>();
@@ -166,6 +186,9 @@ public class MetadataHelper {
 			return resources.toArray(new String[0]);
 		}
 		catch (Exception e) {
+			log.warnf("Failed to parse cfg.xml for mapping"
+					+ " resources: %s — %s",
+					cfgXml, e.getMessage());
 			return new String[0];
 		}
 	}

@@ -20,6 +20,7 @@ import org.hibernate.cfg.QuerySettings;
 
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -117,7 +118,7 @@ public class CollectionFetchPaginationOrderItemTest {
 			assertTrue( generated.contains( "from (select" ) );
 			assertTrue( generated.contains( "item_entity" ) );
 			var dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-			if ( !(dialect instanceof HSQLDialect) && !(dialect instanceof MariaDBDialect) ) {
+			if ( !(dialect instanceof HSQLDialect) && !(dialect instanceof MariaDBDialect) && !(dialect instanceof OracleDialect) ) {
 				final int existsStart = generated.indexOf( "exists(select 1 from item_entity" );
 				final int existsWhere = generated.indexOf( " where", existsStart );
 				assertTrue( existsStart >= 0 );

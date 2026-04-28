@@ -4,17 +4,11 @@
  */
 package org.hibernate.orm.tooling.maven.reveng;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
+import org.apache.maven.cli.MavenCli;
 import org.hibernate.tool.reveng.api.version.Version;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-
-
-import org.apache.maven.cli.MavenCli;
 
 import java.io.File;
 import java.net.URL;
@@ -24,11 +18,14 @@ import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.Objects;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class ExamplesTestIT {
 
 	public static final String MVN_HOME = "maven.multiModuleProjectDirectory";
 	private static File baseFolder;
-	private static File localRepo;
 
 	private File projectFolder;
 
@@ -47,7 +44,7 @@ public class ExamplesTestIT {
 		// by the 'build-helper-maven-plugin' execution.
 		// See the 'pom.xml'
 		baseFolder = determineBaseFolder();
-		localRepo = new File(baseFolder.getParentFile(), "local-repo");
+//		localRepo = new File(baseFolder.getParentFile(), "local-repo");
 	}
 
 	@Test
@@ -82,7 +79,7 @@ public class ExamplesTestIT {
 		databaseCreationScript = new String[] {
 				"create table PERSON (ID int not null,  NAME varchar(20), primary key (ID))",
 				"create table ITEM (ID int not null,  NAME varchar(20), OWNER_ID int not null, " +
-						"   primary key (ID), foreign key (OWNER_ID) references PERSON(ID))"
+				"   primary key (ID), foreign key (OWNER_ID) references PERSON(ID))"
 		};
 		prepareProject("hbm2java/no-generics");
 		assertNotGeneratedYet("Person.java");
@@ -100,7 +97,7 @@ public class ExamplesTestIT {
 		assertFalse(outputDirectory.exists());
 		assertFalse(personFile.exists());
 		runGenerateSources();
-		assertEquals(1, Objects.requireNonNull(outputDirectory.list()).length); // 1 file is generated in 'generated-classes'
+		assertEquals(1, Objects.requireNonNull( outputDirectory.list() ).length); // 1 file is generated in 'generated-classes'
 		assertTrue(personFile.exists()); // The Person.java file should have been generated
 	}
 
@@ -119,7 +116,7 @@ public class ExamplesTestIT {
 		databaseCreationScript = new String[] {
 				"create table PERSON (ID int not null,  NAME varchar(20), primary key (ID))",
 				"create table ITEM (ID int not null,  NAME varchar(20), OWNER_ID int not null, " +
-						"   primary key (ID), foreign key (OWNER_ID) references PERSON(ID))"
+				"   primary key (ID), foreign key (OWNER_ID) references PERSON(ID))"
 		};
 		prepareProject("hbm2java/use-generics");
 		assertNotGeneratedYet("Person.java");
@@ -133,7 +130,7 @@ public class ExamplesTestIT {
 		projectFolder = new File(baseFolder, "hbm2orm/simple-default");
 		File ormXmlFile = new File(projectFolder, "src/main/resources/simple.mapping.xml");
 		assertFalse(ormXmlFile.exists());
-		runMavenCommand("org.hibernate.tool:hibernate-tools-maven:" + Version.versionString() + ":hbm2orm");
+		runMavenCommand( "org.hibernate.orm:hibernate-maven-plugin:" + Version.versionString() + ":hbm2orm");
 		assertTrue(ormXmlFile.exists());
 		String ormXmlContents = Files.readString( ormXmlFile.toPath() );
 		assertTrue(ormXmlContents.contains("entity-mappings"));
@@ -143,35 +140,36 @@ public class ExamplesTestIT {
 		projectFolder = new File(baseFolder, projectName);
 		assertTrue(projectFolder.exists());
 		System.setProperty(MVN_HOME, projectFolder.getAbsolutePath());
+		editPomFile(projectFolder);
 		createHibernatePropertiesFile(projectFolder);
 		createDatabase();
 	}
 
 	private void createHibernatePropertiesFile(File projectFolder) throws Exception {
 		File projectResourcesFolder = new File(projectFolder, "src/main/resources");
-		assertTrue(projectResourcesFolder.mkdirs());
 		File hibernatePropertiesFile = new File(projectResourcesFolder, "hibernate.properties");
-		assertFalse(hibernatePropertiesFile.exists());
 		String hibernatePropertiesFileContents =
-				"hibernate.connection.driver_class=org.h2.Driver"               + System.lineSeparator() +
-				"hibernate.connection.url=" + constructJdbcConnectionString()   + System.lineSeparator() +
-				"hibernate.connection.username="                                + System.lineSeparator() +
-				"hibernate.connection.password="                                + System.lineSeparator() +
-				"hibernate.default_catalog=TEST"                                + System.lineSeparator() +
-				"hibernate.default_schema=PUBLIC"                               + System.lineSeparator();
+				"hibernate.connection.driver_class=org.h2.Driver\n" +
+				"hibernate.connection.url=" + constructJdbcConnectionString() + "\n" +
+				"hibernate.connection.username=\n" +
+				"hibernate.connection.password=\n" +
+				"hibernate.default_catalog=TEST\n" +
+				"hibernate.default_schema=PUBLIC\n";
 		Files.writeString(hibernatePropertiesFile.toPath(), hibernatePropertiesFileContents);
 		assertTrue(hibernatePropertiesFile.exists());
 	}
 
 	private void runGenerateSources() {
-		runMavenCommand("generate-sources");
+		new MavenCli().doMain(
+				new String[]{"generate-sources"},
+				projectFolder.getAbsolutePath(),
+				null,
+				null);
 	}
 
 	private void runMavenCommand(String command) {
 		new MavenCli().doMain(
-				new String[]{
-						"-Dmaven.repo.local=" + localRepo.getAbsolutePath(),
-						command},
+				new String[]{ command },
 				projectFolder.getAbsolutePath(),
 				null,
 				null);
@@ -193,7 +191,7 @@ public class ExamplesTestIT {
 		assertEquals(
 				amount,
 				Objects.requireNonNull(
-					new File(projectFolder, "target/generated-sources").list()).length);
+						new File( projectFolder, "target/generated-sources" ).list() ).length);
 	}
 
 	private String readGeneratedContents(String fileName) throws Exception {
@@ -204,13 +202,9 @@ public class ExamplesTestIT {
 
 	private static File determineBaseFolder() throws Exception {
 		Class<?> thisClass = ExamplesTestIT.class;
-		URL classUrl = thisClass.getResource("/" + thisClass.getName().replace(".", "/") + ".class");
-		assert classUrl != null;
-		File result = new File(classUrl.toURI());
-		for (int i = 0; i < thisClass.getName().chars().filter(ch -> ch == '.').count() + 1; i++) {
-			result = result.getParentFile();
-		}
-		return result;
+		URL markerUrl = thisClass.getResource( "/resource.marker" );
+		assert markerUrl != null;
+		return new File(markerUrl.toURI()).getParentFile();
 	}
 
 	private void createDatabase() throws Exception {
@@ -229,9 +223,18 @@ public class ExamplesTestIT {
 	}
 
 	private String constructJdbcConnectionString() {
-		return "jdbc:h2:"
-				+ tempFolder.getAbsolutePath().replace('\\', '/') // for tests on Windows
-				+ "/database/test;AUTO_SERVER=TRUE";
+		return "jdbc:h2:" + tempFolder.getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
+	}
+
+	private void editPomFile(File projectFolder) throws Exception {
+		System.out.println("Editing pom file");
+		File pomFile = new File(projectFolder, "pom.xml");
+		assertTrue(pomFile.exists());
+		String pomFileContents = Files.readString( pomFile.toPath() );
+		pomFileContents = pomFileContents
+				.replace( "${h2.version}", System.getenv("h2Version") )
+				.replace( "${hibernate.version}", Version.versionString() );
+		Files.writeString( pomFile.toPath(), pomFileContents );
 	}
 
 }

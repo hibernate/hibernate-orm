@@ -34,7 +34,10 @@ public class SequenceCollector {
 				try (Statement statement = connection.createStatement();
 					ResultSet rs = statement.executeQuery(sql)) {
 					while (rs.next()) {
-						sequences.add(rs.getString("SEQUENCE_NAME").toLowerCase().trim());
+						String name = rs.getString("SEQUENCE_NAME");
+						if (name != null) {
+							sequences.add(name.toLowerCase().trim());
+						}
 					}
 				}
 			}

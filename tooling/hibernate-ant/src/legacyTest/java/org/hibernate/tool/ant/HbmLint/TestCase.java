@@ -11,13 +11,12 @@ import org.hibernate.tool.ant.test.utils.ResourceUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TestCase {
 
@@ -37,13 +36,11 @@ public class TestCase {
 	}
 
 	@AfterEach
-	public void tearDown() throws Exception {
+	public void tearDown() {
 		JdbcUtil.dropDatabase(this);
 	}
 
-	// TODO HBX-3313: Verify why this does not work on Windows
 	@Test
-	@DisabledOnOs(OS.WINDOWS)
 	public void testHbmLint() {
 
 		String[] resources = new String[] {"build.xml", "SchemaIssues.hbm.xml", "hibernate.cfg.xml"};
@@ -62,7 +59,7 @@ public class TestCase {
 
 		assertTrue(hbmLintResult.exists());
 
-		assertTrue(FileUtil
+		assertTrue( FileUtil
 				.findFirstString("BadType", hbmLintResult)
 				.contains("SCHEMA_TABLE_MISSING"));
 

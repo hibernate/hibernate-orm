@@ -142,10 +142,18 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		}
 
 		// Compare SQL type codes
-		int dbTypeCode = (Integer) dbColumn.get("DATA_TYPE");
-		int modelTypeCode = field.getType() != null
-				? TypeHelper.getJdbcTypeCode(field.getType().determineRawClass().getClassName())
-				: Integer.MIN_VALUE;
+		Object rawDataType = dbColumn.get("DATA_TYPE");
+		if (rawDataType == null) {
+			return;
+		}
+		int dbTypeCode = (Integer) rawDataType;
+		int modelTypeCode = Integer.MIN_VALUE;
+		if (field.getType() != null) {
+			var rawClass = field.getType().determineRawClass();
+			if (rawClass != null) {
+				modelTypeCode = TypeHelper.getJdbcTypeCode(rawClass.getClassName());
+			}
+		}
 		if (modelTypeCode != Integer.MIN_VALUE
 				&& dbTypeCode != modelTypeCode) {
 			collector.reportIssue(new Issue(

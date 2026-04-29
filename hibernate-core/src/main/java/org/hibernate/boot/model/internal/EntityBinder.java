@@ -136,6 +136,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.toAliasEntityMap;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasTableMap;
 import static org.hibernate.boot.model.internal.Binders.callTypeBinder;
 import static org.hibernate.boot.model.internal.ClassPropertyHolder.setType;
+import static org.hibernate.boot.model.internal.DefaultSchemaHelper.defaultSchema;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.DialectOverridesAnnotationHelper.getOverrideAnnotation;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
@@ -821,7 +822,7 @@ public class EntityBinder {
 				annotatedClass.getAnnotationUsage( jakarta.persistence.Table.class, modelsContext() );
 		if ( tableAnnotation != null ) {
 			table = tableAnnotation.name();
-			schema = tableAnnotation.schema();
+			schema = defaultSchema( tableAnnotation.schema(), annotatedClass, context );
 			catalog = tableAnnotation.catalog();
 			uniqueConstraints = tableAnnotation.uniqueConstraints();
 		}
@@ -2198,7 +2199,7 @@ public class EntityBinder {
 				noDelayInPkColumnCreation,
 				false,
 				joinTable.name(),
-				joinTable.schema(),
+				defaultSchema( joinTable.schema(), annotatedClass, context ),
 				joinTable.catalog(),
 				joinTable.joinColumns(),
 				joinTable.uniqueConstraints()
@@ -2216,7 +2217,7 @@ public class EntityBinder {
 				noDelayInPkColumnCreation,
 				true,
 				secondaryTable.name(),
-				secondaryTable.schema(),
+				defaultSchema( secondaryTable.schema(), annotatedClass, context ),
 				secondaryTable.catalog(),
 				secondaryTable.pkJoinColumns(),
 				secondaryTable.uniqueConstraints()

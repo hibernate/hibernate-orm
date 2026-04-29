@@ -39,6 +39,8 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbTableGeneratorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbUserTypeRegistrationImpl;
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.annotations.internal.NamedNativeQueryJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.SequenceGeneratorJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.TableGeneratorJpaAnnotation;
 import org.hibernate.boot.models.spi.CollectionTypeRegistration;
 import org.hibernate.boot.models.spi.CompositeUserTypeRegistration;
 import org.hibernate.boot.models.spi.ConversionRegistration;
@@ -98,6 +100,7 @@ import static org.hibernate.boot.models.JpaAnnotations.NAMED_STORED_PROCEDURE_QU
 import static org.hibernate.boot.models.JpaAnnotations.SEQUENCE_GENERATOR;
 import static org.hibernate.boot.models.JpaAnnotations.TABLE_GENERATOR;
 import static org.hibernate.boot.models.HibernateAnnotations.TYPE_REGISTRATION;
+import static org.hibernate.boot.model.internal.DefaultSchemaHelper.defaultSchema;
 import static org.hibernate.boot.models.xml.internal.QueryProcessing.collectResultClasses;
 import static org.hibernate.boot.BootLogging.BOOT_LOGGER;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -766,6 +769,9 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 	}
 
 	public void collectSequenceGenerator(ClassDetails classDetails, SequenceGenerator usage) {
+		if ( usage instanceof SequenceGeneratorJpaAnnotation annotation ) {
+			annotation.schema( defaultSchema( annotation.schema(), classDetails, sourceModelContext ) );
+		}
 		final String registrationName = registrationName( classDetails, usage.name() );
 		collectSequenceGenerator( new SequenceGeneratorRegistration( registrationName, usage ) );
 	}
@@ -854,6 +860,9 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 	}
 
 	public void collectTableGenerator(ClassDetails classDetails, TableGenerator usage) {
+		if ( usage instanceof TableGeneratorJpaAnnotation annotation ) {
+			annotation.schema( defaultSchema( annotation.schema(), classDetails, sourceModelContext ) );
+		}
 		final String registrationName = registrationName( classDetails, usage.name() );
 		collectTableGenerator( new TableGeneratorRegistration( registrationName, usage ) );
 	}

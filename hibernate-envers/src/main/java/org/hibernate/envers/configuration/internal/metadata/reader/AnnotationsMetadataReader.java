@@ -15,6 +15,8 @@ import org.hibernate.envers.boot.spi.EnversMetadataBuildingContext;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.models.spi.ClassDetails;
 
+import static org.hibernate.boot.model.internal.DefaultSchemaHelper.defaultSchema;
+
 /**
  * A helper class to read versioning meta-data from annotations on a persistent class.
  *
@@ -43,7 +45,7 @@ public final class AnnotationsMetadataReader {
 	private void addAuditTable(ClassAuditingData auditData, ClassDetails classDetails) {
 		final AuditTable auditTable = classDetails.getDirectAnnotationUsage( AuditTable.class );
 		if ( auditTable != null ) {
-			auditData.setAuditTable( auditTable );
+			auditData.setAuditTable( withDefaultSchema( auditTable, classDetails ) );
 		}
 		else {
 			auditData.setAuditTable( getDefaultAuditTable() );
@@ -114,6 +116,31 @@ public final class AnnotationsMetadataReader {
 
 	private AuditTable getDefaultAuditTable() {
 		return defaultAuditTable;
+	}
+
+	private AuditTable withDefaultSchema(AuditTable auditTable, ClassDetails classDetails) {
+		final String schema = defaultSchema( auditTable.schema(), classDetails, metadataBuildingContext.getModelsContext() );
+		return new AuditTable() {
+			@Override
+			public String value() {
+				return auditTable.value();
+			}
+
+			@Override
+			public String schema() {
+				return schema;
+			}
+
+			@Override
+			public String catalog() {
+				return auditTable.catalog();
+			}
+
+			@Override
+			public Class<? extends Annotation> annotationType() {
+				return auditTable.annotationType();
+			}
+		};
 	}
 
 }

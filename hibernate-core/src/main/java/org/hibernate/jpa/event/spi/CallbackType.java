@@ -5,10 +5,14 @@
 package org.hibernate.jpa.event.spi;
 
 import java.lang.annotation.Annotation;
+import jakarta.persistence.PostDelete;
+import jakarta.persistence.PostInsert;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
+import jakarta.persistence.PreDelete;
+import jakarta.persistence.PreInsert;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreRemove;
 import jakarta.persistence.PreUpdate;
@@ -40,10 +44,10 @@ public enum CallbackType {
 
 	/// Returns the callback type for a given callback annotation.
 	public static CallbackType fromCallbackAnnotation(Class<? extends Annotation> ann) {
-		if ( PrePersist.class.equals( ann ) ) {
+		if ( PrePersist.class.equals( ann ) || PreInsert.class.equals( ann ) ) {
 			return PRE_PERSIST;
 		}
-		if ( PostPersist.class.equals( ann ) ) {
+		if ( PostPersist.class.equals( ann ) || PostInsert.class.equals( ann ) ) {
 			return POST_PERSIST;
 		}
 		if ( PreUpdate.class.equals( ann ) ) {
@@ -52,10 +56,10 @@ public enum CallbackType {
 		if ( PostUpdate.class.equals( ann ) ) {
 			return POST_UPDATE;
 		}
-		if ( PreRemove.class.equals( ann ) ) {
+		if ( PreRemove.class.equals( ann ) || PreDelete.class.equals( ann ) ) {
 			return PRE_REMOVE;
 		}
-		if ( PostRemove.class.equals( ann ) ) {
+		if ( PostRemove.class.equals( ann ) || PostDelete.class.equals( ann ) ) {
 			return POST_REMOVE;
 		}
 		if ( PostLoad.class.equals( ann ) ) {

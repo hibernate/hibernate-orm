@@ -12,7 +12,7 @@ import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.model.source.internal.annotations.DomainModelSource;
-import org.hibernate.boot.models.spi.JpaEventListener;
+import org.hibernate.boot.models.spi.LifecycleEventHandler;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
@@ -40,9 +40,9 @@ public class JpaEventListenerTests {
 				.build();
 
 		final InFlightMetadataCollector metadataCollector = buildMetadataCollector( managedResources, registryScope );
-		final List<JpaEventListener> registrations = metadataCollector.getGlobalRegistrations().getEntityListenerRegistrations();
+		final List<LifecycleEventHandler> registrations = metadataCollector.getGlobalRegistrations().getEntityListenerRegistrations();
 		assertThat( registrations ).hasSize( 1 );
-		final JpaEventListener registration = registrations.get( 0 );
+		final LifecycleEventHandler registration = registrations.get( 0 );
 		final MethodDetails postPersistMethod = registration.getPostPersistMethod();
 		assertThat( postPersistMethod ).isNotNull();
 		assertThat( postPersistMethod.getReturnType() ).isEqualTo( VOID_CLASS_DETAILS );

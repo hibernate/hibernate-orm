@@ -4,13 +4,16 @@
  */
 package org.hibernate.boot.models.internal;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import org.hibernate.annotations.GenericGenerator;
@@ -52,7 +55,7 @@ import org.hibernate.boot.models.spi.GlobalRegistrar;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.spi.JavaTypeRegistration;
 import org.hibernate.boot.models.spi.JdbcTypeRegistration;
-import org.hibernate.boot.models.spi.JpaEventListener;
+import org.hibernate.boot.models.spi.LifecycleEventHandler;
 import org.hibernate.boot.models.JpaEventListenerStyle;
 import org.hibernate.boot.models.spi.NamedNativeQueryRegistration;
 import org.hibernate.boot.models.spi.NamedQueryRegistration;
@@ -69,16 +72,29 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.AvailableHints;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
+import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.AnnotationTarget;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 import org.hibernate.models.spi.MemberDetails;
+import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserCollectionType;
 import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.PostDelete;
+import jakarta.persistence.PostInsert;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PostPersist;
+import jakarta.persistence.PostRemove;
+import jakarta.persistence.PostUpdate;
+import jakarta.persistence.PreDelete;
+import jakarta.persistence.PreInsert;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreRemove;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.QueryHint;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.TableGenerator;
@@ -113,7 +129,8 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 	private final ModelsContext sourceModelContext;
 	private final BootstrapContext bootstrapContext;
 
-	private List<JpaEventListener> jpaEventListeners;
+	private List<LifecycleEventHandler> lifecycleEventHandlers;
+	private Map<ClassDetails, List<LifecycleEventHandler>> targetedLifecycleEventHandlers;
 	private List<ConversionRegistration> converterRegistrations;
 	private List<JavaTypeRegistration> javaTypeRegistrations;
 	private List<JdbcTypeRegistration> jdbcTypeRegistrations;
@@ -148,8 +165,13 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 	}
 
 	@Override
-	public List<JpaEventListener> getEntityListenerRegistrations() {
-		return jpaEventListeners == null ? emptyList() : jpaEventListeners;
+	public List<LifecycleEventHandler> getEntityListenerRegistrations() {
+		return lifecycleEventHandlers == null ? emptyList() : lifecycleEventHandlers;
+	}
+
+	@Override
+	public Map<ClassDetails, List<LifecycleEventHandler>> getTargetedEntityListenerRegistrations() {
+		return targetedLifecycleEventHandlers == null ? emptyMap() : targetedLifecycleEventHandlers;
 	}
 
 	@Override
@@ -627,7 +649,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 	public void collectEntityListenerRegistrations(List<JaxbEntityListenerImpl> listeners, ModelsContext modelsContext) {
 		final var classDetailsRegistry = getClassDetailsRegistry();
 		listeners.forEach( jaxbEntityListener ->
-				addJpaEventListener( JpaEventListener.from(
+				addJpaEventListener( LifecycleEventHandler.from(
 						JpaEventListenerStyle.LISTENER,
 						classDetailsRegistry.resolveClassDetails( jaxbEntityListener.getClazz() ),
 						jaxbEntityListener,
@@ -635,12 +657,169 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 				) ) );
 	}
 
-	public void addJpaEventListener(JpaEventListener listener) {
-		if ( jpaEventListeners == null ) {
-			jpaEventListeners = new ArrayList<>();
+	public void addJpaEventListener(LifecycleEventHandler listener) {
+		if ( lifecycleEventHandlers == null ) {
+			lifecycleEventHandlers = new ArrayList<>();
 		}
 
-		jpaEventListeners.add( listener );
+		lifecycleEventHandlers.add( listener );
+	}
+
+	public void addTargetedJpaEventListener(ClassDetails listenerClassDetails) {
+		final Map<ClassDetails, TargetedLifecycleEventHandlerBuilder> builders = new LinkedHashMap<>();
+		listenerClassDetails.forEachMethod( (index, methodDetails) -> {
+			applyTargetedCallback( listenerClassDetails, methodDetails, PrePersist.class, builders,
+					TargetedLifecycleEventHandlerBuilder::setPrePersistMethod );
+			applyTargetedCallback( listenerClassDetails, methodDetails, PreInsert.class, builders,
+					TargetedLifecycleEventHandlerBuilder::setPrePersistMethod );
+			applyTargetedCallback( listenerClassDetails, methodDetails, PostPersist.class, builders,
+					TargetedLifecycleEventHandlerBuilder::setPostPersistMethod );
+			applyTargetedCallback( listenerClassDetails, methodDetails, PostInsert.class, builders,
+					TargetedLifecycleEventHandlerBuilder::setPostPersistMethod );
+			applyTargetedCallback( listenerClassDetails, methodDetails, PreRemove.class, builders,
+					TargetedLifecycleEventHandlerBuilder::setPreRemoveMethod );
+			applyTargetedCallback( listenerClassDetails, methodDetails, PreDelete.class, builders,
+					TargetedLifecycleEventHandlerBuilder::setPreRemoveMethod );
+			applyTargetedCallback( listenerClassDetails, methodDetails, PostRemove.class, builders,
+					TargetedLifecycleEventHandlerBuilder::setPostRemoveMethod );
+			applyTargetedCallback( listenerClassDetails, methodDetails, PostDelete.class, builders,
+					TargetedLifecycleEventHandlerBuilder::setPostRemoveMethod );
+			applyTargetedCallback( listenerClassDetails, methodDetails, PreUpdate.class, builders,
+					TargetedLifecycleEventHandlerBuilder::setPreUpdateMethod );
+			applyTargetedCallback( listenerClassDetails, methodDetails, PostUpdate.class, builders,
+					TargetedLifecycleEventHandlerBuilder::setPostUpdateMethod );
+			applyTargetedCallback( listenerClassDetails, methodDetails, PostLoad.class, builders,
+					TargetedLifecycleEventHandlerBuilder::setPostLoadMethod );
+		} );
+
+		if ( builders.isEmpty() ) {
+			throw new ModelsException( "Mapping for entity-listener specified no callback methods - "
+					+ listenerClassDetails.getClassName() );
+		}
+
+		builders.forEach( (targetClass, builder) -> addTargetedJpaEventListener(
+				targetClass,
+				builder.build( JpaEventListenerStyle.LISTENER, listenerClassDetails )
+		) );
+	}
+
+	private void addTargetedJpaEventListener(ClassDetails targetClass, LifecycleEventHandler listener) {
+		if ( targetedLifecycleEventHandlers == null ) {
+			targetedLifecycleEventHandlers = new LinkedHashMap<>();
+		}
+
+		targetedLifecycleEventHandlers.computeIfAbsent( targetClass, ignored -> new ArrayList<>() ).add( listener );
+	}
+
+	private static void applyTargetedCallback(
+			ClassDetails listenerClassDetails,
+			MethodDetails methodDetails,
+			Class<? extends Annotation> callbackAnnotation,
+			Map<ClassDetails, TargetedLifecycleEventHandlerBuilder> builders,
+			BiConsumer<TargetedLifecycleEventHandlerBuilder, MethodDetails> methodConsumer) {
+		if ( !methodDetails.hasDirectAnnotationUsage( callbackAnnotation ) ) {
+			return;
+		}
+		if ( !LifecycleEventHandler.matchesSignature( JpaEventListenerStyle.LISTENER, methodDetails ) ) {
+			throw new ModelsException( "Callback methods annotated for "
+					+ callbackAnnotation.getName() + " in "
+					+ listenerClassDetails.getClassName()
+					+ " must return void and take one argument: " + methodDetails );
+		}
+
+		final ClassDetails targetClass = methodDetails.getArgumentTypes().get( 0 );
+		methodConsumer.accept(
+				builders.computeIfAbsent( targetClass, ignored -> new TargetedLifecycleEventHandlerBuilder() ),
+				methodDetails
+		);
+	}
+
+	private static void collectTargetedCallbackMethod(
+			MethodDetails callbackMethod,
+			Map<ClassDetails, TargetedLifecycleEventHandlerBuilder> builders,
+			BiConsumer<TargetedLifecycleEventHandlerBuilder, MethodDetails> methodConsumer) {
+		if ( callbackMethod == null ) {
+			return;
+		}
+
+		final ClassDetails targetClass = callbackMethod.getArgumentTypes().get( 0 );
+		methodConsumer.accept(
+				builders.computeIfAbsent( targetClass, ignored -> new TargetedLifecycleEventHandlerBuilder() ),
+				callbackMethod
+		);
+	}
+
+	private static class TargetedLifecycleEventHandlerBuilder {
+		private MethodDetails prePersistMethod;
+		private MethodDetails postPersistMethod;
+		private MethodDetails preRemoveMethod;
+		private MethodDetails postRemoveMethod;
+		private MethodDetails preUpdateMethod;
+		private MethodDetails postUpdateMethod;
+		private MethodDetails postLoadMethod;
+
+		private TargetedLifecycleEventHandlerBuilder() {
+		}
+
+		private void setPrePersistMethod(MethodDetails method) {
+			checkDuplicate( prePersistMethod, method );
+			prePersistMethod = method;
+		}
+
+		private void setPostPersistMethod(MethodDetails method) {
+			checkDuplicate( postPersistMethod, method );
+			postPersistMethod = method;
+		}
+
+		private void setPreRemoveMethod(MethodDetails method) {
+			checkDuplicate( preRemoveMethod, method );
+			preRemoveMethod = method;
+		}
+
+		private void setPostRemoveMethod(MethodDetails method) {
+			checkDuplicate( postRemoveMethod, method );
+			postRemoveMethod = method;
+		}
+
+		private void setPreUpdateMethod(MethodDetails method) {
+			checkDuplicate( preUpdateMethod, method );
+			preUpdateMethod = method;
+		}
+
+		private void setPostUpdateMethod(MethodDetails method) {
+			checkDuplicate( postUpdateMethod, method );
+			postUpdateMethod = method;
+		}
+
+		private void setPostLoadMethod(MethodDetails method) {
+			checkDuplicate( postLoadMethod, method );
+			postLoadMethod = method;
+		}
+
+		private LifecycleEventHandler build(LifecycleEventHandler source) {
+			return build( source.getStyle(), source.getCallbackClass() );
+		}
+
+		private LifecycleEventHandler build(JpaEventListenerStyle style, ClassDetails listenerClassDetails) {
+			return new LifecycleEventHandler(
+					style,
+					listenerClassDetails,
+					prePersistMethod,
+					postPersistMethod,
+					preRemoveMethod,
+					postRemoveMethod,
+					preUpdateMethod,
+					postUpdateMethod,
+					postLoadMethod
+			);
+		}
+
+		private void checkDuplicate(MethodDetails previous, MethodDetails method) {
+			if ( previous != null && previous != method ) {
+				throw new ModelsException( "You can only annotate one callback method per callback type and target class"
+						+ " in callback class: " + method.getDeclaringType().getClassName() );
+			}
+		}
 	}
 
 

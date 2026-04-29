@@ -780,6 +780,7 @@ oracle_23() {
     # We need to use the defaults
     # SYSTEM/Oracle18
     $PRIVILEGED_CLI $CONTAINER_CLI run --name oracle -d -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
+       --cap-add cap_net_raw \
        --health-cmd healthcheck.sh \
        --health-interval 5s \
        --health-timeout 5s \

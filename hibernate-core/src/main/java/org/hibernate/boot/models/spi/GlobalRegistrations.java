@@ -4,6 +4,8 @@
  */
 package org.hibernate.boot.models.spi;
 
+import org.hibernate.models.spi.ClassDetails;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,7 +18,9 @@ import java.util.Set;
  * @author Steve Ebersole
  */
 public interface GlobalRegistrations {
-	List<JpaEventListener> getEntityListenerRegistrations();
+	List<LifecycleEventHandler> getEntityListenerRegistrations();
+
+	Map<ClassDetails, List<LifecycleEventHandler>> getTargetedEntityListenerRegistrations();
 
 	List<ConversionRegistration> getConverterRegistrations();
 

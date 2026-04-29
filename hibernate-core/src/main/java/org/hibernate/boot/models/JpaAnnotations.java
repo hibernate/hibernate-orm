@@ -8,6 +8,7 @@ import java.lang.annotation.Annotation;
 import java.util.EnumSet;
 import java.util.function.Consumer;
 
+import jakarta.persistence.EntityListener;
 import jakarta.persistence.ExcludedFromVersioning;
 import jakarta.persistence.NamedNativeStatement;
 import jakarta.persistence.NamedNativeStatements;
@@ -35,6 +36,7 @@ import org.hibernate.boot.models.annotations.internal.EmbeddableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.EmbeddedIdJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.EmbeddedJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.EntityJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.EntityListenerJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.EntityListenersJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.EntityResultJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.EnumeratedJpaAnnotation;
@@ -360,6 +362,13 @@ public interface JpaAnnotations {
 	OrmAnnotationDescriptor<Entity,EntityJpaAnnotation> ENTITY = new OrmAnnotationDescriptor<>(
 			Entity.class,
 			EntityJpaAnnotation.class,
+			EnumSet.of( Kind.CLASS ),
+			false
+	);
+
+	OrmAnnotationDescriptor<EntityListener,EntityListenerJpaAnnotation> ENTITY_LISTENER = new OrmAnnotationDescriptor<>(
+			EntityListener.class,
+			EntityListenerJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
 			false
 	);

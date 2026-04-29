@@ -35,7 +35,7 @@ Audited data is mapped to a regular table along with an audit log which is backw
 [[limit-fetch-join]]
 == Limits and Fetch Joins
 
-It is now perfectly safe to combine a HQL `limit` or pagination using `setMaxResults()` with a single collection `join fetch`, on any database which supports limits and offsets inside subqueries (which includes all the supported databases except Sybase ASE).
+It is now perfectly safe to combine a HQL `limit` or pagination using `setMaxResults()` with a collection `join fetch`, on any database which supports limits and offsets inside subqueries (which includes all the supported databases except Sybase ASE).
 Similarly, it's now safe to use a collection `join fetch` with `getResultStream()` or `scroll()`.
 
 In Hibernate 6, and in previous versions of Hibernate 7, the combination of limits/pagination with a many-valued fetch join forced Hibernate to fall back to applying the limit _in the JVM_, which usually exhibited terrible performance characteristics.

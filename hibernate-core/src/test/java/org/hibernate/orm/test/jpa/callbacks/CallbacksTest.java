@@ -12,7 +12,7 @@ import org.hibernate.orm.test.jpa.Cat;
 import org.hibernate.orm.test.jpa.Kitten;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -224,7 +224,7 @@ public class CallbacksTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "collection change does not trigger an event", jiraKey = "EJB-288")
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-20374" )
 	public void testPostUpdateCollection(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {

@@ -1,0 +1,413 @@
+= SQL Formatting Constraints
+
+*Extracted from:* `TokenBasedFormatterTest.testComplexQuery()` +
+*Date:* 2026-05-08
+
+'''
+
+== 1. Casing Rules
+
+=== 1.1 SQL Keywords → UPPERCASE
+
+* Examples: `SELECT`, `FROM`, `WHERE`, `JOIN`, `LEFT JOIN`, `INNER JOIN`, `ON`, `AND`, `OR`, `AS`, `WITH`, `GROUP BY`, `HAVING`, `ORDER BY`, `OFFSET`, `FETCH`, `FIRST`, `ROWS`, `EXISTS`, `IN`, `ALL`, `ANY`, `DESC`, `ASC`, `DISTINCT`, `INTERVAL`, `LATERAL`, `UNION`, `EXCEPT`, etc.
+
+=== 1.2 SQL Functions → UPPERCASE
+
+* Examples: `COUNT`, `MAX`, `MIN`, `SUM`, `AVG`, `UPPER`, `LOWER`, `TRIM`, `ROUND`, `NULLIF`, `COALESCE`, `CAST`, `SUBSTRING`, etc.
+* Includes function-specific keywords: `BOTH`, `LEADING`, `TRAILING` (in TRIM)
+
+=== 1.3 Boolean Literals → UPPERCASE
+
+* `TRUE`, `FALSE`, `NULL`
+
+=== 1.4 Identifiers (tables, columns, aliases) → PRESERVE ORIGINAL CASE
+
+* Examples: `customers`, `customer_id`, `full_name`, `c`, `rca`, `o2`
+* Do NOT change user-defined names
+
+=== 1.5 Quoted Identifiers → PRESERVE EXACTLY AS-IS
+
+* Double quotes: `"o".`customer_id``
+* Backticks: ```column_name```
+* Square brackets: `[oi].description`
+* Preserve both the quotes AND the content case
+
+'''
+
+== 2. Indentation Rules
+
+=== 2.1 Indentation Character
+
+* *Use TAB character (`\t`), NOT spaces*
+* Each indentation level = ONE tab character
+
+=== 2.2 Indentation is Relative to Containing Context
+
+* Not absolute levels (0, 1, 2)
+* Each nesting level adds +1 tab from its parent context
+* No maximum depth (could be 27 levels in complex queries)
+
+=== 2.3 Indentation Levels (relative)
+
+*Current context level (base):*
+
+* Major clauses: `SELECT`, `FROM`, `WHERE`, `GROUP BY`, `HAVING`, `ORDER BY`, `OFFSET`, `FETCH`
+* `JOIN` clauses (all types)
+* `WITH` clause and CTE names
+
+*Current level + 1 tab:*
+
+* SELECT list items (when on separate lines)
+* ON clause conditions (when on separate lines)
+* WHERE clause conditions (when on separate lines)
+* GROUP BY items (when on separate lines)
+* ORDER BY items (when on separate lines)
+* CTE contents (inside `AS (...)`)
+* Subquery contents
+* Operator list items when >3 items (IN, ALL, ANY with value lists)
+* EXISTS/IN/ALL/ANY subquery contents
+
+*Nested contexts:*
+
+* Each subquery creates new context with its own relative levels
+* Example: subquery inside WHERE clause inside CTE inside main query could be at indent level 3+ depending on nesting
+
+'''
+
+== 3. Line Break Rules
+
+=== 3.1 New Line BEFORE
+
+* Each major clause: `SELECT`, `FROM`, `WHERE`, `GROUP BY`, `HAVING`, `ORDER BY`, `OFFSET`, `FETCH`
+* Each `JOIN` clause (`JOIN`, `LEFT JOIN`, `INNER JOIN`, `RIGHT JOIN`, `FULL JOIN`, `CROSS JOIN`, `LATERAL JOIN`)
+* Each list item when list has >3 elements (see section 4)
+* Each `AND`/`OR` in ON/WHERE clauses (after first condition)
+* Closing `)` of CTE definitions
+
+=== 3.2 New Line AFTER
+
+* CTE name and `AS (`
+* Opening `(` of subqueries (e.g., `EXISTS (SELECT ...`, `LATERAL (SELECT ...`)
+* Opening `(` of operator lists when >3 items (e.g., `IN (` with >3 values)
+* Major clause keywords when their content is on separate lines
+
+=== 3.3 Same Line
+
+* First condition stays on same line as `ON` keyword
+* First condition stays on same line as `WHERE` keyword
+* Lists with ≤3 elements stay on same line (see section 4)
+
+'''
+
+== 4. List Formatting Rules
+
+=== 4.1 Lists with ≤3 Elements
+
+* *CAN* stay on same line as their owning element/keyword
+* Examples:
+** `SELECT col1, col2, col3 FROM ...`
+** `COUNT(*)`
+** `ROUND(value, 2)`
+** `GROUP BY a, b, c`
+** `ORDER BY x, y`
+
+=== 4.2 Lists with >3 Elements
+
+* *MUST* put each element on separate line
+* Each element indented +1 tab from current context level
+* Examples:
+** SELECT list with 11 items → each on new line, indented
+** GROUP BY list with 9 items → each on new line, indented
+** ORDER BY list with 5 items → each on new line, indented
+
+=== 4.3 Applies To
+
+* SELECT column/expression lists
+* GROUP BY lists
+* ORDER BY lists
+* Function argument lists (when >3 args)
+* Operator value lists: `IN (...)`, `ALL (...)`, `ANY (...)` value lists
+* INSERT VALUES lists
+
+'''
+
+== 5. Comma Placement
+
+=== 5.1 Trailing Commas (comma at END of line)
+
+* Used in all multi-line lists
+* Examples:
+** SELECT list items (except last)
+** GROUP BY items (except last)
+** ORDER BY items (except last)
+** Between CTE definitions
+** Function arguments when multiline
+
+=== 5.2 No Comma After Last Item
+
+* Last item in any list has no trailing comma
+
+'''
+
+== 6. Spacing Rules
+
+=== 6.1 Function Calls
+
+* *NO* space between function name and opening `(`
+* Examples: `COUNT(*)`, `MAX(value)`, `TRIM(BOTH ' ' FROM col)`
+
+=== 6.2 Operators
+
+* Space *BEFORE* and *AFTER*: `=`, `>`, `<`, `>=`, `<=`, `!=`, `<>`, `+`, `-`, `*`, `/`
+* Examples:
+** `o.status = 'COMPLETED'`
+** `rca.total_spent / NULLIF(rca.order_count, 0)`
+** `age > 18`
+
+=== 6.3 Keywords
+
+* Space *BEFORE* and *AFTER*: `AND`, `OR`, `AS`, `IN`, `NOT`, `BETWEEN`, `LIKE`
+
+=== 6.4 Commas
+
+* *NO* space before comma
+* Space *AFTER* comma (when on same line)
+* Example: `col1, col2, col3`
+
+=== 6.5 Parentheses
+
+* *NO* space after opening `(`
+* *NO* space before closing `)`
+* Examples: `(SELECT ...)`, `COUNT(*)`, `(col1 + col2)`
+
+=== 6.6 Special Operators - Space BEFORE Opening Parenthesis
+
+The following operators require a space before the opening `(`:
+
+* `LATERAL (...)` - for lateral joins
+* `EXISTS (...)` - for existence checks
+* `IN (...)` - for membership tests
+* `ALL (...)` - for quantified comparisons
+* `ANY (...)` - for quantified comparisons
+
+Examples:
+
+* `WHERE EXISTS (SELECT ...)` ✓ (not `WHERE EXISTS(SELECT ...)`)
+* `WHERE col IN ('a', 'b')` ✓ (not `WHERE col IN('a', 'b')`)
+* `WHERE value = ALL (1, 2, 3)` ✓
+* `WHERE value > ANY (10, 20)` ✓
+
+*Note:* Regular functions do NOT have a space: `COUNT(*)`, `UPPER(name)`, etc.
+
+'''
+
+== 7. Special Constructs
+
+=== 7.1 CTE (Common Table Expressions)
+
+Structure:
+
+[source,sql]
+----
+WITH cte_name AS (
+	[indented content]
+),
+next_cte AS (
+	[indented content]
+)
+[main query]
+----
+
+=== 7.2 Subqueries
+
+* Indented relative to parent context
+* Follow same formatting rules recursively
+* Closing `)` is dedented to parent context level
+
+*Example in WHERE with simple condition:*
+
+[source,sql]
+----
+WHERE condition
+	AND EXISTS (
+		SELECT ...
+		FROM ...
+	)
+----
+
+*Example in WHERE with multiple conditions:*
+
+[source,sql]
+----
+WHERE c.is_active = TRUE
+	AND EXISTS (
+		SELECT 1
+		FROM customer_tags ct
+		WHERE ct.customer_id = c.customer_id
+			AND ct.tag_name = 'VIP'
+	)
+----
+
+*Note:* When EXISTS contains a subquery with its own WHERE clause and AND conditions, those inner conditions get additional indentation. The closing `)` is placed at the same indentation level as the line that opened the subquery (the `AND EXISTS` line in this case).
+
+=== 7.3 LATERAL Joins
+
+Structure:
+
+[source,sql]
+----
+LEFT JOIN LATERAL (
+	[indented SELECT query]
+) alias
+	ON condition
+----
+
+*Note:* The alias appears on the same line as the closing `)`, then the `ON` clause starts on a new line with indentation.
+
+=== 7.4 FETCH Clauses
+
+Structure:
+
+[source,sql]
+----
+OFFSET n ROWS
+FETCH FIRST n ROWS
+WITH TIES
+----
+
+* Each major clause (`OFFSET`, `FETCH`, `WITH`) on separate line at current context level
+* The `WITH TIES` (or `WITH TIES ONLY`) qualifier appears on its own line after `FETCH FIRST n ROWS`
+
+=== 7.5 CASE Expressions
+
+Structure:
+
+[source,sql]
+----
+CASE
+	WHEN condition THEN value
+	WHEN condition THEN value
+	ELSE value
+END
+----
+
+=== 7.6 Operator Lists (IN, ALL, ANY, EXISTS)
+
+The operators `IN`, `ALL`, `ANY`, and `EXISTS` all follow consistent formatting rules:
+
+*Space before opening parenthesis:*
+
+* Always include a space: `IN (`, `ALL (`, `ANY (`, `EXISTS (`
+
+*With ≤3 items (single-line):*
+
+[source,sql]
+----
+WHERE status IN ('ACTIVE', 'PENDING', 'APPROVED')
+WHERE value = ALL (1, 2, 3)
+WHERE price > ANY (10, 20)
+----
+
+*With >3 items (multi-line):*
+
+[source,sql]
+----
+WHERE status IN (
+	'ACTIVE',
+	'PENDING',
+	'APPROVED',
+	'COMPLETED',
+	'CANCELLED'
+)
+WHERE value = ALL (
+	100,
+	200,
+	300,
+	400,
+	500
+)
+----
+
+*With subquery:*
+
+[source,sql]
+----
+WHERE EXISTS (
+	SELECT 1
+	FROM other_table
+	WHERE condition
+)
+WHERE id IN (
+	SELECT id
+	FROM other_table
+)
+----
+
+'''
+
+== 8. Identifier Quoting
+
+=== 8.1 Preserve All Quote Styles
+
+* Double quotes: `"identifier"`
+* Backticks: ```identifier```
+* Square brackets: `[identifier]`
+
+=== 8.2 Preserve in Qualified Names
+
+* Examples: `"schema".table`, `table.`column``, `[database].table`
+
+'''
+
+== 9. String Literals
+
+=== 9.1 Preserve Exactly As-Is
+
+* Single quotes: `'value'`
+* Content and case unchanged
+* Escaped quotes unchanged
+
+'''
+
+== 10. Comments
+
+=== 10.1 Preserve Comments
+
+* Single-line: `-- comment`, terminated by the line break token (`'\n'`)
+** Always placed on its own line (newline before and after)
+** Inherits indentation from current context
+* Multi-line: `/* comment */`
+** Always placed on its own line (newline before and after)
+** If the comment contains line breaks, the indentation of the first line is carried over to continuation lines
+** Leading whitespace is stripped from continuation lines before applying base indentation
+** Special case: `/*+ text content */` (hint comments) are preserved exactly as-is, including line breaks
+* Comments in WHERE/ON/HAVING clauses between conditions are indented at the condition level (context indent + 1 tab)
+
+'''
+
+== Revision History
+
+* Extracted base constraints from `testComplexQuery()`
+* Added consistent formatting rules for operator lists (IN, ALL, ANY, EXISTS):
+** Added `ANY` keyword to lexer
+** All four operators require space before `(`
+** All four operators follow the same list formatting rules (≤3 items inline, >3 items multi-line)
+** Added section 7.6 documenting operator list formatting
+** Updated spacing rules (section 6.6) to document special operator behavior
+* Refined formatting rules based on actual formatter behavior:
+** Section 7.3: Clarified LATERAL join alias and ON clause placement (alias on same line as `)`, ON on new line)
+** Section 7.4: Updated FETCH clause formatting (`WITH TIES` on separate line from `FETCH FIRST n ROWS`)
+** Section 7.2: Added examples showing EXISTS subquery closing paren indentation with nested conditions
+** Confirmed ORDER BY with ≤3 items stays on single line (consistent with section 4.1)
+* Fixed closing parenthesis indentation for subqueries:
+** Section 7.2: Corrected the note about closing `)` indentation - it should align with the line that opened the subquery, not return to the parent clause's base level
+** Implementation fix: `processRightParen()` now uses `ctx.indent - 1` to properly calculate the indentation level where the subquery was opened
+* Enhanced comment handling rules:
+** Section 10.1: Clarified that all comments are placed on their own lines (newline before and after)
+** Added detail on comment indentation: inherits from current context, with special handling for comments between conditions in WHERE/ON/HAVING clauses
+** Documented multi-line comment processing: leading whitespace is stripped from continuation lines before applying base indentation
+** Confirmed hint comment preservation behavior
+
+'''
+
+*End of Constraints*

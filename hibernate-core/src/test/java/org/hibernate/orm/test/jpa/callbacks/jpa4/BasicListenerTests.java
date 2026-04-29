@@ -5,7 +5,6 @@
 package org.hibernate.orm.test.jpa.callbacks.jpa4;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -16,7 +15,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 /**
  * @author Steve Ebersole
  */
-@DomainModel(annotatedClasses = {Book.class, Journaler.class})
+@DomainModel(annotatedClasses = {Book.class, Person.class, Journaler.class})
 @SessionFactory
 public class BasicListenerTests {
 	@AfterEach
@@ -25,13 +24,15 @@ public class BasicListenerTests {
 	}
 
 	@Test
-	@NotImplementedYet
 	void testSimplyLifecycle(SessionFactoryScope factoryScope) {
 		Journaler.reset();
 		factoryScope.inTransaction( (session) -> {
-			session.persist(  new Book( 1, "123456789", "The Wrath of Rings" ) );
+			var billy = new Person( 1, "Billy" );
+			session.persist( billy );
+			session.persist( new Book( 1, "123456789", "The Wrath of Rings", billy ) );
 		} );
 
+		assertThat( Journaler.preCreateCount ).isEqualTo( 2 );
 		assertThat( Journaler.bookCreateCount ).isEqualTo( 1 );
 		assertThat( Journaler.bookUpdateCount ).isEqualTo( 0 );
 		assertThat( Journaler.bookDeleteCount ).isEqualTo( 0 );

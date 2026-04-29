@@ -27,6 +27,7 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
@@ -81,8 +82,10 @@ public final class CallbackDefinitionResolver {
 
 		//handle default listeners
 		if ( !stopDefaultListeners ) {
-			final List<LifecycleEventHandler> globalListenerRegistrations =
-					metadataCollector.getGlobalRegistrations().getEntityListenerRegistrations();
+			final List<LifecycleEventHandler> globalListenerRegistrations = new ArrayList<>(
+					metadataCollector.getGlobalRegistrations().getEntityListenerRegistrations()
+			);
+			collectTargetedListenerRegistrations( metadataCollector, entityClass, globalListenerRegistrations );
 			if ( isNotEmpty( globalListenerRegistrations ) ) {
 				int defaultListenerSize = globalListenerRegistrations.size();
 				for ( int i = defaultListenerSize - 1; i >= 0; i-- ) {
@@ -128,6 +131,24 @@ public final class CallbackDefinitionResolver {
 				method,
 				callbackType
 		);
+	}
+
+	private static void collectTargetedListenerRegistrations(
+			InFlightMetadataCollector metadataCollector,
+			ClassDetails entityClass,
+			List<LifecycleEventHandler> globalListenerRegistrations) {
+		final Map<ClassDetails, List<LifecycleEventHandler>> targetedRegistrations =
+				metadataCollector.getGlobalRegistrations().getTargetedEntityListenerRegistrations();
+		if ( targetedRegistrations.isEmpty() ) {
+			return;
+		}
+
+		final Class<?> entityJavaClass = entityClass.toJavaClass();
+		targetedRegistrations.forEach( (targetClass, listenerRegistrations) -> {
+			if ( targetClass.toJavaClass().isAssignableFrom( entityJavaClass ) ) {
+				globalListenerRegistrations.addAll( listenerRegistrations );
+			}
+		} );
 	}
 
 	private static MethodDetails getCallbackMethod(

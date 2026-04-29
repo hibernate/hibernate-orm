@@ -1432,7 +1432,7 @@ public class XmlAnnotationHelper {
 			ClassDetails classDetails) {
 		for ( MethodDetails method : classDetails.getMethods() ) {
 			if ( method.getName().equals( name )
-				 && LifecycleEventHandler.matchesSignature( callbackType, method ) ) {
+				&& LifecycleEventHandler.matchesSignature( callbackType, method ) ) {
 				return (MutableMemberDetails) method;
 			}
 		}

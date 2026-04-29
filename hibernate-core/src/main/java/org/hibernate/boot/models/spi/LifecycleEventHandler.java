@@ -14,9 +14,13 @@ import org.hibernate.models.spi.MutableMemberDetails;
 import org.hibernate.models.spi.ModelsContext;
 
 import jakarta.persistence.PostLoad;
+import jakarta.persistence.PostDelete;
+import jakarta.persistence.PostInsert;
 import jakarta.persistence.PostPersist;
 import jakarta.persistence.PostRemove;
 import jakarta.persistence.PostUpdate;
+import jakarta.persistence.PreDelete;
+import jakarta.persistence.PreInsert;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreRemove;
 import jakarta.persistence.PreUpdate;
@@ -228,10 +232,13 @@ public class LifecycleEventHandler {
 	}
 
 	/// Create a handler from annotations based on annotated methods on the given `listenerClassDetails`.
-	public static LifecycleEventHandler from(JpaEventListenerStyle consumerType, ClassDetails listenerClassDetails) {
+	/// Used from XML parsing when no explicit methods are identified indicating that we should use
+	/// whatever event annotations are available, and errror if none are found.
+	private static LifecycleEventHandler from(JpaEventListenerStyle consumerType, ClassDetails listenerClassDetails) {
 		return from( consumerType, listenerClassDetails, true );
 	}
 
+	/// Create a handler from annotations based on annotated methods on the given `listenerClassDetails`.
 	public static LifecycleEventHandler from(
 			JpaEventListenerStyle consumerType,
 			ClassDetails listenerClassDetails,
@@ -246,9 +253,13 @@ public class LifecycleEventHandler {
 
 		listenerClassDetails.forEachMethod( (index, methodDetails) -> {
 			applyAnnotatedCallback( consumerType, listenerClassDetails, methodDetails, PrePersist.class, prePersistMethod );
+			applyAnnotatedCallback( consumerType, listenerClassDetails, methodDetails, PreInsert.class, prePersistMethod );
 			applyAnnotatedCallback( consumerType, listenerClassDetails, methodDetails, PostPersist.class, postPersistMethod );
+			applyAnnotatedCallback( consumerType, listenerClassDetails, methodDetails, PostInsert.class, postPersistMethod );
 			applyAnnotatedCallback( consumerType, listenerClassDetails, methodDetails, PreRemove.class, preRemoveMethod );
+			applyAnnotatedCallback( consumerType, listenerClassDetails, methodDetails, PreDelete.class, preRemoveMethod );
 			applyAnnotatedCallback( consumerType, listenerClassDetails, methodDetails, PostRemove.class, postRemoveMethod );
+			applyAnnotatedCallback( consumerType, listenerClassDetails, methodDetails, PostDelete.class, postRemoveMethod );
 			applyAnnotatedCallback( consumerType, listenerClassDetails, methodDetails, PreUpdate.class, preUpdateMethod );
 			applyAnnotatedCallback( consumerType, listenerClassDetails, methodDetails, PostUpdate.class, postUpdateMethod );
 			applyAnnotatedCallback( consumerType, listenerClassDetails, methodDetails, PostLoad.class, postLoadMethod );

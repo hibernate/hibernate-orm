@@ -8,44 +8,24 @@ import jakarta.persistence.EntityListener;
 import jakarta.persistence.PostDelete;
 import jakarta.persistence.PostInsert;
 import jakarta.persistence.PostUpdate;
-import jakarta.persistence.PreInsert;
 
 /**
  * @author Steve Ebersole
  */
 @EntityListener
-public class Journaler {
-	public static int preCreateCount;
-
-	public static int bookCreateCount;
-	public static int bookUpdateCount;
-	public static int bookDeleteCount;
-
-	public static void reset() {
-		preCreateCount = 0;
-
-		bookCreateCount = 0;
-		bookUpdateCount = 0;
-		bookDeleteCount = 0;
-	}
-
-	@PreInsert
-	public static void preInsert(Object entity) {
-		preCreateCount++;
-	}
-
+public class BookWatcher {
 	@PostInsert
 	public void afterCreation(Book book) {
-		bookCreateCount++;
+		EventSink.bookCreationEvents.add( BookWatcher.class );
 	}
 
 	@PostUpdate
 	public void afterUpdate(Book book) {
-		bookUpdateCount++;
+		EventSink.bookUpdateEvents.add( BookWatcher.class );
 	}
 
 	@PostDelete
 	public void afterDelete(Book book) {
-		bookDeleteCount++;
+		EventSink.bookDeleteEvents.add( BookWatcher.class );
 	}
 }

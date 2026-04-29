@@ -128,7 +128,7 @@ import org.hibernate.boot.models.annotations.internal.UniqueConstraintJpaAnnotat
 import org.hibernate.boot.models.annotations.internal.UuidGeneratorAnnotation;
 import org.hibernate.boot.models.annotations.spi.CustomSqlDetails;
 import org.hibernate.boot.models.annotations.spi.DatabaseObjectDetails;
-import org.hibernate.boot.models.spi.JpaEventListener;
+import org.hibernate.boot.models.spi.LifecycleEventHandler;
 import org.hibernate.boot.models.xml.internal.attr.CommonAttributeProcessing;
 import org.hibernate.boot.models.xml.internal.db.ForeignKeyProcessing;
 import org.hibernate.boot.models.xml.internal.db.JoinColumnProcessing;
@@ -1432,7 +1432,7 @@ public class XmlAnnotationHelper {
 			ClassDetails classDetails) {
 		for ( MethodDetails method : classDetails.getMethods() ) {
 			if ( method.getName().equals( name )
-					&& JpaEventListener.matchesSignature( callbackType, method ) ) {
+				&& LifecycleEventHandler.matchesSignature( callbackType, method ) ) {
 				return (MutableMemberDetails) method;
 			}
 		}

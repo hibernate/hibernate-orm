@@ -13,10 +13,13 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
+ * Simple tests of multiple sources of listening for events - @EntityListener, @EntityListeners, callback
+ *
  * @author Steve Ebersole
  */
 @DomainModel( annotatedClasses = {
-		Book.class, Person.class, Publisher.class, CreationWatcher.class, BookWatcher.class
+		Book.class, Person.class, Publisher.class, CreationWatcher.class, BookWatcher.class,
+		Cat.class, Dog.class, AnimalWatcher.class
 } )
 @SessionFactory
 public class MultipleListenerTests {
@@ -26,7 +29,7 @@ public class MultipleListenerTests {
 	}
 
 	@Test
-	void testOverloadedListenerMethodsByCallbackTarget(SessionFactoryScope factoryScope) {
+	void testOrderingAmongstEventHandlers(SessionFactoryScope factoryScope) {
 		EventSink.reset();
 
 		factoryScope.inTransaction( (session) -> {
@@ -46,7 +49,25 @@ public class MultipleListenerTests {
 
 
 		// PublisherListener & CreationWatcher & Publisher (callback)
-		//		- only PublisherListener is an @EntityListener, so the order is well-defined
+		//		- only CreationWatcher is an @EntityListener, so the order is well-defined
 		assertThat( EventSink.publisherCreationEvents ).containsExactly( CreationWatcher.class, PublisherListener.class, Publisher.class );
+	}
+
+	@Test
+	void testListenerTargetAssignability(SessionFactoryScope factoryScope) {
+		assertThat( AnimalWatcher.creations ).isEmpty();
+
+		factoryScope.inTransaction( (session) -> {
+			session.persist( new Cat( 1, "Cat" ) );
+		} );
+
+		assertThat( AnimalWatcher.creations ).hasSize( 2 );
+		AnimalWatcher.creations.clear();
+
+		factoryScope.inTransaction( (session) -> {
+			session.persist( new Dog( 1, "Dog" ) );
+		} );
+
+		assertThat( AnimalWatcher.creations ).hasSize( 2 );
 	}
 }

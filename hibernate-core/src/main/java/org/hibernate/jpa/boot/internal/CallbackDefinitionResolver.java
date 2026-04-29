@@ -66,7 +66,7 @@ public final class CallbackDefinitionResolver {
 			}
 
 			if ( !stopListeners ) {
-				applyListeners( currentClazz, orderedListeners, modelsContext );
+				applyListeners( currentClazz, entityClass, orderedListeners, modelsContext );
 				stopListeners = currentClazz.hasDirectAnnotationUsage( ExcludeSuperclassListeners.class );
 				stopDefaultListeners = currentClazz.hasDirectAnnotationUsage( ExcludeDefaultListeners.class );
 			}
@@ -183,6 +183,7 @@ public final class CallbackDefinitionResolver {
 
 	private static void applyListeners(
 			ClassDetails currentClazz,
+			ClassDetails entityClass,
 			List<LifecycleEventHandler> listOfListeners,
 			ModelsContext sourceModelContext) {
 		final var classDetailsRegistry = sourceModelContext.getClassDetailsRegistry();
@@ -194,6 +195,7 @@ public final class CallbackDefinitionResolver {
 			for ( int index = size - 1; index >= 0; index-- ) {
 				applyListener(
 						classDetailsRegistry.resolveClassDetails( listenerClasses[index].getName() ),
+						entityClass,
 						listOfListeners
 				);
 			}
@@ -208,6 +210,7 @@ public final class CallbackDefinitionResolver {
 				for ( int index = listenerClasses.length - 1; index >= 0; index-- ) {
 					applyListener(
 							classDetailsRegistry.resolveClassDetails( listenerClasses[index].getName() ),
+							entityClass,
 							listOfListeners
 					);
 				}
@@ -217,15 +220,14 @@ public final class CallbackDefinitionResolver {
 
 	private static void applyListener(
 			ClassDetails listenerClassDetails,
+			ClassDetails entityClass,
 			List<LifecycleEventHandler> listOfListeners) {
-		final LifecycleEventHandler eventListener = LifecycleEventHandler.from(
-				JpaEventListenerStyle.LISTENER,
+		final List<LifecycleEventHandler> eventListeners = LifecycleEventHandler.listenersForTarget(
 				listenerClassDetails,
+				entityClass,
 				false
 		);
-		if ( eventListener.hasCallbackMethods() ) {
-			listOfListeners.add( eventListener );
-		}
+		listOfListeners.addAll( eventListeners );
 	}
 
 	/**

@@ -1,0 +1,238 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.tool.reveng.internal.descriptor;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.InheritanceType;
+
+/**
+ * Tests for {@link TableDescriptor}.
+ *
+ * @author Koen Aers
+ */
+public class TableDescriptorTest {
+
+	@Test
+	public void testConstructorAndDefaults() {
+		TableDescriptor table = new TableDescriptor("PERSON", "Person", "com.example");
+
+		assertEquals("PERSON", table.getTableName());
+		assertEquals("Person", table.getEntityClassName());
+		assertEquals("com.example", table.getEntityPackage());
+		assertNull(table.getSchema());
+		assertNull(table.getCatalog());
+		assertNotNull(table.getColumns());
+		assertTrue(table.getColumns().isEmpty());
+		assertNotNull(table.getForeignKeys());
+		assertTrue(table.getForeignKeys().isEmpty());
+		assertNotNull(table.getOneToManys());
+		assertTrue(table.getOneToManys().isEmpty());
+		assertNotNull(table.getOneToOnes());
+		assertTrue(table.getOneToOnes().isEmpty());
+		assertNotNull(table.getManyToManys());
+		assertTrue(table.getManyToManys().isEmpty());
+		assertNotNull(table.getEmbeddedFields());
+		assertTrue(table.getEmbeddedFields().isEmpty());
+		assertNull(table.getInheritance());
+		assertNull(table.getDiscriminatorValue());
+		assertNull(table.getParentEntityClassName());
+		assertNull(table.getParentEntityPackage());
+		assertNull(table.getPrimaryKeyJoinColumnName());
+		assertNull(table.getCompositeId());
+	}
+
+	@Test
+	public void testSetters() {
+		TableDescriptor table = new TableDescriptor("PERSON", "Person", "com.example");
+
+		table.setTableName("EMPLOYEE");
+		table.setEntityClassName("Employee");
+		table.setEntityPackage("com.example.entity");
+		table.setSchema("public");
+		table.setCatalog("mydb");
+
+		assertEquals("EMPLOYEE", table.getTableName());
+		assertEquals("Employee", table.getEntityClassName());
+		assertEquals("com.example.entity", table.getEntityPackage());
+		assertEquals("public", table.getSchema());
+		assertEquals("mydb", table.getCatalog());
+	}
+
+	@Test
+	public void testAddColumn() {
+		TableDescriptor table = new TableDescriptor("PERSON", "Person", "com.example")
+			.addColumn(new ColumnDescriptor("ID", "id", Long.class))
+			.addColumn(new ColumnDescriptor("NAME", "name", String.class));
+
+		assertEquals(2, table.getColumns().size());
+		assertEquals("ID", table.getColumns().get(0).getColumnName());
+		assertEquals("NAME", table.getColumns().get(1).getColumnName());
+	}
+
+	@Test
+	public void testAddForeignKey() {
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example")
+			.addForeignKey(new ForeignKeyDescriptor(
+				"department", "DEPARTMENT_ID", "Department", "com.example"));
+
+		assertEquals(1, table.getForeignKeys().size());
+		assertEquals("department", table.getForeignKeys().get(0).getFieldName());
+	}
+
+	@Test
+	public void testAddOneToMany() {
+		TableDescriptor table = new TableDescriptor("DEPARTMENT", "Department", "com.example")
+			.addOneToMany(new OneToManyDescriptor(
+				"employees", "department", "Employee", "com.example"));
+
+		assertEquals(1, table.getOneToManys().size());
+		assertEquals("employees", table.getOneToManys().get(0).getFieldName());
+	}
+
+	@Test
+	public void testAddOneToOne() {
+		TableDescriptor table = new TableDescriptor("USER_TABLE", "User", "com.example")
+			.addOneToOne(new OneToOneDescriptor(
+				"address", "Address", "com.example")
+				.foreignKeyColumnName("ADDRESS_ID"));
+
+		assertEquals(1, table.getOneToOnes().size());
+		assertEquals("address", table.getOneToOnes().get(0).getFieldName());
+	}
+
+	@Test
+	public void testAddManyToMany() {
+		TableDescriptor table = new TableDescriptor("STUDENT", "Student", "com.example")
+			.addManyToMany(new ManyToManyDescriptor(
+				"courses", "Course", "com.example")
+				.joinTable("STUDENT_COURSE", "STUDENT_ID", "COURSE_ID"));
+
+		assertEquals(1, table.getManyToManys().size());
+		assertEquals("courses", table.getManyToManys().get(0).getFieldName());
+	}
+
+	@Test
+	public void testAddEmbeddedField() {
+		TableDescriptor table = new TableDescriptor("PERSON", "Person", "com.example")
+			.addEmbeddedField(new EmbeddedFieldDescriptor(
+				"address", "Address", "com.example"));
+
+		assertEquals(1, table.getEmbeddedFields().size());
+		assertEquals("address", table.getEmbeddedFields().get(0).getFieldName());
+	}
+
+	@Test
+	public void testInheritance() {
+		InheritanceDescriptor inheritance = new InheritanceDescriptor(InheritanceType.SINGLE_TABLE);
+		TableDescriptor table = new TableDescriptor("VEHICLE", "Vehicle", "com.example")
+			.inheritance(inheritance);
+
+		assertSame(inheritance, table.getInheritance());
+	}
+
+	@Test
+	public void testDiscriminatorValue() {
+		TableDescriptor table = new TableDescriptor("VEHICLE", "Car", "com.example")
+			.discriminatorValue("CAR");
+
+		assertEquals("CAR", table.getDiscriminatorValue());
+	}
+
+	@Test
+	public void testParent() {
+		TableDescriptor table = new TableDescriptor("CAR", "Car", "com.example")
+			.parent("Vehicle", "com.example");
+
+		assertEquals("Vehicle", table.getParentEntityClassName());
+		assertEquals("com.example", table.getParentEntityPackage());
+	}
+
+	@Test
+	public void testPrimaryKeyJoinColumn() {
+		TableDescriptor table = new TableDescriptor("CREDIT_CARD_PAYMENT", "CreditCardPayment", "com.example")
+			.primaryKeyJoinColumn("PAYMENT_ID");
+
+		assertEquals("PAYMENT_ID", table.getPrimaryKeyJoinColumnName());
+	}
+
+	@Test
+	public void testCompositeId() {
+		CompositeIdDescriptor compositeId =
+			new CompositeIdDescriptor("id", "OrderItemId", "com.example");
+		TableDescriptor table = new TableDescriptor("ORDER_ITEM", "OrderItem", "com.example")
+			.compositeId(compositeId);
+
+		assertSame(compositeId, table.getCompositeId());
+	}
+
+	@Test
+	public void testComment() {
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example")
+			.comment("Employee records");
+
+		assertEquals("Employee records", table.getComment());
+	}
+
+	@Test
+	public void testCommentDefaultsToNull() {
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+
+		assertNull(table.getComment());
+	}
+
+	@Test
+	public void testAddIndex() {
+		IndexDescriptor index = new IndexDescriptor("IDX_EMAIL", true)
+			.addColumn("EMAIL");
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example")
+			.addIndex(index);
+
+		assertEquals(1, table.getIndexes().size());
+		assertEquals("IDX_EMAIL", table.getIndexes().get(0).getIndexName());
+	}
+
+	@Test
+	public void testIndexesDefaultToEmpty() {
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example");
+
+		assertNotNull(table.getIndexes());
+		assertTrue(table.getIndexes().isEmpty());
+	}
+
+	@Test
+	public void testIsForeignKeyColumnWithForeignKey() {
+		TableDescriptor table = new TableDescriptor("EMPLOYEE", "Employee", "com.example")
+			.addForeignKey(new ForeignKeyDescriptor(
+				"department", "DEPARTMENT_ID", "Department", "com.example"));
+
+		assertTrue(table.isForeignKeyColumn("DEPARTMENT_ID"));
+		assertFalse(table.isForeignKeyColumn("NAME"));
+	}
+
+	@Test
+	public void testIsForeignKeyColumnWithOneToOne() {
+		TableDescriptor table = new TableDescriptor("USER_TABLE", "User", "com.example")
+			.addOneToOne(new OneToOneDescriptor(
+				"address", "Address", "com.example")
+				.foreignKeyColumnName("ADDRESS_ID"));
+
+		assertTrue(table.isForeignKeyColumn("ADDRESS_ID"));
+		assertFalse(table.isForeignKeyColumn("NAME"));
+	}
+
+	@Test
+	public void testIsForeignKeyColumnWithInverseOneToOne() {
+		TableDescriptor table = new TableDescriptor("ADDRESS", "Address", "com.example")
+			.addOneToOne(new OneToOneDescriptor(
+				"user", "User", "com.example")
+				.mappedBy("address"));
+
+		assertFalse(table.isForeignKeyColumn("USER_ID"),
+			"Inverse side (mappedBy) should not be treated as FK column");
+	}
+}

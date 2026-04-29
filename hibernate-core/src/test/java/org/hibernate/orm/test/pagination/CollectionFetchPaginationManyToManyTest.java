@@ -8,11 +8,14 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import org.hibernate.cfg.QuerySettings;
@@ -41,7 +44,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DomainModel(annotatedClasses = {
 		CollectionFetchPaginationManyToManyTest.Author.class,
-		CollectionFetchPaginationManyToManyTest.Book.class
+		CollectionFetchPaginationManyToManyTest.Book.class,
+		CollectionFetchPaginationManyToManyTest.Award.class
 })
 @ServiceRegistry(settings = @Setting(
 		name = QuerySettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH,
@@ -64,23 +68,33 @@ public class CollectionFetchPaginationManyToManyTest {
 			author0.addBook( book0 );
 			author0.addBook( book1 );
 			author0.addBook( book2 );
+			author0.addAward( new Award( 0L, "Award 0/0" ) );
+			author0.addAward( new Award( 1L, "Award 0/1" ) );
 
 			final var author1 = new Author( 1L, "Author 1" );
 			author1.addBook( book1 );
 			author1.addBook( book2 );
 			author1.addBook( book3 );
+			author1.addAward( new Award( 10L, "Award 1/0" ) );
+			author1.addAward( new Award( 11L, "Award 1/1" ) );
 
 			final var author2 = new Author( 2L, "Author 2" );
 			author2.addBook( book2 );
 			author2.addBook( book3 );
 			author2.addBook( book4 );
+			author2.addAward( new Award( 20L, "Award 2/0" ) );
+			author2.addAward( new Award( 21L, "Award 2/1" ) );
 
 			final var author3 = new Author( 3L, "Author 3" );
 			author3.addBook( book0 );
 			author3.addBook( book3 );
 			author3.addBook( book4 );
+			author3.addAward( new Award( 30L, "Award 3/0" ) );
+			author3.addAward( new Award( 31L, "Award 3/1" ) );
 
 			final var author4 = new Author( 4L, "Author 4" );
+			author4.addAward( new Award( 40L, "Award 4/0" ) );
+			author4.addAward( new Award( 41L, "Award 4/1" ) );
 
 			session.persist( author0 );
 			session.persist( author1 );
@@ -166,13 +180,13 @@ public class CollectionFetchPaginationManyToManyTest {
 	}
 
 	@Test
-	void doubleFetchJoinWithMaxResults(SessionFactoryScope scope) {
+	void serialFetchJoinWithMaxResults(SessionFactoryScope scope) {
 		final var sql = scope.getCollectingStatementInspector();
 		scope.inTransaction( session -> {
 			sql.clear();
 
 			final var authors = session.createSelectionQuery(
-					"from Author a join fetch a.books b join fetch b.authors order by a.authorId",
+					"from Author a join fetch a.books b left join fetch b.authors order by a.authorId",
 					Author.class
 			).setMaxResults( 3 ).list();
 
@@ -192,6 +206,70 @@ public class CollectionFetchPaginationManyToManyTest {
 		} );
 	}
 
+	@Test
+	void parallelLeftFetchJoinWithMaxResults(SessionFactoryScope scope) {
+		final var sql = scope.getCollectingStatementInspector();
+		scope.inTransaction( session -> {
+			sql.clear();
+
+			final var authors = session.createSelectionQuery(
+					"from Author a left join fetch a.awards left join fetch a.books order by a.authorId",
+					Author.class
+			).setMaxResults( 2 ).list();
+
+			assertEquals( 2, authors.size() );
+			assertEquals( 0L, authors.get( 0 ).getAuthorId() );
+			assertEquals( 1L, authors.get( 1 ).getAuthorId() );
+			assertEquals( 2, authors.get( 0 ).getAwards().size() );
+			assertEquals( 2, authors.get( 1 ).getAwards().size() );
+			assertEquals( 3, authors.get( 0 ).getBooks().size() );
+			assertEquals( 3, authors.get( 1 ).getBooks().size() );
+
+			assertEquals( 1, sql.getSqlQueries().size() );
+			final String generated = normalized( sql.getSqlQueries().get( 0 ) );
+			assertTrue( generated.contains( "from (select" ) );
+			final int derivedClose = generated.indexOf( ')' );
+			final String outer = generated.substring( derivedClose );
+			assertTrue( outer.contains( "award_entity" ) );
+			assertTrue( outer.contains( "author_book_link" ) );
+			assertTrue( outer.contains( "book_entity" ) );
+		} );
+	}
+
+	@Test
+	void parallelInnerFetchJoinWithMaxResults(SessionFactoryScope scope) {
+		final var sql = scope.getCollectingStatementInspector();
+		scope.inTransaction( session -> {
+			sql.clear();
+
+			final var authors = session.createSelectionQuery(
+					"from Author a join fetch a.awards join fetch a.books order by a.authorId",
+					Author.class
+			).setMaxResults( 2 ).list();
+
+			assertEquals( 2, authors.size() );
+			assertEquals( 0L, authors.get( 0 ).getAuthorId() );
+			assertEquals( 1L, authors.get( 1 ).getAuthorId() );
+			assertEquals( 2, authors.get( 0 ).getAwards().size() );
+			assertEquals( 2, authors.get( 1 ).getAwards().size() );
+			assertEquals( 3, authors.get( 0 ).getBooks().size() );
+			assertEquals( 3, authors.get( 1 ).getBooks().size() );
+
+			assertEquals( 1, sql.getSqlQueries().size() );
+			final String generated = normalized( sql.getSqlQueries().get( 0 ) );
+			assertTrue( generated.contains( "from (select" ) );
+			final int derivedClose = generated.indexOf( ')' );
+			final String outer = generated.substring( derivedClose );
+			assertTrue( outer.contains( "award_entity" ) );
+			assertTrue( outer.contains( "author_book_link" ) );
+			assertTrue( outer.contains( "book_entity" ) );
+			int i = generated.indexOf( "exists(select" );
+			assertTrue( i > 0 );
+			int j = generated.indexOf( "exists(select", i + 1 );
+			assertTrue( j > i );
+		} );
+	}
+
 	private static String normalized(String sql) {
 		return sql.toLowerCase( Locale.ROOT ).replaceAll( "\\s+", " " );
 	}
@@ -205,6 +283,9 @@ public class CollectionFetchPaginationManyToManyTest {
 
 		@ManyToMany(mappedBy = "authors")
 		private Set<Book> books = new HashSet<>();
+
+		@OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
+		private Set<Award> awards = new HashSet<>();
 
 		public Author() {
 		}
@@ -222,9 +303,18 @@ public class CollectionFetchPaginationManyToManyTest {
 			return books;
 		}
 
+		public Set<Award> getAwards() {
+			return awards;
+		}
+
 		public void addBook(Book book) {
 			books.add( book );
 			book.authors.add( this );
+		}
+
+		public void addAward(Award award) {
+			awards.add( award );
+			award.author = this;
 		}
 
 		public boolean containsBook(String bookSsn) {
@@ -257,6 +347,26 @@ public class CollectionFetchPaginationManyToManyTest {
 		public Book(String ssn, String title) {
 			this.ssn = ssn;
 			this.title = title;
+		}
+	}
+
+	@Entity(name = "Award")
+	@Table(name = "award_entity")
+	public static class Award {
+		@Id
+		private Long awardId;
+		private String name;
+
+		@ManyToOne
+		@JoinColumn(name = "author_id")
+		private Author author;
+
+		public Award() {
+		}
+
+		public Award(Long awardId, String name) {
+			this.awardId = awardId;
+			this.name = name;
 		}
 	}
 }

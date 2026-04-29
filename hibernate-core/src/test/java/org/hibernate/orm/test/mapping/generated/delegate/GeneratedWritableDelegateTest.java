@@ -5,7 +5,7 @@
 package org.hibernate.orm.test.mapping.generated.delegate;
 
 import org.hibernate.annotations.Generated;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.insert.AbstractReturningDelegate;

@@ -18,8 +18,8 @@ import java.util.concurrent.TimeUnit;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.InformixDialect;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;

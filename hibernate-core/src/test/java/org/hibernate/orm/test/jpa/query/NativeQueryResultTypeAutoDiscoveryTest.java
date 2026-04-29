@@ -18,7 +18,7 @@ import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.GaussDBDialect;
 import org.hibernate.community.dialect.InformixDialect;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.CockroachDialect;

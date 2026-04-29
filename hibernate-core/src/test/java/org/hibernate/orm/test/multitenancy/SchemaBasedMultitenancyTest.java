@@ -8,7 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.community.dialect.InformixDialect;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.context.spi.TenantSchemaMapper;
 import org.hibernate.dialect.SQLServerDialect;

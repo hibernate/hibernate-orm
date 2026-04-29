@@ -2,14 +2,12 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.community.dialect.aggregate;
+package org.hibernate.dialect.aggregate;
 
 /*
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-import org.hibernate.dialect.aggregate.AggregateSupport;
-import org.hibernate.dialect.aggregate.PostgreSQLAggregateSupport;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;

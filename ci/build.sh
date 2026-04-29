@@ -111,6 +111,8 @@ elif [ "$RDBMS" == "altibase" ]; then
   goal="-Pdb=altibase"
 elif [ "$RDBMS" == "informix" ]; then
   goal="-Pdb=informix"
+elif [ "$RDBMS" == "spannerpgsql" ]; then
+  goal="-Pdb=spannerpgsql"
 else
   echo "Invalid value for RDBMS: $RDBMS"
   exit 1

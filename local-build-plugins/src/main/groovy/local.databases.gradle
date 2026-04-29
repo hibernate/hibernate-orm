@@ -368,7 +368,7 @@ ext {
                     'jdbc.datasource' : 'com.google.cloud.spanner.jdbc.JdbcDriver'
             ],
             spannerpgsql : [
-                    'db.dialect' : 'org.hibernate.community.dialect.SpannerPostgreSQLDialect',
+                    'db.dialect' : 'org.hibernate.dialect.SpannerPostgreSQLDialect',
                     'jdbc.driver': 'com.google.cloud.spanner.jdbc.JdbcDriver',
                     'jdbc.user'  : 'root',
                     'jdbc.pass'  : '',

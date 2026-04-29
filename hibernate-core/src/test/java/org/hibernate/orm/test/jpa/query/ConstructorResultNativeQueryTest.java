@@ -23,7 +23,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;

@@ -12,7 +12,7 @@ import org.hibernate.QueryException;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.community.dialect.InformixDialect;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
@@ -644,6 +644,7 @@ public class FunctionTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Emulator bug with extract epoch from date in non-UTC timezones")
 	public void testDateTruncWithLocalDatetimeMinusLocalDate(SessionFactoryScope scope) {
 		scope.inTransaction( session ->
 				assertThat( session.createQuery( "select trunc(local datetime, day) - local date", Duration.class )

@@ -215,7 +215,7 @@ class AuditElementCollectionTest {
 			assertThat( delRows ).hasSizeGreaterThanOrEqualTo( 1 );
 			assertThat( delRows ).anySatisfy( row -> {
 				assertThat( row.get( "strings" ) ).isEqualTo( "alpha" );
-				assertThat( row.get( "strings_ORDER" ) ).isEqualTo( 0 );
+				assertThat( ((Number) row.get( "strings_ORDER" )).intValue() ).isEqualTo( 0 );
 			} );
 		} );
 	}
@@ -299,7 +299,7 @@ class AuditElementCollectionTest {
 			).getResultList();
 			assertThat( delRows ).hasSize( 1 );
 			assertThat( delRows.get( 0 ).get( "name" ) ).isEqualTo( "Alice" );
-			assertThat( delRows.get( 0 ).get( "score" ) ).isEqualTo( 90 );
+			assertThat( ((Number) delRows.get( 0 ).get( "score" )).intValue() ).isEqualTo( 90 );
 		} );
 	}
 

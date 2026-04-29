@@ -4,8 +4,8 @@
  */
 package org.hibernate.orm.test.annotations.identifiercollection;
 
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;

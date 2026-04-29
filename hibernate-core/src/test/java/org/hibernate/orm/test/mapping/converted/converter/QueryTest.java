@@ -19,8 +19,8 @@ import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.Table;
 
 import org.hibernate.HibernateException;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.SpannerDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.orm.junit.DomainModel;

@@ -8,6 +8,7 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -21,7 +22,7 @@ public class PGVectorFunctionContributor implements FunctionContributor {
 	@Override
 	public void contributeFunctions(FunctionContributions functionContributions) {
 		final Dialect dialect = functionContributions.getDialect();
-		if ( dialect instanceof PostgreSQLDialect ) {
+		if ( dialect instanceof PostgreSQLDialect && !( dialect instanceof SpannerPostgreSQLDialect ) ) {
 			final VectorFunctionFactory vectorFunctionFactory = new VectorFunctionFactory( functionContributions );
 
 			vectorFunctionFactory.cosineDistance( "(?1<=>?2)" );

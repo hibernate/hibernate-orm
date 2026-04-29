@@ -4,6 +4,7 @@
  */
 package org.hibernate.annotations;
 
+import jakarta.persistence.spi.Discoverable;
 import org.hibernate.usertype.UserType;
 
 import java.lang.annotation.Repeatable;
@@ -34,6 +35,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target( {TYPE, ANNOTATION_TYPE, PACKAGE} )
 @Retention( RUNTIME )
 @Repeatable( TypeRegistrations.class )
+@Discoverable
 public @interface TypeRegistration {
 	/**
 	 * The basic type described by the {@link #userType}.

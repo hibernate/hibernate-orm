@@ -8,6 +8,7 @@ import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import jakarta.persistence.spi.Discoverable;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
@@ -24,6 +25,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target( {TYPE, ANNOTATION_TYPE, PACKAGE} )
 @Retention( RUNTIME )
 @Repeatable( EmbeddableInstantiatorRegistrations.class )
+@Discoverable
 public @interface EmbeddableInstantiatorRegistration {
 	Class<?> embeddableClass();
 	Class<? extends EmbeddableInstantiator> instantiator();

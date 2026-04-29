@@ -13,6 +13,7 @@ import jakarta.persistence.NamedNativeStatement;
 import jakarta.persistence.NamedNativeStatements;
 import jakarta.persistence.NamedStatement;
 import jakarta.persistence.NamedStatements;
+import jakarta.persistence.spi.Discoverable;
 import org.hibernate.boot.models.annotations.internal.AccessJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.AssociationOverrideJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.AssociationOverridesJpaAnnotation;
@@ -28,6 +29,7 @@ import org.hibernate.boot.models.annotations.internal.ConstructorResultJpaAnnota
 import org.hibernate.boot.models.annotations.internal.ConvertJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ConverterJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ConvertsJpaAnnotation;
+import org.hibernate.boot.models.annotations.internal.DiscoverableJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.DiscriminatorColumnJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.DiscriminatorValueJpaAnnotation;
 import org.hibernate.boot.models.annotations.internal.ElementCollectionJpaAnnotation;
@@ -319,6 +321,13 @@ public interface JpaAnnotations {
 			DiscriminatorColumn.class,
 			DiscriminatorColumnJpaAnnotation.class,
 			EnumSet.of( Kind.CLASS ),
+			false
+	);
+
+	OrmAnnotationDescriptor<Discoverable, DiscoverableJpaAnnotation> DISCOVERABLE = new OrmAnnotationDescriptor<>(
+			Discoverable.class,
+			DiscoverableJpaAnnotation.class,
+			EnumSet.of( Kind.ANNOTATION ),
 			false
 	);
 

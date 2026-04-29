@@ -8,7 +8,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.boot.archive.spi.ArchiveEntry;
 import org.hibernate.boot.jaxb.configuration.spi.JaxbPersistenceImpl.JaxbPersistenceUnitImpl;
-import org.hibernate.boot.models.internal.OrmAnnotationHelper;
 import org.hibernate.boot.scan.internal.ResultCollector;
 import org.hibernate.boot.scan.spi.Scanner;
 import org.hibernate.boot.scan.spi.ScanningContext;
@@ -33,10 +32,7 @@ public class IndexBuildingScanner implements Scanner {
 	@Override
 	public ScanningResult scan(URL... boundaries) {
 		var resultCollector = new ResultCollector();
-		final var indexer = new Indexer();
-		OrmAnnotationHelper.forEachOrmAnnotation( (descriptor) -> {
-			indexClass( descriptor.getAnnotationType(), indexer );
-		} );
+		var indexer = IndexerSupport.buildBaselineIndexer();
 		for ( URL boundary : boundaries ) {
 			var archive = scanningContext.getArchiveDescriptorFactory().buildArchiveDescriptor(boundary);
 			archive.visitClassEntries( (entry) -> indexClassEntry( entry, indexer ) );
@@ -49,10 +45,7 @@ public class IndexBuildingScanner implements Scanner {
 	@Override
 	public ScanningResult jpaScan(ArchiveDescriptor rootArchive, JaxbPersistenceUnitImpl jaxbUnit) {
 		var resultCollector = new ResultCollector();
-		var indexer = new Indexer();
-		OrmAnnotationHelper.forEachOrmAnnotation( (descriptor) -> {
-			indexClass( descriptor.getAnnotationType(), indexer );
-		} );
+		var indexer = IndexerSupport.buildBaselineIndexer();
 
 		if ( jaxbUnit.isExcludeUnlistedClasses() != Boolean.TRUE ) {
 			rootArchive.visitClassEntries(  (entry) -> indexClassEntry( entry, indexer ) );
@@ -67,16 +60,6 @@ public class IndexBuildingScanner implements Scanner {
 
 		IndexScanner.scanForClasses( indexToUse, resultCollector );
 		return resultCollector.toResult();
-	}
-
-
-	private void indexClass(Class<?> clazz, Indexer indexer) {
-		try {
-			indexer.indexClass( clazz );
-		}
-		catch (IOException e) {
-			throw new HibernateException( "Error indexing class for Jandex index - " + clazz.getName(), e );
-		}
 	}
 
 	private void indexClassEntry(ArchiveEntry entry, Indexer indexer) {

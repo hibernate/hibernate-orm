@@ -10,6 +10,7 @@ import java.lang.annotation.Target;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
+import jakarta.persistence.spi.Discoverable;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.PACKAGE;
@@ -27,6 +28,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target( {TYPE, ANNOTATION_TYPE, PACKAGE} )
 @Retention( RUNTIME )
 @Repeatable( ConverterRegistrations.class )
+@Discoverable
 public @interface ConverterRegistration {
 	/**
 	 * The converter class to register

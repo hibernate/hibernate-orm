@@ -6,6 +6,7 @@ package org.hibernate.annotations;
 
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.spi.Discoverable;
 import org.hibernate.SessionFactory;
 import org.hibernate.graph.GraphParser;
 
@@ -38,6 +39,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({TYPE, PACKAGE})
 @Retention(RUNTIME)
 @Repeatable(NamedEntityGraphs.class)
+@Discoverable
 public @interface NamedEntityGraph {
 
 	/**

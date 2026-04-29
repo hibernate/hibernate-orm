@@ -25,6 +25,9 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreRemove;
 import jakarta.persistence.PreUpdate;
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
 import static org.hibernate.boot.models.JpaAnnotations.POST_LOAD;
 import static org.hibernate.boot.models.JpaAnnotations.POST_PERSIST;
@@ -282,6 +285,45 @@ public class LifecycleEventHandler {
 		return descriptor;
 	}
 
+	/// Create a listener handler from annotations, selecting only methods applicable to the callback target type.
+	public static List<LifecycleEventHandler> listenersForTarget(
+			ClassDetails listenerClassDetails,
+			ClassDetails targetClassDetails,
+			boolean errorIfEmpty) {
+		final List<LifecycleEventHandler> descriptors = new ArrayList<>();
+
+		listenerClassDetails.forEachMethod( (index, methodDetails) -> {
+			applyTargetedAnnotatedCallback( listenerClassDetails, targetClassDetails, methodDetails, PrePersist.class,
+					(method) -> withPrePersistMethod( listenerClassDetails, method ), descriptors );
+			applyTargetedAnnotatedCallback( listenerClassDetails, targetClassDetails, methodDetails, PreInsert.class,
+					(method) -> withPrePersistMethod( listenerClassDetails, method ), descriptors );
+			applyTargetedAnnotatedCallback( listenerClassDetails, targetClassDetails, methodDetails, PostPersist.class,
+					(method) -> withPostPersistMethod( listenerClassDetails, method ), descriptors );
+			applyTargetedAnnotatedCallback( listenerClassDetails, targetClassDetails, methodDetails, PostInsert.class,
+					(method) -> withPostPersistMethod( listenerClassDetails, method ), descriptors );
+			applyTargetedAnnotatedCallback( listenerClassDetails, targetClassDetails, methodDetails, PreRemove.class,
+					(method) -> withPreRemoveMethod( listenerClassDetails, method ), descriptors );
+			applyTargetedAnnotatedCallback( listenerClassDetails, targetClassDetails, methodDetails, PreDelete.class,
+					(method) -> withPreRemoveMethod( listenerClassDetails, method ), descriptors );
+			applyTargetedAnnotatedCallback( listenerClassDetails, targetClassDetails, methodDetails, PostRemove.class,
+					(method) -> withPostRemoveMethod( listenerClassDetails, method ), descriptors );
+			applyTargetedAnnotatedCallback( listenerClassDetails, targetClassDetails, methodDetails, PostDelete.class,
+					(method) -> withPostRemoveMethod( listenerClassDetails, method ), descriptors );
+			applyTargetedAnnotatedCallback( listenerClassDetails, targetClassDetails, methodDetails, PreUpdate.class,
+					(method) -> withPreUpdateMethod( listenerClassDetails, method ), descriptors );
+			applyTargetedAnnotatedCallback( listenerClassDetails, targetClassDetails, methodDetails, PostUpdate.class,
+					(method) -> withPostUpdateMethod( listenerClassDetails, method ), descriptors );
+			applyTargetedAnnotatedCallback( listenerClassDetails, targetClassDetails, methodDetails, PostLoad.class,
+					(method) -> withPostLoadMethod( listenerClassDetails, method ), descriptors );
+		} );
+
+		if ( errorIfEmpty && descriptors.isEmpty() ) {
+			throw new ModelsException( "Mapping for entity-listener specified no callback methods - "
+					+ listenerClassDetails.getClassName() );
+		}
+		return descriptors;
+	}
+
 	private static void applyAnnotatedCallback(
 			JpaEventListenerStyle consumerType,
 			ClassDetails listenerClassDetails,
@@ -291,6 +333,131 @@ public class LifecycleEventHandler {
 		if ( methodDetails.hasDirectAnnotationUsage( callbackAnnotation ) ) {
 			setAnnotationCallbackMethod( consumerType, listenerClassDetails, callbackAnnotation, methodDetails, callbackMethod );
 		}
+	}
+
+	private static void applyTargetedAnnotatedCallback(
+			ClassDetails listenerClassDetails,
+			ClassDetails targetClassDetails,
+			MethodDetails methodDetails,
+			Class<? extends Annotation> callbackAnnotation,
+			Function<MethodDetails, LifecycleEventHandler> descriptorCreator,
+			List<LifecycleEventHandler> descriptors) {
+		if ( !methodDetails.hasDirectAnnotationUsage( callbackAnnotation ) ) {
+			return;
+		}
+		if ( !matchesSignature( JpaEventListenerStyle.LISTENER, methodDetails ) ) {
+			throw new ModelsException( "Callback methods annotated for "
+					+ callbackAnnotation.getName() + " in "
+					+ listenerClassDetails.getClassName()
+					+ signatureRequirement( JpaEventListenerStyle.LISTENER )
+					+ ": " + methodDetails );
+		}
+		if ( methodDetails.getArgumentTypes().get( 0 ).toJavaClass().isAssignableFrom( targetClassDetails.toJavaClass() ) ) {
+			addIfAbsent( descriptorCreator.apply( methodDetails ), descriptors );
+		}
+	}
+
+	private static void addIfAbsent(LifecycleEventHandler descriptor, List<LifecycleEventHandler> descriptors) {
+		for ( LifecycleEventHandler existing : descriptors ) {
+			if ( sameCallbackMethod( existing, descriptor ) ) {
+				return;
+			}
+		}
+		descriptors.add( descriptor );
+	}
+
+	private static boolean sameCallbackMethod(LifecycleEventHandler first, LifecycleEventHandler second) {
+		return first.prePersistMethod == second.prePersistMethod
+			&& first.postPersistMethod == second.postPersistMethod
+			&& first.preRemoveMethod == second.preRemoveMethod
+			&& first.postRemoveMethod == second.postRemoveMethod
+			&& first.preUpdateMethod == second.preUpdateMethod
+			&& first.postUpdateMethod == second.postUpdateMethod
+			&& first.postLoadMethod == second.postLoadMethod;
+	}
+
+	private static LifecycleEventHandler withPrePersistMethod(ClassDetails listenerClassDetails, MethodDetails methodDetails) {
+		return new LifecycleEventHandler( JpaEventListenerStyle.LISTENER, listenerClassDetails,
+				methodDetails,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null
+		);
+	}
+
+	private static LifecycleEventHandler withPostPersistMethod(ClassDetails listenerClassDetails, MethodDetails methodDetails) {
+		return new LifecycleEventHandler( JpaEventListenerStyle.LISTENER, listenerClassDetails,
+				null,
+				methodDetails,
+				null,
+				null,
+				null,
+				null,
+				null
+		);
+	}
+
+	private static LifecycleEventHandler withPreRemoveMethod(ClassDetails listenerClassDetails, MethodDetails methodDetails) {
+		return new LifecycleEventHandler( JpaEventListenerStyle.LISTENER, listenerClassDetails,
+				null,
+				null,
+				methodDetails,
+				null,
+				null,
+				null,
+				null
+		);
+	}
+
+	private static LifecycleEventHandler withPostRemoveMethod(ClassDetails listenerClassDetails, MethodDetails methodDetails) {
+		return new LifecycleEventHandler( JpaEventListenerStyle.LISTENER, listenerClassDetails,
+				null,
+				null,
+				null,
+				methodDetails,
+				null,
+				null,
+				null
+		);
+	}
+
+	private static LifecycleEventHandler withPreUpdateMethod(ClassDetails listenerClassDetails, MethodDetails methodDetails) {
+		return new LifecycleEventHandler( JpaEventListenerStyle.LISTENER, listenerClassDetails,
+				null,
+				null,
+				null,
+				null,
+				methodDetails,
+				null,
+				null
+		);
+	}
+
+	private static LifecycleEventHandler withPostUpdateMethod(ClassDetails listenerClassDetails, MethodDetails methodDetails) {
+		return new LifecycleEventHandler( JpaEventListenerStyle.LISTENER, listenerClassDetails,
+				null,
+				null,
+				null,
+				null,
+				null,
+				methodDetails,
+				null
+		);
+	}
+
+	private static LifecycleEventHandler withPostLoadMethod(ClassDetails listenerClassDetails, MethodDetails methodDetails) {
+		return new LifecycleEventHandler( JpaEventListenerStyle.LISTENER, listenerClassDetails,
+				null,
+				null,
+				null,
+				null,
+				null,
+				null,
+				methodDetails
+		);
 	}
 
 	private static boolean setXmlCallbackMethod(

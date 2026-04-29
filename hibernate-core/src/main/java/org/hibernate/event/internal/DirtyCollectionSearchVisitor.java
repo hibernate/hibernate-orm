@@ -9,6 +9,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLaziness
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.Type;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
 import static org.hibernate.engine.internal.ManagedTypeHelper.isPersistentAttributeInterceptable;
@@ -27,11 +28,22 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 
 	private final EnhancementAsProxyLazinessInterceptor interceptor;
 	private final boolean[] propertyVersionability;
+	private final boolean includeNonVersionedCollections;
+	private boolean currentPropertyVersionable;
 	private boolean dirty;
 
 	public DirtyCollectionSearchVisitor(Object entity, EventSource session, boolean[] propertyVersionability) {
+		this( entity, session, propertyVersionability, false );
+	}
+
+	public DirtyCollectionSearchVisitor(
+			Object entity,
+			EventSource session,
+			boolean[] propertyVersionability,
+			boolean includeNonVersionedCollections) {
 		super( session );
 		this.propertyVersionability = propertyVersionability;
+		this.includeNonVersionedCollections = includeNonVersionedCollections;
 		this.interceptor =
 				isPersistentAttributeInterceptable( entity )
 					&& asPersistentAttributeInterceptable( entity ).$$_hibernate_getInterceptor()
@@ -46,6 +58,11 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 
 	@Override
 	Object processCollection(Object collection, CollectionType type) throws HibernateException {
+		if ( includeNonVersionedCollections
+				&& !currentPropertyVersionable
+				&& type.isInverse( getSession().getFactory() ) ) {
+			return null;
+		}
 		if ( collection != null ) {
 			final var session = getSession();
 			if ( type.isArrayType() ) {
@@ -71,7 +88,18 @@ public class DirtyCollectionSearchVisitor extends AbstractVisitor {
 	}
 
 	@Override
+	public void processEntityPropertyValues(Object[] values, Type[] types) throws HibernateException {
+		for ( int i = 0; i < types.length; i++ ) {
+			if ( includeEntityProperty( values, i ) ) {
+				currentPropertyVersionable = propertyVersionability[i];
+				processValue( i, values, types );
+			}
+		}
+	}
+
+	@Override
 	boolean includeEntityProperty(Object[] values, int i) {
-		return propertyVersionability[i] && super.includeEntityProperty( values, i );
+		return ( includeNonVersionedCollections || propertyVersionability[i] )
+			&& super.includeEntityProperty( values, i );
 	}
 }

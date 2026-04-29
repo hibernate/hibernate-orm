@@ -15,7 +15,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.id.SequenceMismatchStrategy;
 import org.hibernate.testing.logger.Triggerable;

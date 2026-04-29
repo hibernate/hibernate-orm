@@ -23,7 +23,7 @@ import org.hamcrest.MatcherAssert;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.community.dialect.TiDBDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;

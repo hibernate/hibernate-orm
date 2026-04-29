@@ -12,7 +12,7 @@ import java.time.ZoneId;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;

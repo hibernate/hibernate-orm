@@ -16,7 +16,7 @@ import java.util.Set;
 
 import jakarta.persistence.LockModeType;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.query.named.NamedResultSetMappingMemento;

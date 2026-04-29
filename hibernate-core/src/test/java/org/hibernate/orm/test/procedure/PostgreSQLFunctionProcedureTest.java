@@ -12,7 +12,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.jpa.HibernateHints;

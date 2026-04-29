@@ -9,7 +9,7 @@ import java.time.Instant;
 import org.hibernate.HibernateError;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.generator.EventType;
 

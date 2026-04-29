@@ -6,7 +6,7 @@ package org.hibernate.orm.test.dialect.function;
 
 import java.math.BigDecimal;
 
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 

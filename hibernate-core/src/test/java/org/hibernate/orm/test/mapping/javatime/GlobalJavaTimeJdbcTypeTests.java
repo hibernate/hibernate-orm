@@ -13,7 +13,7 @@ import java.time.temporal.ChronoUnit;
 
 import org.hibernate.cfg.MappingSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.community.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;

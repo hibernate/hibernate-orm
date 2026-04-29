@@ -197,6 +197,10 @@ The following table illustrates a list of commands for various databases that ca
 |Informix
 |`./docker_db.sh informix`
 |`./gradlew test -Pdb=informix`
+
+|Spanner PostgreSQL
+|`./docker_db.sh spanner_pg`
+|`./gradlew test -Pdb=spannerpgsql`
 |===
 
 To stop a container started by `docker`, use the command

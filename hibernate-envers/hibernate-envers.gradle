@@ -90,8 +90,10 @@ tasks.withType( Test.class ).configureEach { test ->
             def dbCount = threadCount.intdiv( 2 ) ?: 1
             if ( dbCount > 8 ) {
                 testThreads = 4
-            } else {
+            } else if ( dbCount > 2 ) {
                 testThreads = dbCount.intdiv( 2 ) ?: 1
+            } else {
+                testThreads = dbCount
             }
         }
         else {

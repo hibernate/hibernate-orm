@@ -10,7 +10,7 @@ import java.util.Date;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
-import org.hibernate.community.dialect.SpannerPostgreSQLDialect;
+import org.hibernate.dialect.SpannerPostgreSQLDialect;
 import org.hibernate.query.Query;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.type.StandardBasicTypes;

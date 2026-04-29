@@ -44,6 +44,7 @@ public final class CallbackDefinitionResolver {
 		final List<CallbackDefinition> callbackDefinitions = new ArrayList<>();
 		final List<String> callbacksMethodNames = new ArrayList<>();
 		final List<ClassDetails> orderedListeners = new ArrayList<>();
+		final List<JpaEventListener> orderedDefaultListeners = new ArrayList<>();
 
 		ClassDetails currentClazz = entityClass;
 		boolean stopListeners = false;
@@ -103,7 +104,7 @@ public final class CallbackDefinitionResolver {
 			if ( isNotEmpty( globalListenerRegistrations ) ) {
 				int defaultListenerSize = globalListenerRegistrations.size();
 				for ( int i = defaultListenerSize - 1; i >= 0; i-- ) {
-					orderedListeners.add( globalListenerRegistrations.get( i ).getCallbackClass() );
+					orderedDefaultListeners.add( globalListenerRegistrations.get( i ) );
 				}
 			}
 		}
@@ -142,7 +143,42 @@ public final class CallbackDefinitionResolver {
 				}
 			}
 		}
+		for ( JpaEventListener listenerRegistration : orderedDefaultListeners ) {
+			final CallbackDefinition callbackDefinition = resolveGlobalListenerCallback(
+					listenerRegistration,
+					callbackType
+			);
+			if ( callbackDefinition != null ) {
+				callbackDefinitions.add( 0, callbackDefinition );
+			}
+		}
 		return callbackDefinitions;
+	}
+
+	private static CallbackDefinition resolveGlobalListenerCallback(
+			JpaEventListener listenerRegistration,
+			CallbackType callbackType) {
+		final MethodDetails callbackMethod = switch ( callbackType ) {
+			case PRE_PERSIST -> listenerRegistration.getPrePersistMethod();
+			case POST_PERSIST -> listenerRegistration.getPostPersistMethod();
+			case PRE_REMOVE -> listenerRegistration.getPreRemoveMethod();
+			case POST_REMOVE -> listenerRegistration.getPostRemoveMethod();
+			case PRE_UPDATE -> listenerRegistration.getPreUpdateMethod();
+			case POST_UPDATE -> listenerRegistration.getPostUpdateMethod();
+			case POST_LOAD -> listenerRegistration.getPostLoadMethod();
+		};
+
+		if ( callbackMethod == null ) {
+			return null;
+		}
+
+		final Method method = (Method) callbackMethod.toJavaMember();
+		ReflectHelper.ensureAccessibility( method );
+		return new ListenerCallbackDefinition(
+				listenerRegistration.getCallbackClass().toJavaClass(),
+				method,
+				callbackType
+		);
 	}
 
 	private static boolean useAnnotationAnnotatedByListener;

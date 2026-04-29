@@ -16,7 +16,7 @@ import java.util.Set;
  * @author Steve Ebersole
  */
 public interface GlobalRegistrations {
-	List<JpaEventListener> getEntityListenerRegistrations();
+	List<LifecycleEventHandler> getEntityListenerRegistrations();
 
 	List<ConversionRegistration> getConverterRegistrations();
 

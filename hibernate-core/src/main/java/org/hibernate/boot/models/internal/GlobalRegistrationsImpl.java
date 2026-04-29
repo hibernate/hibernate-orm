@@ -52,7 +52,7 @@ import org.hibernate.boot.models.spi.GlobalRegistrar;
 import org.hibernate.boot.models.spi.GlobalRegistrations;
 import org.hibernate.boot.models.spi.JavaTypeRegistration;
 import org.hibernate.boot.models.spi.JdbcTypeRegistration;
-import org.hibernate.boot.models.spi.JpaEventListener;
+import org.hibernate.boot.models.spi.LifecycleEventHandler;
 import org.hibernate.boot.models.JpaEventListenerStyle;
 import org.hibernate.boot.models.spi.NamedNativeQueryRegistration;
 import org.hibernate.boot.models.spi.NamedQueryRegistration;
@@ -113,7 +113,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 	private final ModelsContext sourceModelContext;
 	private final BootstrapContext bootstrapContext;
 
-	private List<JpaEventListener> jpaEventListeners;
+	private List<LifecycleEventHandler> lifecycleEventHandlers;
 	private List<ConversionRegistration> converterRegistrations;
 	private List<JavaTypeRegistration> javaTypeRegistrations;
 	private List<JdbcTypeRegistration> jdbcTypeRegistrations;
@@ -148,8 +148,8 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 	}
 
 	@Override
-	public List<JpaEventListener> getEntityListenerRegistrations() {
-		return jpaEventListeners == null ? emptyList() : jpaEventListeners;
+	public List<LifecycleEventHandler> getEntityListenerRegistrations() {
+		return lifecycleEventHandlers == null ? emptyList() : lifecycleEventHandlers;
 	}
 
 	@Override
@@ -627,7 +627,7 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 	public void collectEntityListenerRegistrations(List<JaxbEntityListenerImpl> listeners, ModelsContext modelsContext) {
 		final var classDetailsRegistry = getClassDetailsRegistry();
 		listeners.forEach( jaxbEntityListener ->
-				addJpaEventListener( JpaEventListener.from(
+				addJpaEventListener( LifecycleEventHandler.from(
 						JpaEventListenerStyle.LISTENER,
 						classDetailsRegistry.resolveClassDetails( jaxbEntityListener.getClazz() ),
 						jaxbEntityListener,
@@ -635,12 +635,12 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations, GlobalRegis
 				) ) );
 	}
 
-	public void addJpaEventListener(JpaEventListener listener) {
-		if ( jpaEventListeners == null ) {
-			jpaEventListeners = new ArrayList<>();
+	public void addJpaEventListener(LifecycleEventHandler listener) {
+		if ( lifecycleEventHandlers == null ) {
+			lifecycleEventHandlers = new ArrayList<>();
 		}
 
-		jpaEventListeners.add( listener );
+		lifecycleEventHandlers.add( listener );
 	}
 
 

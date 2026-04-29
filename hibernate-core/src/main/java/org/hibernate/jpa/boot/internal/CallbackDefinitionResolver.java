@@ -9,8 +9,8 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.ExcludeDefaultListeners;
 import jakarta.persistence.ExcludeSuperclassListeners;
 import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.PersistenceException;
-import org.hibernate.boot.models.spi.JpaEventListener;
+import org.hibernate.boot.models.JpaEventListenerStyle;
+import org.hibernate.boot.models.spi.LifecycleEventHandler;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.jpa.boot.spi.CallbackDefinition;
@@ -43,45 +43,27 @@ public final class CallbackDefinitionResolver {
 
 		final List<CallbackDefinition> callbackDefinitions = new ArrayList<>();
 		final List<String> callbacksMethodNames = new ArrayList<>();
-		final List<ClassDetails> orderedListeners = new ArrayList<>();
-		final List<JpaEventListener> orderedDefaultListeners = new ArrayList<>();
+		final List<LifecycleEventHandler> orderedListeners = new ArrayList<>();
+		final List<LifecycleEventHandler> orderedDefaultListeners = new ArrayList<>();
 
 		ClassDetails currentClazz = entityClass;
 		boolean stopListeners = false;
 		boolean stopDefaultListeners = false;
 
 		do {
-			CallbackDefinition callbackDefinition = null;
-			final List<MethodDetails> methodsDetailsList = currentClazz.getMethods();
-			for ( MethodDetails methodDetails : methodsDetailsList ) {
-				if ( methodDetails.hasDirectAnnotationUsage( callbackType.getCallbackAnnotation() )
-						&& !callbacksMethodNames.contains( methodDetails.getName() ) ) {
-					//overridden method, remove the superclass overridden method
-					if ( callbackDefinition == null ) {
-						final Method javaMethod = (Method) methodDetails.toJavaMember();
-						callbackDefinition = new EntityCallbackDefinition( javaMethod, callbackType );
-						final Class<?> returnType = javaMethod.getReturnType();
-						final Class<?>[] args = javaMethod.getParameterTypes();
-						if ( returnType != Void.TYPE || args.length != 0 ) {
-							throw new RuntimeException(
-									"Callback methods annotated on the bean class must return void and take no arguments: "
-									+ callbackType.getCallbackAnnotation().getName() + " - " + methodDetails
-							);
-						}
-						ReflectHelper.ensureAccessibility( javaMethod );
-						callbackDefinitions.add( 0, callbackDefinition ); //superclass first
-						callbacksMethodNames.add( 0, methodDetails.getName() );
-					}
-					else {
-						throw new PersistenceException(
-								"You can only annotate one callback method with "
-								+ callbackType.getCallbackAnnotation()
-										.getName() + " in bean class: " + entityClass.getName()
-						);
-					}
-				}
-
+			final LifecycleEventHandler callbackRegistration = LifecycleEventHandler.from(
+					JpaEventListenerStyle.CALLBACK,
+					currentClazz,
+					false
+			);
+			final MethodDetails callbackMethod = getCallbackMethod( callbackRegistration, callbackType );
+			if ( callbackMethod != null && !callbacksMethodNames.contains( callbackMethod.getName() ) ) {
+				final Method javaMethod = (Method) callbackMethod.toJavaMember();
+				ReflectHelper.ensureAccessibility( javaMethod );
+				callbackDefinitions.add( 0, new EntityCallbackDefinition( javaMethod, callbackType ) ); //superclass first
+				callbacksMethodNames.add( 0, callbackMethod.getName() );
 			}
+
 			if ( !stopListeners ) {
 				applyListeners( currentClazz, orderedListeners, modelsContext );
 				stopListeners = currentClazz.hasDirectAnnotationUsage( ExcludeSuperclassListeners.class );
@@ -99,7 +81,7 @@ public final class CallbackDefinitionResolver {
 
 		//handle default listeners
 		if ( !stopDefaultListeners ) {
-			final List<JpaEventListener> globalListenerRegistrations =
+			final List<LifecycleEventHandler> globalListenerRegistrations =
 					metadataCollector.getGlobalRegistrations().getEntityListenerRegistrations();
 			if ( isNotEmpty( globalListenerRegistrations ) ) {
 				int defaultListenerSize = globalListenerRegistrations.size();
@@ -109,42 +91,17 @@ public final class CallbackDefinitionResolver {
 			}
 		}
 
-		for ( ClassDetails listenerClassDetails : orderedListeners ) {
-			CallbackDefinition callbackDefinition = null;
-			if ( listenerClassDetails != null ) {
-				for ( MethodDetails methodDetails : listenerClassDetails.getMethods() ) {
-					if ( methodDetails.hasDirectAnnotationUsage( callbackType.getCallbackAnnotation() ) ) {
-						//overridden method, remove the superclass overridden method
-						if ( callbackDefinition == null ) {
-							final Method method = (Method) methodDetails.toJavaMember();
-							final Class<?> listenerClass = listenerClassDetails.toJavaClass();
-							callbackDefinition = new ListenerCallbackDefinition( listenerClass, method, callbackType );
-
-							final Class<?> returnType = method.getReturnType();
-							final Class<?>[] args = method.getParameterTypes();
-							if ( returnType != Void.TYPE || args.length != 1 ) {
-								throw new PersistenceException(
-										"Callback methods annotated in a listener bean class must return void and take one argument: "
-												+ callbackType.getCallbackAnnotation().getName() + " - " + methodDetails
-								);
-							}
-							ReflectHelper.ensureAccessibility( method );
-							callbackDefinitions.add( 0, callbackDefinition ); // listeners first
-						}
-						else {
-							throw new PersistenceException(
-									"You can only annotate one callback method with "
-											+ callbackType.getCallbackAnnotation().getName()
-											+ " in bean class: " + entityClass.getName()
-											+ " and callback listener: " + listenerClassDetails.getName()
-							);
-						}
-					}
-				}
+		for ( LifecycleEventHandler listenerRegistration : orderedListeners ) {
+			final CallbackDefinition callbackDefinition = resolveListenerCallback(
+					listenerRegistration,
+					callbackType
+			);
+			if ( callbackDefinition != null ) {
+				callbackDefinitions.add( 0, callbackDefinition ); // listeners first
 			}
 		}
-		for ( JpaEventListener listenerRegistration : orderedDefaultListeners ) {
-			final CallbackDefinition callbackDefinition = resolveGlobalListenerCallback(
+		for ( LifecycleEventHandler listenerRegistration : orderedDefaultListeners ) {
+			final CallbackDefinition callbackDefinition = resolveListenerCallback(
 					listenerRegistration,
 					callbackType
 			);
@@ -155,18 +112,10 @@ public final class CallbackDefinitionResolver {
 		return callbackDefinitions;
 	}
 
-	private static CallbackDefinition resolveGlobalListenerCallback(
-			JpaEventListener listenerRegistration,
+	private static CallbackDefinition resolveListenerCallback(
+			LifecycleEventHandler listenerRegistration,
 			CallbackType callbackType) {
-		final MethodDetails callbackMethod = switch ( callbackType ) {
-			case PRE_PERSIST -> listenerRegistration.getPrePersistMethod();
-			case POST_PERSIST -> listenerRegistration.getPostPersistMethod();
-			case PRE_REMOVE -> listenerRegistration.getPreRemoveMethod();
-			case POST_REMOVE -> listenerRegistration.getPostRemoveMethod();
-			case PRE_UPDATE -> listenerRegistration.getPreUpdateMethod();
-			case POST_UPDATE -> listenerRegistration.getPostUpdateMethod();
-			case POST_LOAD -> listenerRegistration.getPostLoadMethod();
-		};
+		final MethodDetails callbackMethod = getCallbackMethod( listenerRegistration, callbackType );
 
 		if ( callbackMethod == null ) {
 			return null;
@@ -179,6 +128,20 @@ public final class CallbackDefinitionResolver {
 				method,
 				callbackType
 		);
+	}
+
+	private static MethodDetails getCallbackMethod(
+			LifecycleEventHandler listenerRegistration,
+			CallbackType callbackType) {
+		return switch ( callbackType ) {
+			case PRE_PERSIST -> listenerRegistration.getPrePersistMethod();
+			case POST_PERSIST -> listenerRegistration.getPostPersistMethod();
+			case PRE_REMOVE -> listenerRegistration.getPreRemoveMethod();
+			case POST_REMOVE -> listenerRegistration.getPostRemoveMethod();
+			case PRE_UPDATE -> listenerRegistration.getPreUpdateMethod();
+			case POST_UPDATE -> listenerRegistration.getPostUpdateMethod();
+			case POST_LOAD -> listenerRegistration.getPostLoadMethod();
+		};
 	}
 
 	private static boolean useAnnotationAnnotatedByListener;
@@ -199,7 +162,7 @@ public final class CallbackDefinitionResolver {
 
 	private static void applyListeners(
 			ClassDetails currentClazz,
-			List<ClassDetails> listOfListeners,
+			List<LifecycleEventHandler> listOfListeners,
 			ModelsContext sourceModelContext) {
 		final var classDetailsRegistry = sourceModelContext.getClassDetailsRegistry();
 
@@ -208,7 +171,10 @@ public final class CallbackDefinitionResolver {
 			final var listenerClasses = entityListeners.value();
 			int size = listenerClasses.length;
 			for ( int index = size - 1; index >= 0; index-- ) {
-				listOfListeners.add( classDetailsRegistry.resolveClassDetails( listenerClasses[index].getName() ) );
+				applyListener(
+						classDetailsRegistry.resolveClassDetails( listenerClasses[index].getName() ),
+						listOfListeners
+				);
 			}
 		}
 
@@ -219,14 +185,31 @@ public final class CallbackDefinitionResolver {
 								.getDescriptor( metaAnnotatedUsage.getClass() );
 				final var listenerClasses = descriptor.getDirectAnnotationUsage( EntityListeners.class ).value();
 				for ( int index = listenerClasses.length - 1; index >= 0; index-- ) {
-					listOfListeners.add( classDetailsRegistry.resolveClassDetails( listenerClasses[index].getName() ) );
+					applyListener(
+							classDetailsRegistry.resolveClassDetails( listenerClasses[index].getName() ),
+							listOfListeners
+					);
 				}
 			}
 		}
 	}
 
+	private static void applyListener(
+			ClassDetails listenerClassDetails,
+			List<LifecycleEventHandler> listOfListeners) {
+		final LifecycleEventHandler eventListener = LifecycleEventHandler.from(
+				JpaEventListenerStyle.LISTENER,
+				listenerClassDetails,
+				false
+		);
+		if ( eventListener.hasCallbackMethods() ) {
+			listOfListeners.add( eventListener );
+		}
+	}
+
 	/**
-	 * See {@link JpaEventListener} for a better (?) alternative
+	 * Uses {@link LifecycleEventHandler} for listener descriptors while retaining the JPA hierarchy
+	 * and exclusion rules handled here.
 	 */
 	public static void resolveLifecycleCallbacks(
 			ClassDetails entityClass,

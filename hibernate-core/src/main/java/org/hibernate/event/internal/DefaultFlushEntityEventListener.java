@@ -23,6 +23,7 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEntityEvent;
 import org.hibernate.event.spi.FlushEntityEventListener;
+import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.Type;
 
@@ -429,17 +430,27 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	}
 
 	private static boolean hasDirtyCollections(FlushEntityEvent event, EntityPersister persister) {
-		final var visitor =
-				new DirtyCollectionSearchVisitor( event.getEntity(), event.getSession(),
-						persister.getPropertyVersionability() );
+		final boolean includeNonVersionedCollections = hasUpdateCallbacks( persister );
+		final var visitor = new DirtyCollectionSearchVisitor(
+				event.getEntity(),
+				event.getSession(),
+				persister.getPropertyVersionability(),
+				includeNonVersionedCollections
+		);
 		visitor.processEntityPropertyValues( event.getPropertyValues(), persister.getPropertyTypes() );
 		return visitor.wasDirtyCollectionFound();
 	}
 
 	private boolean isCollectionDirtyCheckNecessary(EntityPersister persister, Status status) {
 		return ( status == Status.MANAGED || status == Status.READ_ONLY )
-			&& persister.isVersioned()
-			&& persister.hasCollections();
+			&& persister.hasCollections()
+			&& ( persister.isVersioned() || hasUpdateCallbacks( persister ) );
+	}
+
+	private static boolean hasUpdateCallbacks(EntityPersister persister) {
+		final var entityCallbacks = persister.getEntityCallbacks();
+		return entityCallbacks.hasRegisteredCallbacks( CallbackType.PRE_UPDATE )
+			|| entityCallbacks.hasRegisteredCallbacks( CallbackType.POST_UPDATE );
 	}
 
 	/**

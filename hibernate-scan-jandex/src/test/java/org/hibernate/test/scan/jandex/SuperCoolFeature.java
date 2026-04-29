@@ -4,7 +4,7 @@
  */
 package org.hibernate.test.scan.jandex;
 
-import org.hibernate.boot.scan.Discoverable;
+import jakarta.persistence.spi.Discoverable;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

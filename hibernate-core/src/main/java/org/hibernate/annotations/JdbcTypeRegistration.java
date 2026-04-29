@@ -9,6 +9,7 @@ import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import jakarta.persistence.spi.Discoverable;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import static java.lang.annotation.ElementType.PACKAGE;
@@ -43,6 +44,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Inherited
 @Retention(RUNTIME)
 @Repeatable( JdbcTypeRegistrations.class )
+@Discoverable
 public @interface JdbcTypeRegistration {
 	/**
 	 * The descriptor to register

@@ -4,6 +4,8 @@
  */
 package org.hibernate.annotations;
 
+import jakarta.persistence.spi.Discoverable;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -21,6 +23,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target( {TYPE, ANNOTATION_TYPE, PACKAGE} )
 @Retention( RUNTIME )
+@Discoverable
 public @interface TypeRegistrations {
 	TypeRegistration[] value();
 }

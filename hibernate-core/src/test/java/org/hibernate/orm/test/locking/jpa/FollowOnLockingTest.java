@@ -42,6 +42,8 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 @SkipForDialect(dialectClass = HSQLDialect.class, reason = "Seems HSQLDB doesn't cancel the query if it waits for a lock?!")
 @SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach allows the concurrent access but cancels one or both transactions at the end")
 @SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 11, reason = "Timeouts don't work on Oracle 11 when using a driver other than ojdbc6, but we can't test with that driver")
+@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 21, reason = "Query timeout doesn't work for lock waits on Oracle 21")
+@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 23, reason = "Query timeout doesn't work for lock waits on Oracle 23")
 @SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase does not support timeout in statement level")
 public class FollowOnLockingTest {
 

@@ -4,6 +4,8 @@
  */
 package org.hibernate.annotations;
 
+import jakarta.persistence.spi.Discoverable;
+
 import java.lang.annotation.Target;
 import java.lang.annotation.Retention;
 
@@ -20,6 +22,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target({TYPE, PACKAGE, ANNOTATION_TYPE})
 @Retention(RUNTIME)
+@Discoverable
 public @interface NamedEntityGraphs {
 	/**
 	 * The grouping of Hibernate named native SQL queries.

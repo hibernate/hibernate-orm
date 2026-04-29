@@ -8,6 +8,7 @@ import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import jakarta.persistence.spi.Discoverable;
 import org.hibernate.usertype.CompositeUserType;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
@@ -30,6 +31,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target( {TYPE, ANNOTATION_TYPE, PACKAGE} )
 @Retention( RUNTIME )
 @Repeatable( CompositeTypeRegistrations.class )
+@Discoverable
 public @interface CompositeTypeRegistration {
 	/**
 	 * The embeddable type described by the {@link #userType}.

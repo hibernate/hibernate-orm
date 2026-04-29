@@ -12,6 +12,7 @@ import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityManager;
 
+import jakarta.persistence.spi.Discoverable;
 import org.hibernate.CacheMode;
 import jakarta.persistence.QueryFlushMode;
 
@@ -36,6 +37,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({TYPE, PACKAGE})
 @Retention(RUNTIME)
 @Repeatable(NamedQueries.class)
+@Discoverable
 public @interface NamedQuery {
 
 	/**

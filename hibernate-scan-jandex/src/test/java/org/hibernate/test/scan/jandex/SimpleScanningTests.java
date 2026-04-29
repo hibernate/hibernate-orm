@@ -5,12 +5,10 @@
 package org.hibernate.test.scan.jandex;
 
 import org.hibernate.boot.archive.internal.StandardArchiveDescriptorFactory;
-import org.hibernate.boot.scan.Discoverable;
 import org.hibernate.boot.scan.internal.ScanningContextImpl;
 import org.hibernate.boot.scan.spi.ScanningResult;
 import org.hibernate.cfg.Environment;
 import org.hibernate.scan.jandex.ScanningProviderImpl;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.jboss.jandex.IndexView;
@@ -31,7 +29,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class SimpleScanningTests {
 	@Test
 	@ServiceRegistry
-	@NotImplementedYet(reason = "Needs the next release of JPA 4.0 with @Discoverable")
 	void testSimpleJarScanning(@TempDir File stagingDir, ServiceRegistryScope registryScope) throws IOException {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// the deployment
@@ -60,7 +57,6 @@ public class SimpleScanningTests {
 			indexer.indexClass( Book.class );
 			indexer.indexClass( FirstClass.class );
 			indexer.indexClass( SecondClass.class );
-			indexer.indexClass( Discoverable.class );
 			indexer.indexClass( Entity.class );
 			indexer.indexClass( SuperCoolFeature.class );
 			return indexer.complete();

@@ -10,6 +10,7 @@ import java.lang.annotation.Target;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.spi.Discoverable;
 import org.hibernate.CacheMode;
 import jakarta.persistence.QueryFlushMode;
 
@@ -34,6 +35,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({TYPE, PACKAGE})
 @Retention(RUNTIME)
 @Repeatable(NamedNativeQueries.class)
+@Discoverable
 public @interface NamedNativeQuery {
 	/**
 	 * The name of this query. Must be unique within a persistence unit.

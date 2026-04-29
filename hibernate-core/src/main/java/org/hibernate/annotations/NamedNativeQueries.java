@@ -3,6 +3,8 @@
  * Copyright Red Hat Inc. and Hibernate Authors
  */
 package org.hibernate.annotations;
+import jakarta.persistence.spi.Discoverable;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -18,6 +20,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 @Target({TYPE, PACKAGE})
 @Retention(RUNTIME)
+@Discoverable
 public @interface NamedNativeQueries {
 	/**
 	 * The grouping of Hibernate named native SQL queries.

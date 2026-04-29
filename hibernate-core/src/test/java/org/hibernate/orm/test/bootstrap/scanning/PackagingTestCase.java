@@ -29,9 +29,9 @@ import org.hibernate.orm.test.jpa.pack.externaljar.Scooter;
 import org.hibernate.orm.test.jpa.pack.spacepar.Bug;
 import org.hibernate.orm.test.jpa.pack.various.Airplane;
 import org.hibernate.orm.test.jpa.pack.various.Seat;
+import org.hibernate.scan.jandex.IndexerSupport;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.jboss.jandex.IndexView;
-import org.jboss.jandex.Indexer;
 import org.jboss.shrinkwrap.api.ArchivePath;
 import org.jboss.shrinkwrap.api.ArchivePaths;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
@@ -153,7 +153,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 	}
 
 	protected IndexView buildDefaultParIndex() {
-		var indexer = new Indexer();
+		var indexer = IndexerSupport.buildBaselineIndexer();
 		forEachDefaultParClass( (clazz) -> {
 			try {
 				indexer.indexClass( clazz );
@@ -268,7 +268,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 
 	protected IndexView buildExplodedParIndex() {
 		try {
-			var indexer = new Indexer();
+			var indexer = IndexerSupport.buildBaselineIndexer();
 			indexer.indexClass( Elephant.class );
 			indexer.indexClass( Carpet.class );
 			indexer.index( PackagingTestCase.class.getResourceAsStream( "/org/hibernate/orm/test/jpa/pack/explodedpar/package-info.class" ) );
@@ -432,7 +432,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 	}
 
 	protected IndexView buildWarIndex() {
-		var indexer = new Indexer();
+		var indexer = IndexerSupport.buildBaselineIndexer();
 		forEachWarClass( aClass -> {
 			try {
 				indexer.indexClass( aClass );

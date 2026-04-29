@@ -9,6 +9,7 @@ import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import jakarta.persistence.spi.Discoverable;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
@@ -38,6 +39,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Inherited
 @Retention(RUNTIME)
 @Repeatable( JavaTypeRegistrations.class )
+@Discoverable
 public @interface JavaTypeRegistration {
 	Class<?> javaType();
 

@@ -97,6 +97,7 @@ public final class CallbackDefinitionResolver {
 		for ( LifecycleEventHandler listenerRegistration : orderedListeners ) {
 			final CallbackDefinition callbackDefinition = resolveListenerCallback(
 					listenerRegistration,
+					entityClass,
 					callbackType
 			);
 			if ( callbackDefinition != null ) {
@@ -106,6 +107,7 @@ public final class CallbackDefinitionResolver {
 		for ( LifecycleEventHandler listenerRegistration : orderedDefaultListeners ) {
 			final CallbackDefinition callbackDefinition = resolveListenerCallback(
 					listenerRegistration,
+					entityClass,
 					callbackType
 			);
 			if ( callbackDefinition != null ) {
@@ -117,10 +119,14 @@ public final class CallbackDefinitionResolver {
 
 	private static CallbackDefinition resolveListenerCallback(
 			LifecycleEventHandler listenerRegistration,
+			ClassDetails entityClass,
 			CallbackType callbackType) {
 		final MethodDetails callbackMethod = getCallbackMethod( listenerRegistration, callbackType );
 
 		if ( callbackMethod == null ) {
+			return null;
+		}
+		if ( !isCompatibleCallbackTarget( callbackMethod, entityClass ) ) {
 			return null;
 		}
 
@@ -131,6 +137,10 @@ public final class CallbackDefinitionResolver {
 				method,
 				callbackType
 		);
+	}
+
+	private static boolean isCompatibleCallbackTarget(MethodDetails callbackMethod, ClassDetails entityClass) {
+		return callbackMethod.getArgumentTypes().get( 0 ).toJavaClass().isAssignableFrom( entityClass.toJavaClass() );
 	}
 
 	private static void collectTargetedListenerRegistrations(

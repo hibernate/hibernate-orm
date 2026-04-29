@@ -268,11 +268,49 @@ Calls to `EntityGraph.removeAttributeNode()` and `EntityGraph.removeAttributeNod
 when the graph is used as a "load graph", removing an attribute "suppresses inclusion of an attribute mapped for eager fetching".
 
 
+[[listener-target]]
+=== Entity Listener Callbacks
+
+Jakarta Persistence has clarified that listener-style callback classes (`@EntityListeners`) may define multiple
+methods for a given event type -
+
+> An entity listener class may have multiple callback methods for a given type of lifecycle event, but at most one callback method for a given type of event and given parameter type.
+
+Using `<E>` as a generic type for the signatures, it says -
+
+> where `E` is an entity class, a mapped superclass, or a supertype of the entity class or mapped superclass to which the entity listener applies. If multiple entity classes are assignable to the type `E`, the callback method is invoked for any such class to which the entity listener applies.
+
+[source,java]
+----
+@Entity
+@EntityListeners( AnimalWatcher.class )
+public class Cat implements Animal { ... }
+
+@Entity
+@EntityListeners( AnimalWatcher.class )
+public class Dog implements Animal { ... }
+
+public class AnimalWatcher {
+    @PostInsert
+    public void postInsert(Animal animal) { ... }
+
+    @PostInsert
+    public void postInsert(Cat animal) { ... }
+
+    @PostInsert
+    public void postInsert(Dog animal) { ... }
+}
+----
+
+_Be aware that creating a Cat, with the above model, will result in calls to both `postInsert(Animal)` and `postInsert(Cat)`; and
+that creating a Dog, both `postInsert(Animal)` and `postInsert(Dog)`._
+
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // XSD changes
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-[[behavior-changes]]
+[[xsd-changes]]
 == Changes in XSD
 
 This section describes changes in XML Schema Descriptors

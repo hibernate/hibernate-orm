@@ -34,7 +34,9 @@ dependencyResolutionManagement {
                 allowInsecureProtocol = true
             }
         }
-        mavenCentral()
+        else {
+            mavenCentral()
+        }
         // Needed for the RC versions of Jakarta Persistence
         maven {
             url "https://jakarta.oss.sonatype.org/content/repositories/releases/"

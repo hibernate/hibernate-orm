@@ -638,6 +638,14 @@ public class FunctionTests {
 	}
 
 	@Test
+	public void testDateTruncWithLocalDatetimeMinusLocalDate(SessionFactoryScope scope) {
+		scope.inTransaction( session ->
+				assertThat( session.createQuery( "select trunc(local datetime, day) - local date", Duration.class )
+						.getSingleResult().getSeconds(), is( 0L ) )
+		);
+	}
+
+	@Test
 	public void testLowerUpperFunctions(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -29,12 +29,8 @@ public abstract class AbstractMavenTestIT {
 	public static void initMavenCli() throws Exception {
 		classWorld = new ClassWorld( "plexus.core", Thread.currentThread().getContextClassLoader() );
 		mavenCli = new MavenCli( classWorld );
-		String mavenMirror = System.getenv( "mavenMirror" );
+		String mavenMirror = System.getenv( "MAVEN_MIRROR" );
 		if ( mavenMirror != null && !mavenMirror.isEmpty() ) {
-			String url = mavenMirror;
-			if ( !url.startsWith( "http://" ) && !url.startsWith( "https://" ) ) {
-				url = "https://" + url;
-			}
 			mavenSettingsFile = Files.createTempFile( "maven-settings", ".xml" );
 			Files.writeString( mavenSettingsFile,
 					"<settings>\n" +
@@ -42,7 +38,7 @@ public abstract class AbstractMavenTestIT {
 					"    <mirror>\n" +
 					"      <id>ci-mirror</id>\n" +
 					"      <mirrorOf>central</mirrorOf>\n" +
-					"      <url>" + url + "</url>\n" +
+					"      <url>${env.MAVEN_MIRROR}</url>\n" +
 					"    </mirror>\n" +
 					"  </mirrors>\n" +
 					"</settings>\n" );

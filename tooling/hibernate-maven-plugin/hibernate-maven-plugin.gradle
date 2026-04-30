@@ -93,9 +93,6 @@ publishingExtension.publications.named("publishedArtifacts") {
 integrationTest {
     environment "hibernateVersion", project.version
     environment "h2Version", jdbcLibs.versions.h2.get()
-    if (project.hasProperty("mavenMirror")) {
-        environment "mavenMirror", project.property("mavenMirror")
-    }
     testLogging {
         exceptionFormat = 'full'
     }

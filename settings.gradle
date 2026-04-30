@@ -29,7 +29,10 @@ dependencyResolutionManagement {
         // TODO Move to infra overrides instead;
         //  see https://blog.gradle.org/maven-central-mirror#overriding-the-urls-for-maven-central-and-the-plugin-portal-repositories
         if ( System.env['MAVEN_MIRROR'] ) {
-            url( System.env['MAVEN_MIRROR'] )
+            maven {
+                url System.env['MAVEN_MIRROR']
+                allowInsecureProtocol = true
+            }
         }
         mavenCentral()
         // Needed for the RC versions of Jakarta Persistence

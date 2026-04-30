@@ -33,7 +33,7 @@ public abstract class AbstractMavenTestIT {
 		if ( mavenMirror != null && !mavenMirror.isEmpty() ) {
 			String url = mavenMirror;
 			if ( !url.startsWith( "http://" ) && !url.startsWith( "https://" ) ) {
-				url = "https://" + url;
+				url = "http://" + url;
 			}
 			mavenSettingsFile = Files.createTempFile( "maven-settings", ".xml" );
 			Files.writeString( mavenSettingsFile,

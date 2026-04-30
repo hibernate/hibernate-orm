@@ -126,14 +126,27 @@ public class OracleTruncFunction extends TruncFunction {
 				renderOffsetTimestampTrunc( sqlAppender, sqlAstArguments, walker );
 			}
 			else if ( temporalUnit == TemporalUnit.SECOND ) {
-				renderTimestampTruncToSecond( sqlAppender, sqlAstArguments.get( 0 ), walker );
+				if ( isTimestamp( sqlAstArguments.get( 0 ) ) ) {
+					sqlAppender.appendSql( "cast(" );
+					renderTimestampTruncToSecond( sqlAppender, sqlAstArguments.get( 0 ), walker );
+					sqlAppender.appendSql( " as timestamp)" );
+				}
+				else {
+					renderTimestampTruncToSecond( sqlAppender, sqlAstArguments.get( 0 ), walker );
+				}
 			}
 			else {
+				if ( isTimestamp( sqlAstArguments.get( 0 ) ) ) {
+					sqlAppender.appendSql( "cast(" );
+				}
 				sqlAppender.appendSql( "trunc(" );
 				sqlAstArguments.get( 0 ).accept( walker );
 				sqlAppender.appendSql( ',' );
 				sqlAstArguments.get( 1 ).accept( walker );
 				sqlAppender.appendSql( ')' );
+				if ( isTimestamp( sqlAstArguments.get( 0 ) ) ) {
+					sqlAppender.appendSql( " as timestamp)" );
+				}
 			}
 		}
 
@@ -173,6 +186,10 @@ public class OracleTruncFunction extends TruncFunction {
 		private static boolean isOffsetOrZonedTimestamp(SqlAstNode datetime) {
 			final CastType castType = getCastType( datetime );
 			return castType == CastType.OFFSET_TIMESTAMP || castType == CastType.ZONE_TIMESTAMP;
+		}
+
+		private static boolean isTimestamp(SqlAstNode datetime) {
+			return getCastType( datetime ) == CastType.TIMESTAMP;
 		}
 
 		private static String getTimezoneFormat(SqlAstNode datetime) {

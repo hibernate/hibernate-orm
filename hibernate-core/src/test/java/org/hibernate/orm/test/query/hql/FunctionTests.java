@@ -623,7 +623,6 @@ public class FunctionTests {
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsDateTimeTruncation.class )
-	@SkipForDialect(dialectClass = OracleDialect.class, reason = "See HHH-16442, Oracle trunc() throws away the timezone")
 	@SkipForDialect(dialectClass = SpannerPostgreSQLDialect.class, reason = "Emulator bug")
 	public void testDateTruncWithOffsetFunction(SessionFactoryScope scope) {
 		scope.inTransaction(

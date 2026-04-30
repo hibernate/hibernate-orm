@@ -44,6 +44,16 @@ This problem is finally solved.
 To recover the previous behavior, using the query hint `org.hibernate.limitInMemory`.
 Use of this hint will almost certainly harm performance.
 
+[[refresh-session]]
+== `CacheMode.REFRESH_SESSION`
+
+The new `REFRESH_SESSION` mode, which may be
+
+- passed as an option to `EntityManager.find()` or
+- requested via `SelectionQuery.setCacheMode()`
+
+specifies that entities returned in a query result set should be efficiently refreshed in the first-level cache, as if they had been passed to `EntityManager.refresh()`, overwriting the current state held in the persistence context.
+
 [[reveng]]
 == Reverse Engineering
 

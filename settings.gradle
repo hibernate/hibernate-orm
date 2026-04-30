@@ -35,7 +35,9 @@ dependencyResolutionManagement {
                 allowInsecureProtocol = true
             }
         }
-        mavenCentral()
+        else {
+            mavenCentral()
+        }
         if (System.getProperty('JPA_PREVIEW') != null) {
             // Needed for the RC versions of Jakarta Persistence
             maven {

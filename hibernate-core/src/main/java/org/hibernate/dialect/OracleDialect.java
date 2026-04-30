@@ -488,7 +488,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String currentDate() {
-		return "current_date";
+		return "trunc(current_date)";
 	}
 
 	@Override

@@ -26,8 +26,11 @@ plugins {
 
 dependencyResolutionManagement {
     repositories {
-        if ( rootProject.hasProperty( "mavenMirror" ) ) {
-            url( rootProject.property( "mavenMirror" ) )
+        // See MAINTAINERS.md for documentation.
+        // TODO Move to infra overrides instead;
+        //  see https://blog.gradle.org/maven-central-mirror#overriding-the-urls-for-maven-central-and-the-plugin-portal-repositories
+        if ( System.env['MAVEN_MIRROR'] ) {
+            url( System.env['MAVEN_MIRROR'] )
         }
         mavenCentral()
         if (System.getProperty('JPA_PREVIEW') != null) {

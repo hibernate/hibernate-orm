@@ -20,6 +20,7 @@ Continuous integration is split across two platforms:
 The Hibernate ORM build can use a mirror instead of Maven central.
 To do so, set the `MAVEN_MIRROR` environment variable to the URL of your mirror,
 e.g. `http://something-on-aws.com/path/to/repo`.
+The mirror can use unsecure HTTP, but obviously that exposes you to MITM attacks unless the build runs in a completely isolated network.
 
 ### GitHub Actions workflows
 

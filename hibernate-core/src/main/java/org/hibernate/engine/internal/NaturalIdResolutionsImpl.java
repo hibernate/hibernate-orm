@@ -5,7 +5,6 @@
 package org.hibernate.engine.internal;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.CacheMode;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
@@ -418,7 +417,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		if ( fromSharedCache( session, cacheKey, persister, cacheAccess ) == null ) {
 			final boolean minimalPutsEnabled =
 					session.getFactory().getSessionFactoryOptions().isMinimalPutsEnabled()
-							&& session.getCacheMode() != CacheMode.REFRESH;
+							&& !session.getCacheMode().isRefreshEnabled();
 			final var statistics = session.getFactory().getStatistics();
 			final var eventMonitor = session.getEventMonitor();
 			boolean put = false;

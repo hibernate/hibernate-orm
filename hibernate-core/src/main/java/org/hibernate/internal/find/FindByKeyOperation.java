@@ -60,6 +60,7 @@ public class FindByKeyOperation<T> implements NaturalIdLoader.Options {
 
 	private CacheStoreMode cacheStoreMode;
 	private CacheRetrieveMode cacheRetrieveMode;
+	private boolean refreshSession;
 
 	private LockMode lockMode;
 	private Locking.Scope lockScope;
@@ -90,8 +91,7 @@ public class FindByKeyOperation<T> implements NaturalIdLoader.Options {
 		this.rootGraph = rootGraph;
 
 		if ( defaultCacheMode != null ) {
-			cacheStoreMode = defaultCacheMode.getJpaStoreMode();
-			cacheRetrieveMode = defaultCacheMode.getJpaRetrieveMode();
+			setCacheMode( defaultCacheMode );
 		}
 
 		if ( defaultLockOptions != null ) {
@@ -115,13 +115,14 @@ public class FindByKeyOperation<T> implements NaturalIdLoader.Options {
 			}
 			else if ( option instanceof CacheStoreMode cacheStoreMode ) {
 				this.cacheStoreMode = cacheStoreMode;
+				this.refreshSession = false;
 			}
 			else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
 				this.cacheRetrieveMode = cacheRetrieveMode;
+				this.refreshSession = false;
 			}
 			else if ( option instanceof CacheMode cacheMode ) {
-				this.cacheStoreMode = cacheMode.getJpaStoreMode();
-				this.cacheRetrieveMode = cacheMode.getJpaRetrieveMode();
+				setCacheMode( cacheMode );
 			}
 			else if ( option instanceof LockModeType lockModeType ) {
 				this.lockMode = LockModeTypeHelper.getLockMode( lockModeType );
@@ -167,6 +168,19 @@ public class FindByKeyOperation<T> implements NaturalIdLoader.Options {
 			enabledFetchProfiles = new HashSet<>();
 		}
 		enabledFetchProfiles.add( profileName );
+	}
+
+	private void setCacheMode(CacheMode cacheMode) {
+		cacheStoreMode = cacheMode.getJpaStoreMode();
+		cacheRetrieveMode = cacheMode.getJpaRetrieveMode();
+		refreshSession = cacheMode == CacheMode.REFRESH_SESSION;
+	}
+
+	private CacheMode getCacheMode() {
+		final var cacheMode = CacheMode.fromJpaModes( cacheRetrieveMode, cacheStoreMode );
+		return refreshSession && cacheMode == CacheMode.REFRESH
+				? CacheMode.REFRESH_SESSION
+				: cacheMode;
 	}
 
 	public T performFind(Object key, LoadAccessContext loadAccessContext) {
@@ -229,8 +243,8 @@ public class FindByKeyOperation<T> implements NaturalIdLoader.Options {
 		final var readOnly = session.isDefaultReadOnly();
 		session.setDefaultReadOnly( readOnlyMode == ReadOnlyMode.READ_ONLY );
 
-		final var cacheMode = session.getCacheMode();
-		session.setCacheMode( CacheMode.fromJpaModes( cacheRetrieveMode, cacheStoreMode ) );
+		final var previousCacheMode = session.getCacheMode();
+		session.setCacheMode( getCacheMode() );
 
 		try {
 			return action.get();
@@ -242,7 +256,7 @@ public class FindByKeyOperation<T> implements NaturalIdLoader.Options {
 			}
 			influencers.setEnabledFetchProfileNames( fetchProfiles );
 			session.setDefaultReadOnly( readOnly );
-			session.setCacheMode( cacheMode );
+			session.setCacheMode( previousCacheMode );
 		}
 	}
 

@@ -5,7 +5,6 @@
 package org.hibernate.sql.results.internal;
 
 
-import org.hibernate.CacheMode;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -187,7 +186,7 @@ public class ResultsHelper {
 		if ( isPutFromLoad( context, collectionDescriptor, entry ) ) {
 			final boolean minimalPutsEnabled =
 					factory.getSessionFactoryOptions().isMinimalPutsEnabled()
-							&& session.getCacheMode() != CacheMode.REFRESH;
+							&& !session.getCacheMode().isRefreshEnabled();
 			final var eventListenerManager = session.getEventListenerManager();
 			final var eventMonitor = session.getEventMonitor();
 			final var cachePutEvent = eventMonitor.beginCachePutEvent();

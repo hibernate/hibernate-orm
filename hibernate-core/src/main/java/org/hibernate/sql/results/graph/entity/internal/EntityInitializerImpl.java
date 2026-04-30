@@ -673,8 +673,13 @@ public class EntityInitializerImpl
 					.getEnabledCascadingFetchProfile() == CascadingFetchProfile.REFRESH;
 	}
 
+	private boolean isRefreshing(EntityInitializerData data) {
+		return isRefreshingCascadeAssociation( data )
+			|| data.getRowProcessingState().getSession().getCacheMode() == CacheMode.REFRESH_SESSION;
+	}
+
 	private State initializedOrResolved(EntityInitializerData data, boolean initialized) {
-		return initialized && !isRefreshingCascadeAssociation( data )
+		return initialized && !isRefreshing( data )
 				? State.INITIALIZED
 				: State.RESOLVED;
 	}
@@ -1263,7 +1268,7 @@ public class EntityInitializerImpl
 				data.setInstance( proxy );
 				if ( Hibernate.isInitialized( proxy ) ) {
 					if ( data.entityHolder.isInitialized()
-							&& !isRefreshingCascadeAssociation( data ) ) {
+							&& !isRefreshing( data ) ) {
 						data.setState( State.INITIALIZED );
 					}
 					data.entityInstanceForNotify = Hibernate.unproxy( proxy );
@@ -1284,7 +1289,7 @@ public class EntityInitializerImpl
 				if ( initializer == null ) {
 					assert entityHolder.isInitialized() == isExistingEntityInitialized( existingEntity );
 					if ( entityHolder.isInitialized()
-							&& !isRefreshingCascadeAssociation( data ) ) {
+							&& !isRefreshing( data ) ) {
 						data.setState( State.INITIALIZED );
 					}
 					else if ( isResultInitializer() ) {
@@ -1613,12 +1618,12 @@ public class EntityInitializerImpl
 		final var entityKey = data.entityKey;
 		assert entityKey != null;
 
-		final boolean refreshingCascadeAssociation = isRefreshingCascadeAssociation( data );
+		final boolean refreshing = isRefreshing( data );
 		final var previousEntityEntry =
-				refreshingCascadeAssociation
+				refreshing
 						? persistenceContext.getEntry( data.entityInstanceForNotify )
 						: null;
-		if ( refreshingCascadeAssociation ) {
+		if ( refreshing ) {
 			clearInitializedLazyFields( data );
 		}
 
@@ -1830,7 +1835,7 @@ public class EntityInitializerImpl
 			Object cacheKey, CacheEntry cacheEntry) {
 		final boolean minimalPutsEnabled =
 				session.getFactory().getSessionFactoryOptions().isMinimalPutsEnabled()
-						&& session.getCacheMode() != CacheMode.REFRESH;
+						&& !session.getCacheMode().isRefreshEnabled();
 		final var eventListenerManager = session.getEventListenerManager();
 		boolean cacheContentChanged = false;
 		final var eventMonitor = session.getEventMonitor();
@@ -2008,7 +2013,7 @@ public class EntityInitializerImpl
 
 	protected boolean skipInitialization(EntityInitializerData data) {
 		if ( data.entityHolder.getEntityInitializer() != this ) {
-			return !isRefreshingCascadeAssociation( data )
+			return !isRefreshing( data )
 				|| data.entityHolder.getEntityInitializer() != null;
 		}
 		else {
@@ -2036,7 +2041,7 @@ public class EntityInitializerImpl
 					}
 				}
 
-				return entry.getStatus() != Status.LOADING && !isRefreshingCascadeAssociation( data )
+				return entry.getStatus() != Status.LOADING && !isRefreshing( data )
 					// If the instance to initialize is the main entity, we can't skip this.
 					// This can happen if we initialize an enhanced proxy.
 					&& rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()

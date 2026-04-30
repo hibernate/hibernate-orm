@@ -826,6 +826,7 @@ public class LoaderSelectBuilder {
 
 			final boolean isFetchablePluralAttributeMapping = isABag || isPluralAttributeMapping( fetchable );
 			final Integer maximumFetchDepth = creationContext.getMaximumFetchDepth();
+			boolean cascadeReachable = false;
 
 			if ( !( fetchable instanceof CollectionPart ) ) {
 				// 'entity graph' takes precedence over 'fetch profile'
@@ -866,6 +867,7 @@ public class LoaderSelectBuilder {
 						fetchTiming = FetchTiming.IMMEDIATE;
 						// In 5.x the CascadeEntityJoinWalker only join fetched the first collection fetch
 						joined = !isFetchablePluralAttributeMapping || rowCardinality == RowCardinality.SINGLE;
+						cascadeReachable = true;
 					}
 				}
 			}
@@ -878,9 +880,16 @@ public class LoaderSelectBuilder {
 				};
 			}
 
+			// Disable the cascade profile for non-cascaded fetchables so sub-fetches aren't eagerly loaded
+			final var originalCascadingFetchProfile = !cascadeReachable
+					? loadQueryInfluencers.getEnabledCascadingFetchProfile()
+					: null;
 			try {
 				if ( fetchable.incrementFetchDepth() ) {
 					fetchDepth++;
+				}
+				if ( originalCascadingFetchProfile != null ) {
+					loadQueryInfluencers.setEnabledCascadingFetchProfile( null );
 				}
 
 				// There is no need to check for circular fetches if this is an explicit fetch
@@ -932,6 +941,9 @@ public class LoaderSelectBuilder {
 				}
 				if ( entityGraphTraversalState != null && traversalResult != null ) {
 					entityGraphTraversalState.backtrack( traversalResult );
+				}
+				if ( originalCascadingFetchProfile != null ) {
+					loadQueryInfluencers.setEnabledCascadingFetchProfile( originalCascadingFetchProfile );
 				}
 			}
 		};

@@ -59,6 +59,7 @@ import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
@@ -80,6 +81,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
+import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlTreeCreationException;
@@ -989,6 +991,11 @@ public class SqmUtil {
 	}
 
 	public static void validateCriteriaQuery(SqmQueryPart<?> queryPart) {
+		validateCriteriaQueryStructure( queryPart );
+		SqmTreeValidator.validate( queryPart );
+	}
+
+	private static void validateCriteriaQueryStructure(SqmQueryPart<?> queryPart) {
 		if ( queryPart instanceof SqmQuerySpec<?> sqmQuerySpec ) {
 			final var selectClause = sqmQuerySpec.getSelectClause();
 			if ( selectClause.getSelections().isEmpty() ) {
@@ -1004,12 +1011,20 @@ public class SqmUtil {
 		}
 		else if ( queryPart instanceof SqmQueryGroup<?> queryGroup ) {
 			for ( var part : queryGroup.getQueryParts() ) {
-				validateCriteriaQuery( part );
+				validateCriteriaQueryStructure( part );
 			}
 		}
 		else {
 			assert false;
 		}
+	}
+
+	public static void validateCriteriaTree(SqmDeleteStatement<?> statement) {
+		SqmTreeValidator.validate( statement );
+	}
+
+	public static void validateCriteriaTree(SqmUpdateStatement<?> statement) {
+		SqmTreeValidator.validate( statement );
 	}
 
 	private static class CriteriaParameterCollector {

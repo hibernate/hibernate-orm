@@ -1,0 +1,193 @@
+= SQL AST Model
+
+:toc2:
+:toclevels: 3
+:sectanchors:
+:numbered:
+
+This document introduces the structure of Hibernate's SQL AST model.
+It is written for contributors who need to recognize the important node families and understand how they fit together.
+
+See also:
+
+* `design/sql-ast.adoc`
+* `design/sql-ast-sources.adoc`
+* `design/sql-ast-translators.adoc`
+
+== What the SQL AST represents
+
+The SQL AST is a structured representation of SQL after Hibernate has resolved domain-model concepts to relational concepts, but before dialect-specific SQL text has been rendered.
+
+At this level, Hibernate is working with:
+
+* table references and table groups
+* column references and SQL expressions
+* SQL predicates
+* select lists and query parts
+* insert, update, and delete statements
+* JDBC parameters
+* domain result descriptors for reading rows back into Hibernate results
+
+The SQL AST is closer to SQL than SQM is, but it is still not SQL text.
+The translator decides final syntax, parameter markers, pagination syntax, locking clauses, function rendering, tuple handling, and many other dialect-sensitive details.
+
+== Main packages
+
+`org.hibernate.sql.ast`::
+Core contracts and enums: `SqlAstTranslator`, `SqlAstTranslatorFactory`, `SqlAstWalker`, `SqlAstJoinType`, `SqlAstNodeRenderingMode`, and `Clause`.
+
+`org.hibernate.sql.ast.tree`::
+The core tree model.
+Every node implements `SqlAstNode` directly or indirectly.
+
+`org.hibernate.sql.ast.tree.select`::
+Select-query nodes such as `SelectStatement`, `QuerySpec`, `QueryGroup`, `SelectClause`, and `SortSpecification`.
+
+`org.hibernate.sql.ast.tree.from`::
+From-clause nodes such as `FromClause`, `TableGroup`, `TableReference`, `TableGroupJoin`, and `TableReferenceJoin`.
+
+`org.hibernate.sql.ast.tree.expression`::
+SQL expression nodes such as `ColumnReference`, `QueryLiteral`, `JdbcParameter`, `SqlTuple`, arithmetic expressions, function expressions, case expressions, casts, window-function nodes, and self-rendering expressions.
+
+`org.hibernate.sql.ast.tree.predicate`::
+Predicate nodes such as comparisons, junctions, nullness checks, `in`, `exists`, `between`, `like`, and filter predicates.
+
+`org.hibernate.sql.ast.tree.insert`, `update`, and `delete`::
+Query-level mutation statements.
+
+`org.hibernate.sql.ast.tree.cte`::
+Common table expression support.
+
+`org.hibernate.sql.model`::
+The model-mutation tree used for table-level insert, update, delete, merge, and upsert operations generated from mapped entity and collection state.
+
+== Select tree shape
+
+A typical select statement has this shape:
+
+[plantuml,sql-ast-select-shape,png]
+.Typical select SQL AST shape
+----
+@startmindmap
+skinparam handwritten true
+
+* SelectStatement
+** CTE container
+** QueryPart
+*** QuerySpec
+**** FromClause
+***** TableGroup
+****** primary TableReference
+****** TableReferenceJoin
+****** TableGroupJoin
+**** SelectClause
+***** SqlSelection
+****** Expression
+**** Predicate
+**** group by expressions
+**** having predicate
+**** sort specifications
+*** QueryGroup
+**** union / intersect / except
+** DomainResult descriptors
+
+@endmindmap
+----
+
+`SelectStatement` owns the root query part and, for ORM queries, the domain result descriptors that describe how selected JDBC values should be assembled into query results.
+
+`QuerySpec` models a single SQL query specification.
+`QueryGroup` models set operations such as `union`, `intersect`, and `except`.
+
+== From-clause model
+
+The from-clause model is built around `TableGroup` and `TableReference`.
+
+`TableReference`::
+A reference to a physical table, derived table, values table, function table, CTE table, or other table-like object.
+It has an identification variable used when rendering column references.
+
+`TableGroup`::
+A group of table references related to a single mapped thing, usually an entity, collection, embeddable-valued function result, derived query, or plural table structure.
+It owns a primary table reference, table-reference joins, table-group joins, and nested table-group joins.
+
+`TableGroupJoin`::
+A join from one table group to another table group.
+This is used for joins that conceptually join mapped structures.
+
+`TableReferenceJoin`::
+A join between table references inside a table group.
+This is used for secondary tables and similar relational joins that are internal to one mapped structure.
+
+`FromClause`::
+The container for root table groups.
+
+The distinction matters because the mapping model often needs more than one SQL table to represent one domain path.
+For example, an entity root might involve a primary table plus secondary table joins, while a collection join may need a collection table and an element table.
+
+== Expression and predicate model
+
+Expressions live under `org.hibernate.sql.ast.tree.expression`.
+Important examples include:
+
+`ColumnReference`::
+A reference to a selectable column or formula, including the table qualifier and JDBC mapping.
+
+`JdbcParameter`::
+A JDBC-level parameter marker.
+This is lower-level than an SQM parameter; SQM parameters may expand to multiple JDBC parameters.
+
+`QueryLiteral` and `JdbcLiteral`::
+Literal SQL values.
+
+`FunctionExpression`::
+Function invocation support.
+Many functions are self-rendering because rendering can depend heavily on dialect rules.
+
+`SqlTuple`::
+A tuple expression used for row-value comparisons or multi-column values.
+
+Predicates live under `org.hibernate.sql.ast.tree.predicate`.
+They are SQL-level boolean restrictions and are rendered by the SQL AST translator.
+
+== Mutation models
+
+Hibernate has two related mutation models.
+
+Query-level mutation statements live under `org.hibernate.sql.ast.tree.insert`, `update`, and `delete`.
+These represent SQL AST statements produced from SQM mutation queries such as HQL `update`, `delete`, and `insert`.
+
+Model mutations live under `org.hibernate.sql.model`.
+These are table-level mutations produced by entity and collection persisters during flush.
+They include `TableInsert`, `TableUpdate`, `TableDelete`, `TableMutation`, `MutationOperationGroup`, and JDBC mutation operation classes.
+
+The same `SqlAstTranslatorFactory` renders both families, but through different factory methods:
+
+* `buildMutationTranslator()` for query-level `MutationStatement`
+* `buildModelMutationTranslator()` for table-level `TableMutation`
+
+== Walking and rendering
+
+Every SQL AST node accepts a `SqlAstWalker`.
+`SqlAstTranslator` extends `SqlAstWalker`, so rendering is implemented as a tree walk.
+
+The translator tracks context while walking:
+
+* current SQL clause
+* current query part
+* affected table names
+* parameter rendering and literal handling
+* dialect capabilities and fallback strategies
+
+Most contributors changing SQL output will spend time in `AbstractSqlAstTranslator` or a dialect-specific subclass.
+
+== Contributor checklist
+
+When changing the SQL AST model, ask:
+
+* Is the concept structural SQL, or should it stay in SQM?
+* Does the node carry enough mapping or JDBC type information for rendering and binding?
+* Does it need to participate in SQL AST walking?
+* Does it affect domain result creation?
+* Does it work for both query-generated SQL and loader-generated SQL?
+* Is the change dialect-neutral, or should it be handled by a translator override?

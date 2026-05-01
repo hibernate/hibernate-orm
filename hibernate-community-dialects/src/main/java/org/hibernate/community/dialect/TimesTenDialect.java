@@ -196,10 +196,7 @@ public class TimesTenDialect extends Dialect {
 		functionFactory.degrees_acos();
 		functionFactory.sinh();
 		functionFactory.tanh();
-		functionContributions.getFunctionRegistry().register(
-				"trunc",
-				new OracleTruncFunction( functionContributions.getTypeConfiguration() )
-		);
+		functionContributions.getFunctionRegistry().register( "trunc", new OracleTruncFunction() );
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 		functionFactory.round();
 

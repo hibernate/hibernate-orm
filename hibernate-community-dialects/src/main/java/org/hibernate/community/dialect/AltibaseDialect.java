@@ -212,10 +212,7 @@ public class AltibaseDialect extends Dialect {
 		functionFactory.hypotheticalOrderedSetAggregates();
 		functionFactory.bitLength_pattern( "bit_length(?1)", "lengthb(?1)*8" );
 		functionFactory.octetLength_pattern( "octet_length(?1)", "lengthb(?1)" );
-		functionContributions.getFunctionRegistry().register(
-				"trunc",
-				new OracleTruncFunction( functionContributions.getTypeConfiguration() )
-		);
+		functionContributions.getFunctionRegistry().register( "trunc", new OracleTruncFunction() );
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
 
 		// Use `numor`, `numand`, and `numxor` because bitwise operators work only in binary columns in Altibase.

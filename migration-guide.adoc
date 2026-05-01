@@ -62,6 +62,11 @@ This section describes changes to contracts (classes, interfaces, methods, etc.)
 
 This section describes changes in behavior that applications should be aware of.
 
+=== HQL `current date` and `local date` on Oracle
+
+Oracle has no true support for dates.
+Its `current_date` function produces a datetime.
+Starting with this release, the HQL expressions `current date` and `local date` translate to `trunc(current_date)`, which zeros out the time part.
 
 === MySQL default max fetch depth
 

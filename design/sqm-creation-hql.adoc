@@ -1,0 +1,222 @@
+= Creating SQM from HQL
+
+:toc2:
+:toclevels: 3
+:sectanchors:
+:numbered:
+
+This document explains how Hibernate creates SQM from an HQL or JPQL string.
+It is intended as a starting point for contributors who need to follow a query from `Session#createQuery()` into the SQM tree.
+
+== Big picture
+
+HQL creation has two major phases:
+
+Parsing::
+ANTLR turns the query string into a syntax tree.
+
+Semantic model building::
+`SemanticQueryBuilder` walks the syntax tree, resolves names and types against Hibernate's domain model, and creates SQM nodes.
+
+[plantuml,hql-to-sqm,png]
+.HQL to SQM
+----
+@startuml
+skinparam handwritten true
+
+Application -> Session : createQuery("from Book b")
+Session -> QueryEngine : interpretHql(hql, resultType)
+QueryEngine -> QueryInterpretationCache : resolveHqlInterpretation(...)
+QueryInterpretationCache -> HqlTranslator : translate(hql, resultType)
+HqlTranslator -> HqlParseTreeBuilder : lexer + parser
+HqlTranslator -> SemanticQueryBuilder : buildSemanticModel(...)
+SemanticQueryBuilder -> SQM : SqmStatement
+QueryInterpretationCache -> QueryEngine : HqlInterpretation
+Session -> QueryObject : SelectionQueryImpl\nor MutationQueryImpl
+
+@enduml
+----
+
+== Entry points
+
+The common session-level HQL entry points live in `AbstractSharedSessionContract`.
+The most important ones are:
+
+* `createSelectionQuery(String, Class)`
+* `createMutationQuery(String)`
+* the JPA-style `createQuery(String, Class)`
+* the deprecated untyped `createQuery(String)`
+
+These methods perform basic session checks, ask the `QueryEngine` to interpret HQL, then wrap the resulting SQM interpretation in a query object.
+
+Select HQL becomes `SelectionQueryImpl`.
+Mutation HQL becomes `MutationQueryImpl`.
+
+== QueryEngine and interpretation cache
+
+`QueryEngine` owns the HQL translator and the query interpretation cache.
+Its default `interpretHql()` method delegates to:
+
+`QueryInterpretationCache.resolveHqlInterpretation(hql, resultType, hqlTranslator)`
+
+The standard implementation is `QueryInterpretationCacheStandardImpl`.
+It caches `HqlInterpretation` instances by query string, and by expected result type when one is supplied.
+
+If there is no cached interpretation, it calls:
+
+`HqlTranslator.translate(hql, expectedResultType)`
+
+Then it derives:
+
+* `DomainParameterXref`
+* `ParameterMetadata`
+* a `SimpleHqlInterpretationImpl`
+
+The HQL interpretation is therefore more than the SQM statement.
+It is the SQM statement plus the query-layer parameter information needed by later query execution.
+
+== HQL translator setup
+
+The standard query engine creates the HQL translator during `QueryEngineImpl` construction.
+The order is important:
+
+* `QueryEngineImpl` creates the function registry and SQM translator factory.
+* It creates the `SqmCriteriaNodeBuilder`.
+* It creates the `StandardHqlTranslator`, passing the node builder as the `SqmCreationContext`.
+
+This means HQL and Criteria share the same node-building infrastructure and query-engine services.
+
+Dialect and custom options may provide alternate translators or SQM translator factories, but the standard path is:
+
+`QueryEngineImpl` -> `StandardHqlTranslator` -> `SemanticQueryBuilder`
+
+== Parsing
+
+`StandardHqlTranslator.translate()` first calls `parseHql()`.
+
+The parser is created by `HqlParseTreeBuilder`:
+
+* `buildHqlLexer(String)`
+* `buildHqlParser(String, HqlLexer)`
+
+The generated lexer and parser come from:
+
+* `org.hibernate.grammars.hql.HqlLexer`
+* `org.hibernate.grammars.hql.HqlParser`
+
+The grammar source is:
+
+`hibernate-core/src/main/antlr/org/hibernate/grammars/hql/HqlParser.g4`
+
+The parser tries SLL prediction first for speed.
+If that fails, it resets the parser and retries with LL prediction and a normal error strategy.
+Syntax errors are converted into Hibernate query exceptions with improved messages.
+
+== Semantic model building
+
+After parsing, `StandardHqlTranslator` calls:
+
+`SemanticQueryBuilder.buildSemanticModel(...)`
+
+`SemanticQueryBuilder` is an ANTLR parse-tree visitor.
+It does the semantic work that a plain parser cannot do:
+
+* identifies the statement kind
+* resolves entity names through the JPA metamodel
+* resolves aliases and path expressions
+* builds roots, joins, selections, predicates, expressions, and mutation targets
+* resolves function descriptors
+* checks types and comparison compatibility
+* records parameters
+* applies HQL-specific inference rules, such as inferred select clauses
+* enforces strict JPA compliance when configured
+
+During this phase, name resolution is stateful.
+The creation state maintains processing-state stacks and path registries so that aliases, roots, joins, subqueries, and CTEs are resolved in the correct scope.
+
+The most useful support contracts are:
+
+`SqmCreationState`::
+Global state for the current SQM build.
+
+`SqmCreationProcessingState`::
+State for the query part currently being built.
+
+`SqmPathRegistry`::
+Tracks roots, joins, aliases, and reusable path resolutions for the current processing state.
+
+`DotIdentifierConsumer`::
+Consumes dotted identifiers and resolves them into semantic path parts.
+
+== Result
+
+The result of HQL translation is an `SqmStatement`.
+
+Common top-level results are:
+
+* `SqmSelectStatement`
+* `SqmUpdateStatement`
+* `SqmDeleteStatement`
+* `SqmInsertSelectStatement`
+* `SqmInsertValuesStatement`
+
+`StandardHqlTranslator` logs the SQM tree through `SqmTreePrinter` when tree logging is enabled.
+It also normalizes common semantic exceptions into query exceptions such as unknown path and unknown entity errors.
+
+== After SQM creation
+
+At query execution time, select queries build or reuse a query plan.
+For a standard select query, `ConcreteSqmSelectQueryPlan` eventually calls the SQM translator factory:
+
+`sessionFactory.getQueryEngine().getSqmTranslatorFactory().createSelectTranslator(...)`
+
+The standard factory creates a `StandardSqmTranslator`, which translates SQM into SQL AST.
+SQL AST is then rendered to JDBC operations by the dialect-aware SQL AST translator.
+
+In short:
+
+[plantuml,hql-after-sqm,png]
+.After HQL SQM creation
+----
+@startuml
+skinparam handwritten true
+
+SqmSelectStatement -> SelectQueryPlan
+SelectQueryPlan -> SqmTranslatorFactory
+SqmTranslatorFactory -> StandardSqmTranslator
+StandardSqmTranslator -> SQLAST : SelectStatement
+SQLAST -> JdbcSelect
+JdbcSelect -> JdbcSelectExecutor
+
+@enduml
+----
+
+== Where to look for common changes
+
+New HQL syntax::
+Start in `HqlParser.g4`, then add semantic handling to `SemanticQueryBuilder`.
+
+New semantic rule::
+Look in `SemanticQueryBuilder`, `TypecheckUtil`, path-resolution classes, and the constructors or factories for the affected SQM nodes.
+
+New function behavior::
+Look at the function registry and descriptors under `org.hibernate.query.sqm.function` and `org.hibernate.query.sqm.produce.function`.
+
+Parameter behavior::
+Look at `DomainParameterXref`, `ParameterMetadataImpl`, SQM parameter nodes, and the HQL interpretation cache.
+
+Generated SQL is wrong::
+First check that the SQM tree is correct.
+If it is, move to `org.hibernate.query.sqm.sql`, especially `BaseSqmToSqlAstConverter`.
+
+== Contributor checklist
+
+When changing HQL-to-SQM creation, ask:
+
+* Does the grammar accept only the intended syntax?
+* Does `SemanticQueryBuilder` create the same SQM shape that Criteria would create for the same query feature?
+* Are aliases and paths resolved in the right scope?
+* Are parameters represented consistently?
+* Are type errors detected during SQM creation?
+* Does strict JPA compliance need special handling?
+* Does the SQM tree translate correctly to SQL AST?

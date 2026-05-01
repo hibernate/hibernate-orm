@@ -19,6 +19,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
+import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.AbstractSqmRestrictedDmlStatement;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
@@ -133,6 +134,9 @@ public class SqmUpdateStatement<T>
 		verifyImmutableEntityUpdate( hql );
 		if ( getSetClause().getAssignments().isEmpty() ) {
 			throw new IllegalArgumentException( "No assignments specified as part of UPDATE criteria" );
+		}
+		if ( getQuerySource() == SqmQuerySource.CRITERIA ) {
+			SqmUtil.validateCriteriaTree( this );
 		}
 		verifyUpdateTypesMatch();
 	}

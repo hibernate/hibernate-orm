@@ -11,6 +11,7 @@ import org.hibernate.query.criteria.JpaCriteriaDelete;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.AbstractSqmRestrictedDmlStatement;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
@@ -82,7 +83,9 @@ public class SqmDeleteStatement<T>
 
 	@Override
 	public void validate(@Nullable String hql) {
-		// No-op
+		if ( getQuerySource() == SqmQuerySource.CRITERIA ) {
+			SqmUtil.validateCriteriaTree( this );
+		}
 	}
 
 	@Override

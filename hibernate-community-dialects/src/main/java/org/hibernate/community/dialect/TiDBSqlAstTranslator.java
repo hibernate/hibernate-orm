@@ -178,6 +178,15 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends SqlAstTransla
 	}
 
 	@Override
+	protected void appendAssignmentColumn(ColumnReference column) {
+		column.appendColumnForWrite(
+				this,
+				getAffectedTableNames().size() > 1 && !(getStatement() instanceof InsertSelectStatement)
+						? determineColumnReferenceQualifier( column )
+						: null );
+	}
+
+	@Override
 	protected String determineColumnReferenceQualifier(ColumnReference columnReference) {
 		final DmlTargetColumnQualifierSupport qualifierSupport = getDialect().getDmlTargetColumnQualifierSupport();
 		final MutationStatement currentDmlStatement;

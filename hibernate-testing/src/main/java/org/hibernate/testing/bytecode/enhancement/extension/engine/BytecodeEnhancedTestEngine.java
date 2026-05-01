@@ -4,66 +4,83 @@
  */
 package org.hibernate.testing.bytecode.enhancement.extension.engine;
 
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.bytecode.enhancement.extension.engine.BytecodeEnhancedClassUtils.enhanceTestClass;
 import static org.junit.platform.commons.util.AnnotationUtils.findAnnotation;
+import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass;
+import static org.junit.platform.launcher.EngineFilter.includeEngines;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhanced;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.ClassOrderer;
-import org.junit.jupiter.api.DisplayNameGenerator;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.extension.ExecutionCondition;
-import org.junit.jupiter.api.extension.Extension;
-import org.junit.jupiter.api.extension.ExtensionConfigurationException;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.extension.TestInstantiationAwareExtension;
-import org.junit.jupiter.api.io.CleanupMode;
-import org.junit.jupiter.api.io.TempDirFactory;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.engine.JupiterTestEngine;
-import org.junit.jupiter.engine.config.JupiterConfiguration;
 import org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor;
-import org.junit.jupiter.engine.descriptor.ClassTemplateTestDescriptor;
-import org.junit.jupiter.engine.descriptor.ClassTestDescriptor;
 import org.junit.jupiter.engine.descriptor.JupiterEngineDescriptor;
-import org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor;
-import org.junit.jupiter.engine.descriptor.TestTemplateTestDescriptor;
-import org.junit.jupiter.engine.execution.JupiterEngineExecutionContext;
-import org.junit.jupiter.engine.execution.LauncherStoreFacade;
+import org.junit.platform.engine.ConfigurationParameters;
 import org.junit.platform.engine.EngineDiscoveryRequest;
 import org.junit.platform.engine.EngineExecutionListener;
 import org.junit.platform.engine.ExecutionRequest;
 import org.junit.platform.engine.OutputDirectoryCreator;
 import org.junit.platform.engine.TestDescriptor;
+import org.junit.platform.engine.TestEngine;
+import org.junit.platform.engine.TestExecutionResult;
+import org.junit.platform.engine.TestSource;
 import org.junit.platform.engine.UniqueId;
+import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor;
+import org.junit.platform.engine.support.descriptor.ClassSource;
 import org.junit.platform.engine.support.descriptor.EngineDescriptor;
-import org.junit.platform.engine.support.hierarchical.EngineExecutionContext;
-import org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine;
-import org.junit.platform.engine.support.hierarchical.ThrowableCollector;
+import org.junit.platform.launcher.Launcher;
+import org.junit.platform.launcher.LauncherDiscoveryRequest;
+import org.junit.platform.launcher.TestExecutionListener;
+import org.junit.platform.launcher.TestIdentifier;
+import org.junit.platform.launcher.TestPlan;
+import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
+import org.junit.platform.launcher.core.LauncherFactory;
+import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
+import org.junit.platform.launcher.listeners.TestExecutionSummary;
 
-public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEngineExecutionContext> {
+/**
+ * Test engine for {@link BytecodeEnhanced} tests.
+ * <p>
+ * This engine deliberately does not try to execute Jupiter tests itself.  Jupiter is still the authority for
+ * discovering and executing {@code @Test}, {@code @BeforeEach}, parameterized tests, templates, extensions, and the
+ * rest of the Jupiter programming model.  This engine only adds the class-loader isolation needed to run a test class,
+ * and the domain classes selected by {@link BytecodeEnhanced}, through Hibernate bytecode enhancement.
+ * <p>
+ * Discovery is split into two steps:
+ * <ul>
+ *     <li>Use Jupiter discovery on the original request to find classes annotated with {@link BytecodeEnhanced}.</li>
+ *     <li>For each enhancement variant, discover the Jupiter test tree again using the variant class and mirror
+ *     Jupiter's method/template descriptors below the variant container.</li>
+ * </ul>
+ * Execution then launches Jupiter against the variant class and forwards Jupiter execution events to the mirrored
+ * descriptors.  That keeps reports method-oriented while still letting Jupiter own test lifecycle semantics such as
+ * {@code @BeforeAll}/{@code @AfterAll}.
+ */
+public class BytecodeEnhancedTestEngine implements TestEngine {
 
 	public static final String ENHANCEMENT_EXTENSION_ENGINE_ENABLED = "hibernate.testing.bytecode.enhancement.extension.engine.enabled";
 
+	/**
+	 * Marks the nested Jupiter discovery/execution that this engine performs internally.
+	 * <p>
+	 * {@link org.hibernate.testing.bytecode.enhancement.extension.BytecodeEnhancementPostDiscoveryFilter} uses this
+	 * marker to avoid filtering out {@link BytecodeEnhanced} classes from the nested Jupiter run.
+	 */
+	private static final ThreadLocal<Boolean> NESTED_JUPITER_EXECUTION = ThreadLocal.withInitial( () -> false );
+
 	public static boolean isEnabled() {
 		return "true".equalsIgnoreCase( System.getProperty( ENHANCEMENT_EXTENSION_ENGINE_ENABLED, "false" ) );
+	}
+
+	public static boolean isNestedJupiterExecution() {
+		return NESTED_JUPITER_EXECUTION.get();
 	}
 
 	@Override
@@ -73,211 +90,147 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 
 	@Override
 	public TestDescriptor discover(EngineDiscoveryRequest discoveryRequest, UniqueId uniqueId) {
-		if ( isEnabled() ) {
-			try {
-				return doDiscover( discoveryRequest, uniqueId );
-			}
-			catch (OutOfMemoryError e) {
-				throw e;
-			}
-			catch (Error e) {
-				throw new ExtensionConfigurationException(
-						"Encountered a problem when enhancing the test classes. It is highly likely that @BytecodeEnhanced extension is incompatible with the provided version of JUnit.",
-						e );
-			}
+		final EngineDescriptor engineDescriptor = new BytecodeEnhancedEngineDescriptor( uniqueId, getId() );
+		if ( !isEnabled() ) {
+			return engineDescriptor;
 		}
 
-		return new EngineDescriptor( uniqueId, getId() );
-	}
-
-	public TestDescriptor doDiscover(EngineDiscoveryRequest discoveryRequest, UniqueId uniqueId) {
-		final BytecodeEnhancedEngineDescriptor engineDescriptor = new BytecodeEnhancedEngineDescriptor(
-				(JupiterEngineDescriptor) new JupiterTestEngine().discover( discoveryRequest, uniqueId )
-		);
-
-		for ( TestDescriptor testDescriptor : new HashSet<>( engineDescriptor.getChildren() ) ) {
-			if ( testDescriptor instanceof ClassBasedTestDescriptor ) {
-				try {
-					ClassBasedTestDescriptor descriptor = (ClassBasedTestDescriptor) testDescriptor;
-					// if the test class is annotated with @BytecodeEnhanced
-					// we replace the descriptor with the new one that will point to an enhanced test class,
-					// this also means that we need to add all the child descriptors back as well...
-					// Then on the extension side we set the classloader that contains the enhanced test class
-					// and set it back to the original once the test class is destroyed.
-					Optional<BytecodeEnhanced> bytecodeEnhanced = findAnnotation(
-							descriptor.getTestClass(), BytecodeEnhanced.class );
-					if ( bytecodeEnhanced.isPresent() ) {
-						TestDescriptor parent = descriptor.getParent().orElseThrow( IllegalStateException::new );
-						Class<?> klass = descriptor.getTestClass();
-
-						JupiterConfiguration jc = ( (JupiterEngineDescriptor) parent ).getConfiguration();
-
-						String[] testEnhancedClasses = Arrays.stream( bytecodeEnhanced.get().testEnhancedClasses() )
-								.map( Class::getName ).toArray( String[]::new );
-
-						// NOTE: get children before potentially removing from hierarchy, since after that there will be none.
-						Set<? extends TestDescriptor> children = new HashSet<>( descriptor.getChildren() );
-						if ( !bytecodeEnhanced.get().runNotEnhancedAsWell() ) {
-							descriptor.removeFromHierarchy();
-						}
-
-						Map<Object, Class<?>> classes = enhanceTestClass( klass );
-						if ( classes.size() == 1 ) {
-							replaceWithEnhanced( classes.values().iterator().next(), descriptor, jc, children, parent, testEnhancedClasses );
-						}
-						else {
-							for ( Map.Entry<Object, Class<?>> entry : classes.entrySet() ) {
-								replaceWithEnhanced(
-										entry.getValue(), descriptor, jc, children, parent, testEnhancedClasses, entry.getKey() );
-							}
-						}
-
-						addEnhancementCheck( false, testEnhancedClasses, descriptor, jc );
-					}
-					else {
-						testDescriptor.removeFromHierarchy();
-					}
-				}
-				catch (ClassNotFoundException | NoSuchMethodException e) {
-					throw new RuntimeException( e );
-				}
+		final JupiterEngineDescriptor jupiterDiscovery = (JupiterEngineDescriptor) new JupiterTestEngine()
+				.discover( discoveryRequest, UniqueId.forEngine( "junit-jupiter" ) );
+		for ( TestDescriptor testDescriptor : new HashSet<>( jupiterDiscovery.getChildren() ) ) {
+			if ( testDescriptor instanceof ClassBasedTestDescriptor classBasedTestDescriptor ) {
+				findAnnotation( classBasedTestDescriptor.getTestClass(), BytecodeEnhanced.class )
+						.ifPresent( bytecodeEnhanced -> addEnhancedTestClass(
+								engineDescriptor,
+								classBasedTestDescriptor.getTestClass(),
+								bytecodeEnhanced,
+								discoveryRequest.getConfigurationParameters()
+						) );
 			}
 		}
 
 		return engineDescriptor;
 	}
 
-	private void addEnhancementCheck(boolean enhance, String[] testEnhancedClasses,
-			ClassBasedTestDescriptor descriptor, JupiterConfiguration jc) {
-		if ( testEnhancedClasses.length > 0 ) {
-			descriptor.addChild( new EnhancementWorkedCheckMethodTestDescriptor(
-					UniqueId.forEngine( getId() )
-							.append(
-									ClassTestDescriptor.SEGMENT_TYPE,
-									descriptor.getTestClass().getName()
-							),
-					descriptor.getTestClass(),
-					descriptor::getEnclosingTestClasses,
-					jc,
-					enhance,
-					testEnhancedClasses
-			) );
-		}
-	}
-
-	private void replaceWithEnhanced(Class<?> enhanced, ClassBasedTestDescriptor descriptor, JupiterConfiguration jc,
-			Set<? extends TestDescriptor> children, TestDescriptor parent, String[] testEnhancedClasses)
-			throws NoSuchMethodException {
-		replaceWithEnhanced( enhanced, descriptor, jc, children, parent, testEnhancedClasses, null );
-	}
-
-	private void replaceWithEnhanced(Class<?> enhanced, ClassBasedTestDescriptor descriptor, JupiterConfiguration jc,
-			Set<? extends TestDescriptor> children, TestDescriptor parent, String[] testEnhancedClasses,
-			Object enhancementContextId)
-			throws NoSuchMethodException {
-		DelegatingJupiterConfiguration configuration = new DelegatingJupiterConfiguration( jc, enhancementContextId );
-
-		final ClassTestDescriptor updatedClassDescriptor = new ClassTestDescriptor(
-				convertUniqueId( descriptor.getUniqueId(), enhancementContextId ),
-				enhanced,
-				configuration
+	private void addEnhancedTestClass(
+			EngineDescriptor engineDescriptor,
+			Class<?> testClass,
+			BytecodeEnhanced annotation,
+			ConfigurationParameters configurationParameters) {
+		final BytecodeEnhancedClassDescriptor classDescriptor = new BytecodeEnhancedClassDescriptor(
+				engineDescriptor.getUniqueId().append( "class", testClass.getName() ),
+				testClass,
+				Arrays.stream( annotation.testEnhancedClasses() ).map( Class::getName ).toArray( String[]::new )
 		);
 
-		final ClassBasedTestDescriptor updated;
-		if ( descriptor instanceof ClassTemplateTestDescriptor ) {
-			updated = new ClassTemplateTestDescriptor(
-					convertUniqueId( descriptor.getUniqueId(), enhancementContextId ),
-					updatedClassDescriptor
-			);
-		}
-		else {
-			updated = updatedClassDescriptor;
+		if ( annotation.runNotEnhancedAsWell() ) {
+			addVariantDescriptor( classDescriptor, new BytecodeEnhancedVariantDescriptor(
+					classDescriptor.getUniqueId().append( "variant", "not-enhanced" ),
+					"Not enhanced",
+					testClass,
+					false,
+					classDescriptor.testEnhancedClassNames
+			), configurationParameters );
 		}
 
-		for ( TestDescriptor child : children ) {
-			// this needs more cases for parameterized tests, test templates and so on ...
-			// for now it'll only work with simple @Test tests
-			if ( child instanceof TestMethodTestDescriptor testMethodDescriptor ) {
-				Method testMethod = testMethodDescriptor.getTestMethod();
-				updated.addChild(
-						new TestMethodTestDescriptor(
-								convertUniqueId( child.getUniqueId(), enhancementContextId ),
-								updated.getTestClass(),
-								findMethodReplacement( updated, testMethod ),
-								updated::getEnclosingTestClasses,
-								configuration
-						)
-				);
-
-			}
-			if ( child instanceof TestTemplateTestDescriptor testTemplateDescriptor ) {
-				Method testMethod = testTemplateDescriptor.getTestMethod();
-				updated.addChild( new TestTemplateTestDescriptor(
-						convertUniqueId( child.getUniqueId(), enhancementContextId ),
-						updated.getTestClass(),
-						findMethodReplacement( updated, testMethod ),
-						updated::getEnclosingTestClasses,
-						configuration
-				) );
+		try {
+			for ( Map.Entry<Object, Class<?>> entry : enhanceTestClass( testClass ).entrySet() ) {
+				final String enhancementContext = entry.getKey().toString();
+				addVariantDescriptor( classDescriptor, new BytecodeEnhancedVariantDescriptor(
+						classDescriptor.getUniqueId().append(
+								"variant",
+								"-".equals( enhancementContext ) ? "enhanced" : enhancementContext
+						),
+						"Enhanced" + ( "-".equals( enhancementContext ) ? "" : "[" + enhancementContext + "]" ),
+						entry.getValue(),
+						true,
+						classDescriptor.testEnhancedClassNames
+				), configurationParameters );
 			}
 		}
-		addEnhancementCheck( true, testEnhancedClasses, updated, configuration );
-		parent.addChild( updated );
+		catch (ClassNotFoundException e) {
+			throw new RuntimeException( e );
+		}
+
+		engineDescriptor.addChild( classDescriptor );
 	}
 
-	private UniqueId convertUniqueId(UniqueId id, Object enhancementContextId) {
-		UniqueId uniqueId = UniqueId.forEngine( getId() )
-				.append( "Enhanced", enhancementContextId == null ? "true" : Objects.toString( enhancementContextId ) );
-
-		List<UniqueId.Segment> segments = id.getSegments();
-		for ( int i = 1; i < segments.size(); i++ ) {
-			UniqueId.Segment segment = segments.get( i );
-			uniqueId = uniqueId.append( segment );
-		}
-		return uniqueId;
+	private void addVariantDescriptor(
+			BytecodeEnhancedClassDescriptor classDescriptor,
+			BytecodeEnhancedVariantDescriptor variantDescriptor,
+			ConfigurationParameters configurationParameters) {
+		discoverVariantChildren( variantDescriptor, configurationParameters );
+		classDescriptor.addChild( variantDescriptor );
 	}
 
-	private Method findMethodReplacement(ClassBasedTestDescriptor updated, Method testMethod) throws NoSuchMethodException {
-		String name = testMethod.getDeclaringClass().getName();
-
-		Class<?> testClass = updated.getTestClass();
-		while ( !testClass.getName().equals( name ) ) {
-			testClass = testClass.getSuperclass();
-			if ( Object.class.equals( testClass ) ) {
-				throw new IllegalStateException( "Wasn't able to find a test method " + testMethod );
-			}
-		}
-		return testClass.getDeclaredMethod(
-				testMethod.getName(),
-				testMethod.getParameterTypes()
+	private void discoverVariantChildren(
+			BytecodeEnhancedVariantDescriptor variantDescriptor,
+			ConfigurationParameters configurationParameters) {
+		// Mirror Jupiter's test tree under the enhancement variant so external reports keep method-level granularity.
+		final LauncherDiscoveryRequest request = launcherRequest(
+				variantDescriptor.testClass,
+				configurationParameters,
+				null
 		);
+		final TestPlan testPlan = withNestedJupiterExecution( () -> LauncherFactory.create().discover( request ) );
+		for ( TestIdentifier root : testPlan.getRoots() ) {
+			for ( TestIdentifier classIdentifier : testPlan.getChildren( root ) ) {
+				for ( TestIdentifier child : testPlan.getChildren( classIdentifier ) ) {
+					variantDescriptor.addMirroredChild( variantDescriptor, child, testPlan );
+				}
+			}
+		}
 	}
 
 	@Override
-	protected JupiterEngineExecutionContext createExecutionContext(ExecutionRequest request) {
+	public void execute(ExecutionRequest request) {
+		final EngineExecutionListener listener = request.getEngineExecutionListener();
+		final TestDescriptor root = request.getRootTestDescriptor();
+		listener.executionStarted( root );
 		try {
-			// Try constructing the JupiterEngineExecutionContext the way it was done in 5.12 and before
-			final Constructor<JupiterEngineExecutionContext> constructorV5_12 = JupiterEngineExecutionContext.class
-					.getConstructor( EngineExecutionListener.class, JupiterConfiguration.class );
-			return constructorV5_12.newInstance( request.getEngineExecutionListener(), this.getJupiterConfiguration( request ) );
+			for ( TestDescriptor classDescriptor : root.getChildren() ) {
+				executeClassDescriptor(
+						listener,
+						classDescriptor,
+						request.getConfigurationParameters(),
+						request.getOutputDirectoryCreator()
+				);
+			}
+			listener.executionFinished( root, TestExecutionResult.successful() );
 		}
-		catch (NoSuchMethodException | InstantiationException | IllegalAccessException | InvocationTargetException e) {
-			// Ignore errors as they are probably due to version mismatches and try the 5.13 way
+		catch (Throwable t) {
+			listener.executionFinished( root, TestExecutionResult.failed( t ) );
 		}
-
-		return new JupiterEngineExecutionContext(
-				request.getEngineExecutionListener(),
-				this.getJupiterConfiguration( request ),
-				new LauncherStoreFacade( request.getStore() )
-		);
 	}
 
-	private JupiterConfiguration getJupiterConfiguration(ExecutionRequest request) {
-		if ( request.getRootTestDescriptor() instanceof JupiterEngineDescriptor descriptor ) {
-			return descriptor.getConfiguration();
+	private void executeClassDescriptor(EngineExecutionListener listener, TestDescriptor classDescriptor,
+			ConfigurationParameters configurationParameters, OutputDirectoryCreator outputDirectoryCreator) {
+		listener.executionStarted( classDescriptor );
+		try {
+			for ( TestDescriptor variantDescriptor : classDescriptor.getChildren() ) {
+				executeVariantDescriptor(
+						listener,
+						(BytecodeEnhancedVariantDescriptor) variantDescriptor,
+						configurationParameters,
+						outputDirectoryCreator
+				);
+			}
+			listener.executionFinished( classDescriptor, TestExecutionResult.successful() );
 		}
-		else {
-			return null;
+		catch (Throwable t) {
+			listener.executionFinished( classDescriptor, TestExecutionResult.failed( t ) );
+		}
+	}
+
+	private void executeVariantDescriptor(EngineExecutionListener listener, BytecodeEnhancedVariantDescriptor descriptor,
+			ConfigurationParameters configurationParameters, OutputDirectoryCreator outputDirectoryCreator) {
+		listener.executionStarted( descriptor );
+		try {
+			descriptor.execute( listener, configurationParameters, outputDirectoryCreator );
+			listener.executionFinished( descriptor, TestExecutionResult.successful() );
+		}
+		catch (Throwable t) {
+			listener.executionFinished( descriptor, TestExecutionResult.failed( t ) );
 		}
 	}
 
@@ -289,209 +242,117 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 		return Optional.of( "junit-jupiter-engine" );
 	}
 
-	public static class Context implements EngineExecutionContext {
-		private final ExecutionRequest request;
+	private static class BytecodeEnhancedClassDescriptor extends AbstractTestDescriptor {
+		private final String[] testEnhancedClassNames;
 
-		public Context(ExecutionRequest request) {
-			this.request = request;
+		private BytecodeEnhancedClassDescriptor(UniqueId uniqueId, Class<?> testClass, String[] testEnhancedClassNames) {
+			super( uniqueId, testClass.getName(), ClassSource.from( testClass ) );
+			this.testEnhancedClassNames = testEnhancedClassNames;
+		}
+
+		@Override
+		public Type getType() {
+			return Type.CONTAINER;
 		}
 	}
 
-	private static class DelegatingJupiterConfiguration implements JupiterConfiguration {
-		private final JupiterConfiguration configuration;
-		private final DelegatingDisplayNameGenerator displayNameGenerator;
-
-		private DelegatingJupiterConfiguration(JupiterConfiguration configuration, Object id) {
-			this.configuration = configuration;
-			displayNameGenerator = new DelegatingDisplayNameGenerator(
-					configuration.getDefaultDisplayNameGenerator(),
-					id
-			);
-		}
-
-		@Override
-		public Predicate<Class<? extends Extension>> getFilterForAutoDetectedExtensions() {
-			return configuration.getFilterForAutoDetectedExtensions();
-		}
-
-		@Override
-		public Optional<String> getRawConfigurationParameter(String s) {
-			return configuration.getRawConfigurationParameter( s );
-		}
-
-		@Override
-		public <T> Optional<T> getRawConfigurationParameter(String key, Function<? super String, ? extends T> transformer) {
-			return configuration.getRawConfigurationParameter(  key, transformer );
-		}
-
-		@Override
-		public boolean isParallelExecutionEnabled() {
-			return configuration.isParallelExecutionEnabled();
-		}
-
-		@Override
-		public boolean isClosingStoredAutoCloseablesEnabled() {
-			return configuration.isClosingStoredAutoCloseablesEnabled();
-		}
-
-		@Override
-		public boolean isExtensionAutoDetectionEnabled() {
-			return configuration.isExtensionAutoDetectionEnabled();
-		}
-
-		@Override
-		public boolean isThreadDumpOnTimeoutEnabled() {
-			return configuration.isThreadDumpOnTimeoutEnabled();
-		}
-
-		@Override
-		public ExecutionMode getDefaultExecutionMode() {
-			return configuration.getDefaultExecutionMode();
-		}
-
-		@Override
-		public ExecutionMode getDefaultClassesExecutionMode() {
-			return configuration.getDefaultClassesExecutionMode();
-		}
-
-		@Override
-		public TestInstance.Lifecycle getDefaultTestInstanceLifecycle() {
-			return configuration.getDefaultTestInstanceLifecycle();
-		}
-
-		@Override
-		public Predicate<ExecutionCondition> getExecutionConditionFilter() {
-			return configuration.getExecutionConditionFilter();
-		}
-
-		@Override
-		public DisplayNameGenerator getDefaultDisplayNameGenerator() {
-			return displayNameGenerator;
-		}
-
-		@Override
-		public Optional<MethodOrderer> getDefaultTestMethodOrderer() {
-			return configuration.getDefaultTestMethodOrderer();
-		}
-
-		@Override
-		public Optional<ClassOrderer> getDefaultTestClassOrderer() {
-			return configuration.getDefaultTestClassOrderer();
-		}
-
-		@Override
-		public CleanupMode getDefaultTempDirCleanupMode() {
-			return configuration.getDefaultTempDirCleanupMode();
-		}
-
-		@Override
-		public Supplier<TempDirFactory> getDefaultTempDirFactorySupplier() {
-			return configuration.getDefaultTempDirFactorySupplier();
-		}
-
-		@Override
-		public TestInstantiationAwareExtension.ExtensionContextScope getDefaultTestInstantiationExtensionContextScope() {
-			return configuration.getDefaultTestInstantiationExtensionContextScope();
-		}
-
-		@Override
-		public OutputDirectoryCreator getOutputDirectoryCreator() {
-			return configuration.getOutputDirectoryCreator();
-		}
-	}
-
-	private static class DelegatingDisplayNameGenerator implements DisplayNameGenerator {
-
-		private final DisplayNameGenerator delegate;
-		private final Object id;
-
-		private DelegatingDisplayNameGenerator(DisplayNameGenerator delegate, Object id) {
-			this.delegate = delegate;
-			this.id = id;
-		}
-
-		@Override
-		public String generateDisplayNameForClass(Class<?> aClass) {
-			return prefix() + delegate.generateDisplayNameForClass( aClass );
-		}
-
-		private String prefix() {
-			return "Enhanced" + ( id == null ? "" : "[" + id + "]" ) + ":";
-		}
-
-		@Override
-		public String generateDisplayNameForNestedClass(List<Class<?>> enclosingInstanceTypes, Class<?> nestedClass) {
-			return prefix() + delegate.generateDisplayNameForNestedClass( enclosingInstanceTypes, nestedClass );
-		}
-
-		@Override
-		public String generateDisplayNameForMethod(List<Class<?>> enclosingInstanceTypes, Class<?> testClass, Method testMethod) {
-			return prefix() + delegate.generateDisplayNameForMethod( enclosingInstanceTypes, testClass, testMethod );
-		}
-	}
-
-	private static class EnhancementWorkedCheckMethodTestDescriptor extends TestMethodTestDescriptor {
-
+	private static class BytecodeEnhancedVariantDescriptor extends AbstractTestDescriptor {
+		private final Class<?> testClass;
 		private final boolean enhanced;
-		private final String[] classes;
+		private final String[] testEnhancedClassNames;
+		/**
+		 * Maps Jupiter unique IDs to the descriptors mirrored into this engine's tree.  The forwarding listener uses
+		 * this to translate nested Jupiter execution events back to the descriptors exposed by this engine.
+		 */
+		private final Map<String, MirroredJupiterDescriptor> mirroredDescriptors = new HashMap<>();
 
-		public EnhancementWorkedCheckMethodTestDescriptor(UniqueId uniqueId, Class<?> testClass, Supplier<List<Class<?>>> enclosingInstanceTypes, JupiterConfiguration configuration, boolean enhanced, String[] classes) {
-			super(
-					prepareId( uniqueId, testMethod( enhanced ) ),
-					testClass, testMethod( enhanced ),
-					enclosingInstanceTypes,
-					configuration
-			);
+		private BytecodeEnhancedVariantDescriptor(
+				UniqueId uniqueId,
+				String displayName,
+				Class<?> testClass,
+				boolean enhanced,
+				String[] testEnhancedClassNames) {
+			super( uniqueId, displayName, ClassSource.from( testClass ) );
+			this.testClass = testClass;
 			this.enhanced = enhanced;
-			this.classes = classes;
-		}
-
-		private static Method testMethod(boolean enhanced) {
-			return enhanced ? METHOD_ENHANCED : METHOD_NOT_ENHANCED;
+			this.testEnhancedClassNames = testEnhancedClassNames;
 		}
 
 		@Override
-		public JupiterEngineExecutionContext execute(JupiterEngineExecutionContext context,
-				DynamicTestExecutor dynamicTestExecutor) {
-			ExtensionContext extensionContext = context.getExtensionContext();
-			ThrowableCollector throwableCollector = context.getThrowableCollector();
+		public Type getType() {
+			return Type.CONTAINER;
+		}
 
-			throwableCollector.execute( () -> {
-				Object instance = extensionContext.getRequiredTestInstance();
-				for ( String className : classes ) {
-					assertEnhancementWorked( className, enhanced, instance );
+		private void addMirroredChild(
+				TestDescriptor parentDescriptor,
+				TestIdentifier testIdentifier,
+				TestPlan testPlan) {
+			final MirroredJupiterDescriptor descriptor = new MirroredJupiterDescriptor(
+					parentDescriptor.getUniqueId().append( "jupiter", testIdentifier.getUniqueId() ),
+					testIdentifier.getDisplayName(),
+					testIdentifier.getSource().orElse( null ),
+					testIdentifier.getType()
+			);
+			parentDescriptor.addChild( descriptor );
+			mirroredDescriptors.put( testIdentifier.getUniqueId(), descriptor );
+
+			for ( TestIdentifier child : testPlan.getChildren( testIdentifier ) ) {
+				addMirroredChild( descriptor, child, testPlan );
+			}
+		}
+
+		private void execute(
+				EngineExecutionListener engineExecutionListener,
+				ConfigurationParameters configurationParameters,
+				OutputDirectoryCreator outputDirectoryCreator) {
+			final LauncherDiscoveryRequest request = launcherRequest(
+					testClass,
+					configurationParameters,
+					outputDirectoryCreator
+			);
+			final Launcher launcher = LauncherFactory.create();
+			final SummaryGeneratingListener summaryListener = new SummaryGeneratingListener();
+			final MirroredJupiterExecutionListener mirroredListener = new MirroredJupiterExecutionListener(
+					this,
+					engineExecutionListener
+			);
+
+			withNestedJupiterExecution( () -> launcher.execute( request, summaryListener, mirroredListener ) );
+
+			final TestExecutionSummary summary = summaryListener.getSummary();
+			if ( summary.getTestsFoundCount() == 0 ) {
+				throw new AssertionError( "No Jupiter tests were discovered for " + testClass.getName() );
+			}
+			if ( summary.getTotalFailureCount() > 0 && hasUnmappedFailures( summary ) ) {
+				throw failure( summary );
+			}
+
+			for ( String className : testEnhancedClassNames ) {
+				assertEnhancementWorked( className, enhanced, testClass.getClassLoader() );
+			}
+		}
+
+		private static AssertionError failure(TestExecutionSummary summary) {
+			final AssertionError failure = new AssertionError(
+					"Nested Jupiter execution failed: " + summary.getTotalFailureCount() + " failure(s)" );
+			for ( TestExecutionSummary.Failure nestedFailure : summary.getFailures() ) {
+				failure.addSuppressed( nestedFailure.getException() );
+			}
+			return failure;
+		}
+
+		private boolean hasUnmappedFailures(TestExecutionSummary summary) {
+			for ( TestExecutionSummary.Failure nestedFailure : summary.getFailures() ) {
+				if ( !mirroredDescriptors.containsKey( nestedFailure.getTestIdentifier().getUniqueId() ) ) {
+					return true;
 				}
-			} );
-
-			return context;
-		}
-
-		private static final Method METHOD_ENHANCED;
-		private static final Method METHOD_NOT_ENHANCED;
-
-		static {
-			try {
-				METHOD_ENHANCED = EnhancementWorkedCheckMethodTestDescriptor.class.getDeclaredMethod(
-						"assertEntityClassesWereEnhanced" );
-				METHOD_NOT_ENHANCED = EnhancementWorkedCheckMethodTestDescriptor.class.getDeclaredMethod(
-						"assertEntityClassesWereNotEnhanced" );
 			}
-			catch (NoSuchMethodException e) {
-				throw new RuntimeException( e );
-			}
+			return false;
 		}
 
-		private static void assertEntityClassesWereEnhanced() {
-			// just for JUint to display the name
-		}
-
-		private static void assertEntityClassesWereNotEnhanced() {
-			// just for JUint to display the name
-		}
-
-		private static void assertEnhancementWorked(String className, boolean enhanced, Object testClassInstance) {
+		private static void assertEnhancementWorked(String className, boolean enhanced, ClassLoader classLoader) {
 			try {
-				Class<?> loaded = testClassInstance.getClass().getClassLoader().loadClass( className );
+				Class<?> loaded = classLoader.loadClass( className );
 				if ( enhanced ) {
 					assertThat( loaded.getDeclaredMethods() )
 							.extracting( Method::getName )
@@ -503,17 +364,123 @@ public class BytecodeEnhancedTestEngine extends HierarchicalTestEngine<JupiterEn
 							.noneMatch( name -> name.startsWith( "$$_hibernate_" ) );
 				}
 			}
-
 			catch (ClassNotFoundException e) {
-				Assertions.fail( e.getMessage() );
+				throw new AssertionError( e );
+			}
+		}
+	}
+
+	private static LauncherDiscoveryRequest launcherRequest(
+			Class<?> testClass,
+			ConfigurationParameters configurationParameters,
+			OutputDirectoryCreator outputDirectoryCreator) {
+		final LauncherDiscoveryRequestBuilder builder = LauncherDiscoveryRequestBuilder.request()
+				.selectors( selectClass( testClass ) )
+				.filters( includeEngines( "junit-jupiter" ) )
+				.parentConfigurationParameters( configurationParameters );
+		if ( outputDirectoryCreator != null ) {
+			builder.outputDirectoryCreator( outputDirectoryCreator );
+		}
+		return builder.build();
+	}
+
+	private static <T> T withNestedJupiterExecution(Supplier<T> action) {
+		NESTED_JUPITER_EXECUTION.set( true );
+		try {
+			return action.get();
+		}
+		finally {
+			NESTED_JUPITER_EXECUTION.remove();
+		}
+	}
+
+	private static void withNestedJupiterExecution(Runnable action) {
+		withNestedJupiterExecution( () -> {
+			action.run();
+			return null;
+		} );
+	}
+
+	/**
+	 * Descriptor exposed by this engine for a test or container that Jupiter discovered inside an enhancement variant.
+	 */
+	private static class MirroredJupiterDescriptor extends AbstractTestDescriptor {
+		private final Type type;
+
+		private MirroredJupiterDescriptor(
+				UniqueId uniqueId,
+				String displayName,
+				TestSource source,
+				Type type) {
+			super( uniqueId, displayName, source );
+			this.type = type;
+		}
+
+		@Override
+		public Type getType() {
+			return type;
+		}
+	}
+
+	/**
+	 * Translates events from the nested Jupiter launcher back to this engine's mirrored descriptors.
+	 */
+	private static class MirroredJupiterExecutionListener implements TestExecutionListener {
+		private final BytecodeEnhancedVariantDescriptor variantDescriptor;
+		private final EngineExecutionListener engineExecutionListener;
+
+		private MirroredJupiterExecutionListener(
+				BytecodeEnhancedVariantDescriptor variantDescriptor,
+				EngineExecutionListener engineExecutionListener) {
+			this.variantDescriptor = variantDescriptor;
+			this.engineExecutionListener = engineExecutionListener;
+		}
+
+		@Override
+		public void dynamicTestRegistered(TestIdentifier testIdentifier) {
+			final Optional<String> parentId = testIdentifier.getParentId();
+			if ( parentId.isEmpty() ) {
+				return;
+			}
+
+			final MirroredJupiterDescriptor parent = variantDescriptor.mirroredDescriptors.get( parentId.get() );
+			if ( parent == null ) {
+				return;
+			}
+
+			final MirroredJupiterDescriptor descriptor = new MirroredJupiterDescriptor(
+					parent.getUniqueId().append( "dynamic-test", testIdentifier.getUniqueId() ),
+					testIdentifier.getDisplayName(),
+					testIdentifier.getSource().orElse( null ),
+					testIdentifier.getType()
+			);
+			parent.addChild( descriptor );
+			variantDescriptor.mirroredDescriptors.put( testIdentifier.getUniqueId(), descriptor );
+			engineExecutionListener.dynamicTestRegistered( descriptor );
+		}
+
+		@Override
+		public void executionSkipped(TestIdentifier testIdentifier, String reason) {
+			final MirroredJupiterDescriptor descriptor = variantDescriptor.mirroredDescriptors.get( testIdentifier.getUniqueId() );
+			if ( descriptor != null ) {
+				engineExecutionListener.executionSkipped( descriptor, reason );
 			}
 		}
 
-		private static UniqueId prepareId(UniqueId uniqueId, Method method) {
-			return uniqueId.append(
-					TestMethodTestDescriptor.SEGMENT_TYPE,
-					method.getName()
-			);
+		@Override
+		public void executionStarted(TestIdentifier testIdentifier) {
+			final MirroredJupiterDescriptor descriptor = variantDescriptor.mirroredDescriptors.get( testIdentifier.getUniqueId() );
+			if ( descriptor != null ) {
+				engineExecutionListener.executionStarted( descriptor );
+			}
+		}
+
+		@Override
+		public void executionFinished(TestIdentifier testIdentifier, TestExecutionResult testExecutionResult) {
+			final MirroredJupiterDescriptor descriptor = variantDescriptor.mirroredDescriptors.get( testIdentifier.getUniqueId() );
+			if ( descriptor != null ) {
+				engineExecutionListener.executionFinished( descriptor, testExecutionResult );
+			}
 		}
 	}
 }

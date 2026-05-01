@@ -1,0 +1,236 @@
+= Semantic Query Model (SQM)
+
+:toc2:
+:toclevels: 3
+:sectanchors:
+:numbered:
+
+This document is a new-contributor introduction to Hibernate's Semantic Query Model, usually called SQM.
+It focuses on the shape of the model, the roles played by the main classes, and the way SQM fits between query construction and SQL generation.
+
+See also:
+
+* `design/sqm-creation-hql.adoc`
+* `design/sqm-creation-criteria.adoc`
+* `design/sql-ast.adoc`
+
+== What SQM is
+
+SQM is Hibernate's semantic tree representation of a domain query.
+It is "semantic" because it is not just a parse tree.
+An SQM tree contains resolved domain-model references, typed expressions, inferred query structure, parameters, joins, predicates, selections, and mutation targets.
+
+SQM is the common representation used for:
+
+* HQL and JPQL strings
+* Jakarta Persistence Criteria queries
+* Hibernate Criteria extensions
+* HQL parsed into Criteria objects for later programmatic modification
+
+In a simplified query pipeline, SQM lives here:
+
+[plantuml,sqm-query-pipeline,png]
+.Query pipeline
+----
+@startuml
+skinparam handwritten true
+
+actor Application
+
+Application -> QueryAPI : HQL string\nor Criteria calls
+QueryAPI -> SQM : build semantic tree
+SQM -> SQLAST : translate using mapping model\nand query options
+SQLAST -> JDBC : render SQL and bind parameters
+JDBC -> Database : execute
+
+@enduml
+----
+
+== The main packages
+
+`org.hibernate.query.sqm`::
+The root SQM package.
+It defines shared contracts such as `NodeBuilder`, `SqmExpressible`, `SqmPathSource`, query-source markers, logging categories, and visitor contracts.
+
+`org.hibernate.query.sqm.tree`::
+The SQM tree model.
+The root statement contract is `SqmStatement`.
+
+`org.hibernate.query.sqm.tree.select`::
+Select-query statement and query-part nodes such as `SqmSelectStatement`, `SqmQuerySpec`, `SqmQueryGroup`, `SqmSelectClause`, and `SqmSortSpecification`.
+
+`org.hibernate.query.sqm.tree.domain`::
+Domain-path nodes such as roots, joins, path expressions, entity paths, embeddable paths, basic-valued paths, collection paths, and treated paths.
+
+`org.hibernate.query.sqm.tree.expression`::
+Expression nodes such as literals, parameters, functions, arithmetic expressions, case expressions, subqueries, and type-related expressions.
+
+`org.hibernate.query.sqm.tree.predicate`::
+Predicate nodes such as comparisons, junctions, `between`, `like`, `is null`, `exists`, and `in`.
+
+`org.hibernate.query.sqm.tree.insert`, `update`, and `delete`::
+Mutation statement nodes.
+
+`org.hibernate.query.hql.internal`::
+The HQL parser and semantic model builder.
+`StandardHqlTranslator` parses a string and delegates semantic tree creation to `SemanticQueryBuilder`.
+
+`org.hibernate.query.sqm.internal`::
+Internal SQM helpers, query plans, parameter handling, type checking, the Criteria node builder, and SQM tree diagnostics.
+
+`org.hibernate.query.sqm.sql`::
+The SQM-to-SQL AST translation contract.
+`StandardSqmTranslatorFactory` creates `StandardSqmTranslator`, which is implemented by `BaseSqmToSqlAstConverter`.
+
+== Tree shape
+
+The exact node classes vary by statement kind, but a select query usually has this shape:
+
+[plantuml,sqm-select-shape,png]
+.Typical select SQM shape
+----
+@startmindmap
+skinparam handwritten true
+
+* SqmSelectStatement
+** SqmQueryPart
+*** SqmQuerySpec
+**** SqmFromClause
+***** SqmRoot
+***** SqmJoin
+**** SqmSelectClause
+***** SqmSelection
+****** SqmExpression
+**** SqmWhereClause
+***** SqmPredicate
+**** group by
+**** having
+**** order by
+*** SqmQueryGroup
+**** union / intersect / except
+** CTE statements
+** parameters
+
+@endmindmap
+----
+
+A mutation query has a different top-level statement, for example `SqmUpdateStatement`, `SqmDeleteStatement`, `SqmInsertSelectStatement`, or `SqmInsertValuesStatement`.
+These still use SQM expressions, predicates, domain paths, and parameter nodes.
+
+== SQM and Criteria are the same objects
+
+Hibernate does not maintain a separate Criteria tree and then convert it to SQM.
+The SQM node classes directly implement the Criteria contracts.
+
+For example:
+
+* `SqmSelectStatement` implements Hibernate's `JpaCriteriaQuery`
+* SQM `from` nodes implement Criteria `From` contracts
+* SQM expression and predicate nodes implement Criteria expression and predicate contracts
+* `SqmCriteriaNodeBuilder` implements the builder API by instantiating SQM nodes
+
+This is the reason HQL and Criteria are expected to have the same semantics in Hibernate.
+They converge on the same internal representation before query planning and SQL AST translation.
+
+== Important services
+
+`QueryEngine`::
+The session-factory scoped service that owns query infrastructure.
+It exposes the HQL translator, the Criteria builder, the SQM translator factory, the function registry, and the query interpretation cache.
+
+`NodeBuilder`::
+The SQM-facing builder contract used by SQM nodes and creation code.
+Hibernate's implementation is `SqmCriteriaNodeBuilder`.
+
+`SqmCreationContext`::
+The context used while creating SQM.
+The Criteria node builder also acts as the SQM creation context for the standard HQL translator.
+
+`SqmFunctionRegistry`::
+Registry of SQM function descriptors.
+HQL parsing and Criteria function calls both resolve functions through query-engine infrastructure.
+
+`QueryInterpretationCache`::
+Caches HQL interpretations and query plans.
+The HQL interpretation contains the SQM statement plus parameter metadata and SQM-to-query-parameter cross references.
+
+== Parameters
+
+SQM represents query parameters as SQM parameter nodes.
+There are two important follow-up structures:
+
+`ParameterMetadata`::
+The public/query-layer view of parameters.
+
+`DomainParameterXref`::
+The cross reference between SQM parameter occurrences and query parameters.
+It is used later when query bindings are resolved into JDBC parameter bindings during SQM-to-SQL AST translation.
+
+For HQL, parameter metadata is created after the HQL string is translated to SQM.
+For Criteria, parameters may be collected from a tree that is still being built, and Criteria parameter wrappers are resolved when the statement is prepared for execution.
+
+== SQM to SQL AST
+
+SQM is still a domain query.
+It does not directly render SQL.
+Execution first translates SQM into SQL AST:
+
+[plantuml,sqm-to-sql-ast,png]
+.SQM to SQL AST
+----
+@startuml
+skinparam handwritten true
+
+SQM -> SqmTranslatorFactory
+SqmTranslatorFactory -> StandardSqmTranslator
+StandardSqmTranslator -> BaseSqmToSqlAstConverter
+BaseSqmToSqlAstConverter -> SQLAST : SelectStatement\nMutationStatement
+SQLAST -> SqlAstTranslator : dialect-specific rendering
+SqlAstTranslator -> JDBC : JdbcSelect\nJdbcMutation
+
+@enduml
+----
+
+The SQM-to-SQL AST phase uses:
+
+* the runtime mapping model
+* the SQL translation engine
+* query options such as locking and limits
+* load-query influencers such as enabled filters and entity graphs
+* query parameter bindings
+* dialect-specific capabilities exposed through the SQL AST layer
+
+== Common contributor tasks
+
+Adding HQL syntax::
+Start with the ANTLR grammar in `hibernate-core/src/main/antlr/org/hibernate/grammars/hql/HqlParser.g4`, then update `SemanticQueryBuilder` to build the appropriate SQM nodes.
+If the feature has runtime SQL impact, expect corresponding work in SQM-to-SQL AST translation.
+
+Adding a new Criteria operation::
+Start with the public API under `org.hibernate.query.criteria`, implement it in `SqmCriteriaNodeBuilder` or the appropriate SQM node, and make sure it produces the same SQM shape that HQL produces for the equivalent language feature.
+
+Changing type checking::
+Look at `TypecheckUtil`, expression constructors, path resolution, and function descriptors.
+Most type errors should be found while building SQM, before SQL AST translation.
+
+Changing SQL generation for an existing SQM node::
+Start in `BaseSqmToSqlAstConverter` or one of the interpretation helpers in `org.hibernate.query.sqm.sql.internal`.
+The SQM tree might already be correct, and the change may belong only in translation.
+
+Debugging an SQM tree::
+Enable the SQM tree logging category mentioned in `hibernate-core/src/test/resources/log4j2.properties`, or use `SqmTreePrinter` from a debugger or test.
+
+== Things to keep in mind
+
+SQM is deliberately closer to the Java domain model than to SQL.
+A path like `book.publisher.name` is represented in terms of mapped attributes and domain types, not table aliases and columns.
+
+SQM nodes are used both by HQL and Criteria.
+When changing a node, consider both creation paths.
+
+HQL has parsing concerns that Criteria does not have.
+Criteria has mutability and API compatibility concerns that HQL does not have.
+Both meet in the same tree before execution.
+
+SQL AST translation is a separate phase.
+If a feature is parsed and type checked correctly but produces wrong SQL, the problem is often in `org.hibernate.query.sqm.sql`, not in SQM creation.

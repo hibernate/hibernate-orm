@@ -1,0 +1,216 @@
+= Creating SQM from Criteria
+
+:toc2:
+:toclevels: 3
+:sectanchors:
+:numbered:
+
+This document explains how Hibernate creates SQM from Jakarta Persistence Criteria queries and Hibernate Criteria extensions.
+It is intended as a starting point for contributors who need to follow a Criteria query from builder calls into execution.
+
+== Big picture
+
+Hibernate's Criteria implementation does not build a separate Criteria model.
+Criteria objects are SQM objects.
+
+When application code calls the Criteria API, Hibernate creates and wires SQM nodes directly:
+
+[plantuml,criteria-to-sqm,png]
+.Criteria to SQM
+----
+@startuml
+skinparam handwritten true
+
+Application -> SessionFactory : getCriteriaBuilder()
+SessionFactory -> QueryEngine : getCriteriaBuilder()
+QueryEngine -> SqmCriteriaNodeBuilder : shared builder
+Application -> SqmCriteriaNodeBuilder : createQuery(Book.class)
+SqmCriteriaNodeBuilder -> SQM : SqmSelectStatement
+Application -> SQM : from(), select(), where(), orderBy()
+Application -> Session : createSelectionQuery(criteria)
+Session -> QueryObject : SelectionQueryImpl
+
+@enduml
+----
+
+The important idea is that the object returned from `createQuery()` is already an `SqmSelectStatement`.
+Calls like `from()`, `select()`, `where()`, and `join()` mutate or attach SQM nodes.
+
+== Builder ownership
+
+The Criteria builder is exposed as `HibernateCriteriaBuilder`, which extends the Jakarta Persistence `CriteriaBuilder`.
+The standard implementation is `SqmCriteriaNodeBuilder`.
+
+`QueryEngineImpl` creates one `SqmCriteriaNodeBuilder` for the session factory.
+That builder is returned from:
+
+* `SessionFactory#getCriteriaBuilder()`
+* `QueryEngine#getCriteriaBuilder()`
+
+The same builder is also used as SQM creation context for the standard HQL translator.
+This is one reason HQL and Criteria share type configuration, function registry access, and domain-model resolution behavior.
+
+== Creating statement nodes
+
+The core creation methods in `SqmCriteriaNodeBuilder` instantiate SQM statements directly.
+
+Examples:
+
+* `createQuery()` creates an `SqmSelectStatement<Object>`
+* `createQuery(Class<T>)` creates an `SqmSelectStatement<T>`
+* `createTupleQuery()` creates an `SqmSelectStatement<Tuple>`
+* `createCriteriaUpdate(Class<T>)` creates an `SqmUpdateStatement<T>`
+* `createCriteriaDelete(Class<T>)` creates an `SqmDeleteStatement<T>`
+* Hibernate extensions create insert statements and other HQL-only constructs
+
+These constructors use `SqmQuerySource.CRITERIA`, which is important for Criteria parameter handling and Criteria-specific validation.
+
+== Building the tree
+
+After a statement is created, normal Criteria API calls add SQM nodes:
+
+[plantuml,criteria-tree-build,png]
+.Criteria tree building
+----
+@startmindmap
+skinparam handwritten true
+
+* SqmSelectStatement
+** from(Book.class)
+*** SqmRoot<Book>
+** root.join("publisher")
+*** SqmJoin
+** builder.equal(...)
+*** SqmComparisonPredicate
+** query.where(...)
+*** SqmWhereClause
+** query.select(...)
+*** SqmSelectClause
+**** SqmSelection
+** query.orderBy(...)
+*** SqmSortSpecification
+
+@endmindmap
+----
+
+Most Criteria interfaces returned by Hibernate are Hibernate-extended interfaces under `org.hibernate.query.criteria`.
+Those interfaces extend the Jakarta Persistence contracts but expose HQL features that are not part of standard JPQL.
+
+== Criteria nodes are SQM nodes
+
+This dual role is the main design point:
+
+* Criteria `Path` objects are SQM path nodes.
+* Criteria `Root` and `Join` objects are SQM from nodes.
+* Criteria `Expression` and `Predicate` objects are SQM expression and predicate nodes.
+* Criteria query statements are SQM statements.
+
+The benefit is that query planning, parameter handling, SQM-to-SQL AST translation, and SQL rendering do not need separate paths for HQL and Criteria.
+
+The cost is that SQM node changes can affect both APIs.
+When changing an SQM node, check how it is used from:
+
+* HQL semantic creation in `SemanticQueryBuilder`
+* Criteria construction through `SqmCriteriaNodeBuilder`
+* public contracts under `org.hibernate.query.criteria`
+* Jakarta Persistence interfaces implemented by the node
+
+== Creating Criteria from HQL
+
+Hibernate also supports creating a Criteria query from an HQL string:
+
+`HibernateCriteriaBuilder#createQuery(String, Class)`
+
+In the standard implementation, `SqmCriteriaNodeBuilder` asks the HQL translator to translate the string.
+If the result is a select SQM statement, it copies that statement into a new `SqmSelectStatement` with query source `CRITERIA`.
+
+This feature lets applications use HQL as a base query and then programmatically augment the tree with Criteria calls.
+It also reinforces the design rule that HQL and Criteria should produce compatible SQM shapes.
+
+== Preparing a Criteria query for execution
+
+Criteria execution starts from session methods such as:
+
+* `createSelectionQuery(CriteriaQuery<R>)`
+* `createQuery(CriteriaSelect<T>)`
+* `createMutationQuery(CriteriaStatement<?>)` for update and delete criteria trees
+* `createMutationQuery(JpaCriteriaInsert<?>)` for insert criteria trees
+
+For a select query, `AbstractSharedSessionContract` verifies that the Criteria object is an SQM select statement and then creates `SelectionQueryImpl` directly from the `SqmSelectStatement`.
+
+There is no HQL parsing step and no HQL interpretation cache lookup.
+The SQM tree already exists.
+
+Before creating the query object, Hibernate may apply Criteria-specific conveniences.
+For example, if a simple Criteria select query has exactly one root and no explicit selection, Hibernate can use that root as the selection.
+
+== Parameters
+
+Criteria parameters are represented in the SQM tree using Criteria parameter nodes and wrappers.
+Unlike HQL parameters, Criteria parameters may be Java object identities supplied by application code.
+
+Important places to inspect:
+
+* `SqmStatement#getSqmParameters()`
+* `SqmStatement#resolveParameters()`
+* `JpaCriteriaParameter`
+* `SqmJpaCriteriaParameterWrapper`
+* `ParameterCollector`
+* `DomainParameterXref`
+
+The end goal is the same as HQL: query parameter bindings must be resolved to mapping-model types and then to JDBC parameter bindings during SQL AST translation.
+
+== After SQM creation
+
+Once a Criteria statement is wrapped in `SelectionQueryImpl` or `MutationQueryImpl`, execution follows the normal SQM path.
+
+For selects:
+
+[plantuml,criteria-after-sqm,png]
+.After Criteria SQM creation
+----
+@startuml
+skinparam handwritten true
+
+SqmSelectStatement -> SelectionQueryImpl
+SelectionQueryImpl -> SelectQueryPlan
+SelectQueryPlan -> SqmTranslatorFactory
+SqmTranslatorFactory -> StandardSqmTranslator
+StandardSqmTranslator -> SQLAST : SelectStatement
+SQLAST -> JdbcSelect
+
+@enduml
+----
+
+Criteria skips HQL parsing, but it does not skip SQM-to-SQL AST translation.
+
+== Where to look for common changes
+
+New Criteria API method::
+Start with the public Hibernate Criteria interface under `org.hibernate.query.criteria`, then implement it in `SqmCriteriaNodeBuilder` or the relevant SQM node.
+
+New expression or predicate type::
+Look under `org.hibernate.query.sqm.tree.expression` or `org.hibernate.query.sqm.tree.predicate`.
+Make sure the node supports copying, visiting, type access, and SQL AST translation.
+
+New path or join behavior::
+Look under `org.hibernate.query.sqm.tree.domain` and `org.hibernate.query.sqm.tree.from`.
+Also compare the HQL path-resolution behavior in `SemanticQueryBuilder`.
+
+Criteria query execution behavior::
+Start in `AbstractSharedSessionContract` and `SelectionQueryImpl` or `MutationQueryImpl`.
+
+SQL output behavior::
+Start in `org.hibernate.query.sqm.sql`, especially `BaseSqmToSqlAstConverter`.
+
+== Contributor checklist
+
+When changing Criteria-to-SQM creation, ask:
+
+* Does the public Criteria API return the most specific Hibernate Criteria type?
+* Does the implementation create normal SQM nodes, not a parallel model?
+* Does the generated SQM shape match equivalent HQL?
+* Does copying preserve `SqmQuerySource.CRITERIA` when needed?
+* Are Criteria parameters collected and resolved correctly?
+* Does the node still work when the query is copied, transformed, or cached in a query plan?
+* Does the SQM tree translate correctly to SQL AST?

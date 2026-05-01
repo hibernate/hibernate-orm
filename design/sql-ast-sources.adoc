@@ -1,0 +1,240 @@
+= SQL AST Sources
+
+:toc2:
+:toclevels: 3
+:sectanchors:
+:numbered:
+
+This document describes the main producers of Hibernate SQL AST trees.
+It is intended to help contributors find the code path responsible for creating a SQL AST before looking at SQL rendering.
+
+See also:
+
+* `design/sql-ast.adoc`
+* `design/sql-ast-model.adoc`
+* `design/sql-ast-translators.adoc`
+
+== Overview
+
+Hibernate builds SQL AST from several places:
+
+[plantuml,sql-ast-sources,png]
+.SQL AST producers
+----
+@startuml
+skinparam handwritten true
+
+SQM -> SQLAST : HQL and Criteria queries
+LoaderBuilders -> SQLAST : entity and collection loads
+ModelMutations -> SQLAST : flush-time table mutations
+SpecializedHelpers -> SQLAST : locking, generated values,\nfunction internals
+
+SQLAST -> SqlAstTranslatorFactory
+
+@enduml
+----
+
+The producer matters because the same SQL AST translator may render trees created by very different subsystems.
+
+== SQM translation
+
+HQL and Criteria queries first become SQM.
+Then SQM is translated to SQL AST by `org.hibernate.query.sqm.sql`.
+
+The main path for selects is:
+
+[plantuml,sqm-source-to-sql-ast,png]
+.SQM source
+----
+@startuml
+skinparam handwritten true
+
+SqmSelectStatement -> SqmTranslatorFactory
+SqmTranslatorFactory -> StandardSqmTranslator
+StandardSqmTranslator -> BaseSqmToSqlAstConverter
+BaseSqmToSqlAstConverter -> SelectStatement
+SelectStatement -> SqlAstTranslatorFactory
+
+@enduml
+----
+
+Important classes:
+
+`SqmTranslatorFactory`::
+Factory for SQM-to-SQL AST translators.
+
+`StandardSqmTranslatorFactory`::
+Creates `StandardSqmTranslator`.
+
+`StandardSqmTranslator`::
+The standard SQM translator implementation.
+It extends `BaseSqmToSqlAstConverter`.
+
+`BaseSqmToSqlAstConverter`::
+The central SQM-to-SQL AST converter.
+It resolves SQM paths against the runtime mapping model, creates table groups, creates column references, resolves SQL selections, handles joins, translates predicates and expressions, and produces `SelectStatement` or mutation SQL AST nodes.
+
+`SqmTranslation`::
+The result object for SQM translation, containing the SQL AST and parameter mapping information.
+
+This path is used for HQL and Criteria because both share the SQM model.
+
+== Loader SQL AST
+
+Entity and collection loading often bypass SQM and build SQL AST directly from mapping metadata.
+
+Typical use cases include:
+
+* `Session#get()` and `Session#find()`
+* lazy entity loading
+* collection loading
+* batch loading
+* natural-id loading
+* unique-key loading
+* subselect fetching
+* generated-value selection
+
+The central builder is `org.hibernate.loader.ast.internal.LoaderSelectBuilder`.
+It creates `SelectStatement` instances using:
+
+* the mapped entity or collection descriptor
+* selected fetches
+* key restrictions
+* load query influencers
+* lock options
+* batch-loading strategy
+
+A common path looks like this:
+
+[plantuml,loader-source-to-sql-ast,png]
+.Loader source
+----
+@startuml
+skinparam handwritten true
+
+EntityLoader -> LoaderSelectBuilder
+CollectionLoader -> LoaderSelectBuilder
+LoaderSelectBuilder -> LoaderSqlAstCreationState
+LoaderSelectBuilder -> SelectStatement
+SelectStatement -> SqlAstTranslatorFactory
+SqlAstTranslatorFactory -> JdbcSelect
+
+@enduml
+----
+
+Useful packages:
+
+`org.hibernate.loader.ast.spi`::
+Loader contracts.
+
+`org.hibernate.loader.ast.internal`::
+Standard loader implementations and `LoaderSelectBuilder`.
+
+`org.hibernate.sql.results.graph`::
+Result graph and assembler infrastructure used by loader SQL ASTs and query SQL ASTs.
+
+If a generated select is for loading mapped state rather than executing a user query, start in `org.hibernate.loader.ast` before looking at SQM.
+
+== Model mutation SQL AST
+
+Flush-time entity and collection changes are usually not represented as SQM mutation statements.
+They are represented as table-level model mutations under `org.hibernate.sql.model`.
+
+Typical use cases include:
+
+* entity insert, update, and delete during flush
+* collection row insert, update, and delete
+* delete-all rows for a collection table
+* soft-delete or temporal mutation variants
+* optional-table updates and upserts
+
+The main concepts are:
+
+`TableMutation`::
+An AST-like description of a single table mutation.
+
+`RestrictedTableMutation`::
+A table mutation with key or restriction predicates.
+
+`TableInsert`, `TableUpdate`, `TableDelete`::
+Specific table mutation types.
+
+`MutationOperationGroup`::
+A group of JDBC mutation operations for one entity or collection mutation.
+
+`JdbcMutationOperation`::
+The translated JDBC operation for a table mutation.
+
+Common creation areas:
+
+* `org.hibernate.persister.entity.mutation`
+* `org.hibernate.persister.collection.mutation`
+* `org.hibernate.persister.collection.BasicCollectionPersister`
+* `org.hibernate.persister.collection.OneToManyPersister`
+* builders under `org.hibernate.sql.model.ast.builder`
+
+The rendering path uses:
+
+`SqlAstTranslatorFactory.buildModelMutationTranslator(TableMutation, SessionFactoryImplementor)`
+
+== Query mutation SQL AST
+
+HQL and Criteria mutation queries produce SQM mutation statements first.
+Those statements are translated through `org.hibernate.query.sqm.sql` into SQL AST mutation statements under:
+
+* `org.hibernate.sql.ast.tree.insert`
+* `org.hibernate.sql.ast.tree.update`
+* `org.hibernate.sql.ast.tree.delete`
+
+Simple single-table mutations may translate directly to SQL AST mutation statements.
+Multi-table mutations may use mutation strategies under `org.hibernate.query.sqm.mutation`.
+Those strategies can involve temporary tables, persistent helper tables, inline id selection, or multiple JDBC operations.
+
+If the mutation came from an HQL or Criteria query, start in SQM mutation translation.
+If it came from flush, start in the persister mutation coordinators.
+
+== Specialized sources
+
+Some SQL ASTs are built by focused helper code rather than by a broad query or loader pipeline.
+Examples include:
+
+Generated values::
+`GeneratedValuesProcessor` uses loader-style SQL AST selection to read generated values after mutation when needed.
+
+Locking helpers::
+SQL AST based locking strategies may build select statements for lock acquisition or verification.
+
+Dialect functions::
+Some function implementations build small SQL AST fragments or temporary select statements to reuse rendering behavior.
+
+These are usually easier to understand once the main SQM, loader, and model-mutation paths are clear.
+
+== Finding the source of a SQL AST
+
+When debugging, first ask what kind of operation produced the SQL:
+
+HQL or Criteria select::
+Start in `SelectionQueryImpl`, `ConcreteSqmSelectQueryPlan`, and `org.hibernate.query.sqm.sql`.
+
+HQL or Criteria mutation::
+Start in `MutationQueryImpl`, SQM mutation query plans, and `org.hibernate.query.sqm.mutation`.
+
+Entity or collection load::
+Start in `org.hibernate.loader.ast.internal.LoaderSelectBuilder`.
+
+Flush-time insert, update, or delete::
+Start in entity or collection persister mutation coordinators and `org.hibernate.sql.model`.
+
+SQL text is dialect-specific but the tree seems right::
+Move to `SqlAstTranslator` and dialect-specific translator overrides.
+
+== Contributor checklist
+
+When changing SQL AST creation, ask:
+
+* Which producer owns this SQL AST?
+* Is the tree wrong, or is only rendering wrong?
+* Does the producer have enough mapping-model information to build table groups and column references correctly?
+* Are JDBC parameters and their bindings tracked correctly?
+* Is the change query-specific, loader-specific, or shared?
+* Does the same feature need support in more than one producer path?

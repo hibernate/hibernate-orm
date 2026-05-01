@@ -1,70 +1,100 @@
 = SQL AST
 
-Ultimately our goal here is to have a `JdbcOperation` object to be executed.  Generally, that would look like this:
+:toc2:
+:toclevels: 3
+:sectanchors:
+:numbered:
 
-[source]
+This is the landing page for Hibernate's SQL AST design notes.
+The SQL AST is Hibernate's structured, dialect-aware representation of SQL before it is rendered into JDBC operations.
+
+See also:
+
+* `design/sql-ast-model.adoc`
+* `design/sql-ast-sources.adoc`
+* `design/sql-ast-translators.adoc`
+* `design/sqm-model.adoc`
+
+== Where SQL AST fits
+
+Hibernate does not render most SQL by concatenating strings at the point where a query or loader is requested.
+Instead, it usually builds a SQL AST and then asks a dialect-aware translator to produce an executable JDBC operation.
+
+[plantuml,sql-ast-position,png]
+.SQL AST position
 ----
-		final SelectStatement sqlAst = ...;
+@startuml
+skinparam handwritten true
 
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
+QueryOrLoader -> SQLAST : build SelectStatement\nMutationStatement\nTableMutation
+SQLAST -> SqlAstTranslator : dialect-aware rendering
+SqlAstTranslator -> JdbcOperation : JdbcSelect\nJdbcOperationQueryMutation\nJdbcMutationOperation
+JdbcOperation -> Executor : bind parameters\nexecute
 
-		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory ).translate( sqlAst );
-
-		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
-		// <fill in parameter bindings>
-
-		session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
-				jdbcSelect,
-				jdbcParameterBindings,
-				...
-		);
+@enduml
 ----
 
+== Main ideas
 
-== The Tree
+The tree lives mostly under `org.hibernate.sql.ast.tree`.
+It represents SQL structure such as select statements, query specs, table groups, table references, predicates, expressions, and mutation statements.
 
-The actual tree nodes are defined in the `org.hibernate.sql.ast.tree` package.
+SQL AST has several producers:
 
+* SQM translation for HQL and Criteria queries
+* loader builders for entity and collection loading
+* model mutation builders for persistence-context flush work
+* a small number of specialized internal producers, such as generated-value selection and locking helpers
 
-== Building SQL AST
+The final rendering phase is handled by `SqlAstTranslator`.
+The standard implementation is `StandardSqlAstTranslator`, backed by the large shared implementation in `AbstractSqlAstTranslator`.
+Dialects may provide custom translator factories or custom translator subclasses when SQL rendering rules differ.
 
-There are 3 main producers of SQL AST:
+== Quick source map
 
-SQM:: Translation of HQL and criteria queries. See `org.hibernate.query.sqm.sql`
-Loading:: SQL generated for persistence-context events to load entities and collections.  This includes `Session#find`, `Session#get`, `Session#lock`, ...  See `org.hibernate.loader.internal.MetamodelSelectBuilderProcess`
-Mutations:: SQL generated for persistence-context flush events to write entity and collection state to the database.  See `org.hibernate.persister.entity.mutation` and `org.hibernate.persister.collection.mutation`
+`org.hibernate.sql.ast`::
+Top-level contracts such as `SqlAstTranslator`, `SqlAstTranslatorFactory`, `SqlAstWalker`, `Clause`, and SQL AST logging support.
 
+`org.hibernate.sql.ast.tree`::
+The SQL AST node model.
 
-== Translating SQL AST
+`org.hibernate.sql.ast.spi`::
+Creation and rendering support classes, including `SqlAstCreationState`, `SqlExpressionResolver`, `FromClauseAccess`, `AbstractSqlAstTranslator`, and `StandardSqlAstTranslatorFactory`.
 
-Translating a SQL AST produces 2 pieces of information needed for executing SQL:
+`org.hibernate.query.sqm.sql`::
+SQM-to-SQL AST translation for HQL and Criteria queries.
 
-* `org.hibernate.sql.exec.spi.JdbcOperation`
-* `org.hibernate.sql.exec.spi.JdbcParameterBindings`
+`org.hibernate.loader.ast`::
+SQL AST creation for entity and collection loading.
 
+`org.hibernate.sql.model`::
+SQL model mutation AST and JDBC mutation operation model used by entity and collection mutation coordinators.
 
-=== JdbcOperation
+`org.hibernate.sql.exec`::
+JDBC operation execution contracts and implementations.
 
-* `org.hibernate.sql.exec.spi.JdbcDelete`
-* `org.hibernate.sql.exec.spi.JdbcInsert`
-* `org.hibernate.sql.exec.spi.JdbcSelect`
-* `org.hibernate.sql.exec.spi.JdbcUpdate`
+== Minimal lifecycle
 
+For a select query, the core lifecycle is:
 
-=== JdbcParameterBindings
+[source,java]
+----
+SelectStatement sqlAst = ...;
 
+var translatorFactory =
+        sessionFactory.getJdbcServices()
+                .getJdbcEnvironment()
+                .getSqlAstTranslatorFactory();
 
-== Execution
+var jdbcSelect =
+        translatorFactory
+                .buildSelectTranslator( sessionFactory, sqlAst )
+                .translate( jdbcParameterBindings, queryOptions );
 
-=== SELECT execution
+sessionFactory.getJdbcServices()
+        .getJdbcSelectExecutor()
+        .list( jdbcSelect, jdbcParameterBindings, executionContext, rowTransformer );
+----
 
-`org.hibernate.sql.exec.spi.JdbcSelectExecutor`
-
-=== INSERT, UPDATE, DELETE execution
-
-`org.hibernate.sql.exec.spi.JdbcMutationExecutor`
-
-
-
+Mutation execution uses the same translator factory idea, but the result is a mutation JDBC operation.
+Flush-time model mutations often flow through `TableMutation` and `JdbcMutationOperation` rather than the query-level `MutationStatement` hierarchy.

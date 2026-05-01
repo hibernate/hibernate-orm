@@ -1,0 +1,208 @@
+= SQL AST Translators
+
+:toc2:
+:toclevels: 3
+:sectanchors:
+:numbered:
+
+This document gives a high-level introduction to Hibernate's SQL AST translators.
+It focuses on the final phase: walking a SQL AST and producing executable JDBC operations.
+
+See also:
+
+* `design/sql-ast.adoc`
+* `design/sql-ast-model.adoc`
+* `design/sql-ast-sources.adoc`
+
+== What a SQL AST translator does
+
+A SQL AST translator turns a SQL AST tree into a JDBC operation.
+It is dialect-aware and single-use.
+
+[plantuml,sql-ast-translation,png]
+.SQL AST translation
+----
+@startuml
+skinparam handwritten true
+
+SQLAST -> SqlAstTranslatorFactory
+SqlAstTranslatorFactory -> SqlAstTranslator
+SqlAstTranslator -> SQLString : render SQL
+SqlAstTranslator -> JdbcParameters : collect JDBC params
+SqlAstTranslator -> JdbcOperation : create executable operation
+
+@enduml
+----
+
+The translator does not execute SQL.
+It produces objects later consumed by JDBC executors.
+
+== Main contracts
+
+`SqlAstTranslatorFactory`::
+Factory for single-use translators.
+It creates translators for select statements, query-level mutation statements, and model mutations.
+
+`SqlAstTranslator`::
+Extends `SqlAstWalker`.
+It walks the SQL AST and returns a `JdbcOperation` from `translate(JdbcParameterBindings, QueryOptions)`.
+
+`SqlAstWalker`::
+The visitor contract implemented by translators and helper walkers.
+
+`StandardSqlAstTranslatorFactory`::
+The standard factory.
+It creates `StandardSqlAstTranslator` instances unless a dialect overrides the factory behavior.
+
+`StandardSqlAstTranslator`::
+The standard concrete translator.
+Most behavior is inherited from `AbstractSqlAstTranslator`.
+
+`AbstractSqlAstTranslator`::
+The main implementation.
+It contains most SQL rendering logic, dialect capability checks, fallback rendering strategies, clause tracking, parameter rendering, function rendering support, pagination and locking rendering, tuple emulation, CTE rendering, and mutation rendering.
+
+== Factory methods
+
+The translator factory has three major entry points:
+
+`buildSelectTranslator(SessionFactoryImplementor, SelectStatement)`::
+Used for select SQL ASTs from SQM translation, loaders, generated-value selection, and specialized select helpers.
+Produces a translator whose result is a `JdbcSelect`.
+
+`buildMutationTranslator(SessionFactoryImplementor, MutationStatement)`::
+Used for query-level mutation SQL ASTs, such as SQL AST statements translated from SQM insert, update, and delete queries.
+Produces a query mutation JDBC operation.
+
+`buildModelMutationTranslator(TableMutation, SessionFactoryImplementor)`::
+Used for flush-time table mutations from `org.hibernate.sql.model`.
+Produces a `JdbcMutationOperation`.
+
+== Dialect involvement
+
+The `JdbcEnvironment` exposes the `SqlAstTranslatorFactory`.
+Dialects may provide a custom factory by overriding `Dialect#getSqlAstTranslatorFactory()`.
+
+Common reasons for dialect-specific translation include:
+
+* limit and offset syntax
+* locking syntax
+* tuple comparison support or emulation
+* `merge` or upsert support
+* recursive CTE syntax
+* function or aggregate syntax
+* mutation statement restrictions
+* returning clauses
+* lateral joins and derived table capabilities
+
+Many dialects return an anonymous `StandardSqlAstTranslatorFactory` subclass that creates a dialect-specific `SqlAstTranslator` subclass.
+
+== Translation inputs
+
+The important inputs to `translate()` are:
+
+`JdbcParameterBindings`::
+The runtime parameter bindings.
+The translator may need these for literal handling, limit handling, or compatibility checks.
+
+`QueryOptions`::
+Options such as limit, lock options, timeout, fetch size, and other execution-time settings.
+
+`SessionFactoryImplementor`::
+Access to services, mapping metadata, dialect, JDBC services, and type configuration.
+
+The translator also owns the SQL AST statement passed to the factory.
+
+== Translation outputs
+
+The output depends on the input statement kind:
+
+`JdbcSelect`::
+Executable representation of a select query.
+It includes rendered SQL, JDBC parameters, affected tables, and select-specific execution metadata.
+
+`JdbcOperationQueryMutation`::
+Executable representation of a query-level mutation statement.
+
+`JdbcMutationOperation`::
+Executable representation of a table-level model mutation generated for flush-time persistence work.
+
+Execution is handled elsewhere:
+
+* `JdbcSelectExecutor` for selects
+* `JdbcMutationExecutor` and mutation coordinators for mutations
+
+== High-level rendering flow
+
+[plantuml,sql-ast-rendering-flow,png]
+.Rendering flow
+----
+@startuml
+skinparam handwritten true
+
+SqlAstTranslator -> Statement : accept(this)
+Statement -> SqlAstTranslator : visitSelectStatement\nvisitUpdateStatement\n...
+SqlAstTranslator -> SqlAppender : append SQL fragments
+SqlAstTranslator -> JdbcOperation : package SQL + params
+
+@enduml
+----
+
+While walking, `AbstractSqlAstTranslator` tracks the current clause stack.
+This matters because the same expression may need different rendering in a select list, predicate, group-by clause, order-by clause, or mutation assignment.
+
+== Parameters
+
+At SQL AST level, parameters are JDBC parameters.
+They are represented by nodes such as `JdbcParameter`.
+
+This is lower-level than SQM parameters.
+An SQM parameter may map to:
+
+* one JDBC parameter
+* multiple JDBC parameters, such as an embeddable value
+* expanded parameters for multi-valued bindings
+* no JDBC parameter in cases where a literal is inlined
+
+SQM-to-SQL AST translation creates the JDBC parameter structure.
+SQL AST translation renders parameter markers and packages parameter metadata into the JDBC operation.
+
+== Caching and compatibility
+
+SQL AST translation results may be cached as part of query plans.
+However, some execution options affect the rendered SQL.
+For example, limit handling or locking options may require rebuilding a `JdbcSelect`.
+
+This is why select query plans check whether an existing JDBC select is compatible with the current `JdbcParameterBindings` and `QueryOptions`.
+
+== Where to change SQL output
+
+Dialect-neutral rendering change::
+Start in `AbstractSqlAstTranslator`.
+
+Dialect-specific rendering change::
+Start in the dialect's `getSqlAstTranslatorFactory()` and translator subclass.
+
+SQM query produces structurally wrong SQL AST::
+Start in `org.hibernate.query.sqm.sql`, especially `BaseSqmToSqlAstConverter`.
+
+Loader SQL is structurally wrong::
+Start in `LoaderSelectBuilder` and loader SQL AST creation state.
+
+Flush mutation SQL is structurally wrong::
+Start in persister mutation coordinators and `org.hibernate.sql.model`.
+
+Parameter binding issue::
+Start with SQM parameter cross references for queries, or table mutation value bindings for model mutations, then follow them into SQL AST translation.
+
+== Contributor checklist
+
+When changing translators, ask:
+
+* Is the SQL AST tree already correct?
+* Is this behavior dialect-specific?
+* Does the change depend on the current SQL clause?
+* Does it affect parameter markers or parameter ordering?
+* Does it affect cached JDBC operation compatibility?
+* Does it need separate handling for select, query mutation, and model mutation translation?
+* Are there dialects that need an override instead of sharing the default rendering?

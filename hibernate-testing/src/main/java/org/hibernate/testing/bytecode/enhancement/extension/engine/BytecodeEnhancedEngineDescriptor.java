@@ -4,20 +4,18 @@
  */
 package org.hibernate.testing.bytecode.enhancement.extension.engine;
 
-import org.junit.jupiter.engine.config.JupiterConfiguration;
-import org.junit.jupiter.engine.descriptor.JupiterEngineDescriptor;
-import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.UniqueId;
+import org.junit.platform.engine.support.descriptor.EngineDescriptor;
 
-public class BytecodeEnhancedEngineDescriptor extends JupiterEngineDescriptor {
-	public BytecodeEnhancedEngineDescriptor(UniqueId uniqueId, JupiterConfiguration configuration) {
-		super( uniqueId, configuration );
-	}
-
-	public BytecodeEnhancedEngineDescriptor(JupiterEngineDescriptor engineDescriptor) {
-		super( engineDescriptor.getUniqueId(), engineDescriptor.getConfiguration() );
-		for ( TestDescriptor child : engineDescriptor.getChildren() ) {
-			addChild( child );
-		}
+/**
+ * Root descriptor for the bytecode enhancement test engine.
+ * <p>
+ * This descriptor intentionally has no Jupiter-specific state.  {@link BytecodeEnhancedTestEngine} delegates
+ * discovery and execution of Jupiter tests to nested Jupiter launcher calls and mirrors the resulting descriptors under
+ * this root.
+ */
+public class BytecodeEnhancedEngineDescriptor extends EngineDescriptor {
+	public BytecodeEnhancedEngineDescriptor(UniqueId uniqueId, String displayName) {
+		super( uniqueId, displayName );
 	}
 }

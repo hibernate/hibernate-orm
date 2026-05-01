@@ -633,6 +633,12 @@ public class FunctionTests {
 					assertThat( session.createQuery( "select truncate(offset datetime 1974-10-03 12:30-12:00, minute)", OffsetDateTime.class ).getSingleResult(),
 							isOneOf( OffsetDateTime.of( 1974,10,3,12,30,0, 0, ZoneOffset.ofHours(-12) ),
 									OffsetDateTime.of( 1974,10,4,0,30,0, 0, ZoneOffset.UTC ) ) );
+					assertThat( session.createQuery( "select truncate(offset datetime 1974-10-03 12:30-12:00, year)", OffsetDateTime.class ).getSingleResult(),
+							isOneOf( OffsetDateTime.of( 1974,1,1,0,0,0, 0, ZoneOffset.ofHours(-12) ),
+									OffsetDateTime.of( 1974,1,1,0,0,0, 0, ZoneOffset.UTC ) ) );
+					assertThat( session.createQuery( "select truncate(offset datetime 1974-10-03 12:30-12:00, month)", OffsetDateTime.class ).getSingleResult(),
+							isOneOf( OffsetDateTime.of( 1974,10,1,0,0,0, 0, ZoneOffset.ofHours(-12) ),
+									OffsetDateTime.of( 1974,10,1,0,0,0, 0, ZoneOffset.UTC ) ) );
 				}
 		);
 	}

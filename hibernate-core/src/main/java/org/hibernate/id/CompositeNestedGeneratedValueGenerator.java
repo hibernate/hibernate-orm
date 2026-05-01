@@ -191,6 +191,11 @@ public class CompositeNestedGeneratedValueGenerator
 		}
 	}
 
+	@Override
+	public Class<?> getGeneratedType() {
+		return componentType.getReturnedClass();
+	}
+
 	private Object instantiateEmptyComposite() {
 		final var mappingModelPart = componentType.getMappingModelPart();
 		final var embeddable = mappingModelPart.getEmbeddableTypeDescriptor();

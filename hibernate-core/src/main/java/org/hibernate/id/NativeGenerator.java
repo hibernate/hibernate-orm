@@ -57,6 +57,11 @@ public class NativeGenerator
 	}
 
 	@Override
+	public Class<?> getGeneratedType() {
+		return dialectNativeGenerator == null ? null : dialectNativeGenerator.getGeneratedType();
+	}
+
+	@Override
 	public boolean generatedOnExecution() {
 		return dialectNativeGenerator.generatedOnExecution();
 	}

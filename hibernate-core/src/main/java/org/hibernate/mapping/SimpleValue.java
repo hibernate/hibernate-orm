@@ -35,6 +35,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.GeneratorCreationContext;
+import org.hibernate.generator.internal.GeneratorTypeHelper;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.TypeDetails;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -452,6 +453,7 @@ public abstract class SimpleValue implements KeyValue {
 		if ( customIdGeneratorCreator != null ) {
 			final var context = new IdGeneratorCreationContext( this, rootClass, property, defaults );
 			final var generator = customIdGeneratorCreator.createGenerator( context );
+			GeneratorTypeHelper.checkGeneratorGeneratedType( generator, context );
 			if ( generator.allowAssignedIdentifiers() && nullValue == null ) {
 				setNullValueUndefined();
 			}

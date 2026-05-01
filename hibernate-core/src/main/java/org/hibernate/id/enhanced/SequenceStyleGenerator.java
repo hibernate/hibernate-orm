@@ -180,6 +180,11 @@ public class SequenceStyleGenerator
 		return identifierType;
 	}
 
+	@Override
+	public Class<?> getGeneratedType() {
+		return identifierType == null ? null : identifierType.getReturnedClass();
+	}
+
 
 	// Configurable implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

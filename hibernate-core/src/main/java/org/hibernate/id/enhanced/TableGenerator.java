@@ -224,6 +224,11 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 		return identifierType;
 	}
 
+	@Override
+	public Class<?> getGeneratedType() {
+		return identifierType == null ? null : identifierType.getReturnedClass();
+	}
+
 	/**
 	 * The name of the table in which we store this generator's persistent state.
 	 *

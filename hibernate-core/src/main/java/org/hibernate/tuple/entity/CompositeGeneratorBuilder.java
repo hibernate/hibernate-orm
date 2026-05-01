@@ -307,6 +307,12 @@ class CompositeGeneratorBuilder {
 		public EnumSet<EventType> getEventTypes() {
 			return eventTypes;
 		}
+
+		@Override
+		public Class<?> getGeneratedType() {
+			return mappingProperty.getType().getReturnedClass();
+		}
+
 		@Override
 		public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
 			final var persister = session.getEntityPersister( entityName, owner );
@@ -363,6 +369,11 @@ class CompositeGeneratorBuilder {
 		@Override
 		public Object generate(SharedSessionContractImplementor session, Object owner, Object currentValue, EventType eventType) {
 			return beforeExecutionGenerator.generate( session, owner, currentValue, eventType );
+		}
+
+		@Override
+		public Class<?> getGeneratedType() {
+			return beforeExecutionGenerator.getGeneratedType();
 		}
 
 		@Override

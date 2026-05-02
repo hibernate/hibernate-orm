@@ -190,7 +190,7 @@ public class SchemaManagementToolCoordinator {
 		};
 	}
 
-	private static void performDatabaseAction(
+	public static void performDatabaseAction(
 			final Action action,
 			Metadata metadata,
 			SchemaManagementTool tool,

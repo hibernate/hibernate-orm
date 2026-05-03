@@ -1,6 +1,15 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.2.52.Final (May 03, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/38829
+
+
+** Bug
+    * HHH-20339 MappedSuperclass query with embeddable path comparison against parameter throws UnsupportedOperationException
+
 Changes in 6.2.51.Final (April 19, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

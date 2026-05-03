@@ -1,6 +1,18 @@
 Hibernate 7 Changelog
 =======================
 
+Changes in 7.3.3.Final (May 03, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/38865
+
+
+** Bug
+    * HHH-20356 NPE when mapping embedded property as @MappedSuperclass
+    * HHH-20302 Cannot use MAX with LocalDateTime and hibernate.type.java_time_use_direct_jdbc
+    * HHH-20147 Hibernate fails to initialize when an entity with an IdClass has a singular attribute alongside join column
+    * HHH-19020 NullPointerException in ClassPropertyHolder.addPropertyToMappedSuperclass()
+
 Changes in 7.3.2.Final (April 20, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

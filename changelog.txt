@@ -1,6 +1,17 @@
 Hibernate 6 Changelog
 =======================
 
+Changes in 6.6.50.Final (May 03, 2026)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/38830
+
+
+** Bug
+    * HHH-20356 NPE when mapping embedded property as @MappedSuperclass
+    * HHH-20339 MappedSuperclass query with embeddable path comparison against parameter throws UnsupportedOperationException
+    * HHH-19020 NullPointerException in ClassPropertyHolder.addPropertyToMappedSuperclass()
+
 Changes in 6.6.49.Final (April 19, 2026)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -27,18 +27,13 @@ import org.hibernate.SessionCheckMode;
 import org.hibernate.Timeouts;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
-import org.hibernate.loader.internal.LoadAccessContext;
 import org.hibernate.persister.entity.EntityPersister;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import static org.hibernate.Timeouts.WAIT_FOREVER;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
@@ -215,40 +210,6 @@ public abstract class AbstractFindMultipleByKeyOperation<T> implements MultiIdLo
 
 	public Set<String> getEnabledFetchProfiles() {
 		return enabledFetchProfiles;
-	}
-
-	private List<T> withOptions(
-			LoadAccessContext loadAccessContext,
-			GraphSemantic graphSemantic,
-			RootGraphImplementor<T> rootGraph,
-			Supplier<List<T>> action) {
-		final var session = loadAccessContext.getSession();
-		final var influencers = session.getLoadQueryInfluencers();
-		final var fetchProfiles =
-				influencers.adjustFetchProfiles( disabledFetchProfiles, enabledFetchProfiles );
-		final var effectiveEntityGraph =
-				rootGraph == null
-						? null
-						: influencers.applyEntityGraph( rootGraph, graphSemantic );
-
-		final var readOnly = session.isDefaultReadOnly();
-		session.setDefaultReadOnly( readOnlyMode == ReadOnlyMode.READ_ONLY );
-
-		final var previousCacheMode = session.getCacheMode();
-		session.setCacheMode( getCacheMode() );
-
-		try {
-			return action.get();
-		}
-		finally {
-			loadAccessContext.delayedAfterCompletion();
-			if ( effectiveEntityGraph != null ) {
-				effectiveEntityGraph.clear();
-			}
-			influencers.setEnabledFetchProfileNames( fetchProfiles );
-			session.setDefaultReadOnly( readOnly );
-			session.setCacheMode( previousCacheMode );
-		}
 	}
 
 	public Set<String> getDisabledFetchProfiles() {

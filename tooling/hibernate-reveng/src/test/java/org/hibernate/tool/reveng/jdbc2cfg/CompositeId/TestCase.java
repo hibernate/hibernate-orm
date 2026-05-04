@@ -206,11 +206,11 @@ public class TestCase {
 				.buildSessionFactory();
 		Session session = factory.openSession();
 		JdbcUtil.populateDatabase(this);
-		session.createQuery("from LineItem", null).getResultList();
-		List<?> list = session.createQuery("from Product", null).getResultList();
+		session.createQuery("from LineItem").getResultList();
+		List<?> list = session.createQuery("from Product").getResultList();
 		assertEquals(2,list.size() );
 		list = session
-				.createQuery("select li.customerOrder.id from LineItem as li", null)
+				.createQuery("select li.customerOrder.id from LineItem as li")
 				.getResultList();
 		assertFalse(list.isEmpty());
 		Class<?> productIdClass = ucl.loadClass("ProductId");

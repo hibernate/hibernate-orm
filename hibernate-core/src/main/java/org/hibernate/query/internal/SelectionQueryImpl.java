@@ -44,6 +44,7 @@ import org.hibernate.query.named.NamedSqmQueryMemento;
 import org.hibernate.query.named.internal.CriteriaSelectionMementoImpl;
 import org.hibernate.query.named.internal.HqlSelectionMementoImpl;
 import org.hibernate.query.named.internal.SqmSelectionMemento;
+import org.hibernate.query.spi.DelegatingQueryOptions;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.MutableQueryOptions;
@@ -798,13 +799,25 @@ public class SelectionQueryImpl<R>
 		final boolean containsCollectionFetches = statement.containsCollectionFetches()
 				|| containsCollectionFetches( getQueryOptions() );
 		final boolean hasLimit = hasLimit( statement, getQueryOptions() );
+		final boolean limitInMemory = getQueryOptions().isLimitInMemoryEnabled() == TRUE;
 		final boolean needsDistinct = needsDistinct( containsCollectionFetches, hasLimit, statement );
-		final var list = resolveQueryPlan().performList( executionContext( hasLimit, containsCollectionFetches ) );
-		return needsDistinct ? handleDistinct( hasLimit, statement, list ) : list;
+		final var list = resolveQueryPlan().performList( executionContext( hasLimit, containsCollectionFetches, false ) );
+		if ( needsDistinct ) {
+			return limitInMemory
+					? handleDistinct( true, statement, list )
+					: handleDistinct( false, statement, list );
+		}
+		else {
+			return limitInMemory && hasLimit ? handleLimit( hasLimit, statement, list ) : list;
+		}
 	}
 
 	protected ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
-		return resolveQueryPlan().performScroll( scrollMode, this );
+		final var statement = getSqmStatement();
+		final boolean containsCollectionFetches = statement.containsCollectionFetches()
+				|| containsCollectionFetches( getQueryOptions() );
+		final boolean hasLimit = hasLimit( statement, getQueryOptions() );
+		return resolveQueryPlan().performScroll( scrollMode, executionContext( hasLimit, containsCollectionFetches, true ) );
 	}
 
 	@Override
@@ -1067,11 +1080,17 @@ public class SelectionQueryImpl<R>
 		return appliedGraph != null && appliedGraph.getSemantic() != null;
 	}
 
-	private DomainQueryExecutionContext executionContext(boolean hasLimit, boolean containsCollectionFetches) {
-		if ( hasLimit && containsCollectionFetches ) {
-			errorOrLogForPaginationWithCollectionFetch();
+	private DomainQueryExecutionContext executionContext(
+			boolean hasLimit,
+			boolean containsCollectionFetches,
+			boolean scrollExecution) {
+		if ( getQueryOptions().isLimitInMemoryEnabled() == TRUE
+				|| hasLimit && containsCollectionFetches ) {
 			final var originalQueryOptions = getQueryOptions();
-			final var normalizedQueryOptions = omitSqlQueryOptions( originalQueryOptions, true, false );
+			final var normalizedQueryOptions = markScrollExecution(
+					omitSqlQueryOptions( originalQueryOptions, true, false ),
+					scrollExecution
+			);
 			if ( originalQueryOptions == normalizedQueryOptions ) {
 				return this;
 			}
@@ -1085,15 +1104,32 @@ public class SelectionQueryImpl<R>
 			}
 		}
 		else {
-			return this;
+			return scrollExecution ? new DelegatingDomainQueryExecutionContext( this ) {
+				@Override
+				public QueryOptions getQueryOptions() {
+					return markScrollExecution( SelectionQueryImpl.this.getQueryOptions(), true );
+				}
+			} : this;
 		}
 	}
 
-	private List<R> handleDistinct(boolean hasLimit, SqmSelectStatement<?> statement, List<R> list) {
+	private static QueryOptions markScrollExecution(QueryOptions queryOptions, boolean scrollExecution) {
+		if ( !scrollExecution || queryOptions.isScrollExecution() ) {
+			return queryOptions;
+		}
+		return new DelegatingQueryOptions( queryOptions ) {
+			@Override
+			public boolean isScrollExecution() {
+				return true;
+			}
+		};
+	}
+
+	private List<R> handleDistinct(boolean applyLimit, SqmSelectStatement<?> statement, List<R> list) {
 		int includedCount = -1;
 		// NOTE: 'firstRow' is zero-based
-		final int first = first( hasLimit, statement );
-		final int max = max( hasLimit, statement, list );
+		final int first = applyLimit ? first( true, statement ) : 0;
+		final int max = applyLimit ? max( true, statement, list ) : -1;
 		final List<R> distinctList = new ArrayList<>( list.size() );
 		final IdentitySet<Object> distinction = new IdentitySet<>( list.size() );
 		for ( final R result : list) {
@@ -1109,6 +1145,21 @@ public class SelectionQueryImpl<R>
 			}
 		}
 		return distinctList;
+	}
+
+	private List<R> handleLimit(boolean hasLimit, SqmSelectStatement<?> statement, List<R> list) {
+		final int first = first( hasLimit, statement );
+		final int max = max( hasLimit, statement, list );
+		if ( first == 0 && max == list.size() ) {
+			return list;
+		}
+		else {
+			final int fromIndex = Math.min( first, list.size() );
+			final int toIndex = max < 0
+					? list.size()
+					: Math.min( first + max, list.size() );
+			return list.subList( fromIndex, toIndex );
+		}
 	}
 
 	private <T> void setBindValues(QueryParameter<?> parameter, QueryParameterBinding<T> binding) {

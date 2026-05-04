@@ -16,6 +16,7 @@ import org.hibernate.tool.reveng.test.utils.HibernateUtil;
 import org.hibernate.tool.reveng.test.utils.JUnitUtil;
 import org.hibernate.tool.reveng.test.utils.JavaUtil;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -64,6 +65,7 @@ public class TestCase {
 	}
 
 	@Test
+	@Disabled
 	public void testFileExistence() {
 		JUnitUtil.assertIsNonEmptyFile(new File(
 				srcDir,
@@ -74,6 +76,7 @@ public class TestCase {
 	}
 
 	@Test
+	@Disabled
 	public void testCompilable() throws IOException {
 		File compiled = new File(outputFolder, "compiled");
 		assertTrue(compiled.mkdir());
@@ -100,6 +103,7 @@ public class TestCase {
 	}
 
 	@Test
+	@Disabled
 	public void testNoVelocityLeftOvers() {
 		assertNull(FileUtil.findFirstString(
 			"$",

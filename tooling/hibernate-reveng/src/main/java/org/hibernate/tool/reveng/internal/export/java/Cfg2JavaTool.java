@@ -4,8 +4,6 @@
  */
 package org.hibernate.tool.reveng.internal.export.java;
 
-import org.hibernate.boot.internal.NamedHqlQueryDefinitionImpl;
-import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Array;
 import org.hibernate.mapping.Collection;
@@ -25,7 +23,6 @@ import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
-import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -384,19 +381,4 @@ public class Cfg2JavaTool {
 		return typeName!=null && typeName.endsWith("[]");
 	}
 
-	public Map<?, ?> getParameterTypes(NamedHqlQueryDefinition<?> query) {
-		Map<?, ?> result;
-		try {
-			Field field = NamedHqlQueryDefinitionImpl.class.getDeclaredField("parameterTypes");
-			field.setAccessible(true);
-			result = (Map<?, ?>)field.get(query);
-			if (result == null) {
-				result = new HashMap<>();
-			}
-		}
-		catch (NoSuchFieldException | IllegalAccessException e) {
-			throw new RuntimeException(e);
-		}
-		return result;
-	}
 }

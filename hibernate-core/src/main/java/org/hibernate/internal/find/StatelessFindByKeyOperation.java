@@ -168,14 +168,16 @@ public class StatelessFindByKeyOperation<T> extends AbstractFindByKeyOperation<T
 		var session = loadAccessContext.getStatelessSession();
 
 		var temporaryPersistenceContext = session.getPersistenceContext();
-		if ( getEntityDescriptor().canReadFromCache() ) {
-			final Object cachedEntity = loadFromSecondLevelCache( key, loadAccessContext );
-			if ( cachedEntity != null ) {
-				temporaryPersistenceContext.clear();
-				//noinspection unchecked
-				return (T) cachedEntity;
+			if ( getEntityDescriptor().canReadFromCache() ) {
+				final Object cachedEntity = loadFromSecondLevelCache( key, loadAccessContext );
+				if ( cachedEntity != null ) {
+					if ( temporaryPersistenceContext.isLoadFinished() ) {
+						temporaryPersistenceContext.clear();
+					}
+					//noinspection unchecked
+					return (T) cachedEntity;
+				}
 			}
-		}
 
 		return withOptions( session, ()-> {
 			final Object result = getEntityDescriptor().load(

@@ -384,13 +384,19 @@ public class CacheLoadHelper {
 			Object cachedEntry,
 			PersistentCollection<?> collection,
 			SharedSessionContractImplementor source) {
-		final var cacheEntry = (CollectionCacheEntry)
-				persister.getCacheEntryStructure().destructure( cachedEntry, source.getFactory() );
-		final var persistenceContext = source.getPersistenceContextInternal();
-		cacheEntry.assemble( collection, persister, persistenceContext.getCollectionOwner( key, persister ) );
-		persistenceContext.getCollectionEntry( collection ).postInitialize( collection, source );
-		// addInitializedCollection(collection, persister, key);
-	}
+			final var cacheEntry = (CollectionCacheEntry)
+					persister.getCacheEntryStructure().destructure( cachedEntry, source.getFactory() );
+			final var persistenceContext = source.getPersistenceContextInternal();
+			if ( persistenceContext.getCollectionEntry( collection ) == null ) {
+				persistenceContext.addUninitializedDetachedCollection( persister, collection );
+			}
+			cacheEntry.assemble( collection, persister, persistenceContext.getCollectionOwner( key, persister ) );
+			final var collectionEntry = persistenceContext.getCollectionEntry( collection );
+			if ( collectionEntry != null ) {
+				collectionEntry.postInitialize( collection, source );
+			}
+			// addInitializedCollection(collection, persister, key);
+		}
 
 	private static Object getFromSharedCache(
 			Object key,

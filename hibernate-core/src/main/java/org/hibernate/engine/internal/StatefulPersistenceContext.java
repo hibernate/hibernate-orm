@@ -275,7 +275,7 @@ class StatefulPersistenceContext implements PersistenceContext {
 		}
 		// defaultReadOnly is unaffected by clear()
 		hasNonReadOnlyEntities = false;
-		if ( loadContexts != null ) {
+		if ( loadContexts != null && isLoadFinished() ) {
 			loadContexts.cleanup();
 		}
 		naturalIdResolutions = null;

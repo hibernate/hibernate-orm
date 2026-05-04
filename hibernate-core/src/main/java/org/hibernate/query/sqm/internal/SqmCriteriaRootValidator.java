@@ -61,19 +61,19 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @author Gavin King
  * @since 7.4
  */
-final class SqmTreeValidator extends BaseSemanticQueryWalker {
+final class SqmCriteriaRootValidator extends BaseSemanticQueryWalker {
 	private final ArrayDeque<Collection<? extends SqmRoot<?>>> validRootStack = new ArrayDeque<>();
 
 	static void validate(SqmQueryPart<?> queryPart) {
-		new SqmTreeValidator().visitQueryPart( queryPart );
+		new SqmCriteriaRootValidator().visitQueryPart( queryPart );
 	}
 
 	static void validate(SqmDeleteStatement<?> statement) {
-		new SqmTreeValidator().visitDeleteStatement( statement );
+		new SqmCriteriaRootValidator().visitDeleteStatement( statement );
 	}
 
 	static void validate(SqmUpdateStatement<?> statement) {
-		new SqmTreeValidator().visitUpdateStatement( statement );
+		new SqmCriteriaRootValidator().visitUpdateStatement( statement );
 	}
 
 	@Override

@@ -992,7 +992,7 @@ public class SqmUtil {
 
 	public static void validateCriteriaQuery(SqmQueryPart<?> queryPart) {
 		validateCriteriaQueryStructure( queryPart );
-		SqmTreeValidator.validate( queryPart );
+		SqmCriteriaRootValidator.validate( queryPart );
 	}
 
 	private static void validateCriteriaQueryStructure(SqmQueryPart<?> queryPart) {
@@ -1020,11 +1020,11 @@ public class SqmUtil {
 	}
 
 	public static void validateCriteriaTree(SqmDeleteStatement<?> statement) {
-		SqmTreeValidator.validate( statement );
+		SqmCriteriaRootValidator.validate( statement );
 	}
 
 	public static void validateCriteriaTree(SqmUpdateStatement<?> statement) {
-		SqmTreeValidator.validate( statement );
+		SqmCriteriaRootValidator.validate( statement );
 	}
 
 	private static class CriteriaParameterCollector {

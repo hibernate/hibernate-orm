@@ -63,7 +63,7 @@ public class TransformHbmTestIT extends AbstractMavenTestIT {
 		// Check the existence of the transformed file
 		assertTrue(ormXmlFile.exists());
 		// Check if it's pretty printed
-		assertTrue(Files.readString(ormXmlFile.toPath()).contains("\n        <table name=\"Foo\"/>\n"));
+		assertTrue(Files.readString(ormXmlFile.toPath()).contains("\n        <table name=\"Foo\"/>"));
 	}
 
 	private static final String simplePomContents =

@@ -89,7 +89,7 @@ public abstract class TestTemplate {
 	}
 
 	private String constructJdbcConnectionString() {
-		return "jdbc:h2:" + getProjectDir().getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
+		return "jdbc:h2:file:" + getProjectDir().getAbsolutePath().replace( '\\', '/' ) + "/database/test;AUTO_SERVER=TRUE";
 	}
 
 	private void createDatabase() throws Exception {

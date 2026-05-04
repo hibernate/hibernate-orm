@@ -25,13 +25,12 @@ import org.hibernate.sql.ast.spi.ExpressionReplacementWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
-import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
-import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.QueryTransformer;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
+import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.from.AbstractTableGroup;
@@ -53,7 +52,7 @@ import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIM
 import static org.hibernate.sql.ast.SqlAstJoinType.*;
 
 /**
- * Deals with many-valued join fetches in a query with pagaination or a limit.
+ * Deals with many-valued join fetches in a query with pagination or a limit.
  * <p>
  * Pushes the offset/fetch of a top-level {@code QuerySpec} down into a derived
  * table over the root entity, leaving fetch joins of plural attributes on the
@@ -96,24 +95,15 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 	}
 
 	@Override
-	public QuerySpec transform(
-			CteContainer cteContainer,
-			QuerySpec querySpec,
-			SqmToSqlAstConverter converter) {
-		final var roots = querySpec.getFromClause().getRoots();
-		if ( roots.isEmpty() ) {
-			return querySpec;
+	public QuerySpec transform(CteContainer cteContainer, QuerySpec querySpec, SqmToSqlAstConverter converter) {
+		final var primaryRoot = primaryRoot( querySpec.getFromClause().getRoots() );
+		if ( primaryRoot instanceof AbstractTableGroup
+				&& primaryRoot.getModelPart() instanceof EntityMappingType primaryEntity
+				&& primaryRoot.getPrimaryTableReference() instanceof NamedTableReference primaryNamed ) {
+			return transform( querySpec, converter, primaryEntity, primaryNamed, primaryRoot );
 		}
 		else {
-			final var primaryRoot = primaryRoot( roots );
-			if ( primaryRoot instanceof AbstractTableGroup
-					&& primaryRoot.getModelPart() instanceof EntityMappingType primaryEntity
-					&& primaryRoot.getPrimaryTableReference() instanceof NamedTableReference primaryNamed ) {
-				return transform( querySpec, converter, primaryEntity, primaryNamed, primaryRoot );
-			}
-			else {
-				return querySpec;
-			}
+			return querySpec;
 		}
 	}
 
@@ -776,18 +766,21 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 	}
 
 	private static void collectAliases(TableGroup group, Set<String> aliases) {
-		final var primary = group.getPrimaryTableReference();
-		if ( primary != null ) {
-			aliases.add( primary.getIdentificationVariable() );
-		}
-		for ( var referenceJoin : group.getTableReferenceJoins() ) {
-			aliases.add( referenceJoin.getJoinedTableReference().getIdentificationVariable() );
-		}
-		for ( var tableGroupJoin : group.getTableGroupJoins() ) {
-			collectAliases( tableGroupJoin.getJoinedGroup(), aliases );
-		}
-		for ( var tableGroupJoin : group.getNestedTableGroupJoins() ) {
-			collectAliases( tableGroupJoin.getJoinedGroup(), aliases );
+		// Don't initialize a lazy table group unnecessarily for this rewrite
+		if ( !( group instanceof LazyTableGroup lazyTableGroup ) || lazyTableGroup.isInitialized() ) {
+			final var primary = group.getPrimaryTableReference();
+			if ( primary != null ) {
+				aliases.add( primary.getIdentificationVariable() );
+			}
+			for ( var referenceJoin : group.getTableReferenceJoins() ) {
+				aliases.add( referenceJoin.getJoinedTableReference().getIdentificationVariable() );
+			}
+			for ( var tableGroupJoin : group.getTableGroupJoins() ) {
+				collectAliases( tableGroupJoin.getJoinedGroup(), aliases );
+			}
+			for ( var tableGroupJoin : group.getNestedTableGroupJoins() ) {
+				collectAliases( tableGroupJoin.getJoinedGroup(), aliases );
+			}
 		}
 	}
 
@@ -882,84 +875,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 					}
 				}
 			}
-			else if ( expression instanceof CaseSearchedExpression caseSearchedExpression ) {
-				return (X) rewriteCaseSearched( caseSearchedExpression );
-			}
-			else if ( expression instanceof CaseSimpleExpression caseSimpleExpression ) {
-				return (X) rewriteCaseSimple( caseSimpleExpression );
-			}
-			else if ( expression instanceof CaseStatementDiscriminatorExpression discriminatorExpression ) {
-				// Replace the lazy self-rendering wrapper with the rewritten inner
-				// CASE, so the outer renders against the derived alias.
-				return (X) rewriteCaseSearched( discriminatorExpression.buildCaseExpression() );
-			}
 			return expression;
-		}
-
-		private CaseSearchedExpression rewriteCaseSearched(CaseSearchedExpression caseSearchedExpression) {
-			final var fragments = caseSearchedExpression.getWhenFragments();
-			List<CaseSearchedExpression.WhenFragment> newFragments = null;
-			for ( int i = 0; i < fragments.size(); i++ ) {
-				final var fragment = fragments.get( i );
-				final var predicate = fragment.getPredicate();
-				final var result = fragment.getResult();
-				final var newPred = replaceExpressions( predicate );
-				final var newResult = replaceExpressions( result );
-				if ( newPred != predicate || newResult != result ) {
-					if ( newFragments == null ) {
-						newFragments = new ArrayList<>( fragments );
-					}
-					newFragments.set( i, new CaseSearchedExpression.WhenFragment( newPred, newResult ) );
-				}
-			}
-			final var originalOtherwise = caseSearchedExpression.getOtherwise();
-			final var newOtherwise =
-					originalOtherwise == null
-							? null
-							: replaceExpressions( originalOtherwise );
-			if ( newFragments != null || newOtherwise != originalOtherwise ) {
-				return new CaseSearchedExpression(
-						caseSearchedExpression.getExpressionType(),
-						newFragments != null ? newFragments : fragments,
-						newOtherwise
-				);
-			}
-			return caseSearchedExpression;
-		}
-
-		private CaseSimpleExpression rewriteCaseSimple(CaseSimpleExpression caseSimpleExpression) {
-			final var newFixture = replaceExpressions( caseSimpleExpression.getFixture() );
-			final var fragments = caseSimpleExpression.getWhenFragments();
-			List<CaseSimpleExpression.WhenFragment> newFragments = null;
-			for ( int i = 0; i < fragments.size(); i++ ) {
-				final var fragment = fragments.get( i );
-				final var checkValue = fragment.getCheckValue();
-				final var result = fragment.getResult();
-				final var newCheck = replaceExpressions( checkValue );
-				final var newResult = replaceExpressions( result );
-				if ( newCheck != checkValue || newResult != result ) {
-					if ( newFragments == null ) {
-						newFragments = new ArrayList<>( fragments );
-					}
-					newFragments.set( i, new CaseSimpleExpression.WhenFragment( newCheck, newResult ) );
-				}
-			}
-			final var originalOtherwise = caseSimpleExpression.getOtherwise();
-			final var newOtherwise =
-					originalOtherwise == null
-							? null
-							: replaceExpressions( originalOtherwise );
-			if ( newFixture != caseSimpleExpression.getFixture()
-					|| newFragments != null
-					|| newOtherwise != originalOtherwise ) {
-				return new CaseSimpleExpression(
-						caseSimpleExpression.getExpressionType(),
-						newFixture,
-						newFragments != null ? newFragments : fragments,
-						newOtherwise
-				);
-			}
-			return caseSimpleExpression;
 		}
 	}
 }

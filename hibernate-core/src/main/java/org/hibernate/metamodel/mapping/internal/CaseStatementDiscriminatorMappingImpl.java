@@ -25,6 +25,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
+import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
@@ -260,6 +261,9 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 					new ArrayList<>( tableDiscriminatorDetailsMap.size() );
 			tableDiscriminatorDetailsMap.forEach(
 					(tableName, tableDiscriminatorDetails) -> {
+						// Ensure, we're not accidentally initializing a table group racy (concurrency) fashion
+						assert !(entityTableGroup instanceof LazyTableGroup lazyTableGroup)
+							|| lazyTableGroup.isInitialized();
 						final var tableReference = entityTableGroup.getTableReference(
 								entityTableGroup.getNavigablePath(),
 								tableName,
@@ -288,12 +292,17 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 		 * expression's column references before SQL rendering.
 		 */
 		public CaseSearchedExpression buildCaseExpression() {
-			if ( caseSearchedExpression == null ) {
+			//
+			CaseSearchedExpression expression = caseSearchedExpression;
+			if ( expression == null ) {
 				// todo (6.0): possible optimization is to omit cases for table reference joins, that touch a super class, where a subclass is inner joined due to pruning
-				caseSearchedExpression =
+				CaseSearchedExpression caseExpression =
 						new CaseSearchedExpression( CaseStatementDiscriminatorMappingImpl.this );
 				tableDiscriminatorDetailsMap.forEach(
 						(tableName, tableDiscriminatorDetails) -> {
+							// Ensure, we're not accidentally initializing a table group racy (concurrency) fashion
+							assert !(entityTableGroup instanceof LazyTableGroup lazyTableGroup)
+									|| lazyTableGroup.isInitialized();
 							final var tableReference = entityTableGroup.getTableReference(
 									entityTableGroup.getNavigablePath(),
 									tableName,
@@ -301,7 +310,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 							);
 
 							if ( tableReference != null ) {
-								caseSearchedExpression.when(
+								caseExpression.when(
 										new NullnessPredicate(
 												new ColumnReference(
 														tableReference,
@@ -322,8 +331,9 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 							// not part of the processing entity's sub-hierarchy
 						}
 				);
+				caseSearchedExpression = expression = caseExpression;
 			}
-			return caseSearchedExpression;
+			return expression;
 		}
 
 		@Override

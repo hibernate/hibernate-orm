@@ -6,10 +6,10 @@ package org.hibernate.orm.test.pagination.hhh9965;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
-import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 		settings = @Setting(name = Environment.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH, value = "true")
 )
 @SessionFactory
-@RequiresDialect(SybaseASEDialect.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOffsetInSubquery.class, reverse = true)
 public class HHH9965Test {
 
 	@Test

@@ -2217,7 +2217,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 		}
 		// else: strip the root offset/fetch (the in-memory fallback in
-		// AbstractSqmSelectionQuery slices the parent list after execution).
+		// SelectionQueryImpl slices the parent list after execution).
 	}
 
 	private void applyOffsetAndFetch(SqmQueryPart<?> sqmQueryPart, QueryPart sqlQueryPart) {

@@ -14,7 +14,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.Formula;
 
 @Entity
-@Table(name = "ALL_TABLES")
+@Table(name = "tutti_tavalo")
 @SqlResultSetMapping(name = "all",
 		entities = @EntityResult(entityClass = AllTables.class,
 				fields = {

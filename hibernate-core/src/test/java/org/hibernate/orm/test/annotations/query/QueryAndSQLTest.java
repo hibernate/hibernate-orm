@@ -95,11 +95,11 @@ public class QueryAndSQLTest {
 				.currentDate();
 
 		String sql = String.format(
-				"select t.table_name as {t.tableName}, %s as {t.daysOld} from ALL_TABLES t where t.table_name = 'AUDIT_ACTIONS' ",
+				"select t.table_name as {t.tableName}, %s as {t.daysOld} from tutti_tavalo t where t.table_name = 'AUDIT_ACTIONS' ",
 				dateFunctionRendered
 		);
 		String sql2 = String.format(
-				"select table_name as t_name, %s as t_time from ALL_TABLES where table_name = 'AUDIT_ACTIONS' ",
+				"select table_name as t_name, %s as t_time from tutti_tavalo where table_name = 'AUDIT_ACTIONS' ",
 				dateFunctionRendered
 		);
 
@@ -109,7 +109,7 @@ public class QueryAndSQLTest {
 					List<AllTables> allTables = session.createNativeQuery( sql, AllTables.class, "t" ).list();
 					session.createNativeQuery( sql2, "all", AllTables.class ).list();
 					List<String> allTableNames = session.createNativeQuery( sql2, String.class ).list();
-					NativeQuery q = (NativeQuery) session.createNativeQuery( sql2 );
+					NativeQuery q = session.createNativeQuery( sql2 );
 					q.addRoot( "t", AllTables.class ).addProperty( "tableName", "t_name" ).addProperty(
 							"daysOld",
 							"t_time"
@@ -125,7 +125,7 @@ public class QueryAndSQLTest {
 		scope.inTransaction(
 				session -> {
 					String sql = "select table_name , " + scope.getSessionFactory().getJdbcServices().getDialect()
-							.currentDate() + " as days_old from ALL_TABLES  where table_name = 'AUDIT_ACTIONS' ";
+							.currentDate() + " as days_old from tutti_tavalo  where table_name = 'AUDIT_ACTIONS' ";
 					session.createNativeQuery( sql, AllTables.class ).addEntity( "t", AllTables.class ).list();
 				}
 		);

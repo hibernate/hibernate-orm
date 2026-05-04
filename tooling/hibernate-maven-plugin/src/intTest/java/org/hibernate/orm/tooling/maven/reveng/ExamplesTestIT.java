@@ -11,8 +11,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
@@ -84,9 +89,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 		@Test
 		public void testOutputDirectory() throws Exception {
-			System.setProperty("output.dir", "${project.basedir}/generated-classes");
+			System.setProperty("output.dir", "${project.basedir}/target/generated-classes");
 			prepareProject("hbm2java/output-directory");
-			File outputDirectory = new File(projectFolder, "generated-classes");
+			File outputDirectory = new File(projectFolder, "target/generated-classes");
 			File personFile = new File(outputDirectory, "Person.java");
 			assertFalse(outputDirectory.exists());
 			assertFalse(personFile.exists());
@@ -123,7 +128,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		public void testHbm2OrmSimpleDefault() throws Exception {
 			projectFolder = new File(baseFolder, "hbm2orm/simple-default");
 			File ormXmlFile = new File(projectFolder, "src/main/resources/simple.mapping.xml");
-			assertFalse(ormXmlFile.exists());
+			ormXmlFile.delete();
 			runMaven( projectFolder.getAbsolutePath(), "org.hibernate.orm:hibernate-maven-plugin:" + Version.versionString() + ":transformHbm");
 			assertTrue(ormXmlFile.exists());
 			String ormXmlContents = Files.readString( ormXmlFile.toPath() );
@@ -134,6 +139,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 			projectFolder = new File(baseFolder, projectName);
 			assertTrue(projectFolder.exists());
 			editPomFile(projectFolder);
+			File target = new File( projectFolder, "target" );
+			if ( target.exists() ) {
+				Files.walkFileTree( target.toPath(), new SimpleFileVisitor<>() {
+					@Override
+					public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+						Files.deleteIfExists( dir );
+						return FileVisitResult.CONTINUE;
+					}
+
+					@Override
+					public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+						Files.delete( file );
+						return FileVisitResult.CONTINUE;
+					}
+				} );
+			}
 			createHibernatePropertiesFile(projectFolder);
 			createDatabase();
 		}
@@ -204,7 +225,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		}
 
 		private String constructJdbcConnectionString() {
-			return "jdbc:h2:" + tempFolder.getAbsolutePath() + "/database/test;AUTO_SERVER=TRUE";
+			return "jdbc:h2:file:" + tempFolder.getAbsolutePath().replace( '\\', '/' ) + "/database/test;AUTO_SERVER=TRUE";
 		}
 
 		private void editPomFile(File projectFolder) throws Exception {

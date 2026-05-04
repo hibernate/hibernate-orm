@@ -4,6 +4,7 @@
  */
 package org.hibernate.generator;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -168,7 +169,7 @@ public interface Generator extends Serializable {
 	 * @since 7.4
 	 */
 	@Incubating
-	default Class<?> getGeneratedType() {
+	default @Nullable Class<?> getGeneratedType() {
 		return null;
 	}
 

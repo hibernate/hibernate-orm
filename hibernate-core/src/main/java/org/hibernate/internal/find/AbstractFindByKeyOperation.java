@@ -63,6 +63,7 @@ public abstract class AbstractFindByKeyOperation<T> implements FindByKeyOperatio
 
 	private CacheStoreMode cacheStoreMode;
 	private CacheRetrieveMode cacheRetrieveMode;
+	private boolean refreshSession;
 
 	private LockMode lockMode;
 	private PessimisticLockScope lockScope;
@@ -95,6 +96,7 @@ public abstract class AbstractFindByKeyOperation<T> implements FindByKeyOperatio
 		if ( defaultCacheMode != null ) {
 			cacheStoreMode = defaultCacheMode.getJpaStoreMode();
 			cacheRetrieveMode = defaultCacheMode.getJpaRetrieveMode();
+			refreshSession = defaultCacheMode == CacheMode.REFRESH_SESSION;
 		}
 
 		if ( defaultLockOptions != null ) {
@@ -118,13 +120,16 @@ public abstract class AbstractFindByKeyOperation<T> implements FindByKeyOperatio
 			}
 			else if ( option instanceof CacheStoreMode cacheStoreMode ) {
 				this.cacheStoreMode = cacheStoreMode;
+				this.refreshSession = false;
 			}
 			else if ( option instanceof CacheRetrieveMode cacheRetrieveMode ) {
 				this.cacheRetrieveMode = cacheRetrieveMode;
+				this.refreshSession = false;
 			}
 			else if ( option instanceof CacheMode cacheMode ) {
 				this.cacheStoreMode = cacheMode.getJpaStoreMode();
 				this.cacheRetrieveMode = cacheMode.getJpaRetrieveMode();
+				this.refreshSession = cacheMode == CacheMode.REFRESH_SESSION;
 			}
 			else if ( option instanceof LockModeType lockModeType ) {
 				this.lockMode = LockModeTypeHelper.getLockMode( lockModeType );
@@ -183,6 +188,13 @@ public abstract class AbstractFindByKeyOperation<T> implements FindByKeyOperatio
 
 	public CacheRetrieveMode getCacheRetrieveMode() {
 		return cacheRetrieveMode;
+	}
+
+	public CacheMode getCacheMode() {
+		final var cacheMode = CacheMode.fromJpaModes( cacheRetrieveMode, cacheStoreMode );
+		return refreshSession && cacheMode == CacheMode.REFRESH
+				? CacheMode.REFRESH_SESSION
+				: cacheMode;
 	}
 
 	public ReadOnlyMode getReadOnlyMode() {

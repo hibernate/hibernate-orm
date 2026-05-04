@@ -132,8 +132,8 @@ public class StatefulFindByKeyOperation<T> extends AbstractFindByKeyOperation<T>
 	private T withOptions(StatefulLoadAccessContext loadAccessContext, Supplier<T> action) {
 		final var session = loadAccessContext.getSession();
 
-		final var sessionCacheMode = session.getCacheMode();
-		final var cacheMode = CacheMode.fromJpaModes( getCacheRetrieveMode(), getCacheStoreMode() );
+			final var sessionCacheMode = session.getCacheMode();
+			final var cacheMode = getCacheMode();
 		boolean cacheModeChanged = false;
 		try {
 			if ( cacheMode != null ) {

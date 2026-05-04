@@ -1196,10 +1196,12 @@ public class StatelessSessionImpl
 			if ( foundInCache ) {
 				SESSION_LOGGER.collectionInitializedFromCache();
 			}
-			else {
-				loadedPersister.initialize( loadedKey, this );
-				handlePotentiallyEmptyCollection( collection, persistenceContext, loadedKey, loadedPersister );
-				SESSION_LOGGER.collectionInitialized();
+				else {
+					loadedPersister.initialize( loadedKey, this );
+					if ( !collection.wasInitialized() || persistenceContext.getCollectionEntry( collection ) == null ) {
+						handlePotentiallyEmptyCollection( collection, persistenceContext, loadedKey, loadedPersister );
+					}
+					SESSION_LOGGER.collectionInitialized();
 				final var statistics = getStatistics();
 				if ( statistics.isStatisticsEnabled() ) {
 					statistics.fetchCollection( loadedPersister.getRole() );
@@ -1519,7 +1521,9 @@ public class StatelessSessionImpl
 
 
 	public void afterOperation(boolean success) {
-		temporaryPersistenceContext.clear();
+		if ( temporaryPersistenceContext.isLoadFinished() ) {
+			temporaryPersistenceContext.clear();
+		}
 		if ( !isTransactionInProgress() ) {
 			getJdbcCoordinator().afterTransaction();
 		}

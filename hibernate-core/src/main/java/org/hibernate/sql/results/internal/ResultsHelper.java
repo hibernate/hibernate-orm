@@ -173,6 +173,9 @@ public class ResultsHelper {
 			Object version) {
 		final var session = context.getSession();
 		final var factory = session.getFactory();
+		if ( collection.getSession() == null ) {
+			collection.setCurrentSession( session );
+		}
 		final var entry = new CollectionCacheEntry( collection, collectionDescriptor );
 		final var cacheAccess = collectionDescriptor.getCacheAccessStrategy();
 		final Object cacheKey = cacheAccess.generateCacheKey(

@@ -73,6 +73,8 @@ The process is customizable via XML configuration files and custom strategy clas
 
 See the link:{userGuideBase}#reveng[Reverse Engineering] chapter in the User Guide for details.
 
+See link:https://in.relation.to/2026/05/04/hibernate-tools-moves-to-orm/[the dedicated blog post] for the motivation and migration hints.
+
 [[transform-hbm]]
 == HBM XML Transformation
 

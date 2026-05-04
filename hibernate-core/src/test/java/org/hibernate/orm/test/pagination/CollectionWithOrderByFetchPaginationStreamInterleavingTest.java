@@ -12,14 +12,14 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import org.hibernate.ScrollMode;
 import org.hibernate.cfg.QuerySettings;
-import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,7 +58,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		value = "true"
 ))
 @SessionFactory(useCollectingStatementInspector = true)
-@SkipForDialect( dialectClass = SybaseASEDialect.class )
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOffsetInSubquery.class)
 public class CollectionWithOrderByFetchPaginationStreamInterleavingTest {
 
 	@BeforeEach

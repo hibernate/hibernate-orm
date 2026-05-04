@@ -29,6 +29,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.util.collections.IdentitySet;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.IllegalMutationQueryException;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.KeyedPage;
@@ -64,6 +66,10 @@ import org.hibernate.query.sqm.spi.InterpretationsKeySource;
 import org.hibernate.query.sqm.spi.SqmStatementAccess;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.spi.SingleResultConsumer;
@@ -81,6 +87,8 @@ import static java.lang.Boolean.TRUE;
 import static org.hibernate.cfg.QuerySettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH;
 import static org.hibernate.query.KeyedPage.KeyInterpretation.KEY_OF_FIRST_ON_NEXT_PAGE;
 import static org.hibernate.query.QueryLogging.QUERY_MESSAGE_LOGGER;
+import static org.hibernate.query.common.FetchClauseType.PERCENT_ONLY;
+import static org.hibernate.query.common.FetchClauseType.PERCENT_WITH_TIES;
 import static org.hibernate.query.internal.KeyBasedPagination.paginate;
 import static org.hibernate.query.internal.KeyedResult.collectKeys;
 import static org.hibernate.query.internal.KeyedResult.collectResults;
@@ -603,15 +611,6 @@ public class SelectionQueryImpl<R>
 		return (SelectionQueryImplementor<R>)super.addQueryHint( hint );
 	}
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Hints
-
-	@Override
-	protected void applyFollowOnStrategyHint(Object value) {
-		queryOptions.getLockOptions().setFollowOnStrategy( Locking.FollowOn.fromHint( value ) );
-	}
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Parameter handling
 
@@ -796,28 +795,42 @@ public class SelectionQueryImpl<R>
 
 	protected List<R> doList() {
 		final var statement = getSqmStatement();
-		final boolean containsCollectionFetches = statement.containsCollectionFetches()
-				|| containsCollectionFetches( getQueryOptions() );
-		final boolean hasLimit = hasLimit( statement, getQueryOptions() );
-		final boolean limitInMemory = getQueryOptions().isLimitInMemoryEnabled() == TRUE;
+		final var queryOptions = getQueryOptions();
+		final boolean containsCollectionFetches =
+				statement.containsCollectionFetches()
+						|| containsCollectionFetches( queryOptions );
+		final boolean hasLimit = hasLimit( statement, queryOptions );
+		final boolean limitInMemory = shouldApplyLimitInMemory( statement, queryOptions );
 		final boolean needsDistinct = needsDistinct( containsCollectionFetches, hasLimit, statement );
-		final var list = resolveQueryPlan().performList( executionContext( hasLimit, containsCollectionFetches, false ) );
-		if ( needsDistinct ) {
-			return limitInMemory
-					? handleDistinct( true, statement, list )
-					: handleDistinct( false, statement, list );
-		}
-		else {
-			return limitInMemory && hasLimit ? handleLimit( hasLimit, statement, list ) : list;
-		}
+		final boolean paginationInSql =
+				hasLimit && containsCollectionFetches && !limitInMemory && isPaginationPushedToDerivedTable();
+		final boolean applyLimitInMemory =
+				limitInMemory
+					|| hasLimit && containsCollectionFetches && !paginationInSql;
+		final var list =
+				resolveQueryPlan()
+						.performList( listExecutionContext(
+								hasLimit,
+								containsCollectionFetches,
+								limitInMemory
+						) );
+		return needsDistinct
+				? handleDistinct( applyLimitInMemory, statement, list )
+				: applyLimitInMemory ? this.handleDistinct( true, statement, list ) : list;
 	}
 
 	protected ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
 		final var statement = getSqmStatement();
-		final boolean containsCollectionFetches = statement.containsCollectionFetches()
-				|| containsCollectionFetches( getQueryOptions() );
-		final boolean hasLimit = hasLimit( statement, getQueryOptions() );
-		return resolveQueryPlan().performScroll( scrollMode, executionContext( hasLimit, containsCollectionFetches, true ) );
+		final var queryOptions = getQueryOptions();
+		final boolean containsCollectionFetches =
+				statement.containsCollectionFetches()
+						|| containsCollectionFetches( queryOptions );
+		final boolean hasLimit = hasLimit( statement, queryOptions );
+		return resolveQueryPlan()
+				.performScroll(
+						scrollMode,
+						scrollExecutionContext( statement, hasLimit, containsCollectionFetches )
+				);
 	}
 
 	@Override
@@ -952,6 +965,7 @@ public class SelectionQueryImpl<R>
 			);
 		}
 		else {
+			//noinspection rawtypes
 			return new HqlSelectionMementoImpl(
 					name,
 					hql,
@@ -1054,7 +1068,12 @@ public class SelectionQueryImpl<R>
 		);
 	}
 
-	protected static boolean hasLimit(SqmSelectStatement<?> sqm, MutableQueryOptions queryOptions) {
+	protected static boolean shouldApplyLimitInMemory(SqmSelectStatement<?> sqm, QueryOptions queryOptions) {
+		return queryOptions.isLimitInMemoryEnabled() == TRUE
+			&& hasLimit( sqm, queryOptions );
+	}
+
+	protected static boolean hasLimit(SqmSelectStatement<?> sqm, QueryOptions queryOptions) {
 		return queryOptions.hasLimit() || sqm.getFetch() != null || sqm.getOffset() != null;
 	}
 
@@ -1080,49 +1099,171 @@ public class SelectionQueryImpl<R>
 		return appliedGraph != null && appliedGraph.getSemantic() != null;
 	}
 
-	private DomainQueryExecutionContext executionContext(
+	private DomainQueryExecutionContext listExecutionContext(
 			boolean hasLimit,
 			boolean containsCollectionFetches,
-			boolean scrollExecution) {
-		if ( getQueryOptions().isLimitInMemoryEnabled() == TRUE
-				|| hasLimit && containsCollectionFetches ) {
-			final var originalQueryOptions = getQueryOptions();
-			final var normalizedQueryOptions = markScrollExecution(
-					omitSqlQueryOptions( originalQueryOptions, true, false ),
-					scrollExecution
-			);
-			if ( originalQueryOptions == normalizedQueryOptions ) {
-				return this;
+			boolean limitInMemory) {
+		if ( limitInMemory ) {
+			return limitOmittingExecutionContext();
+		}
+		else if ( hasLimit && containsCollectionFetches ) {
+			if ( !isPaginationPushedToDerivedTable() ) {
+				errorOrLogForPaginationWithCollectionFetch();
 			}
-			else {
-				return new DelegatingDomainQueryExecutionContext( this ) {
-					@Override
-					public QueryOptions getQueryOptions() {
-						return normalizedQueryOptions;
-					}
-				};
-			}
+			return limitOmittingExecutionContext();
 		}
 		else {
-			return scrollExecution ? new DelegatingDomainQueryExecutionContext( this ) {
-				@Override
-				public QueryOptions getQueryOptions() {
-					return markScrollExecution( SelectionQueryImpl.this.getQueryOptions(), true );
-				}
-			} : this;
+			return this;
 		}
 	}
 
-	private static QueryOptions markScrollExecution(QueryOptions queryOptions, boolean scrollExecution) {
-		if ( !scrollExecution || queryOptions.isScrollExecution() ) {
-			return queryOptions;
+	private DomainQueryExecutionContext limitOmittingExecutionContext() {
+		final var originalQueryOptions = getQueryOptions();
+		final var normalizedQueryOptions =
+				omitSqlQueryOptions( originalQueryOptions, true, false );
+		if ( originalQueryOptions == normalizedQueryOptions ) {
+			return this;
 		}
-		return new DelegatingQueryOptions( queryOptions ) {
+		else {
+			return new DelegatingDomainQueryExecutionContext( this ) {
+				@Override
+				public QueryOptions getQueryOptions() {
+					return normalizedQueryOptions;
+				}
+			};
+		}
+	}
+
+	private DomainQueryExecutionContext scrollExecutionContext(
+			SqmSelectStatement<?> statement,
+			boolean hasLimit,
+			boolean containsCollectionFetches) {
+		final var queryOptions = getQueryOptions();
+		final boolean pushedDown =
+				hasLimit && containsCollectionFetches && isPaginationPushedToDerivedTable();
+		final boolean applyLimitInScrollableResults =
+				shouldApplyLimitInMemory( statement, queryOptions )
+						|| hasLimit && containsCollectionFetches && !pushedDown;
+		if ( hasLimit
+				&& containsCollectionFetches
+				&& !pushedDown
+				&& queryOptions.isLimitInMemoryEnabled() != TRUE ) {
+			errorOrLogForPaginationWithCollectionFetch();
+		}
+		final var normalizedQueryOptions =
+				applyLimitInScrollableResults || pushedDown
+						? omitSqlQueryOptions( queryOptions, true, false )
+						: queryOptions;
+		final var scrollQueryOptions = new DelegatingQueryOptions( normalizedQueryOptions ) {
 			@Override
 			public boolean isScrollExecution() {
 				return true;
 			}
+
+			@Override
+			public Boolean isLimitInMemoryEnabled() {
+				return applyLimitInScrollableResults
+						? TRUE
+						: super.isLimitInMemoryEnabled();
+			}
 		};
+		return new DelegatingDomainQueryExecutionContext( this ) {
+			@Override
+			public QueryOptions getQueryOptions() {
+				return scrollQueryOptions;
+			}
+		};
+	}
+
+	/**
+	 * The pagination is pushed down into a derived table over the root entity by
+	 * {@code BaseSqmToSqlAstConverter}'s
+	 * {@code CollectionFetchPaginationQueryTransformer}, so the in-memory slice
+	 * after execution is unnecessary and no warning needs to be logged. These
+	 * conditions must stay in sync with the transformer's preconditions.
+	 */
+	protected boolean isPaginationPushedToDerivedTable() {
+		if ( getQueryOptions().isLimitInMemoryEnabled() == TRUE ) {
+			return false;
+		}
+		final var sessionFactory = getSessionFactory();
+		if ( !sessionFactory.getJdbcServices().getDialect().supportsOffsetInSubquery() ) {
+			return false;
+		}
+		final var queryPart = getSqmStatement().getQueryPart();
+		if ( !( queryPart instanceof SqmQuerySpec<?> spec ) ) {
+			return false;
+		}
+		final var roots = spec.getFromClause().getRoots();
+		if ( roots.isEmpty() ) {
+			return false;
+		}
+		// "fetch first N percent rows" pushed into the inner derived table needs
+		// either native PERCENT support in a subquery or window-function-based
+		// emulation; HSQLDB has neither. Mirror the converter's bail.
+		final var fetchClauseType = spec.getFetchClauseType();
+		if ( fetchClauseType == PERCENT_ONLY || fetchClauseType == PERCENT_WITH_TIES ) {
+			final var dialect = sessionFactory.getJdbcServices().getDialect();
+			if ( !dialect.supportsFetchClause( PERCENT_ONLY )
+					&& !dialect.supportsWindowFunctions() ) {
+				return false;
+			}
+		}
+		// The transformer only rewrites when at least one root contributes a
+		// fetched plural join (directly, or through a chain of fetched
+		// singulars). Without that, the converter leaves the limit on the
+		// original query spec; if the runtime suppresses the in-memory fallback
+		// here too, the query silently returns unpaginated results. Match the
+		// converter's preconditions.
+		return hasAnyReachableFetchedPlural( roots, sessionFactory.getMappingMetamodel() )
+			|| hasCollectionFetchesOnlyViaAppliedGraph( roots, sessionFactory.getMappingMetamodel() );
+	}
+
+	private boolean hasCollectionFetchesOnlyViaAppliedGraph(
+			List<SqmRoot<?>> roots, MappingMetamodelImplementor metamodel) {
+		return containsCollectionFetches( getQueryOptions() )
+			&& allRootsAreEntities( roots, metamodel );
+	}
+
+	private static boolean hasAnyReachableFetchedPlural(
+			List<SqmRoot<?>> roots, MappingMetamodelImplementor metamodel) {
+		boolean anyReachable = false;
+		for ( var root : roots ) {
+			if ( !isEntityRoot( root, metamodel ) ) {
+				return false;
+			}
+			if ( !anyReachable && hasReachableFetchedPluralJoin( root ) ) {
+				anyReachable = true;
+			}
+		}
+		return anyReachable;
+	}
+
+	private static boolean allRootsAreEntities(List<SqmRoot<?>> roots, MappingMetamodelImplementor metamodel) {
+		for ( var root : roots ) {
+			if ( !isEntityRoot( root, metamodel ) ) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static boolean isEntityRoot(SqmRoot<?> root, MappingMetamodelImplementor metamodel) {
+		final var javaType = root.getJavaType();
+		return javaType != null && metamodel.findEntityDescriptor( javaType ) != null;
+	}
+
+	private static boolean hasReachableFetchedPluralJoin(SqmFrom<?, ?> from) {
+		for ( var join : from.getSqmJoins() ) {
+			if ( join instanceof SqmAttributeJoin<?, ?> attributeJoin
+					&& attributeJoin.isFetched() ) {
+				if ( attributeJoin.getAttribute() instanceof PluralPersistentAttribute<?, ?, ?>
+						|| hasReachableFetchedPluralJoin( attributeJoin ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private List<R> handleDistinct(boolean applyLimit, SqmSelectStatement<?> statement, List<R> list) {
@@ -1145,21 +1286,6 @@ public class SelectionQueryImpl<R>
 			}
 		}
 		return distinctList;
-	}
-
-	private List<R> handleLimit(boolean hasLimit, SqmSelectStatement<?> statement, List<R> list) {
-		final int first = first( hasLimit, statement );
-		final int max = max( hasLimit, statement, list );
-		if ( first == 0 && max == list.size() ) {
-			return list;
-		}
-		else {
-			final int fromIndex = Math.min( first, list.size() );
-			final int toIndex = max < 0
-					? list.size()
-					: Math.min( first + max, list.size() );
-			return list.subList( fromIndex, toIndex );
-		}
 	}
 
 	private <T> void setBindValues(QueryParameter<?> parameter, QueryParameterBinding<T> binding) {

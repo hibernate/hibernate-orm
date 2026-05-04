@@ -154,7 +154,7 @@ public final class GenericsHelper {
 			if ( instantiation == null ) {
 				throw new IllegalArgumentException(
 						implementingType.getTypeName()
-						+ " is is not a subtype of "
+						+ " is not a subtype of "
 						+ genericType.getName() );
 			}
 			return instantiation.getActualTypeArguments();

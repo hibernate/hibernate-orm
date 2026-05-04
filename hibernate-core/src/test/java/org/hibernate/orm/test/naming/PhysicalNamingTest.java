@@ -64,7 +64,7 @@ public class PhysicalNamingTest {
 	}
 
 	@Entity(name = "TheEntity")
-	static class TheEntity {
+	public static class TheEntity {
 		@Id long itsId;
 		String itsName;
 		@ManyToOne
@@ -72,7 +72,7 @@ public class PhysicalNamingTest {
 	}
 
 	@Entity(name = "Contact")
-	static class Contact {
+	public static class Contact {
 		@Id
 		long id;
 		@ElementCollection
@@ -80,7 +80,7 @@ public class PhysicalNamingTest {
 	}
 
 	@Embeddable
-	static class Address {
+	public static class Address {
 		String city;
 		String houseNo;
 		String postCode;

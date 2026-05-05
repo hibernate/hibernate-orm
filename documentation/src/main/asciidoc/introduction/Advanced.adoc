@@ -155,62 +155,156 @@ When we only need to filter rows by a static condition with no parameters, we do
 :envers-doc: {doc-user-guide-url}#envers
 
 We've mentioned that a filter can be used to implement versioning, and to provide _historical_ views of the data.
-Being such a general-purpose construct, filters provide a lot of flexibility here.
-But if you're after a more focused/opinionated solution to this problem, you should definitely check out {envers}[Envers].
+But Hibernate 7.4 introduces two much more powerful ways of dealing with historical data.
 
-[[envers]]
-.Using Envers for auditing historical data
-****
-Envers is an add-on to Hibernate ORM which keeps a historical record of each versioned entity in a separate _audit table_, and allows past revisions of the data to be viewed and queried.
-A full introduction to Envers would require a whole chapter, so we'll just give you a quick taste here.
+[[temporal-data]]
+=== Temporal data
 
-First, we must mark an entity as versioned, using the `@Audited` annotation:
-[source,java]
-----
-@Audited @Entity
-@Table(name="CurrentDocument")
-@AuditTable("DocumentRevision")
-class Document { ... }
-----
-[TIP]
-====
-The `@AuditTable` annotation is optional, and it's better to set either `org.hibernate.envers.audit_table_prefix` or `org.hibernate.envers.audit_table_suffix` and let the audit table name be inferred.
-====
-The `AuditReader` interface exposes operations for retrieving and querying historical revisions.
-It's really easy to get hold of one of these:
-[source,java]
-----
-AuditReader reader = AuditReaderFactory.get(entityManager);
-----
-Envers tracks revisions of the data via a global _revision number_.
-We may easily find the revision number which was current at a given instant:
-[source,java]
-----
-Number revision = reader.getRevisionNumberForDate(datetime);
-----
-We can use the revision number to ask for the version of our entity associated with the given revision number:
-[source,java]
-----
-Document doc = reader.find(Document.class, id, revision);
-----
-Alternatively, we can directly ask for the version which was current at a given instant:
-[source,java]
-----
-Document doc = reader.find(Document.class, id, datetime);
-----
-We can even execute queries to obtain lists of entities current at the given revision number:
-[source,java]
-----
-List documents =
-        reader.createQuery()
-            .forEntitiesAtRevision(Document.class, revision)
-            .getResultList();
-----
-For much more information, see the {envers-doc}[User Guide].
-****
+A _temporal entity_ is an entity that keeps a history of its state over time, allowing the database to be queried for state which was effective at a given moment in the past.
+The link:{doc-javadoc-url}org/hibernate/annotations/Temporal.html[`@Temporal`] annotation declares a temporal entity.
 
-Historically, filters where often used to implement soft-delete.
-But, since 6.4, Hibernate now comes with soft-delete built in.
+[source,java]
+----
+@Temporal @Entity
+class Document {
+	...
+}
+----
+
+Any temporal entity has columns holding:
+
+- the moment at which a particular version of the entity became effective, and
+- the moment, if any, at which it the version is superseded (this is null for the currently-effective version).
+
+[source,java]
+----
+@Temporal(rowStart="effective",
+          rowEnd="superseded")
+@Entity
+class Document {
+	...
+}
+----
+
+Hibernate offers several different strategies for mapping temporal entities,
+enumerated by link:{doc-javadoc-url}org/hibernate/temporal/TemporalTableStrategy.html[`TemporalTableStrategy`].
+
+.Temporal table strategies
+[%breakable,cols="15,25,~"]
+|===
+| Strategy | Explanation | Comments
+
+| `NATIVE` | Use ANSI SQL 2011-style temporal tables
+| Requires native database support for temporal tables (Maria, SQL Server, Db2)
+| `SINGLE_TABLE` | Store historical data together with current data in one table
+| The table does not have the usual foreign key constraints that would exist for any non-temporal entity, and so it is the responsibility of the application program to maintain and enforce referential integrity
+| `HISTORY_TABLE` | Maintain two tables, one for current data and one for historical data
+| The table for current data has all the usual foreign key constraints that would exist for any non-temporal entity; the table for historical data has no foreign key constraints
+|===
+
+The temporal table strategy is controlled by the following property setting:
+
+.Multi-tenancy configuration
+[%breakable,cols="36,~"]
+|===
+| Configuration property name           | Purpose
+
+| link:{doc-javadoc-url}org/hibernate/cfg/StateManagementSettings.html#TEMPORAL_TABLE_STRATEGY[`hibernate.temporal.table_strategy`]  | Specifies the `TemporalTableStrategy`
+|===
+
+In the `SINGLE_TABLE` strategy, the `@HistoryPartitioning` annotation allows historical data to be shifted to a separate partition.
+
+[source,java]
+----
+@Temporal @Entity
+@Table(name="documents")
+@Temporal.HistoryPartitioning(
+        currentPartition="doc_current",
+        historyPartition="doc_history")
+class Document {
+	...
+}
+----
+
+In the `HISTORY_TABLE` strategy, the `@HistoryTable` annotation specifies the name of the table holding the historical data.
+
+[source,java]
+----
+@Temporal @Entity
+@Table(name="documents")
+@Temporal.HistoryTable(name="document_history")
+class Document {
+	...
+}
+----
+
+By default, a session or stateless session reads the currently effective version of any temporal entity.
+To read historical versions effective at a given instant, we must specify the instant set when creating the session or stateless session.
+
+[source,java]
+----
+Instant instant = ... ; // a past instant
+try (var session = factory.withOptions().asOf(instant).open()) {
+    var document =
+            // read the version of the document
+            // effective at the specified instant
+            session.find(Document.class, documentId);
+}
+----
+
+// [[envers]]
+// .Using Envers for auditing historical data
+// ****
+// Envers is an add-on to Hibernate ORM which keeps a historical record of each versioned entity in a separate _audit table_, and allows past revisions of the data to be viewed and queried.
+// A full introduction to Envers would require a whole chapter, so we'll just give you a quick taste here.
+//
+// First, we must mark an entity as versioned, using the `@Audited` annotation:
+// [source,java]
+// ----
+// @Audited @Entity
+// @Table(name="CurrentDocument")
+// @AuditTable("DocumentRevision")
+// class Document { ... }
+// ----
+// [TIP]
+// ====
+// The `@AuditTable` annotation is optional, and it's better to set either `org.hibernate.envers.audit_table_prefix` or `org.hibernate.envers.audit_table_suffix` and let the audit table name be inferred.
+// ====
+// The `AuditReader` interface exposes operations for retrieving and querying historical revisions.
+// It's really easy to get hold of one of these:
+// [source,java]
+// ----
+// AuditReader reader = AuditReaderFactory.get(entityManager);
+// ----
+// Envers tracks revisions of the data via a global _revision number_.
+// We may easily find the revision number which was current at a given instant:
+// [source,java]
+// ----
+// Number revision = reader.getRevisionNumberForDate(datetime);
+// ----
+// We can use the revision number to ask for the version of our entity associated with the given revision number:
+// [source,java]
+// ----
+// Document doc = reader.find(Document.class, id, revision);
+// ----
+// Alternatively, we can directly ask for the version which was current at a given instant:
+// [source,java]
+// ----
+// Document doc = reader.find(Document.class, id, datetime);
+// ----
+// We can even execute queries to obtain lists of entities current at the given revision number:
+// [source,java]
+// ----
+// List documents =
+//         reader.createQuery()
+//             .forEntitiesAtRevision(Document.class, revision)
+//             .getResultList();
+// ----
+// For much more information, see the {envers-doc}[User Guide].
+// ****
+//
+// Historically, filters where often used to implement soft-delete.
+// But, since 6.4, Hibernate now comes with soft-delete built in.
 
 [[soft-delete]]
 === Soft-delete

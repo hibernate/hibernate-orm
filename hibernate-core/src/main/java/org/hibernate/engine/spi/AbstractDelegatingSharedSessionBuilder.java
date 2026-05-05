@@ -245,8 +245,8 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 	}
 
 	@Override
-	public SharedSessionBuilder atTransaction(Object transactionId) {
-		delegate.atTransaction( transactionId );
+	public SharedSessionBuilder atChangeset(Object changesetId) {
+		delegate.atChangeset( changesetId );
 		return this;
 	}
 }

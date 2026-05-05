@@ -14,11 +14,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Audited;
+import org.hibernate.annotations.ChangesetEntity;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.audit.ModificationType;
-import org.hibernate.annotations.RevisionEntity;
 import org.hibernate.testing.orm.junit.AuditedTest;
 import org.hibernate.testing.orm.junit.BeforeClassTemplate;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -40,11 +40,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests cross-type entity change tracking via a custom
- * {@link RevisionEntity @RevisionEntity} with
- * {@link RevisionEntity.ModifiedEntities @RevisionEntity.ModifiedEntities}.
+ * {@link ChangesetEntity @ChangesetEntity} with
+ * {@link ChangesetEntity.ModifiedEntities @ChangesetEntity.ModifiedEntities}.
  * <p>
  * Exercises the REVCHANGES write-side (via {@code @ElementCollection}
- * on the revision entity) and the read-side APIs on {@code AuditLog}.
+ * on the changeset entity) and the read-side APIs on {@code AuditLog}.
  */
 @AuditedTest
 @SessionFactory
@@ -57,19 +57,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class RevChangesTrackingTest {
 
-	// --- Custom revision entity with @RevisionEntity.ModifiedEntities ---
+	// --- Custom changeset entity with @ChangesetEntity.ModifiedEntities ---
 
-	@RevisionEntity
+	@ChangesetEntity
 	@Entity(name = "TrackingRevisionInfo")
 	@Table(name = "REVINFO")
 	static class TrackingRevisionInfo {
 		@Id
 		@GeneratedValue
-		@RevisionEntity.TransactionId
+		@ChangesetEntity.ChangesetId
 		@Column(name = "REV")
 		int id;
 
-		@RevisionEntity.Timestamp
+		@ChangesetEntity.Timestamp
 		@Column(name = "REVTSTMP")
 		long timestamp;
 
@@ -77,7 +77,7 @@ class RevChangesTrackingTest {
 		@JoinTable(name = "REVCHANGES", joinColumns = @JoinColumn(name = "REV"))
 		@Column(name = "ENTITYNAME")
 		@Fetch(FetchMode.JOIN)
-		@RevisionEntity.ModifiedEntities
+		@ChangesetEntity.ModifiedEntities
 		Set<String> modifiedEntityNames = new HashSet<>();
 	}
 
@@ -129,7 +129,7 @@ class RevChangesTrackingTest {
 			session.persist( author );
 		} );
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			rev1 = auditLog.getRevisions( Book.class, 1L ).get( 0 );
+			rev1 = auditLog.getChangesets( Book.class, 1L ).get( 0 );
 		}
 
 		// Rev 2: update Book only
@@ -137,7 +137,7 @@ class RevChangesTrackingTest {
 				session.find( Book.class, 1L ).title = "Hibernate in Action 2e"
 		);
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( Book.class, 1L );
+			final var revisions = auditLog.getChangesets( Book.class, 1L );
 			rev2 = revisions.get( revisions.size() - 1 );
 		}
 
@@ -146,7 +146,7 @@ class RevChangesTrackingTest {
 				session.remove( session.find( Author.class, 1L ) )
 		);
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( Author.class, 1L );
+			final var revisions = auditLog.getChangesets( Author.class, 1L );
 			rev3 = revisions.get( revisions.size() - 1 );
 		}
 	}
@@ -286,10 +286,10 @@ class RevChangesTrackingTest {
 
 	@Test
 	@Order(11)
-	void testRevisionEntityHasModifiedEntityNames(SessionFactoryScope scope) {
+	void testChangesetEntityHasModifiedEntityNames(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			// Load the revision entity and verify modifiedEntityNames was populated
-			TrackingRevisionInfo revInfo = auditLog.findRevision( rev1 );
+			// Load the changeset entity and verify modifiedEntityNames was populated
+			TrackingRevisionInfo revInfo = auditLog.findChangeset( TrackingRevisionInfo.class, rev1 );
 			assertNotNull( revInfo.modifiedEntityNames );
 			assertEquals( 2, revInfo.modifiedEntityNames.size() );
 			// Entity names are FQN of the @Entity name mapping

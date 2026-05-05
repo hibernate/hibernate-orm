@@ -16,51 +16,51 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.temporal.spi.TransactionIdentifierService;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetCoordinator;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 
-import static org.hibernate.cfg.StateManagementSettings.TRANSACTION_ID_SUPPLIER;
+import static org.hibernate.cfg.StateManagementSettings.CHANGESET_ID_SUPPLIER;
 import static org.hibernate.cfg.StateManagementSettings.USE_SERVER_TRANSACTION_TIMESTAMPS;
 import static org.hibernate.internal.util.GenericsHelper.erasedType;
 import static org.hibernate.internal.util.GenericsHelper.supertypeInstantiation;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 
 /**
- * Default implementation of {@link TransactionIdentifierService}.
+ * Default implementation of {@link ChangesetCoordinator}.
  * <p>
  * Produces current timestamps by calling {@link Instant#now()}.
  *
- * @see StateManagementSettings#TRANSACTION_ID_SUPPLIER
+ * @see StateManagementSettings#CHANGESET_ID_SUPPLIER
  * @see StateManagementSettings#USE_SERVER_TRANSACTION_TIMESTAMPS
  *
  * @author Gavin King
  *
  * @since 7.4
  */
-public class TransactionIdentifierServiceImpl
-		implements TransactionIdentifierService, TransactionIdentifierSupplier<Instant> {
+public class ChangesetCoordinatorImpl
+		implements ChangesetCoordinator, ChangesetIdentifierSupplier<Instant> {
 
 	private Class<?> identifierValueType;
-	private TransactionIdentifierSupplier<?> identifierSupplier;
+	private ChangesetIdentifierSupplier<?> identifierSupplier;
 	private final boolean useServerTransactionTimestamps;
 
-	public TransactionIdentifierServiceImpl(ServiceRegistry serviceRegistry) {
+	public ChangesetCoordinatorImpl(ServiceRegistry serviceRegistry) {
 		final var settings =
 				serviceRegistry.requireService( ConfigurationService.class )
 						.getSettings();
 		useServerTransactionTimestamps =
 				getBoolean( USE_SERVER_TRANSACTION_TIMESTAMPS, settings );
 		if ( useServerTransactionTimestamps ) {
-			if ( settings.containsKey( TRANSACTION_ID_SUPPLIER ) ) {
+			if ( settings.containsKey( CHANGESET_ID_SUPPLIER ) ) {
 				throw new MappingException( "Settings '"
-						+ USE_SERVER_TRANSACTION_TIMESTAMPS + "' and '"
-						+ TRANSACTION_ID_SUPPLIER + "' are mutually exclusive"
+											+ USE_SERVER_TRANSACTION_TIMESTAMPS + "' and '"
+											+ CHANGESET_ID_SUPPLIER + "' are mutually exclusive"
 				);
 			}
 			final var dialect = serviceRegistry.requireService( JdbcServices.class ).getDialect();
 			identifierSupplier = dialect.isCurrentTimestampStable()
 					? null
-					: new CurrentTimestampTransactionIdentifierSupplier();
+					: new CurrentTimestampChangesetIdentifierSupplier();
 			identifierValueType = Instant.class;
 		}
 		else {
@@ -72,13 +72,13 @@ public class TransactionIdentifierServiceImpl
 	}
 
 	@Override
-	public <T> void contributeIdentifierSupplier(TransactionIdentifierSupplier<T> supplier, Class<T> identifierType) {
+	public <T> void contributeIdentifierSupplier(ChangesetIdentifierSupplier<T> supplier, Class<T> identifierType) {
 		this.identifierSupplier = supplier;
 		this.identifierValueType = identifierType;
 	}
 
 	@Override
-	public Instant generateTransactionIdentifier(SharedSessionContract session) {
+	public Instant generateIdentifier(SharedSessionContract session) {
 		return Instant.now();
 	}
 
@@ -93,7 +93,7 @@ public class TransactionIdentifierServiceImpl
 	}
 
 	@Override
-	public TransactionIdentifierSupplier<?> getIdentifierSupplier() {
+	public ChangesetIdentifierSupplier<?> getIdentifierSupplier() {
 		return identifierSupplier;
 	}
 
@@ -107,40 +107,40 @@ public class TransactionIdentifierServiceImpl
 			&& dialect.isCurrentTimestampStable();
 	}
 
-	private TransactionIdentifierSupplier<?> resolveSupplier(
+	private ChangesetIdentifierSupplier<?> resolveSupplier(
 			Map<String,Object> settings,
 			StrategySelector strategySelector) {
-		final Object setting = settings.get( TRANSACTION_ID_SUPPLIER );
+		final Object setting = settings.get( CHANGESET_ID_SUPPLIER );
 		if ( setting == null ) {
 			return this;
 		}
-		else if ( setting instanceof TransactionIdentifierSupplier<?> supplier ) {
+		else if ( setting instanceof ChangesetIdentifierSupplier<?> supplier ) {
 			return supplier;
 		}
 		else if ( setting instanceof Class<?> clazz ) {
-			if ( TransactionIdentifierSupplier.class.isAssignableFrom( clazz ) ) {
-				return strategySelector.resolveStrategy( TransactionIdentifierSupplier.class, clazz );
+			if ( ChangesetIdentifierSupplier.class.isAssignableFrom( clazz ) ) {
+				return strategySelector.resolveStrategy( ChangesetIdentifierSupplier.class, clazz );
 			}
 			throw new HibernateException(
-					"Setting '" + TRANSACTION_ID_SUPPLIER + "' must specify a '"
-							+ TransactionIdentifierSupplier.class.getName()
-							+ "' implementation"
+					"Setting '" + CHANGESET_ID_SUPPLIER + "' must specify a '"
+					+ ChangesetIdentifierSupplier.class.getName()
+					+ "' implementation"
 			);
 		}
 		else if ( setting instanceof String name ) {
-			return strategySelector.resolveStrategy( TransactionIdentifierSupplier.class, name );
+			return strategySelector.resolveStrategy( ChangesetIdentifierSupplier.class, name );
 		}
 		else {
 			throw new HibernateException(
-					"Setting '" + TRANSACTION_ID_SUPPLIER + "' must specify a '"
-							+ TransactionIdentifierSupplier.class.getName()
-							+ "' instance, class, or class name"
+					"Setting '" + CHANGESET_ID_SUPPLIER + "' must specify a '"
+					+ ChangesetIdentifierSupplier.class.getName()
+					+ "' instance, class, or class name"
 			);
 		}
 	}
 
-	private static Class<?> resolveSuppliedType(Class<? extends TransactionIdentifierSupplier<?>> supplierClass) {
-		final var supplierInstantiation = supertypeInstantiation( TransactionIdentifierSupplier.class, supplierClass );
+	private static Class<?> resolveSuppliedType(Class<? extends ChangesetIdentifierSupplier<?>> supplierClass) {
+		final var supplierInstantiation = supertypeInstantiation( ChangesetIdentifierSupplier.class, supplierClass );
 		if ( supplierInstantiation == null ) {
 			return null;
 		}
@@ -151,8 +151,8 @@ public class TransactionIdentifierServiceImpl
 	}
 
 	@SuppressWarnings("unchecked")
-	private static Class<? extends TransactionIdentifierSupplier<?>> supplierClass(
-			TransactionIdentifierSupplier<?> supplier) {
-		return (Class<? extends TransactionIdentifierSupplier<?>>) supplier.getClass();
+	private static Class<? extends ChangesetIdentifierSupplier<?>> supplierClass(
+			ChangesetIdentifierSupplier<?> supplier) {
+		return (Class<? extends ChangesetIdentifierSupplier<?>>) supplier.getClass();
 	}
 }

@@ -82,7 +82,7 @@ abstract class AbstractTemporalUpdateCoordinator extends AbstractMutationCoordin
 
 			if ( TemporalMutationHelper.isUsingParameters( session ) ) {
 				jdbcValueBindings.bindValue(
-						session.getCurrentTransactionIdentifier(),
+						session.getCurrentChangesetIdentifier(),
 						temporalTableName,
 						temporalMapping.getEndingColumnMapping().getSelectionExpression(),
 						ParameterUsage.SET

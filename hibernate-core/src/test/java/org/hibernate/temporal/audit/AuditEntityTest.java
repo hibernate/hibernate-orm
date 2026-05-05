@@ -22,7 +22,7 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
 import org.hibernate.SharedSessionContract;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -37,14 +37,14 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 		AuditEntityTest.AuditEntity.class,
 		AuditEntityTest.EmbeddedEntity.class
 })
-@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TRANSACTION_ID_SUPPLIER,
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditEntityTest$TxIdSupplier"))
 class AuditEntityTest {
 	private static int currentTxId;
 
-	public static class TxIdSupplier implements TransactionIdentifierSupplier<Integer> {
+	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
 		@Override
-		public Integer generateTransactionIdentifier(SharedSessionContract session) {
+		public Integer generateIdentifier(SharedSessionContract session) {
 			return ++currentTxId;
 		}
 
@@ -81,7 +81,7 @@ class AuditEntityTest {
 					assertNull( entity );
 				}
 		);
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( 0 ).open()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( 0 ).open()) {
 			AuditEntity entity = s.find( AuditEntity.class, 1L );
 			assertNull( entity );
 			AuditEntity result =
@@ -89,7 +89,7 @@ class AuditEntityTest {
 							.getSingleResultOrNull();
 			assertNull( result );
 		}
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( 1 ).open()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( 1 ).open()) {
 			AuditEntity entity = s.find( AuditEntity.class, 1L );
 			assertEquals( "hello", entity.text );
 			assertEquals( Set.of( "hello" ), entity.stringSet );
@@ -98,7 +98,7 @@ class AuditEntityTest {
 							.getSingleResultOrNull();
 			assertSame( entity, result );
 		}
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( 2 ).open()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( 2 ).open()) {
 			AuditEntity entity = s.find( AuditEntity.class, 1L );
 			assertEquals( "goodbye", entity.text );
 			assertEquals( Set.of( "hello", "goodbye" ), entity.stringSet );
@@ -107,7 +107,7 @@ class AuditEntityTest {
 							.getSingleResultOrNull();
 			assertSame( entity, result );
 		}
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( 3 ).open()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( 3 ).open()) {
 			AuditEntity entity = s.find( AuditEntity.class, 1L );
 			assertNull( entity );
 			AuditEntity result =
@@ -115,7 +115,7 @@ class AuditEntityTest {
 							.getSingleResultOrNull();
 			assertNull( result );
 		}
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( 4 ).open()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( 4 ).open()) {
 			AuditEntity entity = s.find( AuditEntity.class, 1L );
 			assertNull( entity );
 			AuditEntity result =
@@ -159,17 +159,17 @@ class AuditEntityTest {
 
 		// Entity A was only modified at rev 701, but should be visible
 		// at rev 702 and 703 with its original state
-		try (var s = sf.withOptions().atTransaction( 702 ).open()) {
+		try (var s = sf.withOptions().atChangeset( 702 ).open()) {
 			var a = s.find( AuditEntity.class, 701L );
 			assertEquals( "A-created", a.text );
 		}
-		try (var s = sf.withOptions().atTransaction( 703 ).open()) {
+		try (var s = sf.withOptions().atChangeset( 703 ).open()) {
 			var a = s.find( AuditEntity.class, 701L );
 			assertEquals( "A-created", a.text );
 		}
 
 		// Entity B should not be visible at rev 701 (created later)
-		try (var s = sf.withOptions().atTransaction( 701 ).open()) {
+		try (var s = sf.withOptions().atChangeset( 701 ).open()) {
 			var b = s.find( AuditEntity.class, 702L );
 			assertNull( b );
 		}
@@ -192,13 +192,13 @@ class AuditEntityTest {
 			e.address = new Address( "456 Oak Ave", "Shelbyville" );
 		} );
 
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( 101 ).open()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( 101 ).open()) {
 			var e = s.find( EmbeddedEntity.class, 1L );
 			assertEquals( "123 Main St", e.address.street );
 			assertEquals( "Springfield", e.address.city );
 		}
 
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( 102 ).open()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( 102 ).open()) {
 			var e = s.find( EmbeddedEntity.class, 1L );
 			assertEquals( "456 Oak Ave", e.address.street );
 			assertEquals( "Shelbyville", e.address.city );
@@ -231,20 +231,20 @@ class AuditEntityTest {
 		} );
 
 		// Verify: revision 201 = ADD with "initial"
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( 201 ).open()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( 201 ).open()) {
 			var e = s.find( AuditEntity.class, 99L );
 			assertEquals( "initial", e.text );
 		}
 
 		// Verify: revision 202 = single MOD with "second change" (not two rows)
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( 202 ).open()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( 202 ).open()) {
 			var e = s.find( AuditEntity.class, 99L );
 			assertEquals( "second change", e.text );
 		}
 
 		// Verify via AuditLog: exactly 2 revisions for this entity
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( AuditEntity.class, 99L );
+			final var revisions = auditLog.getChangesets( AuditEntity.class, 99L );
 			assertEquals( 2, revisions.size() );
 		}
 	}
@@ -268,7 +268,7 @@ class AuditEntityTest {
 
 		// Verify: no audit rows exist for this entity
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( AuditEntity.class, 88L );
+			final var revisions = auditLog.getChangesets( AuditEntity.class, 88L );
 			assertEquals( 0, revisions.size() );
 		}
 	}
@@ -325,7 +325,7 @@ class AuditEntityTest {
 		} );
 
 		// Verify: at revision 502, collection has a, b, c
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( 502 ).open()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( 502 ).open()) {
 			var e = s.find( AuditEntity.class, 66L );
 			assertEquals( Set.of( "a", "b", "c" ), e.stringSet );
 		}
@@ -351,7 +351,7 @@ class AuditEntityTest {
 
 		// Verify: no entity audit rows
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( AuditEntity.class, 55L );
+			final var revisions = auditLog.getChangesets( AuditEntity.class, 55L );
 			assertEquals( 0, revisions.size() );
 		}
 

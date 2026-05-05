@@ -1407,8 +1407,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		//audit column accessor functions for @Audited entities
 
 		functionRegistry.register(
-				AuditColumnFunction.TRANSACTION_ID_FUNCTION,
-				new AuditColumnFunction( AuditColumnFunction.TRANSACTION_ID_FUNCTION, true, typeConfiguration )
+				AuditColumnFunction.CHANGESET_ID_FUNCTION,
+				new AuditColumnFunction( AuditColumnFunction.CHANGESET_ID_FUNCTION, true, typeConfiguration )
 		);
 		functionRegistry.register(
 				AuditColumnFunction.MODIFICATION_TYPE_FUNCTION,

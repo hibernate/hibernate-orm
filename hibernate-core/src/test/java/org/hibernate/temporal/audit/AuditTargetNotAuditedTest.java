@@ -18,7 +18,7 @@ import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.audit.ModificationType;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.AuditedTest;
 import org.hibernate.testing.orm.junit.BeforeClassTemplate;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -54,14 +54,14 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 		AuditTargetNotAuditedTest.Store.class,
 		AuditTargetNotAuditedTest.Item.class
 })
-@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TRANSACTION_ID_SUPPLIER,
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditTargetNotAuditedTest$TxIdSupplier"))
 class AuditTargetNotAuditedTest {
 	private static int currentTxId;
 
-	public static class TxIdSupplier implements TransactionIdentifierSupplier<Integer> {
+	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
 		@Override
-		public Integer generateTransactionIdentifier(SharedSessionContract session) {
+		public Integer generateIdentifier(SharedSessionContract session) {
 			return ++currentTxId;
 		}
 	}
@@ -106,7 +106,7 @@ class AuditTargetNotAuditedTest {
 	@Test
 	void testManyToOneWriteSide(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			assertEquals( 3, auditLog.getRevisions( Product.class, 1L ).size() );
+			assertEquals( 3, auditLog.getChangesets( Product.class, 1L ).size() );
 		}
 	}
 
@@ -114,7 +114,7 @@ class AuditTargetNotAuditedTest {
 	void testManyToOnePointInTimeRead(SessionFactoryScope scope) {
 		// REV 1: product with Electronics category (FK=1)
 		try (var s = scope.getSessionFactory().withOptions()
-				.atTransaction( 1 ).openSession()) {
+				.atChangeset( 1 ).openSession()) {
 			var product = s.find( Product.class, 1L );
 			assertNotNull( product );
 			assertEquals( "Phone", product.name );
@@ -126,7 +126,7 @@ class AuditTargetNotAuditedTest {
 
 		// REV 2: product switched to Gadgets (FK=2)
 		try (var s = scope.getSessionFactory().withOptions()
-				.atTransaction( 2 ).openSession()) {
+				.atChangeset( 2 ).openSession()) {
 			var product = s.find( Product.class, 1L );
 			assertNotNull( product );
 			assertNotNull( product.category );
@@ -139,7 +139,7 @@ class AuditTargetNotAuditedTest {
 
 		// REV 4: category cleared (FK=null)
 		try (var s = scope.getSessionFactory().withOptions()
-				.atTransaction( 4 ).openSession()) {
+				.atChangeset( 4 ).openSession()) {
 			var product = s.find( Product.class, 1L );
 			assertNotNull( product );
 			assertNull( product.category );
@@ -174,7 +174,7 @@ class AuditTargetNotAuditedTest {
 		// eagerly fetched via JOIN, the LEFT JOIN yields null columns
 		// and the association resolves to null.
 		try (var s = scope.getSessionFactory().withOptions()
-				.atTransaction( 401 ).openSession()) {
+				.atChangeset( 401 ).openSession()) {
 			var product = s.find( Product.class, 99L );
 			assertNotNull( product );
 			assertEquals( "Doomed", product.name );
@@ -184,7 +184,7 @@ class AuditTargetNotAuditedTest {
 
 		// REV 2 pointed to Category#98 which still exists
 		try (var s = scope.getSessionFactory().withOptions()
-				.atTransaction( 402 ).openSession()) {
+				.atChangeset( 402 ).openSession()) {
 			var product = s.find( Product.class, 99L );
 			assertNotNull( product );
 			assertNotNull( product.category );
@@ -212,12 +212,12 @@ class AuditTargetNotAuditedTest {
 	@Test
 	void testManyToOneJoinFetchAllRevisions(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions()
-				.atTransaction( AuditLog.ALL_REVISIONS ).openSession()) {
+				.atChangeset( AuditLog.ALL_CHANGESETS ).openSession()) {
 			final var rows = session.createSelectionQuery(
-					"select e, transactionId(e), modificationType(e)"
+					"select e, changesetId(e), modificationType(e)"
 					+ " from Product e left join fetch e.category"
 					+ " where e.id = :id"
-					+ " order by transactionId(e)",
+					+ " order by changesetId(e)",
 					Object[].class
 			).setParameter( "id", 1L ).getResultList();
 
@@ -250,14 +250,14 @@ class AuditTargetNotAuditedTest {
 
 		// Point-in-time: non-audited store loads from current table
 		try (var s = scope.getSessionFactory().withOptions()
-				.atTransaction( 101 ).openSession()) {
+				.atChangeset( 101 ).openSession()) {
 			var item = s.find( Item.class, 1L );
 			assertNotNull( item.store );
 			assertEquals( "Main Store", item.store.name );
 		}
 
 		try (var s = scope.getSessionFactory().withOptions()
-				.atTransaction( 102 ).openSession()) {
+				.atChangeset( 102 ).openSession()) {
 			var item = s.find( Item.class, 1L );
 			assertNotNull( item.store );
 			assertEquals( "Branch", item.store.name );
@@ -300,12 +300,12 @@ class AuditTargetNotAuditedTest {
 
 		// Verify audit rows for the entity
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			assertEquals( 3, auditLog.getRevisions( Product.class, 10L ).size() );
+			assertEquals( 3, auditLog.getChangesets( Product.class, 10L ).size() );
 		}
 
 		// Point-in-time: tags should be loaded from current table
 		try (var s = scope.getSessionFactory().withOptions()
-				.atTransaction( 202 ).openSession()) {
+				.atChangeset( 202 ).openSession()) {
 			var product = s.find( Product.class, 10L );
 			assertNotNull( product );
 			assertEquals( "Laptop", product.name );
@@ -334,12 +334,12 @@ class AuditTargetNotAuditedTest {
 
 		// Verify audit rows for the entity
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			assertEquals( 2, auditLog.getRevisions( Product.class, 20L ).size() );
+			assertEquals( 2, auditLog.getChangesets( Product.class, 20L ).size() );
 		}
 
 		// Point-in-time
 		try (var s = scope.getSessionFactory().withOptions()
-				.atTransaction( 301 ).openSession()) {
+				.atChangeset( 301 ).openSession()) {
 			var product = s.find( Product.class, 20L );
 			assertNotNull( product );
 			assertEquals( "Table", product.name );

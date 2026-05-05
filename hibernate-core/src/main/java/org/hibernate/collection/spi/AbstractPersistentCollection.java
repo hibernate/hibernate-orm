@@ -89,7 +89,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	protected AbstractPersistentCollection(SharedSessionContractImplementor session) {
 		this.session = session;
 		final Object tempId = session.getLoadQueryInfluencers().getTemporalIdentifier();
-		this.temporalIdentifier = tempId != AuditLog.ALL_REVISIONS ? tempId : null;
+		this.temporalIdentifier = tempId != AuditLog.ALL_CHANGESETS ? tempId : null;
 	}
 
 	@Override

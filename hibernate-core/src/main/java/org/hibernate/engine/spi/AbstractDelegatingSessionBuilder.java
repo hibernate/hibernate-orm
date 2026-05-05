@@ -193,8 +193,8 @@ public abstract class AbstractDelegatingSessionBuilder implements SessionBuilder
 	}
 
 	@Override
-	public SessionBuilderImplementor atTransaction(Object transactionId) {
-		delegate.atTransaction( transactionId );
+	public SessionBuilderImplementor atChangeset(Object changesetId) {
+		delegate.atChangeset( changesetId );
 		return this;
 	}
 }

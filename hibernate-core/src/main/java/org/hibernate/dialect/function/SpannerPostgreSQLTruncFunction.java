@@ -4,7 +4,6 @@
  */
 package org.hibernate.dialect.function;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.ReturnableType;
@@ -32,7 +31,6 @@ public class SpannerPostgreSQLTruncFunction extends PostgreSQLTruncFunction {
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
-		final List<SqmTypedNode<?>> args = new ArrayList<>(arguments);
 		if (arguments.size() != 2 || !(arguments.get(1) instanceof SqmExtractUnit)) {
 			// numeric truncation - delegate to Spanner-specific implementation
 			return spannerPostgreSQLTruncRoundFunction.generateSqmFunctionExpression(

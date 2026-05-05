@@ -388,7 +388,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		final var temporalMapping = attributeMapping.getTemporalMapping();
 		if ( temporalMapping != null && isUsingTransactionIdParameters( session ) ) {
 			jdbcValueBindings.bindValue(
-					session.getCurrentTransactionIdentifier(),
+					session.getCurrentChangesetIdentifier(),
 					temporalMapping.getStartingColumnMapping(),
 					ParameterUsage.SET
 			);
@@ -654,7 +654,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		final var temporalMapping = attributeMapping.getTemporalMapping();
 		if ( temporalMapping != null && isUsingTransactionIdParameters( session ) ) {
 			jdbcValueBindings.bindValue(
-					session.getCurrentTransactionIdentifier(),
+					session.getCurrentChangesetIdentifier(),
 					temporalMapping.getEndingColumnMapping(),
 					ParameterUsage.SET
 			);
@@ -719,7 +719,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	private static boolean isUsingTransactionIdParameters(SharedSessionContractImplementor session) {
 		final var factory = session.getFactory();
 		return factory.getSessionFactoryOptions().getTemporalTableStrategy() == SINGLE_TABLE
-			&& !factory.getTransactionIdentifierService().useServerTimestamp( session.getDialect() );
+			&& !factory.getChangesetCoordinator().useServerTimestamp( session.getDialect() );
 	}
 
 	private boolean isNativeTemporalTablesEnabled() {

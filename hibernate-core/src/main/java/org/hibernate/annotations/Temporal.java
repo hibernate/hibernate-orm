@@ -107,15 +107,15 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * An alternative approach, which is not compatible with the
  * {@linkplain TemporalTableStrategy#NATIVE native} mapping strategy,
  * is to provide a custom {@link java.util.function.Supplier} of
- * transaction ids by specifying the configuration property
- * {@value StateManagementSettings#TRANSACTION_ID_SUPPLIER}.
- * Transaction ids must be unique and comparable and must increase
+ * changeset ids by specifying the configuration property
+ * {@value StateManagementSettings#CHANGESET_ID_SUPPLIER}.
+ * Changeset ids must be unique and comparable and must increase
  * monotonically. Typically, such an id is obtained by persisting
  * an instance of an application-defined entity class with a
- * generated id which represents the current unit of work. This
- * entity associates the transaction id with other information about
- * the work being performed, such as the current timestamp, current
- * application user, and so on.
+ * generated id which represents the current changeset. This entity
+ * associates the changeset id with other information about the work
+ * being performed, such as the current timestamp, current application
+ * user, and so on.
  *
  * @apiNote
  * {@linkplain jakarta.persistence.SecondaryTable Secondary tables} and
@@ -123,9 +123,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * joined inheritance mappings} are not supported for temporal entities.
  *
  * @see org.hibernate.engine.creation.CommonBuilder#asOf(Instant)
- * @see org.hibernate.engine.creation.CommonBuilder#atTransaction(Object)
+ * @see org.hibernate.engine.creation.CommonBuilder#atChangeset(Object)
  * @see StateManagementSettings#TEMPORAL_TABLE_STRATEGY
- * @see StateManagementSettings#TRANSACTION_ID_SUPPLIER
+ * @see StateManagementSettings#CHANGESET_ID_SUPPLIER
  * @see StateManagementSettings#USE_SERVER_TRANSACTION_TIMESTAMPS
  *
  * @author Gavin King
@@ -138,14 +138,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface Temporal {
 	/**
 	 * The name of the column holding the starting timestamp
-	 * or transaction id of a revision; the timestamp or id
+	 * or changeset id of a revision; the timestamp or id
 	 * representing the moment the revision became effective;
 	 * that is, the "effective from" timestamp.
 	 */
 	String rowStart() default "effective";
 	/**
 	 * The name of the column holding the ending timestamp
-	 * or transaction id of a revision; the timestamp or id
+	 * or changeset id of a revision; the timestamp or id
 	 * representing the moment the revision was superseded;
 	 * that is, the "effective to" timestamp.
 	 */

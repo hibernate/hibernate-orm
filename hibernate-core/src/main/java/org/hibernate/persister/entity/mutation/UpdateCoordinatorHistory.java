@@ -432,7 +432,7 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 
 		if ( TemporalMutationHelper.isUsingParameters( session ) ) {
 			jdbcValueBindings.bindValue(
-					session.getCurrentTransactionIdentifier(),
+					session.getCurrentChangesetIdentifier(),
 					historyTableName,
 					temporalMapping.getStartingColumnMapping().getSelectionExpression(),
 					ParameterUsage.SET

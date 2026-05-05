@@ -91,7 +91,7 @@ import org.hibernate.relational.internal.SchemaManagerImpl;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.temporal.spi.TransactionIdentifierService;
+import org.hibernate.temporal.spi.ChangesetCoordinator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
@@ -206,7 +206,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	final transient EntityCopyObserverFactory entityCopyObserverFactory;
 	final transient ParameterMarkerStrategy parameterMarkerStrategy;
 	final transient JdbcValuesMappingProducerProvider jdbcValuesMappingProducerProvider;
-	final transient TransactionIdentifierService transactionIdentifierService;
+	final transient ChangesetCoordinator changesetCoordinator;
 
 	public SessionFactoryImpl(
 			final MetadataImplementor bootMetamodel,
@@ -258,7 +258,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		classLoaderService = serviceRegistry.requireService( ClassLoaderService.class );
 		jdbcValuesMappingProducerProvider = serviceRegistry.requireService( JdbcValuesMappingProducerProvider.class );
 
-		transactionIdentifierService = serviceRegistry.requireService( TransactionIdentifierService.class );
+		changesetCoordinator = serviceRegistry.requireService( ChangesetCoordinator.class );
 
 		final var integratorObserver = new IntegratorObserver();
 		observerChain.addObserver( integratorObserver );
@@ -1099,8 +1099,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public TransactionIdentifierService getTransactionIdentifierService() {
-		return transactionIdentifierService;
+	public ChangesetCoordinator getChangesetCoordinator() {
+		return changesetCoordinator;
 	}
 
 	// Serialization handling ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

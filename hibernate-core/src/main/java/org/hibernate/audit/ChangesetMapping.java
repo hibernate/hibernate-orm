@@ -9,39 +9,39 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Transient;
+import org.hibernate.annotations.ChangesetEntity;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.RevisionEntity;
 
 import java.io.Serializable;
 import java.time.Instant;
 
 /**
- * Base {@link MappedSuperclass @MappedSuperclass} for revision
+ * Base {@link MappedSuperclass @MappedSuperclass} for changeset
  * entities, providing the standard {@code REV} (auto-generated
  * integer primary key) and {@code REVTSTMP} (Unix epoch
  * timestamp) columns. The timestamp is initialized automatically
  * via {@link CreationTimestamp}.
  * <p>
  * Extend this class to create a custom
- * {@link RevisionEntity @RevisionEntity}. For entity change
- * tracking, extend {@link TrackingModifiedEntitiesRevisionMapping}
+ * {@link ChangesetEntity @ChangesetEntity}. For entity change
+ * tracking, extend {@link TrackingModifiedEntitiesChangesetMapping}
  * instead.
  *
  * @author Marco Belladelli
- * @see DefaultRevisionEntity
- * @see TrackingModifiedEntitiesRevisionMapping
+ * @see DefaultChangesetEntity
+ * @see TrackingModifiedEntitiesChangesetMapping
  * @since 7.4
  */
 @MappedSuperclass
-public class RevisionMapping implements Serializable {
+public class ChangesetMapping implements Serializable {
 	@Id
 	@GeneratedValue
-	@RevisionEntity.TransactionId
+	@ChangesetEntity.ChangesetId
 	@Column(name = "REV")
 	private long id;
 
 	@CreationTimestamp
-	@RevisionEntity.Timestamp
+	@ChangesetEntity.Timestamp
 	@Column(name = "REVTSTMP")
 	private long timestamp;
 
@@ -71,7 +71,7 @@ public class RevisionMapping implements Serializable {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !(o instanceof RevisionMapping that) ) {
+		if ( !(o instanceof ChangesetMapping that) ) {
 			return false;
 		}
 		return id == that.id
@@ -87,7 +87,7 @@ public class RevisionMapping implements Serializable {
 
 	@Override
 	public String toString() {
-		return "RevisionMapping(id = " + id
+		return "ChangesetMapping(id = " + id
 			+ ", timestamp = " + getRevisionInstant() + ")";
 	}
 }

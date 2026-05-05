@@ -27,7 +27,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import org.hibernate.SharedSessionContract;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 
 import java.util.List;
 
@@ -46,16 +46,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		AuditLogTest.AuditedEntity.class,
 		AuditLogTest.NonAuditedEntity.class
 })
-@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TRANSACTION_ID_SUPPLIER,
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditLogTest$TxIdSupplier"))
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AuditLogTest {
 	private static int currentTxId;
 
-	public static class TxIdSupplier implements TransactionIdentifierSupplier<Integer> {
+	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
 		@Override
-		public Integer generateTransactionIdentifier(SharedSessionContract session) {
+		public Integer generateIdentifier(SharedSessionContract session) {
 			return ++currentTxId;
 		}
 
@@ -140,13 +140,13 @@ class AuditLogTest {
 		}
 	}
 
-	// --- getRevisions ---
+	// --- getChangesets ---
 
 	@Test
 	@Order(2)
 	void testGetRevisionsForEntity1(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( AuditedEntity.class, 1L );
+			final var revisions = auditLog.getChangesets( AuditedEntity.class, 1L );
 
 			// Entity 1 was: created (rev1), updated (rev2), deleted (rev4)
 			assertEquals( 3, revisions.size() );
@@ -160,7 +160,7 @@ class AuditLogTest {
 	@Order(3)
 	void testGetRevisionsForEntity2(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( AuditedEntity.class, 2L );
+			final var revisions = auditLog.getChangesets( AuditedEntity.class, 2L );
 
 			// Entity 2 was: created (rev2), updated (rev3)
 			assertEquals( 2, revisions.size() );
@@ -173,7 +173,7 @@ class AuditLogTest {
 	@Order(4)
 	void testGetRevisionsChronologicalOrder(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( AuditedEntity.class, 1L );
+			final var revisions = auditLog.getChangesets( AuditedEntity.class, 1L );
 
 			// Should be in ascending order
 			for ( int i = 1; i < revisions.size(); i++ ) {
@@ -189,7 +189,7 @@ class AuditLogTest {
 	@Order(5)
 	void testGetRevisionsForNonExistentEntity(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( AuditedEntity.class, 999L );
+			final var revisions = auditLog.getChangesets( AuditedEntity.class, 999L );
 			assertTrue( revisions.isEmpty() );
 		}
 	}
@@ -305,8 +305,8 @@ class AuditLogTest {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			// The non-audited entity was persisted in a separate transaction
 			// but should NOT have created any audit rows
-			final var revisions1 = auditLog.getRevisions( AuditedEntity.class, 1L );
-			final var revisions2 = auditLog.getRevisions( AuditedEntity.class, 2L );
+			final var revisions1 = auditLog.getChangesets( AuditedEntity.class, 1L );
+			final var revisions2 = auditLog.getChangesets( AuditedEntity.class, 2L );
 
 			// No revision should exist beyond revDelete for entity 1
 			// or beyond revUpdate for entity 2
@@ -328,13 +328,13 @@ class AuditLogTest {
 			final var sf = scope.getSessionFactory();
 
 			// Use AuditLog to get revisions, then read entity state via atTransaction
-			final var revisions = auditLog.getRevisions( AuditedEntity.class, 1L );
+			final var revisions = auditLog.getChangesets( AuditedEntity.class, 1L );
 			assertEquals( 3, revisions.size() );
 
 			// First revision: entity was created with name "first"
 			final int firstRev = ( (Number) revisions.get( 0 ) ).intValue();
 			assertEquals( ModificationType.ADD, auditLog.getModificationType( AuditedEntity.class, 1L, firstRev ) );
-			try (var s = sf.withOptions().atTransaction( firstRev ).open()) {
+			try (var s = sf.withOptions().atChangeset( firstRev ).open()) {
 				final var entity = s.find( AuditedEntity.class, 1L );
 				assertNotNull( entity );
 				assertEquals( "first", entity.name );
@@ -343,7 +343,7 @@ class AuditLogTest {
 			// Second revision: entity was updated to "first-updated"
 			final int secondRev = ( (Number) revisions.get( 1 ) ).intValue();
 			assertEquals( ModificationType.MOD, auditLog.getModificationType( AuditedEntity.class, 1L, secondRev ) );
-			try (var s = sf.withOptions().atTransaction( secondRev ).open()) {
+			try (var s = sf.withOptions().atChangeset( secondRev ).open()) {
 				final var entity = s.find( AuditedEntity.class, 1L );
 				assertNotNull( entity );
 				assertEquals( "first-updated", entity.name );
@@ -352,7 +352,7 @@ class AuditLogTest {
 			// Third revision: entity was deleted
 			final int thirdRev = ( (Number) revisions.get( 2 ) ).intValue();
 			assertEquals( ModificationType.DEL, auditLog.getModificationType( AuditedEntity.class, 1L, thirdRev ) );
-			try (var s = sf.withOptions().atTransaction( thirdRev ).open()) {
+			try (var s = sf.withOptions().atChangeset( thirdRev ).open()) {
 				final var entity = s.find( AuditedEntity.class, 1L );
 				assertNull( entity );
 			}
@@ -491,10 +491,10 @@ class AuditLogTest {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			final var history = auditLog.getHistory( AuditedEntity.class, 1L );
 
-			// Without a RevisionEntitySupplier, revision should be the plain txId
-			assertEquals( revCreate1, history.get( 0 ).revision() );
-			assertEquals( revCreate2, history.get( 1 ).revision() );
-			assertEquals( revDelete, history.get( 2 ).revision() );
+			// Without a ChangesetEntitySupplier, revision should be the plain txId
+			assertEquals( revCreate1, history.get( 0 ).changeset() );
+			assertEquals( revCreate2, history.get( 1 ).changeset() );
+			assertEquals( revDelete, history.get( 2 ).changeset() );
 		}
 	}
 

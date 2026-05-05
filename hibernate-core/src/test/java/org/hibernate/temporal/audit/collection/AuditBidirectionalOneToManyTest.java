@@ -12,7 +12,7 @@ import org.hibernate.annotations.Audited;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.AuditedTest;
@@ -41,16 +41,16 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 		AuditBidirectionalOneToManyTest.Parent.class,
 		AuditBidirectionalOneToManyTest.Child.class
 })
-@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TRANSACTION_ID_SUPPLIER,
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.collection.AuditBidirectionalOneToManyTest$TxIdSupplier"))
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AuditBidirectionalOneToManyTest {
 	private static int currentTxId;
 
-	public static class TxIdSupplier implements TransactionIdentifierSupplier<Integer> {
+	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
 		@Override
-		public Integer generateTransactionIdentifier(SharedSessionContract session) {
+		public Integer generateIdentifier(SharedSessionContract session) {
 			return ++currentTxId;
 		}
 	}
@@ -157,11 +157,11 @@ class AuditBidirectionalOneToManyTest {
 	void testWriteSideRevisionCounts(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			// Parent is inverse side: only 1 revision (initial persist)
-			assertEquals( 1, auditLog.getRevisions( Parent.class, 1L ).size() );
+			assertEquals( 1, auditLog.getChangesets( Parent.class, 1L ).size() );
 			// Child A: ADD + MOD (name update) + DEL
-			assertEquals( 3, auditLog.getRevisions( Child.class, 1L ).size() );
+			assertEquals( 3, auditLog.getChangesets( Child.class, 1L ).size() );
 			// Child B: ADD only
-			assertEquals( 1, auditLog.getRevisions( Child.class, 2L ).size() );
+			assertEquals( 1, auditLog.getChangesets( Child.class, 2L ).size() );
 		}
 	}
 
@@ -173,7 +173,7 @@ class AuditBidirectionalOneToManyTest {
 		final var sf = scope.getSessionFactory();
 
 		// At revCreate: parent has 1 child (A)
-		try (var s = sf.withOptions().atTransaction( revCreate ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revCreate ).openSession()) {
 			var parent = s.find( Parent.class, 1L );
 			assertNotNull( parent );
 			assertEquals( 1, parent.children.size() );
@@ -181,7 +181,7 @@ class AuditBidirectionalOneToManyTest {
 		}
 
 		// At revAddChild: parent has 2 children (A v2 + B)
-		try (var s = sf.withOptions().atTransaction( revAddChild ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revAddChild ).openSession()) {
 			var parent = s.find( Parent.class, 1L );
 			assertNotNull( parent );
 			assertEquals( 2, parent.children.size() );
@@ -190,7 +190,7 @@ class AuditBidirectionalOneToManyTest {
 		}
 
 		// At revRemove: parent has 1 child (B only)
-		try (var s = sf.withOptions().atTransaction( revRemove ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revRemove ).openSession()) {
 			var parent = s.find( Parent.class, 1L );
 			assertNotNull( parent );
 			assertEquals( 1, parent.children.size() );
@@ -226,19 +226,19 @@ class AuditBidirectionalOneToManyTest {
 		final var sf = scope.getSessionFactory();
 
 		try (var auditLog = AuditLogFactory.create( sf )) {
-			assertEquals( 1, auditLog.getRevisions( Parent.class, 10L ).size(),
+			assertEquals( 1, auditLog.getChangesets( Parent.class, 10L ).size(),
 					"Parent should have 1 revision (inverse side)" );
 		}
 
 		// At revRecCreate: 2 children (A + B)
-		try (var s = sf.withOptions().atTransaction( revRecCreate ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revRecCreate ).openSession()) {
 			var parent = s.find( Parent.class, 10L );
 			assertNotNull( parent );
 			assertEquals( 2, parent.children.size() );
 		}
 
 		// At revRecReplace: 2 children (B + C, A removed)
-		try (var s = sf.withOptions().atTransaction( revRecReplace ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revRecReplace ).openSession()) {
 			var parent = s.find( Parent.class, 10L );
 			assertNotNull( parent );
 			assertEquals( 2, parent.children.size() );
@@ -255,13 +255,13 @@ class AuditBidirectionalOneToManyTest {
 		final var sf = scope.getSessionFactory();
 
 		try (var auditLog = AuditLogFactory.create( sf )) {
-			assertEquals( 2, auditLog.getRevisions( Child.class, 20L ).size(),
+			assertEquals( 2, auditLog.getChangesets( Child.class, 20L ).size(),
 					"Child should have 2 revisions (ADD + property update)" );
-			assertEquals( 1, auditLog.getRevisions( Parent.class, 20L ).size(),
+			assertEquals( 1, auditLog.getChangesets( Parent.class, 20L ).size(),
 					"Parent should still have 1 revision" );
 		}
 
-		try (var s = sf.withOptions().atTransaction( revUpdMod ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revUpdMod ).openSession()) {
 			var parent = s.find( Parent.class, 20L );
 			assertNotNull( parent );
 			assertEquals( 1, parent.children.size() );

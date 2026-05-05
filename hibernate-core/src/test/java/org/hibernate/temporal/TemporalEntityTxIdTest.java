@@ -17,7 +17,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Temporal;
 import org.hibernate.cfg.StateManagementSettings;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -41,15 +41,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		{TemporalEntityTxIdTest.TemporalEntity1.class,
 		TemporalEntityTxIdTest.TemporalChild1.class})
 @ServiceRegistry(settings = {@Setting(name = StateManagementSettings.TEMPORAL_TABLE_STRATEGY, value = "SINGLE_TABLE"),
-		@Setting(name = StateManagementSettings.TRANSACTION_ID_SUPPLIER,
+		@Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 				value = "org.hibernate.temporal.TemporalEntityTxIdTest$TxIdSupplier")})
 class TemporalEntityTxIdTest {
 
 	private static int currentTxId;
 
-	public static class TxIdSupplier implements TransactionIdentifierSupplier<Integer> {
+	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
 		@Override
-		public Integer generateTransactionIdentifier(SharedSessionContract session) {
+		public Integer generateIdentifier(SharedSessionContract session) {
 			return ++currentTxId;
 		}
 	}
@@ -129,7 +129,7 @@ class TemporalEntityTxIdTest {
 					assertEquals( 1, friends );
 				}
 		);
-		try (var session = scope.getSessionFactory().withOptions().atTransaction(txId).open()) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset(txId).open()) {
 			session.inTransaction( tx -> {
 				TemporalEntity1 entity = session.find( TemporalEntity1.class, 1L );
 				assertEquals( "hello", entity.text );
@@ -140,7 +140,7 @@ class TemporalEntityTxIdTest {
 				assertEquals( 0, entity.children.get(0).friends.size() );
 			} );
 		}
-		try (var session = scope.getSessionFactory().withOptions().atTransaction(txId).open()) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset(txId).open()) {
 			session.inTransaction( tx -> {
 				TemporalEntity1 entity =
 						session.createSelectionQuery( "from TemporalEntity1 where id=1", TemporalEntity1.class )
@@ -148,7 +148,7 @@ class TemporalEntityTxIdTest {
 				assertEquals( "hello", entity.text );
 			} );
 		}
-		try (var session = scope.getSessionFactory().withOptions().atTransaction(txId).open()) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset(txId).open()) {
 			session.inTransaction( tx -> {
 				TemporalEntity1 entity =
 						session.createSelectionQuery( "from TemporalEntity1 p left join fetch p.children c where p.id=1", TemporalEntity1.class )
@@ -181,7 +181,7 @@ class TemporalEntityTxIdTest {
 					assertEquals( 0, entity.children.get(0).friends.size() );
 				}
 		);
-		try (var session = scope.getSessionFactory().withOptions().atTransaction(txId).open()) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset(txId).open()) {
 			scope.getSessionFactory().inTransaction(
 					tx -> {
 						TemporalEntity1 entity = session.find( TemporalEntity1.class, 1L );
@@ -190,7 +190,7 @@ class TemporalEntityTxIdTest {
 					}
 			);
 		}
-		try (var session = scope.getSessionFactory().withOptions().atTransaction(nextTxId).open()) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset(nextTxId).open()) {
 			scope.getSessionFactory().inTransaction(
 					tx -> {
 						TemporalEntity1 entity = session.find( TemporalEntity1.class, 1L );
@@ -211,7 +211,7 @@ class TemporalEntityTxIdTest {
 					assertNull( entity );
 				}
 		);
-		try (var session = scope.getSessionFactory().withOptions().atTransaction(txId).open()) {
+		try (var session = scope.getSessionFactory().withOptions().atChangeset(txId).open()) {
 			session.inTransaction( tx -> {
 				TemporalEntity1 entity = session.find( TemporalEntity1.class, 1L );
 				assertEquals( "hello", entity.text );
@@ -248,7 +248,7 @@ class TemporalEntityTxIdTest {
 					assertEquals( "goodbye", entity.text );
 				}
 		);
-		try (var session = scope.getSessionFactory().withStatelessOptions().atTransaction(txId).open()) {
+		try (var session = scope.getSessionFactory().withStatelessOptions().atChangeset(txId).open()) {
 			session.inTransaction( tx -> {
 				TemporalEntity1 entity = session.get( TemporalEntity1.class, 2L );
 				assertEquals( "hello", entity.text );
@@ -270,7 +270,7 @@ class TemporalEntityTxIdTest {
 					assertNull( entity );
 				}
 		);
-		try (var session = scope.getSessionFactory().withStatelessOptions().atTransaction(txId).open()) {
+		try (var session = scope.getSessionFactory().withStatelessOptions().atChangeset(txId).open()) {
 			session.inTransaction( tx -> {
 				TemporalEntity1 entity = session.get( TemporalEntity1.class, 2L );
 				assertEquals( "hello", entity.text );
@@ -342,7 +342,7 @@ class TemporalEntityTxIdTest {
 			assertEquals( List.of(), entity.list );
 			s.remove( entity );
 		} );
-		try (var s = scope.getSessionFactory().withOptions().atTransaction(txId).open()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset(txId).open()) {
 			s.inTransaction( tx -> {
 				TemporalEntity1 entity = s.find(TemporalEntity1.class, 3L);
 				assertEquals( Set.of("x", "y", "z"), entity.strings );

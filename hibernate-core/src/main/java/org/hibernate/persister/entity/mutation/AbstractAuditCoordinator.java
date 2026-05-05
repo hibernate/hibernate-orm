@@ -70,7 +70,7 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 			this.auditedPropertyMask[i] = !entityPersister.isPropertyAuditedExcluded( i );
 		}
 		this.useServerTransactionTimestamps =
-				factory.getTransactionIdentifierService().useServerTimestamp( dialect() );
+				factory.getChangesetCoordinator().useServerTimestamp( dialect() );
 		this.currentTimestampFunctionName = useServerTransactionTimestamps ? dialect().currentTimestamp() : null;
 		this.auditBatchKey = new BasicBatchKey( entityPersister.getEntityName() + "#AUDIT_INSERT" );
 		this.staticAuditInsertGroup = entityPersister.isDynamicInsert()
@@ -220,13 +220,13 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 
 			// Audit columns (on every audit table)
 			final var sourceTableName = sourceMapping.getTableName();
-			final var txIdMapping = auditMapping.getTransactionIdMapping( sourceTableName );
+			final var csIdMapping = auditMapping.getChangesetIdMapping( sourceTableName );
 			final var modTypeMapping = auditMapping.getModificationTypeMapping( sourceTableName );
 			if ( useServerTransactionTimestamps ) {
-				insertBuilder.addValueColumn( currentTimestampFunctionName, txIdMapping );
+				insertBuilder.addValueColumn( currentTimestampFunctionName, csIdMapping );
 			}
 			else {
-				insertBuilder.addValueColumn( "?", txIdMapping );
+				insertBuilder.addValueColumn( "?", csIdMapping );
 			}
 			if ( modTypeMapping != null ) {
 				insertBuilder.addValueColumn( "?", modTypeMapping );
@@ -300,9 +300,9 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 			final String sourceTableName = sourceMappings[tableIndex].getTableName();
 			if ( !useServerTransactionTimestamps ) {
 				jdbcValueBindings.bindValue(
-						session.getCurrentTransactionIdentifier(),
+						session.getCurrentChangesetIdentifier(),
 						tableName,
-						auditMapping.getTransactionIdMapping( sourceTableName ).getSelectionExpression(),
+						auditMapping.getChangesetIdMapping( sourceTableName ).getSelectionExpression(),
 						ParameterUsage.SET
 				);
 			}
@@ -351,21 +351,21 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 				}
 				final String tableName = auditTableMappings[tableIndex].getTableName();
 				final String sourceTableName = sourceMappings[tableIndex].getTableName();
-				final var revEndMapping = auditMapping.getTransactionEndMapping( sourceTableName );
+				final var revEndMapping = auditMapping.getInvalidatingChangesetIdMapping( sourceTableName );
 				if ( revEndMapping == null ) {
 					continue;
 				}
 
-				// SET REVEND = :txId
+				// SET REVEND = :changesetId
 				jdbcValueBindings.bindValue(
-						session.getCurrentTransactionIdentifier(),
+						session.getCurrentChangesetIdentifier(),
 						tableName,
 						revEndMapping.getSelectionExpression(),
 						ParameterUsage.SET
 				);
 
 				// SET REVEND_TSTMP = :tstmp (if configured)
-				final var revEndTsMapping = auditMapping.getTransactionEndTimestampMapping( sourceTableName );
+				final var revEndTsMapping = auditMapping.getInvalidationTimestampMapping( sourceTableName );
 				if ( revEndTsMapping != null ) {
 					jdbcValueBindings.bindValue(
 							java.time.Instant.now(), tableName,
@@ -421,7 +421,7 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 				continue;
 			}
 			final String sourceTableName = sourceMappings[i].getTableName();
-			final var revEndMapping = auditMapping.getTransactionEndMapping( sourceTableName );
+			final var revEndMapping = auditMapping.getInvalidatingChangesetIdMapping( sourceTableName );
 			if ( revEndMapping == null ) {
 				continue;
 			}
@@ -437,7 +437,7 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 			}
 
 			// SET REVEND_TSTMP = ? (if configured)
-			final var revEndTsMapping = auditMapping.getTransactionEndTimestampMapping( sourceTableName );
+			final var revEndTsMapping = auditMapping.getInvalidationTimestampMapping( sourceTableName );
 			if ( revEndTsMapping != null ) {
 				updateBuilder.addValueColumn( "?", revEndTsMapping );
 			}

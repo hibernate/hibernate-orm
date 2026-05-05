@@ -46,7 +46,7 @@ public class InsertCoordinatorTemporal extends InsertCoordinatorStandard {
 
 		if ( TemporalMutationHelper.isUsingParameters( session ) ) {
 			mutationExecutor.getJdbcValueBindings().bindValue(
-					session.getCurrentTransactionIdentifier(),
+					session.getCurrentChangesetIdentifier(),
 					entityPersister().physicalTableNameForMutation( temporalMapping.getStartingColumnMapping() ),
 					temporalMapping.getStartingColumnMapping().getSelectionExpression(),
 					ParameterUsage.SET

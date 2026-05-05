@@ -417,8 +417,8 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public Object getCurrentTransactionIdentifier() {
-		return delegate.getCurrentTransactionIdentifier();
+	public Object getCurrentChangesetIdentifier() {
+		return delegate.getCurrentChangesetIdentifier();
 	}
 
 	@Override

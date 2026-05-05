@@ -13,7 +13,6 @@ import java.util.Set;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -39,7 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 		OneToManyCustomSqlMutationsTest.Project.class,
 		OneToManyCustomSqlMutationsTest.User.class,
 } )
-@SessionFactory( useCollectingStatementInspector = true )
+@SessionFactory( useCollectingStatementObserver = true )
 @SQLDelete( sql = "update t_user set project_id = null where project_id = ? and name = ? and 1=1" )
 public class OneToManyCustomSqlMutationsTest {
 	@BeforeAll
@@ -65,46 +64,46 @@ public class OneToManyCustomSqlMutationsTest {
 
 	@Test
 	public void testSQLDelete(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		var sqlCollector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			final Project project = session.find( Project.class, "p1" );
 			project.getMembers().remove( project.getMembers().iterator().next() );
-			inspector.clear();
+			sqlCollector.clear();
 		} );
-		assertThat( inspector.getSqlQueries() ).hasSize( 1 );
-		assertThat( inspector.getSqlQueries().get( 0 ) ).contains( "1=1" );
-		scope.inTransaction( session -> assertThat(
-				session.find( Project.class, "p1" ).getMembers()
-		).hasSize( 1 ) );
+		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( "1=1" );
+		scope.inTransaction( session ->
+				assertThat( session.find( Project.class, "p1" ).getMembers()	).hasSize( 1 )
+		);
 	}
 
 	@Test
 	public void testSQLDeleteAll(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		var sqlCollector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			final Project project = session.find( Project.class, "p2" );
 			project.getMembers().remove( project.getMembers().iterator().next() );
-			inspector.clear();
+			sqlCollector.clear();
 		} );
-		assertThat( inspector.getSqlQueries() ).hasSize( 1 );
-		assertThat( inspector.getSqlQueries().get( 0 ) ).contains( "2=2" );
-		scope.inTransaction( session -> assertThat(
-				session.find( Project.class, "p2" ).getMembers()
-		).isEmpty() );
+		assertThat( sqlCollector.getSqlQueries() ).hasSize( 1 );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( "2=2" );
+		scope.inTransaction( session ->
+				assertThat( session.find( Project.class, "p2" ).getMembers()	).isEmpty()
+		);
 	}
 
 	@Test
 	public void testSQLUpdate(SessionFactoryScope scope) {
-		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		var sqlCollector = scope.getCollectingStatementObserver();
 		scope.inTransaction( session -> {
 			final Project project = session.find( Project.class, "p2" );
 			assertThat( project.getOrderedUsers().stream().map( User::getName ) ).containsExactly( "user2", "user1" );
 			project.getOrderedUsers().sort( Comparator.comparing( User::getName ) );
-			inspector.clear();
+			sqlCollector.clear();
 		} );
-		assertThat( inspector.getSqlQueries() ).hasSize( 4 );
-		assertThat( inspector.getSqlQueries().get( 0 ) ).contains( "3=3" );
-		assertThat( inspector.getSqlQueries().get( 1 ) ).contains( "3=3" );
+		assertThat( sqlCollector.getSqlQueries() ).hasSize( 4 );
+		assertThat( sqlCollector.getSqlQueries().get( 0 ) ).contains( "3=3" );
+		assertThat( sqlCollector.getSqlQueries().get( 1 ) ).contains( "3=3" );
 		scope.inTransaction( session -> {
 			final Project project = session.find( Project.class, "p2" );
 			assertThat( project.getOrderedUsers().stream().map( User::getName ) ).containsExactly( "user1", "user2" );

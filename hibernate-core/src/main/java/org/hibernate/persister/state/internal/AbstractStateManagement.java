@@ -10,9 +10,9 @@ import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.OneToManyPersister;
-import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorStandard;
@@ -114,7 +114,7 @@ public abstract class AbstractStateManagement implements StateManagement {
 			}
 			else {
 				return new UpdateRowsCoordinatorOneToMany(
-						mutationTarget,
+						(OneToManyPersister) mutationTarget,
 						persister.getRowMutationOperations(),
 						persister.getFactory()
 				);
@@ -199,8 +199,8 @@ public abstract class AbstractStateManagement implements StateManagement {
 			&& elementPersister instanceof UnionSubclassEntityPersister;
 	}
 
-	protected static CollectionMutationTarget resolveMutationTarget(CollectionPersister persister) {
-		if ( persister instanceof CollectionMutationTarget collectionMutationTarget ) {
+	protected static AbstractCollectionPersister resolveMutationTarget(CollectionPersister persister) {
+		if ( persister instanceof AbstractCollectionPersister collectionMutationTarget ) {
 			return collectionMutationTarget;
 		}
 		throw new IllegalArgumentException( "CollectionPersister does not implement CollectionMutationTarget" );

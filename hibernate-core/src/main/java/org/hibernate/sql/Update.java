@@ -4,6 +4,7 @@
  */
 package org.hibernate.sql;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -65,6 +66,10 @@ public class Update implements RestrictionRenderingContext {
 	public Update addAssignment(String columnName, String valueExpression) {
 		assignments.put( columnName, valueExpression );
 		return this;
+	}
+
+	public void addAssignments(Collection<String> columns) {
+		columns.forEach( this::addAssignment );
 	}
 
 	public Update addRestriction(String column) {

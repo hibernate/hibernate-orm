@@ -6,8 +6,8 @@ package org.hibernate.engine.jdbc.mutation.internal;
 
 import java.sql.SQLException;
 
-import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.engine.jdbc.batch.spi.StaleStateMapper;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.OperationResultChecker;
@@ -16,7 +16,7 @@ import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValues;
-import org.hibernate.persister.entity.mutation.EntityTableMapping;
+import org.hibernate.persister.entity.mutation.EntityTableMappingImpl;
 import org.hibernate.sql.model.ValuesAnalysis;
 
 import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.checkResults;
@@ -61,7 +61,7 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 			TableInclusionChecker inclusionChecker,
 			OperationResultChecker resultChecker,
 			SharedSessionContractImplementor session,
-			Batch.StaleStateMapper staleStateMapper) {
+			StaleStateMapper staleStateMapper) {
 		final var generatedValues = performNonBatchedOperations(
 				modelReference,
 				valuesAnalysis,
@@ -94,7 +94,7 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 	protected void performBatchedOperations(
 			ValuesAnalysis valuesAnalysis,
 			TableInclusionChecker inclusionChecker,
-			Batch.StaleStateMapper staleStateMapper) {
+			StaleStateMapper staleStateMapper) {
 	}
 
 	/**
@@ -121,7 +121,7 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 
 		if ( id != null ) {
 			assert !tableDetails.isIdentifierTable() : "Unsupported identifier table with generated id";
-			( (EntityTableMapping) tableDetails ).getKeyMapping().breakDownKeyJdbcValues(
+			( (EntityTableMappingImpl) tableDetails ).getKeyMapping().breakDownKeyJdbcValues(
 					id,
 					(jdbcValue, columnMapping) -> valueBindings.bindValue(
 							jdbcValue,

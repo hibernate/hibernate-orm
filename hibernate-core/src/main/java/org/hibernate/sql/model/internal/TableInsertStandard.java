@@ -13,17 +13,20 @@ import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.ast.AbstractTableInsert;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
+import org.hibernate.sql.model.ast.GeneratedMutation;
 import org.hibernate.sql.model.ast.MutatingTableReference;
+import org.hibernate.sql.model.ast.TableInsert;
+import org.hibernate.sql.model.jdbc.JdbcInsertMutation;
 
 /**
  * @author Steve Ebersole
  */
-public class TableInsertStandard extends AbstractTableInsert {
+public class TableInsertStandard extends AbstractTableInsert implements TableInsert, GeneratedMutation<JdbcInsertMutation> {
 	private final List<ColumnReference> returningColumns;
 
 	public TableInsertStandard(
 			MutatingTableReference mutatingTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnReference> returningColumns,
 			List<ColumnValueParameter> parameters) {

@@ -28,14 +28,14 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 	private final SessionFactoryImplementor sessionFactory;
 
 	private final MutationType mutationType;
-	private final MutationTarget<?> mutationTarget;
+	private final MutationTarget<?,?> mutationTarget;
 
 	private final MutatingTableReference mutatingTable;
 	private final ColumnValueParameterList parameters;
 
 	public AbstractTableMutationBuilder(
 			MutationType mutationType,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			TableMapping table,
 			SessionFactoryImplementor sessionFactory) {
 		this( mutationType, mutationTarget, new MutatingTableReference( table ), sessionFactory );
@@ -43,7 +43,7 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 
 	public AbstractTableMutationBuilder(
 			MutationType mutationType,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			MutatingTableReference mutatingTable,
 			SessionFactoryImplementor sessionFactory) {
 		this.mutationType = mutationType;
@@ -54,7 +54,7 @@ public abstract class AbstractTableMutationBuilder<M extends TableMutation<?>> i
 		this.parameters = new ColumnValueParameterList( mutatingTable, null, 0 );
 	}
 
-	protected MutationTarget<?> getMutationTarget() {
+	protected MutationTarget<?,?> getMutationTarget() {
 		return mutationTarget;
 	}
 

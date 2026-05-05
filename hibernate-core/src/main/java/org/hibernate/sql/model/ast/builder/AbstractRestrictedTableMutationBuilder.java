@@ -31,7 +31,7 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 
 	public AbstractRestrictedTableMutationBuilder(
 			MutationType mutationType,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			TableMapping table,
 			SessionFactoryImplementor sessionFactory) {
 		super( mutationType, mutationTarget, table, sessionFactory );
@@ -41,7 +41,7 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 
 	public AbstractRestrictedTableMutationBuilder(
 			MutationType mutationType,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory) {
 		super( mutationType, mutationTarget, tableReference, sessionFactory );
@@ -62,6 +62,17 @@ public abstract class AbstractRestrictedTableMutationBuilder<O extends MutationO
 	@Override
 	public void addNonKeyRestriction(ColumnValueBinding valueBinding) {
 		optimisticLockBindings.addRestriction( valueBinding );
+	}
+
+	@Override
+	public void addNonKeyRestriction(SelectableMapping restrictableMapping, String restrictionExpression) {
+		optimisticLockBindings.addRestriction( ColumnValueBindingBuilder.createValueBinding(
+				restrictionExpression,
+				restrictableMapping,
+				getMutatingTable(),
+				ParameterUsage.RESTRICT,
+				getParameters()::apply
+		) );
 	}
 
 	@Override

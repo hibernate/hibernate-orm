@@ -157,14 +157,14 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator {
 		}
 
 		if ( useServerTransactionTimestamps ) {
-			insertBuilder.addValueColumn( currentTimestampFunctionName, getTransactionIdMapping() );
+			insertBuilder.addColumnAssignment( getTransactionIdMapping(), currentTimestampFunctionName );
 		}
 		else {
-			insertBuilder.addValueColumn( "?", getTransactionIdMapping() );
+			insertBuilder.addColumnAssignment( getTransactionIdMapping(), "?" );
 		}
-		insertBuilder.addValueColumn( "?", getModificationTypeMapping() );
+		insertBuilder.addColumnAssignment( getModificationTypeMapping(), "?" );
 
-		identifierTableMapping.getKeyMapping().forEachKeyColumn( insertBuilder::addKeyColumn );
+		identifierTableMapping.getKeyMapping().forEachKeyColumn( insertBuilder::addColumnAssignment );
 	}
 
 	private void bindAuditValues(

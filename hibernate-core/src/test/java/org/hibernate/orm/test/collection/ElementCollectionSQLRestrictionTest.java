@@ -9,12 +9,15 @@ import java.util.Set;
 
 import org.hibernate.annotations.SQLRestriction;
 
+import org.hibernate.cfg.BatchSettings;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CollectionTable;
@@ -27,14 +30,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Marco Belladelli
+ *
+ * @implNote Disabling batching because anytime we are leveraging SQLStatementInspector for
+ * assertions we need to be aware that batching does not notify about statements within the batch.
+ * See <a href="https://hibernate.atlassian.net/browse/HHH-20295">HHH-20295</a>.
  */
+@ServiceRegistry(settings = @Setting( name = BatchSettings.STATEMENT_BATCH_SIZE, value = "-1"))
 @DomainModel( annotatedClasses = {
 		ElementCollectionSQLRestrictionTest.TaskEntity.class,
 		ElementCollectionSQLRestrictionTest.LocalizedLabel.class,
 } )
 @SessionFactory( useCollectingStatementInspector = true )
 public class ElementCollectionSQLRestrictionTest {
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final TaskEntity task1 = new TaskEntity( 1 );
@@ -54,9 +62,9 @@ public class ElementCollectionSQLRestrictionTest {
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.createMutationQuery( "delete from TaskEntity" ).executeUpdate() );
+		scope.dropData();
 	}
 
 	@Test

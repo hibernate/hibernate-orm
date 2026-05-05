@@ -4,10 +4,7 @@
  */
 package org.hibernate.id.insert;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -15,6 +12,11 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.AbstractGeneratedValuesMutationDelegate;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.model.PreparableMutationOperation;
+
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import static java.sql.Statement.NO_GENERATED_KEYS;
 import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getGeneratedValues;
@@ -27,7 +29,8 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesMutationDelegate
+public abstract class AbstractSelectingDelegate
+		extends AbstractGeneratedValuesMutationDelegate
 		implements InsertGeneratedIdentifierDelegate {
 
 	protected AbstractSelectingDelegate(
@@ -61,6 +64,42 @@ public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesM
 	public PreparedStatement prepareStatement(String insertSql, SharedSessionContractImplementor session) {
 		return session.getJdbcCoordinator().getMutationStatementPreparer()
 				.prepareStatement( insertSql, NO_GENERATED_KEYS );
+	}
+
+	@Override
+	public GeneratedValues performGraphMutation(
+			PlannedOperation operation,
+			Object entity,
+			SharedSessionContractImplementor session) {
+		var jdbcOperation = (PreparableMutationOperation) operation.getJdbcOperation();
+		final String sql = jdbcOperation.getSqlString();
+		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
+
+		final PreparedStatement preparedStatement = prepareStatement( sql, session );
+		try {
+			var valueBindings = new org.hibernate.action.queue.exec.JdbcValueBindings(
+					operation.getMutatingTableDescriptor(),
+					jdbcOperation
+			);
+			operation.getBindPlan().execute(
+					(plannedOperation, binder, resultChecker) -> {
+						binder.accept( valueBindings, session );
+						valueBindings.beforeStatement( preparedStatement, session );
+
+						session.getJdbcCoordinator()
+								.getResultSetReturn()
+								.executeUpdate( preparedStatement, sql );
+					},
+					operation,
+					session
+			);
+		}
+		finally {
+			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( preparedStatement );
+			session.getJdbcCoordinator().afterStatementExecution();
+		}
+
+		return selectGeneratedId( session, entity );
 	}
 
 	@Override

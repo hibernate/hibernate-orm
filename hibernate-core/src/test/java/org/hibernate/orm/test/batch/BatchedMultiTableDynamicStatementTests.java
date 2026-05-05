@@ -9,7 +9,6 @@ import java.util.List;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
-import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -38,14 +37,14 @@ public class BatchedMultiTableDynamicStatementTests {
 	@Test
 	@ServiceRegistry( settings = @Setting( name = STATEMENT_BATCH_SIZE, value = "2" ) )
 	@DomainModel( annotatedClasses = { Payment.class, CheckPayment.class } )
-	@SessionFactory( useCollectingStatementInspector = true )
+	@SessionFactory( useCollectingStatementObserver = true )
 	public void testBatched(SessionFactoryScope scope) {
-		final SQLStatementInspector statementCollector = scope.getCollectingStatementInspector();
-		statementCollector.clear();
+		var sqlCollector = scope.getCollectingStatementObserver();
+		sqlCollector.clear();
 
 		createData( scope );
 
-		assertThat( statementCollector.getSqlQueries() ).hasSize( 6 );
+		assertThat( sqlCollector.getSqlQueries() ).hasSize( 6 );
 
 		scope.inTransaction( (session) -> {
 			final List<Payment> payments = session.createSelectionQuery( "from Payment", Payment.class ).list();
@@ -56,14 +55,14 @@ public class BatchedMultiTableDynamicStatementTests {
 	@Test
 	@ServiceRegistry( settings = @Setting( name = STATEMENT_BATCH_SIZE, value = "-1" ) )
 	@DomainModel( annotatedClasses = { Payment.class, CheckPayment.class } )
-	@SessionFactory( useCollectingStatementInspector = true )
+	@SessionFactory( useCollectingStatementObserver = true )
 	public void testNonBatched(SessionFactoryScope scope) {
-		final SQLStatementInspector statementCollector = scope.getCollectingStatementInspector();
-		statementCollector.clear();
+		var sqlCollector = scope.getCollectingStatementObserver();
+		sqlCollector.clear();
 
 		createData( scope );
 
-		assertThat( statementCollector.getSqlQueries() ).hasSize( 6 );
+		assertThat( sqlCollector.getSqlQueries() ).hasSize( 6 );
 
 		scope.inTransaction( (session) -> {
 			final List<Payment> payments = session.createSelectionQuery( "from Payment", Payment.class ).list();

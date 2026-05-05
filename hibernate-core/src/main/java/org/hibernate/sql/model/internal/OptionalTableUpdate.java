@@ -15,33 +15,29 @@ import org.hibernate.persister.entity.mutation.InsertCoordinatorStandard;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ValuesAnalysis;
 import org.hibernate.sql.model.ast.AbstractRestrictedTableMutation;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
+import org.hibernate.sql.model.ast.LogicalTableUpdate;
 import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.RestrictedTableMutation;
-import org.hibernate.sql.model.ast.TableUpdate;
 import org.hibernate.sql.model.jdbc.JdbcUpdateMutation;
 import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 
 import static org.hibernate.sql.model.ast.AbstractTableUpdate.collectParameters;
 
 /**
- * @apiNote Implements {@link TableUpdate} because it is fundamentally an update
- *
  * @author Steve Ebersole
  */
 public class OptionalTableUpdate
 		extends AbstractRestrictedTableMutation<MutationOperation>
-		implements RestrictedTableMutation<MutationOperation> {
+		implements LogicalTableUpdate<MutationOperation> {
 	private final List<ColumnValueBinding> valueBindings;
 
 	public OptionalTableUpdate(
 			MutatingTableReference mutatingTable,
-			MutationTarget<?> mutationTarget,
+			EntityMutationTarget mutationTarget,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings) {
@@ -57,7 +53,7 @@ public class OptionalTableUpdate
 
 	public OptionalTableUpdate(
 			MutatingTableReference mutatingTable,
-			MutationTarget<?> mutationTarget,
+			EntityMutationTarget mutationTarget,
 			String comment,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,

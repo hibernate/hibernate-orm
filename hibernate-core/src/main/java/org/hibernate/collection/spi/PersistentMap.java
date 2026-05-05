@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -436,6 +437,88 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 			write();
 			return me.setValue( value );
 		}
+	}
+
+	@Override
+	public CollectionChangeSet getChangeSet(CollectionPersister persister) {
+		//noinspection unchecked
+		var snapshot = (Map<K,E>) getSnapshot();
+		if ( snapshot == null) {
+			return CollectionChangeSet.EMPTY;
+		}
+
+		final boolean isEntityCollection = persister.getElementType().isEntityType();
+
+		if (isEntityCollection) {
+			return computeEntityCollectionChangeSet( snapshot, persister );
+		}
+		else {
+			return computeElementCollectionChangeSet( snapshot, persister);
+		}
+	}
+
+	private CollectionChangeSet computeEntityCollectionChangeSet(Map<K, E> snapshot, CollectionPersister persister) {
+		// Note: we could handle shifts here, but only in cases where the (key+elementId) combo is unique.
+		// For now, just treat potential shifts as removal & addition
+		final Type elementType = persister.getElementType();
+
+		final java.util.List<CollectionChangeSet.Removal> removals = new ArrayList<>();
+		final java.util.List<CollectionChangeSet.Addition> additions = new ArrayList<>();
+		final java.util.List<CollectionChangeSet.ValueChange> valueChanges = new ArrayList<>();
+
+		var mapCopy = new LinkedHashMap<>( map );
+		snapshot.forEach( (snapshotKey, snapshotValue) -> {
+			var currentValue = mapCopy.remove( snapshotKey );
+			if ( currentValue == null ) {
+				// The snapshot contained this key, but the current state does not.
+				// NOTE: technically this might be a "shift" where the key simply changed, but see note above.
+				removals.add( new CollectionChangeSet.Removal( snapshotValue, snapshotKey ) );
+			}
+			else if ( !elementType.isEqual( snapshotValue, currentValue, persister.getFactory() ) ) {
+				valueChanges.add( new CollectionChangeSet.ValueChange( snapshotValue, currentValue, snapshotKey ) );
+			}
+		} );
+
+		// Anything left in the copy is an addition
+		mapCopy.forEach( (key, value) -> {
+			additions.add( new CollectionChangeSet.Addition( value, key ) );
+		} );
+
+		return new CollectionChangeSet(removals, additions, List.of(), valueChanges);
+	}
+
+	/**
+	 * Compute change set for element collections.
+	 * Uses equals-based comparison to detect value changes at the same position.
+	 */
+	private CollectionChangeSet computeElementCollectionChangeSet(Map<K,E> snapshot, CollectionPersister persister) {
+		// Note: Element collections don't have shifts in the same sense as entity collections
+		// Shifts (position changes) are handled as removal + addition
+		final Type elementType = persister.getElementType();
+		final java.util.List<CollectionChangeSet.Removal> removals = new ArrayList<>();
+		final java.util.List<CollectionChangeSet.Addition> additions = new ArrayList<>();
+		final java.util.List<CollectionChangeSet.ValueChange> valueChanges = new ArrayList<>();
+
+		var mapCopy = new LinkedHashMap<>( map );
+		snapshot.forEach( (snapshotKey, snapshotValue) -> {
+			var currentValue = mapCopy.remove( snapshotKey );
+			if ( currentValue == null ) {
+				// The snapshot contained this key, but the current state does not.
+				// NOTE: technically this might be a "shift" where the key simply changed, but see note above.
+				removals.add( new CollectionChangeSet.Removal( snapshotValue, snapshotKey ) );
+			}
+			else if ( elementType.isDirty( currentValue, snapshotValue, getSession() ) ) {
+				// both contained the key, but with different values - treat that as a value change.
+				valueChanges.add( new CollectionChangeSet.ValueChange( snapshotValue, currentValue, snapshotKey ) );
+			}
+		} );
+
+		// Anything left in the copy is an addition
+		mapCopy.forEach( (key, value) -> {
+			additions.add( new CollectionChangeSet.Addition( value, key ) );
+		} );
+
+		return new CollectionChangeSet(removals, additions, List.of(), valueChanges);
 	}
 
 	@Override

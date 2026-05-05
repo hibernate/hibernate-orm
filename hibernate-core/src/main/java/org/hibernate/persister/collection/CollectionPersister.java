@@ -15,6 +15,12 @@ import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.action.internal.CollectionRecreateAction;
+import org.hibernate.action.internal.CollectionRemoveAction;
+import org.hibernate.action.internal.CollectionUpdateAction;
+import org.hibernate.action.internal.QueuedOperationCollectionAction;
+import org.hibernate.action.queue.decompose.DecompositionContext;
+import org.hibernate.action.queue.plan.PlannedOperation;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.collection.spi.CollectionSemantics;
@@ -103,6 +109,57 @@ public interface CollectionPersister extends Restrictable {
 	default PluralAttributeMapping getAttributeMapping() {
 		throw new UnsupportedOperationException( "CollectionPersister used for [" + getRole() + "] does not support SQL AST" );
 	}
+
+	/**
+	 * Decomposes a collection recreate action into planned operations.
+	 */
+	void decompose(
+			CollectionRecreateAction action,
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			DecompositionContext decompositionContext,
+			Consumer<PlannedOperation> operationConsumer);
+
+	/**
+	 * Removes the collection:<ul>
+	 *     <li>
+	 *         For collections with a collection-table, this will execute a DELETE based
+	 *         on the {@linkplain org.hibernate.engine.spi.CollectionKey collection-key}
+	 *     </li>
+	 *     <li>
+	 *         For one-to-many collections, this executes an UPDATE to unset the collection-key
+	 *         on the association table
+	 *     </li>
+	 * </ul>
+	 */
+	void decompose(
+			CollectionRemoveAction action,
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			DecompositionContext decompositionContext,
+			Consumer<PlannedOperation> operationConsumer);
+
+	/**
+	 * Decomposes a collection update action into planned operations
+	*/
+	void decompose(
+			CollectionUpdateAction action,
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			DecompositionContext decompositionContext,
+			Consumer<PlannedOperation> operationConsumer);
+
+	/**
+	 * Decomposes a queued collection operation action into planned operations.
+	 * <p>
+	 * Queued collection operations often have no SQL work of their own, but still need
+	 * flush-time lifecycle cleanup after the plan reaches the action.
+	 */
+	void decompose(
+			QueuedOperationCollectionAction action,
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			Consumer<PlannedOperation> operationConsumer);
 
 	/**
 	 * Get the persister of the entity that "owns" this collection

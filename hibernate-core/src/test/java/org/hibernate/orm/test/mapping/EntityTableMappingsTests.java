@@ -9,6 +9,7 @@ import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
+import org.hibernate.persister.entity.mutation.EntityTableMappingImpl;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.retail.CardPayment;
 import org.hibernate.testing.orm.domain.retail.Payment;
@@ -28,7 +29,7 @@ import jakarta.persistence.Table;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * @see org.hibernate.persister.entity.mutation.EntityTableMapping
+ * @see EntityTableMappingImpl
  *
  * @author Steve Ebersole
  */

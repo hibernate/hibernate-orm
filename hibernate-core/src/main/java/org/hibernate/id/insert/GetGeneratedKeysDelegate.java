@@ -4,25 +4,29 @@
  */
 package org.hibernate.id.insert;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
+import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
+import org.hibernate.engine.jdbc.spi.StatementPreparer;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.internal.util.MutableObject;
+import org.hibernate.jdbc.Expectation;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.model.PreparableMutationOperation;
+import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
+import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
+import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
+
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
-
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
-import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.generator.EventType;
-import org.hibernate.generator.values.GeneratedValues;
-import org.hibernate.jdbc.Expectation;
-import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
-import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 
 import static java.sql.Statement.RETURN_GENERATED_KEYS;
 import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getActualGeneratedModelPart;
@@ -105,6 +109,51 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 				statementDetails.releaseStatement( session );
 			}
 			jdbcValueBindings.afterStatement( statementDetails.getMutatingTableDetails() );
+		}
+	}
+
+	@Override
+	public GeneratedValues performGraphMutation(
+			PlannedOperation operation,
+			Object entity,
+			SharedSessionContractImplementor session) {
+		var jdbcOperation = (PreparableMutationOperation) operation.getJdbcOperation();
+		var sql = jdbcOperation.getSqlString();
+		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
+
+		StatementPreparer preparer = session.getJdbcCoordinator().getStatementPreparer();
+		final PreparedStatement preparedStatement = columnNames == null
+				? preparer.prepareStatement( sql, RETURN_GENERATED_KEYS )
+				: preparer.prepareStatement( sql, columnNames );
+		try {
+
+			var valueBindings = new org.hibernate.action.queue.exec.JdbcValueBindings(
+					operation.getMutatingTableDescriptor(),
+					jdbcOperation
+			);
+
+			var ref = new MutableObject<GeneratedValues>();
+			operation.getBindPlan().execute(
+					(plannedOperation, binder, resultChecker) -> {
+						binder.accept( valueBindings, session );
+						valueBindings.beforeStatement( preparedStatement, session );
+
+						session.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement, sql );
+						var generatedValues = extractGeneratedValues( session, preparedStatement, sql,
+								() -> String.format( Locale.ROOT,
+										"Unable to extract generated key for '%s'",
+										persister.getNavigableRole().getFullPath() ) );
+						ref.set( generatedValues );
+					},
+					operation,
+					session
+			);
+
+			return ref.get();
+		}
+		finally {
+			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( preparedStatement );
+			session.getJdbcCoordinator().afterStatementExecution();
 		}
 	}
 

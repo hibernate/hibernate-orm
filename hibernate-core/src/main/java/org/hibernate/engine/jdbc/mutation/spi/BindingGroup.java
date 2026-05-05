@@ -5,11 +5,13 @@
 package org.hibernate.engine.jdbc.mutation.spi;
 
 import java.util.Comparator;
-import java.util.Objects;
+import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Consumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 
 /**
@@ -53,7 +55,6 @@ public class BindingGroup {
 	 * Create a binding
 	 */
 	public void bindValue(String columnName, Object value, JdbcValueDescriptor valueDescriptor) {
-		assert Objects.equals( columnName, valueDescriptor.getColumnName() );
 		bindings.add( new Binding( columnName, value, valueDescriptor ) );
 	}
 
@@ -62,5 +63,27 @@ public class BindingGroup {
 	 */
 	public void clear() {
 		bindings.clear();
+	}
+
+	@Nullable public Binding findBinding(String columnName, ParameterUsage usage) {
+		for ( Binding binding : bindings ) {
+			if ( binding.getValueDescriptor().getUsage() == usage
+				&& binding.getColumnName().equals( columnName ) ) {
+				return binding;
+			}
+		}
+		return null;
+	}
+
+	public Binding getBinding(String columnName, ParameterUsage usage) {
+		final Binding binding = findBinding( columnName, usage );
+		if ( binding != null ) {
+			return binding;
+		}
+		throw new IllegalArgumentException( String.format( Locale.ROOT,
+				"Could not locate binding [%s : %s]",
+				usage.toString(),
+				columnName
+		) );
 	}
 }

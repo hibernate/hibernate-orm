@@ -4,25 +4,17 @@
  */
 package org.hibernate.persister.entity;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.action.queue.exec.JdbcValueBindings;
+import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
@@ -37,6 +29,7 @@ import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappin
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.filter.internal.DynamicFilterAliasGenerator;
 import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -46,12 +39,22 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.UnknownTableReferenceException;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
+import org.hibernate.sql.model.ast.builder.TableDeleteBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
+import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.StandardBasicTypes;
-
 import org.jboss.logging.Logger;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static java.util.Collections.emptyMap;
 import static java.util.function.Function.identity;
@@ -709,6 +712,14 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
+	protected boolean isSecondaryTable(String tableExpression, int relativePosition) {
+		// In JoinedSubclassEntityPersister, secondary tables come after inheritance tables.
+		// Tables at positions >= subclassCoreTableSpan are from getSubclassJoinClosure() (secondary tables)
+		// Tables at positions < subclassCoreTableSpan are from getSubclassTableClosure() (inheritance tables)
+		return relativePosition >= subclassCoreTableSpan;
+	}
+
+	@Override
 	public boolean isInverseTable(int j) {
 		return isInverseTable[j];
 	}
@@ -765,10 +776,67 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		if ( explicitDiscriminatorColumnName != null ) {
 			final TableInsertBuilder tableInsertBuilder =
 					insertGroupBuilder.getTableDetailsBuilder( getRootTableName() );
-			tableInsertBuilder.addValueColumn(
-					getDiscriminatorValueString(),
-					getDiscriminatorMapping()
+			tableInsertBuilder.addColumnAssignment(
+					getDiscriminatorMapping(),
+					getDiscriminatorValueString()
 			);
+		}
+	}
+
+	@Override
+	public EntityTableDescriptor getIdentifierTableDescriptor() {
+		final var superMappingType = getSuperMappingType();
+		return superMappingType == null
+				? getTableDescriptors()[0]
+				: getRootEntityDescriptor().getEntityPersister().getIdentifierTableDescriptor();
+	}
+
+	@Override
+	public void addDiscriminatorToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder) {
+		if ( explicitDiscriminatorColumnName != null ) {
+			final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.apply( getRootTableName() );
+			if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
+				tableInsertBuilder.addColumnAssignment(	getDiscriminatorMapping(), TableMutationBuilder.NULL );
+			}
+			else if ( discriminatorValue == DiscriminatorValue.Special.NOT_NULL ) {
+				tableInsertBuilder.addColumnAssignment(	getDiscriminatorMapping(), TableMutationBuilder.NOT_NULL );
+			}
+			else {
+				tableInsertBuilder.addColumnAssignment(	getDiscriminatorMapping() );
+			}
+		}
+	}
+
+	@Override
+	public void bindDiscriminatorForInsert(JdbcValueBindings jdbcValueBindings) {
+		if ( explicitDiscriminatorColumnName != null
+				&& discriminatorValue != DiscriminatorValue.Special.NULL
+				&& discriminatorValue != DiscriminatorValue.Special.NOT_NULL ) {
+			jdbcValueBindings.bindAssignment( -1, discriminatorValue.value(), getDiscriminatorMapping() );
+		}
+	}
+
+	@Override
+	public void addDiscriminatorToDelete(TableDeleteBuilder tableDeleteBuilder) {
+		if ( explicitDiscriminatorColumnName != null ) {
+			if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
+				tableDeleteBuilder.addNonKeyRestriction( getDiscriminatorMapping(), TableMutationBuilder.NULL );
+			}
+			else if ( discriminatorValue == DiscriminatorValue.Special.NOT_NULL ) {
+				tableDeleteBuilder.addNonKeyRestriction( getDiscriminatorMapping(), TableMutationBuilder.NOT_NULL );
+			}
+			else {
+				tableDeleteBuilder.addNonKeyRestriction( getDiscriminatorMapping() );
+			}
+		}
+	}
+
+	@Override
+	public void bindDiscriminatorForDelete(JdbcValueBindings jdbcValueBindings) {
+		if ( explicitDiscriminatorColumnName != null
+				&& discriminatorValue != DiscriminatorValue.Special.NULL
+				&& discriminatorValue != DiscriminatorValue.Special.NOT_NULL ) {
+			jdbcValueBindings.bindRestriction( -1, discriminatorValue.value(), getDiscriminatorMapping() );
 		}
 	}
 

@@ -22,9 +22,15 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.action.queue.decompose.entity.DeleteDecomposer;
+import org.hibernate.action.queue.decompose.entity.DeleteDecomposerSoftDelete;
+import org.hibernate.action.queue.decompose.entity.DeleteDecomposerStandard;
+import org.hibernate.action.queue.meta.ColumnDescriptor;
+import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.filter.internal.StaticFilterAliasGenerator;
@@ -207,6 +213,37 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 		initSubclassPropertyAliasesMap( persistentClass );
 
 		postConstruct( creationContext.getMetadata() );
+	}
+
+	protected EntityTableDescriptor[] buildTableDescriptors() {
+		var builder = createTableDescriptorBuilder(
+				tableName,
+				0,
+				() -> columnConsumer -> columnConsumer.accept(
+						getIdentifierMapping(),
+						tableName,
+						getIdentifierColumnNames()
+				)
+		);
+
+		visitAttributeMappings( (attribute) -> {
+			builder.addAttribute( attribute );
+			attribute.forEachSelectable( (selectableIndex, selectable) -> {
+				builder.addColumn( attribute, ColumnDescriptor.from( selectable ) );
+			} );
+		} );
+
+		// Union subclass has only one table, so entity-wide flag equals table flag
+		return new EntityTableDescriptor[] { builder.build( builder.isSelfReferential ) };
+	}
+
+	protected DeleteDecomposer buildDeleteDecomposer(SessionFactoryImplementor factory) {
+		if ( getSoftDeleteMapping() == null ) {
+			return new DeleteDecomposerStandard( this, factory );
+		}
+		else {
+			return new DeleteDecomposerSoftDelete( this, factory );
+		}
 	}
 
 	protected void validateGenerator() {

@@ -18,6 +18,13 @@ import java.util.function.Supplier;
 public class MutableObject<T> {
 	private T reference;
 
+	public MutableObject() {
+	}
+
+	public MutableObject(T reference) {
+		this.reference = reference;
+	}
+
 	public T get() {
 		return reference;
 	}

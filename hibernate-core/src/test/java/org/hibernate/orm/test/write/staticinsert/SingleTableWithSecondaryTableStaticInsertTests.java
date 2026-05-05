@@ -9,7 +9,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.hibernate.action.queue.QueueType;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -52,7 +54,7 @@ public class SingleTableWithSecondaryTableStaticInsertTests {
 			}
 	)
 	public void batchedSingleTableWithSecondaryTableTest(SessionFactoryScope scope) {
-		verify( scope, 2 );
+		verify( scope, isGraphQueue( scope ) ? 1 : 2 );
 	}
 
 	@AfterEach
@@ -86,6 +88,13 @@ public class SingleTableWithSecondaryTableStaticInsertTests {
 
 			assertThat( count ).isEqualTo( 2 );
 		} );
+	}
+
+	private static boolean isGraphQueue(SessionFactoryScope scope) {
+		return scope.getSessionFactory()
+				.unwrap( SessionFactoryImplementor.class )
+				.getActionQueueFactory()
+				.getConfiguredQueueType() == QueueType.GRAPH;
 	}
 
 //	@Test

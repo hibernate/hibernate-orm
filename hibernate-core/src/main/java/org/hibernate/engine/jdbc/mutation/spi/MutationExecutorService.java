@@ -30,4 +30,15 @@ public interface MutationExecutorService extends Service {
 			BatchKeyAccess batchKeySupplier,
 			MutationOperationGroup operationGroup,
 			SharedSessionContractImplementor session);
+
+
+	/**
+	 * Create an executor for the given {@code operationGroup}, potentially using batching.
+	 */
+	MutationExecutor createExecutor(
+			BatchKeyAccess batchKeySupplier,
+			MutationOperationGroup operationGroup,
+			JdbcValueBindingsFactory bindingsFactory,
+			SharedSessionContractImplementor session
+	);
 }

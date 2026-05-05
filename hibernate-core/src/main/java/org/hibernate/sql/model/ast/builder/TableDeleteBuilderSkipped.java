@@ -26,6 +26,10 @@ public class TableDeleteBuilderSkipped implements TableDeleteBuilder {
 	}
 
 	@Override
+	public void addNonKeyRestriction(SelectableMapping restrictableMapping, String restrictionExpression) {
+	}
+
+	@Override
 	public void addKeyRestrictionBinding(SelectableMapping selectableMapping) {
 	}
 
@@ -63,5 +67,10 @@ public class TableDeleteBuilderSkipped implements TableDeleteBuilder {
 	@Override
 	public TableDelete buildMutation() {
 		return null;
+	}
+
+	@Override
+	public boolean hasValueBindings() {
+		return false;
 	}
 }

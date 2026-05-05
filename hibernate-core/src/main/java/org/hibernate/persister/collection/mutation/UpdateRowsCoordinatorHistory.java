@@ -11,8 +11,10 @@ import java.util.function.UnaryOperator;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
+import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 
@@ -39,9 +41,10 @@ public class UpdateRowsCoordinatorHistory extends AbstractUpdateRowsCoordinator 
 	private MutationOperationGroup historyInsertOperationGroup;
 	private CollectionTableMapping historyTableMapping;
 	private HistoryCollectionRowMutationHelper rowMutationHelper;
+	protected final MutationExecutorService mutationExecutorService;
 
 	public UpdateRowsCoordinatorHistory(
-			CollectionMutationTarget mutationTarget,
+			AbstractCollectionPersister mutationTarget,
 			RowMutationOperations rowMutationOperations,
 			SessionFactoryImplementor sessionFactory,
 			boolean[] indexColumnIsSettable,
@@ -54,6 +57,7 @@ public class UpdateRowsCoordinatorHistory extends AbstractUpdateRowsCoordinator 
 		this.indexIncrementer = indexIncrementer;
 		this.historyDeleteBatchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#HISTORY_DELETE" );
 		this.historyInsertBatchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#HISTORY_INSERT" );
+		mutationExecutorService = sessionFactory.getServiceRegistry().getService( MutationExecutorService.class );
 	}
 
 	@Override

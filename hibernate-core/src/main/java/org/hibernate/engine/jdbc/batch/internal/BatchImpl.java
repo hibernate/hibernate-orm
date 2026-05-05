@@ -13,6 +13,7 @@ import org.hibernate.StatementObserver;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchObserver;
+import org.hibernate.engine.jdbc.batch.spi.StaleStateMapper;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
@@ -90,7 +91,8 @@ public class BatchImpl implements Batch {
 
 	@Override
 	public void addToBatch(
-			JdbcValueBindings jdbcValueBindings, TableInclusionChecker inclusionChecker,
+			JdbcValueBindings jdbcValueBindings,
+			TableInclusionChecker inclusionChecker,
 			StaleStateMapper staleStateMapper) {
 		if ( staleStateMapper != null ) {
 			if ( staleStateMappers == null ) {
@@ -308,8 +310,11 @@ public class BatchImpl implements Batch {
 						.verifyOutcome( rowCounts[i], statementDetails.getStatement(), i, sql );
 			}
 			catch ( StaleStateException staleStateException ) {
-				if ( staleStateMappers != null ) {
-					throw staleStateMappers[i].map( staleStateException );
+				if ( staleStateMappers != null && staleStateMappers[i] != null ) {
+					final var mappedException = staleStateMappers[i].map( staleStateException );
+					if ( mappedException != null ) {
+						throw mappedException;
+					}
 				}
 			}
 		}

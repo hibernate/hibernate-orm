@@ -8,7 +8,7 @@
  * asynchronous execution by the event listeners. Every action implements
  * {@link org.hibernate.action.spi.Executable}.
  * <p>
- * The {@link org.hibernate.engine.spi.ActionQueue} is responsible for
+ * The {@link org.hibernate.action.queue.ActionQueue} is responsible for
  * scheduling and execution of the actions.
  *
  * @see org.hibernate.event

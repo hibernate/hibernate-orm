@@ -13,13 +13,16 @@ import java.util.Set;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLJoinTableRestriction;
 
+import org.hibernate.cfg.BatchSettings;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
@@ -36,6 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Marco Belladelli
  */
+@ServiceRegistry(settings = @Setting(name = BatchSettings.STATEMENT_BATCH_SIZE, value = "1"))
 @DomainModel( annotatedClasses = {
 		ManyToManySQLJoinTableRestrictionTest.Project.class,
 		ManyToManySQLJoinTableRestrictionTest.User.class,
@@ -44,7 +48,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SessionFactory( useCollectingStatementInspector = true )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17105" )
 public class ManyToManySQLJoinTableRestrictionTest {
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final User user1 = new User( "user1" );
@@ -66,16 +70,14 @@ public class ManyToManySQLJoinTableRestrictionTest {
 			project3.getOrderedUsers().add(user2);
 			session.persist( user2 );
 			session.persist( user3 );
+
 			session.persist( project3 );
 		} );
 	}
 
-	@AfterAll
+	@AfterEach
 	public void tearDown(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
-			session.createMutationQuery( "delete from Project" ).executeUpdate();
-			session.createMutationQuery( "delete from User" ).executeUpdate();
-		} );
+		scope.dropData();
 	}
 
 	@Test

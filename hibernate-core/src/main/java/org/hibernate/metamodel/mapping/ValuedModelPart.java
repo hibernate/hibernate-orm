@@ -38,6 +38,10 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 		return ModelPart.super.forEachSelectable( consumer );
 	}
 
+	default int forEachColumn(SelectableConsumer consumer) {
+		return ModelPart.super.forEachColumn( consumer );
+	}
+
 	default void forEachInsertable(SelectableConsumer consumer) {
 		ModelPart.super.forEachSelectable(
 				(selectionIndex, selectableMapping) -> {

@@ -270,10 +270,10 @@ Even if we removed the first entity and then persist a new one, Hibernate is goi
 
 [TIP]
 ====
-The order in which SQL statements are executed is given by the `ActionQueue` and not by the order in which entity state operations have been previously defined.
+The order in which SQL statements are executed is given by the `ActionQueueLegacy` and not by the order in which entity state operations have been previously defined.
 ====
 
-The `ActionQueue` executes all operations in the following order:
+The `ActionQueueLegacy` executes all operations in the following order:
 
 . `OrphanRemovalAction`
 . `EntityInsertAction` or `EntityIdentityInsertAction`
@@ -284,3 +284,13 @@ The `ActionQueue` executes all operations in the following order:
 . `CollectionRecreateAction`
 . `EntityDeleteAction`
 
+
+[NOTE]
+====
+There is also a new, currently experimental, implementation of `ActionQueue` based on graph planning named, appropriately, `GraphBasedActionQueue`.  To enable usage of this, specify:
+
+[source,java]
+----
+hibernate.flush.queue.impl=graph
+----
+====

@@ -49,7 +49,7 @@ import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.MethodDetails;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
+import org.hibernate.action.queue.decompose.collection.CollectionMutationTarget;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;

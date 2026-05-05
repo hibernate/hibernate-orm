@@ -6,11 +6,13 @@ package org.hibernate.sql.model.ast.builder;
 
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.TableMapping;
+import org.hibernate.sql.model.ast.AbstractTableUpdate;
+import org.hibernate.sql.model.ast.LogicalTableUpdate;
 import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.internal.TableUpdateCustomSql;
 import org.hibernate.sql.model.internal.TableUpdateNoSet;
@@ -26,28 +28,50 @@ import static java.util.Collections.emptyList;
 public class TableUpdateBuilderStandard<O extends MutationOperation>
 		extends AbstractTableUpdateBuilder<O> {
 	private final String whereFragment;
+	private TableMapping.MutationDetails mutationDetails;
 
 	public TableUpdateBuilderStandard(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			TableMapping tableMapping,
 			SessionFactoryImplementor sessionFactory) {
-		super( mutationTarget, tableMapping, sessionFactory );
-		this.whereFragment = null;
+		this(
+				mutationTarget,
+				new MutatingTableReference( tableMapping ),
+				tableMapping.getUpdateDetails(),
+				null,
+				sessionFactory
+		);
 	}
 
 	public TableUpdateBuilderStandard(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory) {
 		this( mutationTarget, tableReference, sessionFactory, null );
 	}
 
 	public TableUpdateBuilderStandard(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory,
 			String whereFragment) {
+		this(
+				mutationTarget,
+				tableReference,
+				tableReference.getTableMapping().getUpdateDetails(),
+				whereFragment,
+				sessionFactory
+		);
+	}
+
+	public TableUpdateBuilderStandard(
+			MutationTarget<?,?> mutationTarget,
+			MutatingTableReference tableReference,
+			TableMapping.MutationDetails mutationDetails,
+			String whereFragment,
+			SessionFactoryImplementor sessionFactory) {
 		super( mutationTarget, tableReference, sessionFactory );
+		this.mutationDetails = mutationDetails;
 		this.whereFragment = whereFragment;
 	}
 
@@ -58,47 +82,45 @@ public class TableUpdateBuilderStandard<O extends MutationOperation>
 	//TODO: The unchecked typecasts here are horrible
 	@SuppressWarnings("unchecked")
 	@Override
-	public RestrictedTableMutation<O> buildMutation() {
+	public LogicalTableUpdate<O> buildMutation() {
 		final var valueBindings = combine( getValueBindings(), getKeyBindings(), getLobValueBindings() );
 		if ( valueBindings.isEmpty() ) {
-			return (RestrictedTableMutation<O>)
-					new TableUpdateNoSet( getMutatingTable(), getMutationTarget() );
+			return (LogicalTableUpdate<O>)	new TableUpdateNoSet( getMutatingTable(), getMutationTarget() );
 		}
 
-		if ( getMutatingTable().getTableMapping().getUpdateDetails().getCustomSql() != null ) {
-			return (RestrictedTableMutation<O>)
-					new TableUpdateCustomSql(
-							getMutatingTable(),
-							getMutationTarget(),
-							getSqlComment(),
-							valueBindings,
-							getKeyRestrictionBindings(),
-							getOptimisticLockBindings()
-					);
+		if ( mutationDetails.getCustomSql() != null ) {
+			return (LogicalTableUpdate<O>) new TableUpdateCustomSql(
+					getMutatingTable(),
+					getMutationTarget(),
+					mutationDetails,
+					getSqlComment(),
+					valueBindings,
+					getKeyRestrictionBindings(),
+					getOptimisticLockBindings(),
+					AbstractTableUpdate.collectParameters( valueBindings, getKeyRestrictionBindings(), getOptimisticLockBindings() )
+			);
 		}
 
 		if ( getMutatingTable().getTableMapping().isOptional() ) {
-			return (RestrictedTableMutation<O>)
-					new OptionalTableUpdate(
-							getMutatingTable(),
-							getMutationTarget(),
-							valueBindings,
-							getKeyRestrictionBindings(),
-							getOptimisticLockBindings()
-					);
+			return (LogicalTableUpdate<O>)	new OptionalTableUpdate(
+					getMutatingTable(),
+					(EntityMutationTarget) getMutationTarget(),
+					valueBindings,
+					getKeyRestrictionBindings(),
+					getOptimisticLockBindings()
+			);
 		}
 
-		return (RestrictedTableMutation<O>)
-				new TableUpdateStandard(
-						getMutatingTable(),
-						getMutationTarget(),
-						getSqlComment(),
-						valueBindings,
-						getKeyRestrictionBindings(),
-						getOptimisticLockBindings(),
-						whereFragment,
-						null,
-						emptyList()
-				);
+		return (LogicalTableUpdate<O>)	new TableUpdateStandard(
+				getMutatingTable(),
+				getMutationTarget(),
+				getSqlComment(),
+				valueBindings,
+				getKeyRestrictionBindings(),
+				getOptimisticLockBindings(),
+				whereFragment,
+				null,
+				emptyList()
+		);
 	}
 }

@@ -7,6 +7,7 @@ package org.hibernate.sql.model.ast.builder;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.model.MutationOperation;
+import org.hibernate.sql.model.ast.LogicalTableUpdate;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 
 /**
@@ -16,7 +17,7 @@ import org.hibernate.sql.model.ast.RestrictedTableMutation;
  */
 public interface TableUpdateBuilder<O extends MutationOperation>
 		extends RestrictedTableMutationBuilder<O, RestrictedTableMutation<O>>,
-		ColumnValuesTableMutationBuilder<RestrictedTableMutation<O>>,
+		AssigningTableMutationBuilder<RestrictedTableMutation<O>>,
 		SelectableConsumer {
 
 	/**
@@ -25,8 +26,11 @@ public interface TableUpdateBuilder<O extends MutationOperation>
 	 */
 	@Override
 	default void accept(int selectionIndex, SelectableMapping selectableMapping) {
-		addValueColumn( selectableMapping );
+		addColumnAssignment( selectableMapping );
 	}
 
 	void setWhere(String fragment);
+
+	@Override
+	LogicalTableUpdate<O> buildMutation();
 }

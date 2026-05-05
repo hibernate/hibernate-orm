@@ -21,7 +21,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
  */
 public abstract class AbstractJdbcMutation implements JdbcMutationOperation {
 	private final TableMapping tableDetails;
-	private final MutationTarget<?> mutationTarget;
+	private final MutationTarget<?,?> mutationTarget;
 	private final String sql;
 	private final boolean callable;
 	private final Expectation expectation;
@@ -31,7 +31,7 @@ public abstract class AbstractJdbcMutation implements JdbcMutationOperation {
 
 	public AbstractJdbcMutation(
 			TableMapping tableDetails,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String sql,
 			boolean callable,
 			Expectation expectation,
@@ -63,7 +63,7 @@ public abstract class AbstractJdbcMutation implements JdbcMutationOperation {
 	}
 
 	@Override
-	public MutationTarget<?> getMutationTarget() {
+	public MutationTarget<?,?> getMutationTarget() {
 		return mutationTarget;
 	}
 

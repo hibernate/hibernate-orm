@@ -5,12 +5,11 @@
 package org.hibernate.sql.model.ast.builder;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.TableMapping;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
-import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.ast.RestrictedTableMutation;
+import org.hibernate.sql.model.ast.LogicalTableUpdate;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 
 import java.util.List;
@@ -21,22 +20,20 @@ import java.util.List;
 public class TableMergeBuilder<O extends MutationOperation> extends AbstractTableUpdateBuilder<O> {
 
 	public TableMergeBuilder(
-			MutationTarget<?> mutationTarget,
+			EntityMutationTarget mutationTarget,
 			TableMapping tableMapping,
 			SessionFactoryImplementor sessionFactory) {
 		super( mutationTarget, tableMapping, sessionFactory );
 	}
 
-	public TableMergeBuilder(
-			MutationTarget<?> mutationTarget,
-			MutatingTableReference tableReference,
-			SessionFactoryImplementor sessionFactory) {
-		super( mutationTarget, tableReference, sessionFactory );
+	@Override
+	protected EntityMutationTarget getMutationTarget() {
+		return (EntityMutationTarget) super.getMutationTarget();
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public RestrictedTableMutation<O> buildMutation() {
+	public LogicalTableUpdate<O> buildMutation() {
 		final List<ColumnValueBinding> valueBindings = combine( getValueBindings(), getKeyBindings(), getLobValueBindings() );
 
 		// TODO: add getMergeDetails()
@@ -51,7 +48,7 @@ public class TableMergeBuilder<O extends MutationOperation> extends AbstractTabl
 //			);
 //		}
 
-		return (RestrictedTableMutation<O>) new OptionalTableUpdate(
+		return (LogicalTableUpdate<O>) new OptionalTableUpdate(
 				getMutatingTable(),
 				getMutationTarget(),
 				valueBindings,

@@ -14,6 +14,8 @@ import org.hibernate.Internal;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatementObserver;
+import org.hibernate.action.queue.ActionQueueFactory;
+import org.hibernate.action.queue.PlanningOptions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -270,6 +272,11 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	TransactionIdentifierService getTransactionIdentifierService();
 
 	/**
+	 * Configuration for graph planning as part of the ActionQueue.
+	 */
+	PlanningOptions getGraphPlanningOptions();
+
+	/**
 	 * Return an instance of {@link WrapperOptions} which is not backed by a session,
 	 * and whose functionality is therefore incomplete.
 	 *
@@ -351,4 +358,9 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	default <T> RootGraph<T> parseEntityGraph(CharSequence graphText) {
 		return GraphParser.parse( graphText.toString(), unwrap( SessionFactoryImplementor.class ) );
 	}
+
+	/**
+	 * Access to the factory for ActionQueue instances configured for this factory.
+	 */
+	ActionQueueFactory getActionQueueFactory();
 }

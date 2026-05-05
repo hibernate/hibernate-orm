@@ -101,19 +101,19 @@ public class EntityUpdateAction extends EntityAction {
 				: naturalIdMapping.extractNaturalIdFromEntityState( previousState );
 	}
 
-	protected Object[] getState() {
+	public Object[] getState() {
 		return state;
 	}
 
-	protected Object[] getPreviousState() {
+	public Object[] getPreviousState() {
 		return previousState;
 	}
 
-	protected Object getNextVersion() {
+	public Object getNextVersion() {
 		return nextVersion;
 	}
 
-	protected int[] getDirtyFields() {
+	public int[] getDirtyFields() {
 		return dirtyFields;
 	}
 	protected boolean hasDirtyCollection() {
@@ -191,7 +191,7 @@ public class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	private void handleNaturalIdLocalResolutions(Object id, EntityPersister persister, PersistenceContext context) {
+	public void handleNaturalIdLocalResolutions(Object id, EntityPersister persister, PersistenceContext context) {
 		final var naturalIdMapping = persister.getNaturalIdMapping();
 		if ( naturalIdMapping != null) {
 			context.getNaturalIdResolutions().manageLocalResolution(
@@ -203,7 +203,7 @@ public class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	protected void handleNaturalIdSharedResolutions(Object id, EntityPersister persister, PersistenceContext context) {
+	public void handleNaturalIdSharedResolutions(Object id, EntityPersister persister, PersistenceContext context) {
 		final var naturalIdMapping = persister.getNaturalIdMapping();
 		if ( naturalIdMapping != null ) {
 			context.getNaturalIdResolutions().manageSharedResolution(
@@ -216,7 +216,7 @@ public class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	protected void updateCacheItem(Object previousVersion, Object cacheKey, EntityEntry entry) {
+	public void updateCacheItem(Object previousVersion, Object cacheKey, EntityEntry entry) {
 		final var persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			final var session = getSession();
@@ -248,7 +248,7 @@ public class EntityUpdateAction extends EntityAction {
 			|| session.getCacheMode() == CacheMode.IGNORE;
 	}
 
-	private void handleGeneratedProperties(EntityEntry entry, GeneratedValues generatedValues) {
+	public void handleGeneratedProperties(EntityEntry entry, GeneratedValues generatedValues) {
 		final var persister = getPersister();
 		if ( entry.getStatus() == Status.MANAGED || persister.isVersionPropertyGenerated() ) {
 			final var session = getSession();
@@ -281,7 +281,7 @@ public class EntityUpdateAction extends EntityAction {
 	/*
 	 * Used by Hibernate Reactive
 	 */
-	protected void handleDeleted(EntityEntry entry) {
+	public void handleDeleted(EntityEntry entry) {
 		if ( entry.getStatus() == Status.DELETED ) {
 			final var entityMetamodel = getPersister();
 			final boolean isImpliedOptimisticLocking = !entityMetamodel.isVersioned()
@@ -295,7 +295,7 @@ public class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	protected Object getPreviousVersion() {
+	public Object getPreviousVersion() {
 		final var persister = getPersister();
 		if ( persister.isVersionPropertyGenerated() ) {
 			// we need to grab the version value from the entity, otherwise
@@ -308,7 +308,7 @@ public class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	protected Object lockCacheItem(Object previousVersion) {
+	public Object lockCacheItem(Object previousVersion) {
 		final var persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			final var session = getSession();
@@ -368,7 +368,7 @@ public class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	protected void postUpdate() {
+	public void postUpdate() {
 		getEventListenerGroups().eventListenerGroup_POST_UPDATE
 				.fireLazyEventOnEachListener( this::newPostUpdateEvent, PostUpdateEventListener::onPostUpdate );
 	}

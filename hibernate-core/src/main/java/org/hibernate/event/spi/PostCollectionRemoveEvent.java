@@ -33,6 +33,22 @@ public class PostCollectionRemoveEvent extends AbstractCollectionEvent {
 	public PostCollectionRemoveEvent(
 			CollectionPersister collectionPersister,
 			PersistentCollection<?> collection,
+			EventSource source,
+			Object affectedOwner,
+			Object affectedOwnerId) {
+		super(
+				collectionPersister,
+				collection,
+				source,
+				affectedOwner,
+				affectedOwnerId
+		);
+	}
+
+	@Internal
+	public PostCollectionRemoveEvent(
+			CollectionPersister collectionPersister,
+			PersistentCollection<?> collection,
 			Object id,
 			String entityName,
 			Object loadedOwner) {

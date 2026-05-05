@@ -69,7 +69,7 @@
         <many-to-one name="parent" update="false" insert="false"/>
         <set name="subcontracts" inverse="false"
                 mutable="true" cascade="all" fetch="join">
-            <key column="parent"/>
+            <key column="parent" not-null="false"/>
             <one-to-many class="Contract"/>
         </set>
         <set name="plans" table="plan_contract" inverse="true" mutable="true" cascade="none">

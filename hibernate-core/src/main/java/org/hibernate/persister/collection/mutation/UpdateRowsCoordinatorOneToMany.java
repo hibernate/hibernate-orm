@@ -7,8 +7,10 @@ package org.hibernate.persister.collection.mutation;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
+import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 
@@ -19,16 +21,19 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
  */
 public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinator {
 	private final RowMutationOperations rowMutationOperations;
+	private final MutationExecutorService mutationExecutorService;
 
 	private MutationOperationGroup deleteOperationGroup;
 	private MutationOperationGroup insertOperationGroup;
 
 	public UpdateRowsCoordinatorOneToMany(
-			CollectionMutationTarget mutationTarget,
+			OneToManyPersister mutationTarget,
 			RowMutationOperations rowMutationOperations,
 			SessionFactoryImplementor sessionFactory) {
 		super( mutationTarget, sessionFactory );
 		this.rowMutationOperations = rowMutationOperations;
+
+		mutationExecutorService = sessionFactory.getServiceRegistry().requireService( MutationExecutorService.class );
 	}
 
 	@Override

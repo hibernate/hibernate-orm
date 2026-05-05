@@ -56,6 +56,4 @@ public interface RestrictedTableMutation<O extends MutationOperation>
 	 * Visit each {@linkplain #getOptimisticLockBindings() optimistic-lock binding}
 	 */
 	void forEachOptimisticLockBinding(BiConsumer<Integer,ColumnValueBinding> consumer);
-
-	void forEachValueBinding(BiConsumer<Integer, ColumnValueBinding> consumer);
 }

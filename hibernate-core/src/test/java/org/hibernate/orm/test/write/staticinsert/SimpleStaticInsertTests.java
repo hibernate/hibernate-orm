@@ -9,14 +9,17 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.hibernate.cfg.BatchSettings;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.retail.CardPayment;
 import org.hibernate.testing.orm.domain.retail.DomesticVendor;
 import org.hibernate.testing.orm.domain.retail.ForeignVendor;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -25,9 +28,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Simple tests for new "write path" approach in cases of static (non-dynamic) inserts
  *
+ * @implNote Batching must be disabled to get proper statement counts.
+ *
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
+@ServiceRegistry(settings = @Setting(name = BatchSettings.STATEMENT_BATCH_SIZE, value = "-1"))
 public class SimpleStaticInsertTests {
 
 	@Test

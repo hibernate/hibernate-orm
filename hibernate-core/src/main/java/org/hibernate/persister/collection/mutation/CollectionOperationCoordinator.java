@@ -4,6 +4,8 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import org.hibernate.action.queue.decompose.collection.CollectionMutationTarget;
+
 /**
  * Base contract for coordination of collection mutation operations
  *

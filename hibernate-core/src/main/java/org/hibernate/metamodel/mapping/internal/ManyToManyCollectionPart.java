@@ -35,7 +35,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.persister.collection.CollectionPersister;
-import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
+import org.hibernate.action.queue.decompose.collection.CollectionMutationTarget;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;

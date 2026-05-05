@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.engine.jdbc.batch.spi.StaleStateMapper;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.OperationResultChecker;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -19,6 +20,7 @@ import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
+import org.hibernate.engine.jdbc.mutation.spi.JdbcValueDescriptorAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
@@ -40,7 +42,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpt
  *
  * @author Steve Ebersole
  */
-public class MutationExecutorStandard extends AbstractMutationExecutor implements JdbcValueBindingsImpl.JdbcValueDescriptorAccess {
+public class MutationExecutorStandard extends AbstractMutationExecutor implements JdbcValueDescriptorAccess {
 	private final MutationOperationGroup mutationOperationGroup;
 
 	/**
@@ -296,7 +298,7 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 	protected void performBatchedOperations(
 			ValuesAnalysis valuesAnalysis,
 			TableInclusionChecker inclusionChecker,
-			Batch.StaleStateMapper staleStateMapper) {
+			StaleStateMapper staleStateMapper) {
 		if ( batch == null ) {
 			return;
 		}

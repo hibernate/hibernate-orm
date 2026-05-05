@@ -25,7 +25,7 @@
         </bag>
     </class>
 
-    <class name="ChildWithManyToOne" table="CHILD">
+    <class name="ChildWithManyToOne" table="`CHILD`">
         <id name="id" column="ID" type="long">
             <generator class="native"/>
         </id>

@@ -39,7 +39,7 @@ public class InsertSelectStatement extends AbstractMutationStatement implements 
 		this( null, targetTable, Collections.emptyList() );
 	}
 
-	public InsertSelectStatement(NamedTableReference targetTable, MutationTarget<?> mutationTarget) {
+	public InsertSelectStatement(NamedTableReference targetTable, MutationTarget<?,?> mutationTarget) {
 		this( null, targetTable, mutationTarget, Collections.emptyList() );
 	}
 
@@ -58,7 +58,7 @@ public class InsertSelectStatement extends AbstractMutationStatement implements 
 	public InsertSelectStatement(
 			CteContainer cteContainer,
 			NamedTableReference targetTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			List<ColumnReference> returningColumns) {
 		super( cteContainer, targetTable, mutationTarget, returningColumns );
 	}

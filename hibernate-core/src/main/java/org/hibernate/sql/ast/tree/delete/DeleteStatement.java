@@ -59,7 +59,7 @@ public class DeleteStatement extends AbstractUpdateOrDeleteStatement {
 	public DeleteStatement(
 			CteContainer cteContainer,
 			NamedTableReference targetTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			FromClause fromClause,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {

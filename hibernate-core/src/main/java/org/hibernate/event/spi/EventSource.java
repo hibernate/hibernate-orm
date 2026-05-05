@@ -5,7 +5,6 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -21,7 +20,7 @@ public interface EventSource extends SessionImplementor {
 	/**
 	 * Get the ActionQueue for this session
 	 */
-	ActionQueue getActionQueue();
+	org.hibernate.action.queue.ActionQueue getActionQueue();
 
 	/**
 	 * Instantiate an entity instance, using either an interceptor,

@@ -9,6 +9,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
+import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.collection.OneToManyPersister;
@@ -27,6 +28,8 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 	private final SubclassEntry[] deleteSubclassEntries;
 	private final SubclassEntry[] insertSubclassEntries;
 
+	private final MutationExecutorService mutationExecutorService;
+
 	public UpdateRowsCoordinatorTablePerSubclass(
 			OneToManyPersister mutationTarget,
 			RowMutationOperations rowMutationOperations,
@@ -38,6 +41,8 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 						.getSubclassEntityNames().size();
 		deleteSubclassEntries = new SubclassEntry[size];
 		insertSubclassEntries = new SubclassEntry[size];
+
+		mutationExecutorService = sessionFactory.getServiceRegistry().requireService( MutationExecutorService.class );
 	}
 
 	@Override

@@ -5,7 +5,7 @@
 package org.hibernate.engine.jdbc.mutation;
 
 import org.hibernate.Incubating;
-import org.hibernate.engine.jdbc.batch.spi.Batch;
+import org.hibernate.engine.jdbc.batch.spi.StaleStateMapper;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValues;
@@ -55,7 +55,7 @@ public interface MutationExecutor {
 			TableInclusionChecker inclusionChecker,
 			OperationResultChecker resultChecker,
 			SharedSessionContractImplementor session,
-			Batch.StaleStateMapper staleStateMapper);
+			StaleStateMapper staleStateMapper);
 
 	void release();
 }

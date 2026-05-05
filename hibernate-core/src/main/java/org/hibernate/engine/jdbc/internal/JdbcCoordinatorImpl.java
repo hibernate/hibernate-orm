@@ -10,6 +10,7 @@ import org.hibernate.TransactionException;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
+import org.hibernate.engine.jdbc.mutation.internal.PreparedStatementGroupSingleTable;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.JdbcWrapper;
@@ -17,6 +18,7 @@ import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.jdbc.spi.ResultSetReturn;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jdbc.WorkExecutor;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.resource.jdbc.internal.LogicalConnectionManagedImpl;
@@ -25,6 +27,7 @@ import org.hibernate.resource.jdbc.internal.ResourceRegistryStandardImpl;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction;
+import org.hibernate.sql.model.PreparableMutationOperation;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -185,6 +188,16 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 				owner.getJdbcSessionContext().getBatchBuilder()
 						.buildBatch( key, batchSize, statementGroupSupplier, this );
 		return currentBatch;
+	}
+
+	@Override
+	public Batch getBatch(BatchKey key, Integer batchSize, PreparableMutationOperation mutationOperation) {
+		final var session = (SharedSessionContractImplementor) owner;
+		return getBatch(
+				key,
+				batchSize,
+				() -> new PreparedStatementGroupSingleTable( mutationOperation, session )
+		);
 	}
 
 	@Override

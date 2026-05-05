@@ -21,7 +21,7 @@ public abstract class AbstractRestrictedTableMutation<O extends MutationOperatio
 
 	public AbstractRestrictedTableMutation(
 			MutatingTableReference mutatingTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String comment,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
@@ -49,9 +49,5 @@ public abstract class AbstractRestrictedTableMutation<O extends MutationOperatio
 	@Override
 	public void forEachOptimisticLockBinding(BiConsumer<Integer, ColumnValueBinding> consumer) {
 		forEachThing( optLockRestrictionBindings, consumer );
-	}
-
-	@Override
-	public void forEachValueBinding(BiConsumer<Integer, ColumnValueBinding> consumer) {
 	}
 }

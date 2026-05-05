@@ -10,8 +10,10 @@ import java.util.List;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
+import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 
@@ -26,16 +28,17 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
  * @author Steve Ebersole
  */
 public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator implements UpdateRowsCoordinator {
-
 	private final RowMutationOperations rowMutationOperations;
+	private final MutationExecutorService mutationExecutorService;
 	private MutationOperationGroup operationGroup;
 
 	public UpdateRowsCoordinatorStandard(
-			CollectionMutationTarget mutationTarget,
+			AbstractCollectionPersister mutationTarget,
 			RowMutationOperations rowMutationOperations,
 			SessionFactoryImplementor sessionFactory) {
 		super( mutationTarget, sessionFactory );
 		this.rowMutationOperations = rowMutationOperations;
+		mutationExecutorService = sessionFactory.getServiceRegistry().requireService( MutationExecutorService.class );
 	}
 
 	@Override
@@ -149,6 +152,4 @@ public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator
 		}
 		return operationGroup;
 	}
-
-
 }

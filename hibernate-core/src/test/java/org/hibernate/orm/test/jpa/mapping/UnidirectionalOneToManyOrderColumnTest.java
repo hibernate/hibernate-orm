@@ -15,8 +15,10 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 
+import org.hibernate.action.queue.QueueType;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 
@@ -24,6 +26,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @JiraKey(value = "HHH-11587")
 @Jpa(annotatedClasses = {
@@ -178,8 +181,12 @@ public class UnidirectionalOneToManyOrderColumnTest {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-15591")
+	@Jira("https://hibernate.atlassian.net/browse/HHH-15591")
 	public void testSwapElementsAtZeroAndOne(EntityManagerFactoryScope scope) {
+		// only works with graph queue (HHH-15591)
+		var aqf = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class ).getActionQueueFactory();
+		assumeTrue( aqf.getConfiguredQueueType() == QueueType.GRAPH );
+
 		long parentId = scope.fromTransaction(
 				entityManager -> {
 					ParentData parent = new ParentData();
@@ -204,11 +211,20 @@ public class UnidirectionalOneToManyOrderColumnTest {
 				}
 		);
 		// if the above works, then test on {"Two", "One"}
+		scope.inTransaction( (em) -> {
+			var parent = em.get( ParentData.class, parentId );
+			assertEquals( "Two", parent.children.get( 0 ).childId );
+			assertEquals( "One", parent.children.get( 1 ).childId );
+		} );
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-15591")
+	@Jira("https://hibernate.atlassian.net/browse/HHH-15591")
 	public void testAddAtZeroDeleteAtTwo(EntityManagerFactoryScope scope) {
+		// only works with graph queue (HHH-15591)
+		var aqf = scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class ).getActionQueueFactory();
+		assumeTrue( aqf.getConfiguredQueueType() == QueueType.GRAPH );
+
 		long parentId = scope.fromTransaction(
 				entityManager -> {
 					ParentData parent = new ParentData();
@@ -229,7 +245,11 @@ public class UnidirectionalOneToManyOrderColumnTest {
 					return parent.id;
 				}
 		);
-		// if the above works, then test on {"Zero", "One"}
+		scope.inTransaction( (em) -> {
+			var parent = em.get( ParentData.class, parentId );
+			assertEquals( "Zero", parent.children.get( 0 ).childId );
+			assertEquals( "One", parent.children.get( 1 ).childId );
+		} );
 	}
 
 	@Entity(name = "ParentData")

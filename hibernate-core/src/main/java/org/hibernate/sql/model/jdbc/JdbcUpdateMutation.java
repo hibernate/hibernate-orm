@@ -20,7 +20,7 @@ import org.hibernate.sql.model.TableMapping;
 public class JdbcUpdateMutation extends AbstractJdbcMutation {
 	public JdbcUpdateMutation(
 			TableMapping tableDetails,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String sql,
 			boolean callable,
 			Expectation expectation,

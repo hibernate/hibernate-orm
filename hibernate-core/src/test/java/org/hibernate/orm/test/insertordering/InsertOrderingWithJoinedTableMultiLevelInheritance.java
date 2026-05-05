@@ -81,7 +81,7 @@ public class InsertOrderingWithJoinedTableMultiLevelInheritance extends BaseInse
 		// 3 for President (8)
 		// 1 for Address (9)
 		// 1 for Office (10)
-		verifyPreparedStatementCount( 10 );
+		verifyPreparedStatementCount( isGraphQueue() ? 6 : 10 );
 
 		sessionFactoryScope().inTransaction( (session) -> {
 			// 2 Address per loop (4)

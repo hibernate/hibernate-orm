@@ -32,4 +32,6 @@ public interface GeneratedValues {
 	 * Ensures the order of the values in the returned list corresponds to the input properties.
 	 */
 	List<Object> getGeneratedValues(List<? extends ModelPart> modelParts);
+
+	void apply(GeneratedValues generatedValues);
 }

@@ -81,7 +81,7 @@ public final class ConfigurationHelper {
 	 *
 	 * @return The value.
 	 */
-	public static String getString(String name, Map<?,?> values, String defaultValue) {
+	public static @NonNull String getString(String name, Map<?,?> values, @NonNull String defaultValue) {
 		return getString( name, values, () -> defaultValue );
 	}
 

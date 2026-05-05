@@ -445,6 +445,189 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 	}
 
 	@Override
+	public Iterator<?> getRemovedEntities(CollectionPersister persister) {
+		final List<?> sn = (List<?>) getSnapshot();
+		if ( sn == null || sn.isEmpty() ) {
+			return java.util.Collections.emptyIterator();
+		}
+
+		// Find entities in snapshot that are no longer in current list (by identity)
+		final List<Object> removedEntities = new ArrayList<>();
+		for ( Object snapshotEntity : sn ) {
+			if ( snapshotEntity != null ) {
+				boolean found = false;
+				for ( Object currentEntity : list ) {
+					if ( currentEntity == snapshotEntity ) {
+						found = true;
+						break;
+					}
+				}
+				if ( !found ) {
+					removedEntities.add( snapshotEntity );
+				}
+			}
+		}
+		return removedEntities.iterator();
+	}
+
+	@Override
+	public Iterator<?> getAddedEntities(CollectionPersister persister) {
+		final List<?> sn = (List<?>) getSnapshot();
+		final Type elementType = persister.getElementType();
+
+		// Find entities in current list that were not in snapshot.
+		final List<Object> addedEntities = new ArrayList<>();
+		for ( Object currentEntity : list ) {
+			if ( currentEntity != null ) {
+				boolean found = false;
+				if ( sn != null ) {
+					for ( Object snapshotEntity : sn ) {
+						if ( elementType.isEqual( snapshotEntity, currentEntity, persister.getFactory() ) ) {
+							found = true;
+							break;
+						}
+					}
+				}
+				if ( !found ) {
+					addedEntities.add( currentEntity );
+				}
+			}
+		}
+		return addedEntities.iterator();
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public CollectionChangeSet getChangeSet(CollectionPersister persister) {
+		final List<?> sn = (List<?>) getSnapshot();
+		if (sn == null) {
+			return CollectionChangeSet.EMPTY;
+		}
+
+		final boolean isEntityCollection = persister.getElementType().isEntityType();
+
+		if (isEntityCollection) {
+			return computeEntityListChangeSet(sn, persister);
+		}
+		else {
+			return computeElementListChangeSet(sn, persister);
+		}
+	}
+
+	/**
+	 * Compute change set for entity collections (join tables).
+	 * Uses Hibernate type equality to track which entities were added, removed, or shifted.
+	 */
+	private CollectionChangeSet computeEntityListChangeSet(List<?> snapshot, CollectionPersister persister) {
+		final Type elementType = persister.getElementType();
+		final boolean[] processedSnapshotElements = new boolean[snapshot.size()];
+		final java.util.List<CollectionChangeSet.Removal> removals = new ArrayList<>();
+		final java.util.List<CollectionChangeSet.Addition> additions = new ArrayList<>();
+		final java.util.List<CollectionChangeSet.Shift> shifts = new ArrayList<>();
+
+		// Single pass through current collection
+		for (int currentPos = 0; currentPos < list.size(); currentPos++) {
+			final Object element = list.get(currentPos);
+			int snapshotPos = -1;
+			if ( element != null ) {
+				for ( int i = 0; i < snapshot.size(); i++ ) {
+					if ( !processedSnapshotElements[i]
+							&& elementType.isEqual( snapshot.get( i ), element, persister.getFactory() ) ) {
+						snapshotPos = i;
+						break;
+					}
+				}
+			}
+
+			if (snapshotPos < 0) {
+				// Not in snapshot → ADDITION
+				additions.add(new CollectionChangeSet.Addition(element, currentPos));
+			}
+			else {
+				// In snapshot → check if position changed
+				processedSnapshotElements[snapshotPos] = true;
+				if (snapshotPos != currentPos) {
+					// Position changed → SHIFT
+					shifts.add(new CollectionChangeSet.Shift(element, snapshotPos, currentPos));
+				}
+				// else: no change, do nothing
+			}
+		}
+
+		// Find removals: elements in snapshot but not processed
+		for (int i = 0; i < snapshot.size(); i++) {
+			final Object element = snapshot.get(i);
+			if (!processedSnapshotElements[i]) {
+				// In snapshot but not in current → REMOVAL
+				removals.add(new CollectionChangeSet.Removal(element, i));
+			}
+		}
+
+		return new CollectionChangeSet(removals, additions, shifts, List.of());
+	}
+
+	/**
+	 * Compute change set for element collections.
+	 * Uses equals-based comparison to detect value changes at the same position.
+	 */
+	private CollectionChangeSet computeElementListChangeSet(List<?> snapshot, CollectionPersister persister) {
+		final Type elementType = persister.getElementType();
+		final java.util.List<CollectionChangeSet.Removal> removals = new ArrayList<>();
+		final java.util.List<CollectionChangeSet.Addition> additions = new ArrayList<>();
+		final java.util.List<CollectionChangeSet.ValueChange> valueChanges = new ArrayList<>();
+
+		final int snapshotSize = snapshot.size();
+		final int currentSize = list.size();
+		final int commonSize = Math.min(snapshotSize, currentSize);
+
+		// Check positions that exist in both snapshot and current
+		for (int i = 0; i < commonSize; i++) {
+			final Object snapshotElement = snapshot.get(i);
+			final Object currentElement = list.get(i);
+
+			if (snapshotElement == null && currentElement != null) {
+				// Was null, now has value → ADDITION (at same position)
+				additions.add(new CollectionChangeSet.Addition(currentElement, i));
+			}
+			else if (snapshotElement != null && currentElement == null) {
+				// Had value, now null → REMOVAL (at same position)
+				removals.add(new CollectionChangeSet.Removal(snapshotElement, i));
+			}
+			else if (snapshotElement != null && currentElement != null) {
+				// Both non-null → check if value changed
+				if (elementType.isDirty(currentElement, snapshotElement, getSession())) {
+					valueChanges.add(new CollectionChangeSet.ValueChange(snapshotElement, currentElement, i));
+				}
+			}
+			// else: both null, no change
+		}
+
+		// Elements beyond common size
+		if (currentSize > snapshotSize) {
+			// Current is longer → additions
+			for (int i = snapshotSize; i < currentSize; i++) {
+				final Object element = list.get(i);
+				if (element != null) {
+					additions.add(new CollectionChangeSet.Addition(element, i));
+				}
+			}
+		}
+		else if (snapshotSize > currentSize) {
+			// Snapshot was longer → removals
+			for (int i = currentSize; i < snapshotSize; i++) {
+				final Object element = snapshot.get(i);
+				if (element != null) {
+					removals.add(new CollectionChangeSet.Removal(element, i));
+				}
+			}
+		}
+
+		// Note: Element collections don't have shifts in the same sense as entity collections
+		// Position changes are handled as removal + addition
+		return new CollectionChangeSet(removals, additions, List.of(), valueChanges);
+	}
+
+	@Override
 	public boolean needsInserting(Object entry, int i, Type elemType) throws HibernateException {
 		final List<?> sn = (List<?>) getSnapshot();
 		return list.get( i ) != null && ( i >= sn.size() || sn.get( i ) == null );

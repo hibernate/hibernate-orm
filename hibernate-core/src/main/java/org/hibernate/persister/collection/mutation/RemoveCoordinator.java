@@ -32,4 +32,5 @@ public interface RemoveCoordinator extends CollectionOperationCoordinator {
 	 * Delete all rows based on the collection-key
 	 */
 	void deleteAllRows(Object key, SharedSessionContractImplementor session);
+
 }

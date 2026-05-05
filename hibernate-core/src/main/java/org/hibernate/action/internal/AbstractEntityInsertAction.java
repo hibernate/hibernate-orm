@@ -85,6 +85,10 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 */
 	public abstract boolean isEarlyInsert();
 
+	public final boolean isVersionIncrementDisabled() {
+		return isVersionIncrementDisabled;
+	}
+
 	/**
 	 * Find the transient unsaved entity dependencies that are non-nullable.
 	 * @return the transient unsaved entity dependencies that are non-nullable,
@@ -112,7 +116,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	 *
 	 * @see #makeEntityManaged()
 	 */
-	protected final void nullifyTransientReferencesIfNotAlready() {
+	public final void nullifyTransientReferencesIfNotAlready() {
 		if ( !areTransientReferencesNullified ) {
 			new ForeignKeys.Nullifier( getInstance(), false, isEarlyInsert(), getSession(), getPersister() )
 					.nullifyTransientReferences( getState() );
@@ -151,7 +155,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 		}
 	}
 
-	protected void addCollectionsByKeyToPersistenceContext(PersistenceContext persistenceContext, Object[] objects) {
+	public void addCollectionsByKeyToPersistenceContext(PersistenceContext persistenceContext, Object[] objects) {
 		for ( int i = 0; i < objects.length; i++ ) {
 			final var attributeMapping = getPersister().getAttributeMapping( i );
 			if ( attributeMapping.isEmbeddedAttributeMapping() ) {
@@ -224,7 +228,7 @@ public abstract class AbstractEntityInsertAction extends EntityAction {
 	/**
 	 * Indicate that the action has executed.
 	 */
-	protected void markExecuted() {
+	public void markExecuted() {
 		this.isExecuted = true;
 	}
 

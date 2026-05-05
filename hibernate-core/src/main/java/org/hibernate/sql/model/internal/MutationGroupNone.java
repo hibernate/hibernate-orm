@@ -21,9 +21,9 @@ import org.hibernate.sql.model.ast.TableMutation;
  */
 public class MutationGroupNone implements MutationGroup {
 	private final MutationType mutationType;
-	private final MutationTarget<?> mutationTarget;
+	private final MutationTarget<?,?> mutationTarget;
 
-	public MutationGroupNone(MutationType mutationType, MutationTarget<?> mutationTarget) {
+	public MutationGroupNone(MutationType mutationType, MutationTarget<?,?> mutationTarget) {
 		this.mutationType = mutationType;
 		this.mutationTarget = mutationTarget;
 	}
@@ -34,7 +34,7 @@ public class MutationGroupNone implements MutationGroup {
 	}
 
 	@Override
-	public MutationTarget<?> getMutationTarget() {
+	public MutationTarget<?,?> getMutationTarget() {
 		return mutationTarget;
 	}
 

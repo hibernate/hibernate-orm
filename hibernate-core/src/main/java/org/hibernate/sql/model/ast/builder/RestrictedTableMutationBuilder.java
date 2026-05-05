@@ -14,10 +14,7 @@ import org.hibernate.sql.model.ast.ColumnValueBindingList;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 
 /**
- * Specialized {@link TableMutationBuilder} implementation for building mutations
- * which have a {@code where} clause.
- *
- * Common operations of {@link TableUpdateBuilder} and {@link TableDeleteBuilder}.
+ * Specialized builder for building mutations which have a restrictions (aka, {@code where} clause).
  *
  * @author Steve Ebersole
  */
@@ -31,6 +28,30 @@ public interface RestrictedTableMutationBuilder<O extends MutationOperation, M e
 	 */
 	@Internal @Incubating
 	void addNonKeyRestriction(ColumnValueBinding valueBinding);
+
+	/**
+	 * Adds a restriction, which is assumed to be based on a selectable that is NOT
+	 * a table key, e.g. optimistic locking.
+	 *
+	 * @apiNote Be sure you know what you are doing before using this method.  Generally
+	 * prefer any of the other methods here for adding non-key restrictions.
+	 */
+	@Internal
+	@Incubating
+	default void addNonKeyRestriction(SelectableMapping restrictableMapping) {
+		addNonKeyRestriction( restrictableMapping, restrictableMapping.getWriteExpression() );
+	}
+
+	/**
+	 * Adds a restriction, which is assumed to be based on a selectable that is NOT
+	 * a table key, e.g. optimistic locking.
+	 *
+	 * @apiNote Be sure you know what you are doing before using this method.  Generally
+	 * prefer any of the other methods here for adding non-key restrictions.
+	 */
+	@Internal
+	@Incubating
+	void addNonKeyRestriction(SelectableMapping restrictableMapping, String restrictionExpression);
 
 	/**
 	 * Add a restriction as long as the selectable is not a formula and is not nullable
@@ -97,6 +118,10 @@ public interface RestrictedTableMutationBuilder<O extends MutationOperation, M e
 	 * Add restriction based on non-version optimistically-locked column
 	 */
 	void addOptimisticLockRestriction(SelectableMapping selectableMapping);
+
+	default void addOptimisticLockRestriction(int position, SelectableMapping selectableMapping) {
+		addOptimisticLockRestriction(  selectableMapping );
+	}
 
 	ColumnValueBindingList getKeyRestrictionBindings();
 

@@ -54,11 +54,14 @@ import static org.hibernate.action.internal.ActionLogging.ACTION_LOGGER;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
- * Responsible for maintaining the queue of actions related to events.
+ * Legacy implementation of the action queue.
  * <p>
- * The {@code ActionQueue} holds the DML operations queued as part of a
+ * The {@code ActionQueueLegacy} holds the DML operations queued as part of a
  * session's transactional-write-behind semantics. The DML operations are
  * queued here until a flush forces them to be executed against the database.
+ * <p>
+ * This is the legacy implementation. The new, currently incubating, implementation is
+ * {@link org.hibernate.action.queue.GraphBasedActionQueue}.
  *
  * @apiNote This class is logically part of the {@linkplain Executable action}
  *          subsystem and so it would more naturally belong in the package
@@ -69,12 +72,11 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Gail Badner
  * @author Anton Marsden
  */
-public class ActionQueue implements TransactionCompletionCallbacks {
+public class ActionQueueLegacy implements org.hibernate.action.queue.ActionQueue {
 
 	private final SessionImplementor session;
 
 	private UnresolvedEntityInsertActions unresolvedInsertions;
-
 	// NOTE: ExecutableList fields must be instantiated via ListProvider#init
 	//       or #getOrInit to ensure that they are instantiated consistently.
 
@@ -110,11 +112,11 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 	private enum OrderedActions {
 		OrphanCollectionRemoveAction {
 			@Override
-			public ExecutableList<?> getActions(ActionQueue instance) {
+			public ExecutableList<?> getActions(ActionQueueLegacy instance) {
 				return instance.orphanCollectionRemovals;
 			}
 			@Override
-			public void ensureInitialized(ActionQueue instance) {
+			public void ensureInitialized(ActionQueueLegacy instance) {
 				if ( instance.orphanCollectionRemovals == null ) {
 					instance.orphanCollectionRemovals = new ExecutableList<>( instance.isOrderUpdatesEnabled() );
 				}
@@ -122,11 +124,11 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 		},
 		OrphanRemovalAction {
 			@Override
-			public ExecutableList<?> getActions(ActionQueue instance) {
+			public ExecutableList<?> getActions(ActionQueueLegacy instance) {
 				return instance.orphanRemovals;
 			}
 			@Override
-			public void ensureInitialized(ActionQueue instance) {
+			public void ensureInitialized(ActionQueueLegacy instance) {
 				if ( instance.orphanRemovals == null ) {
 					instance.orphanRemovals = new ExecutableList<>( false );
 				}
@@ -134,11 +136,11 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 		},
 		EntityInsertAction {
 			@Override
-			public ExecutableList<?> getActions(ActionQueue instance) {
+			public ExecutableList<?> getActions(ActionQueueLegacy instance) {
 				return instance.insertions;
 			}
 			@Override
-			public void ensureInitialized(final ActionQueue instance) {
+			public void ensureInitialized(final ActionQueueLegacy instance) {
 				if ( instance.insertions == null ) {
 					//Special case of initialization
 					instance.insertions = instance.isOrderInsertsEnabled()
@@ -149,11 +151,11 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 		},
 		EntityUpdateAction {
 			@Override
-			public ExecutableList<?> getActions(ActionQueue instance) {
+			public ExecutableList<?> getActions(ActionQueueLegacy instance) {
 				return instance.updates;
 			}
 			@Override
-			public void ensureInitialized(ActionQueue instance) {
+			public void ensureInitialized(ActionQueueLegacy instance) {
 				if ( instance.updates == null ) {
 					instance.updates = new ExecutableList<>( instance.isOrderUpdatesEnabled() );
 				}
@@ -161,11 +163,11 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 		},
 		QueuedOperationCollectionAction {
 			@Override
-			public ExecutableList<?> getActions(ActionQueue instance) {
+			public ExecutableList<?> getActions(ActionQueueLegacy instance) {
 				return instance.collectionQueuedOps;
 			}
 			@Override
-			public void ensureInitialized(ActionQueue instance) {
+			public void ensureInitialized(ActionQueueLegacy instance) {
 				if ( instance.collectionQueuedOps == null ) {
 					instance.collectionQueuedOps = new ExecutableList<>( instance.isOrderUpdatesEnabled() );
 				}
@@ -173,11 +175,11 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 		},
 		CollectionRemoveAction {
 			@Override
-			public ExecutableList<?> getActions(ActionQueue instance) {
+			public ExecutableList<?> getActions(ActionQueueLegacy instance) {
 				return instance.collectionRemovals;
 			}
 			@Override
-			public void ensureInitialized(ActionQueue instance) {
+			public void ensureInitialized(ActionQueueLegacy instance) {
 				if ( instance.collectionRemovals == null ) {
 					instance.collectionRemovals = new ExecutableList<>( instance.isOrderUpdatesEnabled() );
 				}
@@ -185,11 +187,11 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 		},
 		CollectionUpdateAction {
 			@Override
-			public ExecutableList<?> getActions(ActionQueue instance) {
+			public ExecutableList<?> getActions(ActionQueueLegacy instance) {
 				return instance.collectionUpdates;
 			}
 			@Override
-			public void ensureInitialized(ActionQueue instance) {
+			public void ensureInitialized(ActionQueueLegacy instance) {
 				if ( instance.collectionUpdates == null ) {
 					instance.collectionUpdates = new ExecutableList<>( instance.isOrderUpdatesEnabled() );
 				}
@@ -197,11 +199,11 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 		},
 		CollectionRecreateAction {
 			@Override
-			public ExecutableList<?> getActions(ActionQueue instance) {
+			public ExecutableList<?> getActions(ActionQueueLegacy instance) {
 				return instance.collectionCreations;
 			}
 			@Override
-			public void ensureInitialized(ActionQueue instance) {
+			public void ensureInitialized(ActionQueueLegacy instance) {
 				if ( instance.collectionCreations == null ) {
 					instance.collectionCreations = new ExecutableList<>( instance.isOrderUpdatesEnabled() );
 				}
@@ -209,19 +211,19 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 		},
 		EntityDeleteAction {
 			@Override
-			public ExecutableList<?> getActions(ActionQueue instance) {
+			public ExecutableList<?> getActions(ActionQueueLegacy instance) {
 				return instance.deletions;
 			}
 			@Override
-			public void ensureInitialized(ActionQueue instance) {
+			public void ensureInitialized(ActionQueueLegacy instance) {
 				if ( instance.deletions == null ) {
 					instance.deletions = new ExecutableList<>( false );
 				}
 			}
 		};
 
-		public abstract ExecutableList<?> getActions(ActionQueue instance);
-		public abstract void ensureInitialized(ActionQueue instance);
+		public abstract ExecutableList<?> getActions(ActionQueueLegacy instance);
+		public abstract void ensureInitialized(ActionQueueLegacy instance);
 	}
 
 	/**
@@ -229,7 +231,7 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 	 *
 	 * @param session The session "owning" this queue.
 	 */
-	public ActionQueue(SessionImplementor session) {
+	public ActionQueueLegacy(SessionImplementor session) {
 		this.session = session;
 		isTransactionCoordinatorShared = false;
 		transactionCompletionCallbacks = new TransactionCompletionCallbacksImpl( session );
@@ -918,13 +920,13 @@ public class ActionQueue implements TransactionCompletionCallbacks {
 	 * @throws IOException indicates a problem reading from the stream
 	 * @throws ClassNotFoundException Generally means we were unable to locate user classes.
 	 */
-	public static ActionQueue deserialize(ObjectInputStream ois, EventSource session)
+	public static ActionQueueLegacy deserialize(ObjectInputStream ois, EventSource session)
 			throws IOException, ClassNotFoundException {
 		final boolean traceEnabled = ACTION_LOGGER.isTraceEnabled();
 		if ( traceEnabled ) {
 			ACTION_LOGGER.deserializingActionQueue();
 		}
-		final var actionQueue = new ActionQueue( session );
+		final var actionQueue = new ActionQueueLegacy( session );
 		actionQueue.unresolvedInsertions = UnresolvedEntityInsertActions.deserialize( ois, session );
 		for ( var action : ORDERED_OPERATIONS ) {
 			final boolean notNull = ois.readBoolean();

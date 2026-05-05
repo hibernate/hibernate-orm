@@ -4,7 +4,6 @@
  */
 package org.hibernate.action.internal;
 
-import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -52,8 +51,19 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 			final boolean isVersionIncrementDisabled,
 			final EventSource session,
 			final boolean isDelayed) {
+		this( state, instance, persister, isVersionIncrementDisabled, session, isDelayed, isDelayed );
+	}
+
+	private EntityIdentityInsertAction(
+			final Object[] state,
+			final Object instance,
+			final EntityPersister persister,
+			final boolean isVersionIncrementDisabled,
+			final EventSource session,
+			final boolean isDelayed,
+			final boolean useDelayedIdentifier) {
 		super(
-				isDelayed ? generateDelayedPostInsertIdentifier() : null,
+				useDelayedIdentifier ? generateDelayedPostInsertIdentifier() : null,
 				state,
 				instance,
 				isVersionIncrementDisabled,
@@ -61,7 +71,19 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 				session
 		);
 		this.isDelayed = isDelayed;
-		this.delayedEntityKey = isDelayed ? generateDelayedEntityKey() : null;
+		this.delayedEntityKey = useDelayedIdentifier ? generateDelayedEntityKey() : null;
+	}
+
+	public static EntityIdentityInsertAction delayedCopy(EntityIdentityInsertAction action) {
+		return new EntityIdentityInsertAction(
+				action.getState(),
+				action.getInstance(),
+				action.getPersister(),
+				action.isVersionIncrementDisabled(),
+				action.getSession(),
+				true,
+				true
+		);
 	}
 
 	@Override
@@ -167,10 +189,10 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 		postCommitInsert( success );
 	}
 
-	protected void postInsert() {
-		if ( isDelayed ) {
-			getSession().getPersistenceContextInternal()
-					.replaceDelayedEntityIdentityInsertKeys( delayedEntityKey, generatedId );
+	public void postInsert() {
+		final var persistenceContext = getSession().getPersistenceContextInternal();
+		if ( delayedEntityKey != null && persistenceContext.containsEntity( delayedEntityKey ) ) {
+			persistenceContext.replaceDelayedEntityIdentityInsertKeys( delayedEntityKey, generatedId );
 		}
 		getEventListenerGroups().eventListenerGroup_POST_INSERT
 				.fireLazyEventOnEachListener( this::newPostInsertEvent, PostInsertEventListener::onPostInsert );
@@ -299,7 +321,7 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 		return generatedId;
 	}
 
-	protected void setGeneratedId(Object generatedId) {
+	public void setGeneratedId(Object generatedId) {
 		this.generatedId = generatedId;
 	}
 
@@ -318,7 +340,11 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 		return rowId;
 	}
 
-	protected void setEntityKey(EntityKey entityKey) {
+	public void setRowId(Object rowId) {
+		this.rowId = rowId;
+	}
+
+	public void setEntityKey(EntityKey entityKey) {
 		this.entityKey = entityKey;
 	}
 
@@ -327,11 +353,6 @@ public class EntityIdentityInsertAction extends AbstractEntityInsertAction  {
 	}
 
 	protected EntityKey generateDelayedEntityKey() {
-		if ( isDelayed ) {
-			return getSession().generateEntityKey( getDelayedId(), getPersister() );
-		}
-		else {
-			throw new AssertionFailure( "cannot request delayed entity-key for early-insert post-insert-id generation" );
-		}
+		return getSession().generateEntityKey( getDelayedId(), getPersister() );
 	}
 }

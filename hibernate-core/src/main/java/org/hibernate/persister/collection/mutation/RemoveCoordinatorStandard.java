@@ -4,10 +4,12 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import org.hibernate.action.queue.decompose.collection.CollectionMutationTarget;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationOperationGroup;
@@ -24,7 +26,7 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
  * @author Steve Ebersole
  */
 public class RemoveCoordinatorStandard implements RemoveCoordinator {
-	private final CollectionMutationTarget mutationTarget;
+	private final AbstractCollectionPersister mutationTarget;
 	private final OperationProducer operationProducer;
 	private final BasicBatchKey batchKey;
 	private final MutationExecutorService mutationExecutorService;
@@ -38,7 +40,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 	 * of timing (chicken-egg) back on the persister.
 	 */
 	public RemoveCoordinatorStandard(
-			CollectionMutationTarget mutationTarget,
+			AbstractCollectionPersister mutationTarget,
 			RowMutationOperations mutationOperations,
 			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;

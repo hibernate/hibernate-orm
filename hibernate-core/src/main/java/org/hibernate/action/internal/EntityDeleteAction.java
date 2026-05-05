@@ -7,7 +7,6 @@ package org.hibernate.action.internal;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.cache.spi.access.SoftLock;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitDeleteEventListener;
@@ -80,7 +79,7 @@ public class EntityDeleteAction extends EntityAction {
 		return state;
 	}
 
-	protected Object getNaturalIdValues() {
+	private Object getNaturalIdValues() {
 		return naturalIdValues;
 	}
 
@@ -97,7 +96,12 @@ public class EntityDeleteAction extends EntityAction {
 		return getInstance() != null;
 	}
 
+	/**
+	 * @deprecated Legacy ActionQueue artifact.  Execution in the new queue is based on
+	 * decomposition into individual SQL statements.
+	 */
 	@Override
+	@Deprecated(since = "8.0")
 	public void execute() throws HibernateException {
 		final Object id = getId();
 		final Object version = getCurrentVersion();
@@ -107,7 +111,7 @@ public class EntityDeleteAction extends EntityAction {
 
 		final boolean veto = isInstanceLoaded() && preDelete();
 
-		handleNaturalIdLocalResolutions( persister, session.getPersistenceContextInternal() );
+		handleNaturalIdLocalResolutions();
 
 		final Object cacheKey = lockCacheItem();
 
@@ -138,7 +142,9 @@ public class EntityDeleteAction extends EntityAction {
 		}
 	}
 
-	private void handleNaturalIdLocalResolutions(EntityPersister persister, PersistenceContext context) {
+	private void handleNaturalIdLocalResolutions() {
+		final var persister = getPersister();
+		final var context = getSession().getPersistenceContextInternal();
 		final var naturalIdMapping = persister.getNaturalIdMapping();
 		if ( naturalIdMapping != null ) {
 			naturalIdValues = context.getNaturalIdResolutions()
@@ -199,7 +205,7 @@ public class EntityDeleteAction extends EntityAction {
 		removeCacheItem( cacheKey );
 	}
 
-	protected boolean preDelete() {
+	private boolean preDelete() {
 		final var listenerGroup = getEventListenerGroups().eventListenerGroup_PRE_DELETE;
 		if ( listenerGroup.isEmpty() ) {
 			return false;
@@ -215,16 +221,16 @@ public class EntityDeleteAction extends EntityAction {
 		}
 	}
 
-	protected void postDelete() {
+	private void postDelete() {
 		getEventListenerGroups().eventListenerGroup_POST_DELETE
 				.fireLazyEventOnEachListener( this::newPostDeleteEvent, PostDeleteEventListener::onPostDelete );
 	}
 
-	PostDeleteEvent newPostDeleteEvent() {
+	private PostDeleteEvent newPostDeleteEvent() {
 		return new PostDeleteEvent( getInstance(), getId(), state, getPersister(), eventSource() );
 	}
 
-	protected void postCommitDelete(boolean success) {
+	private void postCommitDelete(boolean success) {
 		final var eventListeners = getEventListenerGroups().eventListenerGroup_POST_COMMIT_DELETE;
 		if ( success ) {
 			eventListeners.fireLazyEventOnEachListener( this::newPostDeleteEvent, PostDeleteEventListener::onPostDelete );
@@ -260,7 +266,7 @@ public class EntityDeleteAction extends EntityAction {
 		return false;
 	}
 
-	protected Object lockCacheItem() {
+	private Object lockCacheItem() {
 		final var persister = getPersister();
 		if ( persister.canWriteToCache() ) {
 			final var cache = persister.getCacheAccessStrategy();

@@ -18,6 +18,7 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.TRACE;
 import static org.jboss.logging.Logger.Level.WARN;
 
@@ -203,4 +204,11 @@ public interface ActionLogging extends BasicLogger {
 			id = NAMESPACE + 22
 	)
 	void batchCouldNotBeSorted(int count);
+
+	@LogMessage(level = DEBUG)
+	@Message(
+			value = "Using %s ActionQueue implementation",
+			id = NAMESPACE + 23
+	)
+	void usingActionQueue(String name);
 }

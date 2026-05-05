@@ -55,16 +55,17 @@ public final class Collections {
 			final Object ownerId = getOwnerId( collection, session, loadedPersister );
 			final var key = session.generateEntityKey( ownerId, loadedPersister.getOwnerEntityPersister() );
 			final Object owner = persistenceContext.getEntity( key );
-			if ( owner == null ) {
-				throw new AssertionFailure( "collection owner not associated with session: " + loadedPersister.getRole() );
-			}
-			final var entityEntry = persistenceContext.getEntry( owner );
-			//only collections belonging to deleted entities are allowed to be dereferenced in the case of orphan delete
-			if ( entityEntry != null && !entityEntry.getStatus().isDeletedOrGone() ) {
-				throw new HibernateException(
-						"A collection with orphan deletion was no longer referenced by the owning entity instance: "
-						+ loadedPersister.getRole()
-				);
+			// If owner is null, the owning entity was deleted (removed from persistence context),
+			// which is allowed for collections with orphan delete
+			if ( owner != null ) {
+				final var entityEntry = persistenceContext.getEntry( owner );
+				//only collections belonging to deleted entities are allowed to be dereferenced in the case of orphan delete
+				if ( entityEntry != null && !entityEntry.getStatus().isDeletedOrGone() ) {
+					throw new HibernateException(
+							"A collection with orphan deletion was no longer referenced by the owning entity instance: "
+							+ loadedPersister.getRole()
+					);
+				}
 			}
 		}
 
@@ -237,6 +238,7 @@ public final class Collections {
 
 		final var loadedPersister = collectionEntry.getLoadedPersister();
 		final var currentPersister = collectionEntry.getCurrentPersister();
+
 		if ( loadedPersister != null || currentPersister != null ) {
 			// it is or was referenced _somewhere_
 

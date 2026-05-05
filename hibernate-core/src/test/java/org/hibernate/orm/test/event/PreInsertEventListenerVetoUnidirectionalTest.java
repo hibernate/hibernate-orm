@@ -10,14 +10,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
-
 import org.hibernate.action.internal.EntityActionVetoException;
 import org.hibernate.event.spi.EventType;
-
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -28,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * @author Chris Cranford
  */
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 @JiraKey(value = "HHH-11721")
 @DomainModel(
 		annotatedClasses = {

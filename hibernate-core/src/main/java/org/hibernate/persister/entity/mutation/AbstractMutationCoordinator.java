@@ -27,7 +27,7 @@ import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.ValuesAnalysis;
 import org.hibernate.sql.model.ast.MutationGroup;
 import org.hibernate.sql.model.ast.TableMutation;
-import org.hibernate.sql.model.ast.builder.ColumnValuesTableMutationBuilder;
+import org.hibernate.sql.model.ast.builder.AssigningTableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
 
@@ -190,14 +190,14 @@ public abstract class AbstractMutationCoordinator {
 		final var columnInclusions = generator.getColumnInclusions( dialect, eventType );
 		attributeMapping.forEachSelectable( (j, mapping) -> {
 			if ( columnInclusions == null || columnInclusions[j] ) {
-				final ColumnValuesTableMutationBuilder<?> tableUpdateBuilder =
+				final AssigningTableMutationBuilder<?> tableUpdateBuilder =
 						mutationGroupBuilder.findTableDetailsBuilder(
 								entityPersister.physicalTableNameForMutation( mapping ) );
 				final String columnValue =
 						columnValues != null && columnValues[j] != null
 								? columnValues[j]
 								: "?";
-				tableUpdateBuilder.addValueColumn( columnValue, mapping );
+				tableUpdateBuilder.addColumnAssignment( mapping, columnValue );
 			}
 		} );
 	}
@@ -338,13 +338,14 @@ public abstract class AbstractMutationCoordinator {
 			EntityTableMapping identifierTableMapping,
 			EntityPersister persister,
 			String tableName) {
-		return new EntityTableMapping(
+		return new EntityTableMappingImpl(
 				tableName,
 				identifierTableMapping.getRelativePosition(),
 				identifierTableMapping.getKeyMapping(),
 				identifierTableMapping.isOptional(),
 				identifierTableMapping.isInverse(),
 				identifierTableMapping.isIdentifierTable(),
+				false,
 				identifierTableMapping.getAttributeIndexes(),
 				identifierTableMapping.getInsertExpectation(),
 				identifierTableMapping.getInsertCustomSql(),

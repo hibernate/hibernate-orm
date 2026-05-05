@@ -202,6 +202,7 @@ public abstract class AbstractFlushingEventListener {
 	 * <li> search out any reachable collections
 	 * </ol>
 	 */
+	@SuppressWarnings("removal")
 	private int flushEntities(final FlushEvent event, final PersistenceContext persistenceContext)
 			throws HibernateException {
 		EVENT_LISTENER_LOGGER.flushingEntitiesAndProcessingReferencedCollections();
@@ -260,6 +261,7 @@ public abstract class AbstractFlushingEventListener {
 	 * Process any unreferenced collections and then inspect all known collections,
 	 * scheduling creates/removes/updates.
 	 */
+	@SuppressWarnings("removal")
 	private int flushCollections(final EventSource session, final PersistenceContext persistenceContext)
 			throws HibernateException {
 		EVENT_LISTENER_LOGGER.processingUnreferencedCollections();
@@ -275,6 +277,7 @@ public abstract class AbstractFlushingEventListener {
 				(collection, collectionEntry) -> {
 					if ( collectionEntry.isDorecreate() ) {
 						final var currentKey = collectionEntry.getCurrentKey();
+						EVENT_LISTENER_LOGGER.debugf( "Creating CollectionRecreateAction for role=%s, key=%s", collectionEntry.getCurrentPersister().getRole(), currentKey );
 						interceptor.onCollectionRecreate( collection, currentKey );
 						actionQueue.addAction(
 								new CollectionRecreateAction(

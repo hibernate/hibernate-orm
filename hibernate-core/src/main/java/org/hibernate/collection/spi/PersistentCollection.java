@@ -328,6 +328,66 @@ public interface PersistentCollection<E> extends LazyInitializable, InstanceIden
 	boolean hasDeletes(CollectionPersister persister);
 
 	/**
+	 * Get entities (elements) that were present in the snapshot but are no longer in the current collection.
+	 * Used by decomposers to plan DELETE operations for join table rows.
+	 * <p>
+	 * Unlike {@link #getDeletes(CollectionPersister, boolean)}, this method tracks actual entity removals
+	 * rather than positional changes, making it suitable for join table collections where we need to
+	 * delete rows based on entity identity, not position.
+	 *
+	 * @param persister The collection persister
+	 *
+	 * @return An iterator over entities removed from the collection
+	 *
+	 * @since 8
+	 */
+	default Iterator<?> getRemovedEntities(CollectionPersister persister) {
+		// Default implementation delegates to existing getDeletes for backward compatibility
+		return getDeletes(persister, !persister.hasIndex());
+	}
+
+	/**
+	 * Get entities (elements) that are present in the current collection but were not in the snapshot.
+	 * Used by decomposers to plan INSERT operations for join table rows.
+	 * <p>
+	 * This method tracks actual entity additions rather than positional changes, making it suitable
+	 * for join table collections where we need to insert rows based on entity identity, not position.
+	 *
+	 * @param persister The collection persister
+	 *
+	 * @return An iterator over entities added to the collection
+	 *
+	 * @since 8
+	 */
+	default Iterator<?> getAddedEntities(CollectionPersister persister) {
+		// Default implementation returns empty - subclasses should override
+		return java.util.Collections.emptyIterator();
+	}
+
+	/**
+	 * Computes the complete set of changes between the collection's snapshot state
+	 * and its current state. This provides a holistic view of all changes (removals,
+	 * additions, position shifts, and value changes) in a single operation.
+	 * <p>
+	 * This method is more efficient than multiple separate scans and provides better
+	 * clarity by computing all changes at once. It uses O(N+M) time complexity with
+	 * hash-based lookups instead of the O(N²) complexity of repeated linear searches.
+	 * <p>
+	 * Only applicable to indexed collections (lists). Other collection types should
+	 * return {@code null} or an empty change set.
+	 *
+	 * @param persister The collection persister
+	 *
+	 * @return The complete change set, or {@code null} if not applicable to this collection type
+	 *
+	 * @since 8
+	 */
+	default CollectionChangeSet getChangeSet(CollectionPersister persister) {
+		// Default implementation returns null - only indexed collections override
+		return null;
+	}
+
+	/**
 	 * Is this the wrapper for the given collection instance?
 	 *
 	 * @param collection The collection to check whether this is wrapping it

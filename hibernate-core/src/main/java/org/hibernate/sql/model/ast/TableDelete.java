@@ -7,7 +7,7 @@ package org.hibernate.sql.model.ast;
 import org.hibernate.sql.model.jdbc.JdbcDeleteMutation;
 
 /**
- * Models an update to a model (entity or collection) table,
+ * Models an DELETE to a model (entity or collection) table,
  * triggered from flush
  *
  * @author Steve Ebersole

@@ -10,8 +10,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Audited;
+import org.hibernate.annotations.ChangesetEntity;
 import org.hibernate.audit.AuditLogFactory;
-import org.hibernate.annotations.RevisionEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.AuditedTest;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -23,29 +23,29 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
- * Tests that {@link RevisionEntity @RevisionEntity} auto-detection
- * works without an explicit {@code hibernate.temporal.transaction_id_supplier}
+ * Tests that {@link ChangesetEntity @ChangesetEntity} auto-detection
+ * works without an explicit {@code hibernate.temporal.changeset_id_supplier}
  * setting.
  */
 @AuditedTest
 @SessionFactory
 @DomainModel(annotatedClasses = {
-		RevisionEntityAnnotationTest.Book.class,
-		RevisionEntityAnnotationTest.MyRevisionInfo.class
+		ChangesetEntityAnnotationTest.Book.class,
+		ChangesetEntityAnnotationTest.MyRevisionInfo.class
 })
-class RevisionEntityAnnotationTest {
+class ChangesetEntityAnnotationTest {
 
-	@RevisionEntity
+	@ChangesetEntity
 	@Entity(name = "MyRevisionInfo")
 	@Table(name = "REVINFO")
 	static class MyRevisionInfo {
 		@Id
 		@GeneratedValue
-		@RevisionEntity.TransactionId
+		@ChangesetEntity.ChangesetId
 		@Column(name = "REV")
 		int id;
 
-		@RevisionEntity.Timestamp
+		@ChangesetEntity.Timestamp
 		@Column(name = "REVTSTMP")
 		long timestamp;
 	}
@@ -59,7 +59,7 @@ class RevisionEntityAnnotationTest {
 	}
 
 	@Test
-	void testAutoDetectedRevisionEntity(SessionFactoryScope scope) {
+	void testAutoDetectedChangesetEntity(SessionFactoryScope scope) {
 		// Create
 		scope.getSessionFactory().inTransaction( session -> {
 			final var book = new Book();
@@ -80,9 +80,9 @@ class RevisionEntityAnnotationTest {
 			session.remove( book );
 		} );
 
-		// Verify revision entity was auto-configured
+		// Verify changeset entity was auto-configured
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
-			final var revisions = auditLog.getRevisions( Book.class, 1L );
+			final var revisions = auditLog.getChangesets( Book.class, 1L );
 			assertEquals( 3, revisions.size() );
 
 			final int rev1 = (int) revisions.get( 0 );
@@ -91,21 +91,21 @@ class RevisionEntityAnnotationTest {
 
 			// Read at each revision
 			try (var s = scope.getSessionFactory().withOptions()
-					.atTransaction( rev1 ).open()) {
+					.atChangeset( rev1 ).open()) {
 				final var book = s.find( Book.class, 1L );
 				assertNotNull( book );
 				assertEquals( "Auto-detected", book.title );
 			}
 
 			try (var s = scope.getSessionFactory().withOptions()
-					.atTransaction( rev2 ).open()) {
+					.atChangeset( rev2 ).open()) {
 				final var book = s.find( Book.class, 1L );
 				assertNotNull( book );
 				assertEquals( "Updated", book.title );
 			}
 
 			try (var s = scope.getSessionFactory().withOptions()
-					.atTransaction( rev3 ).open()) {
+					.atChangeset( rev3 ).open()) {
 				final var book = s.find( Book.class, 1L );
 				assertNull( book );
 			}
@@ -113,7 +113,7 @@ class RevisionEntityAnnotationTest {
 	}
 
 	@Test
-	void testGetHistoryWithAutoDetectedRevisionEntity(SessionFactoryScope scope) {
+	void testGetHistoryWithAutoDetectedChangesetEntity(SessionFactoryScope scope) {
 		scope.getSessionFactory().inTransaction( session -> {
 			final var book = new Book();
 			book.id = 2L;
@@ -129,7 +129,7 @@ class RevisionEntityAnnotationTest {
 			final var entry = history.get( 0 );
 			assertNotNull( entry.entity() );
 			assertEquals( "History Book", entry.entity().title );
-			assertNotNull( entry.revision() );
+			assertNotNull( entry.changeset() );
 		}
 	}
 }

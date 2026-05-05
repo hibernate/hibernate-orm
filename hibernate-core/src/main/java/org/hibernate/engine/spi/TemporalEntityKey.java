@@ -10,9 +10,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * An {@link EntityKey} for a temporal (historical) snapshot of an entity,
- * loaded from an audit table at a specific transaction identifier.
+ * loaded from an audit table at a specific changeset identifier.
  * <p>
- * The transaction identifier is included in {@code equals()}/{@code hashCode()}
+ * The changeset identifier is included in {@code equals()}/{@code hashCode()}
  * so that the persistence context naturally isolates entities at different
  * points in time. Entities with a temporal key are always read-only.
  *
@@ -21,23 +21,23 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  * @since 7.4
  */
 public final class TemporalEntityKey extends EntityKey {
-	private final Object txId;
+	private final Object changesetId;
 
 	/**
 	 * Construct a unique identifier for a temporal snapshot of an entity.
 	 *
 	 * @param id The entity id
 	 * @param persister The entity persister
-	 * @param txId The audit transaction identifier (must not be null)
+	 * @param changesetId The changeset identifier (must not be null)
 	 */
-	public TemporalEntityKey(@Nullable Object id, EntityPersister persister, Object txId) {
-		super( id, persister, txId.hashCode() );
-		this.txId = txId;
+	public TemporalEntityKey(@Nullable Object id, EntityPersister persister, Object changesetId) {
+		super( id, persister, changesetId.hashCode() );
+		this.changesetId = changesetId;
 	}
 
 	@Override
-	public Object getTransactionId() {
-		return txId;
+	public Object getChangesetId() {
+		return changesetId;
 	}
 
 	@Override
@@ -47,6 +47,6 @@ public final class TemporalEntityKey extends EntityKey {
 
 	@Override
 	public String toString() {
-		return super.toString() + "@tx" + txId;
+		return super.toString() + "@" + changesetId;
 	}
 }

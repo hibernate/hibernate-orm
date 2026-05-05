@@ -15,7 +15,7 @@ import jakarta.persistence.IdClass;
 import org.hibernate.annotations.Audited;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.AuditedTest;
@@ -37,14 +37,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 		AuditCompositeIdTest.IdClassEntity.class,
 		AuditCompositeIdTest.MultiIdEntity.class
 })
-@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TRANSACTION_ID_SUPPLIER,
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditCompositeIdTest$TxIdSupplier"))
 class AuditCompositeIdTest {
 	private static int currentTxId;
 
-	public static class TxIdSupplier implements TransactionIdentifierSupplier<Integer> {
+	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
 		@Override
-		public Integer generateTransactionIdentifier(SharedSessionContract session) {
+		public Integer generateIdentifier(SharedSessionContract session) {
 			return ++currentTxId;
 		}
 
@@ -65,13 +65,13 @@ class AuditCompositeIdTest {
 		scope.inTransaction( session ->
 				session.find( EmbeddedIdEntity.class, key ).data = "updated" );
 
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( 1 ).openSession()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( 1 ).openSession()) {
 			var e = s.find( EmbeddedIdEntity.class, key );
 			assertThat( e ).isNotNull();
 			assertThat( e.data ).isEqualTo( "initial" );
 		}
 
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( 2 ).openSession()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( 2 ).openSession()) {
 			var e = s.find( EmbeddedIdEntity.class, key );
 			assertThat( e ).isNotNull();
 			assertThat( e.data ).isEqualTo( "updated" );
@@ -94,13 +94,13 @@ class AuditCompositeIdTest {
 		scope.inTransaction( session ->
 				session.find( IdClassEntity.class, key ).data = "updated" );
 
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( 101 ).openSession()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( 101 ).openSession()) {
 			var e = s.find( IdClassEntity.class, key );
 			assertThat( e ).isNotNull();
 			assertThat( e.data ).isEqualTo( "initial" );
 		}
 
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( 102 ).openSession()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( 102 ).openSession()) {
 			var e = s.find( IdClassEntity.class, key );
 			assertThat( e ).isNotNull();
 			assertThat( e.data ).isEqualTo( "updated" );
@@ -124,7 +124,7 @@ class AuditCompositeIdTest {
 								"from MultiIdEntity where pk1 = 10 and pk2 = 20", MultiIdEntity.class )
 						.getSingleResult().data = "updated" );
 
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( 201 ).openSession()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( 201 ).openSession()) {
 			var e = s.createSelectionQuery(
 							"from MultiIdEntity where pk1 = 10 and pk2 = 20", MultiIdEntity.class )
 					.getSingleResultOrNull();
@@ -132,7 +132,7 @@ class AuditCompositeIdTest {
 			assertThat( e.data ).isEqualTo( "initial" );
 		}
 
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( 202 ).openSession()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( 202 ).openSession()) {
 			var e = s.createSelectionQuery(
 							"from MultiIdEntity where pk1 = 10 and pk2 = 20", MultiIdEntity.class )
 					.getSingleResultOrNull();

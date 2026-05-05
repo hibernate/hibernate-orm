@@ -220,13 +220,13 @@ public interface SharedSessionContractImplementor
 	CacheTransactionSynchronization getCacheTransactionSynchronization();
 
 	/**
-	 * A transaction id representing the beginning of the current transaction,
+	 * The changeset id associated with the current unit of work,
 	 * for use with {@linkplain org.hibernate.annotations.Temporal temporal}
 	 * effectivity columns and with
-	 * {@linkplain org.hibernate.annotations.Audited.Table#transactionIdColumn audit log
-	 * transaction id columns}.
+	 * {@linkplain org.hibernate.annotations.Audited.Table#changesetIdColumn
+	 * audit log changeset id columns}.
 	 */
-	Object getCurrentTransactionIdentifier();
+	Object getCurrentChangesetIdentifier();
 
 	/**
 	 * Does this session have an active Hibernate transaction, or is it

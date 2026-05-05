@@ -13,7 +13,7 @@ import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.audit.ModificationType;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.AuditedTest;
@@ -30,14 +30,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @AuditedTest
 @SessionFactory
 @DomainModel(annotatedClasses = AuditColumnFunctionTest.Book.class)
-@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TRANSACTION_ID_SUPPLIER,
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditColumnFunctionTest$TxIdSupplier"))
 class AuditColumnFunctionTest {
 	private static int currentTxId;
 
-	public static class TxIdSupplier implements TransactionIdentifierSupplier<Integer> {
+	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
 		@Override
-		public Integer generateTransactionIdentifier(SharedSessionContract session) {
+		public Integer generateIdentifier(SharedSessionContract session) {
 			return ++currentTxId;
 		}
 
@@ -70,12 +70,12 @@ class AuditColumnFunctionTest {
 		// Query all revisions using the HQL functions with scalar projections
 		// (avoids entity identity caching issues with duplicate PKs)
 		try (var s = scope.getSessionFactory().withStatelessOptions()
-				.atTransaction( AuditLog.ALL_REVISIONS ).openStatelessSession()) {
+				.atChangeset( AuditLog.ALL_CHANGESETS ).openStatelessSession()) {
 
 			List<Object[]> results = s.createSelectionQuery(
-					"select e.title, transactionId(e), modificationType(e) " +
+					"select e.title, changesetId(e), modificationType(e) " +
 					"from Book e where e.id = :id " +
-					"order by transactionId(e)",
+					"order by changesetId(e)",
 					Object[].class
 			).setParameter( "id", 1L ).getResultList();
 
@@ -95,10 +95,10 @@ class AuditColumnFunctionTest {
 			assertEquals( 3, results.get( 2 )[1] );
 			assertEquals( ModificationType.DEL, results.get( 2 )[2] );
 
-			// Test transactionId() in WHERE clause
+			// Test changesetId() in WHERE clause
 			List<String> titles = s.createSelectionQuery(
 					"select e.title from Book e " +
-					"where e.id = :id and transactionId(e) = :txId",
+					"where e.id = :id and changesetId(e) = :txId",
 					String.class
 			).setParameter( "id", 1L ).setParameter( "txId", 2 ).getResultList();
 
@@ -107,7 +107,7 @@ class AuditColumnFunctionTest {
 
 			// Test plain entity select: each row should be a distinct snapshot
 			List<Book> allBooks = s.createSelectionQuery(
-					"from Book e where e.id = :id order by transactionId(e)",
+					"from Book e where e.id = :id order by changesetId(e)",
 					Book.class
 			).setParameter( "id", 1L ).getResultList();
 			assertEquals( 3, allBooks.size() );

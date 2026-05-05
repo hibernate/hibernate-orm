@@ -6,21 +6,24 @@ package org.hibernate.audit;
 
 
 /**
- * A tuple representing an entity at a specific revision in
+ * A tuple representing an entity at a specific changeset in
  * the audit history.
  * <p>
- * The {@link #revision} field is:
+ * The {@link #changeset} field holds:
  * <ul>
- *   <li>the revision entity instance (e.g. {@link DefaultRevisionEntity}), if one is configured
- *   <li>the plain transaction identifier (e.g. {@code Instant}, {@code Integer}) otherwise</li>
+ *   <li>the changeset entity instance
+ *       (e.g. {@link DefaultChangesetEntity}), if one is
+ *       configured, or
+ *   <li>the plain changeset identifier
+ *       (e.g. {@code Instant}, {@code Integer}) otherwise.
  * </ul>
  *
- * @param entity the entity snapshot at this revision
- * @param revision the revision entity (if configured) or transaction identifier
+ * @param entity the entity snapshot after application of the changeset
+ * @param changeset the changeset entity (if configured) or changeset identifier
  * @param modificationType the type of modification (ADD/MOD/DEL)
  * @param <T> the entity type
  * @author Marco Belladelli
  * @since 7.4
  */
-public record AuditEntry<T>(T entity, Object revision, ModificationType modificationType) {
+public record AuditEntry<T>(T entity, Object changeset, ModificationType modificationType) {
 }

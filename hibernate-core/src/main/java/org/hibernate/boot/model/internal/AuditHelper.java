@@ -15,9 +15,9 @@ import java.util.Set;
 
 import org.hibernate.MappingException;
 import org.hibernate.annotations.Audited;
-import org.hibernate.annotations.RevisionEntity;
-import org.hibernate.audit.RevisionListener;
-import org.hibernate.audit.spi.RevisionEntitySupplier;
+import org.hibernate.annotations.ChangesetEntity;
+import org.hibernate.audit.ChangesetListener;
+import org.hibernate.audit.spi.ChangesetEntitySupplier;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
@@ -44,10 +44,13 @@ import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.persister.state.internal.AuditStateManagement;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.temporal.spi.TransactionIdentifierService;
+import org.hibernate.temporal.spi.ChangesetCoordinator;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.annotations.Audited.Table.DEFAULT_CHANGESET_ID_COLUMN_NAME;
+import static org.hibernate.annotations.Audited.Table.DEFAULT_INVALIDATING_CHANGESET_ID_COLUMN_NAME;
+import static org.hibernate.annotations.Audited.Table.DEFAULT_MODIFICATION_TYPE_COLUMN_NAME;
 import static org.hibernate.internal.util.StringHelper.isBlank;
 import static org.hibernate.internal.util.StringHelper.nullIfBlank;
 
@@ -55,10 +58,10 @@ import static org.hibernate.internal.util.StringHelper.nullIfBlank;
  * Helper for building audit log tables in the boot model.
  */
 public final class AuditHelper {
-	public static final String TRANSACTION_ID = "transactionId";
+	public static final String CHANGESET_ID = "changesetId";
 	public static final String MODIFICATION_TYPE = "modificationType";
-	public static final String TRANSACTION_END_ID = "transactionEndId";
-	public static final String TRANSACTION_END_TIMESTAMP = "transactionEndTimestamp";
+	public static final String INVALIDATING_CHANGESET_ID = "invalidatingChangesetId";
+	public static final String INVALIDATION_TIMESTAMP = "invalidationTimestamp";
 
 	private static final String DEFAULT_TABLE_SUFFIX = "_AUD";
 
@@ -91,21 +94,21 @@ public final class AuditHelper {
 		final String explicitAuditTableName;
 		final String auditSchema;
 		final String auditCatalog;
-		final String txIdColumnName;
+		final String csIdColumnName;
 		final String modTypeColumnName;
 		if ( auditTable != null ) {
 			explicitAuditTableName = auditTable.name();
 			auditSchema = auditTable.schema();
 			auditCatalog = auditTable.catalog();
-			txIdColumnName = auditTable.transactionIdColumn();
+			csIdColumnName = auditTable.changesetIdColumn();
 			modTypeColumnName = auditTable.modificationTypeColumn();
 		}
 		else {
 			explicitAuditTableName = "";
 			auditSchema = "";
 			auditCatalog = "";
-			txIdColumnName = Audited.Table.DEFAULT_TRANSACTION_ID;
-			modTypeColumnName = Audited.Table.DEFAULT_MODIFICATION_TYPE;
+			csIdColumnName = DEFAULT_CHANGESET_ID_COLUMN_NAME;
+			modTypeColumnName = DEFAULT_MODIFICATION_TYPE_COLUMN_NAME;
 		}
 		final boolean hasExplicitAuditTableName = !isBlank( explicitAuditTableName );
 		final var auditLogTable = collector.addTable(
@@ -125,7 +128,7 @@ public final class AuditHelper {
 
 		// Defer audit column creation to a second pass so the transaction
 		// ID type is resolved after all entities are bound, including any
-		// @RevisionEntity contributed by mapping contributors
+		// @ChangesetEntity contributed by mapping contributors
 		collector.addSecondPass( (OptionalDeterminationSecondPass) ignored -> {
 			// Auto-exclude @Version property from audit tables
 			if ( auditable instanceof RootClass rootClass && rootClass.isVersioned() ) {
@@ -137,24 +140,24 @@ public final class AuditHelper {
 					? resolveExcludedColumns( rootClass )
 					: Set.<String>of();
 			copyTableColumns( table, auditLogTable, excludedColumns );
-			final var transactionIdColumn =
-					createAuditColumn( txIdColumnName,
-							getTransactionIdType( context ), auditLogTable, context );
+			final var changesetIdColumn =
+					createAuditColumn( csIdColumnName,
+							getChangesetIdType( context ), auditLogTable, context );
 			final var modificationTypeColumn =
 					createAuditColumn( modTypeColumnName,
 							Byte.class, auditLogTable, context );
-			auditLogTable.addColumn( transactionIdColumn );
+			auditLogTable.addColumn( changesetIdColumn );
 			auditLogTable.addColumn( modificationTypeColumn );
 			if ( auditable instanceof Collection ) {
 				// Collection audit PK: (REV, all_source_cols)
-				createAuditPrimaryKey( auditLogTable, transactionIdColumn, table.getColumns() );
+				createAuditPrimaryKey( auditLogTable, changesetIdColumn, table.getColumns() );
 			}
 			else {
 				// Entity audit PK: (REV, entity_id_cols) from source table's PK
-				createAuditPrimaryKey( auditLogTable, transactionIdColumn, table.getPrimaryKey().getColumns() );
+				createAuditPrimaryKey( auditLogTable, changesetIdColumn, table.getPrimaryKey().getColumns() );
 			}
-			enableAudit( auditable, auditLogTable, transactionIdColumn, modificationTypeColumn );
-			createRevisionForeignKey( auditLogTable, transactionIdColumn, context );
+			enableAudit( auditable, auditLogTable, changesetIdColumn, modificationTypeColumn );
+			createChangesetForeignKey( auditLogTable, changesetIdColumn, context );
 			addTransactionEndColumns( auditTable, auditable, auditLogTable, context );
 		} );
 	}
@@ -164,16 +167,16 @@ public final class AuditHelper {
 			RootClass rootClass,
 			ClassDetails classDetails,
 			MetadataBuildingContext context) {
-		final String txIdColumnName;
+		final String csIdColumnName;
 		final String auditSchema;
 		final String auditCatalog;
 		if ( auditTable != null ) {
-			txIdColumnName = auditTable.transactionIdColumn();
+			csIdColumnName = auditTable.changesetIdColumn();
 			auditSchema = auditTable.schema();
 			auditCatalog = auditTable.catalog();
 		}
 		else {
-			txIdColumnName = Audited.Table.DEFAULT_TRANSACTION_ID;
+			csIdColumnName = DEFAULT_CHANGESET_ID_COLUMN_NAME;
 			auditSchema = null;
 			auditCatalog = null;
 		}
@@ -189,7 +192,7 @@ public final class AuditHelper {
 				final String customName = secondaryAuditTableNames.get( sourceTable.getName() );
 				final var secondaryAuditTable = createAuditTable(
 						sourceTable,
-						txIdColumnName,
+						csIdColumnName,
 						resolveExcludedColumns( join.getProperties() ),
 						nullIfBlank( auditSchema ),
 						nullIfBlank( auditCatalog ),
@@ -199,7 +202,7 @@ public final class AuditHelper {
 				createAuditTableForeignKey( secondaryAuditTable, rootClass.getEntityName(), rootClass.getAuxiliaryTable() );
 				// Secondary tables only get tx-id (no mod type, no REVEND)
 				join.setAuxiliaryTable( secondaryAuditTable );
-				join.addAuxiliaryColumn( TRANSACTION_ID, secondaryAuditTable.getPrimaryKey().getColumn( 0 ) );
+				join.addAuxiliaryColumn( CHANGESET_ID, secondaryAuditTable.getPrimaryKey().getColumn( 0 ) );
 			}
 		} );
 	}
@@ -208,22 +211,22 @@ public final class AuditHelper {
 			Audited.@Nullable Table auditTable,
 			RootClass rootClass,
 			MetadataBuildingContext context) {
-		final String txIdColumnName;
+		final String csIdColumnName;
 		final String modTypeColumnName;
 		if ( auditTable != null ) {
-			txIdColumnName = auditTable.transactionIdColumn();
+			csIdColumnName = auditTable.changesetIdColumn();
 			modTypeColumnName = auditTable.modificationTypeColumn();
 		}
 		else {
-			txIdColumnName = Audited.Table.DEFAULT_TRANSACTION_ID;
-			modTypeColumnName = Audited.Table.DEFAULT_MODIFICATION_TYPE;
+			csIdColumnName = DEFAULT_CHANGESET_ID_COLUMN_NAME;
+			modTypeColumnName = DEFAULT_MODIFICATION_TYPE_COLUMN_NAME;
 		}
 		// Defer to second pass since subclasses haven't been added to rootClass yet
 		context.getMetadataCollector().addSecondPass( (OptionalDeterminationSecondPass) ignored ->
 				bindSubclassAuditTables(
 						rootClass,
 						auditTable,
-						txIdColumnName,
+						csIdColumnName,
 						modTypeColumnName,
 						context
 				)
@@ -237,7 +240,7 @@ public final class AuditHelper {
 	private static void bindSubclassAuditTables(
 			PersistentClass parent,
 			Audited.@Nullable Table auditTable,
-			String txIdColumnName,
+			String csIdColumnName,
 			String modTypeColumnName,
 			MetadataBuildingContext context) {
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
@@ -250,14 +253,14 @@ public final class AuditHelper {
 				final var effective = subclassTable != null ? subclassTable : auditTable;
 				final var subclassAuditTable = createAuditTable(
 						subclass.getTable(),
-						txIdColumnName,
+						csIdColumnName,
 						resolveExcludedColumns( subclass.getProperties() ),
 						effective != null ? nullIfBlank( effective.schema() ) : null,
 						effective != null ? nullIfBlank( effective.catalog() ) : null,
 						effective != null ? nullIfBlank( effective.name() ) : null,
 						context
 				);
-				subclass.addAuxiliaryColumn( TRANSACTION_ID, subclassAuditTable.getPrimaryKey().getColumn( 0 ) );
+				subclass.addAuxiliaryColumn( CHANGESET_ID, subclassAuditTable.getPrimaryKey().getColumn( 0 ) );
 				if ( subclass instanceof UnionSubclass ) {
 					// TABLE_PER_CLASS: each table is self-contained, needs its own REVTYPE and REVEND
 					final var modificationTypeColumn =
@@ -277,16 +280,16 @@ public final class AuditHelper {
 				}
 				subclass.setAuxiliaryTable( subclassAuditTable );
 				// Recurse into this subclass's children
-				bindSubclassAuditTables( subclass, auditTable, txIdColumnName, modTypeColumnName, context );
+				bindSubclassAuditTables( subclass, auditTable, csIdColumnName, modTypeColumnName, context );
 			}
 		}
 	}
 
 	static void enableAudit(
 			Stateful model, Table auditTable,
-			Column transactionIdColumn, Column modificationTypeColumn) {
+			Column changesetIdColumn, Column modificationTypeColumn) {
 		model.setAuxiliaryTable( auditTable );
-		model.addAuxiliaryColumn( TRANSACTION_ID, transactionIdColumn );
+		model.addAuxiliaryColumn( CHANGESET_ID, changesetIdColumn );
 		model.addAuxiliaryColumn( MODIFICATION_TYPE, modificationTypeColumn );
 		model.setStateManagementType( AuditStateManagement.class );
 	}
@@ -321,19 +324,19 @@ public final class AuditHelper {
 
 		final String auditSchema;
 		final String auditCatalog;
-		final String txIdColumnName;
+		final String csIdColumnName;
 		final String modTypeColumnName;
 		if ( auditTable != null ) {
 			auditSchema = auditTable.schema();
 			auditCatalog = auditTable.catalog();
-			txIdColumnName = auditTable.transactionIdColumn();
+			csIdColumnName = auditTable.changesetIdColumn();
 			modTypeColumnName = auditTable.modificationTypeColumn();
 		}
 		else {
 			auditSchema = "";
 			auditCatalog = "";
-			txIdColumnName = Audited.Table.DEFAULT_TRANSACTION_ID;
-			modTypeColumnName = Audited.Table.DEFAULT_MODIFICATION_TYPE;
+			csIdColumnName = DEFAULT_CHANGESET_ID_COLUMN_NAME;
+			modTypeColumnName = DEFAULT_MODIFICATION_TYPE_COLUMN_NAME;
 		}
 		final String schema = collectionAuditTable != null && !isBlank( collectionAuditTable.schema() )
 				? collectionAuditTable.schema()
@@ -369,9 +372,9 @@ public final class AuditHelper {
 				keyColumns.add( copy );
 			}
 			// Audit columns
-			final var transactionIdColumn = createAuditColumn(
-					txIdColumnName,
-					getTransactionIdType( context ),
+			final var changesetIdColumn = createAuditColumn(
+					csIdColumnName,
+					getChangesetIdType( context ),
 					middleAuditTable,
 					context
 			);
@@ -381,32 +384,32 @@ public final class AuditHelper {
 					middleAuditTable,
 					context
 			);
-			middleAuditTable.addColumn( transactionIdColumn );
+			middleAuditTable.addColumn( changesetIdColumn );
 			middleAuditTable.addColumn( modificationTypeColumn );
-			createAuditPrimaryKey( middleAuditTable, transactionIdColumn, keyColumns );
-			createRevisionForeignKey( middleAuditTable, transactionIdColumn, context );
-			enableAudit( collection, middleAuditTable, transactionIdColumn, modificationTypeColumn );
+			createAuditPrimaryKey( middleAuditTable, changesetIdColumn, keyColumns );
+			createChangesetForeignKey( middleAuditTable, changesetIdColumn, context );
+			enableAudit( collection, middleAuditTable, changesetIdColumn, modificationTypeColumn );
 			addTransactionEndColumns( auditTable, collection, middleAuditTable, context );
 		} );
 	}
 
-	static void bindRevisionEntity(
-			RevisionEntity revisionEntity,
+	static void bindChangesetEntity(
+			ChangesetEntity changesetEntity,
 			RootClass rootClass,
 			ClassDetails classDetails,
 			MetadataBuildingContext context) {
 		final var modelsContext = context.getBootstrapContext().getModelsContext();
 
-		// todo : @RevisionEntity currently requires @Entity;
-		//  could we automatically imply @Entity for @RevisionEntity classes
+		// todo : @ChangesetEntity currently requires @Entity;
+		//  could we automatically imply @Entity for @ChangesetEntity classes
 		//  so users don't need both annotations?
 
 		// The entity must not be audited
 		if ( classDetails.hasAnnotationUsage( Audited.class, modelsContext ) ) {
-			throw new MappingException( "The @RevisionEntity entity cannot be audited" );
+			throw new MappingException( "The @ChangesetEntity entity cannot be audited" );
 		}
 
-		// Scan class members (including supertypes) for @TransactionId,
+		// Scan class members (including supertypes) for @ChangesetId,
 		// @Timestamp, and @ModifiedEntities. We need the names
 		// and type eagerly to configure the supplier before audit table
 		// second passes create the REV column.
@@ -418,19 +421,19 @@ public final class AuditHelper {
 				revNumberMember = checkAnnotation(
 						member,
 						revNumberMember,
-						RevisionEntity.TransactionId.class,
+						ChangesetEntity.ChangesetId.class,
 						classDetails
 				);
 				revTimestampMember = checkAnnotation(
 						member,
 						revTimestampMember,
-						RevisionEntity.Timestamp.class,
+						ChangesetEntity.Timestamp.class,
 						classDetails
 				);
 				modifiedEntityNamesMember = checkAnnotation(
 						member,
 						modifiedEntityNamesMember,
-						RevisionEntity.ModifiedEntities.class,
+						ChangesetEntity.ModifiedEntities.class,
 						classDetails
 				);
 			}
@@ -438,19 +441,19 @@ public final class AuditHelper {
 				revNumberMember = checkAnnotation(
 						member,
 						revNumberMember,
-						RevisionEntity.TransactionId.class,
+						ChangesetEntity.ChangesetId.class,
 						classDetails
 				);
 				revTimestampMember = checkAnnotation(
 						member,
 						revTimestampMember,
-						RevisionEntity.Timestamp.class,
+						ChangesetEntity.Timestamp.class,
 						classDetails
 				);
 				modifiedEntityNamesMember = checkAnnotation(
 						member,
 						modifiedEntityNamesMember,
-						RevisionEntity.ModifiedEntities.class,
+						ChangesetEntity.ModifiedEntities.class,
 						classDetails
 				);
 			}
@@ -458,24 +461,25 @@ public final class AuditHelper {
 
 		if ( revNumberMember == null ) {
 			throw new MappingException(
-					"@RevisionEntity '" + classDetails.getName()
-							+ "' must have a property annotated with @RevisionEntity.TransactionId"
+					"@ChangesetEntity '" + classDetails.getName()
+							+ "' must have a property annotated with @ChangesetEntity.ChangesetId"
 			);
 		}
 		if ( revTimestampMember == null ) {
 			throw new MappingException(
-					"@RevisionEntity '" + classDetails.getName()
-							+ "' must have a property annotated with @RevisionEntity.Timestamp"
+					"@ChangesetEntity '" + classDetails.getName()
+							+ "' must have a property annotated with @ChangesetEntity.Timestamp"
 			);
 		}
 
 		// Configure the supplier eagerly
 		final var serviceRegistry = context.getBootstrapContext().getServiceRegistry();
-		final Class<? extends RevisionListener> listenerClass = revisionEntity.listener();
-		final RevisionListener listener = listenerClass != RevisionListener.class
-				? serviceRegistry.requireService( ManagedBeanRegistry.class ).getBean( listenerClass ).getBeanInstance()
+		final var listenerClass = changesetEntity.listener();
+		final var listener = listenerClass != ChangesetListener.class
+				? serviceRegistry.requireService( ManagedBeanRegistry.class )
+						.getBean( listenerClass ).getBeanInstance()
 				: null;
-		final var supplier = new RevisionEntitySupplier<>(
+		final var supplier = new ChangesetEntitySupplier<>(
 				classDetails.toJavaClass(),
 				revNumberMember.resolveAttributeName(),
 				revTimestampMember.resolveAttributeName(),
@@ -484,7 +488,7 @@ public final class AuditHelper {
 						: null, listener
 		);
 		final var revNumberType = revNumberMember.getType().determineRawClass().toJavaClass();
-		serviceRegistry.requireService( TransactionIdentifierService.class )
+		serviceRegistry.requireService( ChangesetCoordinator.class )
 				.contributeIdentifierSupplier( supplier, revNumberType );
 
 		// Defer validation (basic type, mapped as Hibernate property) and
@@ -493,7 +497,7 @@ public final class AuditHelper {
 		final String revNumberName = revNumberMember.resolveAttributeName();
 		final String revTimestampName = revTimestampMember.resolveAttributeName();
 		context.getMetadataCollector().addSecondPass( (OptionalDeterminationSecondPass) ignored ->
-				validateRevisionEntity( entityName, revNumberName, revTimestampName, context )
+				validateChangesetEntity( entityName, revNumberName, revTimestampName, context )
 		);
 	}
 
@@ -509,7 +513,7 @@ public final class AuditHelper {
 		if ( member.hasDirectAnnotationUsage( annotationType ) ) {
 			if ( existing != null ) {
 				throw new MappingException(
-						"@RevisionEntity '" + classDetails.getName()
+						"@ChangesetEntity '" + classDetails.getName()
 								+ "' has multiple members annotated with @"
 								+ annotationType.getSimpleName()
 				);
@@ -520,11 +524,11 @@ public final class AuditHelper {
 	}
 
 	/**
-	 * Second-pass validation: verify {@code @RevisionEntity.TransactionId}
-	 * and {@code @RevisionEntity.Timestamp} are mapped as basic properties,
-	 * and add a unique constraint on non-ID {@code @TransactionId}.
+	 * Second-pass validation: verify {@code @ChangesetEntity.ChangesetId}
+	 * and {@code @ChangesetEntity.Timestamp} are mapped as basic properties,
+	 * and add a unique constraint on non-ID {@code @ChangesetId}.
 	 */
-	private static void validateRevisionEntity(
+	private static void validateChangesetEntity(
 			String entityName,
 			String revNumberName,
 			String revTimestampName,
@@ -536,10 +540,10 @@ public final class AuditHelper {
 		final var revNumberProperty = requireBasicProperty(
 				entityBinding,
 				revNumberName,
-				"@RevisionEntity.TransactionId"
+				"@ChangesetEntity.ChangesetId"
 		);
-		requireBasicProperty( entityBinding, revTimestampName, "@RevisionEntity.Timestamp" );
-		// Add unique constraint on non-ID @TransactionId
+		requireBasicProperty( entityBinding, revTimestampName, "@ChangesetEntity.Timestamp" );
+		// Add unique constraint on non-ID @ChangesetId
 		if ( revNumberProperty != entityBinding.getIdentifierProperty() ) {
 			for ( var column : revNumberProperty.getColumns() ) {
 				column.setUnique( true );
@@ -561,7 +565,7 @@ public final class AuditHelper {
 		catch (MappingException e) {
 			throw new MappingException(
 					annotationName + " member '" + propertyName
-							+ "' is not mapped as a property on @RevisionEntity '"
+							+ "' is not mapped as a property on @ChangesetEntity '"
 							+ entityBinding.getEntityName() + "'"
 			);
 		}
@@ -577,11 +581,11 @@ public final class AuditHelper {
 	/**
 	 * Create an audit table for the given source table: copy columns,
 	 * add the REV column, create the composite PK, and add the
-	 * REV -> REVINFO FK (if a revision entity is configured).
+	 * REV -> REVINFO FK (if a changeset entity is configured).
 	 */
 	private static Table createAuditTable(
 			Table sourceTable,
-			String txIdColumnName,
+			String csIdColumnName,
 			Set<String> excludedColumns,
 			@Nullable String schemaOverride,
 			@Nullable String catalogOverride,
@@ -601,28 +605,28 @@ public final class AuditHelper {
 				sourceTable.getNameIdentifier().isExplicit()
 		);
 		copyTableColumns( sourceTable, auditTable, excludedColumns );
-		final var revColumn = createAuditColumn( txIdColumnName, getTransactionIdType( context ), auditTable, context );
+		final var revColumn = createAuditColumn( csIdColumnName, getChangesetIdType( context ), auditTable, context );
 		auditTable.addColumn( revColumn );
 		createAuditPrimaryKey( auditTable, revColumn, sourceTable.getPrimaryKey().getColumns() );
-		createRevisionForeignKey( auditTable, revColumn, context );
+		createChangesetForeignKey( auditTable, revColumn, context );
 		return auditTable;
 	}
 
 	private static void createAuditPrimaryKey(
 			Table auditTable,
-			Column transactionIdColumn,
+			Column changesetIdColumn,
 			Iterable<Column> sourceKeyColumns) {
 		final var pk = new PrimaryKey( auditTable );
-		pk.addColumn( transactionIdColumn );
+		pk.addColumn( changesetIdColumn );
 		for ( var sourceCol : sourceKeyColumns ) {
 			pk.addColumn( auditTable.getColumn( sourceCol ) );
 		}
 		auditTable.setPrimaryKey( pk );
 	}
 
-	private static Class<?> getTransactionIdType(MetadataBuildingContext context) {
+	private static Class<?> getChangesetIdType(MetadataBuildingContext context) {
 		return context.getBootstrapContext().getServiceRegistry()
-				.requireService( TransactionIdentifierService.class )
+				.requireService( ChangesetCoordinator.class )
 				.getIdentifierType();
 	}
 
@@ -699,39 +703,41 @@ public final class AuditHelper {
 		}
 		final var revEndColumn =
 				createAuditColumn(
-						auditTableAnnotation != null ? auditTableAnnotation.transactionEndIdColumn() : Audited.Table.DEFAULT_TRANSACTION_END_ID,
-						getTransactionIdType( context ), auditTable, context );
+						auditTableAnnotation != null
+								? auditTableAnnotation.invalidatingChangesetIdColumn()
+								: DEFAULT_INVALIDATING_CHANGESET_ID_COLUMN_NAME,
+						getChangesetIdType( context ), auditTable, context );
 		revEndColumn.setNullable( true );
 		auditTable.addColumn( revEndColumn );
-		holder.addAuxiliaryColumn( TRANSACTION_END_ID, revEndColumn );
-		createRevisionForeignKey( auditTable, revEndColumn, context );
+		holder.addAuxiliaryColumn( INVALIDATING_CHANGESET_ID, revEndColumn );
+		createChangesetForeignKey( auditTable, revEndColumn, context );
 
 		final String revEndTsName = auditTableAnnotation != null
-				? auditTableAnnotation.transactionEndTimestampColumn()
+				? auditTableAnnotation.invalidationTimestampColumn()
 				: "";
 		if ( !isBlank( revEndTsName ) ) {
 			final var revEndTsColumn = createAuditColumn( revEndTsName, Instant.class, auditTable, context );
 			revEndTsColumn.setNullable( true );
 			auditTable.addColumn( revEndTsColumn );
-			holder.addAuxiliaryColumn( TRANSACTION_END_TIMESTAMP, revEndTsColumn );
+			holder.addAuxiliaryColumn( INVALIDATION_TIMESTAMP, revEndTsColumn );
 		}
 	}
 
 	/**
 	 * Create a FK from the audit table's REV (or REVEND) column to the
-	 * revision entity's PK. Only applies when {@code @RevisionEntity}
+	 * changeset entity's PK. Only applies when {@code @ChangesetEntity}
 	 * is configured.
 	 */
-	private static void createRevisionForeignKey(
+	private static void createChangesetForeignKey(
 			Table auditTable,
 			Column revColumn,
 			MetadataBuildingContext context) {
-		final String revisionEntityName = getRevisionEntityName( context );
-		if ( revisionEntityName != null ) {
+		final String changesetEntityName = getChangesetEntityName( context );
+		if ( changesetEntityName != null ) {
 			auditTable.createForeignKey(
 					null,
 					List.of( revColumn ),
-					revisionEntityName,
+					changesetEntityName,
 					null,
 					null
 			);
@@ -757,9 +763,9 @@ public final class AuditHelper {
 		fk.setReferencedTable( referencedAuditTable );
 	}
 
-	private static @Nullable String getRevisionEntityName(MetadataBuildingContext context) {
-		final var supplier = RevisionEntitySupplier.resolve( context.getBootstrapContext().getServiceRegistry() );
-		return supplier != null ? supplier.getRevisionEntityClass().getName() : null;
+	private static @Nullable String getChangesetEntityName(MetadataBuildingContext context) {
+		final var supplier = ChangesetEntitySupplier.resolve( context.getBootstrapContext().getServiceRegistry() );
+		return supplier != null ? supplier.getChangesetEntityClass().getName() : null;
 	}
 
 	private static Set<String> resolveExcludedColumns(Iterable<Property> properties) {

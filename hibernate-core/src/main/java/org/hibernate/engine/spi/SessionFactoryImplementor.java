@@ -34,7 +34,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sql.spi.SqlTranslationEngine;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.temporal.spi.TransactionIdentifierService;
+import org.hibernate.temporal.spi.ChangesetCoordinator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.sql.exec.internal.JdbcSelectWithActions;
@@ -263,9 +263,9 @@ public interface SessionFactoryImplementor extends SessionFactory {
 	EventListenerRegistry getEventListenerRegistry();
 
 	/**
-	 * Efficient access to the {@link TransactionIdentifierService}.
+	 * Efficient access to the {@link ChangesetCoordinator}.
 	 */
-	TransactionIdentifierService getTransactionIdentifierService();
+	ChangesetCoordinator getChangesetCoordinator();
 
 	/**
 	 * Return an instance of {@link WrapperOptions} which is not backed by a session,

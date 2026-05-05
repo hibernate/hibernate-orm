@@ -49,9 +49,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.boot.model.internal.AuditHelper.MODIFICATION_TYPE;
-import static org.hibernate.boot.model.internal.AuditHelper.TRANSACTION_END_ID;
-import static org.hibernate.boot.model.internal.AuditHelper.TRANSACTION_END_TIMESTAMP;
-import static org.hibernate.boot.model.internal.AuditHelper.TRANSACTION_ID;
+import static org.hibernate.boot.model.internal.AuditHelper.INVALIDATING_CHANGESET_ID;
+import static org.hibernate.boot.model.internal.AuditHelper.INVALIDATION_TIMESTAMP;
+import static org.hibernate.boot.model.internal.AuditHelper.CHANGESET_ID;
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
 import static org.hibernate.persister.state.internal.AbstractStateManagement.resolveMutationTarget;
 
@@ -153,12 +153,14 @@ public class AuditStateManagement implements StateManagement {
 			RootClass rootClass,
 			AbstractEntityPersister persister,
 			MappingModelCreationProcess creationProcess) {
-		final var typeConfiguration = creationProcess.getCreationContext().getTypeConfiguration();
-		final var sessionFactory = creationProcess.getCreationContext().getSessionFactory();
-		final var txIdJdbcMapping = resolveJdbcMapping(
-				typeConfiguration,
-				sessionFactory.getTransactionIdentifierService().getIdentifierType()
-		);
+		final var creationContext = creationProcess.getCreationContext();
+		final var typeConfiguration = creationContext.getTypeConfiguration();
+		final var changesetCoordinator =
+				creationContext.getSessionFactory()
+						.getChangesetCoordinator();
+		final var csIdJdbcMapping =
+				resolveJdbcMapping( typeConfiguration,
+						changesetCoordinator.getIdentifierType() );
 		final var modTypeJdbcMapping = resolveJdbcMapping( typeConfiguration, ModificationType.class );
 
 		final var map = new HashMap<String, AuditMappingImpl.TableAuditInfo>();
@@ -170,7 +172,7 @@ public class AuditStateManagement implements StateManagement {
 				rootClass.getAuxiliaryTable(),
 				rootClass,
 				persister,
-				txIdJdbcMapping,
+				csIdJdbcMapping,
 				modTypeJdbcMapping,
 				creationProcess
 		);
@@ -183,14 +185,14 @@ public class AuditStateManagement implements StateManagement {
 			tableNameResolver = originalName -> map.get( originalName ).auditTableName();
 			final var rootInfo = map.values().iterator().next();
 			final var extras = new ArrayList<>( List.of(
-					rootInfo.transactionIdMapping().getSelectionExpression(),
+					rootInfo.changesetIdMapping().getSelectionExpression(),
 					rootInfo.modificationTypeMapping().getSelectionExpression()
 			) );
-			if ( rootInfo.transactionEndMapping() != null ) {
-				extras.add( rootInfo.transactionEndMapping().getSelectionExpression() );
+			if ( rootInfo.invalidatingChangesetMapping() != null ) {
+				extras.add( rootInfo.invalidatingChangesetMapping().getSelectionExpression() );
 			}
-			if ( rootInfo.transactionEndTimestampMapping() != null ) {
-				extras.add( rootInfo.transactionEndTimestampMapping().getSelectionExpression() );
+			if ( rootInfo.invalidationTimestampMapping() != null ) {
+				extras.add( rootInfo.invalidationTimestampMapping().getSelectionExpression() );
 			}
 			extraColumns = extras;
 		}
@@ -208,7 +210,7 @@ public class AuditStateManagement implements StateManagement {
 						join.getAuxiliaryTable(),
 						join,
 						persister,
-						txIdJdbcMapping,
+						csIdJdbcMapping,
 						modTypeJdbcMapping,
 						creationProcess
 				);
@@ -224,7 +226,7 @@ public class AuditStateManagement implements StateManagement {
 						subclass.getAuxiliaryTable(),
 						subclass,
 						persister,
-						txIdJdbcMapping,
+						csIdJdbcMapping,
 						modTypeJdbcMapping,
 						creationProcess
 				);
@@ -261,12 +263,13 @@ public class AuditStateManagement implements StateManagement {
 				extraColumns
 		);
 		map.put(
-				originalSubquery, new AuditMappingImpl.TableAuditInfo(
+				originalSubquery,
+				new AuditMappingImpl.TableAuditInfo(
 						auditSubquery,
-						rootInfo.transactionIdMapping(),
+						rootInfo.changesetIdMapping(),
 						rootInfo.modificationTypeMapping(),
-						rootInfo.transactionEndMapping(),
-						rootInfo.transactionEndTimestampMapping()
+						rootInfo.invalidatingChangesetMapping(),
+						rootInfo.invalidationTimestampMapping()
 				)
 		);
 	}
@@ -277,21 +280,21 @@ public class AuditStateManagement implements StateManagement {
 			Table auditTable,
 			AuxiliaryTableHolder holder,
 			AbstractEntityPersister persister,
-			JdbcMapping txIdJdbcMapping,
+			JdbcMapping csIdJdbcMapping,
 			JdbcMapping modTypeJdbcMapping,
 			MappingModelCreationProcess creationProcess) {
 		final String originalTableName = persister.determineTableName( originalTable );
 		final String auditTableName = persister.determineTableName( auditTable );
 		map.put(
 				originalTableName,
-				createTableAuditInfo( auditTableName, holder, txIdJdbcMapping, modTypeJdbcMapping, creationProcess )
+				createTableAuditInfo( auditTableName, holder, csIdJdbcMapping, modTypeJdbcMapping, creationProcess )
 		);
 	}
 
 	private static AuditMappingImpl.TableAuditInfo createTableAuditInfo(
 			String auditTableName,
 			AuxiliaryTableHolder holder,
-			JdbcMapping txIdJdbcMapping,
+			JdbcMapping csIdJdbcMapping,
 			JdbcMapping modTypeJdbcMapping,
 			MappingModelCreationProcess creationProcess) {
 		final var creationContext = creationProcess.getCreationContext();
@@ -300,8 +303,8 @@ public class AuditStateManagement implements StateManagement {
 				auditTableName,
 				toSelectableMapping(
 						auditTableName,
-						holder.getAuxiliaryColumn( TRANSACTION_ID ),
-						txIdJdbcMapping,
+						holder.getAuxiliaryColumn( CHANGESET_ID ),
+						csIdJdbcMapping,
 						creationProcess
 				),
 				toSelectableMapping(
@@ -312,13 +315,13 @@ public class AuditStateManagement implements StateManagement {
 				),
 				toSelectableMapping(
 						auditTableName,
-						holder.getAuxiliaryColumn( TRANSACTION_END_ID ),
-						txIdJdbcMapping,
+						holder.getAuxiliaryColumn( INVALIDATING_CHANGESET_ID ),
+						csIdJdbcMapping,
 						creationProcess
 				),
 				toSelectableMapping(
 						auditTableName,
-						holder.getAuxiliaryColumn( TRANSACTION_END_TIMESTAMP ),
+						holder.getAuxiliaryColumn( INVALIDATION_TIMESTAMP ),
 						resolveJdbcMapping( typeConfiguration, java.time.Instant.class ),
 						creationProcess
 				)
@@ -367,12 +370,14 @@ public class AuditStateManagement implements StateManagement {
 		final String originalTableName = getTableIdentifierExpression(
 				bootDescriptor.getCollectionTable(), creationProcess );
 		final String auditTableName = getTableIdentifierExpression( auditTable, creationProcess );
-		final var typeConfiguration = creationProcess.getCreationContext().getTypeConfiguration();
-		final var sessionFactory = creationProcess.getCreationContext().getSessionFactory();
-		final var txIdJdbcMapping = resolveJdbcMapping(
-				typeConfiguration,
-				sessionFactory.getTransactionIdentifierService().getIdentifierType()
-		);
+		final var creationContext = creationProcess.getCreationContext();
+		final var typeConfiguration = creationContext.getTypeConfiguration();
+		final var changesetCoordinator =
+				creationContext.getSessionFactory()
+						.getChangesetCoordinator();
+		final var csIdJdbcMapping =
+				resolveJdbcMapping( typeConfiguration,
+						changesetCoordinator.getIdentifierType() );
 		final var modTypeJdbcMapping = resolveJdbcMapping( typeConfiguration, ModificationType.class );
 		return new AuditMappingImpl(
 				Map.of(
@@ -380,7 +385,7 @@ public class AuditStateManagement implements StateManagement {
 						createTableAuditInfo(
 								auditTableName,
 								bootDescriptor,
-								txIdJdbcMapping,
+								csIdJdbcMapping,
 								modTypeJdbcMapping,
 								creationProcess
 						)

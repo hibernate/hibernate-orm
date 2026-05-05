@@ -6359,7 +6359,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private boolean renderAsOfClause(NamedTableReference tableReference) {
 		return tableReference.getAsOfTransactionIdentifier() != null
-			&& sessionFactory.getTransactionIdentifierService().isIdentifierTypeInstant()
+			&& sessionFactory.getChangesetCoordinator().isIdentifierTypeInstant()
 			&& statementStack.getCurrent() instanceof SelectStatement
 			&& dialect.getTemporalTableSupport().useAsOfOperator( getTemporalTableStrategy() );
 	}

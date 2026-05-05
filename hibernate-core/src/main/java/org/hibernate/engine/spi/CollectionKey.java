@@ -20,7 +20,7 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 /**
  * Uniquely identifies a collection instance in a particular session.
  * <p>
- * For temporal collections, use {@link TemporalCollectionKey} which includes a transaction identifier
+ * For temporal collections, use {@link TemporalCollectionKey} which includes a changeset identifier
  * to isolate historical snapshots in the persistence context.
  *
  * @author Gavin King
@@ -43,14 +43,14 @@ public sealed class CollectionKey implements Serializable permits TemporalCollec
 	}
 
 	/**
-	 * @param txIdHashCode hash code contribution from the transaction identifier
+	 * @param changesetIdHashCode hash code contribution from the changeset identifier
 	 */
 	CollectionKey(
 			String role,
 			@Nullable Object key,
 			@Nullable Type keyType,
 			SessionFactoryImplementor factory,
-			int txIdHashCode) {
+			int changesetIdHashCode) {
 		this.role = role;
 		if ( key == null ) {
 			throw new AssertionFailure( "null identifier for collection of role (" + role + ")" );
@@ -59,7 +59,7 @@ public sealed class CollectionKey implements Serializable permits TemporalCollec
 		this.keyType = keyType;
 		this.factory = factory;
 		//cache the hash-code
-		this.hashCode = generateHashCode( role, key, keyType, factory, txIdHashCode );
+		this.hashCode = generateHashCode( role, key, keyType, factory, changesetIdHashCode );
 	}
 
 	private static int generateHashCode(
@@ -67,11 +67,11 @@ public sealed class CollectionKey implements Serializable permits TemporalCollec
 			Object key,
 			@Nullable Type keyType,
 			SessionFactoryImplementor factory,
-			int txIdHashCode) {
+			int changesetIdHashCode) {
 		int result = 17;
 		result = 37 * result + role.hashCode();
 		result = 37 * result + (keyType == null ? key.hashCode() : keyType.getHashCode( key, factory ));
-		result = 37 * result + txIdHashCode;
+		result = 37 * result + changesetIdHashCode;
 		return result;
 	}
 
@@ -84,10 +84,10 @@ public sealed class CollectionKey implements Serializable permits TemporalCollec
 	}
 
 	/**
-	 * The audit transaction identifier for this key, or {@code null} for
+	 * The audit changeset identifier for this key, or {@code null} for
 	 * non-temporal collections.
 	 */
-	public @Nullable Object getTransactionId() {
+	public @Nullable Object getChangesetId() {
 		return null;
 	}
 
@@ -111,13 +111,13 @@ public sealed class CollectionKey implements Serializable permits TemporalCollec
 		if ( this == other ) {
 			return true;
 		}
-		if ( other == null || !(other instanceof CollectionKey that) ) {
+		if ( !(other instanceof CollectionKey that) ) {
 			return false;
 		}
 
 		return that.role.equals( role )
 			&& sameKey( that )
-			&& sameTransactionId( that );
+			&& sameChangesetId( that );
 	}
 
 	private boolean sameKey(final CollectionKey that) {
@@ -126,13 +126,13 @@ public sealed class CollectionKey implements Serializable permits TemporalCollec
 	}
 
 	/**
-	 * Compare transaction identifiers without virtual dispatch, using
+	 * Compare changeset identifiers without virtual dispatch, using
 	 * instanceof on the sealed hierarchy for optimal JIT performance.
 	 */
-	private boolean sameTransactionId(final CollectionKey otherKey) {
+	private boolean sameChangesetId(final CollectionKey otherKey) {
 		if ( this instanceof TemporalCollectionKey t1 ) {
 			return otherKey instanceof TemporalCollectionKey t2
-				&& t1.getTransactionId().equals( t2.getTransactionId() );
+				&& t1.getChangesetId().equals( t2.getChangesetId() );
 		}
 		return !(otherKey instanceof TemporalCollectionKey);
 	}
@@ -154,7 +154,7 @@ public sealed class CollectionKey implements Serializable permits TemporalCollec
 		oos.writeObject( role );
 		oos.writeObject( key );
 		oos.writeObject( keyType );
-		oos.writeObject( getTransactionId() );
+		oos.writeObject( getChangesetId() );
 	}
 
 	/**
@@ -173,10 +173,10 @@ public sealed class CollectionKey implements Serializable permits TemporalCollec
 		final String role = (String) ois.readObject();
 		final Object key = ois.readObject();
 		final Type keyType = (Type) ois.readObject();
-		final Object txId = ois.readObject();
+		final Object changesetId = ois.readObject();
 		final SessionFactoryImplementor factory = session.getFactory();
-		return txId != null
-				? new TemporalCollectionKey( role, key, keyType, factory, txId )
+		return changesetId != null
+				? new TemporalCollectionKey( role, key, keyType, factory, changesetId )
 				: new CollectionKey( role, key, keyType, factory, 0 );
 	}
 }

@@ -55,7 +55,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		// Capture the temporal identifier for revision-aware proxy initialization
 		if ( session != null ) {
 			final Object tempId = session.getLoadQueryInfluencers().getTemporalIdentifier();
-			this.temporalIdentifier = tempId != AuditLog.ALL_REVISIONS ? tempId : null;
+			this.temporalIdentifier = tempId != AuditLog.ALL_CHANGESETS ? tempId : null;
 		}
 		// initialize other fields depending on session state
 		if ( session == null ) {

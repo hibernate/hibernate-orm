@@ -55,14 +55,14 @@ public class AuditEntityLoaderImpl implements AuditEntityLoader {
 		final var auditMapping = entityMappingType.getAuditMapping();
 		final var revTableName = entityMappingType.getMappedTableDetails().getTableName();
 		final var revTypeTableName = entityMappingType.getIdentifierTableDetails().getTableName();
-		this.revMapping = auditMapping.getTransactionIdMapping( revTableName );
+		this.revMapping = auditMapping.getChangesetIdMapping( revTableName );
 		final var revTypeMapping = auditMapping.getModificationTypeMapping( revTypeTableName );
 
 		// Build SQL AST: SELECT ... WHERE id = ? AND REV = (SELECT MAX(REV) ... WHERE REV <= ?)
 		// Uses ALL_REVISIONS so LoaderSelectBuilder doesn't add its own temporal restriction,
 		// then applies the audit mapping's restriction with our own JDBC parameter.
 		final var influencers = new LoadQueryInfluencers( sessionFactory );
-		influencers.setTemporalIdentifier( AuditLog.ALL_REVISIONS );
+		influencers.setTemporalIdentifier( AuditLog.ALL_CHANGESETS );
 		final var paramsBuilder = JdbcParametersList.newBuilder();
 		final var sqlAliasBaseManager = new SqlAliasBaseManager();
 		final var sqlAst = LoaderSelectBuilder.createSelect(
@@ -118,11 +118,11 @@ public class AuditEntityLoaderImpl implements AuditEntityLoader {
 	@Override
 	public <T> T find(
 			Object id,
-			Object transactionId,
+			Object changesetId,
 			boolean includeDeletions,
 			SharedSessionContractImplementor session) {
 		final var select = includeDeletions ? includingDeletions : excludingDeletions;
-		return execute( select, id, transactionId, session );
+		return execute( select, id, changesetId, session );
 	}
 
 	private static JdbcSelect translate(SelectStatement sqlAst, SessionFactoryImplementor sessionFactory) {
@@ -137,7 +137,7 @@ public class AuditEntityLoaderImpl implements AuditEntityLoader {
 	private <T> T execute(
 			JdbcSelect select,
 			Object id,
-			Object transactionId,
+			Object changesetId,
 			SharedSessionContractImplementor session) {
 		final var bindings = new JdbcParameterBindingsImpl( jdbcParams.size() );
 		int offset = bindings.registerParametersForEachJdbcValue(
@@ -147,7 +147,7 @@ public class AuditEntityLoaderImpl implements AuditEntityLoader {
 		);
 		bindings.addBinding(
 				jdbcParams.get( offset ),
-				new JdbcParameterBindingImpl( revMapping.getJdbcMapping(), transactionId )
+				new JdbcParameterBindingImpl( revMapping.getJdbcMapping(), changesetId )
 		);
 
 		final var callback = new CallbackImpl();

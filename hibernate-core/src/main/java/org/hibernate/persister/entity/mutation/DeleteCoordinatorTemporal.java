@@ -61,7 +61,7 @@ public class DeleteCoordinatorTemporal extends AbstractDeleteCoordinator {
 			JdbcValueBindings jdbcValueBindings) {
 		if ( TemporalMutationHelper.isUsingParameters( session ) ) {
 			jdbcValueBindings.bindValue(
-					session.getCurrentTransactionIdentifier(),
+					session.getCurrentChangesetIdentifier(),
 					entityPersister().physicalTableNameForMutation( temporalMapping.getEndingColumnMapping() ),
 					temporalMapping.getEndingColumnMapping().getSelectionExpression(),
 					ParameterUsage.SET

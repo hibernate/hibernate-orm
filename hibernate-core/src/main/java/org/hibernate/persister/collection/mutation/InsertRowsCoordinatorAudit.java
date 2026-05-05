@@ -190,26 +190,26 @@ public class InsertRowsCoordinatorAudit implements InsertRowsCoordinator, Collec
 		);
 		try {
 			final var tableName = getAuditHelper().getAuditTableMapping().getTableName();
-			final var txId = session.getCurrentTransactionIdentifier();
+			final var changesetId = session.getCurrentChangesetIdentifier();
 			final var auditMapping = mutationTarget.getTargetPart().getAuditMapping();
 			final var collectionTableName = mutationTarget.getCollectionTableMapping().getTableName();
-			final var revEndMapping = auditMapping.getTransactionEndMapping( collectionTableName );
+			final var revEndMapping = auditMapping.getInvalidatingChangesetIdMapping( collectionTableName );
 			final var bindings = getAuditHelper().getRowMutationHelper();
 
 			// Update REVEND for ALL changes (not just DEL) to cover both removed and replaced elements
 			for ( var change : changes ) {
 				final var jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
 
-				// SET REVEND = :txId
+				// SET REVEND = :changesetId
 				jdbcValueBindings.bindValue(
-						txId,
+						changesetId,
 						tableName,
 						revEndMapping.getSelectionExpression(),
 						ParameterUsage.SET
 				);
 
 				// SET REVEND_TSTMP = :tstmp (if configured)
-				final var revEndTsMapping = auditMapping.getTransactionEndTimestampMapping( collectionTableName );
+				final var revEndTsMapping = auditMapping.getInvalidationTimestampMapping( collectionTableName );
 				if ( revEndTsMapping != null ) {
 					jdbcValueBindings.bindValue(
 							java.time.Instant.now(),

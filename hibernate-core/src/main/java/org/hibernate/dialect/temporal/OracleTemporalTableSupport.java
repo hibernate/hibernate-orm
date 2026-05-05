@@ -53,7 +53,7 @@ public class OracleTemporalTableSupport extends DefaultTemporalTableSupport {
 	@Override
 	public boolean useTemporalRestriction(LoadQueryInfluencers influencers) {
 		final var sessionFactory = influencers.getSessionFactory();
-		return sessionFactory.getTransactionIdentifierService().isIdentifierTypeInstant()
+		return sessionFactory.getChangesetCoordinator().isIdentifierTypeInstant()
 				? sessionFactory.getSessionFactoryOptions().getTemporalTableStrategy() == HISTORY_TABLE
 						&& influencers.getTemporalIdentifier() != null
 				: super.useTemporalRestriction( influencers );

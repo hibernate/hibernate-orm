@@ -56,7 +56,7 @@ public class NamedTableReference extends AbstractTableReference {
 				&& mapping.getTableName().equals( getTableExpression() ) ) {
 			final var dialect = influencers.getSessionFactory().getJdbcServices().getDialect();
 			if ( influencers.getTemporalIdentifier() == null
-					&& influencers.getSessionFactory().getTransactionIdentifierService()
+					&& influencers.getSessionFactory().getChangesetCoordinator()
 							.useServerTimestamp( dialect ) ) {
 				// we are querying current data,
 				// so we can use the server timestamp
@@ -67,7 +67,7 @@ public class NamedTableReference extends AbstractTableReference {
 				asOfTransactionIdentifier = new TemporalJdbcParameter( temporalMapping.getEndingColumnMapping() );
 			}
 			else if ( mapping instanceof AuditMapping auditMapping ) {
-				asOfTransactionIdentifier = new TemporalJdbcParameter( auditMapping.getTransactionIdMapping( getTableExpression() ) );
+				asOfTransactionIdentifier = new TemporalJdbcParameter( auditMapping.getChangesetIdMapping( getTableExpression() ) );
 			}
 			else {
 				asOfTransactionIdentifier = null;
@@ -81,7 +81,7 @@ public class NamedTableReference extends AbstractTableReference {
 		}
 		else {
 			final var sessionFactory = influencers.getSessionFactory();
-			return sessionFactory.getTransactionIdentifierService().isIdentifierTypeInstant()
+			return sessionFactory.getChangesetCoordinator().isIdentifierTypeInstant()
 				&& sessionFactory.getJdbcServices().getDialect().getTemporalTableSupport()
 						.useAsOfOperator( sessionFactory.getSessionFactoryOptions().getTemporalTableStrategy() );
 		}

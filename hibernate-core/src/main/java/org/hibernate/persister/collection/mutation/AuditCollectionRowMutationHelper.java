@@ -21,7 +21,7 @@ final class AuditCollectionRowMutationHelper {
 	private final CollectionMutationTarget mutationTarget;
 	private final PluralAttributeMapping attributeMapping;
 	private final String auditTableName;
-	private final SelectableMapping transactionIdMapping;
+	private final SelectableMapping changesetIdMapping;
 	private final SelectableMapping modificationTypeMapping;
 	private final boolean[] indexColumnIsSettable;
 	private final boolean[] elementColumnIsSettable;
@@ -31,7 +31,7 @@ final class AuditCollectionRowMutationHelper {
 	AuditCollectionRowMutationHelper(
 			CollectionMutationTarget mutationTarget,
 			String auditTableName,
-			SelectableMapping transactionIdMapping,
+			SelectableMapping changesetIdMapping,
 			SelectableMapping modificationTypeMapping,
 			boolean[] indexColumnIsSettable,
 			boolean[] elementColumnIsSettable,
@@ -40,7 +40,7 @@ final class AuditCollectionRowMutationHelper {
 		this.mutationTarget = mutationTarget;
 		this.attributeMapping = mutationTarget.getTargetPart();
 		this.auditTableName = auditTableName;
-		this.transactionIdMapping = transactionIdMapping;
+		this.changesetIdMapping = changesetIdMapping;
 		this.modificationTypeMapping = modificationTypeMapping;
 		this.indexColumnIsSettable = indexColumnIsSettable;
 		this.elementColumnIsSettable = elementColumnIsSettable;
@@ -72,9 +72,9 @@ final class AuditCollectionRowMutationHelper {
 
 		if ( !useServerTransactionTimestamps ) {
 			jdbcValueBindings.bindValue(
-					session.getCurrentTransactionIdentifier(),
+					session.getCurrentChangesetIdentifier(),
 					auditTableName,
-					transactionIdMapping.getSelectionExpression(),
+					changesetIdMapping.getSelectionExpression(),
 					ParameterUsage.SET
 			);
 		}

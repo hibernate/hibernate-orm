@@ -27,7 +27,7 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  * Performance considerations: lots of instances of this type are created at runtime. Make sure each one is as small as possible
  * by storing just the essential needed.
  * <p>
- * For temporal entities, use {@link TemporalEntityKey} which includes a transaction identifier
+ * For temporal entities, use {@link TemporalEntityKey} which includes a changeset identifier
  * to isolate historical snapshots in the persistence context.
  *
  * @author Gavin King
@@ -55,24 +55,24 @@ public sealed class EntityKey implements Serializable permits TemporalEntityKey 
 	}
 
 	/**
-	 * @param txIdHashCode hash code contribution from the transaction identifier
+	 * @param changesetIdHashCode hash code contribution from the changeset identifier
 	 */
-	EntityKey(@Nullable Object id, EntityPersister persister, int txIdHashCode) {
+	EntityKey(@Nullable Object id, EntityPersister persister, int changesetIdHashCode) {
 		this.persister = persister;
 		if ( id == null ) {
 			throw new AssertionFailure( "null identifier (" + persister.getEntityName() + ")" );
 		}
 		this.identifier = id;
-		this.hashCode = generateHashCode( id, persister, txIdHashCode );
+		this.hashCode = generateHashCode( id, persister, changesetIdHashCode );
 	}
 
-	private static int generateHashCode(Object id, EntityPersister persister, int txIdHashCode) {
+	private static int generateHashCode(Object id, EntityPersister persister, int changesetIdHashCode) {
 		int result = 17;
 		final String rootEntityName = persister.getRootEntityName();
 		result = 37 * result + rootEntityName.hashCode();
 		final Type identifierType = persister.getIdentifierType().getTypeForEqualsHashCode();
 		result = 37 * result + ( identifierType == null ? id.hashCode() : identifierType.getHashCode( id, persister.getFactory() ) );
-		result = 37 * result + txIdHashCode;
+		result = 37 * result + changesetIdHashCode;
 		return result;
 	}
 
@@ -97,11 +97,11 @@ public sealed class EntityKey implements Serializable permits TemporalEntityKey 
 	}
 
 	/**
-	 * The audit transaction identifier for this key, or {@code null} for
+	 * The audit changeset identifier for this key, or {@code null} for
 	 * non-temporal entities.
 	 * When non-null, this entity is a read-only historical snapshot.
 	 */
-	public @Nullable Object getTransactionId() {
+	public @Nullable Object getChangesetId() {
 		return null;
 	}
 
@@ -117,13 +117,13 @@ public sealed class EntityKey implements Serializable permits TemporalEntityKey 
 		if ( this == other ) {
 			return true;
 		}
-		if ( other == null || !( other instanceof EntityKey otherKey ) ) {
+		if ( !(other instanceof EntityKey otherKey) ) {
 			return false;
 		}
 
 		return samePersistentType( otherKey )
 			&& sameIdentifier( otherKey )
-			&& sameTransactionId( otherKey );
+			&& sameChangesetId( otherKey );
 
 	}
 
@@ -135,13 +135,13 @@ public sealed class EntityKey implements Serializable permits TemporalEntityKey 
 	}
 
 	/**
-	 * Compare transaction identifiers without virtual dispatch, using
+	 * Compare changeset identifiers without virtual dispatch, using
 	 * instanceof on the sealed hierarchy for optimal JIT performance.
 	 */
-	private boolean sameTransactionId(final EntityKey otherKey) {
+	private boolean sameChangesetId(final EntityKey otherKey) {
 		if ( this instanceof TemporalEntityKey t1 ) {
 			return otherKey instanceof TemporalEntityKey t2
-					&& t1.getTransactionId().equals( t2.getTransactionId() );
+					&& t1.getChangesetId().equals( t2.getChangesetId() );
 		}
 		return !( otherKey instanceof TemporalEntityKey );
 	}
@@ -172,7 +172,7 @@ public sealed class EntityKey implements Serializable permits TemporalEntityKey 
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		oos.writeObject( identifier );
 		oos.writeObject( persister.getEntityName() );
-		oos.writeObject( getTransactionId() );
+		oos.writeObject( getChangesetId() );
 	}
 
 	/**
@@ -190,12 +190,12 @@ public sealed class EntityKey implements Serializable permits TemporalEntityKey 
 	public static EntityKey deserialize(ObjectInputStream ois, SessionFactoryImplementor sessionFactory) throws IOException, ClassNotFoundException {
 		final Object id = ois.readObject();
 		final String entityName = (String) ois.readObject();
-		final Object txId = ois.readObject();
+		final Object changesetId = ois.readObject();
 		final EntityPersister entityPersister =
 				sessionFactory.getMappingMetamodel()
 						.getEntityDescriptor( entityName );
-		return txId != null
-				? new TemporalEntityKey( id, entityPersister, txId )
+		return changesetId != null
+				? new TemporalEntityKey( id, entityPersister, changesetId )
 				: new EntityKey( id, entityPersister );
 	}
 }

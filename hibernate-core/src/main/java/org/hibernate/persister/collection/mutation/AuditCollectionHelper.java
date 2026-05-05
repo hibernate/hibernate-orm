@@ -28,7 +28,7 @@ public final class AuditCollectionHelper {
 	private final CollectionMutationTarget mutationTarget;
 	private final SessionFactoryImplementor sessionFactory;
 	private final CollectionTableMapping auditTableMapping;
-	private final SelectableMapping transactionIdMapping;
+	private final SelectableMapping changesetIdMapping;
 	private final SelectableMapping modificationTypeMapping;
 	private final SelectableMapping transactionEndMapping;
 	private final boolean useServerTransactionTimestamps;
@@ -58,13 +58,13 @@ public final class AuditCollectionHelper {
 				mutationTarget.getCollectionTableMapping(),
 				auditMapping.resolveTableName( collectionTableName )
 		);
-		this.transactionIdMapping = auditMapping.getTransactionIdMapping( collectionTableName );
+		this.changesetIdMapping = auditMapping.getChangesetIdMapping( collectionTableName );
 		this.modificationTypeMapping = auditMapping.getModificationTypeMapping( collectionTableName );
-		this.transactionEndMapping = auditMapping.getTransactionEndMapping( collectionTableName );
+		this.transactionEndMapping = auditMapping.getInvalidatingChangesetIdMapping( collectionTableName );
 
 		final var dialect = sessionFactory.getJdbcServices().getDialect();
 		this.useServerTransactionTimestamps =
-				sessionFactory.getTransactionIdentifierService()
+				sessionFactory.getChangesetCoordinator()
 						.useServerTimestamp( dialect );
 		this.currentTimestampFunctionName = useServerTransactionTimestamps
 				? dialect.currentTimestamp()
@@ -87,7 +87,7 @@ public final class AuditCollectionHelper {
 			rowMutationHelper = new AuditCollectionRowMutationHelper(
 					mutationTarget,
 					auditTableMapping.getTableName(),
-					transactionIdMapping,
+					changesetIdMapping,
 					modificationTypeMapping,
 					indexColumnIsSettable,
 					elementColumnIsSettable,
@@ -140,10 +140,10 @@ public final class AuditCollectionHelper {
 		}
 
 		if ( useServerTransactionTimestamps ) {
-			insertBuilder.addValueColumn( currentTimestampFunctionName, transactionIdMapping );
+			insertBuilder.addValueColumn( currentTimestampFunctionName, changesetIdMapping );
 		}
 		else {
-			insertBuilder.addValueColumn( "?", transactionIdMapping );
+			insertBuilder.addValueColumn( "?", changesetIdMapping );
 		}
 		insertBuilder.addValueColumn( "?", modificationTypeMapping );
 	}
@@ -163,7 +163,7 @@ public final class AuditCollectionHelper {
 
 		// SET REVEND_TSTMP = ? (if configured)
 		final var revEndTsMapping = mutationTarget.getTargetPart().getAuditMapping()
-				.getTransactionEndTimestampMapping( mutationTarget.getCollectionTableMapping().getTableName() );
+				.getInvalidationTimestampMapping( mutationTarget.getCollectionTableMapping().getTableName() );
 		if ( revEndTsMapping != null ) {
 			updateBuilder.addValueColumn( "?", revEndTsMapping );
 		}

@@ -105,5 +105,5 @@ public interface SessionBuilderImplementor extends SessionBuilder {
 	SessionBuilderImplementor asOf(Instant instant);
 
 	@Override
-	SessionBuilderImplementor atTransaction(Object transactionId);
+	SessionBuilderImplementor atChangeset(Object changesetId);
 }

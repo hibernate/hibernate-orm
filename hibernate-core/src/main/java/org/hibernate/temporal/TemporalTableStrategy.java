@@ -13,6 +13,7 @@ import org.hibernate.Incubating;
  * entities and collections.
  *
  * @see org.hibernate.annotations.Temporal
+ * @see org.hibernate.cfg.StateManagementSettings#TEMPORAL_TABLE_STRATEGY
  *
  * @author Gavin King
  *

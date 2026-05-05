@@ -90,7 +90,6 @@ public class TemporalMappingImpl implements TemporalMapping {
 		final var typeConfiguration = creationContext.getTypeConfiguration();
 		final var dialect = creationContext.getDialect();
 		final var sessionFactory = creationContext.getSessionFactory();
-		final var sqmFunctionRegistry = sessionFactory.getQueryEngine().getSqmFunctionRegistry();
 
 		startingColumnMapping = SelectableMappingImpl.from(
 				tableName,

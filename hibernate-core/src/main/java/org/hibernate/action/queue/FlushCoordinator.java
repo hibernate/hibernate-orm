@@ -169,6 +169,7 @@ public class FlushCoordinator {
 		}
 		finally {
 			newlyManagedEntities.clear();
+			decomposer.clearFlushState();
 		}
 	}
 

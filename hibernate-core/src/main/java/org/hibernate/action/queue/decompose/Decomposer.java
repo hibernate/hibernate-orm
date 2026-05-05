@@ -84,12 +84,7 @@ public class Decomposer implements DecompositionContext {
 		for ( AbstractEntityInsertAction insertion : insertions ) {
 			final Object instance = insertion.getInstance();
 			entitiesBeingInserted.add( instance );
-			if ( insertion.getPersister().getGenerator().generatedOnExecution() ) {
-				generatedIdentifierHandles.put(
-						instance,
-						new DelayedValueAccess( insertion.getEntityName() + "#id" )
-				);
-			}
+			trackGeneratedIdentifierHandle( insertion );
 		}
 		for ( EntityDeleteAction deletion : deletions ) {
 			entitiesBeingDeleted.add( deletion.getInstance() );
@@ -112,8 +107,12 @@ public class Decomposer implements DecompositionContext {
 		entitiesBeingInserted = null;
 		entitiesBeingDeleted = null;
 		updatedAttributesByDeletedEntity = null;
-		generatedIdentifierHandles = null;
 		ownersWithUpdateCallbacks = null;
+	}
+
+	public void clearFlushState() {
+		endFlush();
+		generatedIdentifierHandles = null;
 	}
 
 	@Override
@@ -283,6 +282,8 @@ public class Decomposer implements DecompositionContext {
 				System.identityHashCode(transientEntity));
 		}
 
+		trackGeneratedIdentifierHandle( insert );
+
 		unresolvedInserts.put(insert, dependencies);
 
 		// Build reverse mapping for fast resolution lookup
@@ -291,6 +292,21 @@ public class Decomposer implements DecompositionContext {
 					.computeIfAbsent(transientEntity, k -> Collections.newSetFromMap(new IdentityHashMap<>()))
 					.add(insert);
 		}
+	}
+
+	private void trackGeneratedIdentifierHandle(AbstractEntityInsertAction insert) {
+		if ( !insert.getPersister().getGenerator().generatedOnExecution() ) {
+			return;
+		}
+
+		if ( generatedIdentifierHandles == null ) {
+			generatedIdentifierHandles = new IdentityHashMap<>();
+		}
+
+		generatedIdentifierHandles.computeIfAbsent(
+				insert.getInstance(),
+				entity -> new DelayedValueAccess( insert.getEntityName() + "#id" )
+		);
 	}
 
 	/**
@@ -428,6 +444,7 @@ public class Decomposer implements DecompositionContext {
 	public void clear() {
 		unresolvedInserts.clear();
 		insertsByTransientEntity.clear();
+		generatedIdentifierHandles = null;
 	}
 
 	public void serialize(ObjectOutputStream oos) throws IOException {

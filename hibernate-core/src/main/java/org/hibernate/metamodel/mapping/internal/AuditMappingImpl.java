@@ -79,14 +79,7 @@ public class AuditMappingImpl implements AuditMapping {
 			@Nullable SelectableMapping modificationTypeMapping,
 			@Nullable SelectableMapping transactionEndMapping,
 			@Nullable SelectableMapping transactionEndTimestampMapping
-	) {
-		public TableAuditInfo(
-				String auditTableName,
-				SelectableMapping transactionIdMapping,
-				@Nullable SelectableMapping modificationTypeMapping) {
-			this( auditTableName, transactionIdMapping, modificationTypeMapping, null, null );
-		}
-	}
+	) {}
 
 	private final Map<String, TableAuditInfo> tableAuditInfoMap;
 
@@ -627,6 +620,6 @@ public class AuditMappingImpl implements AuditMapping {
 
 	private static boolean hasTemporalPredicate(LoadQueryInfluencers influencers) {
 		return influencers.getTemporalIdentifier() != null
-				&& !influencers.isAllRevisions();
+			&& !influencers.isAllRevisions();
 	}
 }

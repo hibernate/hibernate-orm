@@ -115,7 +115,7 @@ public class LoadQueryInfluencers implements Serializable {
 	// internal fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public <T> T fromInternalFetchProfile(CascadingFetchProfile profile, Supplier<T> supplier) {
-		final CascadingFetchProfile previous = enabledCascadingFetchProfile;
+		final var previous = enabledCascadingFetchProfile;
 		enabledCascadingFetchProfile = profile;
 		try {
 			return supplier.get();
@@ -181,7 +181,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public Filter enableFilter(String filterName) {
-		final FilterImpl filter = new FilterImpl( sessionFactory.getFilterDefinition( filterName ) );
+		final var filter = new FilterImpl( sessionFactory.getFilterDefinition( filterName ) );
 		if ( enabledFilters == null ) {
 			enabledFilters = new TreeMap<>();
 		}
@@ -244,7 +244,7 @@ public class LoadQueryInfluencers implements Serializable {
 	public void enableFetchProfile(String name) throws UnknownProfileException {
 		checkFetchProfileName( name );
 		if ( enabledFetchProfileNames == null ) {
-			this.enabledFetchProfileNames = new HashSet<>();
+			enabledFetchProfileNames = new HashSet<>();
 		}
 		enabledFetchProfileNames.add( name );
 	}

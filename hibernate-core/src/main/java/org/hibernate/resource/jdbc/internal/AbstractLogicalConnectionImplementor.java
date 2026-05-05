@@ -14,6 +14,7 @@ import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.resource.jdbc.spi.PhysicalJdbcTransaction;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
+import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_LOGGER;
 import static org.hibernate.resource.jdbc.internal.LogicalConnectionLogging.CONNECTION_LOGGER;
 
 /**
@@ -89,7 +90,19 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 			status = TransactionStatus.COMMITTED;
 			CONNECTION_LOGGER.transactionCommittedViaConnectionCommit();
 		}
-		catch( SQLException e ) {
+		catch ( SQLException e ) {
+			// commit failed, the current status of the
+			// transaction is ambiguous; make a last ditch
+			// attempt to roll it back
+			try {
+				getConnectionForTransactionManagement().rollback();
+			}
+			catch ( SQLException e2 ) {
+				e.addSuppressed( e2 );
+				JDBC_LOGGER.encounteredFailureRollingBackFailedCommit( e2 );
+			}
+			// at this point we can't really know for
+			// sure what happened to the transaction
 			status = TransactionStatus.FAILED_COMMIT;
 			throw new TransactionException( "Unable to commit against JDBC Connection", e );
 		}
@@ -128,7 +141,7 @@ public abstract class AbstractLogicalConnectionImplementor implements LogicalCon
 			status = TransactionStatus.ROLLED_BACK;
 			CONNECTION_LOGGER.transactionRolledBackViaConnectionRollback();
 		}
-		catch( SQLException e ) {
+		catch ( SQLException e ) {
 			status = TransactionStatus.FAILED_ROLLBACK;
 			throw new TransactionException( "Unable to rollback against JDBC Connection", e );
 		}

@@ -19,7 +19,7 @@ import org.hibernate.sql.model.ast.TableInsert;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.action.queue.support.Helper;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -43,7 +43,7 @@ import static org.hibernate.generator.EventType.INSERT;
 
 /// [Decomposer][EntityActionDecomposer] for entity insert operations.
 ///
-/// Converts an [AbstractEntityInsertAction] into a group of [PlannedOperation] to be performed.
+/// Converts an [AbstractEntityInsertAction] into a group of [FlushOperation] to be performed.
 ///
 /// @author Steve Ebersole
 public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAction> {
@@ -69,7 +69,7 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		final Object entity = action.getInstance();
 		if ( decompositionContext != null && decompositionContext.isBeingDeletedInCurrentFlush( entity ) ) {
 			return;
@@ -119,7 +119,7 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		final boolean needsIdPrePhase = Helper.needsIdentityPrePhase(entityPersister, identifier);
 
 		int localOrd = 0;
-		PlannedOperation previousOperation = null;
+		FlushOperation previousOperation = null;
 		for ( Map.Entry<String, TableInsert> entry : effectiveGroup.entrySet() ) {
 			var operation = entry.getValue().createMutationOperation(valuesAnalysis, sessionFactory);
 			var tableMapping = (TableDescriptorAsTableMapping) operation.getTableDetails();
@@ -140,7 +140,7 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 					decompositionContext
 			);
 
-			final PlannedOperation op = new PlannedOperation(
+			final FlushOperation op = new FlushOperation(
 					tableDescriptor,
 					MutationKind.INSERT,
 					operation,

@@ -23,7 +23,7 @@ import java.util.Map;
 /// Uses standard {@link MutationOperation} from the SQL model package.
 ///
 /// @author Steve Ebersole
-public class PlannedOperation {
+public class FlushOperation {
 	private final TableDescriptor tableDescriptor;
 	private final MutationKind kind;
 	private final StatementShapeKey shapeKey;
@@ -59,7 +59,7 @@ public class PlannedOperation {
 	private int ordinal;
 	private String origin;
 
-	public PlannedOperation(
+	public FlushOperation(
 			TableDescriptor tableDescriptor,
 			MutationKind kind,
 			MutationOperation jdbcOperation,
@@ -69,7 +69,7 @@ public class PlannedOperation {
 		this(tableDescriptor, kind, jdbcOperation, bindPlan, ordinal, origin, false);
 	}
 
-	public PlannedOperation(
+	public FlushOperation(
 			TableDescriptor tableDescriptor,
 			MutationKind kind,
 			MutationOperation jdbcOperation,

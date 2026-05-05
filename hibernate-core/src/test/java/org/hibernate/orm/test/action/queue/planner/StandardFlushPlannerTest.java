@@ -16,10 +16,10 @@ import org.hibernate.action.queue.graph.GraphTestUtils;
 import org.hibernate.action.queue.graph.GroupNode;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptor;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.action.queue.plan.FlushPlan;
 import org.hibernate.action.queue.plan.PlanStep;
-import org.hibernate.action.queue.plan.PlannedOperationGroup;
+import org.hibernate.action.queue.plan.FlushOperationGroup;
 import org.hibernate.action.queue.plan.StandardFlushPlanner;
 import org.hibernate.action.queue.plan.UnbreakableUniqueCycleException;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -74,7 +74,7 @@ public class StandardFlushPlannerTest {
 	@Test
 	public void testSingleNodeGraph() {
 		// Test planning with a single node (no dependencies)
-		final PlannedOperationGroup group1 = createGroup("table1", MutationKind.INSERT, 1);
+		final FlushOperationGroup group1 = createGroup("table1", MutationKind.INSERT, 1);
 		final GroupNode node1 = new GroupNode(group1, 1L);
 
 		final Graph graph = new Graph(List.of(node1), Map.of());
@@ -90,9 +90,9 @@ public class StandardFlushPlannerTest {
 	@Test
 	public void testAcyclicGraph() {
 		// Test planning with acyclic graph: A -> B -> C
-		final PlannedOperationGroup groupA = createGroup("tableA", MutationKind.INSERT, 1);
-		final PlannedOperationGroup groupB = createGroup("tableB", MutationKind.INSERT, 2);
-		final PlannedOperationGroup groupC = createGroup("tableC", MutationKind.INSERT, 3);
+		final FlushOperationGroup groupA = createGroup("tableA", MutationKind.INSERT, 1);
+		final FlushOperationGroup groupB = createGroup("tableB", MutationKind.INSERT, 2);
+		final FlushOperationGroup groupC = createGroup("tableC", MutationKind.INSERT, 3);
 
 		final GroupNode nodeA = new GroupNode(groupA, 1L);
 		final GroupNode nodeB = new GroupNode(groupB, 2L);
@@ -116,7 +116,7 @@ public class StandardFlushPlannerTest {
 		assertFalse(plan.steps().isEmpty(), "Plan should have steps");
 
 		// Verify topological order - A before B before C
-		final List<PlannedOperation> allOps = new ArrayList<>();
+		final List<FlushOperation> allOps = new ArrayList<>();
 		for ( PlanStep step : plan.steps()) {
 			allOps.addAll(step.operations());
 		}
@@ -134,8 +134,8 @@ public class StandardFlushPlannerTest {
 	@Test
 	public void testCyclicGraphBreaking() {
 		// Test planning with cyclic graph: A -> B -> A (cycle)
-		final PlannedOperationGroup groupA = createGroup("tableA", MutationKind.INSERT, 1);
-		final PlannedOperationGroup groupB = createGroup("tableB", MutationKind.INSERT, 2);
+		final FlushOperationGroup groupA = createGroup("tableA", MutationKind.INSERT, 1);
+		final FlushOperationGroup groupB = createGroup("tableB", MutationKind.INSERT, 2);
 
 		final GroupNode nodeA = new GroupNode(groupA, 1L);
 		final GroupNode nodeB = new GroupNode(groupB, 2L);
@@ -162,7 +162,7 @@ public class StandardFlushPlannerTest {
 		// Verify binding patch was installed on the child INSERT operations
 		boolean patchFound = false;
 		for ( PlanStep step : plan.steps()) {
-			for (PlannedOperation op : step.operations()) {
+			for (FlushOperation op : step.operations()) {
 				if (op.getBindingPatch() != null) {
 					patchFound = true;
 					break;
@@ -176,8 +176,8 @@ public class StandardFlushPlannerTest {
 
 	@Test
 	public void testPreferredOrderEdgeBreaksBeforeNullPatchableEdge() {
-		final PlannedOperationGroup groupA = createGroup("tableA", MutationKind.INSERT, 1);
-		final PlannedOperationGroup groupB = createGroup("tableB", MutationKind.INSERT, 2);
+		final FlushOperationGroup groupA = createGroup("tableA", MutationKind.INSERT, 1);
+		final FlushOperationGroup groupB = createGroup("tableB", MutationKind.INSERT, 2);
 
 		final GroupNode nodeA = new GroupNode(groupA, 1L);
 		final GroupNode nodeB = new GroupNode(groupB, 2L);
@@ -203,8 +203,8 @@ public class StandardFlushPlannerTest {
 
 	@Test
 	public void testUniqueUpdateCyclePrefersNullPatchableUniqueEdge() {
-		final PlannedOperationGroup groupA = createGroup("tableA", MutationKind.UPDATE, 1);
-		final PlannedOperationGroup groupB = createGroup("tableB", MutationKind.UPDATE, 2);
+		final FlushOperationGroup groupA = createGroup("tableA", MutationKind.UPDATE, 1);
+		final FlushOperationGroup groupB = createGroup("tableB", MutationKind.UPDATE, 2);
 
 		final GroupNode nodeA = new GroupNode(groupA, 1L);
 		final GroupNode nodeB = new GroupNode(groupB, 2L);
@@ -235,8 +235,8 @@ public class StandardFlushPlannerTest {
 
 	@Test
 	public void testEqualCostCycleBreakUsesStableEdgeId() {
-		final PlannedOperationGroup groupA = createGroup("tableA", MutationKind.INSERT, 1);
-		final PlannedOperationGroup groupB = createGroup("tableB", MutationKind.INSERT, 1);
+		final FlushOperationGroup groupA = createGroup("tableA", MutationKind.INSERT, 1);
+		final FlushOperationGroup groupB = createGroup("tableB", MutationKind.INSERT, 1);
 
 		final GroupNode nodeA = new GroupNode(groupA, 1L);
 		final GroupNode nodeB = new GroupNode(groupB, 2L);
@@ -260,8 +260,8 @@ public class StandardFlushPlannerTest {
 
 	@Test
 	public void testRequiredUniqueUpdateCycleThrows() {
-		final PlannedOperationGroup groupA = createGroup("tableA", MutationKind.UPDATE, 1);
-		final PlannedOperationGroup groupB = createGroup("tableB", MutationKind.UPDATE, 2);
+		final FlushOperationGroup groupA = createGroup("tableA", MutationKind.UPDATE, 1);
+		final FlushOperationGroup groupB = createGroup("tableB", MutationKind.UPDATE, 2);
 
 		final GroupNode nodeA = new GroupNode(groupA, 1L);
 		final GroupNode nodeB = new GroupNode(groupB, 2L);
@@ -295,8 +295,8 @@ public class StandardFlushPlannerTest {
 
 	@Test
 	public void testRequiredForeignKeyEdgeHasNoPatchCycleType() {
-		final PlannedOperationGroup groupA = createGroup("tableA", MutationKind.INSERT, 1);
-		final PlannedOperationGroup groupB = createGroup("tableB", MutationKind.INSERT, 2);
+		final FlushOperationGroup groupA = createGroup("tableA", MutationKind.INSERT, 1);
+		final FlushOperationGroup groupB = createGroup("tableB", MutationKind.INSERT, 2);
 
 		final GroupNode nodeA = new GroupNode(groupA, 1L);
 		final GroupNode nodeB = new GroupNode(groupB, 2L);
@@ -308,8 +308,8 @@ public class StandardFlushPlannerTest {
 
 	@Test
 	public void testRequiredForeignKeyUpdateBreakDoesNotInstallPatch() {
-		final PlannedOperationGroup groupA = createGroup("tableA", MutationKind.UPDATE, 1);
-		final PlannedOperationGroup groupB = createGroup("tableB", MutationKind.INSERT, 2);
+		final FlushOperationGroup groupA = createGroup("tableA", MutationKind.UPDATE, 1);
+		final FlushOperationGroup groupB = createGroup("tableB", MutationKind.INSERT, 2);
 
 		final GroupNode nodeA = new GroupNode(groupA, 1L);
 		final GroupNode nodeB = new GroupNode(groupB, 2L);
@@ -335,7 +335,7 @@ public class StandardFlushPlannerTest {
 	@Test
 	public void testSelfLoopBreaking() {
 		// Test planning with self-referencing node: A -> A
-		final PlannedOperationGroup groupA = createGroup("tableA", MutationKind.INSERT, 1);
+		final FlushOperationGroup groupA = createGroup("tableA", MutationKind.INSERT, 1);
 		final GroupNode nodeA = new GroupNode(groupA, 1L);
 
 		// A -> A (self loop)
@@ -353,7 +353,7 @@ public class StandardFlushPlannerTest {
 		assertTrue(selfEdge.isBroken(), "Self-loop edge should be broken");
 
 		// Verify operation has binding patch
-		final PlannedOperation op = groupA.operations().get(0);
+		final FlushOperation op = groupA.operations().get(0);
 		assertNotNull(op.getBindingPatch(), "Self-loop should install binding patch");
 	}
 
@@ -364,10 +364,10 @@ public class StandardFlushPlannerTest {
 		// SCC2: C -> D -> C (cycle)
 		// A -> C (dependency between SCCs)
 
-		final PlannedOperationGroup groupA = createGroup("tableA", MutationKind.INSERT, 1);
-		final PlannedOperationGroup groupB = createGroup("tableB", MutationKind.INSERT, 2);
-		final PlannedOperationGroup groupC = createGroup("tableC", MutationKind.INSERT, 3);
-		final PlannedOperationGroup groupD = createGroup("tableD", MutationKind.INSERT, 4);
+		final FlushOperationGroup groupA = createGroup("tableA", MutationKind.INSERT, 1);
+		final FlushOperationGroup groupB = createGroup("tableB", MutationKind.INSERT, 2);
+		final FlushOperationGroup groupC = createGroup("tableC", MutationKind.INSERT, 3);
+		final FlushOperationGroup groupD = createGroup("tableD", MutationKind.INSERT, 4);
 
 		final GroupNode nodeA = new GroupNode(groupA, 1L);
 		final GroupNode nodeB = new GroupNode(groupB, 2L);
@@ -409,11 +409,11 @@ public class StandardFlushPlannerTest {
 		// Test that operations with same shape are grouped together
 		final StatementShapeKey shapeKey1 = new StatementShapeKey("table1", MutationKind.INSERT, 100);
 
-		final PlannedOperation op1 = createOperation("table1", MutationKind.INSERT, shapeKey1, 1);
-		final PlannedOperation op2 = createOperation("table1", MutationKind.INSERT, shapeKey1, 2);
-		final PlannedOperation op3 = createOperation("table1", MutationKind.INSERT, shapeKey1, 3);
+		final FlushOperation op1 = createOperation("table1", MutationKind.INSERT, shapeKey1, 1);
+		final FlushOperation op2 = createOperation("table1", MutationKind.INSERT, shapeKey1, 2);
+		final FlushOperation op3 = createOperation("table1", MutationKind.INSERT, shapeKey1, 3);
 
-		final PlannedOperationGroup group1 = new PlannedOperationGroup(
+		final FlushOperationGroup group1 = new FlushOperationGroup(
 				"table1",
 				MutationKind.INSERT,
 				shapeKey1,
@@ -443,17 +443,17 @@ public class StandardFlushPlannerTest {
 		final StatementShapeKey shapeKey2 = new StatementShapeKey("table1", MutationKind.INSERT, 200); // different hash
 		final StatementShapeKey shapeKey3 = new StatementShapeKey("table2", MutationKind.INSERT, 100); // different table
 
-		final PlannedOperation op1 = createOperation("table1", MutationKind.INSERT, shapeKey1, 1);
-		final PlannedOperation op2 = createOperation("table1", MutationKind.INSERT, shapeKey2, 2);
-		final PlannedOperation op3 = createOperation("table2", MutationKind.INSERT, shapeKey3, 3);
+		final FlushOperation op1 = createOperation("table1", MutationKind.INSERT, shapeKey1, 1);
+		final FlushOperation op2 = createOperation("table1", MutationKind.INSERT, shapeKey2, 2);
+		final FlushOperation op3 = createOperation("table2", MutationKind.INSERT, shapeKey3, 3);
 
-		final PlannedOperationGroup group1 = new PlannedOperationGroup(
+		final FlushOperationGroup group1 = new FlushOperationGroup(
 				"table1", MutationKind.INSERT, shapeKey1, List.of(op1), false, false, 1, "test"
 		);
-		final PlannedOperationGroup group2 = new PlannedOperationGroup(
+		final FlushOperationGroup group2 = new FlushOperationGroup(
 				"table1", MutationKind.INSERT, shapeKey2, List.of(op2), false, false, 2, "test"
 		);
-		final PlannedOperationGroup group3 = new PlannedOperationGroup(
+		final FlushOperationGroup group3 = new FlushOperationGroup(
 				"table2", MutationKind.INSERT, shapeKey3, List.of(op3), false, false, 3, "test"
 		);
 
@@ -473,9 +473,9 @@ public class StandardFlushPlannerTest {
 	@Test
 	public void testDifferentMutationKinds() {
 		// Test planning with different mutation kinds (INSERT, UPDATE, DELETE)
-		final PlannedOperationGroup insertGroup = createGroup("table1", MutationKind.INSERT, 1);
-		final PlannedOperationGroup updateGroup = createGroup("table1", MutationKind.UPDATE, 2);
-		final PlannedOperationGroup deleteGroup = createGroup("table2", MutationKind.DELETE, 3);
+		final FlushOperationGroup insertGroup = createGroup("table1", MutationKind.INSERT, 1);
+		final FlushOperationGroup updateGroup = createGroup("table1", MutationKind.UPDATE, 2);
+		final FlushOperationGroup deleteGroup = createGroup("table2", MutationKind.DELETE, 3);
 
 		final GroupNode insertNode = new GroupNode(insertGroup, 1L);
 		final GroupNode updateNode = new GroupNode(updateGroup, 2L);
@@ -500,8 +500,8 @@ public class StandardFlushPlannerTest {
 	@Test
 	public void testUnbreakableCycleThrowsException() {
 		// Test that unbreakable cycle throws exception
-		final PlannedOperationGroup groupA = createGroup("tableA", MutationKind.INSERT, 1);
-		final PlannedOperationGroup groupB = createGroup("tableB", MutationKind.INSERT, 2);
+		final FlushOperationGroup groupA = createGroup("tableA", MutationKind.INSERT, 1);
+		final FlushOperationGroup groupB = createGroup("tableB", MutationKind.INSERT, 2);
 
 		final GroupNode nodeA = new GroupNode(groupA, 1L);
 		final GroupNode nodeB = new GroupNode(groupB, 2L);
@@ -524,8 +524,8 @@ public class StandardFlushPlannerTest {
 	@Test
 	public void testBreakCostPreference() {
 		// Test that edges with lower break cost are preferred when breaking cycles
-		final PlannedOperationGroup groupA = createGroup("tableA", MutationKind.INSERT, 1);
-		final PlannedOperationGroup groupB = createGroup("tableB", MutationKind.INSERT, 2);
+		final FlushOperationGroup groupA = createGroup("tableA", MutationKind.INSERT, 1);
+		final FlushOperationGroup groupB = createGroup("tableB", MutationKind.INSERT, 2);
 
 		final GroupNode nodeA = new GroupNode(groupA, 1L);
 		final GroupNode nodeB = new GroupNode(groupB, 2L);
@@ -557,10 +557,10 @@ public class StandardFlushPlannerTest {
 		// A -> C -> D
 		// (diamond pattern)
 
-		final PlannedOperationGroup groupA = createGroup("tableA", MutationKind.INSERT, 1);
-		final PlannedOperationGroup groupB = createGroup("tableB", MutationKind.INSERT, 2);
-		final PlannedOperationGroup groupC = createGroup("tableC", MutationKind.INSERT, 3);
-		final PlannedOperationGroup groupD = createGroup("tableD", MutationKind.INSERT, 4);
+		final FlushOperationGroup groupA = createGroup("tableA", MutationKind.INSERT, 1);
+		final FlushOperationGroup groupB = createGroup("tableB", MutationKind.INSERT, 2);
+		final FlushOperationGroup groupC = createGroup("tableC", MutationKind.INSERT, 3);
+		final FlushOperationGroup groupD = createGroup("tableD", MutationKind.INSERT, 4);
 
 		final GroupNode nodeA = new GroupNode(groupA, 1L);
 		final GroupNode nodeB = new GroupNode(groupB, 2L);
@@ -587,7 +587,7 @@ public class StandardFlushPlannerTest {
 		assertFalse(plan.steps().isEmpty(), "Plan should have steps");
 
 		// Verify topological order - A before B and C, B and C before D
-		final List<PlannedOperation> allOps = new ArrayList<>();
+		final List<FlushOperation> allOps = new ArrayList<>();
 		for ( PlanStep step : plan.steps()) {
 			allOps.addAll(step.operations());
 		}
@@ -606,8 +606,8 @@ public class StandardFlushPlannerTest {
 	@Test
 	public void testBindingPatchOnlyOnInserts() {
 		// Test that binding patches are only installed on INSERT operations, not UPDATE or DELETE
-		final PlannedOperationGroup groupA = createGroup("tableA", MutationKind.UPDATE, 1);
-		final PlannedOperationGroup groupB = createGroup("tableB", MutationKind.UPDATE, 2);
+		final FlushOperationGroup groupA = createGroup("tableA", MutationKind.UPDATE, 1);
+		final FlushOperationGroup groupB = createGroup("tableB", MutationKind.UPDATE, 2);
 
 		final GroupNode nodeA = new GroupNode(groupA, 1L);
 		final GroupNode nodeB = new GroupNode(groupB, 2L);
@@ -632,7 +632,7 @@ public class StandardFlushPlannerTest {
 
 		// Verify no binding patch on UPDATE operations
 		for ( PlanStep step : plan.steps()) {
-			for (PlannedOperation op : step.operations()) {
+			for (FlushOperation op : step.operations()) {
 				if (op.getKind() == MutationKind.UPDATE) {
 					assertNull(op.getBindingPatch(), "UPDATE operations should not have binding patch");
 				}
@@ -644,7 +644,7 @@ public class StandardFlushPlannerTest {
 	// Helper methods
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private PlannedOperationGroup createGroup(String tableName, MutationKind kind, int ordinal) {
+	private FlushOperationGroup createGroup(String tableName, MutationKind kind, int ordinal) {
 		return createGroup(
 				makeTableDescriptor( tableName ),
 				kind,
@@ -672,11 +672,11 @@ public class StandardFlushPlannerTest {
 		);
 	}
 
-	private PlannedOperationGroup createGroup(TableDescriptor tableDescriptor, MutationKind kind, int ordinal) {
+	private FlushOperationGroup createGroup(TableDescriptor tableDescriptor, MutationKind kind, int ordinal) {
 		final StatementShapeKey shapeKey = new StatementShapeKey(tableDescriptor.name(), kind, ordinal);
-		final PlannedOperation op = createOperation(tableDescriptor, kind, shapeKey, ordinal);
+		final FlushOperation op = createOperation(tableDescriptor, kind, shapeKey, ordinal);
 
-		return new PlannedOperationGroup(
+		return new FlushOperationGroup(
 				tableDescriptor.name(),
 				kind,
 				shapeKey,
@@ -688,7 +688,7 @@ public class StandardFlushPlannerTest {
 		);
 	}
 
-	private PlannedOperation createOperation(
+	private FlushOperation createOperation(
 			String tableName,
 			MutationKind kind,
 			StatementShapeKey shapeKey,
@@ -696,12 +696,12 @@ public class StandardFlushPlannerTest {
 		return createOperation( makeTableDescriptor( tableName ), kind, shapeKey, ordinal );
 	}
 
-	private PlannedOperation createOperation(
+	private FlushOperation createOperation(
 			TableDescriptor tableDescriptor,
 			MutationKind kind,
 			StatementShapeKey shapeKey,
 			int ordinal) {
-		return new PlannedOperation(
+		return new FlushOperation(
 				tableDescriptor,
 				kind,
 				new MockMutationOperation(),
@@ -727,7 +727,7 @@ public class StandardFlushPlannerTest {
 		}
 	}
 
-	private int findOperationIndex(List<PlannedOperation> ops, String tableName) {
+	private int findOperationIndex(List<FlushOperation> ops, String tableName) {
 		for (int i = 0; i < ops.size(); i++) {
 			if (ops.get(i).getTableExpression().equals(tableName)) {
 				return i;
@@ -764,7 +764,7 @@ public class StandardFlushPlannerTest {
 
 	private static class MockBindPlan implements BindPlan {
 		@Override
-		public void execute(ExecutionContext context, PlannedOperation plannedOperation, SharedSessionContractImplementor session) {
+		public void execute(ExecutionContext context, FlushOperation flushOperation, SharedSessionContractImplementor session) {
 			// no-op for testing
 		}
 	}

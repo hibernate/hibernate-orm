@@ -12,7 +12,7 @@ import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.queue.decompose.DecompositionContext;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -626,7 +626,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		decomposer.decomposeRecreate( action, ordinalBase, session, decompositionContext, operationConsumer );
 	}
 
@@ -636,7 +636,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		decomposer.decomposeUpdate( action, ordinalBase, session, decompositionContext, operationConsumer );
 	}
 
@@ -646,7 +646,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		decomposer.decomposeRemove( action, ordinalBase, session, decompositionContext, operationConsumer );
 	}
 
@@ -654,7 +654,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			QueuedOperationCollectionAction action,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		decomposer.decomposeQueuedOperations( action, ordinalBase, session, operationConsumer );
 	}
 

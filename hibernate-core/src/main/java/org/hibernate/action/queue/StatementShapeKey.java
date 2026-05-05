@@ -4,7 +4,7 @@
  */
 package org.hibernate.action.queue;
 
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.action.queue.support.OperationGroupKey;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.sql.model.PreparableMutationOperation;
@@ -18,23 +18,23 @@ import org.hibernate.sql.model.PreparableMutationOperation;
 /// @author Steve Ebersole
 public record StatementShapeKey(String tableExpression, MutationKind kind, int shapeHash) implements BatchKey, OperationGroupKey {
 
-	public static StatementShapeKey forInsert(String tableName, PlannedOperation plannedOperation) {
-		final int h = hashMutationShape(tableName, MutationKind.INSERT, plannedOperation);
+	public static StatementShapeKey forInsert(String tableName, FlushOperation flushOperation) {
+		final int h = hashMutationShape(tableName, MutationKind.INSERT, flushOperation);
 		return new StatementShapeKey( tableName, MutationKind.INSERT, h);
 	}
 
-	public static StatementShapeKey forUpdate(String tableName, PlannedOperation plannedOperation) {
-		final int h = hashMutationShape(tableName, MutationKind.UPDATE, plannedOperation);
+	public static StatementShapeKey forUpdate(String tableName, FlushOperation flushOperation) {
+		final int h = hashMutationShape(tableName, MutationKind.UPDATE, flushOperation);
 		return new StatementShapeKey( tableName, MutationKind.UPDATE, h);
 	}
 
-	public static StatementShapeKey forUpdateOrder(String tableName, PlannedOperation plannedOperation) {
-		final int h = hashMutationShape(tableName, MutationKind.UPDATE_ORDER, plannedOperation);
+	public static StatementShapeKey forUpdateOrder(String tableName, FlushOperation flushOperation) {
+		final int h = hashMutationShape(tableName, MutationKind.UPDATE_ORDER, flushOperation);
 		return new StatementShapeKey( tableName, MutationKind.UPDATE_ORDER, h);
 	}
 
-	public static StatementShapeKey forDelete(String tableName, PlannedOperation plannedOperation) {
-		final int h = hashMutationShape(tableName, MutationKind.DELETE, plannedOperation);
+	public static StatementShapeKey forDelete(String tableName, FlushOperation flushOperation) {
+		final int h = hashMutationShape(tableName, MutationKind.DELETE, flushOperation);
 		return new StatementShapeKey( tableName, MutationKind.DELETE, h);
 	}
 
@@ -49,26 +49,26 @@ public record StatementShapeKey(String tableExpression, MutationKind kind, int s
 	private static int hashMutationShape(
 			String normalizedTableName,
 			MutationKind kind,
-			PlannedOperation plannedOperation) {
+			FlushOperation flushOperation) {
 		// Always include table + kind (guards against collisions)
 		int hash = 17;
 		hash = 31 * hash + normalizedTableName.hashCode();
 		hash = 31 * hash + kind.hashCode();
 
 		// Include navigableRole for collections to distinguish multiple collections on same table
-		var tableDescriptor = plannedOperation.getMutatingTableDescriptor();
+		var tableDescriptor = flushOperation.getMutatingTableDescriptor();
 		if ( tableDescriptor instanceof org.hibernate.action.queue.meta.CollectionTableDescriptor ctd ) {
 			if ( ctd.navigableRole() != null ) {
 				hash = 31 * hash + ctd.navigableRole().hashCode();
 			}
 		}
 
-		if ( plannedOperation.getJdbcOperation() instanceof PreparableMutationOperation pmo ) {
+		if ( flushOperation.getJdbcOperation() instanceof PreparableMutationOperation pmo ) {
 			hash = 31 * hash + pmo.getSqlString().hashCode();
 		}
 		else {
 			// we have some form of "self executing" operation
-			hash = 31 * hash + plannedOperation.getJdbcOperation().hashCode();
+			hash = 31 * hash + flushOperation.getJdbcOperation().hashCode();
 		}
 
 		return hash;

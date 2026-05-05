@@ -11,7 +11,7 @@ import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.exec.JdbcValueBindings;
 import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -57,18 +57,18 @@ public class EntitySoftDeleteBindPlan implements BindPlan, OperationResultChecke
 	@Override
 	public void execute(
 			ExecutionContext context,
-			PlannedOperation plannedOperation,
+			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
 		context.executeRow(
-				plannedOperation,
-				(jdbcValueBindings, s) -> bindValues( jdbcValueBindings, plannedOperation, session ),
+				flushOperation,
+				(jdbcValueBindings, s) -> bindValues( jdbcValueBindings, flushOperation, session ),
 				this
 		);
 	}
 
 	private void bindValues(
 			JdbcValueBindings valueBindings,
-			PlannedOperation plannedOperation,
+			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
 		// NOTE: We do NOT bind the soft delete value or non-deleted restriction here.
 		// These are literal values (e.g., true/false or CURRENT_TIMESTAMP) that are

@@ -191,7 +191,7 @@ With graph queue + bundling enabled:
 - **26-32% faster** than legacy action queue
 - **0.3-1.4% faster** than graph queue without bundling
 - Better throughput scaling with collection size
-- Reduced memory pressure from fewer PlannedOperation objects
+- Reduced memory pressure from fewer FlushOperation objects
 
 ---
 
@@ -199,13 +199,13 @@ With graph queue + bundling enabled:
 
 ### Without Bundling
 For a collection with 100 items:
-- Creates 100 individual `PlannedOperation` objects
+- Creates 100 individual `FlushOperation` objects
 - Creates 100 individual `SingleRowInsertBindPlan` objects
 - Graph queue must manage 100 nodes in dependency graph
 
 ### With Bundling
 For the same collection:
-- Creates 1 `PlannedOperation` object
+- Creates 1 `FlushOperation` object
 - Creates 1 `BundledCollectionInsertBindPlan` containing all 100 entries
 - Graph queue manages just 1 node
 - BindPlan executes all 100 rows via `ExecutionContext.executeRow()`

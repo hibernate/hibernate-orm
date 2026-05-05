@@ -20,11 +20,11 @@ import org.hibernate.action.queue.exec.PlanStepExecutorFactory;
 import org.hibernate.action.queue.decompose.Decomposer;
 import org.hibernate.action.queue.graph.GraphBuilder;
 import org.hibernate.action.queue.graph.StandardGraphBuilder;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.action.queue.plan.FlushPlan;
 import org.hibernate.action.queue.plan.FlushPlanner;
 import org.hibernate.action.queue.plan.PlanStep;
-import org.hibernate.action.queue.plan.PlannedOperationGroup;
+import org.hibernate.action.queue.plan.FlushOperationGroup;
 import org.hibernate.action.queue.plan.StandardFlushPlanner;
 import org.hibernate.action.queue.support.GraphBasedActionQueueFactory;
 import org.hibernate.action.queue.support.OperationGroupKey;
@@ -61,22 +61,22 @@ import static org.hibernate.action.queue.CollectionOrdinalSupport.extractCollect
 /// list of [actions][Executable].
 ///
 /// - First, these actions (EntityInsertAction, etc.) are decomposed into low-level
-/// 	[PlannedOperation] references by the [Decomposer] delegate.
-/// - The [PlannedOperation] references are grouped by "shape" into [PlannedOperationGroup] references.
-/// - The [PlannedOperationGroup] references are then arranged into a directed dependency `Graph`
+/// 	[FlushOperation] references by the [Decomposer] delegate.
+/// - The [FlushOperation] references are grouped by "shape" into [FlushOperationGroup] references.
+/// - The [FlushOperationGroup] references are then arranged into a directed dependency `Graph`
 /// 	(using the [ConstraintModel]) by [GraphBuilder].
 /// - [FlushPlanner] then creates an executable plan from the `Graph`..
 ///
 /// Some important concepts for this coordination include -
 ///
 /// = `ConstraintModel` - Details about constraints defined on the domain model.
-/// - `PlannedOperation` - A single operation against a single table
-/// - `PlannedOperationGroup` - Multiple operations (of the same kind and shape) against a single table
-/// - `GraphNode` - Wraps `PlannedOperation` and acts as vertx for the graph.
+/// - `FlushOperation` - A single operation against a single table
+/// - `FlushOperationGroup` - Multiple operations (of the same kind and shape) against a single table
+/// - `GraphNode` - Wraps `FlushOperation` and acts as vertx for the graph.
 /// - `GraphEdge` - Used to denote to/from dependencies in the graph.
 /// - `CycleBreaker` - Used to find edges where we can break cycles in the graph (using fk-fixups e.g.).
-/// - `BindingPatch` - When we do break an edge, we "install" one of these on to the corresponding `PlannedOperation`.
-/// - `PlanStep` - Grouping of independent `PlannedOperation` references.
+/// - `BindingPatch` - When we do break an edge, we "install" one of these on to the corresponding `FlushOperation`.
+/// - `PlanStep` - Grouping of independent `FlushOperation` references.
 /// - `FlushPlan` - Group of `PlanStep`, indicates the overall groupings of operations to perform as part of the flush.
 ///
 /// @author Steve Ebersole
@@ -209,7 +209,7 @@ public class FlushCoordinator {
 
 		if ( operationGroups.isEmpty() ) {
 			// No SQL operations needed - post-execution callbacks (if any) were already
-			// attached to PlannedOperations and would have run during decomposition.
+			// attached to Flush operations and would have run during decomposition.
 			// Since there are no operations, there's nothing to finalize.
 			decomposer.validateNoUnresolvedInserts();
 			return;
@@ -253,10 +253,10 @@ public class FlushCoordinator {
 	///
 	/// @param groups the operation groups to check
 	/// @return true if we can skip graph building
-	private boolean canSkipGraphBuilding(List<PlannedOperationGroup> groups) {
+	private boolean canSkipGraphBuilding(List<FlushOperationGroup> groups) {
 		// Single group - check for intra-group dependencies
 		if (groups.size() == 1) {
-			PlannedOperationGroup singleGroup = groups.get(0);
+			FlushOperationGroup singleGroup = groups.get(0);
 
 			// Single operation - definitely no dependencies
 			if (singleGroup.operations().size() <= 1) {
@@ -278,7 +278,7 @@ public class FlushCoordinator {
 		MutationKind firstKind = groups.get(0).kind();
 
 		// Mixed kinds or UPDATE_ORDER (collection operations) need graph
-		for (PlannedOperationGroup group : groups) {
+		for (FlushOperationGroup group : groups) {
 			if (group.kind() != firstKind || group.kind() == MutationKind.UPDATE_ORDER) {
 				return false;
 			}
@@ -304,10 +304,10 @@ public class FlushCoordinator {
 	/// @param groups the operation groups
 	/// @param kind the mutation kind (INSERT or DELETE)
 	/// @return true if there are inter-group dependencies
-	private boolean hasInterGroupDependencies(List<PlannedOperationGroup> groups, MutationKind kind) {
+	private boolean hasInterGroupDependencies(List<FlushOperationGroup> groups, MutationKind kind) {
 		// Build set of tables involved in this flush
 		final java.util.Set<String> involvedTables = new java.util.HashSet<>();
-		for (PlannedOperationGroup group : groups) {
+		for (FlushOperationGroup group : groups) {
 			involvedTables.add(group.tableExpression());
 		}
 
@@ -350,9 +350,9 @@ public class FlushCoordinator {
 	///
 	/// @param groups the UPDATE operation groups
 	/// @return true if there are potential unique constraint conflicts
-	private boolean hasUniqueConstraintConflicts(List<PlannedOperationGroup> groups) {
+	private boolean hasUniqueConstraintConflicts(List<FlushOperationGroup> groups) {
 		// Check if any group operates on a table with unique constraints
-		for (PlannedOperationGroup group : groups) {
+		for (FlushOperationGroup group : groups) {
 			if ( group.hasUniqueConstraints() ) {
 				// This table has unique constraints - need graph to detect swaps
 				return true;
@@ -366,10 +366,10 @@ public class FlushCoordinator {
 	///
 	/// @param groups the operation groups
 	/// @return a simple flush plan
-	private FlushPlan createSimplePlan(List<PlannedOperationGroup> groups) {
+	private FlushPlan createSimplePlan(List<FlushOperationGroup> groups) {
 		// Collect all operations from all groups, maintaining their order
-		final List<PlannedOperation> allOperations = new ArrayList<>();
-		for (PlannedOperationGroup group : groups) {
+		final List<FlushOperation> allOperations = new ArrayList<>();
+		for (FlushOperationGroup group : groups) {
 			allOperations.addAll(group.operations());
 		}
 
@@ -380,14 +380,14 @@ public class FlushCoordinator {
 
 	/// Simple implementation of PlanStep for fast path execution.
 	private static class SimplePlanStep implements PlanStep {
-		private final List<PlannedOperation> operations;
+		private final List<FlushOperation> operations;
 
-		SimplePlanStep(List<PlannedOperation> operations) {
+		SimplePlanStep(List<FlushOperation> operations) {
 			this.operations = List.copyOf(operations);
 		}
 
 		@Override
-		public List<PlannedOperation> operations() {
+		public List<FlushOperation> operations() {
 			return operations;
 		}
 
@@ -396,7 +396,7 @@ public class FlushCoordinator {
 	/**
 	 * Decompose executables from separate phases, preserving phase boundaries.
 	 */
-	private List<PlannedOperationGroup> decomposeExecutablePhases(
+	private List<FlushOperationGroup> decomposeExecutablePhases(
 			List<CollectionRemoveAction> orphanCollectionRemovals,
 			List<OrphanRemovalAction> orphanRemovals,
 			List<AbstractEntityInsertAction> insertions,
@@ -409,7 +409,7 @@ public class FlushCoordinator {
 
 		decomposer.beginFlush( insertions, updates, orphanRemovals, deletions );
 
-		final ArrayList<PlannedOperation> operations = new ArrayList<>();
+		final ArrayList<FlushOperation> operations = new ArrayList<>();
 		int ordinalBase = 0;
 
 		// Decompose each phase separately, maintaining ordinal ordering
@@ -429,14 +429,14 @@ public class FlushCoordinator {
 		return groupOperations(operations);
 	}
 
-	private int decomposePhase(List<? extends Executable> executables, int ordinalBase, List<PlannedOperation> operations) {
+	private int decomposePhase(List<? extends Executable> executables, int ordinalBase, List<FlushOperation> operations) {
 		for (Executable e : executables) {
 			decomposer.decompose(e, ordinalBase++, operations::add);
 		}
 		return ordinalBase;
 	}
 
-	/// Groups PlannedOperations by their StatementShapeKey (table + kind + SQL shape).
+	/// Groups Flush operations by their StatementShapeKey (table + kind + SQL shape).
 	///
 	/// Uses a hybrid grouping strategy:
 	/// - For tables with self-referential associations: groups are split by ordinalBase
@@ -453,7 +453,7 @@ public class FlushCoordinator {
 	///
 	/// @param operations the raw operations from decomposition
 	/// @return grouped operations
-	private List<PlannedOperationGroup> groupOperations(List<PlannedOperation> operations) {
+	private List<FlushOperationGroup> groupOperations(List<FlushOperation> operations) {
 		if (operations.isEmpty()) {
 			return List.of();
 		}
@@ -462,7 +462,7 @@ public class FlushCoordinator {
 		// Also separate by cascade source to preserve cascade metadata fidelity
 		final Map<OperationGroupKey, OperationGroupBuilder> builders = new LinkedHashMap<>();
 
-		for (PlannedOperation operation : operations) {
+		for (FlushOperation operation : operations) {
 			final StatementShapeKey shapeKey = operation.getShapeKey();
 
 			// Build composite key considering:
@@ -495,7 +495,7 @@ public class FlushCoordinator {
 		}
 
 		// Build groups
-		final List<PlannedOperationGroup> groups = new ArrayList<>(builders.size());
+		final List<FlushOperationGroup> groups = new ArrayList<>(builders.size());
 		for (OperationGroupBuilder builder : builders.values()) {
 			groups.add(builder.build());
 		}
@@ -503,7 +503,7 @@ public class FlushCoordinator {
 		return groups;
 	}
 
-	/// Helper class to build a PlannedOperationGroup from multiple PlannedOperations.
+	/// Helper class to build a FlushOperationGroup from multiple Flush operations.
 	/// When merging operations from multiple entities, tracks the minimum ordinal for proper ordering.
 	private static class OperationGroupBuilder {
 		private final String tableExpression;
@@ -512,9 +512,9 @@ public class FlushCoordinator {
 		private int ordinal;
 		private final String origin;
 		private final boolean hasUniqueConstraints;
-		private final List<PlannedOperation> operations = new ArrayList<>();
+		private final List<FlushOperation> operations = new ArrayList<>();
 
-		OperationGroupBuilder(PlannedOperation firstOperation, StatementShapeKey shapeKey) {
+		OperationGroupBuilder(FlushOperation firstOperation, StatementShapeKey shapeKey) {
 			this.tableExpression = firstOperation.getTableExpression();
 			this.kind = firstOperation.getKind();
 			this.shapeKey = shapeKey;
@@ -525,19 +525,19 @@ public class FlushCoordinator {
 			hasUniqueConstraints = firstOperation.getMutatingTableDescriptor().hasUniqueConstraints();
 		}
 
-		void addOperation(PlannedOperation op) {
+		void addOperation(FlushOperation op) {
 			this.operations.add(op);
 			// When merging operations from different entities, use the minimum ordinal
 			// to ensure the group executes at the earliest required point
 			this.ordinal = Math.min(this.ordinal, op.getOrdinal());
 		}
 
-		PlannedOperationGroup build() {
+		FlushOperationGroup build() {
 			// Compute group's needsIdPrePhase as true if ANY operation needs it
 			final boolean needsIdPrePhase = operations.stream()
-					.anyMatch(PlannedOperation::needsIdPrePhase);
+					.anyMatch(FlushOperation::needsIdPrePhase);
 
-			return new PlannedOperationGroup(
+			return new FlushOperationGroup(
 					tableExpression,
 					kind,
 					shapeKey,
@@ -561,7 +561,7 @@ public class FlushCoordinator {
 		executor.finishUp();
 
 		// Execute all fixups after all regular operations
-		final List<PlannedOperation> fixups = plan.drainFixupsInOrder();
+		final List<FlushOperation> fixups = plan.drainFixupsInOrder();
 		if (!fixups.isEmpty()) {
 			executor.execute( fixups, null, null );
 		}
@@ -584,7 +584,7 @@ public class FlushCoordinator {
 
 		// Try to resolve inserts for each entity that became managed
 		for (Object managedEntity : newlyManagedEntities) {
-			var resolvedOperations = new ArrayList<PlannedOperation>();
+			var resolvedOperations = new ArrayList<FlushOperation>();
 			decomposer.resolveAndDecompose(managedEntity, resolvedOperations::add);
 
 			if (!resolvedOperations.isEmpty()) {

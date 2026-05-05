@@ -7,11 +7,11 @@ package org.hibernate.action.queue.cyclebreak;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 
-/// Factory for building PlannedOperations which "fixup" cycle breaks due to
+/// Factory for building Flush operations which "fixup" cycle breaks due to
 /// foreign-key cycles.
 ///
 /// The original operation inserts null for those foreign-key columns as part
@@ -28,8 +28,8 @@ import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 public final class FkFixupUpdateFactory {
 
 	@Nullable
-	public PlannedOperation buildOperationIfNeeded(
-			PlannedOperation cycleBrokenOp,
+	public FlushOperation buildOperationIfNeeded(
+			FlushOperation cycleBrokenOp,
 			Object entityId,
 			SharedSessionContractImplementor session) {
 		assert cycleBrokenOp.getKind() == MutationKind.INSERT;
@@ -69,7 +69,7 @@ public final class FkFixupUpdateFactory {
 				cycleBrokenOp.getIntendedFkValues()
 		);
 
-		return new PlannedOperation(
+		return new FlushOperation(
 				tableDescriptor,
 				MutationKind.UPDATE,
 				jdbcUpdate,

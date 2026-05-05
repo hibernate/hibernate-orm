@@ -5,14 +5,14 @@
 package org.hibernate.action.queue.graph;
 
 import org.hibernate.action.queue.constraint.DeferrableConstraintMode;
-import org.hibernate.action.queue.plan.PlannedOperationGroup;
+import org.hibernate.action.queue.plan.FlushOperationGroup;
 
 import java.util.List;
 
-/// Constructs a directed dependency [graph][Graph] from PlannedOperations using details
+/// Constructs a directed dependency [graph][Graph] from Flush operations using details
 /// from the [org.hibernate.action.queue.constraint.ConstraintModel].
 ///
 /// @author Steve Ebersole
 public interface GraphBuilder {
-	Graph build(List<PlannedOperationGroup> groups, DeferrableConstraintMode deferrableConstraintMode);
+	Graph build(List<FlushOperationGroup> groups, DeferrableConstraintMode deferrableConstraintMode);
 }

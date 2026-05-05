@@ -5,7 +5,7 @@
 package org.hibernate.id.insert;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
@@ -114,7 +114,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 
 	@Override
 	public GeneratedValues performGraphMutation(
-			PlannedOperation operation,
+			FlushOperation operation,
 			Object entity,
 			SharedSessionContractImplementor session) {
 		var jdbcOperation = (PreparableMutationOperation) operation.getJdbcOperation();
@@ -134,7 +134,7 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 
 			var ref = new MutableObject<GeneratedValues>();
 			operation.getBindPlan().execute(
-					(plannedOperation, binder, resultChecker) -> {
+					(flushOperation, binder, resultChecker) -> {
 						binder.accept( valueBindings, session );
 						valueBindings.beforeStatement( preparedStatement, session );
 

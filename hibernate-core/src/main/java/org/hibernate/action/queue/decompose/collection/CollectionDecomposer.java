@@ -9,7 +9,7 @@ import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.queue.decompose.DecompositionContext;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import java.util.function.Consumer;
@@ -32,7 +32,7 @@ public interface CollectionDecomposer {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
-			Consumer<PlannedOperation> operationConsumer);
+			Consumer<FlushOperation> operationConsumer);
 
 	/// Decomposes collection update actions.
 	void decomposeUpdate(
@@ -40,7 +40,7 @@ public interface CollectionDecomposer {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
-			Consumer<PlannedOperation> operationConsumer);
+			Consumer<FlushOperation> operationConsumer);
 
 	/// Decomposes collection removal ("delete all") operations.
 	void decomposeRemove(
@@ -48,12 +48,12 @@ public interface CollectionDecomposer {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
-			Consumer<PlannedOperation> operationConsumer);
+			Consumer<FlushOperation> operationConsumer);
 
 	/// Decomposes queued collection operations.
 	void decomposeQueuedOperations(
 			QueuedOperationCollectionAction action,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
-			Consumer<PlannedOperation> operationConsumer);
+			Consumer<FlushOperation> operationConsumer);
 }

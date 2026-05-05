@@ -4,7 +4,7 @@
  */
 package org.hibernate.action.queue.exec;
 
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -14,9 +14,9 @@ import java.util.function.Consumer;
  */
 public interface PlanStepExecutor {
 	void execute(
-			List<PlannedOperation> plannedOperations,
+			List<FlushOperation> flushOperations,
 			Consumer<Object> newlyManagedEntityConsumer,
-			Consumer<PlannedOperation> fixupOperationConsumer);
+			Consumer<FlushOperation> fixupOperationConsumer);
 
 	void finishUp();
 }

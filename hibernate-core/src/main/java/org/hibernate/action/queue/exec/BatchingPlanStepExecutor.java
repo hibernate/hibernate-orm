@@ -7,7 +7,7 @@ package org.hibernate.action.queue.exec;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.action.queue.StatementShapeKey;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.StaleStateMapper;
 import org.hibernate.engine.jdbc.mutation.internal.JdbcValueBindingsImpl;
@@ -30,10 +30,10 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ex
 	private int currentBatchIndex;
 
 	private Batch batch;
-	private PlannedOperation[] batchOperations;
+	private FlushOperation[] batchOperations;
 
 	private Consumer<Object> newlyManagedEntityConsumer;
-	private Consumer<PlannedOperation> fixupOperationConsumer;
+	private Consumer<FlushOperation> fixupOperationConsumer;
 
 	public BatchingPlanStepExecutor(int batchSize, SharedSessionContractImplementor session) {
 		super(session);
@@ -42,13 +42,13 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ex
 
 	@Override
 	public void execute(
-			java.util.List<PlannedOperation> plannedOperations,
+			java.util.List<FlushOperation> flushOperations,
 			Consumer<Object> newlyManagedEntityConsumer,
-			Consumer<PlannedOperation> fixupOperationConsumer) {
+			Consumer<FlushOperation> fixupOperationConsumer) {
 		this.newlyManagedEntityConsumer = newlyManagedEntityConsumer;
 		this.fixupOperationConsumer = fixupOperationConsumer;
 		try {
-			super.execute( plannedOperations, newlyManagedEntityConsumer, fixupOperationConsumer );
+			super.execute( flushOperations, newlyManagedEntityConsumer, fixupOperationConsumer );
 			if ( batchKey != null ) {
 				assert batch != null;
 				executeBatch();
@@ -61,44 +61,44 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ex
 	}
 
 	@Override
-	protected void executePreparable(PreparableMutationOperation preparable, PlannedOperation plannedOperation) {
-		plannedOperation.getBindPlan().execute( this, plannedOperation, session );
+	protected void executePreparable(PreparableMutationOperation preparable, FlushOperation flushOperation) {
+		flushOperation.getBindPlan().execute( this, flushOperation, session );
 	}
 
 	@Override
-	protected boolean beforeOperationExecution(PlannedOperation plannedOperation) {
-		if ( plannedOperation.getPreExecutionCallback() != null && batchKey != null ) {
+	protected boolean beforeOperationExecution(FlushOperation flushOperation) {
+		if ( flushOperation.getPreExecutionCallback() != null && batchKey != null ) {
 			executeBatch();
 		}
-		return super.beforeOperationExecution( plannedOperation );
+		return super.beforeOperationExecution( flushOperation );
 	}
 
 	@Override
 	protected void afterOperationExecution(
-			PlannedOperation plannedOperation,
+			FlushOperation flushOperation,
 			Consumer<Object> newlyManagedEntityConsumer,
-			Consumer<PlannedOperation> fixupOperationConsumer) {
-		if ( plannedOperation.getKind() == org.hibernate.action.queue.MutationKind.NO_OP && batchKey != null ) {
+			Consumer<FlushOperation> fixupOperationConsumer) {
+		if ( flushOperation.getKind() == org.hibernate.action.queue.MutationKind.NO_OP && batchKey != null ) {
 			executeBatch();
 		}
-		if ( plannedOperation.getKind() != org.hibernate.action.queue.MutationKind.NO_OP
-				&& !plannedOperation.isExecutionSkipped()
-				&& plannedOperation.getBindPlan().getGeneratedValuesCollector() == null
-				&& plannedOperation.getJdbcOperation() instanceof PreparableMutationOperation ) {
+		if ( flushOperation.getKind() != org.hibernate.action.queue.MutationKind.NO_OP
+				&& !flushOperation.isExecutionSkipped()
+				&& flushOperation.getBindPlan().getGeneratedValuesCollector() == null
+				&& flushOperation.getJdbcOperation() instanceof PreparableMutationOperation ) {
 			return;
 		}
-		super.afterOperationExecution( plannedOperation, newlyManagedEntityConsumer, fixupOperationConsumer );
+		super.afterOperationExecution( flushOperation, newlyManagedEntityConsumer, fixupOperationConsumer );
 	}
 
 	@Override
 	public void executeRow(
-			PlannedOperation plannedOperation,
+			FlushOperation flushOperation,
 			BiConsumer<JdbcValueBindings, SharedSessionContractImplementor> binder,
 			OperationResultChecker resultChecker) {
-		assert plannedOperation.getJdbcOperation() instanceof PreparableMutationOperation;
+		assert flushOperation.getJdbcOperation() instanceof PreparableMutationOperation;
 
-		var preparable = (PreparableMutationOperation) plannedOperation.getJdbcOperation();
-		final StatementShapeKey operationShapeKey = plannedOperation.getShapeKey();
+		var preparable = (PreparableMutationOperation) flushOperation.getJdbcOperation();
+		final StatementShapeKey operationShapeKey = flushOperation.getShapeKey();
 		if ( batchKey == null ) {
 			newBatch( operationShapeKey, preparable );
 		}
@@ -107,7 +107,7 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ex
 			newBatch( operationShapeKey, preparable );
 		}
 
-		applyToBatch( preparable, plannedOperation, binder, resultChecker );
+		applyToBatch( preparable, flushOperation, binder, resultChecker );
 	}
 
 	private void newBatch(StatementShapeKey operationShapeKey, PreparableMutationOperation preparable) {
@@ -118,22 +118,22 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ex
 				batchSize,
 				preparable
 		);
-		batchOperations = new PlannedOperation[batchSize];
+		batchOperations = new FlushOperation[batchSize];
 	}
 
 	private void applyToBatch(
 			PreparableMutationOperation preparable,
-			PlannedOperation plannedOperation,
+			FlushOperation flushOperation,
 			BiConsumer<JdbcValueBindings, SharedSessionContractImplementor> binder,
 			OperationResultChecker resultChecker) {
 		if ( currentBatchIndex > 0 ) {
 			session.getJdbcServices().getSqlStatementLogger().logStatement( preparable.getSqlString() );
 		}
 
-		var valueBindings = new JdbcValueBindings( plannedOperation.getMutatingTableDescriptor(), preparable );
+		var valueBindings = new JdbcValueBindings( flushOperation.getMutatingTableDescriptor(), preparable );
 		binder.accept( valueBindings, session );
 
-		batchOperations[currentBatchIndex] = plannedOperation;
+		batchOperations[currentBatchIndex] = flushOperation;
 
 		final var jdbcValueBindings = new JdbcValueBindingsImpl(
 				preparable.getMutationType(),
@@ -190,7 +190,7 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ex
 
 	private void executeBatch() {
 		final int batchCount = currentBatchIndex;
-		final PlannedOperation[] operations = batchOperations;
+		final FlushOperation[] operations = batchOperations;
 		try {
 			session.getJdbcCoordinator().executeBatch();
 			runPostBatchCallbacks( batchCount );
@@ -204,7 +204,7 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ex
 	}
 
 	private void runPostBatchCallbacks(int batchCount) {
-		final PlannedOperation[] operations = batchOperations;
+		final FlushOperation[] operations = batchOperations;
 		if ( batchCount > operations.length ) {
 			throw new AssertionFailure( "Expecting at most " + operations.length + " batched operations; but got " + batchCount );
 		}
@@ -214,19 +214,19 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ex
 	}
 
 	@Override
-	protected void executeWithGeneratedValues(PlannedOperation plannedOperation) {
+	protected void executeWithGeneratedValues(FlushOperation flushOperation) {
 		if ( batchKey != null ) {
 			executeBatch();
 		}
-		super.executeWithGeneratedValues( plannedOperation );
+		super.executeWithGeneratedValues( flushOperation );
 	}
 
 	@Override
-	protected void executeSelfExecuting(SelfExecutingUpdateOperation selfExecuting, PlannedOperation plannedOperation) {
+	protected void executeSelfExecuting(SelfExecutingUpdateOperation selfExecuting, FlushOperation flushOperation) {
 		if ( batchKey != null ) {
 			executeBatch();
 		}
-		super.executeSelfExecuting( selfExecuting, plannedOperation );
+		super.executeSelfExecuting( selfExecuting, flushOperation );
 	}
 
 	@Override

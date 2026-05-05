@@ -292,7 +292,7 @@ public class CycleBreaker {
 			return;  // Edge is already marked as broken, no patch needed
 		}
 
-		final PlannedOperationGroup patchGroup = chosen.getPatchNode().group();
+		final FlushOperationGroup patchGroup = chosen.getPatchNode().group();
 
 		final BindingPatch.CycleType cycleType = chosen.getPatchCycleType();
 		if ( cycleType == null ) {
@@ -313,7 +313,7 @@ public class CycleBreaker {
 
 		final String table = patchGroup.tableExpression();
 
-		for ( PlannedOperation op : patchGroup.operations()) {
+		for ( FlushOperation op : patchGroup.operations()) {
 			if (op.getBindingPatch() == null) {
 				op.setBindingPatch( new BindingPatch(table, toSet(chosen.getColumnsToNull()), cycleType) );
 			}
@@ -338,8 +338,8 @@ public class CycleBreaker {
 	private boolean isDeleteOnlyCycle(List<GraphEdge> cycle) {
 		// Check if all nodes in the cycle are DELETE operations
 		for (GraphEdge e : cycle) {
-			final PlannedOperationGroup fromGroup = e.getFrom().group();
-			final PlannedOperationGroup toGroup = e.getTo().group();
+			final FlushOperationGroup fromGroup = e.getFrom().group();
+			final FlushOperationGroup toGroup = e.getTo().group();
 
 			if (fromGroup.kind() != MutationKind.DELETE) {
 				return false;

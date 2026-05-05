@@ -6,7 +6,7 @@ package org.hibernate.action.queue.constraint;
 
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.decompose.entity.EntityUpdateBindPlan;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -25,7 +25,7 @@ import java.util.Objects;
 import static org.hibernate.action.queue.constraint.ConstraintModel.normalizeIdentifier;
 import static org.hibernate.action.queue.constraint.ConstraintModel.normalizeTableExpression;
 
-/// Extracts unique constraint slot values from PlannedOperations.
+/// Extracts unique constraint slot values from Flush operations.
 ///
 /// The graph builder uses these runtime values to model release/occupy facts for
 /// unique constraints. DELETE and UPDATE operations can release slots, while INSERT
@@ -50,8 +50,8 @@ public class UniqueSlotExtractor {
 	///
 	/// INSERT and DELETE operations use the operation state. UPDATE operations return
 	/// only the changed new values; callers that need released values should use
-	/// [#extractOldSlots(PlannedOperation)].
-	public List<UniqueSlot> extractSlots(PlannedOperation operation) {
+	/// [#extractOldSlots(FlushOperation)].
+	public List<UniqueSlot> extractSlots(FlushOperation operation) {
 		List<UniqueSlot> slots = new ArrayList<>();
 
 		if (operation.getKind() == MutationKind.UPDATE) {
@@ -112,7 +112,7 @@ public class UniqueSlotExtractor {
 	///
 	/// Only changed unique constraint values are returned. Unchanged unique values do
 	/// not participate in release/occupy ordering for the UPDATE.
-	private List<UniqueSlot> extractUpdateSlots(PlannedOperation operation) {
+	private List<UniqueSlot> extractUpdateSlots(FlushOperation operation) {
 		List<UniqueSlot> slots = new ArrayList<>();
 
 		String tableName = operation.getTableExpression();
@@ -163,7 +163,7 @@ public class UniqueSlotExtractor {
 	}
 
 	/// Extract the unique slots released by an UPDATE operation.
-	public List<UniqueSlot> extractOldSlots(PlannedOperation operation) {
+	public List<UniqueSlot> extractOldSlots(FlushOperation operation) {
 		List<UniqueSlot> slots = new ArrayList<>();
 
 		if ( operation.getKind() != MutationKind.UPDATE ) {

@@ -6,7 +6,7 @@ package org.hibernate.action.queue.decompose.entity;
 
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.queue.decompose.DecompositionContext;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -36,7 +36,7 @@ public class DeleteDecomposerInheritedSoftDelete extends AbstractDeleteDecompose
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		entityPersister.getRootEntityDescriptor()
 				.getEntityPersister()
 				.getDeleteDecomposer()

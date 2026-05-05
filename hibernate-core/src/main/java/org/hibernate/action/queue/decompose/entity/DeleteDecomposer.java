@@ -6,7 +6,7 @@ package org.hibernate.action.queue.decompose.entity;
 
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.queue.decompose.DecompositionContext;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.ast.TableMutation;
 
@@ -25,5 +25,5 @@ public interface DeleteDecomposer extends EntityActionDecomposer<EntityDeleteAct
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
-			Consumer<PlannedOperation> operationConsumer);
+			Consumer<FlushOperation> operationConsumer);
 }

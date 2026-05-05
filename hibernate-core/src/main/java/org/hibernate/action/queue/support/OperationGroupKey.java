@@ -4,7 +4,7 @@
  */
 package org.hibernate.action.queue.support;
 
-/// Used as a key for identifying [org.hibernate.action.queue.plan.PlannedOperationGroup]
+/// Used as a key for identifying [org.hibernate.action.queue.plan.FlushOperationGroup]
 /// builders within [org.hibernate.action.queue.FlushCoordinator].
 ///
 /// @author Steve Ebersole

@@ -9,8 +9,8 @@ import org.hibernate.action.queue.PlanningOptions;
 import org.hibernate.action.queue.constraint.Constraint;
 import org.hibernate.action.queue.constraint.DeferrableConstraintMode;
 import org.hibernate.action.queue.constraint.ForeignKey;
-import org.hibernate.action.queue.plan.PlannedOperation;
-import org.hibernate.action.queue.plan.PlannedOperationGroup;
+import org.hibernate.action.queue.plan.FlushOperation;
+import org.hibernate.action.queue.plan.FlushOperationGroup;
 import org.hibernate.action.queue.constraint.ConstraintModel;
 import org.hibernate.action.queue.constraint.UniqueConstraint;
 import org.hibernate.action.queue.constraint.UniqueSlot;
@@ -63,9 +63,9 @@ public class StandardGraphBuilder implements GraphBuilder {
 	}
 
 	@Override
-	public Graph build(List<PlannedOperationGroup> groups, DeferrableConstraintMode deferrableConstraintMode) {
+	public Graph build(List<FlushOperationGroup> groups, DeferrableConstraintMode deferrableConstraintMode) {
 		// Split UPDATE groups that need per-row unique-slot ordering into separate nodes.
-		List<PlannedOperationGroup> expandedGroups = planningOptions.orderByUniqueKeySlots()
+		List<FlushOperationGroup> expandedGroups = planningOptions.orderByUniqueKeySlots()
 				? splitUpdateGroupsForUniqueSlotOrdering( groups, deferrableConstraintMode )
 				: groups;
 
@@ -79,11 +79,11 @@ public class StandardGraphBuilder implements GraphBuilder {
 
 		// stable ids based on group.ordinal (if provided), else encounter order
 		// (we assume group.ordinal is stable in decomposer)
-		final ArrayList<PlannedOperationGroup> sortedGroups = new ArrayList<>( expandedGroups );
-		sortedGroups.sort( comparingInt( PlannedOperationGroup::ordinal ) );
+		final ArrayList<FlushOperationGroup> sortedGroups = new ArrayList<>( expandedGroups );
+		sortedGroups.sort( comparingInt( FlushOperationGroup::ordinal ) );
 
 		long nodeId = 1;
-		for ( PlannedOperationGroup g : sortedGroups ) {
+		for ( FlushOperationGroup g : sortedGroups ) {
 			final GroupNode n = new GroupNode( g, nodeId++ );
 			nodes.add( n );
 
@@ -478,7 +478,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 	 */
 	private long addUniqueSlotEdges(
 			ArrayList<GroupNode> nodes,
-			List<PlannedOperationGroup> groups,
+			List<FlushOperationGroup> groups,
 			Map<String, List<GroupNode>> deleteNodeByTable,
 			Map<String, List<GroupNode>> insertNodeByTable,
 			Map<GroupNode, List<GraphEdge>> outgoing,
@@ -517,7 +517,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 
 	private UniqueSlotFacts collectUniqueSlotFacts(
 			ArrayList<GroupNode> nodes,
-			List<PlannedOperationGroup> groups,
+			List<FlushOperationGroup> groups,
 			Map<String, List<GroupNode>> deleteNodeByTable,
 			Map<String, List<GroupNode>> insertNodeByTable,
 			DeferrableConstraintMode deferrableConstraintMode) {
@@ -569,7 +569,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 			}
 		}
 
-		for ( PlannedOperationGroup group : groups ) {
+		for ( FlushOperationGroup group : groups ) {
 			if ( group.kind() == MutationKind.UPDATE ) {
 				String tableName = (group.tableExpression());
 				if ( !constraintModel.getUniqueConstraintsForTable( tableName ).isEmpty() ) {
@@ -888,9 +888,9 @@ public class StandardGraphBuilder implements GraphBuilder {
 	}
 
 	/**
-	 * Find the GroupNode corresponding to a PlannedOperationGroup.
+	 * Find the GroupNode corresponding to a FlushOperationGroup.
 	 */
-	private GroupNode findGroupNode(ArrayList<GroupNode> nodes, PlannedOperationGroup group) {
+	private GroupNode findGroupNode(ArrayList<GroupNode> nodes, FlushOperationGroup group) {
 		for ( GroupNode node : nodes ) {
 			if ( node.group() == group ) {
 				return node;
@@ -909,10 +909,10 @@ public class StandardGraphBuilder implements GraphBuilder {
 			Map<UniqueSlot, List<UniqueSlotRelease>> releasesBySlot,
 			Map<UniqueSlot, List<UniqueSlotOccupy>> occupiesBySlot,
 			DeferrableConstraintMode deferrableConstraintMode) {
-		PlannedOperationGroup group = node.group();
+		FlushOperationGroup group = node.group();
 		UniqueSlotExtractor extractor = new UniqueSlotExtractor( constraintModel, session, entityPersistersByTable );
 
-		for ( PlannedOperation operation : group.operations() ) {
+		for ( FlushOperation operation : group.operations() ) {
 			List<UniqueSlot> oldSlots = removeEffectivelyDeferredSlots(
 					extractor.extractOldSlots( operation ),
 					deferrableConstraintMode
@@ -983,7 +983,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 			Map<UniqueSlot, List<UniqueSlotRelease>> releasesBySlot,
 			Map<UniqueSlot, List<UniqueSlotOccupy>> occupiesBySlot,
 			DeferrableConstraintMode deferrableConstraintMode) {
-		PlannedOperationGroup group = node.group();
+		FlushOperationGroup group = node.group();
 
 		// Create slot extractor
 		UniqueSlotExtractor extractor = new UniqueSlotExtractor(
@@ -993,7 +993,7 @@ public class StandardGraphBuilder implements GraphBuilder {
 		);
 
 		// Extract slots from each operation in the group
-		for ( PlannedOperation operation : group.operations() ) {
+		for ( FlushOperation operation : group.operations() ) {
 			List<UniqueSlot> slots = removeEffectivelyDeferredSlots(
 					extractor.extractSlots( operation ),
 					deferrableConstraintMode
@@ -1084,14 +1084,14 @@ public class StandardGraphBuilder implements GraphBuilder {
 	 * Groups are normally table/shape batches, but row-to-row unique-slot cycles
 	 * need separate graph nodes so the planner can see and resolve the cycle.
 	 */
-	private List<PlannedOperationGroup> splitUpdateGroupsForUniqueSlotOrdering(
-			List<PlannedOperationGroup> groups,
+	private List<FlushOperationGroup> splitUpdateGroupsForUniqueSlotOrdering(
+			List<FlushOperationGroup> groups,
 			DeferrableConstraintMode deferrableConstraintMode) {
-		List<PlannedOperationGroup> result = new ArrayList<>();
+		List<FlushOperationGroup> result = new ArrayList<>();
 
 		UniqueSlotExtractor extractor = new UniqueSlotExtractor( constraintModel, session, entityPersistersByTable );
 
-		for ( PlannedOperationGroup group : groups ) {
+		for ( FlushOperationGroup group : groups ) {
 			if ( group.kind() != MutationKind.UPDATE || group.operations().size() <= 1 ) {
 				// Not an UPDATE or only one operation - no need to split
 				result.add( group );
@@ -1107,10 +1107,10 @@ public class StandardGraphBuilder implements GraphBuilder {
 				continue;
 			}
 
-			Map<PlannedOperation, Map<UniqueConstraintKey, UniqueSlot>> newSlotsByOperation = new HashMap<>();
-			Map<PlannedOperation, Map<UniqueConstraintKey, UniqueSlot>> oldSlotsByOperation = new HashMap<>();
+			Map<FlushOperation, Map<UniqueConstraintKey, UniqueSlot>> newSlotsByOperation = new HashMap<>();
+			Map<FlushOperation, Map<UniqueConstraintKey, UniqueSlot>> oldSlotsByOperation = new HashMap<>();
 
-			for ( PlannedOperation operation : group.operations() ) {
+			for ( FlushOperation operation : group.operations() ) {
 				List<UniqueSlot> oldSlotList = removeEffectivelyDeferredSlots(
 						extractor.extractOldSlots( operation ),
 						deferrableConstraintMode
@@ -1152,8 +1152,8 @@ public class StandardGraphBuilder implements GraphBuilder {
 			else {
 				// Split so the graph can represent row-to-row unique-slot ordering.
 				int ordinalOffset = 0;
-				for ( PlannedOperation operation : group.operations() ) {
-					PlannedOperationGroup singleOpGroup = new PlannedOperationGroup(
+				for ( FlushOperation operation : group.operations() ) {
+					FlushOperationGroup singleOpGroup = new FlushOperationGroup(
 							group.tableExpression(),
 							group.kind(),
 							group.shapeKey(),

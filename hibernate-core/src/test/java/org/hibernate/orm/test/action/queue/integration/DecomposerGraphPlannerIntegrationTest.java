@@ -27,10 +27,10 @@ import org.hibernate.action.queue.graph.GraphEdgeKind;
 import org.hibernate.action.queue.graph.GroupNode;
 import org.hibernate.action.queue.graph.StandardGraphBuilder;
 import org.hibernate.action.spi.Executable;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.action.queue.plan.FlushPlan;
 import org.hibernate.action.queue.plan.PlanStep;
-import org.hibernate.action.queue.plan.PlannedOperationGroup;
+import org.hibernate.action.queue.plan.FlushOperationGroup;
 import org.hibernate.action.queue.plan.StandardFlushPlanner;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -116,9 +116,9 @@ public class DecomposerGraphPlannerIntegrationTest {
 			);
 
 			// Decompose
-			final List<PlannedOperation> operations = new ArrayList<>();
+			final List<FlushOperation> operations = new ArrayList<>();
 			decomposer.decompose(action, 0, sessionImpl, null, operations::add);
-			final List<PlannedOperationGroup> groups = groupOperations(operations);
+			final List<FlushOperationGroup> groups = groupOperations(operations);
 
 			var constraintModel = scope.getSessionFactory().getMappingMetamodel().getConstraintModel();
 
@@ -199,7 +199,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			);
 
 			// Decompose both actions
-			final List<PlannedOperationGroup> allGroups = new ArrayList<>();
+			final List<FlushOperationGroup> allGroups = new ArrayList<>();
 			allGroups.addAll(decomposeAndGroup(personDecomposer, personAction, 0, sessionImpl));
 			allGroups.addAll(decomposeAndGroup(addressDecomposer, addressAction, 1, sessionImpl));
 
@@ -229,7 +229,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			assertFalse(plan.steps().isEmpty(), "Plan should have steps");
 
 			// Verify FK ordering: Person must come before Address
-			final List<PlannedOperation> allOps = new ArrayList<>();
+			final List<FlushOperation> allOps = new ArrayList<>();
 			for ( PlanStep step : plan.steps()) {
 				allOps.addAll(step.operations());
 			}
@@ -296,9 +296,9 @@ public class DecomposerGraphPlannerIntegrationTest {
 			final UpdateDecomposer decomposer = new UpdateDecomposer(persister, factory);
 
 			// Decompose
-			final List<PlannedOperation> operations = new ArrayList<>();
+			final List<FlushOperation> operations = new ArrayList<>();
 			decomposer.decompose(action, 0, sessionImpl, null, operations::add);
-			final List<PlannedOperationGroup> groups = groupOperations(operations);
+			final List<FlushOperationGroup> groups = groupOperations(operations);
 
 			var constraintModel = scope.getSessionFactory().getMappingMetamodel().getConstraintModel();
 
@@ -365,9 +365,9 @@ public class DecomposerGraphPlannerIntegrationTest {
 			final DeleteDecomposerStandard decomposer = new DeleteDecomposerStandard(persister, factory);
 
 			// Decompose
-			final List<PlannedOperation> operations = new ArrayList<>();
+			final List<FlushOperation> operations = new ArrayList<>();
 			decomposer.decompose(action, 0, sessionImpl, null, operations::add);
-			final List<PlannedOperationGroup> groups = groupOperations(operations);
+			final List<FlushOperationGroup> groups = groupOperations(operations);
 
 			var constraintModel = scope.getSessionFactory().getMappingMetamodel().getConstraintModel();
 
@@ -472,7 +472,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			);
 
 			// Decompose all actions
-			final List<PlannedOperationGroup> allGroups = new ArrayList<>();
+			final List<FlushOperationGroup> allGroups = new ArrayList<>();
 			allGroups.addAll(decomposeAndGroup(personInsertDecomposer, person1InsertAction, 0, sessionImpl));
 			allGroups.addAll(decomposeAndGroup(addressInsertDecomposer, addressInsertAction, 1, sessionImpl));
 			allGroups.addAll(decomposeAndGroup(personUpdateDecomposer, person2UpdateAction, 2, sessionImpl));
@@ -567,7 +567,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			);
 
 			// Decompose
-			final List<PlannedOperationGroup> allGroups = new ArrayList<>();
+			final List<FlushOperationGroup> allGroups = new ArrayList<>();
 			allGroups.addAll(decomposeAndGroup(deptDecomposer, deptAction, 0, sessionImpl));
 			allGroups.addAll(decomposeAndGroup(empDecomposer, empAction, 1, sessionImpl));
 
@@ -602,7 +602,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			// Verify at least one operation has a binding patch (cycle was broken)
 			boolean patchFound = false;
 			for ( PlanStep step : plan.steps()) {
-				for (PlannedOperation op : step.operations()) {
+				for (FlushOperation op : step.operations()) {
 					if (op.getBindingPatch() != null) {
 						patchFound = true;
 						break;
@@ -745,7 +745,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			final UpdateDecomposer updateDecomposer = new UpdateDecomposer(productPersister, factory);
 			final InsertDecomposer insertDecomposer = new InsertDecomposer(productPersister, factory);
-			final List<PlannedOperationGroup> groups = new ArrayList<>();
+			final List<FlushOperationGroup> groups = new ArrayList<>();
 			groups.addAll(decomposeAndGroup(updateDecomposer, updateAction, 0, sessionImpl));
 			groups.addAll(decomposeAndGroup(insertDecomposer, insertAction, 1, sessionImpl));
 
@@ -814,7 +814,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 
 			final UpdateDecomposer updateDecomposer = new UpdateDecomposer(productPersister, factory);
 			final InsertDecomposer insertDecomposer = new InsertDecomposer(productPersister, factory);
-			final List<PlannedOperationGroup> groups = new ArrayList<>();
+			final List<FlushOperationGroup> groups = new ArrayList<>();
 			groups.addAll(decomposeAndGroup(updateDecomposer, updateAction, 0, sessionImpl));
 			groups.addAll(decomposeAndGroup(insertDecomposer, insertAction, 1, sessionImpl));
 
@@ -871,7 +871,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			);
 
 			final UpdateDecomposer updateDecomposer = new UpdateDecomposer(productPersister, factory);
-			final List<PlannedOperationGroup> groups = new ArrayList<>();
+			final List<FlushOperationGroup> groups = new ArrayList<>();
 			groups.addAll(decomposeAndGroup(updateDecomposer, product1Action, 0, sessionImpl));
 			groups.addAll(decomposeAndGroup(updateDecomposer, product2Action, 1, sessionImpl));
 
@@ -990,7 +990,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 				departmentSetter
 		);
 
-		final List<PlannedOperationGroup> groups = new ArrayList<>();
+		final List<FlushOperationGroup> groups = new ArrayList<>();
 		groups.addAll(decomposeAndGroup(updateDecomposer, emp1Action, 0, sessionImpl));
 		groups.addAll(decomposeAndGroup(updateDecomposer, emp2Action, 1, sessionImpl));
 
@@ -1000,7 +1000,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 	private Graph buildGraph(
 			SessionFactoryScope scope,
 			SessionImplementor sessionImpl,
-			List<PlannedOperationGroup> groups) {
+			List<FlushOperationGroup> groups) {
 		final PlanningOptions planningOptions = new PlanningOptions(
 				true,
 				true,
@@ -1135,17 +1135,17 @@ public class DecomposerGraphPlannerIntegrationTest {
 	 * Helper method to group operations by shape (table + kind + SQL).
 	 * Mirrors FlushCoordinator's grouping logic.
 	 */
-	private <A extends Executable> List<PlannedOperationGroup> decomposeAndGroup(
+	private <A extends Executable> List<FlushOperationGroup> decomposeAndGroup(
 			EntityActionDecomposer<A> decomposer,
 			A action,
 			int ordinalBase,
 			SessionImplementor session) {
-		final List<PlannedOperation> operations = new ArrayList<>();
+		final List<FlushOperation> operations = new ArrayList<>();
 		decomposer.decompose(action, ordinalBase, session, null, operations::add);
 		return groupOperations(operations);
 	}
 
-	private List<PlannedOperationGroup> groupOperations(List<PlannedOperation> operations) {
+	private List<FlushOperationGroup> groupOperations(List<FlushOperation> operations) {
 		if (operations.isEmpty()) {
 			return List.of();
 		}
@@ -1154,7 +1154,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 		// This mirrors FlushCoordinator behavior for non-self-referential tables
 		final java.util.Map<StatementShapeKey, OperationGroupBuilder> builders = new java.util.LinkedHashMap<>();
 
-		for (PlannedOperation operation : operations) {
+		for (FlushOperation operation : operations) {
 			final StatementShapeKey shapeKey = computeShapeKey(operation);
 			var builder = builders.get(shapeKey);
 			if (builder == null) {
@@ -1167,7 +1167,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 			}
 		}
 
-		final List<PlannedOperationGroup> groups = new ArrayList<>(builders.size());
+		final List<FlushOperationGroup> groups = new ArrayList<>(builders.size());
 		for (OperationGroupBuilder builder : builders.values()) {
 			groups.add(builder.build());
 		}
@@ -1175,7 +1175,7 @@ public class DecomposerGraphPlannerIntegrationTest {
 		return groups;
 	}
 
-	private StatementShapeKey computeShapeKey(PlannedOperation operation) {
+	private StatementShapeKey computeShapeKey(FlushOperation operation) {
 		final String table = operation.getTableExpression();
 		final MutationKind kind = operation.getKind();
 
@@ -1193,9 +1193,9 @@ public class DecomposerGraphPlannerIntegrationTest {
 		private final StatementShapeKey shapeKey;
 		private int ordinal;
 		private final String origin;
-		private final List<PlannedOperation> operations = new ArrayList<>();
+		private final List<FlushOperation> operations = new ArrayList<>();
 
-		OperationGroupBuilder(PlannedOperation firstOperation, StatementShapeKey shapeKey) {
+		OperationGroupBuilder(FlushOperation firstOperation, StatementShapeKey shapeKey) {
 			this.tableExpression = firstOperation.getTableExpression();
 			this.kind = firstOperation.getKind();
 			this.shapeKey = shapeKey;
@@ -1204,15 +1204,15 @@ public class DecomposerGraphPlannerIntegrationTest {
 			this.operations.add(firstOperation);
 		}
 
-		void addOperation(PlannedOperation op) {
+		void addOperation(FlushOperation op) {
 			this.operations.add(op);
 			// Track minimum ordinal when merging operations
 			this.ordinal = Math.min(this.ordinal, op.getOrdinal());
 		}
 
-		PlannedOperationGroup build() {
+		FlushOperationGroup build() {
 			final boolean needsIdPrePhase = false;
-			return new PlannedOperationGroup(
+			return new FlushOperationGroup(
 					tableExpression,
 					kind,
 					shapeKey,

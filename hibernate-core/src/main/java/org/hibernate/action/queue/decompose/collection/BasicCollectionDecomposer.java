@@ -18,7 +18,7 @@ import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.decompose.DecompositionContext;
 import org.hibernate.action.queue.meta.CollectionTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.collection.spi.CollectionChangeSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.collection.spi.SnapshotIndexed;
@@ -73,7 +73,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			QueuedOperationCollectionAction action,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		operationConsumer.accept( DecompositionSupport.createNoOpCallbackCarrier(
 				tableDescriptor,
 				ordinalBase,
@@ -115,7 +115,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 
 		// Always fire PRE event, even if no SQL operations will be needed
 		DecompositionSupport.firePreRecreate( persister, action.getCollection(), session );
@@ -157,7 +157,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		}
 	}
 
-	private @NonNull List<PlannedOperation> planRecreateOperation(
+	private @NonNull List<FlushOperation> planRecreateOperation(
 			PersistentCollection<?> collection,
 			Object key,
 			int ordinalBase,
@@ -178,7 +178,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			return List.of();
 		}
 
-		final List<PlannedOperation> operations = new ArrayList<>();
+		final List<FlushOperation> operations = new ArrayList<>();
 
 		// One operation per row
 		int entryCount = 0;
@@ -196,7 +196,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						entryCount
 				);
 
-				final PlannedOperation plannedOp = new PlannedOperation(
+				final FlushOperation plannedOp = new FlushOperation(
 						tableDescriptor,
 						MutationKind.INSERT,
 						jdbcOperations.insertRowPlan().jdbcOperation(),
@@ -219,13 +219,13 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		var collection = action.getCollection();
 		var key = action.getKey();
 
 		DecompositionSupport.firePreUpdate( persister, collection, session );
 
-		final List<PlannedOperation> operations = new ArrayList<>();
+		final List<FlushOperation> operations = new ArrayList<>();
 
 		if ( !collection.wasInitialized() ) {
 			// If there were queued operations, they would have
@@ -309,7 +309,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		);
 		if ( !operations.isEmpty() ) {
 			// Attach post-execution callback to the last operation
-			final PlannedOperation lastOperation = operations.get( operations.size() - 1 );
+			final FlushOperation lastOperation = operations.get( operations.size() - 1 );
 			lastOperation.setPostExecutionCallback( postExecutionCallback );
 			operations.forEach( operationConsumer );
 		}
@@ -333,7 +333,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			Object key,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		var deleteRowPlan = jdbcOperations.deleteRowPlan();
 
 		// For entity collections with index (join tables with @OrderColumn), we need special handling
@@ -371,7 +371,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 					deleteRowPlan.restrictions()
 			);
 
-			operationConsumer.accept( new PlannedOperation(
+			operationConsumer.accept( new FlushOperation(
 					tableDescriptor,
 					MutationKind.DELETE,
 					deleteRowPlan.jdbcOperation(),
@@ -389,7 +389,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			Object key,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		var updateRowPlan = jdbcOperations.updateRowPlan();
 
 		if ( updateRowPlan == null ) {
@@ -422,7 +422,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			Object key,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 
 		final var deleteRowPlan = jdbcOperations.deleteRowPlan();
 		final var insertRowPlan = jdbcOperations.insertRowPlan();
@@ -441,7 +441,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						deleteRowPlan.restrictions()
 				);
 
-				operationConsumer.accept( new PlannedOperation(
+				operationConsumer.accept( new FlushOperation(
 						tableDescriptor,
 						MutationKind.DELETE,
 						deleteRowPlan.jdbcOperation(),
@@ -481,7 +481,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 							updateRowPlan.restrictions()
 					);
 
-					operationConsumer.accept( new PlannedOperation(
+					operationConsumer.accept( new FlushOperation(
 							tableDescriptor,
 							MutationKind.UPDATE,
 							updateRowPlan.jdbcOperation(),
@@ -494,8 +494,8 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			else if ( orderUpdatePlan != null ) {
 				// WITHOUT custom SQL: Use ORDER updates with two-phase temp values
 				// This handles unique constraints by temporarily moving to safe values
-				final List<PlannedOperation> tempPhaseOps = new ArrayList<>();
-				final List<PlannedOperation> finalPhaseOps = new ArrayList<>();
+				final List<FlushOperation> tempPhaseOps = new ArrayList<>();
+				final List<FlushOperation> finalPhaseOps = new ArrayList<>();
 
 				final int updateOrdinalBase = calculateOrdinal( ordinalBase, Slot.UPDATE );
 				final int tempPhaseOrdinal = updateOrdinalBase;
@@ -506,7 +506,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 					final int tempPosition = tempOffset + (int) shift.currentIndex();
 
 					// TEMP PHASE: Move from old position to temporary position
-					tempPhaseOps.add( new PlannedOperation(
+					tempPhaseOps.add( new FlushOperation(
 							tableDescriptor,
 							MutationKind.UPDATE_ORDER,
 							orderUpdatePlan.jdbcOperation(),
@@ -524,7 +524,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 					) );
 
 					// FINAL PHASE: Move from temporary position to final position
-					finalPhaseOps.add( new PlannedOperation(
+					finalPhaseOps.add( new FlushOperation(
 							tableDescriptor,
 							MutationKind.UPDATE_ORDER,
 							orderUpdatePlan.jdbcOperation(),
@@ -577,7 +577,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						entryIndex
 				);
 
-				operationConsumer.accept( new PlannedOperation(
+				operationConsumer.accept( new FlushOperation(
 						tableDescriptor,
 						MutationKind.INSERT,
 						insertRowPlan.jdbcOperation(),
@@ -620,7 +620,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						updateRowPlan.restrictions()
 				);
 
-				operationConsumer.accept( new PlannedOperation(
+				operationConsumer.accept( new FlushOperation(
 						tableDescriptor,
 						MutationKind.UPDATE,
 						updateRowPlan.jdbcOperation(),
@@ -638,7 +638,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			CollectionJdbcOperations.UpdateRowPlan orderUpdatePlan,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 
 		if ( orderUpdatePlan == null ) {
 			// No order update plan available (shouldn't happen for indexed collections)
@@ -672,7 +672,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		// Phase 2: Move from temporary positions to final positions
 		// All operations in each phase have the SAME ordinal, enabling batching
 
-		final List<PlannedOperation> finalPhaseOps = new ArrayList<>();
+		final List<FlushOperation> finalPhaseOps = new ArrayList<>();
 
 		// All temp-phase operations use same ordinal for batching
 		final var tempPhaseOrdinal = calculateOrdinal( ordinalBase, Slot.UPDATE );
@@ -706,7 +706,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				final int tempPosition = tempOffset + currentPos;
 
 				// TEMP PHASE: Move from old position to temporary position
-				operationConsumer.accept( new PlannedOperation(
+				operationConsumer.accept( new FlushOperation(
 						tableDescriptor,
 						MutationKind.UPDATE_ORDER,
 						orderUpdatePlan.jdbcOperation(),
@@ -724,7 +724,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				) );
 
 				// FINAL PHASE: Move from temporary position to final position
-				finalPhaseOps.add( new PlannedOperation(
+				finalPhaseOps.add( new FlushOperation(
 						tableDescriptor,
 						MutationKind.UPDATE_ORDER,
 						orderUpdatePlan.jdbcOperation(),
@@ -756,7 +756,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			CollectionJdbcOperations.UpdateRowPlan updateRowPlan,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 
 		final var entries = collection.entries( persister );
 		if ( !entries.hasNext() ) {
@@ -764,7 +764,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		}
 
 		final var updateOrdinal = calculateOrdinal( ordinalBase, Slot.UPDATE );
-		final List<PlannedOperation> updateOperations = new ArrayList<>();
+		final List<FlushOperation> updateOperations = new ArrayList<>();
 
 		int entryCount = 0;
 		while ( entries.hasNext() ) {
@@ -781,7 +781,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						updateRowPlan.restrictions()
 				);
 
-				updateOperations.add( new PlannedOperation(
+				updateOperations.add( new FlushOperation(
 						tableDescriptor,
 						MutationKind.UPDATE,
 						updateRowPlan.jdbcOperation(),
@@ -808,7 +808,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			Object key,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		// Pre-insert callback once for the whole collection
 		collection.preInsert( persister );
 
@@ -857,7 +857,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 								position
 						);
 
-						operationConsumer.accept( new PlannedOperation(
+						operationConsumer.accept( new FlushOperation(
 								tableDescriptor,
 								MutationKind.INSERT,
 								insertRowPlan.jdbcOperation(),
@@ -895,7 +895,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 							entryCount
 					);
 
-					operationConsumer.accept( new PlannedOperation(
+					operationConsumer.accept( new FlushOperation(
 							tableDescriptor,
 							MutationKind.INSERT,
 							insertRowPlan.jdbcOperation(),
@@ -915,7 +915,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		var collection = action.getCollection();
 		var affectedOwner = action.getAffectedOwner();
 
@@ -932,7 +932,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		);
 
 
-		final PlannedOperation removeOperation;
+		final FlushOperation removeOperation;
 		if ( action.isEmptySnapshot() ) {
 			removeOperation = null;
 		}
@@ -953,7 +953,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		}
 	}
 
-	private PlannedOperation planRemoveOperation(
+	private FlushOperation planRemoveOperation(
 			Object key,
 			int ordinalBase) {
 		final var jdbcOperation = jdbcOperations.removeOperation();
@@ -961,7 +961,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			return null;
 		}
 
-		return new PlannedOperation(
+		return new FlushOperation(
 				tableDescriptor,
 				MutationKind.DELETE,
 				jdbcOperation,
@@ -1718,10 +1718,10 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		@Override
 		public void execute(
 				ExecutionContext context,
-				PlannedOperation plannedOperation,
+				FlushOperation flushOperation,
 				SharedSessionContractImplementor session) {
 			context.executeRow(
-					plannedOperation,
+					flushOperation,
 					(valueBindings, s) -> {
 						var fkDescriptor = mutationTarget.getAttributeMapping().getKeyDescriptor();
 						fkDescriptor.getKeyPart().decompose(

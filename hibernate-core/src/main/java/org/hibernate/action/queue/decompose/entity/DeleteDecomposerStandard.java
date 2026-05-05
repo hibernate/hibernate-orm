@@ -16,7 +16,7 @@ import org.hibernate.sql.model.ast.TableDelete;
 import org.hibernate.sql.model.ast.TableMutation;
 import org.hibernate.sql.model.ast.builder.TableDeleteBuilder;
 import org.hibernate.sql.model.ast.builder.TableDeleteBuilderStandard;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -30,7 +30,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.linkedMap
 
 /// [Decomposer][EntityActionDecomposer] for entity delete operations.
 ///
-/// Converts an [EntityDeleteAction] into a group of [PlannedOperation] to be performed.
+/// Converts an [EntityDeleteAction] into a group of [FlushOperation] to be performed.
 ///
 /// @see EntityDeleteBindPlan
 /// @see EntitySoftDeleteBindPlan
@@ -57,7 +57,7 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		final Object identifier = action.getId();
 		final Object version = action.getVersion();
 		final Object[] state = action.getState();
@@ -158,11 +158,11 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 		return false;
 	}
 
-	private PlannedOperation createNoOpDeleteCallbackCarrier(
+	private FlushOperation createNoOpDeleteCallbackCarrier(
 			int ordinalBase,
 			PreDeleteHandling preDeleteHandling,
 			PostDeleteHandling postDeleteHandling) {
-		final PlannedOperation operation = DecompositionSupport.createNoOpCallbackCarrier(
+		final FlushOperation operation = DecompositionSupport.createNoOpCallbackCarrier(
 				entityPersister.getIdentifierTableDescriptor(),
 				ordinalBase * 1_000,
 				postDeleteHandling
@@ -191,11 +191,11 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 			OptimisticLockStyle optimisticLockStyle,
 			PostDeleteHandling postDeleteHandling,
 			SharedSessionContractImplementor session,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		final var dynamicMutations = generateMutations( rowId, loadedState, sameFlushUpdatedAttributeIndexes, true, session );
 
 		int localOrd = 0;
-		PlannedOperation previousOperation = null;
+		FlushOperation previousOperation = null;
 		for ( Map.Entry<String, TableDelete> entry : dynamicMutations.entrySet() ) {
 			var mutation = entry.getValue().createMutationOperation(null, sessionFactory);
 			var tableMapping = (TableDescriptorAsTableMapping) mutation.getTableDetails();
@@ -213,7 +213,7 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 					optimisticLockStyle
 			);
 
-			final PlannedOperation op = new PlannedOperation(
+			final FlushOperation op = new FlushOperation(
 					tableDescriptor,
 					MutationKind.DELETE,
 					mutation,
@@ -248,7 +248,7 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 			OptimisticLockStyle optimisticLockStyle,
 			PostDeleteHandling postDeleteHandling,
 			SharedSessionContractImplementor session,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		final boolean applyVersion;
 		final Map<String,TableDelete> tableDeletesToUse;
 		if ( instance == null ) {
@@ -264,7 +264,7 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 		}
 
 		int localOrd = 0;
-		PlannedOperation previousOperation = null;
+		FlushOperation previousOperation = null;
 		for ( Map.Entry<String, TableDelete> entry : tableDeletesToUse.entrySet() ) {
 			var mutation = entry.getValue().createMutationOperation(null, sessionFactory);
 			var tableMapping = (TableDescriptorAsTableMapping) mutation.getTableDetails();
@@ -282,7 +282,7 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 					applyVersion ? optimisticLockStyle : OptimisticLockStyle.NONE
 			);
 
-			final PlannedOperation op = new PlannedOperation(
+			final FlushOperation op = new FlushOperation(
 					tableDescriptor,
 					MutationKind.DELETE,
 					mutation,

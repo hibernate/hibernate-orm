@@ -10,7 +10,7 @@ import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.exec.JdbcValueBindings;
 import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -69,18 +69,18 @@ public class EntityDeleteBindPlan implements BindPlan, OperationResultChecker {
 	@Override
 	public void execute(
 			ExecutionContext context,
-			PlannedOperation plannedOperation,
+			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
 		context.executeRow(
-				plannedOperation,
-				(jdbcValueBindings, s) -> bindValues( jdbcValueBindings, plannedOperation, session ),
+				flushOperation,
+				(jdbcValueBindings, s) -> bindValues( jdbcValueBindings, flushOperation, session ),
 				this
 		);
 	}
 
 	private void bindValues(
 			JdbcValueBindings valueBindings,
-			PlannedOperation plannedOperation,
+			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
 
 		// Bind the identifier for the WHERE clause

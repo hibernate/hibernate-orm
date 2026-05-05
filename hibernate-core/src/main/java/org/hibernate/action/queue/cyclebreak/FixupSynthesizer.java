@@ -6,7 +6,7 @@ package org.hibernate.action.queue.cyclebreak;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.Incubating;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /// Factory for building cycle break fixup operations.
@@ -30,10 +30,10 @@ public class FixupSynthesizer {
 	}
 
 	/// Build the fix up operation (which is always an update), if one is needed, for
-	/// the initial `cycleBrokenOp` PlannedOperation.
+	/// the initial `cycleBrokenOp` FlushOperation.
 	@Nullable
-	public PlannedOperation synthesizeFixupOperationIfNeeded(
-			PlannedOperation cycleBrokenOp,
+	public FlushOperation synthesizeFixupOperationIfNeeded(
+			FlushOperation cycleBrokenOp,
 			Object entityId,
 			SharedSessionContractImplementor session) {
 		final BindingPatch bindingPatch = cycleBrokenOp.getBindingPatch();

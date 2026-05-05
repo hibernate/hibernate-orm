@@ -6,7 +6,7 @@ package org.hibernate.action.queue.cyclebreak;
 
 import org.hibernate.action.queue.exec.DelayedValueAccess;
 import org.hibernate.action.queue.exec.JdbcValueBindings;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.spi.JdbcValueBindingsImplementor;
@@ -17,13 +17,13 @@ import org.hibernate.engine.jdbc.mutation.spi.JdbcValueBindingsImplementor;
 public class CycleBreakPatcher {
 	public static void applyNullInsertPatch(
 			MutationExecutor executor,
-			PlannedOperation plannedOperation,
+			FlushOperation flushOperation,
 			BindingPatch bindingPatch) {
 		if (bindingPatch == null || bindingPatch.fkColumnsToNull().isEmpty()) {
 			return;
 		}
 
-		final String table = (plannedOperation.getTableExpression());
+		final String table = (flushOperation.getTableExpression());
 		if (!table.equals(( bindingPatch.tableName() ))) {
 			return;
 		}
@@ -46,8 +46,8 @@ public class CycleBreakPatcher {
 			}
 			if ( intended instanceof DelayedValueAccess
 					&& (isUniqueSwap
-							? plannedOperation.getIntendedUniqueValues().containsKey( col )
-							: plannedOperation.getIntendedFkValues().containsKey( col )) ) {
+							? flushOperation.getIntendedUniqueValues().containsKey( col )
+							: flushOperation.getIntendedFkValues().containsKey( col )) ) {
 				continue;
 			}
 			final Object intendedForFixup = intended instanceof DelayedValueAccess handle && handle.isResolved()
@@ -56,7 +56,7 @@ public class CycleBreakPatcher {
 
 			// 2) Register a generated-value handle
 			final DelayedValueAccess handle = new DelayedValueAccess(
-					plannedOperation.getOrigin() + "#" + col,
+					flushOperation.getOrigin() + "#" + col,
 					intendedForFixup
 			);
 			bindings.replaceValue(table, col, ParameterUsage.SET, handle);
@@ -66,23 +66,23 @@ public class CycleBreakPatcher {
 
 			// 4) Record intended value for later fixup UPDATE
 			if (isUniqueSwap) {
-				plannedOperation.getIntendedUniqueValues().put(col, intendedForFixup);
+				flushOperation.getIntendedUniqueValues().put(col, intendedForFixup);
 			}
 			else {
-				plannedOperation.getIntendedFkValues().put(col, intendedForFixup);
+				flushOperation.getIntendedFkValues().put(col, intendedForFixup);
 			}
 		}
 	}
 
 	public static void applyFixupPatch(
 			JdbcValueBindings valueBindings,
-			PlannedOperation plannedOperation,
+			FlushOperation flushOperation,
 			BindingPatch bindingPatch) {
 		if (bindingPatch == null || bindingPatch.fkColumnsToNull().isEmpty()) {
 			return;
 		}
 
-		final String table = (plannedOperation.getTableExpression());
+		final String table = (flushOperation.getTableExpression());
 		if (!table.equals(( bindingPatch.tableName() ))) {
 			return;
 		}
@@ -103,8 +103,8 @@ public class CycleBreakPatcher {
 			}
 			if ( intended instanceof DelayedValueAccess
 					&& (isUniqueSwap
-							? plannedOperation.getIntendedUniqueValues().containsKey( col )
-							: plannedOperation.getIntendedFkValues().containsKey( col )) ) {
+							? flushOperation.getIntendedUniqueValues().containsKey( col )
+							: flushOperation.getIntendedFkValues().containsKey( col )) ) {
 				continue;
 			}
 			final Object intendedForFixup = intended instanceof DelayedValueAccess handle && handle.isResolved()
@@ -113,7 +113,7 @@ public class CycleBreakPatcher {
 
 			// 2) Register a generated-value handle
 			final DelayedValueAccess handle = new DelayedValueAccess(
-					plannedOperation.getOrigin() + "#" + col,
+					flushOperation.getOrigin() + "#" + col,
 					intendedForFixup
 			);
 			valueBindings.replaceValue( col, ParameterUsage.SET, handle);
@@ -123,10 +123,10 @@ public class CycleBreakPatcher {
 
 			// 4) Record intended value for later fixup UPDATE
 			if (isUniqueSwap) {
-				plannedOperation.getIntendedUniqueValues().put(col, intendedForFixup);
+				flushOperation.getIntendedUniqueValues().put(col, intendedForFixup);
 			}
 			else {
-				plannedOperation.getIntendedFkValues().put(col, intendedForFixup);
+				flushOperation.getIntendedFkValues().put(col, intendedForFixup);
 			}
 		}
 	}

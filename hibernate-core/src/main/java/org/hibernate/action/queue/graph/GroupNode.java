@@ -4,16 +4,16 @@
  */
 package org.hibernate.action.queue.graph;
 
-import org.hibernate.action.queue.plan.PlannedOperationGroup;
+import org.hibernate.action.queue.plan.FlushOperationGroup;
 
-/// Wraps a PlannedOperationGroup with a stable identifier for graph operations.
+/// Wraps a FlushOperationGroup with a stable identifier for graph operations.
 /// Allows for efficient lookups, comparisons, and deduplication in the graph structure.
 /// Used as nodes (vertices) in the graph and as keys for [GraphEdge] lookups.
 ///
-/// @param group The PlannedOperationGroup
+/// @param group The FlushOperationGroup
 /// @param stableId Provides a unique, stable identifier for each group that persists
 /// 	throughout graph operations.
 ///
 /// @author Steve Ebersole
-public record GroupNode(PlannedOperationGroup group, long stableId) {
+public record GroupNode(FlushOperationGroup group, long stableId) {
 }

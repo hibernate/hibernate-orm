@@ -53,12 +53,12 @@ public class StandardFlushPlanner implements FlushPlanner {
 		final ArrayList<PlanStep> steps = new ArrayList<>();
 
 		StatementShapeKey curKey = null;
-		final ArrayList<PlannedOperation> bucket = new ArrayList<>();
+		final ArrayList<FlushOperation> bucket = new ArrayList<>();
 
 		for (GroupNode n : topoOrder) {
 			final StatementShapeKey key = n.group().shapeKey();
 
-			for (PlannedOperation op : n.group().operations()) {
+			for (FlushOperation op : n.group().operations()) {
 				if (curKey == null) {
 					curKey = key;
 					bucket.add(op);

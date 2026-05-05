@@ -12,7 +12,7 @@ import org.hibernate.action.queue.decompose.DecompositionContext;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
@@ -53,7 +53,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.trim;
 
 /// Decomposer for entity update operations.
 ///
-/// Converts an [EntityUpdateAction] into a group of [PlannedOperation] to be performed.
+/// Converts an [EntityUpdateAction] into a group of [FlushOperation] to be performed.
 ///
 /// @see EntityUpdateBindPlan
 ///
@@ -86,7 +86,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		final boolean vetoed = preUpdate( action, session );
 		if ( vetoed ) {
 			return;
@@ -216,7 +216,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		}
 
 		int localOrd = 0;
-		PlannedOperation previousOperation = null;
+		FlushOperation previousOperation = null;
 
 		// determine whether the entity we are about to update is being deleted in the same flush
 		final boolean isBeingDeleted = decompositionContext != null
@@ -263,7 +263,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 					generatedValuesCollector
 			);
 
-			final PlannedOperation op = new PlannedOperation(
+			final FlushOperation op = new FlushOperation(
 					tableDescriptor,
 					MutationKind.UPDATE,
 					operation,
@@ -322,7 +322,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 	/// Handle the case where the only value being updated is the version.
 	/// We treat this case specially in `#coordinateUpdate` to leverage
 	/// `#doVersionUpdate`.
-	private PlannedOperation possiblyBuildForcedVersionIncrementOperation(
+	private FlushOperation possiblyBuildForcedVersionIncrementOperation(
 			EntityUpdateAction action,
 			int ordinalBase,
 			UpdateCacheHandling.CacheUpdate cacheUpdate,
@@ -389,7 +389,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				previousVersion,
 				newVersion
 		);
-		final PlannedOperation op = new PlannedOperation(
+		final FlushOperation op = new FlushOperation(
 				identifierTableDescriptor,
 				MutationKind.UPDATE,
 				jdbcUpdate,

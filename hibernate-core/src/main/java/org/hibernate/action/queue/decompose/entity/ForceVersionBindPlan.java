@@ -11,7 +11,7 @@ import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.exec.JdbcValueBindings;
 import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -56,8 +56,8 @@ public class ForceVersionBindPlan implements BindPlan, OperationResultChecker {
 	}
 
 	@Override
-	public void execute(ExecutionContext context, PlannedOperation plannedOperation, SharedSessionContractImplementor session) {
-		context.executeRow( plannedOperation, this::bindValues, this );
+	public void execute(ExecutionContext context, FlushOperation flushOperation, SharedSessionContractImplementor session) {
+		context.executeRow( flushOperation, this::bindValues, this );
 	}
 
 	private void bindValues(JdbcValueBindings jdbcValueBindings, SharedSessionContractImplementor session) {

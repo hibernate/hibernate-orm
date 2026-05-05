@@ -4,7 +4,7 @@
  */
 package org.hibernate.generator.values;
 
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -59,7 +59,7 @@ public interface GeneratedValuesMutationDelegate {
 	 * @see #createTableMutationBuilder
 	 */
 	GeneratedValues performGraphMutation(
-			PlannedOperation operation,
+			FlushOperation operation,
 			Object entity,
 			SharedSessionContractImplementor session);
 

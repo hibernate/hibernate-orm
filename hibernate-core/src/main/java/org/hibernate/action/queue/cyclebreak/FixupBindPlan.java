@@ -7,7 +7,7 @@ package org.hibernate.action.queue.cyclebreak;
 import org.hibernate.action.queue.exec.BindPlan;
 import org.hibernate.action.queue.exec.JdbcValueBindings;
 import org.hibernate.action.queue.exec.ExecutionContext;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -32,9 +32,9 @@ public class FixupBindPlan implements BindPlan {
 	@Override
 	public void execute(
 			ExecutionContext context,
-			PlannedOperation plannedOperation,
+			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
-		context.executeRow(	plannedOperation, this::bindValues, this::noopCheck );
+		context.executeRow(	flushOperation, this::bindValues, this::noopCheck );
 	}
 
 	private void bindValues(JdbcValueBindings valueBindings, SharedSessionContractImplementor session) {

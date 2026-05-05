@@ -14,7 +14,7 @@ import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.queue.exec.DelayedValueAccess;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.action.queue.support.GraphBasedActionQueueFactory;
 import org.hibernate.action.spi.Executable;
 import org.hibernate.engine.internal.NonNullableTransientDependencies;
@@ -173,7 +173,7 @@ public class Decomposer implements DecompositionContext {
 	public void decompose(
 			Executable executable,
 			int ordinalBase,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		// Special handling for entity inserts - check for unresolved transient dependencies
 		if (executable instanceof AbstractEntityInsertAction insert) {
 			ACTION_LOGGER.tracef("Decomposing INSERT for %s", insert.getEntityName());
@@ -349,9 +349,9 @@ public class Decomposer implements DecompositionContext {
 	 * This should be called after an entity becomes managed (e.g., after an INSERT is executed).
 	 *
 	 * @param managedEntity the entity that just became managed
-	 * @param operationConsumer Consumer for any {@linkplain PlannedOperation table operations} produced.
+	 * @param operationConsumer Consumer for any {@linkplain FlushOperation table operations} produced.
 	 */
-	public void resolveAndDecompose(Object managedEntity, Consumer<PlannedOperation> operationConsumer) {
+	public void resolveAndDecompose(Object managedEntity, Consumer<FlushOperation> operationConsumer) {
 		// Find inserts that were waiting for this entity
 		final Set<AbstractEntityInsertAction> dependentInserts = insertsByTransientEntity.remove(managedEntity);
 

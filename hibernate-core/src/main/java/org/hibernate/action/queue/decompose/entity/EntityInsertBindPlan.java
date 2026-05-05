@@ -14,7 +14,7 @@ import org.hibernate.action.queue.exec.GeneratedValuesCollector;
 import org.hibernate.action.queue.exec.JdbcValueBindings;
 import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -84,23 +84,23 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 	@Override
 	public void execute(
 			ExecutionContext context,
-			PlannedOperation plannedOperation,
+			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
 		context.executeRow(
-				plannedOperation,
-				(jdbcValueBindings, s) -> bindValues( jdbcValueBindings, plannedOperation, session ),
+				flushOperation,
+				(jdbcValueBindings, s) -> bindValues( jdbcValueBindings, flushOperation, session ),
 				this
 		);
 	}
 
 	private void bindValues(
 			JdbcValueBindings valueBindings,
-			PlannedOperation plannedOperation,
+			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
 		decomposeForInsert( valueBindings, identifier, session );
 
-		if ( plannedOperation.getBindingPatch() != null ) {
-			CycleBreakPatcher.applyFixupPatch( valueBindings, plannedOperation, plannedOperation.getBindingPatch() );
+		if ( flushOperation.getBindingPatch() != null ) {
+			CycleBreakPatcher.applyFixupPatch( valueBindings, flushOperation, flushOperation.getBindingPatch() );
 		}
 	}
 

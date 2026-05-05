@@ -5,7 +5,7 @@
 package org.hibernate.action.queue;
 
 
-/// Constants and utilities for calculating ordinals for [PlannedOperation]
+/// Constants and utilities for calculating ordinals for [FlushOperation]
 /// related to collection actions.
 ///
 /// Ordinals help determine the execution order of database operations during flush within graph building and

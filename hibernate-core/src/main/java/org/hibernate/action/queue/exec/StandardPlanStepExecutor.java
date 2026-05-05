@@ -5,7 +5,7 @@
 package org.hibernate.action.queue.exec;
 
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.PreparableMutationOperation;
 
@@ -21,23 +21,23 @@ public class StandardPlanStepExecutor extends AbstractStepExecutor implements Ex
 	}
 
 	@Override
-	public void executePreparable(PreparableMutationOperation preparable, PlannedOperation plannedOperation) {
+	public void executePreparable(PreparableMutationOperation preparable, FlushOperation flushOperation) {
 		// Delegate to BindPlan to drive execution
 		// The BindPlan will call back to executeRow() for each row it needs to execute
-		plannedOperation.getBindPlan().execute( this, plannedOperation, session );
+		flushOperation.getBindPlan().execute( this, flushOperation, session );
 	}
 
 	@Override
 	public void executeRow(
-			PlannedOperation plannedOperation,
+			FlushOperation flushOperation,
 			@MonotonicNonNull BiConsumer<JdbcValueBindings, SharedSessionContractImplementor> binder,
 			OperationResultChecker resultChecker) {
-		final PreparableMutationOperation preparable = (PreparableMutationOperation) plannedOperation.getJdbcOperation();
+		final PreparableMutationOperation preparable = (PreparableMutationOperation) flushOperation.getJdbcOperation();
 
 		try (var stmnt = session.getJdbcCoordinator()
 				.getStatementPreparer()
 				.prepareStatement( preparable.getSqlString() ) ) {
-			var valueBindings = new JdbcValueBindings( plannedOperation.getMutatingTableDescriptor(), preparable );
+			var valueBindings = new JdbcValueBindings( flushOperation.getMutatingTableDescriptor(), preparable );
 			binder.accept( valueBindings, session );
 			valueBindings.beforeStatement( stmnt, session );
 

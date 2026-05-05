@@ -9,5 +9,5 @@ import java.util.List;
 /// Simple implementation of PlanStep
 ///
 /// @author Steve Ebersole
-public record SimplePlanStep(List<PlannedOperation> operations) implements PlanStep {
+public record SimplePlanStep(List<FlushOperation> operations) implements PlanStep {
 }

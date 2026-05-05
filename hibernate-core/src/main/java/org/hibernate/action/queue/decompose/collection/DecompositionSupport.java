@@ -148,16 +148,16 @@ public class DecompositionSupport {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// No-op operations
 
-	/// Creates a no-op PlannedOperation to carry a post-execution callback.
+	/// Creates a no-op FlushOperation to carry a post-execution callback.
 	/// Used when decomposition produces no SQL operations but needs to defer
 	/// the POST event callback until after all decompositions complete.
-	public static org.hibernate.action.queue.plan.PlannedOperation createNoOpCallbackCarrier(
+	public static org.hibernate.action.queue.plan.FlushOperation createNoOpCallbackCarrier(
 			TableDescriptor tableDescriptor,
 			int ordinal,
 			PostExecutionCallback callback) {
-		// Create PlannedOperation with NO_OP kind
+		// Create FlushOperation with NO_OP kind
 		// Executor will skip SQL execution but still run the callback
-		var noOp = new org.hibernate.action.queue.plan.PlannedOperation(
+		var noOp = new org.hibernate.action.queue.plan.FlushOperation(
 				tableDescriptor,
 				org.hibernate.action.queue.MutationKind.NO_OP,
 				null,  // jdbcOperation - not needed for no-op

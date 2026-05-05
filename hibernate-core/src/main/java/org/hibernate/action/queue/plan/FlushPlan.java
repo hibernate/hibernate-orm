@@ -14,7 +14,7 @@ import java.util.List;
 public class FlushPlan {
 	private final List<PlanStep> steps;
 
-	private final ArrayDeque<PlannedOperation> fixups = new ArrayDeque<>();
+	private final ArrayDeque<FlushOperation> fixups = new ArrayDeque<>();
 
 	public FlushPlan(List<PlanStep> steps) {
 		this.steps = List.copyOf(steps);
@@ -22,12 +22,12 @@ public class FlushPlan {
 
 	public List<PlanStep> steps() { return steps; }
 
-	public void enqueueFixup(PlannedOperation fixup) {
+	public void enqueueFixup(FlushOperation fixup) {
 		fixups.addLast(fixup);
 	}
 
-	public List<PlannedOperation> drainFixupsInOrder() {
-		final ArrayList<PlannedOperation> out = new ArrayList<>(fixups.size());
+	public List<FlushOperation> drainFixupsInOrder() {
+		final ArrayList<FlushOperation> out = new ArrayList<>(fixups.size());
 		while (!fixups.isEmpty()) {
 			out.add(fixups.removeFirst());
 		}

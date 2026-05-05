@@ -6,7 +6,7 @@ package org.hibernate.action.queue.exec;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.action.queue.constraint.UniqueConstraint;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.ValuesAnalysis;
 
@@ -14,7 +14,7 @@ import org.hibernate.sql.model.ValuesAnalysis;
 ///
 /// @author Steve Ebersole
 public interface BindPlan {
-	/// Access to the entity identifier associated with the PlannedOperation
+	/// Access to the entity identifier associated with the FlushOperation
 	/// that this BindPlan is associated with.  May be null.
 	@Nullable
 	default Object getEntityId() {
@@ -64,12 +64,12 @@ public interface BindPlan {
 	 * For bundled operations, this may execute multiple rows.
 	 *
 	 * @param context the execution context providing batching and statement management
-	 * @param plannedOperation the operation being executed
+	 * @param flushOperation the operation being executed
 	 * @param session the session
 	 */
 	void execute(
 			ExecutionContext context,
-			PlannedOperation plannedOperation,
+			FlushOperation flushOperation,
 			SharedSessionContractImplementor session);
 
 	default GeneratedValuesCollector getGeneratedValuesCollector() {

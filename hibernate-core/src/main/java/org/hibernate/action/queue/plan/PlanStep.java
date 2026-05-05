@@ -13,5 +13,5 @@ import java.util.List;
 /// @author Steve Ebersole
 public interface PlanStep {
 	/// The operations for this step.
-	List<PlannedOperation> operations();
+	List<FlushOperation> operations();
 }

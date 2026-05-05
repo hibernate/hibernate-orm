@@ -9,7 +9,7 @@ import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.decompose.DecompositionContext;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -49,7 +49,7 @@ public class DeleteDecomposerSoftDelete extends AbstractDeleteDecomposer {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		final Object naturalIdValues = DeleteNaturalIdHandling.removeLocalResolution( action, session );
 
 		final DeleteCacheHandling.CacheLock cacheLock = DeleteCacheHandling.lockItem( action, session );
@@ -80,7 +80,7 @@ public class DeleteDecomposerSoftDelete extends AbstractDeleteDecomposer {
 				OptimisticLockStyle.NONE
 		);
 
-		final PlannedOperation op = new PlannedOperation(
+		final FlushOperation op = new FlushOperation(
 				tableDescriptor,
 				MutationKind.UPDATE,
 				mutation,

@@ -25,11 +25,11 @@ import java.util.List;
 /// - update persons ... // different kind
 ///
 /// @author Steve Ebersole
-public record PlannedOperationGroup(
+public record FlushOperationGroup(
 		String tableExpression,
 		MutationKind kind,
 		StatementShapeKey shapeKey,
-		List<PlannedOperation> operations,
+		List<FlushOperation> operations,
 		boolean needsIdPrePhase,
 		boolean hasUniqueConstraints,
 		int ordinal,

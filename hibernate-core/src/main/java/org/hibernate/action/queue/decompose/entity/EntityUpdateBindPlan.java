@@ -13,7 +13,7 @@ import org.hibernate.action.queue.exec.GeneratedValuesCollector;
 import org.hibernate.action.queue.exec.JdbcValueBindings;
 import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -114,33 +114,33 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 	@Override
 	public void execute(
 			ExecutionContext context,
-			PlannedOperation plannedOperation,
+			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
 		context.executeRow(
-				plannedOperation,
-				(jdbcValueBindings, s) -> bindValues( jdbcValueBindings, plannedOperation, session ),
+				flushOperation,
+				(jdbcValueBindings, s) -> bindValues( jdbcValueBindings, flushOperation, session ),
 				this
 		);
 	}
 
 	private void bindValues(
 			JdbcValueBindings valueBindings,
-			PlannedOperation plannedOperation,
+			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
-		decomposeForUpdate( valueBindings, plannedOperation, session );
+		decomposeForUpdate( valueBindings, flushOperation, session );
 
-		if (plannedOperation.getBindingPatch() != null) {
+		if (flushOperation.getBindingPatch() != null) {
 			CycleBreakPatcher.applyFixupPatch(
 					valueBindings,
-					plannedOperation,
-					plannedOperation.getBindingPatch()
+					flushOperation,
+					flushOperation.getBindingPatch()
 			);
 		}
 	}
 
 	private void decomposeForUpdate(
 			JdbcValueBindings valueBindings,
-			PlannedOperation plannedOperation,
+			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
 		for ( int i = 0; i < tableDescriptor.attributes().size(); i++ ) {
 			var attribute = tableDescriptor.attributes().get( i );

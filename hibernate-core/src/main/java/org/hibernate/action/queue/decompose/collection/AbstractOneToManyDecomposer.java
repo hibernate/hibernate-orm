@@ -13,7 +13,7 @@ import org.hibernate.action.queue.exec.JdbcValueBindings;
 import org.hibernate.action.queue.decompose.DecompositionContext;
 import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.collection.spi.CollectionChangeSet;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.model.MutationOperation;
@@ -70,7 +70,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		var collection = action.getCollection();
 		var key = action.getKey();
 
@@ -106,7 +106,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			return;
 		}
 
-		final List<PlannedOperation> operations = new ArrayList<>();
+		final List<FlushOperation> operations = new ArrayList<>();
 
 		var insertOrdinal = calculateOrdinal( ordinalBase, Slot.INSERT );
 		var writeIndexOrdinal = calculateOrdinal( ordinalBase, Slot.WRITEINDEX );
@@ -130,7 +130,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 
 				// For one-to-many collections, the "insert" is actually an UPDATE that sets the FK
 				// Use MutationKind.UPDATE so it's ordered AFTER entity INSERTs via FK edges
-				final PlannedOperation plannedOp = new PlannedOperation(
+				final FlushOperation plannedOp = new FlushOperation(
 						persister.getCollectionTableDescriptor(),
 						MutationKind.UPDATE,
 						insertRowPlan.jdbcOperation(),
@@ -154,7 +154,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 				);
 
 
-				var  writeIndexPlannedOp = new PlannedOperation(
+				var  writeIndexFlushOp = new FlushOperation(
 						persister.getCollectionTableDescriptor(),
 						MutationKind.UPDATE_ORDER,
 						jdbcOperations.updateIndexPlan().jdbcOperation(),
@@ -165,7 +165,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 
 				//postExecCallbackRegistry.accept(... );
 				// on recreate we should be able to write the index as a normal planned-op
-				operations.add( writeIndexPlannedOp );
+				operations.add( writeIndexFlushOp );
 			}
 
 			entryCount++;
@@ -192,7 +192,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		final var collection = action.getCollection();
 		final var key = action.getKey();
 
@@ -215,7 +215,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 				postUpdateHandling
 		);
 
-		final List<PlannedOperation> operations = new ArrayList<>();
+		final List<FlushOperation> operations = new ArrayList<>();
 
 		if ( !collection.wasInitialized() ) {
 			// If the collection wasn't initialized, we cannot access entries/deletes
@@ -226,7 +226,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			if ( !action.isEmptySnapshot() ) {
 				final var removeOperation = buildRemoveOperation( persister.getCollectionTableDescriptor() );
 				if ( removeOperation != null ) {
-					operations.add( new PlannedOperation(
+					operations.add( new FlushOperation(
 							persister.getCollectionTableDescriptor(),
 							MutationKind.UPDATE,
 							removeOperation,
@@ -274,20 +274,20 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			Object key,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		final int deleteOrdinal = calculateOrdinal( ordinalBase, Slot.DELETE );
 		final int tempOrderOrdinal = calculateOrdinal( ordinalBase, Slot.UPDATE );
 		final int writeIndexOrdinal = calculateOrdinal( ordinalBase, Slot.WRITEINDEX );
 		final int finalOrderOrdinal = writeIndexOrdinal + 1;
 		final int tempOffset = Integer.MAX_VALUE / 2;
-		final List<PlannedOperation> finalOrderOperations = new ArrayList<>();
+		final List<FlushOperation> finalOrderOperations = new ArrayList<>();
 
 		for ( CollectionChangeSet.Shift shift : changeSet.shifts() ) {
 			final var jdbcOperations = selectJdbcOperations( shift.element(), session );
 			assert jdbcOperations != null;
 			final var deleteRowPlan = jdbcOperations.deleteRowPlan();
 			if ( deleteRowPlan != null ) {
-				operationConsumer.accept( new PlannedOperation(
+				operationConsumer.accept( new FlushOperation(
 						persister.getCollectionTableDescriptor(),
 						// technically an UPDATE
 						MutationKind.UPDATE,
@@ -308,7 +308,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			}
 			else if ( jdbcOperations.updateIndexPlan() != null ) {
 				final int tempPosition = tempOffset + ( (Number) shift.currentIndex() ).intValue();
-				operationConsumer.accept( new PlannedOperation(
+				operationConsumer.accept( new FlushOperation(
 						persister.getCollectionTableDescriptor(),
 						MutationKind.UPDATE_ORDER,
 						jdbcOperations.updateIndexPlan().jdbcOperation(),
@@ -325,7 +325,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 						"UpdateShiftTemp[" + shift.snapshotIndex() + "->" + tempPosition + "](" + persister.getRolePath() + ")"
 				) );
 
-				finalOrderOperations.add( new PlannedOperation(
+				finalOrderOperations.add( new FlushOperation(
 						persister.getCollectionTableDescriptor(),
 						MutationKind.UPDATE_ORDER,
 						jdbcOperations.updateIndexPlan().jdbcOperation(),
@@ -350,7 +350,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			assert jdbcOperations != null;
 			final var insertRowPlan = jdbcOperations.insertRowPlan();
 			if ( insertRowPlan != null ) {
-				operationConsumer.accept( new PlannedOperation(
+				operationConsumer.accept( new FlushOperation(
 						persister.getCollectionTableDescriptor(),
 						// technically an UPDATE
 						MutationKind.UPDATE,
@@ -377,7 +377,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			assert jdbcOperations != null;
 			final var insertRowPlan = jdbcOperations.insertRowPlan();
 			if ( insertRowPlan != null ) {
-				operationConsumer.accept( new PlannedOperation(
+				operationConsumer.accept( new FlushOperation(
 						persister.getCollectionTableDescriptor(),
 						// technically an UPDATE
 						MutationKind.UPDATE,
@@ -416,10 +416,10 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			QueuedOperationCollectionAction action,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		final var collection = action.getCollection();
 		final var key = action.getKey();
-		final List<PlannedOperation> operations = new ArrayList<>();
+		final List<FlushOperation> operations = new ArrayList<>();
 
 		final int writeIndexOrdinal = calculateOrdinal( ordinalBase, Slot.WRITEINDEX );
 		final List<QueuedIndexWrite> queuedIndexWrites = new ArrayList<>();
@@ -529,7 +529,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			Object key,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		if ( !persister.needsRemove() ) {
 			// EARLY EXIT!!
 			return;
@@ -560,7 +560,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 					deleteRowPlan.restrictions()
 			);
 
-			final PlannedOperation plannedOp = new PlannedOperation(
+			final FlushOperation plannedOp = new FlushOperation(
 					persister.getCollectionTableDescriptor(),
 					// technically an UPDATE
 					MutationKind.UPDATE,
@@ -580,7 +580,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			Object key,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		if ( !persister.isDoWriteEvenWhenInverse() ) {
 			// EARLY EXIT!!
 			return;
@@ -609,7 +609,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 						updateIndexPlan.restrictions()
 				);
 
-				final PlannedOperation plannedOp = new PlannedOperation(
+				final FlushOperation plannedOp = new FlushOperation(
 						persister.getCollectionTableDescriptor(),
 						MutationKind.UPDATE_ORDER,
 						updateIndexPlan.jdbcOperation(),
@@ -630,7 +630,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			Object key,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		// todo (ActionQueue2) : where should this come from?
 		var allowInserts = true;
 		if ( !allowInserts ) {
@@ -672,7 +672,7 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 
 					// For one-to-many collections, the "insert" is actually an UPDATE that sets the FK
 					// Use MutationKind.UPDATE so it's ordered AFTER entity INSERTs via FK edges
-					final PlannedOperation plannedOp = new PlannedOperation(
+					final FlushOperation plannedOp = new FlushOperation(
 							persister.getCollectionTableDescriptor(),
 							// technically an UPDATE
 							MutationKind.UPDATE,
@@ -712,12 +712,12 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 			CollectionJdbcOperations.UpdateRowPlan updateIndexPlan,
 			int ordinal,
 			String description,
-			Consumer<PlannedOperation> operationConsumer) {
+			Consumer<FlushOperation> operationConsumer) {
 		if ( updateIndexPlan == null ) {
 			return;
 		}
 
-		operationConsumer.accept( new PlannedOperation(
+		operationConsumer.accept( new FlushOperation(
 				persister.getCollectionTableDescriptor(),
 				MutationKind.UPDATE_ORDER,
 				updateIndexPlan.jdbcOperation(),
@@ -748,10 +748,10 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 		@Override
 		public void execute(
 				org.hibernate.action.queue.exec.ExecutionContext context,
-				PlannedOperation plannedOperation,
+				FlushOperation flushOperation,
 				SharedSessionContractImplementor session) {
 			context.executeRow(
-					plannedOperation,
+					flushOperation,
 					(valueBindings, s) -> {
 						var fkDescriptor = mutationTarget.getAttributeMapping().getKeyDescriptor();
 						fkDescriptor.getKeyPart().decompose(

@@ -20,7 +20,7 @@ import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.queue.decompose.DecompositionContext;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.collection.spi.CollectionSemantics;
@@ -118,7 +118,7 @@ public interface CollectionPersister extends Restrictable {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
-			Consumer<PlannedOperation> operationConsumer);
+			Consumer<FlushOperation> operationConsumer);
 
 	/**
 	 * Removes the collection:<ul>
@@ -137,7 +137,7 @@ public interface CollectionPersister extends Restrictable {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
-			Consumer<PlannedOperation> operationConsumer);
+			Consumer<FlushOperation> operationConsumer);
 
 	/**
 	 * Decomposes a collection update action into planned operations
@@ -147,7 +147,7 @@ public interface CollectionPersister extends Restrictable {
 			int ordinalBase,
 			SharedSessionContractImplementor session,
 			DecompositionContext decompositionContext,
-			Consumer<PlannedOperation> operationConsumer);
+			Consumer<FlushOperation> operationConsumer);
 
 	/**
 	 * Decomposes a queued collection operation action into planned operations.
@@ -159,7 +159,7 @@ public interface CollectionPersister extends Restrictable {
 			QueuedOperationCollectionAction action,
 			int ordinalBase,
 			SharedSessionContractImplementor session,
-			Consumer<PlannedOperation> operationConsumer);
+			Consumer<FlushOperation> operationConsumer);
 
 	/**
 	 * Get the persister of the entity that "owns" this collection

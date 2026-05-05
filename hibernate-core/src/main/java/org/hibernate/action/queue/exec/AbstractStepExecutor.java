@@ -6,7 +6,7 @@ package org.hibernate.action.queue.exec;
 
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.cyclebreak.FixupSynthesizer;
-import org.hibernate.action.queue.plan.PlannedOperation;
+import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.persister.entity.EntityPersister;
@@ -35,9 +35,9 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 
 	@Override
 	public void execute(
-			List<PlannedOperation> plannedOperations,
+			List<FlushOperation> flushOperations,
 			Consumer<Object> newlyManagedEntityConsumer,
-			Consumer<PlannedOperation> fixupOperationConsumer) {
+			Consumer<FlushOperation> fixupOperationConsumer) {
 		// todo : not a fan of this overall, but it largely fits the expectations of tests.
 
 		// Grab a reference to the physical connection to ensure it's acquired before execution begins.
@@ -48,13 +48,13 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 		var physicalConnection = session.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
 		doExecution(
 				physicalConnection,
-				plannedOperations,
+				flushOperations,
 				newlyManagedEntityConsumer,
 				fixupOperationConsumer
 		);
 	}
 
-	/// There are 4 forms of PlannedOperation handled here -
+	/// There are 4 forms of FlushOperation handled here -
 	/// 	1. Operations with generated value handling.  At the moment these are handled separately to
 	/// 		integrate the older delegate contract to allow new and legacy queue impls to continue
 	/// 		working side-by-side.  I'd like to adjust this after we remove the legacy queue as we can
@@ -68,27 +68,27 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 	/// 		used from collection decomposers.
 	private void doExecution(
 			Connection physicalConnection,
-			List<PlannedOperation> plannedOperations,
+			List<FlushOperation> flushOperations,
 			Consumer<Object> newlyManagedEntityConsumer,
-			Consumer<PlannedOperation> fixupOperationConsumer) {
-		for ( int i = 0; i < plannedOperations.size(); i++ ) {
-			var plannedOperation = plannedOperations.get( i );
-			final boolean execute = beforeOperationExecution( plannedOperation );
+			Consumer<FlushOperation> fixupOperationConsumer) {
+		for ( int i = 0; i < flushOperations.size(); i++ ) {
+			var flushOperation = flushOperations.get( i );
+			final boolean execute = beforeOperationExecution( flushOperation );
 
 			// No-op operations: only carry post-execution callback, skip SQL execution
-			if ( plannedOperation.getKind() != MutationKind.NO_OP && execute ) {
-				final var bindPlan = plannedOperation.getBindPlan();
+			if ( flushOperation.getKind() != MutationKind.NO_OP && execute ) {
+				final var bindPlan = flushOperation.getBindPlan();
 				if ( bindPlan.getGeneratedValuesCollector() != null ) {
 					// we need to execute these without batching
-					executeWithGeneratedValues( plannedOperation );
+					executeWithGeneratedValues( flushOperation );
 				}
 				else {
-					final MutationOperation jdbcOperation = plannedOperation.getJdbcOperation();
+					final MutationOperation jdbcOperation = flushOperation.getJdbcOperation();
 					if ( jdbcOperation instanceof PreparableMutationOperation preparable ) {
-						executePreparable( preparable, plannedOperation );
+						executePreparable( preparable, flushOperation );
 					}
 					else if ( jdbcOperation instanceof SelfExecutingUpdateOperation selfExecuting ) {
-						executeSelfExecuting( selfExecuting, plannedOperation );
+						executeSelfExecuting( selfExecuting, flushOperation );
 					}
 					else {
 						throw new IllegalStateException(
@@ -97,31 +97,31 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 				}
 			}
 
-			afterOperationExecution( plannedOperation, newlyManagedEntityConsumer, fixupOperationConsumer );
+			afterOperationExecution( flushOperation, newlyManagedEntityConsumer, fixupOperationConsumer );
 		}
 	}
 
-	protected boolean beforeOperationExecution(PlannedOperation plannedOperation) {
-		final var preExecutionCallback = plannedOperation.getPreExecutionCallback();
+	protected boolean beforeOperationExecution(FlushOperation flushOperation) {
+		final var preExecutionCallback = flushOperation.getPreExecutionCallback();
 		if ( preExecutionCallback == null ) {
 			return true;
 		}
 		final boolean execute = preExecutionCallback.beforeExecution( (org.hibernate.engine.spi.SessionImplementor) session );
-		plannedOperation.setExecutionSkipped( !execute );
+		flushOperation.setExecutionSkipped( !execute );
 		return execute;
 	}
 
 	protected void afterOperationExecution(
-			PlannedOperation plannedOperation,
+			FlushOperation flushOperation,
 			Consumer<Object> newlyManagedEntityConsumer,
-			Consumer<PlannedOperation> fixupOperationConsumer) {
-		if ( plannedOperation.getPostExecutionCallback() != null ) {
-			plannedOperation.getPostExecutionCallback().handle( (org.hibernate.engine.spi.SessionImplementor) session );
+			Consumer<FlushOperation> fixupOperationConsumer) {
+		if ( flushOperation.getPostExecutionCallback() != null ) {
+			flushOperation.getPostExecutionCallback().handle( (org.hibernate.engine.spi.SessionImplementor) session );
 		}
 
 		if ( newlyManagedEntityConsumer != null ) {
-			if ( plannedOperation.getKind() == MutationKind.INSERT ) {
-				final Object entity = plannedOperation.getBindPlan().getEntityInstance();
+			if ( flushOperation.getKind() == MutationKind.INSERT ) {
+				final Object entity = flushOperation.getBindPlan().getEntityInstance();
 				if ( entity != null ) {
 					newlyManagedEntityConsumer.accept( entity );
 				}
@@ -130,11 +130,11 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 
 		if ( fixupOperationConsumer != null ) {
 			// If this op was cycle-broken, the patcher stored intended FK values in op.intendedFkValues.
-			if ( !plannedOperation.getIntendedFkValues().isEmpty() ) {
-				final Object entityId = plannedOperation.getBindPlan().getEntityId();
+			if ( !flushOperation.getIntendedFkValues().isEmpty() ) {
+				final Object entityId = flushOperation.getBindPlan().getEntityId();
 
-				final PlannedOperation fix = fixupSynthesizer.synthesizeFixupOperationIfNeeded(
-						plannedOperation,
+				final FlushOperation fix = fixupSynthesizer.synthesizeFixupOperationIfNeeded(
+						flushOperation,
 						entityId,
 						session
 				);
@@ -144,11 +144,11 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 			}
 
 			// If this op was cycle-broken for unique swap, the patcher stored intended values in op.intendedUniqueValues.
-			if ( !plannedOperation.getIntendedUniqueValues().isEmpty() ) {
-				final Object entityId = plannedOperation.getBindPlan().getEntityId();
+			if ( !flushOperation.getIntendedUniqueValues().isEmpty() ) {
+				final Object entityId = flushOperation.getBindPlan().getEntityId();
 
-				final PlannedOperation fix = fixupSynthesizer.synthesizeFixupOperationIfNeeded(
-						plannedOperation,
+				final FlushOperation fix = fixupSynthesizer.synthesizeFixupOperationIfNeeded(
+						flushOperation,
 						entityId,
 						session
 				);
@@ -159,16 +159,16 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 		}
 	}
 
-	protected abstract void executePreparable(PreparableMutationOperation preparable, PlannedOperation plannedOperation);
+	protected abstract void executePreparable(PreparableMutationOperation preparable, FlushOperation flushOperation);
 
-	protected void executeWithGeneratedValues(PlannedOperation plannedOperation) {
-		var bindPlan = plannedOperation.getBindPlan();
+	protected void executeWithGeneratedValues(FlushOperation flushOperation) {
+		var bindPlan = flushOperation.getBindPlan();
 		var generatedValuesCollector = bindPlan.getGeneratedValuesCollector();
 
 		final GeneratedValuesMutationDelegate generatedValuesDelegate;
-		var mutationTarget = plannedOperation.getJdbcOperation().getMutationTarget();
+		var mutationTarget = flushOperation.getJdbcOperation().getMutationTarget();
 		if ( mutationTarget instanceof EntityPersister entityPersister ) {
-			generatedValuesDelegate = plannedOperation.getKind() == MutationKind.INSERT
+			generatedValuesDelegate = flushOperation.getKind() == MutationKind.INSERT
 					? entityPersister.getInsertDelegate()
 					: entityPersister.getUpdateDelegate();
 		}
@@ -177,7 +177,7 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 		}
 
 		var generatedValues = generatedValuesDelegate.performGraphMutation(
-				plannedOperation,
+				flushOperation,
 				bindPlan.getEntityInstance(),
 				session
 		);
@@ -185,14 +185,14 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 		generatedValuesCollector.apply( generatedValues );
 	}
 
-	protected void executeSelfExecuting(SelfExecutingUpdateOperation selfExecuting, PlannedOperation plannedOperation) {
+	protected void executeSelfExecuting(SelfExecutingUpdateOperation selfExecuting, FlushOperation flushOperation) {
 		final var graphBindings = new JdbcValueBindings(
-				plannedOperation.getMutatingTableDescriptor(),
+				flushOperation.getMutatingTableDescriptor(),
 				selfExecuting
 		);
-		plannedOperation.getBindPlan().execute(
+		flushOperation.getBindPlan().execute(
 				(operation, binder, resultChecker) -> binder.accept( graphBindings, session ),
-				plannedOperation,
+				flushOperation,
 				session
 		);
 
@@ -213,7 +213,7 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 
 		selfExecuting.performMutation(
 				jdbcValueBindings,
-				plannedOperation.getBindPlan().getValuesAnalysis(),
+				flushOperation.getBindPlan().getValuesAnalysis(),
 				session
 		);
 	}

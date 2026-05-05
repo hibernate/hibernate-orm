@@ -143,7 +143,7 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ex
 		);
 		valueBindings.getBindingGroup().forEachBinding( binding ->
 				jdbcValueBindings.bindValue(
-						binding.getValue(),
+						JdbcValueBindings.resolveValue( binding.getValue() ),
 						valueBindings.getBindingGroup().getTableName(),
 						binding.getColumnName(),
 						binding.getValueDescriptor().getUsage()

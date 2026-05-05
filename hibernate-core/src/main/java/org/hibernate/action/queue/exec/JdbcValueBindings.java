@@ -35,15 +35,9 @@ public class JdbcValueBindings {
 	public void beforeStatement(PreparedStatement preparedStatement, SharedSessionContractImplementor session) {
 		bindingGroup.forEachBinding( (binding) -> {
 			try {
-				// Unwrap delayed value accessors used by cycle breaking and generated identifiers
-				Object valueToBindObject = binding.getValue();
-				if ( valueToBindObject instanceof DelayedValueAccess handle ) {
-					valueToBindObject = handle.get();
-				}
-
 				binding.getValueBinder().bind(
 						preparedStatement,
-						valueToBindObject,
+						resolveValue( binding.getValue() ),
 						binding.getPosition(),
 						session
 				);
@@ -60,6 +54,10 @@ public class JdbcValueBindings {
 				);
 			}
 		} );
+	}
+
+	static Object resolveValue(Object value) {
+		return value instanceof DelayedValueAccess handle ? handle.get() : value;
 	}
 
 	public void bindValue(Object columnValue, String columnName, ParameterUsage parameterUsage) {

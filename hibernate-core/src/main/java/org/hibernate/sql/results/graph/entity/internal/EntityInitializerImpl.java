@@ -667,18 +667,21 @@ public class EntityInitializerImpl
 				: keyTypeForEqualsHashCode.isEqual( key1, key2 );
 	}
 
-	private boolean isRefreshingCascadeAssociation(EntityInitializerData data) {
+	// used by Hibernate Reactive
+	protected boolean isRefreshingCascadeAssociation(EntityInitializerData data) {
 		return affectedByRefreshCascade
 			&& data.getRowProcessingState().getSession().getLoadQueryInfluencers()
 					.getEnabledCascadingFetchProfile() == CascadingFetchProfile.REFRESH;
 	}
 
-	private boolean isRefreshing(EntityInitializerData data) {
+	// used by Hibernate Reactive
+	protected boolean isRefreshing(EntityInitializerData data) {
 		return isRefreshingCascadeAssociation( data )
 			|| data.getRowProcessingState().getSession().getCacheMode() == CacheMode.REFRESH_SESSION;
 	}
 
-	private State initializedOrResolved(EntityInitializerData data, boolean initialized) {
+	// used by Hibernate Reactive
+	protected State initializedOrResolved(EntityInitializerData data, boolean initialized) {
 		return initialized && !isRefreshing( data )
 				? State.INITIALIZED
 				: State.RESOLVED;
@@ -1082,29 +1085,7 @@ public class EntityInitializerImpl
 					}
 				}
 
-				data.entityInstanceForNotify = instance;
-
-				if ( data.concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
-						&& isPersistentAttributeInterceptable( data.entityInstanceForNotify )
-						&& getAttributeInterceptor( data.entityInstanceForNotify )
-								instanceof EnhancementAsProxyLazinessInterceptor enhancementInterceptor
-						&& !enhancementInterceptor.isInitialized() ) {
-					data.setState( State.RESOLVED );
-				}
-				else {
-					// If the entity initializer is null, we know the entity is fully initialized;
-					// otherwise it will be initialized by some other initializer
-					data.setState( initializedOrResolved( data, data.entityHolder.getEntityInitializer() == null ) );
-				}
-
-				if ( data.getState() == State.RESOLVED ) {
-					data.entityHolder = persistenceContext.claimEntityHolderIfPossible(
-							data.entityKey,
-							data.entityInstanceForNotify,
-							rowProcessingState.getJdbcValuesSourceProcessingState(),
-							this
-					);
-				}
+				resolveEntityHolderState( instance, data, persistenceContext, rowProcessingState );
 			}
 			else if ( lazyInitializer.isUninitialized() ) {
 				data.setState( State.RESOLVED );
@@ -1176,7 +1157,35 @@ public class EntityInitializerImpl
 		}
 	}
 
-	private void resolveEntity(EntityInitializerData data, Object proxy) {
+	// used by Hibernate Reactive
+	protected void resolveEntityHolderState(Object instance, EntityInitializerData data, PersistenceContext persistenceContext, RowProcessingState rowProcessingState) {
+		data.entityInstanceForNotify = instance;
+
+		if ( data.concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading()
+			&& isPersistentAttributeInterceptable( data.entityInstanceForNotify )
+			&& getAttributeInterceptor( data.entityInstanceForNotify )
+						instanceof EnhancementAsProxyLazinessInterceptor enhancementInterceptor
+			&& !enhancementInterceptor.isInitialized() ) {
+			data.setState( State.RESOLVED );
+		}
+		else {
+			// If the entity initializer is null, we know the entity is fully initialized;
+			// otherwise it will be initialized by some other initializer
+			data.setState( initializedOrResolved( data, data.entityHolder.getEntityInitializer() == null ) );
+		}
+
+		if ( data.getState() == State.RESOLVED ) {
+			data.entityHolder = persistenceContext.claimEntityHolderIfPossible(
+					data.entityKey,
+					data.entityInstanceForNotify,
+					rowProcessingState.getJdbcValuesSourceProcessingState(),
+					this
+			);
+		}
+	}
+
+	// used by Hibernate Reactive
+	protected void resolveEntity(EntityInitializerData data, Object proxy) {
 		final Object entity = data.entityHolder.getEntity();
 		if ( entity == null ) {
 			data.entityInstanceForNotify = resolveEntityInstance( data );
@@ -1698,7 +1707,8 @@ public class EntityInitializerImpl
 		);
 	}
 
-	private static void clearInitializedLazyFields(EntityInitializerData data) {
+	// used by Hibernate Reactive
+	protected static void clearInitializedLazyFields(EntityInitializerData data) {
 		final var instrumentationMetadata = data.concreteDescriptor.getBytecodeEnhancementMetadata();
 		if ( instrumentationMetadata.isEnhancedForLazyLoading() ) {
 			final var interceptor = instrumentationMetadata.extractLazyInterceptor( data.entityInstanceForNotify );

@@ -15,6 +15,11 @@ import org.hibernate.sql.model.ast.builder.AssigningTableMutationBuilder;
 
 /// Base support for [EntityAction]-based [EntityActionDecomposer] implementations.
 ///
+/// Entity persisters construct decomposers directly.  State-management-specific
+/// behavior should be introduced through [EntityMutationPlanContributor] when
+/// the logical action needs a different graph mutation plan, rather than by
+/// replacing the decomposer hierarchy for that state-management strategy.
+///
 /// @author Steve Ebersole
 public abstract class AbstractDecomposer<T extends EntityAction> implements EntityActionDecomposer<T> {
 	protected final EntityPersister entityPersister;

@@ -5,6 +5,8 @@
 package org.hibernate.persister.state.spi;
 
 import org.hibernate.Incubating;
+import org.hibernate.action.queue.decompose.collection.CollectionMutationPlanContributor;
+import org.hibernate.action.queue.decompose.entity.EntityMutationPlanContributor;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
@@ -43,6 +45,20 @@ import org.hibernate.persister.state.internal.TemporalStateManagement;
  */
 @Incubating
 public interface StateManagement {
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Graph ActionQueue integration
+
+	default EntityMutationPlanContributor createEntityMutationPlanContributor(EntityPersister persister) {
+		return EntityMutationPlanContributor.STANDARD;
+	}
+
+	default CollectionMutationPlanContributor createCollectionMutationPlanContributor(CollectionPersister persister) {
+		return CollectionMutationPlanContributor.STANDARD;
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Legacy ActionQueue integration
 
 	InsertCoordinator createInsertCoordinator(EntityPersister persister);
 

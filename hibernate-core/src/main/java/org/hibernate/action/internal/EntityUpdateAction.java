@@ -116,7 +116,7 @@ public class EntityUpdateAction extends EntityAction {
 	public int[] getDirtyFields() {
 		return dirtyFields;
 	}
-	protected boolean hasDirtyCollection() {
+	public boolean hasDirtyCollection() {
 		return hasDirtyCollection;
 	}
 

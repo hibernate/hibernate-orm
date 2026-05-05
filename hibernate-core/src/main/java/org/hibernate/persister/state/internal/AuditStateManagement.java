@@ -64,6 +64,10 @@ public class AuditStateManagement implements StateManagement {
 		DEL
 	}
 
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Legacy ActionQueue integration
+
 	@Override
 	public InsertCoordinator createInsertCoordinator(EntityPersister persister) {
 		return new InsertCoordinatorAudit( persister, persister.getFactory(),

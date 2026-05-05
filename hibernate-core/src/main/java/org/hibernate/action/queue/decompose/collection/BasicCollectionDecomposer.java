@@ -26,7 +26,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.TemporalMapping;
-import org.hibernate.metamodel.mapping.internal.ManyToManyCollectionPart;
 import org.hibernate.persister.collection.BasicCollectionPersister;
 import org.hibernate.persister.collection.mutation.OrderOnlyUpdateBindPlan;
 import org.hibernate.persister.entity.mutation.TemporalMutationHelper;
@@ -46,7 +45,12 @@ import java.util.function.Consumer;
 
 import static org.hibernate.action.queue.decompose.collection.CollectionOrdinalSupport.Slot;
 import static org.hibernate.action.queue.decompose.collection.CollectionOrdinalSupport.calculateOrdinal;
+import static org.hibernate.action.queue.decompose.collection.CollectionMutationPlanSupport.applyRemoveRestrictions;
+import static org.hibernate.action.queue.decompose.collection.CollectionMutationPlanSupport.applyRowDeleteRestrictions;
+import static org.hibernate.action.queue.decompose.collection.CollectionMutationPlanSupport.buildSoftDeleteMutation;
+import static org.hibernate.action.queue.decompose.collection.CollectionMutationPlanSupport.createTableMapping;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
+import static org.hibernate.temporal.TemporalTableStrategy.SINGLE_TABLE;
 
 /// Decomposition support for [BasicCollectionPersister] which managed inserts, updates and deletes
 /// into the collection table.
@@ -55,15 +59,24 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
 public class BasicCollectionDecomposer implements CollectionDecomposer {
 	private final BasicCollectionPersister persister;
 	private final CollectionTableDescriptor tableDescriptor;
+	private final CollectionMutationPlanContributor mutationPlanContributor;
 	private final CollectionJdbcOperations jdbcOperations;
 
 	public BasicCollectionDecomposer(
 			BasicCollectionPersister persister,
 			SessionFactoryImplementor factory) {
+		this( persister, factory, CollectionMutationPlanContributor.STANDARD );
+	}
+
+	public BasicCollectionDecomposer(
+			BasicCollectionPersister persister,
+			SessionFactoryImplementor factory,
+			CollectionMutationPlanContributor mutationPlanContributor) {
 		assert persister != null;
 
 		this.persister = persister;
 		this.tableDescriptor = persister.getCollectionTableDescriptor();
+		this.mutationPlanContributor = mutationPlanContributor;
 		this.jdbcOperations = buildJdbcOperations( factory );
 	}
 
@@ -205,6 +218,15 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				);
 
 				operations.add( plannedOp );
+				contributeAdditionalInsert(
+						collection,
+						key,
+						entry,
+						entryCount,
+						ordinalBase,
+						session,
+						operations::add
+				);
 			}
 
 			entryCount++;
@@ -454,15 +476,18 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		// Phase 2: Handle position shifts
 		// Strategy depends on whether we can safely update the element value at each position:
 		// - WITH custom SQL: Use VALUE updates so custom SQL receives element values, matching legacy behavior
-		// - Plain many-to-many lists without declared unique constraints: use VALUE updates to swap elements in place
+		// - Plain non-indexed many-to-many collections without declared unique constraints: use VALUE updates
 		// - Otherwise: use ORDER updates with two-phase temp values
 		// Note: for reasons discussed on PersistentMap#computeEntityCollectionChangeSet and
 		// 		#computeElementCollectionChangeSet, shifts are not supported for Maps only Lists
 		if ( !changeSet.shifts().isEmpty() ) {
 			final var updateRowPlan = jdbcOperations.updateRowPlan();
 			final boolean hasCustomSql = tableDescriptor.updateDetails().getCustomSql() != null;
+			final boolean indexedEntityCollection = persister.getElementType().isEntityType()
+					&& persister.hasIndex()
+					&& orderUpdatePlan != null;
 			final boolean canUpdateValuesAtPositions = hasCustomSql
-					|| persister.isManyToMany() && !tableDescriptor.hasUniqueConstraints();
+					|| !indexedEntityCollection && persister.isManyToMany() && !tableDescriptor.hasUniqueConstraints();
 
 			if ( canUpdateValuesAtPositions && updateRowPlan != null ) {
 				final int updateOrdinal = calculateOrdinal( ordinalBase, Slot.UPDATE );
@@ -584,6 +609,15 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						insertOrdinal,
 						"InsertRow[" + addition.index() + "](" + persister.getRolePath() + ")"
 				) );
+				contributeAdditionalInsert(
+						collection,
+						key,
+						rowValue,
+						entryIndex,
+						ordinalBase,
+						session,
+						operationConsumer
+				);
 			}
 		}
 
@@ -593,6 +627,22 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		if ( updateRowPlan != null && !changeSet.valueChanges().isEmpty() ) {
 			final int updateOrdinal = calculateOrdinal( ordinalBase, Slot.UPDATE );
 			for ( CollectionChangeSet.ValueChange valueChange : changeSet.valueChanges() ) {
+				if ( mutationPlanContributor.contributeValueChange(
+						new CollectionMutationPlanContributor.ValueChangeContext(
+								persister,
+								tableDescriptor,
+								jdbcOperations,
+								collection,
+								key,
+								ordinalBase,
+								session,
+								valueChange
+						),
+						operationConsumer
+				) ) {
+					continue;
+				}
+
 				// For Maps, need to create a Map.Entry with (key, newValue)
 				// For Lists, the index is the position and entry is just the element
 				final Object entry;
@@ -864,6 +914,15 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 								insertOrdinal,
 								"InsertRow[" + insertCount + "](" + persister.getRolePath() + ")"
 						) );
+						contributeAdditionalInsert(
+								collection,
+								key,
+								addedEntity,
+								position,
+								ordinalBase,
+								session,
+								operationConsumer
+						);
 						insertCount++;
 					}
 				}
@@ -902,6 +961,15 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 							insertOrdinal,
 							"InsertRow[" + entryCount + "](" + persister.getRolePath() + ")"
 					) );
+					contributeAdditionalInsert(
+							collection,
+							key,
+							entry,
+							entryCount,
+							ordinalBase,
+							session,
+							operationConsumer
+					);
 				}
 
 				entryCount++;
@@ -964,9 +1032,33 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				tableDescriptor,
 				MutationKind.DELETE,
 				jdbcOperation,
-				new RemoveBindPlan( key, persister ),
+				new RemoveBindPlan( key, persister, mutationPlanContributor ),
 				calculateOrdinal( ordinalBase, Slot.DELETE ),
 				"RemoveAllRows(" + persister.getRolePath() + ")"
+		);
+	}
+
+	private void contributeAdditionalInsert(
+			PersistentCollection<?> collection,
+			Object key,
+			Object rowValue,
+			int rowPosition,
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			Consumer<FlushOperation> operationConsumer) {
+		mutationPlanContributor.contributeAdditionalInsert(
+				new CollectionMutationPlanContributor.RowInsertContext(
+						persister,
+						tableDescriptor,
+						session.getFactory(),
+						jdbcOperations,
+						collection,
+						key,
+						rowValue,
+						rowPosition,
+						ordinalBase
+				),
+				operationConsumer
 		);
 	}
 
@@ -1053,7 +1145,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		}
 
 		final TemporalMapping temporalMapping = attributeMapping.getTemporalMapping();
-		if ( temporalMapping != null ) {
+		if ( temporalMapping != null && factory.getSessionFactoryOptions().getTemporalTableStrategy() == SINGLE_TABLE ) {
 			final var startingColumn = new ColumnReference(
 					insertBuilder.getMutatingTable(),
 					temporalMapping.getStartingColumnMapping()
@@ -1120,7 +1212,9 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		);
 
 		final TemporalMapping temporalMapping = attributeMapping.getTemporalMapping();
-		if ( temporalMapping != null && TemporalMutationHelper.isUsingParameters( session ) ) {
+		if ( temporalMapping != null
+				&& session.getFactory().getSessionFactoryOptions().getTemporalTableStrategy() == SINGLE_TABLE
+				&& TemporalMutationHelper.isUsingParameters( session ) ) {
 			jdbcValueBindings.bindValue(
 					session.getCurrentTransactionIdentifier(),
 					temporalMapping.getStartingColumnMapping().getSelectionExpression(),
@@ -1380,15 +1474,20 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			// Row delete not enabled - no plan needed
 			return null;
 		}
+		return mutationPlanContributor.buildDeleteRowPlan(
+				new CollectionMutationPlanContributor.DeleteRowPlanContext(
+						persister,
+						tableDescriptor,
+						factory
+				),
+				() -> buildStandardDeleteRowPlan( factory )
+		);
+	}
 
+	private CollectionJdbcOperations.DeleteRowPlan buildStandardDeleteRowPlan(SessionFactoryImplementor factory) {
 		var attribute = persister.getAttributeMapping();
 
-		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
-				persister.getCollectionTableDescriptor(),
-				0, // relativePosition
-				false, // isIdentifierTable
-				false // isInverse
-		);
+		final TableDescriptorAsTableMapping tableMapping = createTableMapping( persister.getCollectionTableDescriptor() );
 
 		final var mutatingTable = new MutatingTableReference( tableMapping );
 		final var softDeleteMapping = attribute.getSoftDeleteMapping();
@@ -1398,7 +1497,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						mutatingTable,
 						factory,
 						persister.getSqlWhereString()
-				)
+					)
 				: null;
 		final var updateBuilder = softDeleteMapping == null
 				? null
@@ -1409,74 +1508,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						persister.getSqlWhereString()
 				);
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// WHERE clause: restrict by
-		// 		- key columns (restrict by owner FK)
-		//		-  element/index
-
-		attribute.getKeyDescriptor().getKeyPart().forEachSelectable( (index, jdbcMapping) -> {
-			if ( updateBuilder != null ) {
-				updateBuilder.addKeyRestrictionLeniently( jdbcMapping );
-			}
-			else {
-				deleteBuilder.addKeyRestrictionLeniently( jdbcMapping );
-			}
-		} );
-
-		// For row-based deletion, also restrict by element/index/identifier
-		// This differentiates deleteRows (specific rows) from remove (entire collection)
-		final var indexDescriptor = attribute.getIndexDescriptor();
-		final var identifierDescriptor = attribute.getIdentifierDescriptor();
-		if ( indexDescriptor != null && persister.hasPhysicalIndexColumn() ) {
-			// For indexed collections (lists, maps), restrict by index
-			indexDescriptor.forEachSelectable( (index, jdbcMapping) -> {
-				if ( updateBuilder != null ) {
-					updateBuilder.addKeyRestriction( jdbcMapping );
-				}
-				else {
-					deleteBuilder.addKeyRestriction( jdbcMapping );
-				}
-			} );
-		}
-		else if ( identifierDescriptor != null ) {
-			// For IdBag collections, restrict by the synthetic identifier column
-			identifierDescriptor.forEachSelectable( (index, jdbcMapping) -> {
-				if ( updateBuilder != null ) {
-					updateBuilder.addKeyRestriction( jdbcMapping );
-				}
-				else {
-					deleteBuilder.addKeyRestriction( jdbcMapping );
-				}
-			} );
-		}
-		else {
-			// For non-indexed collections (sets, bags), restrict by element
-			// todo : consider adding some form of `forEachSelectable` and `decompose` which is
-			//  	local to the element descriptor -
-			//  		* the value column(s) for element collections
-			//			* the fk column(s) for to-many with join-table
-			var elementDescriptor = attribute.getElementDescriptor();
-			if ( elementDescriptor instanceof ManyToManyCollectionPart manyToMany ) {
-				manyToMany.getForeignKeyDescriptor().getKeyPart().forEachSelectable( (index, jdbcMapping) -> {
-					if ( updateBuilder != null ) {
-						updateBuilder.addKeyRestriction( jdbcMapping );
-					}
-					else {
-						deleteBuilder.addKeyRestriction( jdbcMapping );
-					}
-				} );
-			}
-			else {
-				elementDescriptor.forEachSelectable( (index, jdbcMapping) -> {
-					if ( updateBuilder != null ) {
-						updateBuilder.addKeyRestriction( jdbcMapping );
-					}
-					else {
-						deleteBuilder.addKeyRestriction( jdbcMapping );
-					}
-				} );
-			}
-		}
+		applyRowDeleteRestrictions( persister, deleteBuilder, updateBuilder );
 
 		final var mutation = softDeleteMapping == null
 				? deleteBuilder.buildMutation()
@@ -1572,75 +1604,15 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			int rowPosition,
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings) {
-		var attribute = persister.getAttributeMapping();
-
-		attribute.getKeyDescriptor().getKeyPart().decompose(
+		CollectionMutationPlanSupport.bindDeleteRestrictions(
+				persister,
+				collection,
 				key,
-				jdbcValueBindings::bindRestriction,
-				session
+				rowValue,
+				rowPosition,
+				session,
+				jdbcValueBindings
 		);
-
-		// Handle SnapshotPositioned objects (Removal, EntityPosition, etc.)
-		final Object actualElement;
-		final Object actualKey;
-		if ( rowValue instanceof SnapshotIndexed<?> positioned ) {
-			actualElement = positioned.element();
-			actualKey = positioned.snapshotIndex();
-		}
-		else {
-			actualElement = rowValue;
-			actualKey = rowPosition;
-		}
-
-		// For row-based deletion, also restrict by element/index/identifier
-		// This differentiates deleteRows (specific rows) from remove (entire collection)
-		final var indexDescriptor = attribute.getIndexDescriptor();
-		final var identifierDescriptor = attribute.getIdentifierDescriptor();
-		if ( indexDescriptor != null && persister.hasPhysicalIndexColumn() ) {
-			// For indexed collections (lists, maps), restrict by index/key
-			// - For Lists: actualKey is the numeric position (Integer)
-			// - For Maps: actualKey is the actual map key (any type)
-			final Object indexValue = (rowValue instanceof SnapshotIndexed<?>)
-					? actualKey
-					: rowValue;
-			indexDescriptor.decompose(
-					persister.incrementIndexByBase( indexValue ),
-					jdbcValueBindings::bindUpdateRestriction,
-					session
-			);
-		}
-		else if ( identifierDescriptor != null ) {
-			// For IdBag collections, restrict by the synthetic identifier
-			// The identifier value is stored in the collection's snapshot
-			identifierDescriptor.decompose(
-					actualElement,  // For IdBag, actualElement is the identifier value
-					jdbcValueBindings::bindRestriction,
-					session
-			);
-		}
-		else {
-			// For non-indexed collections (sets, bags), restrict by element
-			var elementDescriptor = attribute.getElementDescriptor();
-			if ( elementDescriptor instanceof ManyToManyCollectionPart manyToMany ) {
-				var id = manyToMany.getAssociatedEntityMappingType().getIdentifierMapping().getIdentifier( actualElement );
-				manyToMany.getForeignKeyDescriptor().getKeyPart().decompose(
-						id,
-						jdbcValueBindings::bindRestriction,
-						session
-				);
-			}
-			else {
-				elementDescriptor.decompose(
-						actualElement,
-						(valueIndex, value, jdbcValueMapping) -> {
-							if ( !jdbcValueMapping.isNullable() && !jdbcValueMapping.isFormula() ) {
-								jdbcValueBindings.bindRestriction( valueIndex, value, jdbcValueMapping );
-							}
-						},
-						session
-				);
-			}
-		}
 	}
 
 	private MutationOperation buildRemoveOperation(SessionFactoryImplementor factory) {
@@ -1648,15 +1620,21 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 			return null;
 		}
 
+		return mutationPlanContributor.buildRemoveOperation(
+				new CollectionMutationPlanContributor.RemoveOperationContext(
+						persister,
+						tableDescriptor,
+						factory
+				),
+				() -> buildStandardRemoveOperation( factory )
+		);
+	}
+
+	private MutationOperation buildStandardRemoveOperation(SessionFactoryImplementor factory) {
 		var tableDescriptor = persister.getCollectionTableDescriptor();
 		var attribute = persister.getAttributeMapping();
 
-		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
-				tableDescriptor,
-				0, // relativePosition
-				false, // isIdentifierTable
-				false // isInverse
-		);
+		final TableDescriptorAsTableMapping tableMapping = createTableMapping( tableDescriptor );
 		final var mutatingTable = new MutatingTableReference( tableMapping );
 		final var softDeleteMapping = attribute.getSoftDeleteMapping();
 		final var deleteBuilder = softDeleteMapping == null
@@ -1666,7 +1644,7 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						tableDescriptor.deleteAllDetails(),
 						persister.getSqlWhereString(),
 						factory
-				)
+					)
 				: null;
 		final var updateBuilder = softDeleteMapping == null
 				? null
@@ -1677,29 +1655,12 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 						persister.getSqlWhereString()
 				);
 
-		attribute.getKeyDescriptor().getKeyPart().forEachSelectable( (index, jdbcMapping) -> {
-			if ( updateBuilder != null ) {
-				updateBuilder.addKeyRestrictionLeniently( jdbcMapping );
-			}
-			else {
-				deleteBuilder.addKeyRestrictionLeniently( jdbcMapping );
-			}
-		} );
+		applyRemoveRestrictions( persister, deleteBuilder, updateBuilder );
 
 		final var mutation = softDeleteMapping == null
 				? deleteBuilder.buildMutation()
 				: buildSoftDeleteMutation( updateBuilder, mutatingTable, softDeleteMapping );
 		return mutation.createMutationOperation(null, factory);
-	}
-
-	private org.hibernate.sql.model.ast.LogicalTableUpdate<?> buildSoftDeleteMutation(
-			TableUpdateBuilderStandard<?> updateBuilder,
-			MutatingTableReference mutatingTable,
-			org.hibernate.metamodel.mapping.SoftDeleteMapping softDeleteMapping) {
-		final var softDeleteColumnReference = new ColumnReference( mutatingTable, softDeleteMapping );
-		updateBuilder.addColumnAssignment( softDeleteMapping.createDeletedValueBinding( softDeleteColumnReference ) );
-		updateBuilder.addNonKeyRestriction( softDeleteMapping.createNonDeletedValueBinding( softDeleteColumnReference ) );
-		return updateBuilder.buildMutation();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1708,10 +1669,15 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 	public static class RemoveBindPlan implements BindPlan {
 		private final Object key;
 		private final BasicCollectionPersister mutationTarget;
+		private final CollectionMutationPlanContributor mutationPlanContributor;
 
-		public RemoveBindPlan(Object key, BasicCollectionPersister mutationTarget) {
+		public RemoveBindPlan(
+				Object key,
+				BasicCollectionPersister mutationTarget,
+				CollectionMutationPlanContributor mutationPlanContributor) {
 			this.key = key;
 			this.mutationTarget = mutationTarget;
+			this.mutationPlanContributor = mutationPlanContributor;
 		}
 
 		@Override
@@ -1719,17 +1685,13 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 				JdbcValueBindings valueBindings,
 				FlushOperation flushOperation,
 				SharedSessionContractImplementor session) {
-			var fkDescriptor = mutationTarget.getAttributeMapping().getKeyDescriptor();
-			fkDescriptor.getKeyPart().decompose(
-					key,
-					(valueIndex, value, jdbcValueMapping) -> {
-						valueBindings.bindValue(
-								value,
-								jdbcValueMapping.getSelectionExpression(),
-								ParameterUsage.RESTRICT
-						);
-					},
-					session
+			mutationPlanContributor.bindRemoveValues(
+					new CollectionMutationPlanContributor.RemoveBindContext(
+							mutationTarget,
+							key,
+							session
+					),
+					valueBindings
 			);
 		}
 	}

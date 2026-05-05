@@ -19,8 +19,6 @@ import org.hibernate.MappingException;
 import org.hibernate.PropertyValueException;
 import org.hibernate.QueryException;
 import org.hibernate.Timeouts;
-import org.hibernate.action.queue.decompose.entity.DeleteDecomposerInheritedSoftDelete;
-import org.hibernate.action.queue.decompose.entity.DeleteDecomposerSoftDelete;
 import org.hibernate.action.queue.decompose.entity.DeleteDecomposerStandard;
 import org.hibernate.action.queue.meta.ColumnDescriptor;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
@@ -3397,23 +3395,35 @@ public abstract class AbstractEntityPersister
 
 		// tableDescriptors were built in buildTableDescriptorsEarly()
 		// Now we can safely create decomposers which may access tableDescriptors
-		insertDecomposer = new InsertDecomposer( this, factory );
-		updateDecomposer = new UpdateDecomposer( this, factory );
+		insertDecomposer = buildInsertDecomposer( factory );
+		updateDecomposer = buildUpdateDecomposer( factory );
 		deleteDecomposer = buildDeleteDecomposer( factory );
 
 		logStaticSQL();
 	}
 
+	protected InsertDecomposer buildInsertDecomposer(SessionFactoryImplementor factory) {
+		return new InsertDecomposer(
+				this,
+				factory,
+				stateManagement.createEntityMutationPlanContributor( this )
+		);
+	}
+
+	protected UpdateDecomposer buildUpdateDecomposer(SessionFactoryImplementor factory) {
+		return new UpdateDecomposer(
+				this,
+				factory,
+				stateManagement.createEntityMutationPlanContributor( this )
+		);
+	}
+
 	protected DeleteDecomposer buildDeleteDecomposer(SessionFactoryImplementor factory) {
-		if ( getSoftDeleteMapping() == null ) {
-			return new DeleteDecomposerStandard( this, factory );
-		}
-		else if ( getRootEntityDescriptor() == this ) {
-			return new DeleteDecomposerSoftDelete( this, factory );
-		}
-		else {
-			return new DeleteDecomposerInheritedSoftDelete( this, factory );
-		}
+		return new DeleteDecomposerStandard(
+				this,
+				factory,
+				stateManagement.createEntityMutationPlanContributor( this )
+		);
 	}
 
 	private void doLateInit() {

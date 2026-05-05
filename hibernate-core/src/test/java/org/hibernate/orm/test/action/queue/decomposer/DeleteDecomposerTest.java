@@ -13,7 +13,7 @@ import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.QueueType;
 import org.hibernate.action.queue.StatementShapeKey;
-import org.hibernate.action.queue.decompose.entity.DeleteDecomposerSoftDelete;
+import org.hibernate.action.queue.decompose.entity.DeleteDecomposer;
 import org.hibernate.action.queue.decompose.entity.DeleteDecomposerStandard;
 import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.action.queue.plan.FlushOperationGroup;
@@ -225,14 +225,13 @@ public class DeleteDecomposerTest {
 
 			EntityPersister persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SoftDeleteEntity.class );
-			DeleteDecomposerSoftDelete decomposer = new DeleteDecomposerSoftDelete( persister, factory );
 
 			// Verify soft delete is enabled
 			assertNotNull( persister.getSoftDeleteMapping(), "Soft delete should be enabled" );
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
 			List<FlushOperation> operations = new ArrayList<>();
-			decomposer.decompose(action, 0, session, null, operations::add);
+			persister.getDeleteDecomposer().decompose(action, 0, session, null, operations::add);
 			List<FlushOperationGroup> groups = groupOperations( operations );
 
 			// Verify
@@ -266,7 +265,6 @@ public class DeleteDecomposerTest {
 
 			EntityPersister persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SoftDeleteWithVersion.class );
-			DeleteDecomposerSoftDelete decomposer = new DeleteDecomposerSoftDelete( persister, factory );
 
 			// Verify soft delete and version
 			assertNotNull( persister.getSoftDeleteMapping() );
@@ -274,7 +272,7 @@ public class DeleteDecomposerTest {
 
 			EntityDeleteAction action = createDeleteAction( entity, session, persister );
 			List<FlushOperation> operations = new ArrayList<>();
-			decomposer.decompose(action, 0, session, null, operations::add);
+			persister.getDeleteDecomposer().decompose(action, 0, session, null, operations::add);
 			List<FlushOperationGroup> groups = groupOperations( operations );
 
 			assertNotNull( groups );
@@ -352,7 +350,7 @@ public class DeleteDecomposerTest {
 
 			EntityPersister persister = factory.getMappingMetamodel()
 					.getEntityDescriptor( SoftDeleteEntity.class );
-			DeleteDecomposerSoftDelete decomposer = new DeleteDecomposerSoftDelete( persister, factory );
+			DeleteDecomposer decomposer = (DeleteDecomposer) persister.getDeleteDecomposer();
 
 			// Static delete group should be pre-generated for soft deletes too
 			assertNotNull( decomposer.getStaticDeleteOperations() );

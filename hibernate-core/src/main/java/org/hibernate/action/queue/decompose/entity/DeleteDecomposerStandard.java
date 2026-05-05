@@ -6,6 +6,7 @@ package org.hibernate.action.queue.decompose.entity;
 
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.queue.MutationKind;
+import org.hibernate.action.queue.bind.PostExecutionCallback;
 import org.hibernate.action.queue.decompose.DecompositionContext;
 import org.hibernate.action.queue.decompose.collection.DecompositionSupport;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
@@ -22,6 +23,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -31,24 +34,44 @@ import static org.hibernate.internal.util.collections.CollectionHelper.linkedMap
 /// [Decomposer][EntityActionDecomposer] for entity delete operations.
 ///
 /// Converts an [EntityDeleteAction] into a group of [FlushOperation] to be performed.
+/// The standard delete lifecycle is always handled here, including natural-id
+/// cleanup, cache locking, pre/post delete callbacks, same-flush insert/delete
+/// no-op handling, and cascade-delete shortcuts.  Before physical DELETE
+/// operations are planned, this decomposer asks its [EntityMutationPlanContributor]
+/// whether the logical delete should be represented by an alternate complete
+/// mutation plan.  Soft-delete, for example, contributes an UPDATE plan while
+/// still reusing this decomposer's lifecycle handling.
 ///
 /// @see EntityDeleteBindPlan
 /// @see EntitySoftDeleteBindPlan
+/// @see EntityMutationPlanContributor
 ///
 /// @author Steve Ebersole
 public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 	private final Map<String, TableDelete> staticDeleteMutations;
 	private Map<String, TableDelete> staticNoVersionDeleteMutations;
+	private final EntityMutationPlanContributor mutationPlanContributor;
+	private final Map<String, ? extends TableMutation<?>> staticDeleteOperations;
 
 	public DeleteDecomposerStandard(EntityPersister entityPersister, SessionFactoryImplementor sessionFactory) {
-		super( entityPersister, sessionFactory );
-		assert entityPersister.getSoftDeleteMapping() == null;
+		this( entityPersister, sessionFactory, EntityMutationPlanContributor.STANDARD );
+	}
 
-		this.staticDeleteMutations = generateMutations( "", null, null, true, null );
+	public DeleteDecomposerStandard(
+			EntityPersister entityPersister,
+			SessionFactoryImplementor sessionFactory,
+			EntityMutationPlanContributor mutationPlanContributor) {
+		super( entityPersister, sessionFactory );
+
+		this.mutationPlanContributor = mutationPlanContributor;
+		this.staticDeleteOperations = mutationPlanContributor.getStaticDeleteOperations();
+		this.staticDeleteMutations = staticDeleteOperations.isEmpty()
+				? generateMutations( "", null, null, true, null )
+				: Map.of();
 	}
 
 	public Map<String, ? extends TableMutation<?>> getStaticDeleteOperations() {
-		return staticDeleteMutations;
+		return staticDeleteOperations.isEmpty() ? staticDeleteMutations : staticDeleteOperations;
 	}
 
 	@Override
@@ -79,6 +102,25 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 			return;
 		}
 
+		final EntityMutationPlanContributor.DeleteContext context = new EntityMutationPlanContributor.DeleteContext(
+				entityPersister,
+				action,
+				ordinalBase,
+				session,
+				decompositionContext,
+				identifier,
+				version,
+				state,
+				postDeleteHandling
+		);
+
+		if ( mutationPlanContributor.contributeReplacementDelete(
+				context,
+				operationConsumer
+		) ) {
+			return;
+		}
+
 		// If an owning association's database cascade will delete this entity row,
 		// skip creating DELETE operations but still run post-delete cleanup.
 		//
@@ -106,7 +148,7 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 		if ( (isImpliedOptimisticLocking && loadedState != null)
 				|| ((entityEntry == null || entityEntry.getLoadedState() == null) && entityPersister.hasPartitionedSelectionMapping())
 				|| (rowId == null && entityPersister.hasRowId()) ) {
-			decomposeDynamicDelete(
+			final FlushOperation previousOperation = decomposeDynamicDelete(
 					ordinalBase,
 					action.getInstance(),
 					identifier,
@@ -120,9 +162,10 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 					session,
 					operationConsumer
 			);
+			emitTailOperations( previousOperation, context, postDeleteHandling, operationConsumer );
 		}
 		else {
-			decomposeStaticDelete(
+			final FlushOperation previousOperation = decomposeStaticDelete(
 					ordinalBase,
 					action.getInstance(),
 					identifier,
@@ -136,7 +179,34 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 					session,
 					operationConsumer
 			);
+			emitTailOperations( previousOperation, context, postDeleteHandling, operationConsumer );
 		}
+	}
+
+	private void emitTailOperations(
+			FlushOperation previousOperation,
+			EntityMutationPlanContributor.DeleteContext context,
+			PostExecutionCallback postExecutionCallback,
+			Consumer<FlushOperation> operationConsumer) {
+		final List<FlushOperation> additionalOperations = new ArrayList<>();
+		mutationPlanContributor.contributeAdditionalDelete( context, additionalOperations::add );
+		if ( additionalOperations.isEmpty() ) {
+			if ( previousOperation != null ) {
+				previousOperation.setPostExecutionCallback( postExecutionCallback );
+				operationConsumer.accept( previousOperation );
+			}
+			return;
+		}
+
+		if ( previousOperation != null ) {
+			operationConsumer.accept( previousOperation );
+		}
+		for ( int i = 0; i < additionalOperations.size() - 1; i++ ) {
+			operationConsumer.accept( additionalOperations.get( i ) );
+		}
+		final FlushOperation lastOperation = additionalOperations.get( additionalOperations.size() - 1 );
+		lastOperation.setPostExecutionCallback( postExecutionCallback );
+		operationConsumer.accept( lastOperation );
 	}
 
 	private void registerAfterTransactionCompletion(
@@ -179,7 +249,7 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 				: decompositionContext.getUpdatedAttributeIndexesForDeletedEntity( action.getInstance() );
 	}
 
-	private void decomposeDynamicDelete(
+	private FlushOperation decomposeDynamicDelete(
 			int ordinalBase,
 			Object instance,
 			Object identifier,
@@ -229,14 +299,10 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 			previousOperation = op;
 		}
 
-		// Attach post-execution callback to the last operation
-		if ( previousOperation != null ) {
-			previousOperation.setPostExecutionCallback( postDeleteHandling );
-			operationConsumer.accept( previousOperation );
-		}
+		return previousOperation;
 	}
 
-	private void decomposeStaticDelete(
+	private FlushOperation decomposeStaticDelete(
 			int ordinalBase,
 			Object instance,
 			Object identifier,
@@ -298,11 +364,7 @@ public class DeleteDecomposerStandard extends AbstractDeleteDecomposer {
 			previousOperation = op;
 		}
 
-		// Attach post-execution callback to the last operation
-		if ( previousOperation != null ) {
-			previousOperation.setPostExecutionCallback( postDeleteHandling );
-			operationConsumer.accept( previousOperation );
-		}
+		return previousOperation;
 	}
 
 	private OptimisticLockStyle definedOptimisticLockStyle() {

@@ -6,6 +6,7 @@ package org.hibernate.persister.state.internal;
 
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.action.queue.decompose.entity.EntityMutationPlanContributor;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
@@ -50,6 +51,17 @@ import static org.hibernate.internal.util.collections.ArrayHelper.isAnyTrue;
  * @since 7.4
  */
 public abstract class AbstractStateManagement implements StateManagement {
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Graph ActionQueue integration
+
+	@Override
+	public EntityMutationPlanContributor createEntityMutationPlanContributor(EntityPersister persister) {
+		return EntityMutationPlanContributor.STANDARD;
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Legacy ActionQueue integration
+
 	@Override
 	public InsertCoordinator createInsertCoordinator(EntityPersister persister) {
 		return new InsertCoordinatorStandard( persister, persister.getFactory() );

@@ -14,8 +14,7 @@ import org.hibernate.temporal.TemporalTableStrategy;
 
 /**
  * State management for temporal entities and collections with
- * {@linkplain TemporalTableStrategy#NATIVE
- * dialect-native temporary tables}.
+ * {@linkplain TemporalTableStrategy#NATIVE dialect-native temporary tables}.
  *
  * @author Gavin King
  *

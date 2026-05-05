@@ -6,6 +6,7 @@ package org.hibernate.action.queue.decompose.entity;
 
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.queue.MutationKind;
+import org.hibernate.action.queue.bind.PostExecutionCallback;
 import org.hibernate.action.queue.decompose.collection.DecompositionSupport;
 import org.hibernate.action.queue.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.decompose.DecompositionContext;
@@ -38,9 +39,11 @@ import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.ast.builder.VersionUpdateBuilder;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -54,16 +57,31 @@ import static org.hibernate.internal.util.collections.ArrayHelper.trim;
 /// Decomposer for entity update operations.
 ///
 /// Converts an [EntityUpdateAction] into a group of [FlushOperation] to be performed.
+/// The standard update lifecycle is always handled here.  After pre-update
+/// handling, natural-id handling, cache locking, and no-op callback-carrier
+/// handling are resolved, this decomposer gives its
+/// [EntityMutationPlanContributor] a chance to emit an alternate complete
+/// mutation plan.  If no contributor handles the action, the decomposer emits
+/// the normal physical table update operations.
 ///
 /// @see EntityUpdateBindPlan
+/// @see EntityMutationPlanContributor
 ///
 /// @author Steve Ebersole
 public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 	private final Map<String, LogicalTableUpdate<?>> staticUpdateOperations;
 	private final Map<TableDescriptor, TableDescriptorAsTableMapping> tableMappingAdapters = new IdentityHashMap<>();
 	private final TableUpdateStandard versionUpdate;
+	private final EntityMutationPlanContributor mutationPlanContributor;
 
 	public UpdateDecomposer(EntityPersister entityPersister, SessionFactoryImplementor sessionFactory) {
+		this( entityPersister, sessionFactory, EntityMutationPlanContributor.STANDARD );
+	}
+
+	public UpdateDecomposer(
+			EntityPersister entityPersister,
+			SessionFactoryImplementor sessionFactory,
+			EntityMutationPlanContributor mutationPlanContributor) {
 		super( entityPersister, sessionFactory );
 
 		this.staticUpdateOperations = entityPersister.isDynamicUpdate()
@@ -74,6 +92,7 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 		this.versionUpdate = entityPersister.getVersionMapping() != null
 				? new VersionUpdateBuilder( entityPersister ).buildMutation()
 				: null;
+		this.mutationPlanContributor = mutationPlanContributor;
 	}
 
 	public Map<String, LogicalTableUpdate<?>> getStaticUpdateOperations() {
@@ -137,6 +156,29 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			return;
 		}
 
+		final EntityMutationPlanContributor.UpdateContext context = new EntityMutationPlanContributor.UpdateContext(
+				entityPersister,
+				action,
+				ordinalBase,
+				session,
+				decompositionContext,
+				entity,
+				identifier,
+				rowId,
+				state,
+				previousState,
+				previousVersion,
+				entityEntry,
+				cacheUpdate
+		);
+
+		if ( mutationPlanContributor.contributeReplacementUpdate(
+				context,
+				operationConsumer
+		) ) {
+			return;
+		}
+
 		var generatedValuesCollector = GeneratedValuesCollector.forUpdate( entityPersister, sessionFactory );
 		final PostUpdateHandling postUpdateHandling = new PostUpdateHandling(
 				action,
@@ -162,7 +204,12 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 					entityEntry
 			);
 			if ( forceIncrementOperation != null ) {
-				operationConsumer.accept( forceIncrementOperation );
+				final List<FlushOperation> additionalOperations = new ArrayList<>();
+				mutationPlanContributor.contributeAdditionalUpdate(
+						context,
+						additionalOperations::add
+				);
+				emitTailOperations( forceIncrementOperation, additionalOperations, postUpdateHandling, ordinalBase, operationConsumer );
 				return;
 			}
 		}
@@ -203,11 +250,11 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 					entity,
 					identifier,
 					rowId,
-				state,
-				previousState,
-				previousVersion,
-				updateability,
-				valuesAnalysis,
+					state,
+					previousState,
+					previousVersion,
+					updateability,
+					valuesAnalysis,
 					session
 			);
 		}
@@ -278,18 +325,45 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 			previousOperation = op;
 		}
 
-		// Attach post-execution callback to the last operation
+		final List<FlushOperation> additionalOperations = new ArrayList<>();
+		mutationPlanContributor.contributeAdditionalUpdate(
+				context,
+				additionalOperations::add
+		);
+
+		emitTailOperations( previousOperation, additionalOperations, postUpdateHandling, ordinalBase, operationConsumer );
+	}
+
+	private void emitTailOperations(
+			FlushOperation previousOperation,
+			List<FlushOperation> additionalOperations,
+			PostExecutionCallback postExecutionCallback,
+			int ordinalBase,
+			Consumer<FlushOperation> operationConsumer) {
+		if ( additionalOperations.isEmpty() ) {
+			if ( previousOperation != null ) {
+				previousOperation.setPostExecutionCallback( postExecutionCallback );
+				operationConsumer.accept( previousOperation );
+			}
+			else {
+				operationConsumer.accept( DecompositionSupport.createNoOpCallbackCarrier(
+						entityPersister.getIdentifierTableDescriptor(),
+						ordinalBase * 1_000,
+						postExecutionCallback
+				) );
+			}
+			return;
+		}
+
 		if ( previousOperation != null ) {
-			previousOperation.setPostExecutionCallback( postUpdateHandling );
 			operationConsumer.accept( previousOperation );
 		}
-		else {
-			operationConsumer.accept( DecompositionSupport.createNoOpCallbackCarrier(
-					entityPersister.getIdentifierTableDescriptor(),
-					ordinalBase * 1_000,
-					postUpdateHandling
-			) );
+		for ( int i = 0; i < additionalOperations.size() - 1; i++ ) {
+			operationConsumer.accept( additionalOperations.get( i ) );
 		}
+		final FlushOperation lastOperation = additionalOperations.get( additionalOperations.size() - 1 );
+		lastOperation.setPostExecutionCallback( postExecutionCallback );
+		operationConsumer.accept( lastOperation );
 	}
 
 	private boolean hasOnlyInversePluralDirtiness(EntityUpdateAction action) {
@@ -397,14 +471,6 @@ public class UpdateDecomposer extends AbstractDecomposer<EntityUpdateAction> {
 				ordinalBase * 1_000,
 				"EntityUpdateAction(" + entityPersister.getEntityName() + ")"
 		);
-
-		op.setPostExecutionCallback( new PostUpdateHandling(
-				action,
-				cacheUpdate,
-				newVersion,
-				null,
-				entityEntry
-		) );
 
 		return op;
 	}

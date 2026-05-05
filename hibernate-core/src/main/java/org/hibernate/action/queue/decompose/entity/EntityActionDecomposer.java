@@ -21,7 +21,15 @@ import java.util.function.Consumer;
 /// Post-execution callbacks are attached directly to Flush operations and execute
 /// inline as operations complete, rather than being registered globally.
 ///
+/// Entity decomposers are created by the entity persister.  State-management
+/// strategies may still alter the mutation plan by supplying an
+/// [EntityMutationPlanContributor].  The decomposer owns the common action
+/// lifecycle and operation ordering, while the contributor may replace the
+/// table mutation plan for logical update/delete actions such as soft-delete
+/// or temporal row versioning.
+///
 /// @see Decomposer
+/// @see EntityMutationPlanContributor
 ///
 /// @author Steve Ebersole
 public interface EntityActionDecomposer<A extends Executable> {

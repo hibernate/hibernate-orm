@@ -12,6 +12,9 @@ import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.queue.decompose.DecompositionContext;
+import org.hibernate.action.queue.decompose.collection.CollectionDecomposer;
+import org.hibernate.action.queue.decompose.collection.StandardOneToManyDecomposer;
+import org.hibernate.action.queue.decompose.collection.TablePerSubclassOneToManyDecomposer;
 import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
@@ -28,18 +31,16 @@ import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinator;
-import org.hibernate.action.queue.decompose.collection.OneToManyDecomposer;
 import org.hibernate.persister.collection.mutation.OperationProducer;
 import org.hibernate.persister.collection.mutation.RemoveCoordinator;
 import org.hibernate.persister.collection.mutation.RowMutationOperations;
-import org.hibernate.action.queue.decompose.collection.StandardOneToManyDecomposer;
-import org.hibernate.action.queue.decompose.collection.TablePerSubclassOneToManyDecomposer;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
 import org.hibernate.persister.collection.mutation.WriteIndexCoordinator;
 import org.hibernate.persister.collection.mutation.WriteIndexCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.WriteIndexCoordinatorStandard;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.persister.filter.FilterAliasGenerator;
+import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -75,6 +76,7 @@ import static org.hibernate.sql.model.ast.builder.TableUpdateBuilder.NULL;
 @Internal
 public class OneToManyPersister extends AbstractCollectionPersister {
 	private final RowMutationOperations rowMutationOperations;
+	private final StateManagement stateManagement;
 
 	private final InsertRowsCoordinator insertRowsCoordinator;
 	private final UpdateRowsCoordinator updateRowsCoordinator;
@@ -103,7 +105,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 					&& !getElementPersisterInternal().managesColumns( indexColumnNames );
 
 		rowMutationOperations = buildRowMutationOperations();
-		final var stateManagement = collectionBinding.getStateManagement();
+		stateManagement = collectionBinding.getStateManagement();
 		insertRowsCoordinator = stateManagement.createInsertRowsCoordinator( this );
 		updateRowsCoordinator = stateManagement.createUpdateRowsCoordinator( this );
 		deleteRowsCoordinator = stateManagement.createDeleteRowsCoordinator( this );
@@ -128,12 +130,13 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		super.postInstantiate();
 
 		// Initialize JDBC operations after entity persisters have completed their initialization
-		if ( useTablePerSubclassDecomposition ) {
-			decomposer = new TablePerSubclassOneToManyDecomposer( this, getFactory() );
-		}
-		else {
-			decomposer = new StandardOneToManyDecomposer( this, getFactory() );
-		}
+		decomposer = buildCollectionDecomposer();
+	}
+
+	protected CollectionDecomposer buildCollectionDecomposer() {
+		return useTablePerSubclassDecomposition
+				? new TablePerSubclassOneToManyDecomposer( this, getFactory() )
+				: new StandardOneToManyDecomposer( this, getFactory() );
 	}
 
 	public boolean isDoWriteEvenWhenInverse() {
@@ -618,7 +621,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// GraphBasedActionQueue / FlushCoordinator support
 
-	private OneToManyDecomposer decomposer;
+	private CollectionDecomposer decomposer;
 
 	@Override
 	public void decompose(

@@ -6,6 +6,8 @@ package org.hibernate.persister.state.internal;
 
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.action.queue.decompose.entity.EntityMutationPlanContributor;
+import org.hibernate.action.queue.decompose.entity.SoftDeleteEntityMutationPlanContributor;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
@@ -25,6 +27,19 @@ public final class SoftDeleteStateManagement extends AbstractStateManagement {
 
 	private SoftDeleteStateManagement() {
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Graph ActionQueue integration
+
+	@Override
+	public EntityMutationPlanContributor createEntityMutationPlanContributor(EntityPersister persister) {
+		return new SoftDeleteEntityMutationPlanContributor( persister, persister.getFactory() );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Legacy ActionQueue integration
 
 	@Override
 	public DeleteCoordinator createDeleteCoordinator(EntityPersister persister) {

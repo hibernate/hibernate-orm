@@ -6,6 +6,10 @@ package org.hibernate.persister.state.internal;
 
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.action.queue.decompose.collection.CollectionMutationPlanContributor;
+import org.hibernate.action.queue.decompose.collection.HistoryCollectionMutationPlanContributor;
+import org.hibernate.action.queue.decompose.entity.EntityMutationPlanContributor;
+import org.hibernate.action.queue.decompose.entity.HistoryEntityMutationPlanContributor;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
@@ -53,6 +57,24 @@ public final class HistoryStateManagement implements StateManagement {
 
 	private HistoryStateManagement() {
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Graph ActionQueue integration
+
+	@Override
+	public EntityMutationPlanContributor createEntityMutationPlanContributor(EntityPersister persister) {
+		return new HistoryEntityMutationPlanContributor( persister, persister.getFactory() );
+	}
+
+	@Override
+	public CollectionMutationPlanContributor createCollectionMutationPlanContributor(CollectionPersister persister) {
+		return new HistoryCollectionMutationPlanContributor();
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Legacy ActionQueue integration
 
 	@Override
 	public UpdateCoordinator createMergeCoordinator(EntityPersister persister) {

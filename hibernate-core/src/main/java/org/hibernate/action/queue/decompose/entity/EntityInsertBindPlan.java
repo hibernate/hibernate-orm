@@ -67,7 +67,7 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 
 	@Override
 	public Object getEntityId() {
-		return action.getId();
+		return identifier;
 	}
 
 	@Override

@@ -8,6 +8,7 @@ import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
+import org.hibernate.action.queue.decompose.Decomposer;
 import org.hibernate.action.queue.decompose.DecompositionContext;
 import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -20,7 +21,18 @@ import java.util.function.Consumer;
 /// * [OneToManyDecomposer] for `one-to-many` collections
 /// * [BasicCollectionDecomposer] for `element-collection` and `many-to-many` collections
 ///
+/// Collection persisters construct their decomposers directly.
+///
+/// A decomposer owns collection delta discovery, operation ordering and
+/// callback/event handling. State-management-specific SQL shape is isolated through
+/// [CollectionMutationPlanContributor]: contributors may replace delete/remove
+/// mutation plans, provide strategy-specific bind values and contribute alternate
+/// operations for logical value changes.  This keeps temporal, history-table and
+/// audit behavior from being baked into the delta walking code.
+///
+/// @see Decomposer
 /// @see CollectionJdbcOperations
+/// @see CollectionMutationPlanContributor
 ///
 /// @apiNote This is just a marker interface mainly for some unified Javadoc.
 ///

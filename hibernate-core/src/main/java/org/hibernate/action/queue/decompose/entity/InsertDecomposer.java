@@ -8,6 +8,7 @@ import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.bind.GeneratedValuesCollector;
+import org.hibernate.action.queue.bind.PostExecutionCallback;
 import org.hibernate.action.queue.decompose.DecompositionContext;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptor;
@@ -33,7 +34,9 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -45,11 +48,24 @@ import static org.hibernate.generator.EventType.INSERT;
 ///
 /// Converts an [AbstractEntityInsertAction] into a group of [FlushOperation] to be performed.
 ///
+/// @apiNote Insert decomposition does not currently use an [EntityMutationPlanContributor].
+/// State-management-specific graph mutation plans are contributed for logical
+/// update/delete actions, where the logical action may need to be represented
+/// by a different physical mutation shape.
+///
 /// @author Steve Ebersole
 public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAction> {
 	private final Map<String, TableInsert> staticInsertOperations;
+	private final EntityMutationPlanContributor mutationPlanContributor;
 
 	public InsertDecomposer(EntityPersister entityPersister, SessionFactoryImplementor sessionFactory) {
+		this( entityPersister, sessionFactory, EntityMutationPlanContributor.STANDARD );
+	}
+
+	public InsertDecomposer(
+			EntityPersister entityPersister,
+			SessionFactoryImplementor sessionFactory,
+			EntityMutationPlanContributor mutationPlanContributor) {
 		super( entityPersister, sessionFactory );
 
 		this.staticInsertOperations = entityPersister.isDynamicInsert()
@@ -57,10 +73,33 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 				// static inserts as we will create them every time
 				? null
 				: generateStaticOperations();
+		this.mutationPlanContributor = mutationPlanContributor;
 	}
 
+	/// Static set of table mutations used to perform the entity creation.
 	public Map<String, TableInsert> getStaticInsertOperations() {
 		return staticInsertOperations;
+	}
+
+	public boolean[] resolveInsertability(Object[] state) {
+		return entityPersister.isDynamicInsert()
+				? getPropertiesToInsert( state )
+				: entityPersister.getPropertyInsertability();
+	}
+
+	public Map<String, TableInsert> resolveInsertOperations(
+			boolean[] effectiveInsertability,
+			Object entity,
+			Object identifier,
+			boolean hasStateDependentGenerator,
+			SharedSessionContractImplementor session) {
+		return chooseEffectiveInsertGroup(
+				effectiveInsertability,
+				entity,
+				identifier,
+				hasStateDependentGenerator,
+				session
+		);
 	}
 
 	@Override
@@ -156,11 +195,47 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 			previousOperation = op;
 		}
 
-		// Attach post-execution callback to the last operation
+		final List<FlushOperation> additionalOperations = new ArrayList<>();
+		mutationPlanContributor.contributeAdditionalInsert(
+				new EntityMutationPlanContributor.InsertContext(
+						entityPersister,
+						action,
+						ordinalBase,
+						session,
+						decompositionContext,
+						entity,
+						identifier,
+						state,
+						cacheInsert
+				),
+				additionalOperations::add
+		);
+
+		emitTailOperations( previousOperation, additionalOperations, postInsertHandling, operationConsumer );
+	}
+
+	private void emitTailOperations(
+			FlushOperation previousOperation,
+			List<FlushOperation> additionalOperations,
+			PostExecutionCallback postExecutionCallback,
+			Consumer<FlushOperation> operationConsumer) {
+		if ( additionalOperations.isEmpty() ) {
+			if ( previousOperation != null ) {
+				previousOperation.setPostExecutionCallback( postExecutionCallback );
+				operationConsumer.accept( previousOperation );
+			}
+			return;
+		}
+
 		if ( previousOperation != null ) {
-			previousOperation.setPostExecutionCallback( postInsertHandling );
 			operationConsumer.accept( previousOperation );
 		}
+		for ( int i = 0; i < additionalOperations.size() - 1; i++ ) {
+			operationConsumer.accept( additionalOperations.get( i ) );
+		}
+		final FlushOperation lastOperation = additionalOperations.get( additionalOperations.size() - 1 );
+		lastOperation.setPostExecutionCallback( postExecutionCallback );
+		operationConsumer.accept( lastOperation );
 	}
 
 	private void registerAfterTransactionCompletion(
@@ -209,7 +284,7 @@ public class InsertDecomposer extends AbstractDecomposer<AbstractEntityInsertAct
 		}
 	}
 
-	protected boolean preInsertInMemoryValueGeneration(Object[] values, Object entity, SharedSessionContractImplementor session) {
+	public boolean preInsertInMemoryValueGeneration(Object[] values, Object entity, SharedSessionContractImplementor session) {
 		boolean foundStateDependentGenerator = false;
 		if ( entityPersister.hasPreInsertGeneratedProperties() ) {
 			final var generators = entityPersister.getGenerators();

@@ -4,17 +4,18 @@
  */
 package org.hibernate.action.queue.decompose.entity;
 
-import org.hibernate.action.internal.EntityDeleteAction;
+import java.util.Map;
+import java.util.function.Consumer;
+
 import org.hibernate.action.queue.MutationKind;
-import org.hibernate.action.queue.decompose.DecompositionContext;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
 import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.TableMutation;
@@ -22,19 +23,23 @@ import org.hibernate.sql.model.ast.TableUpdate;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 
-import java.util.function.Consumer;
-import java.util.Map;
-
-/// [Decomposer][EntityActionDecomposer] for entity delete operations for entities mapped with soft-delete.
-///
-/// @author Steve Ebersole
-public class DeleteDecomposerSoftDelete extends AbstractDeleteDecomposer {
+/**
+ * Graph mutation plan contributor for soft-delete entity deletes.
+ *
+ * @author Steve Ebersole
+ */
+public class SoftDeleteEntityMutationPlanContributor implements EntityMutationPlanContributor {
+	private final EntityPersister entityPersister;
+	private final SessionFactoryImplementor sessionFactory;
 	private final TableUpdate<?> softDeleteOperation;
 
-	public DeleteDecomposerSoftDelete(EntityPersister entityPersister, SessionFactoryImplementor sessionFactory) {
-		super( entityPersister, sessionFactory );
-		assert entityPersister.getSoftDeleteMapping() != null;
-
+	public SoftDeleteEntityMutationPlanContributor(
+			EntityPersister entityPersister,
+			SessionFactoryImplementor sessionFactory) {
+		this.entityPersister = entityPersister instanceof UnionSubclassEntityPersister
+				? entityPersister
+				: entityPersister.getRootEntityDescriptor().getEntityPersister();
+		this.sessionFactory = sessionFactory;
 		this.softDeleteOperation = generateSoftDeleteOperation();
 	}
 
@@ -44,29 +49,13 @@ public class DeleteDecomposerSoftDelete extends AbstractDeleteDecomposer {
 	}
 
 	@Override
-	public void decompose(
-			EntityDeleteAction action,
-			int ordinalBase,
-			SharedSessionContractImplementor session,
-			DecompositionContext decompositionContext,
+	public boolean contributeReplacementDelete(
+			DeleteContext context,
 			Consumer<FlushOperation> operationConsumer) {
-		final Object naturalIdValues = DeleteNaturalIdHandling.removeLocalResolution( action, session );
+		final Object identifier = context.identifier();
+		final Object version = context.version();
 
-		final DeleteCacheHandling.CacheLock cacheLock = DeleteCacheHandling.lockItem( action, session );
-		registerAfterTransactionCompletion( action, cacheLock, session );
-
-		final PreDeleteHandling preDeleteHandling = new PreDeleteHandling( action );
-		final PostDeleteHandling postDeleteHandling = new PostDeleteHandling(
-				action,
-				cacheLock.cacheKey(),
-				naturalIdValues,
-				preDeleteHandling
-		);
-
-		final Object identifier = action.getId();
-		final Object version = action.getVersion();
-
-		final var mutation = softDeleteOperation.createMutationOperation(null, sessionFactory);
+		final var mutation = softDeleteOperation.createMutationOperation( null, sessionFactory );
 		final var tableMapping = (TableDescriptorAsTableMapping) mutation.getTableDetails();
 		final var tableDescriptor = (EntityTableDescriptor) tableMapping.getDescriptor();
 
@@ -75,68 +64,46 @@ public class DeleteDecomposerSoftDelete extends AbstractDeleteDecomposer {
 				entityPersister,
 				identifier,
 				version,
-				// todo : do we need to get loadedState here?
 				null,
 				OptimisticLockStyle.NONE
 		);
 
-		final FlushOperation op = new FlushOperation(
+		final FlushOperation operation = new FlushOperation(
 				tableDescriptor,
 				MutationKind.UPDATE,
 				mutation,
 				bindPlan,
-				ordinalBase * 1_000,
+				context.ordinalBase() * 1_000,
 				"EntityDeleteAction(" + entityPersister.getEntityName() + ")"
 		);
-		op.setPreExecutionCallback( preDeleteHandling );
-
-		// Attach post-execution callback to the operation
-		op.setPostExecutionCallback( postDeleteHandling );
-
-		operationConsumer.accept( op );
-	}
-
-	private void registerAfterTransactionCompletion(
-			EntityDeleteAction action,
-			DeleteCacheHandling.CacheLock cacheLock,
-			SharedSessionContractImplementor session) {
-		final var callback = new DeleteAfterTransactionCompletionHandling( action, cacheLock );
-		if ( callback.isNeeded( session ) ) {
-			session.getTransactionCompletionCallbacks().registerCallback( callback );
-		}
+		operation.setPreExecutionCallback( context.postDeleteHandling().getPreDeleteHandling() );
+		operation.setPostExecutionCallback( context.postDeleteHandling() );
+		operationConsumer.accept( operation );
+		return true;
 	}
 
 	private TableUpdate<?> generateSoftDeleteOperation() {
-		final var softDeleteMapping = entityPersister.getSoftDeleteMapping();
+		final SoftDeleteMapping softDeleteMapping = entityPersister.getSoftDeleteMapping();
 		assert softDeleteMapping != null;
 
-		// Soft delete only operates on the root/identifier table
-		final var rootTableDescriptor = entityPersister.getIdentifierTableDescriptor();
-
-		// Create adapter to convert TableDescriptor to TableMapping
+		final EntityTableDescriptor rootTableDescriptor = entityPersister.getIdentifierTableDescriptor();
 		final TableDescriptorAsTableMapping tableMapping = new TableDescriptorAsTableMapping(
 				rootTableDescriptor,
-				0, // relativePosition
-				true, // isIdentifierTable
-				false // isInverse
+				0,
+				true,
+				false
 		);
 
 		final TableUpdateBuilder<?> tableUpdateBuilder = new TableUpdateBuilderStandard<>(
 				entityPersister,
-				new MutatingTableReference(tableMapping),
+				new MutatingTableReference( tableMapping ),
 				sessionFactory
 		);
 
-		// Apply key restriction (WHERE id = ?)
 		tableUpdateBuilder.addKeyRestrictions( rootTableDescriptor.keyDescriptor() );
-
-		// Apply soft delete assignment and restriction
 		applySoftDelete( softDeleteMapping, tableUpdateBuilder );
-
-		// Apply partition key restriction if needed
 		applyPartitionKeyRestrictionForSoftDelete( tableUpdateBuilder );
 
-		// Version-based optimistic locking (if applicable)
 		if ( entityPersister.optimisticLockStyle().isVersion() && entityPersister.getVersionMapping() != null ) {
 			tableUpdateBuilder.addOptimisticLockRestriction( entityPersister.getVersionMapping() );
 		}
@@ -152,10 +119,7 @@ public class DeleteDecomposerSoftDelete extends AbstractDeleteDecomposer {
 				softDeleteMapping
 		);
 
-		// Apply the assignment: SET deleted_column = deleted_value
 		tableUpdateBuilder.addColumnAssignment( softDeleteMapping.createDeletedValueBinding( softDeleteColumnReference ) );
-
-		// Apply the restriction: WHERE deleted_column = not_deleted_value
 		tableUpdateBuilder.addNonKeyRestriction( softDeleteMapping.createNonDeletedValueBinding( softDeleteColumnReference ) );
 	}
 

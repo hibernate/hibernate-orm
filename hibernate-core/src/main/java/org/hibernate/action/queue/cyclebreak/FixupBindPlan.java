@@ -4,9 +4,9 @@
  */
 package org.hibernate.action.queue.cyclebreak;
 
-import org.hibernate.action.queue.exec.BindPlan;
-import org.hibernate.action.queue.exec.JdbcValueBindings;
-import org.hibernate.action.queue.exec.OperationResultChecker;
+import org.hibernate.action.queue.bind.BindPlan;
+import org.hibernate.action.queue.bind.JdbcValueBindings;
+import org.hibernate.action.queue.bind.OperationResultChecker;
 import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;

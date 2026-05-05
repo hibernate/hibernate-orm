@@ -4,7 +4,7 @@
  */
 package org.hibernate.action.queue.decompose;
 
-import org.hibernate.action.queue.exec.DelayedValueAccess;
+import org.hibernate.action.queue.bind.DelayedValueAccess;
 
 /// Context for decomposition operations, providing information about entities being
 /// mutated in the current flush.

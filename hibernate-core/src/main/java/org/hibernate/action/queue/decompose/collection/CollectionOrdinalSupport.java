@@ -2,7 +2,8 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.action.queue;
+package org.hibernate.action.queue.decompose.collection;
+
 
 
 /// Constants and utilities for calculating ordinals for [FlushOperation]

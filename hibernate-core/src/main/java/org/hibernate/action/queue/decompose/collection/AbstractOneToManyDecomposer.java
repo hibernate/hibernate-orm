@@ -8,8 +8,8 @@ import org.hibernate.action.internal.CollectionRecreateAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.queue.MutationKind;
-import org.hibernate.action.queue.exec.BindPlan;
-import org.hibernate.action.queue.exec.JdbcValueBindings;
+import org.hibernate.action.queue.bind.BindPlan;
+import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.action.queue.decompose.DecompositionContext;
 import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
@@ -42,8 +42,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import static org.hibernate.action.queue.CollectionOrdinalSupport.Slot;
-import static org.hibernate.action.queue.CollectionOrdinalSupport.calculateOrdinal;
+import static org.hibernate.action.queue.decompose.collection.CollectionOrdinalSupport.Slot;
+import static org.hibernate.action.queue.decompose.collection.CollectionOrdinalSupport.calculateOrdinal;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.ast.builder.TableMutationBuilder.NULL;
 

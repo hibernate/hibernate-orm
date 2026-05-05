@@ -7,6 +7,8 @@ package org.hibernate.action.queue.exec;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.action.queue.StatementShapeKey;
+import org.hibernate.action.queue.bind.JdbcValueBindings;
+import org.hibernate.action.queue.bind.OperationResultChecker;
 import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.StaleStateMapper;

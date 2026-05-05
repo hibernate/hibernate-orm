@@ -10,7 +10,7 @@ import org.hibernate.Incubating;
 import org.hibernate.action.internal.AbstractEntityInsertAction;
 import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityUpdateAction;
-import org.hibernate.action.queue.exec.JdbcValueBindings;
+import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;

@@ -5,9 +5,9 @@
 package org.hibernate.action.queue.decompose.collection;
 
 import org.hibernate.action.queue.constraint.UniqueConstraint;
-import org.hibernate.action.queue.exec.BindPlan;
-import org.hibernate.action.queue.exec.JdbcValueBindings;
-import org.hibernate.action.queue.exec.OperationResultChecker;
+import org.hibernate.action.queue.bind.BindPlan;
+import org.hibernate.action.queue.bind.JdbcValueBindings;
+import org.hibernate.action.queue.bind.OperationResultChecker;
 import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;

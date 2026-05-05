@@ -5,7 +5,7 @@
 package org.hibernate.action.queue.decompose.entity;
 
 import org.hibernate.action.queue.meta.TableDescriptor;
-import org.hibernate.action.queue.support.TableInclusionChecker;
+import org.hibernate.action.queue.meta.TableInclusionChecker;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.sql.model.ValuesAnalysis;
 

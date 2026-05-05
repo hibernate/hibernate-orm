@@ -4,7 +4,7 @@
  */
 package org.hibernate.action.queue.decompose.collection;
 
-import org.hibernate.action.queue.exec.JdbcValueBindings;
+import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.MutationOperation;

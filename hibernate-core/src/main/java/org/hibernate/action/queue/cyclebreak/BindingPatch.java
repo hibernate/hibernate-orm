@@ -20,7 +20,7 @@ import java.util.Set;
 /// When this FlushOperation is executed, its BindPlan will bind values normally
 /// (into [org.hibernate.engine.jdbc.mutation.JdbcValueBindings]).  It will then see
 /// that a BindingPatch is in effect and will replace the necessary binding values with
-/// [org.hibernate.action.queue.exec.DelayedValueAccess].  This is handled in
+/// [org.hibernate.action.queue.bind.DelayedValueAccess].  This is handled in
 /// [org.hibernate.action.queue.cyclebreak.CycleBreakPatcher].
 /// It will also capture the "real values" and store them on the
 /// [FlushOperation#getIntendedFkValues()].

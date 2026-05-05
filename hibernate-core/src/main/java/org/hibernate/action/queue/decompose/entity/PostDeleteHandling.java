@@ -6,7 +6,7 @@ package org.hibernate.action.queue.decompose.entity;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.action.internal.EntityDeleteAction;
-import org.hibernate.action.queue.exec.PostExecutionCallback;
+import org.hibernate.action.queue.bind.PostExecutionCallback;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.PostDeleteEvent;
 import org.hibernate.event.spi.PostDeleteEventListener;

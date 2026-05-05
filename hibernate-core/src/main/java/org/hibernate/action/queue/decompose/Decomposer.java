@@ -13,7 +13,7 @@ import org.hibernate.action.internal.EntityDeleteAction;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.internal.OrphanRemovalAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
-import org.hibernate.action.queue.exec.DelayedValueAccess;
+import org.hibernate.action.queue.bind.DelayedValueAccess;
 import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.action.queue.support.GraphBasedActionQueueFactory;
 import org.hibernate.action.spi.Executable;

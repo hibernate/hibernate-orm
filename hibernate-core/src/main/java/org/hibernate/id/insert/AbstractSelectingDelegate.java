@@ -77,7 +77,7 @@ public abstract class AbstractSelectingDelegate
 
 		final PreparedStatement preparedStatement = prepareStatement( sql, session );
 		try {
-			var valueBindings = new org.hibernate.action.queue.exec.JdbcValueBindings(
+			var valueBindings = new org.hibernate.action.queue.bind.JdbcValueBindings(
 					operation.getMutatingTableDescriptor(),
 					jdbcOperation
 			);

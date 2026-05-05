@@ -4,7 +4,7 @@
  */
 package org.hibernate.engine.jdbc.mutation.internal;
 
-import org.hibernate.action.queue.exec.DelayedValueAccess;
+import org.hibernate.action.queue.bind.DelayedValueAccess;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.group.UnknownParameterException;

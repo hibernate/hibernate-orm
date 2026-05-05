@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.action.queue.exec;
+package org.hibernate.action.queue.bind;
 
 import org.hibernate.HibernateException;
 import org.hibernate.action.queue.meta.TableDescriptor;
@@ -56,7 +56,7 @@ public class JdbcValueBindings {
 		} );
 	}
 
-	static Object resolveValue(Object value) {
+	public static Object resolveValue(Object value) {
 		return value instanceof DelayedValueAccess handle ? handle.get() : value;
 	}
 

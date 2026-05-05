@@ -4,6 +4,8 @@
  */
 package org.hibernate.action.queue.exec;
 
+import org.hibernate.action.queue.bind.JdbcValueBindings;
+import org.hibernate.action.queue.bind.OperationResultChecker;
 import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.PreparableMutationOperation;

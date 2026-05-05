@@ -39,7 +39,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.hibernate.action.queue.CollectionOrdinalSupport.extractCollectionOrdinal;
+import static org.hibernate.action.queue.decompose.collection.CollectionOrdinalSupport.extractCollectionOrdinal;
 
 /// Orchestrates the steps needed to flush a Session, using a graph-based approach to
 /// model mutation-operation scheduling that automatically handles foreign key dependencies,

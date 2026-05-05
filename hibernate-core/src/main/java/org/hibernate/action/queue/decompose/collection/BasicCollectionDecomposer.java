@@ -12,8 +12,8 @@ import org.hibernate.action.internal.CollectionRemoveAction;
 import org.hibernate.action.internal.CollectionUpdateAction;
 import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.queue.MutationKind;
-import org.hibernate.action.queue.exec.BindPlan;
-import org.hibernate.action.queue.exec.JdbcValueBindings;
+import org.hibernate.action.queue.bind.BindPlan;
+import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.action.queue.decompose.DecompositionContext;
 import org.hibernate.action.queue.meta.CollectionTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
@@ -44,8 +44,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import static org.hibernate.action.queue.CollectionOrdinalSupport.Slot;
-import static org.hibernate.action.queue.CollectionOrdinalSupport.calculateOrdinal;
+import static org.hibernate.action.queue.decompose.collection.CollectionOrdinalSupport.Slot;
+import static org.hibernate.action.queue.decompose.collection.CollectionOrdinalSupport.calculateOrdinal;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /// Decomposition support for [BasicCollectionPersister] which managed inserts, updates and deletes

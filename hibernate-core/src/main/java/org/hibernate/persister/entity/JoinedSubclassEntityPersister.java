@@ -8,7 +8,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.action.queue.exec.JdbcValueBindings;
+import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.cache.spi.access.EntityDataAccess;

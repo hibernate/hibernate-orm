@@ -7,7 +7,7 @@ package org.hibernate.action.queue.decompose.entity;
 import org.hibernate.action.internal.EntityUpdateAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.decompose.collection.DecompositionSupport;
-import org.hibernate.action.queue.exec.GeneratedValuesCollector;
+import org.hibernate.action.queue.bind.GeneratedValuesCollector;
 import org.hibernate.action.queue.decompose.DecompositionContext;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptor;

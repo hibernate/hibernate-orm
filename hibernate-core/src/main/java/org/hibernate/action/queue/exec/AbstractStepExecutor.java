@@ -5,15 +5,16 @@
 package org.hibernate.action.queue.exec;
 
 import org.hibernate.action.queue.MutationKind;
+import org.hibernate.action.queue.bind.JdbcValueBindings;
 import org.hibernate.action.queue.cyclebreak.FixupSynthesizer;
 import org.hibernate.action.queue.plan.FlushOperation;
+import org.hibernate.engine.jdbc.mutation.internal.JdbcValueBindingsImpl;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.SelfExecutingUpdateOperation;
-import org.hibernate.engine.jdbc.mutation.internal.JdbcValueBindingsImpl;
 
 import java.sql.Connection;
 import java.util.List;

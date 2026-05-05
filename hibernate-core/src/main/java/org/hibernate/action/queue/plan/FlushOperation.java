@@ -6,11 +6,11 @@ package org.hibernate.action.queue.plan;
 
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.StatementShapeKey;
-import org.hibernate.action.queue.exec.BindPlan;
+import org.hibernate.action.queue.bind.BindPlan;
 import org.hibernate.action.queue.cyclebreak.BindingPatch;
-import org.hibernate.action.queue.exec.ChainedPostExecutionCallback;
-import org.hibernate.action.queue.exec.PostExecutionCallback;
-import org.hibernate.action.queue.exec.PreExecutionCallback;
+import org.hibernate.action.queue.bind.ChainedPostExecutionCallback;
+import org.hibernate.action.queue.bind.PostExecutionCallback;
+import org.hibernate.action.queue.bind.PreExecutionCallback;
 import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ValuesAnalysis;

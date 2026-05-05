@@ -6,11 +6,11 @@ package org.hibernate.action.queue.decompose.entity;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.action.queue.cyclebreak.CycleBreakPatcher;
-import org.hibernate.action.queue.exec.BindPlan;
-import org.hibernate.action.queue.exec.Checkers;
-import org.hibernate.action.queue.exec.GeneratedValuesCollector;
-import org.hibernate.action.queue.exec.JdbcValueBindings;
-import org.hibernate.action.queue.exec.OperationResultChecker;
+import org.hibernate.action.queue.bind.BindPlan;
+import org.hibernate.action.queue.bind.Checkers;
+import org.hibernate.action.queue.bind.GeneratedValuesCollector;
+import org.hibernate.action.queue.bind.JdbcValueBindings;
+import org.hibernate.action.queue.bind.OperationResultChecker;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
 import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;

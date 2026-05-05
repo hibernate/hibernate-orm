@@ -5,7 +5,7 @@
 package org.hibernate.action.queue.decompose.entity;
 
 import org.hibernate.action.internal.EntityDeleteAction;
-import org.hibernate.action.queue.exec.PreExecutionCallback;
+import org.hibernate.action.queue.bind.PreExecutionCallback;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.PreDeleteEvent;
 

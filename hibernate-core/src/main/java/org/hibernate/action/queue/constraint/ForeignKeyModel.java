@@ -2,9 +2,7 @@
  * SPDX-License-Identifier: Apache-2.0
  * Copyright Red Hat Inc. and Hibernate Authors
  */
-package org.hibernate.action.queue.fk;
-
-import org.hibernate.action.queue.constraint.ForeignKey;
+package org.hibernate.action.queue.constraint;
 
 import java.io.Serializable;
 import java.util.List;

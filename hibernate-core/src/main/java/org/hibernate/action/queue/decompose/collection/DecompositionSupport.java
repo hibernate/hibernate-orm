@@ -6,8 +6,8 @@ package org.hibernate.action.queue.decompose.collection;
 
 import org.hibernate.action.internal.CollectionAction;
 import org.hibernate.action.queue.decompose.DecompositionContext;
-import org.hibernate.action.queue.exec.ChainedPostExecutionCallback;
-import org.hibernate.action.queue.exec.PostExecutionCallback;
+import org.hibernate.action.queue.bind.ChainedPostExecutionCallback;
+import org.hibernate.action.queue.bind.PostExecutionCallback;
 import org.hibernate.action.queue.meta.TableDescriptor;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;

@@ -76,18 +76,30 @@ public class InsertOrderingSelfReferenceTest extends BaseInsertOrderingTest {
 			clearBatches();
 		} );
 
-		verifyContainsBatches(
-				new Batch( "insert into Placeholder (name,id) values (?,?)", 2 ),
-				new Batch( List.of(
-						"insert into Parameter (name,parent_id,TYPE,id) values (?,?," + literal( "INPUT" ) + ",?)",
-						"insert into \"Parameter\" (name,\"parent_id\",TYPE,id) values (?,?," + literal( "INPUT" ) + ",?)",
-						"insert into `Parameter` (name,`parent_id`,TYPE,id) values (?,?," + literal( "INPUT" ) + ",?)" ) ),
-				new Batch( List.of(
-						"insert into Parameter (name,parent_id,TYPE,id) values (?,?," + literal( "OUTPUT" ) + ",?)",
-						"insert into \"Parameter\" (name,\"parent_id\",TYPE,id) values (?,?," + literal( "OUTPUT" ) + ",?)",
-						"insert into `Parameter` (name,`parent_id`,TYPE,id) values (?,?," + literal( "OUTPUT" ) + ",?)" ),
-						3 )
-		);
+		if ( isGraphQueue() ) {
+			verifyContainsBatches(
+					new Batch( "insert into Placeholder (name,id) values (?,?)", 2 ),
+					new Batch( List.of(
+							"insert into Parameter (name,parent_id,TYPE,id) values (?,?,?,?)",
+							"insert into \"Parameter\" (name,\"parent_id\",TYPE,id) values (?,?,?,?)",
+							"insert into `Parameter` (name,`parent_id`,TYPE,id) values (?,?,?,?)" ),
+							4 )
+			);
+		}
+		else {
+			verifyContainsBatches(
+					new Batch( "insert into Placeholder (name,id) values (?,?)", 2 ),
+					new Batch( List.of(
+							"insert into Parameter (name,parent_id,TYPE,id) values (?,?," + literal( "INPUT" ) + ",?)",
+							"insert into \"Parameter\" (name,\"parent_id\",TYPE,id) values (?,?," + literal( "INPUT" ) + ",?)",
+							"insert into `Parameter` (name,`parent_id`,TYPE,id) values (?,?," + literal( "INPUT" ) + ",?)" ) ),
+					new Batch( List.of(
+							"insert into Parameter (name,parent_id,TYPE,id) values (?,?," + literal( "OUTPUT" ) + ",?)",
+							"insert into \"Parameter\" (name,\"parent_id\",TYPE,id) values (?,?," + literal( "OUTPUT" ) + ",?)",
+							"insert into `Parameter` (name,`parent_id`,TYPE,id) values (?,?," + literal( "OUTPUT" ) + ",?)" ),
+							3 )
+			);
+		}
 	}
 
 	@MappedSuperclass

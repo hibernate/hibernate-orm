@@ -28,9 +28,6 @@ public interface SqlAstTranslatorFactory {
 	 */
 	SqlAstTranslator<? extends JdbcOperationQueryMutation> buildMutationTranslator(SessionFactoryImplementor sessionFactory, MutationStatement statement);
 
-	/**
-	 * Builds a single-use translator for dealing with model mutations
-	 */
 	<O extends JdbcMutationOperation> SqlAstTranslator<O> buildModelMutationTranslator(TableMutation<O> mutation, SessionFactoryImplementor sessionFactory);
 
 }

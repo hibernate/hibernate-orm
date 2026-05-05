@@ -19,7 +19,7 @@ import org.hibernate.sql.model.MutationType;
 public interface MutationGroup {
 	MutationType getMutationType();
 
-	MutationTarget<?> getMutationTarget();
+	MutationTarget<?,?> getMutationTarget();
 
 	int getNumberOfTableMutations();
 

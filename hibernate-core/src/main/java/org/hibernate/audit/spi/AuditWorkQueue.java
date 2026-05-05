@@ -5,8 +5,6 @@
 package org.hibernate.audit.spi;
 
 import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Set;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -16,11 +14,11 @@ import org.hibernate.annotations.Changelog;
 import org.hibernate.audit.EntityTrackingChangesetListener;
 import org.hibernate.audit.ModificationType;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.TransactionCompletionCallbacks;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.mutation.AuditMutationWriter;
 
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
@@ -46,40 +44,7 @@ import static org.hibernate.internal.util.NullnessUtil.castNonNull;
  * @since 7.4
  */
 public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeCompletionCallback {
-
-	/**
-	 * A queued audit entry, holding the entity state and
-	 * modification type, plus a writer callback.
-	 */
-	private static class QueuedEntry {
-		Object entity;
-		Object[] values;
-		ModificationType modificationType;
-		final AuditWriter writer;
-
-		QueuedEntry(
-				Object entity, Object[] values,
-				ModificationType modificationType, AuditWriter writer) {
-			this.entity = entity;
-			this.values = values;
-			this.modificationType = modificationType;
-			this.writer = writer;
-		}
-	}
-
-	/**
-	 * A queued collection audit entry, holding the original snapshot
-	 * captured before the first flush.
-	 */
-	private record QueuedCollectionEntry(
-			PersistentCollection<?> collection,
-			Object ownerId,
-			Object originalSnapshot,
-			CollectionAuditWriter writer) {
-	}
-
-	private final Map<EntityKey, QueuedEntry> entries = new LinkedHashMap<>();
-	private final Map<CollectionKey, QueuedCollectionEntry> collectionEntries = new LinkedHashMap<>();
+	private final AuditChangeSet<AuditWriter, CollectionAuditWriter> changeSet = new AuditChangeSet<>();
 	private EntityTrackingChangesetListener trackingListener;
 	private Object changelog;
 	private @Nullable Session changesetSession;
@@ -108,14 +73,7 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 			trackingListener = resolveTrackingListener( session );
 			registered = true;
 		}
-
-		final var existing = entries.get( entityKey );
-		if ( existing == null ) {
-			entries.put( entityKey, new QueuedEntry( entity, values, modificationType, writer ) );
-		}
-		else {
-			merge( entityKey, existing, entity, values, modificationType );
-		}
+		changeSet.addEntityChange( entityKey, entity, values, modificationType, writer );
 	}
 
 	/**
@@ -142,62 +100,32 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 			session.getTransactionCompletionCallbacks().registerCallback( this );
 			registered = true;
 		}
-
-		final var key = new CollectionKey( collectionPersister, ownerId );
 		// Only store the first snapshot; subsequent flushes are ignored,
 		// the diff at completion will use original vs final state
-		collectionEntries.putIfAbsent(
-				key,
-				new QueuedCollectionEntry( collection, ownerId, originalSnapshot, writer )
-		);
-	}
+		changeSet.addCollectionChange( collectionPersister, collection, ownerId, originalSnapshot, writer );
 
-	private void merge(
-			EntityKey key,
-			QueuedEntry existing,
-			Object entity,
-			Object[] newValues,
-			ModificationType incoming) {
-		final var merged = mergeModificationType( existing.modificationType, incoming );
-		if ( merged == null ) {
-			// ADD + DEL = cancel out, no entity audit row.
-			// Collection entries may remain (orphaned)
-			// and the orphaned rows are unreachable by any query.
-			entries.remove( key );
-		}
-		else {
-			existing.modificationType = merged;
-			existing.values = newValues;
-			if ( entity != null ) {
-				existing.entity = entity;
+		final var ownerPersister = collectionPersister.getOwnerEntityPersister();
+		if ( ownerPersister.getAuditMapping() != null ) {
+			final var ownerEntityKey = session.generateEntityKey( ownerId, ownerPersister );
+			if ( trackingListener == null ) {
+				trackingListener = resolveTrackingListener( session );
+			}
+			final var persistenceContextOwner =
+					session.getPersistenceContextInternal().getCollectionOwner( ownerId, collectionPersister );
+			final var collectionOwner = persistenceContextOwner != null ? persistenceContextOwner : collection.getOwner();
+			final var owner = collectionOwner != null
+					? collectionOwner
+					: session.getPersistenceContextInternal().getEntity( ownerEntityKey );
+			if ( owner != null ) {
+				changeSet.addEntityChange(
+						ownerEntityKey,
+						owner,
+						ownerPersister.getValues( owner ),
+						ModificationType.MOD,
+						new AuditMutationWriter( ownerPersister, session.getFactory() )
+				);
 			}
 		}
-	}
-
-	/**
-	 * Merge two modification types according to the merge matrix.
-	 *
-	 * @return the merged type, or {@code null} if the entries cancel out
-	 */
-	private static ModificationType mergeModificationType(
-			ModificationType existing,
-			ModificationType incoming) {
-		return switch ( existing ) {
-			case ADD -> switch ( incoming ) {
-				case ADD -> ModificationType.ADD;
-				case MOD -> ModificationType.ADD;   // ADD + MOD -> ADD (with latest state)
-				case DEL -> null;                    // ADD + DEL -> cancel
-			};
-			case MOD -> switch ( incoming ) {
-				case ADD -> ModificationType.MOD;
-				case MOD -> ModificationType.MOD;   // MOD + MOD -> MOD (with latest state)
-				case DEL -> ModificationType.DEL;   // MOD + DEL -> DEL
-			};
-			case DEL -> switch ( incoming ) {
-				case ADD -> ModificationType.MOD;   // DEL + ADD -> MOD (re-created)
-				case MOD, DEL -> ModificationType.DEL;
-			};
-		};
 	}
 
 	/**
@@ -205,7 +133,7 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 	 * persist it. The child session is kept open for deferred
 	 * flush of {@code @ElementCollection} changes (e.g.
 	 * {@link Changelog.ModifiedEntities @ModifiedEntities}).
-	 * Called from {@link ChangelogSupplier#generateIdentifier}.let's
+	 * Called from {@link ChangelogSupplier#generateIdentifier}.
 	 */
 	public void setChangesetContext(Object changelog, Session changesetSession) {
 		this.changelog = changelog;
@@ -216,31 +144,30 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 	public void doBeforeTransactionCompletion(SharedSessionContractImplementor session) {
 		try {
 			// Entity audit rows first
-			for ( var mapEntry : entries.entrySet() ) {
-				final var entityKey = mapEntry.getKey();
-				final var entry = mapEntry.getValue();
-				entry.writer.writeAuditRow(
+			for ( var entry : changeSet.entityChanges() ) {
+				final var entityKey = entry.entityKey();
+				entry.entityAuditHandler().writeAuditRow(
 						entityKey,
-						entry.entity,
-						entry.values,
-						entry.modificationType,
+						entry.entity(),
+						entry.values(),
+						entry.modificationType(),
 						session
 				);
 				if ( trackingListener != null ) {
 					trackingListener.entityChanged(
 							entityKey.getPersister().getMappedClass(),
 							entityKey.getIdentifier(),
-							entry.modificationType,
+							entry.modificationType(),
 							changelog
 					);
 				}
 			}
 			// Collection audit rows (diff original snapshot vs final state)
-			for ( var entry : collectionEntries.values() ) {
-				entry.writer.writeCollectionAuditRows(
-						entry.collection,
-						entry.ownerId,
-						entry.originalSnapshot,
+			for ( var entry : changeSet.collectionChanges() ) {
+				entry.collectionAuditHandler().writeCollectionAuditRows(
+						entry.collection(),
+						entry.ownerId(),
+						entry.originalSnapshot(),
 						session
 				);
 			}
@@ -248,8 +175,7 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 			populateModifiedEntityNames( session );
 		}
 		finally {
-			entries.clear();
-			collectionEntries.clear();
+			changeSet.clear();
 			trackingListener = null;
 			changelog = null;
 			changesetSession = null;
@@ -271,8 +197,8 @@ public class AuditWorkQueue implements TransactionCompletionCallbacks.BeforeComp
 				entityNames = new HashSet<>();
 				persister.setValue( changelog, attr.getStateArrayPosition(), entityNames );
 			}
-			for ( var entityKey : entries.keySet() ) {
-				entityNames.add( entityKey.getEntityName() );
+			for ( var change : changeSet.entityChanges() ) {
+				entityNames.add( change.entityKey().getEntityName() );
 			}
 			castNonNull( changesetSession ).flush();
 		}

@@ -14,9 +14,9 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.Remove;
+import org.hibernate.action.queue.spi.bind.JdbcValueBindings;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
-import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Formula;
@@ -25,12 +25,15 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.DiscriminatorValue;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.filter.FilterAliasGenerator;
 import org.hibernate.persister.filter.internal.DynamicFilterAliasGenerator;
 import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
+import org.hibernate.sql.model.ast.builder.TableDeleteBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
+import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
 import org.hibernate.type.BasicType;
 
 import static java.util.function.Function.identity;
@@ -42,7 +45,6 @@ import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
 import static org.hibernate.internal.util.collections.CollectionHelper.toSmallMap;
 import static org.hibernate.jdbc.Expectations.createExpectation;
-import static org.hibernate.sql.model.ast.builder.TableMutationBuilder.NULL;
 
 /**
  * The default implementation of the {@link EntityPersister} interface.
@@ -485,9 +487,57 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			final TableInsertBuilder tableInsertBuilder =
 					insertGroupBuilder.getTableDetailsBuilder( getRootTableName() );
 			tableInsertBuilder.addValueColumn(
-					discriminatorValue == DiscriminatorValue.Special.NULL ? NULL : discriminatorSQLValue,
+					discriminatorValue == DiscriminatorValue.Special.NULL ? TableMutationBuilder.NULL : discriminatorSQLValue,
 					getDiscriminatorMapping()
 			);
+		}
+	}
+
+	@Override
+	public void addDiscriminatorToInsertGroup(Function<String, TableInsertBuilder> insertGroupBuilder) {
+		if ( discriminatorInsertable ) {
+			// find the root table insert builder
+			final TableInsertBuilder tableInsertBuilder = insertGroupBuilder.apply( getRootTableName() );
+			if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
+				tableInsertBuilder.addColumnAssignment( getDiscriminatorMapping(), TableMutationBuilder.NULL );
+			}
+			else {
+				// and apply the parameter
+				tableInsertBuilder.addColumnAssignment( getDiscriminatorMapping() );
+			}
+		}
+	}
+
+	@Override
+	public void bindDiscriminatorForInsert(JdbcValueBindings jdbcValueBindings) {
+		if ( discriminatorInsertable ) {
+			if ( discriminatorValue != DiscriminatorValue.Special.NULL ) {
+				jdbcValueBindings.bindAssignment( -1, discriminatorValue.value(),  getDiscriminatorMapping() );
+			}
+		}
+	}
+
+	@Override
+	public void addDiscriminatorToDelete(TableDeleteBuilder tableDeleteBuilder) {
+		if ( needsDiscriminatorForDelete() ) {
+			if ( discriminatorValue == DiscriminatorValue.Special.NULL ) {
+				tableDeleteBuilder.addNullRestriction( getDiscriminatorMapping() );
+			}
+			else {
+				// and apply the parameter
+				tableDeleteBuilder.addNonKeyRestriction( getDiscriminatorMapping() );
+			}
+		}
+	}
+
+	private boolean needsDiscriminatorForDelete() {
+		return discriminatorValue != null && needsDiscriminator() && getDiscriminatorMapping().hasPhysicalColumn();
+	}
+
+	@Override
+	public void bindDiscriminatorForDelete(JdbcValueBindings jdbcValueBindings) {
+		if ( needsDiscriminatorForDelete() && discriminatorValue != DiscriminatorValue.Special.NULL ) {
+			jdbcValueBindings.bindRestriction( -1, discriminatorValue.value(),  getDiscriminatorMapping() );
 		}
 	}
 
@@ -534,6 +584,13 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	@Override
 	protected boolean isIdentifierTable(String tableExpression) {
 		return tableExpression.equals( getRootTableName() );
+	}
+
+	@Override
+	protected boolean isSecondaryTable(String tableExpression, int relativePosition) {
+		// In SingleTableEntityPersister, position 0 is the main table
+		// Positions >= 1 are from getSubclassJoinClosure() (secondary tables)
+		return relativePosition >= 1;
 	}
 
 	@Override

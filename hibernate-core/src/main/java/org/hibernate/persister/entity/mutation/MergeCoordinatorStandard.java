@@ -64,7 +64,7 @@ public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 	}
 
 	@Override
-	protected InclusionChecker createInclusionChecker(boolean[] attributeUpdateability) {
+	protected AttributeInclusionChecker createInclusionChecker(boolean[] attributeUpdateability) {
 		return (position, attribute) -> isInsertableOrUpdatable( attribute );
 	}
 
@@ -115,9 +115,9 @@ public class MergeCoordinatorStandard extends UpdateCoordinatorStandard {
 			Object oldVersion,
 			Object[] oldValues,
 			int[] dirtyAttributeIndexes,
-			InclusionChecker inclusionChecker,
-			InclusionChecker lockingChecker,
-			InclusionChecker dirtinessChecker,
+			AttributeInclusionChecker inclusionChecker,
+			AttributeInclusionChecker lockingChecker,
+			AttributeInclusionChecker dirtinessChecker,
 			boolean restrictToTemporalExcluded,
 			Object rowId,
 			boolean forceDynamicUpdate,

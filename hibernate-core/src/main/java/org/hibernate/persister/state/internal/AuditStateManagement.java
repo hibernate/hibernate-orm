@@ -10,6 +10,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.hibernate.action.queue.internal.decompose.collection.AuditCollectionMutationPlanContributor;
+import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor;
+import org.hibernate.action.queue.internal.decompose.entity.AuditEntityMutationPlanContributor;
+import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
 import org.hibernate.audit.ModificationType;
 import org.hibernate.mapping.AuxiliaryTableHolder;
 import org.hibernate.mapping.Collection;
@@ -44,6 +48,8 @@ import org.hibernate.persister.entity.mutation.MergeCoordinatorAudit;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorAudit;
 import org.hibernate.persister.state.spi.StateManagement;
+import org.hibernate.persister.state.spi.StateManagementGraphIntegration;
+import org.hibernate.persister.state.spi.StateManagementLegacyIntegration;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -61,34 +67,59 @@ import static org.hibernate.persister.state.internal.AbstractStateManagement.res
  * @author Gavin King
  * @since 7.4
  */
-public class AuditStateManagement implements StateManagement {
+public class AuditStateManagement implements StateManagement, StateManagementLegacyIntegration {
 	public static final AuditStateManagement INSTANCE = new AuditStateManagement();
+
+	private final StateManagementLegacyIntegration standardLegacyIntegration =
+			StandardStateManagement.INSTANCE.getLegacyIntegration();
+
+	private final StateManagementGraphIntegration graphIntegration = new StateManagementGraphIntegration() {
+		@Override
+		public EntityMutationPlanContributor createEntityMutationPlanContributor(EntityPersister persister) {
+			return new AuditEntityMutationPlanContributor( persister, persister.getFactory() );
+		}
+
+		@Override
+		public CollectionMutationPlanContributor createCollectionMutationPlanContributor(CollectionPersister persister) {
+			return new AuditCollectionMutationPlanContributor( persister, persister.getFactory() );
+		}
+	};
 
 	private AuditStateManagement() {
 	}
 
 	@Override
+	public StateManagementLegacyIntegration getLegacyIntegration() {
+		return this;
+	}
+
+	@Override
 	public InsertCoordinator createInsertCoordinator(EntityPersister persister) {
 		return new InsertCoordinatorAudit( persister, persister.getFactory(),
-				StandardStateManagement.INSTANCE.createInsertCoordinator( persister ) );
+				standardLegacyIntegration.createInsertCoordinator( persister ) );
 	}
 
 	@Override
 	public UpdateCoordinator createUpdateCoordinator(EntityPersister persister) {
 		return new UpdateCoordinatorAudit( persister, persister.getFactory(),
-				StandardStateManagement.INSTANCE.createUpdateCoordinator( persister ) );
+				standardLegacyIntegration.createUpdateCoordinator( persister ) );
 	}
 
 	@Override
 	public UpdateCoordinator createMergeCoordinator(EntityPersister persister) {
 		return new MergeCoordinatorAudit( persister, persister.getFactory(),
-				StandardStateManagement.INSTANCE.createMergeCoordinator( persister ) );
+				standardLegacyIntegration.createMergeCoordinator( persister ) );
 	}
 
 	@Override
 	public DeleteCoordinator createDeleteCoordinator(EntityPersister persister) {
 		return new DeleteCoordinatorAudit( persister, persister.getFactory(),
-				StandardStateManagement.INSTANCE.createDeleteCoordinator( persister ) );
+				standardLegacyIntegration.createDeleteCoordinator( persister ) );
+	}
+
+	@Override
+	public StateManagementGraphIntegration getGraphIntegration() {
+		return graphIntegration;
 	}
 
 	@Override
@@ -100,7 +131,7 @@ public class AuditStateManagement implements StateManagement {
 		else {
 			return new InsertRowsCoordinatorAudit(
 					mutationTarget,
-					StandardStateManagement.INSTANCE.createInsertRowsCoordinator( persister ),
+					standardLegacyIntegration.createInsertRowsCoordinator( persister ),
 					persister.getIndexColumnIsSettable(),
 					persister.getElementColumnIsSettable(),
 					persister.getIndexIncrementer(),
@@ -113,14 +144,14 @@ public class AuditStateManagement implements StateManagement {
 	public UpdateRowsCoordinator createUpdateRowsCoordinator(CollectionPersister persister) {
 		// Collection audit rows are always ADD/DEL (never MOD).
 		// The semantic diff in InsertRowsCoordinatorAudit handles all audit writes.
-		return StandardStateManagement.INSTANCE.createUpdateRowsCoordinator( persister );
+		return standardLegacyIntegration.createUpdateRowsCoordinator( persister );
 	}
 
 	@Override
 	public DeleteRowsCoordinator createDeleteRowsCoordinator(CollectionPersister persister) {
 		// Collection audit rows are always ADD/DEL (never MOD).
 		// The semantic diff in InsertRowsCoordinatorAudit handles all audit writes.
-		return StandardStateManagement.INSTANCE.createDeleteRowsCoordinator( persister );
+		return standardLegacyIntegration.createDeleteRowsCoordinator( persister );
 	}
 
 	@Override
@@ -130,7 +161,7 @@ public class AuditStateManagement implements StateManagement {
 		}
 		return new RemoveCoordinatorAudit(
 				resolveMutationTarget( persister ),
-				StandardStateManagement.INSTANCE.createRemoveCoordinator( persister ),
+				standardLegacyIntegration.createRemoveCoordinator( persister ),
 				persister.getIndexColumnIsSettable(),
 				persister.getElementColumnIsSettable(),
 				persister.getIndexIncrementer(),

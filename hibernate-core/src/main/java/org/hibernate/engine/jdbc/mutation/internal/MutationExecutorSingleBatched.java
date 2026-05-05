@@ -6,6 +6,7 @@ package org.hibernate.engine.jdbc.mutation.internal;
 
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
+import org.hibernate.engine.jdbc.batch.spi.StaleStateMapper;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.PreparableMutationOperation;
@@ -45,7 +46,7 @@ public class MutationExecutorSingleBatched extends AbstractSingleMutationExecuto
 			batch = session.getJdbcCoordinator().getBatch(
 					batchKey,
 					batchSize,
-					() -> new PreparedStatementGroupSingleTable( getMutationOperation(), session )
+					getMutationOperation()
 			);
 			assert batch != null;
 		}
@@ -57,7 +58,7 @@ public class MutationExecutorSingleBatched extends AbstractSingleMutationExecuto
 	protected void performBatchedOperations(
 			ValuesAnalysis valuesAnalysis,
 			TableInclusionChecker inclusionChecker,
-			Batch.StaleStateMapper staleStateMapper) {
+			StaleStateMapper staleStateMapper) {
 		resolveBatch().addToBatch( getJdbcValueBindings(), inclusionChecker, staleStateMapper );
 	}
 

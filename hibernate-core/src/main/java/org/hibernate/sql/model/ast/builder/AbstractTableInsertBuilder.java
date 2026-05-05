@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
@@ -24,14 +25,13 @@ import org.hibernate.sql.model.ast.TableInsert;
 public abstract class AbstractTableInsertBuilder
 		extends AbstractTableMutationBuilder<TableInsert>
 		implements TableInsertBuilder {
-	private final List<ColumnValueBinding> keyBindingList = new ArrayList<>();
 	private final List<ColumnValueBinding> valueBindingList = new ArrayList<>();
 	private List<ColumnValueBinding> lobValueBindingList;
 
 	private String sqlComment;
 
 	public AbstractTableInsertBuilder(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			TableMapping table,
 			SessionFactoryImplementor sessionFactory) {
 		super( MutationType.INSERT, mutationTarget, table, sessionFactory );
@@ -39,7 +39,7 @@ public abstract class AbstractTableInsertBuilder
 	}
 
 	public AbstractTableInsertBuilder(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory) {
 		super( MutationType.INSERT, mutationTarget, tableReference, sessionFactory );
@@ -54,10 +54,6 @@ public abstract class AbstractTableInsertBuilder
 		this.sqlComment = sqlComment;
 	}
 
-	protected List<ColumnValueBinding> getKeyBindingList() {
-		return keyBindingList;
-	}
-
 	protected List<ColumnValueBinding> getValueBindingList() {
 		return valueBindingList;
 	}
@@ -67,10 +63,12 @@ public abstract class AbstractTableInsertBuilder
 	}
 
 	@Override
-	public void addValueColumn(String columnWriteFragment, SelectableMapping selectableMapping) {
-		final ColumnValueBinding valueBinding = createValueBinding( columnWriteFragment, selectableMapping );
-
-		if ( selectableMapping.isLob() && getJdbcServices().getDialect().forceLobAsLastValue() ) {
+	public void addColumnAssignment(ColumnValueBinding valueBinding) {
+		if ( hasColumnAssignment( valueBinding ) ) {
+			return;
+		}
+		if ( valueBinding.getColumnReference().getJdbcMapping().getJdbcType().isLob()
+				&& getJdbcServices().getDialect().forceLobAsLastValue() ) {
 			if ( lobValueBindingList == null ) {
 				lobValueBindingList = new ArrayList<>();
 			}
@@ -82,12 +80,31 @@ public abstract class AbstractTableInsertBuilder
 	}
 
 	@Override
-	public void addValueColumn(ColumnValueBinding valueBinding) {
-		valueBindingList.add( valueBinding );
+	public void addColumnAssignment(SelectableMapping columnMapping) {
+		addColumnAssignment( columnMapping, columnMapping.getWriteExpression() );
 	}
 
 	@Override
-	public void addKeyColumn(String columnWriteFragment, SelectableMapping selectableMapping) {
-		addColumn( columnWriteFragment, selectableMapping, keyBindingList );
+	public void addColumnAssignment(SelectableMapping columnMapping, String assignment) {
+		addColumnAssignment( createValueBinding( assignment, columnMapping ) );
+	}
+
+
+	@Override
+	public boolean hasAssignmentBindings() {
+		return !valueBindingList.isEmpty() || CollectionHelper.isNotEmpty( lobValueBindingList );
+	}
+
+	@Override
+	public boolean hasColumnAssignment(SelectableMapping selectableMapping) {
+		return valueBindingList.stream().anyMatch( binding -> binding.matches( selectableMapping ) )
+			|| lobValueBindingList != null
+					&& lobValueBindingList.stream().anyMatch( binding -> binding.matches( selectableMapping ) );
+	}
+
+	private boolean hasColumnAssignment(ColumnValueBinding valueBinding) {
+		return valueBindingList.stream().anyMatch( binding -> binding.equals( valueBinding ) )
+			|| lobValueBindingList != null
+					&& lobValueBindingList.stream().anyMatch( binding -> binding.equals( valueBinding ) );
 	}
 }

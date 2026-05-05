@@ -20,6 +20,7 @@ import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransactionAccess;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
+import org.hibernate.sql.model.PreparableMutationOperation;
 
 /**
  * Coordinates JDBC-related activities.
@@ -53,6 +54,16 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 			BatchKey key,
 			Integer batchSize,
 			Supplier<PreparedStatementGroup> statementGroupSupplier);
+
+	/**
+	 * Get a batch for a single preparable mutation operation.
+	 *
+	 * @implNote Any previous Batch is executed and released prior to returning
+	 */
+	Batch getBatch(
+			BatchKey key,
+			Integer batchSize,
+			PreparableMutationOperation mutationOperation);
 
 	/**
 	 * Execute the currently managed batch (if any)

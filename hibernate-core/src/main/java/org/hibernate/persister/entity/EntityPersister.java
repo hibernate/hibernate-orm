@@ -4,12 +4,6 @@
  */
 package org.hibernate.persister.entity;
 
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Consumer;
-
 import jakarta.persistence.Entity;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.HibernateException;
@@ -39,8 +33,6 @@ import org.hibernate.generator.Generator;
 import org.hibernate.generator.internal.VersionGeneration;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.persister.filter.FilterAliasGenerator;
-import org.hibernate.persister.filter.internal.TableGroupFilterAliasGenerator;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
@@ -55,6 +47,8 @@ import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
+import org.hibernate.persister.filter.FilterAliasGenerator;
+import org.hibernate.persister.filter.internal.TableGroupFilterAliasGenerator;
 import org.hibernate.persister.walking.spi.AttributeSource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -67,6 +61,12 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.VersionJavaType;
+
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 
 import static org.hibernate.internal.util.StringHelper.unqualifyEntityName;
 
@@ -144,6 +144,16 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 	 * are available across the entire model
 	 */
 	default void prepareLoaders() {
+	}
+
+	/**
+	 * Build {@link org.hibernate.action.queue.spi.meta.TableDescriptor}s early, before loaders.
+	 * <p/>
+	 * This is separated from {@link #prepareLoaders()} to ensure all table descriptors
+	 * are available across the entire model hierarchy before any persister tries to
+	 * access them (e.g., subclass persisters accessing root persister's table descriptors).
+	 */
+	default void buildTableDescriptorsEarly() {
 	}
 
 	/**
@@ -1585,4 +1595,10 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	@Internal
 	boolean managesColumns(String[] columnNames);
+
+
+	@Override
+	default String getRolePath() {
+		return getNavigableRole().getFullPath();
+	}
 }

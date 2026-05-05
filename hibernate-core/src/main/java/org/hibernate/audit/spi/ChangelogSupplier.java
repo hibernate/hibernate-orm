@@ -8,9 +8,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Session;
+import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.annotations.Changelog;
 import org.hibernate.audit.AuditException;
 import org.hibernate.audit.ChangesetListener;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
@@ -98,8 +100,28 @@ public class ChangelogSupplier<T> implements ChangesetIdentifierSupplier<T> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public T generateIdentifier(SharedSessionContract session) {
+		final var sessionImpl = (SharedSessionContractImplementor) session;
+		final var context = generateContext( session );
+		registerLegacyContext( sessionImpl, context );
+		return context.changesetId();
+	}
+
+	/**
+	 * Generate the complete changelog context for the current transaction.
+	 * <p>
+	 * This persists the configured {@link Changelog} entity, reads its
+	 * changeset identifier, and returns both values together with the child
+	 * session which owns deferred changelog collection work. Graph queue audit
+	 * execution captures this context directly and passes the identifier into
+	 * its bind plans, avoiding the legacy action-queue callback path.
+	 *
+	 * @param session the session requiring a changeset identifier
+	 *
+	 * @return the generated changeset context
+	 */
+	@SuppressWarnings("unchecked")
+	public ChangesetContext<T> generateContext(SharedSessionContract session) {
 		final var sessionImpl = (SharedSessionContractImplementor) session;
 		final EntityPersister persister = sessionImpl.getEntityPersister( changelogClass.getName(), null );
 		final Object changelog = persister.instantiate( null, sessionImpl );
@@ -107,8 +129,40 @@ public class ChangelogSupplier<T> implements ChangesetIdentifierSupplier<T> {
 			listener.newChangeset( changelog );
 		}
 		final var childSession = persistChangelog( session, changelog );
-		sessionImpl.getAuditWorkQueue().setChangesetContext( changelog, childSession );
-		return (T) readChangesetId( changelog, persister, sessionImpl );
+		return new ChangesetContext<>(
+				(T) readChangesetId( changelog, persister, sessionImpl ),
+				changelog,
+				childSession
+		);
+	}
+
+	/**
+	 * Register the generated context with the legacy audit infrastructure.
+	 * <p>
+	 * This is intentionally limited to the legacy queue. Graph queue audit
+	 * execution obtains the same context from the session and does not rely on
+	 * {@link org.hibernate.action.queue.spi.ActionQueue#setAuditChangesetContext(Object, Session)}.
+	 *
+	 * @param sessionImpl the session which owns the transaction
+	 * @param context the generated changeset context
+	 */
+	public void registerLegacyContext(
+			SharedSessionContractImplementor sessionImpl,
+			ChangesetContext<?> context) {
+		if ( sessionImpl instanceof SessionImplementor sessionImplementor ) {
+			if ( sessionImpl.getFactory().getActionQueueFactory().getConfiguredQueueType() == QueueType.LEGACY ) {
+				sessionImplementor.getActionQueue().setAuditChangesetContext(
+						context.changelog(),
+						context.changesetSession()
+				);
+			}
+		}
+		else {
+			sessionImpl.getAuditWorkQueue().setChangesetContext(
+					context.changelog(),
+					context.changesetSession()
+			);
+		}
 	}
 
 	/**
@@ -167,5 +221,20 @@ public class ChangelogSupplier<T> implements ChangesetIdentifierSupplier<T> {
 		return service != null && service.getIdentifierSupplier() instanceof ChangelogSupplier<?> supplier
 				? supplier
 				: null;
+	}
+
+	/**
+	 * Complete transaction changeset context produced by a {@link ChangelogSupplier}.
+	 *
+	 * @param changesetId the identifier stored in audit rows
+	 * @param changelog the persisted changelog entity
+	 * @param changesetSession the child session used for deferred changelog collection work
+	 *
+	 * @param <T> the changeset identifier type
+	 */
+	public record ChangesetContext<T>(
+			T changesetId,
+			Object changelog,
+			Session changesetSession) {
 	}
 }

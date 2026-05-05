@@ -6,12 +6,15 @@ package org.hibernate.persister.state.internal;
 
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
+import org.hibernate.action.queue.internal.decompose.entity.SoftDeleteEntityMutationPlanContributor;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.DeleteCoordinatorSoft;
+import org.hibernate.persister.state.spi.StateManagementGraphIntegration;
 
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
 
@@ -23,8 +26,28 @@ import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDele
 public final class SoftDeleteStateManagement extends AbstractStateManagement {
 	public static final SoftDeleteStateManagement INSTANCE = new SoftDeleteStateManagement();
 
+	private final StateManagementGraphIntegration graphIntegration = new StateManagementGraphIntegration() {
+		@Override
+		public EntityMutationPlanContributor createEntityMutationPlanContributor(EntityPersister persister) {
+			return new SoftDeleteEntityMutationPlanContributor( persister, persister.getFactory() );
+		}
+	};
+
 	private SoftDeleteStateManagement() {
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Graph ActionQueue integration
+
+	@Override
+	public StateManagementGraphIntegration getGraphIntegration() {
+		return graphIntegration;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Legacy ActionQueue integration
 
 	@Override
 	public DeleteCoordinator createDeleteCoordinator(EntityPersister persister) {

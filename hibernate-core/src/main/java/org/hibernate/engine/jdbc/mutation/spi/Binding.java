@@ -15,7 +15,7 @@ import org.hibernate.type.descriptor.ValueBinder;
  */
 public class Binding {
 	private final String columnName;
-	private final Object value;
+	private Object value;
 	private final JdbcValueDescriptor valueDescriptor;
 
 	public Binding(String columnName, Object value, JdbcValueDescriptor valueDescriptor) {
@@ -36,6 +36,10 @@ public class Binding {
 	 */
 	public Object getValue() {
 		return value;
+	}
+
+	public void setValue(Object newValue) {
+		this.value = newValue;
 	}
 
 	public JdbcValueDescriptor getValueDescriptor() {

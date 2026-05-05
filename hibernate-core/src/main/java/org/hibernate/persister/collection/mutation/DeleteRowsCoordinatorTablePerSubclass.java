@@ -4,6 +4,7 @@
  */
 package org.hibernate.persister.collection.mutation;
 
+import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
@@ -23,7 +24,7 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
  * OneToMany delete coordinator if the element is a {@link org.hibernate.persister.entity.UnionSubclassEntityPersister}.
  */
 public class DeleteRowsCoordinatorTablePerSubclass implements DeleteRowsCoordinator {
-	private final CollectionMutationTarget mutationTarget;
+	private final OneToManyPersister mutationTarget;
 	private final RowMutationOperations rowMutationOperations;
 	private final boolean deleteByIndex;
 

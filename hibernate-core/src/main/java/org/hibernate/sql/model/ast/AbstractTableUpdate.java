@@ -28,7 +28,7 @@ public abstract class AbstractTableUpdate<O extends MutationOperation>
 
 	public AbstractTableUpdate(
 			MutatingTableReference mutatingTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String sqlComment,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,
@@ -47,7 +47,7 @@ public abstract class AbstractTableUpdate<O extends MutationOperation>
 
 	public <T> AbstractTableUpdate(
 			MutatingTableReference tableReference,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String sqlComment,
 			List<ColumnValueBinding> valueBindings,
 			List<ColumnValueBinding> keyRestrictionBindings,

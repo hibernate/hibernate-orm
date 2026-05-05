@@ -28,7 +28,7 @@ public interface TableMapping extends TableDetails {
 	/**
 	 * The position of the table relative to others for the {@link MutationTarget}
 	 */
-	int getRelativePosition();
+	int relativePosition();
 
 	/**
 	 * Whether the table is mapped as optional

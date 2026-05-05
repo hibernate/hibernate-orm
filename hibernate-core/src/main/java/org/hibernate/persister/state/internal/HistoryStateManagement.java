@@ -6,6 +6,10 @@ package org.hibernate.persister.state.internal;
 
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor;
+import org.hibernate.action.queue.internal.decompose.collection.HistoryCollectionMutationPlanContributor;
+import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
+import org.hibernate.action.queue.internal.decompose.entity.HistoryEntityMutationPlanContributor;
 import org.hibernate.metamodel.mapping.AuxiliaryMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
@@ -33,6 +37,8 @@ import org.hibernate.persister.entity.mutation.MergeCoordinatorHistory;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorHistory;
 import org.hibernate.persister.state.spi.StateManagement;
+import org.hibernate.persister.state.spi.StateManagementGraphIntegration;
+import org.hibernate.persister.state.spi.StateManagementLegacyIntegration;
 
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
 import static org.hibernate.persister.state.internal.AbstractStateManagement.isInsertAllowed;
@@ -48,34 +54,67 @@ import static org.hibernate.persister.state.internal.AbstractStateManagement.res
  *
  * @since 7.4
  */
-public final class HistoryStateManagement implements StateManagement {
+public final class HistoryStateManagement implements StateManagement, StateManagementLegacyIntegration {
 	public static final HistoryStateManagement INSTANCE = new HistoryStateManagement();
+
+	private final StateManagementLegacyIntegration standardLegacyIntegration =
+			StandardStateManagement.INSTANCE.getLegacyIntegration();
+
+	private final StateManagementGraphIntegration graphIntegration = new StateManagementGraphIntegration() {
+		@Override
+		public EntityMutationPlanContributor createEntityMutationPlanContributor(EntityPersister persister) {
+			return new HistoryEntityMutationPlanContributor( persister, persister.getFactory() );
+		}
+
+		@Override
+		public CollectionMutationPlanContributor createCollectionMutationPlanContributor(CollectionPersister persister) {
+			return new HistoryCollectionMutationPlanContributor();
+		}
+	};
 
 	private HistoryStateManagement() {
 	}
 
 	@Override
+	public StateManagementLegacyIntegration getLegacyIntegration() {
+		return this;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Graph ActionQueue integration
+
+	@Override
+	public StateManagementGraphIntegration getGraphIntegration() {
+		return graphIntegration;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Legacy ActionQueue integration
+
+	@Override
 	public UpdateCoordinator createMergeCoordinator(EntityPersister persister) {
 		return new MergeCoordinatorHistory( persister, persister.getFactory(),
-				StandardStateManagement.INSTANCE.createMergeCoordinator( persister ) );
+				standardLegacyIntegration.createMergeCoordinator( persister ) );
 	}
 
 	@Override
 	public InsertCoordinator createInsertCoordinator(EntityPersister persister) {
 		return new InsertCoordinatorHistory( persister, persister.getFactory(),
-				StandardStateManagement.INSTANCE.createInsertCoordinator( persister ) );
+				standardLegacyIntegration.createInsertCoordinator( persister ) );
 	}
 
 	@Override
 	public UpdateCoordinator createUpdateCoordinator(EntityPersister persister) {
 		return new UpdateCoordinatorHistory( persister, persister.getFactory(),
-				StandardStateManagement.INSTANCE.createUpdateCoordinator( persister ) );
+				standardLegacyIntegration.createUpdateCoordinator( persister ) );
 	}
 
 	@Override
 	public DeleteCoordinator createDeleteCoordinator(EntityPersister persister) {
 		return new DeleteCoordinatorHistory( persister, persister.getFactory(),
-				StandardStateManagement.INSTANCE.createDeleteCoordinator( persister ) );
+				standardLegacyIntegration.createDeleteCoordinator( persister ) );
 	}
 
 	@Override
@@ -91,7 +130,7 @@ public final class HistoryStateManagement implements StateManagement {
 			return new InsertRowsCoordinatorHistory(
 					mutationTarget,
 					persister.getRowMutationOperations(),
-					StandardStateManagement.INSTANCE.createInsertRowsCoordinator( persister ),
+					standardLegacyIntegration.createInsertRowsCoordinator( persister ),
 					persister.getIndexColumnIsSettable(),
 					persister.getElementColumnIsSettable(),
 					persister.getIndexIncrementer(),

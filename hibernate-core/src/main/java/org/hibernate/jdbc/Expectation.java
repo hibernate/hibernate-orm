@@ -164,6 +164,8 @@ public interface Expectation {
 	 * @since 6.5
 	 */
 	class RowCount implements Expectation {
+		public static final RowCount INSTANCE = new RowCount();
+
 		@Override
 		public final void verifyOutcome(int rowCount, PreparedStatement statement, int batchPosition, String sql) {
 			if ( batchPosition < 0 ) {

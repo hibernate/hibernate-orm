@@ -50,7 +50,7 @@ public class ModelMutationHelper {
 			PreparedStatementDetails statementDetails,
 			int affectedRowCount,
 			int batchPosition,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			Object id,
 			SessionFactoryImplementor sessionFactory) {
 		try {
@@ -91,7 +91,7 @@ public class ModelMutationHelper {
 
 	public static PreparedStatementGroup toPreparedStatementGroup(
 			MutationType mutationType,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			GeneratedValuesMutationDelegate delegate,
 			List<PreparableMutationOperation> mutations,
 			SharedSessionContractImplementor session) {

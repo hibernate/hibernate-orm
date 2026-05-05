@@ -261,6 +261,17 @@ public interface SharedSessionContractImplementor
 	Object getCurrentChangesetIdentifier();
 
 	/**
+	 * Obtain the full changeset context associated with
+	 * {@link #getCurrentChangesetIdentifier()}, if the configured changeset
+	 * supplier exposes one.
+	 * <p>
+	 * This is used by graph-queue audit execution to capture changelog state
+	 * before materializing audit bind plans. Suppliers which only produce a
+	 * scalar changeset identifier return {@code null}.
+	 */
+	@Nullable Object getCurrentChangesetContext();
+
+	/**
 	 * Does this session have an active Hibernate transaction, or is it
 	 * associated with a JTA transaction currently in progress?
 	 */

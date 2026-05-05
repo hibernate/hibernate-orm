@@ -11,6 +11,7 @@ plugins {
     alias(libs.plugins.versionInjection)
     alias(libs.plugins.hibernateBuildAntlr)
     alias(libs.plugins.hibernateXjc)
+    id "me.champeau.jmh" version "0.7.2"
 }
 
 description = 'Hibernate\'s core ORM functionality'
@@ -21,6 +22,9 @@ configurations {
     }
 }
 
+tasks.named("forbiddenApisJmh") {
+    enabled = false
+}
 
 dependencies {
     api libs.jakarta.jpa
@@ -90,7 +94,10 @@ dependencies {
     // errors about mismatched versions if I do not include the runtime
     // dependency here.
     antlr libs.antlr
-    antlr libs.antlrRuntime
+	antlr libs.antlrRuntime
+
+	// JMH benchmarks
+	jmh libs.jdbc.h2
 }
 
 jar {
@@ -111,6 +118,29 @@ sourceSets {
             srcDir 'src/test/resources'
             srcDir 'src/test/bundles'
         }
+    }
+}
+
+jmh {
+    jmhVersion = '1.37'
+    warmupIterations = 5
+    iterations = 10
+    fork = 1
+    zip64 = true
+
+    // Force JMH to use minimal logging configuration from src/jmh/resources
+    // Without this, it picks up src/test/resources/log4j2.properties with TRACE logging
+    // which generates millions of log lines and severely degrades benchmark performance
+    jvmArgs = ['-Dlog4j.configurationFile=file:src/jmh/resources/log4j2.properties']
+
+    // Can be overridden via -Pjmh.include="pattern"
+    if (project.hasProperty('jmh.include')) {
+        includes = [project.property('jmh.include')]
+    }
+
+    // JFR profiler support - can be enabled via -Pjmh.profiler=true
+    if (project.hasProperty('jmh.profiler')) {
+        profilers = ['jfr']
     }
 }
 

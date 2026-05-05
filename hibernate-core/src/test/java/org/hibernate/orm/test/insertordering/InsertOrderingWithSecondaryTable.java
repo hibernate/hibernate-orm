@@ -69,13 +69,23 @@ public class InsertOrderingWithSecondaryTable extends BaseInsertOrderingTest {
 			clearBatches();
 		} );
 
-		verifyContainsBatches(
-				new Batch( "insert into TOP_LEVEL (name,id) values (?,?)" ),
-				new Batch( "insert into SHAPE (name,SHAPE_TYPE,SHAPE_ID) values (?," + literal( "POLYGON" ) + ",?)" ),
-				new Batch( "insert into SHAPE (name,SHAPE_TYPE,SHAPE_ID) values (?," + literal( "CIRCLE" ) + ",?)" ),
-				new Batch( "insert into SHAPE_CIRCLE (centre,SHAPE_ID) values (?,?)" ),
-				new Batch( "insert into GEOGRAPHIC_AREA (name,SHAPE_ID,TOP_LEVEL_ID,id) values (?,?,?,?)", 2 )
-		);
+		if ( isGraphQueue() ) {
+			verifyContainsBatches(
+					new Batch( "insert into TOP_LEVEL (name,id) values (?,?)" ),
+					new Batch( "insert into SHAPE (name,SHAPE_TYPE,SHAPE_ID) values (?,?,?)", 2 ),
+					new Batch( "insert into SHAPE_CIRCLE (centre,SHAPE_ID) values (?,?)" ),
+					new Batch( "insert into GEOGRAPHIC_AREA (name,SHAPE_ID,TOP_LEVEL_ID,id) values (?,?,?,?)", 2 )
+			);
+		}
+		else {
+			verifyContainsBatches(
+					new Batch( "insert into TOP_LEVEL (name,id) values (?,?)" ),
+					new Batch( "insert into SHAPE (name,SHAPE_TYPE,SHAPE_ID) values (?," + literal( "POLYGON" ) + ",?)" ),
+					new Batch( "insert into SHAPE (name,SHAPE_TYPE,SHAPE_ID) values (?," + literal( "CIRCLE" ) + ",?)" ),
+					new Batch( "insert into SHAPE_CIRCLE (centre,SHAPE_ID) values (?,?)" ),
+					new Batch( "insert into GEOGRAPHIC_AREA (name,SHAPE_ID,TOP_LEVEL_ID,id) values (?,?,?,?)", 2 )
+			);
+		}
 	}
 
 	@Entity(name = "ShapeEntity")

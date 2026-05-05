@@ -27,14 +27,14 @@ import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 public abstract class AbstractTableMutation<O extends MutationOperation>
 		implements TableMutation<O> {
 	private final MutatingTableReference mutatingTable;
-	private final MutationTarget<?> mutationTarget;
+	private final MutationTarget<?,?> mutationTarget;
 	private final String sqlComment;
 
 	private final List<ColumnValueParameter> parameters;
 
 	public AbstractTableMutation(
 			MutatingTableReference mutatingTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String sqlComment,
 			List<ColumnValueParameter> parameters) {
 		this.mutatingTable = mutatingTable;
@@ -60,7 +60,7 @@ public abstract class AbstractTableMutation<O extends MutationOperation>
 		return mutatingTable;
 	}
 
-	public MutationTarget<?> getMutationTarget() {
+	public MutationTarget<?,?> getMutationTarget() {
 		return mutationTarget;
 	}
 

@@ -83,7 +83,7 @@ public class InsertOrderingWithJoinedTableInheritance extends BaseInsertOrdering
 		// 1 for first 10 Address (4)
 		// 0 for second 10 Address (reused)
 		// 0 for final 4 Address (reused)
-		verifyPreparedStatementCount( 4 );
+		verifyPreparedStatementCount( isGraphQueue() ? 3 : 4 );
 
 		sessionFactoryScope().inTransaction( (session) -> {
 			final Long specialPersonCount = session

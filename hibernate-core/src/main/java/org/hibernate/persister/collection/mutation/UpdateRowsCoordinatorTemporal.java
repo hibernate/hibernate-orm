@@ -10,8 +10,10 @@ import java.util.List;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
+import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 
@@ -30,17 +32,21 @@ public class UpdateRowsCoordinatorTemporal extends AbstractUpdateRowsCoordinator
 	private final BasicBatchKey deleteBatchKey;
 	private final BasicBatchKey insertBatchKey;
 
+	protected final MutationExecutorService mutationExecutorService;
+
 	private MutationOperationGroup deleteOperationGroup;
 	private MutationOperationGroup insertOperationGroup;
 
 	public UpdateRowsCoordinatorTemporal(
-			CollectionMutationTarget mutationTarget,
+			AbstractCollectionPersister mutationTarget,
 			RowMutationOperations rowMutationOperations,
 			SessionFactoryImplementor sessionFactory) {
 		super( mutationTarget, sessionFactory );
 		this.rowMutationOperations = rowMutationOperations;
 		this.deleteBatchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#DELETE" );
 		this.insertBatchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#INSERT" );
+
+		mutationExecutorService = sessionFactory.getServiceRegistry().getService( MutationExecutorService.class );
 	}
 
 	@Override

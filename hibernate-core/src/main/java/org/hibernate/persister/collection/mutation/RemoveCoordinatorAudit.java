@@ -6,6 +6,8 @@ package org.hibernate.persister.collection.mutation;
 
 import java.util.function.UnaryOperator;
 
+import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
+import org.hibernate.audit.ModificationType;
 import org.hibernate.audit.spi.CollectionAuditWriter;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
@@ -13,7 +15,6 @@ import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.audit.ModificationType;
 
 /**
  * RemoveCoordinator for audited collections.

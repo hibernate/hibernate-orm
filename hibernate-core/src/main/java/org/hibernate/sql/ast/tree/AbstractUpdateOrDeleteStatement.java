@@ -48,7 +48,7 @@ public abstract class AbstractUpdateOrDeleteStatement extends AbstractMutationSt
 	public AbstractUpdateOrDeleteStatement(
 			CteContainer cteContainer,
 			NamedTableReference targetTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			FromClause fromClause,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {

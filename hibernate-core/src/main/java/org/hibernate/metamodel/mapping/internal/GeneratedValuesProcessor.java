@@ -18,6 +18,7 @@ import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.loader.ast.internal.NoCallbackExecutionContext;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
@@ -94,6 +95,9 @@ public class GeneratedValuesProcessor {
 	}
 
 	private boolean needsSubsequentSelect(EventType timing, List<AttributeMapping> generatedAttributes) {
+		if ( hasFormula( generatedAttributes ) ) {
+			return true;
+		}
 		if ( timing == EventType.INSERT ) {
 			return entityDescriptor.getInsertDelegate() == null
 				|| !entityDescriptor.getInsertDelegate().supportsArbitraryValues()
@@ -104,6 +108,16 @@ public class GeneratedValuesProcessor {
 		else {
 			return entityDescriptor.getUpdateDelegate() == null;
 		}
+	}
+
+	private static boolean hasFormula(List<AttributeMapping> generatedAttributes) {
+		for ( AttributeMapping generatedAttribute : generatedAttributes ) {
+			if ( generatedAttribute instanceof SelectableMapping selectableMapping
+					&& selectableMapping.isFormula() ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private int numberOfGeneratedNonIdentifierProperties(EventType timing) {

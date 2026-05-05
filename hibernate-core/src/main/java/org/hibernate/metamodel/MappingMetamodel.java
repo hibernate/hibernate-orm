@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
+import org.hibernate.action.queue.internal.constraint.ConstraintModel;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -35,6 +36,11 @@ public interface MappingMetamodel extends Metamodel {
 	 * The {@link TypeConfiguration} this metamodel is associated with
 	 */
 	TypeConfiguration getTypeConfiguration();
+
+	/**
+	 * Access to constraint details from the domain model.
+	 */
+	ConstraintModel getConstraintModel();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Entity descriptors

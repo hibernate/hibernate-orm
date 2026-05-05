@@ -7,6 +7,14 @@ package org.hibernate.persister.collection;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.action.internal.CollectionRecreateAction;
+import org.hibernate.action.internal.CollectionRemoveAction;
+import org.hibernate.action.internal.CollectionUpdateAction;
+import org.hibernate.action.internal.QueuedOperationCollectionAction;
+import org.hibernate.action.queue.spi.decompose.DecompositionContext;
+import org.hibernate.action.queue.internal.decompose.collection.BasicCollectionDecomposer;
+import org.hibernate.action.queue.spi.decompose.collection.CollectionDecomposer;
+import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -14,9 +22,8 @@ import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.filter.FilterAliasGenerator;
-import org.hibernate.persister.filter.internal.StaticFilterAliasGenerator;
 import org.hibernate.mapping.Collection;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.InsertRowsCoordinator;
@@ -24,6 +31,9 @@ import org.hibernate.persister.collection.mutation.OperationProducer;
 import org.hibernate.persister.collection.mutation.RemoveCoordinator;
 import org.hibernate.persister.collection.mutation.RowMutationOperations;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
+import org.hibernate.persister.filter.FilterAliasGenerator;
+import org.hibernate.persister.filter.internal.StaticFilterAliasGenerator;
+import org.hibernate.persister.state.spi.StateManagement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
@@ -39,6 +49,7 @@ import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.type.EntityType;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import static org.hibernate.temporal.TemporalTableStrategy.NATIVE;
 import static org.hibernate.temporal.TemporalTableStrategy.SINGLE_TABLE;
@@ -59,6 +70,10 @@ import static org.hibernate.persister.collection.mutation.RowMutationOperations.
 @Internal
 public class BasicCollectionPersister extends AbstractCollectionPersister {
 	private final RowMutationOperations rowMutationOperations;
+	private final StateManagement stateManagement;
+
+	private CollectionDecomposer decomposer;
+
 	private final InsertRowsCoordinator insertRowsCoordinator;
 	private final UpdateRowsCoordinator updateCoordinator;
 	private final DeleteRowsCoordinator deleteRowsCoordinator;
@@ -70,20 +85,47 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			RuntimeModelCreationContext creationContext)
 					throws MappingException, CacheException {
 		super( collectionBinding, cacheAccessStrategy, creationContext );
+
 		this.rowMutationOperations = buildRowMutationOperations();
-		final var stateManagement = collectionBinding.getStateManagement();
-		this.insertRowsCoordinator = stateManagement.createInsertRowsCoordinator( this );
-		this.updateCoordinator = stateManagement.createUpdateRowsCoordinator( this );
-		this.deleteRowsCoordinator = stateManagement.createDeleteRowsCoordinator( this );
-		this.removeCoordinator = stateManagement.createRemoveCoordinator( this );
+
+		stateManagement = collectionBinding.getStateManagement();
+		final var legacyIntegration = stateManagement.getLegacyIntegration();
+		this.insertRowsCoordinator = legacyIntegration.createInsertRowsCoordinator( this );
+		this.updateCoordinator = legacyIntegration.createUpdateRowsCoordinator( this );
+		this.deleteRowsCoordinator = legacyIntegration.createDeleteRowsCoordinator( this );
+		this.removeCoordinator = legacyIntegration.createRemoveCoordinator( this );
 	}
 
 	@Override
+	public void prepareMappingModel(MappingModelCreationProcess creationProcess) {
+		super.prepareMappingModel( creationProcess );
+	}
+
+	@Override
+	public void postInstantiate() throws MappingException {
+		super.postInstantiate();
+
+		// Build JDBC operations after collectionTableDescriptor is initialized
+		decomposer = buildCollectionDecomposer();
+	}
+
+	protected CollectionDecomposer buildCollectionDecomposer() {
+		return new BasicCollectionDecomposer(
+				this,
+				getFactory(),
+				stateManagement.getGraphIntegration().createCollectionMutationPlanContributor( this )
+		);
+	}
+
 	public RowMutationOperations getRowMutationOperations() {
 		return rowMutationOperations;
 	}
 
-	protected InsertRowsCoordinator getCreateEntryCoordinator() {
+	public InsertRowsCoordinator getCreateEntryCoordinator() {
+		return insertRowsCoordinator;
+	}
+
+	public InsertRowsCoordinator getInsertRowsCoordinator() {
 		return insertRowsCoordinator;
 	}
 	@Override
@@ -97,7 +139,11 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		getCreateEntryCoordinator().insertRows( collection, id, collection::includeInInsert, session );
 	}
 
-	protected UpdateRowsCoordinator getUpdateEntryCoordinator() {
+	public UpdateRowsCoordinator getUpdateEntryCoordinator() {
+		return updateCoordinator;
+	}
+
+	public UpdateRowsCoordinator getUpdateRowsCoordinator() {
 		return updateCoordinator;
 	}
 
@@ -106,7 +152,11 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		getUpdateEntryCoordinator().updateRows( id, collection, session );
 	}
 
-	protected DeleteRowsCoordinator getRemoveEntryCoordinator() {
+	public DeleteRowsCoordinator getRemoveEntryCoordinator() {
+		return deleteRowsCoordinator;
+	}
+
+	public DeleteRowsCoordinator getDeleteRowsCoordinator() {
 		return deleteRowsCoordinator;
 	}
 
@@ -116,7 +166,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	}
 
 	@Override
-	protected RemoveCoordinator getRemoveCoordinator() {
+	public RemoveCoordinator getRemoveCoordinator() {
 		return removeCoordinator;
 	}
 
@@ -125,7 +175,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		// nothing to do
 	}
 
-	private boolean isPerformingUpdates() {
+	public boolean isPerformingUpdates() {
 		return !isInverse()
 			&& getCollectionSemantics().getCollectionClassification().isRowUpdatePossible()
 			&& isAnyTrue( elementColumnIsSettable );
@@ -250,8 +300,6 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 
 
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Insert handling
 
 	private JdbcMutationOperation generateInsertRowOperation(MutatingTableReference tableReference) {
 		return getIdentifierTableMapping().getInsertDetails().getCustomSql() != null
@@ -477,20 +525,14 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		if ( identifierDescriptor != null ) {
 			identifierDescriptor.decompose(
 					collection.getIdentifier( entry, entryPosition ),
-					0,
-					jdbcValueBindings,
-					null,
-					DEFAULT_RESTRICTOR,
+					jdbcValueBindings::bindRestriction,
 					session
 			);
 		}
 		else {
 			attributeMapping.getKeyDescriptor().getKeyPart().decompose(
 					key,
-					0,
-					jdbcValueBindings,
-					null,
-					DEFAULT_RESTRICTOR,
+					jdbcValueBindings::bindRestriction,
 					session
 			);
 
@@ -748,4 +790,44 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	public FilterAliasGenerator getFilterAliasGenerator(TableGroup tableGroup) {
 		return getFilterAliasGenerator( tableGroup.getPrimaryTableReference().getIdentificationVariable() );
 	}
+
+	@Override
+	public void decompose(
+			CollectionRecreateAction action,
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			DecompositionContext decompositionContext,
+			Consumer<FlushOperation> operationConsumer) {
+		decomposer.decomposeRecreate( action, ordinalBase, session, decompositionContext, operationConsumer );
+	}
+
+	@Override
+	public void decompose(
+			CollectionUpdateAction action,
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			DecompositionContext decompositionContext,
+			Consumer<FlushOperation> operationConsumer) {
+		decomposer.decomposeUpdate( action, ordinalBase, session, decompositionContext, operationConsumer );
+	}
+
+	@Override
+	public void decompose(
+			CollectionRemoveAction action,
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			DecompositionContext decompositionContext,
+			Consumer<FlushOperation> operationConsumer) {
+		decomposer.decomposeRemove( action, ordinalBase, session, decompositionContext, operationConsumer );
+	}
+
+	@Override
+	public void decompose(
+			QueuedOperationCollectionAction action,
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			Consumer<FlushOperation> operationConsumer) {
+		decomposer.decomposeQueuedOperations( action, ordinalBase, session, operationConsumer );
+	}
+
 }

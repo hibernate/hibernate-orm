@@ -216,6 +216,7 @@ public class TenantIdTest implements SessionFactoryProducer {
 		assertNotNull( record.state.updated );
 
 		clock.tick();
+		clock.tick();
 
 		scope.inTransaction( s -> {
 			Record r = s.find( Record.class, record.id );

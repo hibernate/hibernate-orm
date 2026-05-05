@@ -158,11 +158,11 @@ public class InsertCoordinatorHistory extends AbstractMutationCoordinator implem
 
 		final var mutatingTable = insertBuilder.getMutatingTable();
 		final var startingColumn = new ColumnReference( mutatingTable, temporalMapping.getStartingColumnMapping() );
-		insertBuilder.addValueColumn( temporalMapping.createStartingValueBinding( startingColumn ) );
+		insertBuilder.addColumnAssignment( temporalMapping.createStartingValueBinding( startingColumn ) );
 		final var endingColumn = new ColumnReference( mutatingTable, temporalMapping.getEndingColumnMapping() );
-		insertBuilder.addValueColumn( temporalMapping.createNullEndingValueBinding( endingColumn ) );
+		insertBuilder.addColumnAssignment( temporalMapping.createNullEndingValueBinding( endingColumn ) );
 
-		identifierTableMapping.getKeyMapping().forEachKeyColumn( insertBuilder::addKeyColumn );
+		identifierTableMapping.getKeyMapping().forEachKeyColumn( insertBuilder::addColumnAssignment );
 	}
 
 	private void addSqlGeneratedValue(

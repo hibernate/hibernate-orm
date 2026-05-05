@@ -11,11 +11,12 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.persister.collection.CollectionPersister;
 
 /**
- * If a collection is extra lazy and has queued ops, we still need to
- * process them.
+ * If a collection has queued ops, we still need to process them.
  * <p>
  * For example, {@link org.hibernate.persister.collection.OneToManyPersister}
  * needs to insert indexes for lists.  See HHH-8083.
+ *
+ * @see CollectionPersister#decompose(QueuedOperationCollectionAction, int, org.hibernate.engine.spi.SharedSessionContractImplementor).
  *
  * @author Brett Meyer
  */
@@ -42,7 +43,10 @@ public final class QueuedOperationCollectionAction extends CollectionAction {
 		// CollectionAction involving the same collection.
 
 		getPersister().processQueuedOps( getCollection(), getKey(), getSession() );
+		afterQueuedOperationsProcessed();
+	}
 
+	public void afterQueuedOperationsProcessed() {
 		// TODO: It would be nice if this could be done safely by CollectionPersister#processQueuedOps;
 		//       Can't change the SPI to do this though.
 		final var collection = (AbstractPersistentCollection<?>) getCollection();

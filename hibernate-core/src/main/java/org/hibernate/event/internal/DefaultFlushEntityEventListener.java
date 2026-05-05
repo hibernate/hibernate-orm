@@ -134,7 +134,9 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 
 		boolean substitute = wrapCollections( event, values );
 
-		if ( isUpdateNecessary( event, mightBeDirty ) ) {
+		// Entities with Status.SAVING are being inserted and haven't been made managed yet
+		// because they have unresolved transient dependencies. They shouldn't have UPDATEs scheduled.
+		if ( entry.getStatus() != Status.SAVING && isUpdateNecessary( event, mightBeDirty ) ) {
 			substitute = scheduleUpdate( event ) || substitute;
 		}
 

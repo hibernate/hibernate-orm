@@ -4,10 +4,6 @@
  */
 package org.hibernate.persister.entity.mutation;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
@@ -25,10 +21,14 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.ast.builder.ColumnValuesTableMutationBuilder;
+import org.hibernate.sql.model.ast.builder.AssigningTableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
 import org.hibernate.sql.model.internal.MutationGroupSingle;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
 
@@ -366,15 +366,15 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 
 		final var mutatingTable = insertBuilder.getMutatingTable();
 		final var startingColumn = new ColumnReference( mutatingTable, temporalMapping.getStartingColumnMapping() );
-		insertBuilder.addValueColumn( temporalMapping.createStartingValueBinding( startingColumn ) );
+		insertBuilder.addColumnAssignment( temporalMapping.createStartingValueBinding( startingColumn ) );
 		final var endingColumn = new ColumnReference( mutatingTable, temporalMapping.getEndingColumnMapping() );
-		insertBuilder.addValueColumn( temporalMapping.createNullEndingValueBinding( endingColumn ) );
+		insertBuilder.addColumnAssignment( temporalMapping.createNullEndingValueBinding( endingColumn ) );
 
-		identifierTableMapping.getKeyMapping().forEachKeyColumn( insertBuilder::addKeyColumn );
+		identifierTableMapping.getKeyMapping().forEachKeyColumn( insertBuilder::addColumnAssignment );
 	}
 
 	private void addSqlGeneratedValue(
-			ColumnValuesTableMutationBuilder<?> updateBuilder,
+			AssigningTableMutationBuilder<?> updateBuilder,
 			AttributeMapping attributeMapping,
 			OnExecutionGenerator generator) {
 		final boolean writePropertyValue = generator.writePropertyValue();
@@ -383,7 +383,7 @@ public class UpdateCoordinatorHistory extends AbstractTemporalUpdateCoordinator 
 						? null
 						: generator.getReferencedColumnValues( factory.getJdbcServices().getDialect() );
 		attributeMapping.forEachSelectable( (j, mapping) ->
-				updateBuilder.addValueColumn( writePropertyValue ? "?" : columnValues[j], mapping ) );
+				updateBuilder.addColumnAssignment( mapping, writePropertyValue ? "?" : columnValues[j] ) );
 	}
 
 	private void bindHistoryInsertValues(

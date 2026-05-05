@@ -56,7 +56,7 @@ public class BrokenCollectionEventTest {
 	@Test
 	@FailureExpected(jiraKey = "unknown")
 	public void testUpdateDetachedParentNoChildrenToNull(SessionFactoryScope scope) {
-		CollectionListeners listeners = new CollectionListeners( scope.getSessionFactory() );
+		EventSink listeners = new EventSink( scope.getSessionFactory() );
 		ParentWithCollection parent = createParentWithNoChildren( scope, "parent" );
 		listeners.clear();
 		assertEquals( 0, parent.getChildren().size() );
@@ -78,7 +78,7 @@ public class BrokenCollectionEventTest {
 	@Test
 	@FailureExpected(jiraKey = "unknown")
 	public void testSaveParentNullChildren(SessionFactoryScope scope) {
-		CollectionListeners listeners = new CollectionListeners( scope.getSessionFactory() );
+		EventSink listeners = new EventSink( scope.getSessionFactory() );
 		ParentWithCollection parent = createParentWithNullChildren( scope, "parent" );
 		assertNull( parent.getChildren() );
 		int index = 0;
@@ -97,7 +97,7 @@ public class BrokenCollectionEventTest {
 	@Test
 	@FailureExpected(jiraKey = "unknown")
 	public void testUpdateParentNoChildrenToNull(SessionFactoryScope scope) {
-		CollectionListeners listeners = new CollectionListeners( scope.getSessionFactory() );
+		EventSink listeners = new EventSink( scope.getSessionFactory() );
 		ParentWithCollection parent = createParentWithNoChildren( scope, "parent" );
 		listeners.clear();
 		assertEquals( 0, parent.getChildren().size() );
@@ -140,15 +140,15 @@ public class BrokenCollectionEventTest {
 		} );
 	}
 
-	protected void checkResult(CollectionListeners listeners,
-							CollectionListeners.Listener listenerExpected,
+	protected void checkResult(EventSink listeners,
+							EventSink.Listener listenerExpected,
 							ParentWithCollection parent,
 							int index) {
 		checkResult( listeners, listenerExpected, parent, parent.getChildren(), index );
 	}
 
-	protected void checkResult(CollectionListeners listeners,
-							CollectionListeners.Listener listenerExpected,
+	protected void checkResult(EventSink listeners,
+							EventSink.Listener listenerExpected,
 							Entity ownerExpected,
 							Collection collExpected,
 							int index) {
@@ -170,7 +170,7 @@ public class BrokenCollectionEventTest {
 		);
 	}
 
-	private void checkNumberOfResults(CollectionListeners listeners, int nEventsExpected) {
+	private void checkNumberOfResults(EventSink listeners, int nEventsExpected) {
 		assertEquals( nEventsExpected, listeners.getListenersCalled().size() );
 		assertEquals( nEventsExpected, listeners.getEvents().size() );
 	}

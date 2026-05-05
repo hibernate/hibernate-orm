@@ -16,7 +16,7 @@ import static java.util.Arrays.copyOf;
  * they are updated within the scope of a particular persister.
  * This makes it possible to store a set of them as a bitset,
  * which is typically more efficient than using a {@link java.util.Set}.
- * These table ids come from {@link org.hibernate.sql.model.TableMapping#getRelativePosition}.
+ * These table ids come from {@link org.hibernate.sql.model.TableMapping#relativePosition}.
  * <p>N.B. Make sure to not store TableMappings from different
  * persisters, as their unique identifiers will overlap:
  * we'll only verify a mismatch if assertions are enabled.</p>
@@ -31,13 +31,13 @@ public final class TableSet {
 			bits = new BitSet();
 		}
 		assert addForChecks( tableMapping );
-		bits.set( tableMapping.getRelativePosition() );
+		bits.set( tableMapping.relativePosition() );
 	}
 
 	public void remove(final TableMapping tableMapping) {
 		if ( bits != null ) {
 			assert addForChecks( tableMapping );
-			bits.set( tableMapping.getRelativePosition(), false );
+			bits.set( tableMapping.relativePosition(), false );
 		}
 	}
 
@@ -47,13 +47,13 @@ public final class TableSet {
 
 	public boolean contains(final TableMapping tableMapping) {
 		assert matchRead( tableMapping );
-		return bits != null && bits.get( tableMapping.getRelativePosition() );
+		return bits != null && bits.get( tableMapping.relativePosition() );
 	}
 
 	//Meant for assertions only
 	private boolean matchRead(final TableMapping tableMapping) {
 		if ( bits != null ) {
-			final int index = tableMapping.getRelativePosition();
+			final int index = tableMapping.relativePosition();
 			if ( bits.get( index ) ) {
 				return checks[index] == tableMapping;
 			}
@@ -63,7 +63,7 @@ public final class TableSet {
 
 	//Meant for assertions only
 	private boolean addForChecks(final TableMapping tableMapping) {
-		final int position = tableMapping.getRelativePosition();
+		final int position = tableMapping.relativePosition();
 		ensureCapacity( position );
 		if ( checks[position] != null ) {
 			//pre-existing in the set: verify it's the same one.

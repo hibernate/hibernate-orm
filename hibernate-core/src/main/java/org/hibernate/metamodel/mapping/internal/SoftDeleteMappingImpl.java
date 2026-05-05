@@ -14,6 +14,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.SoftDeletable;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.LegacyAuxiliaryMutationSupport;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SoftDeletableModelPart;
@@ -62,7 +63,7 @@ import static org.hibernate.query.sqm.ComparisonOperator.EQUAL;
  *
  * @author Steve Ebersole
  */
-public class SoftDeleteMappingImpl implements SoftDeleteMapping {
+public class SoftDeleteMappingImpl implements SoftDeleteMapping, LegacyAuxiliaryMutationSupport {
 	private final NavigableRole navigableRole;
 	private final SoftDeletableModelPart softDeletable;
 	private final SoftDeleteType strategy;

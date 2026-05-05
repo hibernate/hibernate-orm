@@ -80,7 +80,7 @@ public class BatchBuilderImpl implements BatchBuilder {
 									}
 
 									@Override
-									public int getRelativePosition() {
+									public int relativePosition() {
 										return 0;
 									}
 

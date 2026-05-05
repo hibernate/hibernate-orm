@@ -27,6 +27,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.StatementObserver;
+import org.hibernate.action.queue.spi.PlanningOptions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -44,6 +45,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.spi.RuntimeMetamodelsImplementor;
+import org.hibernate.action.queue.spi.ActionQueueFactory;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.QueryEngine;
@@ -297,6 +299,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
+	public ActionQueueFactory getActionQueueFactory() {
+		return delegate.getActionQueueFactory();
+	}
+
+	@Override
 	public SessionImplementor openTemporarySession() throws HibernateException {
 		return delegate.openTemporarySession();
 	}
@@ -469,6 +476,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public EventListenerRegistry getEventListenerRegistry() {
 		return delegate.getEventListenerRegistry();
+	}
+
+	@Override
+	public PlanningOptions getGraphPlanningOptions() {
+		return delegate.getGraphPlanningOptions();
 	}
 
 	@Override

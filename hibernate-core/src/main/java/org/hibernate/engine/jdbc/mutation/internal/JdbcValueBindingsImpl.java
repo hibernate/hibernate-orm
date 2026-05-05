@@ -4,28 +4,30 @@
  */
 package org.hibernate.engine.jdbc.mutation.internal;
 
+import org.hibernate.action.queue.spi.bind.DelayedValueAccess;
+import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
+import org.hibernate.engine.jdbc.mutation.group.UnknownParameterException;
+import org.hibernate.engine.jdbc.mutation.spi.Binding;
+import org.hibernate.engine.jdbc.mutation.spi.BindingGroup;
+import org.hibernate.engine.jdbc.mutation.spi.JdbcValueBindingsImplementor;
+import org.hibernate.engine.jdbc.mutation.spi.JdbcValueDescriptorAccess;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.sql.model.MutationTarget;
+import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.model.TableMapping;
+
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
-import org.hibernate.engine.jdbc.mutation.ParameterUsage;
-import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
-import org.hibernate.engine.jdbc.mutation.group.UnknownParameterException;
-import org.hibernate.engine.jdbc.mutation.spi.BindingGroup;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.model.MutationTarget;
-import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.TableMapping;
-import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
-
 /**
  * @author Steve Ebersole
  */
-public class JdbcValueBindingsImpl implements JdbcValueBindings {
+public class JdbcValueBindingsImpl implements JdbcValueBindingsImplementor {
 	private final MutationType mutationType;
-	private final MutationTarget<?> mutationTarget;
+	private final MutationTarget<?,?> mutationTarget;
 	private final JdbcValueDescriptorAccess jdbcValueDescriptorAccess;
 	private final SharedSessionContractImplementor session;
 
@@ -33,7 +35,7 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 
 	public JdbcValueBindingsImpl(
 			MutationType mutationType,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			JdbcValueDescriptorAccess jdbcValueDescriptorAccess,
 			SharedSessionContractImplementor session) {
 		this.mutationType = mutationType;
@@ -44,7 +46,8 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 
 	@Override
 	public BindingGroup getBindingGroup(String tableName) {
-		return bindingGroupMap.get( tableName );
+		final String normalizedTableName = ( tableName );
+		return bindingGroupMap.get( normalizedTableName );
 	}
 
 	@Override
@@ -53,13 +56,18 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 			String tableName,
 			String columnName,
 			ParameterUsage usage) {
+		// Normalize column name BEFORE calling resolveValueDescriptor because
+		// AbstractJdbcMutation.findValueDescriptor expects normalized names
+		final String normalizedColumnName = ( columnName );
 		final var jdbcValueDescriptor =
-				jdbcValueDescriptorAccess.resolveValueDescriptor( tableName, columnName, usage );
+				jdbcValueDescriptorAccess.resolveValueDescriptor( tableName, normalizedColumnName, usage );
 		if ( jdbcValueDescriptor == null ) {
 			throw new UnknownParameterException( mutationType, mutationTarget, tableName, columnName, usage );
 		}
-		resolveBindingGroup( jdbcValueDescriptorAccess.resolvePhysicalTableName( tableName ) )
-				.bindValue( columnName, value, jdbcValueDescriptor );
+		// Normalize table name for storage to match cycle breaking lookups
+		final String physicalTableName = jdbcValueDescriptorAccess.resolvePhysicalTableName( tableName );
+		resolveBindingGroup( ( physicalTableName ) )
+				.bindValue( normalizedColumnName, value, jdbcValueDescriptor );
 	}
 
 	private BindingGroup resolveBindingGroup(String tableName) {
@@ -77,17 +85,24 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 
 	@Override
 	public void beforeStatement(PreparedStatementDetails statementDetails) {
-		final var bindingGroup =
-				bindingGroupMap.get( statementDetails.getMutatingTableDetails().getTableName() );
+		final String normalizedTableName = (
+				statementDetails.getMutatingTableDetails().getTableName() );
+		final var bindingGroup = bindingGroupMap.get( normalizedTableName );
 		if ( bindingGroup == null ) {
 			statementDetails.resolveStatement();
 		}
 		else {
 			bindingGroup.forEachBinding( (binding) -> {
 				try {
+					// Unwrap delayed value accessors used by cycle breaking and generated identifiers
+					Object valueToBindObject = binding.getValue();
+					if ( valueToBindObject instanceof DelayedValueAccess handle ) {
+						valueToBindObject = handle.get();
+					}
+
 					binding.getValueBinder().bind(
 							statementDetails.resolveStatement(),
-							binding.getValue(),
+							valueToBindObject,
 							binding.getPosition(),
 							session
 					);
@@ -109,21 +124,31 @@ public class JdbcValueBindingsImpl implements JdbcValueBindings {
 
 	@Override
 	public void afterStatement(TableMapping mutatingTable) {
-		final var bindingGroup = bindingGroupMap.remove( mutatingTable.getTableName() );
+		final String normalizedTableName = ( mutatingTable.getTableName() );
+		final var bindingGroup = bindingGroupMap.remove( normalizedTableName );
 		if ( bindingGroup != null ) {
 			bindingGroup.clear();
 		}
 	}
 
-	/**
-	 * Access to {@link JdbcValueDescriptor} values
-	 */
-	public interface JdbcValueDescriptorAccess {
-
-		default String resolvePhysicalTableName(String tableName) {
-			return tableName;
+	@Override
+	public Object getBoundValue(String tableName, String columnName, ParameterUsage usage) {
+		final String normalizedTableName = ( tableName );
+		final String normalizedColumnName = ( columnName );
+		final BindingGroup bindingGroup = bindingGroupMap.get( normalizedTableName );
+		if ( bindingGroup == null ) {
+			return null;
 		}
+		final Binding binding = bindingGroup.findBinding( normalizedColumnName, usage );
+		return binding == null ? null : binding.getValue();
+	}
 
-		JdbcValueDescriptor resolveValueDescriptor(String tableName, String columnName, ParameterUsage usage);
+	@Override
+	public void replaceValue(String tableName, String columnName, ParameterUsage usage, Object newValue) {
+		final String normalizedTableName = ( tableName );
+		final String normalizedColumnName = ( columnName );
+		final BindingGroup bindingGroup = bindingGroupMap.get( normalizedTableName );
+		final Binding binding = bindingGroup.getBinding( normalizedColumnName, usage );
+		binding.setValue( newValue );
 	}
 }

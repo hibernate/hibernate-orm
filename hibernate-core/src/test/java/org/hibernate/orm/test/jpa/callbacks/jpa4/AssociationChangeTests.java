@@ -106,6 +106,29 @@ public class AssociationChangeTests {
 
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-20374" )
+	void testOwnerElementCollectionChangeGuardrail(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var vendor = new Vendor( 1, "A" );
+			session.persist( vendor );
+		} );
+
+		UpdateWatcher.reset();
+
+		factoryScope.inTransaction( (session) -> {
+			var vendor = session.get( Vendor.class, 1 );
+			// change entity state
+			vendor.name = vendor.name + 'a';
+			// *and* the collection
+			vendor.superlatives.add( "Amaze balls!" );
+		} );
+
+		// make sure we only get one set of callbacks
+		assertThat( UpdateWatcher.vendorPreUpdates ).hasSize( 1 );
+		assertThat( UpdateWatcher.vendorPostUpdates ).hasSize( 1 );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-20374" )
 	void testOwnerToManyChange(SessionFactoryScope factoryScope) {
 		factoryScope.inTransaction( (session) -> {
 			var vendor = new Vendor( 1, "A" );
@@ -129,6 +152,39 @@ public class AssociationChangeTests {
 			product.parts.add( session.getReference( Part.class, 2 ) );
 		} );
 
+		assertThat( UpdateWatcher.productPreUpdates ).hasSize( 1 );
+		assertThat( UpdateWatcher.productPostUpdates ).hasSize( 1 );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-20374" )
+	void testOwnerToManyChangeGuardrail(SessionFactoryScope factoryScope) {
+		factoryScope.inTransaction( (session) -> {
+			var vendor = new Vendor( 1, "A" );
+			session.persist( vendor );
+
+			var part1 = new Part( 1, "Widgeadonk", vendor );
+			session.persist( part1 );
+
+			var part2 = new Part( 2, "Padankadonk", vendor );
+			session.persist( part2 );
+
+			var product = new Product( 1, "stuff" );
+			product.parts = new HashSet<>();
+			product.parts.add( part1 );
+			session.persist( product );
+		} );
+
+		UpdateWatcher.reset();
+		factoryScope.inTransaction( (session) -> {
+			var product = session.get( Product.class, 1 );
+			// change entity state
+			product.name = "Stuff";
+			// *and* the collection
+			product.parts.add( session.getReference( Part.class, 2 ) );
+		} );
+
+		// make sure we only get one set of callbacks
 		assertThat( UpdateWatcher.productPreUpdates ).hasSize( 1 );
 		assertThat( UpdateWatcher.productPostUpdates ).hasSize( 1 );
 	}

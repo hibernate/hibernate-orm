@@ -14,12 +14,16 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLUpdate;
 
+import org.hibernate.cfg.BatchSettings;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.BeforeAll;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -38,6 +42,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * @author Marco Belladelli
  */
+@ServiceRegistry(settings = @Setting(name = BatchSettings.STATEMENT_BATCH_SIZE, value = "1"))
 @DomainModel( annotatedClasses = {
 		ManyToManyCustomSqlMutationsTest.Project.class,
 		ManyToManyCustomSqlMutationsTest.User.class,
@@ -45,7 +50,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SessionFactory( useCollectingStatementInspector = true )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17170" )
 public class ManyToManyCustomSqlMutationsTest {
-	@BeforeAll
+	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final User u1 = new User( "user1" );
@@ -62,6 +67,11 @@ public class ManyToManyCustomSqlMutationsTest {
 			session.persist( p1 );
 			session.persist( p2 );
 		} );
+	}
+
+	@AfterEach
+	void tearDown(SessionFactoryScope factoryScope) {
+		factoryScope.dropData();
 	}
 
 	@Test

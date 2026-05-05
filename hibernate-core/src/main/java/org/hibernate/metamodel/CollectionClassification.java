@@ -113,6 +113,22 @@ public enum CollectionClassification {
 		};
 	}
 
+	public boolean isMap() {
+		return this == MAP || this == ORDERED_MAP || this == SORTED_MAP;
+	}
+
+	public boolean isSet() {
+		return this == SET || this == ORDERED_SET || this == SORTED_SET;
+	}
+
+	public boolean isSorted()  {
+		return this == SORTED_SET || this == SORTED_MAP;
+	}
+
+	public boolean isOrdered()  {
+		return this == ORDERED_SET || this == ORDERED_MAP;
+	}
+
 	public boolean isRowUpdatePossible() {
 		// anything other than BAG and SET
 		return this != BAG && this != SET;

@@ -6,6 +6,7 @@ package org.hibernate.orm.test.service.javaservice;
 
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
+import org.hibernate.engine.jdbc.mutation.spi.JdbcValueBindingsFactory;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.MutationOperationGroup;
@@ -47,6 +48,15 @@ public class MutationExecutorServiceLoaderTest {
 				MutationOperationGroup operationGroup,
 				SharedSessionContractImplementor session) {
 			throw new UnsupportedOperationException( "Not needed for bootstrap test" );
+		}
+
+		@Override
+		public MutationExecutor createExecutor(
+				BatchKeyAccess batchKeySupplier,
+				MutationOperationGroup operationGroup,
+				JdbcValueBindingsFactory bindingsFactory,
+				SharedSessionContractImplementor session) {
+			return null;
 		}
 	}
 }

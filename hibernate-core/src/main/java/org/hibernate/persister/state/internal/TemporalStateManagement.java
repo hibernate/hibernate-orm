@@ -14,6 +14,10 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinator;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorTemporal;
+import org.hibernate.action.queue.spi.decompose.entity.EntityMutationPlanContributor;
+import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationPlanContributor;
+import org.hibernate.action.queue.internal.decompose.collection.TemporalCollectionMutationPlanContributor;
+import org.hibernate.action.queue.internal.decompose.entity.TemporalEntityMutationPlanContributor;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
@@ -23,6 +27,7 @@ import org.hibernate.persister.entity.mutation.InsertCoordinatorTemporal;
 import org.hibernate.persister.entity.mutation.MergeCoordinatorTemporal;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorTemporal;
+import org.hibernate.persister.state.spi.StateManagementGraphIntegration;
 import org.hibernate.temporal.TemporalTableStrategy;
 
 import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper.getTableIdentifierExpression;
@@ -39,8 +44,33 @@ import static org.hibernate.metamodel.mapping.internal.MappingModelCreationHelpe
 public final class TemporalStateManagement extends AbstractStateManagement {
 	public static final TemporalStateManagement INSTANCE = new TemporalStateManagement();
 
+	private final StateManagementGraphIntegration graphIntegration = new StateManagementGraphIntegration() {
+		@Override
+		public EntityMutationPlanContributor createEntityMutationPlanContributor(EntityPersister persister) {
+			return new TemporalEntityMutationPlanContributor( persister, persister.getFactory() );
+		}
+
+		@Override
+		public CollectionMutationPlanContributor createCollectionMutationPlanContributor(CollectionPersister persister) {
+			return new TemporalCollectionMutationPlanContributor();
+		}
+	};
+
 	private TemporalStateManagement() {
 	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Graph ActionQueue integration
+
+	@Override
+	public StateManagementGraphIntegration getGraphIntegration() {
+		return graphIntegration;
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Legacy ActionQueue integration
 
 	@Override
 	public InsertCoordinator createInsertCoordinator(EntityPersister persister) {

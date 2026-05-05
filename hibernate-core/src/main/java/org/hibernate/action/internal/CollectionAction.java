@@ -45,8 +45,24 @@ public abstract class CollectionAction implements ComparableExecutable {
 		this.collection = collection;
 	}
 
-	protected PersistentCollection<?> getCollection() {
+	/**
+	 * collection accessor
+	 *
+	 * @return The collection
+	 */
+	public PersistentCollection<?> getCollection() {
 		return collection;
+	}
+
+	/**
+	 * collection key accessor
+	 *
+	 * @return The collection key
+	 */
+	public Object getKey() {
+		return key instanceof DelayedPostInsertIdentifier
+				? session.getPersistenceContextInternal().getEntry( collection.getOwner() ).getId()
+				: key;
 	}
 
 	/**
@@ -102,14 +118,8 @@ public abstract class CollectionAction implements ComparableExecutable {
 		return persister.getCollectionSpaces();
 	}
 
-	protected final CollectionPersister getPersister() {
+	public final CollectionPersister getPersister() {
 		return persister;
-	}
-
-	protected final Object getKey() {
-		return key instanceof DelayedPostInsertIdentifier
-				? session.getPersistenceContextInternal().getEntry( collection.getOwner() ).getId()
-				: key;
 	}
 
 	@Override
@@ -126,7 +136,7 @@ public abstract class CollectionAction implements ComparableExecutable {
 		return session;
 	}
 
-	protected final void evict() throws CacheException {
+	public final void evict() throws CacheException {
 		if ( persister.hasCache() ) {
 			final var cache = persister.getCacheAccessStrategy();
 			final Object cacheKey = cache.generateCacheKey(
@@ -154,6 +164,11 @@ public abstract class CollectionAction implements ComparableExecutable {
 				//then by fk
 				: persister.getAttributeMapping().getKeyDescriptor()
 						.compare( key, executable.getSecondarySortIndex() );
+	}
+
+	public String getLoggableDetails() {
+		// for now...
+		return getClass().getSimpleName() + "(" + collectionRole + ")";
 	}
 
 	private static class CacheCleanupProcess implements AfterTransactionCompletionProcess {

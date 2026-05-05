@@ -68,7 +68,7 @@ public class UpdateStatement extends AbstractUpdateOrDeleteStatement {
 	public UpdateStatement(
 			CteContainer cteContainer,
 			NamedTableReference targetTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			FromClause fromClause,
 			List<Assignment> assignments,
 			Predicate restriction,

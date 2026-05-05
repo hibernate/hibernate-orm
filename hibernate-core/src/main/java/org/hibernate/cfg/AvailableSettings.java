@@ -28,9 +28,9 @@ import org.hibernate.jpa.SpecHints;
  */
 public interface AvailableSettings
 		extends BatchSettings, BytecodeSettings, CacheSettings, EnvironmentSettings, FetchSettings,
-		JdbcSettings, JpaComplianceSettings, ManagedBeanSettings, MappingSettings, MultiTenancySettings,
-		PersistenceSettings, QuerySettings, SchemaToolingSettings, SessionEventSettings, StatisticsSettings,
-		TransactionSettings, ValidationSettings, GraphParserSettings {
+		FlushSettings, JdbcSettings, JpaComplianceSettings, ManagedBeanSettings, MappingSettings,
+		MultiTenancySettings, PersistenceSettings, QuerySettings, SchemaToolingSettings,
+		SessionEventSettings, StatisticsSettings, TransactionSettings, ValidationSettings, GraphParserSettings {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA settings

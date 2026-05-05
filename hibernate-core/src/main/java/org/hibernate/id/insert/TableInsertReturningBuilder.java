@@ -39,7 +39,7 @@ public class TableInsertReturningBuilder extends AbstractTableInsertBuilder {
 		return new TableInsertStandard(
 				getMutatingTable(),
 				getMutationTarget(),
-				combine( getValueBindingList(), getKeyBindingList(), getLobValueBindingList() ),
+				combine( getValueBindingList(), getLobValueBindingList() ),
 				generatedColumns,
 				getParameters()
 		);

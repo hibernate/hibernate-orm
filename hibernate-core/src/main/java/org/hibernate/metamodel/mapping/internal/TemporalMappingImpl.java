@@ -10,6 +10,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Stateful;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.LegacyAuxiliaryMutationSupport;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
@@ -54,7 +55,7 @@ import static org.hibernate.query.sqm.ComparisonOperator.LESS_THAN_OR_EQUAL;
  *
  * @since 7.4
  */
-public class TemporalMappingImpl implements TemporalMapping {
+public class TemporalMappingImpl implements TemporalMapping, LegacyAuxiliaryMutationSupport {
 	private final String tableName;
 	private final SelectableMapping startingColumnMapping;
 	private final SelectableMapping endingColumnMapping;

@@ -15,43 +15,59 @@ import org.hibernate.sql.model.internal.TableDeleteCustomSql;
 import org.hibernate.sql.model.internal.TableDeleteStandard;
 import org.hibernate.sql.model.jdbc.JdbcDeleteMutation;
 
-/**
- * Standard TableDeleteBuilder implementation used when Hibernate
- * generates the delete statement
- *
- * @author Steve Ebersole
- */
+/// Standard TableDeleteBuilder implementation used when
+/// Hibernate generates the delete statement.
+///
+/// Used for -
+/// * entity table deletes
+/// * collection row deletes
+/// * collection removals ("delete all")
+///
+/// @author Steve Ebersole
 public class TableDeleteBuilderStandard
 		extends AbstractRestrictedTableMutationBuilder<JdbcDeleteMutation, TableDelete>
 		implements TableDeleteBuilder {
-	private final boolean isCustomSql;
+	private final TableMapping.MutationDetails mutationDetails;
 
 	private String sqlComment;
-
 	private final String whereFragment;
 
 	public TableDeleteBuilderStandard(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			TableMapping table,
 			SessionFactoryImplementor sessionFactory) {
-		this( mutationTarget, new MutatingTableReference( table ), sessionFactory, null );
+		this(
+				mutationTarget,
+				new MutatingTableReference( table ),
+				table.getDeleteDetails(),
+				null,
+				sessionFactory
+		);
 	}
 
 	public TableDeleteBuilderStandard(
-			MutationTarget<?> mutationTarget,
-			MutatingTableReference tableReference,
-			SessionFactoryImplementor sessionFactory) {
-		this( mutationTarget, tableReference, sessionFactory, null );
-	}
-
-	public TableDeleteBuilderStandard(
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory,
 			String whereFragment) {
+		this(
+				mutationTarget,
+				tableReference,
+				tableReference.getTableMapping().getDeleteDetails(),
+				whereFragment,
+				sessionFactory
+		);
+	}
+
+	public TableDeleteBuilderStandard(
+			MutationTarget<?,?> mutationTarget,
+			MutatingTableReference tableReference,
+			TableMapping.MutationDetails mutationDetails,
+			String whereFragment,
+			SessionFactoryImplementor sessionFactory) {
 		super( MutationType.DELETE, mutationTarget, tableReference, sessionFactory );
 
-		this.isCustomSql = tableReference.getTableMapping().getDeleteDetails().getCustomSql() != null;
+		this.mutationDetails = mutationDetails;
 		this.sqlComment = "delete for " + mutationTarget.getRolePath();
 		this.whereFragment = whereFragment;
 	}
@@ -70,7 +86,7 @@ public class TableDeleteBuilderStandard
 
 	@Override
 	public void setWhere(String fragment) {
-		if ( isCustomSql && fragment != null ) {
+		if ( mutationDetails.getCustomSql() != null && fragment != null ) {
 			throw new HibernateException(
 					"Invalid attempt to apply where-restriction on top of custom sql-delete mapping : " +
 							getMutationTarget().getNavigableRole().getFullPath()
@@ -80,7 +96,7 @@ public class TableDeleteBuilderStandard
 
 	@Override
 	public void addWhereFragment(String fragment) {
-		if ( isCustomSql && fragment != null ) {
+		if ( mutationDetails.getCustomSql() != null && fragment != null ) {
 			throw new HibernateException(
 					"Invalid attempt to apply where-filter on top of custom sql-delete mapping : " +
 							getMutationTarget().getNavigableRole().getFullPath()
@@ -90,9 +106,10 @@ public class TableDeleteBuilderStandard
 
 	@Override
 	public TableDelete buildMutation() {
-		if ( isCustomSql ) {
+		if ( mutationDetails.getCustomSql() != null ) {
 			return new TableDeleteCustomSql(
 					getMutatingTable(),
+					mutationDetails,
 					getMutationTarget(),
 					sqlComment,
 					getKeyRestrictionBindings(),
@@ -110,5 +127,10 @@ public class TableDeleteBuilderStandard
 				getParameters(),
 				whereFragment
 		);
+	}
+
+	@Override
+	public boolean hasValueBindings() {
+		return false;
 	}
 }

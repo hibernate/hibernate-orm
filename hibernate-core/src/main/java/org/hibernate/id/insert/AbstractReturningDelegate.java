@@ -4,9 +4,7 @@
  */
 package org.hibernate.id.insert;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
+import org.hibernate.action.queue.spi.plan.FlushOperation;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -14,6 +12,10 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.AbstractGeneratedValuesMutationDelegate;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.model.PreparableMutationOperation;
+
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 import static org.hibernate.pretty.MessageHelper.infoString;
 
@@ -25,7 +27,8 @@ import static org.hibernate.pretty.MessageHelper.infoString;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractReturningDelegate extends AbstractGeneratedValuesMutationDelegate
+public abstract class AbstractReturningDelegate
+		extends AbstractGeneratedValuesMutationDelegate
 		implements InsertGeneratedIdentifierDelegate {
 
 	public AbstractReturningDelegate(
@@ -34,6 +37,35 @@ public abstract class AbstractReturningDelegate extends AbstractGeneratedValuesM
 			boolean supportsArbitraryValues,
 			boolean supportsRowId) {
 		super( persister, timing, supportsArbitraryValues, supportsRowId );
+	}
+
+	@Override
+	public GeneratedValues performGraphMutation(
+			FlushOperation operation,
+			Object entity,
+			SharedSessionContractImplementor session) {
+		var jdbcOperation = (PreparableMutationOperation) operation.getJdbcOperation();
+		final String sql = jdbcOperation.getSqlString();
+		session.getJdbcServices().getSqlStatementLogger().logStatement( sql );
+
+		final PreparedStatement preparedStatement = session.getJdbcCoordinator()
+				.getStatementPreparer()
+				.prepareStatement( sql );
+		try {
+
+			var valueBindings = new org.hibernate.action.queue.spi.bind.JdbcValueBindings(
+					operation.getMutatingTableDescriptor(),
+					jdbcOperation
+			);
+
+			operation.getBindPlan().bindValues( valueBindings, operation, session );
+			valueBindings.beforeStatement( preparedStatement, session );
+			return executeAndExtractReturning( sql, preparedStatement, session );
+		}
+		finally {
+			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( preparedStatement );
+			session.getJdbcCoordinator().afterStatementExecution();
+		}
 	}
 
 	@Override

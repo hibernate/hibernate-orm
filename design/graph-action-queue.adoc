@@ -1,0 +1,866 @@
+:toc2:
+:toclevels: 3
+:sectanchors:
+:numbered:
+= Graph Action Queue
+
+This document is a contributor-oriented design guide for Hibernate's graph-based
+action queue.
+It describes how the graph queue decomposes flush actions, models dependencies,
+plans execution, integrates state-management features, and preserves the
+observable lifecycle expected by the rest of Hibernate.
+
+The graph queue is selected by `hibernate.flush.queue.type=graph`.
+As of Hibernate 8.0, `graph` is the default value.
+The legacy queue remains available by setting `hibernate.flush.queue.type=legacy`.
+
+== Goals
+
+The graph queue exists to replace fixed action-phase ordering with an explicit
+dependency model.
+Instead of relying on one global sequence of action lists, the graph queue turns
+flush work into lower-level table mutations, groups compatible mutations for
+batching, builds a dependency graph from mapping constraints, and executes a
+planned sequence of independent steps.
+
+The main goals are:
+
+* Preserve the external semantics of `ActionQueue`.
+* Improve ordering for foreign keys, unique keys, and mixed entity/collection work.
+* Make dependency handling model-driven instead of hard-coded by action type.
+* Keep JDBC mutation execution batchable.
+* Let state-management features such as soft-delete, temporal tables, history
+  tables, and audit participate by contributing graph mutation plans.
+* Keep legacy queue integration isolated so it can eventually be removed without
+  reshaping graph queue code.
+
+== Source Map
+
+`org.hibernate.action.queue.spi`::
+Shared action-queue contracts and graph-facing SPI types.  This package is the
+boundary other Hibernate subsystems should use when they need to interact with
+queue selection, decomposition, binding, or flush operations.
+
+`org.hibernate.action.queue.internal`::
+The graph queue implementation and high-level flush coordinator.
+
+`org.hibernate.action.queue.internal.support`::
+Queue factory services, graph queue construction, planning options, and support
+types used by bootstrap/session integration.
+
+`org.hibernate.action.queue.internal.decompose`::
+The action-to-operation decomposition entry point.
+
+`org.hibernate.action.queue.internal.decompose.entity`::
+Entity decomposers, entity bind plans, and entity state-management contributors.
+
+`org.hibernate.action.queue.internal.decompose.collection`::
+Collection decomposers, collection bind plans, collection JDBC operation bundles,
+and collection state-management contributors.
+
+`org.hibernate.action.queue.internal.constraint`::
+The model of foreign keys, unique keys, and deferrability used for graph
+construction and cycle handling.
+
+`org.hibernate.action.queue.internal.graph`::
+Graph nodes, edges, and graph construction.
+
+`org.hibernate.action.queue.internal.plan`::
+Planning, topological sorting, cycle detection, cycle breaking, and plan-step
+creation.
+
+`org.hibernate.action.queue.internal.cyclebreak`::
+Synthetic fixup mutation support used when the planner must break a dependency
+cycle.
+
+`org.hibernate.action.queue.internal.exec`::
+Execution of planned flush steps.
+
+`org.hibernate.action.queue.internal.audit`::
+Graph-native audit change collection and materialization of audit flush
+operations.
+
+`org.hibernate.persister.state.spi`::
+State-management contracts.  The root `StateManagement` contract describes the
+mapping model.  `StateManagementGraphIntegration` supplies graph queue mutation
+contributors.  `StateManagementLegacyIntegration` supplies legacy queue
+integration.
+
+[[ConstraintModel]]
+== ConstraintModel
+
+`ConstraintModel` is the immutable mapping snapshot used by the graph builder to
+turn grouped flush operations into ordering edges.
+It is deliberately separate from the flush-local graph:
+the constraint model describes what the database schema and runtime mappings
+make possible, while the graph describes the specific mutations queued for one
+flush.
+
+The model contains:
+
+* all known `ForeignKey` constraints,
+* all known `UniqueConstraint` instances, including primary keys,
+  natural-id constraints, explicit unique keys, unique columns, and collection
+  table unique keys,
+* unique constraints indexed by normalized table expression,
+* inbound foreign keys indexed by target table,
+* outbound foreign keys indexed by key table,
+* tables participating in bidirectional/cyclic foreign-key relationships,
+* tables with self-referential foreign keys.
+
+`ForeignKey` records the key table, target table, key columns, target columns,
+target type, association flag, nullability, and deferrability.
+The target type distinguishes primary-key, unique-key, and non-unique targets.
+That distinction matters because constraints targeting unique slots can require
+different ordering from ordinary parent/child primary-key dependencies.
+
+`UniqueConstraint` records the constrained table, constraint name, type,
+columns, deferrability, nullability, and optional property names used for
+runtime value extraction.
+The graph builder uses this metadata to derive `UniqueSlot` instances for the
+actual row values being inserted, updated, or deleted in the current flush.
+Unique slots let the planner create precise release-before-occupy edges instead
+of relying only on coarse table-level delete-before-insert ordering.
+
+Table and column names in the model are normalized for comparison.
+Normalization removes common identifier quoting and compares lower-case table
+expressions, while still allowing qualified and unqualified table names to match
+where appropriate.
+
+=== ConstraintModel Creation
+
+`ConstraintModelBuilder` creates the model during `MappingMetamodelImpl`
+initialization.
+The build happens after all entity persisters have completed `postInstantiate()`,
+because table mappings and runtime selectable mappings must already exist.
+It happens before table descriptors, loaders, and decomposers are prepared,
+because those later graph-facing components may need the constraint model.
+
+The builder combines two sources of metadata:
+
+* the runtime mapping model, via entity and collection persisters,
+* the boot mapping model, via `MetadataImplementor`, `PersistentClass`,
+  `Table`, `UniqueKey`, and `Column`.
+
+Runtime metadata is authoritative for binding and extraction because it exposes
+`ForeignKeyDescriptor`, `SelectableMapping`, `SelectableMappings`, entity table
+mappings, collection table mappings, natural-id mappings, and association
+mappings.
+Boot metadata fills in schema declarations that are not always represented as a
+runtime association, especially explicit unique keys and `@Column(unique=true)`.
+
+The builder performs these broad passes:
+
+1. collect entity persisters by entity name for later target classification,
+2. scan entity persisters for primary-key unique constraints, composite-id
+   to-one foreign keys, natural-id unique constraints, unique columns/keys,
+   entity table-group foreign keys, and to-one association foreign keys,
+3. scan collection persisters for collection-key foreign keys, many-to-many
+   element foreign keys, and collection table unique constraints,
+4. reclassify foreign-key target types after all unique constraints are known,
+5. build lookup indexes by normalized table expression,
+6. identify tables with bidirectional foreign-key relationships and
+   self-referential foreign keys.
+
+Planning options intentionally affect model creation:
+
+* when foreign-key ordering is disabled, foreign-key collection is reduced,
+* when unique-key slot ordering is disabled, unique constraints do not need to
+  be collected for runtime slot extraction,
+* deferrability metadata is still carried on constraints so the graph builder
+  and cycle breaker can interpret it according to the effective
+  `DeferrableConstraintMode`.
+
+The resulting `ConstraintModel` is held by the `FlushCoordinator` and passed to
+`StandardGraphBuilder`.
+It is not rebuilt per flush.
+Only the flush-local graph nodes, edges, unique slots, and binding patches are
+created per flush.
+
+== Mental Model
+
+The graph queue has four layers:
+
+1. `ActionQueue` compatibility.
+   Hibernate still enqueues familiar actions such as `EntityInsertAction`,
+   `EntityUpdateAction`, `CollectionUpdateAction`, and `EntityDeleteAction`.
+2. Decomposition.
+   Actions are decomposed into `FlushOperation` instances.  A `FlushOperation`
+   represents one mutation against one table with a concrete `MutationOperation`
+   and a `BindPlan`.
+3. Planning.
+   `FlushOperation` instances are grouped by statement shape, represented as
+   graph nodes, connected by dependency edges, and planned into executable
+   `PlanStep` instances.
+4. Execution.
+   Plan steps execute JDBC mutations, apply any cycle-break patches, collect
+   generated values, and run lifecycle callbacks.
+
+The graph queue should not be understood as a different event system.
+The normal persistence events, cache callbacks, transaction-completion callbacks,
+and generated-value handling still belong to the action/decomposer lifecycle.
+The graph adds a better scheduling model underneath that lifecycle.
+
+== Flush Lifecycle
+
+The high-level flow is:
+
+[source]
+----
+SessionImpl
+  -> GraphBasedActionQueue
+  -> FlushCoordinator
+       -> Decomposer
+            -> EntityActionDecomposer / CollectionDecomposer
+            -> FlushOperation
+       -> group operations by StatementShapeKey
+       -> StandardGraphBuilder
+            -> GroupNode + GraphEdge
+       -> StandardFlushPlanner
+            -> FlushPlan + PlanStep
+       -> PlanStepExecutor
+            -> JDBC mutation execution
+            -> generated values
+            -> callbacks
+----
+
+`GraphBasedActionQueue` owns the queued action lists and implements the public
+`ActionQueue` contract.
+`FlushCoordinator` owns the graph-specific flush pipeline.
+This split is intentional: queue compatibility remains in the queue, while
+decomposition, grouping, planning, and execution stay in the coordinator.
+
+=== Phase Boundaries
+
+The graph queue still receives actions in familiar legacy phase lists.
+Those phase lists are an input ordering signal, not the final execution order.
+Decomposers assign stable ordinals to emitted operations so the graph planner
+can preserve deterministic behavior when no dependency requires a different
+ordering.
+
+Contributors should treat `ordinalBase` as part of the action identity for the
+current flush.
+Do not invent unrelated ordering schemes inside contributors.
+Use the helpers already present for entity or collection operation slots.
+
+=== Grouping and Batching
+
+After decomposition, operations are grouped by `StatementShapeKey`.
+The grouping key captures the table, mutation kind, and JDBC mutation shape.
+Groups are the graph nodes, not individual operations.
+
+This is what keeps batching viable:
+
+* One `FlushOperation` models one row-level or callback-carrier unit.
+* One `FlushOperationGroup` models a compatible batch of operations.
+* One `PlanStep` may contain multiple independent groups.
+
+When adding new operation types, prefer real `JdbcMutationOperation` instances
+over self-executing callbacks when the work can be represented as JDBC mutation
+operations.
+Self-executing operations should be reserved for lifecycle carriers or work that
+is not naturally batchable.
+
+== Core Concepts
+
+`FlushOperation`::
+The smallest graph queue execution unit.  It contains a table descriptor,
+mutation kind, mutation operation, bind plan, ordinal, description, and optional
+pre/post-execution callbacks.
+
+`BindPlan`::
+Binds values for a `FlushOperation`.  Bind plans are deliberately separated from
+mutation operation construction so the same SQL shape can be reused with many
+row values.
+
+`StatementShapeKey`::
+The grouping key used to decide which operations may batch together.
+
+`FlushOperationGroup`::
+A batchable group of operations with the same statement shape.
+
+`ConstraintModel`::
+The table/constraint model used to build dependency edges.  It captures foreign
+keys, unique keys, deferrability, table relationships, and graph-relevant
+mapping facts.
+
+`GraphEdge`::
+A directed dependency between groups.  Edges usually mean one group must execute
+before another to satisfy a foreign key, unique key, or cycle-break fixup rule.
+
+`FlushPlan`::
+The final execution plan.  It contains ordered `PlanStep` instances and any
+synthetic fixup operations created during planning.
+
+`PlanStep`::
+A set of operations or groups that may execute in the same logical step because
+the planner found no ordering dependency between them.
+
+`BindingPatch`::
+A value patch installed when the planner breaks a cycle by nulling or otherwise
+adjusting a binding before execution and later restoring it with a fixup update.
+
+== Decomposition
+
+Decomposition is where high-level actions become table-level mutations.
+
+Entity decomposers implement `EntityActionDecomposer`.
+Collection decomposers implement `CollectionDecomposer`.
+The top-level `Decomposer` delegates to the appropriate entity or collection
+decomposer based on the action type.
+
+Decomposers own:
+
+* action lifecycle sequencing,
+* pre-event invocation,
+* nullability and transient-reference preparation,
+* generated-value collection setup,
+* cache and post-execution callback attachment,
+* stable operation ordinal assignment,
+* standard table mutation plan construction,
+* conversion from action state to `FlushOperation` instances.
+
+State-management contributors should not duplicate this lifecycle.
+They should only alter or extend the mutation plan shape for a state-management
+strategy.
+
+=== Entity Decomposition
+
+Entity insert, update, and delete decomposition is handled under
+`org.hibernate.action.queue.internal.decompose.entity`.
+
+Important implementation pieces:
+
+* `InsertDecomposer`
+* `UpdateDecomposer`
+* `DeleteDecomposer`
+* `EntityInsertMutationPlanner`
+* `EntityMutationPlanContributor`
+
+`InsertDecomposer` delegates reusable insert operation planning to
+`EntityInsertMutationPlanner`.
+This keeps temporal replacement-update insert handling from depending on
+`InsertDecomposer` internals while still sharing the same insert SQL shape logic.
+
+Entity contributors are used for state-management-specific changes:
+
+* replacement update,
+* replacement delete,
+* additional insert/update/delete operations,
+* static delete operation exposure for grouping.
+
+=== Collection Decomposition
+
+Collection decomposition is handled under
+`org.hibernate.action.queue.internal.decompose.collection`.
+
+Important implementation pieces:
+
+* `BasicCollectionDecomposer`
+* `AbstractOneToManyDecomposer`
+* `StandardOneToManyDecomposer`
+* `TablePerSubclassOneToManyDecomposer`
+* `CollectionJdbcOperations`
+* `CollectionMutationPlanContributor`
+* collection bind plans such as `SingleRowInsertBindPlan`, `SingleRowDeleteBindPlan`,
+  `SingleRowUpdateBindPlan`, and `RemoveBindPlan`
+
+Collection decomposers own delta discovery.
+They decide which rows are inserted, removed, updated, recreated, or shifted.
+The contributor contract then lets state-management features alter the mutation
+plan for those logical deltas.
+
+Collection contributors distinguish row-scoped and action-scoped hooks:
+
+* `contributeAdditionalInsert` is row-scoped.  Use it for one extra operation
+  per inserted row, such as history-table row mirroring.
+* `contributeCollectionChange` is action-scoped.  Use it for whole-collection
+  logical notifications, such as audit collection-change collection.
+* `contributeValueChange` is row-change-scoped.  Use it when a logical in-place
+  value change needs to become a different physical operation set.
+* `buildDeleteRowPlan` and `buildRemoveOperation` replace standard delete or
+  remove-all plans.
+* `bindRemoveValues` binds additional values required by replacement remove-all
+  operations.
+
+Do not use row-level insertion hooks as callback carriers for whole-collection
+work.
+That produces one callback per inserted row for a single logical collection
+change and makes recreate paths harder to reason about.
+
+== State Management Integration
+
+State-management integration is intentionally split:
+
+`StateManagement`::
+Identifies the state-management model and exposes semantic mapping/model helpers.
+
+`StateManagementGraphIntegration`::
+Creates graph queue mutation-plan contributors for entity and collection
+persisters.
+
+`StateManagementLegacyIntegration`::
+Creates legacy queue coordinators and legacy-specific auxiliary mutation support.
+
+This split prevents graph queue code from depending on legacy coordinator
+hierarchies.
+It also gives contributors a narrow graph-native role: describe the mutation
+plan shape needed by the state-management model.
+
+=== Standard
+
+The standard model uses the standard entity and collection mutation plans.
+Its graph integration returns the no-op contributors.
+
+=== Soft Delete
+
+Soft-delete replaces logical deletes with updates that mark rows as deleted.
+
+For graph queue support:
+
+* entity delete is modeled as a replacement delete,
+* collection row/remove handling may replace physical deletes with state updates
+  where the mapping requires it,
+* insert planning still adds the soft-delete initial value as part of the normal
+  insert operation shape.
+
+Soft-delete is not merely an additional operation after delete.
+Where it changes the meaning of the logical delete, it should be represented as
+a replacement plan.
+
+=== Single-Table Temporal
+
+Single-table temporal state management keeps current and historical versions in
+the same physical table using start/end columns.
+
+For graph queue support:
+
+* logical update becomes "end current row" plus "insert new row version",
+* logical delete becomes "end current row",
+* collection row delete/remove can become temporal end-row updates,
+* collection value change can become "end old row" plus "insert new row",
+* insert planning adds the temporal start and null-end values.
+
+Temporal replacement update is the reason entity insert planning is factored out
+of `InsertDecomposer`.
+The contributor needs the same insert mutation operations as a normal insert,
+but it should not depend on one decomposer implementation.
+
+=== History Tables
+
+History-table state management writes current-table changes to separate history
+tables.
+
+For graph queue support:
+
+* standard current-table operations still run,
+* contributors append history-table operations,
+* entity history support uses additional insert/update/delete operations,
+* collection history support uses row-scoped insertion augmentation and
+  replacement operations where needed.
+
+History-table support is additive unless the logical operation itself must use a
+different physical current-table shape.
+Keep current-table and history-table mutation concerns distinct.
+
+=== Audit
+
+Audit support is graph-native but transaction-oriented.
+Audit contributors collect logical entity and collection changes during flush.
+The graph audit collector merges those changes and materializes audit
+`FlushOperation` instances at transaction completion.
+
+Important rules:
+
+* Audit contributors should record logical changes, not legacy `AuditWorkUnit`
+  actions.
+* Audit writes should use proper mutation operations where possible so they can
+  participate in batching.
+* Whole-collection audit changes belong in `contributeCollectionChange`, not in
+  row-level insert augmentation.
+* The collector is responsible for merging and materializing final audit work.
+
+==== Graph-Native Materialization
+
+The graph queue does not enqueue legacy audit work units and does not route audit
+state through the legacy `AuditWorkQueue`.
+Instead, entity and collection audit contributors emit callback-carrier
+`FlushOperation` instances during normal decomposition.
+Those carriers run with the normal flush plan and record logical changes in the
+transaction-scoped `GraphAuditMutationCollector`.
+
+The materialization flow is:
+
+[source]
+----
+AuditEntityMutationPlanContributor / AuditCollectionMutationPlanContributor
+  -> callback carrier FlushOperation
+  -> GraphAuditMutationCollector
+       -> AuditChangeSet
+       -> EntityAuditSupport / CollectionAuditSupport plans
+       -> GraphAuditMutationPlans bind plans
+       -> audit FlushOperation instances
+       -> PlanStepExecutor
+----
+
+`AuditChangeSet` is the queue-independent merged representation of audited
+changes.
+It records the final logical entity or collection changes for the transaction so
+that repeated updates, delete-after-insert, and collection deltas may be folded
+before SQL is generated.
+The collector consumes the merged changes at
+`GraphBasedActionQueue.beforeTransactionCompletion()`.
+
+At materialization time the collector resolves the transaction changeset context
+from the session.
+For a scalar `ChangesetIdentifierSupplier`, this is just the current changeset
+identifier.
+For `ChangelogSupplier`, the session caches a full
+`ChangelogSupplier.ChangesetContext`, including:
+
+* the changeset identifier stored in audit rows,
+* the persisted changelog entity,
+* the child session used for deferred changelog collection work.
+
+This context is captured before audit `FlushOperation` instances are created.
+The resulting audit bind plans carry the resolved changeset identifier
+explicitly.
+They should not call `getCurrentChangesetIdentifier()` during bind execution.
+That avoids the legacy inversion where resolving the id called back into the
+action queue to register changelog state.
+
+`GraphAuditMutationPlans` adapts the queue-agnostic plans exposed by
+`EntityAuditSupport` and `CollectionAuditSupport` into graph queue
+`BindPlan`/`OperationResultChecker` implementations.
+The persister-side audit support owns the reusable mutation-operation shape:
+
+* entity audit-row inserts,
+* entity transaction-end updates,
+* collection audit-row inserts,
+* collection transaction-end updates.
+
+The collector owns graph queue packaging:
+
+* choose which merged changes need which plans,
+* create one audit `FlushOperation` per row-level audit write,
+* assign stable audit operation ordinals,
+* execute the operations through `PlanStepExecutor`,
+* invoke changeset listener callbacks,
+* populate `@Changelog.ModifiedEntities`,
+* flush the changelog child session when needed.
+
+Audit operations are materialized after normal flush work has executed, so they
+generally do not need full dependency graph construction.
+There are no entity/collection cycles left to resolve in audit tables; the main
+remaining execution concern is batching compatible statements.
+Therefore graph-native audit materialization creates ordinary `FlushOperation`
+instances and executes them through `PlanStepExecutor` for grouping and JDBC
+batching, rather than feeding them back through the full graph builder/planner.
+
+Callback carriers are intentionally separate from audit writes.
+During normal flush they only collect logical audit intent.
+During before-transaction completion the collector turns the merged intent into
+actual JDBC mutations.
+This keeps audit merging transaction-scoped while still preserving graph queue
+batching for the final audit-table SQL.
+
+== Graph Construction
+
+Graph construction starts from grouped operations.
+The `ConstraintModel` supplies the mapping facts needed by `StandardGraphBuilder`
+to create edges.
+
+The graph builder considers:
+
+* foreign-key dependencies,
+* unique-key conflicts,
+* mutation kind,
+* table descriptors,
+* operation ordinals,
+* deferrable constraint options,
+* self-referential association handling,
+* collection table and entity table relationships.
+
+Edges should express database correctness requirements or required semantic
+ordering.
+Do not add edges to compensate for missing lifecycle callbacks or contributor
+ordering bugs.
+Those belong in decomposition.
+
+== Planning
+
+`StandardFlushPlanner` turns a graph into a `FlushPlan`.
+It performs topological sorting, detects strongly connected components, and
+asks cycle-breaking support to resolve cycles when possible.
+
+Planning output should be deterministic:
+
+* use stable group identifiers,
+* preserve operation ordinals where dependencies allow,
+* keep equal-shape operations grouped for batching,
+* only split groups when correctness requires it.
+
+=== Cycle Handling
+
+Cycles may arise from non-nullable foreign keys, self-references, circular
+associations, or unique-key swaps.
+Cycle-breaking support can synthesize:
+
+* nullable foreign-key fixups,
+* unique-key swap fixups,
+* binding patches installed before the original operation executes,
+* follow-up updates to restore the desired final state.
+
+Deferrable constraints are controlled by planning options.
+Depending on those options, deferrable edges may be ignored for ordering or
+treated as less desirable cycle-break candidates.
+
+Cycle breaking should remain a planner concern.
+Decomposers should emit the true logical mutations; they should not pre-null
+values merely because a cycle might exist.
+
+== Execution
+
+Execution is performed by `PlanStepExecutor`.
+For each planned operation, execution must:
+
+* invoke pre-execution callbacks,
+* apply binding patches,
+* bind values through the operation's `BindPlan`,
+* execute the JDBC mutation operation,
+* collect generated values,
+* run post-execution callbacks,
+* register or execute any synthesized fixups in the correct order.
+
+Post-execution callbacks are how decomposers preserve Hibernate lifecycle work
+such as cache updates, event completion, collection `afterAction`, and generated
+state propagation.
+
+When a logical action has no SQL operation but still needs post-action work,
+the decomposer may create a no-op callback carrier.
+Callback carriers should be action-scoped unless there is a truly row-scoped
+lifecycle reason.
+
+== Identity Inserts and Generated Values
+
+By default the graph queue preserves legacy observable behavior for non-delayed
+identity inserts: identifiers are available after `persist()` when legacy
+semantics require immediate execution.
+
+The graph queue also has an option to defer identity inserts into the normal
+flush plan:
+
+`hibernate.flush.queue.graph.defer_identity_inserts`::
+When enabled, identity inserts are planned with the rest of the flush and
+generated identifiers are resolved through graph-generated value handles.
+
+Generated values are coordinated by insert/update bind plans and
+`GeneratedValuesCollector`.
+Contributors that emit replacement insert/update operations must attach the
+appropriate generated-value collector and post-execution handling supplied by
+their context, or delegate to shared planning support that does so.
+
+== Cache and Event Handling
+
+Graph queue decomposition must preserve:
+
+* pre-insert, pre-update, pre-delete, and collection pre-events,
+* post-action cache handling,
+* transaction-completion callbacks,
+* collection lifecycle callbacks,
+* entity owner update callbacks,
+* statistics/event-monitor completion.
+
+This is why contributors should not bypass decomposer lifecycle casually.
+If a contributor emits a complete replacement plan, it is responsible for
+attaching any callbacks supplied by the context to the correct emitted operation.
+
+For multi-operation replacement plans, attach final post-execution handling to an
+operation that is guaranteed by graph dependencies to execute after all mutations
+needed to complete the logical action.  Emission order alone is not enough: the
+planner may reorder independent operations.  If no real mutation has that
+dependency relationship, emit an explicit callback carrier or add the required
+ordering relationship deliberately.
+
+== Serialization
+
+`ActionQueue` supports session serialization.
+The graph queue has serialization hooks and can deserialize through its factory,
+but contributors should avoid storing non-serializable mutable flush state in
+long-lived queue objects.
+
+Flush-local state belongs in:
+
+* the decomposer during one flush,
+* bind plans created for one operation,
+* callback carriers created for one flush,
+* transaction-completion collectors when the work is explicitly deferred.
+
+== StateManagement Contributor Guidelines
+
+=== Choosing the Right Hook
+
+Use a replacement hook when the standard physical mutation should not run.
+Examples:
+
+* soft-delete entity delete,
+* temporal entity update,
+* temporal row delete,
+* temporal collection value change.
+
+Use an additional hook when the standard physical mutation should still run.
+Examples:
+
+* history-table insert after current-table insert,
+* history-table update rows after current-table update,
+* audit change collection carrier after standard work.
+
+Use an action-scoped collection hook for whole-collection logical changes.
+Use a row-scoped hook only for per-row augmentation.
+
+=== Building Operations
+
+Prefer the existing SQL model builders:
+
+* `TableInsertBuilderStandard`
+* `TableUpdateBuilderStandard`
+* `TableDeleteBuilderStandard`
+* existing persister mutation support helpers
+
+Build `MutationOperation` or `JdbcMutationOperation` instances that can be
+grouped and batched.
+Avoid ad hoc SQL strings or self-executing callbacks unless the work is not a
+JDBC mutation.
+
+=== Binding Values
+
+Keep SQL shape and value binding separate.
+The mutation operation describes the columns and restrictions.
+The bind plan supplies row-specific values at execution time.
+
+Do not capture session-local mutable state in static mutation operations.
+Do not mutate shared insertability/updateability arrays unless the helper
+explicitly documents that ownership.
+
+=== Ordinals
+
+Ordinals are stable ordering hints.
+They are not a substitute for graph dependencies.
+
+Follow existing slot helpers:
+
+* entity decomposers use their action ordinal base and local operation offset,
+* collection decomposers use `CollectionOrdinalSupport`,
+* contributors should place additional operations in the slot that matches their
+  semantic dependency on the standard operation.
+
+=== Callback Placement
+
+If a contributor emits additional operations, the decomposer usually attaches
+post-execution handling after all additional operations are appended.
+
+If a contributor replaces the whole plan, it must attach callbacks itself.
+For replacement update/delete, use the context's post-handling objects rather
+than reconstructing lifecycle behavior.
+
+=== Legacy Boundaries
+
+Do not change legacy coordinators to support graph behavior.
+The only acceptable reason to edit legacy coordinators is to extract or share
+mapping/mutation-building code that both legacy and graph paths need.
+
+Graph queue support should live in:
+
+* graph decomposers,
+* graph contributors,
+* shared support classes under persister/mutation packages when the code is
+  genuinely queue-agnostic,
+* `StateManagementGraphIntegration`.
+
+Legacy queue support should live in:
+
+* legacy coordinators,
+* `StateManagementLegacyIntegration`,
+* legacy auxiliary mutation support.
+
+== Testing Strategy
+
+Test the graph queue at several levels.
+
+Planner tests::
+Use small synthetic graphs to test topological sorting, grouping, cycle
+detection, and cycle breaking.
+
+Decomposer tests::
+Directly decompose actions and assert emitted `FlushOperation` kinds, tables,
+ordinals, and callbacks.
+
+Integration tests::
+Run real sessions and verify database state, generated identifiers, lifecycle
+callbacks, and batching-sensitive behavior.
+
+State-management tests::
+For soft-delete, temporal, history, and audit, cover:
+
+* entity insert/update/delete,
+* secondary tables,
+* joined inheritance,
+* table-per-class where applicable,
+* basic collections,
+* one-to-many collections,
+* many-to-many/join-table collections,
+* queued operations,
+* order-column/index changes,
+* remove-all and recreate paths.
+
+Regression tests for defaults::
+Keep a focused test proving that an unconfigured factory uses `QueueType.GRAPH`.
+Keep explicit `legacy` tests where behavior must remain available until the
+legacy queue is removed.
+
+== Common Failure Modes
+
+Contributor/decomposer boundary leaks::
+A contributor casts back to a concrete decomposer or calls decomposer internals.
+Extract a shared planner/helper instead.
+
+Row hooks used for action-level work::
+Audit-style whole-collection changes are emitted once per inserted row.
+Use `contributeCollectionChange`.
+
+Unbatchable audit/history work::
+A contributor emits self-executing operations for work that can be represented
+as JDBC mutations.
+Build proper mutation operations and bind plans.
+
+Incorrect table descriptor for inheritance::
+Collection or entity mutations use the union/abstract table instead of the
+concrete table that owns the row.
+Build JDBC operations from the selected concrete persister/table descriptor.
+
+Callback attached too early::
+A replacement or additional plan attaches post-execution handling before all
+logical work is complete.
+Attach it to the final operation for the logical action.
+
+Static operation captures dynamic state::
+A reusable mutation operation accidentally captures session, entity, row state,
+or mutable inclusion arrays.
+Move row/session values into the bind plan.
+
+Graph edge hides lifecycle bug::
+An edge is added to force callback ordering.
+Fix the decomposer/contributor callback placement instead.
+
+== Open Design Areas
+
+These areas are intentionally still worth revisiting as the graph queue becomes
+the default and legacy support shrinks:
+
+* remove or simplify legacy-only methods from shared contracts,
+* continue moving semantic mapping helpers out of legacy coordinator shapes,
+* reduce direct references from graph code to legacy action classes where a
+  graph-native action abstraction becomes useful,
+* expand collection contributor coverage for less common collection shapes,
+* document which serialization guarantees are required for graph queue sessions,
+* decide when explicit graph-only tests no longer need runtime assumptions.

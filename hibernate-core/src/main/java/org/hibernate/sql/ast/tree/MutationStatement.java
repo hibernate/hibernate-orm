@@ -18,7 +18,7 @@ import org.hibernate.sql.model.MutationTarget;
 public interface MutationStatement extends Statement {
 	NamedTableReference getTargetTable();
 
-	MutationTarget<?> getMutationTarget();
+	MutationTarget<?,?> getMutationTarget();
 
 	List<ColumnReference> getReturningColumns();
 }

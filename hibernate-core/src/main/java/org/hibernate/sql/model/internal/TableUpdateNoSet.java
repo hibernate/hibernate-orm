@@ -32,7 +32,7 @@ import static java.util.Collections.emptyList;
 public class TableUpdateNoSet
 		extends AbstractRestrictedTableMutation<MutationOperation>
 		implements TableUpdate<MutationOperation> {
-	public TableUpdateNoSet(MutatingTableReference mutatingTable, MutationTarget<?> mutationTarget) {
+	public TableUpdateNoSet(MutatingTableReference mutatingTable, MutationTarget<?,?> mutationTarget) {
 		super(
 				mutatingTable,
 				mutationTarget,
@@ -55,6 +55,11 @@ public class TableUpdateNoSet
 
 	@Override
 	public void accept(SqlAstWalker walker) {
+	}
+
+	@Override
+	public void forEachValueBinding(BiConsumer<Integer, ColumnValueBinding> consumer) {
+		// there are none
 	}
 
 	@Override

@@ -189,7 +189,15 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 							);
 			persister.afterReassociate( entity, source );
 
-			delete( event, transientEntities, source, entity, persister, id, version, entityEntry );
+			deleteEntity(
+					source,
+					entity,
+					entityEntry,
+					event.isCascadeDeleteEnabled(),
+					event.isOrphanRemovalBeforeUpdates(),
+					persister,
+					transientEntities
+			);
 		}
 	}
 
@@ -242,40 +250,15 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 			EVENT_LISTENER_LOGGER.alreadyDeleted();
 		}
 		else {
-			delete(
-					event,
-					transientEntities,
+			deleteEntity(
 					source,
 					entity,
+					entityEntry,
+					event.isCascadeDeleteEnabled(),
+					event.isOrphanRemovalBeforeUpdates(),
 					entityEntry.getPersister(),
-					entityEntry.getId(),
-					entityEntry.getVersion(),
-					entityEntry
+					transientEntities
 			);
-		}
-	}
-
-	private void delete(
-			DeleteEvent event,
-			DeleteContext transientEntities,
-			EventSource source,
-			Object entity,
-			EntityPersister persister,
-			Object id,
-			Object version,
-			EntityEntry entityEntry) {
-		source.runEntityLifecycleCallback( () -> persister.getEntityCallbacks().preRemove( entity ) );
-		deleteEntity(
-				source,
-				entity,
-				entityEntry,
-				event.isCascadeDeleteEnabled(),
-				event.isOrphanRemovalBeforeUpdates(),
-				persister,
-				transientEntities
-		);
-		if ( source.getFactory().getSessionFactoryOptions().isIdentifierRollbackEnabled() ) {
-			persister.resetIdentifier( entity, id, version, source );
 		}
 	}
 
@@ -341,7 +324,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 	/**
 	 * Perform the entity deletion.  Well, as with most operations, does not
 	 * really perform it; just schedules an action/execution with the
-	 * {@link org.hibernate.engine.spi.ActionQueue} for execution during flush.
+	 * {@link org.hibernate.action.queue.spi.ActionQueue} for execution during flush.
 	 *
 	 * @param session The originating session
 	 * @param entity The entity to delete
@@ -364,6 +347,9 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 					infoString( persister, entityEntry.getId(), session.getFactory() ) );
 		}
 
+		session.runEntityLifecycleCallback( () -> persister.getEntityCallbacks().preRemove( entity ) );
+
+		final Object id = entityEntry.getId();
 		final Object version = entityEntry.getVersion();
 
 		final Object[] currentState =
@@ -430,6 +416,10 @@ public class DefaultDeleteEventListener implements DeleteEventListener {
 		}
 
 		cascadeAfterDelete( session, persister, entity, transientEntities );
+
+		if ( session.getFactory().getSessionFactoryOptions().isIdentifierRollbackEnabled() ) {
+			persister.resetIdentifier( entity, id, version, session );
+		}
 
 		// the entry will be removed after the flush, and will no longer
 		// override the stale snapshot

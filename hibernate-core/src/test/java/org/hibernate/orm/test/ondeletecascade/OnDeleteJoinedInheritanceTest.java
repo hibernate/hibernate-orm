@@ -8,8 +8,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.Test;
@@ -23,7 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		useCollectingStatementInspector = true)
 //@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsCascadeDeleteCheck.class)
 class OnDeleteJoinedInheritanceTest {
-	@Test void test(EntityManagerFactoryScope scope) {
+	@Test
+	void test(EntityManagerFactoryScope scope) {
 		var inspector = scope.getCollectingStatementInspector();
 		scope.inTransaction( em -> {
 			B b = new B();
@@ -33,7 +36,9 @@ class OnDeleteJoinedInheritanceTest {
 			c.id = 2;
 			em.persist( c );
 		} );
-		inspector.assertExecutedCount( 4 );
+		// The GRAPH queue batches the inserts into the root table whereas the LEGACY queue
+		// could not.
+		inspector.assertExecutedCount( isGraphQueue( scope ) ? 3 : 4 );
 		inspector.clear();
 
 		scope.inTransaction( em -> {
@@ -55,7 +60,12 @@ class OnDeleteJoinedInheritanceTest {
 			assertEquals( 0,
 					em.createNativeQuery( "select count(*) from A", Integer.class )
 							.getSingleResultOrNull() );
-		});
+		} );
+	}
+
+	private static boolean isGraphQueue(EntityManagerFactoryScope scope) {
+		return ((SessionFactoryImplementor) scope.getEntityManagerFactory()).getActionQueueFactory()
+				.getConfiguredQueueType() == QueueType.GRAPH;
 	}
 
 	@Entity(name = "A")

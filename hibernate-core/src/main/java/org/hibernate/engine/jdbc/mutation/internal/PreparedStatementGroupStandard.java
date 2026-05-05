@@ -32,7 +32,7 @@ import org.hibernate.sql.model.TableMapping;
  */
 public class PreparedStatementGroupStandard extends AbstractPreparedStatementGroup {
 	private final MutationType mutationType;
-	private final MutationTarget<?> mutationTarget;
+	private final MutationTarget<?,?> mutationTarget;
 	private final List<PreparableMutationOperation> jdbcMutations;
 
 	private final SortedMap<String, PreparedStatementDetails> statementMap;
@@ -40,7 +40,7 @@ public class PreparedStatementGroupStandard extends AbstractPreparedStatementGro
 
 	public PreparedStatementGroupStandard(
 			MutationType mutationType,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			GeneratedValuesMutationDelegate generatedValuesDelegate,
 			List<PreparableMutationOperation> jdbcMutations,
 			SharedSessionContractImplementor session) {
@@ -159,7 +159,7 @@ public class PreparedStatementGroupStandard extends AbstractPreparedStatementGro
 				if ( tableMapping == null ) {
 					return -1;
 				}
-				return jdbcMutations.size() - tableMapping.getRelativePosition();
+				return jdbcMutations.size() - tableMapping.relativePosition();
 			} );
 		}
 		else {
@@ -168,7 +168,7 @@ public class PreparedStatementGroupStandard extends AbstractPreparedStatementGro
 				if ( tableMapping == null ) {
 					return -1;
 				}
-				return tableMapping.getRelativePosition();
+				return tableMapping.relativePosition();
 			} );
 		}
 

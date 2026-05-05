@@ -18,7 +18,7 @@ public abstract class AbstractMutationStatement extends AbstractStatement implem
 
 	private final NamedTableReference targetTable;
 	private final List<ColumnReference> returningColumns;
-	private final MutationTarget<?> mutationTarget;
+	private final MutationTarget<?,?> mutationTarget;
 
 	@Deprecated(forRemoval = true, since = "7.3")
 	public AbstractMutationStatement(
@@ -31,7 +31,7 @@ public abstract class AbstractMutationStatement extends AbstractStatement implem
 	public AbstractMutationStatement(
 			CteContainer cteContainer,
 			NamedTableReference targetTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			List<ColumnReference> returningColumns) {
 		super( cteContainer );
 		this.targetTable = targetTable;
@@ -50,7 +50,7 @@ public abstract class AbstractMutationStatement extends AbstractStatement implem
 	}
 
 	@Override
-	public MutationTarget<?> getMutationTarget() {
+	public MutationTarget<?,?> getMutationTarget() {
 		return mutationTarget;
 	}
 }

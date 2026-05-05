@@ -582,13 +582,16 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 					offset,
 					x,
 					y,
-					(valueIndex, arg1, arg2, jdbcValue, jdbcValueMapping) -> valueConsumer.consume(
-							offset,
-							arg1,
-							arg2,
-							jdbcValue,
-							keySelectableMappings.getSelectable( columnPosition.getAndIncrement() )
-					),
+					(valueIndex, arg1, arg2, jdbcValue, jdbcValueMapping) -> {
+						final int position = columnPosition.getAndIncrement();
+						valueConsumer.consume(
+								offset + position,
+								arg1,
+								arg2,
+								jdbcValue,
+								keySelectableMappings.getSelectable( position )
+						);
+					},
 					session
 			);
 		}

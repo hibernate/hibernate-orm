@@ -4,15 +4,13 @@
  */
 package org.hibernate.engine.jdbc.batch.spi;
 
-import java.sql.PreparedStatement;
-import java.util.function.Supplier;
-
-import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
-import org.hibernate.StaleStateException;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
+
+import java.sql.PreparedStatement;
+import java.util.function.Supplier;
 
 /**
  * Represents a batch of statements to be executed together.
@@ -56,11 +54,6 @@ public interface Batch {
 	 * of the current part of the batch.
 	 */
 	void addToBatch(JdbcValueBindings jdbcValueBindings, TableInclusionChecker inclusionChecker, StaleStateMapper staleStateMapper);
-
-	@FunctionalInterface
-	interface StaleStateMapper {
-		HibernateException map(StaleStateException staleStateException);
-	}
 
 	/**
 	 * Execute this batch.

@@ -9,6 +9,7 @@ import java.sql.Types;
 import java.util.Collection;
 import java.util.List;
 
+import org.hibernate.action.queue.spi.QueueType;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
@@ -135,5 +136,9 @@ abstract class BaseInsertOrderingTest extends BaseSessionFactoryFunctionalTest {
 
 	void clearBatches() {
 		connectionProvider.clear();
+	}
+
+	boolean isGraphQueue() {
+		return sessionFactory().getActionQueueFactory().getConfiguredQueueType() == QueueType.GRAPH;
 	}
 }

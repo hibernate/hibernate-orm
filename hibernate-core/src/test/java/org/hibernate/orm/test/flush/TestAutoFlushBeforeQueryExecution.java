@@ -9,10 +9,8 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
@@ -60,7 +58,7 @@ public class TestAutoFlushBeforeQueryExecution implements BootstrapServiceRegist
 			Assertions.assertTrue( publisher.getAuthors().isEmpty() );
 
 			final PersistenceContext persistenceContext = session.getPersistenceContext();
-			final ActionQueue actionQueue = session.unwrap( EventSource.class ).getActionQueue();
+			final var actionQueue = session.getActionQueue();
 			Assertions.assertEquals( 1, persistenceContext.getCollectionEntriesSize() );
 			Assertions.assertEquals( 1, persistenceContext.getCollectionsByKey().size() );
 			Assertions.assertTrue( persistenceContext.getCollectionEntries().containsKey( publisher.getAuthors() ) );
@@ -146,7 +144,7 @@ public class TestAutoFlushBeforeQueryExecution implements BootstrapServiceRegist
 			Assertions.assertTrue( publisher.getAuthors().isEmpty() );
 
 			final PersistenceContext persistenceContext = s.getPersistenceContext();
-			final ActionQueue actionQueue = s.unwrap( EventSource.class ).getActionQueue();
+			final var actionQueue = s.getActionQueue();
 			Assertions.assertEquals( 1, persistenceContext.getCollectionEntriesSize() );
 			Assertions.assertEquals( 1, persistenceContext.getCollectionsByKey().size() );
 			Assertions.assertTrue( persistenceContext.getCollectionEntries().containsKey( publisher.getAuthors() ) );

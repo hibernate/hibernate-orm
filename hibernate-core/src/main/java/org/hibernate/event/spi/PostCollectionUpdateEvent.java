@@ -33,6 +33,37 @@ public class PostCollectionUpdateEvent extends AbstractCollectionEvent {
 	public PostCollectionUpdateEvent(
 			CollectionPersister collectionPersister,
 			PersistentCollection<?> collection,
+			EventSource source,
+			Object affectedOwner) {
+		super(
+				collectionPersister,
+				collection,
+				source,
+				affectedOwner,
+				getOwnerIdOrNull( affectedOwner, source )
+		);
+	}
+
+	@Internal
+	public PostCollectionUpdateEvent(
+			CollectionPersister collectionPersister,
+			PersistentCollection<?> collection,
+			EventSource source,
+			Object affectedOwner,
+			Object affectedOwnerId) {
+		super(
+				collectionPersister,
+				collection,
+				source,
+				affectedOwner,
+				affectedOwnerId
+		);
+	}
+
+	@Internal
+	public PostCollectionUpdateEvent(
+			CollectionPersister collectionPersister,
+			PersistentCollection<?> collection,
 			Object id,
 			String entityName,
 			Object loadedOwner) {

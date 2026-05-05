@@ -24,7 +24,7 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.creation.internal.SessionCreationOptions;
 import org.hibernate.engine.creation.internal.SharedSessionCreationOptions;
 import org.hibernate.engine.internal.PersistenceContexts;
-import org.hibernate.engine.spi.ActionQueue;
+import org.hibernate.action.queue.spi.ActionQueue;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
@@ -212,6 +212,7 @@ public class SessionImpl
 		}
 	}
 
+	@SuppressWarnings("removal")
 	private static void setUpTransactionCompletionProcesses(
 			SessionCreationOptions options,
 			ActionQueue actionQueue,
@@ -252,7 +253,7 @@ public class SessionImpl
 	}
 
 	protected ActionQueue createActionQueue() {
-		return new ActionQueue( this );
+		return getFactory().getActionQueueFactory().buildActionQueue( this );
 	}
 
 	@Override
@@ -1372,7 +1373,7 @@ public class SessionImpl
 	@Override
 	public boolean isDirty() {
 		checkOpen();
-		if ( actionQueue.areInsertionsOrDeletionsQueued() ) {
+		if ( actionQueue.hasAnyQueuedActions() ) {
 			return true;
 		}
 		else {
@@ -2693,7 +2694,7 @@ public class SessionImpl
 
 		persistenceContext = PersistenceContexts.deserialize( ois, this );
 		loadQueryInfluencers = (LoadQueryInfluencers) ois.readObject();
-		actionQueue = ActionQueue.deserialize( ois, this );
+		actionQueue = getFactory().getActionQueueFactory().deserialize(  ois, this );
 
 		// LoadQueryInfluencers#getEnabledFilters() tries to validate each enabled
 		// filter, which will fail when called before FilterImpl#afterDeserialize( factory );

@@ -32,6 +32,9 @@ import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.StatementObserver;
 import org.hibernate.UnknownFilterException;
+import org.hibernate.action.queue.spi.ActionQueueFactory;
+import org.hibernate.action.queue.spi.PlanningOptions;
+import org.hibernate.action.queue.internal.support.ActionQueueFactoryService;
 import org.hibernate.binder.internal.TenantIdBinder;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
@@ -49,6 +52,7 @@ import org.hibernate.context.internal.ThreadLocalSessionContext;
 import org.hibernate.context.spi.CurrentSessionContext;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.creation.internal.SessionBuilderImpl;
 import org.hibernate.engine.creation.internal.StatelessSessionBuilderImpl;
 import org.hibernate.engine.creation.spi.SessionBuilderImplementor;
@@ -135,6 +139,7 @@ import static jakarta.persistence.SynchronizationType.SYNCHRONIZED;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Locale.ROOT;
+import static org.hibernate.action.queue.internal.support.GraphBasedActionQueueFactory.buildPlanningOptions;
 import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
 import static org.hibernate.internal.FetchProfileHelper.addFetchProfiles;
 import static org.hibernate.internal.SessionFactoryLogging.SESSION_FACTORY_LOGGER;
@@ -220,6 +225,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	final transient JdbcValuesMappingProducerProvider jdbcValuesMappingProducerProvider;
 	final transient ChangesetCoordinator changesetCoordinator;
 
+	private final PlanningOptions graphPlanningOptions;
+	private final transient ActionQueueFactory actionQueueFactory;
+
 	public SessionFactoryImpl(
 			final MetadataImplementor bootMetamodel,
 			final SessionFactoryOptions options,
@@ -235,6 +243,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		serviceRegistry = getServiceRegistry( options, this );
 		eventEngine = new EventEngine( bootMetamodel, this );
+
+		graphPlanningOptions = buildPlanningOptions( serviceRegistry.requireService( ConfigurationService.class ) );
 
 		bootMetamodel.initSessionFactory( this );
 
@@ -300,8 +310,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			// now actually create the mapping and JPA metamodels
 			final var mappingMetamodelImpl = new MappingMetamodelImpl( typeConfiguration, serviceRegistry );
 			runtimeMetamodelsImpl.setMappingMetamodel( mappingMetamodelImpl );
-			mappingMetamodelImpl.finishInitialization(
-					new ModelCreationContext( bootstrapContext, bootMetamodel, mappingMetamodelImpl, typeConfiguration ) );
+			mappingMetamodelImpl.finishInitialization( new ModelCreationContext(
+					bootstrapContext,
+					bootMetamodel,
+					mappingMetamodelImpl,
+					typeConfiguration,
+					graphPlanningOptions
+			) );
 			runtimeMetamodelsImpl.setJpaMetamodel( mappingMetamodelImpl.getJpaMetamodel() );
 
 			// this needs to happen after the mapping metamodel is
@@ -339,6 +354,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			// really know or control who's calling back to us while
 			// we're in an incompletely-initialized state
 			typeConfiguration.scope( this );
+
+			actionQueueFactory = serviceRegistry.requireService( ActionQueueFactoryService.class )
+					.buildActionQueueFactory( this );
 
 			observerChain.sessionFactoryCreated( this );
 		}
@@ -416,6 +434,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
+	public ActionQueueFactory getActionQueueFactory() {
+		return actionQueueFactory;
+	}
+
+	@Override
 	public ParameterMarkerStrategy getParameterMarkerStrategy() {
 		return parameterMarkerStrategy;
 	}
@@ -443,6 +466,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public EventListenerRegistry getEventListenerRegistry() {
 		return eventEngine.getListenerRegistry();
+	}
+
+	public PlanningOptions getGraphPlanningOptions() {
+		return graphPlanningOptions;
 	}
 
 	class IntegratorObserver implements SessionFactoryObserver {
@@ -1346,16 +1373,19 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		private final MetadataImplementor bootMetamodel;
 		private final MappingMetamodelImplementor mappingMetamodel;
 		private final TypeConfiguration typeConfiguration;
+		private final PlanningOptions graphPlanningOptions;
 
 		private ModelCreationContext(
 				BootstrapContext bootstrapContext,
 				MetadataImplementor bootMetamodel,
 				MappingMetamodelImplementor mappingMetamodel,
-				TypeConfiguration typeConfiguration) {
+				TypeConfiguration typeConfiguration,
+				PlanningOptions graphPlanningOptions) {
 			this.bootstrapContext = bootstrapContext;
 			this.bootMetamodel = bootMetamodel;
 			this.mappingMetamodel = mappingMetamodel;
 			this.typeConfiguration = typeConfiguration;
+			this.graphPlanningOptions = graphPlanningOptions;
 			generators = new HashMap<>();
 		}
 
@@ -1383,6 +1413,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@Override
 		public CacheImplementor getCache() {
 			return cacheAccess;
+		}
+
+		public PlanningOptions getGraphPlanningOptions() {
+			return graphPlanningOptions;
 		}
 
 		@Override

@@ -5,13 +5,16 @@
 package org.hibernate.persister.collection.mutation;
 
 
+import org.hibernate.action.queue.spi.decompose.collection.CollectionMutationTarget;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
+
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.singleOperation;
@@ -20,7 +23,7 @@ import static org.hibernate.sql.model.internal.MutationOperationGroupFactory.sin
  * @author Steve Ebersole
  */
 public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
-	private final CollectionMutationTarget mutationTarget;
+	private final AbstractCollectionPersister mutationTarget;
 	private final RowMutationOperations rowMutationOperations;
 
 	private final BasicBatchKey batchKey;
@@ -29,7 +32,7 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 	private MutationOperationGroup operationGroup;
 
 	public InsertRowsCoordinatorStandard(
-			CollectionMutationTarget mutationTarget,
+			AbstractCollectionPersister mutationTarget,
 			RowMutationOperations rowMutationOperations,
 			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
@@ -100,6 +103,8 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 					);
 					mutationExecutor.execute( entry, null, null, null, session );
 				}
+				else {
+				}
 
 				entryCount++;
 			}
@@ -119,4 +124,5 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 		final var operation = rowMutationOperations.getInsertRowOperation();
 		return singleOperation( MutationType.INSERT, mutationTarget, operation );
 	}
+
 }

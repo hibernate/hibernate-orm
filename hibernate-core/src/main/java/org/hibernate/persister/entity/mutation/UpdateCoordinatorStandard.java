@@ -277,7 +277,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			boolean forceDynamicUpdate,
 			boolean temporalExcludedUpdate) {
 
-		final InclusionChecker dirtinessChecker =
+		final AttributeInclusionChecker dirtinessChecker =
 				(position, attribute) -> isDirty(
 						hasDirtyCollection,
 						versionMapping,
@@ -288,7 +288,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 						entityPersister()
 				);
 
-		final InclusionChecker lockingChecker =
+		final AttributeInclusionChecker lockingChecker =
 				(position, attribute) -> includedInLock(
 						versionMapping,
 						dirtinessChecker,
@@ -296,6 +296,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 						attribute,
 						entityPersister()
 				);
+
+		final AttributeInclusionChecker inclusionChecker = (position, attribute) -> attributeUpdateability[position];
 
 		final var valuesAnalysis = analyzeUpdateValues(
 				entity,
@@ -383,7 +385,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 	private static boolean includedInLock(
 			EntityVersionMapping versionMapping,
-			InclusionChecker dirtinessChecker,
+			AttributeInclusionChecker dirtinessChecker,
 			int position,
 			SingularAttributeMapping attribute,
 			EntityPersister persister) {
@@ -649,9 +651,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object oldVersion,
 			Object[] oldValues,
 			int[] dirtyAttributeIndexes,
-			InclusionChecker inclusionChecker,
-			InclusionChecker lockingChecker,
-			InclusionChecker dirtinessChecker,
+			AttributeInclusionChecker inclusionChecker,
+			AttributeInclusionChecker lockingChecker,
+			AttributeInclusionChecker dirtinessChecker,
 			boolean restrictToTemporalExcluded,
 			Object rowId,
 			boolean forceDynamicUpdate,
@@ -717,8 +719,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			SingularAttributeMapping attributeMapping,
 			Object oldVersion,
 			Object[] oldValues,
-			InclusionChecker inclusionChecker,
-			InclusionChecker lockingChecker,
+			AttributeInclusionChecker inclusionChecker,
+			AttributeInclusionChecker lockingChecker,
 			boolean restrictToTemporalExcluded,
 			SharedSessionContractImplementor session) {
 
@@ -794,7 +796,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		return selectable.isUpdateable();
 	}
 
-	protected InclusionChecker createInclusionChecker(boolean[] attributeUpdateability) {
+	protected AttributeInclusionChecker createInclusionChecker(boolean[] attributeUpdateability) {
 		return (position, attribute) -> attributeUpdateability[position];
 	}
 
@@ -1052,7 +1054,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object rowId,
 			Object[] values,
 			Object[] oldValues,
-			InclusionChecker dirtinessChecker,
+			AttributeInclusionChecker dirtinessChecker,
 			UpdateValuesAnalysisImpl valuesAnalysis,
 			SharedSessionContractImplementor session) {
 		// Create the JDBC operation descriptors
@@ -1356,7 +1358,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	protected class UpdateValuesAnalysisImpl implements UpdateValuesAnalysis {
 		private final Object[] values;
 		private final int[] dirtyAttributeIndexes;
-		private final InclusionChecker dirtinessChecker;
+		private final AttributeInclusionChecker dirtinessChecker;
 
 		private final TableSet tablesNeedingUpdate = new TableSet();
 		private final TableSet tablesNeedingDynamicUpdate = new TableSet();
@@ -1374,7 +1376,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				Object[] values,
 				Object[] oldValues,
 				int[] dirtyAttributeIndexes,
-				InclusionChecker dirtinessChecker,
+				AttributeInclusionChecker dirtinessChecker,
 				Object rowId,
 				boolean forceDynamicUpdate) {
 			this.values = values;
@@ -1789,11 +1791,6 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 			return MutationOperationGroupFactory.singleOperation( MutationType.UPDATE, entityPersister(), jdbcMutation );
 		}
-	}
-
-	@FunctionalInterface
-	protected interface InclusionChecker {
-		boolean include(int position, SingularAttributeMapping attribute);
 	}
 
 	@FunctionalInterface

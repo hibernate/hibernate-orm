@@ -24,36 +24,48 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SuppressWarnings("JUnitMalformedDeclaration")
-@SessionFactory
 @DomainModel(annotatedClasses = CustomSqlGeneratedTest.Custom.class)
+@SessionFactory
 public class CustomSqlGeneratedTest {
 	@Test
 	public void testCustomSqlWithGenerated(SessionFactoryScope scope) {
-		Custom c = new Custom();
-		c.name = "name";
-		c.text = "text";
-		scope.inTransaction(s->{
-			s.persist(c);
-			s.flush();
-			Custom cc = s.find(Custom.class, c.id);
-			assertEquals(cc.text, "TEXT");
-			assertEquals(cc.name, "NAME");
+		var id = scope.fromTransaction( (session) -> {
+			Custom c = new Custom();
+			c.name = "name";
+			c.text = "text";
+			session.persist(c);
+			session.flush();
+			return c.id;
+		} );
+
+		scope.inTransaction( (session) -> {
+			var cc = session.find(Custom.class, id);
+			assertThat( cc.text ).isEqualTo( "TEXT" );
+			assertThat( cc.name ).isEqualTo( "NAME" );
+
 			cc.name = "eman";
 			cc.text = "more text";
-			s.flush();
-			cc = s.find(Custom.class, c.id);
+		} );
+
+		scope.inTransaction( (session) -> {
+			var  cc = session.find(Custom.class, id);
+
 			assertThat(cc.text ).isEqualTo( "MORE TEXT");
 			assertThat( cc.name ).isEqualTo( "EMAN" );
-			s.remove(cc);
-			s.flush();
-			cc = s.find(Custom.class, c.id);
-			assertEquals(cc.text, "DELETED");
-			assertEquals(cc.name, "DELETED");
+
+			session.remove(cc);
+		} );
+
+		scope.inTransaction( (session) -> {
+			var cc = session.find(Custom.class, id);
+
+			assertThat(cc.text ).isEqualTo( "DELETED");
+			assertThat( cc.name ).isEqualTo( "DELETED" );
 		});
 	}
+
+
 	@Entity
 	@Table(name = "CustomPrimary")
 	@SecondaryTable(name = "CustomSecondary")

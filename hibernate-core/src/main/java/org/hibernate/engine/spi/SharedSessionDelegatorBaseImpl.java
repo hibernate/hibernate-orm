@@ -562,6 +562,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
+	public @Nullable Object getCurrentChangesetContext() {
+		return delegate.getCurrentChangesetContext();
+	}
+
+	@Override
 	public boolean isTransactionInProgress() {
 		return delegate.isTransactionInProgress();
 	}

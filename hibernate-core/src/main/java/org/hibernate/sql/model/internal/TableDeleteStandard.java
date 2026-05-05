@@ -11,17 +11,19 @@ import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.ast.AbstractTableDelete;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.ast.ColumnValueParameter;
+import org.hibernate.sql.model.ast.GeneratedMutation;
 import org.hibernate.sql.model.ast.MutatingTableReference;
+import org.hibernate.sql.model.jdbc.JdbcDeleteMutation;
 
 /**
  * @author Steve Ebersole
  */
-public class TableDeleteStandard extends AbstractTableDelete {
+public class TableDeleteStandard extends AbstractTableDelete implements GeneratedMutation<JdbcDeleteMutation> {
 	private final String whereFragment;
 
 	public TableDeleteStandard(
 			MutatingTableReference mutatingTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String sqlComment,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,
@@ -31,7 +33,7 @@ public class TableDeleteStandard extends AbstractTableDelete {
 
 	public TableDeleteStandard(
 			MutatingTableReference mutatingTable,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			String sqlComment,
 			List<ColumnValueBinding> keyRestrictionBindings,
 			List<ColumnValueBinding> optLockRestrictionBindings,

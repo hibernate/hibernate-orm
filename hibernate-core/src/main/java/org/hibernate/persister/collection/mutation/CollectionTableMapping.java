@@ -107,7 +107,7 @@ public class CollectionTableMapping implements TableMapping {
 	}
 
 	@Override
-	public int getRelativePosition() {
+	public int relativePosition() {
 		return 0;
 	}
 

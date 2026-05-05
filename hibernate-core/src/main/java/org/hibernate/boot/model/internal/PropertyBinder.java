@@ -31,9 +31,9 @@ import jakarta.persistence.Version;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AttributeBinderType;
+import org.hibernate.annotations.Audited;
 import org.hibernate.annotations.CascadeType;
 import org.hibernate.annotations.CompositeType;
 import org.hibernate.annotations.IdGeneratorType;
@@ -48,7 +48,6 @@ import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -70,6 +69,7 @@ import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.ModelsContext;
 import org.hibernate.models.spi.TypeDetails;
+import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.usertype.CompositeUserType;
 
 import java.lang.annotation.Annotation;
@@ -101,8 +101,8 @@ import static org.hibernate.boot.model.internal.TimeZoneStorageHelper.resolveTim
 import static org.hibernate.boot.model.internal.ToOneBinder.bindManyToOne;
 import static org.hibernate.boot.model.internal.ToOneBinder.bindOneToOne;
 import static org.hibernate.id.IdentifierGeneratorHelper.getForeignId;
-import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isBlank;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**

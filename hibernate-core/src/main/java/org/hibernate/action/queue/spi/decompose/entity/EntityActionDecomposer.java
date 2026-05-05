@@ -1,0 +1,52 @@
+/*
+ * SPDX-License-Identifier: Apache-2.0
+ * Copyright Red Hat Inc. and Hibernate Authors
+ */
+package org.hibernate.action.queue.spi.decompose.entity;
+
+
+import org.hibernate.Incubating;
+import org.hibernate.action.queue.spi.decompose.DecompositionContext;
+import org.hibernate.action.queue.spi.plan.FlushOperation;
+import org.hibernate.action.spi.Executable;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+
+import java.util.function.Consumer;
+
+/// Handles decomposing for a single [action][Executable] type (delegation).
+///
+/// Decomposes actions into individual table operations. Grouping and batching
+/// of operations happens later in FlushCoordinator.
+///
+/// Post-execution callbacks are attached directly to Flush operations and execute
+/// inline as operations complete, rather than being registered globally.
+///
+/// Entity decomposers are created by the entity persister.  State-management
+/// strategies may still alter the mutation plan by supplying an
+/// [EntityMutationPlanContributor].  The decomposer owns the common action
+/// lifecycle and operation ordering, while the contributor may replace the
+/// table mutation plan for logical update/delete actions such as soft-delete
+/// or temporal row versioning.
+///
+/// @see org.hibernate.action.queue.internal.decompose.Decomposer
+/// @see EntityMutationPlanContributor
+///
+/// @author Steve Ebersole
+/// @since 8.0
+@Incubating
+public interface EntityActionDecomposer<A extends Executable> {
+	/// Decompose the [action][Executable] into its constituent [table operations][FlushOperation].
+	///
+	/// @param action The [action][Executable] to decompose
+	/// @param ordinalBase Defines a "slot range" which is used to help order operations later.
+	/// 		Use small offsets from this base for each operation.
+	/// @param session The session from which this request originates.
+	/// @param decompositionContext The decomposition context tracking entities being inserted (might be null)
+	/// @param operationConsumer Consumer for any [table operations][FlushOperation] produced
+	void decompose(
+			A action,
+			int ordinalBase,
+			SharedSessionContractImplementor session,
+			DecompositionContext decompositionContext,
+			Consumer<FlushOperation> operationConsumer);
+}

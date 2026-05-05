@@ -13,7 +13,6 @@ import jakarta.transaction.Transaction;
 import org.hibernate.HibernateException;
 import org.hibernate.action.spi.AfterTransactionCompletionProcess;
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
-import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -78,7 +77,7 @@ public class JtaAfterCompletionTest {
 				// Register before and after callback handlers
 				// The before causes the original thread to wait until Reaper aborts the transaction
 				// The after tracks whether it is invoked since this test is to guarantee it is called
-				final ActionQueue actionQueue = session.unwrap( EventSource.class ).getActionQueue();
+				final var actionQueue = session.unwrap( EventSource.class ).getActionQueue();
 				actionQueue.registerCallback( new AfterCallbackCompletionHandler() );
 				actionQueue.registerCallback( new BeforeCallbackCompletionHandler() );
 

@@ -4,14 +4,15 @@
  */
 package org.hibernate.sql.model.ast;
 
+import java.util.Locale;
 import java.util.Objects;
 
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 
 /**
- * Represents the binding of a value to a column.  Uniformly
- * models both value assignments and value restrictions in
+ * Represents the binding of a value to a column.
+ * Uniformly models both assignments and restrictions in
  * relation to inserts, updates and upserts.
  *
  * @author Steve Ebersole
@@ -57,9 +58,25 @@ public class ColumnValueBinding {
 			|| selectableMapping.isUpdateable();
 	}
 
+	public boolean matches(SelectableMapping selectableMapping) {
+		return columnReference.isColumnExpressionFormula() == selectableMapping.isFormula()
+			&& Objects.equals( columnReference.getColumnExpression(), selectableMapping.getSelectionExpression() );
+	}
+
 	@Override
 	public String toString() {
-		return "ColumnValueBinding(" + valueExpression + ")";
+		return String.format( Locale.ROOT, "ColumnValueBinding(%s=%s)",
+				columnReference.getColumnExpression(),
+				valueExpressionString( valueExpression )
+		);
+	}
+
+	private String valueExpressionString(ColumnWriteFragment valueExpression) {
+		return switch ( valueExpression.getParameters().size() ) {
+			case 0 -> valueExpression.getFragment();
+			case 1 -> "?";
+			default -> "(?,...)";
+		};
 	}
 
 	@Override

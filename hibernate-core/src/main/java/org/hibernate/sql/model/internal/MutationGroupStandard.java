@@ -20,12 +20,12 @@ import org.hibernate.sql.model.ast.TableMutation;
  */
 public class MutationGroupStandard implements MutationGroup {
 	private final MutationType mutationType;
-	private final MutationTarget<?> mutationTarget;
+	private final MutationTarget<?,?> mutationTarget;
 	private final List<? extends TableMutation<?>> tableMutationList;
 
 	public MutationGroupStandard(
 			MutationType mutationType,
-			MutationTarget<?> mutationTarget,
+			MutationTarget<?,?> mutationTarget,
 			List<? extends TableMutation<?>> tableMutationList) {
 		this.mutationType = mutationType;
 		this.mutationTarget = mutationTarget;
@@ -38,7 +38,7 @@ public class MutationGroupStandard implements MutationGroup {
 	}
 
 	@Override
-	public MutationTarget<?> getMutationTarget() {
+	public MutationTarget<?,?> getMutationTarget() {
 		return mutationTarget;
 	}
 

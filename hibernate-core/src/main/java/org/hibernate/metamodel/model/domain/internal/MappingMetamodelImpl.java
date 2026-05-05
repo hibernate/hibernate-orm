@@ -19,6 +19,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.UnknownEntityTypeException;
+import org.hibernate.action.queue.internal.constraint.ConstraintModel;
+import org.hibernate.action.queue.internal.constraint.ConstraintModelBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.mapping.Collection;
@@ -100,6 +102,8 @@ public class MappingMetamodelImpl
 
 	private final Map<NavigableRole, EmbeddableValuedModelPart> embeddableValuedModelPart = new ConcurrentHashMap<>();
 
+	private ConstraintModel constraintModel;
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// DomainMetamodel
 
@@ -163,13 +167,38 @@ public class MappingMetamodelImpl
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// after *all* persisters and named queries are registered
 
+		// triggers
+		// 		- linkWithSuperType (which links persisters with others in their hierarchy)
+		// 		- prepareMappingModel (which builds id-mappings, attribute mappings, fk-descriptors, etc.)
 		MappingModelCreationProcess.process( entityPersisterMap, collectionPersisterMap, context );
 
+		// triggers
+		//		- collecting insert and update generated attributes
+		//		- building insert and update generation delegates
+		//		- building tableMappings (in doLateInit)
 		for ( var persister : entityPersisterMap.values() ) {
 			persister.postInstantiate();
 			registerEntityNameResolvers( persister, entityNameResolvers );
 		}
 
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// Build the constraint model AFTER tableMappings exist (from postInstantiate)
+		// but BEFORE tableDescriptors are built (which need the constraint model)
+		constraintModel = ConstraintModelBuilder.buildConstraintModel(
+				this,
+				context.getGraphPlanningOptions(),
+				bootModel,
+				context.getSqlStringGenerationContext()
+		);
+
+		// Build tableDescriptors for all persisters BEFORE prepareLoaders()
+		// This is necessary because subclass persisters may reference their root persister's
+		// tableDescriptors (e.g., JoinedSubclassEntityPersister.getIdentifierTableDescriptor)
+		for ( var persister : entityPersisterMap.values() ) {
+			persister.buildTableDescriptorsEarly();
+		}
+
+		// Now that all tableDescriptors exist, we can safely build loaders and decomposers
 		for ( var persister : entityPersisterMap.values() ) {
 			persister.prepareLoaders();
 		}
@@ -466,6 +495,10 @@ public class MappingMetamodelImpl
 	@Override
 	public @Nullable <X> EmbeddableDomainType<X> findEmbeddableType(Class<X> cls) {
 		return jpaMetamodel.findEmbeddableType( cls );
+	}
+
+	public ConstraintModel getConstraintModel() {
+		return constraintModel;
 	}
 
 	@Override

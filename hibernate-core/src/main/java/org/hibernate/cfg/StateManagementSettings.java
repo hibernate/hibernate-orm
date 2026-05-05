@@ -7,6 +7,8 @@ package org.hibernate.cfg;
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.temporal.TemporalTableStrategy;
+import org.hibernate.temporal.spi.ChangesetCoordinator;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 
 /**
  * Settings related to {@linkplain org.hibernate.persister.state.spi.StateManagement
@@ -52,7 +54,7 @@ public interface StateManagementSettings {
 	 * database except PostgreSQL-like databases).
 	 * <p>
 	 * This option cannot be used together with
-	 * {@value #TRANSACTION_ID_SUPPLIER}.
+	 * {@value #CHANGESET_ID_SUPPLIER}.
 	 * <p>
 	 * By default, transaction timestamps are generated in memory.
 	 *
@@ -64,8 +66,8 @@ public interface StateManagementSettings {
 	String USE_SERVER_TRANSACTION_TIMESTAMPS = "hibernate.temporal.use_server_transaction_timestamps";
 
 	/**
-	 * Specify a {@link org.hibernate.temporal.spi.TransactionIdentifierSupplier TransactionIdentifierSupplier} which
-	 * provides unique, monotonically increasing transaction IDs for
+	 * Specify a {@link ChangesetIdentifierSupplier} which
+	 * provides unique, monotonically increasing changeset ids for
 	 * {@linkplain org.hibernate.annotations.Temporal temporal data}
 	 * when using the {@link TemporalTableStrategy#SINGLE_TABLE} or
 	 * {@link TemporalTableStrategy#HISTORY_TABLE} mapping strategy
@@ -73,12 +75,13 @@ public interface StateManagementSettings {
 	 * data}. A plain {@link java.util.function.Supplier Supplier}
 	 * is also accepted for backward compatibility.
 	 * <p>
-	 * The Java type of the transaction id is inferred from the type
-	 * argument {@code T} in the instantiation of {@code TransactionIdentifierSupplier<T>}
-	 * implemented by the supplier class, and is used instead of
-	 * {@link java.time.Instant} for the effectivity column mappings.
+	 * The Java type of the changeset id is inferred from the type
+	 * argument {@code T} in the instantiation of
+	 * {@code ChangesetIdentifierSupplier<T>} implemented by the
+	 * supplier class, and is used instead of {@link java.time.Instant}
+	 * for the effectivity column mappings.
 	 * <p>
-	 * By default, transaction IDs are timestamps generated using
+	 * By default, changeset ids are timestamps generated using
 	 * {@link java.time.Instant#now()}.
 	 * <p>
 	 * This option cannot be used together with
@@ -86,12 +89,12 @@ public interface StateManagementSettings {
 	 *
 	 * @see org.hibernate.annotations.Temporal
 	 * @see org.hibernate.annotations.Audited
-	 * @see org.hibernate.temporal.spi.TransactionIdentifierService
-	 * @see org.hibernate.temporal.spi.TransactionIdentifierSupplier
+	 * @see ChangesetCoordinator
+	 * @see ChangesetIdentifierSupplier
 	 *
 	 * @since 7.4
 	 */
-	String TRANSACTION_ID_SUPPLIER = "hibernate.temporal.transaction_id_supplier";
+	String CHANGESET_ID_SUPPLIER = "hibernate.temporal.changeset_id_supplier";
 
 	/**
 	 * Specifies the audit strategy for
@@ -99,10 +102,10 @@ public interface StateManagementSettings {
 	 * <p>
 	 * Accepts:
 	 * <ul>
-	 *     <li>{@code "default"}: each point-in-time query uses a
+	 * <li>{@code "default"}: each point-in-time query uses a
 	 *     {@code MAX(REV)} subquery to find the current audit row
 	 *     (no additional schema requirements), or
-	 *     <li>{@code "validity"}: each audit row carries a
+	 * <li>{@code "validity"}: each audit row carries a
 	 *     {@code REVEND} column marking when it was superseded;
 	 *     point-in-time queries use a simple range predicate
 	 *     ({@code REV <= :txId AND (REVEND > :txId OR REVEND IS NULL)})

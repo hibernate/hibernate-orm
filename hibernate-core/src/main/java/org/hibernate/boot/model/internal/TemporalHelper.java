@@ -27,7 +27,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.persister.state.internal.HistoryStateManagement;
 import org.hibernate.persister.state.internal.NativeTemporalStateManagement;
 import org.hibernate.persister.state.internal.TemporalStateManagement;
-import org.hibernate.temporal.spi.TransactionIdentifierService;
+import org.hibernate.temporal.spi.ChangesetCoordinator;
 
 import static org.hibernate.cfg.StateManagementSettings.TEMPORAL_TABLE_STRATEGY;
 import static org.hibernate.temporal.TemporalTableStrategy.AUTO;
@@ -123,7 +123,7 @@ public class TemporalHelper {
 
 	private static Class<?> getTransactionIdType(MetadataBuildingContext context) {
 		return context.getBootstrapContext().getServiceRegistry()
-				.requireService( TransactionIdentifierService.class )
+				.requireService( ChangesetCoordinator.class )
 				.getIdentifierType();
 	}
 

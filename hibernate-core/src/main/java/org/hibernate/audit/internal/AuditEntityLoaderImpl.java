@@ -55,7 +55,7 @@ public class AuditEntityLoaderImpl implements AuditEntityLoader {
 		final var auditMapping = entityMappingType.getAuditMapping();
 		final var revTableName = entityMappingType.getMappedTableDetails().getTableName();
 		final var revTypeTableName = entityMappingType.getIdentifierTableDetails().getTableName();
-		this.revMapping = auditMapping.getTransactionIdMapping( revTableName );
+		this.revMapping = auditMapping.getChangesetIdMapping( revTableName );
 		final var revTypeMapping = auditMapping.getModificationTypeMapping( revTypeTableName );
 
 		// Build SQL AST: SELECT ... WHERE id = ? AND REV = (SELECT MAX(REV) ... WHERE REV <= ?)
@@ -118,11 +118,11 @@ public class AuditEntityLoaderImpl implements AuditEntityLoader {
 	@Override
 	public <T> T find(
 			Object id,
-			Object transactionId,
+			Object changesetId,
 			boolean includeDeletions,
 			SharedSessionContractImplementor session) {
 		final var select = includeDeletions ? includingDeletions : excludingDeletions;
-		return execute( select, id, transactionId, session );
+		return execute( select, id, changesetId, session );
 	}
 
 	private static JdbcSelect translate(SelectStatement sqlAst, SessionFactoryImplementor sessionFactory) {

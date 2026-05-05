@@ -12,7 +12,7 @@ import org.hibernate.audit.AuditLog;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.AuditedTest;
@@ -42,16 +42,16 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 		AuditManyToManyTest.Student.class,
 		AuditManyToManyTest.Course.class
 })
-@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TRANSACTION_ID_SUPPLIER,
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.collection.AuditManyToManyTest$TxIdSupplier"))
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AuditManyToManyTest {
 	private static int currentTxId;
 
-	public static class TxIdSupplier implements TransactionIdentifierSupplier<Integer> {
+	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
 		@Override
-		public Integer generateTransactionIdentifier(SharedSessionContract session) {
+		public Integer generateIdentifier(SharedSessionContract session) {
 			return ++currentTxId;
 		}
 	}
@@ -155,7 +155,7 @@ class AuditManyToManyTest {
 		final var sf = scope.getSessionFactory();
 
 		// At revCreate: 1 course
-		try (var s = sf.withOptions().atTransaction( revCreate ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revCreate ).openSession()) {
 			var student = s.find( Student.class, 1L );
 			assertNotNull( student );
 			assertEquals( 1, student.courses.size(), "At revCreate, student should have 1 course" );
@@ -163,14 +163,14 @@ class AuditManyToManyTest {
 		}
 
 		// At revAdd: 2 courses
-		try (var s = sf.withOptions().atTransaction( revAdd ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revAdd ).openSession()) {
 			var student = s.find( Student.class, 1L );
 			assertNotNull( student );
 			assertEquals( 2, student.courses.size(), "At revAdd, student should have 2 courses" );
 		}
 
 		// At revDrop: 1 course (Physics only)
-		try (var s = sf.withOptions().atTransaction( revDrop ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revDrop ).openSession()) {
 			var student = s.find( Student.class, 1L );
 			assertNotNull( student );
 			assertEquals( 1, student.courses.size(), "At revDrop, student should have 1 course" );
@@ -204,14 +204,14 @@ class AuditManyToManyTest {
 		}
 
 		// At revRecCreate: 2 courses (Math + Physics)
-		try (var s = sf.withOptions().atTransaction( revRecCreate ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revRecCreate ).openSession()) {
 			var student = s.find( Student.class, 10L );
 			assertNotNull( student );
 			assertEquals( 2, student.courses.size(), "At revRecCreate, student should have 2 courses" );
 		}
 
 		// At revRecReplace: 2 courses (Physics + Chemistry, Math dropped)
-		try (var s = sf.withOptions().atTransaction( revRecReplace ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revRecReplace ).openSession()) {
 			var student = s.find( Student.class, 10L );
 			assertNotNull( student );
 			assertEquals( 2, student.courses.size(), "At revRecReplace, student should have 2 courses" );
@@ -226,7 +226,7 @@ class AuditManyToManyTest {
 	@Order(5)
 	void testCollectionRevisionIsolation(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
-		try (var s = sf.withOptions().atTransaction( AuditLog.ALL_REVISIONS ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( AuditLog.ALL_REVISIONS ).openSession()) {
 			var students = s.createSelectionQuery( "from Student where id = :id", Student.class )
 					.setParameter( "id", 1L )
 					.getResultList();

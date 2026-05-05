@@ -7,13 +7,13 @@ package org.hibernate.audit;
 
 /**
  * A callback invoked for each entity change within a transaction,
- * in addition to the {@link RevisionListener#newRevision} callback
+ * in addition to the {@link ChangesetListener#newChangeset} callback
  * invoked once when the revision entity is created.
  *
  * @author Marco Belladelli
  * @since 7.4
  */
-public interface EntityTrackingRevisionListener extends RevisionListener {
+public interface EntityTrackingChangesetListener extends ChangesetListener {
 	/**
 	 * Called for each entity change within a transaction, after
 	 * audit rows are written. The revision entity has already

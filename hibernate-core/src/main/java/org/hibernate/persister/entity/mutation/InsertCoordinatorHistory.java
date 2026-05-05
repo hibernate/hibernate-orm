@@ -224,7 +224,7 @@ public class InsertCoordinatorHistory extends AbstractMutationCoordinator implem
 
 		if ( TemporalMutationHelper.isUsingParameters( session ) ) {
 			jdbcValueBindings.bindValue(
-					session.getCurrentTransactionIdentifier(),
+					session.getCurrentChangesetIdentifier(),
 					historyTableName,
 					temporalMapping.getStartingColumnMapping().getSelectionExpression(),
 					ParameterUsage.SET

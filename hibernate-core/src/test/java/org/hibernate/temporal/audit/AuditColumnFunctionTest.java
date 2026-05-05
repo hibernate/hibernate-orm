@@ -13,7 +13,7 @@ import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.audit.ModificationType;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.AuditedTest;
@@ -30,14 +30,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @AuditedTest
 @SessionFactory
 @DomainModel(annotatedClasses = AuditColumnFunctionTest.Book.class)
-@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TRANSACTION_ID_SUPPLIER,
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditColumnFunctionTest$TxIdSupplier"))
 class AuditColumnFunctionTest {
 	private static int currentTxId;
 
-	public static class TxIdSupplier implements TransactionIdentifierSupplier<Integer> {
+	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
 		@Override
-		public Integer generateTransactionIdentifier(SharedSessionContract session) {
+		public Integer generateIdentifier(SharedSessionContract session) {
 			return ++currentTxId;
 		}
 
@@ -70,7 +70,7 @@ class AuditColumnFunctionTest {
 		// Query all revisions using the HQL functions with scalar projections
 		// (avoids entity identity caching issues with duplicate PKs)
 		try (var s = scope.getSessionFactory().withStatelessOptions()
-				.atTransaction( AuditLog.ALL_REVISIONS ).openStatelessSession()) {
+				.atChangeset( AuditLog.ALL_REVISIONS ).openStatelessSession()) {
 
 			List<Object[]> results = s.createSelectionQuery(
 					"select e.title, transactionId(e), modificationType(e) " +

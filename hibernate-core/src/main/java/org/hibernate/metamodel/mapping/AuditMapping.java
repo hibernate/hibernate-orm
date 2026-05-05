@@ -29,7 +29,7 @@ public interface AuditMapping extends AuxiliaryMapping {
 	/**
 	 * Get the transaction ID selectable mapping for the given original table.
 	 */
-	SelectableMapping getTransactionIdMapping(String originalTableName);
+	SelectableMapping getChangesetIdMapping(String originalTableName);
 
 	/**
 	 * Get the modification type selectable mapping for the given original table,
@@ -43,14 +43,14 @@ public interface AuditMapping extends AuxiliaryMapping {
 	 * or {@code null} if the validity audit strategy is not active.
 	 */
 	@Nullable
-	SelectableMapping getTransactionEndMapping(String originalTableName);
+	SelectableMapping getInvalidatingChangesetIdMapping(String originalTableName);
 
 	/**
 	 * Get the transaction end timestamp selectable mapping for the given original table,
 	 * or {@code null} if not configured.
 	 */
 	@Nullable
-	SelectableMapping getTransactionEndTimestampMapping(String originalTableName);
+	SelectableMapping getInvalidationTimestampMapping(String originalTableName);
 
 	/**
 	 * Get the entity loader for single-entity audit queries.

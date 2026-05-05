@@ -103,7 +103,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 			final var influencers = creationState.getSqlAstCreationState().getLoadQueryInfluencers();
 			if ( influencers.isAllRevisions() && auditMapping.useAuxiliaryTable( influencers ) ) {
 				final String originalTable = entityMappingType.getMappedTableDetails().getTableName();
-				final var transactionIdMapping = auditMapping.getTransactionIdMapping( originalTable );
+				final var transactionIdMapping = auditMapping.getChangesetIdMapping( originalTable );
 				final var sqlAstCreationState = creationState.getSqlAstCreationState();
 				final var expressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 				final var tableReference = entityTableGroup.resolveTableReference(

@@ -10,7 +10,7 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Audited;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.boot.model.naming.Identifier;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.AuditedTest;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -33,15 +33,15 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @AuditedTest
 @SessionFactory
 @DomainModel(annotatedClasses = AuditCustomTableTest.CustomTableEntity.class)
-@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TRANSACTION_ID_SUPPLIER,
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditCustomTableTest$TxIdSupplier"))
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AuditCustomTableTest {
 	private static int currentTxId;
 
-	public static class TxIdSupplier implements TransactionIdentifierSupplier<Integer> {
+	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
 		@Override
-		public Integer generateTransactionIdentifier(SharedSessionContract session) {
+		public Integer generateIdentifier(SharedSessionContract session) {
 			return ++currentTxId;
 		}
 	}
@@ -95,13 +95,13 @@ class AuditCustomTableTest {
 
 	@Test
 	void testAuditReadWithCustomTable(SessionFactoryScope scope) {
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( 1 ).open()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( 1 ).open()) {
 			var e = s.find( CustomTableEntity.class, 1L );
 			assertNotNull( e );
 			assertEquals( "created", e.name );
 		}
 
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( 2 ).open()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( 2 ).open()) {
 			var e = s.find( CustomTableEntity.class, 1L );
 			assertNotNull( e );
 			assertEquals( "updated", e.name );
@@ -124,13 +124,13 @@ class AuditCustomTableTest {
 			session.remove( e );
 		} );
 
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( 101 ).open()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( 101 ).open()) {
 			var e = s.find( CustomTableEntity.class, 99L );
 			assertNotNull( e );
 			assertEquals( "to-delete", e.name );
 		}
 
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( 102 ).open()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( 102 ).open()) {
 			var e = s.find( CustomTableEntity.class, 99L );
 			assertNull( e );
 		}
@@ -139,7 +139,7 @@ class AuditCustomTableTest {
 	// ---- Entity ----
 
 	@Audited
-	@Audited.Table(name = "MY_AUDIT_LOG", transactionIdColumn = "TX_ID", modificationTypeColumn = "MOD_TYPE")
+	@Audited.Table(name = "MY_AUDIT_LOG", changesetIdColumn = "TX_ID", modificationTypeColumn = "MOD_TYPE")
 	@Entity(name = "CustomTableEntity")
 	static class CustomTableEntity {
 		@Id

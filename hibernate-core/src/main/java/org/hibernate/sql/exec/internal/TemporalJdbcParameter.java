@@ -31,7 +31,7 @@ public class TemporalJdbcParameter extends SqlTypedMappingJdbcParameter {
 		final Object temporalIdentifier = session.getLoadQueryInfluencers().getTemporalIdentifier();
 		final Object currentTransactionIdentifier = temporalIdentifier != null
 				? temporalIdentifier
-				: session.getCurrentTransactionIdentifier();
+				: session.getCurrentChangesetIdentifier();
 		if ( currentTransactionIdentifier == null ) {
 			throw new ExecutionException( "JDBC parameter value not bound - " + this );
 		}

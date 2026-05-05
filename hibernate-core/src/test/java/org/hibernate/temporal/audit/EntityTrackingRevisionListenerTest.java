@@ -10,9 +10,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Audited;
-import org.hibernate.audit.EntityTrackingRevisionListener;
+import org.hibernate.annotations.ChangesetEntity;
+import org.hibernate.audit.EntityTrackingChangesetListener;
 import org.hibernate.audit.ModificationType;
-import org.hibernate.annotations.RevisionEntity;
 import org.hibernate.testing.orm.junit.AuditedTest;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
- * Tests {@link EntityTrackingRevisionListener}: per-entity-change callbacks.
+ * Tests {@link EntityTrackingChangesetListener}: per-entity-change callbacks.
  */
 @AuditedTest
 @SessionFactory
@@ -127,12 +127,12 @@ class EntityTrackingRevisionListenerTest {
 			Object revisionEntity) {
 	}
 
-	public static class TrackingListener implements EntityTrackingRevisionListener {
+	public static class TrackingListener implements EntityTrackingChangesetListener {
 		static final List<EntityChange> changes = new ArrayList<>();
 
 		@Override
-		public void newRevision(Object revisionEntity) {
-			((TrackingRevisionInfo) revisionEntity).username = "tracking-user";
+		public void newChangeset(Object changesetEntity) {
+			((TrackingRevisionInfo) changesetEntity).username = "tracking-user";
 		}
 
 		@Override
@@ -149,17 +149,17 @@ class EntityTrackingRevisionListenerTest {
 
 	// ---- Entities ----
 
-	@RevisionEntity(listener = TrackingListener.class)
+	@ChangesetEntity(listener = TrackingListener.class)
 	@Entity(name = "TrackingRevisionInfo")
 	@Table(name = "REVINFO")
 	static class TrackingRevisionInfo {
 		@Id
 		@GeneratedValue
-		@RevisionEntity.TransactionId
+		@ChangesetEntity.ChangesetId
 		@Column(name = "REV")
 		int id;
 
-		@RevisionEntity.Timestamp
+		@ChangesetEntity.Timestamp
 		@Column(name = "REVTSTMP")
 		long timestamp;
 

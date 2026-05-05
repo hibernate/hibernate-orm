@@ -171,8 +171,8 @@ public abstract class AbstractCommonBuilder<T extends CommonBuilder> implements 
 	}
 
 	@Override
-	public T atTransaction(Object transactionId) {
-		this.temporalIdentifier = transactionId;
+	public T atChangeset(Object changesetId) {
+		this.temporalIdentifier = changesetId;
 		return getThis();
 	}
 }

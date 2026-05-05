@@ -14,11 +14,11 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Audited;
+import org.hibernate.annotations.ChangesetEntity;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.audit.ModificationType;
-import org.hibernate.annotations.RevisionEntity;
 import org.hibernate.testing.orm.junit.AuditedTest;
 import org.hibernate.testing.orm.junit.BeforeClassTemplate;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -40,8 +40,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests cross-type entity change tracking via a custom
- * {@link RevisionEntity @RevisionEntity} with
- * {@link RevisionEntity.ModifiedEntities @RevisionEntity.ModifiedEntities}.
+ * {@link ChangesetEntity @RevisionEntity} with
+ * {@link ChangesetEntity.ModifiedEntities @RevisionEntity.ModifiedEntities}.
  * <p>
  * Exercises the REVCHANGES write-side (via {@code @ElementCollection}
  * on the revision entity) and the read-side APIs on {@code AuditLog}.
@@ -59,17 +59,17 @@ class RevChangesTrackingTest {
 
 	// --- Custom revision entity with @RevisionEntity.ModifiedEntities ---
 
-	@RevisionEntity
+	@ChangesetEntity
 	@Entity(name = "TrackingRevisionInfo")
 	@Table(name = "REVINFO")
 	static class TrackingRevisionInfo {
 		@Id
 		@GeneratedValue
-		@RevisionEntity.TransactionId
+		@ChangesetEntity.ChangesetId
 		@Column(name = "REV")
 		int id;
 
-		@RevisionEntity.Timestamp
+		@ChangesetEntity.Timestamp
 		@Column(name = "REVTSTMP")
 		long timestamp;
 
@@ -77,7 +77,7 @@ class RevChangesTrackingTest {
 		@JoinTable(name = "REVCHANGES", joinColumns = @JoinColumn(name = "REV"))
 		@Column(name = "ENTITYNAME")
 		@Fetch(FetchMode.JOIN)
-		@RevisionEntity.ModifiedEntities
+		@ChangesetEntity.ModifiedEntities
 		Set<String> modifiedEntityNames = new HashSet<>();
 	}
 

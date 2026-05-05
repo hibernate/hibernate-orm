@@ -13,7 +13,7 @@ import org.hibernate.audit.AuditLog;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.AuditedTest;
@@ -43,16 +43,16 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 		AuditUnidirectionalOneToManyJoinColumnTest.Department.class,
 		AuditUnidirectionalOneToManyJoinColumnTest.Employee.class
 })
-@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TRANSACTION_ID_SUPPLIER,
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.collection.AuditUnidirectionalOneToManyJoinColumnTest$TxIdSupplier"))
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AuditUnidirectionalOneToManyJoinColumnTest {
 	private static int currentTxId;
 
-	public static class TxIdSupplier implements TransactionIdentifierSupplier<Integer> {
+	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
 		@Override
-		public Integer generateTransactionIdentifier(SharedSessionContract session) {
+		public Integer generateIdentifier(SharedSessionContract session) {
 			return ++currentTxId;
 		}
 	}
@@ -184,7 +184,7 @@ class AuditUnidirectionalOneToManyJoinColumnTest {
 		final var sf = scope.getSessionFactory();
 
 		// At revCreate: department should have 1 employee (Alice)
-		try (var s = sf.withOptions().atTransaction( revCreate ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revCreate ).openSession()) {
 			var dept = s.find( Department.class, 1L );
 			assertNotNull( dept );
 			assertEquals( 1, dept.employees.size(), "At revCreate, department should have 1 employee" );
@@ -192,7 +192,7 @@ class AuditUnidirectionalOneToManyJoinColumnTest {
 		}
 
 		// At revAdd: department should have 2 employees
-		try (var s = sf.withOptions().atTransaction( revAdd ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revAdd ).openSession()) {
 			var dept = s.find( Department.class, 1L );
 			assertNotNull( dept );
 			assertEquals( 2, dept.employees.size(), "At revAdd, department should have 2 employees" );
@@ -201,7 +201,7 @@ class AuditUnidirectionalOneToManyJoinColumnTest {
 		}
 
 		// At revRemove: department should have 1 employee (Bob only)
-		try (var s = sf.withOptions().atTransaction( revRemove ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revRemove ).openSession()) {
 			var dept = s.find( Department.class, 1L );
 			assertNotNull( dept );
 			assertEquals( 1, dept.employees.size(), "At revRemove, department should have 1 employee" );
@@ -236,14 +236,14 @@ class AuditUnidirectionalOneToManyJoinColumnTest {
 		}
 
 		// At revRecCreate: 2 employees
-		try (var s = sf.withOptions().atTransaction( revRecCreate ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revRecCreate ).openSession()) {
 			var dept = s.find( Department.class, 10L );
 			assertNotNull( dept );
 			assertEquals( 2, dept.employees.size(), "At revRecCreate, department should have 2 employees" );
 		}
 
 		// At revRecReplace: 2 employees (Bob + Charlie, Alice dropped)
-		try (var s = sf.withOptions().atTransaction( revRecReplace ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revRecReplace ).openSession()) {
 			var dept = s.find( Department.class, 10L );
 			assertNotNull( dept );
 			assertEquals( 2, dept.employees.size(), "At revRecReplace, department should have 2 employees" );
@@ -269,7 +269,7 @@ class AuditUnidirectionalOneToManyJoinColumnTest {
 		}
 
 		// Point-in-time: employee name should reflect the update
-		try (var s = sf.withOptions().atTransaction( revUpdMod ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revUpdMod ).openSession()) {
 			var dept = s.find( Department.class, 20L );
 			assertNotNull( dept );
 			assertEquals( 1, dept.employees.size() );
@@ -283,7 +283,7 @@ class AuditUnidirectionalOneToManyJoinColumnTest {
 	@Order(6)
 	void testCollectionRevisionIsolation(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
-		try (var s = sf.withOptions().atTransaction( AuditLog.ALL_REVISIONS ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( AuditLog.ALL_REVISIONS ).openSession()) {
 			var departments = s.createSelectionQuery( "from Department where id = :id", Department.class )
 					.setParameter( "id", 1L )
 					.getResultList();

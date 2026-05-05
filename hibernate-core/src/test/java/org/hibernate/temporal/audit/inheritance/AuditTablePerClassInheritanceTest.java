@@ -17,7 +17,7 @@ import org.hibernate.annotations.Audited;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.AuditedTest;
@@ -47,16 +47,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 		AuditTablePerClassInheritanceTest.Driver.class,
 		AuditTablePerClassInheritanceTest.Team.class
 })
-@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TRANSACTION_ID_SUPPLIER,
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.inheritance.AuditTablePerClassInheritanceTest$TxIdSupplier"))
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AuditTablePerClassInheritanceTest {
 	private static int currentTxId;
 
-	public static class TxIdSupplier implements TransactionIdentifierSupplier<Integer> {
+	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
 		@Override
-		public Integer generateTransactionIdentifier(SharedSessionContract session) {
+		public Integer generateIdentifier(SharedSessionContract session) {
 			return ++currentTxId;
 		}
 
@@ -166,7 +166,7 @@ class AuditTablePerClassInheritanceTest {
 		final var sf = scope.getSessionFactory();
 
 		// At revCreate: original values
-		try (var s = sf.withOptions().atTransaction( revCreate ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revCreate ).openSession()) {
 			var car = s.find( SportsCar.class, 1L );
 			assertThat( car ).isNotNull();
 			assertThat( car.name ).isEqualTo( "Sedan" );
@@ -179,7 +179,7 @@ class AuditTablePerClassInheritanceTest {
 		}
 
 		// At revUpdate: car updated, truck unchanged. Polymorphic lookups
-		try (var s = sf.withOptions().atTransaction( revUpdate ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revUpdate ).openSession()) {
 			var car = s.find( SportsCar.class, 1L );
 			assertThat( car ).isNotNull();
 			assertThat( car.name ).isEqualTo( "Sports Car" );
@@ -195,7 +195,7 @@ class AuditTablePerClassInheritanceTest {
 		}
 
 		// At revTruckUpd: truck name updated
-		try (var s = sf.withOptions().atTransaction( revTruckUpd ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revTruckUpd ).openSession()) {
 			var truck = s.find( Truck.class, 2L );
 			assertThat( truck ).isNotNull();
 			assertThat( truck.name ).isEqualTo( "Big Hauler" );
@@ -203,7 +203,7 @@ class AuditTablePerClassInheritanceTest {
 		}
 
 		// At revDelete: car deleted
-		try (var s = sf.withOptions().atTransaction( revDelete ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revDelete ).openSession()) {
 			assertThat( s.find( SportsCar.class, 1L ) ).isNull();
 			assertThat( s.find( Truck.class, 2L ) ).isNotNull();
 		}
@@ -233,12 +233,12 @@ class AuditTablePerClassInheritanceTest {
 			assertThat( auditLog.getRevisions( SportsCar.class, 31L ) ).hasSize( 2 );
 		}
 
-		try (var s = sf.withOptions().atTransaction( revDeepCreate ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revDeepCreate ).openSession()) {
 			assertThat( s.find( Car.class, 31L ) ).isNotNull()
 					.extracting( v -> v.name ).isEqualTo( "Ferrari" );
 		}
 
-		try (var s = sf.withOptions().atTransaction( revDeepUpdate ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revDeepUpdate ).openSession()) {
 			assertThat( s.find( Car.class, 31L ) ).isNotNull()
 					.extracting( v -> v.name ).isEqualTo( "Lamborghini" );
 		}
@@ -257,14 +257,14 @@ class AuditTablePerClassInheritanceTest {
 	void testToOneAssociation(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
 
-		try (var s = sf.withOptions().atTransaction( revToOneCreate ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revToOneCreate ).openSession()) {
 			var driver = s.find( Driver.class, 41L );
 			assertThat( driver ).isNotNull();
 			assertThat( driver.vehicle ).isNotNull();
 			assertThat( driver.vehicle.name ).isEqualTo( "Ferrari" );
 		}
 
-		try (var s = sf.withOptions().atTransaction( revToOneUpdate ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revToOneUpdate ).openSession()) {
 			var driver = s.find( Driver.class, 41L );
 			assertThat( driver ).isNotNull();
 			assertThat( driver.vehicle.name ).isEqualTo( "Lamborghini" );
@@ -276,14 +276,14 @@ class AuditTablePerClassInheritanceTest {
 	void testManyToManyAssociation(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
 
-		try (var s = sf.withOptions().atTransaction( revM2mCreate ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revM2mCreate ).openSession()) {
 			var team = s.find( Team.class, 52L );
 			assertThat( team ).isNotNull();
 			assertThat( team.vehicles ).extracting( v -> v.name )
 					.containsExactlyInAnyOrder( "Ferrari", "Hauler" );
 		}
 
-		try (var s = sf.withOptions().atTransaction( revM2mUpdate ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revM2mUpdate ).openSession()) {
 			var team = s.find( Team.class, 52L );
 			assertThat( team ).isNotNull();
 			assertThat( team.vehicles ).extracting( v -> v.name )

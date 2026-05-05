@@ -65,7 +65,7 @@ import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.annotations.View;
-import org.hibernate.annotations.RevisionEntity;
+import org.hibernate.annotations.ChangesetEntity;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.internal.InheritanceState.ElementsToProcess;
 import org.hibernate.boot.model.naming.EntityNaming;
@@ -365,7 +365,7 @@ public class EntityBinder {
 			AuditHelper.bindAuditTable( auditTable, rootClass, classDetails, context );
 		}
 		else {
-			final var revisionEntity = extract( RevisionEntity.class, classDetails, context );
+			final var revisionEntity = extract( ChangesetEntity.class, classDetails, context );
 			if ( revisionEntity != null ) {
 				AuditHelper.bindRevisionEntity( revisionEntity, rootClass, classDetails, context );
 			}

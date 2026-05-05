@@ -7,6 +7,7 @@ package org.hibernate.temporal.audit;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.Audited;
+import org.hibernate.annotations.ChangesetEntity;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.audit.DefaultRevisionEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -23,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests the built-in {@link DefaultRevisionEntity}, which is
- * auto-detected via {@link org.hibernate.annotations.RevisionEntity @RevisionEntity}
+ * auto-detected via {@link ChangesetEntity @RevisionEntity}
  * with no explicit supplier configuration needed.
  */
 @AuditedTest
@@ -94,7 +95,7 @@ class DefaultRevisionEntityTest {
 
 			// Read at rev1: entity was created
 			try (var s = scope.getSessionFactory().withOptions()
-					.atTransaction( rev1 ).open()) {
+					.atChangeset( rev1 ).open()) {
 				final var book = s.find( Book.class, 1L );
 				assertNotNull( book );
 				assertEquals( "Original Title", book.title );
@@ -102,7 +103,7 @@ class DefaultRevisionEntityTest {
 
 			// Read at rev2: entity was updated
 			try (var s = scope.getSessionFactory().withOptions()
-					.atTransaction( rev2 ).open()) {
+					.atChangeset( rev2 ).open()) {
 				final var book = s.find( Book.class, 1L );
 				assertNotNull( book );
 				assertEquals( "Updated Title", book.title );
@@ -110,7 +111,7 @@ class DefaultRevisionEntityTest {
 
 			// Read at rev3: entity was deleted
 			try (var s = scope.getSessionFactory().withOptions()
-					.atTransaction( rev3 ).open()) {
+					.atChangeset( rev3 ).open()) {
 				final var book = s.find( Book.class, 1L );
 				assertNull( book );
 			}

@@ -28,7 +28,7 @@ import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.AuditedTest;
@@ -59,16 +59,16 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 		AuditElementCollectionTest.ArrayEntity.class,
 		AuditElementCollectionTest.SortedSetEntity.class
 })
-@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TRANSACTION_ID_SUPPLIER,
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.collection.AuditElementCollectionTest$TxIdSupplier"))
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AuditElementCollectionTest {
 	private static int currentTxId;
 
-	public static class TxIdSupplier implements TransactionIdentifierSupplier<Integer> {
+	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
 		@Override
-		public Integer generateTransactionIdentifier(SharedSessionContract session) {
+		public Integer generateIdentifier(SharedSessionContract session) {
 			return ++currentTxId;
 		}
 	}
@@ -193,14 +193,14 @@ class AuditElementCollectionTest {
 		}
 
 		// At revListCreate: [alpha, beta]
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( revListCreate ).openSession()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( revListCreate ).openSession()) {
 			var e = s.find( ListEntity.class, 1L );
 			assertThat( e ).isNotNull();
 			assertThat( e.strings ).containsExactly( "alpha", "beta" );
 		}
 
 		// At revListMod: [beta, gamma] (alpha removed, gamma added)
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( revListMod ).openSession()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( revListMod ).openSession()) {
 			var e = s.find( ListEntity.class, 1L );
 			assertThat( e ).isNotNull();
 			assertThat( e.strings ).containsExactly( "beta", "gamma" );
@@ -230,7 +230,7 @@ class AuditElementCollectionTest {
 		}
 
 		// At revMapCreate: {key1=value1, key2=value2}
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( revMapCreate ).openSession()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( revMapCreate ).openSession()) {
 			var e = s.find( MapEntity.class, 1L );
 			assertThat( e ).isNotNull();
 			assertThat( e.strings ).containsEntry( "key1", "value1" )
@@ -239,7 +239,7 @@ class AuditElementCollectionTest {
 		}
 
 		// At revMapMod: {key1=updated1, key3=value3}
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( revMapMod ).openSession()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( revMapMod ).openSession()) {
 			var e = s.find( MapEntity.class, 1L );
 			assertThat( e ).isNotNull();
 			assertThat( e.strings ).containsEntry( "key1", "updated1" )
@@ -276,7 +276,7 @@ class AuditElementCollectionTest {
 		}
 
 		// At revEmbCreate: {Alice/90, Bob/85}
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( revEmbCreate ).openSession()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( revEmbCreate ).openSession()) {
 			var e = s.find( EmbeddableSetEntity.class, 1L );
 			assertThat( e ).isNotNull();
 			assertThat( e.components ).extracting( c -> c.name )
@@ -284,7 +284,7 @@ class AuditElementCollectionTest {
 		}
 
 		// At revEmbMod: {Bob/85, Charlie/95}
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( revEmbMod ).openSession()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( revEmbMod ).openSession()) {
 			var e = s.find( EmbeddableSetEntity.class, 1L );
 			assertThat( e ).isNotNull();
 			assertThat( e.components ).extracting( c -> c.name )
@@ -313,14 +313,14 @@ class AuditElementCollectionTest {
 		}
 
 		// At revArrCreate: [alpha, beta]
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( revArrCreate ).openSession()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( revArrCreate ).openSession()) {
 			var e = s.find( ArrayEntity.class, 1L );
 			assertThat( e ).isNotNull();
 			assertThat( e.strings ).containsExactly( "alpha", "beta" );
 		}
 
 		// At revArrMod: [gamma, beta, delta]
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( revArrMod ).openSession()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( revArrMod ).openSession()) {
 			var e = s.find( ArrayEntity.class, 1L );
 			assertThat( e ).isNotNull();
 			assertThat( e.strings ).containsExactly( "gamma", "beta", "delta" );
@@ -346,14 +346,14 @@ class AuditElementCollectionTest {
 		}
 
 		// At revSsCreate: {alpha, beta} (sorted)
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( revSsCreate ).openSession()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( revSsCreate ).openSession()) {
 			var e = s.find( SortedSetEntity.class, 1L );
 			assertThat( e ).isNotNull();
 			assertThat( e.tags ).containsExactly( "alpha", "beta" );
 		}
 
 		// At revSsMod: {beta, gamma} (sorted)
-		try (var s = scope.getSessionFactory().withOptions().atTransaction( revSsMod ).openSession()) {
+		try (var s = scope.getSessionFactory().withOptions().atChangeset( revSsMod ).openSession()) {
 			var e = s.find( SortedSetEntity.class, 1L );
 			assertThat( e ).isNotNull();
 			assertThat( e.tags ).containsExactly( "beta", "gamma" );
@@ -366,7 +366,7 @@ class AuditElementCollectionTest {
 	@Order(6)
 	void testCollectionRevisionIsolation(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
-		try (var s = sf.withOptions().atTransaction( AuditLog.ALL_REVISIONS ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( AuditLog.ALL_REVISIONS ).openSession()) {
 			var entities = s.createSelectionQuery( "from ArrayEntity where id = :id", ArrayEntity.class )
 					.setParameter( "id", 1L )
 					.getResultList();

@@ -75,16 +75,16 @@ public class AuditMappingImpl implements AuditMapping {
 	 */
 	public record TableAuditInfo(
 			String auditTableName,
-			SelectableMapping transactionIdMapping,
+			SelectableMapping changesetIdMapping,
 			@Nullable SelectableMapping modificationTypeMapping,
-			@Nullable SelectableMapping transactionEndMapping,
-			@Nullable SelectableMapping transactionEndTimestampMapping
+			@Nullable SelectableMapping invalidatingChangesetMapping,
+			@Nullable SelectableMapping invalidationTimestampMapping
 	) {}
 
 	private final Map<String, TableAuditInfo> tableAuditInfoMap;
 
 	private final JdbcMapping jdbcMapping;
-	private final BasicType<?> transactionIdBasicType;
+	private final BasicType<?> changesetIdBasicType;
 	private final String currentTimestampFunctionName;
 	private final FunctionRenderer maxFunctionDescriptor;
 
@@ -102,14 +102,14 @@ public class AuditMappingImpl implements AuditMapping {
 		final var creationContext = creationProcess.getCreationContext();
 		final var typeConfiguration = creationContext.getTypeConfiguration();
 		this.sessionFactory = creationContext.getSessionFactory();
-		final var transactionIdJavaType = sessionFactory.getTransactionIdentifierService().getIdentifierType();
+		final var changesetIdJavaType = sessionFactory.getChangesetCoordinator().getIdentifierType();
 
-		jdbcMapping = resolveJdbcMapping( typeConfiguration, transactionIdJavaType );
-		transactionIdBasicType = resolveBasicType( typeConfiguration, transactionIdJavaType );
+		jdbcMapping = resolveJdbcMapping( typeConfiguration, changesetIdJavaType );
+		changesetIdBasicType = resolveBasicType( typeConfiguration, changesetIdJavaType );
 
 		final var dialect = sessionFactory.getJdbcServices().getDialect();
 		currentTimestampFunctionName =
-				sessionFactory.getTransactionIdentifierService().useServerTimestamp( dialect )
+				sessionFactory.getChangesetCoordinator().useServerTimestamp( dialect )
 						? dialect.currentTimestamp()
 						: null;
 
@@ -150,8 +150,8 @@ public class AuditMappingImpl implements AuditMapping {
 	}
 
 	@Override
-	public SelectableMapping getTransactionIdMapping(String originalTableName) {
-		return resolveInfo( originalTableName ).transactionIdMapping;
+	public SelectableMapping getChangesetIdMapping(String originalTableName) {
+		return resolveInfo( originalTableName ).changesetIdMapping;
 	}
 
 	@Override
@@ -160,27 +160,27 @@ public class AuditMappingImpl implements AuditMapping {
 	}
 
 	@Override
-	public SelectableMapping getTransactionEndMapping(String originalTableName) {
-		return resolveInfo( originalTableName ).transactionEndMapping;
+	public SelectableMapping getInvalidatingChangesetIdMapping(String originalTableName) {
+		return resolveInfo( originalTableName ).invalidatingChangesetMapping;
 	}
 
 	@Override
-	public SelectableMapping getTransactionEndTimestampMapping(String originalTableName) {
-		return resolveInfo( originalTableName ).transactionEndTimestampMapping;
+	public SelectableMapping getInvalidationTimestampMapping(String originalTableName) {
+		return resolveInfo( originalTableName ).invalidationTimestampMapping;
 	}
 
 	@Override
 	public List<String> getExtraSelectExpressions() {
 		final var anyInfo = tableAuditInfoMap.values().iterator().next();
 		final var exprs = new ArrayList<>( List.of(
-				anyInfo.transactionIdMapping.getSelectionExpression(),
+				anyInfo.changesetIdMapping.getSelectionExpression(),
 				anyInfo.modificationTypeMapping.getSelectionExpression()
 		) );
-		if ( anyInfo.transactionEndMapping != null ) {
-			exprs.add( anyInfo.transactionEndMapping.getSelectionExpression() );
+		if ( anyInfo.invalidatingChangesetMapping != null ) {
+			exprs.add( anyInfo.invalidatingChangesetMapping.getSelectionExpression() );
 		}
-		if ( anyInfo.transactionEndTimestampMapping != null ) {
-			exprs.add( anyInfo.transactionEndTimestampMapping.getSelectionExpression() );
+		if ( anyInfo.invalidationTimestampMapping != null ) {
+			exprs.add( anyInfo.invalidationTimestampMapping.getSelectionExpression() );
 		}
 		return exprs;
 	}
@@ -193,7 +193,7 @@ public class AuditMappingImpl implements AuditMapping {
 	private Expression resolveDefaultUpperBound(TableAuditInfo info) {
 		return currentTimestampFunctionName != null
 				? new SelfRenderingSqlFragmentExpression( currentTimestampFunctionName, jdbcMapping )
-				: new TemporalJdbcParameter( info.transactionIdMapping );
+				: new TemporalJdbcParameter( info.changesetIdMapping );
 	}
 
 	@Override
@@ -235,7 +235,7 @@ public class AuditMappingImpl implements AuditMapping {
 			TableAuditInfo info,
 			Expression upperBound,
 			boolean includeDeletions) {
-		if ( info.transactionEndMapping != null ) {
+		if ( info.invalidatingChangesetMapping != null ) {
 			return createValidityRestriction( tableReference, info, upperBound, includeDeletions );
 		}
 		final var subQuerySpec = new QuerySpec( false, 1 );
@@ -256,7 +256,7 @@ public class AuditMappingImpl implements AuditMapping {
 		);
 		subQuerySpec.getFromClause().addRoot( subTableGroup );
 
-		final var transactionId = new ColumnReference( subTableReference, info.transactionIdMapping );
+		final var transactionId = new ColumnReference( subTableReference, info.changesetIdMapping );
 		subQuerySpec.getSelectClause()
 				.addSqlSelection( new SqlSelectionImpl( buildMaxExpression( transactionId ) ) );
 
@@ -275,7 +275,7 @@ public class AuditMappingImpl implements AuditMapping {
 		// Main predicate: REV = (subquery) AND optionally REVTYPE <> DEL
 		final var auditPredicate = new Junction( Junction.Nature.CONJUNCTION );
 		auditPredicate.add( new ComparisonPredicate(
-				new ColumnReference( tableReference, info.transactionIdMapping ),
+				new ColumnReference( tableReference, info.changesetIdMapping ),
 				EQUAL,
 				new SelectStatement( subQuerySpec )
 		) );
@@ -302,13 +302,13 @@ public class AuditMappingImpl implements AuditMapping {
 
 		// REV <= upperBound
 		predicate.add( new ComparisonPredicate(
-				new ColumnReference( tableReference, info.transactionIdMapping ),
+				new ColumnReference( tableReference, info.changesetIdMapping ),
 				LESS_THAN_OR_EQUAL,
 				upperBound
 		) );
 
 		// (REVEND > upperBound OR REVEND IS NULL)
-		final var revEndRef = new ColumnReference( tableReference, info.transactionEndMapping );
+		final var revEndRef = new ColumnReference( tableReference, info.invalidatingChangesetMapping );
 		final var revEndDisjunction = new Junction( Junction.Nature.DISJUNCTION );
 		revEndDisjunction.add( new ComparisonPredicate( revEndRef, GREATER_THAN, upperBound ) );
 		revEndDisjunction.add( new NullnessPredicate( revEndRef ) );
@@ -331,8 +331,8 @@ public class AuditMappingImpl implements AuditMapping {
 				maxFunctionDescriptor,
 				singletonList( expression ),
 				null,
-				transactionIdBasicType,
-				transactionIdBasicType
+				changesetIdBasicType,
+				changesetIdBasicType
 		);
 	}
 
@@ -565,9 +565,9 @@ public class AuditMappingImpl implements AuditMapping {
 			final var primaryInfo = resolveInfo( primaryTable );
 			final var joinedInfo = resolveInfo( originalTableName );
 			tableReferenceJoin.applyPredicate( new ComparisonPredicate(
-					new ColumnReference( primaryTableReference, primaryInfo.transactionIdMapping() ),
+					new ColumnReference( primaryTableReference, primaryInfo.changesetIdMapping() ),
 					EQUAL,
-					new ColumnReference( tableReferenceJoin.getJoinedTableReference(), joinedInfo.transactionIdMapping() )
+					new ColumnReference( tableReferenceJoin.getJoinedTableReference(), joinedInfo.changesetIdMapping() )
 			) );
 			// If the joined table carries REVTYPE (i.e. the root table), apply the DEL filter
 			if ( joinedInfo.modificationTypeMapping() != null && hasTemporalPredicate( influencers ) ) {
@@ -601,7 +601,7 @@ public class AuditMappingImpl implements AuditMapping {
 				final String parentAuditTable = parentAuditMapping.resolveTableName( parentTable );
 				return new ColumnReference(
 						parentTableGroup.resolveTableReference( parentAuditTable ),
-						parentAuditMapping.getTransactionIdMapping( parentTable )
+						parentAuditMapping.getChangesetIdMapping( parentTable )
 				);
 			}
 		}

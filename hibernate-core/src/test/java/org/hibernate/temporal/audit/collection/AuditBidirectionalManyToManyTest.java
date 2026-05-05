@@ -12,7 +12,7 @@ import org.hibernate.audit.AuditLog;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.AuditedTest;
@@ -45,16 +45,16 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 		AuditBidirectionalManyToManyTest.OwningEntity.class,
 		AuditBidirectionalManyToManyTest.OwnedEntity.class
 })
-@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TRANSACTION_ID_SUPPLIER,
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.collection.AuditBidirectionalManyToManyTest$TxIdSupplier"))
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AuditBidirectionalManyToManyTest {
 	private static int currentTxId;
 
-	public static class TxIdSupplier implements TransactionIdentifierSupplier<Integer> {
+	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
 		@Override
-		public Integer generateTransactionIdentifier(SharedSessionContract session) {
+		public Integer generateIdentifier(SharedSessionContract session) {
 			return ++currentTxId;
 		}
 	}
@@ -172,21 +172,21 @@ class AuditBidirectionalManyToManyTest {
 		final var sf = scope.getSessionFactory();
 
 		// At revLink: ing1 has 1 reference (ed1)
-		try (var s = sf.withOptions().atTransaction( revLink ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revLink ).openSession()) {
 			var ing = s.find( OwningEntity.class, 3 );
 			assertNotNull( ing );
 			assertEquals( 1, ing.references.size(), "At revLink, ing1 should have 1 reference" );
 		}
 
 		// At revAddRef: ing1 has 2 references (ed1 + ed2)
-		try (var s = sf.withOptions().atTransaction( revAddRef ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revAddRef ).openSession()) {
 			var ing = s.find( OwningEntity.class, 3 );
 			assertNotNull( ing );
 			assertEquals( 2, ing.references.size(), "At revAddRef, ing1 should have 2 references" );
 		}
 
 		// At revRemoveRef: ing1 has 1 reference (ed2 only)
-		try (var s = sf.withOptions().atTransaction( revRemoveRef ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revRemoveRef ).openSession()) {
 			var ing = s.find( OwningEntity.class, 3 );
 			assertNotNull( ing );
 			assertEquals( 1, ing.references.size(), "At revRemoveRef, ing1 should have 1 reference" );
@@ -225,14 +225,14 @@ class AuditBidirectionalManyToManyTest {
 		}
 
 		// At revRecCreate: 2 references
-		try (var s = sf.withOptions().atTransaction( revRecCreate ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revRecCreate ).openSession()) {
 			var ing = s.find( OwningEntity.class, 12 );
 			assertNotNull( ing );
 			assertEquals( 2, ing.references.size(), "At revRecCreate, should have 2 references" );
 		}
 
 		// At revRecReplace: 2 references (ed2 + ed3, ed1 dropped)
-		try (var s = sf.withOptions().atTransaction( revRecReplace ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revRecReplace ).openSession()) {
 			var ing = s.find( OwningEntity.class, 12 );
 			assertNotNull( ing );
 			assertEquals( 2, ing.references.size(), "At revRecReplace, should have 2 references" );
@@ -247,7 +247,7 @@ class AuditBidirectionalManyToManyTest {
 	@Order(5)
 	void testCollectionRevisionIsolation(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
-		try (var s = sf.withOptions().atTransaction( AuditLog.ALL_REVISIONS ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( AuditLog.ALL_REVISIONS ).openSession()) {
 			var entities = s.createSelectionQuery( "from OwningEntity where id = :id", OwningEntity.class )
 					.setParameter( "id", 3 )
 					.getResultList();

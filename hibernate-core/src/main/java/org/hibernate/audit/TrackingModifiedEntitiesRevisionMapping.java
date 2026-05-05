@@ -10,9 +10,9 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.MappedSuperclass;
+import org.hibernate.annotations.ChangesetEntity;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.annotations.RevisionEntity;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -25,7 +25,7 @@ import java.util.Set;
  * {@link ElementCollection @ElementCollection}.
  * <p>
  * When a revision entity extends this class (or has a property
- * annotated with {@link RevisionEntity.ModifiedEntities @ModifiedEntities}),
+ * annotated with {@link ChangesetEntity.ModifiedEntities @ModifiedEntities}),
  * cross-type revision queries are automatically enabled via
  * {@link AuditLog#getEntityTypesModifiedAt},
  * {@link AuditLog#findAllEntitiesModifiedAt}, and
@@ -36,7 +36,7 @@ import java.util.Set;
  *
  * @author Marco Belladelli
  * @see DefaultTrackingModifiedEntitiesRevisionEntity
- * @see RevisionEntity.ModifiedEntities
+ * @see ChangesetEntity.ModifiedEntities
  * @since 7.4
  */
 @MappedSuperclass
@@ -45,7 +45,7 @@ public class TrackingModifiedEntitiesRevisionMapping extends RevisionMapping {
 	@JoinTable(name = "REVCHANGES", joinColumns = @JoinColumn(name = "REV"))
 	@Column(name = "ENTITYNAME")
 	@Fetch(FetchMode.JOIN)
-	@RevisionEntity.ModifiedEntities
+	@ChangesetEntity.ModifiedEntities
 	private Set<String> modifiedEntityNames = new HashSet<>();
 
 	public Set<String> getModifiedEntityNames() {

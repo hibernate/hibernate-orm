@@ -58,13 +58,13 @@ public final class AuditCollectionHelper {
 				mutationTarget.getCollectionTableMapping(),
 				auditMapping.resolveTableName( collectionTableName )
 		);
-		this.transactionIdMapping = auditMapping.getTransactionIdMapping( collectionTableName );
+		this.transactionIdMapping = auditMapping.getChangesetIdMapping( collectionTableName );
 		this.modificationTypeMapping = auditMapping.getModificationTypeMapping( collectionTableName );
-		this.transactionEndMapping = auditMapping.getTransactionEndMapping( collectionTableName );
+		this.transactionEndMapping = auditMapping.getInvalidatingChangesetIdMapping( collectionTableName );
 
 		final var dialect = sessionFactory.getJdbcServices().getDialect();
 		this.useServerTransactionTimestamps =
-				sessionFactory.getTransactionIdentifierService()
+				sessionFactory.getChangesetCoordinator()
 						.useServerTimestamp( dialect );
 		this.currentTimestampFunctionName = useServerTransactionTimestamps
 				? dialect.currentTimestamp()
@@ -163,7 +163,7 @@ public final class AuditCollectionHelper {
 
 		// SET REVEND_TSTMP = ? (if configured)
 		final var revEndTsMapping = mutationTarget.getTargetPart().getAuditMapping()
-				.getTransactionEndTimestampMapping( mutationTarget.getCollectionTableMapping().getTableName() );
+				.getInvalidationTimestampMapping( mutationTarget.getCollectionTableMapping().getTableName() );
 		if ( revEndTsMapping != null ) {
 			updateBuilder.addValueColumn( "?", revEndTsMapping );
 		}

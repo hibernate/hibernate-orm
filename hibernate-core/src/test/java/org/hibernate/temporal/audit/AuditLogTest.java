@@ -27,7 +27,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 
 import org.hibernate.SharedSessionContract;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 
 import java.util.List;
 
@@ -46,16 +46,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		AuditLogTest.AuditedEntity.class,
 		AuditLogTest.NonAuditedEntity.class
 })
-@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TRANSACTION_ID_SUPPLIER,
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditLogTest$TxIdSupplier"))
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AuditLogTest {
 	private static int currentTxId;
 
-	public static class TxIdSupplier implements TransactionIdentifierSupplier<Integer> {
+	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
 		@Override
-		public Integer generateTransactionIdentifier(SharedSessionContract session) {
+		public Integer generateIdentifier(SharedSessionContract session) {
 			return ++currentTxId;
 		}
 
@@ -334,7 +334,7 @@ class AuditLogTest {
 			// First revision: entity was created with name "first"
 			final int firstRev = ( (Number) revisions.get( 0 ) ).intValue();
 			assertEquals( ModificationType.ADD, auditLog.getModificationType( AuditedEntity.class, 1L, firstRev ) );
-			try (var s = sf.withOptions().atTransaction( firstRev ).open()) {
+			try (var s = sf.withOptions().atChangeset( firstRev ).open()) {
 				final var entity = s.find( AuditedEntity.class, 1L );
 				assertNotNull( entity );
 				assertEquals( "first", entity.name );
@@ -343,7 +343,7 @@ class AuditLogTest {
 			// Second revision: entity was updated to "first-updated"
 			final int secondRev = ( (Number) revisions.get( 1 ) ).intValue();
 			assertEquals( ModificationType.MOD, auditLog.getModificationType( AuditedEntity.class, 1L, secondRev ) );
-			try (var s = sf.withOptions().atTransaction( secondRev ).open()) {
+			try (var s = sf.withOptions().atChangeset( secondRev ).open()) {
 				final var entity = s.find( AuditedEntity.class, 1L );
 				assertNotNull( entity );
 				assertEquals( "first-updated", entity.name );
@@ -352,7 +352,7 @@ class AuditLogTest {
 			// Third revision: entity was deleted
 			final int thirdRev = ( (Number) revisions.get( 2 ) ).intValue();
 			assertEquals( ModificationType.DEL, auditLog.getModificationType( AuditedEntity.class, 1L, thirdRev ) );
-			try (var s = sf.withOptions().atTransaction( thirdRev ).open()) {
+			try (var s = sf.withOptions().atChangeset( thirdRev ).open()) {
 				final var entity = s.find( AuditedEntity.class, 1L );
 				assertNull( entity );
 			}

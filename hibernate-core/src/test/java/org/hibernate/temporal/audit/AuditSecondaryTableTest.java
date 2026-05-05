@@ -15,7 +15,7 @@ import org.hibernate.annotations.Audited;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.audit.ModificationType;
 import org.hibernate.cfg.StateManagementSettings;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.AuditedTest;
@@ -34,14 +34,14 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 		AuditSecondaryTableTest.Employee.class,
 		AuditSecondaryTableTest.Department.class
 })
-@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TRANSACTION_ID_SUPPLIER,
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditSecondaryTableTest$TxIdSupplier"))
 class AuditSecondaryTableTest {
 	private static int currentTxId;
 
-	public static class TxIdSupplier implements TransactionIdentifierSupplier<Integer> {
+	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
 		@Override
-		public Integer generateTransactionIdentifier(SharedSessionContract session) {
+		public Integer generateIdentifier(SharedSessionContract session) {
 			return ++currentTxId;
 		}
 	}
@@ -73,7 +73,7 @@ class AuditSecondaryTableTest {
 		);
 
 		try (var s = scope.getSessionFactory().withStatelessOptions()
-				.atTransaction( 1 ).openStatelessSession()) {
+				.atChangeset( 1 ).openStatelessSession()) {
 			var emp = s.get( Employee.class, 1L );
 			assertEquals( "Alice", emp.name );
 			assertEquals( "123 Main St", emp.address );
@@ -83,7 +83,7 @@ class AuditSecondaryTableTest {
 		}
 
 		try (var s = scope.getSessionFactory().withStatelessOptions()
-				.atTransaction( 2 ).openStatelessSession()) {
+				.atChangeset( 2 ).openStatelessSession()) {
 			var emp = s.get( Employee.class, 1L );
 			assertEquals( "Alice B.", emp.name );
 			assertEquals( "456 Oak Ave", emp.address );
@@ -91,7 +91,7 @@ class AuditSecondaryTableTest {
 		}
 
 		try (var s = scope.getSessionFactory().withStatelessOptions()
-				.atTransaction( 3 ).openStatelessSession()) {
+				.atChangeset( 3 ).openStatelessSession()) {
 			assertNull( s.get( Employee.class, 1L ) );
 		}
 	}
@@ -159,17 +159,17 @@ class AuditSecondaryTableTest {
 		} );
 
 		try (var s = scope.getSessionFactory().withStatelessOptions()
-				.atTransaction( 201 ).openStatelessSession()) {
+				.atChangeset( 201 ).openStatelessSession()) {
 			assertEquals( "Engineering", s.get( Employee.class, 20L ).department.name );
 		}
 
 		try (var s = scope.getSessionFactory().withStatelessOptions()
-				.atTransaction( 202 ).openStatelessSession()) {
+				.atChangeset( 202 ).openStatelessSession()) {
 			assertEquals( "Marketing", s.get( Employee.class, 20L ).department.name );
 		}
 
 		try (var s = scope.getSessionFactory().withStatelessOptions()
-				.atTransaction( 203 ).openStatelessSession()) {
+				.atChangeset( 203 ).openStatelessSession()) {
 			assertNull( s.get( Employee.class, 20L ).department );
 		}
 

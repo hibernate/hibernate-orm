@@ -25,36 +25,37 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * a historical record of changes over time. Unlike a
  * {@linkplain Temporal temporal} entity, it explicitly records
  * the nature of each change, such as creation, modification, or
- * deletion. An audited entity or collection maps to two tables,
- * a table holding the current state of the entity or collection,
- * and an <em>audit log</em> table with a record of each change.
+ * deletion, and associates each change with a <em>changeset</em>.
+ * An audited entity or collection maps to two tables, a table
+ * holding the current state of the entity or collection, and an
+ * <em>audit log</em> table with a record of each change.
  * <p>
  * The audit log contains the following columns:
  * <ul>
  * <li>columns holding the state of the entity or collection at
  *     the moment of creation, modification, or deletion, except
  *     for state held by {@linkplain Excluded excluded attributes},
- * <li>a {@linkplain StateManagementSettings#TRANSACTION_ID_SUPPLIER
- *     transaction id} recording the unit of work in which the
- *     change occurred, and
+ * <li>a {@linkplain StateManagementSettings#CHANGESET_ID_SUPPLIER
+ *     changeset id} recording the changeset in which the change
+ *     occurred, and
  * <li>a column indicating the type of change, encoded as 0 for
  *     creation, 1 for modification, and 2 for deletion.
  * </ul>
  * <p>
- * Audited entities are typically used when a supplier of
- * transaction identifiers is available to Hibernate. A supplier
- * may be specified via the configuration property
- * {@value StateManagementSettings#TRANSACTION_ID_SUPPLIER}.
- * Transactions ids must be unique and comparable and must
- * increase monotonically. Typically, such an id is obtained by
- * persisting an instance of an application-defined entity class
- * with a generated id which represents the current unit of work.
- * This entity associates the transaction id with other information
- * about the work being performed, such as the current timestamp,
- * current application user, and so on. If no supplier is provided,
- * the {@linkplain java.time.Instant#now() current JVM instant} is
- * used as the transaction identifier, but relying on this default
- * behavior is not recommended.
+ * Audited entities are typically used when a supplier of changeset
+ * identifiers is available to Hibernate. A custom supplier may be
+ * specified via the configuration property
+ * {@value StateManagementSettings#CHANGESET_ID_SUPPLIER}.
+ * Changeset ids must be unique and comparable and must increase
+ * monotonically. Typically, such an id is obtained by persisting
+ * an instance of an application-defined entity class with a
+ * generated id which represents the current changeset. This
+ * entity associates the changeset id with other information about
+ * the work being performed, such as the current timestamp, current
+ * application user, and so on. If no supplier is provided, the
+ * {@linkplain java.time.Instant#now() current JVM instant} is used
+ * as the changeset identifier, but relying on this default behavior
+ * is not recommended.
  * <p>
  * Use the nested {@link Table @Audited.Table} annotation to
  * customize the audit log's table name, schema, catalog, or
@@ -102,9 +103,9 @@ public @interface Audited {
 	@Target({TYPE, PACKAGE, ANNOTATION_TYPE})
 	@Retention(RUNTIME)
 	@interface Table {
-		String DEFAULT_TRANSACTION_ID = "REV";
-		String DEFAULT_MODIFICATION_TYPE = "REVTYPE";
-		String DEFAULT_TRANSACTION_END_ID = "REVEND";
+		String DEFAULT_CHANGESET_ID_COLUMN_NAME = "REV";
+		String DEFAULT_MODIFICATION_TYPE_COLUMN_NAME = "REVTYPE";
+		String DEFAULT_INVALIDATING_CHANGESET_ID_COLUMN_NAME = "REVEND";
 
 		/**
 		 * The name of the audit log table. Defaults to the
@@ -125,11 +126,13 @@ public @interface Audited {
 		String catalog() default "";
 
 		/**
-		 * The name of the column holding the transaction identifier.
+		 * The name of the column holding the identifier of the
+		 * changeset in which a revision was introduced.
 		 *
-		 * @see org.hibernate.engine.spi.SharedSessionContractImplementor#getCurrentTransactionIdentifier()
+		 * @see org.hibernate.engine.spi.SharedSessionContractImplementor#getCurrentChangesetIdentifier()
 		 */
-		String transactionIdColumn() default DEFAULT_TRANSACTION_ID;
+		String changesetIdColumn()
+				default DEFAULT_CHANGESET_ID_COLUMN_NAME;
 
 		/**
 		 * The name of the column holding the modification type,
@@ -138,30 +141,31 @@ public @interface Audited {
 		 *
 		 * @see org.hibernate.audit.ModificationType
 		 */
-		String modificationTypeColumn() default DEFAULT_MODIFICATION_TYPE;
+		String modificationTypeColumn()
+				default DEFAULT_MODIFICATION_TYPE_COLUMN_NAME;
 
 		/**
-		 * The name of the column holding the end transaction
-		 * identifier, used only when the
+		 * The name of the column holding the identifier of
+		 * the changeset which invalidates a revision when the
 		 * {@linkplain StateManagementSettings#AUDIT_STRATEGY
-		 * audit strategy} is set to {@code "validity"}. When a
-		 * new audit row is written, the previous row's end
-		 * transaction id column is updated with the current
-		 * transaction identifier, marking it as superseded.
-		 * A {@code null} value indicates the row is current
+		 * audit strategy} is set to {@code "validity"}. When
+		 * a new audit row is written, the previous row's
+		 * invalidating changeset id column is updated with the
+		 * current changeset id, marking it as superseded. A
+		 * {@code null} value indicates the row is current
 		 * (not yet superseded).
 		 */
-		String transactionEndIdColumn() default DEFAULT_TRANSACTION_END_ID;
+		String invalidatingChangesetIdColumn()
+				default DEFAULT_INVALIDATING_CHANGESET_ID_COLUMN_NAME;
 
 		/**
 		 * The name of the column holding the timestamp of the
-		 * end transaction. Only used when the
+		 * instant at which a revision was superseded when the
 		 * {@linkplain StateManagementSettings#AUDIT_STRATEGY
 		 * audit strategy} is set to {@code "validity"} and this
-		 * attribute is set to a non-empty value. Stores the
-		 * timestamp of when the audit row was superseded.
+		 * attribute is set to a non-empty value.
 		 */
-		String transactionEndTimestampColumn() default "";
+		String invalidationTimestampColumn() default "";
 	}
 
 	/**

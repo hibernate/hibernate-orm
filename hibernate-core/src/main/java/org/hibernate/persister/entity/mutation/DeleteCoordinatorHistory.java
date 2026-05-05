@@ -98,7 +98,7 @@ public class DeleteCoordinatorHistory
 
 			if ( TemporalMutationHelper.isUsingParameters( session ) ) {
 				jdbcValueBindings.bindValue(
-						session.getCurrentTransactionIdentifier(),
+						session.getCurrentChangesetIdentifier(),
 						historyTableMapping.getTableName(),
 						temporalMapping.getEndingColumnMapping().getSelectionExpression(),
 						ParameterUsage.SET

@@ -13,7 +13,7 @@ import org.hibernate.audit.AuditLog;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.AuditedTest;
@@ -43,16 +43,16 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 		AuditUnidirectionalOneToManyJoinTableTest.Team.class,
 		AuditUnidirectionalOneToManyJoinTableTest.Player.class
 })
-@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TRANSACTION_ID_SUPPLIER,
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.collection.AuditUnidirectionalOneToManyJoinTableTest$TxIdSupplier"))
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AuditUnidirectionalOneToManyJoinTableTest {
 	private static int currentTxId;
 
-	public static class TxIdSupplier implements TransactionIdentifierSupplier<Integer> {
+	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
 		@Override
-		public Integer generateTransactionIdentifier(SharedSessionContract session) {
+		public Integer generateIdentifier(SharedSessionContract session) {
 			return ++currentTxId;
 		}
 	}
@@ -156,7 +156,7 @@ class AuditUnidirectionalOneToManyJoinTableTest {
 		final var sf = scope.getSessionFactory();
 
 		// At revCreate: team should have 1 player (Alice)
-		try (var s = sf.withOptions().atTransaction( revCreate ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revCreate ).openSession()) {
 			var team = s.find( Team.class, 1L );
 			assertNotNull( team );
 			assertEquals( 1, team.players.size(), "At revCreate, team should have 1 player" );
@@ -164,14 +164,14 @@ class AuditUnidirectionalOneToManyJoinTableTest {
 		}
 
 		// At revAdd: team should have 2 players
-		try (var s = sf.withOptions().atTransaction( revAdd ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revAdd ).openSession()) {
 			var team = s.find( Team.class, 1L );
 			assertNotNull( team );
 			assertEquals( 2, team.players.size(), "At revAdd, team should have 2 players" );
 		}
 
 		// At revRemove: 1 player (Bob only)
-		try (var s = sf.withOptions().atTransaction( revRemove ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revRemove ).openSession()) {
 			var team = s.find( Team.class, 1L );
 			assertNotNull( team );
 			assertEquals( 1, team.players.size(), "At revRemove, team should have 1 player" );
@@ -205,14 +205,14 @@ class AuditUnidirectionalOneToManyJoinTableTest {
 		}
 
 		// At revRecCreate: 2 players
-		try (var s = sf.withOptions().atTransaction( revRecCreate ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revRecCreate ).openSession()) {
 			var team = s.find( Team.class, 10L );
 			assertNotNull( team );
 			assertEquals( 2, team.players.size(), "At revRecCreate, team should have 2 players" );
 		}
 
 		// At revRecReplace: 2 players (Bob + Charlie, Alice dropped)
-		try (var s = sf.withOptions().atTransaction( revRecReplace ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revRecReplace ).openSession()) {
 			var team = s.find( Team.class, 10L );
 			assertNotNull( team );
 			assertEquals( 2, team.players.size(), "At revRecReplace, team should have 2 players" );
@@ -229,7 +229,7 @@ class AuditUnidirectionalOneToManyJoinTableTest {
 		final var sf = scope.getSessionFactory();
 		// Use separate point-in-time sessions within an ALL_REVISIONS session
 		// to verify collection isolation across revisions
-		try (var s = sf.withOptions().atTransaction( AuditLog.ALL_REVISIONS ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( AuditLog.ALL_REVISIONS ).openSession()) {
 			var teams = s.createSelectionQuery( "from Team where id = :id", Team.class )
 					.setParameter( "id", 1L )
 					.getResultList();

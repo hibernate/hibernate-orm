@@ -9,8 +9,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Transient;
+import org.hibernate.annotations.ChangesetEntity;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.RevisionEntity;
 
 import java.io.Serializable;
 import java.time.Instant;
@@ -23,7 +23,7 @@ import java.time.Instant;
  * via {@link CreationTimestamp}.
  * <p>
  * Extend this class to create a custom
- * {@link RevisionEntity @RevisionEntity}. For entity change
+ * {@link ChangesetEntity @RevisionEntity}. For entity change
  * tracking, extend {@link TrackingModifiedEntitiesRevisionMapping}
  * instead.
  *
@@ -36,12 +36,12 @@ import java.time.Instant;
 public class RevisionMapping implements Serializable {
 	@Id
 	@GeneratedValue
-	@RevisionEntity.TransactionId
+	@ChangesetEntity.ChangesetId
 	@Column(name = "REV")
 	private long id;
 
 	@CreationTimestamp
-	@RevisionEntity.Timestamp
+	@ChangesetEntity.Timestamp
 	@Column(name = "REVTSTMP")
 	private long timestamp;
 

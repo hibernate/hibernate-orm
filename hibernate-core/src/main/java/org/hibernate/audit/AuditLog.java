@@ -4,7 +4,7 @@
  */
 package org.hibernate.audit;
 
-import org.hibernate.annotations.RevisionEntity;
+import org.hibernate.annotations.ChangesetEntity;
 
 import java.time.Instant;
 import java.util.List;
@@ -17,7 +17,7 @@ import java.util.Set;
  * {@linkplain org.hibernate.annotations.Audited audited}
  * entities, complementing the transparent point-in-time
  * reads available via
- * {@link org.hibernate.SessionBuilder#atTransaction(Object)
+ * {@link org.hibernate.SessionBuilder#atChangeset(Object)
  * atTransaction()} sessions.
  * <p>
  * Obtain an instance via {@link AuditLogFactory#create}.
@@ -41,7 +41,7 @@ public interface AuditLog extends AutoCloseable {
 	 * A special transaction identifier that selects all
 	 * revisions from the audit table without filtering.
 	 * Pass this to
-	 * {@link org.hibernate.SessionBuilder#atTransaction(Object)
+	 * {@link org.hibernate.SessionBuilder#atChangeset(Object)
 	 * atTransaction()} to open a session that reads all audit
 	 * rows, including deletions.
 	 * <p>
@@ -210,8 +210,8 @@ public interface AuditLog extends AutoCloseable {
 	 * Get the set of entity types that were modified at the
 	 * given transaction.
 	 * <p>
-	 * Requires a {@link RevisionEntity @RevisionEntity} with a
-	 * {@link RevisionEntity.ModifiedEntities @ModifiedEntities} property
+	 * Requires a {@link ChangesetEntity @RevisionEntity} with a
+	 * {@link ChangesetEntity.ModifiedEntities @ModifiedEntities} property
 	 * (e.g. {@link DefaultTrackingModifiedEntitiesRevisionEntity}).
 	 *
 	 * @param transactionId the transaction identifier
@@ -226,8 +226,8 @@ public interface AuditLog extends AutoCloseable {
 	 * Find all entity snapshots across all audited types that
 	 * were modified at the given transaction.
 	 * <p>
-	 * Requires a {@link RevisionEntity @RevisionEntity} with a
-	 * {@link RevisionEntity.ModifiedEntities @ModifiedEntities} property
+	 * Requires a {@link ChangesetEntity @RevisionEntity} with a
+	 * {@link ChangesetEntity.ModifiedEntities @ModifiedEntities} property
 	 * (e.g. {@link DefaultTrackingModifiedEntitiesRevisionEntity}).
 	 *
 	 * @param transactionId the transaction identifier
@@ -243,8 +243,8 @@ public interface AuditLog extends AutoCloseable {
 	 * were modified at the given transaction with the specified
 	 * modification type.
 	 * <p>
-	 * Requires a {@link RevisionEntity @RevisionEntity} with a
-	 * {@link RevisionEntity.ModifiedEntities @ModifiedEntities} property
+	 * Requires a {@link ChangesetEntity @RevisionEntity} with a
+	 * {@link ChangesetEntity.ModifiedEntities @ModifiedEntities} property
 	 * (e.g. {@link DefaultTrackingModifiedEntitiesRevisionEntity}).
 	 *
 	 * @param transactionId the transaction identifier
@@ -260,8 +260,8 @@ public interface AuditLog extends AutoCloseable {
 	 * Find all entity snapshots modified at the given transaction,
 	 * grouped by modification type (ADD, MOD, DEL).
 	 * <p>
-	 * Requires a {@link RevisionEntity @RevisionEntity} with a
-	 * {@link RevisionEntity.ModifiedEntities @ModifiedEntities} property
+	 * Requires a {@link ChangesetEntity @RevisionEntity} with a
+	 * {@link ChangesetEntity.ModifiedEntities @ModifiedEntities} property
 	 * (e.g. {@link DefaultTrackingModifiedEntitiesRevisionEntity}).
 	 *
 	 * @param transactionId the transaction identifier
@@ -274,8 +274,8 @@ public interface AuditLog extends AutoCloseable {
 
 	/**
 	 * Get the timestamp of a specific revision. Requires
-	 * a {@link RevisionEntity @RevisionEntity} with a
-	 * {@link RevisionEntity.Timestamp @Timestamp} field.
+	 * a {@link ChangesetEntity @RevisionEntity} with a
+	 * {@link ChangesetEntity.Timestamp @Timestamp} field.
 	 *
 	 * @param transactionId the transaction identifier
 	 *
@@ -289,8 +289,8 @@ public interface AuditLog extends AutoCloseable {
 	/**
 	 * Get the transaction identifier that was current at or
 	 * before the given instant. Requires a
-	 * {@link RevisionEntity @RevisionEntity} with a
-	 * {@link RevisionEntity.Timestamp @Timestamp} field.
+	 * {@link ChangesetEntity @RevisionEntity} with a
+	 * {@link ChangesetEntity.Timestamp @Timestamp} field.
 	 *
 	 * @param instant the point in time
 	 *
@@ -304,7 +304,7 @@ public interface AuditLog extends AutoCloseable {
 
 	/**
 	 * Load the revision entity for the given transaction identifier.
-	 * Requires a {@link RevisionEntity @RevisionEntity}.
+	 * Requires a {@link ChangesetEntity @RevisionEntity}.
 	 *
 	 * @param transactionId the transaction identifier
 	 * @param <T> the revision entity type
@@ -318,7 +318,7 @@ public interface AuditLog extends AutoCloseable {
 
 	/**
 	 * Load revision entities for multiple transaction identifiers.
-	 * Requires a {@link RevisionEntity @RevisionEntity}.
+	 * Requires a {@link ChangesetEntity @RevisionEntity}.
 	 *
 	 * @param transactionIds the transaction identifiers
 	 * @param <T> the revision entity type

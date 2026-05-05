@@ -99,7 +99,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 			final var temporalMapping = mutationTarget.getTargetPart().getTemporalMapping();
 			if ( temporalMapping != null && TemporalMutationHelper.isUsingParameters( session ) ) {
 				jdbcValueBindings.bindValue(
-						session.getCurrentTransactionIdentifier(),
+						session.getCurrentChangesetIdentifier(),
 						temporalMapping.getEndingColumnMapping(),
 						ParameterUsage.SET
 				);

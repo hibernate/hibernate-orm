@@ -8,54 +8,54 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Session;
+import org.hibernate.annotations.ChangesetEntity;
 import org.hibernate.audit.AuditException;
-import org.hibernate.annotations.RevisionEntity;
-import org.hibernate.audit.RevisionListener;
+import org.hibernate.audit.ChangesetListener;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.temporal.spi.TransactionIdentifierService;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetCoordinator;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 
 
 /**
- * A built-in {@link TransactionIdentifierSupplier} that persists
+ * A built-in {@link ChangesetIdentifierSupplier} that persists
  * a user-defined revision entity and returns the
- * {@link RevisionEntity.TransactionId @RevisionEntity.TransactionId}
+ * {@link ChangesetEntity.ChangesetId @RevisionEntity.TransactionId}
  * property value as the transaction id for audit rows.
  * <p>
- * An optional {@link RevisionListener} callback can be
+ * An optional {@link ChangesetListener} callback can be
  * configured for populating custom fields.
  *
  * @param <T> the type of the transaction identifier
- * (the {@link RevisionEntity.TransactionId @TransactionId}
+ * (the {@link ChangesetEntity.ChangesetId @TransactionId}
  * property type)
  *
  * @author Marco Belladelli
  * @since 7.4
  */
-public class RevisionEntitySupplier<T> implements TransactionIdentifierSupplier<T> {
+public class ChangesetEntitySupplier<T> implements ChangesetIdentifierSupplier<T> {
 	private final Class<?> revisionEntityClass;
-	private final String transactionIdProperty;
+	private final String changesetIdProperty;
 	private final String timestampProperty;
 	private final @Nullable String modifiedEntitiesProperty;
-	private final @Nullable RevisionListener listener;
+	private final @Nullable ChangesetListener listener;
 
 	/**
 	 * @param revisionEntityClass the revision entity class
-	 * @param transactionIdProperty the name of the {@link RevisionEntity.TransactionId @TransactionId} property
-	 * @param timestampProperty the name of the {@link RevisionEntity.Timestamp @Timestamp} property
-	 * @param modifiedEntitiesProperty the name of the {@link RevisionEntity.ModifiedEntities @ModifiedEntities}
+	 * @param changesetIdProperty the name of the {@link ChangesetEntity.ChangesetId @TransactionId} property
+	 * @param timestampProperty the name of the {@link ChangesetEntity.Timestamp @Timestamp} property
+	 * @param modifiedEntitiesProperty the name of the {@link ChangesetEntity.ModifiedEntities @ModifiedEntities}
 	 * property, or {@code null} if entity change tracking is not configured
 	 * @param listener optional callback for populating custom fields
 	 */
-	public RevisionEntitySupplier(
+	public ChangesetEntitySupplier(
 			Class<?> revisionEntityClass,
-			String transactionIdProperty,
+			String changesetIdProperty,
 			String timestampProperty,
-			@Nullable String modifiedEntitiesProperty, @Nullable RevisionListener listener) {
+			@Nullable String modifiedEntitiesProperty, @Nullable ChangesetListener listener) {
 		this.revisionEntityClass = revisionEntityClass;
-		this.transactionIdProperty = transactionIdProperty;
+		this.changesetIdProperty = changesetIdProperty;
 		this.timestampProperty = timestampProperty;
 		this.modifiedEntitiesProperty = modifiedEntitiesProperty;
 		this.listener = listener;
@@ -69,14 +69,14 @@ public class RevisionEntitySupplier<T> implements TransactionIdentifierSupplier<
 	}
 
 	/**
-	 * The name of the {@link RevisionEntity.TransactionId @TransactionId} property.
+	 * The name of the {@link ChangesetEntity.ChangesetId @TransactionId} property.
 	 */
-	public String getTransactionIdProperty() {
-		return transactionIdProperty;
+	public String getChangesetIdProperty() {
+		return changesetIdProperty;
 	}
 
 	/**
-	 * The name of the {@link RevisionEntity.Timestamp @Timestamp} property.
+	 * The name of the {@link ChangesetEntity.Timestamp @Timestamp} property.
 	 */
 	public String getTimestampProperty() {
 		return timestampProperty;
@@ -85,12 +85,12 @@ public class RevisionEntitySupplier<T> implements TransactionIdentifierSupplier<
 	/**
 	 * The configured revision listener, or {@code null}.
 	 */
-	public @Nullable RevisionListener getListener() {
+	public @Nullable ChangesetListener getListener() {
 		return listener;
 	}
 
 	/**
-	 * The name of the {@link RevisionEntity.ModifiedEntities @ModifiedEntities}
+	 * The name of the {@link ChangesetEntity.ModifiedEntities @ModifiedEntities}
 	 * property, or {@code null} if entity change tracking is not configured.
 	 */
 	public @Nullable String getModifiedEntitiesProperty() {
@@ -99,12 +99,12 @@ public class RevisionEntitySupplier<T> implements TransactionIdentifierSupplier<
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public T generateTransactionIdentifier(SharedSessionContract session) {
+	public T generateIdentifier(SharedSessionContract session) {
 		final var sessionImpl = (SharedSessionContractImplementor) session;
 		final EntityPersister persister = sessionImpl.getEntityPersister( revisionEntityClass.getName(), null );
 		final Object revisionEntity = persister.instantiate( null, sessionImpl );
 		if ( listener != null ) {
-			listener.newRevision( revisionEntity );
+			listener.newChangeset( revisionEntity );
 		}
 		final var childSession = persistRevisionEntity( session, revisionEntity );
 		sessionImpl.getAuditWorkQueue().setRevisionContext( revisionEntity, childSession );
@@ -112,7 +112,7 @@ public class RevisionEntitySupplier<T> implements TransactionIdentifierSupplier<
 	}
 
 	/**
-	 * Read the {@link RevisionEntity.TransactionId @TransactionId} property value
+	 * Read the {@link ChangesetEntity.ChangesetId @TransactionId} property value
 	 * from the revision entity after persistence.
 	 * <p>
 	 * Handles both regular properties and {@code @Id} properties.
@@ -122,7 +122,7 @@ public class RevisionEntitySupplier<T> implements TransactionIdentifierSupplier<
 			EntityPersister persister,
 			SharedSessionContractImplementor session) {
 		final Object txId;
-		final var txIdAttr = persister.findAttributeMapping( transactionIdProperty );
+		final var txIdAttr = persister.findAttributeMapping( changesetIdProperty );
 		if ( txIdAttr != null ) {
 			txId = persister.getValue( revisionEntity, txIdAttr.getStateArrayPosition() );
 		}
@@ -132,9 +132,9 @@ public class RevisionEntitySupplier<T> implements TransactionIdentifierSupplier<
 		}
 		if ( txId == null ) {
 			throw new AuditException(
-					"@RevisionEntity.TransactionId property '" + transactionIdProperty
-							+ "' is null after persisting revision entity '"
-							+ revisionEntityClass.getName() + "'"
+					"@RevisionEntity.TransactionId property '" + changesetIdProperty
+					+ "' is null after persisting revision entity '"
+					+ revisionEntityClass.getName() + "'"
 			);
 		}
 		return txId;
@@ -158,13 +158,13 @@ public class RevisionEntitySupplier<T> implements TransactionIdentifierSupplier<
 	}
 
 	/**
-	 * Resolve the {@link RevisionEntitySupplier} from the given
+	 * Resolve the {@link ChangesetEntitySupplier} from the given
 	 * service registry, or return {@code null} if no
 	 * {@code @RevisionEntity} is configured.
 	 */
-	public static @Nullable RevisionEntitySupplier<?> resolve(ServiceRegistry registry) {
-		final var service = registry.getService( TransactionIdentifierService.class );
-		return service != null && service.getIdentifierSupplier() instanceof RevisionEntitySupplier<?> supplier
+	public static @Nullable ChangesetEntitySupplier<?> resolve(ServiceRegistry registry) {
+		final var service = registry.getService( ChangesetCoordinator.class );
+		return service != null && service.getIdentifierSupplier() instanceof ChangesetEntitySupplier<?> supplier
 				? supplier
 				: null;
 	}

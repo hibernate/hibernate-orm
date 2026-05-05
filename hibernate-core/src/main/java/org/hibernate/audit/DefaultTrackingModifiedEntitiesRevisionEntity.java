@@ -7,7 +7,7 @@ package org.hibernate.audit;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.RevisionEntity;
+import org.hibernate.annotations.ChangesetEntity;
 
 
 /**
@@ -21,10 +21,10 @@ import org.hibernate.annotations.RevisionEntity;
  *
  * @author Marco Belladelli
  * @see TrackingModifiedEntitiesRevisionMapping
- * @see RevisionEntity.ModifiedEntities
+ * @see ChangesetEntity.ModifiedEntities
  * @since 7.4
  */
-@RevisionEntity
+@ChangesetEntity
 @Entity(name = "DefaultTrackingModifiedEntitiesRevisionEntity")
 @Table(name = "REVINFO")
 public final class DefaultTrackingModifiedEntitiesRevisionEntity extends TrackingModifiedEntitiesRevisionMapping {

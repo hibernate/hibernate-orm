@@ -54,7 +54,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.event.monitor.spi.EventMonitor;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
@@ -108,7 +108,6 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.TransactionRequiredForJoinException;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
 import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -173,13 +172,13 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	private final boolean readOnly;
 	private final TimeZone jdbcTimeZone;
 
-	private transient TransactionIdentifierSupplier<?> transactionIdSupplier;
+	private transient ChangesetIdentifierSupplier<?> changesetIdSupplier;
 
 	// mutable state
 	private CacheMode cacheMode;
 	private Integer jdbcBatchSize;
 
-	private transient Object currentTransactionIdentifier;
+	private transient Object currentChangesetId;
 
 	private boolean criteriaCopyTreeEnabled;
 	private boolean criteriaPlanCacheEnabled;
@@ -221,7 +220,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 		final var statementInspector = interpret( options.getStatementInspector() );
 
-		transactionIdSupplier = initializeTransactionIdSupplier( factory );
+		changesetIdSupplier = initializeTransactionIdSupplier( factory );
 
 		if ( options instanceof SharedSessionCreationOptions sharedOptions
 				&& sharedOptions.isTransactionCoordinatorShared() ) {
@@ -263,11 +262,11 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		}
 	}
 
-	private static TransactionIdentifierSupplier<?> initializeTransactionIdSupplier(SessionFactoryImplementor factory) {
-		final var transactionIdentifierService = factory.getTransactionIdentifierService();
-		return transactionIdentifierService.useServerTimestamp( factory.getJdbcServices().getDialect() )
+	private static ChangesetIdentifierSupplier<?> initializeTransactionIdSupplier(SessionFactoryImplementor factory) {
+		final var changesetCoordinator = factory.getChangesetCoordinator();
+		return changesetCoordinator.useServerTimestamp( factory.getJdbcServices().getDialect() )
 				? null
-				: transactionIdentifierService.getIdentifierSupplier();
+				: changesetCoordinator.getIdentifierSupplier();
 	}
 
 	final SessionFactoryOptions getSessionFactoryOptions() {
@@ -625,13 +624,13 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	}
 
 	@Override
-	public Object getCurrentTransactionIdentifier() {
-		if ( currentTransactionIdentifier != null ) {
-			return currentTransactionIdentifier;
+	public Object getCurrentChangesetIdentifier() {
+		if ( currentChangesetId != null ) {
+			return currentChangesetId;
 		}
 		else if ( isTransactionInProgress() ) {
 			initializeCurrentTransactionIdentifier();
-			return currentTransactionIdentifier;
+			return currentChangesetId;
 		}
 		else {
 			return generateCurrentTransactionIdentifier();
@@ -639,9 +638,9 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	}
 
 	private Object generateCurrentTransactionIdentifier() {
-		return transactionIdSupplier == null
+		return changesetIdSupplier == null
 				? null
-				: transactionIdSupplier.generateTransactionIdentifier( this );
+				: changesetIdSupplier.generateIdentifier( this );
 	}
 
 	@Override
@@ -649,11 +648,11 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 	}
 
 	protected void initializeCurrentTransactionIdentifier() {
-		currentTransactionIdentifier = generateCurrentTransactionIdentifier();
+		currentChangesetId = generateCurrentTransactionIdentifier();
 	}
 
 	protected void clearTransactionStartInstant() {
-		currentTransactionIdentifier = null;
+		currentChangesetId = null;
 	}
 
 	@Override
@@ -1846,7 +1845,7 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
 
-		transactionIdSupplier = initializeTransactionIdSupplier( factory );
+		changesetIdSupplier = initializeTransactionIdSupplier( factory );
 	}
 
 }

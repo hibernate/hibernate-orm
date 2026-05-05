@@ -8,10 +8,10 @@ import java.time.Instant;
 import java.util.Set;
 
 import org.hibernate.annotations.Audited;
-import org.hibernate.annotations.RevisionEntity;
+import org.hibernate.annotations.ChangesetEntity;
 import org.hibernate.audit.AuditException;
 import org.hibernate.audit.AuditLogFactory;
-import org.hibernate.audit.RevisionListener;
+import org.hibernate.audit.ChangesetListener;
 
 import org.hibernate.testing.orm.junit.AuditedTest;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -32,9 +32,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Test demonstrating {@link RevisionEntity @RevisionEntity}
+ * Test demonstrating {@link ChangesetEntity @RevisionEntity}
  * auto-detection with a custom revision entity and
- * {@link RevisionListener}.
+ * {@link ChangesetListener}.
  */
 @AuditedTest
 @SessionFactory
@@ -45,20 +45,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AuditRevisionEntityTest {
 
 	/**
-	 * Custom revision entity with a {@link RevisionListener}
+	 * Custom revision entity with a {@link ChangesetListener}
 	 * that populates the {@code username} field.
 	 */
-	@RevisionEntity(listener = UsernameRevisionListener.class)
+	@ChangesetEntity(listener = UsernameChangesetListener.class)
 	@Entity(name = "RevisionInfo")
 	@Table(name = "REVINFO")
 	static class RevisionInfo {
 		@Id
 		@GeneratedValue
-		@RevisionEntity.TransactionId
+		@ChangesetEntity.ChangesetId
 		@Column(name = "REV")
 		int id;
 
-		@RevisionEntity.Timestamp
+		@ChangesetEntity.Timestamp
 		@Column(name = "REVTSTMP")
 		Instant timestamp = Instant.now();
 
@@ -66,10 +66,10 @@ class AuditRevisionEntityTest {
 		String username;
 	}
 
-	public static class UsernameRevisionListener implements RevisionListener {
+	public static class UsernameChangesetListener implements ChangesetListener {
 		@Override
-		public void newRevision(Object revisionEntity) {
-			( (RevisionInfo) revisionEntity ).username = "test-user";
+		public void newChangeset(Object changesetEntity) {
+			( (RevisionInfo) changesetEntity).username = "test-user";
 		}
 	}
 
@@ -144,21 +144,21 @@ class AuditRevisionEntityTest {
 			final int rev3 = ( (Number) revisions.get( 2 ) ).intValue();
 
 			// Read at revision 1: entity was created
-			try (var s = scope.getSessionFactory().withOptions().atTransaction( rev1 ).open()) {
+			try (var s = scope.getSessionFactory().withOptions().atChangeset( rev1 ).open()) {
 				final var entity = s.find( MyEntity.class, 1L );
 				assertNotNull( entity );
 				assertEquals( "original", entity.name );
 			}
 
 			// Read at revision 2: entity was updated
-			try (var s = scope.getSessionFactory().withOptions().atTransaction( rev2 ).open()) {
+			try (var s = scope.getSessionFactory().withOptions().atChangeset( rev2 ).open()) {
 				final var entity = s.find( MyEntity.class, 1L );
 				assertNotNull( entity );
 				assertEquals( "updated", entity.name );
 			}
 
 			// Read at revision 3: entity was deleted
-			try (var s = scope.getSessionFactory().withOptions().atTransaction( rev3 ).open()) {
+			try (var s = scope.getSessionFactory().withOptions().atChangeset( rev3 ).open()) {
 				final var entity = s.find( MyEntity.class, 1L );
 				assertNull( entity );
 			}

@@ -10,15 +10,15 @@ import org.hibernate.SharedSessionContract;
 
 
 /**
- * A source of transaction identifiers or timestamps for use
+ * A source of changeset identifiers or timestamps for use
  * with {@linkplain org.hibernate.annotations.Temporal temporal}
  * or {@linkplain org.hibernate.annotations.Audited audited} data.
  * <p>
- * Transaction ids produced by the {@linkplain #generateTransactionIdentifier
+ * Changeset ids produced by the {@linkplain #generateIdentifier
  * supplier} must be distinct and monotonically increasing. Note,
  * however, that unless the database is in serializable isolation
  * mode, transactions themselves do not have a well-defined total
- * order. Therefore, the transaction ids are ordered by the moment
+ * order. Therefore, the changeset ids are ordered by the moment
  * at which they are obtained; approximately, by the instant at
  * which the transaction <em>started</em>. This must be taken into
  * account when interpreting the results of historical queries
@@ -27,15 +27,15 @@ import org.hibernate.SharedSessionContract;
  * completion time of a transaction is never known when the records
  * are written to the history table or audit log.
  *
- * @apiNote A transaction id or timestamp is assumed to be constant
+ * @apiNote A changeset id or timestamp is assumed to be constant
  * during a transaction. The supplier does not have to be aware of
  * transaction contexts, and so it is the responsibility of the client
- * to ensure that the {@linkplain #generateTransactionIdentifier supplier}
+ * to ensure that the {@linkplain #generateIdentifier supplier}
  * is called no more than once in a transaction.
  *
- * @param <T> the type of transaction identifier produced
+ * @param <T> the type of changeset identifier produced
  *
- * @see StateManagementSettings#TRANSACTION_ID_SUPPLIER
+ * @see StateManagementSettings#CHANGESET_ID_SUPPLIER
  *
  * @author Gavin King
  * @author Marco Belladelli
@@ -43,7 +43,7 @@ import org.hibernate.SharedSessionContract;
  * @since 7.4
  */
 @Incubating
-public interface TransactionIdentifierSupplier<T> {
+public interface ChangesetIdentifierSupplier<T> {
 
 	/**
 	 * Called once per transaction to obtain the transaction identifier
@@ -51,5 +51,5 @@ public interface TransactionIdentifierSupplier<T> {
 	 * @param session the current session
 	 * @return the transaction identifier
 	 */
-	T generateTransactionIdentifier(SharedSessionContract session);
+	T generateIdentifier(SharedSessionContract session);
 }

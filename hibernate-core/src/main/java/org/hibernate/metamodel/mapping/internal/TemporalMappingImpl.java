@@ -120,7 +120,7 @@ public class TemporalMappingImpl implements TemporalMapping {
 				creationContext
 		);
 
-		if ( sessionFactory.getTransactionIdentifierService().useServerTimestamp( dialect ) ) {
+		if ( sessionFactory.getChangesetCoordinator().useServerTimestamp( dialect ) ) {
 			currentTimestampFunctionName = dialect.currentTimestamp();
 			currentTimestampExpression =
 					new SelfRenderingSqlFragmentExpression( currentTimestampFunctionName, jdbcMapping );
@@ -336,14 +336,14 @@ public class TemporalMappingImpl implements TemporalMapping {
 
 	private static boolean useTemporalRestriction(LoadQueryInfluencers influencers) {
 		return !influencers.isAllRevisions()
-				&& influencers.getSessionFactory().getJdbcServices().getDialect().getTemporalTableSupport()
+			&& influencers.getSessionFactory().getJdbcServices().getDialect().getTemporalTableSupport()
 						.useTemporalRestriction( influencers );
 	}
 
 	private boolean useTemporalRestriction(SqlAstCreationState creationState) {
 		final var influencers = creationState.getLoadQueryInfluencers();
 		return !influencers.isAllRevisions()
-				&& creationState.getCreationContext().getDialect().getTemporalTableSupport()
+			&& creationState.getCreationContext().getDialect().getTemporalTableSupport()
 						.useTemporalRestriction( influencers );
 	}
 
@@ -357,6 +357,6 @@ public class TemporalMappingImpl implements TemporalMapping {
 	@Override
 	public boolean isAffectedByInfluencers(LoadQueryInfluencers influencers) {
 		return influencers.getTemporalIdentifier() != null
-				&& !influencers.isAllRevisions();
+			&& !influencers.isAllRevisions();
 	}
 }

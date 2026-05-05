@@ -16,7 +16,7 @@ import org.hibernate.audit.AuditLog;
 import org.hibernate.audit.AuditLogFactory;
 import org.hibernate.audit.ModificationType;
 import org.hibernate.cfg.StateManagementSettings;
-import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
+import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 import org.hibernate.testing.orm.junit.AuditedTest;
 import org.hibernate.testing.orm.junit.BeforeClassTemplate;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -46,16 +46,16 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 		AuditToOneAssociationTest.Person.class,
 		AuditToOneAssociationTest.Passport.class
 })
-@ServiceRegistry(settings = @Setting(name = StateManagementSettings.TRANSACTION_ID_SUPPLIER,
+@ServiceRegistry(settings = @Setting(name = StateManagementSettings.CHANGESET_ID_SUPPLIER,
 		value = "org.hibernate.temporal.audit.AuditToOneAssociationTest$TxIdSupplier"))
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AuditToOneAssociationTest {
 	private static int currentTxId;
 
-	public static class TxIdSupplier implements TransactionIdentifierSupplier<Integer> {
+	public static class TxIdSupplier implements ChangesetIdentifierSupplier<Integer> {
 		@Override
-		public Integer generateTransactionIdentifier(SharedSessionContract session) {
+		public Integer generateIdentifier(SharedSessionContract session) {
 			return ++currentTxId;
 		}
 	}
@@ -184,7 +184,7 @@ class AuditToOneAssociationTest {
 		final var sf = scope.getSessionFactory();
 
 		// Rev 1: Book->Author->Publisher at creation
-		try (var s = sf.withStatelessOptions().atTransaction( revCreate ).openStatelessSession()) {
+		try (var s = sf.withStatelessOptions().atChangeset( revCreate ).openStatelessSession()) {
 			var book = s.get( Book.class, 1L );
 			assertEquals( "Book V1", book.getTitle() );
 			assertEquals( "Author V1", book.getAuthor().getName() );
@@ -192,7 +192,7 @@ class AuditToOneAssociationTest {
 		}
 
 		// Rev 2: all updated
-		try (var s = sf.withStatelessOptions().atTransaction( revUpdate ).openStatelessSession()) {
+		try (var s = sf.withStatelessOptions().atChangeset( revUpdate ).openStatelessSession()) {
 			var book = s.get( Book.class, 1L );
 			assertEquals( "Book V2", book.getTitle() );
 			assertEquals( "Author V2", book.getAuthor().getName() );
@@ -200,14 +200,14 @@ class AuditToOneAssociationTest {
 		}
 
 		// Rev 3: FK reassigned
-		try (var s = sf.withStatelessOptions().atTransaction( revReassign ).openStatelessSession()) {
+		try (var s = sf.withStatelessOptions().atChangeset( revReassign ).openStatelessSession()) {
 			var book = s.get( Book.class, 1L );
 			assertEquals( 2L, book.getAuthor().id );
 			assertEquals( "Author B", book.getAuthor().getName() );
 		}
 
 		// Rev 4: FK null
-		try (var s = sf.withStatelessOptions().atTransaction( revNull ).openStatelessSession()) {
+		try (var s = sf.withStatelessOptions().atChangeset( revNull ).openStatelessSession()) {
 			assertNull( s.get( Book.class, 1L ).getAuthor() );
 		}
 	}
@@ -217,13 +217,13 @@ class AuditToOneAssociationTest {
 	void testLazyPointInTimeRead(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
 
-		try (var s = sf.withOptions().atTransaction( revCreate ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revCreate ).openSession()) {
 			var author = s.find( LazyBook.class, 2L ).getAuthor();
 			assertEquals( "Author V1", author.getName() );
 			assertEquals( "Pub V1", author.getPublisher().getName() );
 		}
 
-		try (var s = sf.withOptions().atTransaction( revUpdate ).openSession()) {
+		try (var s = sf.withOptions().atChangeset( revUpdate ).openSession()) {
 			var author = s.find( LazyBook.class, 2L ).getAuthor();
 			assertEquals( "Author V2", author.getName() );
 			assertEquals( "Pub V2", author.getPublisher().getName() );
@@ -266,7 +266,7 @@ class AuditToOneAssociationTest {
 	@Order(5)
 	void testJoinFetchAllRevisions(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions()
-				.atTransaction( AuditLog.ALL_REVISIONS ).openSession()) {
+				.atChangeset( AuditLog.ALL_REVISIONS ).openSession()) {
 			// Single-level join fetch: inner join filters out revNull (null author)
 			final var rows = session.createSelectionQuery(
 					"select e, transactionId(e), modificationType(e)"
@@ -303,7 +303,7 @@ class AuditToOneAssociationTest {
 	void testJoinFetchPointInTime(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
 
-		try (var session = sf.withOptions().atTransaction( revCreate ).openSession()) {
+		try (var session = sf.withOptions().atChangeset( revCreate ).openSession()) {
 			final var book = session.createSelectionQuery(
 					"from Book e join fetch e.author where e.id = :id",
 					Book.class
@@ -313,7 +313,7 @@ class AuditToOneAssociationTest {
 			assertEquals( "Author V1", book.getAuthor().getName() );
 		}
 
-		try (var session = sf.withOptions().atTransaction( revUpdate ).openSession()) {
+		try (var session = sf.withOptions().atChangeset( revUpdate ).openSession()) {
 			final var book = session.createSelectionQuery(
 					"from Book e join fetch e.author where e.id = :id",
 					Book.class
@@ -330,7 +330,7 @@ class AuditToOneAssociationTest {
 		final var sf = scope.getSessionFactory();
 
 		// Explicit entity join (not fetch join), hits consumeEntityJoin path
-		try (var session = sf.withOptions().atTransaction( revCreate ).openSession()) {
+		try (var session = sf.withOptions().atChangeset( revCreate ).openSession()) {
 			final var rows = session.createSelectionQuery(
 					"select b, a from Book b join Author a on a.id = b.author.id"
 					+ " where b.id = :id",
@@ -342,7 +342,7 @@ class AuditToOneAssociationTest {
 			assertEquals( "Author V1", ((Author) rows.get( 0 )[1]).getName() );
 		}
 
-		try (var session = sf.withOptions().atTransaction( revUpdate ).openSession()) {
+		try (var session = sf.withOptions().atChangeset( revUpdate ).openSession()) {
 			final var rows = session.createSelectionQuery(
 					"select b, a from Book b join Author a on a.id = b.author.id"
 					+ " where b.id = :id",
@@ -362,15 +362,15 @@ class AuditToOneAssociationTest {
 	void testNullAssociationPointInTimeRead(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
 
-		try (var s = sf.withStatelessOptions().atTransaction( revNullCreate ).openStatelessSession()) {
+		try (var s = sf.withStatelessOptions().atChangeset( revNullCreate ).openStatelessSession()) {
 			assertNull( s.get( Book.class, 10L ).getAuthor() );
 		}
 
-		try (var s = sf.withStatelessOptions().atTransaction( revNullSet ).openStatelessSession()) {
+		try (var s = sf.withStatelessOptions().atChangeset( revNullSet ).openStatelessSession()) {
 			assertEquals( "Late Author", s.get( Book.class, 10L ).getAuthor().getName() );
 		}
 
-		try (var s = sf.withStatelessOptions().atTransaction( revNullClear ).openStatelessSession()) {
+		try (var s = sf.withStatelessOptions().atChangeset( revNullClear ).openStatelessSession()) {
 			assertNull( s.get( Book.class, 10L ).getAuthor() );
 		}
 	}
@@ -397,7 +397,7 @@ class AuditToOneAssociationTest {
 	@Order(10)
 	void testLeftJoinFetchNullAssociationAllRevisions(SessionFactoryScope scope) {
 		try (var session = scope.getSessionFactory().withOptions()
-				.atTransaction( AuditLog.ALL_REVISIONS ).openSession()) {
+				.atChangeset( AuditLog.ALL_REVISIONS ).openSession()) {
 			final var rows = session.createSelectionQuery(
 					"select e, transactionId(e), modificationType(e)"
 					+ " from Book e left join fetch e.author"
@@ -420,15 +420,15 @@ class AuditToOneAssociationTest {
 	void testOneToOnePointInTimeRead(SessionFactoryScope scope) {
 		final var sf = scope.getSessionFactory();
 
-		try (var s = sf.withStatelessOptions().atTransaction( revO2oCreate ).openStatelessSession()) {
+		try (var s = sf.withStatelessOptions().atChangeset( revO2oCreate ).openStatelessSession()) {
 			assertEquals( "AB123", s.get( Person.class, 1L ).passport.number );
 		}
 
-		try (var s = sf.withStatelessOptions().atTransaction( revO2oReassign ).openStatelessSession()) {
+		try (var s = sf.withStatelessOptions().atChangeset( revO2oReassign ).openStatelessSession()) {
 			assertEquals( "CD456", s.get( Person.class, 1L ).passport.number );
 		}
 
-		try (var s = sf.withStatelessOptions().atTransaction( revO2oNull ).openStatelessSession()) {
+		try (var s = sf.withStatelessOptions().atChangeset( revO2oNull ).openStatelessSession()) {
 			assertNull( s.get( Person.class, 1L ).passport );
 		}
 	}

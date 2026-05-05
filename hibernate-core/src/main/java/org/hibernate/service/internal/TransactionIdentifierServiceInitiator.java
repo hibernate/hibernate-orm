@@ -6,8 +6,8 @@ package org.hibernate.service.internal;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.temporal.internal.TransactionIdentifierServiceImpl;
-import org.hibernate.temporal.spi.TransactionIdentifierService;
+import org.hibernate.temporal.internal.ChangesetCoordinatorImpl;
+import org.hibernate.temporal.spi.ChangesetCoordinator;
 
 import java.util.Map;
 
@@ -16,16 +16,16 @@ import java.util.Map;
  *
  * @author Gavin King
  */
-public class TransactionIdentifierServiceInitiator implements StandardServiceInitiator<TransactionIdentifierService> {
+public class TransactionIdentifierServiceInitiator implements StandardServiceInitiator<ChangesetCoordinator> {
 	public static final TransactionIdentifierServiceInitiator INSTANCE = new TransactionIdentifierServiceInitiator();
 
 	@Override
-	public Class<TransactionIdentifierService> getServiceInitiated() {
-		return TransactionIdentifierService.class;
+	public Class<ChangesetCoordinator> getServiceInitiated() {
+		return ChangesetCoordinator.class;
 	}
 
 	@Override
-	public TransactionIdentifierService initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
-		return new TransactionIdentifierServiceImpl(registry);
+	public ChangesetCoordinator initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+		return new ChangesetCoordinatorImpl(registry);
 	}
 }

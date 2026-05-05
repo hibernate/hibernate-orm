@@ -10,7 +10,7 @@ import org.hibernate.audit.AuditEntry;
 import org.hibernate.audit.AuditException;
 import org.hibernate.audit.AuditLog;
 import org.hibernate.audit.ModificationType;
-import org.hibernate.audit.spi.RevisionEntitySupplier;
+import org.hibernate.audit.spi.ChangesetEntitySupplier;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -43,7 +43,7 @@ import static java.util.Objects.requireNonNull;
 public class AuditLogImpl implements AuditLog {
 	private final SessionFactoryImplementor sessionFactory;
 	private final SharedSessionContractImplementor auditSession;
-	private final @Nullable RevisionEntitySupplier<?> revisionEntitySupplier;
+	private final @Nullable ChangesetEntitySupplier<?> changesetEntitySupplier;
 	private final @Nullable String revisionEntityName;
 	private final @Nullable String transactionIdProperty;
 	private final @Nullable String timestampProperty;
@@ -57,13 +57,13 @@ public class AuditLogImpl implements AuditLog {
 	public AuditLogImpl(SharedSessionContractImplementor auditSession) {
 		this.auditSession = auditSession;
 		this.sessionFactory = auditSession.getSessionFactory();
-		final var supplier = RevisionEntitySupplier.resolve( sessionFactory.getServiceRegistry() );
+		final var supplier = ChangesetEntitySupplier.resolve( sessionFactory.getServiceRegistry() );
 		if ( supplier != null ) {
-			this.revisionEntitySupplier = supplier;
+			this.changesetEntitySupplier = supplier;
 			this.revisionEntityName = sessionFactory.getMappingMetamodel()
 					.getEntityDescriptor( supplier.getRevisionEntityClass() )
 					.getEntityName();
-			this.transactionIdProperty = supplier.getTransactionIdProperty();
+			this.transactionIdProperty = supplier.getChangesetIdProperty();
 			this.timestampProperty = supplier.getTimestampProperty();
 			this.modifiedEntitiesProperty = supplier.getModifiedEntitiesProperty();
 			this.timestampFieldType = sessionFactory.getMappingMetamodel()
@@ -73,7 +73,7 @@ public class AuditLogImpl implements AuditLog {
 		}
 		else {
 			this.modifiedEntitiesProperty = null;
-			this.revisionEntitySupplier = null;
+			this.changesetEntitySupplier = null;
 			this.revisionEntityName = null;
 			this.transactionIdProperty = null;
 			this.timestampProperty = null;
@@ -428,7 +428,7 @@ public class AuditLogImpl implements AuditLog {
 	}
 
 	private void requireRevisionEntity() {
-		if ( revisionEntitySupplier == null ) {
+		if ( changesetEntitySupplier == null ) {
 			throw new AuditException(
 					"No @RevisionEntity configured. "
 							+ "This operation requires a revision entity with "

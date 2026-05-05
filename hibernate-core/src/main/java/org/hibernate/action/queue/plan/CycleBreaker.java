@@ -99,20 +99,16 @@ public class CycleBreaker {
 			// one-to-one relationships. Required unique edges participate in this
 			// classification, but only explicit NULL_PATCHABLE_UNIQUE edges can install
 			// a NULL-then-patch update.
-			if (isUniqueUpdateOrderingCycle(cycle)) {
-				final GraphEdge uniquePatchCandidate = findUniquePatchCandidate(cycle);
-				if (uniquePatchCandidate != null) {
-					uniquePatchCandidate.setBroken(true);
-					installPatchForEdge(uniquePatchCandidate);
+			if ( isUniqueUpdateOrderingCycle( cycle ) ) {
+				final GraphEdge uniquePatchCandidate = findUniquePatchCandidate( cycle );
+				if ( uniquePatchCandidate != null ) {
+					uniquePatchCandidate.setBroken( true );
+					installPatchForEdge( uniquePatchCandidate );
 				}
 				else {
-					// Preserve progress for unique-only cycles whose constraints do
-					// not allow a temporary-null patch.
-					for (GraphEdge e : cycle) {
-						if (e.isUniqueConstraintEdge()) {
-							e.setBroken(true);
-						}
-					}
+					throw new UnbreakableUniqueCycleException(
+							"Unbreakable unique update cycle detected for SCC: " + describeScc( scc )
+					);
 				}
 				continue;
 			}

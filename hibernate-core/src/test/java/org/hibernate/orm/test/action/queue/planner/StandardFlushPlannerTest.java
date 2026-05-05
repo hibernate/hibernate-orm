@@ -21,6 +21,7 @@ import org.hibernate.action.queue.plan.FlushPlan;
 import org.hibernate.action.queue.plan.PlanStep;
 import org.hibernate.action.queue.plan.PlannedOperationGroup;
 import org.hibernate.action.queue.plan.StandardFlushPlanner;
+import org.hibernate.action.queue.plan.UnbreakableUniqueCycleException;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.MutationOperation;
@@ -258,7 +259,7 @@ public class StandardFlushPlannerTest {
 	}
 
 	@Test
-	public void testRequiredUniqueUpdateCycleDoesNotInstallPatch() {
+	public void testRequiredUniqueUpdateCycleThrows() {
 		final PlannedOperationGroup groupA = createGroup("tableA", MutationKind.UPDATE, 1);
 		final PlannedOperationGroup groupB = createGroup("tableB", MutationKind.UPDATE, 2);
 
@@ -275,11 +276,17 @@ public class StandardFlushPlannerTest {
 		final Graph graph = new Graph(List.of(nodeA, nodeB), outgoing);
 		final StandardFlushPlanner planner = new StandardFlushPlanner( DEFAULT_PLANNING_OPTIONS );
 
-		final FlushPlan plan = planner.plan(graph);
+		final UnbreakableUniqueCycleException exception = assertThrows(
+				UnbreakableUniqueCycleException.class,
+				() -> planner.plan(graph)
+		);
 
-		assertNotNull(plan);
-		assertTrue(firstRequiredUniqueEdge.isBroken(), "Required unique edge should still be breakable to preserve progress");
-		assertTrue(secondRequiredUniqueEdge.isBroken(), "Required unique fallback should break the unique cycle without installing patches");
+		assertTrue(
+				exception.getMessage().contains( "Unbreakable unique update cycle" ),
+				"Required unique cycles should fail before arbitrary execution order"
+		);
+		assertFalse(firstRequiredUniqueEdge.isBroken(), "Required unique edge should not be silently broken");
+		assertFalse(secondRequiredUniqueEdge.isBroken(), "Required unique edge should not be silently broken");
 		assertNull(firstRequiredUniqueEdge.getPatchCycleType(), "Required unique edge should not advertise a patch type");
 		assertNull(secondRequiredUniqueEdge.getPatchCycleType(), "Required unique edge should not advertise a patch type");
 		assertNull(groupA.operations().get(0).getBindingPatch(), "Required unique cycle should not install a NULL patch");

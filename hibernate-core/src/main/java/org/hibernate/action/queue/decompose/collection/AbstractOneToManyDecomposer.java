@@ -746,27 +746,21 @@ public abstract class AbstractOneToManyDecomposer implements OneToManyDecomposer
 		}
 
 		@Override
-		public void execute(
-				org.hibernate.action.queue.exec.ExecutionContext context,
+		public void bindValues(
+				JdbcValueBindings valueBindings,
 				FlushOperation flushOperation,
 				SharedSessionContractImplementor session) {
-			context.executeRow(
-					flushOperation,
-					(valueBindings, s) -> {
-						var fkDescriptor = mutationTarget.getAttributeMapping().getKeyDescriptor();
-						fkDescriptor.getKeyPart().decompose(
-								key,
-								(valueIndex, value, jdbcValueMapping) -> {
-									valueBindings.bindValue(
-											value,
-											jdbcValueMapping.getSelectionExpression(),
-											ParameterUsage.RESTRICT
-									);
-								},
-								session
+			var fkDescriptor = mutationTarget.getAttributeMapping().getKeyDescriptor();
+			fkDescriptor.getKeyPart().decompose(
+					key,
+					(valueIndex, value, jdbcValueMapping) -> {
+						valueBindings.bindValue(
+								value,
+								jdbcValueMapping.getSelectionExpression(),
+								ParameterUsage.RESTRICT
 						);
 					},
-					null
+					session
 			);
 		}
 	}

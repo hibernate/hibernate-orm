@@ -11,7 +11,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.AbstractGeneratedValuesMutationDelegate;
 import org.hibernate.generator.values.GeneratedValues;
-import org.hibernate.internal.util.MutableObject;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.PreparableMutationOperation;
 
@@ -59,19 +58,9 @@ public abstract class AbstractReturningDelegate
 					jdbcOperation
 			);
 
-			var ref = new MutableObject<GeneratedValues>();
-			operation.getBindPlan().execute(
-					(flushOperation, binder, resultChecker) -> {
-						binder.accept( valueBindings, session );
-						valueBindings.beforeStatement( preparedStatement, session );
-						var generatedValues = executeAndExtractReturning( sql, preparedStatement, session );
-						ref.set(  generatedValues );
-					},
-					operation,
-					session
-			);
-
-			return ref.get();
+			operation.getBindPlan().bindValues( valueBindings, operation, session );
+			valueBindings.beforeStatement( preparedStatement, session );
+			return executeAndExtractReturning( sql, preparedStatement, session );
 		}
 		finally {
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( preparedStatement );

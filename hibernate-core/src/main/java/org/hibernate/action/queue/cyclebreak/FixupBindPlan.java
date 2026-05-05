@@ -6,7 +6,7 @@ package org.hibernate.action.queue.cyclebreak;
 
 import org.hibernate.action.queue.exec.BindPlan;
 import org.hibernate.action.queue.exec.JdbcValueBindings;
-import org.hibernate.action.queue.exec.ExecutionContext;
+import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -18,7 +18,7 @@ import java.util.Map;
 /**
  * @author Steve Ebersole
  */
-public class FixupBindPlan implements BindPlan {
+public class FixupBindPlan implements BindPlan, OperationResultChecker {
 	private final EntityPersister entityPersister;
 	private final Object identifier;
 	private final Map<String,Object> intendedValues;
@@ -30,15 +30,10 @@ public class FixupBindPlan implements BindPlan {
 	}
 
 	@Override
-	public void execute(
-			ExecutionContext context,
+	public void bindValues(
+			JdbcValueBindings valueBindings,
 			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
-		context.executeRow(	flushOperation, this::bindValues, this::noopCheck );
-	}
-
-	private void bindValues(JdbcValueBindings valueBindings, SharedSessionContractImplementor session) {
-
 		// SET fk columns
 		for (var e : intendedValues.entrySet()) {
 			valueBindings.bindValue(
@@ -62,7 +57,8 @@ public class FixupBindPlan implements BindPlan {
 		);
 	}
 
-	private boolean noopCheck(int affectedRowCount, int batchPosition, String sqlString, SessionFactoryImplementor f) {
+	@Override
+	public boolean checkResult(int affectedRowCount, int batchPosition, String sqlString, SessionFactoryImplementor f) {
 		// technically we could make sure 1 row was affected...
 		return true;
 	}

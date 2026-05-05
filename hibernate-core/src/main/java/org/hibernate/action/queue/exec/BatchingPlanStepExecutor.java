@@ -17,13 +17,12 @@ import org.hibernate.sql.model.SelfExecutingUpdateOperation;
 
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
  * @author Steve Ebersole
  */
-public class BatchingPlanStepExecutor extends AbstractStepExecutor implements ExecutionContext {
+public class BatchingPlanStepExecutor extends AbstractStepExecutor {
 	private final int batchSize;
 
 	private StatementShapeKey batchKey;
@@ -62,7 +61,16 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ex
 
 	@Override
 	protected void executePreparable(PreparableMutationOperation preparable, FlushOperation flushOperation) {
-		flushOperation.getBindPlan().execute( this, flushOperation, session );
+		final StatementShapeKey operationShapeKey = flushOperation.getShapeKey();
+		if ( batchKey == null ) {
+			newBatch( operationShapeKey, preparable );
+		}
+		else if ( !batchKey.equals( operationShapeKey ) || currentBatchIndex >= batchSize ) {
+			executeBatch();
+			newBatch( operationShapeKey, preparable );
+		}
+
+		applyToBatch( preparable, flushOperation );
 	}
 
 	@Override
@@ -90,26 +98,6 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ex
 		super.afterOperationExecution( flushOperation, newlyManagedEntityConsumer, fixupOperationConsumer );
 	}
 
-	@Override
-	public void executeRow(
-			FlushOperation flushOperation,
-			BiConsumer<JdbcValueBindings, SharedSessionContractImplementor> binder,
-			OperationResultChecker resultChecker) {
-		assert flushOperation.getJdbcOperation() instanceof PreparableMutationOperation;
-
-		var preparable = (PreparableMutationOperation) flushOperation.getJdbcOperation();
-		final StatementShapeKey operationShapeKey = flushOperation.getShapeKey();
-		if ( batchKey == null ) {
-			newBatch( operationShapeKey, preparable );
-		}
-		else if ( !batchKey.equals( operationShapeKey ) || currentBatchIndex >= batchSize) {
-			executeBatch();
-			newBatch( operationShapeKey, preparable );
-		}
-
-		applyToBatch( preparable, flushOperation, binder, resultChecker );
-	}
-
 	private void newBatch(StatementShapeKey operationShapeKey, PreparableMutationOperation preparable) {
 		batchKey = operationShapeKey;
 		currentBatchIndex = 0;
@@ -123,15 +111,13 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ex
 
 	private void applyToBatch(
 			PreparableMutationOperation preparable,
-			FlushOperation flushOperation,
-			BiConsumer<JdbcValueBindings, SharedSessionContractImplementor> binder,
-			OperationResultChecker resultChecker) {
+			FlushOperation flushOperation) {
 		if ( currentBatchIndex > 0 ) {
 			session.getJdbcServices().getSqlStatementLogger().logStatement( preparable.getSqlString() );
 		}
 
 		var valueBindings = new JdbcValueBindings( flushOperation.getMutatingTableDescriptor(), preparable );
-		binder.accept( valueBindings, session );
+		flushOperation.getBindPlan().bindValues( valueBindings, flushOperation, session );
 
 		batchOperations[currentBatchIndex] = flushOperation;
 
@@ -153,7 +139,11 @@ public class BatchingPlanStepExecutor extends AbstractStepExecutor implements Ex
 		batch.addToBatch(
 				jdbcValueBindings,
 				null,
-				buildStaleStateMapper( resultChecker, currentBatchIndex, preparable.getSqlString() )
+				buildStaleStateMapper(
+						flushOperation.getBindPlan().getOperationResultChecker(),
+						currentBatchIndex,
+						preparable.getSqlString()
+				)
 		);
 		currentBatchIndex++;
 

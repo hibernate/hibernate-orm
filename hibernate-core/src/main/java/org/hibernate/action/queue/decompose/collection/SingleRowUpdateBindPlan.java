@@ -7,7 +7,6 @@ package org.hibernate.action.queue.decompose.collection;
 import org.hibernate.action.queue.constraint.UniqueConstraint;
 import org.hibernate.action.queue.exec.BindPlan;
 import org.hibernate.action.queue.exec.JdbcValueBindings;
-import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -70,12 +69,9 @@ public class SingleRowUpdateBindPlan implements BindPlan, OperationResultChecker
 	}
 
 	@Override
-	public void execute(ExecutionContext context, FlushOperation flushOperation, SharedSessionContractImplementor session) {
-		context.executeRow( flushOperation, this::bindValues, this );
-	}
-
-	private void bindValues(
+	public void bindValues(
 			JdbcValueBindings valueBindings,
+			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
 		updateRowValues.applyValues( collection, key, entry, entryIndex, session, valueBindings );
 		updateRowRestrictions.applyRestrictions( collection, key, entry, entryIndex, session, valueBindings );

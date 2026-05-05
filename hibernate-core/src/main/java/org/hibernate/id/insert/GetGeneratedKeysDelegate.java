@@ -13,7 +13,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.GeneratedValues;
-import org.hibernate.internal.util.MutableObject;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.PreparableMutationOperation;
@@ -132,24 +131,14 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 					jdbcOperation
 			);
 
-			var ref = new MutableObject<GeneratedValues>();
-			operation.getBindPlan().execute(
-					(flushOperation, binder, resultChecker) -> {
-						binder.accept( valueBindings, session );
-						valueBindings.beforeStatement( preparedStatement, session );
+			operation.getBindPlan().bindValues( valueBindings, operation, session );
+			valueBindings.beforeStatement( preparedStatement, session );
 
-						session.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement, sql );
-						var generatedValues = extractGeneratedValues( session, preparedStatement, sql,
-								() -> String.format( Locale.ROOT,
-										"Unable to extract generated key for '%s'",
-										persister.getNavigableRole().getFullPath() ) );
-						ref.set( generatedValues );
-					},
-					operation,
-					session
-			);
-
-			return ref.get();
+			session.getJdbcCoordinator().getResultSetReturn().executeUpdate( preparedStatement, sql );
+			return extractGeneratedValues( session, preparedStatement, sql,
+					() -> String.format( Locale.ROOT,
+							"Unable to extract generated key for '%s'",
+							persister.getNavigableRole().getFullPath() ) );
 		}
 		finally {
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( preparedStatement );

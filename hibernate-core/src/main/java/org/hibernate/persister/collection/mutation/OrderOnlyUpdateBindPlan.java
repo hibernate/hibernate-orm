@@ -7,7 +7,6 @@ package org.hibernate.persister.collection.mutation;
 import org.hibernate.action.queue.exec.BindPlan;
 import org.hibernate.action.queue.exec.JdbcValueBindings;
 import org.hibernate.action.queue.decompose.collection.CollectionJdbcOperations;
-import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -52,12 +51,9 @@ public class OrderOnlyUpdateBindPlan implements BindPlan, OperationResultChecker
 	}
 
 	@Override
-	public void execute(ExecutionContext context, FlushOperation flushOperation, SharedSessionContractImplementor session) {
-		context.executeRow( flushOperation, this::bindValues, this );
-	}
-
-	private void bindValues(
+	public void bindValues(
 			JdbcValueBindings valueBindings,
+			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
 		// SET clause: use new position
 		updateRowValues.applyValues( collection, key, entry, newPosition, session, valueBindings );

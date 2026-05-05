@@ -81,18 +81,12 @@ public abstract class AbstractSelectingDelegate
 					operation.getMutatingTableDescriptor(),
 					jdbcOperation
 			);
-			operation.getBindPlan().execute(
-					(flushOperation, binder, resultChecker) -> {
-						binder.accept( valueBindings, session );
-						valueBindings.beforeStatement( preparedStatement, session );
+			operation.getBindPlan().bindValues( valueBindings, operation, session );
+			valueBindings.beforeStatement( preparedStatement, session );
 
-						session.getJdbcCoordinator()
-								.getResultSetReturn()
-								.executeUpdate( preparedStatement, sql );
-					},
-					operation,
-					session
-			);
+			session.getJdbcCoordinator()
+					.getResultSetReturn()
+					.executeUpdate( preparedStatement, sql );
 		}
 		finally {
 			session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( preparedStatement );

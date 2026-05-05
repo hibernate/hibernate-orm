@@ -4,47 +4,34 @@
  */
 package org.hibernate.action.queue.exec;
 
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.model.PreparableMutationOperation;
 
 import java.sql.SQLException;
-import java.util.function.BiConsumer;
 
 /**
  * @author Steve Ebersole
  */
-public class StandardPlanStepExecutor extends AbstractStepExecutor implements ExecutionContext {
+public class StandardPlanStepExecutor extends AbstractStepExecutor {
 	public StandardPlanStepExecutor(SharedSessionContractImplementor session) {
 		super( session );
 	}
 
 	@Override
 	public void executePreparable(PreparableMutationOperation preparable, FlushOperation flushOperation) {
-		// Delegate to BindPlan to drive execution
-		// The BindPlan will call back to executeRow() for each row it needs to execute
-		flushOperation.getBindPlan().execute( this, flushOperation, session );
-	}
-
-	@Override
-	public void executeRow(
-			FlushOperation flushOperation,
-			@MonotonicNonNull BiConsumer<JdbcValueBindings, SharedSessionContractImplementor> binder,
-			OperationResultChecker resultChecker) {
-		final PreparableMutationOperation preparable = (PreparableMutationOperation) flushOperation.getJdbcOperation();
-
 		try (var stmnt = session.getJdbcCoordinator()
 				.getStatementPreparer()
 				.prepareStatement( preparable.getSqlString() ) ) {
 			var valueBindings = new JdbcValueBindings( flushOperation.getMutatingTableDescriptor(), preparable );
-			binder.accept( valueBindings, session );
+			flushOperation.getBindPlan().bindValues( valueBindings, flushOperation, session );
 			valueBindings.beforeStatement( stmnt, session );
 
 			final int affectedRowCount = session.getJdbcCoordinator()
 					.getResultSetReturn()
 					.executeUpdate( stmnt, preparable.getSqlString() );
 
+			final OperationResultChecker resultChecker = flushOperation.getBindPlan().getOperationResultChecker();
 			if ( resultChecker != null ) {
 				resultChecker.checkResult( affectedRowCount, -1, preparable.getSqlString(),  session.getFactory() );
 			}

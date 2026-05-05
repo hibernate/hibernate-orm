@@ -8,7 +8,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.action.queue.cyclebreak.CycleBreakPatcher;
 import org.hibernate.action.queue.exec.BindPlan;
 import org.hibernate.action.queue.exec.Checkers;
-import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.exec.GeneratedValuesCollector;
 import org.hibernate.action.queue.exec.JdbcValueBindings;
 import org.hibernate.action.queue.exec.OperationResultChecker;
@@ -112,18 +111,7 @@ public class EntityUpdateBindPlan implements BindPlan, OperationResultChecker {
 	}
 
 	@Override
-	public void execute(
-			ExecutionContext context,
-			FlushOperation flushOperation,
-			SharedSessionContractImplementor session) {
-		context.executeRow(
-				flushOperation,
-				(jdbcValueBindings, s) -> bindValues( jdbcValueBindings, flushOperation, session ),
-				this
-		);
-	}
-
-	private void bindValues(
+	public void bindValues(
 			JdbcValueBindings valueBindings,
 			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {

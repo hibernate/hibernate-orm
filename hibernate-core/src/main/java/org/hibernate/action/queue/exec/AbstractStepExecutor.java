@@ -43,8 +43,8 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 		// Grab a reference to the physical connection to ensure it's acquired before execution begins.
 		// The connection will be maintained throughout the flush via the flush lifecycle
 		// (flushBeginning/flushEnding), which disables aggressive connection release.
-		// Individual statements are released from the resource registry as they complete
-		// (see StandardPlanStepExecutor.executeRow()), but the connection itself is retained.
+		// Individual statements are released from the resource registry as they complete,
+		// but the connection itself is retained.
 		var physicalConnection = session.getJdbcCoordinator().getLogicalConnection().getPhysicalConnection();
 		doExecution(
 				physicalConnection,
@@ -190,11 +190,7 @@ public abstract class AbstractStepExecutor implements PlanStepExecutor {
 				flushOperation.getMutatingTableDescriptor(),
 				selfExecuting
 		);
-		flushOperation.getBindPlan().execute(
-				(operation, binder, resultChecker) -> binder.accept( graphBindings, session ),
-				flushOperation,
-				session
-		);
+		flushOperation.getBindPlan().bindValues( graphBindings, flushOperation, session );
 
 		final var jdbcValueBindings = new JdbcValueBindingsImpl(
 				selfExecuting.getMutationType(),

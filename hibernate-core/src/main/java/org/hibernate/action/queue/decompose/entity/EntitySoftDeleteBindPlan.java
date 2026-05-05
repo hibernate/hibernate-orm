@@ -7,7 +7,6 @@ package org.hibernate.action.queue.decompose.entity;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.action.queue.exec.BindPlan;
 import org.hibernate.action.queue.exec.Checkers;
-import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.exec.JdbcValueBindings;
 import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.meta.EntityTableDescriptor;
@@ -55,18 +54,7 @@ public class EntitySoftDeleteBindPlan implements BindPlan, OperationResultChecke
 	}
 
 	@Override
-	public void execute(
-			ExecutionContext context,
-			FlushOperation flushOperation,
-			SharedSessionContractImplementor session) {
-		context.executeRow(
-				flushOperation,
-				(jdbcValueBindings, s) -> bindValues( jdbcValueBindings, flushOperation, session ),
-				this
-		);
-	}
-
-	private void bindValues(
+	public void bindValues(
 			JdbcValueBindings valueBindings,
 			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {

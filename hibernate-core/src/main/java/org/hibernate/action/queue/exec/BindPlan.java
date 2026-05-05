@@ -58,17 +58,14 @@ public interface BindPlan {
 	}
 
 	/**
-	 * Execute this bind plan using the provided execution context.
-	 * <p>
-	 * For standard (non-bundled) operations, this executes a single row.
-	 * For bundled operations, this may execute multiple rows.
+	 * Bind JDBC values for the operation being executed.
 	 *
-	 * @param context the execution context providing batching and statement management
+	 * @param valueBindings the JDBC value bindings to populate
 	 * @param flushOperation the operation being executed
 	 * @param session the session
 	 */
-	void execute(
-			ExecutionContext context,
+	void bindValues(
+			JdbcValueBindings valueBindings,
 			FlushOperation flushOperation,
 			SharedSessionContractImplementor session);
 
@@ -77,7 +74,7 @@ public interface BindPlan {
 	}
 
 	default OperationResultChecker getOperationResultChecker() {
-		return null;
+		return this instanceof OperationResultChecker checker ? checker : null;
 	}
 
 	default ValuesAnalysis getValuesAnalysis() {

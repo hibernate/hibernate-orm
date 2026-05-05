@@ -14,7 +14,6 @@ import org.hibernate.action.internal.QueuedOperationCollectionAction;
 import org.hibernate.action.queue.MutationKind;
 import org.hibernate.action.queue.exec.BindPlan;
 import org.hibernate.action.queue.exec.JdbcValueBindings;
-import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.decompose.DecompositionContext;
 import org.hibernate.action.queue.meta.CollectionTableDescriptor;
 import org.hibernate.action.queue.meta.TableDescriptorAsTableMapping;
@@ -1716,27 +1715,21 @@ public class BasicCollectionDecomposer implements CollectionDecomposer {
 		}
 
 		@Override
-		public void execute(
-				ExecutionContext context,
+		public void bindValues(
+				JdbcValueBindings valueBindings,
 				FlushOperation flushOperation,
 				SharedSessionContractImplementor session) {
-			context.executeRow(
-					flushOperation,
-					(valueBindings, s) -> {
-						var fkDescriptor = mutationTarget.getAttributeMapping().getKeyDescriptor();
-						fkDescriptor.getKeyPart().decompose(
-								key,
-								(valueIndex, value, jdbcValueMapping) -> {
-									valueBindings.bindValue(
-											value,
-											jdbcValueMapping.getSelectionExpression(),
-											ParameterUsage.RESTRICT
-									);
-								},
-								session
+			var fkDescriptor = mutationTarget.getAttributeMapping().getKeyDescriptor();
+			fkDescriptor.getKeyPart().decompose(
+					key,
+					(valueIndex, value, jdbcValueMapping) -> {
+						valueBindings.bindValue(
+								value,
+								jdbcValueMapping.getSelectionExpression(),
+								ParameterUsage.RESTRICT
 						);
 					},
-					null
+					session
 			);
 		}
 	}

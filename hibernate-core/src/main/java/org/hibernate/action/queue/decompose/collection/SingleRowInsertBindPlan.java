@@ -7,7 +7,6 @@ package org.hibernate.action.queue.decompose.collection;
 import org.hibernate.action.queue.constraint.UniqueConstraint;
 import org.hibernate.action.queue.exec.BindPlan;
 import org.hibernate.action.queue.exec.JdbcValueBindings;
-import org.hibernate.action.queue.exec.ExecutionContext;
 import org.hibernate.action.queue.exec.OperationResultChecker;
 import org.hibernate.action.queue.plan.FlushOperation;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -68,15 +67,9 @@ public class SingleRowInsertBindPlan implements BindPlan, OperationResultChecker
 	}
 
 	@Override
-	public void execute(
-			ExecutionContext context,
-			FlushOperation flushOperation,
-			SharedSessionContractImplementor session) {
-		context.executeRow( flushOperation, this::bindValues, this );
-	}
-
-	private void bindValues(
+	public void bindValues(
 			JdbcValueBindings jdbcValueBindings,
+			FlushOperation flushOperation,
 			SharedSessionContractImplementor session) {
 		if ( key == null ) {
 			throw new IllegalArgumentException( "null key for collection: " + persister.getNavigableRole().getFullPath() );

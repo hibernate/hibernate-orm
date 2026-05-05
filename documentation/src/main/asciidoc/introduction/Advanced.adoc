@@ -204,7 +204,7 @@ enumerated by link:{doc-javadoc-url}org/hibernate/temporal/TemporalTableStrategy
 
 The temporal table strategy is controlled by the following property setting:
 
-.Multi-tenancy configuration
+.Temporal data configuration
 [%breakable,cols="36,~"]
 |===
 | Configuration property name           | Purpose
@@ -248,6 +248,85 @@ try (var session = factory.withOptions().asOf(instant).open()) {
     var document =
             // read the version of the document
             // effective at the specified instant
+            session.find(Document.class, documentId);
+}
+----
+
+A temporal entity tracks its state as it changes over time, but it doesn't keep any record of the _changes themselves_.
+For this we must use need an audit log.
+
+[[audit-logs]]
+=== Audit logs
+
+An _audited entity_ is quite similar to a temporal entity with a separate history table.
+But whereas a history table only tracks the timestamp at which a version became effective, an _audit log_ keeps a record of each changeset and something about the nature of the change.
+The link:{doc-javadoc-url}org/hibernate/annotations/Audited.html[`@Audited`] annotation declares a temporal entity.
+
+[source,java]
+----
+@Audited @Entity
+class Document {
+	...
+}
+----
+
+The `@Audited.Table` annotation specified the table holding the audit log:
+
+[source,java]
+----
+@Audited @Entity
+@Table(name="documents")
+@Audited.Table(name="document_aud_log")
+class Document {
+	...
+}
+----
+
+An audit log has columns holding:
+
+- an identifier of the changeset at which a revision of the entity became effective,
+- the nature of the change to entity that resulted in the revision being created--that is, the `ModificationType`,
+and
+- optionally, an identifier of the changeset which resulted in the revision being superseded.
+
+[source,java]
+----
+@Audited @Entity
+@Table(name="documents")
+@Audited.Table(
+        name="document_aud_log",
+        transactionIdColumn="REV",
+        modificationTypeColumn="REVTYPE")
+class Document {
+	...
+}
+----
+
+NOTE: In the past, audit logging was provided by {envers}[Envers].
+The functionality provided by the `@Audited` annotation is completely new, but is backward compatible with the format of Envers audit logs.
+
+To make use of audited entities, we need a source of changeset ids.
+Typically, we'll want to supply our own custom implementation of link:{doc-javadoc-url}org/hibernate/temporal/spi/TransactionIdentifierService.html[`TransactionIdentifierService`] to assign changeset ids to transactions.
+
+.Audit log configuration
+[%breakable,cols="36,~"]
+|===
+| Configuration property name           | Purpose
+
+| link:{doc-javadoc-url}org/hibernate/cfg/StateManagementSettings.html#TRANSACTION_ID_SUPPLIER[`hibernate.temporal.transaction_id_supplier`] | Specify a custom `TransactionIdentifierService`
+| link:{doc-javadoc-url}org/hibernate/cfg/StateManagementSettings.html#AUDIT_STRATEGY[`hibernate.audit.strategy`]  | Specifies whether there is a column holding the id of the changeset which superseded a revision
+|===
+
+By default, a session or stateless session reads the currently effective version of an audited entity and ignores the audit log.
+To read historical reversions, we must specify a changeset id when creating the session or stateless session.
+
+[source,java]
+----
+Long changeset = ... ; // a changeset id
+try (var session = factory.withOptions().atTransaction(changeset).open()) {
+    var document =
+            // read the reversion of the document
+            // effective after the specified changeset
             session.find(Document.class, documentId);
 }
 ----
@@ -305,6 +384,8 @@ try (var session = factory.withOptions().asOf(instant).open()) {
 //
 // Historically, filters where often used to implement soft-delete.
 // But, since 6.4, Hibernate now comes with soft-delete built in.
+
+Sometimes, keeping a full record of past revisions of an entity is too much.
 
 [[soft-delete]]
 === Soft-delete

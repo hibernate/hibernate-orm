@@ -249,25 +249,30 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		private void commitNoRollbackOnly() {
 			try {
 				beforeCompletionCallback();
-				jdbcResourceTransaction.commit();
-				afterCompletionCallback( true );
-			}
-			catch (RollbackException e) {
-				afterCompletionCallback( false );
-				throw e;
 			}
 			catch (RuntimeException e) {
-				// something went wrong, so make a last-ditch,
-				// hail-mary attempt to roll back the transaction
+				// error processing before completion callbacks
+				// attempt to roll back the transaction
 				try {
-					rollback();
+					jdbcResourceTransaction.rollback();
 				}
 				catch (RuntimeException e2) {
 					e.addSuppressed( e2 );
-					JDBC_LOGGER.encounteredFailureRollingBackFailedCommit( e2 );
 				}
+				afterCompletionCallback( false );
 				throw e;
 			}
+
+			try {
+				jdbcResourceTransaction.commit();
+			}
+			catch (RuntimeException e) {
+				// commit failed
+				afterCompletionCallback( false );
+				throw e;
+			}
+			// commit successful
+			afterCompletionCallback( true );
 		}
 
 		private void commitRollbackOnly() {

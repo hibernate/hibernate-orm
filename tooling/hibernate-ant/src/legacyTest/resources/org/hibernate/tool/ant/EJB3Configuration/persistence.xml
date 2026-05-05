@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Copyright 2004 - 2025 Red Hat, Inc.
   ~
@@ -14,15 +13,14 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<!-- example of reference to a cfg.xml file -->
-<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-   xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd"
-   version="1.0">
+   xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_1.xsd"
+   version="3.1">
    <persistence-unit name="ejb3test" transaction-type="RESOURCE_LOCAL">
       <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+      <class>VerySimpleTable</class>
       <properties>
-         <property name="hibernate.ejb.cfgfile" value="/hibernate.cfg.xml"/>
       </properties>
    </persistence-unit>
 </persistence>

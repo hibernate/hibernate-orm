@@ -10,7 +10,6 @@ import org.hibernate.tool.ant.test.utils.JdbcUtil;
 import org.hibernate.tool.ant.test.utils.ResourceUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -43,7 +42,6 @@ public class TestCase {
 	}
 
 	@Test
-	@Disabled
 	public void testEJB3ConfigurationFailureExpected() {
 
 		String[] resources = new String[] {"build.xml", "hibernate.cfg.xml", "persistence.xml"};

@@ -29,6 +29,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
+import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
@@ -169,6 +170,13 @@ abstract class AbstractSqmSelectionQuery<R> extends AbstractSelectionQuery<R> {
 					&& !dialect.supportsWindowFunctions() ) {
 				return false;
 			}
+		}
+		if ( BaseSqmToSqlAstConverter.ordersByPluralFetchBeforeOwner( spec ) ) {
+			// When a query orders by a collection element before the owner,
+			// pushing the owner table into a paginated subquery is not safe,
+			// because the pagination ordering depends on the collection element.
+			// This is arguably silly, but let's play safe here and disable the transformation in this case.
+			return false;
 		}
 		// The transformer only rewrites when at least one root contributes a
 		// fetched plural join (directly, or through a chain of fetched

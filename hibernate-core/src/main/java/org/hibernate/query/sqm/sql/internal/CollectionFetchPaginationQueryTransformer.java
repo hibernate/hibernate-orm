@@ -17,7 +17,6 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl.CaseStatementDiscriminatorExpression;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.spi.AbstractSqlAstWalker;
@@ -29,7 +28,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.QueryTransformer;
-import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
+import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
@@ -139,7 +138,7 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 					rebuildInnerSelect( querySpec, primaryEntity, primaryTableExpr, primaryAlias, absorption );
 			detachMovedJoins( movedJoins );
 			final var originalSortSpecifications =
-					prepareInnerSortSpecifications( querySpec, outerAliases, primaryAlias );
+					prepareInnerSortSpecifications( querySpec, outerAliases, primaryAlias, columnNames );
 			final var inner = querySpec.asSubQuery();
 			final var outer = new QuerySpec( querySpec.isRoot(), 1 );
 			final var derivedRoot = createDerivedRoot(
@@ -214,7 +213,13 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		}
 		if ( querySpec.hasSortSpecifications() ) {
 			for ( var sort : querySpec.getSortSpecifications() ) {
-				sort.getSortExpression().accept( collector );
+				final var sortExpression = sort.getSortExpression();
+				if ( sortExpression instanceof SqlSelectionExpression sqlSelection ) {
+					sqlSelection.getSelection().accept( collector );
+				}
+				else {
+					sortExpression.accept( collector );
+				}
 			}
 		}
 		// Moved fetch joins' predicates reference the join target (the parent
@@ -381,13 +386,12 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		// explicit column list.
 		final List<String> columnNames = new ArrayList<>();
 		querySpec.getSelectClause().getSqlSelections().clear();
-		final int nextPosition =
-				addPrimaryTableSelections( querySpec, primaryEntity, primaryTableExpr, primaryAlias, columnNames );
-		addAbsorbedSelections( querySpec, absorption, columnNames, nextPosition );
+		addPrimaryTableSelections( querySpec, primaryEntity, primaryTableExpr, primaryAlias, columnNames );
+		addAbsorbedSelections( querySpec, absorption, columnNames );
 		return columnNames;
 	}
 
-	private static int addPrimaryTableSelections(
+	private static void addPrimaryTableSelections(
 			QuerySpec querySpec,
 			EntityMappingType primaryEntity,
 			String primaryTableExpr,
@@ -400,16 +404,16 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		// SELECT and AbsorbedColumnCollector picks up its component column refs,
 		// so the inner doesn't need (and can't render) this placeholder.
 		seen.add( DISCRIMINATOR_ROLE_NAME );
+		final List<SqlSelection> sqlSelections = querySpec.getSelectClause().getSqlSelections();
 		class Projector implements SelectableConsumer {
-			int position;
 			@Override
 			public void accept(int idx, SelectableMapping selectable) {
 				if ( primaryTableExpr.equals( selectable.getContainingTableExpression() ) ) {
 					final String columnName = selectable.getSelectionExpression();
 					if ( seen.add( columnName ) ) {
-						querySpec.getSelectClause().addSqlSelection(
+						sqlSelections.add(
 								new ResolvedSqlSelection(
-										position++,
+										sqlSelections.size(),
 										new ColumnReference( primaryAlias, selectable ),
 										(BasicType<?>) selectable.getJdbcMapping()
 								)
@@ -430,29 +434,27 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 			versionMapping.forEachSelectable( projector );
 		}
 		primaryEntity.forEachSelectable( projector );
-		return projector.position;
 	}
 
 	private static void addAbsorbedSelections(
 			QuerySpec querySpec,
 			Map<AbsorbedKey, AbsorbedColumn> absorption,
-			List<String> columnNames,
-			int startPosition) {
-		int position = startPosition;
+			List<String> columnNames) {
+		final List<SqlSelection> sqlSelections = querySpec.getSelectClause().getSqlSelections();
 		for ( var entry : absorption.entrySet() ) {
 			final var absorbedKey = entry.getKey();
 			final var absorbedColumn = entry.getValue();
 			final String exposedName = absorbedKey.qualifier() + "_" + absorbedKey.columnName();
 			// Expose the absorbed column under a stable derived-table column name and
 			// remember that name so outer ColumnReferences can be rewritten to it.
-			querySpec.getSelectClause().addSqlSelection(
+			sqlSelections.add(
 					new ResolvedSqlSelection(
-							position++,
+							sqlSelections.size(),
 							new ColumnReference(
 									absorbedKey.qualifier(),
 									absorbedKey.columnName(),
 									false,
-									null,
+									absorbedColumn.readExpression,
 									absorbedColumn.jdbcMapping
 							),
 							(BasicType<?>) absorbedColumn.jdbcMapping
@@ -475,7 +477,8 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 	private static List<SortSpecification> prepareInnerSortSpecifications(
 			QuerySpec querySpec,
 			Set<String> outerAliases,
-			String primaryAlias) {
+			String primaryAlias,
+			List<String> columnNames) {
 		// Split sort specs: those that reference an alias that's now in the outer
 		// (e.g. the synthetic ORDER BY Hibernate adds on a fetched collection's FK)
 		// can't stay on the inner — they'd reference a TableGroup we just removed.
@@ -490,14 +493,54 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 			final List<SortSpecification> innerSortSpecifications =
 					new ArrayList<>( originalSortSpecifications.size() );
 			for ( var sort : originalSortSpecifications ) {
-				if ( !referencesMovedAlias( sort, outerAliases, primaryAlias ) ) {
-					innerSortSpecifications.add( sort );
+				final var sortExpression = sort.getSortExpression();
+				if ( sortExpression instanceof SqlSelectionExpression selectionExpression ) {
+					if ( !sqlAstReferencesAnyAlias( selectionExpression.getSelection(), outerAliases, primaryAlias ) ) {
+						SqlSelection selection = findSqlSelection(
+								querySpec.getSelectClause().getSqlSelections(),
+								selectionExpression.getSelection().getExpression()
+						);
+						if ( selection == null ) {
+							selection = new ResolvedSqlSelection(
+									columnNames.size(),
+									selectionExpression.getSelection().getExpression(),
+									(BasicType<?>) selectionExpression.getSelection().getExpressionType()
+							);
+							querySpec.getSelectClause().getSqlSelections().add( selection );
+							columnNames.add( "hib_gen_" + columnNames.size() );
+						}
+						innerSortSpecifications.add( new SortSpecification(
+								new SqlSelectionExpression( selection ),
+								sort.getSortOrder(),
+								sort.getNullPrecedence(),
+								sort.isIgnoreCase()
+						) );
+					}
+				}
+				else {
+					if ( !referencesMovedAlias( sort, outerAliases, primaryAlias ) ) {
+						innerSortSpecifications.add( sort );
+					}
 				}
 			}
 			sortSpecifications.clear();
 			sortSpecifications.addAll( innerSortSpecifications );
 			return originalSortSpecifications;
 		}
+	}
+
+	private static @Nullable SqlSelection findSqlSelection(List<SqlSelection> sqlSelections, Expression expression) {
+		for ( SqlSelection sqlSelection : sqlSelections ) {
+			final var selectionExpression = sqlSelection.getExpression();
+			if ( selectionExpression == expression ) {
+				return sqlSelection;
+			}
+			else if ( selectionExpression instanceof ColumnReference columnReference
+				&& expression.equals( columnReference ) ) {
+				return sqlSelection;
+			}
+		}
+		return null;
 	}
 
 	private static QueryPartTableGroup createDerivedRoot(
@@ -596,21 +639,15 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		// identifier between the root-level ordering and the moved collection
 		// ordering. List execution does not need this.
 		if ( groupRowsByOwnerForScroll ) {
-			addRootOuterSortSpecifications(
-					outer,
-					originalSortSpecifications,
-					outerAliases,
-					primaryAlias,
-					rewriter
-			);
+			final int ownerIdInsertionIndex =
+					findOwnerIdInsertionIndex( originalSortSpecifications, outerAliases, primaryAlias );
+			for ( int i = 0; i < ownerIdInsertionIndex; i++ ) {
+				addOuterSortSpecification( outer, originalSortSpecifications.get( i ), rewriter );
+			}
 			addOwnerIdentifierSortSpecifications( outer, primaryAlias, primaryEntity );
-			addMovedAliasOuterSortSpecifications(
-					outer,
-					originalSortSpecifications,
-					outerAliases,
-					primaryAlias,
-					rewriter
-			);
+			for ( int i = ownerIdInsertionIndex; i < originalSortSpecifications.size(); i++ ) {
+				addOuterSortSpecification( outer, originalSortSpecifications.get( i ), rewriter );
+			}
 		}
 		else {
 			// Outer ORDER BY mirrors the original (full) sort specs, with absorbed
@@ -621,17 +658,18 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 		}
 	}
 
-	private static void addRootOuterSortSpecifications(
-			QuerySpec outer,
+	private static int findOwnerIdInsertionIndex(
 			List<SortSpecification> originalSortSpecifications,
 			Set<String> outerAliases,
-			String primaryAlias,
-			ColumnReferenceRewriter rewriter) {
-		for ( var sort : originalSortSpecifications ) {
-			if ( !referencesMovedAlias( sort, outerAliases, primaryAlias ) ) {
-				addOuterSortSpecification( outer, sort, rewriter );
+			String primaryAlias) {
+		int lastOuterIndex = -1;
+		for ( int i = 0; i < originalSortSpecifications.size(); i++ ) {
+			var sortSpecification = originalSortSpecifications.get( i );
+			if ( !referencesMovedAlias( sortSpecification, outerAliases, primaryAlias ) ) {
+				lastOuterIndex = i;
 			}
 		}
+		return lastOuterIndex + 1;
 	}
 
 	private static void addOwnerIdentifierSortSpecifications(
@@ -644,19 +682,6 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 				outer.addSortSpecification( new SortSpecification( identifierColumn, SortDirection.ASCENDING ) );
 			}
 		} );
-	}
-
-	private static void addMovedAliasOuterSortSpecifications(
-			QuerySpec outer,
-			List<SortSpecification> originalSortSpecifications,
-			Set<String> outerAliases,
-			String primaryAlias,
-			ColumnReferenceRewriter rewriter) {
-		for ( var sort : originalSortSpecifications ) {
-			if ( referencesMovedAlias( sort, outerAliases, primaryAlias ) ) {
-				addOuterSortSpecification( outer, sort, rewriter );
-			}
-		}
 	}
 
 	private static boolean referencesMovedAlias(
@@ -789,9 +814,11 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 
 	private static class AbsorbedColumn {
 		final JdbcMapping jdbcMapping;
+		final String readExpression;
 		String exposedName;
-		private AbsorbedColumn(JdbcMapping jdbcMapping) {
+		private AbsorbedColumn(JdbcMapping jdbcMapping, String readExpression) {
 			this.jdbcMapping = jdbcMapping;
+			this.readExpression = readExpression;
 		}
 	}
 
@@ -815,19 +842,8 @@ public class CollectionFetchPaginationQueryTransformer implements QueryTransform
 			if ( qualifier != null && !outerAliases.contains( qualifier ) ) {
 				absorption.computeIfAbsent(
 						new AbsorbedKey( qualifier, columnReference.getColumnExpression() ),
-						k -> new AbsorbedColumn( columnReference.getJdbcMapping() )
+						k -> new AbsorbedColumn( columnReference.getJdbcMapping(), columnReference.getReadExpression() )
 				);
-			}
-		}
-
-		@Override
-		public void visitSelfRenderingExpression(SelfRenderingExpression expression) {
-			// Joined-inheritance synthesizes a CaseStatementDiscriminatorExpression
-			// whose inner CaseSearchedExpression is built lazily at SQL render time;
-			// trigger the build so the column references it will use are visible to
-			// the absorption pass.
-			if ( expression instanceof CaseStatementDiscriminatorExpression discriminatorExpression ) {
-				discriminatorExpression.buildCaseExpression().accept( this );
 			}
 		}
 	}

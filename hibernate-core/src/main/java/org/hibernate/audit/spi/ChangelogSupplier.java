@@ -8,7 +8,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Session;
-import org.hibernate.annotations.ChangesetEntity;
+import org.hibernate.annotations.Changelog;
 import org.hibernate.audit.AuditException;
 import org.hibernate.audit.ChangesetListener;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -20,41 +20,41 @@ import org.hibernate.temporal.spi.ChangesetIdentifierSupplier;
 
 /**
  * A built-in {@link ChangesetIdentifierSupplier} that persists
- * a user-defined changeset entity and returns the
- * {@link ChangesetEntity.ChangesetId @ChangesetEntity.ChangesetId}
+ * a user-defined changelog entity and returns the
+ * {@link Changelog.ChangesetId @Changelog.ChangesetId}
  * property value as the changeset id for audit rows.
  * <p>
  * An optional {@link ChangesetListener} callback can be
  * configured for populating custom fields.
  *
  * @param <T> the type of the changeset identifier
- * (the {@link ChangesetEntity.ChangesetId @ChangesetId}
+ * (the {@link Changelog.ChangesetId @ChangesetId}
  * property type)
  *
  * @author Marco Belladelli
  * @since 7.4
  */
-public class ChangesetEntitySupplier<T> implements ChangesetIdentifierSupplier<T> {
-	private final Class<?> changesetEntityClass;
+public class ChangelogSupplier<T> implements ChangesetIdentifierSupplier<T> {
+	private final Class<?> changelogClass;
 	private final String changesetIdProperty;
 	private final String timestampProperty;
 	private final @Nullable String modifiedEntitiesProperty;
 	private final @Nullable ChangesetListener listener;
 
 	/**
-	 * @param changesetEntityClass the changeset entity class
-	 * @param changesetIdProperty the name of the {@link ChangesetEntity.ChangesetId @ChangesetId} property
-	 * @param timestampProperty the name of the {@link ChangesetEntity.Timestamp @Timestamp} property
-	 * @param modifiedEntitiesProperty the name of the {@link ChangesetEntity.ModifiedEntities @ModifiedEntities}
+	 * @param changelogClass the changelog entity class
+	 * @param changesetIdProperty the name of the {@link Changelog.ChangesetId @ChangesetId} property
+	 * @param timestampProperty the name of the {@link Changelog.Timestamp @Timestamp} property
+	 * @param modifiedEntitiesProperty the name of the {@link Changelog.ModifiedEntities @ModifiedEntities}
 	 * property, or {@code null} if entity change tracking is not configured
 	 * @param listener optional callback for populating custom fields
 	 */
-	public ChangesetEntitySupplier(
-			Class<?> changesetEntityClass,
+	public ChangelogSupplier(
+			Class<?> changelogClass,
 			String changesetIdProperty,
 			String timestampProperty,
 			@Nullable String modifiedEntitiesProperty, @Nullable ChangesetListener listener) {
-		this.changesetEntityClass = changesetEntityClass;
+		this.changelogClass = changelogClass;
 		this.changesetIdProperty = changesetIdProperty;
 		this.timestampProperty = timestampProperty;
 		this.modifiedEntitiesProperty = modifiedEntitiesProperty;
@@ -62,21 +62,21 @@ public class ChangesetEntitySupplier<T> implements ChangesetIdentifierSupplier<T
 	}
 
 	/**
-	 * The changeset entity class.
+	 * The changelog entity class.
 	 */
-	public Class<?> getChangesetEntityClass() {
-		return changesetEntityClass;
+	public Class<?> getChangelogClass() {
+		return changelogClass;
 	}
 
 	/**
-	 * The name of the {@link ChangesetEntity.ChangesetId @Changeset} property.
+	 * The name of the {@link Changelog.ChangesetId @Changeset} property.
 	 */
 	public String getChangesetIdProperty() {
 		return changesetIdProperty;
 	}
 
 	/**
-	 * The name of the {@link ChangesetEntity.Timestamp @Timestamp} property.
+	 * The name of the {@link Changelog.Timestamp @Timestamp} property.
 	 */
 	public String getTimestampProperty() {
 		return timestampProperty;
@@ -90,7 +90,7 @@ public class ChangesetEntitySupplier<T> implements ChangesetIdentifierSupplier<T
 	}
 
 	/**
-	 * The name of the {@link ChangesetEntity.ModifiedEntities @ModifiedEntities}
+	 * The name of the {@link Changelog.ModifiedEntities @ModifiedEntities}
 	 * property, or {@code null} if entity change tracking is not configured.
 	 */
 	public @Nullable String getModifiedEntitiesProperty() {
@@ -101,70 +101,70 @@ public class ChangesetEntitySupplier<T> implements ChangesetIdentifierSupplier<T
 	@SuppressWarnings("unchecked")
 	public T generateIdentifier(SharedSessionContract session) {
 		final var sessionImpl = (SharedSessionContractImplementor) session;
-		final EntityPersister persister = sessionImpl.getEntityPersister( changesetEntityClass.getName(), null );
-		final Object changesetEntity = persister.instantiate( null, sessionImpl );
+		final EntityPersister persister = sessionImpl.getEntityPersister( changelogClass.getName(), null );
+		final Object changelog = persister.instantiate( null, sessionImpl );
 		if ( listener != null ) {
-			listener.newChangeset( changesetEntity );
+			listener.newChangeset( changelog );
 		}
-		final var childSession = persistChangesetEntity( session, changesetEntity );
-		sessionImpl.getAuditWorkQueue().setChangesetContext( changesetEntity, childSession );
-		return (T) readChangesetId( changesetEntity, persister, sessionImpl );
+		final var childSession = persistChangelog( session, changelog );
+		sessionImpl.getAuditWorkQueue().setChangesetContext( changelog, childSession );
+		return (T) readChangesetId( changelog, persister, sessionImpl );
 	}
 
 	/**
-	 * Read the {@link ChangesetEntity.ChangesetId @Changeset} property value
-	 * from the changeset entity after persistence.
+	 * Read the {@link Changelog.ChangesetId @Changeset} property value
+	 * from the changelog entity after persistence.
 	 * <p>
 	 * Handles both regular properties and {@code @Id} properties.
 	 */
 	private Object readChangesetId(
-			Object changesetEntity,
+			Object changelog,
 			EntityPersister persister,
 			SharedSessionContractImplementor session) {
 		final Object changesetId;
 		final var changesetIdAttr = persister.findAttributeMapping( changesetIdProperty );
 		if ( changesetIdAttr != null ) {
-			changesetId = persister.getValue( changesetEntity, changesetIdAttr.getStateArrayPosition() );
+			changesetId = persister.getValue( changelog, changesetIdAttr.getStateArrayPosition() );
 		}
 		else {
 			// @ChangesetId is the @Id
-			changesetId = persister.getIdentifier( changesetEntity, session );
+			changesetId = persister.getIdentifier( changelog, session );
 		}
 		if ( changesetId == null ) {
 			throw new AuditException(
-					"@ChangesetEntity.ChangesetId property '" + changesetIdProperty
-					+ "' is null after persisting changeset entity '"
-					+ changesetEntityClass.getName() + "'"
+					"@Changelog.ChangesetId property '" + changesetIdProperty
+					+ "' is null after persisting changelog entity '"
+					+ changelogClass.getName() + "'"
 			);
 		}
 		return changesetId;
 	}
 
 	/**
-	 * Persist the changeset entity using a child {@link Session}
+	 * Persist the changelog entity using a child {@link Session}
 	 * that shares the parent session's JDBC connection.
 	 * The child session is returned so it can be kept open
 	 * for deferred flush of {@code @ElementCollection} changes.
 	 */
-	private static Session persistChangesetEntity(
+	private static Session persistChangelog(
 			SharedSessionContract session,
-			Object changesetEntity) {
+			Object changelog) {
 		final var childSession = session.sessionWithOptions()
 				.connection()
 				.openSession();
-		childSession.persist( changesetEntity );
+		childSession.persist( changelog );
 		childSession.flush();
 		return childSession;
 	}
 
 	/**
-	 * Resolve the {@link ChangesetEntitySupplier} from the given
+	 * Resolve the {@link ChangelogSupplier} from the given
 	 * service registry, or return {@code null} if no
-	 * {@code @ChangesetEntity} is configured.
+	 * {@code @Changelog} is configured.
 	 */
-	public static @Nullable ChangesetEntitySupplier<?> resolve(ServiceRegistry registry) {
+	public static @Nullable ChangelogSupplier<?> resolve(ServiceRegistry registry) {
 		final var service = registry.getService( ChangesetCoordinator.class );
-		return service != null && service.getIdentifierSupplier() instanceof ChangesetEntitySupplier<?> supplier
+		return service != null && service.getIdentifierSupplier() instanceof ChangelogSupplier<?> supplier
 				? supplier
 				: null;
 	}

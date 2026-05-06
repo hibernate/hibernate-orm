@@ -11,15 +11,15 @@ package org.hibernate.audit;
  * <p>
  * The {@link #changeset} field holds:
  * <ul>
- *   <li>the changeset entity instance
- *       (e.g. {@link DefaultChangesetEntity}), if one is
+ *   <li>the changelog entity instance
+ *       (e.g. {@link DefaultChangelog}), if one is
  *       configured, or
  *   <li>the plain changeset identifier
  *       (e.g. {@code Instant}, {@code Integer}) otherwise.
  * </ul>
  *
  * @param entity the entity snapshot after application of the changeset
- * @param changeset the changeset entity (if configured) or changeset identifier
+ * @param changeset the changelog entity (if configured) or changeset identifier
  * @param modificationType the type of modification (ADD/MOD/DEL)
  * @param <T> the entity type
  * @author Marco Belladelli

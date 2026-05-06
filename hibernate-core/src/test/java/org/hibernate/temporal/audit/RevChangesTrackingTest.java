@@ -14,7 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Audited;
-import org.hibernate.annotations.ChangesetEntity;
+import org.hibernate.annotations.Changelog;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.audit.AuditLogFactory;
@@ -40,8 +40,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests cross-type entity change tracking via a custom
- * {@link ChangesetEntity @ChangesetEntity} with
- * {@link ChangesetEntity.ModifiedEntities @ChangesetEntity.ModifiedEntities}.
+ * {@link Changelog @Changelog} with
+ * {@link Changelog.ModifiedEntities @Changelog.ModifiedEntities}.
  * <p>
  * Exercises the REVCHANGES write-side (via {@code @ElementCollection}
  * on the changeset entity) and the read-side APIs on {@code AuditLog}.
@@ -57,19 +57,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class RevChangesTrackingTest {
 
-	// --- Custom changeset entity with @ChangesetEntity.ModifiedEntities ---
+	// --- Custom changeset entity with @Changelog.ModifiedEntities ---
 
-	@ChangesetEntity
+	@Changelog
 	@Entity(name = "TrackingRevisionInfo")
 	@Table(name = "REVINFO")
 	static class TrackingRevisionInfo {
 		@Id
 		@GeneratedValue
-		@ChangesetEntity.ChangesetId
+		@Changelog.ChangesetId
 		@Column(name = "REV")
 		int id;
 
-		@ChangesetEntity.Timestamp
+		@Changelog.Timestamp
 		@Column(name = "REVTSTMP")
 		long timestamp;
 
@@ -77,7 +77,7 @@ class RevChangesTrackingTest {
 		@JoinTable(name = "REVCHANGES", joinColumns = @JoinColumn(name = "REV"))
 		@Column(name = "ENTITYNAME")
 		@Fetch(FetchMode.JOIN)
-		@ChangesetEntity.ModifiedEntities
+		@Changelog.ModifiedEntities
 		Set<String> modifiedEntityNames = new HashSet<>();
 	}
 
@@ -286,7 +286,7 @@ class RevChangesTrackingTest {
 
 	@Test
 	@Order(11)
-	void testChangesetEntityHasModifiedEntityNames(SessionFactoryScope scope) {
+	void testChangelogHasModifiedEntityNames(SessionFactoryScope scope) {
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			// Load the changeset entity and verify modifiedEntityNames was populated
 			TrackingRevisionInfo revInfo = auditLog.findChangeset( TrackingRevisionInfo.class, rev1 );

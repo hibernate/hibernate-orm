@@ -7,11 +7,11 @@ package org.hibernate.audit;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.ChangesetEntity;
+import org.hibernate.annotations.Changelog;
 
 
 /**
- * A built-in changeset entity which maps to the {@code REVINFO} table.
+ * A built-in changelog entity which maps to the {@code REVINFO} table.
  * <p>
  * Maps to the {@code REVINFO} table with columns:
  * <ul>
@@ -22,15 +22,15 @@ import org.hibernate.annotations.ChangesetEntity;
  * To use this entity, add it to the domain model of your application.
  * <p>
  * For entity change tracking (cross-type revision queries),
- * use {@link DefaultTrackingModifiedEntitiesChangesetEntity} instead.
+ * use {@link DefaultTrackingModifiedEntitiesChangelog} instead.
  *
  * @author Marco Belladelli
- * @see ChangesetEntity
- * @see DefaultTrackingModifiedEntitiesChangesetEntity
+ * @see Changelog
+ * @see DefaultTrackingModifiedEntitiesChangelog
  * @since 7.4
  */
-@ChangesetEntity
-@Entity(name = "DefaultChangesetEntity")
+@Changelog
+@Entity
 @Table(name = "REVINFO")
-public final class DefaultChangesetEntity extends ChangesetMapping {
+public final class DefaultChangelog extends ChangelogMapping {
 }

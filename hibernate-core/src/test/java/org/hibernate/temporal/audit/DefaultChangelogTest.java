@@ -7,9 +7,9 @@ package org.hibernate.temporal.audit;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.Audited;
-import org.hibernate.annotations.ChangesetEntity;
+import org.hibernate.annotations.Changelog;
 import org.hibernate.audit.AuditLogFactory;
-import org.hibernate.audit.DefaultChangesetEntity;
+import org.hibernate.audit.DefaultChangelog;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.AuditedTest;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -23,17 +23,17 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Tests the built-in {@link DefaultChangesetEntity}, which is
- * auto-detected via {@link ChangesetEntity @ChangesetEntity}
+ * Tests the built-in {@link DefaultChangelog}, which is
+ * auto-detected via {@link Changelog @Changelog}
  * with no explicit supplier configuration needed.
  */
 @AuditedTest
 @SessionFactory
 @DomainModel(annotatedClasses = {
-		DefaultChangesetEntityTest.Book.class,
-		DefaultChangesetEntity.class
+		DefaultChangelogTest.Book.class,
+		DefaultChangelog.class
 })
-class DefaultChangesetEntityTest {
+class DefaultChangelogTest {
 
 	@Audited
 	@Entity(name = "Book")
@@ -44,7 +44,7 @@ class DefaultChangesetEntityTest {
 	}
 
 	@Test
-	void testDefaultChangesetEntity(SessionFactoryScope scope) {
+	void testDefaultChangelog(SessionFactoryScope scope) {
 		final long beforeTest = System.currentTimeMillis();
 
 		// Create
@@ -74,8 +74,8 @@ class DefaultChangesetEntityTest {
 			assertEquals( 3, revisionIds.size() );
 
 			final var revisions = session.createSelectionQuery(
-					"from DefaultChangesetEntity where id in :ids order by id",
-					DefaultChangesetEntity.class
+					"from DefaultChangelog where id in :ids order by id",
+					DefaultChangelog.class
 			).setParameter( "ids", revisionIds ).getResultList();
 			assertEquals( 3, revisions.size() );
 
@@ -119,7 +119,7 @@ class DefaultChangesetEntityTest {
 	}
 
 	@Test
-	void testGetHistoryReturnsChangesetEntity(SessionFactoryScope scope) {
+	void testGetHistoryReturnsChangelog(SessionFactoryScope scope) {
 		// Create and update a book
 		scope.getSessionFactory().inTransaction( session -> {
 			var book = new Book();
@@ -132,22 +132,22 @@ class DefaultChangesetEntityTest {
 			book.title = "Updated History Book";
 		} );
 
-		// getHistory() should return DefaultChangesetEntity instances as the revision member
+		// getHistory() should return DefaultChangelog instances as the revision member
 		try (var auditLog = AuditLogFactory.create( scope.getSessionFactory() )) {
 			var history = auditLog.getHistory( Book.class, 2L );
 
 			assertEquals( 2, history.size() );
 
-			// Verify revision is a DefaultChangesetEntity, not a plain Integer
+			// Verify revision is a DefaultChangelog, not a plain Integer
 			var entry1 = history.get( 0 );
-			assertInstanceOf( DefaultChangesetEntity.class, entry1.changeset(),
-					"Revision should be a DefaultChangesetEntity instance" );
-			var rev1 = (DefaultChangesetEntity) entry1.changeset();
+			assertInstanceOf( DefaultChangelog.class, entry1.changeset(),
+					"Revision should be a DefaultChangelog instance" );
+			var rev1 = (DefaultChangelog) entry1.changeset();
 			assertTrue( rev1.getTimestamp() > 0, "Revision should have a timestamp" );
 
 			var entry2 = history.get( 1 );
-			assertInstanceOf( DefaultChangesetEntity.class, entry2.changeset() );
-			var rev2 = (DefaultChangesetEntity) entry2.changeset();
+			assertInstanceOf( DefaultChangelog.class, entry2.changeset() );
+			var rev2 = (DefaultChangelog) entry2.changeset();
 			assertTrue( rev2.getId() > rev1.getId(),
 					"Revisions should be sequential: rev1=" + rev1.getId() + ", rev2=" + rev2.getId() );
 		}

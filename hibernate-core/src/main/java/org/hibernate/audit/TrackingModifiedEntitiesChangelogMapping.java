@@ -10,7 +10,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.MappedSuperclass;
-import org.hibernate.annotations.ChangesetEntity;
+import org.hibernate.annotations.Changelog;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
@@ -19,14 +19,14 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Extension of {@link ChangesetMapping} that tracks which
+ * Extension of {@link ChangelogMapping} that tracks which
  * entity types were modified in each revision. The entity
  * names are stored in a {@code REVCHANGES} table as an
  * {@link ElementCollection @ElementCollection}.
  * <p>
- * When a custom changeset entity extends this class (or
+ * When a custom changelog entity extends this class (or
  * has a property annotated with
- * {@link ChangesetEntity.ModifiedEntities @ModifiedEntities}),
+ * {@link Changelog.ModifiedEntities @ModifiedEntities}),
  * cross-type revision queries are automatically enabled via
  * {@link AuditLog#getEntityTypesModifiedAt},
  * {@link AuditLog#findAllEntitiesModifiedAt}, and
@@ -34,20 +34,20 @@ import java.util.Set;
  * <p>
  * Extend this class to create a custom tracking changeset
  * entity, or use the ready-made
- * {@link DefaultTrackingModifiedEntitiesChangesetEntity}.
+ * {@link DefaultTrackingModifiedEntitiesChangelog}.
  *
  * @author Marco Belladelli
- * @see DefaultTrackingModifiedEntitiesChangesetEntity
- * @see ChangesetEntity.ModifiedEntities
+ * @see DefaultTrackingModifiedEntitiesChangelog
+ * @see Changelog.ModifiedEntities
  * @since 7.4
  */
 @MappedSuperclass
-public class TrackingModifiedEntitiesChangesetMapping extends ChangesetMapping {
+public class TrackingModifiedEntitiesChangelogMapping extends ChangelogMapping {
 	@ElementCollection(fetch = FetchType.EAGER)
 	@JoinTable(name = "REVCHANGES", joinColumns = @JoinColumn(name = "REV"))
 	@Column(name = "ENTITYNAME")
 	@Fetch(FetchMode.JOIN)
-	@ChangesetEntity.ModifiedEntities
+	@Changelog.ModifiedEntities
 	private Set<String> modifiedEntityNames = new HashSet<>();
 
 	public Set<String> getModifiedEntityNames() {
@@ -63,7 +63,7 @@ public class TrackingModifiedEntitiesChangesetMapping extends ChangesetMapping {
 		if ( this == o ) {
 			return true;
 		}
-		if ( !(o instanceof TrackingModifiedEntitiesChangesetMapping that) ) {
+		if ( !(o instanceof TrackingModifiedEntitiesChangelogMapping that) ) {
 			return false;
 		}
 		if ( !super.equals( o ) ) {
@@ -81,7 +81,7 @@ public class TrackingModifiedEntitiesChangesetMapping extends ChangesetMapping {
 
 	@Override
 	public String toString() {
-		return "TrackingModifiedEntitiesChangesetMapping(" + super.toString()
+		return "TrackingModifiedEntitiesChangelogMapping(" + super.toString()
 			+ ", modifiedEntityNames = " + modifiedEntityNames + ")";
 	}
 }

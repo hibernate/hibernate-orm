@@ -270,7 +270,7 @@ class Document {
 }
 ----
 
-The `@Audited.Table` annotation specified the table holding the audit log:
+The `@Audited.Table` annotation specified the table holding the audit log for that entity:
 
 [source,java]
 ----
@@ -306,14 +306,41 @@ NOTE: In the past, audit logging was provided by {envers}[Envers].
 The functionality provided by the `@Audited` annotation is completely new, but is backward compatible with the format of Envers audit logs.
 
 To make use of audited entities, we need a source of changeset ids.
-Typically, we'll want to supply our own custom implementation of link:{doc-javadoc-url}org/hibernate/temporal/spi/TransactionIdentifierService.html[`TransactionIdentifierService`] to assign changeset ids to transactions.
+There are two approaches we could take:
+
+1. create an entity class which holds information about each changeset, and annotate it link:{doc-javadoc-url}org/hibernate/annotations/Changelog.html[`Changelog`] or,
+2. supply our own custom implementation of link:{doc-javadoc-url}org/hibernate/temporal/spi/ChangesetIdentifierSupplier.html[`ChangesetIdentifierSupplier`] to assign changeset ids to transactions.
+
+With the first (recommended) approach, Hibernate automatically persists a new instance of the `@Changelog` entity in each transaction, using the `@ChangesetId` field--typically the generated identifier of the entity--as the changeset id.
+
+[source,java]
+----
+@Changelog @Entity
+@Table(name = "REVINFO")
+static class ChangesetInfo {
+    @Id
+    @GeneratedValue
+    @Changelog.ChangesetId
+    @Column(name = "REV")
+    int id;
+
+    @Changelog.Timestamp
+    @Column(name = "REVTSTMP")
+    long timestamp;
+
+    @Basic(optional=false)
+    String description;
+}
+----
+
+For those familiar with Envers, the changelog entity fills the role of the Envers "revision entity".
 
 .Audit log configuration
 [%breakable,cols="36,~"]
 |===
 | Configuration property name           | Purpose
 
-| link:{doc-javadoc-url}org/hibernate/cfg/StateManagementSettings.html#TRANSACTION_ID_SUPPLIER[`hibernate.temporal.transaction_id_supplier`] | Specify a custom `TransactionIdentifierService`
+| link:{doc-javadoc-url}org/hibernate/cfg/StateManagementSettings.html#TRANSACTION_ID_SUPPLIER[`hibernate.temporal.changeset_id_supplier`] | Specify a custom `ChangesetIdentifierSupplier`
 | link:{doc-javadoc-url}org/hibernate/cfg/StateManagementSettings.html#AUDIT_STRATEGY[`hibernate.audit.strategy`]  | Specifies whether there is a column holding the id of the changeset which superseded a revision
 |===
 
@@ -322,14 +349,30 @@ To read historical reversions, we must specify a changeset id when creating the 
 
 [source,java]
 ----
-Long changeset = ... ; // a changeset id
-try (var session = factory.withOptions().atTransaction(changeset).open()) {
+Long changesetId = ... ; // a changeset id
+try (var session = factory.withOptions().atChangeset(changesetId).open()) {
     var document =
             // read the reversion of the document
             // effective after the specified changeset
             session.find(Document.class, documentId);
 }
 ----
+
+The link:{doc-javadoc-url}org/hibernate/audit/AuditLog.html[`AuditLog`] interface lets us run more sophisticated queries against the audit log:
+
+[source,java]
+----
+try (var auditLog = AuditLogFactory.create(factory)) {
+    for (var changesetId : auditLog.getChangesets(Document.class, documentId)) {
+        // iterate over the changesets which modified the given document
+        try (var session = factory.withOptions().atChangeset(changesetId).open()) {
+            // ...
+        }
+    }
+}
+----
+
+You'll find much more information about these new APIs in the Javadoc.
 
 // [[envers]]
 // .Using Envers for auditing historical data

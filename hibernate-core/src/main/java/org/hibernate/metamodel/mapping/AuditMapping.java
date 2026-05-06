@@ -46,13 +46,6 @@ public interface AuditMapping extends AuxiliaryMapping {
 	SelectableMapping getInvalidatingChangesetIdMapping(String originalTableName);
 
 	/**
-	 * Get the invalidation timestamp selectable mapping for the given original table,
-	 * or {@code null} if not configured.
-	 */
-	@Nullable
-	SelectableMapping getInvalidationTimestampMapping(String originalTableName);
-
-	/**
 	 * Get the entity loader for single-entity audit queries.
 	 */
 	AuditEntityLoader getEntityLoader();

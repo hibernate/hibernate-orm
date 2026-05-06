@@ -79,8 +79,7 @@ public class AuditMappingImpl implements AuditMapping {
 			String auditTableName,
 			SelectableMapping changesetIdMapping,
 			@Nullable SelectableMapping modificationTypeMapping,
-			@Nullable SelectableMapping invalidatingChangesetMapping,
-			@Nullable SelectableMapping invalidationTimestampMapping
+			@Nullable SelectableMapping invalidatingChangesetMapping
 	) {}
 
 	private final Map<String, TableAuditInfo> tableAuditInfoMap;
@@ -169,11 +168,6 @@ public class AuditMappingImpl implements AuditMapping {
 	}
 
 	@Override
-	public SelectableMapping getInvalidationTimestampMapping(String originalTableName) {
-		return resolveInfo( originalTableName ).invalidationTimestampMapping;
-	}
-
-	@Override
 	public List<String> getExtraSelectExpressions() {
 		final var anyInfo = tableAuditInfoMap.values().iterator().next();
 		final var exprs = new ArrayList<>( List.of(
@@ -182,9 +176,6 @@ public class AuditMappingImpl implements AuditMapping {
 		) );
 		if ( anyInfo.invalidatingChangesetMapping != null ) {
 			exprs.add( anyInfo.invalidatingChangesetMapping.getSelectionExpression() );
-		}
-		if ( anyInfo.invalidationTimestampMapping != null ) {
-			exprs.add( anyInfo.invalidationTimestampMapping.getSelectionExpression() );
 		}
 		return exprs;
 	}

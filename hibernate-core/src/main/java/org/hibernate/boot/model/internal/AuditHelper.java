@@ -62,7 +62,6 @@ public final class AuditHelper {
 	public static final String CHANGESET_ID = "changesetId";
 	public static final String MODIFICATION_TYPE = "modificationType";
 	public static final String INVALIDATING_CHANGESET_ID = "invalidatingChangesetId";
-	public static final String INVALIDATION_TIMESTAMP = "invalidationTimestamp";
 
 	private static final String DEFAULT_TABLE_SUFFIX = "_AUD";
 
@@ -707,16 +706,6 @@ public final class AuditHelper {
 		auditTable.addColumn( revEndColumn );
 		holder.addAuxiliaryColumn( INVALIDATING_CHANGESET_ID, revEndColumn );
 		createChangesetForeignKey( auditTable, revEndColumn, context );
-
-		final String revEndTsName = auditTableAnnotation != null
-				? auditTableAnnotation.invalidationTimestampColumn()
-				: "";
-		if ( !isBlank( revEndTsName ) ) {
-			final var revEndTsColumn = createAuditColumn( revEndTsName, Instant.class, auditTable, context );
-			revEndTsColumn.setNullable( true );
-			auditTable.addColumn( revEndTsColumn );
-			holder.addAuxiliaryColumn( INVALIDATION_TIMESTAMP, revEndTsColumn );
-		}
 	}
 
 	/**

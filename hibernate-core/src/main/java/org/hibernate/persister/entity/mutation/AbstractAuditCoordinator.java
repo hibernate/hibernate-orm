@@ -368,16 +368,6 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 						ParameterUsage.SET
 				);
 
-				// SET REVEND_TSTMP = :tstmp (if configured)
-				final var revEndTsMapping = auditMapping.getInvalidationTimestampMapping( sourceTableName );
-				if ( revEndTsMapping != null ) {
-					jdbcValueBindings.bindValue(
-							java.time.Instant.now(), tableName,
-							revEndTsMapping.getSelectionExpression(),
-							ParameterUsage.SET
-					);
-				}
-
 				// WHERE id = :id
 				sourceMappings[tableIndex].getKeyMapping().breakDownKeyJdbcValues(
 						id,
@@ -438,12 +428,6 @@ abstract class AbstractAuditCoordinator extends AbstractMutationCoordinator impl
 			}
 			else {
 				updateBuilder.addValueColumn( "?", revEndMapping );
-			}
-
-			// SET REVEND_TSTMP = ? (if configured)
-			final var revEndTsMapping = auditMapping.getInvalidationTimestampMapping( sourceTableName );
-			if ( revEndTsMapping != null ) {
-				updateBuilder.addValueColumn( "?", revEndTsMapping );
 			}
 
 			// WHERE id columns

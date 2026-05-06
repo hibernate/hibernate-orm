@@ -70,7 +70,8 @@ public interface StateManagementSettings {
 	 * when using the {@link TemporalTableStrategy#SINGLE_TABLE} or
 	 * {@link TemporalTableStrategy#HISTORY_TABLE} mapping strategy
 	 * or for {@linkplain org.hibernate.annotations.Audited audited
-	 * data}.
+	 * data}. A plain {@link java.util.function.Supplier Supplier}
+	 * is also accepted for backward compatibility.
 	 * <p>
 	 * The Java type of the transaction id is inferred from the type
 	 * argument {@code T} in the instantiation of {@code TransactionIdentifierSupplier<T>}
@@ -86,8 +87,34 @@ public interface StateManagementSettings {
 	 * @see org.hibernate.annotations.Temporal
 	 * @see org.hibernate.annotations.Audited
 	 * @see org.hibernate.temporal.spi.TransactionIdentifierService
+	 * @see org.hibernate.temporal.spi.TransactionIdentifierSupplier
 	 *
 	 * @since 7.4
 	 */
 	String TRANSACTION_ID_SUPPLIER = "hibernate.temporal.transaction_id_supplier";
+
+	/**
+	 * Specifies the audit strategy for
+	 * {@linkplain org.hibernate.annotations.Audited audited} entities.
+	 * <p>
+	 * Accepts:
+	 * <ul>
+	 *     <li>{@code "default"}: each point-in-time query uses a
+	 *     {@code MAX(REV)} subquery to find the current audit row
+	 *     (no additional schema requirements), or
+	 *     <li>{@code "validity"}: each audit row carries a
+	 *     {@code REVEND} column marking when it was superseded;
+	 *     point-in-time queries use a simple range predicate
+	 *     ({@code REV <= :txId AND (REVEND > :txId OR REVEND IS NULL)})
+	 *     instead of a subquery, which is significantly faster for
+	 *     large audit tables.
+	 * </ul>
+	 *
+	 * @settingDefault {@code "default"}
+	 * @see org.hibernate.annotations.Audited
+	 *
+	 * @since 7.4
+	 */
+	@Incubating
+	String AUDIT_STRATEGY = "hibernate.audit.strategy";
 }

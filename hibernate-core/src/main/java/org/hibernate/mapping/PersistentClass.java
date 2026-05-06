@@ -24,6 +24,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,8 @@ import static org.hibernate.sql.Template.collectColumnNames;
  * @author Gavin King
  */
 public abstract sealed class PersistentClass
-		implements IdentifiableTypeClass, AttributeContainer, Filterable, MetaAttributable, Contributable, Serializable
+		implements IdentifiableTypeClass, AttributeContainer, AuxiliaryTableHolder,
+				Filterable, MetaAttributable, Contributable, Serializable
 		permits RootClass, Subclass {
 
 	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
@@ -98,6 +100,8 @@ public abstract sealed class PersistentClass
 	private boolean hasSubselectLoadableCollections;
 	private Component identifierMapper;
 	private List<CallbackDefinition> callbackDefinitions;
+	private Table auxiliaryTable;
+	private Map<String, Column> auxiliaryColumns;
 
 	private final List<CheckConstraint> checkConstraints = new ArrayList<>();
 
@@ -298,6 +302,29 @@ public abstract sealed class PersistentClass
 	}
 
 	public abstract Table getTable();
+
+	@Override
+	public Table getAuxiliaryTable() {
+		return auxiliaryTable;
+	}
+
+	@Override
+	public void setAuxiliaryTable(Table auxiliaryTable) {
+		this.auxiliaryTable = auxiliaryTable;
+	}
+
+	@Override
+	public Column getAuxiliaryColumn(String name) {
+		return auxiliaryColumns == null ? null : auxiliaryColumns.get( name );
+	}
+
+	@Override
+	public void addAuxiliaryColumn(String name, Column column) {
+		if ( auxiliaryColumns == null ) {
+			auxiliaryColumns = new HashMap<>();
+		}
+		auxiliaryColumns.put( name, column );
+	}
 
 	public String getEntityName() {
 		return entityName;

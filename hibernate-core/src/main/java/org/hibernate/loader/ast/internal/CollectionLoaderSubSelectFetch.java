@@ -78,7 +78,7 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 
 	@Override
 	public PersistentCollection<?> load(Object triggerKey, SharedSessionContractImplementor session) {
-		final var collectionKey = new CollectionKey( attributeMapping.getCollectionDescriptor(), triggerKey );
+		final var collectionKey = session.generateCollectionKey( attributeMapping.getCollectionDescriptor(), triggerKey );
 
 		final var sessionFactory = session.getFactory();
 		final var jdbcServices = sessionFactory.getJdbcServices();
@@ -99,7 +99,7 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 				// there was one, so we want to make sure to prepare the corresponding collection
 				// reference for reading
 				for ( var key : registeredFetch.getResultingEntityKeys() ) {
-					final var containedCollection = persistenceContext.getCollection( collectionKey( key ) );
+					final var containedCollection = persistenceContext.getCollection( collectionKey( key, session ) );
 					if ( containedCollection != null && containedCollection != collection ) {
 						containedCollection.beginRead();
 						containedCollection.beforeInitialize( getLoadable().getCollectionDescriptor(), -1 );
@@ -151,8 +151,8 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 		return collection;
 	}
 
-	private CollectionKey collectionKey(EntityKey key) {
-		return new CollectionKey( attributeMapping.getCollectionDescriptor(), key.getIdentifier() );
+	private CollectionKey collectionKey(EntityKey key, SharedSessionContractImplementor session) {
+		return session.generateCollectionKey( attributeMapping.getCollectionDescriptor(), key.getIdentifier() );
 	}
 
 }

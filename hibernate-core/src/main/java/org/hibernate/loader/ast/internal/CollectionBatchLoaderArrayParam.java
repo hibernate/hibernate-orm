@@ -169,11 +169,11 @@ public class CollectionBatchLoaderArrayParam
 			}
 		}
 		return session.getPersistenceContext()
-				.getCollection( collectionKey( keyBeingLoaded ) );
+				.getCollection( collectionKey( keyBeingLoaded, session ) );
 	}
 
-	private CollectionKey collectionKey(Object keyBeingLoaded) {
-		return new CollectionKey( getLoadable().getCollectionDescriptor(), keyBeingLoaded );
+	private CollectionKey collectionKey(Object keyBeingLoaded, SharedSessionContractImplementor session) {
+		return session.generateCollectionKey( getLoadable().getCollectionDescriptor(), keyBeingLoaded );
 	}
 
 	@Override

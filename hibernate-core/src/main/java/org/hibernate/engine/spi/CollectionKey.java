@@ -19,10 +19,13 @@ import static org.hibernate.pretty.MessageHelper.collectionInfoString;
 
 /**
  * Uniquely identifies a collection instance in a particular session.
+ * <p>
+ * For temporal collections, use {@link TemporalCollectionKey} which includes a transaction identifier
+ * to isolate historical snapshots in the persistence context.
  *
  * @author Gavin King
  */
-public final class CollectionKey implements Serializable {
+public sealed class CollectionKey implements Serializable permits TemporalCollectionKey {
 	private final String role;
 	private final Object key;
 	private final @Nullable Type keyType;
@@ -34,15 +37,20 @@ public final class CollectionKey implements Serializable {
 				persister.getRole(),
 				key,
 				persister.getKeyType().getTypeForEqualsHashCode(),
-				persister.getFactory()
+				persister.getFactory(),
+				0
 		);
 	}
 
-	private CollectionKey(
+	/**
+	 * @param txIdHashCode hash code contribution from the transaction identifier
+	 */
+	CollectionKey(
 			String role,
 			@Nullable Object key,
 			@Nullable Type keyType,
-			SessionFactoryImplementor factory) {
+			SessionFactoryImplementor factory,
+			int txIdHashCode) {
 		this.role = role;
 		if ( key == null ) {
 			throw new AssertionFailure( "null identifier for collection of role (" + role + ")" );
@@ -51,13 +59,19 @@ public final class CollectionKey implements Serializable {
 		this.keyType = keyType;
 		this.factory = factory;
 		//cache the hash-code
-		this.hashCode = generateHashCode();
+		this.hashCode = generateHashCode( role, key, keyType, factory, txIdHashCode );
 	}
 
-	private int generateHashCode() {
+	private static int generateHashCode(
+			String role,
+			Object key,
+			@Nullable Type keyType,
+			SessionFactoryImplementor factory,
+			int txIdHashCode) {
 		int result = 17;
 		result = 37 * result + role.hashCode();
-		result = 37 * result + ( keyType == null ? key.hashCode() : keyType.getHashCode( key, factory ) );
+		result = 37 * result + (keyType == null ? key.hashCode() : keyType.getHashCode( key, factory ));
+		result = 37 * result + txIdHashCode;
 		return result;
 	}
 
@@ -67,6 +81,21 @@ public final class CollectionKey implements Serializable {
 
 	public Object getKey() {
 		return key;
+	}
+
+	/**
+	 * The audit transaction identifier for this key, or {@code null} for
+	 * non-temporal collections.
+	 */
+	public @Nullable Object getTransactionId() {
+		return null;
+	}
+
+	/**
+	 * Whether this key refers to a temporal (historical) collection snapshot.
+	 */
+	public boolean isTemporal() {
+		return false;
 	}
 
 	@Override
@@ -82,14 +111,30 @@ public final class CollectionKey implements Serializable {
 		if ( this == other ) {
 			return true;
 		}
-		if ( other == null || CollectionKey.class != other.getClass() ) {
+		if ( other == null || !(other instanceof CollectionKey that) ) {
 			return false;
 		}
 
-		final CollectionKey that = (CollectionKey) other;
 		return that.role.equals( role )
-				&& ( this.key == that.key ||
-					keyType == null ? this.key.equals( that.key ) : keyType.isEqual( this.key, that.key, factory ) );
+			&& sameKey( that )
+			&& sameTransactionId( that );
+	}
+
+	private boolean sameKey(final CollectionKey that) {
+		return this.key == that.key
+			|| (keyType == null ? this.key.equals( that.key ) : keyType.isEqual( this.key, that.key, factory ));
+	}
+
+	/**
+	 * Compare transaction identifiers without virtual dispatch, using
+	 * instanceof on the sealed hierarchy for optimal JIT performance.
+	 */
+	private boolean sameTransactionId(final CollectionKey otherKey) {
+		if ( this instanceof TemporalCollectionKey t1 ) {
+			return otherKey instanceof TemporalCollectionKey t2
+				&& t1.getTransactionId().equals( t2.getTransactionId() );
+		}
+		return !(otherKey instanceof TemporalCollectionKey);
 	}
 
 	@Override
@@ -109,6 +154,7 @@ public final class CollectionKey implements Serializable {
 		oos.writeObject( role );
 		oos.writeObject( key );
 		oos.writeObject( keyType );
+		oos.writeObject( getTransactionId() );
 	}
 
 	/**
@@ -124,12 +170,13 @@ public final class CollectionKey implements Serializable {
 	public static CollectionKey deserialize(
 			ObjectInputStream ois,
 			SessionImplementor session) throws IOException, ClassNotFoundException {
-		return new CollectionKey(
-				(String) ois.readObject(),
-				ois.readObject(),
-				(Type) ois.readObject(),
-				// Should never be able to be null
-				session.getFactory()
-		);
+		final String role = (String) ois.readObject();
+		final Object key = ois.readObject();
+		final Type keyType = (Type) ois.readObject();
+		final Object txId = ois.readObject();
+		final SessionFactoryImplementor factory = session.getFactory();
+		return txId != null
+				? new TemporalCollectionKey( role, key, keyType, factory, txId )
+				: new CollectionKey( role, key, keyType, factory, 0 );
 	}
 }

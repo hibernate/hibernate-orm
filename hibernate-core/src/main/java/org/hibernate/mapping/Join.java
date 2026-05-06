@@ -10,7 +10,9 @@ import org.hibernate.sql.Alias;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 /**
@@ -22,13 +24,15 @@ import java.util.function.Supplier;
  *
  * @author Gavin King
  */
-public class Join implements AttributeContainer, Serializable {
+public class Join implements AttributeContainer, AuxiliaryTableHolder, Serializable {
 
 	private static final Alias PK_ALIAS = new Alias(15, "PK");
 
 	private final ArrayList<Property> properties = new ArrayList<>();
 	private final ArrayList<Property> declaredProperties = new ArrayList<>();
 	private Table table;
+	private Table auxiliaryTable;
+	private Map<String, Column> auxiliaryColumns;
 	private KeyValue key;
 	private PersistentClass persistentClass;
 	private boolean inverse;
@@ -88,6 +92,29 @@ public class Join implements AttributeContainer, Serializable {
 
 	public void setTable(Table table) {
 		this.table = table;
+	}
+
+	@Override
+	public Table getAuxiliaryTable() {
+		return auxiliaryTable;
+	}
+
+	@Override
+	public void setAuxiliaryTable(Table auxiliaryTable) {
+		this.auxiliaryTable = auxiliaryTable;
+	}
+
+	@Override
+	public Column getAuxiliaryColumn(String name) {
+		return auxiliaryColumns == null ? null : auxiliaryColumns.get( name );
+	}
+
+	@Override
+	public void addAuxiliaryColumn(String name, Column column) {
+		if ( auxiliaryColumns == null ) {
+			auxiliaryColumns = new HashMap<>();
+		}
+		auxiliaryColumns.put( name, column );
 	}
 
 	public KeyValue getKey() {

@@ -65,6 +65,7 @@ import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.TypeBinderType;
 import org.hibernate.annotations.View;
+import org.hibernate.annotations.RevisionEntity;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
 import org.hibernate.boot.model.internal.InheritanceState.ElementsToProcess;
 import org.hibernate.boot.model.naming.EntityNaming;
@@ -359,7 +360,14 @@ public class EntityBinder {
 			MetadataBuildingContext context) {
 		final var audited = extract( Audited.class, classDetails, context );
 		if ( audited != null ) {
-			AuditHelper.bindAuditTable( audited, rootClass, context );
+			final var auditTable = extract( Audited.Table.class, classDetails, context );
+			AuditHelper.bindAuditTable( auditTable, rootClass, classDetails, context );
+		}
+		else {
+			final var revisionEntity = extract( RevisionEntity.class, classDetails, context );
+			if ( revisionEntity != null ) {
+				AuditHelper.bindRevisionEntity( revisionEntity, rootClass, classDetails, context );
+			}
 		}
 	}
 

@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 import org.hibernate.Filter;
 import org.hibernate.Internal;
 import org.hibernate.UnknownProfileException;
+import org.hibernate.audit.AuditLog;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FilterImpl;
@@ -104,6 +105,10 @@ public class LoadQueryInfluencers implements Serializable {
 
 	public void setTemporalIdentifier(Object temporalIdentifier) {
 		this.temporalIdentifier = temporalIdentifier;
+	}
+
+	public boolean isAllRevisions() {
+		return temporalIdentifier == AuditLog.ALL_REVISIONS;
 	}
 
 

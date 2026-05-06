@@ -92,7 +92,7 @@ public abstract class AbstractNonJoinCollectionInitializer<Data extends Abstract
 							assert targetInstance != null;
 							collection.setOwner( targetInstance );
 							persistenceContext.addUninitializedCollection( collectionDescriptor, collection, key,
-									isReadOnly( rowProcessingState, session ) );
+									isReadOnly( collectionKey, rowProcessingState, session ) );
 							if ( isEager ) {
 								persistenceContext.addNonLazyCollection( collection );
 							}

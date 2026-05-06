@@ -25,6 +25,7 @@ import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.audit.internal.AuditColumnFunction;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.AggregateSupportImpl;
 import org.hibernate.dialect.function.CastFunction;
@@ -1402,6 +1403,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		functionRegistry.registerAlternateKey( "current_instant", "instant" ); //deprecated legacy!
 
 		functionRegistry.register( "sql", new SqlFunction() );
+
+		//audit column accessor functions for @Audited entities
+
+		functionRegistry.register(
+				AuditColumnFunction.TRANSACTION_ID_FUNCTION,
+				new AuditColumnFunction( AuditColumnFunction.TRANSACTION_ID_FUNCTION, true, typeConfiguration )
+		);
+		functionRegistry.register(
+				AuditColumnFunction.MODIFICATION_TYPE_FUNCTION,
+				new AuditColumnFunction( AuditColumnFunction.MODIFICATION_TYPE_FUNCTION, false, typeConfiguration )
+		);
 	}
 
 	/**

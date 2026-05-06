@@ -210,7 +210,7 @@ public abstract class AbstractStateManagement implements StateManagement {
 	@Override
 	public AuxiliaryMapping createAuxiliaryMapping(
 			EntityPersister persister,
-			RootClass rootClass,
+			RootClass bootDescriptor,
 			MappingModelCreationProcess creationProcess) {
 		return null;
 	}

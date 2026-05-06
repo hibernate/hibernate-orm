@@ -120,6 +120,7 @@ class EntityResultImpl<E> implements EntityResult<E> {
 				discriminatorFetch,
 				null,
 				null,
+				null,
 				NotFoundAction.EXCEPTION,
 				false,
 				null,

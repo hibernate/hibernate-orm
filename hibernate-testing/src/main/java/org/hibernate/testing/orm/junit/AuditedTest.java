@@ -10,12 +10,15 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.hibernate.audit.AuditStrategy;
+
 import org.junit.jupiter.api.ClassTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Runs the annotated test class once per audit strategy
- * ({@code "default"} and {@code "validity"}).
+ * ({@link AuditStrategy#DEFAULT default} and
+ * {@link AuditStrategy#VALIDITY validity}).
  * <p>
  * Use in conjunction with {@link DomainModel}, {@link SessionFactory},
  * and {@link ServiceRegistry} to bootstrap the environment.
@@ -34,7 +37,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 public @interface AuditedTest {
 	/**
 	 * The audit strategies to test with.
-	 * Defaults to both {@code "default"} and {@code "validity"}.
+	 * Defaults to both {@link AuditStrategy#DEFAULT default} and
+	 * {@link AuditStrategy#VALIDITY validity}.
 	 */
-	String[] strategies() default {"default", "validity"};
+	AuditStrategy[] strategies() default { AuditStrategy.DEFAULT, AuditStrategy.VALIDITY };
 }

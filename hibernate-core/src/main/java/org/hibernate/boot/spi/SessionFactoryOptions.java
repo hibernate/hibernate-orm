@@ -21,6 +21,7 @@ import org.hibernate.Internal;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.audit.AuditStrategy;
 import org.hibernate.cfg.StateManagementSettings;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.TenantCredentialsMapper;
@@ -547,6 +548,11 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 * @see StateManagementSettings#TEMPORAL_TABLE_STRATEGY
 	 */
 	TemporalTableStrategy getTemporalTableStrategy();
+
+	/**
+	 * @see StateManagementSettings#AUDIT_STRATEGY
+	 */
+	AuditStrategy getAuditStrategy();
 
 	/**
 	 * @see org.hibernate.cfg.AvailableSettings#CRITERIA_COPY_TREE

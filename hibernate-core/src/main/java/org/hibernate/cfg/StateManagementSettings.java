@@ -5,6 +5,7 @@
 package org.hibernate.cfg;
 
 import org.hibernate.Incubating;
+import org.hibernate.audit.AuditStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.temporal.spi.ChangesetCoordinator;
@@ -100,12 +101,19 @@ public interface StateManagementSettings {
 	 * Specifies the audit strategy for
 	 * {@linkplain org.hibernate.annotations.Audited audited} entities.
 	 * <p>
-	 * Accepts:
+	 * Accepts any of:
 	 * <ul>
-	 * <li>{@code "default"}: each point-in-time query uses a
+	 *     <li>an instance of {@link AuditStrategy}, or
+	 *     <li>the (case-insensitive) name of an {@code AuditStrategy},
+	 *     for example, {@code default} or {@code validity}.
+	 * </ul>
+	 * <p>
+	 * The available strategies are:
+	 * <ul>
+	 * <li>{@link AuditStrategy#DEFAULT default}: each point-in-time query uses a
 	 *     {@code MAX(REV)} subquery to find the current audit row
 	 *     (no additional schema requirements), or
-	 * <li>{@code "validity"}: each audit row carries a
+	 * <li>{@link AuditStrategy#VALIDITY validity}: each audit row carries a
 	 *     {@code REVEND} column marking when it was superseded;
 	 *     point-in-time queries use a simple range predicate
 	 *     ({@code REV <= :changesetId AND (REVEND > :changesetId OR REVEND IS NULL)})
@@ -113,8 +121,9 @@ public interface StateManagementSettings {
 	 *     large audit tables.
 	 * </ul>
 	 *
-	 * @settingDefault {@code "default"}
+	 * @settingDefault {@link AuditStrategy#DEFAULT}
 	 * @see org.hibernate.annotations.Audited
+	 * @see AuditStrategy
 	 *
 	 * @since 7.4
 	 */

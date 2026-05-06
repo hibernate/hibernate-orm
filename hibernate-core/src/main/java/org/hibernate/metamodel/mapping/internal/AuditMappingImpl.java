@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.hibernate.audit.AuditStrategy;
 import org.hibernate.audit.ModificationType;
 import org.hibernate.audit.internal.AuditEntityLoaderImpl;
 import org.hibernate.audit.spi.AuditEntityLoader;
@@ -55,6 +56,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.Collections.singletonList;
+import static org.hibernate.audit.AuditStrategy.VALIDITY;
 import static org.hibernate.query.sqm.ComparisonOperator.EQUAL;
 import static org.hibernate.query.sqm.ComparisonOperator.GREATER_THAN;
 import static org.hibernate.query.sqm.ComparisonOperator.LESS_THAN_OR_EQUAL;
@@ -87,6 +89,7 @@ public class AuditMappingImpl implements AuditMapping {
 	private final BasicType<?> changesetIdBasicType;
 	private final String currentTimestampFunctionName;
 	private final FunctionRenderer maxFunctionDescriptor;
+	private final AuditStrategy auditStrategy;
 
 	private final EntityMappingType entityMappingType;
 	private final SessionFactoryImplementor sessionFactory;
@@ -102,6 +105,7 @@ public class AuditMappingImpl implements AuditMapping {
 		final var creationContext = creationProcess.getCreationContext();
 		final var typeConfiguration = creationContext.getTypeConfiguration();
 		this.sessionFactory = creationContext.getSessionFactory();
+		this.auditStrategy = sessionFactory.getSessionFactoryOptions().getAuditStrategy();
 		final var changesetIdJavaType = sessionFactory.getChangesetCoordinator().getIdentifierType();
 
 		jdbcMapping = resolveJdbcMapping( typeConfiguration, changesetIdJavaType );
@@ -235,7 +239,7 @@ public class AuditMappingImpl implements AuditMapping {
 			TableAuditInfo info,
 			Expression upperBound,
 			boolean includeDeletions) {
-		if ( info.invalidatingChangesetMapping != null ) {
+		if ( usesValidityStrategy( info ) ) {
 			return createValidityRestriction( tableReference, info, upperBound, includeDeletions );
 		}
 		final var subQuerySpec = new QuerySpec( false, 1 );
@@ -287,6 +291,10 @@ public class AuditMappingImpl implements AuditMapping {
 			) );
 		}
 		return auditPredicate;
+	}
+
+	private boolean usesValidityStrategy(TableAuditInfo info) {
+		return auditStrategy == VALIDITY && info.invalidatingChangesetMapping != null;
 	}
 
 	/**

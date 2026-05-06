@@ -12,6 +12,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.annotations.CacheLayout;
+import org.hibernate.audit.AuditStrategy;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -384,6 +385,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyTemporalTableStrategy(TemporalTableStrategy strategy) {
 		optionsBuilder.applyTemporalTableStrategy( strategy );
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyAuditStrategy(AuditStrategy strategy) {
+		optionsBuilder.applyAuditStrategy( strategy );
 		return this;
 	}
 

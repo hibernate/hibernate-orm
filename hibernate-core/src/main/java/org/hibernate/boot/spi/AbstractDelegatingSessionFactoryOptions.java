@@ -18,6 +18,7 @@ import org.hibernate.GraphParserMode;
 import org.hibernate.Interceptor;
 import org.hibernate.LockOptions;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.audit.AuditStrategy;
 import org.hibernate.temporal.TemporalTableStrategy;
 import org.hibernate.context.spi.TenantCredentialsMapper;
 import org.hibernate.context.spi.TenantSchemaMapper;
@@ -413,6 +414,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public TemporalTableStrategy getTemporalTableStrategy() {
 		return delegate.getTemporalTableStrategy();
+	}
+
+	@Override
+	public AuditStrategy getAuditStrategy() {
+		return delegate.getAuditStrategy();
 	}
 
 	@Override

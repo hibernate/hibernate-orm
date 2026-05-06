@@ -7,9 +7,11 @@ package org.hibernate.testing.orm.junit;
 import java.lang.reflect.AnnotatedElement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import org.hibernate.audit.AuditStrategy;
 import org.hibernate.cfg.StateManagementSettings;
 
 import org.junit.jupiter.api.extension.ClassTemplateInvocationContext;
@@ -48,18 +50,18 @@ public class AuditStrategyExtension implements ClassTemplateInvocationContextPro
 			}
 		}
 
-		final String[] strategies = castNonNull( ann ).strategies();
+		final AuditStrategy[] strategies = castNonNull( ann ).strategies();
 		final List<ClassTemplateInvocationContext> contexts = new ArrayList<>( strategies.length );
-		for ( String strategy : strategies ) {
+		for ( AuditStrategy strategy : strategies ) {
 			contexts.add( new AuditStrategyInvocationContext( strategy ) );
 		}
 		return contexts.stream();
 	}
 
-	private record AuditStrategyInvocationContext(String strategy) implements ClassTemplateInvocationContext {
+	private record AuditStrategyInvocationContext(AuditStrategy strategy) implements ClassTemplateInvocationContext {
 		@Override
 		public String getDisplayName(int invocationIndex) {
-			return "[" + strategy + "]";
+			return "[" + strategy.name().toLowerCase( Locale.ROOT ) + "]";
 		}
 
 		@Override

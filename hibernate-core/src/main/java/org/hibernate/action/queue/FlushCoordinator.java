@@ -87,7 +87,6 @@ public class FlushCoordinator {
 
 	private final transient Decomposer decomposer;
 	private final transient FlushPlanner flushPlanner;
-	private final transient PlanStepExecutor executor;
 	private transient DeferrableConstraintMode deferrableConstraintMode = DeferrableConstraintMode.DEFAULT;
 
 	// Track entities that became managed during the current flush
@@ -104,7 +103,6 @@ public class FlushCoordinator {
 		decomposer = new Decomposer( session );
 		graphBuilder = new StandardGraphBuilder( constraintModel, planningOptions, session );
 		flushPlanner = new StandardFlushPlanner( planningOptions );
-		executor = PlanStepExecutorFactory.create( session );
 	}
 
 	/// Get the Decomposer (for accessing unresolved insert tracking).
@@ -231,8 +229,6 @@ public class FlushCoordinator {
 
 		// Execute the plan - post-execution callbacks will run inline as operations complete
 		executePlan( plan );
-
-		executor.finishUp();
 
 		// After execution, try to resolve any deferred inserts
 		resolveUnresolvedInserts();
@@ -552,8 +548,9 @@ public class FlushCoordinator {
 
 	/// Executes planned operations in order. Handles fixups emitted from cycle breaks.
 	private void executePlan(FlushPlan plan) {
+		final PlanStepExecutor executor = PlanStepExecutorFactory.create( session );
 		for ( PlanStep step : plan.steps() ) {
-			executeStep(step, plan);
+			executeStep(step, plan, executor);
 		}
 
 		// Batched execution emits cycle-break fixups from post-batch callbacks.
@@ -567,7 +564,7 @@ public class FlushCoordinator {
 		}
 	}
 
-	private void executeStep(PlanStep step, FlushPlan plan) {
+	private void executeStep(PlanStep step, FlushPlan plan, PlanStepExecutor executor) {
 		executor.execute(
 				step.operations(),
 				newlyManagedEntities::add,
@@ -599,8 +596,6 @@ public class FlushCoordinator {
 				return;
 			}
 		}
-
-		executor.finishUp();
 
 		// Clear the list for the next flush
 		newlyManagedEntities.clear();
@@ -646,6 +641,5 @@ public class FlushCoordinator {
 
 		graphBuilder = new StandardGraphBuilder( actionQueueFactory.getConstraintModel(), actionQueueFactory.getPlanningOptions(), session );
 		flushPlanner = new StandardFlushPlanner( actionQueueFactory.getPlanningOptions() );
-		executor = PlanStepExecutorFactory.create( session );
 	}
 }

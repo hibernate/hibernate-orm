@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.TemporalMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -225,12 +226,15 @@ public class EntityInsertBindPlan implements BindPlan, OperationResultChecker {
 					// Use the table's key column name, not the identifier column name
 					final var keyColumn = keyColumns.get(index);
 					final String columnName = keyColumn.selectionExpression();
+					final Object valueToBind = jdbcValueMapping instanceof BasicEntityIdentifierMapping
+							? jdbcValueMapping.getJdbcMapping().convertToRelationalValue( jdbcValue )
+							: jdbcValue;
 					if ( valueBindings.hasBinding( columnName, ParameterUsage.SET ) ) {
-						valueBindings.replaceValue( columnName, ParameterUsage.SET, jdbcValue );
+						valueBindings.replaceValue( columnName, ParameterUsage.SET, valueToBind );
 					}
 					else {
 						valueBindings.bindValue(
-								jdbcValue,
+								valueToBind,
 								columnName,
 								ParameterUsage.SET
 						);

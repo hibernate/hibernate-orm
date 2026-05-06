@@ -10,6 +10,7 @@ import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.generator.EventType;
 
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ import jakarta.persistence.Version;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@DomainModel(annotatedClasses = CustomSqlGeneratedTest.Custom.class)
 @SessionFactory
 public class CustomSqlGeneratedTest {
 	@Test

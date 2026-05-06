@@ -8,7 +8,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.state.internal.AuditStateManagement;
+import org.hibernate.audit.ModificationType;
 import org.hibernate.sql.model.MutationOperationGroup;
 
 /**
@@ -53,7 +53,7 @@ public class UpdateCoordinatorAudit extends AbstractAuditCoordinator implements 
 				session
 		);
 		if ( shouldAuditUpdate( dirtyAttributeIndexes, hasDirtyCollection ) ) {
-			insertAuditRow( entity, id, values, AuditStateManagement.ModificationType.MOD, session );
+			enqueueAuditEntry( entity, values, ModificationType.MOD, session );
 		}
 		return generatedValues;
 	}

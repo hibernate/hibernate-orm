@@ -72,6 +72,7 @@ import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 
 
 import static java.util.Collections.singletonList;
+import static org.hibernate.boot.model.internal.AuditHelper.isFetchableAuditExcluded;
 import static org.hibernate.query.results.internal.ResultsHelper.attributeName;
 
 /**
@@ -805,7 +806,7 @@ public class LoaderSelectBuilder {
 			LoaderSqlAstCreationState creationState,
 			ImmutableFetchList.Builder fetches) {
 		return (fetchable, isKeyFetchable, isABag) -> {
-			if ( !fetchable.isSelectable() ) {
+			if ( !fetchable.isSelectable() || isFetchableAuditExcluded( fetchable, loadQueryInfluencers ) ) {
 				return;
 			}
 

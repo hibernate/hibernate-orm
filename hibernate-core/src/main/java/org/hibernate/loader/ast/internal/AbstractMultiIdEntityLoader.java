@@ -133,7 +133,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 
 		for ( int i = 0; i < ids.length; i++ ) {
 			final Object id = coerce( idType, ids[i] );
-			final var entityKey = new EntityKey( id, persister );
+			final var entityKey = session.generateEntityKey( id, persister );
 			if ( !loadFromEnabledCaches( loadOptions, session, lockOptions, entityKey, results, i ) ) {
 				// if we did not hit any of the continues above,
 				// then we need to batch load the entity state.
@@ -352,7 +352,7 @@ public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoa
 							lockOptions,
 							resolutionConsumer,
 							id,
-							new EntityKey( id, persister ),
+							session.generateEntityKey( id, persister ),
 							unresolvedIds,
 							i,
 							session

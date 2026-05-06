@@ -25,6 +25,8 @@ import jakarta.persistence.sql.ResultSetMapping;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityNameResolver;
+import org.hibernate.audit.AuditLog;
+import org.hibernate.audit.spi.AuditWorkQueue;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -52,7 +54,10 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.TemporalCollectionKey;
+import org.hibernate.engine.spi.TemporalEntityKey;
 import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionEventListenerManager;
@@ -62,6 +67,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.StatelessSessionImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.event.monitor.spi.EventMonitor;
+import org.hibernate.temporal.spi.TransactionIdentifierSupplier;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
@@ -1020,7 +1026,6 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 
 	@Override
 	public void afterTransactionBegin() {
-		initializeCurrentTransactionIdentifier();
 	}
 
 	protected void initializeCurrentTransactionIdentifier() {
@@ -1231,9 +1236,30 @@ abstract class AbstractSharedSessionContract implements SharedSessionContractImp
 		}
 	}
 
+	private AuditWorkQueue auditWorkQueue;
+
+	@Override
+	public AuditWorkQueue getAuditWorkQueue() {
+		if ( auditWorkQueue == null ) {
+			auditWorkQueue = new AuditWorkQueue();
+		}
+		return auditWorkQueue;
+	}
+
 	@Override
 	public EntityKey generateEntityKey(Object id, EntityPersister persister) {
-		return new EntityKey( id, persister );
+		final Object temporalId = getLoadQueryInfluencers().getTemporalIdentifier();
+		return temporalId != null && temporalId != AuditLog.ALL_REVISIONS
+				? new TemporalEntityKey( id, persister, temporalId )
+				: new EntityKey( id, persister );
+	}
+
+	@Override
+	public CollectionKey generateCollectionKey(CollectionPersister persister, Object key) {
+		final Object temporalId = getLoadQueryInfluencers().getTemporalIdentifier();
+		return temporalId != null && temporalId != AuditLog.ALL_REVISIONS
+				? new TemporalCollectionKey( persister, key, temporalId )
+				: new CollectionKey( persister, key );
 	}
 
 	@Override

@@ -47,6 +47,7 @@ public interface TransactionIdentifierService extends Service {
 
 	/**
 	 * A supplier of transaction identifiers or timestamps.
+	 * The current session is passed to the supplier.
 	 *
 	 * @see StateManagementSettings#TRANSACTION_ID_SUPPLIER
 	 */
@@ -68,4 +69,19 @@ public interface TransactionIdentifierService extends Service {
 	 * Whether the transaction identifiers are actually timestamps.
 	 */
 	boolean isIdentifierTypeInstant();
+
+	/**
+	 * Programmatically contribute a {@link TransactionIdentifierSupplier},
+	 * overriding any previously configured supplier.
+	 * <p>
+	 * Called during bootstrap (e.g. from the session factory) when
+	 * a supplier is derived from metadata rather than from explicit
+	 * configuration.
+	 *
+	 * @param supplier the supplier to use
+	 * @param identifierType the Java type of transaction identifiers
+	 *        produced by the supplier
+	 */
+	default <T> void contributeIdentifierSupplier(TransactionIdentifierSupplier<T> supplier, Class<T> identifierType) {
+	}
 }

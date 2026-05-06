@@ -122,6 +122,7 @@ public class JoinedDiscriminatedEntityInitializer
 						entityResult.getDiscriminatorFetch(),
 						null,
 						entityResult.getRowIdResult(),
+						entityResult.getAuditTransactionIdResult(),
 						NotFoundAction.EXCEPTION,
 						false,
 						this,

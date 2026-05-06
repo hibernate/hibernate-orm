@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.hibernate.AssertionFailure;
+import org.hibernate.audit.AuditLog;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.engine.spi.CollectionEntry;
@@ -74,6 +75,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	private String sessionFactoryUuid;
 	private boolean allowLoadOutsideTransaction;
+	private @Nullable Object temporalIdentifier;
 
 	private transient int instanceId;
 
@@ -86,6 +88,8 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 
 	protected AbstractPersistentCollection(SharedSessionContractImplementor session) {
 		this.session = session;
+		final Object tempId = session.getLoadQueryInfluencers().getTemporalIdentifier();
+		this.temporalIdentifier = tempId != AuditLog.ALL_REVISIONS ? tempId : null;
 	}
 
 	@Override
@@ -96,6 +100,10 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	@Override
 	public final @Nullable Object getKey() {
 		return key;
+	}
+
+	public @Nullable Object getTemporalIdentifier() {
+		return temporalIdentifier;
 	}
 
 	@Override
@@ -615,7 +623,20 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		if ( !initialized ) {
 			withTemporarySessionIfNeeded(
 					() -> {
-						session.initializeCollection( this, writing );
+						if ( temporalIdentifier != null ) {
+							final var influencers = session.getLoadQueryInfluencers();
+							final Object previous = influencers.getTemporalIdentifier();
+							influencers.setTemporalIdentifier( temporalIdentifier );
+							try {
+								session.initializeCollection( this, writing );
+							}
+							finally {
+								influencers.setTemporalIdentifier( previous );
+							}
+						}
+						else {
+							session.initializeCollection( this, writing );
+						}
 						return null;
 					}
 			);

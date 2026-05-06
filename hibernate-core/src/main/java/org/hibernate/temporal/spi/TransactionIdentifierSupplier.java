@@ -5,8 +5,8 @@
 package org.hibernate.temporal.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.SharedSessionContract;
 import org.hibernate.cfg.StateManagementSettings;
+import org.hibernate.SharedSessionContract;
 
 
 /**
@@ -33,9 +33,12 @@ import org.hibernate.cfg.StateManagementSettings;
  * to ensure that the {@linkplain #generateTransactionIdentifier supplier}
  * is called no more than once in a transaction.
  *
+ * @param <T> the type of transaction identifier produced
+ *
  * @see StateManagementSettings#TRANSACTION_ID_SUPPLIER
  *
  * @author Gavin King
+ * @author Marco Belladelli
  *
  * @since 7.4
  */
@@ -43,7 +46,10 @@ import org.hibernate.cfg.StateManagementSettings;
 public interface TransactionIdentifierSupplier<T> {
 
 	/**
-	 * Generates the transaction identifier or timestamp for a transaction.
+	 * Called once per transaction to obtain the transaction identifier
+	 *
+	 * @param session the current session
+	 * @return the transaction identifier
 	 */
 	T generateTransactionIdentifier(SharedSessionContract session);
 }

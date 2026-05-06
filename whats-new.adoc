@@ -31,8 +31,10 @@ The mapping strategy is transparent to client code.
 Historical temporal data may be queried at a given effective data/time.
 
 Audited data is mapped to a regular table along with an audit log which is backward compatible with Hibernate Envers.
+Optionally, the application may provide a `@Changelog` entity tracking information about each changeset.
+The `AuditLog` object may be used to query the audit log.
 
-For examples and more details, see the _Audit Logs_ section of the link:{versionDocBase}/introduction/html_single/Hibernate_Introduction.html#audit-logs[Introduction].
+For examples and more details, see link:{versionDocBase}/introduction/html_single/Hibernate_Introduction.html#temporal-data[Temporal data] and link:{versionDocBase}/introduction/html_single/Hibernate_Introduction.html#audit-logs[Audit logs] in _A Short Guide to Hibernate 7_.
 
 [[limit-fetch-join]]
 == Limits and Fetch Joins
